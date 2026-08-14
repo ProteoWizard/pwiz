@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
+using System.Xml.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -881,6 +882,33 @@ namespace pwiz.Skyline.Model
             AccessionNumbers = MoleculeAccessionNumbers.FromSerializableString(reader.GetAttribute(ATTR.id));
 
             Validate();
+        }
+
+        /// <summary>
+        /// The same attributes as <see cref="WriteXml(XmlWriter,Adduct)"/>, on an element being
+        /// built up rather than one being written. Both exist because these are attributes, which
+        /// an <see cref="XElement"/> cannot be handed through an <see cref="XmlWriter"/> made with
+        /// <see cref="XContainer.CreateWriter"/> - that one has no element to put them on.
+        /// </summary>
+        public void WriteXml(XElement element, Adduct adduct)
+        {
+            if (adduct.IsEmpty)
+            {
+                element.SetAttributeIfString(ATTR.neutral_formula, ParsedMolecule.IsMassOnly ? string.Empty : ParsedMolecule.ToString()); // If it's mass only, let ATTR.neutral_mass_* show that
+            }
+            else
+            {
+                element.SetAttributeIfString(ATTR.ion_formula,
+                    (ParsedMolecule.IsMassOnly ? string.Empty : ParsedMolecule.ToString()) + // If it's mass only, let ATTR.neutral_mass_* show that
+                                                        (adduct.IsProteomic ? string.Empty : adduct.ToString()));
+            }
+            Assume.IsFalse(AverageMass.IsMassH()); // We're going to read these as neutral masses
+            Assume.IsFalse(MonoisotopicMass.IsMassH());
+            element.SetAttributeNullable(ATTR.neutral_mass_average, ParsedMolecule.IsMassOnly ? AverageMass : Math.Round(AverageMass, BioMassCalc.MassPrecision));
+            element.SetAttributeNullable(ATTR.neutral_mass_monoisotopic, ParsedMolecule.IsMassOnly ? MonoisotopicMass : Math.Round(MonoisotopicMass, BioMassCalc.MassPrecision));
+            if (!string.IsNullOrEmpty(Name))
+                element.SetAttribute(ATTR.custom_ion_name, Name);
+            element.SetAttributeIfString(ATTR.id, AccessionNumbers.ToSerializableString());
         }
 
         public void WriteXml(XmlWriter writer, Adduct adduct)

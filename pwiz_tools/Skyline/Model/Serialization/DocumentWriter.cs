@@ -186,8 +186,8 @@ namespace pwiz.Skyline.Model.Serialization
 
             foreach (PeptideDocNode nodePeptide in node.Children)
             {
-                var moleculeWriter = new MoleculeWriter(this, writer, nodePeptide);
-                moleculeWriter.WriteXml();
+                var moleculeWriter = new MoleculeWriter(this, nodePeptide);
+                moleculeWriter.CreateElement().WriteTo(writer);
             }
         }
 

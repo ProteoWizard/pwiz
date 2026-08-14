@@ -1155,6 +1155,183 @@ namespace pwiz.Skyline.Util
 
             return Convert.ToInt32(attr.Value, CultureInfo.InvariantCulture);
         }
+
+        // Each of the following formats a value exactly the way the matching
+        // XmlUtil.WriteAttribute does, so that an element built up here and the same element
+        // written straight to an XmlWriter come out as the same text. Changing a format in one
+        // place means changing it in the other. A null string is written as an empty attribute
+        // rather than removing it, which is what XmlWriter.WriteAttributeString does with one.
+
+        public static void SetAttribute(this XElement element, string name, string value)
+        {
+            element.SetAttributeValue(name, value ?? string.Empty);
+        }
+
+        public static void SetAttribute<TAttr>(this XElement element, string name, TAttr value)
+        {
+            element.SetAttribute(name, value.ToString());
+        }
+
+        public static void SetAttributeIfString(this XElement element, string name, string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+                element.SetAttribute(name, value);
+        }
+
+        public static void SetAttributeNullable<TStruct>(this XElement element, string name, TStruct? value)
+            where TStruct : struct
+        {
+            if (value.HasValue)
+                element.SetAttribute(name, value.ToString());
+        }
+
+        public static void SetAttribute<TAttr>(this XElement element, string name, TAttr value, TAttr defaultValue)
+        {
+            if (!Equals(value, defaultValue))
+                element.SetAttribute(name, value.ToString());
+        }
+
+        public static void SetAttribute(this XElement element, string name, bool value)
+        {
+            element.SetAttribute(name, value, false);
+        }
+
+        public static void SetAttribute(this XElement element, string name, bool value, bool defaultValue)
+        {
+            if (value != defaultValue)
+                element.SetAttribute(name, value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant());
+        }
+
+        public static void SetAttribute(this XElement element, string name, int value)
+        {
+            element.SetAttribute(name, value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        public static void SetAttribute(this XElement element, string name, TypedMass value)
+        {
+            element.SetAttribute(name, value.Value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
+        }
+
+        public static void SetAttribute(this XElement element, string name, double value)
+        {
+            element.SetAttribute(name, value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
+        }
+
+        public static void SetAttribute(this XElement element, string name, float value)
+        {
+            element.SetAttribute(name, value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
+        }
+
+        /// <summary>
+        /// Always sets a bool value, if one is present, or nothing for a null value.
+        /// </summary>
+        public static void SetAttributeNullable(this XElement element, string name, bool? value)
+        {
+            if (value.HasValue)
+                element.SetAttribute(name, value.Value, !value.Value);
+        }
+
+        public static void SetAttributeNullable(this XElement element, string name, int? value)
+        {
+            if (value.HasValue)
+                element.SetAttribute(name, value.Value);
+        }
+
+        public static void SetAttributeNullable(this XElement element, string name, float? value)
+        {
+            if (value.HasValue)
+                element.SetAttribute(name, value.Value);
+        }
+
+        public static void SetAttributeNullable(this XElement element, string name, double? value)
+        {
+            if (value.HasValue)
+                element.SetAttribute(name, value.Value);
+        }
+
+        /// <summary>
+        /// Named apart from <see cref="SetAttribute{TAttr}(XElement,string,TAttr)"/> for the same
+        /// reason <see cref="XmlUtil.WriteFloatsAttribute"/> is.
+        /// </summary>
+        public static void SetFloatsAttribute(this XElement element, string name, IEnumerable<float> values)
+        {
+            element.SetAttribute(name, string.Join(@" ",
+                values.Select(value => value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture))));
+        }
+
+        // The same again for the classes which name their attributes with an enum rather than with
+        // string constants. XmlUtil carries both families for the same reason.
+
+        public static void SetAttribute(this XElement element, Enum name, string value)
+        {
+            element.SetAttribute(name.ToString(), value);
+        }
+
+        public static void SetAttribute<TAttr>(this XElement element, Enum name, TAttr value)
+        {
+            element.SetAttribute(name.ToString(), value);
+        }
+
+        public static void SetAttribute<TAttr>(this XElement element, Enum name, TAttr value, TAttr defaultValue)
+        {
+            element.SetAttribute(name.ToString(), value, defaultValue);
+        }
+
+        public static void SetAttributeIfString(this XElement element, Enum name, string value)
+        {
+            element.SetAttributeIfString(name.ToString(), value);
+        }
+
+        public static void SetAttribute(this XElement element, Enum name, bool value)
+        {
+            element.SetAttribute(name.ToString(), value);
+        }
+
+        public static void SetAttribute(this XElement element, Enum name, bool value, bool defaultValue)
+        {
+            element.SetAttribute(name.ToString(), value, defaultValue);
+        }
+
+        public static void SetAttribute(this XElement element, Enum name, int value)
+        {
+            element.SetAttribute(name.ToString(), value);
+        }
+
+        public static void SetAttribute(this XElement element, Enum name, double value)
+        {
+            element.SetAttribute(name.ToString(), value);
+        }
+
+        public static void SetAttribute(this XElement element, Enum name, float value)
+        {
+            element.SetAttribute(name.ToString(), value);
+        }
+
+        public static void SetAttributeNullable<TStruct>(this XElement element, Enum name, TStruct? value)
+            where TStruct : struct
+        {
+            element.SetAttributeNullable(name.ToString(), value);
+        }
+
+        public static void SetAttributeNullable(this XElement element, Enum name, bool? value)
+        {
+            element.SetAttributeNullable(name.ToString(), value);
+        }
+
+        public static void SetAttributeNullable(this XElement element, Enum name, int? value)
+        {
+            element.SetAttributeNullable(name.ToString(), value);
+        }
+
+        public static void SetAttributeNullable(this XElement element, Enum name, float? value)
+        {
+            element.SetAttributeNullable(name.ToString(), value);
+        }
+
+        public static void SetAttributeNullable(this XElement element, Enum name, double? value)
+        {
+            element.SetAttributeNullable(name.ToString(), value);
+        }
     }
 
     public interface IXmlElementHelper<out TElem>

@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
@@ -254,6 +255,20 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.massdiff_average, AverageMass);
             writer.WriteAttribute(ATTR.inclusion, Inclusion, LossInclusion.Library);
             writer.WriteAttribute(ATTR.charge, Charge, 0);
+        }
+
+        /// <summary>
+        /// The same attributes as <see cref="WriteXml(XmlWriter)"/>, on an element being built up
+        /// rather than one being written.
+        /// </summary>
+        public void WriteXml(XElement element)
+        {
+            // Write tag attributes
+            element.SetAttributeIfString(ATTR.formula, Formula);
+            element.SetAttribute(ATTR.massdiff_monoisotopic, MonoisotopicMass);
+            element.SetAttribute(ATTR.massdiff_average, AverageMass);
+            element.SetAttribute(ATTR.inclusion, Inclusion, LossInclusion.Library);
+            element.SetAttribute(ATTR.charge, Charge, 0);
         }
 
         #endregion

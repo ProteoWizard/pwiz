@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
+using System.Xml.Linq;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -37,19 +38,24 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Model.Serialization
 {
     /// <summary>
-    /// Writes the &lt;peptide&gt; or &lt;molecule&gt; element of one
+    /// Builds the &lt;peptide&gt; or &lt;molecule&gt; element of one
     /// <see cref="PeptideDocNode"/>, and everything below it.
     /// <para>
     /// One of these is made per molecule, which is what lets the things that are the same for all
-    /// of a molecule - the node itself, its <see cref="MoleculeResults"/>, its retention time
-    /// score - be fields rather than parameters handed down through every level. It is the same
-    /// lifetime a <see cref="MoleculeResults"/> has, and this owns the one it uses.
+    /// of a molecule - the node itself and its <see cref="MoleculeResults"/> - be fields rather
+    /// than parameters handed down through every level. It is the same lifetime a
+    /// <see cref="MoleculeResults"/> has, and this owns the one it uses.
+    /// </para>
+    /// <para>
+    /// There is no <see cref="XmlWriter"/> here. Everything is an <see cref="XElement"/> which is
+    /// still open to being changed, which is what lets one pass decide what every level says: see
+    /// <see cref="CreateResults"/>, where a transition's results and its precursor's are worked
+    /// out together because neither is complete without the other.
     /// </para>
     /// </summary>
     public class MoleculeWriter : DocumentSerializer
     {
         private readonly DocumentWriter _documentWriter;
-        private readonly XmlWriter _writer;
 
         /// <summary>
         /// One per molecule, made once, because making one reads every chromatogram of the
@@ -65,22 +71,9 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         private MoleculeResults _moleculeResults;
 
-        /// <summary>
-        /// The retention time calculator score of this molecule, worked out while its attributes
-        /// are written and read again when its peptide results are.
-        /// </summary>
-        private double? _scoreCalc;
-
-        /// <summary>
-        /// The files whose transition areas the precursor being written carries. Set while its
-        /// results are written and read while its transitions are.
-        /// </summary>
-        private HashSet<ReferenceValue<ChromFileInfoId>> _sharedTransitionAreaFiles;
-
-        public MoleculeWriter(DocumentWriter documentWriter, XmlWriter writer, PeptideDocNode peptideDocNode)
+        public MoleculeWriter(DocumentWriter documentWriter, PeptideDocNode peptideDocNode)
         {
             _documentWriter = documentWriter;
-            _writer = writer;
             PeptideDocNode = peptideDocNode;
             Settings = documentWriter.Settings;
             DocumentFormat = documentWriter.DocumentFormat;
@@ -100,6 +93,10 @@ namespace pwiz.Skyline.Model.Serialization
         /// null <see cref="_moleculeResults"/> is what says so - see
         /// <see cref="DocumentWriter.WriteChromInfos"/> and
         /// <see cref="MoleculeResults.HasChromatograms"/>.
+        /// <para>
+        /// The same answer for every precursor and transition of the molecule, since none of what
+        /// it reads changes while one is being built.
+        /// </para>
         /// </summary>
         private bool UseCompactFormat()
         {
@@ -115,79 +112,81 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         /// <summary>
-        /// Serializes the contents of this <see cref="PeptideDocNode"/> to XML.
+        /// The &lt;peptide&gt; or &lt;molecule&gt; element for this <see cref="PeptideDocNode"/>.
         /// </summary>
-        public void WriteXml()
+        public XElement CreateElement()
         {
             var node = PeptideDocNode;
             var peptide = node.Peptide;
             var isCustomIon = peptide.IsCustomMolecule;
 
-            _writer.WriteStartElement(isCustomIon ? EL.molecule : EL.peptide);
+            var element = new XElement(isCustomIon ? EL.molecule : EL.peptide);
             if (node.ExplicitRetentionTime != null)
             {
-                _writer.WriteAttribute(ATTR.explicit_retention_time, node.ExplicitRetentionTime.RetentionTime);
-                _writer.WriteAttributeNullable(ATTR.explicit_retention_time_window, node.ExplicitRetentionTime.RetentionTimeWindow);
+                element.SetAttribute(ATTR.explicit_retention_time, node.ExplicitRetentionTime.RetentionTime);
+                element.SetAttributeNullable(ATTR.explicit_retention_time_window, node.ExplicitRetentionTime.RetentionTimeWindow);
             }
 
-            _writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
+            element.SetAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             if (node.GlobalStandardType != null)
-                _writer.WriteAttribute(ATTR.standard_type, node.GlobalStandardType.Name);
+                element.SetAttribute(ATTR.standard_type, node.GlobalStandardType.Name);
 
-            _writer.WriteAttributeNullable(ATTR.rank, node.Rank);
-            _writer.WriteAttributeNullable(ATTR.concentration_multiplier, node.ConcentrationMultiplier);
-            _writer.WriteAttributeNullable(ATTR.internal_standard_concentration, node.InternalStandardConcentration);
+            element.SetAttributeNullable(ATTR.rank, node.Rank);
+            element.SetAttributeNullable(ATTR.concentration_multiplier, node.ConcentrationMultiplier);
+            element.SetAttributeNullable(ATTR.internal_standard_concentration, node.InternalStandardConcentration);
             if (null != node.NormalizationMethod)
             {
-                _writer.WriteAttribute(ATTR.normalization_method, node.NormalizationMethod.Name);
+                element.SetAttribute(ATTR.normalization_method, node.NormalizationMethod.Name);
             }
-            _writer.WriteAttributeIfString(ATTR.attribute_group_id, node.AttributeGroupId);
-            _writer.WriteAttributeIfString(ATTR.surrogate_calibration_curve, node.SurrogateCalibrationCurve);
+            element.SetAttributeIfString(ATTR.attribute_group_id, node.AttributeGroupId);
+            element.SetAttributeIfString(ATTR.surrogate_calibration_curve, node.SurrogateCalibrationCurve);
 
+            // The retention time calculator score, worked out with the attributes which report it
+            // and needed again by the peptide results below.
+            double? scoreCalc = null;
             if (isCustomIon)
             {
-                peptide.CustomMolecule.WriteXml(_writer, Adduct.EMPTY);
+                peptide.CustomMolecule.WriteXml(element, Adduct.EMPTY);
                 // If user changed any molecule details (other than formula or mass) after chromatogram extraction, this info continues the target->chromatogram association
-                _writer.WriteAttributeIfString(ATTR.chromatogram_target, node.OriginalMoleculeTarget?.ToSerializableString());
+                element.SetAttributeIfString(ATTR.chromatogram_target, node.OriginalMoleculeTarget?.ToSerializableString());
             }
             else
             {
                 string sequence = peptide.Target.Sequence;
-                _writer.WriteAttributeString(ATTR.sequence, sequence);
+                element.SetAttribute(ATTR.sequence, sequence);
                 var modSeq = Settings.GetModifiedSequence(node);
-                _writer.WriteAttributeString(ATTR.modified_sequence, GetModifiedSequence(modSeq));
+                element.SetAttribute(ATTR.modified_sequence, GetModifiedSequence(modSeq));
                 if (node.SourceKey != null)
-                    _writer.WriteAttributeString(ATTR.lookup_sequence, node.SourceKey.ModifiedSequence);
+                    element.SetAttribute(ATTR.lookup_sequence, node.SourceKey.ModifiedSequence);
                 if (peptide.Begin.HasValue && peptide.End.HasValue)
                 {
-                    _writer.WriteAttribute(ATTR.start, peptide.Begin.Value);
-                    _writer.WriteAttribute(ATTR.end, peptide.End.Value);
-                    _writer.WriteAttribute(ATTR.prev_aa, peptide.PrevAA);
-                    _writer.WriteAttribute(ATTR.next_aa, peptide.NextAA);
+                    element.SetAttribute(ATTR.start, peptide.Begin.Value);
+                    element.SetAttribute(ATTR.end, peptide.End.Value);
+                    element.SetAttribute(ATTR.prev_aa, peptide.PrevAA);
+                    element.SetAttribute(ATTR.next_aa, peptide.NextAA);
                 }
                 var massH = Settings.GetPrecursorCalc(IsotopeLabelType.light, node.ExplicitMods).GetPrecursorMass(peptide.Target);
-                _writer.WriteAttribute(ATTR.calc_neutral_pep_mass,
+                element.SetAttribute(ATTR.calc_neutral_pep_mass,
                     SequenceMassCalc.PersistentNeutral(massH));
 
-                _writer.WriteAttribute(ATTR.num_missed_cleavages, peptide.MissedCleavages);
-                _writer.WriteAttribute(ATTR.decoy, node.IsDecoy);
+                element.SetAttribute(ATTR.num_missed_cleavages, peptide.MissedCleavages);
+                element.SetAttribute(ATTR.decoy, node.IsDecoy);
                 var rtPredictor = Settings.PeptideSettings.Prediction.RetentionTime;
                 if (rtPredictor != null)
                 {
-                    _scoreCalc = rtPredictor.Calculator.ScoreSequence(modSeq);
-                    if (_scoreCalc.HasValue)
+                    scoreCalc = rtPredictor.Calculator.ScoreSequence(modSeq);
+                    if (scoreCalc.HasValue)
                     {
-                        _writer.WriteAttributeNullable(ATTR.rt_calculator_score, _scoreCalc);
-                        _writer.WriteAttributeNullable(ATTR.predicted_retention_time,
-                            rtPredictor.GetRetentionTime(_scoreCalc.Value));
+                        element.SetAttributeNullable(ATTR.rt_calculator_score, scoreCalc);
+                        element.SetAttributeNullable(ATTR.predicted_retention_time,
+                            rtPredictor.GetRetentionTime(scoreCalc.Value));
                     }
                 }
             }
 
-            _writer.WriteAttributeNullable(ATTR.avg_measured_retention_time, node.AverageMeasuredRetentionTime);
+            element.SetAttributeNullable(ATTR.avg_measured_retention_time, node.AverageMeasuredRetentionTime);
 
-            // Write child elements
-            DocumentWriter.WriteAnnotations(_writer, node.Annotations);
+            AddAnnotations(element, node.Annotations);
             if (!isCustomIon)
             {
                 var explicitMods = node.ExplicitMods;
@@ -208,10 +207,10 @@ namespace pwiz.Skyline.Model.Serialization
                 }
                 // CONSIDER(bspratt) the code as written actually can use static isotope
                 // label modifications, and this if clause could be removed - but Brendan wants proof of demand for this first
-                WriteExplicitMods(node.Peptide.Target.Sequence, explicitMods);
-                WriteImplicitMods();
-                WriteLookupMods();
-                WriteCrosslinkStructure(explicitMods?.CrosslinkStructure);
+                element.Add(CreateExplicitModsElements(node.Peptide.Target.Sequence, explicitMods));
+                element.Add(CreateImplicitModsElement());
+                element.Add(CreateLookupModsElement());
+                element.Add(CreateCrosslinkStructureElement(explicitMods?.CrosslinkStructure));
             }
 
             _moleculeResults = _documentWriter.WriteChromInfos && Settings.MeasuredResults != null
@@ -225,687 +224,112 @@ namespace pwiz.Skyline.Model.Serialization
             var peptideChromInfos = _moleculeResults?.GetPeptideChromInfos();
             if (peptideChromInfos != null)
             {
-                WriteResults(peptideChromInfos, EL.peptide_results, EL.peptide_result, WritePeptideChromInfo);
+                element.Add(CreateChromInfoResultsElement(peptideChromInfos, EL.peptide_results, EL.peptide_result,
+                    (peptideResult, chromInfo) => SetPeptideChromInfo(peptideResult, chromInfo, scoreCalc)));
             }
 
             foreach (TransitionGroupDocNode nodeGroup in node.Children)
             {
-                _writer.WriteStartElement(EL.precursor);
-                WriteTransitionGroupXml(nodeGroup);
-                _writer.WriteEndElement();
+                element.Add(CreateTransitionGroupElement(nodeGroup));
             }
-            _writer.WriteEndElement();
+
+            return element;
         }
 
-        private string GetModifiedSequence(Target target)
-        {
-            if (DocumentFormat >= DocumentFormat.VERSION_3_73 || !target.IsProteomic)
-            {
-                return target.Sequence;
-            }
-            return new PeptideLibraryKey(target.Sequence, 0).FormatToOneDecimal().ModifiedSequence;
-        }
-
-        private void WriteLookupMods()
-        {
-            var node = PeptideDocNode;
-            if (node.SourceKey == null || node.SourceKey.ExplicitMods == null)
-                return;
-            _writer.WriteStartElement(EL.lookup_modifications);
-            WriteExplicitMods(node.SourceKey.Sequence, node.SourceKey.ExplicitMods);
-            _writer.WriteEndElement();
-        }
-
-        private void WriteExplicitMods(string sequence, ExplicitMods mods)
-        {
-            if (mods == null ||
-                string.IsNullOrEmpty(sequence) && !mods.HasIsotopeLabels)
-                return;
-            if (mods.IsVariableStaticMods)
-            {
-                WriteExplicitMods(EL.variable_modifications,
-                    EL.variable_modification, null, mods.StaticModifications, sequence);
-
-                // If no heavy modifications, then don't write an <explicit_modifications> tag
-                if (!mods.HasHeavyModifications)
-                    return;
-            }
-            _writer.WriteStartElement(EL.explicit_modifications);
-            if (!mods.IsVariableStaticMods)
-            {
-                WriteExplicitMods(EL.explicit_static_modifications,
-                    EL.explicit_modification, null, mods.StaticModifications, sequence);
-            }
-            foreach (var heavyMods in mods.GetHeavyModifications())
-            {
-                IsotopeLabelType labelType = heavyMods.LabelType;
-                if (Equals(labelType, IsotopeLabelType.heavy))
-                    labelType = null;
-
-                WriteExplicitMods(EL.explicit_heavy_modifications,
-                    EL.explicit_modification, labelType, heavyMods.Modifications, sequence);
-            }
-            _writer.WriteEndElement();
-        }
-
-        private void WriteImplicitMods()
-        {
-            var node = PeptideDocNode;
-
-            // Get the implicit  modifications on this peptide.
-            var implicitMods = new ExplicitMods(node,
-                Settings.PeptideSettings.Modifications.StaticModifications,
-                Properties.Settings.Default.StaticModList,
-                Settings.PeptideSettings.Modifications.GetHeavyModifications(),
-                Properties.Settings.Default.HeavyModList,
-                true);
-
-            bool hasStaticMods = implicitMods.StaticModifications.Count != 0 && node.CanHaveImplicitStaticMods;
-            bool hasHeavyMods = implicitMods.HasHeavyModifications &&
-                                Settings.PeptideSettings.Modifications.GetHeavyModifications().Any(
-                                     mod => node.CanHaveImplicitHeavyMods(mod.LabelType));
-
-            if (!hasStaticMods && !hasHeavyMods)
-            {
-                return;
-            }
-
-            _writer.WriteStartElement(EL.implicit_modifications);
-
-            // implicit static modifications.
-            if (hasStaticMods)
-            {
-                WriteExplicitMods(EL.implicit_static_modifications,
-                        EL.implicit_modification, null, implicitMods.StaticModifications,
-                        node.Peptide.Target.Sequence);
-            }
-
-            // implicit heavy modifications
-            foreach (var heavyMods in implicitMods.GetHeavyModifications())
-            {
-                IsotopeLabelType labelType = heavyMods.LabelType;
-                if (!node.CanHaveImplicitHeavyMods(labelType))
-                {
-                    continue;
-                }
-                if (Equals(labelType, IsotopeLabelType.heavy))
-                    labelType = null;
-
-                WriteExplicitMods(EL.implicit_heavy_modifications,
-                                  EL.implicit_modification, labelType, heavyMods.Modifications,
-                                  node.Peptide.Target.Sequence);
-            }
-            _writer.WriteEndElement();
-        }
-
-
-        private void WriteExplicitMods(string name,
-            string nameElMod, IsotopeLabelType labelType, IEnumerable<ExplicitMod> mods,
-            string sequence)
-        {
-            if (mods == null || (labelType == null && string.IsNullOrEmpty(sequence)))
-                return;
-            _writer.WriteStartElement(name);
-            if (labelType != null)
-                _writer.WriteAttribute(ATTR.isotope_label, labelType);
-
-            if (!string.IsNullOrEmpty(sequence))
-            {
-                SequenceMassCalc massCalc = Settings.TransitionSettings.Prediction.PrecursorMassType == MassType.Monoisotopic ?
-                    SrmSettings.MonoisotopicMassCalc : SrmSettings.AverageMassCalc;
-                foreach (ExplicitMod mod in mods)
-                {
-                    _writer.WriteStartElement(nameElMod);
-                    _writer.WriteAttribute(ATTR.index_aa, mod.IndexAA);
-                    _writer.WriteAttribute(ATTR.modification_name, mod.Modification.Name);
-
-                    double massDiff = massCalc.GetModMass(sequence[mod.IndexAA], mod.Modification);
-
-                    _writer.WriteAttribute(ATTR.mass_diff,
-                        string.Format(CultureInfo.InvariantCulture, @"{0}{1}", (massDiff < 0 ? string.Empty : @"+"),
-                            Math.Round(massDiff, 1)));
-                    if (null != mod.LinkedPeptide)
-                    {
-                        WriteLinkedPeptide(mod.LinkedPeptide);
-                    }
-                    _writer.WriteEndElement();
-                }
-            }
-            _writer.WriteEndElement();
-        }
-
-        private void WriteLinkedPeptide(LegacyLinkedPeptide linkedPeptide)
-        {
-            _writer.WriteStartElement(EL.linked_peptide);
-            _writer.WriteAttribute(ATTR.index_aa, linkedPeptide.IndexAa);
-            if (linkedPeptide.Peptide != null)
-            {
-                _writer.WriteAttributeIfString(ATTR.sequence, linkedPeptide.Peptide.Sequence);
-                if (null != linkedPeptide.ExplicitMods)
-                {
-                    WriteExplicitMods(linkedPeptide.Peptide.Sequence, linkedPeptide.ExplicitMods);
-                }
-            }
-            _writer.WriteEndElement();
-        }
-
-        private void WriteCrosslinkStructure(CrosslinkStructure crosslinkStructure)
-        {
-            if (crosslinkStructure == null || crosslinkStructure.IsEmpty)
-            {
-                return;
-            }
-            _writer.WriteStartElement(EL.crosslinks);
-            for (int i = 0; i < crosslinkStructure.LinkedPeptides.Count; i++)
-            {
-                var peptide = crosslinkStructure.LinkedPeptides[i];
-                _writer.WriteStartElement(EL.linked_peptide);
-                _writer.WriteAttributeIfString(ATTR.sequence, peptide.Sequence);
-                var explicitMods = crosslinkStructure.LinkedExplicitMods[i];
-                if (null != explicitMods)
-                {
-                    WriteExplicitMods(peptide.Sequence, explicitMods);
-                }
-                _writer.WriteEndElement();
-            }
-
-            foreach (var crosslink in crosslinkStructure.Crosslinks)
-            {
-                _writer.WriteStartElement(EL.crosslink);
-                _writer.WriteAttribute(ATTR.modification_name, crosslink.Crosslinker.Name);
-                foreach (var site in crosslink.Sites)
-                {
-                    _writer.WriteStartElement(EL.site);
-                    _writer.WriteAttribute(ATTR.peptide_index, site.PeptideIndex);
-                    _writer.WriteAttribute(ATTR.index_aa, site.AaIndex);
-                    _writer.WriteEndElement();
-                }
-                _writer.WriteEndElement();
-            }
-            _writer.WriteEndElement();
-        }
-
-        private void WritePeptideChromInfo(PeptideChromInfo chromInfo)
-        {
-            _writer.WriteAttribute(ATTR.peak_count_ratio, chromInfo.PeakCountRatio);
-            _writer.WriteAttributeNullable(ATTR.retention_time, chromInfo.RetentionTime);
-            _writer.WriteAttribute(ATTR.exclude_from_calibration, chromInfo.ExcludeFromCalibration);
-            _writer.WriteAttributeNullable(ATTR.analyte_concentration, chromInfo.AnalyteConcentration);
-            if (_scoreCalc.HasValue)
-            {
-                double? rt = Settings.PeptideSettings.Prediction.RetentionTime.GetRetentionTime(_scoreCalc.Value,
-                                                                                      chromInfo.FileId);
-                _writer.WriteAttributeNullable(ATTR.predicted_retention_time, rt);
-            }
-        }
+        #region Results
 
         /// <summary>
-        /// Serializes the contents of a single <see cref="TransitionGroupDocNode"/>
-        /// to XML.
+        /// One transition's results, or null when it has nothing to say which its precursor has
+        /// not already said.
+        /// <para>
+        /// <paramref name="groupResults"/> and <paramref name="sharedAreaFiles"/> are what the
+        /// precursor said, handed down from <see cref="CreateTransitionGroupElement"/> because the
+        /// two are one decision: the areas of a precursor's transitions ride on its
+        /// <see cref="ATTR.transition_areas"/> whenever all of them are ordinary, and then those
+        /// transitions are left out of the file altogether.
+        /// </para>
         /// </summary>
-        /// <param name="node">The transition group document node</param>
-        private void WriteTransitionGroupXml(TransitionGroupDocNode node)
+        private XElement CreateTransitionResultsElement(TransitionGroupDocNode nodeGroup,
+            TransitionDocNode nodeTransition, TransitionGroupResults groupResults,
+            ICollection<ReferenceValue<ChromFileInfoId>> sharedAreaFiles)
         {
-            var nodePep = PeptideDocNode;
-            TransitionGroup group = node.TransitionGroup;
-            var isCustomIon = nodePep.Peptide.IsCustomMolecule;
-            _writer.WriteAttribute(ATTR.charge, group.PrecursorAdduct.AdductCharge);
-            if (!group.LabelType.IsLight)
-                _writer.WriteAttribute(ATTR.isotope_label, group.LabelType);
-            if (!isCustomIon)
-            {
-                _writer.WriteAttribute(ATTR.calc_neutral_mass, node.GetPrecursorIonPersistentNeutralMass());
-            }
-            _writer.WriteAttribute(ATTR.precursor_mz, SequenceMassCalc.PersistentMZ(node.PrecursorMz));
-            WriteExplicitTransitionGroupValuesAttributes(node.ExplicitValues);
-
-            _writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
-            _writer.WriteAttributeNullable(ATTR.decoy_mass_shift, group.DecoyMassShift);
-            _writer.WriteAttributeNullable(ATTR.precursor_concentration, node.PrecursorConcentration);
-
-
-            TransitionPrediction predict = Settings.TransitionSettings.Prediction;
-            double regressionMz = Settings.GetRegressionMz(nodePep, node);
-            var ce = predict.CollisionEnergy.GetCollisionEnergy(node.TransitionGroup.PrecursorAdduct, regressionMz);
-            _writer.WriteAttribute(ATTR.collision_energy, ce);
-
-            var dpRegression = predict.DeclusteringPotential;
-            if (dpRegression != null)
-            {
-                var dp = dpRegression.GetDeclustringPotential(regressionMz);
-                _writer.WriteAttribute(ATTR.declustering_potential, dp);
-            }
-
-            if (!isCustomIon)
-            {
-                // modified sequence
-                if (nodePep.ExplicitMods != null && nodePep.ExplicitMods.HasCrosslinks)
-                {
-                    _writer.WriteAttribute(ATTR.modified_sequence,
-                        Settings.GetCrosslinkModifiedSequence(nodePep.Target, node.TransitionGroup.LabelType, nodePep.ExplicitMods));
-                }
-                else
-                {
-                    var calcPre = Settings.GetPrecursorCalc(node.TransitionGroup.LabelType, nodePep.ExplicitMods);
-                    var seq = node.TransitionGroup.Peptide.Target;
-                    _writer.WriteAttribute(ATTR.modified_sequence, calcPre.GetModifiedSequence(seq,
-                        false)); // formatNarrow = false; We want InvariantCulture, not the local format
-                }
-                Assume.IsTrue(group.PrecursorAdduct.IsProteomic, @"expected IsProteomic tag on adduct");
-            }
-            else
-            {
-                // Custom ion
-                node.CustomMolecule.WriteXml(_writer, group.PrecursorAdduct);
-            }
-            // Write child elements
-            DocumentWriter.WriteAnnotations(_writer, node.Annotations);
-            node.SpectrumClassFilter.WriteXml(_writer);
-            if (node.HasLibInfo)
-            {
-                var helpers = PeptideLibraries.SpectrumHeaderXmlHelpers;
-                var libInfo = node.LibInfo;
-                if (libInfo is EncyclopeDiaLibrary.ElibSpectrumHeaderInfo && DocumentFormat < DocumentFormat.VERSION_22_25)
-                {
-                    // Older versions of Skyline used ChromLibSpectrumHeaderInfo instead of ElibSpectrumHeaderInfo
-                    libInfo = new ChromLibSpectrumHeaderInfo(libInfo.LibraryName, 0, null);
-                }
-                _writer.WriteElements(new[] { libInfo }, helpers);
-            }
-
-            // The columnar results whenever the chrom infos could not be rebuilt, which is
-            // every molecule when only they are being written and any molecule whose
-            // chromatograms could not be read. See WriteXml.
+            var transition = nodeTransition.Transition;
             if (_moleculeResults == null)
             {
-                WriteTransitionGroupResults(node);
-            }
-            else
-            {
-                var groupChromInfos = _moleculeResults.GetTransitionGroupChromInfos(group);
-                if (groupChromInfos != null)
+                if (groupResults == null || !groupResults.HasTransitionResults(transition) ||
+                    groupResults.IsTransitionCoveredBySharedAreas(transition, sharedAreaFiles))
                 {
-                    WriteResults(groupChromInfos, EL.precursor_results, EL.precursor_peak, WriteTransitionGroupChromInfo);
+                    return null;
                 }
+
+                return CreateColumnarTransitionResultsElement(groupResults, transition);
             }
 
-            if (UseCompactFormat())
+            // Worked out from the chromatograms, since a transition does not keep them.
+            var transitionChromInfos = _moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup, transition);
+            if (transitionChromInfos == null)
             {
-                _writer.WriteStartElement(EL.transition_data);
-                var transitionData = new SkylineDocumentProto.Types.TransitionData();
-                // The peaks come from the chromatograms, since a transition does not keep them.
-                transitionData.Transitions.AddRange(node.Transitions.Select(transition =>
-                    transition.ToTransitionProto(Settings, nodePep, node,
-                        _moleculeResults?.GetTransitionChromInfos(group, transition.Transition))));
-                byte[] bytes = transitionData.ToByteArray();
-                _writer.WriteBase64(bytes, 0, bytes.Length);
-                _writer.WriteEndElement();
-                _documentWriter.OnWroteTransitions(node.TransitionCount);
+                return null;
             }
-            else
-            {
-                foreach (TransitionDocNode nodeTransition in node.Children)
-                {
-                    _writer.WriteStartElement(EL.transition);
-                    WriteTransitionXml(node, nodeTransition);
-                    _writer.WriteEndElement();
-                }
-            }
+
+            return CreateChromInfoResultsElement(transitionChromInfos, EL.transition_results, EL.transition_peak,
+                SetTransitionChromInfo);
         }
 
         /// <summary>
-        /// Serializes any optionally explicitly specified CE, RT and DT information to attributes only
+        /// One entry per replicate and file the chrom infos are held for, or null when there are
+        /// none: the element exists only if something went in it.
         /// </summary>
-        private void WriteExplicitTransitionGroupValuesAttributes(ExplicitTransitionGroupValues importedAttributes)
+        private XElement CreateChromInfoResultsElement<TItem>(IEnumerable<ChromInfoList<TItem>> results,
+                string start, string startChild, Action<XElement, TItem> setChromInfo)
+            where TItem : ChromInfo
         {
-            if (DocumentFormat < DocumentFormat.VERSION_4_22 || DocumentFormat >= DocumentFormat.VERSION_20_12) // Format supports per-precursor explicit CE?
-                _writer.WriteAttributeNullable(ATTR.explicit_collision_energy, importedAttributes.CollisionEnergy);
-            _writer.WriteAttributeNullable(ATTR.explicit_ion_mobility, importedAttributes.IonMobility);
-            if (importedAttributes.IonMobility.HasValue)
-                _writer.WriteAttribute(ATTR.explicit_ion_mobility_units, importedAttributes.IonMobilityUnits.ToString());
-            _writer.WriteAttributeNullable(ATTR.explicit_ccs_sqa, importedAttributes.CollisionalCrossSectionSqA);
-        }
-
-        private void WriteTransitionGroupChromInfo(TransitionGroupChromInfo chromInfo)
-        {
-            if (chromInfo.OptimizationStep != 0)
-                _writer.WriteAttribute(ATTR.step, chromInfo.OptimizationStep);
-            _writer.WriteAttribute(ATTR.peak_count_ratio, chromInfo.PeakCountRatio);
-            _writer.WriteAttributeNullable(ATTR.retention_time, chromInfo.RetentionTime);
-            _writer.WriteAttributeNullable(ATTR.start_time, chromInfo.StartRetentionTime);
-            _writer.WriteAttributeNullable(ATTR.end_time, chromInfo.EndRetentionTime);
-            _writer.WriteAttributeNullable(ATTR.ccs, chromInfo.IonMobilityInfo.CollisionalCrossSection);
-            if (chromInfo.IonMobilityInfo.IonMobilityUnits != eIonMobilityUnits.none)
+            var element = new XElement(start);
+            using (var enumReplicates = Settings.MeasuredResults.Chromatograms.GetEnumerator())
             {
-                _writer.WriteAttributeNullable(ATTR.ion_mobility_ms1, chromInfo.IonMobilityInfo.IonMobilityMS1);
-                _writer.WriteAttributeNullable(ATTR.ion_mobility_fragment, chromInfo.IonMobilityInfo.IonMobilityFragment);
-                _writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobilityInfo.IonMobilityWindow);
-                _writer.WriteAttribute(ATTR.ion_mobility_type, chromInfo.IonMobilityInfo.IonMobilityUnits.ToString());
+                foreach (var listChromInfo in results)
+                {
+                    bool success = enumReplicates.MoveNext();
+                    Assume.IsTrue(success || Settings.MeasuredResults.Chromatograms.Count == 0);
+                    if (listChromInfo.IsEmpty)
+                        continue;
+                    var chromatogramSet = enumReplicates.Current;
+                    if (chromatogramSet == null)
+                        continue;
+                    foreach (var chromInfo in listChromInfo)
+                    {
+                        var childElement = new XElement(startChild);
+                        childElement.SetAttribute(ATTR.replicate, chromatogramSet.Name);
+                        if (chromatogramSet.FileCount > 1)
+                            childElement.SetAttribute(ATTR.file, chromatogramSet.GetFileSaveId(chromInfo.FileId));
+                        setChromInfo(childElement, chromInfo);
+                        element.Add(childElement);
+                    }
+                }
             }
-            _writer.WriteAttributeNullable(ATTR.fwhm, chromInfo.Fwhm);
-            _writer.WriteAttributeNullable(ATTR.area, chromInfo.Area);
-            _writer.WriteAttributeNullable(ATTR.background, chromInfo.BackgroundArea);
-            _writer.WriteAttributeNullable(ATTR.height, chromInfo.Height);
-            _writer.WriteAttributeNullable(ATTR.mass_error_ppm, chromInfo.MassError);
-            _writer.WriteAttributeNullable(ATTR.truncated, chromInfo.Truncated);
-            _writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLowerInvariant());
-            _writer.WriteAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);
-            _writer.WriteAttributeNullable(ATTR.isotope_dotp, chromInfo.IsotopeDotProduct);
-            _writer.WriteAttributeNullable(ATTR.qvalue, chromInfo.QValue);
-            _writer.WriteAttributeNullable(ATTR.zscore, chromInfo.ZScore);
-            _writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
-            var originalPeak = chromInfo.OriginalPeak;
-            if (originalPeak != null && originalPeak.StartTime.Equals(chromInfo.StartRetentionTime) && originalPeak.EndTime.Equals(chromInfo.EndRetentionTime))
-            {
-                _writer.WriteAttribute(ATTR.original_score, originalPeak.Score);
-                originalPeak = null;
-            }
-            DocumentWriter.WriteAnnotations(_writer, chromInfo.Annotations);
-            WriteScoredPeak(EL.original_peak, originalPeak);
-            WriteScoredPeak(EL.reintegrated_peak, chromInfo.ReintegratedPeak);
-        }
-
-        private void WriteScoredPeak(string el, ScoredPeakBounds scoredPeak)
-        {
-            if (scoredPeak == null || DocumentFormat < DocumentFormat.PEAK_IMPUTATION)
-            {
-                return;
-            }
-            _writer.WriteStartElement(el);
-            _writer.WriteAttribute(ATTR.score, scoredPeak.Score);
-            _writer.WriteAttribute(ATTR.retention_time, scoredPeak.ApexTime);
-            _writer.WriteAttribute(ATTR.start_time, scoredPeak.StartTime);
-            _writer.WriteAttribute(ATTR.end_time, scoredPeak.EndTime);
-            _writer.WriteEndElement();
+            return element.HasElements ? element : null;
         }
 
         /// <summary>
-        /// Serializes the contents of a single <see cref="TransitionDocNode"/>
-        /// to XML.
-        /// </summary>
-        /// <param name="nodeGroup">The transition node's parent group node</param>
-        /// <param name="nodeTransition">The transition document node</param>
-        private void WriteTransitionXml(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition)
-        {
-            var nodePep = PeptideDocNode;
-            Transition transition = nodeTransition.Transition;
-            _writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
-            _writer.WriteAttribute(ATTR.quantitative, nodeTransition.ExplicitQuantitative, true);
-            WriteExplicitTransitionValuesAttributes(nodeTransition.ExplicitValues);
-            if (transition.IsCustom())
-            {
-                if (!(transition.CustomIon is SettingsCustomIon))
-                {
-                    transition.CustomIon.WriteXml(_writer, transition.Adduct);
-                }
-                else
-                {
-                    _writer.WriteAttributeString(ATTR.measured_ion_name, transition.CustomIon.Name);
-                }
-            }
-            _writer.WriteAttributeNullable(ATTR.decoy_mass_shift, transition.DecoyMassShift);
-            // NOTE: MassIndex is the peak index in the isotopic distribution of the precursor.
-            //       0 for monoisotopic peaks and for non "precursor" ion types.
-            if (transition.MassIndex != 0)
-                _writer.WriteAttribute(ATTR.mass_index, transition.MassIndex);
-            if (nodeTransition.HasDistInfo)
-            {
-                _writer.WriteAttribute(ATTR.isotope_dist_rank, nodeTransition.IsotopeDistInfo.Rank);
-                _writer.WriteAttribute(ATTR.isotope_dist_proportion, nodeTransition.IsotopeDistInfo.Proportion);
-            }
-
-            if (transition.IsPrecursor())
-            {
-                _writer.WriteAttribute(ATTR.product_charge, transition.Charge, nodeGroup.PrecursorCharge);
-            }
-            else
-            {
-                if (!transition.IsCustom())
-                {
-                    _writer.WriteAttribute(ATTR.fragment_ordinal, transition.Ordinal);
-                    _writer.WriteAttribute(ATTR.calc_neutral_mass, nodeTransition.GetMoleculePersistentNeutralMass());
-                }
-                _writer.WriteAttribute(ATTR.product_charge, transition.Charge);
-                if (!transition.IsCustom())
-                {
-                    _writer.WriteAttribute(ATTR.cleavage_aa, transition.AA.ToString(CultureInfo.InvariantCulture));
-                    if (nodeTransition.HasLoss)
-                        _writer.WriteAttribute(ATTR.loss_neutral_mass, nodeTransition.LostMass); //po
-                }
-            }
-
-            if (nodeTransition.ComplexFragmentIon.IsOrphan)
-            {
-                _writer.WriteAttribute(ATTR.orphaned_crosslink_ion, true);
-            }
-
-            // Order of elements matters for XSD validation
-            DocumentWriter.WriteAnnotations(_writer, nodeTransition.Annotations);
-            _writer.WriteElementString(EL.precursor_mz, SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz));
-            _writer.WriteElementString(EL.product_mz, SequenceMassCalc.PersistentMZ(nodeTransition.Mz));
-
-
-            double? ce = nodeTransition.GetCollisionEnergy(Settings, nodePep, nodeGroup);
-            double? dp = nodeTransition.GetDeclusteringPotential(Settings, nodePep, nodeGroup);
-
-            if (ce.HasValue)
-            {
-                _writer.WriteElementString(EL.collision_energy, ce.Value);
-            }
-
-            if (dp.HasValue)
-            {
-                _writer.WriteElementString(EL.declustering_potential, dp.Value);
-            }
-            WriteTransitionLosses(nodeTransition.Losses);
-            if (!nodePep.CrosslinkStructure.IsEmpty)
-            {
-                if (DocumentFormat < DocumentFormat.FLAT_CROSSLINKS)
-                {
-                    var sitePathMap = new Dictionary<int, ImmutableList<ModificationSite>>();
-                    var legacyConverter = new LegacyCrosslinkConverter(Settings, nodePep.ExplicitMods);
-                    legacyConverter.ConvertToLegacyFormat(sitePathMap);
-                    var ionChain = nodeTransition.ComplexFragmentIon.NeutralFragmentIon.IonChain;
-                    var linkedIons = new Dictionary<ImmutableList<ModificationSite>, IonOrdinal>();
-                    for (int i = 0; i < ionChain.Count; i++)
-                    {
-                        linkedIons.Add(sitePathMap[i], ionChain[i]);
-                    }
-                    WriteLegacyLinkedIons(ImmutableList<ModificationSite>.EMPTY, linkedIons);
-                }
-                else
-                {
-                    WriteLinkedIons(nodeTransition.ComplexFragmentIon.NeutralFragmentIon);
-                }
-            }
-            if (nodeTransition.HasLibInfo)
-            {
-                _writer.WriteStartElement(EL.transition_lib_info);
-                _writer.WriteAttribute(ATTR.rank, nodeTransition.LibInfo.Rank);
-                _writer.WriteAttribute(ATTR.intensity, nodeTransition.LibInfo.Intensity);
-                _writer.WriteEndElement();
-            }
-
-            // The columnar results whenever the chrom infos could not be rebuilt. See
-            // WriteXml for when that is.
-            if (_moleculeResults == null)
-            {
-                // Left out when the precursor already carries these areas and there is nothing
-                // else here to say.
-                var groupResults = nodeGroup.AbbreviatedResults;
-                if (groupResults != null && groupResults.HasTransitionResults(nodeTransition.Transition) &&
-                    !groupResults.IsTransitionCoveredBySharedAreas(nodeTransition.Transition, _sharedTransitionAreaFiles))
-                {
-                    WriteTransitionResults(groupResults, nodeTransition.Transition);
-                }
-            }
-            else
-            {
-                // Worked out from the chromatograms, since a transition does not keep them.
-                var transitionChromInfos = _moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup,
-                    nodeTransition.Transition);
-                if (transitionChromInfos != null)
-                {
-                    if (UseCompactFormat())
-                    {
-                        var protoResults = new SkylineDocumentProto.Types.TransitionResults();
-                        protoResults.Peaks.AddRange(TransitionDocNode.GetTransitionPeakProtos(transitionChromInfos,
-                            Settings.MeasuredResults));
-                        byte[] bytes = protoResults.ToByteArray();
-                        _writer.WriteStartElement(EL.results_data);
-                        _writer.WriteBase64(bytes, 0, bytes.Length);
-                        _writer.WriteEndElement();
-                    }
-                    else
-                    {
-                        WriteResults(transitionChromInfos, EL.transition_results, EL.transition_peak, WriteTransitionChromInfo);
-                    }
-                }
-            }
-
-            _documentWriter.OnWroteTransitions(1);
-        }
-
-        private void WriteExplicitTransitionValuesAttributes(ExplicitTransitionValues importedAttributes)
-        {
-            _writer.WriteAttributeNullable(ATTR.explicit_collision_energy, importedAttributes.CollisionEnergy);
-            _writer.WriteAttributeNullable(ATTR.explicit_ion_mobility_high_energy_offset, importedAttributes.IonMobilityHighEnergyOffset);
-            _writer.WriteAttributeNullable(ATTR.explicit_s_lens, importedAttributes.SLens);
-            _writer.WriteAttributeNullable(ATTR.explicit_cone_voltage, importedAttributes.ConeVoltage);
-            _writer.WriteAttributeNullable(ATTR.explicit_declustering_potential, importedAttributes.DeclusteringPotential);
-        }
-
-        private void WriteTransitionLosses(TransitionLosses losses)
-        {
-            if (losses == null)
-                return;
-            _writer.WriteStartElement(EL.losses);
-            foreach (var loss in losses.Losses)
-            {
-                _writer.WriteStartElement(EL.neutral_loss);
-                if (loss.PrecursorMod == null)
-                {
-                    // Custom neutral losses are not yet implemented to cause this case
-                    // TODO: Implement custome neutral losses, and remove this comment.
-                    loss.Loss.WriteXml(_writer);
-                }
-                else
-                {
-                    _writer.WriteAttribute(ATTR.modification_name, loss.PrecursorMod.Name);
-                    int indexLoss = loss.LossIndex;
-                    if (indexLoss != 0)
-                        _writer.WriteAttribute(ATTR.loss_index, indexLoss);
-                }
-                _writer.WriteEndElement();
-            }
-            _writer.WriteEndElement();
-        }
-
-        private void WriteLegacyLinkedIons(ImmutableList<ModificationSite> sitePath, IDictionary<ImmutableList<ModificationSite>, IonOrdinal> linkedIons)
-        {
-            foreach (var entry in linkedIons)
-            {
-                if (entry.Key.Count != sitePath.Count + 1)
-                {
-                    continue;
-                }
-
-                if (!sitePath.SequenceEqual(entry.Key.Take(sitePath.Count)))
-                {
-                    continue;
-                }
-
-                _writer.WriteStartElement(EL.linked_fragment_ion);
-                var ionOrdinal = entry.Value;
-                if (!ionOrdinal.IsEmpty)
-                {
-                    // blank fragment type means orphaned fragment ion
-                    _writer.WriteAttribute(ATTR.fragment_type, ionOrdinal.Type);
-                }
-
-                _writer.WriteAttribute(ATTR.fragment_ordinal, ionOrdinal.Ordinal, 0);
-                _writer.WriteAttribute(ATTR.index_aa, entry.Key.Last().IndexAa);
-                _writer.WriteAttribute(ATTR.modification_name, entry.Key.Last().ModName);
-                WriteLegacyLinkedIons(entry.Key, linkedIons);
-                _writer.WriteEndElement();
-            }
-        }
-
-        private void WriteLinkedIons(NeutralFragmentIon complexFragmentIon)
-        {
-            foreach (var part in complexFragmentIon.IonChain.Skip(1))
-            {
-                _writer.WriteStartElement(EL.linked_fragment_ion);
-                _writer.WriteAttributeNullable(ATTR.fragment_type, part.Type);
-                _writer.WriteAttribute(ATTR.fragment_ordinal, part.Ordinal, 0);
-                _writer.WriteEndElement();
-            }
-        }
-
-        private void WriteTransitionChromInfo(TransitionChromInfo chromInfo)
-        {
-            if (chromInfo.OptimizationStep != 0)
-                _writer.WriteAttribute(ATTR.step, chromInfo.OptimizationStep);
-
-            // Only write peak information, if it is not empty
-            if (!chromInfo.IsEmpty)
-            {
-                _writer.WriteAttributeNullable(ATTR.mass_error_ppm, chromInfo.MassError);
-                _writer.WriteAttribute(ATTR.retention_time, chromInfo.RetentionTime);
-                _writer.WriteAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
-                _writer.WriteAttribute(ATTR.end_time, chromInfo.EndRetentionTime);
-                _writer.WriteAttributeNullable(ATTR.ccs, chromInfo.IonMobility.CollisionalCrossSectionSqA);
-                _writer.WriteAttributeNullable(ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
-                _writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobility.IonMobilityExtractionWindowWidth);
-                _writer.WriteAttribute(ATTR.area, chromInfo.Area);
-                _writer.WriteAttribute(ATTR.background, chromInfo.BackgroundArea);
-                _writer.WriteAttribute(ATTR.height, chromInfo.Height);
-                _writer.WriteAttribute(ATTR.fwhm, chromInfo.Fwhm);
-                _writer.WriteAttribute(ATTR.fwhm_degenerate, chromInfo.IsFwhmDegenerate);
-                _writer.WriteAttributeNullable(ATTR.truncated, chromInfo.IsTruncated);
-                _writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLowerInvariant());
-                _writer.WriteAttribute(ATTR.rank, chromInfo.Rank);
-                var peakShapeValues = chromInfo.PeakShapeValues;
-                if (peakShapeValues.HasValue)
-                {
-                    _writer.WriteAttribute(ATTR.std_dev, peakShapeValues.Value.StdDev);
-                    _writer.WriteAttribute(ATTR.skewness, peakShapeValues.Value.Skewness);
-                    _writer.WriteAttribute(ATTR.kurtosis, peakShapeValues.Value.Kurtosis);
-                    _writer.WriteAttribute(ATTR.shape_correlation, peakShapeValues.Value.ShapeCorrelation);
-                }
-                if (SkylineVersion.SrmDocumentVersion.CompareTo(DocumentFormat.VERSION_3_61) >= 0)
-                {
-                    _writer.WriteAttributeNullable(ATTR.points_across, chromInfo.PointsAcrossPeak);
-                }
-                if (chromInfo.Rank != chromInfo.RankByLevel)
-                    _writer.WriteAttribute(ATTR.rank_by_level, chromInfo.RankByLevel);
-            }
-            _writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
-            _writer.WriteAttribute(ATTR.forced_integration, chromInfo.IsForcedIntegration, false);
-            DocumentWriter.WriteAnnotations(_writer, chromInfo.Annotations);
-        }
-
-        /// <summary>
-        /// Writes one entry per replicate and file, in that order, which is what
-        /// <see cref="ChromFileIds"/> is: the reader rebuilds the flat positions from the order
-        /// they come back in.
+        /// One entry per replicate and file, in that order, which is what <see cref="ChromFileIds"/>
+        /// is: the reader rebuilds the flat positions from the order they come back in.
         /// <para>
         /// The same element names a document has always used. What tells the two apart is what is
         /// on them: this leaves out everything the .skyd gives back, and writes
         /// <see cref="ATTR.chosen_peak_index"/>, which says which candidate peak there to read.
         /// </para>
         /// </summary>
-        private void WriteColumnarResults(ChromFileIds chromFileIds, string start, string peakStart,
-            Action<int, int> writePeak)
+        private XElement CreateColumnarResultsElement(ChromFileIds chromFileIds, string start, string peakStart,
+            Action<XElement, int, int> setPeak)
         {
             var replicatePositions = chromFileIds?.ReplicatePositions;
             if (replicatePositions == null || replicatePositions.TotalCount == 0)
             {
-                return;
+                return null;
             }
 
             var chromatograms = Settings.MeasuredResults.Chromatograms;
-            _writer.WriteStartElement(start);
+            var element = new XElement(start);
             for (int replicateIndex = 0;
                  replicateIndex < Math.Min(replicatePositions.ReplicateCount, chromatograms.Count);
                  replicateIndex++)
@@ -913,20 +337,56 @@ namespace pwiz.Skyline.Model.Serialization
                 var chromatogramSet = chromatograms[replicateIndex];
                 foreach (int position in replicatePositions[replicateIndex])
                 {
-                    _writer.WriteStartElement(peakStart);
-                    _writer.WriteAttribute(ATTR.replicate, chromatogramSet.Name);
+                    var peakElement = new XElement(peakStart);
+                    peakElement.SetAttribute(ATTR.replicate, chromatogramSet.Name);
                     if (chromatogramSet.FileCount > 1)
                     {
-                        _writer.WriteAttribute(ATTR.file,
+                        peakElement.SetAttribute(ATTR.file,
                             chromatogramSet.GetFileSaveId(chromFileIds.FileIds[position]));
                     }
 
-                    writePeak(replicateIndex, position);
-                    _writer.WriteEndElement();
+                    setPeak(peakElement, replicateIndex, position);
+                    element.Add(peakElement);
                 }
             }
 
-            _writer.WriteEndElement();
+            return element;
+        }
+
+        private XElement CreateColumnarPrecursorResultsElement(TransitionGroupResults results, float[][] sharedAreas)
+        {
+            return CreateColumnarResultsElement(results?.ChromFileIds, EL.precursor_results, EL.precursor_peak,
+                (element, replicateIndex, position) =>
+            {
+                // No area: a precursor's is the sum of its transitions', which are written below it.
+                element.SetAttribute(ATTR.retention_time, results.Peaks.FlatValues[position].RetentionTime);
+                // Nullable rather than the generic default-value overload, which formats with
+                // ToString() and so loses digits a float needs to come back the same.
+                element.SetAttributeNullable(ATTR.start_time, results.GetStartTime(position));
+                element.SetAttributeNullable(ATTR.end_time, results.GetEndTime(position));
+                // Written, even as -1, by a precursor which knows which candidate peaks its peaks
+                // are; left out altogether by one which does not. Its presence is what
+                // DocumentReader reads back as TransitionGroupResults.NeedsPeakIndexes, so writing
+                // it either way would tell a document being read again that the matching had been
+                // done when it had not, and -1 would be taken for "not a candidate peak" rather
+                // than "not worked out". A precursor which does not know keeps everything its
+                // peaks need instead - see CreateColumnarTransitionResultsElement.
+                if (!results.NeedsPeakIndexes)
+                {
+                    element.SetAttribute(ATTR.chosen_peak_index,
+                        results.GetChosenPeakIndex(position) ?? PrecursorPeak.NO_PEAK_INDEX);
+                }
+                element.SetAttributeNullable(ATTR.qvalue, results.GetQValue(position));
+                element.SetAttributeNullable(ATTR.zscore, results.GetZScore(position));
+                element.SetAttribute(ATTR.user_set, results.GetUserSet(position), UserSet.FALSE);
+                var areas = sharedAreas[position];
+                if (areas != null)
+                {
+                    element.SetFloatsAttribute(ATTR.transition_areas, areas);
+                }
+
+                AddAnnotations(element, results.GetAnnotations(position));
+            });
         }
 
         /// <summary>
@@ -938,85 +398,42 @@ namespace pwiz.Skyline.Model.Serialization
         /// are held only where there is one, and none of them has an entry wherever another does.
         /// </para>
         /// </summary>
-        private void WriteTransitionResults(TransitionGroupResults results, Transition transition)
+        private XElement CreateColumnarTransitionResultsElement(TransitionGroupResults results, Transition transition)
         {
             var chromFileIds = results.GetTransitionChromFileIds(transition);
-            WriteColumnarResults(chromFileIds, EL.transition_results, EL.transition_peak,
-                (replicateIndex, position) =>
+            return CreateColumnarResultsElement(chromFileIds, EL.transition_results, EL.transition_peak,
+                (element, replicateIndex, position) =>
                 {
                     var fileId = chromFileIds.FileIds[position].Value;
                     results.TryGetTransitionPeak(transition, replicateIndex, fileId, out var peak);
-                    _writer.WriteAttribute(ATTR.area, peak.Area);
-                    _writer.WriteAttribute(ATTR.user_set, peak.UserSet, UserSet.FALSE);
+                    element.SetAttribute(ATTR.area, peak.Area);
+                    element.SetAttribute(ATTR.user_set, peak.UserSet, UserSet.FALSE);
                     // Nothing else carries these, so a transition written out has to say them. They
                     // are the reason a peak which is anything but ordinary cannot ride its
                     // precursor's transition_areas - see TransitionResults.TryGetPlainArea, which
                     // decides that, and SharedTransitionAreas.MakeTransitionResults, which puts
                     // back exactly the values it treats as ordinary.
-                    _writer.WriteAttributeNullable(ATTR.truncated, peak.IsTruncated);
-                    _writer.WriteAttribute(ATTR.forced_integration, peak.IsForcedIntegration, false);
-                    _writer.WriteAttribute(ATTR.empty, peak.IsEmpty, false);
+                    element.SetAttributeNullable(ATTR.truncated, peak.IsTruncated);
+                    element.SetAttribute(ATTR.forced_integration, peak.IsForcedIntegration, false);
+                    element.SetAttribute(ATTR.empty, peak.IsEmpty, false);
 
                     var peakBounds = results.FindTransitionCustomPeakBounds(transition, replicateIndex, fileId);
                     if (peakBounds.HasValue)
                     {
-                        _writer.WriteAttribute(ATTR.start_time, peakBounds.Value.StartTime);
-                        _writer.WriteAttribute(ATTR.end_time, peakBounds.Value.EndTime);
+                        element.SetAttribute(ATTR.start_time, peakBounds.Value.StartTime);
+                        element.SetAttribute(ATTR.end_time, peakBounds.Value.EndTime);
                     }
 
                     var peakMetrics = results.FindTransitionCustomPeakMetrics(transition, replicateIndex, fileId);
                     if (peakMetrics != null)
                     {
-                        _writer.WriteAttributeNullable(ATTR.mass_error_ppm, peakMetrics.MassError);
+                        element.SetAttributeNullable(ATTR.mass_error_ppm, peakMetrics.MassError);
                         if (peakMetrics.Identified != PeakIdentification.FALSE)
-                            _writer.WriteAttribute(ATTR.identified, peakMetrics.Identified.ToString().ToLowerInvariant());
+                            element.SetAttribute(ATTR.identified, peakMetrics.Identified.ToString().ToLowerInvariant());
                     }
 
-                    // Last, because these are child elements and an XmlWriter takes no more
-                    // attributes once an element has content.
-                    DocumentWriter.WriteAnnotations(_writer, results.FindTransitionAnnotations(transition, replicateIndex, fileId));
+                    AddAnnotations(element, results.FindTransitionAnnotations(transition, replicateIndex, fileId));
                 });
-        }
-
-        private void WriteTransitionGroupResults(TransitionGroupDocNode nodeGroup)
-        {
-            var results = nodeGroup.AbbreviatedResults;
-            var sharedAreas = results?.GetSharedTransitionAreas(nodeGroup.Children.Count);
-            _sharedTransitionAreaFiles = GetSharedTransitionAreaFiles(results, sharedAreas);
-            WriteColumnarResults(results?.ChromFileIds, EL.precursor_results, EL.precursor_peak,
-                (replicateIndex, position) =>
-            {
-                // No area: a precursor's is the sum of its transitions', which are written below it.
-                _writer.WriteAttribute(ATTR.retention_time, results.Peaks.FlatValues[position].RetentionTime);
-                // Nullable rather than the generic default-value overload, which formats with
-                // ToString() and so loses digits a float needs to come back the same.
-                _writer.WriteAttributeNullable(ATTR.start_time, results.GetStartTime(position));
-                _writer.WriteAttributeNullable(ATTR.end_time, results.GetEndTime(position));
-                // Written, even as -1, by a precursor which knows which candidate peaks its peaks
-                // are; left out altogether by one which does not. Its presence is what
-                // DocumentReader reads back as TransitionGroupResults.NeedsPeakIndexes, so writing
-                // it either way would tell a document being read again that the matching had been
-                // done when it had not, and -1 would be taken for "not a candidate peak" rather
-                // than "not worked out". A precursor which does not know keeps everything its
-                // peaks need instead - see WriteTransitionResults.
-                if (!results.NeedsPeakIndexes)
-                {
-                    _writer.WriteAttribute(ATTR.chosen_peak_index,
-                        results.GetChosenPeakIndex(position) ?? PrecursorPeak.NO_PEAK_INDEX);
-                }
-                _writer.WriteAttributeNullable(ATTR.qvalue, results.GetQValue(position));
-                _writer.WriteAttributeNullable(ATTR.zscore, results.GetZScore(position));
-                _writer.WriteAttribute(ATTR.user_set, results.GetUserSet(position), UserSet.FALSE);
-                var areas = sharedAreas[position];
-                if (areas != null)
-                {
-                    _writer.WriteFloatsAttribute(ATTR.transition_areas, areas);
-                }
-
-                // Last, because these are child elements and an XmlWriter takes no more attributes
-                // once an element has content.
-                DocumentWriter.WriteAnnotations(_writer, results.GetAnnotations(position));
-            });
         }
 
         /// <summary>
@@ -1043,41 +460,685 @@ namespace pwiz.Skyline.Model.Serialization
             return fileIds;
         }
 
-        private void WriteResults<TItem>(IEnumerable<ChromInfoList<TItem>> results, string start, string startChild,
-                Action<TItem> writeChromInfo)
-            where TItem : ChromInfo
+        private void SetPeptideChromInfo(XElement element, PeptideChromInfo chromInfo, double? scoreCalc)
         {
-            bool started = false;
-            using (var enumReplicates = Settings.MeasuredResults.Chromatograms.GetEnumerator())
+            element.SetAttribute(ATTR.peak_count_ratio, chromInfo.PeakCountRatio);
+            element.SetAttributeNullable(ATTR.retention_time, chromInfo.RetentionTime);
+            element.SetAttribute(ATTR.exclude_from_calibration, chromInfo.ExcludeFromCalibration);
+            element.SetAttributeNullable(ATTR.analyte_concentration, chromInfo.AnalyteConcentration);
+            if (scoreCalc.HasValue)
             {
-                foreach (var listChromInfo in results)
+                double? rt = Settings.PeptideSettings.Prediction.RetentionTime.GetRetentionTime(scoreCalc.Value,
+                                                                                      chromInfo.FileId);
+                element.SetAttributeNullable(ATTR.predicted_retention_time, rt);
+            }
+        }
+
+        private void SetTransitionGroupChromInfo(XElement element, TransitionGroupChromInfo chromInfo)
+        {
+            if (chromInfo.OptimizationStep != 0)
+                element.SetAttribute(ATTR.step, chromInfo.OptimizationStep);
+            element.SetAttribute(ATTR.peak_count_ratio, chromInfo.PeakCountRatio);
+            element.SetAttributeNullable(ATTR.retention_time, chromInfo.RetentionTime);
+            element.SetAttributeNullable(ATTR.start_time, chromInfo.StartRetentionTime);
+            element.SetAttributeNullable(ATTR.end_time, chromInfo.EndRetentionTime);
+            element.SetAttributeNullable(ATTR.ccs, chromInfo.IonMobilityInfo.CollisionalCrossSection);
+            if (chromInfo.IonMobilityInfo.IonMobilityUnits != eIonMobilityUnits.none)
+            {
+                element.SetAttributeNullable(ATTR.ion_mobility_ms1, chromInfo.IonMobilityInfo.IonMobilityMS1);
+                element.SetAttributeNullable(ATTR.ion_mobility_fragment, chromInfo.IonMobilityInfo.IonMobilityFragment);
+                element.SetAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobilityInfo.IonMobilityWindow);
+                element.SetAttribute(ATTR.ion_mobility_type, chromInfo.IonMobilityInfo.IonMobilityUnits.ToString());
+            }
+            element.SetAttributeNullable(ATTR.fwhm, chromInfo.Fwhm);
+            element.SetAttributeNullable(ATTR.area, chromInfo.Area);
+            element.SetAttributeNullable(ATTR.background, chromInfo.BackgroundArea);
+            element.SetAttributeNullable(ATTR.height, chromInfo.Height);
+            element.SetAttributeNullable(ATTR.mass_error_ppm, chromInfo.MassError);
+            element.SetAttributeNullable(ATTR.truncated, chromInfo.Truncated);
+            element.SetAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLowerInvariant());
+            element.SetAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);
+            element.SetAttributeNullable(ATTR.isotope_dotp, chromInfo.IsotopeDotProduct);
+            element.SetAttributeNullable(ATTR.qvalue, chromInfo.QValue);
+            element.SetAttributeNullable(ATTR.zscore, chromInfo.ZScore);
+            element.SetAttribute(ATTR.user_set, chromInfo.UserSet);
+            var originalPeak = chromInfo.OriginalPeak;
+            if (originalPeak != null && originalPeak.StartTime.Equals(chromInfo.StartRetentionTime) && originalPeak.EndTime.Equals(chromInfo.EndRetentionTime))
+            {
+                element.SetAttribute(ATTR.original_score, originalPeak.Score);
+                originalPeak = null;
+            }
+            AddAnnotations(element, chromInfo.Annotations);
+            element.Add(CreateScoredPeakElement(EL.original_peak, originalPeak));
+            element.Add(CreateScoredPeakElement(EL.reintegrated_peak, chromInfo.ReintegratedPeak));
+        }
+
+        private XElement CreateScoredPeakElement(string el, ScoredPeakBounds scoredPeak)
+        {
+            if (scoredPeak == null || DocumentFormat < DocumentFormat.PEAK_IMPUTATION)
+            {
+                return null;
+            }
+            var element = new XElement(el);
+            element.SetAttribute(ATTR.score, scoredPeak.Score);
+            element.SetAttribute(ATTR.retention_time, scoredPeak.ApexTime);
+            element.SetAttribute(ATTR.start_time, scoredPeak.StartTime);
+            element.SetAttribute(ATTR.end_time, scoredPeak.EndTime);
+            return element;
+        }
+
+        private void SetTransitionChromInfo(XElement element, TransitionChromInfo chromInfo)
+        {
+            if (chromInfo.OptimizationStep != 0)
+                element.SetAttribute(ATTR.step, chromInfo.OptimizationStep);
+
+            // Only write peak information, if it is not empty
+            if (!chromInfo.IsEmpty)
+            {
+                element.SetAttributeNullable(ATTR.mass_error_ppm, chromInfo.MassError);
+                element.SetAttribute(ATTR.retention_time, chromInfo.RetentionTime);
+                element.SetAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
+                element.SetAttribute(ATTR.end_time, chromInfo.EndRetentionTime);
+                element.SetAttributeNullable(ATTR.ccs, chromInfo.IonMobility.CollisionalCrossSectionSqA);
+                element.SetAttributeNullable(ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
+                element.SetAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobility.IonMobilityExtractionWindowWidth);
+                element.SetAttribute(ATTR.area, chromInfo.Area);
+                element.SetAttribute(ATTR.background, chromInfo.BackgroundArea);
+                element.SetAttribute(ATTR.height, chromInfo.Height);
+                element.SetAttribute(ATTR.fwhm, chromInfo.Fwhm);
+                element.SetAttribute(ATTR.fwhm_degenerate, chromInfo.IsFwhmDegenerate);
+                element.SetAttributeNullable(ATTR.truncated, chromInfo.IsTruncated);
+                element.SetAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLowerInvariant());
+                element.SetAttribute(ATTR.rank, chromInfo.Rank);
+                var peakShapeValues = chromInfo.PeakShapeValues;
+                if (peakShapeValues.HasValue)
                 {
-                    bool success = enumReplicates.MoveNext();
-                    Assume.IsTrue(success || Settings.MeasuredResults.Chromatograms.Count == 0);
-                    if (listChromInfo.IsEmpty)
-                        continue;
-                    var chromatogramSet = enumReplicates.Current;
-                    if (chromatogramSet == null)
-                        continue;
-                    string name = chromatogramSet.Name;
-                    foreach (var chromInfo in listChromInfo)
-                    {
-                        if (!started)
-                        {
-                            _writer.WriteStartElement(start);
-                            started = true;
-                        }
-                        _writer.WriteStartElement(startChild);
-                        _writer.WriteAttribute(ATTR.replicate, name);
-                        if (chromatogramSet.FileCount > 1)
-                            _writer.WriteAttribute(ATTR.file, chromatogramSet.GetFileSaveId(chromInfo.FileId));
-                        writeChromInfo(chromInfo);
-                        _writer.WriteEndElement();
-                    }
+                    element.SetAttribute(ATTR.std_dev, peakShapeValues.Value.StdDev);
+                    element.SetAttribute(ATTR.skewness, peakShapeValues.Value.Skewness);
+                    element.SetAttribute(ATTR.kurtosis, peakShapeValues.Value.Kurtosis);
+                    element.SetAttribute(ATTR.shape_correlation, peakShapeValues.Value.ShapeCorrelation);
+                }
+                if (SkylineVersion.SrmDocumentVersion.CompareTo(DocumentFormat.VERSION_3_61) >= 0)
+                {
+                    element.SetAttributeNullable(ATTR.points_across, chromInfo.PointsAcrossPeak);
+                }
+                if (chromInfo.Rank != chromInfo.RankByLevel)
+                    element.SetAttribute(ATTR.rank_by_level, chromInfo.RankByLevel);
+            }
+            element.SetAttribute(ATTR.user_set, chromInfo.UserSet);
+            element.SetAttribute(ATTR.forced_integration, chromInfo.IsForcedIntegration, false);
+            AddAnnotations(element, chromInfo.Annotations);
+        }
+
+        #endregion
+
+        #region Precursors and transitions
+
+        /// <summary>
+        /// The &lt;precursor&gt; element of one <see cref="TransitionGroupDocNode"/>, and every
+        /// &lt;transition&gt; below it.
+        /// <para>
+        /// The precursor's results and its transitions' are worked out here rather than at either
+        /// level alone, because they are one decision - see
+        /// <see cref="CreateTransitionResultsElement"/>.
+        /// </para>
+        /// </summary>
+        private XElement CreateTransitionGroupElement(TransitionGroupDocNode node)
+        {
+            var nodePep = PeptideDocNode;
+            var element = new XElement(EL.precursor);
+            TransitionGroup group = node.TransitionGroup;
+            var isCustomIon = nodePep.Peptide.IsCustomMolecule;
+            element.SetAttribute(ATTR.charge, group.PrecursorAdduct.AdductCharge);
+            if (!group.LabelType.IsLight)
+                element.SetAttribute(ATTR.isotope_label, group.LabelType);
+            if (!isCustomIon)
+            {
+                element.SetAttribute(ATTR.calc_neutral_mass, node.GetPrecursorIonPersistentNeutralMass());
+            }
+            element.SetAttribute(ATTR.precursor_mz, SequenceMassCalc.PersistentMZ(node.PrecursorMz));
+            SetExplicitTransitionGroupValuesAttributes(element, node.ExplicitValues);
+
+            element.SetAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
+            element.SetAttributeNullable(ATTR.decoy_mass_shift, group.DecoyMassShift);
+            element.SetAttributeNullable(ATTR.precursor_concentration, node.PrecursorConcentration);
+
+
+            TransitionPrediction predict = Settings.TransitionSettings.Prediction;
+            double regressionMz = Settings.GetRegressionMz(nodePep, node);
+            var ce = predict.CollisionEnergy.GetCollisionEnergy(node.TransitionGroup.PrecursorAdduct, regressionMz);
+            element.SetAttribute(ATTR.collision_energy, ce);
+
+            var dpRegression = predict.DeclusteringPotential;
+            if (dpRegression != null)
+            {
+                var dp = dpRegression.GetDeclustringPotential(regressionMz);
+                element.SetAttribute(ATTR.declustering_potential, dp);
+            }
+
+            if (!isCustomIon)
+            {
+                // modified sequence
+                if (nodePep.ExplicitMods != null && nodePep.ExplicitMods.HasCrosslinks)
+                {
+                    element.SetAttribute(ATTR.modified_sequence,
+                        Settings.GetCrosslinkModifiedSequence(nodePep.Target, node.TransitionGroup.LabelType, nodePep.ExplicitMods));
+                }
+                else
+                {
+                    var calcPre = Settings.GetPrecursorCalc(node.TransitionGroup.LabelType, nodePep.ExplicitMods);
+                    var seq = node.TransitionGroup.Peptide.Target;
+                    element.SetAttribute(ATTR.modified_sequence, calcPre.GetModifiedSequence(seq,
+                        false)); // formatNarrow = false; We want InvariantCulture, not the local format
+                }
+                Assume.IsTrue(group.PrecursorAdduct.IsProteomic, @"expected IsProteomic tag on adduct");
+            }
+            else
+            {
+                // Custom ion
+                node.CustomMolecule.WriteXml(element, group.PrecursorAdduct);
+            }
+
+            AddAnnotations(element, node.Annotations);
+            AddXmlWriterContent(element, w => node.SpectrumClassFilter.WriteXml(w));
+            if (node.HasLibInfo)
+            {
+                var helpers = PeptideLibraries.SpectrumHeaderXmlHelpers;
+                var libInfo = node.LibInfo;
+                if (libInfo is EncyclopeDiaLibrary.ElibSpectrumHeaderInfo && DocumentFormat < DocumentFormat.VERSION_22_25)
+                {
+                    // Older versions of Skyline used ChromLibSpectrumHeaderInfo instead of ElibSpectrumHeaderInfo
+                    libInfo = new ChromLibSpectrumHeaderInfo(libInfo.LibraryName, 0, null);
+                }
+                AddXmlWriterContent(element, w => w.WriteElements(new[] { libInfo }, helpers));
+            }
+
+            // What the precursor says about its transitions' areas, which is also what decides
+            // whether each of them has anything left to say. Null in the shape which keeps every
+            // attribute of the chrom infos, where the levels are independent.
+            TransitionGroupResults groupResults = null;
+            HashSet<ReferenceValue<ChromFileInfoId>> sharedAreaFiles = null;
+            if (_moleculeResults == null)
+            {
+                groupResults = node.AbbreviatedResults;
+                var sharedAreas = groupResults?.GetSharedTransitionAreas(node.Children.Count);
+                sharedAreaFiles = GetSharedTransitionAreaFiles(groupResults, sharedAreas);
+                element.Add(CreateColumnarPrecursorResultsElement(groupResults, sharedAreas));
+            }
+            else
+            {
+                var groupChromInfos = _moleculeResults.GetTransitionGroupChromInfos(group);
+                if (groupChromInfos != null)
+                {
+                    element.Add(CreateChromInfoResultsElement(groupChromInfos, EL.precursor_results,
+                        EL.precursor_peak, SetTransitionGroupChromInfo));
                 }
             }
-            if (started)
-                _writer.WriteEndElement();
+
+            if (UseCompactFormat())
+            {
+                var transitionData = new SkylineDocumentProto.Types.TransitionData();
+                // The peaks come from the chromatograms, since a transition does not keep them.
+                transitionData.Transitions.AddRange(node.Transitions.Select(transition =>
+                    transition.ToTransitionProto(Settings, nodePep, node,
+                        _moleculeResults?.GetTransitionChromInfos(group, transition.Transition))));
+                element.Add(new XElement(EL.transition_data, Convert.ToBase64String(transitionData.ToByteArray())));
+                _documentWriter.OnWroteTransitions(node.TransitionCount);
+            }
+            else
+            {
+                foreach (TransitionDocNode nodeTransition in node.Children)
+                {
+                    element.Add(CreateTransitionElement(node, nodeTransition,
+                        CreateTransitionResultsElement(node, nodeTransition, groupResults, sharedAreaFiles)));
+                    _documentWriter.OnWroteTransitions(1);
+                }
+            }
+
+            return element;
+        }
+
+        /// <summary>
+        /// Serializes any optionally explicitly specified CE, RT and DT information to attributes only
+        /// </summary>
+        private void SetExplicitTransitionGroupValuesAttributes(XElement element, ExplicitTransitionGroupValues importedAttributes)
+        {
+            if (DocumentFormat < DocumentFormat.VERSION_4_22 || DocumentFormat >= DocumentFormat.VERSION_20_12) // Format supports per-precursor explicit CE?
+                element.SetAttributeNullable(ATTR.explicit_collision_energy, importedAttributes.CollisionEnergy);
+            element.SetAttributeNullable(ATTR.explicit_ion_mobility, importedAttributes.IonMobility);
+            if (importedAttributes.IonMobility.HasValue)
+                element.SetAttribute(ATTR.explicit_ion_mobility_units, importedAttributes.IonMobilityUnits.ToString());
+            element.SetAttributeNullable(ATTR.explicit_ccs_sqa, importedAttributes.CollisionalCrossSectionSqA);
+        }
+
+        /// <summary>
+        /// The &lt;transition&gt; element of one <see cref="TransitionDocNode"/>, given the results
+        /// its precursor worked out for it - null when the precursor already says everything it
+        /// has.
+        /// </summary>
+        private XElement CreateTransitionElement(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition,
+            XElement results)
+        {
+            var nodePep = PeptideDocNode;
+            var element = new XElement(EL.transition);
+            Transition transition = nodeTransition.Transition;
+            element.SetAttribute(ATTR.fragment_type, transition.IonType);
+            element.SetAttribute(ATTR.quantitative, nodeTransition.ExplicitQuantitative, true);
+            SetExplicitTransitionValuesAttributes(element, nodeTransition.ExplicitValues);
+            if (transition.IsCustom())
+            {
+                if (!(transition.CustomIon is SettingsCustomIon))
+                {
+                    transition.CustomIon.WriteXml(element, transition.Adduct);
+                }
+                else
+                {
+                    element.SetAttribute(ATTR.measured_ion_name, transition.CustomIon.Name);
+                }
+            }
+            element.SetAttributeNullable(ATTR.decoy_mass_shift, transition.DecoyMassShift);
+            // NOTE: MassIndex is the peak index in the isotopic distribution of the precursor.
+            //       0 for monoisotopic peaks and for non "precursor" ion types.
+            if (transition.MassIndex != 0)
+                element.SetAttribute(ATTR.mass_index, transition.MassIndex);
+            if (nodeTransition.HasDistInfo)
+            {
+                element.SetAttribute(ATTR.isotope_dist_rank, nodeTransition.IsotopeDistInfo.Rank);
+                element.SetAttribute(ATTR.isotope_dist_proportion, nodeTransition.IsotopeDistInfo.Proportion);
+            }
+
+            if (transition.IsPrecursor())
+            {
+                element.SetAttribute(ATTR.product_charge, transition.Charge, nodeGroup.PrecursorCharge);
+            }
+            else
+            {
+                if (!transition.IsCustom())
+                {
+                    element.SetAttribute(ATTR.fragment_ordinal, transition.Ordinal);
+                    element.SetAttribute(ATTR.calc_neutral_mass, nodeTransition.GetMoleculePersistentNeutralMass());
+                }
+                element.SetAttribute(ATTR.product_charge, transition.Charge);
+                if (!transition.IsCustom())
+                {
+                    element.SetAttribute(ATTR.cleavage_aa, transition.AA.ToString(CultureInfo.InvariantCulture));
+                    if (nodeTransition.HasLoss)
+                        element.SetAttribute(ATTR.loss_neutral_mass, nodeTransition.LostMass); //po
+                }
+            }
+
+            if (nodeTransition.ComplexFragmentIon.IsOrphan)
+            {
+                element.SetAttribute(ATTR.orphaned_crosslink_ion, true);
+            }
+
+            // Order of elements matters for XSD validation
+            AddAnnotations(element, nodeTransition.Annotations);
+            element.Add(new XElement(EL.precursor_mz, SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz)
+                .ToString(Formats.RoundTrip, CultureInfo.InvariantCulture)));
+            element.Add(new XElement(EL.product_mz, SequenceMassCalc.PersistentMZ(nodeTransition.Mz)
+                .ToString(Formats.RoundTrip, CultureInfo.InvariantCulture)));
+
+            double? ce = nodeTransition.GetCollisionEnergy(Settings, nodePep, nodeGroup);
+            double? dp = nodeTransition.GetDeclusteringPotential(Settings, nodePep, nodeGroup);
+
+            if (ce.HasValue)
+            {
+                element.Add(new XElement(EL.collision_energy,
+                    ce.Value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture)));
+            }
+
+            if (dp.HasValue)
+            {
+                element.Add(new XElement(EL.declustering_potential,
+                    dp.Value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture)));
+            }
+            element.Add(CreateTransitionLossesElement(nodeTransition.Losses));
+            if (!nodePep.CrosslinkStructure.IsEmpty)
+            {
+                if (DocumentFormat < DocumentFormat.FLAT_CROSSLINKS)
+                {
+                    var sitePathMap = new Dictionary<int, ImmutableList<ModificationSite>>();
+                    var legacyConverter = new LegacyCrosslinkConverter(Settings, nodePep.ExplicitMods);
+                    legacyConverter.ConvertToLegacyFormat(sitePathMap);
+                    var ionChain = nodeTransition.ComplexFragmentIon.NeutralFragmentIon.IonChain;
+                    var linkedIons = new Dictionary<ImmutableList<ModificationSite>, IonOrdinal>();
+                    for (int i = 0; i < ionChain.Count; i++)
+                    {
+                        linkedIons.Add(sitePathMap[i], ionChain[i]);
+                    }
+                    element.Add(CreateLegacyLinkedIonElements(ImmutableList<ModificationSite>.EMPTY, linkedIons));
+                }
+                else
+                {
+                    element.Add(CreateLinkedIonElements(nodeTransition.ComplexFragmentIon.NeutralFragmentIon));
+                }
+            }
+            if (nodeTransition.HasLibInfo)
+            {
+                var libInfoElement = new XElement(EL.transition_lib_info);
+                libInfoElement.SetAttribute(ATTR.rank, nodeTransition.LibInfo.Rank);
+                libInfoElement.SetAttribute(ATTR.intensity, nodeTransition.LibInfo.Intensity);
+                element.Add(libInfoElement);
+            }
+
+            element.Add(results);
+
+            return element;
+        }
+
+        private void SetExplicitTransitionValuesAttributes(XElement element, ExplicitTransitionValues importedAttributes)
+        {
+            element.SetAttributeNullable(ATTR.explicit_collision_energy, importedAttributes.CollisionEnergy);
+            element.SetAttributeNullable(ATTR.explicit_ion_mobility_high_energy_offset, importedAttributes.IonMobilityHighEnergyOffset);
+            element.SetAttributeNullable(ATTR.explicit_s_lens, importedAttributes.SLens);
+            element.SetAttributeNullable(ATTR.explicit_cone_voltage, importedAttributes.ConeVoltage);
+            element.SetAttributeNullable(ATTR.explicit_declustering_potential, importedAttributes.DeclusteringPotential);
+        }
+
+        private XElement CreateTransitionLossesElement(TransitionLosses losses)
+        {
+            if (losses == null)
+                return null;
+            var element = new XElement(EL.losses);
+            foreach (var loss in losses.Losses)
+            {
+                var lossElement = new XElement(EL.neutral_loss);
+                if (loss.PrecursorMod == null)
+                {
+                    // Custom neutral losses are not yet implemented to cause this case
+                    // TODO: Implement custome neutral losses, and remove this comment.
+                    loss.Loss.WriteXml(lossElement);
+                }
+                else
+                {
+                    lossElement.SetAttribute(ATTR.modification_name, loss.PrecursorMod.Name);
+                    int indexLoss = loss.LossIndex;
+                    if (indexLoss != 0)
+                        lossElement.SetAttribute(ATTR.loss_index, indexLoss);
+                }
+                element.Add(lossElement);
+            }
+            return element;
+        }
+
+        private IEnumerable<XElement> CreateLegacyLinkedIonElements(ImmutableList<ModificationSite> sitePath,
+            IDictionary<ImmutableList<ModificationSite>, IonOrdinal> linkedIons)
+        {
+            foreach (var entry in linkedIons)
+            {
+                if (entry.Key.Count != sitePath.Count + 1)
+                {
+                    continue;
+                }
+
+                if (!sitePath.SequenceEqual(entry.Key.Take(sitePath.Count)))
+                {
+                    continue;
+                }
+
+                var element = new XElement(EL.linked_fragment_ion);
+                var ionOrdinal = entry.Value;
+                if (!ionOrdinal.IsEmpty)
+                {
+                    // blank fragment type means orphaned fragment ion
+                    element.SetAttribute(ATTR.fragment_type, ionOrdinal.Type);
+                }
+
+                element.SetAttribute(ATTR.fragment_ordinal, ionOrdinal.Ordinal, 0);
+                element.SetAttribute(ATTR.index_aa, entry.Key.Last().IndexAa);
+                element.SetAttribute(ATTR.modification_name, entry.Key.Last().ModName);
+                element.Add(CreateLegacyLinkedIonElements(entry.Key, linkedIons));
+                yield return element;
+            }
+        }
+
+        private IEnumerable<XElement> CreateLinkedIonElements(NeutralFragmentIon complexFragmentIon)
+        {
+            foreach (var part in complexFragmentIon.IonChain.Skip(1))
+            {
+                var element = new XElement(EL.linked_fragment_ion);
+                element.SetAttributeNullable(ATTR.fragment_type, part.Type);
+                element.SetAttribute(ATTR.fragment_ordinal, part.Ordinal, 0);
+                yield return element;
+            }
+        }
+
+        #endregion
+
+        #region Modifications
+
+        private string GetModifiedSequence(Target target)
+        {
+            if (DocumentFormat >= DocumentFormat.VERSION_3_73 || !target.IsProteomic)
+            {
+                return target.Sequence;
+            }
+            return new PeptideLibraryKey(target.Sequence, 0).FormatToOneDecimal().ModifiedSequence;
+        }
+
+        private XElement CreateLookupModsElement()
+        {
+            var node = PeptideDocNode;
+            if (node.SourceKey == null || node.SourceKey.ExplicitMods == null)
+                return null;
+            var element = new XElement(EL.lookup_modifications);
+            element.Add(CreateExplicitModsElements(node.SourceKey.Sequence, node.SourceKey.ExplicitMods));
+            return element;
+        }
+
+        /// <summary>
+        /// The modification elements of one sequence: an &lt;explicit_modifications&gt; element,
+        /// a &lt;variable_modifications&gt; one, or both.
+        /// </summary>
+        private IEnumerable<XElement> CreateExplicitModsElements(string sequence, ExplicitMods mods)
+        {
+            if (mods == null ||
+                string.IsNullOrEmpty(sequence) && !mods.HasIsotopeLabels)
+                yield break;
+            if (mods.IsVariableStaticMods)
+            {
+                yield return CreateModsElement(EL.variable_modifications,
+                    EL.variable_modification, null, mods.StaticModifications, sequence);
+
+                // If no heavy modifications, then don't write an <explicit_modifications> tag
+                if (!mods.HasHeavyModifications)
+                    yield break;
+            }
+            var element = new XElement(EL.explicit_modifications);
+            if (!mods.IsVariableStaticMods)
+            {
+                element.Add(CreateModsElement(EL.explicit_static_modifications,
+                    EL.explicit_modification, null, mods.StaticModifications, sequence));
+            }
+            foreach (var heavyMods in mods.GetHeavyModifications())
+            {
+                IsotopeLabelType labelType = heavyMods.LabelType;
+                if (Equals(labelType, IsotopeLabelType.heavy))
+                    labelType = null;
+
+                element.Add(CreateModsElement(EL.explicit_heavy_modifications,
+                    EL.explicit_modification, labelType, heavyMods.Modifications, sequence));
+            }
+            yield return element;
+        }
+
+        private XElement CreateImplicitModsElement()
+        {
+            var node = PeptideDocNode;
+
+            // Get the implicit  modifications on this peptide.
+            var implicitMods = new ExplicitMods(node,
+                Settings.PeptideSettings.Modifications.StaticModifications,
+                Properties.Settings.Default.StaticModList,
+                Settings.PeptideSettings.Modifications.GetHeavyModifications(),
+                Properties.Settings.Default.HeavyModList,
+                true);
+
+            bool hasStaticMods = implicitMods.StaticModifications.Count != 0 && node.CanHaveImplicitStaticMods;
+            bool hasHeavyMods = implicitMods.HasHeavyModifications &&
+                                Settings.PeptideSettings.Modifications.GetHeavyModifications().Any(
+                                     mod => node.CanHaveImplicitHeavyMods(mod.LabelType));
+
+            if (!hasStaticMods && !hasHeavyMods)
+            {
+                return null;
+            }
+
+            var element = new XElement(EL.implicit_modifications);
+
+            // implicit static modifications.
+            if (hasStaticMods)
+            {
+                element.Add(CreateModsElement(EL.implicit_static_modifications,
+                        EL.implicit_modification, null, implicitMods.StaticModifications,
+                        node.Peptide.Target.Sequence));
+            }
+
+            // implicit heavy modifications
+            foreach (var heavyMods in implicitMods.GetHeavyModifications())
+            {
+                IsotopeLabelType labelType = heavyMods.LabelType;
+                if (!node.CanHaveImplicitHeavyMods(labelType))
+                {
+                    continue;
+                }
+                if (Equals(labelType, IsotopeLabelType.heavy))
+                    labelType = null;
+
+                element.Add(CreateModsElement(EL.implicit_heavy_modifications,
+                                  EL.implicit_modification, labelType, heavyMods.Modifications,
+                                  node.Peptide.Target.Sequence));
+            }
+            return element;
+        }
+
+        private XElement CreateModsElement(string name,
+            string nameElMod, IsotopeLabelType labelType, IEnumerable<ExplicitMod> mods,
+            string sequence)
+        {
+            if (mods == null || (labelType == null && string.IsNullOrEmpty(sequence)))
+                return null;
+            var element = new XElement(name);
+            if (labelType != null)
+                element.SetAttribute(ATTR.isotope_label, labelType);
+
+            if (!string.IsNullOrEmpty(sequence))
+            {
+                SequenceMassCalc massCalc = Settings.TransitionSettings.Prediction.PrecursorMassType == MassType.Monoisotopic ?
+                    SrmSettings.MonoisotopicMassCalc : SrmSettings.AverageMassCalc;
+                foreach (ExplicitMod mod in mods)
+                {
+                    var modElement = new XElement(nameElMod);
+                    modElement.SetAttribute(ATTR.index_aa, mod.IndexAA);
+                    modElement.SetAttribute(ATTR.modification_name, mod.Modification.Name);
+
+                    double massDiff = massCalc.GetModMass(sequence[mod.IndexAA], mod.Modification);
+
+                    modElement.SetAttribute(ATTR.mass_diff,
+                        string.Format(CultureInfo.InvariantCulture, @"{0}{1}", (massDiff < 0 ? string.Empty : @"+"),
+                            Math.Round(massDiff, 1)));
+                    if (null != mod.LinkedPeptide)
+                    {
+                        modElement.Add(CreateLinkedPeptideElement(mod.LinkedPeptide));
+                    }
+                    element.Add(modElement);
+                }
+            }
+            return element;
+        }
+
+        private XElement CreateLinkedPeptideElement(LegacyLinkedPeptide linkedPeptide)
+        {
+            var element = new XElement(EL.linked_peptide);
+            element.SetAttribute(ATTR.index_aa, linkedPeptide.IndexAa);
+            if (linkedPeptide.Peptide != null)
+            {
+                element.SetAttributeIfString(ATTR.sequence, linkedPeptide.Peptide.Sequence);
+                if (null != linkedPeptide.ExplicitMods)
+                {
+                    element.Add(CreateExplicitModsElements(linkedPeptide.Peptide.Sequence, linkedPeptide.ExplicitMods));
+                }
+            }
+            return element;
+        }
+
+        private XElement CreateCrosslinkStructureElement(CrosslinkStructure crosslinkStructure)
+        {
+            if (crosslinkStructure == null || crosslinkStructure.IsEmpty)
+            {
+                return null;
+            }
+            var element = new XElement(EL.crosslinks);
+            for (int i = 0; i < crosslinkStructure.LinkedPeptides.Count; i++)
+            {
+                var peptide = crosslinkStructure.LinkedPeptides[i];
+                var peptideElement = new XElement(EL.linked_peptide);
+                peptideElement.SetAttributeIfString(ATTR.sequence, peptide.Sequence);
+                var explicitMods = crosslinkStructure.LinkedExplicitMods[i];
+                if (null != explicitMods)
+                {
+                    peptideElement.Add(CreateExplicitModsElements(peptide.Sequence, explicitMods));
+                }
+                element.Add(peptideElement);
+            }
+
+            foreach (var crosslink in crosslinkStructure.Crosslinks)
+            {
+                var crosslinkElement = new XElement(EL.crosslink);
+                crosslinkElement.SetAttribute(ATTR.modification_name, crosslink.Crosslinker.Name);
+                foreach (var site in crosslink.Sites)
+                {
+                    var siteElement = new XElement(EL.site);
+                    siteElement.SetAttribute(ATTR.peptide_index, site.PeptideIndex);
+                    siteElement.SetAttribute(ATTR.index_aa, site.AaIndex);
+                    crosslinkElement.Add(siteElement);
+                }
+                element.Add(crosslinkElement);
+            }
+            return element;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// The annotations of anything which has them, as child elements. Nothing here has to be
+        /// added last: an <see cref="XElement"/> takes attributes after it has children.
+        /// </summary>
+        private static void AddAnnotations(XElement element, Annotations annotations)
+        {
+            if (annotations.IsEmpty)
+                return;
+
+            if (annotations.Note != null || annotations.ColorIndex > 0)
+            {
+                var noteElement = new XElement(EL.note);
+                if (annotations.ColorIndex != 0)
+                    noteElement.SetAttribute(ATTR.category, annotations.ColorIndex);
+                if (annotations.Note != null)
+                    noteElement.Add(annotations.Note);
+                element.Add(noteElement);
+            }
+            foreach (var entry in annotations.ListAnnotations())
+            {
+                var annotationElement = new XElement(EL.annotation);
+                annotationElement.SetAttribute(ATTR.name, entry.Key);
+                annotationElement.Add(entry.Value);
+                element.Add(annotationElement);
+            }
+        }
+
+        /// <summary>
+        /// Adds the child elements something which only knows how to write itself to an
+        /// <see cref="XmlWriter"/> produces. Only for things which write whole elements: an
+        /// <see cref="XmlWriter"/> made this way has no element of its own to put attributes on.
+        /// </summary>
+        private static void AddXmlWriterContent(XElement element, Action<XmlWriter> writeContent)
+        {
+            using (var writer = element.CreateWriter())
+            {
+                writeContent(writer);
+            }
         }
     }
 }
