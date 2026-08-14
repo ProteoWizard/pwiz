@@ -468,9 +468,12 @@ namespace pwiz.Skyline
         /// list or group comparison this document does not have are closed for the same reason:
         /// <see cref="DeserializeForm"/> manufactures them from the persist string without checking.
         ///
-        /// <para>Deliberately NOT inside <see cref="LoadLayout"/>. Test cleanup loads a
-        /// contents-free layout precisely to close every window and then asserts that only
-        /// SkylineWindow is left, so the primitive has to stay able to leave nothing behind.</para>
+        /// <para>Deliberately NOT inside <see cref="LoadLayout"/>, which stays the primitive that
+        /// leaves nothing behind. <c>AbstractFunctionalTest.EndTest</c> relies on that: its
+        /// <c>RestoreMinimalView</c> loads a contents-free layout to close every dock window, and
+        /// two separate gates then require only SkylineWindow to remain - the open-form count and
+        /// the "left open at end of test" report in <c>CloseOpenForms</c>. Moving the repair into
+        /// <see cref="LoadLayout"/> was tried and fails both, for every functional test.</para>
         /// </summary>
         private void RepairLayoutAfterLoad()
         {
