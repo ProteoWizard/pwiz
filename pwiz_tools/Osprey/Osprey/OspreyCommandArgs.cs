@@ -287,6 +287,13 @@ namespace pwiz.Osprey
         // format/section value (ascii | unicode | sections | html | <Section>).
         public static readonly OspreyArgument ARG_DIAGNOSTICS = new OspreyArgument(@"diagnostics",
             (c, p) => c._config.Diagnostics = true) { ShortName = @"d" };
+        // One flag, everything we know how to show. An opt-in token per expensive panel was built
+        // and removed (#4522): the peak co-assignment panel measured 7.3M rows/s, i.e. ~46s on an
+        // 82-file Astral run against a 10-hour search, so the cost never justified making anyone
+        // choose. Someone who asks for --model-diagnostics wants the diagnostics, not a decision
+        // about which ones they can afford - and a panel behind a token nobody remembers is a
+        // panel nobody sees, which defeats a diagnostic whose whole purpose is surfacing an effect
+        // users do not know to look for.
         public static readonly OspreyArgument ARG_MODEL_DIAGNOSTICS = new OspreyArgument(@"model-diagnostics",
             (c, p) => c._config.ModelDiagnostics = true);
         public static readonly OspreyArgument ARG_HELP = new OspreyArgument(@"help",
@@ -420,7 +427,6 @@ namespace pwiz.Osprey
                     matched.ProcessValue(this, new NameValuePair(matched.Name, parallelValue));
                     continue;
                 }
-
                 if (matched.Variadic)
                 {
                     i++;
@@ -809,7 +815,7 @@ namespace pwiz.Osprey
                 { @"perf-stats", @"Emit machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for perf tools (off by default)" },
                 { @"verbose", @"Show implementer-grade detail (e.g. per-fold Percolator iterations) hidden by default" },
                 { @"diagnostics", @"Write cross-impl bisection dumps (OSPREY_DUMP_* bundle)" },
-                { @"model-diagnostics", @"Write a self-contained interactive HTML report of the trained scoring model and FDR calibration" },
+                { @"model-diagnostics", @"Write a self-contained interactive HTML report of the trained scoring model, FDR calibration, and single-peak multiple-ID co-assignment" },
                 { @"help", @"Show this help message ([ascii|unicode|sections|html|<Section>])" },
                 { @"version", @"Show version" },
             };

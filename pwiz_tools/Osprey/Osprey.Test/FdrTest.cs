@@ -921,7 +921,7 @@ namespace pwiz.Osprey.Test
                 Score = -2.5,
                 RunPrecursorQvalue = 0.011,
                 RunPeptideQvalue = 0.022,
-                RunProteinQvalue = 0.033,
+                ExperimentProteinQvalue = 0.033,
                 ExperimentPrecursorQvalue = 0.044,
                 ExperimentPeptideQvalue = 0.055,
                 Pep = 0.066,
@@ -955,21 +955,25 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Minimal <see cref="IFdrOutputSink"/> for the projection parity tests: records
-        /// each row's Score + <see cref="FdrQValues"/> by (fileIdx, rowIdx) so the test
-        /// can compare the streamed outputs against the FdrEntry oracle now that the lean
-        /// struct no longer stores them (issue #4355 struct-shrink S0).
+        /// each row's Score + experiment aggregate score + <see cref="FdrQValues"/> by
+        /// (fileIdx, rowIdx) so the test can compare the streamed outputs against the
+        /// FdrEntry oracle now that the lean struct no longer stores them (issue #4355
+        /// struct-shrink S0).
         /// </summary>
         private sealed class CapturingSink : IFdrOutputSink
         {
             private readonly Dictionary<(int, int), double> _scores = new Dictionary<(int, int), double>();
+            private readonly Dictionary<(int, int), double> _expAgg = new Dictionary<(int, int), double>();
             private readonly Dictionary<(int, int), FdrQValues> _q = new Dictionary<(int, int), FdrQValues>();
             private readonly Dictionary<(int, int), (uint EntryId, bool IsDecoy, byte Charge, string Peptide)> _ident =
                 new Dictionary<(int, int), (uint, bool, byte, string)>();
 
             public void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
-                byte charge, string peptide, double score, in FdrQValues q)
+                byte charge, string peptide, double score, double experimentAggregateScore,
+                in FdrQValues q)
             {
                 _scores[(fileIdx, rowIdx)] = score;
+                _expAgg[(fileIdx, rowIdx)] = experimentAggregateScore;
                 _q[(fileIdx, rowIdx)] = q;
                 _ident[(fileIdx, rowIdx)] = (entryId, isDecoy, charge, peptide);
             }
@@ -979,6 +983,7 @@ namespace pwiz.Osprey.Test
             }
 
             public double ScoreAt(int fileIdx, int rowIdx) => _scores[(fileIdx, rowIdx)];
+            public double ExperimentAggregateScoreAt(int fileIdx, int rowIdx) => _expAgg[(fileIdx, rowIdx)];
             public FdrQValues QAt(int fileIdx, int rowIdx) => _q[(fileIdx, rowIdx)];
             public (uint EntryId, bool IsDecoy, byte Charge, string Peptide) IdentAt(int fileIdx, int rowIdx)
                 => _ident[(fileIdx, rowIdx)];
@@ -2203,6 +2208,25 @@ namespace pwiz.Osprey.Test
             AssertMapsEqual(
                 PercolatorQValues.ComputePepWinnerMap(scoreArr, labelArr, entryIdArr),
                 streaming.BuildPepWinnerMap(), "pep-winner");
+
+            // The score persisted beside those q-values (sidecar v4, issue #4522). The two
+            // paths derive it independently - the flat one by reducing the score array, the
+            // streaming one off the per-(base_id, side) bests it already keeps - so this is
+            // the check that they cannot disagree about what the experiment scope competed on.
+            var flatAgg = PercolatorQValues.ComputeExperimentAggregateScoreMap(
+                scoreArr, labelArr, entryIdArr, applyExperimentAgg: false);
+            AssertMapsEqual(flatAgg, streaming.BuildExperimentAggregateScoreMap(), "exp-aggregate");
+
+            // Under the default aggregation the aggregate IS the max over the entry's rows.
+            // Computed here straight from the fixture rather than from either implementation,
+            // so both are pinned to the definition instead of to each other.
+            var expectedMax = new Dictionary<uint, double>();
+            for (int i = 0; i < scoreArr.Length; i++)
+            {
+                if (!expectedMax.TryGetValue(entryIdArr[i], out double cur) || scoreArr[i] > cur)
+                    expectedMax[entryIdArr[i]] = scoreArr[i];
+            }
+            AssertMapsEqual(expectedMax, flatAgg, "exp-aggregate-vs-definition");
         }
 
         /// <summary>
@@ -2292,6 +2316,17 @@ namespace pwiz.Osprey.Test
             AssertMapsEqual(
                 ResidentMeanBestNPeptideQMap(scoreArr, labelArr, entryIdArr, peptideArr, n),
                 streaming.BuildExperimentPeptideQMap(), "mbN exp-peptide");
+
+            // The persisted aggregate (sidecar v4, issue #4522) must follow the aggregation
+            // too - under mean(best-N) it is the group's mean-best-N score, NOT the raw max.
+            // This is the case the whole format change exists for: a consumer that rebuilt the
+            // roll-up with max() would be wrong here and right everywhere else.
+            var residentAgg = new Dictionary<uint, double>();
+            var aggPerRow = TargetDecoyCompetition.ComputeBaseIdMeanBestN(
+                scoreArr, labelArr, entryIdArr, n);
+            for (int i = 0; i < aggPerRow.Length; i++)
+                residentAgg[entryIdArr[i]] = aggPerRow[i];
+            AssertMapsEqual(residentAgg, streaming.BuildExperimentAggregateScoreMap(), "mbN exp-aggregate");
 
             // PEP must still be the RAW-max map, untouched by the aggregation. That invariant
             // rests entirely on the mean-best-N block in Add() sitting AFTER the _precTargets /
@@ -2713,7 +2748,12 @@ namespace pwiz.Osprey.Test
             PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
             var map = new Dictionary<uint, double>(wi.Length);
             for (int rank = 0; rank < wi.Length; rank++)
-                map[entryIds[wi[rank]] & 0x7FFFFFFFu] = q[rank];
+            {
+                // Keyed by the WINNER's full entry_id, decoy bit intact - mirroring
+                // PercolatorQValues.ComputeExperimentPrecursorQMap. On base_id the losing side of
+                // each competition inherited the winner's q, which is the defect this pins shut.
+                map[entryIds[wi[rank]]] = q[rank];
+            }
             return map;
         }
 

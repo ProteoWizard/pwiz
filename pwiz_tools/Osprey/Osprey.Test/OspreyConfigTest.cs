@@ -95,13 +95,13 @@ namespace pwiz.Osprey.Test
         }
 
         // NOTE: A direct compaction protein-rescue test (a non-decoy entry whose
-        // RunPeptideQvalue is above config.RunFdr but whose RunProteinQvalue <= 0.01
+        // RunPeptideQvalue is above config.RunFdr but whose ExperimentProteinQvalue <= 0.01
         // still survives first-pass compaction) is intentionally NOT added here.
         // The predicate lives in FirstPassFdrTask.CompactFirstPass, a private instance
         // method that consumes a PipelineContext (DI container + logging) and either
         // a full RescoreInputs bundle or a constructed per-file entry list; there is
         // no pure/public seam exposing the
-        // "RunPeptideQvalue <= RunFdr || RunProteinQvalue <= EffectiveProteinFdr"
+        // "RunPeptideQvalue <= RunFdr || ExperimentProteinQvalue <= EffectiveProteinFdr"
         // gate without that heavy setup. TestEffectiveProteinFdr above guards the
         // exact value (0.01) that CompactFirstPass reads as its always-on
         // proteinGate, so the always-on threshold semantics are covered at the

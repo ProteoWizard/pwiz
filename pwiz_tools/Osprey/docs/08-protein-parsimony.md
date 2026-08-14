@@ -177,7 +177,7 @@ Ranking is by raw SVM discriminant (`FdrEntry.Score`), never by q-value or PEP �
 the class doc (`ProteinFdr.cs:496-534`) reproduces the Rust rationale that q/PEP
 collapse the decoy null.
 
-### First pass — pre-compaction, gating (`run_protein_qvalue`)
+### First pass — pre-compaction, gating (`experiment_protein_qvalue`)
 
 `ProteinFdr.RunFirstPassProteinFdr` (`ProteinFdr.cs:804`), wrapped by
 `ProteinFdrEngine.RunFirstPass` (`ProteinFdrEngine.cs:61`), is invoked from
@@ -193,11 +193,27 @@ compaction (`Osprey.Tasks/FirstPassFdrTask.cs:305-313`; the comment confirms it 
   passed precursor FDR), giving a symmetric target+decoy null.
 - Picked-protein FDR runs at the **1× Savitski gate** `config.RunFdr`
   (`ProteinFdr.cs:824`).
-- Only `RunProteinQvalue` is set (`setRun: true, setExperiment: false`,
-  `ProteinFdr.cs:828`) via `PropagateProteinQvalues` (`ProteinFdr.cs:765`).
+- `ExperimentProteinQvalue` is set via `PropagateProteinQvalues`, which assigns by
+  `ModifiedSequence` over **every** entry, passing or not — a peptide's protein q is a
+  property of the peptide, not of a detection.
 
-`RunProteinQvalue` then feeds protein-aware compaction and the reconciliation
-consensus rescue gate (`10-cross-run-reconciliation.md`).
+There is ONE protein q-value field, and it is experiment-scope in both passes: the detected
+set is gated on run-level peptide q, but it is pooled over every file, one picked-protein FDR
+runs, and one value per peptide reaches every entry in every file. The field was called
+`RunProteinQvalue` until issue #4559, which was a misnomer — measured over a Stellar 3-file
+run, 483,820 of 483,820 precursors appearing in 2+ files carried an identical value in all of
+them.
+
+**The pass is recorded by the sidecar, not by a second field.** The first-pass value is
+captured into `.1st-pass.fdr_scores.bin`, where the streaming compaction gate reads it back;
+the second-pass protein FDR then overwrites it in memory, and `PatchPass2ProteinQvalues`
+writes that into `.2nd-pass.fdr_scores.bin`. Before #4559 the second pass wrote a separate
+`ExperimentProteinQvalue` that nothing read, while the 2nd-pass sidecar kept a **pass-1**
+value — the one column in that file that was not a pass-2 quantity.
+
+The first-pass value feeds protein-aware compaction and the reconciliation
+consensus rescue gate (`10-cross-run-reconciliation.md`). Both run before the second-pass
+protein FDR exists, which is why one field can serve both passes.
 
 ### Second pass — post-reconciliation, authoritative (`experiment_protein_qvalue`)
 
