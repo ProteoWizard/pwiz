@@ -98,7 +98,6 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
             if (expType == WiffExperimentType.SIM && !_simAsSpectra) continue;
 
             double[] times, intensities;
-            double[] cycleTics = Array.Empty<double>();
             if (_acceptZeroLengthSpectra)
             {
                 // cpp SpectrumList_ABI.cpp:298-306: the flag's whole point is to skip the
@@ -110,9 +109,6 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
             {
                 (times, intensities) = exp.GetBpc();
                 if (times.Length == 0) (times, intensities) = exp.GetTic();
-                // Second axis for the emptiness test below. Already materialized - the BPC
-                // fetch initializes the TIC to get its time axis - so this costs nothing.
-                cycleTics = exp.GetTic().Intensities;
             }
 
             int n = Math.Min(times.Length, intensities.Length);
@@ -132,26 +128,26 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
                 }
                 // cpp SpectrumList_ABI.cpp:314 drops a cycle unless BOTH the per-cycle BPC
                 // (fallback TIC) intensity is > 0 AND getSpectrum(...)->getDataSize(false, true)
-                // is > 0. Do NOT restore that second half literally: it reads the file's entire
-                // spectral payload at index-build time, on EVERY open including GraphFullScan's
-                // scan-load reopen, which made opening a large TripleTOF MS1 .wiff exceed the
-                // full-scan graph's load timeout on .NET 8.
-                //
-                // The BPC test alone is not sufficient, though - it was once assumed to imply the
-                // other, and it does not. On wine yeast sampleA_2.wiff 834 MS2 cycles report a
-                // base peak of exactly 1.0 at m/z 2.35e-07, a sentinel, while carrying no points
-                // at all; we emitted 834 empty spectra cpp never indexes. Test the cycle TIC
-                // instead: it is Spectrum::getSumY (cpp WiffFile.cpp:740), i.e. the sum over the
-                // very points getDataSize counts, so TIC > 0 and "has a point above zero" are the
-                // same condition - reproduced from an array that is already in memory rather than
-                // by reading every spectrum.
-                else if (intensities[i] <= 0 || (i < cycleTics.Length && cycleTics[i] <= 0))
+                // is > 0. This is the first half.
+                else if (intensities[i] <= 0)
                     continue;
-                // The other half of cpp's test, off by default because of what it costs. Some
-                // cycles look like real data on both chromatograms and still read back empty -
-                // 448 of them in 20061108_CPTAC_1B468.wiff - and only the read can tell.
-                // addZeros:false is cpp's ignoreZeroIntensityPoints:true, so this counts the same
-                // points getDataSize(false, true) counts.
+                // The second half, off by default because of what it costs: it reads the file's
+                // entire spectral payload at index-build time, on EVERY open including
+                // GraphFullScan's scan-load reopen, which made opening a large TripleTOF MS1
+                // .wiff exceed the full-scan graph's load timeout on .NET 8. msconvert turns it
+                // on; interactive callers leave it off and accept the empty spectra.
+                //
+                // There is no cheap stand-in for it. A cycle-TIC > 0 test looked equivalent -
+                // the TIC is Spectrum::getSumY, a sum over the points getDataSize counts - and
+                // it does catch the sentinel cycles (wine yeast sampleA_2.wiff has 834 MS2
+                // cycles reporting base peak 1.0 at m/z 2.35e-07 with nothing behind them). But
+                // the implication does not hold in the other direction: "checkmix 1.wiff"
+                // sample 7 cycle 58 reports a cycle TIC of exactly 0.0 while carrying 9 real
+                // points with a base peak of 2.0, and cpp keeps it. Gating on the TIC dropped
+                // that cycle and shifted every id after it.
+                //
+                // addZeros:false is cpp's ignoreZeroIntensityPoints:true, so this counts the
+                // same points getDataSize(false, true) counts.
                 else if (_verifyNonEmptySpectra
                          && (exp.GetSpectrum(i + 1, addZeros: false, centroid: false)?.XValues.Length ?? 0) == 0)
                     continue;
