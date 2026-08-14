@@ -1277,7 +1277,7 @@ namespace pwiz.Skyline
 
             try
             {
-                SaveLayout(fileName);
+                SaveLayout(GetViewFile(fileName));
 
                 if (includingCacheFile)
                 {
@@ -1461,12 +1461,7 @@ namespace pwiz.Skyline
             }, (int) SrmDocument.Level.TransitionGroups);
         }
 
-        private void SaveLayout(string fileName)
-        {
-            SaveLayoutToFile(GetViewFile(fileName));
-        }
-
-        private void SaveLayoutToFile(string viewFilePath)
+        private void SaveLayout(string viewFilePath)
         {
             using (var saverUser = new FileSaver(viewFilePath))
             {
@@ -1524,7 +1519,7 @@ namespace pwiz.Skyline
         {
             try
             {
-                SaveLayoutToFile(viewFilePath);
+                SaveLayout(viewFilePath);
             }
             catch (Exception x)
             {
@@ -1703,8 +1698,8 @@ namespace pwiz.Skyline
                     {
                         var tempDocumentPath = Path.Combine(sharing.EnsureTempDir().DirPath,
                             sharing.GetDocumentFileName());
-                        SaveLayout(tempDocumentPath);
                         sharing.ViewFilePath = GetViewFile(tempDocumentPath);
+                        SaveLayout(sharing.ViewFilePath);
                     }
                     else if (DocumentFilePath != null)
                     {
