@@ -447,7 +447,7 @@ namespace pwiz.Skyline
             } // layoutLock.Dispose()
 
             // Do this after layout is unlocked, because it messes up the selected graph otherwise
-            RepairLayoutAfterLoad();
+            EnsureApplicableForms();
 
             // Just about any change could potentially change these panes.
             if (settingsNew.HasResults)
@@ -461,21 +461,13 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Puts right what loading a layout leaves behind, once the dock panel is unlocked.
-        /// <see cref="LoadLayoutLocked"/> destroys every dockable form before it rebuilds, so a
-        /// layout that does not name the Targets window leaves <see cref="SequenceTree"/> null -
-        /// and the next document edit dereferences it through <c>UndoState</c>. Windows bound to a
-        /// list or group comparison this document does not have are closed for the same reason:
-        /// <see cref="DeserializeForm"/> manufactures them from the persist string without checking.
-        ///
-        /// <para>Deliberately NOT inside <see cref="LoadLayout"/>, which stays the primitive that
-        /// leaves nothing behind. <c>AbstractFunctionalTest.EndTest</c> relies on that: its
-        /// <c>RestoreMinimalView</c> loads a contents-free layout to close every dock window, and
-        /// two separate gates then require only SkylineWindow to remain - the open-form count and
-        /// the "left open at end of test" report in <c>CloseOpenForms</c>. Moving the repair into
-        /// <see cref="LoadLayout"/> was tried and fails both, for every functional test.</para>
+        /// Shows the forms this document requires and closes the ones it cannot support, after a
+        /// layout load has destroyed and rebuilt them. The Targets window is the only required one:
+        /// without it <see cref="SequenceTree"/> is null and the next document edit throws.
+        /// Kept out of <see cref="LoadLayout"/> itself, which stays able to leave nothing behind -
+        /// <c>AbstractFunctionalTest</c> teardown loads an empty layout and requires exactly that.
         /// </summary>
-        private void RepairLayoutAfterLoad()
+        private void EnsureApplicableForms()
         {
             if (_sequenceTreeForm == null)
             {

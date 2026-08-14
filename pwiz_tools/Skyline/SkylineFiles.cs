@@ -1581,9 +1581,9 @@ namespace pwiz.Skyline
                 MessageDlg.ShowWithException(this,
                     string.Format(SkylineResources.SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__, viewFilePath), x);
             }
-            // On every path: the load that succeeded, the one that was rolled back, and the one
-            // whose rollback also failed. All three can leave windows that need putting right.
-            RepairLayoutAfterLoad();
+            // On every path: the layout that loaded, the one that was rolled back, and the one
+            // whose rollback failed too. All three can leave forms needing this.
+            EnsureApplicableForms();
         }
 
         private void SetActiveFile(string path)
