@@ -461,11 +461,7 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Shows the forms this document requires and closes the ones it cannot support, after a
-        /// layout load has destroyed and rebuilt them. The Targets window is the only required one:
-        /// without it <see cref="SequenceTree"/> is null and the next document edit throws.
-        /// Kept out of <see cref="LoadLayout"/> itself, which stays able to leave nothing behind -
-        /// <c>AbstractFunctionalTest</c> teardown loads an empty layout and requires exactly that.
+        /// Shows required and closes inapplicable forms.
         /// </summary>
         private void EnsureApplicableForms()
         {
@@ -473,9 +469,6 @@ namespace pwiz.Skyline
             {
                 ShowSequenceTreeForm(true);
             }
-            // Everything below is disabled on the View menu without results, but a layout can name
-            // any of it and DeserializeForm builds what it is told - only GraphChromatogram checks.
-            // So an imported layout could show windows the user had no way to open.
             if (!DocumentUI.Settings.HasResults)
             {
                 UpdateUIGraphRetentionTime(IsRetentionTimeGraphTypeEnabled);

@@ -75,7 +75,6 @@ namespace pwiz.Skyline
             return fileName + @".view";
         }
 
-
         private void fileMenu_DropDownOpening(object sender, EventArgs e)
         {
             ToolStripMenuItem menu = fileToolStripMenuItem;
@@ -1573,16 +1572,14 @@ namespace pwiz.Skyline
                     {
                         LoadLayout(previousLayout);
                     }
-                    catch
+                    catch (Exception restoreException)
                     {
-                        // Ignore
+                        x = new AggregateException(x, restoreException);
                     }
                 }
                 MessageDlg.ShowWithException(this,
                     string.Format(SkylineResources.SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__, viewFilePath), x);
             }
-            // On every path: the layout that loaded, the one that was rolled back, and the one
-            // whose rollback failed too. All three can leave forms needing this.
             EnsureApplicableForms();
         }
 
