@@ -239,44 +239,6 @@ namespace pwiz.Skyline.Model.Serialization
         #region Results
 
         /// <summary>
-        /// One transition's results, or null when it has nothing to say which its precursor has
-        /// not already said.
-        /// <para>
-        /// <paramref name="groupResults"/> and <paramref name="sharedAreaFiles"/> are what the
-        /// precursor said, handed down from <see cref="CreateTransitionGroupElement"/> because the
-        /// two are one decision: the areas of a precursor's transitions ride on its
-        /// <see cref="ATTR.transition_areas"/> whenever all of them are ordinary, and then those
-        /// transitions are left out of the file altogether.
-        /// </para>
-        /// </summary>
-        private XElement CreateTransitionResultsElement(TransitionGroupDocNode nodeGroup,
-            TransitionDocNode nodeTransition, TransitionGroupResults groupResults,
-            ICollection<ReferenceValue<ChromFileInfoId>> sharedAreaFiles)
-        {
-            var transition = nodeTransition.Transition;
-            if (_moleculeResults == null)
-            {
-                if (groupResults == null || !groupResults.HasTransitionResults(transition) ||
-                    groupResults.IsTransitionCoveredBySharedAreas(transition, sharedAreaFiles))
-                {
-                    return null;
-                }
-
-                return CreateColumnarTransitionResultsElement(groupResults, transition);
-            }
-
-            // Worked out from the chromatograms, since a transition does not keep them.
-            var transitionChromInfos = _moleculeResults.GetTransitionChromInfos(nodeGroup.TransitionGroup, transition);
-            if (transitionChromInfos == null)
-            {
-                return null;
-            }
-
-            return CreateChromInfoResultsElement(transitionChromInfos, EL.transition_results, EL.transition_peak,
-                SetTransitionChromInfo);
-        }
-
-        /// <summary>
         /// One entry per replicate and file the chrom infos are held for, or null when there are
         /// none: the element exists only if something went in it.
         /// </summary>
@@ -311,25 +273,46 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         /// <summary>
-        /// One entry per replicate and file, in that order, which is what <see cref="ChromFileIds"/>
-        /// is: the reader rebuilds the flat positions from the order they come back in.
+        /// The peaks of one precursor and of all of its transitions, in one walk of the replicates
+        /// and files - which is what <see cref="ChromFileIds"/> is, and the order the reader
+        /// rebuilds the flat positions from.
+        /// <para>
+        /// One walk because the two levels are one decision. The areas of a precursor's transitions
+        /// ride on its <see cref="ATTR.transition_areas"/> wherever all of them are ordinary, and a
+        /// transition whose every area is carried that way is left out of the file altogether. What
+        /// a transition has left to say is only knowable with the precursor's answer in hand, so
+        /// they are settled here in the same place rather than one level at a time.
+        /// </para>
         /// <para>
         /// The same element names a document has always used. What tells the two apart is what is
         /// on them: this leaves out everything the .skyd gives back, and writes
         /// <see cref="ATTR.chosen_peak_index"/>, which says which candidate peak there to read.
         /// </para>
         /// </summary>
-        private XElement CreateColumnarResultsElement(ChromFileIds chromFileIds, string start, string peakStart,
-            Action<XElement, int, int> setPeak)
+        private void AddColumnarResults(TransitionGroupDocNode nodeGroup, XElement precursorResults,
+            IList<XElement> transitionElements)
         {
-            var replicatePositions = chromFileIds?.ReplicatePositions;
-            if (replicatePositions == null || replicatePositions.TotalCount == 0)
+            var results = nodeGroup.AbbreviatedResults;
+            var chromFileIds = results.ChromFileIds;
+            var replicatePositions = chromFileIds.ReplicatePositions;
+            var sharedAreas = results.GetSharedTransitionAreas(transitionElements.Count);
+            var sharedAreaFiles = GetSharedTransitionAreaFiles(results, sharedAreas);
+
+            // Null for a transition the precursor already speaks for, which is then not asked
+            // about again at any file.
+            var transitions = new Transition[transitionElements.Count];
+            for (int i = 0; i < transitions.Length; i++)
             {
-                return null;
+                var transition = ((TransitionDocNode) nodeGroup.Children[i]).Transition;
+                if (results.HasTransitionResults(transition) &&
+                    !results.IsTransitionCoveredBySharedAreas(transition, sharedAreaFiles))
+                {
+                    transitions[i] = transition;
+                }
             }
 
+            var transitionResults = new XElement[transitions.Length];
             var chromatograms = Settings.MeasuredResults.Chromatograms;
-            var element = new XElement(start);
             for (int replicateIndex = 0;
                  replicateIndex < Math.Min(replicatePositions.ReplicateCount, chromatograms.Count);
                  replicateIndex++)
@@ -337,27 +320,63 @@ namespace pwiz.Skyline.Model.Serialization
                 var chromatogramSet = chromatograms[replicateIndex];
                 foreach (int position in replicatePositions[replicateIndex])
                 {
-                    var peakElement = new XElement(peakStart);
-                    peakElement.SetAttribute(ATTR.replicate, chromatogramSet.Name);
-                    if (chromatogramSet.FileCount > 1)
-                    {
-                        peakElement.SetAttribute(ATTR.file,
-                            chromatogramSet.GetFileSaveId(chromFileIds.FileIds[position]));
-                    }
+                    var fileId = chromFileIds.FileIds[position];
+                    var peakElement = new XElement(EL.precursor_peak);
+                    SetReplicateAndFile(peakElement, chromatogramSet, fileId);
+                    SetColumnarPrecursorPeak(peakElement, results, sharedAreas, position);
+                    precursorResults.Add(peakElement);
 
-                    setPeak(peakElement, replicateIndex, position);
-                    element.Add(peakElement);
+                    for (int i = 0; i < transitions.Length; i++)
+                    {
+                        // Asked by file rather than by position: the position in hand is the
+                        // precursor's, and a transition's positions are its own.
+                        if (transitions[i] == null ||
+                            !results.TryGetTransitionPeak(transitions[i], replicateIndex, fileId, out var peak))
+                        {
+                            continue;
+                        }
+
+                        if (transitionResults[i] == null)
+                        {
+                            transitionResults[i] = new XElement(EL.transition_results);
+                            transitionElements[i].Add(transitionResults[i]);
+                        }
+
+                        var transitionPeak = new XElement(EL.transition_peak);
+                        SetReplicateAndFile(transitionPeak, chromatogramSet, fileId);
+                        SetColumnarTransitionPeak(transitionPeak, results, transitions[i], replicateIndex, fileId,
+                            peak);
+                        transitionResults[i].Add(transitionPeak);
+                    }
                 }
             }
 
-            return element;
+            // A transition's peaks are all in files its precursor was found in - see
+            // TransitionGroupResults.GetTransitionChromFileIds, which says only the other way
+            // round happens - so walking the precursor's positions has reached every one of them.
+            for (int i = 0; i < transitions.Length; i++)
+            {
+                if (transitions[i] != null)
+                {
+                    Assume.AreEqual(results.GetTransitionChromFileIds(transitions[i]).FileIds.Count,
+                        transitionResults[i]?.Elements().Count() ?? 0);
+                }
+            }
         }
 
-        private XElement CreateColumnarPrecursorResultsElement(TransitionGroupResults results, float[][] sharedAreas)
+        private static void SetReplicateAndFile(XElement element, ChromatogramSet chromatogramSet,
+            ChromFileInfoId fileId)
         {
-            return CreateColumnarResultsElement(results?.ChromFileIds, EL.precursor_results, EL.precursor_peak,
-                (element, replicateIndex, position) =>
+            element.SetAttribute(ATTR.replicate, chromatogramSet.Name);
+            if (chromatogramSet.FileCount > 1)
             {
+                element.SetAttribute(ATTR.file, chromatogramSet.GetFileSaveId(fileId));
+            }
+        }
+
+        private void SetColumnarPrecursorPeak(XElement element, TransitionGroupResults results, float[][] sharedAreas,
+            int position)
+        {
                 // No area: a precursor's is the sum of its transitions', which are written below it.
                 element.SetAttribute(ATTR.retention_time, results.Peaks.FlatValues[position].RetentionTime);
                 // Nullable rather than the generic default-value overload, which formats with
@@ -370,7 +389,7 @@ namespace pwiz.Skyline.Model.Serialization
                 // it either way would tell a document being read again that the matching had been
                 // done when it had not, and -1 would be taken for "not a candidate peak" rather
                 // than "not worked out". A precursor which does not know keeps everything its
-                // peaks need instead - see CreateColumnarTransitionResultsElement.
+                // peaks need instead - see SetColumnarTransitionPeak.
                 if (!results.NeedsPeakIndexes)
                 {
                     element.SetAttribute(ATTR.chosen_peak_index,
@@ -386,54 +405,48 @@ namespace pwiz.Skyline.Model.Serialization
                 }
 
                 AddAnnotations(element, results.GetAnnotations(position));
-            });
         }
 
         /// <summary>
-        /// A transition's peaks, written only when it has something its precursor does not already
-        /// say: an area which did not ride on <see cref="ATTR.transition_areas"/>, boundaries of
-        /// its own, something integrating between them cannot find again, or an annotation.
+        /// One transition's peak, written only where it has something its precursor does not
+        /// already say: an area which did not ride on <see cref="ATTR.transition_areas"/>,
+        /// boundaries of its own, something integrating between them cannot find again, or an
+        /// annotation.
         /// <para>
         /// Each value is looked up by replicate and file, because each of them is its own map: they
         /// are held only where there is one, and none of them has an entry wherever another does.
         /// </para>
         /// </summary>
-        private XElement CreateColumnarTransitionResultsElement(TransitionGroupResults results, Transition transition)
+        private void SetColumnarTransitionPeak(XElement element, TransitionGroupResults results,
+            Transition transition, int replicateIndex, ChromFileInfoId fileId, TransitionPeak peak)
         {
-            var chromFileIds = results.GetTransitionChromFileIds(transition);
-            return CreateColumnarResultsElement(chromFileIds, EL.transition_results, EL.transition_peak,
-                (element, replicateIndex, position) =>
-                {
-                    var fileId = chromFileIds.FileIds[position].Value;
-                    results.TryGetTransitionPeak(transition, replicateIndex, fileId, out var peak);
-                    element.SetAttribute(ATTR.area, peak.Area);
-                    element.SetAttribute(ATTR.user_set, peak.UserSet, UserSet.FALSE);
-                    // Nothing else carries these, so a transition written out has to say them. They
-                    // are the reason a peak which is anything but ordinary cannot ride its
-                    // precursor's transition_areas - see TransitionResults.TryGetPlainArea, which
-                    // decides that, and SharedTransitionAreas.MakeTransitionResults, which puts
-                    // back exactly the values it treats as ordinary.
-                    element.SetAttributeNullable(ATTR.truncated, peak.IsTruncated);
-                    element.SetAttribute(ATTR.forced_integration, peak.IsForcedIntegration, false);
-                    element.SetAttribute(ATTR.empty, peak.IsEmpty, false);
+            element.SetAttribute(ATTR.area, peak.Area);
+            element.SetAttribute(ATTR.user_set, peak.UserSet, UserSet.FALSE);
+            // Nothing else carries these, so a transition written out has to say them. They
+            // are the reason a peak which is anything but ordinary cannot ride its
+            // precursor's transition_areas - see TransitionResults.TryGetPlainArea, which
+            // decides that, and SharedTransitionAreas.MakeTransitionResults, which puts
+            // back exactly the values it treats as ordinary.
+            element.SetAttributeNullable(ATTR.truncated, peak.IsTruncated);
+            element.SetAttribute(ATTR.forced_integration, peak.IsForcedIntegration, false);
+            element.SetAttribute(ATTR.empty, peak.IsEmpty, false);
 
-                    var peakBounds = results.FindTransitionCustomPeakBounds(transition, replicateIndex, fileId);
-                    if (peakBounds.HasValue)
-                    {
-                        element.SetAttribute(ATTR.start_time, peakBounds.Value.StartTime);
-                        element.SetAttribute(ATTR.end_time, peakBounds.Value.EndTime);
-                    }
+            var peakBounds = results.FindTransitionCustomPeakBounds(transition, replicateIndex, fileId);
+            if (peakBounds.HasValue)
+            {
+                element.SetAttribute(ATTR.start_time, peakBounds.Value.StartTime);
+                element.SetAttribute(ATTR.end_time, peakBounds.Value.EndTime);
+            }
 
-                    var peakMetrics = results.FindTransitionCustomPeakMetrics(transition, replicateIndex, fileId);
-                    if (peakMetrics != null)
-                    {
-                        element.SetAttributeNullable(ATTR.mass_error_ppm, peakMetrics.MassError);
-                        if (peakMetrics.Identified != PeakIdentification.FALSE)
-                            element.SetAttribute(ATTR.identified, peakMetrics.Identified.ToString().ToLowerInvariant());
-                    }
+            var peakMetrics = results.FindTransitionCustomPeakMetrics(transition, replicateIndex, fileId);
+            if (peakMetrics != null)
+            {
+                element.SetAttributeNullable(ATTR.mass_error_ppm, peakMetrics.MassError);
+                if (peakMetrics.Identified != PeakIdentification.FALSE)
+                    element.SetAttribute(ATTR.identified, peakMetrics.Identified.ToString().ToLowerInvariant());
+            }
 
-                    AddAnnotations(element, results.FindTransitionAnnotations(transition, replicateIndex, fileId));
-                });
+            AddAnnotations(element, results.FindTransitionAnnotations(transition, replicateIndex, fileId));
         }
 
         /// <summary>
@@ -653,19 +666,19 @@ namespace pwiz.Skyline.Model.Serialization
                 AddXmlWriterContent(element, w => w.WriteElements(new[] { libInfo }, helpers));
             }
 
-            // What the precursor says about its transitions' areas, which is also what decides
-            // whether each of them has anything left to say. Null in the shape which keeps every
-            // attribute of the chrom infos, where the levels are independent.
-            TransitionGroupResults groupResults = null;
-            HashSet<ReferenceValue<ChromFileInfoId>> sharedAreaFiles = null;
-            if (_moleculeResults == null)
+            // Goes in ahead of the transitions, which is where the document has always had it, and
+            // is filled in below once they are all here. An XElement is still open to being added
+            // to after it is in the tree, so its place and its contents are two separate questions.
+            var columnarPositions = _moleculeResults == null
+                ? node.AbbreviatedResults?.ChromFileIds?.ReplicatePositions
+                : null;
+            XElement precursorResults = null;
+            if (columnarPositions != null && columnarPositions.TotalCount != 0)
             {
-                groupResults = node.AbbreviatedResults;
-                var sharedAreas = groupResults?.GetSharedTransitionAreas(node.Children.Count);
-                sharedAreaFiles = GetSharedTransitionAreaFiles(groupResults, sharedAreas);
-                element.Add(CreateColumnarPrecursorResultsElement(groupResults, sharedAreas));
+                precursorResults = new XElement(EL.precursor_results);
+                element.Add(precursorResults);
             }
-            else
+            else if (_moleculeResults != null)
             {
                 var groupChromInfos = _moleculeResults.GetTransitionGroupChromInfos(group);
                 if (groupChromInfos != null)
@@ -684,14 +697,34 @@ namespace pwiz.Skyline.Model.Serialization
                         _moleculeResults?.GetTransitionChromInfos(group, transition.Transition))));
                 element.Add(new XElement(EL.transition_data, Convert.ToBase64String(transitionData.ToByteArray())));
                 _documentWriter.OnWroteTransitions(node.TransitionCount);
+                return element;
             }
-            else
+
+            var transitionElements = new List<XElement>(node.Children.Count);
+            foreach (TransitionDocNode nodeTransition in node.Children)
             {
-                foreach (TransitionDocNode nodeTransition in node.Children)
+                var transitionElement = CreateTransitionElement(node, nodeTransition);
+                element.Add(transitionElement);
+                transitionElements.Add(transitionElement);
+                _documentWriter.OnWroteTransitions(1);
+            }
+
+            if (precursorResults != null)
+            {
+                AddColumnarResults(node, precursorResults, transitionElements);
+            }
+            else if (_moleculeResults != null)
+            {
+                for (int i = 0; i < transitionElements.Count; i++)
                 {
-                    element.Add(CreateTransitionElement(node, nodeTransition,
-                        CreateTransitionResultsElement(node, nodeTransition, groupResults, sharedAreaFiles)));
-                    _documentWriter.OnWroteTransitions(1);
+                    // Worked out from the chromatograms, since a transition does not keep them.
+                    var transitionChromInfos = _moleculeResults.GetTransitionChromInfos(group,
+                        ((TransitionDocNode) node.Children[i]).Transition);
+                    if (transitionChromInfos != null)
+                    {
+                        transitionElements[i].Add(CreateChromInfoResultsElement(transitionChromInfos,
+                            EL.transition_results, EL.transition_peak, SetTransitionChromInfo));
+                    }
                 }
             }
 
@@ -712,12 +745,11 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         /// <summary>
-        /// The &lt;transition&gt; element of one <see cref="TransitionDocNode"/>, given the results
-        /// its precursor worked out for it - null when the precursor already says everything it
-        /// has.
+        /// The &lt;transition&gt; element of one <see cref="TransitionDocNode"/>, without its
+        /// results: those are added by <see cref="CreateTransitionGroupElement"/>, which walks the
+        /// replicates once for the precursor and all of its transitions together.
         /// </summary>
-        private XElement CreateTransitionElement(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition,
-            XElement results)
+        private XElement CreateTransitionElement(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition)
         {
             var nodePep = PeptideDocNode;
             var element = new XElement(EL.transition);
@@ -821,8 +853,6 @@ namespace pwiz.Skyline.Model.Serialization
                 libInfoElement.SetAttribute(ATTR.intensity, nodeTransition.LibInfo.Intensity);
                 element.Add(libInfoElement);
             }
-
-            element.Add(results);
 
             return element;
         }
