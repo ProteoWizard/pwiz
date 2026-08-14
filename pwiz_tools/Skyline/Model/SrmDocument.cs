@@ -1847,27 +1847,34 @@ namespace pwiz.Skyline.Model
                 var nodeGroup = (TransitionGroupDocNode) FindNode(groupPath);
                 if (nodeGroup == null)
                     throw new IdentityNotFoundException(groupPath.Child);
-                var targets = Settings.GetTargets(nodePep).ToList();
-                var retentionTimes = Settings.GetRetentionTimes(filePath, targets);
-                Settings.TryGetRetentionTimes(nodePep, nodeGroup.TransitionGroup.PrecursorAdduct, filePath, out _, out retentionTimes);
-                if(ContainsTime(retentionTimes, startTime.Value, endTime.Value))
-                {
-                    identified = PeakIdentification.TRUE;
-                }
-                else
-                {
-                    ChromatogramSet chromatogramSet = null;
-                    MeasuredResults?.TryGetChromatogramSet(nameSet, out chromatogramSet, out _);
-                    var alignedRetentionTimes = Settings.GetAlignedRetentionTimes(chromatogramSet, filePath, Settings.GetTargets(nodePep).ToList());
-                    identified = ContainsTime(alignedRetentionTimes, startTime.Value, endTime.Value)
-                        ? PeakIdentification.ALIGNED
-                        : PeakIdentification.FALSE;
-                }
+                ChromatogramSet chromatogramSet = null;
+                MeasuredResults?.TryGetChromatogramSet(nameSet, out chromatogramSet, out _);
+                identified = GetPeakIdentification(nodePep, nodeGroup.TransitionGroup.PrecursorAdduct,
+                    chromatogramSet, filePath, startTime.Value, endTime.Value);
             }
             return ChangePeak(groupPath, nameSet, filePath,
                 (node, info, tol, iSet, fileId, reg) =>
-                    node.ChangePeak(Settings, info, iSet, fileId, reg, transition, startTime, 
+                    node.ChangePeak(Settings, info, iSet, fileId, reg, transition, startTime,
                                     endTime, identified.Value, userSet, preserveMissingPeaks));
+        }
+
+        /// <summary>
+        /// Tells whether the peak between <paramref name="startTime"/> and <paramref name="endTime"/> contains
+        /// a spectrum library retention time for the molecule, either measured in the file itself
+        /// (<see cref="PeakIdentification.TRUE"/>) or through retention time alignment
+        /// (<see cref="PeakIdentification.ALIGNED"/>).
+        /// </summary>
+        public PeakIdentification GetPeakIdentification(PeptideDocNode nodePep, Adduct precursorAdduct,
+            ChromatogramSet chromatogramSet, MsDataFileUri filePath, double startTime, double endTime)
+        {
+            Settings.TryGetRetentionTimes(nodePep, precursorAdduct, filePath, out _, out var retentionTimes);
+            if (ContainsTime(retentionTimes, startTime, endTime))
+                return PeakIdentification.TRUE;
+            var alignedRetentionTimes = Settings.GetAlignedRetentionTimes(chromatogramSet, filePath,
+                Settings.GetTargets(nodePep).ToList());
+            return ContainsTime(alignedRetentionTimes, startTime, endTime)
+                ? PeakIdentification.ALIGNED
+                : PeakIdentification.FALSE;
         }
 
         private bool ContainsTime(double[] times, double startTime, double endTime)

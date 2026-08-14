@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
@@ -358,15 +359,68 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument Import(TextReader reader, IProgressMonitor progressMonitor, long lineCount, bool isMinutes, bool removeMissing = false, bool changePeaks = true)
         {
-            IProgressStatus status = new ProgressStatus(ModelResources.PeakBoundaryImporter_Import_Importing_Peak_Boundaries);
+            _progressMonitor = progressMonitor;
+            _status = new ProgressStatus(ModelResources.PeakBoundaryImporter_Import_Importing_Peak_Boundaries);
+            _progressPercent = -1;
+
+            // Read the entire file first, resolving every line to the peptides and result files it refers to,
+            // and grouping the changes by peptide. Nothing about the document is changed by this pass.
+            var peptideChanges = ReadPeakBoundaries(reader, lineCount, isMinutes, changePeaks, out var boundaryLines);
+            if (peptideChanges == null)
+                return Document;    // Canceled
+
+            // Apply the changes for each peptide on a background thread. Because all of the changes for a
+            // peptide are applied to a single PeptideDocNode, the document itself is rebuilt only once, at
+            // the end, instead of once per line of the file.
+            if (!ApplyPeakBoundaries(peptideChanges, changePeaks))
+                return Document;    // Canceled
+
+            // Report the lines which matched a peptide and a file, but no precursor of that peptide. This is
+            // done here, in line order, so that the reported line numbers do not depend on thread scheduling.
+            foreach (var boundaryLine in boundaryLines)
+            {
+                if (boundaryLine.FoundSample)
+                    continue;
+                var unrecognizedChargeState = new UnrecognizedChargeState(boundaryLine.Charge,
+                    boundaryLine.FileIdentity, boundaryLine.ModifiedPeptideString);
+                if (!UnrecognizedChargeStates.ContainsKey(unrecognizedChargeState))
+                    UnrecognizedChargeStates[unrecognizedChargeState] = boundaryLine.LineNumber;
+            }
+
+            var docReference = (SrmDocument) Document.ChangeIgnoreChangingChildren(true);
+            var docNew = ReplacePeptides(docReference, peptideChanges);
+            // Remove peaks from the document that weren't in the file.
+            if (removeMissing)
+            {
+                var trackAdjustedResults = new HashSet<ResultsKey>();
+                foreach (var pepChanges in peptideChanges)
+                    trackAdjustedResults.UnionWith(pepChanges.AdjustedResults);
+                docNew = RemoveMissing(docNew, trackAdjustedResults, changePeaks);
+            }
+            // If nothing has changed, return the old Document before ChangeIgnoreChangingChildren was turned off
+            if (!ReferenceEquals(docNew, docReference))
+                Document = (SrmDocument) Document.ChangeIgnoreChangingChildren(false).ChangeChildrenChecked(docNew.Children);
+            return Document;
+        }
+
+        /// <summary>
+        /// Reads every line of the peak boundaries file and resolves it against the document, without
+        /// changing anything. Lines which cannot be resolved are recorded in <see cref="UnrecognizedPeptides"/>
+        /// and <see cref="UnrecognizedFiles"/>, exactly as they were when the file was read and applied in a
+        /// single pass.
+        /// </summary>
+        /// <returns>The changes to be made, grouped by the peptide they apply to, or null if canceled</returns>
+        private List<PeptidePeakBoundaries> ReadPeakBoundaries(TextReader reader, long lineCount, bool isMinutes,
+            bool changePeaks, out List<PeakBoundaryLine> boundaryLines)
+        {
             double timeConversionFactor = isMinutes ? 1.0 : 60.0;
             int linesRead = 0;
-            int progressPercent = -1;
-            var docNew = (SrmDocument) Document.ChangeIgnoreChangingChildren(true);
-            var docReference = docNew;
+            boundaryLines = new List<PeakBoundaryLine>();
+            var peptideChanges = new List<PeptidePeakBoundaries>();
+            // Keyed on the Peptide Identity, which is reference unique to a single peptide in the document
+            var peptideChangesByPeptide = new Dictionary<ReferenceValue<Identity>, PeptidePeakBoundaries>();
             var sequenceToNode = MakeSequenceDictionary(Document);
-            var fileNameToFileMatch = new Dictionary<Tuple<string, string, bool>, ChromSetFileMatch>();
-            var trackAdjustedResults = new HashSet<ResultsKey>();
+            var fileNameToFileMatch = new Dictionary<Tuple<string, string, bool>, ResultFileMatch>();
             var modMatcher = new ModificationMatcher();
             var canonicalSequenceDict = new Dictionary<string, string>();
 
@@ -393,16 +447,11 @@ namespace pwiz.Skyline.Model
             while ((line = reader.ReadLine()) != null)
             {
                 linesRead++;
-                if (progressMonitor != null)
+                if (_progressMonitor != null)
                 {
-                    if (progressMonitor.IsCanceled)
-                        return Document;
-                    int progressNew = (int) (linesRead*100/lineCount);
-                    if (progressPercent != progressNew)
-                    {
-                        progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressNew));
-                        progressPercent = progressNew;
-                    }
+                    if (_progressMonitor.IsCanceled)
+                        return null;
+                    UpdateProgress((int) (linesRead * PERCENT_READING / lineCount));
                 }
                 var dataFields = new DataFields(fieldIndices, line.ParseDsvFields(correctSeparator), allFieldNames);
                 if (dataFields.Length != fieldsTotal)
@@ -514,12 +563,13 @@ namespace pwiz.Skyline.Model
 
                 var fileKey = Tuple.Create(fileIdentity, sampleName, useReplicate);
                 // Add file identity to second dictionary if not yet encountered
-                ChromSetFileMatch fileMatch;
+                ResultFileMatch fileMatch;
                 if (!fileNameToFileMatch.TryGetValue(fileKey, out fileMatch) && Document.Settings.HasResults)
                 {
+                    ChromSetFileMatch chromSetFileMatch;
                     if (useReplicate)
                     {
-                        fileMatch = FindReplicateFileMatch(replicateName, sampleName, linesRead);
+                        chromSetFileMatch = FindReplicateFileMatch(replicateName, sampleName, linesRead);
                     }
                     else
                     {
@@ -527,8 +577,8 @@ namespace pwiz.Skyline.Model
                         if (sampleName != null && dataFileUri is MsDataFilePath msDataFilePath)
                         {
                             var uriWithSample = new MsDataFilePath(msDataFilePath.FilePath, sampleName, msDataFilePath.SampleIndex, msDataFilePath.LockMassParameters);
-                            fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(uriWithSample);
-                            if (fileMatch == null)
+                            chromSetFileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(uriWithSample);
+                            if (chromSetFileMatch == null)
                             {
                                 var bareFileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(dataFileUri);
                                 if (bareFileMatch != null)
@@ -539,10 +589,11 @@ namespace pwiz.Skyline.Model
                         }
                         else
                         {
-                            fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(dataFileUri);
+                            chromSetFileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(dataFileUri);
                         }
                     }
 
+                    fileMatch = ResultFileMatch.MakeMatch(Document.Settings.MeasuredResults, chromSetFileMatch);
                     fileNameToFileMatch.Add(fileKey, fileMatch);
                 }
                 if (fileMatch == null)
@@ -551,9 +602,6 @@ namespace pwiz.Skyline.Model
                         UnrecognizedFiles[fileIdentity] = linesRead;
                     continue;
                 }
-                var chromSet = fileMatch.Chromatograms;
-                string nameSet = chromSet.Name;
-                var fileId = chromSet.FindFile(fileMatch.FilePath);
                 // Define the annotations to be added
                 var annotations = dataFields.GetAnnotations();
                 if (!changePeaks)
@@ -568,68 +616,154 @@ namespace pwiz.Skyline.Model
                 }
                 AnnotationsAdded = annotations.Keys.ToList();
 
-                // Loop over all the transition groups in that peptide to find matching charge,
-                // or use all transition groups if charge not specified
-                bool foundSample = false;
+                var boundaryLine = new PeakBoundaryLine
+                {
+                    LineNumber = linesRead,
+                    ModifiedPeptideString = modifiedPeptideString,
+                    FileIdentity = fileIdentity,
+                    Charge = charge
+                };
+                boundaryLines.Add(boundaryLine);
+                var change = new PeakBoundaryChange
+                {
+                    ReplicateIndex = fileMatch.ReplicateIndex,
+                    FileId = fileMatch.FileId,
+                    FilePath = fileMatch.FilePath,
+                    StartTime = startTime,
+                    EndTime = endTime,
+                    Annotations = annotations,
+                    Charge = charge,
+                    ChargeSpecified = chargeSpecified,
+                    ChargeIsNumeric = chargeIsNumeric
+                };
+
+                // A line whose modified sequence matches more than one peptide in the document is applied to
+                // each of them, so its change is duplicated once per matching peptide.
                 foreach (var pepPath in pepPaths)
                 {
-                    var nodePep = (PeptideDocNode)docNew.FindNode(pepPath);
-
-                    foreach (TransitionGroupDocNode groupNode in nodePep.Children)
+                    if (!peptideChangesByPeptide.TryGetValue(pepPath.Child, out var pepChanges))
                     {
-                        if (chargeSpecified)
-                        {
-                            var precursorAdduct = groupNode.TransitionGroup.PrecursorAdduct;
-                            if (chargeIsNumeric)
-                            {
-                                // Bare numeric charge: match by charge value only
-                                if (charge.AdductCharge != precursorAdduct.AdductCharge)
-                                    continue;
-                            }
-                            else if (charge != precursorAdduct)
-                            {
-                                continue;
-                            }
-                        }
-
-                        // Loop over the files in this groupNode to find the correct sample
-                        // Change peak boundaries for the transition group
-                        if (!groupNode.ChromInfos.Any(info => ReferenceEquals(info.FileId, fileId)))
-                        {
-                            continue;
-                        }
-                        var groupPath = new IdentityPath(pepPath, groupNode.Id);
-                        // Attach annotations
-                        if (annotations.Any())
-                        {
-                            docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
-                        }
-                        // Change peak
-                        var filePath = chromSet.GetFileInfo(fileId).FilePath;
-                        if (changePeaks)
-                        {
-                            docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
-                                null, startTime, endTime, UserSet.IMPORTED, null, false);
-                        }
-                        // For removing peaks that are not in the file, if removeMissing = true
-                        trackAdjustedResults.Add(new ResultsKey(fileId.GlobalIndex, groupNode.Id));
-                        foundSample = true;
+                        pepChanges = new PeptidePeakBoundaries(pepPath);
+                        peptideChangesByPeptide.Add(pepPath.Child, pepChanges);
+                        peptideChanges.Add(pepChanges);
                     }
-                }
-                if (!foundSample)
-                {
-                    var unrecognizedChargeState = new UnrecognizedChargeState(charge, fileIdentity, modifiedPeptideString);
-                    if (!UnrecognizedChargeStates.ContainsKey(unrecognizedChargeState))
-                        UnrecognizedChargeStates[unrecognizedChargeState] = linesRead;
+                    pepChanges.Changes.Add(new LineChange(boundaryLine, change));
                 }
             }
-            // Remove peaks from the document that weren't in the file.
-            if (removeMissing)
-                docNew = RemoveMissing(docNew, trackAdjustedResults, changePeaks);
-            // If nothing has changed, return the old Document before ChangeIgnoreChangingChildren was turned off
-            if (!ReferenceEquals(docNew, docReference))
-                Document = (SrmDocument) Document.ChangeIgnoreChangingChildren(false).ChangeChildrenChecked(docNew.Children);
-            return Document;
+            return peptideChanges;
+        }
+
+        /// <summary>
+        /// Applies the changes to each peptide on a background thread, leaving the new
+        /// <see cref="PeptideDocNode"/> in <see cref="PeptidePeakBoundaries.ResultNode"/>. Nothing shared is
+        /// modified, so the peptides can be processed in any order and in parallel.
+        /// </summary>
+        /// <returns>False if the import was canceled</returns>
+        private bool ApplyPeakBoundaries(IList<PeptidePeakBoundaries> peptideChanges, bool changePeaks)
+        {
+            bool canceled = false;
+            int peptidesDone = 0;
+            int peptideCount = peptideChanges.Count;
+            ParallelEx.ForEach(peptideChanges, pepChanges =>
+            {
+                if (canceled)
+                    return;
+                if (_progressMonitor != null && _progressMonitor.IsCanceled)
+                {
+                    canceled = true;
+                    return;
+                }
+                ApplyPeakBoundaries(pepChanges, changePeaks);
+                if (_progressMonitor != null)
+                {
+                    int done = Interlocked.Increment(ref peptidesDone);
+                    UpdateProgress(PERCENT_READING + (int) (done * (100L - PERCENT_READING) / peptideCount));
+                }
+            });
+            return !canceled;
+        }
+
+        /// <summary>
+        /// Applies all of the changes for a single peptide with a <see cref="MoleculeIntegrator"/>, which
+        /// reads the peptide's chromatograms from the .skyd file once and reuses them for every change.
+        /// </summary>
+        private void ApplyPeakBoundaries(PeptidePeakBoundaries pepChanges, bool changePeaks)
+        {
+            var nodePep = (PeptideDocNode) Document.FindNode(pepChanges.PeptidePath);
+            var integrator = new MoleculeIntegrator(Document, nodePep) { ChangePeaks = changePeaks };
+            foreach (var lineChange in pepChanges.Changes)
+            {
+                var matched = integrator.ApplyChange(lineChange.Change);
+                if (matched.Count == 0)
+                    continue;
+                lineChange.Line.FoundSample = true;
+                // For removing peaks that are not in the file, if removeMissing = true
+                foreach (var groupId in matched)
+                    pepChanges.AdjustedResults.Add(new ResultsKey(lineChange.Change.FileId.GlobalIndex, groupId));
+            }
+            pepChanges.ResultNode = integrator.MoleculeDocNode;
+        }
+
+        /// <summary>
+        /// Puts the changed peptides back into the document. Each peptide group gets its children replaced
+        /// with all of its changed peptides at once, and then the document children are replaced once, so
+        /// that the cost of rebuilding the document is paid a single time for the whole file.
+        /// </summary>
+        private static SrmDocument ReplacePeptides(SrmDocument document, IEnumerable<PeptidePeakBoundaries> peptideChanges)
+        {
+            // Group the changed peptides by the peptide group they belong to
+            var changesByGroup = new Dictionary<ReferenceValue<Identity>, List<PeptidePeakBoundaries>>();
+            foreach (var pepChanges in peptideChanges)
+            {
+                var groupId = pepChanges.PeptidePath.GetIdentity(0);
+                if (!changesByGroup.TryGetValue(groupId, out var groupChanges))
+                {
+                    groupChanges = new List<PeptidePeakBoundaries>();
+                    changesByGroup.Add(groupId, groupChanges);
+                }
+                groupChanges.Add(pepChanges);
+            }
+
+            bool anyChanged = false;
+            var newChildren = new List<DocNode>(document.Children.Count);
+            foreach (PeptideGroupDocNode nodePepGroup in document.Children)
+            {
+                if (!changesByGroup.TryGetValue(nodePepGroup.Id, out var groupChanges))
+                {
+                    newChildren.Add(nodePepGroup);
+                    continue;
+                }
+                var nodePepGroupNew = nodePepGroup;
+                foreach (var pepChanges in groupChanges)
+                {
+                    if (!ReferenceEquals(pepChanges.ResultNode, nodePepGroupNew.FindNode(pepChanges.PeptidePath.Child)))
+                        nodePepGroupNew = (PeptideGroupDocNode) nodePepGroupNew.ReplaceChild(pepChanges.ResultNode);
+                }
+                anyChanged = anyChanged || !ReferenceEquals(nodePepGroup, nodePepGroupNew);
+                newChildren.Add(nodePepGroupNew);
+            }
+            return anyChanged ? (SrmDocument) document.ChangeChildren(newChildren) : document;
+        }
+
+        /// <summary>
+        /// Percent complete attributed to reading the file, with the rest attributed to applying the changes
+        /// </summary>
+        private const int PERCENT_READING = 50;
+
+        private IProgressMonitor _progressMonitor;
+        private IProgressStatus _status;
+        private int _progressPercent;
+        private readonly object _progressLock = new object();
+
+        private void UpdateProgress(int progressNew)
+        {
+            lock (_progressLock)
+            {
+                if (_progressPercent == progressNew)
+                    return;
+                _progressPercent = progressNew;
+                _progressMonitor.UpdateProgress(_status = _status.ChangePercentComplete(progressNew));
+            }
         }
 
         /// <summary>
@@ -902,6 +1036,98 @@ namespace pwiz.Skyline.Model
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// All of the changes from the peak boundaries file which apply to a single peptide in the document.
+        /// They are applied together, on a single thread, so that the peptide is rebuilt for each change but
+        /// the document is rebuilt only once for the whole file.
+        /// </summary>
+        private class PeptidePeakBoundaries
+        {
+            public PeptidePeakBoundaries(IdentityPath peptidePath)
+            {
+                PeptidePath = peptidePath;
+                Changes = new List<LineChange>();
+                AdjustedResults = new List<ResultsKey>();
+            }
+
+            public IdentityPath PeptidePath { get; }
+            public List<LineChange> Changes { get; }
+            /// <summary>
+            /// The peaks that were adjusted, which <see cref="RemoveMissing"/> uses to tell which peaks
+            /// were not in the file
+            /// </summary>
+            public List<ResultsKey> AdjustedResults { get; }
+            /// <summary>
+            /// The peptide with all of its changes applied, set by the thread which applied them
+            /// </summary>
+            public PeptideDocNode ResultNode { get; set; }
+        }
+
+        /// <summary>
+        /// A change to be made, together with the line of the file it came from. A line which matches more
+        /// than one peptide in the document produces one of these for each of them, all sharing a single
+        /// <see cref="PeakBoundaryLine"/> and a single <see cref="PeakBoundaryChange"/>.
+        /// </summary>
+        private class LineChange
+        {
+            public LineChange(PeakBoundaryLine line, PeakBoundaryChange change)
+            {
+                Line = line;
+                Change = change;
+            }
+
+            public PeakBoundaryLine Line { get; }
+            public PeakBoundaryChange Change { get; }
+        }
+
+        /// <summary>
+        /// The parts of a line of the peak boundaries file which are needed to report the line as having an
+        /// unrecognized charge state.
+        /// </summary>
+        private class PeakBoundaryLine
+        {
+            public long LineNumber { get; set; }
+            public string ModifiedPeptideString { get; set; }
+            public string FileIdentity { get; set; }
+            public Adduct Charge { get; set; }
+            /// <summary>
+            /// True if any precursor of any matching peptide was adjusted. Set to true by the threads
+            /// applying the changes, which never set it back to false.
+            /// </summary>
+            public bool FoundSample { get; set; }
+        }
+
+        /// <summary>
+        /// A result file matched by a line of the peak boundaries file, resolved down to everything a
+        /// <see cref="PeakBoundaryChange"/> needs. Resolving this once per distinct file name in the file,
+        /// instead of once per line, keeps <see cref="ChromatogramSet.FindFile"/> and
+        /// <see cref="ChromatogramSet.GetFileInfo"/> off the per-line path.
+        /// </summary>
+        private class ResultFileMatch
+        {
+            /// <summary>
+            /// Returns null when <paramref name="fileMatch"/> is null, i.e. the file name was not recognized
+            /// </summary>
+            public static ResultFileMatch MakeMatch(MeasuredResults measuredResults, ChromSetFileMatch fileMatch)
+            {
+                if (fileMatch == null)
+                    return null;
+                var chromSet = fileMatch.Chromatograms;
+                measuredResults.TryGetChromatogramSet(chromSet.Name, out _, out int replicateIndex);
+                var fileId = chromSet.FindFile(fileMatch.FilePath);
+                return new ResultFileMatch
+                {
+                    ReplicateIndex = replicateIndex,
+                    FileId = fileId,
+                    FilePath = chromSet.GetFileInfo(fileId).FilePath
+                };
+            }
+
+            public int ReplicateIndex { get; private set; }
+            public ChromFileInfoId FileId { get; private set; }
+            public MsDataFileUri FilePath { get; private set; }
         }
 
         private class ResultsKey
