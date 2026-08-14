@@ -1504,6 +1504,7 @@ namespace pwiz.Skyline
         {
             using (var dlg = new SaveFileDialog())
             {
+                dlg.Title = SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout;
                 dlg.SupportMultiDottedExtensions = true;
                 dlg.Filter = FILTER_SKY_VIEW;
                 dlg.InitialDirectory = GetLayoutDirectory();
@@ -1553,6 +1554,7 @@ namespace pwiz.Skyline
         {
             using (var dlg = new OpenFileDialog())
             {
+                dlg.Title = SkylineResources.SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout;
                 dlg.Filter = FILTER_SKY_VIEW;
                 dlg.InitialDirectory = GetLayoutDirectory();
                 if (dlg.ShowDialog(this) != DialogResult.OK)

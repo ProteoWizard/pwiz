@@ -3295,6 +3295,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Export Window Layout.
+        /// </summary>
+        public static string SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Export Spectral Library.
         /// </summary>
         public static string SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library {
@@ -3322,6 +3331,15 @@ namespace pwiz.Skyline {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Import Window Layout.
+        /// </summary>
+        public static string SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The document must be fully loaded before importing a peptide search..
         /// </summary>

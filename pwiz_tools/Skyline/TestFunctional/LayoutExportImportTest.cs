@@ -193,6 +193,8 @@ namespace pwiz.SkylineTestFunctional
             RunLongNativeDlg<NativeSaveFileDialog>(SkylineWindow.ShowExportLayoutDlg, dlg =>
             {
                 Assert.AreEqual(Path.GetFileName(SkylineWindow.GetViewFile(documentPath)), GetFileNameText(dlg));
+                // Captioned with the command, not the shell's generic "Save As"
+                Assert.AreEqual(SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout, dlg.Title);
                 dlg.DismissWithCancelButton();
             });
         }
@@ -205,6 +207,7 @@ namespace pwiz.SkylineTestFunctional
         {
             RunLongNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowImportLayoutDlg, dlg =>
             {
+                Assert.AreEqual(SkylineResources.SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout, dlg.Title);
                 dlg.EnterPath(documentPath);
                 dlg.Accept();
                 var messageDlg = WaitForOpenForm<MessageDlg>();
