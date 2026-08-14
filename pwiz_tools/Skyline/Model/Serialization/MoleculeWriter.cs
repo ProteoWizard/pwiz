@@ -324,16 +324,17 @@ namespace pwiz.Skyline.Model.Serialization
                         precursorResults.Add(peakElement);
                     }
 
-                    if (sharedAreas != null)
-                    {
-                        // The areas just went on the precursor, and being shareable is exactly
-                        // having nothing else to say, so no transition writes anything here.
-                        continue;
-                    }
-
                     for (int i = 0; i < transitions.Length; i++)
                     {
                         if (!results.TryGetTransitionPeak(transitions[i], replicateIndex, fileId, out var peak))
+                        {
+                            continue;
+                        }
+
+                        // Its area went on the precursor and it has nothing else to say, so there
+                        // is nothing here to write.
+                        if (sharedAreas != null &&
+                            results.IsPlainTransitionPeak(transitions[i], replicateIndex, fileId))
                         {
                             continue;
                         }
@@ -347,7 +348,7 @@ namespace pwiz.Skyline.Model.Serialization
                         var transitionPeak = new XElement(EL.transition_peak);
                         SetReplicateAndFile(transitionPeak, chromatogramSet, fileId);
                         SetColumnarTransitionPeak(transitionPeak, results, transitions[i], replicateIndex, fileId,
-                            peak);
+                            peak, sharedAreas == null);
                         transitionResults[i].Add(transitionPeak);
                     }
                 }
@@ -408,9 +409,15 @@ namespace pwiz.Skyline.Model.Serialization
         /// </para>
         /// </summary>
         private void SetColumnarTransitionPeak(XElement element, TransitionGroupResults results,
-            Transition transition, int replicateIndex, ChromFileInfoId fileId, TransitionPeak peak)
+            Transition transition, int replicateIndex, ChromFileInfoId fileId, TransitionPeak peak,
+            bool writeArea)
         {
-            element.SetAttribute(ATTR.area, peak.Area);
+            // Left off when the precursor's transition_areas already carries it, which it does for
+            // every transition of a file whenever all of them have a peak there.
+            if (writeArea)
+            {
+                element.SetAttribute(ATTR.area, peak.Area);
+            }
             element.SetAttribute(ATTR.user_set, peak.UserSet, UserSet.FALSE);
             // Nothing else carries these, so a transition written out has to say them. They
             // are the reason a peak which is anything but ordinary cannot ride its

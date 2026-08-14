@@ -129,6 +129,15 @@ namespace pwiz.Skyline.Model.Results
         public float Area { get; private set; }
 
         /// <summary>
+        /// This peak with its area replaced, which is what reading one back needs: an area its
+        /// precursor carries is left off the peak's own element, so it arrives with nothing there.
+        /// </summary>
+        public TransitionPeak ChangeArea(float area)
+        {
+            return new TransitionPeak(area, UserSet, IsTruncated, IsEmpty, Identified, IsForcedIntegration);
+        }
+
+        /// <summary>
         /// Almost always <see cref="Results.UserSet.FALSE"/>.
         /// </summary>
         public UserSet UserSet { get; private set; }
@@ -784,10 +793,15 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// The areas of every transition of the precursor in one file, or null when any of them
-        /// has something else to say there: no peak at all, a user set peak, annotations, or
-        /// boundaries which are not a candidate peak's. Then they each need an element of their own
-        /// in that file.
+        /// The areas of every transition of the precursor in one file, or null when any of them has
+        /// no peak there at all - an area cannot be carried for a transition which does not have
+        /// one, and a list with a hole in it could not be read back.
+        /// <para>
+        /// Only that a peak is there, not that it says nothing else. A transition with more to say
+        /// still writes an element of its own for that file, and leaves the area off it because
+        /// this carries it; one with nothing else to say writes nothing at all. See
+        /// <see cref="IsPlainTransitionPeak"/>, which is what tells those two apart.
+        /// </para>
         /// <para>
         /// One file at a time, which is all the question ever needed: it is asked while the
         /// precursor's peak for that file is being written, with every transition in hand. Each
@@ -806,7 +820,7 @@ namespace pwiz.Skyline.Model.Results
                 // Asked by file rather than by position: the position a caller has in hand is the
                 // precursor's, and a transition's positions are its own.
                 var results = GetTransitionResults(iTran);
-                if (results?.TryGetPlainArea(replicateIndex, fileId, out float area) != true)
+                if (results?.TryGetArea(replicateIndex, fileId, out float area) != true)
                 {
                     return null;
                 }
@@ -815,6 +829,16 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return areas;
+        }
+
+        /// <summary>
+        /// Whether one transition's peak in one file says nothing beyond its area, so that with the
+        /// area carried by <see cref="GetSharedTransitionAreas"/> there is nothing left to write
+        /// for it there.
+        /// </summary>
+        public bool IsPlainTransitionPeak(Transition transition, int replicateIndex, ChromFileInfoId fileId)
+        {
+            return GetTransitionResults(transition)?.TryGetPlainArea(replicateIndex, fileId, out _) == true;
         }
 
         /// <summary>
@@ -2003,6 +2027,24 @@ namespace pwiz.Skyline.Model.Results
                 if (!Peaks.TryGetValue(replicateIndex, fileId, out var peak) || !IsPlainPeak(peak) ||
                     HasCustomPeak(replicateIndex, fileId))
                 {
+                    return false;
+                }
+
+                area = peak.Area;
+                return true;
+            }
+
+            /// <summary>
+            /// The area of one file's peak, whatever else that peak may also say. This is the
+            /// question the precursor's shared areas ask: it carries an area for every transition
+            /// which has one, and <see cref="TryGetPlainArea"/> then says which of them have
+            /// nothing more to add.
+            /// </summary>
+            public bool TryGetArea(int replicateIndex, ChromFileInfoId fileId, out float area)
+            {
+                if (!Peaks.TryGetValue(replicateIndex, fileId, out var peak))
+                {
+                    area = 0;
                     return false;
                 }
 

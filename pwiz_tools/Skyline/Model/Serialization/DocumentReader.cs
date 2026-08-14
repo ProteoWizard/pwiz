@@ -1579,19 +1579,25 @@ namespace pwiz.Skyline.Model.Serialization
                     int count = 0;
                     foreach (var fileId in chromFileIds.GetFileIds(replicateIndex))
                     {
+                        sharedAreas.TryGetValue(replicateIndex, fileId, out var areas);
+                        float? sharedArea = areas == null ? (float?) null : areas[transitionIndex];
                         if (written.TryGetValue(replicateIndex, fileId, out var peak) && peak.HasValue)
                         {
-                            peaks.Add(peak.Value);
+                            // The area is the precursor's wherever it carries one: the element was
+                            // written without it, so what came off the element is nothing.
+                            peaks.Add(sharedArea.HasValue
+                                ? peak.Value.ChangeArea(sharedArea.Value)
+                                : peak.Value);
                             annotations.Add(Get(writtenAnnotations, replicateIndex, fileId) ??
                                             pwiz.Skyline.Model.Annotations.EMPTY);
                             peakBounds.Add(Get(writtenPeakBounds, replicateIndex, fileId) ?? default);
                             peakMetrics.Add(Get(writtenPeakMetrics, replicateIndex, fileId));
                         }
-                        else if (sharedAreas.TryGetValue(replicateIndex, fileId, out var areas) && areas != null)
+                        else if (sharedArea.HasValue)
                         {
-                            // Nothing beyond the area is what made it shareable, and MakePlainPeak
-                            // is what a peak which says only that looks like.
-                            peaks.Add(TransitionGroupResults.MakePlainPeak(areas[transitionIndex]));
+                            // No element at all means nothing beyond the area, and MakePlainPeak is
+                            // what a peak which says only that looks like.
+                            peaks.Add(TransitionGroupResults.MakePlainPeak(sharedArea.Value));
                             annotations.Add(pwiz.Skyline.Model.Annotations.EMPTY);
                             peakBounds.Add(default);
                             peakMetrics.Add(null);
