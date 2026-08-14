@@ -42,6 +42,20 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public class PeakBoundaryImporter
     {
+        /// <summary>
+        /// Percent complete attributed to reading the file, with the rest attributed to applying the changes
+        /// </summary>
+        private const int PERCENT_READING = 50;
+
+        private IProgressMonitor _progressMonitor;
+        private IProgressStatus _status;
+        private int _progressPercent;
+        private readonly object _progressLock = new object();
+        /// <summary>
+        /// Set by whichever thread first notices that the caller canceled, and read by all of them
+        /// </summary>
+        private volatile bool _canceled;
+
         public SrmDocument Document { get; private set; }
         public int CountMissing { get; private set; }
         public List<string> AnnotationsAdded { get; private set; }
@@ -451,7 +465,7 @@ namespace pwiz.Skyline.Model
                 {
                     if (_progressMonitor.IsCanceled)
                         return null;
-                    UpdateProgress((int) (linesRead * PERCENT_READING / lineCount));
+                    UpdateProgress((int) (linesRead * (long) PERCENT_READING / lineCount));
                 }
                 var dataFields = new DataFields(fieldIndices, line.ParseDsvFields(correctSeparator), allFieldNames);
                 if (dataFields.Length != fieldsTotal)
@@ -661,16 +675,16 @@ namespace pwiz.Skyline.Model
         /// <returns>False if the import was canceled</returns>
         private bool ApplyPeakBoundaries(IList<PeptidePeakBoundaries> peptideChanges, bool changePeaks)
         {
-            bool canceled = false;
+            _canceled = false;
             int peptidesDone = 0;
             int peptideCount = peptideChanges.Count;
             ParallelEx.ForEach(peptideChanges, pepChanges =>
             {
-                if (canceled)
+                if (_canceled)
                     return;
                 if (_progressMonitor != null && _progressMonitor.IsCanceled)
                 {
-                    canceled = true;
+                    _canceled = true;
                     return;
                 }
                 ApplyPeakBoundaries(pepChanges, changePeaks);
@@ -680,7 +694,7 @@ namespace pwiz.Skyline.Model
                     UpdateProgress(PERCENT_READING + (int) (done * (100L - PERCENT_READING) / peptideCount));
                 }
             });
-            return !canceled;
+            return !_canceled;
         }
 
         /// <summary>
@@ -690,7 +704,13 @@ namespace pwiz.Skyline.Model
         private void ApplyPeakBoundaries(PeptidePeakBoundaries pepChanges, bool changePeaks)
         {
             var nodePep = (PeptideDocNode) Document.FindNode(pepChanges.PeptidePath);
-            var integrator = new MoleculeIntegrator(Document, nodePep) { ChangePeaks = changePeaks };
+            var integrator = new MoleculeIntegrator(Document, nodePep)
+            {
+                ChangePeaks = changePeaks,
+                // Telling the integrator which replicates it will be asked about lets it decide whether
+                // reading all of this molecule's replicates in one pass is worth it
+                ReplicateIndexes = pepChanges.Changes.Select(c => c.Change.ReplicateIndex).ToHashSet()
+            };
             foreach (var lineChange in pepChanges.Changes)
             {
                 var matched = integrator.ApplyChange(lineChange.Change);
@@ -733,37 +753,50 @@ namespace pwiz.Skyline.Model
                     newChildren.Add(nodePepGroup);
                     continue;
                 }
-                var nodePepGroupNew = nodePepGroup;
+                // Copy the group's molecules once and assign by index, rather than calling ReplaceChild per
+                // changed molecule, which clones the whole array each time. A document can hold all of its
+                // molecules in a single group (a peptide list, or a small molecule document), and this runs
+                // after the parallel phase, on one thread.
+                List<DocNode> newMolecules = null;
                 foreach (var pepChanges in groupChanges)
                 {
-                    if (!ReferenceEquals(pepChanges.ResultNode, nodePepGroupNew.FindNode(pepChanges.PeptidePath.Child)))
-                        nodePepGroupNew = (PeptideGroupDocNode) nodePepGroupNew.ReplaceChild(pepChanges.ResultNode);
+                    // ResultNode is null only for a molecule whose worker was skipped by cancellation,
+                    // in which case this is not reached, but never write a null child if that changes
+                    if (pepChanges.ResultNode == null)
+                        continue;
+                    int index = nodePepGroup.FindNodeIndex(pepChanges.PeptidePath.Child);
+                    if (index < 0 || ReferenceEquals(pepChanges.ResultNode, nodePepGroup.Children[index]))
+                        continue;
+                    if (newMolecules == null)
+                        newMolecules = new List<DocNode>(nodePepGroup.Children);
+                    newMolecules[index] = pepChanges.ResultNode;
                 }
-                anyChanged = anyChanged || !ReferenceEquals(nodePepGroup, nodePepGroupNew);
-                newChildren.Add(nodePepGroupNew);
+                if (newMolecules == null)
+                {
+                    newChildren.Add(nodePepGroup);
+                    continue;
+                }
+                anyChanged = true;
+                newChildren.Add(nodePepGroup.ChangeChildrenChecked(newMolecules));
             }
             return anyChanged ? (SrmDocument) document.ChangeChildren(newChildren) : document;
         }
 
-        /// <summary>
-        /// Percent complete attributed to reading the file, with the rest attributed to applying the changes
-        /// </summary>
-        private const int PERCENT_READING = 50;
-
-        private IProgressMonitor _progressMonitor;
-        private IProgressStatus _status;
-        private int _progressPercent;
-        private readonly object _progressLock = new object();
-
         private void UpdateProgress(int progressNew)
         {
+            IProgressStatus statusNew;
             lock (_progressLock)
             {
-                if (_progressPercent == progressNew)
+                // Only ever move forwards. The threads applying the changes finish out of order, so a
+                // lower percentage can arrive after a higher one.
+                if (progressNew <= _progressPercent)
                     return;
                 _progressPercent = progressNew;
-                _progressMonitor.UpdateProgress(_status = _status.ChangePercentComplete(progressNew));
+                statusNew = _status = _status.ChangePercentComplete(progressNew);
             }
+            // Call the monitor outside the lock, since it is supplied by the caller and may marshal to
+            // the UI thread
+            _progressMonitor.UpdateProgress(statusNew);
         }
 
         /// <summary>
@@ -1115,7 +1148,10 @@ namespace pwiz.Skyline.Model
                 if (fileMatch == null)
                     return null;
                 var chromSet = fileMatch.Chromatograms;
-                measuredResults.TryGetChromatogramSet(chromSet.Name, out _, out int replicateIndex);
+                // Resolve the replicate by reference rather than by name, so that this cannot silently
+                // come back with the -1 that TryGetChromatogramSet reports for a name it does not know
+                int replicateIndex = measuredResults.Chromatograms.IndexOf(set => ReferenceEquals(set, chromSet));
+                Assume.IsTrue(replicateIndex >= 0);
                 var fileId = chromSet.FindFile(fileMatch.FilePath);
                 return new ResultFileMatch
                 {

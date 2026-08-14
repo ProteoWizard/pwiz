@@ -1,6 +1,7 @@
 /*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -29,9 +30,9 @@ namespace pwiz.Skyline.Model
     /// <summary>
     /// Applies <see cref="PeakBoundaryChange"/>s to a single molecule.
     /// <para>
-    /// The chromatograms for a precursor are read from the .skyd file once, for all replicates at a time,
-    /// and then reused for every change to that precursor. That matters when many peaks on the same molecule
-    /// are being changed, as when importing a peak boundaries file: going through
+    /// The chromatograms for a precursor are read from the .skyd file once and then reused for every
+    /// change to that precursor. That matters when many peaks on the same molecule are being changed, as
+    /// when importing a peak boundaries file: going through
     /// <see cref="SrmDocument.ChangePeak(IdentityPath,string,pwiz.CommonMsData.MsDataFileUri,Transition,double?,double?,UserSet,PeakIdentification?,bool)"/>
     /// instead would re-read and re-match the chromatograms for every change, and would rebuild the whole
     /// document each time.
@@ -43,16 +44,23 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public class MoleculeIntegrator
     {
+        private static readonly ChromatogramGroupInfo[] NONE_LOADED = Array.Empty<ChromatogramGroupInfo>();
         private static readonly Identity[] NONE_MATCHED = Array.Empty<Identity>();
 
         private readonly SrmDocument _document;
         private readonly PeptideDocNode _nodeMoleculeOriginal;
         /// <summary>
         /// Chromatograms for each precursor that has been changed, keyed on the precursor
-        /// <see cref="Identity"/> and indexed by replicate
+        /// <see cref="Identity"/>, each entry indexed by replicate and null until that replicate is read
         /// </summary>
-        private readonly Dictionary<ReferenceValue<Identity>, IList<IList<ChromatogramGroupInfo>>> _chromatogramGroupInfos
-            = new Dictionary<ReferenceValue<Identity>, IList<IList<ChromatogramGroupInfo>>>();
+        private readonly Dictionary<ReferenceValue<Identity>, IList<ChromatogramGroupInfo>[]> _chromatogramGroupInfos
+            = new Dictionary<ReferenceValue<Identity>, IList<ChromatogramGroupInfo>[]>();
+        /// <summary>
+        /// The precursors whose replicates were all read at once, which is the only case where the
+        /// per-replicate fallback in <see cref="FindChromatogramGroupInfo"/> can be needed
+        /// </summary>
+        private readonly HashSet<ReferenceValue<Identity>> _allReplicatesLoaded
+            = new HashSet<ReferenceValue<Identity>>();
 
         public MoleculeIntegrator(SrmDocument document, PeptideDocNode nodeMolecule)
         {
@@ -85,6 +93,14 @@ namespace pwiz.Skyline.Model
         /// Defaults to false.
         /// </summary>
         public bool PreserveMissingPeaks { get; set; }
+
+        /// <summary>
+        /// The replicates this integrator is going to be asked about, or null when the caller does not know.
+        /// Reading all of a precursor's replicates at once is much faster when most of them are wanted, which
+        /// is the case for a peak boundaries file covering a whole document, but it is a lot of wasted reading
+        /// when only one replicate of a many-replicate document is being fixed up.
+        /// </summary>
+        public ICollection<int> ReplicateIndexes { get; set; }
 
         /// <summary>
         /// Applies a change to every precursor of the molecule which matches its charge and which has
@@ -148,46 +164,103 @@ namespace pwiz.Skyline.Model
         private ChromatogramGroupInfo FindChromatogramGroupInfo(TransitionGroupDocNode nodeGroup,
             ChromatogramSet chromatogramSet, PeakBoundaryChange change)
         {
-            var chromInfos = GetChromatogramGroupInfos(nodeGroup)[change.ReplicateIndex];
-            if (chromInfos.Count == 0)
-            {
-                throw new ArgumentOutOfRangeException(string.Format(
-                    ModelResources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__,
-                    TransitionGroupDocNode.GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz, string.Empty),
-                    chromatogramSet.Name));
-            }
+            var byReplicate = GetReplicateChromatograms(nodeGroup);
+            var chromInfos = byReplicate[change.ReplicateIndex] ??
+                             (byReplicate[change.ReplicateIndex] = LoadOneReplicate(nodeGroup, chromatogramSet));
             var chromGroupInfo = chromInfos.FirstOrDefault(info => Equals(change.FilePath, info.FilePath));
+            if (chromGroupInfo == null && _allReplicatesLoaded.Contains(nodeGroup.Id))
+            {
+                // Reading all of the replicates at once always applies MeasuredResults.GetMatchingChromatograms,
+                // where reading one replicate short-circuits it when exactly one chromatogram matched the
+                // precursor. Rather than fail a precursor that reading one replicate would have found, read
+                // the one replicate and look again.
+                chromInfos = byReplicate[change.ReplicateIndex] = LoadOneReplicate(nodeGroup, chromatogramSet);
+                chromGroupInfo = chromInfos.FirstOrDefault(info => Equals(change.FilePath, info.FilePath));
+            }
             if (chromGroupInfo == null)
             {
                 throw new ArgumentOutOfRangeException(string.Format(
-                    ModelResources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_file__1__,
+                    chromInfos.Count == 0
+                        ? ModelResources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__
+                        : ModelResources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_file__1__,
                     TransitionGroupDocNode.GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz, string.Empty),
-                    change.FilePath));
+                    chromInfos.Count == 0 ? (object) chromatogramSet.Name : change.FilePath));
             }
             return chromGroupInfo;
         }
 
         /// <summary>
-        /// Returns the chromatograms for a precursor, indexed by replicate, reading them from the .skyd file
-        /// the first time the precursor is changed. All of the replicates are read at once, and their peaks
-        /// are all read in a single pass, because a molecule whose peak boundaries are being set usually has
-        /// them set in every replicate.
+        /// Returns the per-replicate chromatogram slots for a precursor, reading every replicate at once the
+        /// first time the precursor is used if <see cref="ReplicateIndexes"/> says that is worth doing.
         /// </summary>
-        private IList<IList<ChromatogramGroupInfo>> GetChromatogramGroupInfos(TransitionGroupDocNode nodeGroup)
+        private IList<ChromatogramGroupInfo>[] GetReplicateChromatograms(TransitionGroupDocNode nodeGroup)
         {
-            IList<IList<ChromatogramGroupInfo>> chromatogramGroupInfos;
-            if (_chromatogramGroupInfos.TryGetValue(nodeGroup.Id, out chromatogramGroupInfos))
-                return chromatogramGroupInfos;
+            IList<ChromatogramGroupInfo>[] byReplicate;
+            if (_chromatogramGroupInfos.TryGetValue(nodeGroup.Id, out byReplicate))
+                return byReplicate;
 
+            byReplicate = new IList<ChromatogramGroupInfo>[_document.Settings.MeasuredResults.Chromatograms.Count];
+            _chromatogramGroupInfos.Add(nodeGroup.Id, byReplicate);
+            if (WantsAllReplicates)
+                LoadAllReplicates(nodeGroup, byReplicate);
+            return byReplicate;
+        }
+
+        /// <summary>
+        /// True when enough of the document's replicates are going to be used that reading them all at once,
+        /// in a single pass over the .skyd file, is cheaper than reading them one at a time
+        /// </summary>
+        private bool WantsAllReplicates
+        {
+            get
+            {
+                if (ReplicateIndexes == null)
+                    return true;
+                return ReplicateIndexes.Count * 2 >= _document.Settings.MeasuredResults.Chromatograms.Count;
+            }
+        }
+
+        private void LoadAllReplicates(TransitionGroupDocNode nodeGroup, IList<ChromatogramGroupInfo>[] byReplicate)
+        {
             var settings = _document.Settings;
-            // Match against the original precursor: changing peaks never changes which chromatograms match
-            var nodeGroupOriginal = (TransitionGroupDocNode) _nodeMoleculeOriginal.FindNode(nodeGroup.Id);
-            chromatogramGroupInfos = settings.MeasuredResults.LoadChromatogramsForAllReplicates(
-                _nodeMoleculeOriginal, nodeGroupOriginal,
-                (float) settings.TransitionSettings.Instrument.MzMatchTolerance);
-            ChromatogramGroupInfo.LoadPeaksForAll(chromatogramGroupInfos.SelectMany(list => list), false);
-            _chromatogramGroupInfos.Add(nodeGroup.Id, chromatogramGroupInfos);
-            return chromatogramGroupInfos;
+            var nodeGroupOriginal = GetOriginalPrecursor(nodeGroup);
+            List<IList<ChromatogramGroupInfo>> allChromatogramGroupInfos;
+            try
+            {
+                allChromatogramGroupInfos = settings.MeasuredResults.LoadChromatogramsForAllReplicates(
+                    _nodeMoleculeOriginal, nodeGroupOriginal,
+                    (float) settings.TransitionSettings.Instrument.MzMatchTolerance);
+                ChromatogramGroupInfo.LoadPeaksForAll(allChromatogramGroupInfos.SelectMany(list => list), false);
+            }
+            catch (FileModifiedException)
+            {
+                // Unable to read results for all replicates: fall back to reading replicates individually
+                return;
+            }
+            for (int i = 0; i < allChromatogramGroupInfos.Count; i++)
+                byReplicate[i] = allChromatogramGroupInfos[i];
+            _allReplicatesLoaded.Add(nodeGroup.Id);
+        }
+
+        private IList<ChromatogramGroupInfo> LoadOneReplicate(TransitionGroupDocNode nodeGroup, ChromatogramSet chromatogramSet)
+        {
+            var settings = _document.Settings;
+            if (!settings.MeasuredResults.TryLoadChromatogram(chromatogramSet, _nodeMoleculeOriginal,
+                    GetOriginalPrecursor(nodeGroup),
+                    (float) settings.TransitionSettings.Instrument.MzMatchTolerance, out var chromInfos))
+            {
+                return NONE_LOADED;
+            }
+            return chromInfos;
+        }
+
+        /// <summary>
+        /// Chromatograms are matched against the precursor as it was before any change was applied, because
+        /// changing a peak never changes which chromatograms match.
+        /// </summary>
+        private TransitionGroupDocNode GetOriginalPrecursor(TransitionGroupDocNode nodeGroup)
+        {
+            return (TransitionGroupDocNode) _nodeMoleculeOriginal.FindNode(nodeGroup.Id);
         }
     }
 }

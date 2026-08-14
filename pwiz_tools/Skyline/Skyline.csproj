@@ -2139,13 +2139,13 @@
     <Compile Include="Model\Lib\BlibData\DbSpectrumSourceFiles.cs" />
     <Compile Include="Model\Lib\LibraryRankedSpectrumInfo.cs" />
     <Compile Include="Model\MemoryDocumentContainer.cs" />
+    <Compile Include="Model\MoleculeIntegrator.cs" />
     <Compile Include="Model\AbstractModificationMatcher.cs" />
     <Compile Include="Model\Optimization\DbOptimization.cs" />
     <Compile Include="Model\Optimization\DbVersionInfo.cs" />
     <Compile Include="Model\Optimization\OptimizationDb.cs" />
     <Compile Include="Model\Optimization\OptimizationDbManager.cs" />
     <Compile Include="Model\Optimization\OptimizationLibrary.cs" />
-    <Compile Include="Model\MoleculeIntegrator.cs" />
     <Compile Include="Model\PeakBoundaryChange.cs" />
     <Compile Include="Model\PeakMatcher.cs" />
     <Compile Include="Model\PeptideDocNode.cs" />
