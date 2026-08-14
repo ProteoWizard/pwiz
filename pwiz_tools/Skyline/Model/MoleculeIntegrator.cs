@@ -55,12 +55,6 @@ namespace pwiz.Skyline.Model
         /// </summary>
         private readonly Dictionary<ReferenceValue<Identity>, IList<ChromatogramGroupInfo>[]> _chromatogramGroupInfos
             = new Dictionary<ReferenceValue<Identity>, IList<ChromatogramGroupInfo>[]>();
-        /// <summary>
-        /// The precursors whose replicates were all read at once, which is the only case where the
-        /// per-replicate fallback in <see cref="FindChromatogramGroupInfo"/> can be needed
-        /// </summary>
-        private readonly HashSet<ReferenceValue<Identity>> _allReplicatesLoaded
-            = new HashSet<ReferenceValue<Identity>>();
 
         public MoleculeIntegrator(SrmDocument document, PeptideDocNode nodeMolecule)
         {
@@ -168,15 +162,6 @@ namespace pwiz.Skyline.Model
             var chromInfos = byReplicate[change.ReplicateIndex] ??
                              (byReplicate[change.ReplicateIndex] = LoadOneReplicate(nodeGroup, chromatogramSet));
             var chromGroupInfo = chromInfos.FirstOrDefault(info => Equals(change.FilePath, info.FilePath));
-            if (chromGroupInfo == null && _allReplicatesLoaded.Contains(nodeGroup.Id))
-            {
-                // Reading all of the replicates at once always applies MeasuredResults.GetMatchingChromatograms,
-                // where reading one replicate short-circuits it when exactly one chromatogram matched the
-                // precursor. Rather than fail a precursor that reading one replicate would have found, read
-                // the one replicate and look again.
-                chromInfos = byReplicate[change.ReplicateIndex] = LoadOneReplicate(nodeGroup, chromatogramSet);
-                chromGroupInfo = chromInfos.FirstOrDefault(info => Equals(change.FilePath, info.FilePath));
-            }
             if (chromGroupInfo == null)
             {
                 throw new ArgumentOutOfRangeException(string.Format(
@@ -190,8 +175,17 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// Returns the per-replicate chromatogram slots for a precursor, reading every replicate at once the
-        /// first time the precursor is used if <see cref="ReplicateIndexes"/> says that is worth doing.
+        /// Returns the per-replicate chromatogram slots for a precursor, reading every replicate this
+        /// molecule is going to need the first time the precursor is used.
+        /// <para>
+        /// The replicates are matched one at a time, exactly as
+        /// <see cref="SrmDocument.ChangePeak(IdentityPath,string,pwiz.CommonMsData.MsDataFileUri,Transition,double?,double?,UserSet,PeakIdentification?,bool)"/>
+        /// does, so which chromatogram is chosen never differs from what the document would have picked. What
+        /// makes it fast is that their peaks are then all read in a single pass, instead of a seek and a read
+        /// under <see cref="ChromatogramCache"/>'s read lock per replicate. Only the replicates named in
+        /// <see cref="ReplicateIndexes"/> are read, so fixing up one run of a many-replicate document does not
+        /// read the rest.
+        /// </para>
         /// </summary>
         private IList<ChromatogramGroupInfo>[] GetReplicateChromatograms(TransitionGroupDocNode nodeGroup)
         {
@@ -199,47 +193,21 @@ namespace pwiz.Skyline.Model
             if (_chromatogramGroupInfos.TryGetValue(nodeGroup.Id, out byReplicate))
                 return byReplicate;
 
-            byReplicate = new IList<ChromatogramGroupInfo>[_document.Settings.MeasuredResults.Chromatograms.Count];
+            var chromatograms = _document.Settings.MeasuredResults.Chromatograms;
+            byReplicate = new IList<ChromatogramGroupInfo>[chromatograms.Count];
             _chromatogramGroupInfos.Add(nodeGroup.Id, byReplicate);
-            if (WantsAllReplicates)
-                LoadAllReplicates(nodeGroup, byReplicate);
-            return byReplicate;
-        }
-
-        /// <summary>
-        /// True when enough of the document's replicates are going to be used that reading them all at once,
-        /// in a single pass over the .skyd file, is cheaper than reading them one at a time
-        /// </summary>
-        private bool WantsAllReplicates
-        {
-            get
-            {
-                if (ReplicateIndexes == null)
-                    return true;
-                return ReplicateIndexes.Count * 2 >= _document.Settings.MeasuredResults.Chromatograms.Count;
-            }
-        }
-
-        private void LoadAllReplicates(TransitionGroupDocNode nodeGroup, IList<ChromatogramGroupInfo>[] byReplicate)
-        {
-            var settings = _document.Settings;
-            var nodeGroupOriginal = GetOriginalPrecursor(nodeGroup);
-            List<IList<ChromatogramGroupInfo>> allChromatogramGroupInfos;
+            foreach (int replicateIndex in ReplicateIndexes ?? Enumerable.Range(0, chromatograms.Count))
+                byReplicate[replicateIndex] = LoadOneReplicate(nodeGroup, chromatograms[replicateIndex]);
             try
             {
-                allChromatogramGroupInfos = settings.MeasuredResults.LoadChromatogramsForAllReplicates(
-                    _nodeMoleculeOriginal, nodeGroupOriginal,
-                    (float) settings.TransitionSettings.Instrument.MzMatchTolerance);
-                ChromatogramGroupInfo.LoadPeaksForAll(allChromatogramGroupInfos.SelectMany(list => list), false);
+                ChromatogramGroupInfo.LoadPeaksForAll(
+                    byReplicate.Where(chromInfos => chromInfos != null).SelectMany(chromInfos => chromInfos), false);
             }
             catch (FileModifiedException)
             {
-                // Unable to read results for all replicates: fall back to reading replicates individually
-                return;
+                // Leave each ChromatogramGroupInfo to read its own peaks, as it does without this prefetch
             }
-            for (int i = 0; i < allChromatogramGroupInfos.Count; i++)
-                byReplicate[i] = allChromatogramGroupInfos[i];
-            _allReplicatesLoaded.Add(nodeGroup.Id);
+            return byReplicate;
         }
 
         private IList<ChromatogramGroupInfo> LoadOneReplicate(TransitionGroupDocNode nodeGroup, ChromatogramSet chromatogramSet)
