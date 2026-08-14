@@ -48,6 +48,85 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class IOTest
     {
+        #region CarafeProteinIdNormalizer Tests
+
+        /// <summary>
+        /// Carafe writes one synthetic accession PER PEPTIDE
+        /// (<c>sp|O95139_pep00019|NDUB6_HUMAN</c>), so every peptide becomes its own protein.
+        /// Left in place that breaks protein parsimony and, worse, silently empties the
+        /// <c>protein-compact</c> stratum - "proteins with &gt;=2 detected peptides" can never
+        /// fire when each protein owns one peptide. Measured on the Stellar entrapment library:
+        /// 7 proteins / 23 base_ids before stripping, 4,022 / 167,660 after.
+        /// </summary>
+        [TestMethod]
+        public void TestCarafeProteinIdNormalizer()
+        {
+            // Two peptides of ONE real protein, each carrying its own pseudo-accession, plus the
+            // entrapment and decoy forms whose markers must survive intact.
+            var library = new List<LibraryEntry>
+            {
+                ProtEntry(@"PEPTIDEK", 2, @"sp|O95139_pep00019|NDUB6_HUMAN"),
+                ProtEntry(@"PEPTIDER", 2, @"sp|O95139_pep00042|NDUB6_HUMAN"),
+                ProtEntry(@"ENTRAPK", 2, @"sp|Q9ULK4_p_target_pep00052|MED23_HUMAN_p_target"),
+                ProtEntry(@"DECOYK", 2, @"decoy_sp|Q04726_p_target_pep00087|TLE3_HUMAN_p_target"),
+            };
+            string warning = null;
+            int n = CarafeProteinIdNormalizer.Normalize(library, w => warning = w);
+
+            Assert.AreEqual(4, n);
+            Assert.IsNotNull(warning, @"stripping the suffix must warn - it changes protein-level results");
+            // The two peptides now share ONE protein, which is the whole point: only then can a
+            // protein reach the 2-detected-peptide bar protein-compact stratifies on.
+            Assert.AreEqual(@"sp|O95139|NDUB6_HUMAN", library[0].ProteinIds[0]);
+            Assert.AreEqual(@"sp|O95139|NDUB6_HUMAN", library[1].ProteinIds[0]);
+            // Entrapment and decoy markers are NOT part of the suffix and must be preserved -
+            // the entrapment form must match what the pairing manifest's `proteins` column holds,
+            // or classification and pairing would stop agreeing with it.
+            Assert.AreEqual(@"sp|Q9ULK4_p_target|MED23_HUMAN_p_target", library[2].ProteinIds[0]);
+            Assert.AreEqual(@"decoy_sp|Q04726_p_target|TLE3_HUMAN_p_target", library[3].ProteinIds[0]);
+        }
+
+        /// <summary>
+        /// The no-op paths: a clean library must be left byte-identical and must NOT warn, and an
+        /// accession containing a bare "_pep" with no digits is a real accession, not a Carafe
+        /// suffix. Also covers the collapse case - once the suffix is gone, two accessions on one
+        /// entry can become the same protein and must not be stored twice.
+        /// </summary>
+        [TestMethod]
+        public void TestCarafeProteinIdNormalizerLeavesCleanLibraries()
+        {
+            var clean = new List<LibraryEntry>
+            {
+                ProtEntry(@"PEPTIDEK", 2, @"sp|Q9NP61|ARFG3_HUMAN"),
+                ProtEntry(@"PEPTIDER", 2, @"sp|P00761_peptidase|TRYP_PIG"),
+            };
+            string warning = null;
+            Assert.AreEqual(0, CarafeProteinIdNormalizer.Normalize(clean, w => warning = w));
+            Assert.IsNull(warning, @"a library with no Carafe suffix must not warn");
+            Assert.AreEqual(@"sp|Q9NP61|ARFG3_HUMAN", clean[0].ProteinIds[0]);
+            Assert.AreEqual(@"sp|P00761_peptidase|TRYP_PIG", clean[1].ProteinIds[0],
+                @"'_pep' without digits is part of a real accession and must survive");
+
+            var collapsing = new List<LibraryEntry> { ProtEntry(@"SHAREDK", 2, null) };
+            collapsing[0].ProteinIds = new[] { @"sp|P1_pep00001|A", @"sp|P1_pep00002|A", @"sp|P2_pep00003|B" };
+            Assert.AreEqual(1, CarafeProteinIdNormalizer.Normalize(collapsing, w => { }));
+            CollectionAssert.AreEqual(new[] { @"sp|P1|A", @"sp|P2|B" },
+                collapsing[0].ProteinIds.ToArray(),
+                @"accessions that become identical once the suffix is stripped must collapse to one");
+        }
+
+        private static uint _protEntryId;
+
+        private static LibraryEntry ProtEntry(string sequence, byte charge, string proteinId)
+        {
+            var entry = new LibraryEntry(++_protEntryId, sequence, sequence, charge, 500.0, 10.0);
+            if (proteinId != null)
+                entry.ProteinIds = new[] { proteinId };
+            return entry;
+        }
+
+        #endregion
+
         #region BlibWriter Tests
 
         /// <summary>

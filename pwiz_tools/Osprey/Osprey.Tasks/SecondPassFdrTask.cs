@@ -82,6 +82,15 @@ namespace pwiz.Osprey.Tasks
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)
         {
+            // A diagnostics-only regeneration declares NOTHING. Any declared output would let
+            // the driver skip this task the moment that file exists - and the report existing
+            // is exactly the case the caller is asking to redo. CanRehydrate returns false on an
+            // empty output list, so zero outputs is what makes "regenerate on demand" mean it.
+            // It also keeps the task from requiring the .blib and 2nd-pass sidecars it
+            // deliberately leaves untouched, which would otherwise fail on a directory that no
+            // longer has them.
+            if (ctx.Config.DiagnosticsOnly)
+                yield break;
             if (!string.IsNullOrEmpty(ctx.Config.OutputBlib))
                 yield return ctx.Config.OutputBlib;
             // The --model-diagnostics report is an output of THIS task (it is finalized in
@@ -108,6 +117,7 @@ namespace pwiz.Osprey.Tasks
             // the whole .blib write, still producing no report.
             if (ctx.Config.ModelDiagnostics && FirstPassFdrTask.IsIncludedFor(ctx.Config))
                 yield return ModelDiagnosticsReport.ReportPath(ctx.Config);
+
             // 2nd-pass FDR sidecars are written whenever Stage 6 rescored entries
             // (independent of protein FDR -- the second Percolator pass runs on the
             // reconciled features), so declare them on that same condition.
@@ -255,10 +265,18 @@ namespace pwiz.Osprey.Tasks
             // the blib, restores "reported => some run genuinely passed" for the final output.
             PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
 
-            // Write output blib
+            // Write output blib - unless this is a diagnostics-only regeneration, whose whole
+            // contract is that it touches no artifact but the report.
             ctx.LogInfo(string.Empty);
             var swBlib = Stopwatch.StartNew();
-            WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config, ctx);
+            if (config.DiagnosticsOnly)
+            {
+                ctx.LogInfo(@"--task ModelDiagnostics: skipping the .blib write (report only).");
+            }
+            else
+            {
+                WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config, ctx);
+            }
             swBlib.Stop();
             ctx.LogInfo(string.Format(@"[STAGE-WALL] blib: {0:F1}s",
                 swBlib.Elapsed.TotalSeconds));
@@ -312,9 +330,19 @@ namespace pwiz.Osprey.Tasks
             // this post-compaction, second-pass-q-valued pool -- the same
             // RescoredEntries the pass-2 FDRBench TSV is written from. Opt-in and
             // off the default output path; a failure is logged and swallowed.
+            // The protein-compact stratum splits the pass-2 acceptance boundary in two (#4573):
+            // in-stratum entries were re-competed, off-stratum ones carry pass-1 q and aggregate
+            // forward. Absent outside protein-compact, which leaves the panel on one boundary.
             if (config.ModelDiagnostics)
+            {
+                HashSet<uint> stratumBaseIds = null;
+                if (OspreyEnvironment.Pass2ProteinCompact &&
+                    ctx.TryGet<ProteinCompactStratum>(out var pcStratum))
+                    stratumBaseIds = pcStratum.BaseIds;
                 ModelDiagnosticsReport.WritePass2AndFinalize(
-                    perFileEntries, pass2Contributions, libraryById, config, ctx.LogInfo);
+                    perFileEntries, pass2Contributions, libraryById, config, ctx.LogInfo,
+                    stratumBaseIds);
+            }
 
             return true;
         }
@@ -419,7 +447,7 @@ namespace pwiz.Osprey.Tasks
             // byte-parity gate (blib + Stage-7 dump) is unaffected. The per-replicate
             // protein counts re-run protein FDR per run, so this is the one place with the
             // full per-file pool + library in hand.
-            if (config.WriteProteinReport || config.WriteSummaryReport)
+            if ((config.WriteProteinReport || config.WriteSummaryReport) && !config.DiagnosticsOnly)
             {
                 OspreyReportWriter.WriteReports(result, perFileEntries, fullLibrary, config, ctx.LogInfo);
             }
