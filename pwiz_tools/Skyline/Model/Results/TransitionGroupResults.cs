@@ -784,62 +784,36 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// The areas of every transition of the precursor, at each of the precursor's positions, or
-        /// null at a position where any transition has something else to say: no peak there at all,
-        /// a user set peak, annotations, or boundaries which are not a candidate peak's. Then they
-        /// each need an element of their own.
+        /// The areas of every transition of the precursor in one file, or false when any of them
+        /// has something else to say there: no peak at all, a user set peak, annotations, or
+        /// boundaries which are not a candidate peak's. Then they each need an element of their own
+        /// in that file.
         /// <para>
-        /// Worked out once for the whole precursor. Doing it a position at a time, and looking up
-        /// each transition's entry across all of its positions, is quadratic in the number of
-        /// replicates, which is enough to make saving a large document look like a hang.
+        /// One file at a time, which is all the question ever needed: it is asked while the
+        /// precursor's peak for that file is being written, with every transition in hand. Each
+        /// lookup is by replicate and file into a map, so asking per file costs what working the
+        /// whole precursor out at once did.
         /// </para>
         /// </summary>
-        public float[][] GetSharedTransitionAreas(int transitionCount)
+        public bool TryGetSharedTransitionAreas(int replicateIndex, ChromFileInfoId fileId, int transitionCount,
+            out float[] areas)
         {
-            var replicatePositions = ChromFileIds.ReplicatePositions;
-            var areasByPosition = new float[ChromFileIds.FileIds.Count][];
-            for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
+            areas = new float[transitionCount];
+            for (int iTran = 0; iTran < transitionCount; iTran++)
             {
-                foreach (int position in replicatePositions[replicateIndex])
+                // Asked by file rather than by position: the position a caller has in hand is the
+                // precursor's, and a transition's positions are its own.
+                var results = GetTransitionResults(iTran);
+                if (results?.TryGetPlainArea(replicateIndex, fileId, out float area) != true)
                 {
-                    var fileId = ChromFileIds.FileIds[position].Value;
-                    var areas = new float[transitionCount];
-                    for (int iTran = 0; iTran < transitionCount; iTran++)
-                    {
-                        // Asked by file rather than by position: the position in hand is the
-                        // precursor's, and a transition's positions are its own.
-                        var results = GetTransitionResults(iTran);
-                        if (results?.TryGetPlainArea(replicateIndex, fileId, out float area) != true)
-                        {
-                            areas = null;
-                            break;
-                        }
-
-                        areas[iTran] = area;
-                    }
-
-                    areasByPosition[position] = areas;
+                    areas = null;
+                    return false;
                 }
+
+                areas[iTran] = area;
             }
 
-            return areasByPosition;
-        }
-
-        /// <summary>
-        /// Whether every area one transition has is already in the precursor's shared transition
-        /// areas, so that the transition can be left out of the file altogether.
-        /// </summary>
-        public bool IsTransitionCoveredBySharedAreas(Transition transition,
-            ICollection<ReferenceValue<ChromFileInfoId>> sharedAreaFiles)
-        {
-            var results = GetTransitionResults(transition);
-            if (sharedAreaFiles == null || results == null)
-            {
-                return false;
-            }
-
-            var fileIds = results.ChromFileIds.FileIds;
-            return fileIds.Count == sharedAreaFiles.Count && fileIds.All(sharedAreaFiles.Contains);
+            return true;
         }
 
         /// <summary>
@@ -876,7 +850,7 @@ namespace pwiz.Skyline.Model.Results
         /// The peak a transition which was left out of the document has, given the area its
         /// precursor carried for it in <see cref="ATTR.transition_areas"/>. A transition is only
         /// left out when every one of its peaks says nothing beyond its area, so this is what each
-        /// of them said - see <see cref="GetSharedTransitionAreas"/>, which is what decides that.
+        /// of them said - see <see cref="TryGetSharedTransitionAreas"/>, which is what decides that.
         /// </summary>
         public static TransitionPeak MakePlainPeak(float area)
         {

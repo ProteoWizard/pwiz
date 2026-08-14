@@ -1370,7 +1370,7 @@ namespace pwiz.Skyline.Model.Serialization
             var userSets = new List<UserSet>();
             var annotations = new List<Annotations>();
             bool needsPeakIndexes = false;
-            var chromFileIds = ReadColumnarResults(reader, EL.precursor_peak, r =>
+            var chromFileIds = ReadColumnarResults(reader, EL.precursor_peak, (r, fileInfoId) =>
             {
                 int? chosenPeakIndex = r.GetNullableIntAttribute(ATTR.chosen_peak_index);
                 needsPeakIndexes = needsPeakIndexes || !chosenPeakIndex.HasValue;
@@ -1423,7 +1423,8 @@ namespace pwiz.Skyline.Model.Serialization
         /// the steps of one file, so the first element a file has is the one that counts.
         /// </para>
         /// </summary>
-        private ChromFileIds ReadColumnarResults(XmlReader reader, string peakStart, Action<XmlReader> readPeak)
+        private ChromFileIds ReadColumnarResults(XmlReader reader, string peakStart,
+            Action<XmlReader, ChromFileInfoId> readPeak)
         {
             var results = Settings.MeasuredResults;
             if (results == null)
@@ -1465,7 +1466,7 @@ namespace pwiz.Skyline.Model.Serialization
                 }
 
                 bool isEmptyElement = reader.IsEmptyElement;
-                readPeak(reader);
+                readPeak(reader, fileInfoId);
                 if (!isEmptyElement)
                 {
                     // Whatever the element still holds that nothing here wanted: the original and
@@ -1534,6 +1535,77 @@ namespace pwiz.Skyline.Model.Serialization
             private Results<TransitionChromInfo> ChromInfos { get; }
 
             /// <summary>
+            /// These results with the areas the precursor carried filled in at the files this
+            /// transition said nothing about, which is every file where all of the precursor's
+            /// transitions had nothing to say beyond their area.
+            /// <para>
+            /// Matched by file rather than by counting positions, and an entry of the transition's
+            /// own wins. That is what reads a document whose transitions were written at every
+            /// file, back when a transition was either left out of the precursor's areas
+            /// altogether or written out in full, the same way it was written.
+            /// </para>
+            /// </summary>
+            public TransitionResultsData WithSharedAreas(SharedTransitionAreas shared, int transitionIndex)
+            {
+                if (ChromInfos != null)
+                {
+                    // A document old enough to keep chrom infos has no shared areas to fill in.
+                    return this;
+                }
+
+                var indexByFile = new Dictionary<ReferenceValue<ChromFileInfoId>, int>();
+                for (int i = 0; i < ChromFileIds.FileIds.Count; i++)
+                {
+                    indexByFile[ChromFileIds.FileIds[i]] = i;
+                }
+
+                var replicatePositions = shared.ChromFileIds.ReplicatePositions;
+                var fileIds = new List<ChromFileInfoId>();
+                var counts = new List<int>();
+                var peaks = new List<TransitionPeak>();
+                var annotations = new List<Annotations>();
+                var peakBounds = new List<CustomPeakBounds>();
+                var peakMetrics = new List<CustomPeakMetrics>();
+                for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
+                {
+                    int count = 0;
+                    foreach (int position in replicatePositions[replicateIndex])
+                    {
+                        var fileId = shared.ChromFileIds.FileIds[position];
+                        if (indexByFile.TryGetValue(fileId, out int index))
+                        {
+                            peaks.Add(Peaks[index]);
+                            annotations.Add(Annotations?[index] ?? pwiz.Skyline.Model.Annotations.EMPTY);
+                            peakBounds.Add(PeakBounds == null ? default : PeakBounds[index]);
+                            peakMetrics.Add(PeakMetrics?[index]);
+                        }
+                        else if (shared.AreasByPosition[position] != null)
+                        {
+                            // Nothing beyond the area is what made it shareable, and MakePlainPeak
+                            // is what a peak which says only that looks like.
+                            peaks.Add(TransitionGroupResults.MakePlainPeak(
+                                shared.AreasByPosition[position][transitionIndex]));
+                            annotations.Add(pwiz.Skyline.Model.Annotations.EMPTY);
+                            peakBounds.Add(default);
+                            peakMetrics.Add(null);
+                        }
+                        else
+                        {
+                            continue;
+                        }
+
+                        fileIds.Add(fileId);
+                        count++;
+                    }
+
+                    counts.Add(count);
+                }
+
+                return new TransitionResultsData(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
+                    peaks, annotations, peakBounds, peakMetrics);
+            }
+
+            /// <summary>
             /// The precursor's results with this transition's added at
             /// <paramref name="transitionIndex"/>.
             /// </summary>
@@ -1569,11 +1641,13 @@ namespace pwiz.Skyline.Model.Serialization
             var annotations = new List<Annotations>();
             var peakBounds = new List<CustomPeakBounds>();
             var peakMetrics = new List<CustomPeakMetrics>();
-            var chromFileIds = ReadColumnarResults(reader, EL.transition_peak, r =>
+            var chromFileIds = ReadColumnarResults(reader, EL.transition_peak, (r, fileInfoId) =>
             {
                 // Protect against negative areas, since they can cause real problems for ratio
                 // calculations.
                 float area = Math.Max(0, r.GetFloatAttribute(ATTR.area));
+                // Left out of the element when it is the same as the precursor's for this file,
+                // which is nearly always, so the precursor's is what it means when it is absent.
                 var userSet = ReadUserSet(r);
                 var identified = r.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict,
                     PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
@@ -1615,8 +1689,8 @@ namespace pwiz.Skyline.Model.Serialization
                 AreasByPosition = areasByPosition;
             }
 
-            private ChromFileIds ChromFileIds { get; }
-            private IList<float[]> AreasByPosition { get; }
+            public ChromFileIds ChromFileIds { get; }
+            public IList<float[]> AreasByPosition { get; }
 
             /// <summary>
             /// The results of one transition, or null when the precursor carried nothing for it,
@@ -1659,12 +1733,13 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         /// <summary>
-        /// Gives the transitions which were not written out the areas the precursor carries for
-        /// them. A transition which was written out has its own results already and keeps them.
-        /// </summary>
-        /// <summary>
-        /// The transitions' results, with the ones the precursor wrote once for all of them filled
-        /// in where a transition had nothing of its own to say.
+        /// The transitions' results, with the areas the precursor wrote once for all of them filled
+        /// in at every file where none of them had anything of its own to say.
+        /// <para>
+        /// Filled in file by file rather than transition by transition: a transition which wrote
+        /// nothing anywhere has no element at all, and one which wrote at some files still needs
+        /// the precursor's areas at the rest.
+        /// </para>
         /// </summary>
         private static TransitionResultsData[] ApplySharedTransitionAreas(TransitionResultsData[] transitionResults,
             SharedTransitionAreas sharedTransitionAreas)
@@ -1677,7 +1752,9 @@ namespace pwiz.Skyline.Model.Serialization
             var resultsNew = new TransitionResultsData[transitionResults.Length];
             for (int iTran = 0; iTran < transitionResults.Length; iTran++)
             {
-                resultsNew[iTran] = transitionResults[iTran] ?? sharedTransitionAreas.MakeTransitionResults(iTran);
+                resultsNew[iTran] = transitionResults[iTran] == null
+                    ? sharedTransitionAreas.MakeTransitionResults(iTran)
+                    : transitionResults[iTran].WithSharedAreas(sharedTransitionAreas, iTran);
             }
 
             return resultsNew;

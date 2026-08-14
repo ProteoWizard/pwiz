@@ -295,23 +295,16 @@ namespace pwiz.Skyline.Model.Serialization
             var results = nodeGroup.AbbreviatedResults;
             var chromFileIds = results.ChromFileIds;
             var replicatePositions = chromFileIds.ReplicatePositions;
-            var sharedAreas = results.GetSharedTransitionAreas(transitionElements.Count);
-            var sharedAreaFiles = GetSharedTransitionAreaFiles(results, sharedAreas);
 
-            // Null for a transition the precursor already speaks for, which is then not asked
-            // about again at any file.
             var transitions = new Transition[transitionElements.Count];
             for (int i = 0; i < transitions.Length; i++)
             {
-                var transition = ((TransitionDocNode) nodeGroup.Children[i]).Transition;
-                if (results.HasTransitionResults(transition) &&
-                    !results.IsTransitionCoveredBySharedAreas(transition, sharedAreaFiles))
-                {
-                    transitions[i] = transition;
-                }
+                transitions[i] = ((TransitionDocNode) nodeGroup.Children[i]).Transition;
             }
 
             var transitionResults = new XElement[transitions.Length];
+            var writtenCounts = new int[transitions.Length];
+            int sharedFileCount = 0;
             var chromatograms = Settings.MeasuredResults.Chromatograms;
             for (int replicateIndex = 0;
                  replicateIndex < Math.Min(replicatePositions.ReplicateCount, chromatograms.Count);
@@ -321,17 +314,25 @@ namespace pwiz.Skyline.Model.Serialization
                 foreach (int position in replicatePositions[replicateIndex])
                 {
                     var fileId = chromFileIds.FileIds[position];
+                    bool shared = results.TryGetSharedTransitionAreas(replicateIndex, fileId, transitions.Length,
+                        out var areas);
+
                     var peakElement = new XElement(EL.precursor_peak);
                     SetReplicateAndFile(peakElement, chromatogramSet, fileId);
-                    SetColumnarPrecursorPeak(peakElement, results, sharedAreas, position);
+                    SetColumnarPrecursorPeak(peakElement, results, areas, position);
                     precursorResults.Add(peakElement);
+
+                    if (shared)
+                    {
+                        // The areas just went on the precursor, and being shareable is exactly
+                        // having nothing else to say, so no transition writes anything here.
+                        sharedFileCount++;
+                        continue;
+                    }
 
                     for (int i = 0; i < transitions.Length; i++)
                     {
-                        // Asked by file rather than by position: the position in hand is the
-                        // precursor's, and a transition's positions are its own.
-                        if (transitions[i] == null ||
-                            !results.TryGetTransitionPeak(transitions[i], replicateIndex, fileId, out var peak))
+                        if (!results.TryGetTransitionPeak(transitions[i], replicateIndex, fileId, out var peak))
                         {
                             continue;
                         }
@@ -347,19 +348,22 @@ namespace pwiz.Skyline.Model.Serialization
                         SetColumnarTransitionPeak(transitionPeak, results, transitions[i], replicateIndex, fileId,
                             peak);
                         transitionResults[i].Add(transitionPeak);
+                        writtenCounts[i]++;
                     }
                 }
             }
 
             // A transition's peaks are all in files its precursor was found in - see
-            // TransitionGroupResults.GetTransitionChromFileIds, which says only the other way
-            // round happens - so walking the precursor's positions has reached every one of them.
+            // TransitionGroupResults.GetTransitionChromFileIds, which says only the other way round
+            // happens - so between the files it was written at and the files the precursor spoke
+            // for, walking the precursor's positions has reached every one of them. Every
+            // transition has a peak at a shared file, which is what made it shareable.
             for (int i = 0; i < transitions.Length; i++)
             {
-                if (transitions[i] != null)
+                var transitionFileIds = results.GetTransitionChromFileIds(transitions[i]);
+                if (transitionFileIds != null)
                 {
-                    Assume.AreEqual(results.GetTransitionChromFileIds(transitions[i]).FileIds.Count,
-                        transitionResults[i]?.Elements().Count() ?? 0);
+                    Assume.AreEqual(transitionFileIds.FileIds.Count, writtenCounts[i] + sharedFileCount);
                 }
             }
         }
@@ -374,7 +378,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
         }
 
-        private void SetColumnarPrecursorPeak(XElement element, TransitionGroupResults results, float[][] sharedAreas,
+        private void SetColumnarPrecursorPeak(XElement element, TransitionGroupResults results, float[] sharedAreas,
             int position)
         {
                 // No area: a precursor's is the sum of its transitions', which are written below it.
@@ -398,10 +402,9 @@ namespace pwiz.Skyline.Model.Serialization
                 element.SetAttributeNullable(ATTR.qvalue, results.GetQValue(position));
                 element.SetAttributeNullable(ATTR.zscore, results.GetZScore(position));
                 element.SetAttribute(ATTR.user_set, results.GetUserSet(position), UserSet.FALSE);
-                var areas = sharedAreas[position];
-                if (areas != null)
+                if (sharedAreas != null)
                 {
-                    element.SetFloatsAttribute(ATTR.transition_areas, areas);
+                    element.SetFloatsAttribute(ATTR.transition_areas, sharedAreas);
                 }
 
                 AddAnnotations(element, results.GetAnnotations(position));
@@ -447,30 +450,6 @@ namespace pwiz.Skyline.Model.Serialization
             }
 
             AddAnnotations(element, results.FindTransitionAnnotations(transition, replicateIndex, fileId));
-        }
-
-        /// <summary>
-        /// The files whose transition areas the precursor carries, so that a transition which has
-        /// nothing to say beyond those areas can be left out altogether.
-        /// </summary>
-        private static HashSet<ReferenceValue<ChromFileInfoId>> GetSharedTransitionAreaFiles(
-            TransitionGroupResults results, float[][] sharedAreas)
-        {
-            if (results == null)
-            {
-                return null;
-            }
-
-            var fileIds = new HashSet<ReferenceValue<ChromFileInfoId>>();
-            for (int position = 0; position < sharedAreas.Length; position++)
-            {
-                if (sharedAreas[position] != null)
-                {
-                    fileIds.Add(results.ChromFileIds.FileIds[position]);
-                }
-            }
-
-            return fileIds;
         }
 
         private void SetPeptideChromInfo(XElement element, PeptideChromInfo chromInfo, double? scoreCalc)
