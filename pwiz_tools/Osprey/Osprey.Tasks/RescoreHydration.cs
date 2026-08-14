@@ -45,7 +45,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Per-file <see cref="FdrEntry"/> stubs from
         /// <c>&lt;stem&gt;.scores.parquet</c>, with SVM scores + 4 q-values
-        /// + PEP + <c>RunProteinQvalue</c> overlaid from the
+        /// + PEP + <c>ExperimentProteinQvalue</c> overlaid from the
         /// <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c> sidecar. File order
         /// matches the order of <c>parquetPaths</c> passed to
         /// <see cref="RescoreHydration.HydrateForRescore"/>.
@@ -93,7 +93,7 @@ namespace pwiz.Osprey.Tasks
         /// they can compute the join-wide reconciliation parameter hash —
         /// the worker's <c>OspreyConfig.InputFiles</c> only has its single
         /// parquet, but the hash that the downstream
-        /// <c>--task SecondPassFDR</c> merge node validates is computed over
+        /// <c>--task SecondPassFDR</c> node validates is computed over
         /// all files. Empty list when reading a v1 envelope (the worker
         /// falls back to its <c>InputFiles</c> stems in that case).
         /// </summary>
@@ -102,12 +102,29 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Join-wide set of base_ids that survived first-pass compaction, read
         /// from the <c>reconciliation.json</c> envelope's <c>first_pass_base_ids</c>
-        /// (v3 required field) that FirstJoin wrote with every file in memory.
+        /// (v3 required field) that FirstPassFDR wrote with every file in memory.
         /// <see cref="RescoreCompaction"/> compacts to exactly this set so an HPC
         /// per-file worker keeps the same cross-file entries the in-memory
         /// straight-through pipeline keeps.
         /// </summary>
         public HashSet<uint> GlobalFirstPassBaseIds { get; set; }
+
+        /// <summary>
+        /// The set of base_ids the compaction actually RETAINED:
+        /// <see cref="GlobalFirstPassBaseIds"/> unioned with the base_ids of every entry
+        /// the planner emitted a reconciliation action for. Set by
+        /// <see cref="RescoreCompaction.Apply"/>, which is the single authority on the
+        /// retained set across every bundle arm (worker-supplied, own-sidecar batch,
+        /// own-sidecar streaming), so a consumer that has to reproduce the survivor list
+        /// takes it from here rather than re-deriving one of the two terms and silently
+        /// dropping the other.
+        ///
+        /// <para>Its one consumer is <c>FirstPassFdrTask.Rehydrate</c>, which uses it to build
+        /// the per-file <see cref="FirstPassSurvivorLoader"/> a resume publishes so Stage 6
+        /// streams instead of holding the all-files survivor buffer (issue #4536). Null
+        /// before <c>Apply</c> has run.</para>
+        /// </summary>
+        public HashSet<uint> RetainedBaseIds { get; set; }
 
         /// <summary>
         /// Per-file PRE-compaction tallies captured by
@@ -141,10 +158,10 @@ namespace pwiz.Osprey.Tasks
         /// its caller still holds the all-files pre-compaction pool and builds the report from
         /// it directly.
         ///
-        /// Has exactly ONE reader, <c>FirstJoinTask</c>'s rehydrate, which nulls this property
+        /// Has exactly ONE reader, <c>FirstPassFdrTask</c>'s rehydrate, which nulls this property
         /// as soon as it has written the report. The bundle travels on a published byproduct
         /// slot that lives for the whole process, so an accumulator left set here would pin
-        /// its ~1-2 GB through Stage 6 and the merge with nothing left to read it.
+        /// its ~1-2 GB through Stage 6 and SecondPassFDR with nothing left to read it.
         /// </summary>
         public ModelDiagnosticsData.Accumulator ModelDiagnosticsAccumulator { get; set; }
 
@@ -295,7 +312,7 @@ namespace pwiz.Osprey.Tasks
         /// wrapper (which loads stubs first) and the in-pipeline joinOnly
         /// dispatch (which already has stubs loaded with PIN features +
         /// calibration siblings, and just needs the rescore overlay added
-        /// to share state with FirstJoin / PerFileRescore).
+        /// to share state with FirstPassFDR / PerFileRescore).
         ///
         /// The returned <see cref="RescoreInputs"/> references the SAME
         /// <see cref="FdrEntry"/> list objects passed in
@@ -546,7 +563,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Overlay SVM scores + 4 q-values + PEP + RunProteinQvalue from
+        /// Overlay SVM scores + 4 q-values + PEP + ExperimentProteinQvalue from
         /// <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c> v3 onto <paramref name="stubs"/>.
         /// <c>expected_pass = FirstPass</c>: the planner's actions were computed against
         /// first-pass FDR, and the compaction predicate uses first-pass q-values. The stub
@@ -706,7 +723,7 @@ namespace pwiz.Osprey.Tasks
         /// captured from the first envelope seen and checked against the rest. A disagreement
         /// means the on-disk envelopes came from different planner steps (corrupted
         /// hand-off): silently taking the first file's values would compact its siblings
-        /// against the wrong base_ids and compute a join-wide reconciliation hash the merge
+        /// against the wrong base_ids and compute a join-wide reconciliation hash the SecondPassFDR
         /// node rejects. Mirrors the consistency checks in Rust's <c>hydrate_for_rescore</c>.
         /// </summary>
         private sealed class EnvelopeConsistency

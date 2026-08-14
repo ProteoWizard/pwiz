@@ -90,7 +90,7 @@ stable key order before the values are used downstream:
 
 The double-counting dedup similarly re-sorts by `EntryId`
 (`Osprey.Scoring/ScoringPipeline.cs:579`), and the reconciliation CWT/forced
-lists sort by `EntryId` (`Osprey.Tasks/FirstJoinTask.cs:1143-1144`).
+lists sort by `EntryId` (`Osprey.Tasks/FirstPassFdrTask.cs:1143-1144`).
 
 ## Step 4 — Deterministic fold assignment (round-robin over sorted peptide groups)
 
@@ -177,7 +177,7 @@ re-imposes the exact `(EntryId, Charge, ScanNumber, ParquetIndex)` order a cold
 run establishes, with `ParquetIndex` as a unique terminal key so the sort never
 ties (`:1306-1315`). The comment at `:1287-1299` explains why this is applied to
 **every** file (even no-work files with no reconciled Parquet): otherwise
-`MergeNode`'s `BuildSharedBoundaries` could iterate a different order and, on a
+`SecondPassFDR`'s `BuildSharedBoundaries` could iterate a different order and, on a
 q-value tie between charge states, pick a different shared `(modseq, file)`
 boundary. Parquet preserves exact IEEE-754 values, so a rehydrated entry is
 bit-identical to the in-memory original (see 14-intermediate-files.md).
@@ -209,9 +209,9 @@ only scheduling, never output. `FileParallelismResolver.Resolve`
 (`Osprey.Core/FileParallelism.cs:122`) resolves a concurrent-file count from the
 CLI request, `OSPREY_MAX_PARALLEL_FILES`, free RAM, and core count, but each file
 is scored independently into its own Parquet cache in a deterministic order, and
-the join stages sort by stable keys. The reconciliation re-scoring per-file loop
+the FirstPassFDR and SecondPassFDR stages sort by stable keys. The reconciliation re-scoring per-file loop
 under `PerFileRescoreTask` (`Osprey.Tasks/PerFileRescoreTask.cs:576`) writes each
-file's result independently and the merge node re-imposes the canonical order
+file's result independently and SecondPassFDR re-imposes the canonical order
 (Step 8), so a run with `--parallel-files 8` and a sequential run produce
 identical blibs — which is exactly what the regression gate asserts.
 

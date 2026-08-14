@@ -82,12 +82,12 @@ a { color: #1565c0; }
 <table>
 <tr><th>Argument</th><th>Description</th></tr>
 <tr><td><nobr>-d</nobr>,&nbsp;<nobr>--diagnostics</nobr></td><td>Write <nobr>cross-impl</nobr> bisection dumps (OSPREY_DUMP_* bundle)</td></tr>
-<tr><td><nobr>--model-diagnostics</nobr></td><td>Write a <nobr>self-contained</nobr> interactive HTML report of the trained scoring model and FDR calibration</td></tr>
+<tr><td><nobr>--model-diagnostics</nobr></td><td>Write a <nobr>self-contained</nobr> interactive HTML report of the trained scoring model, FDR calibration, and <nobr>single-peak</nobr> <nobr>multiple-ID</nobr> <nobr>co-assignment</nobr></td></tr>
 <tr><td><nobr>-h</nobr>,&nbsp;<nobr>--help</nobr></td><td>Show this help message ([ascii|unicode|sections|html|&lt;Section&gt;])</td></tr>
 <tr><td><nobr>-v</nobr>,&nbsp;<nobr>--version</nobr></td><td>Show version</td></tr>
 </table>
 <p>EXAMPLES:</p><p>  osprey -i sample.mzML -l library.tsv -o results.blib</p><p>  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram</p><p>HPC SPLIT (one node = one --task): see --task / --input-scores above.</p><div class="RowType">Distributed execution (HPC)</div>
-<p>Run with no <code>--task</code> for the whole pipeline in one process. For distributed (HPC / workflow-engine) execution the pipeline splits at its join / fan-out boundaries into four single-task workers &mdash; one node = one <code>--task</code>: <code>PerFileScoring</code> (split, per file) &rarr; <code>FirstPassFDR</code> (join, all files) &rarr; <code>PerFileRescoring</code> (split, per file) &rarr; <code>SecondPassFDR</code> (merge node). Pass the same <code>--library</code> and search options to every task; the parquet integrity check rejects inputs whose search/library hash does not match.</p>
+<p>Run with no <code>--task</code> for the whole pipeline in one process. For distributed (HPC / workflow-engine) execution the pipeline splits at its join / fan-out boundaries into four single-task workers &mdash; one node = one <code>--task</code>: <code>PerFileScoring</code> (split, per file) &rarr; <code>FirstPassFDR</code> (join, all files) &rarr; <code>PerFileRescoring</code> (split, per file) &rarr; <code>SecondPassFDR</code> (join, all files). Pass the same <code>--library</code> and search options to every task; the parquet integrity check rejects inputs whose search/library hash does not match.</p>
 <pre>
 # split 1 - one process per mzML (writes &lt;stem&gt;.scores.parquet, &lt;stem&gt;.calibration.json beside each input)
 Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
@@ -103,5 +103,5 @@ Osprey --task PerFileRescoring --input-scores s1.scores.parquet -l hela.tsv -o o
 # join 2 - one process over ALL reconciled parquets (writes out.blib)
 Osprey --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 </pre>
-<p><code>--input-scores</code> takes a directory (globbed and sorted internally) or an explicit file list (used in the order given). First-join reconciliation is order-sensitive, so for the join tasks pass a directory or a deterministically sorted list. The rehydration sidecars must travel with their parquet into each worker's working directory. Let the scheduler do the fan-out (one file per split process) rather than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>
+<p><code>--input-scores</code> takes a directory (globbed and sorted internally) or an explicit file list (used in the order given). FirstPassFDR reconciliation is order-sensitive, so for <code>FirstPassFDR</code> and <code>SecondPassFDR</code> pass a directory or a deterministically sorted list. The rehydration sidecars must travel with their parquet into each worker's working directory. Let the scheduler do the fan-out (one file per split process) rather than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>
 </body></html>

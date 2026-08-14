@@ -724,6 +724,7 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
+    <Compile Include="Model\Results\IndexedMultiArray.cs" />
     <Compile Include="Model\Results\ReplicatePositions.cs" />
     <Compile Include="Model\Results\TransitionGroupIntegrator.cs" />
     <Compile Include="Model\WatersConnect\MethodModel.cs" />
@@ -7181,7 +7182,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\add-pro32.bmp" />
-    <Content Include="SkylineCmd.exe.config">
+    <Content Include="$(IntermediateOutputPath)SkylineCmd.exe.config">
+      <Link>SkylineCmd.exe.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="bin\x86\$(Configuration)\SkylineCmd.exe">
@@ -7550,6 +7552,14 @@
     <Folder Include="Model\Carafe\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- SkylineCmd.exe needs the same config file as Skyline, so copy the "Skyline.exe.config" to "SkylineCmd.exe.config". -->
+  <Target Name="_CopySkylineCmdConfig"
+          DependsOnTargets="GenerateBindingRedirectsUpdateAppConfig"
+          BeforeTargets="GenerateApplicationManifest;_CopyFilesToOutputDirectory">
+    <Copy SourceFiles="@(AppConfigWithTargetPath)"
+          DestinationFiles="$(IntermediateOutputPath)SkylineCmd.exe.config"
+          SkipUnchangedFiles="true" />
+  </Target>
   <Target Name="AfterPublish">
     <Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>

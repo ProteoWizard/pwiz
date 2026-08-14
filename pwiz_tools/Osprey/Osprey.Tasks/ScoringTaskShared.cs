@@ -26,6 +26,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
 
@@ -33,7 +35,7 @@ namespace pwiz.Osprey.Tasks
 {
     /// <summary>
     /// The shared plumbing the scoring tasks (<see cref="PerFileScoringTask"/>,
-    /// <see cref="PerFileRescoreTask"/>, <see cref="FirstJoinTask"/>) once
+    /// <see cref="PerFileRescoreTask"/>, <see cref="FirstPassFdrTask"/>) once
     /// inherited from the retired <c>AbstractScoringTask</c> base: the mzML read
     /// gate, the PIN feature width + base-id mask constants, the isolation-window
     /// extractor, and the nearest-MS1 lookup. None of it needs instance state, so
@@ -187,6 +189,24 @@ namespace pwiz.Osprey.Tasks
             try
             {
                 SpectraCache.SaveSpectraCache(cachePath, mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra, inputFile);
+                // Name the file that was just written, the way the library cache does. Without
+                // this the only evidence a multi-GB cache was produced is a silent gap in the
+                // log, and nothing says WHERE it landed - which matters because --work-dir
+                // redirects this path away from the data directory (ArtifactPaths.ResolveCacheDir),
+                // so a run can rebuild caches that already exist beside the mzML.
+                long cacheBytes = 0;
+                try
+                {
+                    if (File.Exists(cachePath))
+                        cacheBytes = new FileInfo(cachePath).Length;
+                }
+                catch
+                {
+                    cacheBytes = 0;
+                }
+                ctx.LogInfo(string.Format("Saved spectra cache ({0} MS2 + {1} MS1, {2:F2} GB) to '{3}'",
+                    mzmlResult.Ms2Spectra.Count, mzmlResult.Ms1Spectra.Count,
+                    cacheBytes / 1024.0 / 1024.0 / 1024.0, cachePath));
             }
             catch (Exception ex)
             {
@@ -225,7 +245,7 @@ namespace pwiz.Osprey.Tasks
         /// `.scores.parquet` suffix with `.mzML`. Mirrors the Rust
         /// `synthetic_input_from_parquet` helper.
         ///
-        /// <para>Lives here rather than on <see cref="FirstJoinTask"/> because
+        /// <para>Lives here rather than on <see cref="FirstPassFdrTask"/> because
         /// <see cref="FirstPassSurvivorLoader"/> needs the same resolution to find a
         /// file's 1st-pass sidecar, and a loader reaching into a task class for it
         /// would be the wrong direction of dependency.</para>
@@ -260,6 +280,62 @@ namespace pwiz.Osprey.Tasks
                 return Path.Combine(parent, fileName + ".mzML");
             }
             return null;
+        }
+
+        /// <summary>
+        /// Reduce off one file's PRE-compaction stub pool everything a rehydrate used to
+        /// read off the resident all-files pool. Only the run-level FDR passing-target count
+        /// is needed: FirstPassFDR's Stage 5 result line reports it per file, and the streaming
+        /// hydrate has already dropped the non-survivors by the time that line is written.
+        /// Identical predicate to <c>FirstPassFdrTask.LogFirstPassResults</c>.
+        ///
+        /// <para>Shared by both callers of
+        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/> -- the
+        /// <c>--task PerFileRescoring</c> worker load in <see cref="PerFileScoringTask"/>
+        /// and the straight-through resume in <see cref="FirstPassFdrTask"/> - so the two
+        /// cannot drift into reporting per-file counts under different predicates. The
+        /// <c>--task SecondPassFDR</c> merge takes that SAME streaming hydrate since #4486
+        /// (it no longer routes to the resident batch twin), but it skips this tally: the
+        /// only reader of <c>PassingTargets</c> is FirstPassFDR's per-file Stage 5 result
+        /// line, and that task is excluded on the merge node, so filling the field there
+        /// would walk every stub to produce a number nothing reads.</para>
+        /// </summary>
+        internal static void TallyPreCompaction(
+            OspreyConfig config, List<FdrEntry> stubs, PreCompactionTally tally)
+        {
+            int passing = 0;
+            foreach (var entry in stubs)
+            {
+                if (!entry.IsDecoy && entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
+                    passing++;
+            }
+            tally.PassingTargets = passing;
+        }
+
+        /// <summary>
+        /// Fold one file's PRE-compaction stubs into the <c>--model-diagnostics</c> report
+        /// accumulator, handing it exactly the scalars the batch
+        /// <c>ModelDiagnosticsData.Build</c> reads off each <see cref="FdrEntry"/> - identity,
+        /// is_decoy, SVM score, and the four first-pass q-values the
+        /// <c>.1st-pass.fdr_scores.bin</c> overlay has just written onto these stubs. Rows
+        /// arrive here in the same nested (file, row) order the batch build walks (input-file
+        /// order, parquet row order within a file), which is what makes the streamed
+        /// reductions reproduce the resident ones element for element.
+        ///
+        /// <para>Shared by the same two hydrate callers as
+        /// <see cref="TallyPreCompaction"/>: the report must be identical whether the
+        /// pre-compaction rows passed through the worker load or a resume's.</para>
+        /// </summary>
+        internal static void FeedModelDiagnostics(
+            ModelDiagnosticsData.Accumulator accumulator, int fileIdx, List<FdrEntry> stubs)
+        {
+            foreach (var entry in stubs)
+            {
+                accumulator.Add(fileIdx, entry.ModifiedSequence, entry.Charge, entry.EntryId,
+                    entry.IsDecoy, entry.Score,
+                    new FdrQValues(entry.RunPrecursorQvalue, entry.RunPeptideQvalue,
+                        entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep));
+            }
         }
     }
 }

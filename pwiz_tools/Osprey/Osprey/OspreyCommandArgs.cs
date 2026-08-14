@@ -287,6 +287,13 @@ namespace pwiz.Osprey
         // format/section value (ascii | unicode | sections | html | <Section>).
         public static readonly OspreyArgument ARG_DIAGNOSTICS = new OspreyArgument(@"diagnostics",
             (c, p) => c._config.Diagnostics = true) { ShortName = @"d" };
+        // One flag, everything we know how to show. An opt-in token per expensive panel was built
+        // and removed (#4522): the peak co-assignment panel measured 7.3M rows/s, i.e. ~46s on an
+        // 82-file Astral run against a 10-hour search, so the cost never justified making anyone
+        // choose. Someone who asks for --model-diagnostics wants the diagnostics, not a decision
+        // about which ones they can afford - and a panel behind a token nobody remembers is a
+        // panel nobody sees, which defeats a diagnostic whose whole purpose is surfacing an effect
+        // users do not know to look for.
         public static readonly OspreyArgument ARG_MODEL_DIAGNOSTICS = new OspreyArgument(@"model-diagnostics",
             (c, p) => c._config.ModelDiagnostics = true);
         public static readonly OspreyArgument ARG_HELP = new OspreyArgument(@"help",
@@ -420,7 +427,6 @@ namespace pwiz.Osprey
                     matched.ProcessValue(this, new NameValuePair(matched.Name, parallelValue));
                     continue;
                 }
-
                 if (matched.Variadic)
                 {
                     i++;
@@ -739,7 +745,7 @@ namespace pwiz.Osprey
                 @"boundaries into four single-task workers &mdash; one node = one <code>--task</code>: " +
                 @"<code>PerFileScoring</code> (split, per file) &rarr; <code>FirstPassFDR</code> (join, all " +
                 @"files) &rarr; <code>PerFileRescoring</code> (split, per file) &rarr; " +
-                @"<code>SecondPassFDR</code> (merge node). Pass the same <code>--library</code> and search " +
+                @"<code>SecondPassFDR</code> (join, all files). Pass the same <code>--library</code> and search " +
                 @"options to every task; the parquet integrity check rejects inputs whose search/library " +
                 @"hash does not match.</p>");
             sb.AppendLine(@"<pre>");
@@ -758,8 +764,8 @@ namespace pwiz.Osprey
             sb.AppendLine(@"Osprey --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"</pre>");
             sb.AppendLine(@"<p><code>--input-scores</code> takes a directory (globbed and sorted internally) " +
-                @"or an explicit file list (used in the order given). First-join reconciliation is " +
-                @"order-sensitive, so for the join tasks pass a directory or a deterministically sorted " +
+                @"or an explicit file list (used in the order given). FirstPassFDR reconciliation is " +
+                @"order-sensitive, so for <code>FirstPassFDR</code> and <code>SecondPassFDR</code> pass a directory or a deterministically sorted " +
                 @"list. The rehydration sidecars must travel with their parquet into each worker's " +
                 @"working directory. Let the scheduler do the fan-out (one file per split process) rather " +
                 @"than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>");
@@ -809,7 +815,7 @@ namespace pwiz.Osprey
                 { @"perf-stats", @"Emit machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for perf tools (off by default)" },
                 { @"verbose", @"Show implementer-grade detail (e.g. per-fold Percolator iterations) hidden by default" },
                 { @"diagnostics", @"Write cross-impl bisection dumps (OSPREY_DUMP_* bundle)" },
-                { @"model-diagnostics", @"Write a self-contained interactive HTML report of the trained scoring model and FDR calibration" },
+                { @"model-diagnostics", @"Write a self-contained interactive HTML report of the trained scoring model, FDR calibration, and single-peak multiple-ID co-assignment" },
                 { @"help", @"Show this help message ([ascii|unicode|sections|html|<Section>])" },
                 { @"version", @"Show version" },
             };

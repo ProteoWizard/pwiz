@@ -162,6 +162,37 @@ function Get-DiagnosticsMetrics {
     Add-Metric 'winFraction.nullBandReal' $d.winFraction.nullBandReal
     Add-Metric 'winFraction.nullBandEnt'  $(if ($d.winFraction.hasEntrapment) { $d.winFraction.nullBandEnt } else { $null })
 
+    # --- Peak co-assignment (issue #4522) ----------------------------------
+    # Pinned at BOTH passes and BOTH q scopes. Without these the panel ships with no golden
+    # coverage at all: this projection is an explicit metric list, not an enumeration of the
+    # payload, so a new card is invisible to the comparison until it is named here. The counts
+    # are the critical ones (nBetter is the "would go away under best-match-wins" number);
+    # the fractions follow from them and n, so pinning both would only double the failure noise.
+    foreach ($p in 1, 2) {
+        $ca = if ($p -eq 2) { $d.pass2.coAssignment } else { $d.coAssignment }
+        foreach ($scope in 'run', 'experiment') {
+            $s = if ($ca) { $ca.$scope } else { $null }
+            foreach ($cls in 'target', 'entrapment', 'decoy') {
+                $r = if ($s) { $s.$cls } else { $null }
+                Add-Metric "pass$p.coAssign.$scope.$cls.n"       $(if ($r) { $r.n } else { $null })
+                Add-Metric "pass$p.coAssign.$scope.$cls.nBetter" $(if ($r) { $r.nBetter } else { $null })
+            }
+            # NaN when a class is under MIN_N_FOR_ENRICHMENT, which is itself worth pinning: it
+            # says the run had too few of that class to make a ratio, and a change in that is a
+            # change in the pool.
+            Add-Metric "pass$p.coAssign.$scope.enrichment" $(if ($s) { $s.enrichment } else { $null })
+        }
+        # The acceptance boundary in use, and the score this pass's OWN population needs to reach
+        # the target FDR. Pinned because their divergence is the pool-selection signal: they agree
+        # at pass 1 and separate at pass 2 when compaction has stripped the winning decoys, and a
+        # change in that separation is a change in how the second pass is built. The counts are
+        # pinned beside the score so a drift shows whether it moved the IDs, the decoys, or both.
+        Add-Metric "pass$p.coAssign.cutoff"             $(if ($ca) { $ca.experimentCutoff } else { $null })
+        Add-Metric "pass$p.coAssign.fdrCrossing"        $(if ($ca) { $ca.experimentFdrCrossing } else { $null })
+        Add-Metric "pass$p.coAssign.fdrCrossingDecoys"  $(if ($ca) { $ca.experimentFdrCrossingDecoys } else { $null })
+        Add-Metric "pass$p.coAssign.fdrCrossingNonDecoys" $(if ($ca) { $ca.experimentFdrCrossingNonDecoys } else { $null })
+    }
+
     # --- FDP at the reported-q threshold (entrapment only) -----------------
     foreach ($pass in 1, 2) {
         $fdp = Get-FdpAtThreshold -Payload $d -Pass $pass -Scope 'experiment'
@@ -192,12 +223,27 @@ function Compare-DiagnosticsGolden {
     Tier 1: compare a fresh report's metrics against the committed golden.
     Numeric metrics at absolute Tolerance; everything else exact. Returns
     Pass + Issues.
+
+    -NoTrainedModel is for a report emitted by a run that ADOPTED first-pass
+    q-values from the .1st-pass.fdr_scores.bin sidecars instead of training
+    Percolator (FirstPassFdrTask.Rehydrate -- regression.ps1 mode 5). Exactly one
+    metric is model-derived: featureCount comes from the FeatureContributions
+    the trainer produces, and a run that never trained has none to report. The
+    switch does NOT skip that metric -- it PINS it at 0, so the comparison stays
+    total: every metric is still asserted, one of them against the value a
+    modelless run must have rather than against the golden. Skipping instead
+    would leave the report free to lose its feature view on the straight-through
+    path too, unnoticed.
     #>
     param([Parameter(Mandatory = $true)][string]$HtmlPath,
           [Parameter(Mandatory = $true)][string]$GoldenDir,
-          [double]$Tolerance = 1e-9)
+          [double]$Tolerance = 1e-9,
+          [switch]$NoTrainedModel)
 
     $issues = [System.Collections.Generic.List[string]]::new()
+    # The one model-derived metric, named once so the two places below that treat
+    # it specially cannot drift apart.
+    $modelMetric = 'featureCount'
     $goldenPath = Join-Path $GoldenDir 'diagnostics.tsv'
     if (-not (Test-Path $goldenPath)) {
         $issues.Add("diagnostics: missing golden $goldenPath")
@@ -217,6 +263,23 @@ function Compare-DiagnosticsGolden {
     foreach ($name in $goldenOrder) {
         if (-not $fresh.ContainsKey($name)) { $issues.Add("diagnostics: metric missing from run: $name"); continue }
         $g = $golden[$name]; $f = $fresh[$name]
+        if ($NoTrainedModel -and $name -eq $modelMetric) {
+            # Pinned, not skipped. A run that adopted its q-values from the 1st-pass
+            # sidecars trained no model, so it has no feature contributions to report
+            # and this must read 0. Anything else means the report claims a feature
+            # view it cannot have computed, which is the direction that would matter.
+            if ($f -ne '0') {
+                # Double parens: -f binds TIGHTER than the ',' separating method arguments,
+                # so Add(("...") -f $name, $f) parses as a TWO-argument call and the format
+                # operator throws on the missing {1}. Every other Add in this file does the
+                # same. Getting it wrong is invisible until the branch first fires - which
+                # here is the failure path this pin exists to report.
+                $issues.Add((("diagnostics: {0} run='{1}', expected '0' - this run adopted " +
+                    "first-pass q-values from the sidecars and trained no model, so it has " +
+                    "no feature contributions to report") -f $name, $f))
+            }
+            continue
+        }
         $gd = 0.0; $fd = 0.0
         # Invariant, matching how Format-CellValue WROTE these. The current-culture
         # overload reads its own invariant output wrong on a comma-decimal agent, and
@@ -229,9 +292,22 @@ function Compare-DiagnosticsGolden {
         $bothNumeric = [double]::TryParse($g, $style, $inv, [ref]$gd) -and
                        [double]::TryParse($f, $style, $inv, [ref]$fd)
         if ($bothNumeric) {
-            $diff = [math]::Abs($gd - $fd)
-            if ($diff -gt $Tolerance) {
-                $issues.Add(("diagnostics: {0} golden={1} run={2} diff={3:e3} (tol {4:e0})" -f $name, $g, $f, $diff, $Tolerance))
+            # NaN and +/-Infinity BOTH parse successfully here, and every comparison against
+            # NaN is $false - so a bare Abs(diff) -gt Tolerance passes golden='NaN' against
+            # run='4.37' silently, and the string fallback below is unreachable once TryParse
+            # has succeeded. NaN is a meaningful VALUE for these metrics (a class under
+            # MIN_N_FOR_ENRICHMENT reports it), so a class crossing that threshold in either
+            # direction is exactly the change worth catching. Compare non-finite values for
+            # equality; only finite pairs get the tolerance.
+            if (-not ([double]::IsFinite($gd) -and [double]::IsFinite($fd))) {
+                if ($g -ne $f) {
+                    $issues.Add(("diagnostics: {0} golden='{1}' run='{2}'" -f $name, $g, $f))
+                }
+            } else {
+                $diff = [math]::Abs($gd - $fd)
+                if ($diff -gt $Tolerance) {
+                    $issues.Add(("diagnostics: {0} golden={1} run={2} diff={3:e3} (tol {4:e0})" -f $name, $g, $f, $diff, $Tolerance))
+                }
             }
         } elseif ($g -ne $f) {
             $issues.Add(("diagnostics: {0} golden='{1}' run='{2}'" -f $name, $g, $f))

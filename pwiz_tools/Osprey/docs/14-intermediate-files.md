@@ -18,8 +18,8 @@ resume mechanisms the port adds (a per-task `.osprey.task` validity sidecar and 
 | `<stem>.spectra.bin` | Custom binary v3 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload |
 | `<stem>.scores.parquet` | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
 | `<stem>.scores-reconciled.parquet` | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
-| `<stem>.1st-pass.fdr_scores.bin` | Custom binary v3 | `Osprey.IO/FdrScoresSidecar.cs` | SVM score + 4 q-values + PEP + run_protein_qvalue after first-pass Percolator |
-| `<stem>.2nd-pass.fdr_scores.bin` | Custom binary v3 | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
+| `<stem>.1st-pass.fdr_scores.bin` | Custom binary v4 | `Osprey.IO/FdrScoresSidecar.cs` | SVM score + 4 q-values + PEP + experiment_protein_qvalue + experiment_aggregate_score after first-pass Percolator |
+| `<stem>.2nd-pass.fdr_scores.bin` | Custom binary v4 | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
 | `<stem>.reconciliation.json` | JSON (Newtonsoft) | `Osprey.IO/ReconciliationFile.cs` | Stage 5 planner output: actions, gap-fill targets, refined RT calibration |
 | `<output>.<TaskName>.osprey.task` | JSON (hand-rolled) | `Osprey.Tasks/TaskValiditySidecar.cs` | **C# addition**: per-(output, task) resume validity record |
 | `<lib>.<...>` library cache | Custom binary v2 | `Osprey.IO/LibraryCache.cs` | Parsed spectral library reload cache |
@@ -64,7 +64,7 @@ local-temp → NAS cross-volume copy, which sidesteps the truncation risk `copy_
 guards against. Callers that use it: `ParquetScoreCache.WriteScoresParquet`
 (`ParquetScoreCache.cs:265`, `:457`), `SpectraCache.SaveSpectraCache` (`SpectraCache.cs:85`),
 `CalibrationIO.SaveCalibration` (`CalibrationIO.cs:50`), `FdrScoresSidecar.WriteInternal`
-(`FdrScoresSidecar.cs:366`) and `PatchRunProteinQvalues` (`FdrScoresSidecar.cs:257`),
+(`FdrScoresSidecar.cs:366`) and `PatchProteinQvalues` (`FdrScoresSidecar.cs:257`),
 `ReconciliationFile.Save` (`ReconciliationFile.cs:203`), `LibraryCache.SaveCache`
 (`LibraryCache.cs:77`), and `TaskValiditySidecar.Write` (`TaskValiditySidecar.cs:130`).
 
@@ -86,7 +86,7 @@ The schema mirrors Rust's `CalibrationMetadata` / `MzCalibration` / `RTCalibrati
 `ms2_calibration` / `rt_calibration` / `second_pass_rt` JSON keys). The metadata block written
 by `ResolveCalibration` (`PerFileScoringTask.cs:1702`) populates
 `calibration_successful`, `num_confident_peptides`, `num_sampled_precursors`, `timestamp`, and
-the DIA `isolation_scheme` (so an HPC merge node with no mzML can rehydrate the gap-fill m/z
+the DIA `isolation_scheme` (so an HPC SecondPassFDR node with no mzML can rehydrate the gap-fill m/z
 filter, `PerFileScoringTask.cs:1758`).
 
 **How calibration is reused in C#.** The Rust doc says the calibration file is reused when its
@@ -299,19 +299,19 @@ Per-file persistence of FDR state at the Stage 5 → Stage 6 boundary (first pas
 second-pass FDR. Carries the SVM discriminant plus every q-value needed for downstream filtering
 and protein-FDR-aware compaction.
 
-### Format (v3) — byte-identical to Rust
+### Format (v4) — byte-identical to Rust
 
-`FdrScoresSidecar` writes a 32-byte header + fixed 60-byte records (`FdrScoresSidecar.cs:97`):
+`FdrScoresSidecar` writes a 32-byte header + fixed 68-byte records (`FdrScoresSidecar.cs:97`):
 
 ```
 Header (32 bytes):
   [0..8]   magic         = "OSPRYFDR"
-  [8]      version       = 3
+  [8]      version       = 4
   [9]      pass          = 1 (first) | 2 (second)
   [10..16] reserved (zero)
   [16..24] entry_count   u64 LE
   [24..32] reserved (zero)
-Record (60 bytes):
+Record (68 bytes):
   [0..4]   entry_id                     u32 LE
   [4..12]  svm_score                    f64 LE
   [12..20] run_precursor_qvalue         f64 LE
@@ -319,27 +319,59 @@ Record (60 bytes):
   [28..36] experiment_precursor_qvalue  f64 LE
   [36..44] experiment_peptide_qvalue    f64 LE
   [44..52] pep                          f64 LE
-  [52..60] run_protein_qvalue           f64 LE
+  [52..60] experiment_protein_qvalue    f64 LE
+  [60..68] experiment_aggregate_score   f64 LE
 ```
+
+`experiment_protein_qvalue` is the one column whose value depends on WHICH sidecar it is in:
+the `.1st-pass` file carries the first-pass picked-protein result, the `.2nd-pass` file the
+second-pass one. That is the same rule the precursor and peptide q-values follow - the pass is
+recorded by the file, not by a second field - and `FdrEntry` carries a single
+`ExperimentProteinQvalue` accordingly. It is experiment-scope in both passes: the first-pass
+protein FDR pools its detected peptides over every file and propagates one value per peptide,
+so there is no per-run protein q despite the `run_protein_qvalue` name this column carried
+until issue #4559.
 
 Field order and offsets are single-sourced in `WriteRecord` (`FdrScoresSidecar.cs:390`).
 The v2→v3 bump (dated 2026-05-02 in the C# comment, `FdrScoresSidecar.cs:82`) added
-`run_protein_qvalue` so a Stage 6 worker can reproduce the in-process compaction predicate
-`run_peptide_qvalue ≤ 0.01 OR run_protein_qvalue ≤ 0.01`; records are written pre-compaction but
+`experiment_protein_qvalue` so a Stage 6 worker can reproduce the in-process compaction predicate
+`run_peptide_qvalue ≤ 0.01 OR experiment_protein_qvalue ≤ 0.01`; records are written pre-compaction but
 post first-pass protein FDR so the value is real, not the default 1.0. Cross-impl byte parity is
 checked by a harness via the `OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT` hook (`FdrScoresSidecar.cs:43`).
 
+The v3→v4 bump (2026-08-10, issue #4522) appended `experiment_aggregate_score`. `svm_score` is
+the per-ROW discriminant, which is what the RUN-scope q-values compete on; the EXPERIMENT-scope
+q-values compete on a per-entry roll-up across runs instead, and that quantity was never
+persisted — so a consumer re-gating at experiment scope had to rebuild the roll-up itself and
+branch on `OSPREY_EXPERIMENT_AGG`, which is silently wrong on exactly the arms where the
+aggregation is under study. The new field is that roll-up: max over the entry's rows across runs
+under the default aggregation, `ComputeBaseIdMeanBestN`'s value under mean-best-N, produced by
+`PercolatorQValues.ComputeExperimentAggregateScoreMap` (resident/flat) and
+`StreamingFdr.StreamingFirstPassQ.BuildExperimentAggregateScoreMap` (streaming), which
+`FdrTest.TestStreamingFirstPassQMatchesFlat` pins against each other. Every row of an entry
+carries the same value.
+
+Two caveats worth keeping straight. It is **not** a general q→score inverse: the best-of-runs
+clamp (`ClampExperimentQToBestRunFlat`, issue #4390) floors an experiment q up to a run q, so
+after clamping the experiment q is not a monotone function of this score. And the field was
+appended at the END specifically so every v3 offset is unchanged, which is what keeps
+`PatchProteinQvalues`'s `[52..60]` patch valid without modification.
+
 A two-phase write exists for the lean projection path (issue #4355): phase 1 writes records with
-a 1.0 placeholder `run_protein_qvalue`; `PatchRunProteinQvalues` (`FdrScoresSidecar.cs:247`)
+a 1.0 placeholder `experiment_protein_qvalue`; `PatchProteinQvalues` (`FdrScoresSidecar.cs:247`)
 then streams the file one record at a time and overwrites only bytes `[52..60]` per entry_id,
 producing a file byte-identical to a single-phase write.
 
 ### Validation and record→entry matching
 
-`TryRead` (`FdrScoresSidecar.cs:437`) rejects: missing file, wrong magic, `version != 3`, a
+`TryRead` (`FdrScoresSidecar.cs:437`) rejects: missing file, wrong magic, `version != 4`, a
 `pass` byte that disagrees with `expectedPass`, and a file length that does not equal
-`32 + 60 × header_count` (with checked arithmetic to reject an overflowing count,
+`32 + 68 × header_count` (with checked arithmetic to reject an overflowing count,
 `FdrScoresSidecar.cs:120`).
+
+`ReadScalars` validates magic + version too, as of v4. It previously did not, which was
+harmless only while the record width was fixed: at a changed `RecordLength` a stale v3 sidecar
+would otherwise be re-cut at the new stride and yield plausible garbage rather than an error.
 
 **Records are matched to entries by `entry_id`, not by position** (`FdrScoresSidecar.cs:484`).
 This deliberately diverges from the Rust doc's stated "entry_count must match entries.len();
@@ -382,7 +414,7 @@ The C# `CurrentFormatVersion = 3` (`ReconciliationFile.cs:75`) and the envelope 
 fields **absent from the Rust doc's v1 example**:
 
 - `file_stems` (v2, `ReconciliationFile.cs:77`): the join-wide file set, so a per-file Stage 6
-  worker can compute the reconciliation parameter hash the `--task SecondPassFDR` merge node
+  worker can compute the reconciliation parameter hash the `--task SecondPassFDR` node
   expects (hash is over all joined files, not the worker's single parquet).
 - `first_pass_base_ids` (v3, `ReconciliationFile.cs:84`): the join-wide set of base_ids that
   survived first-pass compaction, sorted ascending. A per-file worker uses it to compact to

@@ -17,10 +17,16 @@ REM   * runs all four datasets straight-through, no input copies, output under
 REM     pwiz_tools/Osprey/TestResults/regression-<date>: Stellar and Astral
 REM     (generated decoys), StellarLibDecoy (library-supplied decoys) and
 REM     StellarGenDecoyEntrap (generated decoys measured against entrapment)
-REM   * asserts straight-through vs committed golden (mode 1), the FDR-calibration
-REM     spot checks on the datasets carrying model diagnostics (mode 1b), the HPC
-REM     4-task chain vs straight-through (mode 3) and resume vs straight-through
-REM     (mode 2), all at 1e-9; buildProblem on any mismatch
+REM   * runs EVERY mode: no -Skip* switch is passed here, so this config runs
+REM     whatever regression.ps1 defines. Today that is straight-through vs the
+REM     committed golden (mode 1), the FDR-calibration spot checks on the datasets
+REM     carrying model diagnostics (mode 1b), resume vs straight-through (mode 2),
+REM     the HPC 4-task chain vs straight-through (mode 3), the warm all-cached
+REM     re-run (mode 4), the Stage-5 rehydrate (mode 5) and library-fragment
+REM     release engagement (mode 6) - all at 1e-9; buildProblem on any mismatch.
+REM     Do NOT maintain that list here. It belongs to regression.ps1, and this
+REM     comment named only 1/1b/2/3 for months after modes 4-6 were added, which
+REM     is how "TeamCity runs mode1/2/3" got repeated as fact.
 REM
 REM Outputs consumed by TeamCity (emitted via service messages in regression.ps1):
 REM   * ##teamcity[buildProblem ...]                          (on any failure)

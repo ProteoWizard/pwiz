@@ -344,7 +344,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         public void FireClickedChromatogram(GraphPane graphPane)
         {
-            if (ClickedChromatogram == null)
+            if (ClickedChromatogram == null || _closestCurve == null)
                 return;
 
             var clickedItem = (ChromGraphItem) _closestCurve.Tag;
@@ -1683,6 +1683,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 _enableTrackingDot = false;
             if (_enableTrackingDot)
             {
+                // The recreated tracking point is invisible and at the origin, so the graph is no
+                // longer showing a dot the user can click, no matter what it was showing before.
+                // Without this the click is accepted and then silently discarded, because it reads
+                // its time from the point that was just reset.
+                _showingTrackingDot = false;
                 graphPane.CurveList.Insert(FULLSCAN_TRACKING_INDEX, CreateScanPoint(Color.Black));
                 graphPane.CurveList.Insert(FULLSCAN_SELECTED_INDEX, CreateScanPoint(Color.Red));
             }
@@ -3725,13 +3730,18 @@ namespace pwiz.Skyline.Controls.Graphs
         public void TestMouseDown(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
-            graphControl.PerformMouseDown(new MouseEventArgs(MouseButtons.Left, 1, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
+            // Truncate rather than round as TestMouseMove does, so that the point stays inside the
+            // pane it was transformed for. Rounding it up can land on the neighboring pane, where
+            // the click reads a tracking dot that was never positioned and is silently discarded.
+            graphControl.PerformMouseDown(new MouseEventArgs(MouseButtons.Left, 1, (int)mouse.X, (int)mouse.Y, 0));
         }
 
         public void TestMouseUp(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
-            graphControl.PerformMouseUp(new MouseEventArgs(MouseButtons.Left, 1, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
+            // Truncate as TestMouseDown does, so that the release lands on the same pixel as the
+            // press and the gesture reads as a stationary click rather than a tiny drag.
+            graphControl.PerformMouseUp(new MouseEventArgs(MouseButtons.Left, 1, (int)mouse.X, (int)mouse.Y, 0));
         }
 
         public string TestFullScanSelection(double x, double y, PaneKey? paneKey)
