@@ -1121,7 +1121,9 @@ namespace pwiz.Skyline.Model
                 {
                     ReplicateIndex = replicateIndex,
                     FileId = fileId,
-                    FilePath = chromSet.GetFileInfo(fileId).FilePath
+                    // A null fileId matches no precursor result, so the line ends up reported as an
+                    // unrecognized charge state, and there is no file to ask for a path
+                    FilePath = fileId == null ? null : chromSet.GetFileInfo(fileId).FilePath
                 };
             }
 
