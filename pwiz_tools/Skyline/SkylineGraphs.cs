@@ -447,10 +447,7 @@ namespace pwiz.Skyline
             } // layoutLock.Dispose()
 
             // Do this after layout is unlocked, because it messes up the selected graph otherwise
-            if (_sequenceTreeForm == null)
-            {
-                ShowSequenceTreeForm(true);
-            }
+            RepairLayoutAfterLoad();
 
             // Just about any change could potentially change these panes.
             if (settingsNew.HasResults)
@@ -461,6 +458,26 @@ namespace pwiz.Skyline
             }
 
             UpdateGraphPanes(listUpdateGraphs);
+        }
+
+        /// <summary>
+        /// Puts right what loading a layout leaves behind, once the dock panel is unlocked.
+        /// <see cref="LoadLayoutLocked"/> destroys every dockable form before it rebuilds, so a
+        /// layout that does not name the Targets window leaves <see cref="SequenceTree"/> null -
+        /// and the next document edit dereferences it through <c>UndoState</c>. Windows bound to a
+        /// list or group comparison this document does not have are closed for the same reason:
+        /// <see cref="DeserializeForm"/> manufactures them from the persist string without checking.
+        ///
+        /// <para>Deliberately NOT inside <see cref="LoadLayout"/>. Test cleanup loads a
+        /// contents-free layout precisely to close every window and then asserts that only
+        /// SkylineWindow is left, so the primitive has to stay able to leave nothing behind.</para>
+        /// </summary>
+        private void RepairLayoutAfterLoad()
+        {
+            if (_sequenceTreeForm == null)
+            {
+                ShowSequenceTreeForm(true);
+            }
             FoldChangeForm.CloseInapplicableForms(this);
             ListGridForm.CloseInapplicableForms(this);
         }

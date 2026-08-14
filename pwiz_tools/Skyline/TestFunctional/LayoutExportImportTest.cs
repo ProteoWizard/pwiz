@@ -20,11 +20,13 @@
 
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 
@@ -68,6 +70,33 @@ namespace pwiz.SkylineTestFunctional
             WaitForOpenForm<DocumentGridForm>();
 
             TestImportNotALayoutFile(documentPath);
+
+            TestImportLayoutWithoutTargets();
+        }
+
+        /// <summary>
+        /// A layout that names no windows at all still leaves Skyline usable. LoadLayoutLocked
+        /// destroys the Targets window unconditionally, so without the repair
+        /// <see cref="SkylineWindow"/>.SequenceTree stays null and the next document edit throws
+        /// from UndoState. Uses the contents-free layout Skyline itself ships.
+        /// </summary>
+        private void TestImportLayoutWithoutTargets()
+        {
+            var emptyLayoutPath = TestContext.GetTestResultsPath(@"NoWindows.sky.view");
+            using (var layoutStream = Assembly.GetAssembly(typeof(AbstractFunctionalTest))
+                       .GetManifestResourceStream(typeof(AbstractFunctionalTest).Namespace + @".minimal.sky.view"))
+            using (var fileStream = File.Create(emptyLayoutPath))
+            {
+                Assert.IsNotNull(layoutStream);
+                layoutStream.CopyTo(fileStream);
+            }
+
+            ImportLayout(emptyLayoutPath);
+            RunUI(() => Assert.IsNotNull(SkylineWindow.SequenceTree));
+
+            // The edit that used to throw: UndoManager.BeginTransaction reads SequenceTree
+            RunUI(() => SkylineWindow.ModifyDocument(@"Test edit", doc => doc.ChangeSettings(
+                doc.Settings.ChangePeptideSettings(doc.Settings.PeptideSettings)), AuditLogEntry.SkipChange));
         }
 
         /// <summary>
