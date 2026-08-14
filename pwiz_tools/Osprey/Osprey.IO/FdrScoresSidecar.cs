@@ -32,7 +32,7 @@ namespace pwiz.Osprey.IO
     /// Reader / writer for the per-file <c>.&lt;phase&gt;-pass.fdr_scores.bin</c>
     /// sidecar: the v4 binary format that persists the full FDR statistics
     /// for an entry (SVM discriminant + 4 q-values + PEP +
-    /// <c>run_protein_qvalue</c> + <c>experiment_aggregate_score</c>). Used at
+    /// <c>experiment_protein_qvalue</c> + <c>experiment_aggregate_score</c>). Used at
     /// the Stage 5 → Stage 6 boundary so a Stage 6 worker can run without
     /// re-running first-pass Percolator AND apply the same protein-rescue
     /// compaction predicate the in-process pipeline uses.
@@ -58,14 +58,14 @@ namespace pwiz.Osprey.IO
     ///                            [28..36] f64 experiment_precursor_qvalue
     ///                            [36..44] f64 experiment_peptide_qvalue
     ///                            [44..52] f64 pep
-    ///                            [52..60] f64 run_protein_qvalue
+    ///                            [52..60] f64 experiment_protein_qvalue
     ///                            [60..68] f64 experiment_aggregate_score
     /// </code>
     /// Records are written pre-compaction but POST first-pass protein
     /// FDR at the Stage 5 → Stage 6 boundary: every input entry
     /// contributes one record so q-values are preserved even for
     /// entries that may not survive later compaction, AND so
-    /// <c>run_protein_qvalue</c> carries real values rather than the
+    /// <c>experiment_protein_qvalue</c> carries real values rather than the
     /// default 1.0. Mirrors the post-protein-FDR
     /// <c>persist_fdr_scores</c> call site in Rust's
     /// <c>pipeline.rs</c>. Each record carries the entry's
@@ -80,11 +80,11 @@ namespace pwiz.Osprey.IO
     /// so a 2nd-pass sidecar can never silently scramble 1st-pass
     /// stubs (or vice versa).
     ///
-    /// v2 → v3 (2026-05-02): added <c>run_protein_qvalue</c> to
+    /// v2 → v3 (2026-05-02): added <c>experiment_protein_qvalue</c> to
     /// support the Stage 6 worker's compaction step. The in-process
     /// pipeline filters pre-Stage-6 entries by
     /// <c>run_peptide_qvalue ≤ 0.01</c> OR
-    /// <c>run_protein_qvalue ≤ 0.01</c> (the protein-rescue branch);
+    /// <c>experiment_protein_qvalue ≤ 0.01</c> (the protein-rescue branch);
     /// the v2 sidecar carried only the first half of that predicate,
     /// so a rehydrated worker couldn't reproduce the protein-rescue
     /// half of in-process compaction. v3 closes that gap.
@@ -100,7 +100,7 @@ namespace pwiz.Osprey.IO
     /// where the aggregation is under study. See
     /// <see cref="FdrScoreRecord.ExperimentAggregateScore"/>. Appended at
     /// the END so every v3 field offset is unchanged and
-    /// <see cref="PatchRunProteinQvalues"/>'s <c>[52..60]</c> patch is
+    /// <see cref="PatchProteinQvalues"/>'s <c>[52..60]</c> patch is
     /// untouched.
     /// </summary>
     public static class FdrScoresSidecar
@@ -194,7 +194,7 @@ namespace pwiz.Osprey.IO
                 if (header[8] != FormatVersion || header[9] != (byte)expectedPass)
                     return false;
                 // And the length must match the header's own entry_count, exactly as TryRead,
-                // TryReadOverlay, ReadRecords and PatchRunProteinQvalues all require. Without it
+                // TryReadOverlay, ReadRecords and PatchProteinQvalues all require. Without it
                 // this pre-flight passed a file truncated mid-record - which is precisely what
                 // ReadScalars throws on, so the caller that added this gate to refuse BEFORE
                 // mutating any survivor would still have thrown mid-stream with the pool half
@@ -335,7 +335,7 @@ namespace pwiz.Osprey.IO
                     WriteRecord(bw, e.EntryId, e.Score,
                         e.RunPrecursorQvalue, e.RunPeptideQvalue,
                         e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue,
-                        e.Pep, e.RunProteinQvalue, e.ExperimentAggregateScore);
+                        e.Pep, e.ExperimentProteinQvalue, e.ExperimentAggregateScore);
                 }
             });
         }
@@ -348,8 +348,8 @@ namespace pwiz.Osprey.IO
         /// carries the q-value outputs, the projection sidecar writers assemble each
         /// record from the lean row's EntryId + Score plus the parked / streamed
         /// q-values (1st pass) or the streamed q-values + the survivor's
-        /// <c>RunProteinQvalue</c> lookup (2nd pass), then pass them here. Single-phase
-        /// write producing byte-identical 60-byte records in the given
+        /// <c>ExperimentProteinQvalue</c> lookup (2nd pass), then pass them here. Single-phase
+        /// write producing byte-identical <see cref="RecordLength"/>-byte records in the given
         /// (per-file, projection) order (risk #8). Header + record layout are
         /// single-sourced with the FdrEntry overload via
         /// <see cref="WriteInternal"/> / <see cref="WriteRecord"/>.
@@ -366,42 +366,52 @@ namespace pwiz.Osprey.IO
                     WriteRecord(bw, r.EntryId, r.Score,
                         r.RunPrecursorQvalue, r.RunPeptideQvalue,
                         r.ExperimentPrecursorQvalue, r.ExperimentPeptideQvalue,
-                        r.Pep, r.RunProteinQvalue, r.ExperimentAggregateScore);
+                        r.Pep, r.ExperimentProteinQvalue, r.ExperimentAggregateScore);
                 }
             });
         }
 
         /// <summary>
         /// Phase 2 of the two-phase 1st-pass sidecar write (issue #4355 struct-shrink
-        /// S1): patch each record's <c>run_protein_qvalue</c> field <c>[52..60]</c> in
+        /// S1): patch each record's <c>experiment_protein_qvalue</c> field <c>[52..60]</c> in
         /// place on an already-written (phase-1 partial) sidecar, locating each record
         /// by its <c>entry_id</c> at <c>[0..4]</c> in
-        /// <paramref name="runProteinByEntryId"/>. The phase-1 write (via the second
+        /// <paramref name="proteinQByEntryId"/>. The phase-1 write (via the second
         /// <see cref="Write(string, IReadOnlyList{FdrScoreRecord}, Pass)"/> overload)
-        /// emits a byte-identical file EXCEPT for the <c>run_protein_qvalue</c> column,
+        /// emits a byte-identical file EXCEPT for the <c>experiment_protein_qvalue</c> column,
         /// which carries the 1.0 placeholder until first-pass protein FDR is known; this
         /// patch overwrites only those 8 bytes per record with the finalized value, so
         /// the resulting file is byte-identical to a single-phase <c>Write</c> whose
-        /// records already carried the real <c>run_protein_qvalue</c> (risk R2). Records
+        /// records already carried the real <c>experiment_protein_qvalue</c> (risk R2). Records
         /// whose <c>entry_id</c> is absent from the map keep their placeholder (every
-        /// 1st-pass row has a resident <c>run_protein_qvalue</c>, so that is defensive
+        /// 1st-pass row has a resident <c>experiment_protein_qvalue</c>, so that is defensive
         /// only). The 8-byte little-endian f64 encoding matches
         /// <see cref="WriteRecord"/>'s <c>BinaryWriter.Write(double)</c> (the platform is
         /// little-endian, as the <see cref="BitConverter.ToDouble(byte[], int)"/> reads
         /// in <see cref="TryRead"/> already assume). Same header validation as
         /// <see cref="TryRead"/> (magic / version / pass / size); returns <c>false</c> on
         /// any mismatch or IO failure, leaving the file unchanged. Streams the source one
-        /// 60-byte record at a time straight into the <see cref="FileSaver"/> temp stream
-        /// (bounded memory -- one record resident, not an O(file-size) whole-file buffer;
-        /// issue #4355) and promotes it atomically on Commit, matching the <c>Write</c> path.
+        /// <see cref="RecordLength"/>-byte record at a time straight into the
+        /// <see cref="FileSaver"/> temp stream (bounded memory -- one record resident, not an
+        /// O(file-size) whole-file buffer; issue #4355) and promotes it atomically on Commit,
+        /// matching the <c>Write</c> path.
+        /// <para><paramref name="recordsPatched"/> counts records actually rewritten, NOT the
+        /// size of <paramref name="proteinQByEntryId"/>: the two differ exactly when the map
+        /// carries entry_ids the file does not, which is the coverage hole worth seeing. The
+        /// Rust twin counts the same way.</para>
         /// </summary>
-        public static bool PatchRunProteinQvalues(
+        public static bool PatchProteinQvalues(
             string path,
-            IReadOnlyDictionary<uint, double> runProteinByEntryId,
-            Pass expectedPass)
+            IReadOnlyDictionary<uint, double> proteinQByEntryId,
+            Pass expectedPass,
+            out int recordsPatched)
         {
+            recordsPatched = 0;
+            // Accumulated locally and published only after Commit, so a failed patch reports
+            // zero rather than a count for records the caller's file never actually kept.
+            int nPatchedHere = 0;
             if (path == null) throw new ArgumentNullException(nameof(path));
-            if (runProteinByEntryId == null) throw new ArgumentNullException(nameof(runProteinByEntryId));
+            if (proteinQByEntryId == null) throw new ArgumentNullException(nameof(proteinQByEntryId));
 
             try
             {
@@ -443,8 +453,8 @@ namespace pwiz.Osprey.IO
 
                         dst.Write(header, 0, HeaderLength);
 
-                        // Stream one 60-byte record at a time: overwrite ONLY the
-                        // run_protein_qvalue bytes [52..60] with the finalized value
+                        // Stream one RecordLength-byte record at a time: overwrite ONLY the
+                        // experiment_protein_qvalue bytes [52..60] with the finalized value
                         // looked up by entry_id [0..4], in the identical little-endian f64
                         // encoding BinaryWriter.Write(double) produced for every other
                         // field; every other byte is copied straight through. A record
@@ -459,10 +469,11 @@ namespace pwiz.Osprey.IO
                             if (!ReadFully(src, record, RecordLength))
                                 return false;
                             uint recordEntryId = BitConverter.ToUInt32(record, 0);
-                            if (runProteinByEntryId.TryGetValue(recordEntryId, out double runProteinQvalue))
+                            if (proteinQByEntryId.TryGetValue(recordEntryId, out double experimentProteinQvalue))
                             {
-                                byte[] bytes = BitConverter.GetBytes(runProteinQvalue);
+                                byte[] bytes = BitConverter.GetBytes(experimentProteinQvalue);
                                 Buffer.BlockCopy(bytes, 0, record, 52, 8);
+                                nPatchedHere++;
                             }
                             dst.Write(record, 0, RecordLength);
                         }
@@ -474,6 +485,7 @@ namespace pwiz.Osprey.IO
             {
                 return false;
             }
+            recordsPatched = nPatchedHere;
             return true;
         }
 
@@ -500,7 +512,7 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Shared header + atomic-write scaffold for both <c>Write</c>
         /// overloads. The caller supplies the body writer, which emits exactly
-        /// <paramref name="entryCount"/> 60-byte records via
+        /// <paramref name="entryCount"/> <see cref="RecordLength"/>-byte records via
         /// <see cref="WriteRecord"/>. Atomic write via FileSaver: write to a unique
         /// sibling temp file and promote it to the destination on Commit; on
         /// exception the FileSaver disposes and deletes the temp without touching
@@ -542,7 +554,7 @@ namespace pwiz.Osprey.IO
             BinaryWriter bw, uint entryId, double score,
             double runPrecursorQvalue, double runPeptideQvalue,
             double experimentPrecursorQvalue, double experimentPeptideQvalue,
-            double pep, double runProteinQvalue, double experimentAggregateScore)
+            double pep, double experimentProteinQvalue, double experimentAggregateScore)
         {
             bw.Write(entryId);                          // [0..4]
             bw.Write(score);                            // [4..12]
@@ -551,7 +563,7 @@ namespace pwiz.Osprey.IO
             bw.Write(experimentPrecursorQvalue);        // [28..36]
             bw.Write(experimentPeptideQvalue);          // [36..44]
             bw.Write(pep);                              // [44..52]
-            bw.Write(runProteinQvalue);                 // [52..60]
+            bw.Write(experimentProteinQvalue);                 // [52..60]
             bw.Write(experimentAggregateScore);         // [60..68]
         }
 
@@ -662,7 +674,7 @@ namespace pwiz.Osprey.IO
                 e.ExperimentPrecursorQvalue   = BitConverter.ToDouble(data, off + 28);
                 e.ExperimentPeptideQvalue     = BitConverter.ToDouble(data, off + 36);
                 e.Pep                         = BitConverter.ToDouble(data, off + 44);
-                e.RunProteinQvalue            = BitConverter.ToDouble(data, off + 52);
+                e.ExperimentProteinQvalue     = BitConverter.ToDouble(data, off + 52);
                 e.ExperimentAggregateScore    = BitConverter.ToDouble(data, off + 60);
             }
             return true;
@@ -730,7 +742,7 @@ namespace pwiz.Osprey.IO
                 e.ExperimentPrecursorQvalue   = BitConverter.ToDouble(data, off + 28);
                 e.ExperimentPeptideQvalue     = BitConverter.ToDouble(data, off + 36);
                 e.Pep                         = BitConverter.ToDouble(data, off + 44);
-                e.RunProteinQvalue            = BitConverter.ToDouble(data, off + 52);
+                e.ExperimentProteinQvalue     = BitConverter.ToDouble(data, off + 52);
                 e.ExperimentAggregateScore    = BitConverter.ToDouble(data, off + 60);
             }
             return true;
@@ -746,9 +758,10 @@ namespace pwiz.Osprey.IO
         /// file), not O(all files)) and key them into a per-file map. Same header validation
         /// as <see cref="TryRead(string,IList{FdrEntry},Pass)"/> (magic / version / pass /
         /// size); returns <c>false</c> (with the partial callback effects the caller must
-        /// discard) on any mismatch or IO failure. Streams one 60-byte record at a time from
-        /// the source (one record resident, not an O(file-size) whole-file buffer), matching
-        /// <see cref="PatchRunProteinQvalues"/>. Records are delivered in stored (file) order.
+        /// discard) on any mismatch or IO failure. Streams one <see cref="RecordLength"/>-byte
+        /// record at a time from the source (one record resident, not an O(file-size)
+        /// whole-file buffer), matching
+        /// <see cref="PatchProteinQvalues"/>. Records are delivered in stored (file) order.
         /// </summary>
         public static bool ReadRecords(string path, Pass expectedPass, Action<FdrScoreRecord> onRecord)
         {
@@ -811,7 +824,7 @@ namespace pwiz.Osprey.IO
                 BitConverter.ToDouble(rec, 28),   // [28..36] experiment_precursor_qvalue
                 BitConverter.ToDouble(rec, 36),   // [36..44] experiment_peptide_qvalue
                 BitConverter.ToDouble(rec, 44),   // [44..52] pep
-                BitConverter.ToDouble(rec, 52),   // [52..60] run_protein_qvalue
+                BitConverter.ToDouble(rec, 52),   // [52..60] experiment_protein_qvalue
                 BitConverter.ToDouble(rec, 60));  // [60..68] experiment_aggregate_score
         }
     }

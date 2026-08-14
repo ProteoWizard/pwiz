@@ -32,7 +32,7 @@ namespace pwiz.Osprey.FDR
     /// FdrProjection struct-shrink S0). These are the outputs the lean
     /// <see cref="FdrProjection"/> no longer stores: the score pass hands each row's
     /// values to a per-pass <see cref="IFdrOutputSink"/> instead of overlaying them
-    /// onto the struct. <c>RunProteinQvalue</c> is NOT here -- it is produced by
+    /// onto the struct. <c>ExperimentProteinQvalue</c> is NOT here -- it is produced by
     /// first-pass protein FDR AFTER the score pass, not by the score pass.
     /// </summary>
     public readonly struct FdrQValues
@@ -106,7 +106,7 @@ namespace pwiz.Osprey.FDR
     /// each row's freshly computed <see cref="FdrQValues"/> + <see cref="FdrProjection.Score"/>
     /// to a caller-supplied sink. Both passes stream every row straight to the per-file
     /// <c>.fdr_scores.bin</c> sidecar (never stored -> 32 B resident): the 2nd pass writes
-    /// the final record, the 1st pass writes a phase-1 record whose <c>run_protein_qvalue</c>
+    /// the final record, the 1st pass writes a phase-1 record whose <c>experiment_protein_qvalue</c>
     /// first-pass protein FDR patches from disk afterward (issue #4355 struct-shrink S2; S1
     /// still kept a 16 B/row 1st-pass {RunPeptideQ, RunProteinQ} array, since removed). The
     /// sink also OWNS the tail <c>[COUNT]</c> tally (<see cref="Finish"/>),
