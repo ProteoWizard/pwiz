@@ -132,9 +132,10 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// A name TYPED with the full ".sky.view" is taken as typed, not doubled to
         /// "Name.sky.view.sky.view". The shell appends the selected file type's extension unless the
-        /// name's LAST extension is one the filter knows, so the filter's second entry, ".view", is
-        /// what makes this work - the offered name is safe for a different reason (it is handed over
-        /// as a base name with no extension at all).
+        /// name's LAST extension is one the filter knows, and ".sky.view" ends in ".view", so it
+        /// appends and ShowExportLayoutDlg strips the duplicate back off. Note the name the dialog
+        /// OFFERS is safe for a different reason - it is handed over as a base name with no
+        /// extension at all - so this is the only case that exercises the strip.
         /// </summary>
         private void TestExportTypedFullName()
         {
