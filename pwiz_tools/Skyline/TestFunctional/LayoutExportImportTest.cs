@@ -75,6 +75,8 @@ namespace pwiz.SkylineTestFunctional
             TestImportLayoutWithoutTargets();
 
             TestImportLayoutNeedingResults();
+
+            TestExportOntoReadOnlyFile();
         }
 
         /// <summary>
@@ -107,6 +109,36 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(resultsGrid != null && resultsGrid.Visible,
                     @"Results Grid was shown for a document with no results");
             });
+        }
+
+        /// <summary>
+        /// Exporting onto a read-only file reports it. FileSaver.CanSave catches read-only and
+        /// access-denied itself, and shows nothing unless it is given a parent window - so without
+        /// one the export would write nothing and say nothing.
+        /// </summary>
+        private void TestExportOntoReadOnlyFile()
+        {
+            var readOnlyPath = TestContext.GetTestResultsPath(@"ReadOnly.sky.view");
+            // Clear it first: a run killed before the finally below leaves the file read-only, and
+            // then neither this test nor the results-directory cleanup can touch it again
+            if (File.Exists(readOnlyPath))
+                File.SetAttributes(readOnlyPath, FileAttributes.Normal);
+            File.WriteAllText(readOnlyPath, string.Empty);
+            File.SetAttributes(readOnlyPath, FileAttributes.ReadOnly);
+            try
+            {
+                RunDlg<MessageDlg>(() => SkylineWindow.ExportLayout(readOnlyPath), messageDlg =>
+                {
+                    Assert.AreEqual(string.Format(
+                        UtilResources.FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only,
+                        readOnlyPath), messageDlg.Message);
+                    messageDlg.OkDialog();
+                });
+            }
+            finally
+            {
+                File.SetAttributes(readOnlyPath, FileAttributes.Normal);
+            }
         }
 
         /// <summary>

@@ -1464,7 +1464,9 @@ namespace pwiz.Skyline
         {
             using (var saverUser = new FileSaver(viewFilePath))
             {
-                if (saverUser.CanSave())
+                // Pass the parent: without it CanSave swallows read-only and access-denied and
+                // returns false, so Export Window Layout would write nothing and say nothing.
+                if (saverUser.CanSave(this))
                 {
                     dockPanel.SaveAsXml(saverUser.SafeName, new UTF8Encoding(false)); // UTF-8 without BOM
                     saverUser.Commit();
