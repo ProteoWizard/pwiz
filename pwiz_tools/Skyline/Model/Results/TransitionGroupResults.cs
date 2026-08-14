@@ -1502,6 +1502,88 @@ namespace pwiz.Skyline.Model.Results
             return float.IsNaN(score) ? (float?) null : score;
         }
 
+        // Everything above is answered by a position in this object's own layout, which means
+        // nothing in any other. Everything below is answered by replicate and file, which is what
+        // a caller holding two of these has to use to line them up - see ChromFileIds.Union and
+        // ChromFileIdMap{T}.WithFileIds, which are how two layouts are made the same layout.
+
+        /// <summary>
+        /// The precursor's peak in one file of one replicate, or false where it has none.
+        /// </summary>
+        public bool TryGetPrecursorPeak(int replicateIndex, ChromFileInfoId fileId, out PrecursorPeak peak)
+        {
+            return Peaks.TryGetValue(replicateIndex, fileId, out peak);
+        }
+
+        /// <summary>
+        /// See <see cref="GetChosenPeakIndex(int)"/>, which this asks by file instead.
+        /// </summary>
+        public int? GetChosenPeakIndex(int replicateIndex, ChromFileInfoId fileId)
+        {
+            if (!Peaks.TryGetValue(replicateIndex, fileId, out var peak) || peak.ChosenPeakIndex < 0)
+            {
+                return null;
+            }
+
+            return peak.ChosenPeakIndex;
+        }
+
+        public Annotations GetAnnotations(int replicateIndex, ChromFileInfoId fileId)
+        {
+            if (Annotations == null || !Annotations.TryGetValue(replicateIndex, fileId, out var annotations))
+            {
+                return Model.Annotations.EMPTY;
+            }
+
+            return annotations;
+        }
+
+        public UserSet GetUserSet(int replicateIndex, ChromFileInfoId fileId)
+        {
+            if (UserSets == null || !UserSets.TryGetValue(replicateIndex, fileId, out var userSet))
+            {
+                return UserSet.FALSE;
+            }
+
+            return userSet;
+        }
+
+        public float? GetRetentionTime(int replicateIndex, ChromFileInfoId fileId)
+        {
+            return Peaks.TryGetValue(replicateIndex, fileId, out var peak) ? NullIfZero(peak.RetentionTime) : null;
+        }
+
+        public float? GetStartTime(int replicateIndex, ChromFileInfoId fileId)
+        {
+            return Peaks.TryGetValue(replicateIndex, fileId, out var peak) ? NullIfZero(peak.StartTime) : null;
+        }
+
+        public float? GetEndTime(int replicateIndex, ChromFileInfoId fileId)
+        {
+            return Peaks.TryGetValue(replicateIndex, fileId, out var peak) ? NullIfZero(peak.EndTime) : null;
+        }
+
+        public float? GetQValue(int replicateIndex, ChromFileInfoId fileId)
+        {
+            return GetScore(QValues, replicateIndex, fileId);
+        }
+
+        public float? GetZScore(int replicateIndex, ChromFileInfoId fileId)
+        {
+            return GetScore(ZScores, replicateIndex, fileId);
+        }
+
+        private static float? GetScore(ChromFileIdMap<float> scores, int replicateIndex, ChromFileInfoId fileId)
+        {
+            if (scores == null || !scores.TryGetValue(replicateIndex, fileId, out float score) ||
+                float.IsNaN(score))
+            {
+                return null;
+            }
+
+            return score;
+        }
+
         /// <summary>
         /// Compared by value, so that recalculating results which have not changed can leave the
         /// document alone. Reference equality of an unchanged document is relied on all over

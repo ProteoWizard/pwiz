@@ -293,40 +293,42 @@ namespace pwiz.Skyline.Model.Serialization
             IList<XElement> transitionElements)
         {
             var results = nodeGroup.AbbreviatedResults;
-            var chromFileIds = results.ChromFileIds;
-            var replicatePositions = chromFileIds.ReplicatePositions;
-
             var transitions = new Transition[transitionElements.Count];
             for (int i = 0; i < transitions.Length; i++)
             {
                 transitions[i] = ((TransitionDocNode) nodeGroup.Children[i]).Transition;
             }
 
+            // Every file any of them was found in, so that one walk reaches all of them. A
+            // position in one of these objects means nothing in another, so replicate and file are
+            // what the precursor and its transitions are lined up by - never a flat position.
+            var chromFileIds = ChromFileIds.UnionAll(
+                new[] { results.ChromFileIds }.Concat(transitions.Select(results.GetTransitionChromFileIds)));
+
             var transitionResults = new XElement[transitions.Length];
-            var writtenCounts = new int[transitions.Length];
-            int sharedFileCount = 0;
             var chromatograms = Settings.MeasuredResults.Chromatograms;
             for (int replicateIndex = 0;
-                 replicateIndex < Math.Min(replicatePositions.ReplicateCount, chromatograms.Count);
+                 replicateIndex < Math.Min(chromFileIds.ReplicatePositions.ReplicateCount, chromatograms.Count);
                  replicateIndex++)
             {
                 var chromatogramSet = chromatograms[replicateIndex];
-                foreach (int position in replicatePositions[replicateIndex])
+                foreach (var fileId in chromFileIds.GetFileIds(replicateIndex))
                 {
-                    var fileId = chromFileIds.FileIds[position];
                     bool shared = results.TryGetSharedTransitionAreas(replicateIndex, fileId, transitions.Length,
                         out var areas);
 
-                    var peakElement = new XElement(EL.precursor_peak);
-                    SetReplicateAndFile(peakElement, chromatogramSet, fileId);
-                    SetColumnarPrecursorPeak(peakElement, results, areas, position);
-                    precursorResults.Add(peakElement);
+                    if (results.TryGetPrecursorPeak(replicateIndex, fileId, out _))
+                    {
+                        var peakElement = new XElement(EL.precursor_peak);
+                        SetReplicateAndFile(peakElement, chromatogramSet, fileId);
+                        SetColumnarPrecursorPeak(peakElement, results, areas, replicateIndex, fileId);
+                        precursorResults.Add(peakElement);
+                    }
 
                     if (shared)
                     {
                         // The areas just went on the precursor, and being shareable is exactly
                         // having nothing else to say, so no transition writes anything here.
-                        sharedFileCount++;
                         continue;
                     }
 
@@ -348,22 +350,7 @@ namespace pwiz.Skyline.Model.Serialization
                         SetColumnarTransitionPeak(transitionPeak, results, transitions[i], replicateIndex, fileId,
                             peak);
                         transitionResults[i].Add(transitionPeak);
-                        writtenCounts[i]++;
                     }
-                }
-            }
-
-            // A transition's peaks are all in files its precursor was found in - see
-            // TransitionGroupResults.GetTransitionChromFileIds, which says only the other way round
-            // happens - so between the files it was written at and the files the precursor spoke
-            // for, walking the precursor's positions has reached every one of them. Every
-            // transition has a peak at a shared file, which is what made it shareable.
-            for (int i = 0; i < transitions.Length; i++)
-            {
-                var transitionFileIds = results.GetTransitionChromFileIds(transitions[i]);
-                if (transitionFileIds != null)
-                {
-                    Assume.AreEqual(transitionFileIds.FileIds.Count, writtenCounts[i] + sharedFileCount);
                 }
             }
         }
@@ -379,14 +366,15 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         private void SetColumnarPrecursorPeak(XElement element, TransitionGroupResults results, float[] sharedAreas,
-            int position)
+            int replicateIndex, ChromFileInfoId fileId)
         {
+                results.TryGetPrecursorPeak(replicateIndex, fileId, out var precursorPeak);
                 // No area: a precursor's is the sum of its transitions', which are written below it.
-                element.SetAttribute(ATTR.retention_time, results.Peaks.FlatValues[position].RetentionTime);
+                element.SetAttribute(ATTR.retention_time, precursorPeak.RetentionTime);
                 // Nullable rather than the generic default-value overload, which formats with
                 // ToString() and so loses digits a float needs to come back the same.
-                element.SetAttributeNullable(ATTR.start_time, results.GetStartTime(position));
-                element.SetAttributeNullable(ATTR.end_time, results.GetEndTime(position));
+                element.SetAttributeNullable(ATTR.start_time, results.GetStartTime(replicateIndex, fileId));
+                element.SetAttributeNullable(ATTR.end_time, results.GetEndTime(replicateIndex, fileId));
                 // Written, even as -1, by a precursor which knows which candidate peaks its peaks
                 // are; left out altogether by one which does not. Its presence is what
                 // DocumentReader reads back as TransitionGroupResults.NeedsPeakIndexes, so writing
@@ -397,17 +385,17 @@ namespace pwiz.Skyline.Model.Serialization
                 if (!results.NeedsPeakIndexes)
                 {
                     element.SetAttribute(ATTR.chosen_peak_index,
-                        results.GetChosenPeakIndex(position) ?? PrecursorPeak.NO_PEAK_INDEX);
+                        results.GetChosenPeakIndex(replicateIndex, fileId) ?? PrecursorPeak.NO_PEAK_INDEX);
                 }
-                element.SetAttributeNullable(ATTR.qvalue, results.GetQValue(position));
-                element.SetAttributeNullable(ATTR.zscore, results.GetZScore(position));
-                element.SetAttribute(ATTR.user_set, results.GetUserSet(position), UserSet.FALSE);
+                element.SetAttributeNullable(ATTR.qvalue, results.GetQValue(replicateIndex, fileId));
+                element.SetAttributeNullable(ATTR.zscore, results.GetZScore(replicateIndex, fileId));
+                element.SetAttribute(ATTR.user_set, results.GetUserSet(replicateIndex, fileId), UserSet.FALSE);
                 if (sharedAreas != null)
                 {
                     element.SetFloatsAttribute(ATTR.transition_areas, sharedAreas);
                 }
 
-                AddAnnotations(element, results.GetAnnotations(position));
+                AddAnnotations(element, results.GetAnnotations(replicateIndex, fileId));
         }
 
         /// <summary>

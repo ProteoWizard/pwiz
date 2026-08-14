@@ -368,7 +368,8 @@ namespace pwiz.Skyline.Model.Results
 
                 var calc = listCalculator.GetCalculator(fileId);
                 calc.AddPrecursorPeak(fileId, (float) peakCountRatio.Value,
-                    groupResults.GetRetentionTime(position), groupResults.GetUserSet(position));
+                    groupResults.GetRetentionTime(replicateIndex, fileId),
+                    groupResults.GetUserSet(replicateIndex, fileId));
                 foreach (TransitionDocNode nodeTran in nodeGroup.GetQuantitativeTransitions(Settings))
                 {
                     if (groupResults.TryGetTransitionPeak(nodeTran.Transition, replicateIndex, fileId,

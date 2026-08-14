@@ -1553,38 +1553,45 @@ namespace pwiz.Skyline.Model.Serialization
                     return this;
                 }
 
-                var indexByFile = new Dictionary<ReferenceValue<ChromFileInfoId>, int>();
-                for (int i = 0; i < ChromFileIds.FileIds.Count; i++)
-                {
-                    indexByFile[ChromFileIds.FileIds[i]] = i;
-                }
+                // Two layouts, so replicate and file are the only way across: this transition's
+                // positions are its own and the precursor's are the precursor's. The maps are put
+                // on one layout rather than one being indexed with the other's positions.
+                var chromFileIds = ChromFileIds.Union(shared.ChromFileIds);
+                var written = new ChromFileIdMap<TransitionPeak?>(ChromFileIds,
+                        Peaks.Select(peak => (TransitionPeak?) peak))
+                    .WithFileIds(chromFileIds);
+                var writtenAnnotations = MapOnto(Annotations, chromFileIds);
+                var writtenPeakBounds = MapOnto(PeakBounds.Select(bounds => (CustomPeakBounds?) bounds), chromFileIds);
+                var writtenPeakMetrics = MapOnto(PeakMetrics, chromFileIds);
+                var sharedAreas = new ChromFileIdMap<float[]>(shared.ChromFileIds, shared.AreasByPosition)
+                    .WithFileIds(chromFileIds);
 
-                var replicatePositions = shared.ChromFileIds.ReplicatePositions;
                 var fileIds = new List<ChromFileInfoId>();
                 var counts = new List<int>();
                 var peaks = new List<TransitionPeak>();
                 var annotations = new List<Annotations>();
                 var peakBounds = new List<CustomPeakBounds>();
                 var peakMetrics = new List<CustomPeakMetrics>();
-                for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
+                for (int replicateIndex = 0;
+                     replicateIndex < chromFileIds.ReplicatePositions.ReplicateCount;
+                     replicateIndex++)
                 {
                     int count = 0;
-                    foreach (int position in replicatePositions[replicateIndex])
+                    foreach (var fileId in chromFileIds.GetFileIds(replicateIndex))
                     {
-                        var fileId = shared.ChromFileIds.FileIds[position];
-                        if (indexByFile.TryGetValue(fileId, out int index))
+                        if (written.TryGetValue(replicateIndex, fileId, out var peak) && peak.HasValue)
                         {
-                            peaks.Add(Peaks[index]);
-                            annotations.Add(Annotations?[index] ?? pwiz.Skyline.Model.Annotations.EMPTY);
-                            peakBounds.Add(PeakBounds == null ? default : PeakBounds[index]);
-                            peakMetrics.Add(PeakMetrics?[index]);
+                            peaks.Add(peak.Value);
+                            annotations.Add(Get(writtenAnnotations, replicateIndex, fileId) ??
+                                            pwiz.Skyline.Model.Annotations.EMPTY);
+                            peakBounds.Add(Get(writtenPeakBounds, replicateIndex, fileId) ?? default);
+                            peakMetrics.Add(Get(writtenPeakMetrics, replicateIndex, fileId));
                         }
-                        else if (shared.AreasByPosition[position] != null)
+                        else if (sharedAreas.TryGetValue(replicateIndex, fileId, out var areas) && areas != null)
                         {
                             // Nothing beyond the area is what made it shareable, and MakePlainPeak
                             // is what a peak which says only that looks like.
-                            peaks.Add(TransitionGroupResults.MakePlainPeak(
-                                shared.AreasByPosition[position][transitionIndex]));
+                            peaks.Add(TransitionGroupResults.MakePlainPeak(areas[transitionIndex]));
                             annotations.Add(pwiz.Skyline.Model.Annotations.EMPTY);
                             peakBounds.Add(default);
                             peakMetrics.Add(null);
@@ -1603,6 +1610,22 @@ namespace pwiz.Skyline.Model.Serialization
 
                 return new TransitionResultsData(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
                     peaks, annotations, peakBounds, peakMetrics);
+            }
+
+            /// <summary>
+            /// One of the lists read alongside the peaks, on <paramref name="chromFileIds"/> instead
+            /// of this transition's own layout.
+            /// </summary>
+            private ChromFileIdMap<T> MapOnto<T>(IEnumerable<T> values, ChromFileIds chromFileIds)
+            {
+                return values == null
+                    ? null
+                    : new ChromFileIdMap<T>(ChromFileIds, values).WithFileIds(chromFileIds);
+            }
+
+            private static T Get<T>(ChromFileIdMap<T> map, int replicateIndex, ChromFileInfoId fileId)
+            {
+                return map != null && map.TryGetValue(replicateIndex, fileId, out var value) ? value : default;
             }
 
             /// <summary>

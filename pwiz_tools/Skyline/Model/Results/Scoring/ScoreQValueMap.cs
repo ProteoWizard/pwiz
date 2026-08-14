@@ -93,11 +93,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     continue;
                 }
 
-                for (int position = 0; position < results.ChromFileIds.FileIds.Count; position++)
+                for (int replicateIndex = 0;
+                     replicateIndex < results.ChromFileIds.ReplicatePositions.ReplicateCount;
+                     replicateIndex++)
+                foreach (var fileId in results.ChromFileIds.GetFileIds(replicateIndex))
                 {
-                    var qValue = results.GetQValue(position);
-                    var zScore = results.GetZScore(position);
-                    if (results.GetUserSet(position) == UserSet.TRUE || !qValue.HasValue || !zScore.HasValue)
+                    var qValue = results.GetQValue(replicateIndex, fileId);
+                    var zScore = results.GetZScore(replicateIndex, fileId);
+                    if (results.GetUserSet(replicateIndex, fileId) == UserSet.TRUE || !qValue.HasValue ||
+                        !zScore.HasValue)
                     {
                         continue;
                     }

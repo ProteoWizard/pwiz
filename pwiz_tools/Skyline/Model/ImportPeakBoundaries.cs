@@ -789,16 +789,15 @@ namespace pwiz.Skyline.Model
                         if (groupResults == null)
                             continue;
 
-                        foreach (var position in groupResults.GetPositions(i))
+                        foreach (var fileId in groupResults.ChromFileIds.GetFileIds(i))
                         {
-                            var fileId = groupResults.ChromFileIds.FileIds[position].Value;
                             var key = new ResultsKey(fileId.GlobalIndex, groupNode.Id);
                             if (!trackAdjustedResults.Contains(key))
                             {
                                 CountMissing++;
                                 var fileInfo = set.GetFileInfo(fileId);
                                 var filePath = fileInfo.FilePath;
-                                var annotations = groupResults.GetAnnotations(position);
+                                var annotations = groupResults.GetAnnotations(i, fileId);
                                 // Remove annotations for defs that were imported into the document and were on this peptide prior to import
                                 var newAnnotationValues = annotations.ListAnnotations().ToList();
                                 newAnnotationValues = newAnnotationValues.Where(a => !AnnotationsAdded.Contains(a.Key)).ToList();

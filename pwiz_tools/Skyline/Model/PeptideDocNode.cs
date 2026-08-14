@@ -507,11 +507,11 @@ namespace pwiz.Skyline.Model
                 var results = nodeGroup.AbbreviatedResults;
                 if (results == null)
                     continue;
-                foreach (int position in results.GetPositions(replicateIndex))
+                foreach (var fileId in results.ChromFileIds.GetFileIds(replicateIndex))
                 {
-                    float retentionTime = results.Peaks.FlatValues[position].RetentionTime;
-                    if (retentionTime != 0)
-                        yield return retentionTime;
+                    var retentionTime = results.GetRetentionTime(replicateIndex, fileId);
+                    if (retentionTime.HasValue)
+                        yield return retentionTime.Value;
                 }
             }
         }
