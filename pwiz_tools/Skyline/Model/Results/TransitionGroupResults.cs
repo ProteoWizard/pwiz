@@ -784,7 +784,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// The areas of every transition of the precursor in one file, or false when any of them
+        /// The areas of every transition of the precursor in one file, or null when any of them
         /// has something else to say there: no peak at all, a user set peak, annotations, or
         /// boundaries which are not a candidate peak's. Then they each need an element of their own
         /// in that file.
@@ -795,25 +795,26 @@ namespace pwiz.Skyline.Model.Results
         /// whole precursor out at once did.
         /// </para>
         /// </summary>
-        public bool TryGetSharedTransitionAreas(int replicateIndex, ChromFileInfoId fileId, int transitionCount,
-            out float[] areas)
+        public float[] GetSharedTransitionAreas(int replicateIndex, ChromFileInfoId fileId)
         {
-            areas = new float[transitionCount];
-            for (int iTran = 0; iTran < transitionCount; iTran++)
+            // One entry per transition of the precursor, in the order it holds them, which is what
+            // whoever reads them back indexes by. TransitionIndexes is the precursor's own, so
+            // there is no count for a caller to pass and get wrong.
+            var areas = new float[TransitionIndexes.Count];
+            for (int iTran = 0; iTran < areas.Length; iTran++)
             {
                 // Asked by file rather than by position: the position a caller has in hand is the
                 // precursor's, and a transition's positions are its own.
                 var results = GetTransitionResults(iTran);
                 if (results?.TryGetPlainArea(replicateIndex, fileId, out float area) != true)
                 {
-                    areas = null;
-                    return false;
+                    return null;
                 }
 
                 areas[iTran] = area;
             }
 
-            return true;
+            return areas;
         }
 
         /// <summary>

@@ -314,18 +314,17 @@ namespace pwiz.Skyline.Model.Serialization
                 var chromatogramSet = chromatograms[replicateIndex];
                 foreach (var fileId in chromFileIds.GetFileIds(replicateIndex))
                 {
-                    bool shared = results.TryGetSharedTransitionAreas(replicateIndex, fileId, transitions.Length,
-                        out var areas);
+                    var sharedAreas = results.GetSharedTransitionAreas(replicateIndex, fileId);
 
                     if (results.TryGetPrecursorPeak(replicateIndex, fileId, out _))
                     {
                         var peakElement = new XElement(EL.precursor_peak);
                         SetReplicateAndFile(peakElement, chromatogramSet, fileId);
-                        SetColumnarPrecursorPeak(peakElement, results, areas, replicateIndex, fileId);
+                        SetColumnarPrecursorPeak(peakElement, results, sharedAreas, replicateIndex, fileId);
                         precursorResults.Add(peakElement);
                     }
 
-                    if (shared)
+                    if (sharedAreas != null)
                     {
                         // The areas just went on the precursor, and being shareable is exactly
                         // having nothing else to say, so no transition writes anything here.
