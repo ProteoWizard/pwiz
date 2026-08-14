@@ -148,7 +148,16 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
                 //
                 // addZeros:false is cpp's ignoreZeroIntensityPoints:true, so this counts the
                 // same points getDataSize(false, true) counts.
-                else if (_verifyNonEmptySpectra
+                //
+                // Legacy .wiff only. On wiff2 each GetSpectrum is a full SDK read request, so
+                // probing every cycle at index-build time cost more than the conversion itself:
+                // 250814_ZTScan_100spd_A_3_G1.wiff2 went from 97 s to over 420 s and started
+                // timing out in the corpus sweep. Nothing is given up - every file the probe
+                // fixes is a legacy .wiff (the 448 unreadable cycles in 20061108_CPTAC_1B468,
+                // the 834 sentinel cycles in wine yeast sampleA_2, and five others) - and wiff2
+                // is already better guarded, because its GetBpc returns empty so `intensities`
+                // above is the TIC, a stricter emptiness test than the base peak.
+                else if (_verifyNonEmptySpectra && !isWiff2
                          && (exp.GetSpectrum(i + 1, addZeros: false, centroid: false)?.XValues.Length ?? 0) == 0)
                     continue;
 
