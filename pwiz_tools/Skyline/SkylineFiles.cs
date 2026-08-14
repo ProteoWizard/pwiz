@@ -1560,7 +1560,7 @@ namespace pwiz.Skyline
                 {
                     MemoryStream memoryStream = new MemoryStream();
                     // Remember the current layout in case something goes wrong.
-                    dockPanel.SaveAsXml(memoryStream, Encoding.UTF8, true);
+                    dockPanel.SaveAsXml(memoryStream, new UTF8Encoding(false), true); // UTF-8 without BOM
                     memoryStream.Position = 0;
                     previousLayout = memoryStream;
                 }
