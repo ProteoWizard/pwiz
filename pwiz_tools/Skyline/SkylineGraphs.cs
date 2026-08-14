@@ -473,6 +473,19 @@ namespace pwiz.Skyline
             {
                 ShowSequenceTreeForm(true);
             }
+            // Everything below is disabled on the View menu without results, but a layout can name
+            // any of it and DeserializeForm builds what it is told - only GraphChromatogram checks.
+            // So an imported layout could show windows the user had no way to open.
+            if (!DocumentUI.Settings.HasResults)
+            {
+                UpdateUIGraphRetentionTime(IsRetentionTimeGraphTypeEnabled);
+                UpdateUIGraphPeakArea(false);
+                UpdateUIGraphMassError(false);
+                UpdateUIGraphDetection(false);
+                ShowResultsGrid(false);
+                DestroyCandidatePeakForm();
+                DestroyGraphFullScan();
+            }
             FoldChangeForm.CloseInapplicableForms(this);
             ListGridForm.CloseInapplicableForms(this);
         }

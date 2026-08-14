@@ -27,6 +27,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 
@@ -72,6 +73,40 @@ namespace pwiz.SkylineTestFunctional
             TestImportNotALayoutFile(documentPath);
 
             TestImportLayoutWithoutTargets();
+
+            TestImportLayoutNeedingResults();
+        }
+
+        /// <summary>
+        /// An imported layout must not show a window the user had no way to open. Without results,
+        /// View &gt; Results Grid is disabled - but a layout can name the Results Grid and
+        /// <see cref="SkylineWindow"/>'s DeserializeForm builds what it is told, so
+        /// EnsureApplicableForms has to put it away again. Measured: the same layout DOES show it
+        /// when that gating is removed.
+        /// </summary>
+        private void TestImportLayoutNeedingResults()
+        {
+            Assert.IsFalse(SkylineWindow.Document.Settings.HasResults);
+
+            // Something to rewrite: the previous step closed every window
+            RunUI(() => SkylineWindow.ShowDocumentGrid(true));
+            WaitForOpenForm<DocumentGridForm>();
+
+            var layoutPath = ExportLayout(@"ResultsDependent");
+            var layoutXml = File.ReadAllText(layoutPath);
+            AssertEx.Contains(layoutXml, typeof(DocumentGridForm).ToString());
+            layoutXml = layoutXml.Replace(typeof(DocumentGridForm).ToString(),
+                typeof(LiveResultsGrid).ToString());
+            AssertEx.Contains(layoutXml, typeof(LiveResultsGrid).ToString());
+            File.WriteAllText(layoutPath, layoutXml);
+
+            ImportLayout(layoutPath);
+            RunUI(() =>
+            {
+                var resultsGrid = FormUtil.OpenForms.OfType<LiveResultsGrid>().FirstOrDefault();
+                Assert.IsFalse(resultsGrid != null && resultsGrid.Visible,
+                    @"Results Grid was shown for a document with no results");
+            });
         }
 
         /// <summary>
