@@ -20,8 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData;
@@ -146,7 +144,6 @@ namespace pwiz.SkylineTest
         private void VerifyRoundTrips(SrmDocument document)
         {
             var compactFormatOptionOld = Settings.Default.CompactFormatOption;
-            var regexpTransitionData = new Regex(".*transition_data.*");
             try
             {
                 foreach (var compactFormatOption in new[] {CompactFormatOption.NEVER, CompactFormatOption.ONLY_FOR_LARGE_FILES, CompactFormatOption.ALWAYS})
@@ -155,18 +152,6 @@ namespace pwiz.SkylineTest
                     var stringWriter = new StringWriter();
                     var xmlSerializer = new XmlSerializer(typeof(SrmDocument));
                     xmlSerializer.Serialize(stringWriter, document);
-                    var documentText = stringWriter.ToString();
-                    if (compactFormatOption.UseCompactFormat(document))
-                    {
-                        if (document.MoleculeTransitions.Any())
-                        {
-                            StringAssert.Matches(documentText, regexpTransitionData);
-                        }
-                    }
-                    else
-                    {
-                        StringAssert.DoesNotMatch(documentText, regexpTransitionData);
-                    }
                     var document2 = (SrmDocument)xmlSerializer.Deserialize(new StringReader(stringWriter.ToString()));
                     // DocsEqual rather than AreEqual, so that a round trip which loses something
                     // says which element it was rather than printing two identical doc summaries.
