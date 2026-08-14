@@ -3705,14 +3705,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
         #region Test support
 
-        // These drive the ZedGraph control through the very handlers the operating
-        // system invokes for a real mouse message (SimulateMouseDown/Move/Up), so a
-        // simulated gesture is indistinguishable from a user's -- the same path the
-        // IJsonToolService.ClickGraph verb uses.
+        // These drive the ZedGraph control by raising the very events the operating
+        // system raises for a real mouse message (PerformMouseDown/Move/Up), so a
+        // gesture a test produces is indistinguishable from a user's. It is the same
+        // mechanism the ClickGraph verb uses to let an external client drive a graph,
+        // reached here through a different entry point.
         public void TestMouseMove(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
-            graphControl.SimulateMouseMove(new MouseEventArgs(MouseButtons.None, 0, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
+            graphControl.PerformMouseMove(new MouseEventArgs(MouseButtons.None, 0, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
         }
 
         public bool IsOverHighlightPoint(double x, double y, PaneKey? paneKey)
@@ -3724,13 +3725,13 @@ namespace pwiz.Skyline.Controls.Graphs
         public void TestMouseDown(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
-            graphControl.SimulateMouseDown(new MouseEventArgs(MouseButtons.Left, 1, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
+            graphControl.PerformMouseDown(new MouseEventArgs(MouseButtons.Left, 1, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
         }
 
         public void TestMouseUp(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
-            graphControl.SimulateMouseUp(new MouseEventArgs(MouseButtons.Left, 1, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
+            graphControl.PerformMouseUp(new MouseEventArgs(MouseButtons.Left, 1, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
         }
 
         public string TestFullScanSelection(double x, double y, PaneKey? paneKey)

@@ -307,11 +307,11 @@ namespace pwiz.SkylineTestFunctional
             string[][] items = null;
             RunUI(() =>
             {
-                // Drive the real ZedGraph handlers, as a user click does, rather than
-                // calling the pane's handlers directly (same path as ClickGraph).
+                // Raise the real mouse events, as a user click does, rather than calling
+                // the pane's handlers directly (same mechanism as the ClickGraph verb).
                 var graphControl = pane.GraphSummary.GraphControl;
-                graphControl.SimulateMouseMove(mouseEventArgs);
-                graphControl.SimulateMouseClick(mouseEventArgs);
+                graphControl.PerformMouseMove(mouseEventArgs);
+                graphControl.PerformMouseClick(mouseEventArgs);
             });
 
             var form = WaitForOpenForm<FindResultsForm>();

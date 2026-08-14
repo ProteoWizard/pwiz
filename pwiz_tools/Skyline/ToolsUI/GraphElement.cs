@@ -140,12 +140,12 @@ namespace pwiz.Skyline.ToolsUI
             var down = pane.GeneralTransform(new PointF((float) bounds.Left, (float) bounds.Top), CoordType.AxisXYScale);
             var up = pane.GeneralTransform(new PointF((float) bounds.Right, (float) bounds.Bottom), CoordType.AxisXYScale);
             bool isDrag = bounds.Left != bounds.Right || bounds.Top != bounds.Bottom;
-            Control.SimulateMouseDown(LeftClickArgs(down));
+            Control.PerformMouseDown(LeftClickArgs(down));
             if (isDrag)
-                Control.SimulateMouseMove(LeftClickArgs(up));
-            Control.SimulateMouseUp(LeftClickArgs(up));
+                Control.PerformMouseMove(LeftClickArgs(up));
+            Control.PerformMouseUp(LeftClickArgs(up));
             if (!isDrag)
-                Control.SimulateMouseClick(LeftClickArgs(down));
+                Control.PerformMouseClick(LeftClickArgs(down));
         }
 
         private Bitmap RenderBitmap()

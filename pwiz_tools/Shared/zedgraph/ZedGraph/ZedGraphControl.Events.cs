@@ -668,51 +668,55 @@ namespace ZedGraph
 			Cursor.Current = Cursors.Default;
 		}
 
-		#region Automated mouse simulation
+		#region Automated mouse input
 
-		// These entry points let a test or automation harness (e.g.
-		// IJsonToolService.ClickGraph) reproduce a user gesture. They call the very
-		// same handlers the operating system invokes for a real mouse message, so
-		// every MouseDownEvent/MouseMoveEvent/MouseUpEvent subscriber AND ZedGraph's
-		// own zoom/pan/edit state machine behave identically to a genuine press,
-		// drag, and release. A stationary click is a down followed by an up with no
-		// intervening move; a drag is a down, one or more moves, then an up.
+		// These entry points let a caller that has no operating-system mouse produce a
+		// user gesture programmatically, in the spirit of IButtonControl.PerformClick.
+		// In Skyline the caller is the ClickGraph verb of the JSON tool service, which
+		// is how an external client -- in practice the MCP server an AI model drives --
+		// clicks and drags on a graph; functional tests reach the same verbs. Each
+		// raises the same event the operating system raises for a real mouse message,
+		// so every MouseDown/MouseMove/MouseUp subscriber AND ZedGraph's own
+		// zoom/pan/edit state machine (which subscribes to those events like anyone
+		// else -- see the ZedGraphControl constructor) behave identically to a genuine
+		// press, drag, and release. A stationary click is a down followed by an up with
+		// no intervening move; a drag is a down, one or more moves, then an up.
 
 		/// <summary>
-		/// Simulate a mouse-down at the client point carried by <paramref name="e" />
+		/// Perform a mouse-down at the client point carried by <paramref name="e" />
 		/// exactly as if the operating system had delivered it.
 		/// </summary>
-		public void SimulateMouseDown( MouseEventArgs e )
+		public void PerformMouseDown( MouseEventArgs e )
 		{
-			ZedGraphControl_MouseDown( this, e );
+			OnMouseDown( e );
 		}
 
 		/// <summary>
-		/// Simulate a mouse-move to the client point carried by <paramref name="e" />
+		/// Perform a mouse-move to the client point carried by <paramref name="e" />
 		/// exactly as if the operating system had delivered it.
 		/// </summary>
-		public void SimulateMouseMove( MouseEventArgs e )
+		public void PerformMouseMove( MouseEventArgs e )
 		{
-			ZedGraphControl_MouseMove( this, e );
+			OnMouseMove( e );
 		}
 
 		/// <summary>
-		/// Simulate a mouse-up at the client point carried by <paramref name="e" />
+		/// Perform a mouse-up at the client point carried by <paramref name="e" />
 		/// exactly as if the operating system had delivered it.
 		/// </summary>
-		public void SimulateMouseUp( MouseEventArgs e )
+		public void PerformMouseUp( MouseEventArgs e )
 		{
-			ZedGraphControl_MouseUp( this, e );
+			OnMouseUp( e );
 		}
 
 		/// <summary>
-		/// Simulate the click the operating system raises after a stationary press and
+		/// Perform the click the operating system raises after a stationary press and
 		/// release at one point (the WinForms MouseClick event). Some graph panes select
 		/// on click rather than on mouse-down, so a faithful stationary click is a
-		/// <see cref="SimulateMouseDown" />, a <see cref="SimulateMouseUp" />, then this.
+		/// <see cref="PerformMouseDown" />, a <see cref="PerformMouseUp" />, then this.
 		/// A drag raises no click and must omit it.
 		/// </summary>
-		public void SimulateMouseClick( MouseEventArgs e )
+		public void PerformMouseClick( MouseEventArgs e )
 		{
 			OnMouseClick( e );
 		}
