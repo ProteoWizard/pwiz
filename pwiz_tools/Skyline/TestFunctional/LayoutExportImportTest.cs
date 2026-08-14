@@ -27,6 +27,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
@@ -77,6 +78,8 @@ namespace pwiz.SkylineTestFunctional
             TestImportLayoutNeedingResults();
 
             TestExportOntoReadOnlyFile();
+
+            TestExportStartsBesideDocument();
         }
 
         /// <summary>
@@ -109,6 +112,19 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(resultsGrid != null && resultsGrid.Visible,
                     @"Results Grid was shown for a document with no results");
             });
+        }
+
+        /// <summary>
+        /// The Export dialog opens beside the document, not in <see cref="Settings.ActiveDirectory"/>.
+        /// That setting is the last folder ANY file operation used - picking an iRT database moves
+        /// it - so on its own it would write a file named after this document somewhere unrelated.
+        /// </summary>
+        private void TestExportStartsBesideDocument()
+        {
+            RunUI(() => Settings.Default.ActiveDirectory = Path.GetTempPath());
+            // A bare name lands in whatever folder the dialog opened in, and ExportLayout expects
+            // it beside the document
+            Assert.IsTrue(File.Exists(ExportLayout(@"BesideDocument")));
         }
 
         /// <summary>

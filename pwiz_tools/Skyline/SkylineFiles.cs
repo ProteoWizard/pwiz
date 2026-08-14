@@ -1480,6 +1480,21 @@ namespace pwiz.Skyline
             get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_SKY_VIEW); }
         }
 
+        /// <summary>
+        /// Where the layout dialogs start: beside the document, since that is where its ".sky.view"
+        /// belongs and what the Export dialog names the file after. Only falls back to
+        /// <see cref="Settings.ActiveDirectory"/> for an unsaved document - that setting is the last
+        /// folder ANY file operation used, including unrelated ones like picking an iRT database, so
+        /// on its own it can put a file named after this document somewhere else entirely.
+        /// Share Document starts from the document folder for the same reason.
+        /// </summary>
+        private string GetLayoutDirectory()
+        {
+            return !string.IsNullOrEmpty(DocumentFilePath)
+                ? Path.GetDirectoryName(DocumentFilePath)
+                : Settings.Default.ActiveDirectory;
+        }
+
         private void exportLayoutMenuItem_Click(object sender, EventArgs e)
         {
             ShowExportLayoutDlg();
@@ -1491,7 +1506,7 @@ namespace pwiz.Skyline
             {
                 dlg.SupportMultiDottedExtensions = true;
                 dlg.Filter = FILTER_SKY_VIEW;
-                dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+                dlg.InitialDirectory = GetLayoutDirectory();
                 dlg.DefaultExt = EXT_SKY_VIEW;
                 if (!string.IsNullOrEmpty(DocumentFilePath))
                     dlg.FileName = Path.GetFileNameWithoutExtension(DocumentFilePath);
@@ -1539,7 +1554,7 @@ namespace pwiz.Skyline
             using (var dlg = new OpenFileDialog())
             {
                 dlg.Filter = FILTER_SKY_VIEW;
-                dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+                dlg.InitialDirectory = GetLayoutDirectory();
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
                 ImportLayout(dlg.FileName);
