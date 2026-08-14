@@ -7184,10 +7184,12 @@
     <!-- Skyline runs inside the SkylineCmd.exe process, so the CLR uses SkylineCmd.exe.config
          for binding policy. Publish the config MSBuild generates for Skyline under that name
          rather than maintaining a second one by hand, which silently went stale and broke
-         .parquet export from the command line. Include it from obj rather than bin: the
-         content copy runs before _CopyAppConfigFile, so bin fails a cold build with MSB3113
-         while succeeding on every incremental one. -->
-    <Content Include="obj\$(Platform)\$(Configuration)\$(AssemblyName).exe.config">
+         .parquet export from the command line. This must be a copy rather than a second
+         reference to the generated config itself: ClickOnce writes a manifest <file> entry for
+         each target path but copies a given source file to the publish folder only once, so
+         sharing one source between here and the application config left the deployment missing
+         Skyline-daily.exe.config. _CopySkylineCmdConfig below produces the copy. -->
+    <Content Include="$(IntermediateOutputPath)SkylineCmd.exe.config">
       <Link>SkylineCmd.exe.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -7557,6 +7559,18 @@
     <Folder Include="Model\Carafe\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- Makes the SkylineCmd.exe.config content item above a real file. Both consumers have to run
+       after it: GenerateApplicationManifest reads the file first, and listing only
+       _CopyFilesToOutputDirectory here fails a cold build with MSB3113 while succeeding on every
+       incremental one. Sourcing from AppConfigWithTargetPath picks up the binding redirects
+       AutoGenerateBindingRedirects adds, and works whether or not any were generated. -->
+  <Target Name="_CopySkylineCmdConfig"
+          DependsOnTargets="GenerateBindingRedirectsUpdateAppConfig"
+          BeforeTargets="GenerateApplicationManifest;_CopyFilesToOutputDirectory">
+    <Copy SourceFiles="@(AppConfigWithTargetPath)"
+          DestinationFiles="$(IntermediateOutputPath)SkylineCmd.exe.config"
+          SkipUnchangedFiles="true" />
+  </Target>
   <Target Name="AfterPublish">
     <Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
