@@ -42,7 +42,7 @@ namespace pwiz.CommonMsData
         public const string EXT_XML = ".xml";
         public const string EXT_UIMF = ".uimf";
         public const string EXT_WATERS_RAW = ".raw";    // Folder
-        public const string EXT_AGILENT_BRUKER_RAW = ".d";  // Folder
+        public const string EXT_AGILENT_BRUKER_D = ".d";  // Folder
         public const string EXT_MOBILION_MBI = ".mbi";
 
         public static readonly string[] EXT_FASTA = {".fasta", ".fa", ".faa"};
@@ -91,7 +91,7 @@ namespace pwiz.CommonMsData
         /// The one reader answer taken for a directory whose name says nothing. The reader decides
         /// it by what lies below rather than by a file sitting in the directory, so a copy of an
         /// acquisition's files under some other name cannot be mistaken for it - which is what
-        /// <see cref="EXT_AGILENT_BRUKER_RAW"/> guards against for the rest.
+        /// <see cref="EXT_AGILENT_BRUKER_D"/> guards against for the rest.
         /// </summary>
         private const string READER_TYPE_BRUKER_FID = "Bruker FID";
 
@@ -153,7 +153,7 @@ namespace pwiz.CommonMsData
                 // what a file open dialog shows - is answered by the probes below, each of
                 // which is a single question where a listing is one per entry in the directory.
                 if (PathEx.HasExtension(directoryPath, EXT_WATERS_RAW) ||
-                    PathEx.HasExtension(directoryPath, EXT_AGILENT_BRUKER_RAW))
+                    PathEx.HasExtension(directoryPath, EXT_AGILENT_BRUKER_D))
                 {
                     var sourceType = GetSourceType(directoryPath,
                         dirInfo.GetFiles().Select(f => f.Name).ToArray(),
@@ -184,7 +184,7 @@ namespace pwiz.CommonMsData
                                     fn.EndsWith(@".DAT", StringComparison.InvariantCultureIgnoreCase) &&
                                     fn.Count(ch => ch == '.') == 1))
                 return TYPE_WATERS_RAW;
-            if (PathEx.HasExtension(directoryName, EXT_AGILENT_BRUKER_RAW))
+            if (PathEx.HasExtension(directoryName, EXT_AGILENT_BRUKER_D))
             {
                 // Compared without regard to case, as the filesystem these names come from
                 // compares them, and as the reader looks for them
@@ -324,7 +324,7 @@ namespace pwiz.CommonMsData
                 // exception this is all for: its directories carry no extension, and the reader
                 // reaches it by descending rather than by a file lying in the directory.
                 if (!Equals(readerType, READER_TYPE_BRUKER_FID) &&
-                    !PathEx.HasExtension(directoryPath, EXT_AGILENT_BRUKER_RAW))
+                    !PathEx.HasExtension(directoryPath, EXT_AGILENT_BRUKER_D))
                     return FOLDER_TYPE;
                 return sourceType;
             }
