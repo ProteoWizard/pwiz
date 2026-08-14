@@ -85,26 +85,12 @@ Reader_Bruker_Format format(const string& path)
             return Reader_Bruker_Format_Unknown;
     }
 
-    // Bruker writes an acquisition to a directory named with a .d extension, and that name is
-    // part of what identifies these formats. Without it a directory that merely holds a file
-    // called analysis.baf - a flattened copy of an acquisition, say - reads as an acquisition
-    // itself, and a file open dialog then offers it as a source rather than letting the user
-    // navigate into it. FID is exempt, being the one Bruker format whose directories carry no
-    // extension at all, and it is recognized by what lies below it rather than by a file here.
-    bfs::path namedPath(sourcePath);
-    if (namedPath.filename() == ".") // A trailing separator leaves "." as the filename
-        namedPath = namedPath.parent_path();
-    bool nameSaysAcquisition = bal::iequals(BFS_STRING(namedPath.extension()), ".d");
-
     // Check for tdf-based data;
     // The directory should have a file named "Analysis.tdf"
-    if (nameSaysAcquisition)
-    {
-        if (exists_as_file(sourcePath / "Analysis.tdf") || exists_as_file(sourcePath / "analysis.tdf"))
-            return Reader_Bruker_Format_TDF;
-        if (exists_as_file(sourcePath / "Analysis.tsf") || exists_as_file(sourcePath / "analysis.tsf"))
-            return Reader_Bruker_Format_TSF;
-    }
+    if (exists_as_file(sourcePath / "Analysis.tdf") || exists_as_file(sourcePath / "analysis.tdf"))
+        return Reader_Bruker_Format_TDF;
+    if (exists_as_file(sourcePath / "Analysis.tsf") || exists_as_file(sourcePath / "analysis.tsf"))
+        return Reader_Bruker_Format_TSF;
 
     // TODO: 1SRef is not the only possible substring below, get more examples!
 
@@ -135,9 +121,6 @@ Reader_Bruker_Format format(const string& path)
             else
                 break;
         }
-
-    if (!nameSaysAcquisition)
-        return Reader_Bruker_Format_Unknown;
 
     // Check for yep-based data;
     // The directory should have a file named "Analysis.yep"

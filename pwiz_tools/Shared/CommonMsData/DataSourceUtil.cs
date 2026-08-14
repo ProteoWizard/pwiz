@@ -87,6 +87,14 @@ namespace pwiz.CommonMsData
             { "Bruker TSF", TYPE_BRUKER }
         };
 
+        /// <summary>
+        /// The one reader answer taken for a directory whose name says nothing. The reader decides
+        /// it by what lies below rather than by a file sitting in the directory, so a copy of an
+        /// acquisition's files under some other name cannot be mistaken for it - which is what
+        /// <see cref="EXT_AGILENT_BRUKER_RAW"/> guards against for the rest.
+        /// </summary>
+        private const string READER_TYPE_BRUKER_FID = "Bruker FID";
+
         private const string EXT_BRUKER_U2 = ".u2"; // A file inside the directory, named for it
         private const string AGILENT_ACQUISITION_DIRECTORY = "AcqData";
 
@@ -309,7 +317,16 @@ namespace pwiz.CommonMsData
                 var readerType = MsDataFileImpl.IdentifyReaderType(directoryPath);
                 if (string.IsNullOrEmpty(readerType))
                     return FOLDER_TYPE;
-                return READER_TYPES_TO_TYPES.TryGetValue(readerType, out var sourceType) ? sourceType : FOLDER_TYPE;
+                if (!READER_TYPES_TO_TYPES.TryGetValue(readerType, out var sourceType))
+                    return FOLDER_TYPE;
+                // The reader answers by what a directory holds, which a copy of an acquisition's
+                // files holds too, so its answer is taken only where the name agrees. FID is the
+                // exception this is all for: its directories carry no extension, and the reader
+                // reaches it by descending rather than by a file lying in the directory.
+                if (!Equals(readerType, READER_TYPE_BRUKER_FID) &&
+                    !PathEx.HasExtension(directoryPath, EXT_AGILENT_BRUKER_RAW))
+                    return FOLDER_TYPE;
+                return sourceType;
             }
             catch (Exception)
             {

@@ -250,17 +250,9 @@ void testIdentifyFileFormat()
     unit_assert_operator_equal(MS_ABI_WIFF_format, readerList.identifyAsReader("testSpectraDataFile.wiFF")->getCvType());
     bfs::remove("testSpectraDataFile.wiFF");
 
-    // A directory of _FUNC files is an acquisition only when it is named as one. Without the
-    // name, an extracted or flattened copy of an acquisition - or any directory that happens
-    // to hold such files - would be taken for an acquisition itself.
     {ofstream fs("_FUNC42.DAT"); fs << "Life, the Universe, and Everything";}
-    unit_assert(!readerList.identifyAsReader("."));
+    unit_assert_operator_equal(MS_Waters_raw_format, readerList.identifyAsReader(".")->getCvType());
     bfs::remove("_FUNC42.DAT");
-
-    bfs::create_directory("testSpectraDataFile.raw");
-    {ofstream fs("testSpectraDataFile.raw/_FUNC42.DAT"); fs << "Life, the Universe, and Everything";}
-    unit_assert_operator_equal(MS_Waters_raw_format, readerList.identifyAsReader("testSpectraDataFile.raw")->getCvType());
-    bfs::remove_all("testSpectraDataFile.raw");
 
 
     // test types and extensions
