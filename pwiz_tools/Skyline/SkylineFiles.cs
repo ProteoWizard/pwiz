@@ -1475,9 +1475,21 @@ namespace pwiz.Skyline
         }
 
         public const string EXT_SKY_VIEW = ".sky.view";
+        public const string EXT_VIEW = ".view";
+        /// <summary>
+        /// Two entries, ".sky.view" first so it is the default. The second is what keeps the shell
+        /// from doubling the extension: it appends the selected file type's extension unless the
+        /// name's LAST extension is one the filter knows, and every ".sky.view" name ends in
+        /// ".view". A user who deliberately wants the single extension can also just pick it.
+        /// </summary>
         public static string FILTER_SKY_VIEW
         {
-            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_SKY_VIEW); }
+            get
+            {
+                return TextUtil.FileDialogFilters(
+                    TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_SKY_VIEW),
+                    TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_VIEW));
+            }
         }
 
         /// <summary>
@@ -1513,21 +1525,7 @@ namespace pwiz.Skyline
                     dlg.FileName = Path.GetFileNameWithoutExtension(DocumentFilePath);
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
-                var exportPath = dlg.FileName;
-                if (exportPath.EndsWith(EXT_SKY_VIEW + EXT_SKY_VIEW))
-                {
-                    // If the path ends in ".sky.view.sky.view" strip off the last ".sky.view";
-                    var stripped = exportPath.Substring(0, exportPath.Length - EXT_SKY_VIEW.Length);
-                    // Only strip off the extension if neither form of the file existed.
-                    // If the stripped filename had exists, the dialog would not have added the extra extension, and
-                    // we also would need to prompt the user again to overwrite.
-                    // If the duplicated filename exists, the user was already prompted to overwrite so we should not change the name.
-                    if (!File.Exists(exportPath) && !File.Exists(stripped))
-                    {
-                        exportPath = stripped;
-                    }
-                }
-                ExportLayout(exportPath);
+                ExportLayout(dlg.FileName);
             }
         }
 

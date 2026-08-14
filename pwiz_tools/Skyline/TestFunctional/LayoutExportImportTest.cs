@@ -80,6 +80,8 @@ namespace pwiz.SkylineTestFunctional
             TestExportOntoReadOnlyFile();
 
             TestExportStartsBesideDocument();
+
+            TestExportTypedFullName();
         }
 
         /// <summary>
@@ -125,6 +127,27 @@ namespace pwiz.SkylineTestFunctional
             // A bare name lands in whatever folder the dialog opened in, and ExportLayout expects
             // it beside the document
             Assert.IsTrue(File.Exists(ExportLayout(@"BesideDocument")));
+        }
+
+        /// <summary>
+        /// A name TYPED with the full ".sky.view" is taken as typed, not doubled to
+        /// "Name.sky.view.sky.view". The shell appends the selected file type's extension unless the
+        /// name's LAST extension is one the filter knows, so the filter's second entry, ".view", is
+        /// what makes this work - the offered name is safe for a different reason (it is handed over
+        /// as a base name with no extension at all).
+        /// </summary>
+        private void TestExportTypedFullName()
+        {
+            var typedPath = TestContext.GetTestResultsPath(@"TypedName" + SkylineWindow.EXT_SKY_VIEW);
+            FileEx.SafeDelete(typedPath);
+            FileEx.SafeDelete(typedPath + SkylineWindow.EXT_SKY_VIEW);
+            RunLongNativeDlg<NativeSaveFileDialog>(SkylineWindow.ShowExportLayoutDlg, dlg =>
+            {
+                dlg.EnterPath(typedPath);
+                dlg.DismissWithAcceptButton();
+            });
+            Assert.IsTrue(File.Exists(typedPath));
+            Assert.IsFalse(File.Exists(typedPath + SkylineWindow.EXT_SKY_VIEW));
         }
 
         /// <summary>
