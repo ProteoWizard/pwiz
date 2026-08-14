@@ -130,8 +130,18 @@ namespace pwiz.Osprey.Tasks
             // makes above - one arm's .blib must never be reused as another's.
             // And the sidecar format version, for the same reason FirstPassFdrTask carries it:
             // this task writes the 2nd-pass sidecars, so a record-layout change invalidates them.
+            // And the MEANING of the 2nd-pass sidecar's protein column, which issue #4559
+            // changed from a pass-1 to a pass-2 value without moving a byte. The format version
+            // cannot carry that: no offset, width or type changed, so a v4 record written before
+            // #4559 is structurally valid and silently holds the wrong pass. Without this token
+            // a post-#4559 build resuming into a pre-#4559 output directory finds every declared
+            // output present and the validity key unchanged, skips this task entirely, and keeps
+            // the stale column - which then reds regression mode 1c against a build that is in
+            // fact correct. A key token forces the regeneration a version bump would have forced,
+            // without breaking any reader or moving a golden.
             return base.ValidityKey(ctx)
                 + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
+                + @";pass2proteinq=2"
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
@@ -368,6 +378,18 @@ namespace pwiz.Osprey.Tasks
         {
             var result = ProteinFdrEngine.RunSecondPass(
                 perFileEntries, fullLibrary, config, ctx.LogInfo);
+
+            // The 2nd-pass sidecar was written BEFORE this protein FDR ran - it is one of its
+            // inputs - so the protein column it carries is still the pass-1 value at this point.
+            // Patch it now that the pass-2 value exists, so every column in that file is a
+            // pass-2 value (issue #4559). Cheap: 8 bytes per record, one file at a time, and
+            // only where a 2nd-pass sidecar was written.
+            // This MUST precede the dumps below: Stage7ProteinFdrOnly ends the process there,
+            // and an unpatched record keeps whatever it held when the sidecar was written -
+            // the ResetScores default for every entry Stage 6 rescored or gap-filled, since
+            // RestorePass1Scalars no longer seeds this field.
+            if (AnyReconciledParquet(config))
+                Pass2FdrSidecar.PatchPass2ProteinQvalues(ctx, perFileEntries);
 
             // Cross-impl bisection dump (env-var-gated, no-op in production).
             if (ctx.Diagnostics?.DumpDetectedPeptides ?? false)

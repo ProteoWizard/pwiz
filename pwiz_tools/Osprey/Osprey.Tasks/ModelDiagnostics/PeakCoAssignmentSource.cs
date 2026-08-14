@@ -296,7 +296,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 return 0;
             }
             // The same path the score-pass sink wrote, so the panel reads exactly what this run
-            // produced. At this point the records are the PARTIAL ones (run_protein_qvalue is
+            // produced. At this point the records are the PARTIAL ones (experiment_protein_qvalue is
             // still the 1.0 placeholder that first-pass protein FDR patches later) - harmless
             // here, since the panel reads only the score and the precursor/peptide q-values.
             string sidecarPath = FdrScoresSidecar.Pass1Path(sidecarBase);
