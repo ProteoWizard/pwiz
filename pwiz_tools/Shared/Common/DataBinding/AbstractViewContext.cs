@@ -54,7 +54,6 @@ namespace pwiz.Common.DataBinding
         }
 
         public abstract string GetExportDirectory();
-        public abstract void SetExportDirectory(string value);
         public abstract DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons, Exception exception);
         protected virtual string GetDefaultExportFilename(ViewInfo viewInfo)
         {
@@ -238,7 +237,6 @@ namespace pwiz.Common.DataBinding
                     }
                     var dataFormat = dataFormats[saveFileDialog.FilterIndex - 1];
                     ExportToFile(owner, bindingListSource, saveFileDialog.FileName, dataFormat.Separator);
-                    SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
                 }
             }
             catch (Exception exception)

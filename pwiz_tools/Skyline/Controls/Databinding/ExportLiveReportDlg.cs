@@ -67,13 +67,16 @@ namespace pwiz.Skyline.Controls.Databinding
                 return;
             }
             using var saveFileDialog = new SaveFileDialog();
-            saveFileDialog.InitialDirectory = Settings.Default.ExportDirectory;
+            // Start in the folder holding the document, which is almost always where the report belongs, and
+            // fall back to the last document folder when it has never been saved. Nothing is remembered from
+            // the last export, so exporting one report somewhere else does not become the default for the rest.
+            saveFileDialog.InitialDirectory =
+                Path.GetDirectoryName(_skylineWindow.DocumentFilePath) ?? Settings.Default.ActiveDirectory;
             saveFileDialog.OverwritePrompt = true;
             saveFileDialog.DefaultExt = TextUtil.EXT_CSV;
             var extensions = new[] { TextUtil.EXT_CSV, TextUtil.EXT_TSV, TextUtil.EXT_PARQUET };
             saveFileDialog.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV, TextUtil.FILTER_TSV, TextUtil.FILTER_PARQUET);
             saveFileDialog.FileName = SelectedViewName.Value.Name;
-            // TODO: If document has been saved, initial directory should be document directory
             if (saveFileDialog.ShowDialog(this) == DialogResult.Cancel)
             {
                 return;
@@ -92,7 +95,6 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void OkDialog(string fileName, char separator)
         {
-            Settings.Default.ExportDirectory = Path.GetDirectoryName(fileName);
             if (!ExportReport(fileName, ReportExporters.ForSeparator(GetDataSchemaLocalizer(), separator)))
                 return;
 
@@ -102,7 +104,6 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void OkDialog(string fileName)
         {
-            Settings.Default.ExportDirectory = Path.GetDirectoryName(fileName);
             if (!ExportReport(fileName, ReportExporters.ForFilenameExtension(GetDataSchemaLocalizer(), Path.GetExtension(fileName))))
                 return;
 

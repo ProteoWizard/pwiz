@@ -24,8 +24,8 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -36,7 +36,7 @@ namespace pwiz.Skyline.FileUI
     public partial class ExportAnnotationsDlg : FormEx
     {
         private bool _inUpdate;
-        public ExportAnnotationsDlg(SkylineDataSchema dataSchema)
+        public ExportAnnotationsDlg(SkylineWindowDataSchema dataSchema)
         {
             InitializeComponent();
             DataSchema = dataSchema;
@@ -52,7 +52,7 @@ namespace pwiz.Skyline.FileUI
             SelectAll(listBoxAnnotations);
             SelectAll(listBoxProperties);
         }
-        public SkylineDataSchema DataSchema { get; private set; }
+        public SkylineWindowDataSchema DataSchema { get; private set; }
         public ImmutableList<ElementHandler> Handlers { get; private set; }
         public SrmDocument Document { get { return DataSchema.Document; } }
         public IEnumerable<ElementHandler> SelectedHandlers
@@ -211,24 +211,19 @@ namespace pwiz.Skyline.FileUI
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-            string strSaveFileName = string.Empty;
-            string documentFilePath = null;
-            if (null != DataSchema.SkylineWindow)
-            {
-                documentFilePath = DataSchema.SkylineWindow.DocumentFilePath;
-            }
-            if (!string.IsNullOrEmpty(documentFilePath))
-            {
-                strSaveFileName = Path.GetFileNameWithoutExtension(documentFilePath);
-            }
-            strSaveFileName += @"Annotations.csv";
+            OkDialog();
+        }
+
+        public void OkDialog()
+        {
+            string strSaveFileName = Path.GetFileNameWithoutExtension(DataSchema.SkylineWindow?.DocumentFilePath) + @"Annotations.csv";
             bool success;
             using (var dlg = new SaveFileDialog())
             {
                 dlg.FileName = strSaveFileName;
                 dlg.DefaultExt = TextUtil.EXT_CSV;
                 dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV);
-                dlg.InitialDirectory = Settings.Default.ExportDirectory;
+                dlg.InitialDirectory = Path.GetDirectoryName(DataSchema.SkylineWindow?.DocumentFilePath) ?? Settings.Default.ActiveDirectory;
                 dlg.OverwritePrompt = true;
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                 {

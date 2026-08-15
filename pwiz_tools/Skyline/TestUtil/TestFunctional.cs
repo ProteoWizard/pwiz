@@ -446,6 +446,20 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Whether a native file dialog is showing the given folder, read from its read-only "Address" element
+        /// (the address breadcrumb) the way an MCP client confirms a navigation. Trailing separator and case are
+        /// ignored: Windows paths are case-insensitive, and the shell reports the folder without a trailing
+        /// separator. Wrap in a <see cref="WaitForCondition(Func{bool}, string)"/>: a dialog populates the
+        /// element as it opens, and a navigation lands a short while after it is asked for.
+        /// </summary>
+        protected static bool NativeDlgShowsFolder(NativeFileDialog dlg, string folder)
+        {
+            var current = dlg.GetFormValue(@"Address");
+            return current != null &&
+                   current.TrimEnd('\\').Equals(folder.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
         /// Shows a native dialog and drives it with an action that runs on the UI (event) thread -- for a simple,
         /// single fire-and-forget gesture (e.g. <see cref="NativeFileDialog.EnterPath"/> then
         /// <see cref="NativeOpenFileDialog.Accept"/>). A gesture that has to interleave with the dialog's own modal

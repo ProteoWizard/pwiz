@@ -217,17 +217,12 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public override string GetExportDirectory()
         {
-            return Settings.Default.ExportDirectory;
+            return Path.GetDirectoryName(SkylineDataSchema.SkylineWindow?.DocumentFilePath) ?? Settings.Default.ActiveDirectory;
         }
 
         protected override string GetDefaultExportFilename(ViewInfo viewInfo)
         {
             return viewInfo.Name;
-        }
-
-        public override void SetExportDirectory(string value)
-        {
-            Settings.Default.ExportDirectory = value;
         }
 
         protected override IEnumerable<TabularFileFormat> ListAvailableExportFormats()

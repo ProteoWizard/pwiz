@@ -45,7 +45,6 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
@@ -4077,11 +4076,9 @@ namespace pwiz.Skyline
 
         public void ShowExportAnnotationsDlg()
         {
-            using (var exportAnnotationsDlg =
-                new ExportAnnotationsDlg(new SkylineDataSchema(this, DataSchemaLocalizer.INVARIANT)))
-            {
-                exportAnnotationsDlg.ShowDialog(this);
-            }
+            using var exportAnnotationsDlg = new ExportAnnotationsDlg(
+                new SkylineWindowDataSchema(this, DataSchemaLocalizer.INVARIANT));
+            exportAnnotationsDlg.ShowDialog(this);
         }
 
         public void ImportAnnotations(string filename)
@@ -4159,15 +4156,17 @@ namespace pwiz.Skyline
 
         private void importAnnotationsMenuItem_Click(object sender, EventArgs e)
         {
-            using (var dlg = new OpenFileDialog())
+            ShowImportAnnotationsDlg();
+        }
+
+        public void ShowImportAnnotationsDlg()
+        {
+            using var dlg = new OpenFileDialog();
+            dlg.DefaultExt = TextUtil.EXT_CSV;
+            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV);
+            dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath) ?? Settings.Default.ActiveDirectory;
+            if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                dlg.DefaultExt = TextUtil.EXT_CSV;
-                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV);
-                dlg.InitialDirectory = Settings.Default.ExportDirectory;
-                if (dlg.ShowDialog(this) != DialogResult.OK)
-                {
-                    return;
-                }
                 ImportAnnotations(dlg.FileName);
             }
         }

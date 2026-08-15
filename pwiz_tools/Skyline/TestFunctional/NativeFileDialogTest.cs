@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -178,7 +177,7 @@ namespace pwiz.SkylineTestFunctional
             // single type-and-open sticks and no re-type-until-it-holds loop is needed.
             dlg.EnterPath(folder);
             dlg.Accept();
-            WaitForCondition(() => DialogShowsFolder(dlg, folder),
+            WaitForCondition(() => NativeDlgShowsFolder(dlg, folder),
                 @"The Open dialog did not navigate to the requested folder.");
             WaitForCondition(() => string.IsNullOrEmpty(dlg.GetFormValue(@"File name")),
                 @"The Open dialog did not clear the file-name box after navigating.");
@@ -187,15 +186,6 @@ namespace pwiz.SkylineTestFunctional
             // dialog to go away here -- the RunLongNativeDlg this runs inside already does.
             dlg.EnterPath(quotedNames);
             dlg.Accept();
-        }
-
-        // Whether the Open dialog is showing the given folder -- read from its "Address" control with get_value, the
-        // way an MCP client confirms a navigation (trailing separator and case ignored).
-        private static bool DialogShowsFolder(NativeOpenFileDialog dlg, string folder)
-        {
-            var current = dlg.GetFormValue(@"Address");
-            return current != null &&
-                   current.TrimEnd('\\').Equals(folder.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
         }
 
         private static void AssertPngSignature(byte[] bytes)

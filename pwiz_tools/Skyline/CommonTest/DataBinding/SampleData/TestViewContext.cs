@@ -21,11 +21,6 @@ namespace CommonTest.DataBinding.SampleData
             return Directory.GetCurrentDirectory();
         }
 
-        public override void SetExportDirectory(string value)
-        {
-            
-        }
-
         public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons, Exception exception)
         {
             // ReSharper disable once LocalizableElement
