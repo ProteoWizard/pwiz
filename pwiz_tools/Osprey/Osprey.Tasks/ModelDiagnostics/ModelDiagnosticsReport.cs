@@ -225,19 +225,17 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // half is always built (FdpViews empty without an entrapment pool).
                 // These two steps shared a 71 s silence on the 82-file SEA-AD run of 2026-08-14,
                 // between the classification's [ENTRAPMENT] line and "finalized report" (#4571).
-                // Reported separately rather than as one block because they are very differently
-                // shaped - BuildPass2 walks every survivor observation (89,068,375 at 82 files)
-                // while the render is a single string build - so one line covering both would say
-                // nothing about which is the long one.
-                logInfo(string.Format(
-                    @"[MODEL-DIAGNOSTICS] building the pass-2 views over {0} file(s)...",
-                    perFileEntries.Count));
+                // BuildPass2 owns essentially all of it and carries its own per-card
+                // ProgressReporter; no heading is added here, because a reporter already prints
+                // one and then only as many percent lines as the elapsed time needs, while a
+                // heading at this call site would print unconditionally on every run forever.
+                // Measured 2026-08-15: the render that follows completes inside the same second
+                // it starts, so it gets no line at all.
                 data.Pass2 = ModelDiagnosticsData.BuildPass2(
                     perFileEntries, pass2Contributions, classByBaseId, pairByBaseId,
                     entrapmentRatio, config.RunFdr, config.FdrLevel,
                     BuildPrecursorMzLookup(libraryById));
 
-                logInfo(@"[MODEL-DIAGNOSTICS] rendering the report page...");
                 string outPath = RenderAndWrite(data, config);
                 // Consume the FirstPassFDR -> SecondPassFDR hand-off sidecar unconditionally
                 // once the report is finalized (deleting it in every path avoids

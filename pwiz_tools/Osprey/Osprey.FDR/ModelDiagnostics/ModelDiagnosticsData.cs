@@ -652,6 +652,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         }
 
         /// <summary>
+        /// Number of pass-2 cards <see cref="BuildPass2"/> reports progress across. A count
+        /// rather than a derived value because the reporter needs the total up front, and it
+        /// must be updated with the card list - a stale total shows a run stalling short of
+        /// 100% or jumping past it.
+        /// </summary>
+        private const int PASS2_CARD_COUNT = 6;
+
+        /// <summary>
         /// Build the complete pass-2 (final reported pool) bundle behind the report's
         /// top-level Pass 1 / Pass 2 switch. Called by the end-of-run writer
         /// (SecondPassFdrTask) with the post-compaction, second-pass-q-valued pool
@@ -683,25 +691,49 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             Func<uint, double> precursorMzByEntryId = null)
         {
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
-            var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                out _, out _);
 
-            var pass2 = new Pass2Data
+            // Reported per CARD, not per file (#4571). This is not one loop: it is six
+            // independent whole-pool builds, each of which walks every survivor observation
+            // (89,068,375 at 82 files), and together they were the long half of a 71 s silence
+            // between the classification's [ENTRAPMENT] line and "finalized report". A per-file
+            // reporter would have to live inside each build separately; the cards are the
+            // granularity that actually says WHICH one is slow, which is the question a reader
+            // has when the page takes a minute to appear.
+            //
+            // Written as sequential locals rather than an object initializer for that reason -
+            // an initializer cannot report between its members. Evaluation order is unchanged.
+            var pass2 = new Pass2Data();
+            // Declared out here because the structural half below reads it after the reporter
+            // scope closes.
+            List<Prec> precs;
+            using (var progress = new ProgressReporter(
+                       string.Format(@"Building the pass-2 diagnostics cards over {0} file(s)",
+                           perFileEntries.Count),
+                       PASS2_CARD_COUNT, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
+                precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
+                    out _, out _);
+                progress.Report(1);
+
                 // Q-driven half: available whenever a second pass produced reported
                 // q-values (retrain OR confidence transfer). Entrapment-independent
                 // except FdpViews (which is empty without an entrapment pool).
-                PerFile = BuildPerFile(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel),
-                IdYield = BuildIdYield(precs),
-                CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
-                    entrapmentRatio, runFdr, fdrLevel),
-                FdpViews = BuildPass2FdpViews(perFileEntries, classByBaseId, pairByBaseId, entrapmentRatio),
+                pass2.PerFile = BuildPerFile(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel);
+                progress.Report(2);
+                pass2.IdYield = BuildIdYield(precs);
+                progress.Report(3);
+                pass2.CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
+                    entrapmentRatio, runFdr, fdrLevel);
+                progress.Report(4);
+                pass2.FdpViews = BuildPass2FdpViews(perFileEntries, classByBaseId, pairByBaseId, entrapmentRatio);
+                progress.Report(5);
                 // Single-peak co-assignment on the REPORTED pool (issue #4522). Post-Stage-6, so
                 // it includes co-assignment reconciliation itself introduced; the pass-1 panel is
                 // the uncontaminated scoring picture and the two are meant to be read together.
-                CoAssignment = BuildCoAssignment(perFileEntries, classByBaseId, precursorMzByEntryId,
-                    runFdr, fdrLevel, 2, true),
-            };
+                pass2.CoAssignment = BuildCoAssignment(perFileEntries, classByBaseId, precursorMzByEntryId,
+                    runFdr, fdrLevel, 2, true);
+                progress.Report(6);
+            }
 
             // Structural half: only when the second pass retrained on the reported pool.
             // BuildModelPass2 returns null when contributions are null (transfer mode),
