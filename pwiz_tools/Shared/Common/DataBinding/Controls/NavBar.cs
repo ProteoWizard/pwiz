@@ -319,7 +319,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void NavBarButtonExportOnClick(object sender, EventArgs e)
         {
-            OnExport(this, e);
+            ShowExportReportFileDialog();
         }
 
         void OnEditView(object sender, EventArgs eventArgs)
@@ -369,7 +369,12 @@ namespace pwiz.Common.DataBinding.Controls
             ViewContext.ManageViews(this);
         }
 
-        void OnExport(object sender, EventArgs eventArgs)
+        /// <summary>
+        /// Shows the Save dialog for exporting the report the grid is currently showing, and writes the file if
+        /// the user accepts. This is what the Export button does, so a test can drive the real dialog by calling
+        /// it rather than by reaching through to the view context.
+        /// </summary>
+        public void ShowExportReportFileDialog()
         {
             ViewContext.Export(this, BindingListSource);
         }

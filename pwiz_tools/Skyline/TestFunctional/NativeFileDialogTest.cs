@@ -171,16 +171,16 @@ namespace pwiz.SkylineTestFunctional
             var quotedNames = string.Join(@" ", fileNames.Select(name => @"""" + name + @""""));
 
             // Navigate to the folder. Accepting a folder path makes the shell change into that folder and CLEAR the
-            // file-name box -- but that clear is ASYNCHRONOUS, landing a short while after the navigation. Confirm
-            // the arrival by reading the "Address" control, then wait for the box to actually go empty: that is the
-            // clear landing, and once it has, the names typed next cannot be wiped by a still-pending clear -- so a
-            // single type-and-open sticks and no re-type-until-it-holds loop is needed.
+            // file-name box -- but that clear is ASYNCHRONOUS, landing a short while after the navigation. So the
+            // box going empty is the signal that the navigation has LANDED: wait for that, then read the folder
+            // and assert it in one go (a wait on the folder itself would sit through a full timeout to report a
+            // navigation that went somewhere else). Once the clear has landed the names typed next cannot be wiped
+            // by a still-pending clear either, so a single type-and-open sticks with no retry loop.
             dlg.EnterPath(folder);
             dlg.Accept();
-            WaitForCondition(() => NativeDlgShowsFolder(dlg, folder),
-                @"The Open dialog did not navigate to the requested folder.");
-            WaitForCondition(() => string.IsNullOrEmpty(dlg.GetFormValue(@"File name")),
+            WaitForCondition(() => string.IsNullOrEmpty(dlg.GetFormValue(NativeFileDialog.FILE_NAME_FIELD)),
                 @"The Open dialog did not clear the file-name box after navigating.");
+            AssertNativeDlgFolder(folder, dlg, @"The Open dialog did not navigate to the requested folder.");
 
             // The box is empty and settled, so the names hold: type them and open in one go. Nothing waits for the
             // dialog to go away here -- the RunLongNativeDlg this runs inside already does.

@@ -433,30 +433,41 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Waits for a native dialog (a Win32 "#32770") of the given type to appear in this process and returns its
-        /// automation wrapper -- the native-dialog analog of <see cref="WaitForOpenForm{TDlg}(int)"/>. A test is the
-        /// driver of a native dialog, so the wait lives here in the test rather than baked into the dialog itself.
+        /// Waits for a native dialog (a Win32 "#32770") of the given type to appear in this process AND finish
+        /// populating, then returns its automation wrapper -- the native-dialog analog of
+        /// <see cref="WaitForOpenForm{TDlg}(int)"/>. A test is the driver of a native dialog, so the wait lives
+        /// here in the test rather than baked into the dialog itself.
+        ///
+        /// <para>The wait is on <see cref="NativeDialog.IsReadyToInspect"/>, not merely on the window existing:
+        /// a dialog is discoverable a moment before the shell has filled it in. Waiting for ready HERE, once, is
+        /// what lets everything downstream read the dialog and assert -- instead of polling until the value it
+        /// wants shows up, which cannot tell "not populated yet" from "wrong" and so pays a full timeout to
+        /// report a wrong answer it could have reported immediately.</para>
         /// </summary>
         protected static TDlg WaitForNativeDlg<TDlg>() where TDlg : NativeDialog
         {
             TDlg dlg = null;
             WaitForCondition(() => null != (dlg = NativeDialog.GetOpenDialogs(CancellationToken.None)
-                .OfType<TDlg>().FirstOrDefault()));
+                .OfType<TDlg>().FirstOrDefault(dialog => dialog.IsReadyToInspect)));
             return dlg;
         }
 
         /// <summary>
-        /// Whether a native file dialog is showing the given folder, read from its read-only "Address" element
-        /// (the address breadcrumb) the way an MCP client confirms a navigation. Trailing separator and case are
-        /// ignored: Windows paths are case-insensitive, and the shell reports the folder without a trailing
-        /// separator. Wrap in a <see cref="WaitForCondition(Func{bool}, string)"/>: a dialog populates the
-        /// element as it opens, and a navigation lands a short while after it is asked for.
+        /// Asserts that a native file dialog is showing the given folder. Reads once and fails immediately with
+        /// the folder the dialog is actually showing: the dialog handed to a <see cref="RunNativeDlg{TDlg}"/> or
+        /// <see cref="RunLongNativeDlg{TDlg}"/> exercise has already been waited for (see
+        /// <see cref="WaitForNativeDlg{TDlg}"/>), so there is nothing left to wait out. After driving a
+        /// NAVIGATION, wait for that to land first -- the file-name box going empty says the shell consumed the
+        /// path -- and then assert here.
+        ///
+        /// <para>Paths are compared with <see cref="PathEx.SamePath"/>: Windows paths are case-insensitive, and
+        /// the shell reports the folder without a trailing separator.</para>
         /// </summary>
-        protected static bool NativeDlgShowsFolder(NativeFileDialog dlg, string folder)
+        protected static void AssertNativeDlgFolder(string expectedFolder, NativeFileDialog dlg, string message)
         {
-            var current = dlg.GetFormValue(@"Address");
-            return current != null &&
-                   current.TrimEnd('\\').Equals(folder.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
+            var currentFolder = dlg.CurrentFolder;
+            if (!PathEx.SamePath(expectedFolder, currentFolder))
+                Assert.AreEqual(expectedFolder, currentFolder, message);
         }
 
         /// <summary>

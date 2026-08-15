@@ -63,9 +63,30 @@ namespace pwiz.Skyline.ToolsUI
                     ? new NativeTextBox(fileNameEdit, CancellationToken, FILE_NAME_FIELD)
                     : child;
             }
-            var addressBar = FindDescendant(ADDRESS_BAR_CLASS, ADDRESS_BAR_ID);
-            if (addressBar != IntPtr.Zero)
-                yield return new NativeAddressBar(addressBar, CancellationToken);
+            var addressBar = FindAddressBar();
+            if (addressBar != null)
+                yield return addressBar;
+        }
+
+        /// <summary>
+        /// The folder the dialog is showing, read from its address breadcrumb, or null before the shell has put
+        /// one there. Same value <see cref="NativeAddressBar"/> reports through GetControls, as a property, so a
+        /// driver can read it without walking the children.
+        /// </summary>
+        public string CurrentFolder => FindAddressBar()?.GetValueNow() as string;
+
+        /// <summary>
+        /// A file dialog is ready once its breadcrumb names a folder. The shell fills that in when it finishes
+        /// the navigation that also builds the file list and settles the file-name box, so everything a driver
+        /// reads is in place by then -- and until then the window exists but is showing nothing yet.
+        /// </summary>
+        public override bool IsReadyToInspect => !string.IsNullOrEmpty(CurrentFolder);
+
+        // The address breadcrumb element, or null until the shell has created it.
+        private NativeAddressBar FindAddressBar()
+        {
+            var hwnd = FindDescendant(ADDRESS_BAR_CLASS, ADDRESS_BAR_ID);
+            return hwnd == IntPtr.Zero ? null : new NativeAddressBar(hwnd, CancellationToken);
         }
 
         /// <summary>

@@ -69,6 +69,23 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>Every native dialog reports the one type; <see cref="DialogTypeName"/> says which kind.</summary>
         public const string TYPE_NAME = @"Dialog";
 
+        /// <summary>
+        /// Whether the dialog has finished opening far enough that reading it gives an answer worth believing.
+        /// A native dialog is DISCOVERABLE before it is populated -- its window exists and classifies while the
+        /// shell is still building its contents -- so a driver that reads one the moment it finds it can read a
+        /// state that was never shown to anyone.
+        ///
+        /// <para>A plain "#32770" (a message box) has nothing to populate: its controls are created with the
+        /// window, so it is ready as soon as it exists. <see cref="NativeFileDialog"/> overrides this, because
+        /// the shell browses to the dialog's folder after the window appears.</para>
+        ///
+        /// <para>This is the signal to wait on -- see <c>AbstractFunctionalTest.WaitForNativeDlg</c>, which does
+        /// the waiting once so that everything downstream can read and assert instead of polling for the value
+        /// it wants. Polling for the value cannot tell "not yet" from "wrong", so it turns a wrong value into a
+        /// full timeout; waiting for readiness first makes a wrong value fail at once, and say what it was.</para>
+        /// </summary>
+        public virtual bool IsReadyToInspect => true;
+
         /// <summary>The dialog window's caption.</summary>
         public override string Title => User32.GetWindowTextNoBlock(Hwnd);
 

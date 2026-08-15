@@ -93,7 +93,7 @@ namespace pwiz.SkylineTestFunctional
             var exportReportDlg = ShowExportReportDlg();
             RunLongNativeDlg<NativeSaveFileDialog>(exportReportDlg.OkDialog, dlg =>
             {
-                WaitForCondition(() => NativeDlgShowsFolder(dlg, _documentDir),
+                AssertNativeDlgFolder(_documentDir, dlg,
                     @"Export Report did not start in the document folder.");
                 dlg.EnterPath(reportPath);
                 dlg.DismissWithAcceptButton();
@@ -104,7 +104,7 @@ namespace pwiz.SkylineTestFunctional
             var exportReportDlgAgain = ShowExportReportDlg();
             RunLongNativeDlg<NativeSaveFileDialog>(exportReportDlgAgain.OkDialog, dlg =>
             {
-                WaitForCondition(() => NativeDlgShowsFolder(dlg, _documentDir),
+                AssertNativeDlgFolder(_documentDir, dlg,
                     @"Export Report started where the last report was written instead of the document folder.");
                 dlg.DismissWithCancelButton();
             });
@@ -134,11 +134,12 @@ namespace pwiz.SkylineTestFunctional
             var exportAnnotationsDlg = ShowDialog<ExportAnnotationsDlg>(SkylineWindow.ShowExportAnnotationsDlg);
             RunLongNativeDlg<NativeSaveFileDialog>(exportAnnotationsDlg.OkDialog, dlg =>
             {
-                WaitForCondition(() => NativeDlgShowsFolder(dlg, _documentDir),
+                AssertNativeDlgFolder(_documentDir, dlg,
                     @"Export Annotations did not start in the document folder.");
                 // The default file name is built from the document name, so it comes from the same path and
                 // goes missing in the same way if that path cannot be found.
-                AssertEx.AreEqual(DOCUMENT_NAME + @"Annotations.csv", dlg.GetFormValue(@"File name"),
+                AssertEx.AreEqual(DOCUMENT_NAME + @"Annotations.csv",
+                    dlg.GetFormValue(NativeFileDialog.FILE_NAME_FIELD),
                     @"Export Annotations did not name the file after the document.");
                 dlg.DismissWithCancelButton();
             });
@@ -152,7 +153,7 @@ namespace pwiz.SkylineTestFunctional
         {
             RunLongNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowImportAnnotationsDlg, dlg =>
             {
-                WaitForCondition(() => NativeDlgShowsFolder(dlg, _documentDir),
+                AssertNativeDlgFolder(_documentDir, dlg,
                     @"Import Annotations did not start in the document folder.");
                 dlg.DismissWithCancelButton();
             });
@@ -169,13 +170,12 @@ namespace pwiz.SkylineTestFunctional
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates));
             WaitForCondition(() => documentGrid.IsComplete);
             var navBar = documentGrid.NavBar;
-            RunLongNativeDlg<NativeSaveFileDialog>(
-                () => navBar.ViewContext.Export(navBar, navBar.BindingListSource), dlg =>
-                {
-                    WaitForCondition(() => NativeDlgShowsFolder(dlg, _documentDir),
-                        @"The Document Grid export did not start in the document folder.");
-                    dlg.DismissWithCancelButton();
-                });
+            RunLongNativeDlg<NativeSaveFileDialog>(navBar.ShowExportReportFileDialog, dlg =>
+            {
+                AssertNativeDlgFolder(_documentDir, dlg,
+                    @"The Document Grid export did not start in the document folder.");
+                dlg.DismissWithCancelButton();
+            });
             RunUI(() => SkylineWindow.ShowDocumentGrid(false));
         }
 
@@ -200,7 +200,7 @@ namespace pwiz.SkylineTestFunctional
             var exportReportDlg = ShowExportReportDlg();
             RunLongNativeDlg<NativeSaveFileDialog>(exportReportDlg.OkDialog, dlg =>
             {
-                WaitForCondition(() => NativeDlgShowsFolder(dlg, _otherDir),
+                AssertNativeDlgFolder(_otherDir, dlg,
                     @"Export Report from an unsaved document did not fall back to the active directory.");
                 dlg.DismissWithCancelButton();
             });
