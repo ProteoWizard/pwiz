@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Model.Localization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -45,6 +46,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         private readonly Protein _protein;
         private readonly CachedValues _cachedValues = new CachedValues();
+        private bool _siteDeterminingIonAnalyzerComputed;
+        private SiteDeterminingIonAnalyzer _siteDeterminingIonAnalyzer;
         public Peptide(SkylineDataSchema dataSchema, IdentityPath identityPath) : this(new Protein(dataSchema, identityPath.GetPathTo(0)), identityPath.Child)
         {
         }
@@ -131,8 +134,49 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [InvariantDisplayName("ModificationLocalizationGroup")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
+        public string ModificationLocalizationGroup
+        {
+            get
+            {
+                var analyzer = GetSiteDeterminingIonAnalyzer();
+                return analyzer?.LocalizationGroupKey;
+            }
+        }
+
+        [InvariantDisplayName("LocalizationIsomerCount")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public long? LocalizationIsomerCount
+        {
+            get
+            {
+                var analyzer = GetSiteDeterminingIonAnalyzer();
+                if (analyzer == null || !analyzer.CanLocalize)
+                    return null;
+                return analyzer.IsomerCount;
+            }
+        }
+
+        /// <summary>
+        /// Builds (and memoizes) the <see cref="SiteDeterminingIonAnalyzer"/> for this peptide so
+        /// the two localization columns can share a single analytic precompute. Returns null for
+        /// small molecules.
+        /// </summary>
+        private SiteDeterminingIonAnalyzer GetSiteDeterminingIonAnalyzer()
+        {
+            if (!_siteDeterminingIonAnalyzerComputed)
+            {
+                _siteDeterminingIonAnalyzerComputed = true;
+                if (!IsSmallMolecule())
+                    _siteDeterminingIonAnalyzer = new SiteDeterminingIonAnalyzer(SrmDocument.Settings, DocNode);
+            }
+            return _siteDeterminingIonAnalyzer;
+        }
+
         [Obsolete("use MoleculeName instead")]  // It's a molecule, not an ion
-        public string IonName 
+        public string IonName
         {
             get
             {
