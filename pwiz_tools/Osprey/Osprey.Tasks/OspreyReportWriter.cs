@@ -234,19 +234,30 @@ namespace pwiz.Osprey.Tasks
             // Per replicate: precursors + peptides passing RUN-level FDR in that file, and
             // an INDEPENDENT run-level protein FDR (its own parsimony + picked-protein FDR
             // on that replicate's detected peptides -- not a slice of the experiment set).
-            foreach (var kvp in perFileEntries)
+            // Reported because each iteration runs an INDEPENDENT parsimony + picked-protein FDR
+            // over the whole library for one replicate, so the loop costs roughly one protein-FDR
+            // pass per file - a 46 s silence at 82 files on the 2026-08-15 measurement, with only
+            // the caller's heading in front of it (#4571).
+            int runIdx = 0;
+            using (var progress = new ProgressReporter(
+                       string.Format(@"Per-replicate protein FDR over {0} run(s)", perFileEntries.Count),
+                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                CountPrecursorsPeptides(new[] { kvp }, level, config, runLevel: true,
-                    out int precursors, out int peptides);
-                int proteins = ProteinFdrEngine.CountPassingProteinGroups(
-                    new List<KeyValuePair<string, List<FdrEntry>>> { kvp }, fullLibrary, config, runLevel: true);
-                rows.Add(new[]
+                foreach (var kvp in perFileEntries)
                 {
-                    RunName(kvp.Key),
-                    precursors.ToString(CultureInfo.InvariantCulture),
-                    peptides.ToString(CultureInfo.InvariantCulture),
-                    proteins.ToString(CultureInfo.InvariantCulture),
-                });
+                    progress.Report(++runIdx);
+                    CountPrecursorsPeptides(new[] { kvp }, level, config, runLevel: true,
+                        out int precursors, out int peptides);
+                    int proteins = ProteinFdrEngine.CountPassingProteinGroups(
+                        new List<KeyValuePair<string, List<FdrEntry>>> { kvp }, fullLibrary, config, runLevel: true);
+                    rows.Add(new[]
+                    {
+                        RunName(kvp.Key),
+                        precursors.ToString(CultureInfo.InvariantCulture),
+                        peptides.ToString(CultureInfo.InvariantCulture),
+                        proteins.ToString(CultureInfo.InvariantCulture),
+                    });
+                }
             }
 
             // Experiment row: precursors + peptides passing EXPERIMENT-level FDR (a
