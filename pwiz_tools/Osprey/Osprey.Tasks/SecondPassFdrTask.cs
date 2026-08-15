@@ -388,8 +388,18 @@ namespace pwiz.Osprey.Tasks
             // and an unpatched record keeps whatever it held when the sidecar was written -
             // the ResetScores default for every entry Stage 6 rescored or gap-filled, since
             // RestorePass1Scalars no longer seeds this field.
+            // The patch and the report writer below shared a 125 s silence on the 82-file SEA-AD
+            // run of 2026-08-14, between "N protein groups pass ..." and the blib write (#4571).
+            // Both are per-file/per-run and therefore countable; reported separately because they
+            // are independently expensive - the patch rewrites one sidecar field per file, while
+            // WriteReports RE-RUNS protein FDR once per run for the per-replicate counts.
             if (AnyReconciledParquet(config))
+            {
+                ctx.LogInfo(string.Format(
+                    @"Patching the 2nd-pass protein q-value into {0} file sidecar(s)...",
+                    perFileEntries.Count));
                 Pass2FdrSidecar.PatchPass2ProteinQvalues(ctx, perFileEntries);
+            }
 
             // Cross-impl bisection dump (env-var-gated, no-op in production).
             if (ctx.Diagnostics?.DumpDetectedPeptides ?? false)
@@ -414,6 +424,9 @@ namespace pwiz.Osprey.Tasks
             // full per-file pool + library in hand.
             if (config.WriteProteinReport || config.WriteSummaryReport)
             {
+                ctx.LogInfo(string.Format(
+                    @"Writing the protein and summary reports ({0} run(s), protein FDR re-run per run)...",
+                    perFileEntries.Count));
                 OspreyReportWriter.WriteReports(result, perFileEntries, fullLibrary, config, ctx.LogInfo);
             }
         }
