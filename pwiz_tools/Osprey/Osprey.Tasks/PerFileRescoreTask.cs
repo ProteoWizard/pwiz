@@ -193,7 +193,13 @@ namespace pwiz.Osprey.Tasks
             // The Stage 6 handoff arm joins them: the streamed and resident arms are supposed
             // to write byte-identical reconciled parquets, and an in-place A/B that silently
             // adopted the other arm's outputs would report that identity without testing it.
+            // The sidecar format version belongs here too, not only in FirstPassFdrTask: this
+            // task WRITES the 2nd-pass sidecar, so a record-layout change (v3 -> v4) invalidates
+            // its output exactly as it invalidates the 1st-pass one. Without it, FirstPassFDR
+            // re-ran and rewrote v4 while this task and SecondPassFDR considered themselves
+            // valid against v3 files.
             return base.ValidityKey(ctx)
+                + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
@@ -255,7 +261,12 @@ namespace pwiz.Osprey.Tasks
             {
                 foreach (var inputFile in ctx.Config.InputFiles)
                 {
-                    if (File.Exists(FdrScoresSidecar.Pass2Path(inputFile)))
+                    // Presence is not readability. A bare File.Exists cannot see a version, so a
+                    // sidecar left by a build before the v3 -> v4 record change satisfied this
+                    // gate and made the WHOLE Stage 6 rescore a no-op - the run then finished
+                    // green carrying 1st-pass q-values into the picked-protein FDR and the .blib.
+                    if (FdrScoresSidecar.IsCurrentFormat(FdrScoresSidecar.Pass2Path(inputFile),
+                                                         FdrScoresSidecar.Pass.SecondPass))
                     {
                         anyPass2Present = true;
                         break;
@@ -467,7 +478,7 @@ namespace pwiz.Osprey.Tasks
             if (bundle != null)
             {
                 // First-pass protein FDR BEFORE compaction. The 1st-pass FDR
-                // sidecar v3 already carries RunProteinQvalue from the original
+                // sidecar v3 already carries ExperimentProteinQvalue from the original
                 // straight-through pipeline, but Rust pipeline.rs:4292 (gated by
                 // `!can_skip_fdr || config.expect_reconciled_input`) recomputes
                 // it inline in the --task SecondPassFDR path. The recompute uses the
@@ -476,8 +487,8 @@ namespace pwiz.Osprey.Tasks
                 // upstream rebuild has nudged peptide q-values or score values
                 // even at the ULP level). RescoreCompaction below now retains the
                 // persisted global first-pass base_id set and does NOT consult
-                // RunProteinQvalue, so this recompute no longer affects the
-                // compacted set; it is kept to hold RunProteinQvalue byte-consistent
+                // ExperimentProteinQvalue, so this recompute no longer affects the
+                // compacted set; it is kept to hold ExperimentProteinQvalue byte-consistent
                 // with the straight-through pipeline for the downstream 2nd-pass
                 // protein FDR and cross-impl parity (before recon-v3 read the
                 // persisted set, omitting it diverged the post-compaction set from
@@ -511,7 +522,7 @@ namespace pwiz.Osprey.Tasks
                 //     decoy side comes from q-gated detected peptides either way), so the skip
                 //     is a conservative choice, not a bug fix. It moves 740 records (0.28%)
                 //     upward and changes no output.
-                //   * That the 1st-pass sidecar's RunProteinQvalue is "what the straight-through
+                //   * That the 1st-pass sidecar's ExperimentProteinQvalue is "what the straight-through
                 //     pipeline computed". It is not: the join node's value differs from
                 //     straight-through for 12.46% of records (1.57% at 82 files), always lower.
                 //     That divergence is PRE-EXISTING - master's routing differs by 12.74% - and

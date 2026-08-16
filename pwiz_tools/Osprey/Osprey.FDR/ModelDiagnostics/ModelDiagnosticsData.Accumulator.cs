@@ -142,6 +142,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 _entExpSets = NewSets(_nFiles);
             }
 
+            /// <summary>
+            /// The entrapment classification this accumulator was built with, so a sibling panel
+            /// computed outside the streamed fold - the pass-1 peak co-assignment source, which
+            /// reads apex RT off the FDR sidecars rather than the score pass - classifies rows
+            /// identically without rebuilding it. Worth exposing rather than recomputing:
+            /// classifying the searched library runs for minutes at 6.3M entries.
+            /// </summary>
+            public IReadOnlyDictionary<uint, EntrapmentClass> ClassByBaseId => _classByBaseId;
+
             private static List<HashSet<string>> NewSets(int n)
             {
                 var list = new List<HashSet<string>>(n);
