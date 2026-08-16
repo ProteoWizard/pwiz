@@ -652,12 +652,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         }
 
         /// <summary>
-        /// Number of pass-2 cards <see cref="BuildPass2"/> reports progress across. A count
-        /// rather than a derived value because the reporter needs the total up front, and it
-        /// must be updated with the card list - a stale total shows a run stalling short of
-        /// 100% or jumping past it.
+        /// Cards <see cref="BuildPass2"/> always builds, and the extra ones it builds only when
+        /// the second pass retrained. Counts rather than derived values because the reporter
+        /// needs its total up front; keep them in step with the <c>Report</c> calls, which use
+        /// <c>++cardIdx</c> so only the totals are hand-maintained. A stale total shows a run
+        /// stalling short of 100% or, since <see cref="ProgressReporter"/> does not clamp,
+        /// printing past it.
         /// </summary>
-        private const int PASS2_CARD_COUNT = 6;
+        private const int PASS2_BASE_CARDS = 6;
+
+        private const int PASS2_STRUCTURAL_CARDS = 3;
 
         /// <summary>
         /// Build the complete pass-2 (final reported pool) bundle behind the report's
@@ -703,55 +707,68 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // Written as sequential locals rather than an object initializer for that reason -
             // an initializer cannot report between its members. Evaluation order is unchanged.
             var pass2 = new Pass2Data();
-            // Declared out here because the structural half below reads it after the reporter
-            // scope closes.
-            List<Prec> precs;
-            // The heading counts CARDS, not files, because that is what the total is: a percent
-            // here means "1 of 6 cards", and labelling it with the file count would invite the
-            // reader to extrapolate a completion time from unequal-cost units.
-            using (var progress = new ProgressReporter(
-                       string.Format(@"Building {0} pass-2 diagnostics card(s)", PASS2_CARD_COUNT),
-                       PASS2_CARD_COUNT, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
-            {
-                // Indented one level: this reporter nests inside the card reporter above, and
-                // without it the two percent streams print at the same column - the inner one
-                // reaching 100% immediately before the outer prints 16%.
-                precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                    out _, out _, @"  ");
-                progress.Report(1);
 
-                // Q-driven half: available whenever a second pass produced reported
-                // q-values (retrain OR confidence transfer). Entrapment-independent
-                // except FdpViews (which is empty without an entrapment pool).
-                pass2.PerFile = BuildPerFile(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel);
-                progress.Report(2);
-                pass2.IdYield = BuildIdYield(precs);
-                progress.Report(3);
-                pass2.CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
-                    entrapmentRatio, runFdr, fdrLevel);
-                progress.Report(4);
-                // Reuses the reduction computed for the ID-yield card above rather than
-                // recomputing an identical one from the same inputs.
-                pass2.FdpViews = BuildPass2FdpViews(precs, entrapmentRatio);
-                progress.Report(5);
-                // Single-peak co-assignment on the REPORTED pool (issue #4522). Post-Stage-6, so
-                // it includes co-assignment reconciliation itself introduced; the pass-1 panel is
-                // the uncontaminated scoring picture and the two are meant to be read together.
-                pass2.CoAssignment = BuildCoAssignment(perFileEntries, classByBaseId, precursorMzByEntryId,
-                    runFdr, fdrLevel, 2, true);
-                progress.Report(6);
-            }
+            // The total covers the STRUCTURAL cards too when they will run, and they are inside
+            // the same reporter. Reporting only the q-driven six printed "100%" and then left
+            // BuildModelPass2 and BuildWinFraction - both whole-pool walks - running silently
+            // behind a completed bar, which is the gap #4571 exists to remove wearing a disguise.
+            // BuildModelPass2 returns null iff contributions are null (its first statement), so
+            // this flag predicts the structural half exactly; the guard below tests Model for the
+            // same condition rather than trusting the two to stay in step.
+            bool structural = pass2Contributions != null;
+            int cards = PASS2_BASE_CARDS + (structural ? PASS2_STRUCTURAL_CARDS : 0);
+            // NOT `using`d, matching LibraryDeduplicator: Dispose forces a final 100% from the
+            // finally block, and WritePass2AndFinalize catches and logs our exception as one
+            // line - so a card that threw would read "all cards done" immediately followed by
+            // "pass-2 enrichment failed". The last Report on the success path prints 100% anyway.
+            // The heading counts CARDS because that is what the total is; labelling it with the
+            // file count would invite a completion estimate from unequal-cost units.
+            int cardIdx = 0;
+            var progress = new ProgressReporter(
+                string.Format(@"Building {0} pass-2 diagnostics card(s)", cards),
+                cards, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
-            // Structural half: only when the second pass retrained on the reported pool.
-            // BuildModelPass2 returns null when contributions are null (transfer mode),
-            // which leaves DensityRatio / WinFraction null too -- the report's structural
-            // cards then show their n/a note under the top-level Pass 2 mode.
-            pass2.Model = BuildModelPass2(perFileEntries, pass2Contributions, classByBaseId, pairByBaseId);
+            // Indented one level: this reporter nests inside the card reporter, and without it
+            // the two percent streams print at the same column - the inner one reaching 100%
+            // immediately before the outer prints its next card.
+            var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
+                out _, out _, @"  ");
+            progress.Report(++cardIdx);
+
+            // Q-driven half: available whenever a second pass produced reported
+            // q-values (retrain OR confidence transfer). Entrapment-independent
+            // except FdpViews (which is empty without an entrapment pool).
+            pass2.PerFile = BuildPerFile(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel);
+            progress.Report(++cardIdx);
+            pass2.IdYield = BuildIdYield(precs);
+            progress.Report(++cardIdx);
+            pass2.CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
+                entrapmentRatio, runFdr, fdrLevel);
+            progress.Report(++cardIdx);
+            // Reuses the reduction computed for the ID-yield card above rather than
+            // recomputing an identical one from the same inputs.
+            pass2.FdpViews = BuildPass2FdpViews(precs, entrapmentRatio);
+            progress.Report(++cardIdx);
+            // Single-peak co-assignment on the REPORTED pool (issue #4522). Post-Stage-6, so
+            // it includes co-assignment reconciliation itself introduced; the pass-1 panel is
+            // the uncontaminated scoring picture and the two are meant to be read together.
+            pass2.CoAssignment = BuildCoAssignment(perFileEntries, classByBaseId, precursorMzByEntryId,
+                runFdr, fdrLevel, 2, true);
+            progress.Report(++cardIdx);
+
+            // Structural half: only when the second pass retrained on the reported pool. Null
+            // contributions (transfer mode) leave Model, DensityRatio and WinFraction null and
+            // the report's structural cards show their n/a note. Takes the reduction computed
+            // above; it used to recompute a bit-identical one from the same inputs.
+            pass2.Model = BuildModelPass2(pass2Contributions, precs);
             if (pass2.Model != null)
             {
+                progress.Report(++cardIdx);
                 bool hasEntrapment = precs.Any(p => p.Class == EntrapmentClass.PTarget);
                 pass2.DensityRatio = BuildDensityRatio(pass2.Model.Scores, hasEntrapment);
+                progress.Report(++cardIdx);
                 pass2.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
+                progress.Report(++cardIdx);
             }
             return pass2;
         }
@@ -850,8 +867,23 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             if (contributions == null)
                 return null;
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
-            var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                out _, out _);
+            return BuildModelPass2(contributions,
+                ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
+                    out _, out _));
+        }
+
+        /// <summary>
+        /// The same card from an ALREADY-reduced precursor list, so a caller holding one does not
+        /// pay for the reduction again. <see cref="BuildPass2"/> is that caller: it reduces once
+        /// for the ID-yield card and used to re-derive a bit-identical reduction here from the
+        /// same inputs - the same ~16 s / 89 M-observation walk at 82 files, O(observations), so
+        /// ~32 s at 163. Sharing is safe for the reasons given on
+        /// <see cref="BuildPass2FdpViews(List{Prec}, double)"/>.
+        /// </summary>
+        private static ModelPass BuildModelPass2(FeatureContributions contributions, List<Prec> precs)
+        {
+            if (contributions == null)
+                return null;
             return new ModelPass
             {
                 Composite = contributions.Composite,
