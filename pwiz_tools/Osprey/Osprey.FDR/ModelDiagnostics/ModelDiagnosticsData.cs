@@ -946,9 +946,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                        string.Format(@"Reducing {0} file(s) to best-per-precursor", perFileEntries.Count),
                        perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-            foreach (var kvp in perFileEntries)
-            {
-                progress.Report(++reduceIdx);
+                foreach (var kvp in perFileEntries)
+                {
+                    progress.Report(++reduceIdx);
                     foreach (var e in kvp.Value)
                     {
                         uint baseId = e.EntryId & BASE_ID_MASK;

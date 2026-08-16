@@ -594,9 +594,9 @@ namespace pwiz.Osprey.Tasks
                        string.Format(@"Seeding pass-1 scalars from {0} file(s)", perFileEntries.Count),
                        perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-            foreach (var kvp in perFileEntries)
-            {
-                progress.Report(++restoreIdx);
+                foreach (var kvp in perFileEntries)
+                {
+                    progress.Report(++restoreIdx);
                     if (!inputByFileName.TryGetValue(kvp.Key, out string inputFile))
                         continue;
                     string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
@@ -722,11 +722,11 @@ namespace pwiz.Osprey.Tasks
                        string.Format(@"Patching pass-2 protein q into {0} sidecar(s)", perFileEntries.Count),
                        perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-            foreach (var kvp in perFileEntries)
-            {
-                progress.Report(++patchIdx);
-                if (!inputByName.TryGetValue(kvp.Key, out string inputFile))
-                    continue;
+                foreach (var kvp in perFileEntries)
+                {
+                    progress.Report(++patchIdx);
+                    if (!inputByName.TryGetValue(kvp.Key, out string inputFile))
+                        continue;
                     string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
                     // Two gates, deliberately, because ABSENT and UNUSABLE are different outcomes
                     // here and IsCurrentFormat alone cannot tell them apart (it is false for both).
