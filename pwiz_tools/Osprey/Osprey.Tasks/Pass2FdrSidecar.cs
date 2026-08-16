@@ -585,10 +585,12 @@ namespace pwiz.Osprey.Tasks
             // every file's ENTIRE 1st-pass sidecar - the PRE-compaction pool, 345,024,871 records
             // at 82 files, not the 89 M survivors - and logged nothing while doing it. On the
             // 82-file SEA-AD runs of 2026-08-12/14 that was the 130-141 s gap, and on the
-            // --task SecondPassFDR leg the same step is a 127 s gap. Neither of the two lines that
-            // bracket it reaches a normal run: the "N/M file(s) have no precomputed second-pass
-            // FDR scores" heading is LogVerbose, and the swRestore duration goes out as a
-            // [STAGE-WALL] line, which OspreyOutput filters unless --perf-stats.
+            // --task SecondPassFDR leg the same step is a 127 s gap. It ran unbracketed: the
+            // "N/M file(s) have no precomputed second-pass FDR scores" heading above was
+            // LogVerbose (this change promotes it to LogInfo, so it is now visible), and the
+            // swRestore duration goes out as a [STAGE-WALL] line, which OspreyOutput.IsStatLine
+            // filters unless --perf-stats. A heading alone would not cover this anyway - the
+            // step is O(records) and the silence is INSIDE it.
             int restoreIdx = 0;
             using (var progress = new ProgressReporter(
                        string.Format(@"Seeding pass-1 scalars from {0} file(s)", perFileEntries.Count),

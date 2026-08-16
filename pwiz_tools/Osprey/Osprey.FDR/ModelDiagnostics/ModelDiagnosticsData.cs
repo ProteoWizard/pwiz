@@ -706,13 +706,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // Declared out here because the structural half below reads it after the reporter
             // scope closes.
             List<Prec> precs;
+            // The heading counts CARDS, not files, because that is what the total is: a percent
+            // here means "1 of 6 cards", and labelling it with the file count would invite the
+            // reader to extrapolate a completion time from unequal-cost units.
             using (var progress = new ProgressReporter(
-                       string.Format(@"Building the pass-2 diagnostics cards over {0} file(s)",
-                           perFileEntries.Count),
+                       string.Format(@"Building {0} pass-2 diagnostics card(s)", PASS2_CARD_COUNT),
                        PASS2_CARD_COUNT, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
+                // Indented one level: this reporter nests inside the card reporter above, and
+                // without it the two percent streams print at the same column - the inner one
+                // reaching 100% immediately before the outer prints 16%.
                 precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                    out _, out _);
+                    out _, out _, @"  ");
                 progress.Report(1);
 
                 // Q-driven half: available whenever a second pass produced reported
@@ -886,11 +891,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// reduction of the same inputs - ~16 s duplicated at 82 files on the 2026-08-15
         /// measurement, and it is O(survivor observations), so ~32 s at 163 files.
         ///
-        /// <para>Sharing the list is safe because both consumers only READ it:
+        /// <para>Sharing the list is safe for two independent reasons, and the stronger one is
+        /// the type: <c>Prec</c> is a <c>struct</c>, so <c>List&lt;Prec&gt;</c> hands every
+        /// consumer a copy and one card cannot write through to another however it is used.
+        /// Behaviour also does not depend on that - both consumers only READ:
         /// <see cref="BuildIdYield"/> projects into new collections, and
         /// <see cref="BuildFdpView"/> sorts the double lists it extracts rather than the input.
-        /// Neither mutates a <c>Prec</c>, which matters because <c>Prec</c> is a reference type -
-        /// were either to write through, this would silently couple two cards.</para>
+        /// If <c>Prec</c> ever becomes a class, the value-copy guarantee disappears and only the
+        /// read-only property is left holding this up - re-check both consumers then.</para>
         /// </summary>
         private static List<FdpView> BuildPass2FdpViews(List<Prec> precs, double entrapmentRatio)
         {
@@ -931,7 +939,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, uint> pairByBaseId,
             bool haveManifest,
-            out int nWithClass, out int nWithoutClass)
+            out int nWithClass, out int nWithoutClass,
+            string indent = "")
         {
             var best = new Dictionary<string, Prec>(StringComparer.Ordinal);
             int wc = 0, woc = 0;
@@ -944,7 +953,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             int reduceIdx = 0;
             using (var progress = new ProgressReporter(
                        string.Format(@"Reducing {0} file(s) to best-per-precursor", perFileEntries.Count),
-                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                       perFileEntries.Count, indent, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in perFileEntries)
                 {

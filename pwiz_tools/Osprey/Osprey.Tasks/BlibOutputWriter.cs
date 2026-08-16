@@ -129,10 +129,13 @@ namespace pwiz.Osprey.Tasks
             var intBlobs = new byte[blibN][];
             var numPeaks = new int[blibN];
             // Reported because per-spectrum zlib dominates the blib write and ran silent: on the
-            // 82-file SEA-AD run this pass and the emission below shared a 47 s gap ending at
-            // "Wrote 51597 library spectra". The surrounding [COUNT] lines cannot serve here -
-            // OspreyOutput.IsMachineParseable filters them out of normal output, so they appear
-            // only under --perf-stats (the same trap Calibrator.cs:1564 records).
+            // 82-file SEA-AD run this pass and the emission below were the bulk of a 47 s gap
+            // ending at "Wrote 51597 library spectra". They are not all of it - Commit,
+            // WriteMetadata and FinalizeDatabase run after the emission scope closes and are
+            // still uninstrumented. The surrounding [COUNT] lines cannot serve here:
+            // OspreyOutput.IsStatLine filters them out of normal output, so they appear only
+            // under --perf-stats (the same trap Calibrator.cs:1564 records, where the API is
+            // misnamed IsMachineParseable).
             int precompressed = 0;
             using (var progress = new ProgressReporter(
                        string.Format(@"Compressing {0} library spectra for the blib", blibN),
@@ -261,19 +264,19 @@ namespace pwiz.Osprey.Tasks
                     WriteRetentionTimes(writer, refId, fileName, observations,
                         sourceFileIds, sharedBounds, fdrThreshold);
 
-                    // Osprey extension tables — one row per RefSpectra each,
+                    // Osprey extension tables - one row per RefSpectra each,
                     // mirroring Rust pipeline.rs:6255-6272. Best-run-only for
                     // OspreyPeakBoundaries + OspreyRunScores; experiment-level for
                     // OspreyExperimentScores. The 0.0 fields are the same "not yet
                     // plumbed through Stage 7 plan entries" placeholders Rust writes.
                     writer.AddPeakBoundaries(refId, fileName,
                         sharedStart, sharedEnd, sharedApex,
-                        0.0, // ApexIntensity — matches Rust's apex_coefficient placeholder
+                        0.0, // ApexIntensity - matches Rust's apex_coefficient placeholder
                         entry.BoundsArea);
                     writer.AddRunScores(refId, fileName,
                         entry.EffectiveRunQvalue(FdrLevel.Both),
-                        0.0, // DiscriminantScore — matches Rust's dot_product placeholder
-                        0.0); // PosteriorErrorProb — matches Rust's PEP placeholder
+                        0.0, // DiscriminantScore - matches Rust's dot_product placeholder
+                        0.0); // PosteriorErrorProb - matches Rust's PEP placeholder
                     writer.AddExperimentScores(refId,
                         scoreQvalue, // Same value as RefSpectra.score
                         nRunsDetected,
