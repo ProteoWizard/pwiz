@@ -83,7 +83,7 @@ namespace pwiz.Common.SystemUtil
             {
                 using (var worker = new QueueWorker<IntHolder>(null, (h, i) => localBody(h.TheInt)))
                 {
-                    worker.RunAsync(GetThreadCount(maxThreads ?? Math.Min(count, MaxThreadCount)), threadName ?? nameof(ParallelEx));
+                    worker.RunAsync(GetThreadCount(maxThreads ?? count), threadName ?? nameof(ParallelEx));
                     for (int i = fromInclusive; i < toExclusive; i++)
                     {
                         if (worker.Exception != null)
