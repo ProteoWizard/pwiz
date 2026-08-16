@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Model-diagnostics spot-check capture + comparison for the Osprey regression
     harness.
