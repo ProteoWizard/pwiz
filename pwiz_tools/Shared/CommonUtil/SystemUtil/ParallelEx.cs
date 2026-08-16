@@ -49,17 +49,13 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public static int? MaxThreadCountOverride { get; set; }
 
-        private static int MaxThreadCount
-        {
-            get { return MaxThreadCountOverride ?? DEFAULT_MAX_THREAD_COUNT; }
-        }
-
         public static int GetThreadCount(int? maxThreads = null)
         {
             if (SINGLE_THREADED)
                 return 1;
-            int threadCount = Environment.ProcessorCount;
-            int maxThreadCount = maxThreads ?? MaxThreadCount; // Trial with maximum of 8
+            
+            int threadCount = MaxThreadCountOverride ?? Environment.ProcessorCount;
+            int maxThreadCount = maxThreads ?? MaxThreadCountOverride ?? DEFAULT_MAX_THREAD_COUNT;
             if (threadCount > maxThreadCount)
                 threadCount = maxThreadCount;
             return threadCount;
