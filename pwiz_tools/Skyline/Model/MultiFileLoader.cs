@@ -133,6 +133,11 @@ namespace pwiz.Skyline.Model
                         break;
 
                     case ImportResultsSimultaneousFileOptions.many: // Many is 1/2 logical processors (i.e. 4 for an i7)
+                        // A user-specified maximum replaces the calculation entirely: it is returned as is,
+                        // without being lowered for the GC mode or balanced against the file count
+                        var maxSimultaneousFileImports = Settings.Default.MaxSimultaneousFileImports;
+                        if (maxSimultaneousFileImports > 0)
+                            return maxSimultaneousFileImports;
                         loadingThreads = Math.Max(2, processorCount / 2); // Min of 2, because you really expect more than 1
                         break;
                 }

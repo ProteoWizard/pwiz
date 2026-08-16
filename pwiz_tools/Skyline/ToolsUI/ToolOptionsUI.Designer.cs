@@ -54,6 +54,10 @@ namespace pwiz.Skyline.ToolsUI
             this.labelDisplayLanguage = new System.Windows.Forms.Label();
             this.listBoxLanguages = new System.Windows.Forms.ListBox();
             this.tabMisc = new System.Windows.Forms.TabPage();
+            this.lblMaxThreadCount = new System.Windows.Forms.Label();
+            this.tbxMaxThreadCount = new System.Windows.Forms.TextBox();
+            this.lblMaxSimultaneousFileImports = new System.Windows.Forms.Label();
+            this.tbxMaxSimultaneousFileImports = new System.Windows.Forms.TextBox();
             this.tbxSettingsFilePath = new System.Windows.Forms.TextBox();
             this.lblSettingsPath = new System.Windows.Forms.Label();
             this.btnResetSettings = new System.Windows.Forms.Button();
@@ -257,6 +261,10 @@ namespace pwiz.Skyline.ToolsUI
             this.tabMisc.Controls.Add(this.comboCompactFormatOption);
             this.tabMisc.Controls.Add(this.lblCompactDocumentFormat);
             this.tabMisc.Controls.Add(this.checkBoxShowWizard);
+            this.tabMisc.Controls.Add(this.lblMaxThreadCount);
+            this.tabMisc.Controls.Add(this.tbxMaxThreadCount);
+            this.tabMisc.Controls.Add(this.lblMaxSimultaneousFileImports);
+            this.tabMisc.Controls.Add(this.tbxMaxSimultaneousFileImports);
             resources.ApplyResources(this.tabMisc, "tabMisc");
             this.tabMisc.Name = "tabMisc";
             this.tabMisc.UseVisualStyleBackColor = true;
@@ -296,7 +304,27 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.checkBoxShowWizard, "checkBoxShowWizard");
             this.checkBoxShowWizard.Name = "checkBoxShowWizard";
             this.checkBoxShowWizard.UseVisualStyleBackColor = true;
-            // 
+            //
+            // lblMaxThreadCount
+            //
+            resources.ApplyResources(this.lblMaxThreadCount, "lblMaxThreadCount");
+            this.lblMaxThreadCount.Name = "lblMaxThreadCount";
+            //
+            // tbxMaxThreadCount
+            //
+            resources.ApplyResources(this.tbxMaxThreadCount, "tbxMaxThreadCount");
+            this.tbxMaxThreadCount.Name = "tbxMaxThreadCount";
+            //
+            // lblMaxSimultaneousFileImports
+            //
+            resources.ApplyResources(this.lblMaxSimultaneousFileImports, "lblMaxSimultaneousFileImports");
+            this.lblMaxSimultaneousFileImports.Name = "lblMaxSimultaneousFileImports";
+            //
+            // tbxMaxSimultaneousFileImports
+            //
+            resources.ApplyResources(this.tbxMaxSimultaneousFileImports, "tbxMaxSimultaneousFileImports");
+            this.tbxMaxSimultaneousFileImports.Name = "tbxMaxSimultaneousFileImports";
+            //
             // tabDisplay
             // 
             this.tabDisplay.Controls.Add(this.comboColorScheme);
@@ -338,6 +366,7 @@ namespace pwiz.Skyline.ToolsUI
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // ToolOptionsUI
             // 
@@ -380,6 +409,10 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.ListBox listboxServers;
         private System.Windows.Forms.TabPage tabMisc;
+        private System.Windows.Forms.Label lblMaxThreadCount;
+        private System.Windows.Forms.TextBox tbxMaxThreadCount;
+        private System.Windows.Forms.Label lblMaxSimultaneousFileImports;
+        private System.Windows.Forms.TextBox tbxMaxSimultaneousFileImports;
         private System.Windows.Forms.TabPage tabLanguage;
         private System.Windows.Forms.ListBox listBoxLanguages;
         private System.Windows.Forms.Label labelDisplayLanguage;

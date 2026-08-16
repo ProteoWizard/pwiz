@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using Grpc.Core;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -97,6 +98,9 @@ namespace pwiz.Skyline.ToolsUI
             }
             comboCompactFormatOption.Items.AddRange(CompactFormatOption.ALL_VALUES.ToArray());
             comboCompactFormatOption.SelectedItem = CompactFormatOption.FromSettings();
+
+            MaxThreadCount = SettingToOptionalCount(Settings.Default.MaxThreadCount);
+            MaxSimultaneousFileImports = SettingToOptionalCount(Settings.Default.MaxSimultaneousFileImports);
 
             var iModels = KoinaIntensityModel.Models.ToList();
             iModels.Insert(0, string.Empty);
@@ -318,6 +322,10 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 Settings.Default.CurrentColorScheme = (string) comboColorScheme.SelectedItem;
 
+                Settings.Default.MaxThreadCount = OptionalCountToSetting(MaxThreadCount);
+                Settings.Default.MaxSimultaneousFileImports = OptionalCountToSetting(MaxSimultaneousFileImports);
+                Program.ApplyMaxThreadCount();
+
                 bool koinaSettingsValidBefore = KoinaHelpers.KoinaSettingsValid;
                 Settings.Default.KoinaIntensityModel = (string) intensityModelCombo.SelectedItem;
                 Settings.Default.KoinaRetentionTimeModel = (string) iRTModelCombo.SelectedItem;
@@ -328,8 +336,79 @@ namespace pwiz.Skyline.ToolsUI
             base.OnClosed(e);
         }
 
+        /// <summary>
+        /// Smallest and largest values accepted for the optional thread and file count settings
+        /// </summary>
+        public const int MIN_COUNT = 1;
+        public const int MAX_COUNT = 1024;
+
+        /// <summary>
+        /// The "Max threads" text box, null when it is blank
+        /// </summary>
+        public int? MaxThreadCount
+        {
+            get { return OptionalCountFromTextBox(tbxMaxThreadCount); }
+            set { tbxMaxThreadCount.Text = OptionalCountToTextBox(value); }
+        }
+
+        /// <summary>
+        /// The "Max simultaneous file imports" text box, null when it is blank
+        /// </summary>
+        public int? MaxSimultaneousFileImports
+        {
+            get { return OptionalCountFromTextBox(tbxMaxSimultaneousFileImports); }
+            set { tbxMaxSimultaneousFileImports.Text = OptionalCountToTextBox(value); }
+        }
+
+        private static int? OptionalCountFromTextBox(TextBox textBox)
+        {
+            return int.TryParse(textBox.Text, out int count) ? (int?) count : null;
+        }
+
+        private static string OptionalCountToTextBox(int? count)
+        {
+            return count?.ToString(CultureInfo.CurrentCulture) ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Settings store these counts as an integer, where zero means the text box is blank
+        /// </summary>
+        private static int? SettingToOptionalCount(int setting)
+        {
+            return setting > 0 ? (int?) setting : null;
+        }
+
+        private static int OptionalCountToSetting(int? count)
+        {
+            return count ?? 0;
+        }
+
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            // btnOK closes the dialog through its DialogResult, so undo that when something is invalid
+            if (!ValidateOptionalCounts())
+                DialogResult = DialogResult.None;
+        }
+
+        private bool ValidateOptionalCounts()
+        {
+            var helper = new MessageBoxHelper(this);
+            // Both counts are optional, so only a text box with something in it has to be a valid number
+            return ValidateOptionalCount(helper, tbxMaxThreadCount) &&
+                   ValidateOptionalCount(helper, tbxMaxSimultaneousFileImports);
+        }
+
+        private static bool ValidateOptionalCount(MessageBoxHelper helper, TextBox textBox)
+        {
+            if (string.IsNullOrWhiteSpace(textBox.Text))
+                return true;
+            return helper.ValidateNumberTextBox(textBox, MIN_COUNT, MAX_COUNT, out _);
+        }
+
         public void OkDialog()
         {
+            if (!ValidateOptionalCounts())
+                return;
             DialogResult = DialogResult.OK;
         }
 

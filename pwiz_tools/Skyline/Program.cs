@@ -739,7 +739,19 @@ namespace pwiz.Skyline
                     Settings.Default.ShowHeatmapFullScanSeeded = true;
                     Settings.Default.Save();
                 }
+
+                ApplyMaxThreadCount();
             }
+        }
+
+        /// <summary>
+        /// Pushes the user's "Max threads" setting into <see cref="ParallelEx"/>, which lives in a library
+        /// that cannot see the Skyline settings. Called at startup and again whenever the setting changes.
+        /// </summary>
+        public static void ApplyMaxThreadCount()
+        {
+            int maxThreadCount = Settings.Default.MaxThreadCount;
+            ParallelEx.MaxThreadCountOverride = maxThreadCount > 0 ? (int?) maxThreadCount : null;
         }
 
         /// <summary>

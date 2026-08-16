@@ -2253,7 +2253,40 @@ namespace pwiz.Skyline.Properties {
                 this["ImportResultsSimultaneousFiles"] = value;
             }
         }
-        
+
+        /// <summary>
+        /// Maximum number of threads the parallel helpers may use, replacing their built-in default.
+        /// Zero means unset, which is what the blank text box in Tools &gt; Options shows.
+        /// </summary>
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int MaxThreadCount {
+            get {
+                return ((int)(this["MaxThreadCount"]));
+            }
+            set {
+                this["MaxThreadCount"] = value;
+            }
+        }
+
+        /// <summary>
+        /// Number of files to import at once when the "many" simultaneous files option is chosen,
+        /// regardless of the processor and file counts. Zero means unset, which is what the blank text
+        /// box in Tools &gt; Options shows.
+        /// </summary>
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int MaxSimultaneousFileImports {
+            get {
+                return ((int)(this["MaxSimultaneousFileImports"]));
+            }
+            set {
+                this["MaxSimultaneousFileImports"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]

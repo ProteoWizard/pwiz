@@ -211,7 +211,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPanorama.Size" type="System.Drawing.Size, System.Drawing">
-    <value>389, 248</value>
+    <value>389, 300</value>
   </data>
   <data name="tabPanorama.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -322,7 +322,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabRemote.Size" type="System.Drawing.Size, System.Drawing">
-    <value>389, 248</value>
+    <value>389, 300</value>
   </data>
   <data name="tabRemote.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -652,7 +652,7 @@ well as iRT prediction.</value>
     <value>1, 1, 1, 1</value>
   </data>
   <data name="tabKoina.Size" type="System.Drawing.Size, System.Drawing">
-    <value>389, 248</value>
+    <value>389, 300</value>
   </data>
   <data name="tabKoina.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -730,7 +730,7 @@ well as iRT prediction.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabLanguage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>389, 248</value>
+    <value>389, 300</value>
   </data>
   <data name="tabLanguage.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -753,8 +753,104 @@ well as iRT prediction.</value>
   <data name="tbxSettingsFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
+  <data name="lblMaxThreadCount.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMaxThreadCount.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 118</value>
+  </data>
+  <data name="lblMaxThreadCount.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 13</value>
+  </data>
+  <data name="lblMaxThreadCount.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="lblMaxThreadCount.Text" xml:space="preserve">
+    <value>Max &amp;threads:</value>
+  </data>
+  <data name="&gt;&gt;lblMaxThreadCount.Name" xml:space="preserve">
+    <value>lblMaxThreadCount</value>
+  </data>
+  <data name="&gt;&gt;lblMaxThreadCount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMaxThreadCount.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;lblMaxThreadCount.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="tbxMaxThreadCount.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 134</value>
+  </data>
+  <data name="tbxMaxThreadCount.Size" type="System.Drawing.Size, System.Drawing">
+    <value>63, 20</value>
+  </data>
+  <data name="tbxMaxThreadCount.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxThreadCount.Name" xml:space="preserve">
+    <value>tbxMaxThreadCount</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxThreadCount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxThreadCount.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxThreadCount.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="lblMaxSimultaneousFileImports.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMaxSimultaneousFileImports.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 160</value>
+  </data>
+  <data name="lblMaxSimultaneousFileImports.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 13</value>
+  </data>
+  <data name="lblMaxSimultaneousFileImports.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="lblMaxSimultaneousFileImports.Text" xml:space="preserve">
+    <value>Max simultaneous &amp;file imports:</value>
+  </data>
+  <data name="&gt;&gt;lblMaxSimultaneousFileImports.Name" xml:space="preserve">
+    <value>lblMaxSimultaneousFileImports</value>
+  </data>
+  <data name="&gt;&gt;lblMaxSimultaneousFileImports.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMaxSimultaneousFileImports.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;lblMaxSimultaneousFileImports.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="tbxMaxSimultaneousFileImports.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 176</value>
+  </data>
+  <data name="tbxMaxSimultaneousFileImports.Size" type="System.Drawing.Size, System.Drawing">
+    <value>63, 20</value>
+  </data>
+  <data name="tbxMaxSimultaneousFileImports.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxSimultaneousFileImports.Name" xml:space="preserve">
+    <value>tbxMaxSimultaneousFileImports</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxSimultaneousFileImports.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxSimultaneousFileImports.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxSimultaneousFileImports.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
   <data name="tbxSettingsFilePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 174</value>
+    <value>17, 226</value>
   </data>
   <data name="tbxSettingsFilePath.Size" type="System.Drawing.Size, System.Drawing">
     <value>357, 20</value>
@@ -778,7 +874,7 @@ well as iRT prediction.</value>
     <value>True</value>
   </data>
   <data name="lblSettingsPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 158</value>
+    <value>15, 210</value>
   </data>
   <data name="lblSettingsPath.Size" type="System.Drawing.Size, System.Drawing">
     <value>109, 13</value>
@@ -802,7 +898,7 @@ well as iRT prediction.</value>
     <value>1</value>
   </data>
   <data name="btnResetSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 200</value>
+    <value>17, 252</value>
   </data>
   <data name="btnResetSettings.Size" type="System.Drawing.Size, System.Drawing">
     <value>115, 37</value>
@@ -910,7 +1006,7 @@ well as iRT prediction.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabMisc.Size" type="System.Drawing.Size, System.Drawing">
-    <value>389, 248</value>
+    <value>389, 300</value>
   </data>
   <data name="tabMisc.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1012,7 +1108,7 @@ well as iRT prediction.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabDisplay.Size" type="System.Drawing.Size, System.Drawing">
-    <value>389, 248</value>
+    <value>389, 300</value>
   </data>
   <data name="tabDisplay.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1036,7 +1132,7 @@ well as iRT prediction.</value>
     <value>12, 12</value>
   </data>
   <data name="tabControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>397, 274</value>
+    <value>397, 326</value>
   </data>
   <data name="tabControl.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1057,7 +1153,7 @@ well as iRT prediction.</value>
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>334, 292</value>
+    <value>334, 344</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -1084,7 +1180,7 @@ well as iRT prediction.</value>
     <value>Bottom, Right</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>253, 292</value>
+    <value>253, 344</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -1114,7 +1210,7 @@ well as iRT prediction.</value>
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>421, 320</value>
+    <value>421, 372</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -1134,4 +1230,4 @@ well as iRT prediction.</value>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-</root>
+</root>

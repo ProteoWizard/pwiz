@@ -40,12 +40,26 @@ namespace pwiz.Common.SystemUtil
         }
 
         private const int DEFAULT_MAX_THREAD_COUNT = 8;
+
+        /// <summary>
+        /// Replaces <see cref="DEFAULT_MAX_THREAD_COUNT"/> when set, so that the cap on how many threads
+        /// the parallel helpers use can be raised or lowered. Null leaves the default in place. Set from
+        /// the user's "Max threads" setting, which lives in the Skyline application and so cannot be
+        /// reached from here.
+        /// </summary>
+        public static int? MaxThreadCountOverride { get; set; }
+
+        private static int MaxThreadCount
+        {
+            get { return MaxThreadCountOverride ?? DEFAULT_MAX_THREAD_COUNT; }
+        }
+
         public static int GetThreadCount(int? maxThreads = null)
         {
             if (SINGLE_THREADED)
                 return 1;
             int threadCount = Environment.ProcessorCount;
-            int maxThreadCount = maxThreads ?? DEFAULT_MAX_THREAD_COUNT; // Trial with maximum of 8
+            int maxThreadCount = maxThreads ?? MaxThreadCount; // Trial with maximum of 8
             if (threadCount > maxThreadCount)
                 threadCount = maxThreadCount;
             return threadCount;
@@ -73,7 +87,7 @@ namespace pwiz.Common.SystemUtil
             {
                 using (var worker = new QueueWorker<IntHolder>(null, (h, i) => localBody(h.TheInt)))
                 {
-                    worker.RunAsync(GetThreadCount(maxThreads ?? Math.Min(count, DEFAULT_MAX_THREAD_COUNT)), threadName ?? nameof(ParallelEx));
+                    worker.RunAsync(GetThreadCount(maxThreads ?? Math.Min(count, MaxThreadCount)), threadName ?? nameof(ParallelEx));
                     for (int i = fromInclusive; i < toExclusive; i++)
                     {
                         if (worker.Exception != null)
