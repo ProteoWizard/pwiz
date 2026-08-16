@@ -24,6 +24,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Grpc.Core;
+using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -42,6 +43,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using Resources = pwiz.Skyline.Properties.Resources;
 using Server = pwiz.Skyline.Util.Server;
 
 namespace pwiz.Skyline.ToolsUI
@@ -99,7 +101,7 @@ namespace pwiz.Skyline.ToolsUI
             comboCompactFormatOption.Items.AddRange(CompactFormatOption.ALL_VALUES.ToArray());
             comboCompactFormatOption.SelectedItem = CompactFormatOption.FromSettings();
 
-            MaxThreadCount = Settings.Default.MaxThreadCount;
+            MaxThreadCount = CommonUtilSettings.Default.MaxThreadCount;
             MaxSimultaneousFileImports = Settings.Default.MaxSimultaneousFileImports;
 
             var iModels = KoinaIntensityModel.Models.ToList();
@@ -322,9 +324,8 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 Settings.Default.CurrentColorScheme = (string) comboColorScheme.SelectedItem;
 
-                Settings.Default.MaxThreadCount = MaxThreadCount;
+                CommonUtilSettings.Default.MaxThreadCount = MaxThreadCount;
                 Settings.Default.MaxSimultaneousFileImports = MaxSimultaneousFileImports;
-                Program.ApplyMaxThreadCount();
 
                 bool koinaSettingsValidBefore = KoinaHelpers.KoinaSettingsValid;
                 Settings.Default.KoinaIntensityModel = (string) intensityModelCombo.SelectedItem;

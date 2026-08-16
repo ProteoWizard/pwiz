@@ -753,102 +753,6 @@ well as iRT prediction.</value>
   <data name="tbxSettingsFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
-  <data name="lblMaxThreadCount.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblMaxThreadCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 118</value>
-  </data>
-  <data name="lblMaxThreadCount.Size" type="System.Drawing.Size, System.Drawing">
-    <value>70, 13</value>
-  </data>
-  <data name="lblMaxThreadCount.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="lblMaxThreadCount.Text" xml:space="preserve">
-    <value>Max &amp;threads:</value>
-  </data>
-  <data name="&gt;&gt;lblMaxThreadCount.Name" xml:space="preserve">
-    <value>lblMaxThreadCount</value>
-  </data>
-  <data name="&gt;&gt;lblMaxThreadCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblMaxThreadCount.Parent" xml:space="preserve">
-    <value>tabMisc</value>
-  </data>
-  <data name="&gt;&gt;lblMaxThreadCount.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="tbxMaxThreadCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 134</value>
-  </data>
-  <data name="tbxMaxThreadCount.Size" type="System.Drawing.Size, System.Drawing">
-    <value>63, 20</value>
-  </data>
-  <data name="tbxMaxThreadCount.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;tbxMaxThreadCount.Name" xml:space="preserve">
-    <value>tbxMaxThreadCount</value>
-  </data>
-  <data name="&gt;&gt;tbxMaxThreadCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tbxMaxThreadCount.Parent" xml:space="preserve">
-    <value>tabMisc</value>
-  </data>
-  <data name="&gt;&gt;tbxMaxThreadCount.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="lblMaxSimultaneousFileImports.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblMaxSimultaneousFileImports.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 160</value>
-  </data>
-  <data name="lblMaxSimultaneousFileImports.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 13</value>
-  </data>
-  <data name="lblMaxSimultaneousFileImports.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="lblMaxSimultaneousFileImports.Text" xml:space="preserve">
-    <value>Max simultaneous &amp;file imports:</value>
-  </data>
-  <data name="&gt;&gt;lblMaxSimultaneousFileImports.Name" xml:space="preserve">
-    <value>lblMaxSimultaneousFileImports</value>
-  </data>
-  <data name="&gt;&gt;lblMaxSimultaneousFileImports.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblMaxSimultaneousFileImports.Parent" xml:space="preserve">
-    <value>tabMisc</value>
-  </data>
-  <data name="&gt;&gt;lblMaxSimultaneousFileImports.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="tbxMaxSimultaneousFileImports.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 176</value>
-  </data>
-  <data name="tbxMaxSimultaneousFileImports.Size" type="System.Drawing.Size, System.Drawing">
-    <value>63, 20</value>
-  </data>
-  <data name="tbxMaxSimultaneousFileImports.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;tbxMaxSimultaneousFileImports.Name" xml:space="preserve">
-    <value>tbxMaxSimultaneousFileImports</value>
-  </data>
-  <data name="&gt;&gt;tbxMaxSimultaneousFileImports.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tbxMaxSimultaneousFileImports.Parent" xml:space="preserve">
-    <value>tabMisc</value>
-  </data>
-  <data name="&gt;&gt;tbxMaxSimultaneousFileImports.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
   <data name="tbxSettingsFilePath.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 226</value>
   </data>
@@ -998,6 +902,113 @@ well as iRT prediction.</value>
   </data>
   <data name="&gt;&gt;checkBoxShowWizard.ZOrder" xml:space="preserve">
     <value>5</value>
+  </data>
+  <data name="lblMaxThreadCount.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMaxThreadCount.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 118</value>
+  </data>
+  <data name="lblMaxThreadCount.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 13</value>
+  </data>
+  <data name="lblMaxThreadCount.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="lblMaxThreadCount.Text" xml:space="preserve">
+    <value>Max &amp;threads:</value>
+  </data>
+  <data name="&gt;&gt;lblMaxThreadCount.Name" xml:space="preserve">
+    <value>lblMaxThreadCount</value>
+  </data>
+  <data name="&gt;&gt;lblMaxThreadCount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMaxThreadCount.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;lblMaxThreadCount.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="tbxMaxThreadCount.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 134</value>
+  </data>
+  <data name="tbxMaxThreadCount.Size" type="System.Drawing.Size, System.Drawing">
+    <value>63, 20</value>
+  </data>
+  <data name="tbxMaxThreadCount.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
+  <data name="tbxMaxThreadCount.ToolTip" xml:space="preserve">
+    <value>Number of threads to use when performing calculations in parallel.
+Default is 8.</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxThreadCount.Name" xml:space="preserve">
+    <value>tbxMaxThreadCount</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxThreadCount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxThreadCount.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxThreadCount.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="lblMaxSimultaneousFileImports.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMaxSimultaneousFileImports.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 160</value>
+  </data>
+  <data name="lblMaxSimultaneousFileImports.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 13</value>
+  </data>
+  <data name="lblMaxSimultaneousFileImports.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="lblMaxSimultaneousFileImports.Text" xml:space="preserve">
+    <value>Max simultaneous &amp;file imports:</value>
+  </data>
+  <data name="&gt;&gt;lblMaxSimultaneousFileImports.Name" xml:space="preserve">
+    <value>lblMaxSimultaneousFileImports</value>
+  </data>
+  <data name="&gt;&gt;lblMaxSimultaneousFileImports.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMaxSimultaneousFileImports.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;lblMaxSimultaneousFileImports.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="tbxMaxSimultaneousFileImports.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 176</value>
+  </data>
+  <data name="tbxMaxSimultaneousFileImports.Size" type="System.Drawing.Size, System.Drawing">
+    <value>63, 20</value>
+  </data>
+  <data name="tbxMaxSimultaneousFileImports.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="tbxMaxSimultaneousFileImports.ToolTip" xml:space="preserve">
+    <value>Number of files to extract chromatograms from simultaneously when "Many" option is chosen.
+Default is lesser of 12 or half the number of logical processors.</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxSimultaneousFileImports.Name" xml:space="preserve">
+    <value>tbxMaxSimultaneousFileImports</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxSimultaneousFileImports.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxSimultaneousFileImports.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxSimultaneousFileImports.ZOrder" xml:space="preserve">
+    <value>9</value>
   </data>
   <data name="tabMisc.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -1222,12 +1233,18 @@ well as iRT prediction.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=26.1.1.223, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ToolOptionsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=26.1.1.223, Culture=neutral, PublicKeyToken=null</value>
   </data>
-</root>
+</root>

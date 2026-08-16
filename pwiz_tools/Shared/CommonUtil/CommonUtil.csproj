@@ -187,6 +187,11 @@
     </Compile>
     <Compile Include="GUI\MessageIcons.cs" />
     <Compile Include="Mock\HttpMessageHandlerFactory.cs" />
+    <Compile Include="Properties\CommonUtilSettings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>CommonUtilSettings.settings</DependentUpon>
+    </Compile>
     <Compile Include="SystemUtil\Assume.cs" />
     <Compile Include="SystemUtil\Caching\ProductionFacility.cs" />
     <Compile Include="SystemUtil\Caching\Production.cs" />
@@ -359,7 +364,13 @@
     <Content Include="CommonResources\Copy.bmp" />
     <Content Include="CommonResources\SuccessMessageIcon.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="Properties\CommonUtilSettings.settings">
+      <Generator>PublicSettingsSingleFileGenerator</Generator>
+      <LastGenOutput>CommonUtilSettings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

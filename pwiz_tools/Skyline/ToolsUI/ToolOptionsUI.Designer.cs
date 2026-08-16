@@ -28,6 +28,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ToolOptionsUI));
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPanorama = new System.Windows.Forms.TabPage();
@@ -54,22 +55,23 @@ namespace pwiz.Skyline.ToolsUI
             this.labelDisplayLanguage = new System.Windows.Forms.Label();
             this.listBoxLanguages = new System.Windows.Forms.ListBox();
             this.tabMisc = new System.Windows.Forms.TabPage();
-            this.lblMaxThreadCount = new System.Windows.Forms.Label();
-            this.tbxMaxThreadCount = new System.Windows.Forms.TextBox();
-            this.lblMaxSimultaneousFileImports = new System.Windows.Forms.Label();
-            this.tbxMaxSimultaneousFileImports = new System.Windows.Forms.TextBox();
             this.tbxSettingsFilePath = new System.Windows.Forms.TextBox();
             this.lblSettingsPath = new System.Windows.Forms.Label();
             this.btnResetSettings = new System.Windows.Forms.Button();
             this.comboCompactFormatOption = new System.Windows.Forms.ComboBox();
             this.lblCompactDocumentFormat = new System.Windows.Forms.Label();
             this.checkBoxShowWizard = new System.Windows.Forms.CheckBox();
+            this.lblMaxThreadCount = new System.Windows.Forms.Label();
+            this.tbxMaxThreadCount = new System.Windows.Forms.TextBox();
+            this.lblMaxSimultaneousFileImports = new System.Windows.Forms.Label();
+            this.tbxMaxSimultaneousFileImports = new System.Windows.Forms.TextBox();
             this.tabDisplay = new System.Windows.Forms.TabPage();
             this.comboColorScheme = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
             this.tabRemote.SuspendLayout();
@@ -304,27 +306,29 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.checkBoxShowWizard, "checkBoxShowWizard");
             this.checkBoxShowWizard.Name = "checkBoxShowWizard";
             this.checkBoxShowWizard.UseVisualStyleBackColor = true;
-            //
+            // 
             // lblMaxThreadCount
-            //
+            // 
             resources.ApplyResources(this.lblMaxThreadCount, "lblMaxThreadCount");
             this.lblMaxThreadCount.Name = "lblMaxThreadCount";
-            //
+            // 
             // tbxMaxThreadCount
-            //
+            // 
             resources.ApplyResources(this.tbxMaxThreadCount, "tbxMaxThreadCount");
             this.tbxMaxThreadCount.Name = "tbxMaxThreadCount";
-            //
+            this.toolTip1.SetToolTip(this.tbxMaxThreadCount, resources.GetString("tbxMaxThreadCount.ToolTip"));
+            // 
             // lblMaxSimultaneousFileImports
-            //
+            // 
             resources.ApplyResources(this.lblMaxSimultaneousFileImports, "lblMaxSimultaneousFileImports");
             this.lblMaxSimultaneousFileImports.Name = "lblMaxSimultaneousFileImports";
-            //
+            // 
             // tbxMaxSimultaneousFileImports
-            //
+            // 
             resources.ApplyResources(this.tbxMaxSimultaneousFileImports, "tbxMaxSimultaneousFileImports");
             this.tbxMaxSimultaneousFileImports.Name = "tbxMaxSimultaneousFileImports";
-            //
+            this.toolTip1.SetToolTip(this.tbxMaxSimultaneousFileImports, resources.GetString("tbxMaxSimultaneousFileImports.ToolTip"));
+            // 
             // tabDisplay
             // 
             this.tabDisplay.Controls.Add(this.comboColorScheme);
@@ -442,5 +446,6 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.TextBox tbxKoinaServer;
         private System.Windows.Forms.TextBox tbxSettingsFilePath;
         private System.Windows.Forms.Label lblSettingsPath;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }
