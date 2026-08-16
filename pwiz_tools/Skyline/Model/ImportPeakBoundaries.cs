@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Percent complete attributed to reading the file, with the rest attributed to applying the changes
         /// </summary>
-        private const int PERCENT_READING = 50;
+        private const int PERCENT_READING = 10;
 
         private IProgressMonitor _progressMonitor;
         private IProgressStatus _status;
@@ -373,16 +373,18 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument Import(TextReader reader, IProgressMonitor progressMonitor, long lineCount, bool isMinutes, bool removeMissing = false, bool changePeaks = true)
         {
+            var startTime = DateTime.UtcNow;
             _progressMonitor = progressMonitor;
             _status = new ProgressStatus(ModelResources.PeakBoundaryImporter_Import_Importing_Peak_Boundaries);
             _progressPercent = -1;
 
             // Read the entire file first, resolving every line to the peptides and result files it refers to,
             // and grouping the changes by peptide. Nothing about the document is changed by this pass.
+            _status = _status.ChangeMessage("Scanning peak boundaries file");
             var peptideChanges = ReadPeakBoundaries(reader, lineCount, isMinutes, changePeaks, out var boundaryLines);
             if (peptideChanges == null)
                 return Document;    // Canceled
-
+            _status = _status.ChangeMessage("Apply peak boundary changes");
             // Apply the changes for each peptide on a background thread. Because all of the changes for a
             // peptide are applied to a single PeptideDocNode, the document itself is rebuilt only once, at
             // the end, instead of once per line of the file.
@@ -414,6 +416,8 @@ namespace pwiz.Skyline.Model
             // If nothing has changed, return the old Document before ChangeIgnoreChangingChildren was turned off
             if (!ReferenceEquals(docNew, docReference))
                 Document = (SrmDocument) Document.ChangeIgnoreChangingChildren(false).ChangeChildrenChecked(docNew.Children);
+            var elapsed = DateTime.UtcNow.Subtract(startTime);
+            Messages.WriteAsyncUserMessage("Updated peak boundaries for {0} molecules in {1}", peptideChanges.Count, elapsed);
             return Document;
         }
 
@@ -457,7 +461,6 @@ namespace pwiz.Skyline.Model
             var header = new DataFields(fieldIndices, line.ParseDsvFields(correctSeparator), allFieldNames);
             var peptideColumnName = header.GetField(Field.modified_peptide);
             var listIsProteomic = !MOLECULE_SYNONYMS.Any(s => string.Equals(s, peptideColumnName, StringComparison.CurrentCultureIgnoreCase));
-
             while ((line = reader.ReadLine()) != null)
             {
                 linesRead++;
