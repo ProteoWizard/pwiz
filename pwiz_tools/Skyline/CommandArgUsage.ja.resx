@@ -402,9 +402,6 @@
   <data name="CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library" xml:space="preserve">
     <value>イオン移動度ライブラリを作成中</value>
   </data>
-  <data name="CommandArgs_GROUP_MANAGE_REPLICATES_Managing_results_replicates" xml:space="preserve">
-    <value>結果の繰り返し測定を管理中</value>
-  </data>
   <data name="CommandArgs_GROUP_IMPORT_DOC_Importing_other_Skyline_documents" xml:space="preserve">
     <value>他のSkylineドキュメントをインポート中</value>
   </data>

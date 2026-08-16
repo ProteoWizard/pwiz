@@ -402,9 +402,6 @@
   <data name="CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library" xml:space="preserve">
     <value>创建离子迁移库</value>
   </data>
-  <data name="CommandArgs_GROUP_MANAGE_REPLICATES_Managing_results_replicates" xml:space="preserve">
-    <value>正在管理结果重复测定</value>
-  </data>
   <data name="CommandArgs_GROUP_IMPORT_DOC_Importing_other_Skyline_documents" xml:space="preserve">
     <value>正在导入其他 Skyline 文档</value>
   </data>

@@ -1866,6 +1866,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reorder results replicates using a UTF-8 text file containing one existing replicate name per line. Listed replicates are placed first; unlisted replicates retain their relative order..
+        /// </summary>
+        public static string _reorder_replicates {
+            get {
+                return ResourceManager.GetString("_reorder_replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add reports from a saved report template file to the running program..
         /// </summary>
         public static string _report_add {

@@ -3078,6 +3078,10 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 var chromatogramSetNewSource = measuredResultsNew.Chromatograms[i];
                 var chromatogramSetOldSource = measuredResultsOld.Chromatograms[i];
+                // The comparison below ignores the name, and everything else it compares can be
+                // identical for two replicates measuring the same file. Without this check,
+                // reordering them looks like no change, DiffResults stays false, and the node
+                // results are left on their old indexes while the ChromatogramSet list moves.
                 if (!ReferenceEquals(chromatogramSetNewSource.Id, chromatogramSetOldSource.Id))
                 {
                     return false;

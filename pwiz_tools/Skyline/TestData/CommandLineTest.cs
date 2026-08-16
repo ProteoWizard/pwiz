@@ -318,8 +318,8 @@ namespace pwiz.SkylineTestData
             output = RunCommand(false, CommandArgs.ARG_IN + documentWithoutResults,
                 CommandArgs.ARG_REORDER_REPLICATES + orderPath, CommandArgs.ARG_OUT + outPath,
                 CommandArgs.ARG_OVERWRITE.ArgumentText);
-            CheckRunCommandOutputContains(string.Format(
-                SkylineResources.CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replicates_, orderPath), output);
+            CheckRunCommandOutputContains(
+                SkylineResources.CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replicates_, output);
             CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));
         }
 

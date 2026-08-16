@@ -2463,8 +2463,7 @@ namespace pwiz.Skyline
             if (Document.MeasuredResults == null || Document.MeasuredResults.Chromatograms.Count == 0)
             {
                 _out.WriteLine(Resources.CommandStatusWriter_WriteLine_Error_ + @" " +
-                    string.Format(SkylineResources.CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replicates_,
-                        commandArgs.ReorderReplicatesPath));
+                    SkylineResources.CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replicates_);
                 return false;
             }
 
