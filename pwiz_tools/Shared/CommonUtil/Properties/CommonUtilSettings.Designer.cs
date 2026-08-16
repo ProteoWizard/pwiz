@@ -25,7 +25,6 @@ namespace pwiz.Common.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
         public global::System.Nullable<System.Int32> MaxThreadCount {
             get {
                 return ((global::System.Nullable<System.Int32>)(this["MaxThreadCount"]));

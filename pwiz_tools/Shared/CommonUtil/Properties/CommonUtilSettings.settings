@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="MaxThreadCount" Type="System.Nullable&lt;System.Int32&gt;" Scope="User">
-      <Value Profile="(Default)">0</Value>
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>
