@@ -99,8 +99,8 @@ namespace pwiz.Skyline.ToolsUI
             comboCompactFormatOption.Items.AddRange(CompactFormatOption.ALL_VALUES.ToArray());
             comboCompactFormatOption.SelectedItem = CompactFormatOption.FromSettings();
 
-            MaxThreadCount = SettingToOptionalCount(Settings.Default.MaxThreadCount);
-            MaxSimultaneousFileImports = SettingToOptionalCount(Settings.Default.MaxSimultaneousFileImports);
+            MaxThreadCount = Settings.Default.MaxThreadCount;
+            MaxSimultaneousFileImports = Settings.Default.MaxSimultaneousFileImports;
 
             var iModels = KoinaIntensityModel.Models.ToList();
             iModels.Insert(0, string.Empty);
@@ -322,8 +322,8 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 Settings.Default.CurrentColorScheme = (string) comboColorScheme.SelectedItem;
 
-                Settings.Default.MaxThreadCount = OptionalCountToSetting(MaxThreadCount);
-                Settings.Default.MaxSimultaneousFileImports = OptionalCountToSetting(MaxSimultaneousFileImports);
+                Settings.Default.MaxThreadCount = MaxThreadCount;
+                Settings.Default.MaxSimultaneousFileImports = MaxSimultaneousFileImports;
                 Program.ApplyMaxThreadCount();
 
                 bool koinaSettingsValidBefore = KoinaHelpers.KoinaSettingsValid;
@@ -368,19 +368,6 @@ namespace pwiz.Skyline.ToolsUI
         private static string OptionalCountToTextBox(int? count)
         {
             return count?.ToString(CultureInfo.CurrentCulture) ?? string.Empty;
-        }
-
-        /// <summary>
-        /// Settings store these counts as an integer, where zero means the text box is blank
-        /// </summary>
-        private static int? SettingToOptionalCount(int setting)
-        {
-            return setting > 0 ? (int?) setting : null;
-        }
-
-        private static int OptionalCountToSetting(int? count)
-        {
-            return count ?? 0;
         }
 
         private void btnOK_Click(object sender, EventArgs e)

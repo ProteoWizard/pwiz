@@ -2260,10 +2260,10 @@ namespace pwiz.Skyline.Properties {
         /// </summary>
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int MaxThreadCount {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public int? MaxThreadCount {
             get {
-                return ((int)(this["MaxThreadCount"]));
+                return ((int?)(this["MaxThreadCount"]));
             }
             set {
                 this["MaxThreadCount"] = value;
@@ -2277,10 +2277,10 @@ namespace pwiz.Skyline.Properties {
         /// </summary>
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int MaxSimultaneousFileImports {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public int? MaxSimultaneousFileImports {
             get {
-                return ((int)(this["MaxSimultaneousFileImports"]));
+                return ((int?)(this["MaxSimultaneousFileImports"]));
             }
             set {
                 this["MaxSimultaneousFileImports"] = value;

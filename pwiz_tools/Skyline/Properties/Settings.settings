@@ -563,11 +563,11 @@
     <Setting Name="ImportResultsSimultaneousFiles" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">2</Value>
     </Setting>
-    <Setting Name="MaxThreadCount" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
+    <Setting Name="MaxThreadCount" Type="System.Nullable&lt;System.Int32&gt;" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="MaxSimultaneousFileImports" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
+    <Setting Name="MaxSimultaneousFileImports" Type="System.Nullable&lt;System.Int32&gt;" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="ImportResultsDoAutoRetry" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>

@@ -750,8 +750,7 @@ namespace pwiz.Skyline
         /// </summary>
         public static void ApplyMaxThreadCount()
         {
-            int maxThreadCount = Settings.Default.MaxThreadCount;
-            ParallelEx.MaxThreadCountOverride = maxThreadCount > 0 ? (int?) maxThreadCount : null;
+            ParallelEx.MaxThreadCountOverride = Settings.Default.MaxThreadCount;
         }
 
         /// <summary>

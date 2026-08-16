@@ -136,8 +136,8 @@ namespace pwiz.Skyline.Model
                         // A user-specified maximum replaces the calculation entirely: it is returned as is,
                         // without being lowered for the GC mode or balanced against the file count
                         var maxSimultaneousFileImports = Settings.Default.MaxSimultaneousFileImports;
-                        if (maxSimultaneousFileImports > 0)
-                            return maxSimultaneousFileImports;
+                        if (maxSimultaneousFileImports.HasValue)
+                            return maxSimultaneousFileImports.Value;
                         loadingThreads = Math.Max(2, processorCount / 2); // Min of 2, because you really expect more than 1
                         break;
                 }
