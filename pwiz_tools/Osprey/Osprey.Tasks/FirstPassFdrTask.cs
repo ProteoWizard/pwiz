@@ -78,9 +78,22 @@ namespace pwiz.Osprey.Tasks
         /// (stops at Stage 1-4), --task PerFileRescoring, and the --task SecondPassFDR
         /// stage (where it rehydrates the bundle rather than recomputing).
         /// </summary>
-        public override bool IsIncluded(PipelineContext ctx)
+        public override bool IsIncluded(PipelineContext ctx) => IsIncludedFor(ctx.Config);
+
+        /// <summary>
+        /// Pure membership predicate behind <see cref="IsIncluded"/>, exposed so a caller
+        /// that needs to know whether first-pass Percolator trains in THIS process asks the
+        /// one definition instead of re-deriving it.
+        ///
+        /// <para><see cref="PerFileScoringTask"/>'s pre-compaction-pool decision used
+        /// <c>!NoJoin</c> as a proxy for exactly this question. That proxy is right for every
+        /// task except <c>--task SecondPassFDR</c>, which leaves <c>NoJoin</c> false while
+        /// setting <c>ExpectReconciledInput</c> - so this task is EXCLUDED, nothing trains,
+        /// and the resident pre-compaction pool the proxy forced was pure waste at O(files)
+        /// (issue #4486). Calling the predicate keeps the two from drifting again.</para>
+        /// </summary>
+        internal static bool IsIncludedFor(OspreyConfig c)
         {
-            var c = ctx.Config;
             bool inputs = c.InputScores != null && c.InputScores.Count > 0;
             // The (inputs && StopAfterStage5) clause leans on a CLI-enforced
             // invariant: StopAfterStage5 is set by --task FirstPassFDR, which
@@ -129,19 +142,21 @@ namespace pwiz.Osprey.Tasks
         /// release the library fragments nothing can score any more. Null on the legacy resident
         /// path, which simply skips the release.
         ///
-        /// <para>This is the same set <see cref="_survivorLoader"/> holds privately, and it is a
-        /// separate field on purpose rather than by oversight: the loader is built only on the
-        /// projection path, while <see cref="Rehydrate"/> - the resume, and the one run that most
-        /// needs a lean library - has no loader and takes the set off the reconciliation bundle
-        /// instead. One field that both paths can fill beats an accessor that is null on
-        /// half of them.</para></summary>
+        /// <para>This is the LIBRARY-retention set, and it stays a separate field from the one
+        /// <see cref="_survivorLoader"/> filters on rather than collapsing into it: the two are
+        /// the same on the projection path but not on <see cref="Rehydrate"/>, which takes this
+        /// one off the reconciliation bundle (<c>GlobalFirstPassBaseIds</c>) while the loader
+        /// filters on the compaction's retained set - that union'd with the planner's action
+        /// targets. Feeding either set to the other's consumer would be wrong in one direction
+        /// or the other.</para></summary>
         private HashSet<uint> _firstPassBaseIds;
 
         // Rebuilds any one file's survivors from its .scores.parquet + finalized
         // 1st-pass sidecar, so a per-file consumer never needs the all-files buffer
-        // (issue #4526). Set on the projection path, which is the only one that
-        // computes the passing base_id set here; null on the legacy resident and
-        // rehydrate paths, whose consumers fall back to CompactedEntries.
+        // (issues #4526, #4536). Set on the projection path from the passing base_id set
+        // computed here, and on the rehydrate path from the retained set the compaction
+        // hands back on the bundle; null only on the legacy resident path, whose consumers
+        // fall back to CompactedEntries.
         private FirstPassSurvivorLoader _survivorLoader;
         private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> _perFileConsensusTargets
             = new Dictionary<string, IReadOnlyList<(int, double, double, double)>>();
@@ -222,8 +237,16 @@ namespace pwiz.Osprey.Tasks
             // stratum is computed and written into the 1st-pass model sidecar. A sidecar written
             // under transfer carries no stratum, so a protein-compact re-run that adopted it
             // would be reading an artifact that cannot answer its question.
+            // The sidecar FORMAT VERSION belongs here because this task's output is the
+            // .1st-pass.fdr_scores.bin every later stage reads back. Resuming a directory written
+            // before a format bump would find this task still valid, skip it, and then have every
+            // v4 reader refuse the v3 file by version - leaving RestorePass1Scalars to seed
+            // nothing and write ResetScores defaults into the 2nd-pass sidecars under only a
+            // warning. Including the version turns that silent-wrong-output path into a clean
+            // recompute.
             return base.ValidityKey(ctx)
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
+                + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx);
@@ -394,7 +417,7 @@ namespace pwiz.Osprey.Tasks
 
                 // First-pass protein FDR: runs on the full pre-compaction
                 // peptide pool so target and decoy proteins compete on a
-                // symmetric set. Sets RunProteinQvalue on every FdrEntry,
+                // symmetric set. Sets ExperimentProteinQvalue on every FdrEntry,
                 // which Stage 6 reconciliation reads via the protein-rescue
                 // gate in ConsensusRts.Compute. Runs unconditionally (not gated
                 // on --protein-fdr), matching Rust where config.protein_fdr is a
@@ -569,30 +592,6 @@ namespace pwiz.Osprey.Tasks
             bool builtOwnBundle = bundle == null;
             if (builtOwnBundle)
             {
-                // Refuse the O(files) Stage 6 handoff BEFORE the load, not after: this
-                // rebuild reads every sidecar and parquet, so checking afterwards would
-                // spend minutes (hours at scale) only to abort. See
-                // PerFileScoringTask.ResumeResidentHandoffGuardError and issue #4536.
-                //
-                // Restricted to a STRAIGHT-THROUGH resume. A null bundle also occurs in worker
-                // mode when the .reconciliation.json sidecars are simply absent (a --task
-                // PerFileRescoring node pointed at parquets whose FirstPassFDR has not run) -
-                // that is a missing-input fault, and answering it with a memory-token refusal
-                // would name the wrong problem, quote that worker's slice as if it were the
-                // all-files buffer, and offer a remediation ("re-run without resuming") that
-                // means nothing to a --task worker. Those runs fall through to the load, which
-                // reports the envelope that is actually missing.
-                bool straightThroughResume =
-                    config.InputScores == null || config.InputScores.Count == 0;
-                if (straightThroughResume)
-                {
-                    string resumeHandoffError = PerFileScoringTask.ResumeResidentHandoffGuardError(
-                        perFileEntries.Count, OspreyEnvironment.AllowUnfixedResident,
-                        PerFileScoringTask.NeedsResidentPoolForRun(config));
-                    if (resumeHandoffError != null)
-                        throw new InvalidOperationException(resumeHandoffError);
-                }
-
                 bundle = LoadOwnReconciliationBundle(ctx, perFileEntries);
                 if (bundle == null)
                     return false;  // load failure; ExitCode already set
@@ -637,56 +636,145 @@ namespace pwiz.Osprey.Tasks
             // Release here too, not just on Run. This path is a RESUME - which is exactly what
             // an operator does after the OOM this release exists to prevent - so skipping it
             // would leave the whole library resident in the one run that most needs it lean.
-            // The bundle carries both halves of the retained set: GlobalFirstPassBaseIds is a
-            // required field of the v3 reconciliation envelope, and PerFileGapFill was just
-            // published above.
-            _firstPassBaseIds = bundle.GlobalFirstPassBaseIds;
+            // The bundle carries both halves of the retained set: the base_id set below, and
+            // PerFileGapFill just published above.
+            //
+            // RetainedBaseIds, not GlobalFirstPassBaseIds: the compaction retains the global set
+            // UNION the planner's action targets, so the global set alone can be a strict subset
+            // of what survives. Releasing on the smaller set could free the library spectrum of
+            // an entry Stage 6 still rescores. That gap is believed unreachable today - the
+            // planner runs after compaction on the computed path, so its targets are already in
+            // the envelope's set - but the relationship is not symmetric: the retained set is a
+            // superset, so using it is safe whether or not the union is empty, and using the
+            // other one is safe only while the argument holds. Falls back for an empty join,
+            // where Apply never ran and nothing survived to release against.
+            _firstPassBaseIds = bundle.RetainedBaseIds ?? bundle.GlobalFirstPassBaseIds;
             _perFileGapFillForRescore = bundle.PerFileGapFill;
             ReleaseUnscorableLibraryFragments(ctx.Get<FullLibrary>().Value, ctx);
             ctx.Publish(new PerFileConsensusTargets(ConsensusTargetsFromBundle(ctx, bundle)));
             ctx.Publish(new CompactedEntries(perFileEntries));
-            // Null off the projection path (legacy resident / rehydrate), where a
-            // consumer falls back to the buffer above.
+
+            // The same per-file survivor source Run publishes, so an arm that rescores streams
+            // exactly as a computed run does (issue #4536). Before this the slot was published
+            // null here, and PerFileRescore's streamed branches are all gated on it, so the
+            // all-files survivor buffer stayed live across the whole rescore. What a resume
+            // lacked was only the passing base_id set to rebuild from, and the compaction just
+            // above now hands that back on the bundle.
+            if (!TryBuildResumeSurvivorLoader(ctx, bundle, perFileEntries, out _survivorLoader))
+                return false;  // missing parquet path; ExitCode already set
             ctx.Publish(new FirstPassSurvivorSource(_survivorLoader));
-            // ... and a null loader is exactly what leaves Stage 6 on the RESIDENT
-            // post-compaction handoff: PerFileRescore's streamed branches are all gated on
-            // this slot, so with nothing to stream from, the all-files survivor buffer
-            // published above stays live across the whole rescore and into SecondPassFDR. Run
-            // guards that with Stage6ResidentHandoffGuardError; the guard cannot fire here,
-            // because it deliberately no-ops when streaming is unavailable on the grounds
-            // that such runs are "already resident for a reason with its own token" - which
-            // was true of every rehydrate that used to reach this point (an mdiag full
-            // resume needed the resident first-pass pool) and is NOT true now that a lean
-            // resume gets here. Warn rather than throw, matching WarnPreCompactionPool: the
-            // mdiag full resume reached Stage 6 this way before #4505 too, so refusing it
-            // would turn a working configuration into a failing one.
+
+            // ... but only an arm that actually RESCORES gets anything from releasing the
+            // buffer, and this task's own bundle source is what says which arm this is. With a
+            // worker-supplied RescoreBundle, Stage 6 runs the rescore and refills one file at a
+            // time from the source above. Having built the bundle from our OWN sidecars, there
+            // is no rescore to run at all: PerFileRescore self-gates to a no-op (didPlan is
+            // false and RescoreBundle is null) and refills the WHOLE buffer immediately, so
+            // releasing here would buy a window no consumer uses and cost a full extra parquet
+            // + sidecar pass over every file to undo.
             //
-            // NOT covered by #4526, which is CLOSED: #4530 bounded this handoff by giving
-            // Run a per-file survivor loader, and the rehydrate arm never got one, so the
-            // resident fallback survives here. Tracked by #4536.
-            //
-            // This is the SECOND half of token + warning. Reaching this line means the
-            // operator named resume-survivor-handoff (the guard above refused the run
-            // otherwise), so the warning explains what that token bought rather than
-            // annotating something nobody asked for. A warning WITHOUT the refusal would be
-            // the insufficient case: on a default path there is no request to explain, and
-            // the line reads as normal within a week. Both halves go when #4536 gives the
-            // rehydrate its own survivor loader.
-            if (builtOwnBundle && !config.StopAfterStage5 && perFileEntries.Count > 1)
+            // The buffer is therefore still resident from here to the end of Stage 7 on that
+            // arm - as it is on EVERY arm, because Stage 6 deliberately rebuilds it for
+            // SecondPassFDR to read (PerFileRescoreTask's end-of-loop rebuild). That residency
+            // is a property of Stage 7's whole-run input, not of resuming, and it is #4486's
+            // to remove. This issue bounds the RESCORE window, which is the part Stage 6 owns.
+            bool rescoreWillStream = !builtOwnBundle && !config.StopAfterStage5;
+            // Same call Run makes. streamingAvailable is "this run will stream", not "a loader
+            // exists": passing the latter would refuse an OSPREY_STAGE6_STREAM_SURVIVORS=0
+            // resume whose behaviour is identical either way, which is a guard inventing work
+            // for an operator rather than preventing any.
+            string handoffError = PerFileScoringTask.Stage6ResidentHandoffGuardError(
+                _survivorLoader != null && rescoreWillStream,
+                OspreyEnvironment.Stage6StreamSurvivors,
+                OspreyEnvironment.AllowUnfixedResident);
+            if (handoffError != null)
+                throw new InvalidOperationException(handoffError);
+
+            // Drop the CONTENTS, keeping the outer per-file list (the shared buffer identity
+            // every milestone wraps), exactly as Run does after planning. Consensus targets were
+            // computed off the full buffer immediately above, which is its last all-files reader.
+            if (OspreyEnvironment.Stage6StreamSurvivors && _survivorLoader != null && rescoreWillStream)
             {
-                ctx.LogWarning(string.Format(
-                    @"OSPREY_ALLOW_UNFIXED_RESIDENT={1}: Stage 6 takes the RESIDENT " +
-                    @"post-compaction handoff on this resume. The survivor buffer for all " +
-                    @"{0} files stays in memory for the whole rescore, so memory here grows " +
-                    @"O(files) - 28 GB at 163 files when last measured. Only a computed " +
-                    @"Stage 5 produces the per-file survivor loader (issue #4536).",
-                    perFileEntries.Count, ResidentPaths.RESUME_SURVIVOR_HANDOFF));
+                foreach (var kvp in perFileEntries)
+                {
+                    kvp.Value.Clear();
+                    kvp.Value.TrimExcess();
+                }
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"resume-handoff-released",
+                    string.Format(@"(post-GC, survivors released after rehydrate, files={0})",
+                        perFileEntries.Count));
             }
             // The bundle-adopt / resume path never plans, so the rescore gate is
             // false (PerFileRescore falls back to the no-op unless a worker
             // RescoreBundle is present). Mirrors the old "FirstPassFDR rehydrates ->
             // DidPlan is false" semantics, now as a published slot.
             ctx.Publish(new PlanningPerformed(false));
+            return true;
+        }
+
+        /// <summary>
+        /// The resume counterpart of the loader <see cref="ReloadFirstPassSurvivors"/> builds on
+        /// the projection path: rebuild any ONE file's post-compaction survivors from its
+        /// <c>.scores.parquet</c> plus its finalized <c>.1st-pass.fdr_scores.bin</c>, so Stage 6
+        /// refills a file at a time instead of reading them off a buffer somebody had to hold
+        /// for the whole rescore (issue #4536).
+        ///
+        /// <para>The set to filter to is <see cref="RescoreInputs.RetainedBaseIds"/>, taken off
+        /// the bundle the compaction just ran on rather than
+        /// <see cref="RescoreInputs.GlobalFirstPassBaseIds"/>. The two are NOT the same set:
+        /// compaction retains the global one UNION the base_ids of every planner action target,
+        /// and a target rescued by a sibling file's evidence is in the second term only.
+        /// Filtering to the global set alone would drop exactly those entries on the rebuild,
+        /// leaving them their stale Stage 4 boundaries in the blib - the divergence
+        /// <see cref="RescoreCompaction"/>'s union step exists to prevent.</para>
+        ///
+        /// <para>Returns true with a NULL loader ONLY for an empty join, which is also the only
+        /// case where a null loader costs nothing: there is no survivor buffer to bound. Any
+        /// other missing precondition returns false with
+        /// <see cref="PipelineContext.ExitCode"/> set, rather than falling back to the resident
+        /// handoff. That asymmetry is the point of the issue this fixes: a silent fallback is
+        /// how an O(files) path reached a default run in the first place, and
+        /// <c>Stage6ResidentHandoffGuardError</c> cannot catch it - it reads a null loader as
+        /// "this run could not stream" and exempts it. So the preconditions are faults here,
+        /// where they can still be reported.</para>
+        /// </summary>
+        private static bool TryBuildResumeSurvivorLoader(
+            PipelineContext ctx,
+            RescoreInputs bundle,
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            out FirstPassSurvivorLoader loader)
+        {
+            loader = null;
+            if (bundle.RetainedBaseIds == null)
+            {
+                // Null means CompactFirstPass skipped RescoreCompaction.Apply, which it does
+                // only for an empty join. Checked rather than assumed: if some later change
+                // gives Apply a second skip, the loader would go null on a populated run and
+                // Stage 6 would silently take the resident buffer again - the exact regression
+                // shape that produced this issue, and one no guard downstream can see.
+                if (perFileEntries.Count == 0)
+                    return true;
+                ctx.LogError(string.Format(
+                    @"Resume rehydrate: the first-pass compaction published no retained base_id " +
+                    @"set for {0} joined file(s), so the Stage 6 survivor handoff cannot be " +
+                    @"streamed. RescoreCompaction.Apply must run whenever any file is joined.",
+                    perFileEntries.Count));
+                ctx.ExitCode = 1;
+                return false;
+            }
+            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+            foreach (var kvp in perFileEntries)
+            {
+                if (perFileParquetPaths != null && perFileParquetPaths.ContainsKey(kvp.Key))
+                    continue;
+                ctx.LogError(string.Format(
+                    @"Resume rehydrate: no scores parquet path published for {0}, so its " +
+                    @"first-pass survivors cannot be rebuilt for the Stage 6 rescore.", kvp.Key));
+                ctx.ExitCode = 1;
+                return false;
+            }
+            loader = new FirstPassSurvivorLoader(
+                perFileParquetPaths, ctx.Config, bundle.RetainedBaseIds);
             return true;
         }
 
@@ -1048,14 +1136,33 @@ namespace pwiz.Osprey.Tasks
                 // Same file order either way: the accumulator was seeded with the input-file
                 // order and perFileEntries keeps every file's key even once compacted.
                 var cal = BuildCalibrationData(ctx, perFileEntries.ConvertAll(kv => kv.Key));
+                var libraryById = ctx.Get<LibraryById>().Value;
                 if (mdiagAccumulator != null)
                 {
+                    // The peak co-assignment panel (issue #4522) is built from the per-file FDR
+                    // sidecars, NOT from perFileEntries - the same source the projection path
+                    // uses, so there is one implementation of this panel rather than two.
+                    //
+                    // A non-null mdiagAccumulator means this is the bounded rehydrate path, and
+                    // the remarks on this method say what that implies: perFileEntries "has
+                    // already lost the ~52x non-survivors - mostly the decoys and entrapment",
+                    // so building the report off it "would silently produce a plausible WRONG
+                    // page". That is precisely what the earlier resident build did here. It
+                    // agreed with the sidecar build on the acceptance boundary (0.0120) and on
+                    // the accepted count (28,926) and still reported 72 detected decoys against
+                    // 468, because compaction had already dropped the rest - target denominators
+                    // intact, decoy class quietly gutted. The regression then overwrote the
+                    // straight-through report with this one, so every measurement taken after a
+                    // full run was the wrong page.
+                    var coAssignment = PeakCoAssignmentSource.Build(
+                        perFileEntries.ConvertAll(kv => kv.Key),
+                        ctx.Get<PerFileParquetPaths>().Value, config,
+                        mdiagAccumulator.ClassByBaseId, libraryById, ctx.LogInfo);
                     ModelDiagnosticsReport.WriteFromAccumulator(
-                        mdiagAccumulator, contributions, cal, config, ctx.LogInfo);
+                        mdiagAccumulator, contributions, cal, config, ctx.LogInfo, coAssignment);
                 }
                 else
                 {
-                    var libraryById = ctx.Get<LibraryById>().Value;
                     ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, cal, config, ctx.LogInfo);
                 }
             }
@@ -1337,7 +1444,7 @@ namespace pwiz.Osprey.Tasks
                             // last clause admits present-protein peptides that failed 1st-pass
                             // FDR so they get reconciled + rescored + reported.
                             if (entry.RunPeptideQvalue <= peptideGate ||
-                                entry.RunProteinQvalue <= proteinGate ||
+                                entry.ExperimentProteinQvalue <= proteinGate ||
                                 (_proteinCompactStratum != null && _proteinCompactStratum.Contains(baseId)))
                             {
                                 firstPassBaseIds.Add(baseId);
@@ -2001,9 +2108,10 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// First-pass protein FDR run BEFORE Stage 6 reconciliation, on the
-        /// full pre-compaction peptide pool. Sets only RunProteinQvalue
-        /// (leaves ExperimentProteinQvalue at its 1.0 default for the
-        /// second-pass to overwrite). Detected-peptide filter uses
+        /// full pre-compaction peptide pool. Sets the one experiment-wide
+        /// ExperimentProteinQvalue; the second-pass protein FDR overwrites it
+        /// later, and PatchPass2ProteinQvalues writes that pass-2 value into
+        /// the 2nd-pass sidecar (#4559). Detected-peptide filter uses
         /// run_peptide_qvalue, the strict peptide-level gate, matching Rust
         /// pipeline.rs:3045-3049 exactly. Protein-FDR gate is config.RunFdr
         /// (1x), the Savitski-2015 convention applied at first pass, NOT the
@@ -2194,7 +2302,7 @@ namespace pwiz.Osprey.Tasks
             //
             // Two-phase 1st-pass sidecar (issue #4355 struct-shrink S1). Phase 1: the
             // StoringSink writes each file's PARTIAL .1st-pass.fdr_scores.bin during the
-            // score pass (run_protein_qvalue = 1.0 placeholder), so the four streamed
+            // score pass (experiment_protein_qvalue = 1.0 placeholder), so the four streamed
             // q-values are never held resident. This flush resolves the per-file sidecar
             // path the same way the pre-S1 single-phase write did, so the survivor reload
             // and the Stage 6 worker read identical bytes; it returns a per-file failure
@@ -2316,15 +2424,23 @@ namespace pwiz.Osprey.Tasks
             if (mdiagAccumulator != null)
             {
                 var cal = BuildCalibrationData(ctx, projections.PerFile.ConvertAll(kv => kv.Key));
+                // The peak co-assignment panel (issue #4522) needs each row's DETECTION apex RT,
+                // which the streamed fold never sees: this path carries no RT at all. Rebuild it
+                // from the per-file sidecars just flushed by the score pass, joined to their
+                // parquet apex_rt. Reusing the accumulator's classification avoids re-running the
+                // multi-minute library classification for the same answer.
+                var coAssignment = PeakCoAssignmentSource.Build(
+                    projections.PerFile.ConvertAll(kv => kv.Key), perFileParquetPaths, config,
+                    mdiagAccumulator.ClassByBaseId, ctx.Get<LibraryById>().Value, ctx.LogInfo);
                 ModelDiagnosticsReport.WriteFromAccumulator(
-                    mdiagAccumulator, mdiagContributions, cal, config, ctx.LogInfo);
+                    mdiagAccumulator, mdiagContributions, cal, config, ctx.LogInfo, coAssignment);
             }
 
             // First-pass protein FDR streamed off the per-file sidecar + parquet scalars
             // (issue #4355 struct-shrink S2): read each file's Score / run_peptide_qvalue
             // from the just-written .1st-pass.fdr_scores.bin, joined by entry_id with the
             // modseq / IsDecoy from the parquet scalars, run the identical parsimony +
-            // picked-protein FDR, and patch each row's run_protein_qvalue [52..60] straight
+            // picked-protein FDR, and patch each row's experiment_protein_qvalue [52..60] straight
             // back onto the sidecar -- so the resident FdrProjectionOutputs array is gone.
             // The Stage-6 diagnostic dump reads the returned artifacts, exactly as the
             // FdrEntry path's RunFirstPassProteinFdr does. Runs unconditionally (not gated
@@ -2357,7 +2473,7 @@ namespace pwiz.Osprey.Tasks
                     BuildAndPublishProteinCompactStratum(proteinResult, fullLibrary, ctx);
             }
 
-            // The streaming protein FDR above already patched run_protein_qvalue [52..60]
+            // The streaming protein FDR above already patched experiment_protein_qvalue [52..60]
             // onto each file's sidecar (folding the pre-S2 resident-outputs propagate + the
             // separate phase-2 patch into one streaming pass). Combine the phase-1
             // partial-write failures the sink accumulated during the score pass with those
@@ -2441,13 +2557,13 @@ namespace pwiz.Osprey.Tasks
         /// run_peptide_qvalue keyed by entry_id) joined with the parquet scalars (the modseq
         /// PeptideById was interned from + IsDecoy) into a pure
         /// <see cref="FirstPassProteinFdrAccumulator"/>, which runs the identical parsimony +
-        /// picked-protein FDR. Pass 2 patches each file's <c>run_protein_qvalue</c>
+        /// picked-protein FDR. Pass 2 patches each file's <c>experiment_protein_qvalue</c>
         /// <c>[52..60]</c> from the reducer's peptide -> q map (folding the resident
-        /// <c>PropagateRunProteinQvalues</c> + the old phase-2 patch into one streaming pass).
+        /// <c>PropagateProteinQvalues</c> + the old phase-2 patch into one streaming pass).
         /// Returns <c>null</c> (ExitCode set) on any sidecar / parquet read fault -- the task
         /// just wrote these files, so a read failure is a genuine fault (the survivor reload
         /// below would fail on the same file). <paramref name="patchFailures"/> counts files
-        /// whose run_protein_qvalue patch failed, for the StopAfterStage5 boundary gate.
+        /// whose experiment_protein_qvalue patch failed, for the StopAfterStage5 boundary gate.
         /// </summary>
         private FirstPassProteinFdrResult RunFirstPassProteinFdrStreaming(
             FdrProjectionSet projections,
@@ -2479,9 +2595,9 @@ namespace pwiz.Osprey.Tasks
             var result = accumulator.Finish(fullLibrary, config);
             ProteinFdrEngine.LogFirstPassSummary(result, config, ctx.LogInfo);
 
-            // Pass 2: patch each file's run_protein_qvalue from peptide -> q. entry_id is
+            // Pass 2: patch each file's experiment_protein_qvalue from peptide -> q. entry_id is
             // unique within a file, so a per-file entry_id -> q map (one file resident at a
-            // time; bounded) reproduces the resident PropagateRunProteinQvalues + the phase-2
+            // time; bounded) reproduces the resident PropagateProteinQvalues + the phase-2
             // patch byte-for-byte. The modseq MUST come from the parquet scalars (the same
             // value the pass-1 PeptideQvalues keys were built from), not re-derived from the
             // library, so the peptide -> q lookup matches.
@@ -2499,7 +2615,7 @@ namespace pwiz.Osprey.Tasks
                 string parquetPath = perFileParquetPaths[fileName];  // present: pass 1 read it
                 string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
 
-                var runProteinByEntryId = new Dictionary<uint, double>();
+                var proteinQByEntryId = new Dictionary<uint, double>();
                 try
                 {
                     ParquetScoreCache.ReadFdrStubScalars(parquetPath,
@@ -2511,13 +2627,13 @@ namespace pwiz.Osprey.Tasks
                             // a null Dictionary key would otherwise throw. See StreamFirstPassFileScores.
                             if (!peptideQvalues.TryGetValue(modseq ?? string.Empty, out q))
                                 q = 1.0;
-                            runProteinByEntryId[entryId] = q;
+                            proteinQByEntryId[entryId] = q;
                         });
-                    if (!FdrScoresSidecar.PatchRunProteinQvalues(
-                            fdrPath, runProteinByEntryId, FdrScoresSidecar.Pass.FirstPass))
+                    if (!FdrScoresSidecar.PatchProteinQvalues(
+                            fdrPath, proteinQByEntryId, FdrScoresSidecar.Pass.FirstPass, out _))
                     {
                         ctx.LogWarning(string.Format(
-                            "Failed to patch run_protein_qvalue in 1st-pass fdr_scores.bin for {0} " +
+                            "Failed to patch experiment_protein_qvalue in 1st-pass fdr_scores.bin for {0} " +
                             "(expected at {1})", fileName, fdrPath));
                         patchFailures++;
                     }
@@ -2629,7 +2745,7 @@ namespace pwiz.Osprey.Tasks
             // Protein-rescue gate is always active (default 0.01), matching Rust
             // pipeline.rs:4651/4658 (protein_compaction_gate = config.protein_fdr, a
             // plain f64, never a null switch). First-pass protein FDR runs unconditionally
-            // on this path too, so run_protein_qvalue is populated in the finalized sidecar.
+            // on this path too, so experiment_protein_qvalue is populated in the finalized sidecar.
             double proteinGate = config.EffectiveProteinFdr;
             int compactFiles = 0;
             using (var compactProgress = new ProgressReporter(string.Format(
@@ -2659,7 +2775,7 @@ namespace pwiz.Osprey.Tasks
                             // (>=2 first-pass-detected-peptide proteins) that failed 1st-pass FDR --
                             // identical to the legacy CompactFirstPass twin.
                             if (record.RunPeptideQvalue <= peptideGate ||
-                                record.RunProteinQvalue <= proteinGate ||
+                                record.ExperimentProteinQvalue <= proteinGate ||
                                 (stratum != null && stratum.Contains(baseId)))
                             {
                                 firstPassBaseIds.Add(baseId);

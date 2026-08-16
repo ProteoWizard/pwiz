@@ -456,7 +456,9 @@ namespace pwiz.Osprey.Test
                 scores, labels, entryIds, applyExperimentAgg);
             for (int i = 0; i < scores.Length; i++)
             {
-                double expected = precMap.TryGetValue(entryIds[i] & BASE_ID_MASK, out double q) ? q : 1.0;
+                // Full entry_id, NOT base_id: the map is keyed by the WINNER of each target/decoy
+                // competition, so the losing side keeps 1.0 rather than inheriting the winner's q.
+                double expected = precMap.TryGetValue(entryIds[i], out double q) ? q : 1.0;
                 Assert.AreEqual(expected, precRows[i], 0.0,
                     string.Format(@"{0}: precursor wrapper row {1} must equal its map entry", which, i));
             }

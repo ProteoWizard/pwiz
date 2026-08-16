@@ -45,7 +45,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Per-file <see cref="FdrEntry"/> stubs from
         /// <c>&lt;stem&gt;.scores.parquet</c>, with SVM scores + 4 q-values
-        /// + PEP + <c>RunProteinQvalue</c> overlaid from the
+        /// + PEP + <c>ExperimentProteinQvalue</c> overlaid from the
         /// <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c> sidecar. File order
         /// matches the order of <c>parquetPaths</c> passed to
         /// <see cref="RescoreHydration.HydrateForRescore"/>.
@@ -108,6 +108,23 @@ namespace pwiz.Osprey.Tasks
         /// straight-through pipeline keeps.
         /// </summary>
         public HashSet<uint> GlobalFirstPassBaseIds { get; set; }
+
+        /// <summary>
+        /// The set of base_ids the compaction actually RETAINED:
+        /// <see cref="GlobalFirstPassBaseIds"/> unioned with the base_ids of every entry
+        /// the planner emitted a reconciliation action for. Set by
+        /// <see cref="RescoreCompaction.Apply"/>, which is the single authority on the
+        /// retained set across every bundle arm (worker-supplied, own-sidecar batch,
+        /// own-sidecar streaming), so a consumer that has to reproduce the survivor list
+        /// takes it from here rather than re-deriving one of the two terms and silently
+        /// dropping the other.
+        ///
+        /// <para>Its one consumer is <c>FirstPassFdrTask.Rehydrate</c>, which uses it to build
+        /// the per-file <see cref="FirstPassSurvivorLoader"/> a resume publishes so Stage 6
+        /// streams instead of holding the all-files survivor buffer (issue #4536). Null
+        /// before <c>Apply</c> has run.</para>
+        /// </summary>
+        public HashSet<uint> RetainedBaseIds { get; set; }
 
         /// <summary>
         /// Per-file PRE-compaction tallies captured by
@@ -546,7 +563,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Overlay SVM scores + 4 q-values + PEP + RunProteinQvalue from
+        /// Overlay SVM scores + 4 q-values + PEP + ExperimentProteinQvalue from
         /// <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c> v3 onto <paramref name="stubs"/>.
         /// <c>expected_pass = FirstPass</c>: the planner's actions were computed against
         /// first-pass FDR, and the compaction predicate uses first-pass q-values. The stub
