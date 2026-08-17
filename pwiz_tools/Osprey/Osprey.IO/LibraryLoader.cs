@@ -113,6 +113,12 @@ namespace pwiz.Osprey.IO
                         logInfo(string.Format(
                             "Loaded {0} library entries from cache '{1}'",
                             cached.Count, cachePath));
+                        // Caches written before the normalizer existed still hold Carafe's
+                        // per-peptide accessions, and the cache is keyed on the SOURCE hash, so
+                        // nothing else would invalidate them. Normalizing here keeps a cached
+                        // load identical to a fresh parse instead of making the protein report
+                        // depend on whether a cache happened to be present.
+                        CarafeProteinIdNormalizer.Normalize(cached, logWarning);
                         return cached;
                     }
                     if (status == LibraryCache.LibraryCacheStatus.IdentityMismatch)
@@ -151,6 +157,13 @@ namespace pwiz.Osprey.IO
                     throw new NotSupportedException(string.Format(
                         "Unsupported library format: {0}", config.LibrarySource.Format));
             }
+
+            // Strip Carafe's per-peptide "_pepNNNNN" pseudo-protein accessions BEFORE dedup:
+            // dedup unions each (modified sequence, charge) group's accessions through a
+            // SortedSet, so cleaning first lets that union collapse the variants instead of
+            // carrying duplicates. This ordering is also what pre-stripping the source TSV
+            // produces, which is how the regression goldens were captured.
+            CarafeProteinIdNormalizer.Normalize(entries, logWarning);
 
             // Deduplicate library entries. The format loaders already interned
             // their strings during construction (and logged a collapse summary),
