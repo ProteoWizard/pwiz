@@ -199,7 +199,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             FeatureContributions pass2Contributions,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config,
-            Action<string> logInfo)
+            Action<string> logInfo,
+            HashSet<uint> stratumBaseIds = null)
         {
             try
             {
@@ -234,7 +235,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 data.Pass2 = ModelDiagnosticsData.BuildPass2(
                     perFileEntries, pass2Contributions, classByBaseId, pairByBaseId,
                     entrapmentRatio, config.RunFdr, config.FdrLevel,
-                    BuildPrecursorMzLookup(libraryById));
+                    BuildPrecursorMzLookup(libraryById), stratumBaseIds);
 
                 string outPath = RenderAndWrite(data, config);
                 // Consume the FirstPassFDR -> SecondPassFDR hand-off sidecar unconditionally
