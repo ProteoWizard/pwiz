@@ -923,14 +923,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// reduction of the same inputs - ~16 s duplicated at 82 files on the 2026-08-15
         /// measurement, and it is O(survivor observations), so ~32 s at 163 files.
         ///
-        /// <para>Sharing the list is safe for two independent reasons, and the stronger one is
-        /// the type: <c>Prec</c> is a <c>struct</c>, so <c>List&lt;Prec&gt;</c> hands every
-        /// consumer a copy and one card cannot write through to another however it is used.
-        /// Behaviour also does not depend on that - both consumers only READ:
+        /// <para>Sharing the list is safe because every consumer only READS it:
         /// <see cref="BuildIdYield"/> projects into new collections, and
         /// <see cref="BuildFdpView"/> sorts the double lists it extracts rather than the input.
-        /// If <c>Prec</c> ever becomes a class, the value-copy guarantee disappears and only the
-        /// read-only property is left holding this up - re-check both consumers then.</para>
+        /// That is the property to check when adding a card - it is the one that holds whatever
+        /// <c>Prec</c> is declared as.</para>
+        ///
+        /// <para><c>Prec</c> being a <c>struct</c> is deliberately NOT the argument, even though
+        /// value-copy semantics would stop one card writing through to another. Copy semantics do
+        /// not make a stray mutation harmless, they make it silently INEFFECTIVE, which is a
+        /// different defect rather than the absence of one - and this file already depends on
+        /// that subtlety: <see cref="ReduceToPrecs"/> mutates a local copy and the
+        /// <c>best[key] = cur</c> write-back at the end of its loop is what commits it. Remove
+        /// that line as redundant - which it would be for a class - and the reduction quietly
+        /// stops updating.</para>
         /// </summary>
         private static List<FdpView> BuildPass2FdpViews(List<Prec> precs, double entrapmentRatio)
         {
