@@ -278,6 +278,31 @@ namespace pwiz.Osprey
                         OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
                     return 1;
                 }
+                // A token that names nothing admits nothing, so the run proceeds - but say so
+                // (#4486). 'hpc-merge' was retired when --task SecondPassFDR started streaming
+                // its reconciled-input load, making it the first previously-VALID token to
+                // become invalid, and committed automation still passes it. Silence there is
+                // the bad outcome: the operator believes they granted an allowance, and if the
+                // run later needs a real one the guard says only "does not name this path",
+                // which reads as a typo rather than a retirement. A warning, not an error -
+                // unlike OSPREY_PASS2_QVALUE above, a stale allowance cannot change any
+                // reported number, it can only fail to permit something.
+                if (OspreyEnvironment.AllowUnfixedResidentUnrecognized)
+                {
+                    // Name the UNRECOGNIZED tokens, not the whole value: the flag is a comma
+                    // separated list and NamesResidentPath tests each token independently, so
+                    // 'projection-off,hpc-merge' still grants projection-off. Condemning the
+                    // whole value would push the operator to rewrite or unset a variable whose
+                    // valid half the run still needs, and the run then aborts on a guard the
+                    // warning said was not engaged.
+                    LogWarning(string.Format(
+                        "OSPREY_ALLOW_UNFIXED_RESIDENT contains unrecognized token(s) that grant " +
+                        "nothing: {0}. Recognized: {1}. ('hpc-merge' was retired - the " +
+                        "--task SecondPassFDR reconciled-input load streams and needs no allowance.) " +
+                        "Any recognized token in the same value is still honored.",
+                        OspreyEnvironment.UnrecognizedResidentTokens,
+                        string.Join(", ", ResidentPaths.KNOWN_UNFIXED)));
+                }
                 LogInfo(string.Format("Protein FDR: {0:P1}", config.EffectiveProteinFdr));
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
                 LogInfo("");

@@ -189,6 +189,24 @@ namespace pwiz.Osprey.Tasks
             try
             {
                 SpectraCache.SaveSpectraCache(cachePath, mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra, inputFile);
+                // Name the file that was just written, the way the library cache does. Without
+                // this the only evidence a multi-GB cache was produced is a silent gap in the
+                // log, and nothing says WHERE it landed - which matters because --work-dir
+                // redirects this path away from the data directory (ArtifactPaths.ResolveCacheDir),
+                // so a run can rebuild caches that already exist beside the mzML.
+                long cacheBytes = 0;
+                try
+                {
+                    if (File.Exists(cachePath))
+                        cacheBytes = new FileInfo(cachePath).Length;
+                }
+                catch
+                {
+                    cacheBytes = 0;
+                }
+                ctx.LogInfo(string.Format("Saved spectra cache ({0} MS2 + {1} MS1, {2:F2} GB) to '{3}'",
+                    mzmlResult.Ms2Spectra.Count, mzmlResult.Ms1Spectra.Count,
+                    cacheBytes / 1024.0 / 1024.0 / 1024.0, cachePath));
             }
             catch (Exception ex)
             {
@@ -275,10 +293,12 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="RescoreHydration.HydrateCompactedStreaming"/> -- the
         /// <c>--task PerFileRescoring</c> worker load in <see cref="PerFileScoringTask"/>
         /// and the straight-through resume in <see cref="FirstPassFdrTask"/> - so the two
-        /// cannot drift into reporting per-file counts under different predicates. NOT the
-        /// <c>--task SecondPassFDR</c> run: that sets <c>ExpectReconciledInput</c>, the
-        /// first branch of <c>PreCompactionPoolReason</c>, so it always takes the resident
-        /// batch twin and is still O(files) (issue #4486).</para>
+        /// cannot drift into reporting per-file counts under different predicates. The
+        /// <c>--task SecondPassFDR</c> merge takes that SAME streaming hydrate since #4486
+        /// (it no longer routes to the resident batch twin), but it skips this tally: the
+        /// only reader of <c>PassingTargets</c> is FirstPassFDR's per-file Stage 5 result
+        /// line, and that task is excluded on the merge node, so filling the field there
+        /// would walk every stub to produce a number nothing reads.</para>
         /// </summary>
         internal static void TallyPreCompaction(
             OspreyConfig config, List<FdrEntry> stubs, PreCompactionTally tally)

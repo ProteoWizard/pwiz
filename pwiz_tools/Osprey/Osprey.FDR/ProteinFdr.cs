@@ -133,7 +133,7 @@ namespace pwiz.Osprey.FDR
     /// The computed artifacts of a first-pass protein-FDR run, returned by
     /// <c>ProteinFdr.RunFirstPassProteinFdr</c> so the caller can log
     /// summary counts and emit the Stage-6 diagnostic dump WITHOUT recomputing
-    /// parsimony / FDR. The run has already propagated <c>RunProteinQvalue</c>
+    /// parsimony / FDR. The run has already propagated <c>ExperimentProteinQvalue</c>
     /// onto the stubs; these are the same intermediate objects it used.
     /// </summary>
     public class FirstPassProteinFdrResult
@@ -175,9 +175,9 @@ namespace pwiz.Osprey.FDR
     /// (detected-gate + best max-score / min-q) are order-independent and a modified sequence
     /// maps to a single target/decoy label, so any streaming order reproduces the resident
     /// <see cref="ProteinFdr.CollectBestPeptideScores(IList{KeyValuePair{string, List{FdrEntry}}})"/>
-    /// path byte-identically. The caller then patches each entry's <c>run_protein_qvalue</c>
+    /// path byte-identically. The caller then patches each entry's <c>experiment_protein_qvalue</c>
     /// onto the sidecar from <see cref="FirstPassProteinFdrResult.ProteinFdr"/>'s
-    /// <c>PeptideQvalues</c> (replacing the resident <c>PropagateRunProteinQvalues</c> +
+    /// <c>PeptideQvalues</c> (replacing the resident <c>PropagateProteinQvalues</c> +
     /// phase-2 patch with one streaming pass).
     /// </summary>
     public sealed class FirstPassProteinFdrAccumulator
@@ -224,7 +224,7 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// Run the identical parsimony + picked-protein FDR the buffer path runs and return
         /// the artifacts (the caller logs summary counts + patches the sidecar's
-        /// <c>run_protein_qvalue</c> from <see cref="ProteinFdrResult.PeptideQvalues"/>). The
+        /// <c>experiment_protein_qvalue</c> from <see cref="ProteinFdrResult.PeptideQvalues"/>). The
         /// cross-impl best-peptide-scores dump fires here, at the same point the resident
         /// <see cref="ProteinFdr.CollectBestPeptideScores(IList{KeyValuePair{string, List{FdrEntry}}})"/>
         /// emits it (after the reduction is complete).
@@ -248,8 +248,8 @@ namespace pwiz.Osprey.FDR
     /// by <see cref="ProteinFdrEngine.RunSecondPass"/> so the Tasks-layer caller can
     /// emit the Stage-7 detected-peptides and protein-FDR diagnostic dumps (and the
     /// <c>Stage7ProteinFdrOnly</c> early-exit decision) WITHOUT recomputing parsimony
-    /// / FDR. The run has already propagated <c>RunProteinQvalue</c> and
-    /// <c>ExperimentProteinQvalue</c> onto the stubs; these are the same intermediate
+    /// / FDR. The run has already propagated <c>ExperimentProteinQvalue</c>
+    /// onto the stubs; these are the same intermediate
     /// objects it used.
     /// </summary>
     public class SecondPassProteinFdrResult
@@ -888,13 +888,16 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Propagate protein q-values to FdrEntry stubs.
+        /// Propagate protein q-values to FdrEntry stubs. Assigns by
+        /// <see cref="FdrEntry.ModifiedSequence"/> over EVERY entry, whether or not it passed
+        /// anything - a peptide's protein q is a property of the peptide, so an entry that lost
+        /// its own competition still carries its protein's value. Both passes call this; which
+        /// pass a value came from is recorded by the sidecar it is written to, not by writing a
+        /// second field (see <see cref="FdrEntry.ExperimentProteinQvalue"/>).
         /// </summary>
         public static void PropagateProteinQvalues(
             IList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            ProteinFdrResult proteinFdr,
-            bool setRun,
-            bool setExperiment)
+            ProteinFdrResult proteinFdr)
         {
             foreach (var file in perFileEntries)
             {
@@ -903,10 +906,7 @@ namespace pwiz.Osprey.FDR
                     double q;
                     if (!proteinFdr.PeptideQvalues.TryGetValue(entry.ModifiedSequence, out q))
                         q = 1.0;
-                    if (setRun)
-                        entry.RunProteinQvalue = q;
-                    if (setExperiment)
-                        entry.ExperimentProteinQvalue = q;
+                    entry.ExperimentProteinQvalue = q;
                 }
             }
         }
@@ -914,20 +914,24 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// First-pass protein FDR: build parsimony from peptides passing peptide-level
         /// run FDR, run picked-protein FDR at <see cref="OspreyConfig.RunFdr"/> (1x Savitski
-        /// gate), and write the resulting q-values into <see cref="FdrEntry.RunProteinQvalue"/>
-        /// on every stub. Mirrors Rust <c>pipeline.rs::run_analysis</c> first-pass block
-        /// (around line 4292). Caller is responsible for any logging, dump diagnostics,
-        /// and downstream consumption.
+        /// gate), and write the resulting q-values into
+        /// <see cref="FdrEntry.ExperimentProteinQvalue"/> on every stub. Mirrors Rust
+        /// <c>pipeline.rs::run_analysis</c> first-pass block (around line 4292). Caller is
+        /// responsible for any logging, dump diagnostics, and downstream consumption.
+        ///
+        /// The result is EXPERIMENT-scope even though its detected-peptide gate is run-level:
+        /// the detected set is pooled over every file, one picked-protein FDR runs, and one
+        /// value per peptide reaches every entry in every file. What makes it the FIRST-PASS
+        /// value is when it runs, not what it is scoped to.
         ///
         /// Used by FirstPassFdrTask for the in-process pipeline (runs after first-pass FDR,
         /// before compaction) and by PerFileRescoreTask for the <c>--task SecondPassFDR</c>
         /// rehydration path (runs after sidecar load, before compaction) so the protein-
-        /// rescue branch of compaction has fresh <c>RunProteinQvalue</c> values matching
-        /// what Rust computes inline. Without it, the rehydrated C# pipeline used only
-        /// the <c>RunProteinQvalue</c> values stored in the 1st-pass FDR sidecar; for
-        /// single-file <c>--task SecondPassFDR</c> runs that left 19 peptides outside Rust's
-        /// post-compaction detected set on Stellar Single, causing a 1-protein delta in
-        /// Stage 7 picked-protein output.
+        /// rescue branch of compaction has fresh values matching what Rust computes inline.
+        /// Without it, the rehydrated C# pipeline used only the values stored in the 1st-pass
+        /// FDR sidecar; for single-file <c>--task SecondPassFDR</c> runs that left 19 peptides
+        /// outside Rust's post-compaction detected set on Stellar Single, causing a 1-protein
+        /// delta in Stage 7 picked-protein output.
         /// </summary>
         public static FirstPassProteinFdrResult RunFirstPassProteinFdr(
             IList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
@@ -951,10 +955,9 @@ namespace pwiz.Osprey.FDR
             var bestScores = CollectBestPeptideScores(perFileEntries);
             var proteinFdr = ComputeProteinFdr(parsimony, bestScores, config.RunFdr);
 
-            // Set RunProteinQvalue ONLY. ExperimentProteinQvalue is set by the
-            // post-output Stage 7 second-pass protein FDR (Rust's second-pass).
-            PropagateProteinQvalues(perFileEntries, proteinFdr,
-                setRun: true, setExperiment: false);
+            // The Stage 7 second-pass protein FDR overwrites this with its own value; the
+            // pass-1 value is captured on the way past, into the 1st-pass sidecar.
+            PropagateProteinQvalues(perFileEntries, proteinFdr);
 
             // Return the computed artifacts so the caller can log summary counts
             // and emit the Stage-6 diagnostic dump without recomputing them.
