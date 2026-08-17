@@ -20,9 +20,12 @@
 # limitations under the License.
 # 
 
-project 
+project
   : requirements
     <toolset>darwin:<build>no
+    # Arrow (a BiblioSpec dependency) uses x64-only MSVC intrinsics (__popcnt64,
+    # _BitScan{Reverse,Forward}64), so BiblioSpec is not built for 32-bit.
+    <address-model>32:<build>no
 ;
 
 build-project-if-exists src ;

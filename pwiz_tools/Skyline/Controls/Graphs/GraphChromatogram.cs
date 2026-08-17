@@ -344,7 +344,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         public void FireClickedChromatogram(GraphPane graphPane)
         {
-            if (ClickedChromatogram == null)
+            if (ClickedChromatogram == null || _closestCurve == null)
                 return;
 
             var clickedItem = (ChromGraphItem) _closestCurve.Tag;
@@ -1683,6 +1683,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 _enableTrackingDot = false;
             if (_enableTrackingDot)
             {
+                // The recreated tracking point is invisible and at the origin, so the graph is no
+                // longer showing a dot the user can click, no matter what it was showing before.
+                // Without this the click is accepted and then silently discarded, because it reads
+                // its time from the point that was just reset.
+                _showingTrackingDot = false;
                 graphPane.CurveList.Insert(FULLSCAN_TRACKING_INDEX, CreateScanPoint(Color.Black));
                 graphPane.CurveList.Insert(FULLSCAN_SELECTED_INDEX, CreateScanPoint(Color.Red));
             }
@@ -2046,6 +2051,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (chromGroupInfo == null)
                     continue;
 
+                // Skip a group whose cached path no longer resolves to a peptide in the current
+                // document (a document change can briefly leave the tree selection referencing a
+                // removed node until the next update catches up). Checked before any peak work so a
+                // skipped group cannot influence auto-zoom; the next update redraws against the
+                // current selection.
+                var peptideDocNode = (PeptideDocNode) DocumentUI.FindNode(_groupPaths[i].Parent);
+                if (peptideDocNode == null)
+                    continue;
+
                 ChromFileInfoId fileId = chromatograms.FindFile(chromGroupInfo);
 
                 // Collect the chromatogram info for the transition children
@@ -2097,7 +2111,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Apply any transform the user has chosen
                     infoPrimary.Transform(Transform);
 
-                    var peptideDocNode = (PeptideDocNode) DocumentUI.FindNode(_groupPaths[i].Parent);
                     int iColor = GetColorIndex(peptideDocNode, nodeGroup, countLabelTypes);
                     Color color = COLORS_GROUPS[iColor % COLORS_GROUPS.Count];
 
@@ -3712,6 +3725,9 @@ namespace pwiz.Skyline.Controls.Graphs
         public void TestMouseDown(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
+            // Truncate rather than round as TestMouseMove does, so that the point stays inside the
+            // pane it was transformed for. Rounding it up can land on the neighboring pane, where
+            // the click reads a tracking dot that was never positioned and is silently discarded.
             graphControl_MouseDownEvent(null, new MouseEventArgs(MouseButtons.Left, 1, (int)mouse.X, (int)mouse.Y, 0));
         }
 

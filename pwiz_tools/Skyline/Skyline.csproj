@@ -53,8 +53,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>159</ApplicationRevision>
-    <ApplicationVersion>26.1.1.159</ApplicationVersion>
+    <ApplicationRevision>209</ApplicationRevision>
+    <ApplicationVersion>26.1.1.209</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -226,6 +226,9 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="Accessibility">
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\FilesTree\FileSystemHealthMonitor.cs" />
@@ -265,6 +268,12 @@
     </Compile>
     <Compile Include="Alerts\ArdiaLoginDlg.Designer.cs">
       <DependentUpon>ArdiaLoginDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\DiannDownloadDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\DiannDownloadDlg.Designer.cs">
+      <DependentUpon>DiannDownloadDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\KeyValueGridDlg.cs" />
     <Compile Include="Alerts\MsFraggerDownloadDlg.cs">
@@ -632,6 +641,12 @@
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="FileUI\PeptideSearch\DiannSearchDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\DiannSearchDlg.Designer.cs">
+      <DependentUpon>DiannSearchDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -705,9 +720,11 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
+    <Compile Include="Model\OtherMetadataInfo.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
+    <Compile Include="Model\Results\IndexedMultiArray.cs" />
     <Compile Include="Model\Results\ReplicatePositions.cs" />
     <Compile Include="Model\Results\TransitionGroupIntegrator.cs" />
     <Compile Include="Model\WatersConnect\MethodModel.cs" />
@@ -926,6 +943,7 @@
     <Compile Include="Model\Irt\Regression.cs" />
     <Compile Include="Model\LegacyCrosslinkConverter.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
+    <Compile Include="Model\Lib\DiannHelpers.cs" />
     <Compile Include="Model\Lib\EncyclopeDiaHelpers.cs" />
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
@@ -1079,6 +1097,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ToolsUIResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="ToolsUI\StandaloneWindow.cs" />
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\ScoredPeakValue.cs" />
@@ -1398,6 +1417,15 @@
     <Compile Include="ToolsUI\JsonToolServer.cs" />
     <Compile Include="ToolsUI\JsonTutorialCatalog.cs" />
     <Compile Include="ToolsUI\JsonUiService.cs" />
+    <Compile Include="ToolsUI\DialogWatcher.cs" />
+    <Compile Include="ToolsUI\UiElement.cs" />
+    <Compile Include="ToolsUI\NativeFileDialog.cs" />
+    <Compile Include="ToolsUI\NativeControl.cs" />
+    <Compile Include="ToolsUI\UiActions.cs" />
+    <Compile Include="ToolsUI\NativeDialog.cs" />
+    <Compile Include="ToolsUI\NativeFolderBrowserDialog.cs" />
+    <Compile Include="ToolsUI\NativeOpenFileDialog.cs" />
+    <Compile Include="ToolsUI\NativeSaveFileDialog.cs" />
     <Compile Include="ToolsUI\ToolService.cs" />
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
@@ -2715,6 +2743,9 @@
     <EmbeddedResource Include="Alerts\MissingFileDlg.zh-CHS.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\DiannDownloadDlg.resx">
+      <DependentUpon>DiannDownloadDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MsFraggerDownloadDlg.ja.resx">
       <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -3358,6 +3389,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.zh-CHS.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\DiannSearchDlg.resx">
+      <DependentUpon>DiannSearchDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.ja.resx">
       <DependentUpon>EncyclopeDiaSearchDlg.cs</DependentUpon>
@@ -5406,6 +5441,7 @@
     <Compile Include="Util\Extensions\Text.cs" />
     <Compile Include="Util\Extensions\UtilProcess.cs" />
     <Compile Include="Util\FormAnimator.cs" />
+    <Compile Include="Util\ILongWaitForm.cs" />
     <Compile Include="Util\IonInfo.cs" />
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />
@@ -7145,7 +7181,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\add-pro32.bmp" />
-    <Content Include="SkylineCmd.exe.config">
+    <Content Include="$(IntermediateOutputPath)SkylineCmd.exe.config">
+      <Link>SkylineCmd.exe.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="bin\x86\$(Configuration)\SkylineCmd.exe">
@@ -7514,6 +7551,14 @@
     <Folder Include="Model\Carafe\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- SkylineCmd.exe needs the same config file as Skyline, so copy the "Skyline.exe.config" to "SkylineCmd.exe.config". -->
+  <Target Name="_CopySkylineCmdConfig"
+          DependsOnTargets="GenerateBindingRedirectsUpdateAppConfig"
+          BeforeTargets="GenerateApplicationManifest;_CopyFilesToOutputDirectory">
+    <Copy SourceFiles="@(AppConfigWithTargetPath)"
+          DestinationFiles="$(IntermediateOutputPath)SkylineCmd.exe.config"
+          SkipUnchangedFiles="true" />
+  </Target>
   <Target Name="AfterPublish">
     <Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>

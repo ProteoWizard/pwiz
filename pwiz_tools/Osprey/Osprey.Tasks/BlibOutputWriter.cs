@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -32,14 +33,14 @@ using pwiz.Osprey.IO;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// Orchestrates the BiblioSpecLite <c>.blib</c> output emission for the merge
+    /// Orchestrates the BiblioSpecLite <c>.blib</c> output emission for the SecondPassFDR
     /// node (Stage 9): source-file IDs, a parallel zlib pre-compress pass, the
     /// sequential per-best-precursor RefSpectra + modifications + protein +
     /// RetentionTimes + Osprey extension-table emission, then metadata and
     /// finalize. Drives the low-level <see cref="BlibWriter"/> (the SQLite layer);
     /// this type owns only the per-spectrum row composition.
     ///
-    /// Extracted verbatim from <c>MergeNodeTask.WriteBlibFile</c> as pure code
+    /// Extracted verbatim from <c>SecondPassFdrTask.WriteBlibOutput</c> as pure code
     /// motion so <see cref="Write"/> reads as a sequencer; behavior (and therefore
     /// the blib bytes) is unchanged. Mirrors Rust pipeline.rs:4596-6272.
     /// </summary>
@@ -60,25 +61,39 @@ namespace pwiz.Osprey.Tasks
             Dictionary<(string, byte), List<KeyValuePair<string, FdrEntry>>> entriesByPrecursor)
         {
             double fdrThreshold = config.RunFdr; // run-level threshold for ID-line semantics
-            using (var writer = new BlibWriter(config.OutputBlib))
+            // Write the blib to a FileSaver sibling temp, then atomically rename it into
+            // place. This is safe with BlibWriter's WAL journaling ONLY because
+            // FinalizeDatabase() runs PRAGMA wal_checkpoint(TRUNCATE) + journal_mode=DELETE
+            // (BlibWriter.cs:577-578): by the time the inner using disposes BlibWriter -- which
+            // disposes every prepared command before closing the connection, releasing the OS
+            // handle -- the WAL has been merged back and the -wal/-shm sidecars are gone, so
+            // saver.Commit() renames a single self-contained file (no orphaned WAL, no
+            // sharing-violation on the still-open handle). Keep FinalizeDatabase() as the last
+            // BlibWriter call before the connection closes; reordering or dropping it would
+            // leave sidecar files that the rename would not carry.
+            using (var saver = new FileSaver(config.OutputBlib))
             {
-                writer.BeginBatch();
+                using (var writer = new BlibWriter(saver.SafeName))
+                {
+                    writer.BeginBatch();
 
-                var sourceFileIds = CreateSourceFiles(writer, config, perFileEntries, fdrThreshold);
+                    var sourceFileIds = CreateSourceFiles(writer, config, perFileEntries, fdrThreshold);
 
-                var blibEntries = bestByPrecursor.Values.ToList();
-                PrecompressSpectra(blibEntries, libraryById, config.NThreads,
-                    out byte[][] blibMzBlobs, out byte[][] blibIntBlobs, out int[] blibNumPeaks);
+                    var blibEntries = bestByPrecursor.Values.ToList();
+                    PrecompressSpectra(blibEntries, libraryById, config.NThreads,
+                        out byte[][] blibMzBlobs, out byte[][] blibIntBlobs, out int[] blibNumPeaks);
 
-                EmitSpectrumRows(writer, blibEntries, blibMzBlobs, blibIntBlobs, blibNumPeaks,
-                    sourceFileIds, libraryById, bestExpPrecursorQ, sharedBounds,
-                    entriesByPrecursor, perFileEntries.Count, fdrThreshold);
+                    EmitSpectrumRows(writer, blibEntries, blibMzBlobs, blibIntBlobs, blibNumPeaks,
+                        sourceFileIds, libraryById, bestExpPrecursorQ, sharedBounds,
+                        entriesByPrecursor, perFileEntries.Count, fdrThreshold);
 
-                writer.Commit();
+                    writer.Commit();
 
-                WriteMetadata(writer, config);
+                    WriteMetadata(writer, config);
 
-                writer.FinalizeDatabase();
+                    writer.FinalizeDatabase();
+                }
+                saver.Commit();
             }
         }
 
@@ -113,26 +128,43 @@ namespace pwiz.Osprey.Tasks
             var mzBlobs = new byte[blibN][];
             var intBlobs = new byte[blibN][];
             var numPeaks = new int[blibN];
-            Parallel.For(0, blibN,
-                new ParallelOptions { MaxDegreeOfParallelism = nThreads },
-                i =>
-                {
-                    var entry = blibEntries[i].Value;
-                    LibraryEntry libEntryP;
-                    if (!libraryById.TryGetValue(entry.EntryId, out libEntryP))
-                        return;
-                    int nFrags = libEntryP.Fragments.Count;
-                    var mzsP = new double[nFrags];
-                    var intsP = new float[nFrags];
-                    for (int j = 0; j < nFrags; j++)
+            // Reported because per-spectrum zlib dominates the blib write and ran silent: on the
+            // 82-file SEA-AD run this pass and the emission below were the bulk of a 47 s gap
+            // ending at "Wrote 51597 library spectra". They are not all of it - Commit,
+            // WriteMetadata and FinalizeDatabase run after the emission scope closes and are
+            // still uninstrumented. The surrounding [COUNT] lines cannot serve here:
+            // OspreyOutput.IsStatLine filters them out of normal output, so they appear only
+            // under --perf-stats (the same trap Calibrator.cs:1564 records, where the API is
+            // misnamed IsMachineParseable).
+            int precompressed = 0;
+            using (var progress = new ProgressReporter(
+                       string.Format(@"Compressing {0} library spectra for the blib", blibN),
+                       blibN, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            {
+                Parallel.For(0, blibN,
+                    new ParallelOptions { MaxDegreeOfParallelism = nThreads },
+                    i =>
                     {
-                        mzsP[j] = libEntryP.Fragments[j].Mz;
-                        intsP[j] = libEntryP.Fragments[j].RelativeIntensity;
-                    }
-                    mzBlobs[i] = BlibWriter.CompressMzs(mzsP);
-                    intBlobs[i] = BlibWriter.CompressIntensities(intsP);
-                    numPeaks[i] = nFrags;
-                });
+                        // Reported before the early-out below, so a run whose library lookups all
+                        // miss still advances to 100% rather than stalling at 0%.
+                        progress.Report(Interlocked.Increment(ref precompressed));
+                        var entry = blibEntries[i].Value;
+                        LibraryEntry libEntryP;
+                        if (!libraryById.TryGetValue(entry.EntryId, out libEntryP))
+                            return;
+                        int nFrags = libEntryP.Fragments.Count;
+                        var mzsP = new double[nFrags];
+                        var intsP = new float[nFrags];
+                        for (int j = 0; j < nFrags; j++)
+                        {
+                            mzsP[j] = libEntryP.Fragments[j].Mz;
+                            intsP[j] = libEntryP.Fragments[j].RelativeIntensity;
+                        }
+                        mzBlobs[i] = BlibWriter.CompressMzs(mzsP);
+                        intBlobs[i] = BlibWriter.CompressIntensities(intsP);
+                        numPeaks[i] = nFrags;
+                    });
+            }
             blibMzBlobs = mzBlobs;
             blibIntBlobs = intBlobs;
             blibNumPeaks = numPeaks;
@@ -153,95 +185,103 @@ namespace pwiz.Osprey.Tasks
             Dictionary<(string, byte), List<KeyValuePair<string, FdrEntry>>> entriesByPrecursor,
             int perFileEntriesCount, double fdrThreshold)
         {
-            for (int blibIdx = 0; blibIdx < blibEntries.Count; blibIdx++)
+            // Reported for the same reason as the pre-compress pass above: this emits five row
+            // families per spectrum into SQLite and ran silent inside the same 47 s gap.
+            using (var progress = new ProgressReporter(
+                       string.Format(@"Writing {0} spectra to the blib", blibEntries.Count),
+                       blibEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                var kvp = blibEntries[blibIdx];
-                string fileName = kvp.Key;
-                var entry = kvp.Value;
-
-                LibraryEntry libEntry;
-                if (!libraryById.TryGetValue(entry.EntryId, out libEntry))
-                    continue;
-
-                long fileId = sourceFileIds[fileName];
-
-                byte[] mzBlobPre = blibMzBlobs[blibIdx];
-                byte[] intBlobPre = blibIntBlobs[blibIdx];
-                int numPeaksPre = blibNumPeaks[blibIdx];
-
-                // RefSpectra.score is the EXPERIMENT-PRECURSOR q-value (min
-                // across all observations of this (modseq, charge)). Mirrors
-                // Rust pipeline.rs:4670-4683 / 4795. Same value feeds
-                // OspreyExperimentScores.ExperimentQValue below.
-                var lookupKey = (entry.ModifiedSequence, entry.Charge);
-                double scoreQvalue;
-                if (!bestExpPrecursorQ.TryGetValue(lookupKey, out scoreQvalue))
-                    scoreQvalue = entry.ExperimentPrecursorQvalue;
-
-                // nRunsDetected -> RefSpectra.copies (Rust pipeline.rs:6179
-                // passes n_runs_detected = group.len()). Reused by
-                // OspreyExperimentScores below.
-                List<KeyValuePair<string, FdrEntry>> observations;
-                int nRunsDetected = 1;
-                if (entriesByPrecursor.TryGetValue(lookupKey, out observations) &&
-                    observations.Count > 0)
+                for (int blibIdx = 0; blibIdx < blibEntries.Count; blibIdx++)
                 {
-                    nRunsDetected = observations.Count;
+                    progress.Report(blibIdx + 1);
+                    var kvp = blibEntries[blibIdx];
+                    string fileName = kvp.Key;
+                    var entry = kvp.Value;
+
+                    LibraryEntry libEntry;
+                    if (!libraryById.TryGetValue(entry.EntryId, out libEntry))
+                        continue;
+
+                    long fileId = sourceFileIds[fileName];
+
+                    byte[] mzBlobPre = blibMzBlobs[blibIdx];
+                    byte[] intBlobPre = blibIntBlobs[blibIdx];
+                    int numPeaksPre = blibNumPeaks[blibIdx];
+
+                    // RefSpectra.score is the EXPERIMENT-PRECURSOR q-value (min
+                    // across all observations of this (modseq, charge)). Mirrors
+                    // Rust pipeline.rs:4670-4683 / 4795. Same value feeds
+                    // OspreyExperimentScores.ExperimentQValue below.
+                    var lookupKey = (entry.ModifiedSequence, entry.Charge);
+                    double scoreQvalue;
+                    if (!bestExpPrecursorQ.TryGetValue(lookupKey, out scoreQvalue))
+                        scoreQvalue = entry.ExperimentPrecursorQvalue;
+
+                    // nRunsDetected -> RefSpectra.copies (Rust pipeline.rs:6179
+                    // passes n_runs_detected = group.len()). Reused by
+                    // OspreyExperimentScores below.
+                    List<KeyValuePair<string, FdrEntry>> observations;
+                    int nRunsDetected = 1;
+                    if (entriesByPrecursor.TryGetValue(lookupKey, out observations) &&
+                        observations.Count > 0)
+                    {
+                        nRunsDetected = observations.Count;
+                    }
+
+                    // Shared peak boundaries when the peptide is detected at
+                    // multiple charges in this file (Rust pipeline.rs:6160-6164).
+                    var sharedKey = (entry.ModifiedSequence, fileName);
+                    double sharedApex = entry.ApexRt;
+                    double sharedStart = entry.StartRt;
+                    double sharedEnd = entry.EndRt;
+                    double[] sharedVals;
+                    if (sharedBounds.TryGetValue(sharedKey, out sharedVals))
+                    {
+                        sharedApex = sharedVals[0];
+                        sharedStart = sharedVals[1];
+                        sharedEnd = sharedVals[2];
+                    }
+
+                    long refId = writer.AddSpectrumPrecompressed(
+                        libEntry.Sequence,
+                        libEntry.ModifiedSequence,
+                        libEntry.PrecursorMz,
+                        libEntry.Charge,
+                        sharedApex,
+                        sharedStart,
+                        sharedEnd,
+                        mzBlobPre, intBlobPre, numPeaksPre,
+                        scoreQvalue, fileId, nRunsDetected, 0.0);
+
+                    // Add modifications
+                    if (libEntry.Modifications != null && libEntry.Modifications.Count > 0)
+                        writer.AddModifications(refId, libEntry.Modifications);
+
+                    // Add protein mappings
+                    if (libEntry.ProteinIds != null && libEntry.ProteinIds.Count > 0)
+                        writer.AddProteinMapping(refId, libEntry.ProteinIds);
+
+                    WriteRetentionTimes(writer, refId, fileName, observations,
+                        sourceFileIds, sharedBounds, fdrThreshold);
+
+                    // Osprey extension tables - one row per RefSpectra each,
+                    // mirroring Rust pipeline.rs:6255-6272. Best-run-only for
+                    // OspreyPeakBoundaries + OspreyRunScores; experiment-level for
+                    // OspreyExperimentScores. The 0.0 fields are the same "not yet
+                    // plumbed through Stage 7 plan entries" placeholders Rust writes.
+                    writer.AddPeakBoundaries(refId, fileName,
+                        sharedStart, sharedEnd, sharedApex,
+                        0.0, // ApexIntensity - matches Rust's apex_coefficient placeholder
+                        entry.BoundsArea);
+                    writer.AddRunScores(refId, fileName,
+                        entry.EffectiveRunQvalue(FdrLevel.Both),
+                        0.0, // DiscriminantScore - matches Rust's dot_product placeholder
+                        0.0); // PosteriorErrorProb - matches Rust's PEP placeholder
+                    writer.AddExperimentScores(refId,
+                        scoreQvalue, // Same value as RefSpectra.score
+                        nRunsDetected,
+                        perFileEntriesCount);
                 }
-
-                // Shared peak boundaries when the peptide is detected at
-                // multiple charges in this file (Rust pipeline.rs:6160-6164).
-                var sharedKey = (entry.ModifiedSequence, fileName);
-                double sharedApex = entry.ApexRt;
-                double sharedStart = entry.StartRt;
-                double sharedEnd = entry.EndRt;
-                double[] sharedVals;
-                if (sharedBounds.TryGetValue(sharedKey, out sharedVals))
-                {
-                    sharedApex = sharedVals[0];
-                    sharedStart = sharedVals[1];
-                    sharedEnd = sharedVals[2];
-                }
-
-                long refId = writer.AddSpectrumPrecompressed(
-                    libEntry.Sequence,
-                    libEntry.ModifiedSequence,
-                    libEntry.PrecursorMz,
-                    libEntry.Charge,
-                    sharedApex,
-                    sharedStart,
-                    sharedEnd,
-                    mzBlobPre, intBlobPre, numPeaksPre,
-                    scoreQvalue, fileId, nRunsDetected, 0.0);
-
-                // Add modifications
-                if (libEntry.Modifications != null && libEntry.Modifications.Count > 0)
-                    writer.AddModifications(refId, libEntry.Modifications);
-
-                // Add protein mappings
-                if (libEntry.ProteinIds != null && libEntry.ProteinIds.Count > 0)
-                    writer.AddProteinMapping(refId, libEntry.ProteinIds);
-
-                WriteRetentionTimes(writer, refId, fileName, observations,
-                    sourceFileIds, sharedBounds, fdrThreshold);
-
-                // Osprey extension tables — one row per RefSpectra each,
-                // mirroring Rust pipeline.rs:6255-6272. Best-run-only for
-                // OspreyPeakBoundaries + OspreyRunScores; experiment-level for
-                // OspreyExperimentScores. The 0.0 fields are the same "not yet
-                // plumbed through Stage 7 plan entries" placeholders Rust writes.
-                writer.AddPeakBoundaries(refId, fileName,
-                    sharedStart, sharedEnd, sharedApex,
-                    0.0, // ApexIntensity — matches Rust's apex_coefficient placeholder
-                    entry.BoundsArea);
-                writer.AddRunScores(refId, fileName,
-                    entry.EffectiveRunQvalue(FdrLevel.Both),
-                    0.0, // DiscriminantScore — matches Rust's dot_product placeholder
-                    0.0); // PosteriorErrorProb — matches Rust's PEP placeholder
-                writer.AddExperimentScores(refId,
-                    scoreQvalue, // Same value as RefSpectra.score
-                    nRunsDetected,
-                    perFileEntriesCount);
             }
         }
 

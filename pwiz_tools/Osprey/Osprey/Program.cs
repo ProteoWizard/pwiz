@@ -91,7 +91,7 @@ namespace pwiz.Osprey
                     {
                         if (i + 1 >= args.Length || args[i + 1].StartsWith("-", StringComparison.Ordinal))
                         {
-                            LogError("--task requires a task name (PerFileScoring, FirstPassFDR, PerFileRescoring, or SecondPassFDR).");
+                            LogError("--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, or SecondPassFDR).");
                             return 1;
                         }
                         taskName = args[i + 1];
@@ -124,8 +124,8 @@ namespace pwiz.Osprey
                 // the task<->input-type contract and name the typed task.
                 config.SelectedTask = selectedTask;
                 config.NoJoin = selectedTask == HpcTask.PerFileScoring || selectedTask == HpcTask.PerFileRescore;
-                config.StopAfterStage5 = selectedTask == HpcTask.FirstJoin;
-                config.ExpectReconciledInput = selectedTask == HpcTask.MergeNode;
+                config.StopAfterStage5 = selectedTask == HpcTask.FirstPassFdr;
+                config.ExpectReconciledInput = selectedTask == HpcTask.SecondPassFdr;
 
                 // Apply the output / cache directory overrides process-wide so
                 // every per-file artifact path helper (scores parquet, spectra
@@ -180,8 +180,8 @@ namespace pwiz.Osprey
                     Directory.CreateDirectory(config.OutputDir);
                 if (!string.IsNullOrEmpty(config.CacheDir))
                     Directory.CreateDirectory(config.CacheDir);
-                // Runs that consume --input-scores (FirstJoin, PerFileRescore,
-                // MergeNode, or the default full pipeline started from scores)
+                // Runs that consume --input-scores (FirstPassFDR, PerFileRescore,
+                // SecondPassFDR, or the default full pipeline started from scores)
                 // have no mzML inputs to validate and ignore --output handling
                 // differently from per-file scoring.
                 bool fromInputScores = config.InputScores != null && config.InputScores.Count > 0;
@@ -199,7 +199,13 @@ namespace pwiz.Osprey
                 {
                     foreach (string inputFile in config.InputFiles)
                     {
-                        if (!File.Exists(inputFile))
+                        // A directory counts as present. Several vendor formats ARE
+                        // directories (Agilent .d, Bruker .d, Waters .raw), so testing
+                        // File.Exists alone rejected every one of them here, before any
+                        // reader was consulted, on builds with and without the vendor
+                        // reader. It also blocked reusing a raw-derived .spectra.bin,
+                        // which must work on a build that cannot read the raw itself.
+                        if (!File.Exists(inputFile) && !Directory.Exists(inputFile))
                         {
                             LogError(string.Format("Input file not found: {0}", inputFile));
                             return 1;
@@ -213,7 +219,7 @@ namespace pwiz.Osprey
                 }
 
                 // Log startup info
-                LogInfo(string.Format("Osprey v{0}", OspreyVersion.Current));
+                LogInfo(string.Format("Osprey v{0}", OspreyVersion.DisplayVersion));
                 LogInfo(string.Format("Command: {0}", string.Join(" ", args)));
                 LogInfo(string.Format("Input files: {0}", config.InputFiles.Count));
                 LogInfo(string.Format("Library: {0} ({1})",
@@ -226,10 +232,13 @@ namespace pwiz.Osprey
                     LogInfo(string.Format("Task: {0} (single-task run)",
                         TaskCliName(config.SelectedTask.Value)));
                 // --task PerFileScoring writes per-file .scores.parquet next to each
-                // input mzML, not a blib -- report the real output rather than the
-                // ignored --output blib path. (PerFileRescoring still writes --output.)
-                if (config.NoJoin && !fromInputScores)
-                    LogInfo("Output: per-file .scores.parquet (next to each input mzML)");
+                // input file, mzML or vendor raw, not a blib - report the real output
+                // rather than the ignored --output blib path. (PerFileRescoring still
+                // writes --output.)
+                if (config.SelectedTask == HpcTask.SpectraCache)
+                    LogInfo("Output: per-file .spectra.bin (no scoring; --output and --library are not used)");
+                else if (config.NoJoin && !fromInputScores)
+                    LogInfo("Output: per-file .scores.parquet (next to each input file)");
                 else
                     LogInfo(string.Format("Output: {0}", config.OutputBlib));
                 LogInfo(string.Format("Resolution: {0}", config.ResolutionMode));
@@ -238,8 +247,63 @@ namespace pwiz.Osprey
                     config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th"));
                 LogInfo(string.Format("Run FDR: {0:P1}", config.RunFdr));
                 LogInfo(string.Format("Experiment FDR: {0:P1}", config.ExperimentFdr));
-                if (config.ProteinFdr.HasValue)
-                    LogInfo(string.Format("Protein FDR: {0:P1}", config.ProteinFdr.Value));
+                // Always print which experiment-wide aggregation is in force, active or not.
+                // Reported HERE and not from Stage 5 because FirstPassFdrTask.Run is skipped on
+                // --task SecondPassFDR, on a Rehydrate, and on any warm resume - exactly the runs
+                // whose q-values an operator is most likely to attribute to the wrong arm.
+                LogInfo(OspreyEnvironment.DescribeExperimentAgg());
+                if (OspreyEnvironment.ExperimentAggUnrecognized)
+                {
+                    LogWarning(string.Format(
+                        "OSPREY_EXPERIMENT_AGG was set to an unrecognized value; using the default " +
+                        "'{0}'. Recognized values: '{0}', or '{1}<N>' with N in [2, {2}] (e.g. '{1}2').",
+                        OspreyEnvironment.EXPERIMENT_AGG_MAX,
+                        OspreyEnvironment.EXPERIMENT_AGG_MEAN_BEST_PREFIX,
+                        OspreyEnvironment.MEAN_BEST_N_MAX));
+                }
+                // Abort, do not fall back. A run that asked for a mode it did not get would
+                // report q-values the caller never requested, under whatever output name the
+                // caller chose - and 'percolator' was removed, so existing sweep scripts still
+                // pass it. Checked here rather than at SecondPassFDR so it costs seconds
+                // instead of a full Stage 1-5.
+                if (OspreyEnvironment.Pass2QValueUnrecognized)
+                {
+                    LogError(string.Format(
+                        "OSPREY_PASS2_QVALUE is not a recognized mode. Recognized: '{0}', '{1}', " +
+                        "'{2}'. Unset it for the default ('{2}'). The 'percolator' mode was " +
+                        "REMOVED: it retrained the 2nd-pass SVM on a compaction-depleted decoy " +
+                        "pool, which reports anti-conservative q-values.",
+                        OspreyEnvironment.PASS2_QVALUE_TRANSFER,
+                        OspreyEnvironment.PASS2_QVALUE_TRANSFER_COMPETE,
+                        OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
+                    return 1;
+                }
+                // A token that names nothing admits nothing, so the run proceeds - but say so
+                // (#4486). 'hpc-merge' was retired when --task SecondPassFDR started streaming
+                // its reconciled-input load, making it the first previously-VALID token to
+                // become invalid, and committed automation still passes it. Silence there is
+                // the bad outcome: the operator believes they granted an allowance, and if the
+                // run later needs a real one the guard says only "does not name this path",
+                // which reads as a typo rather than a retirement. A warning, not an error -
+                // unlike OSPREY_PASS2_QVALUE above, a stale allowance cannot change any
+                // reported number, it can only fail to permit something.
+                if (OspreyEnvironment.AllowUnfixedResidentUnrecognized)
+                {
+                    // Name the UNRECOGNIZED tokens, not the whole value: the flag is a comma
+                    // separated list and NamesResidentPath tests each token independently, so
+                    // 'projection-off,hpc-merge' still grants projection-off. Condemning the
+                    // whole value would push the operator to rewrite or unset a variable whose
+                    // valid half the run still needs, and the run then aborts on a guard the
+                    // warning said was not engaged.
+                    LogWarning(string.Format(
+                        "OSPREY_ALLOW_UNFIXED_RESIDENT contains unrecognized token(s) that grant " +
+                        "nothing: {0}. Recognized: {1}. ('hpc-merge' was retired - the " +
+                        "--task SecondPassFDR reconciled-input load streams and needs no allowance.) " +
+                        "Any recognized token in the same value is still honored.",
+                        OspreyEnvironment.UnrecognizedResidentTokens,
+                        string.Join(", ", ResidentPaths.KNOWN_UNFIXED)));
+                }
+                LogInfo(string.Format("Protein FDR: {0:P1}", config.EffectiveProteinFdr));
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
                 LogInfo("");
 
@@ -298,7 +362,7 @@ namespace pwiz.Osprey
             }
             if (string.Equals(taskName, "FirstPassFDR", StringComparison.OrdinalIgnoreCase))
             {
-                task = HpcTask.FirstJoin;
+                task = HpcTask.FirstPassFdr;
                 return null;
             }
             if (string.Equals(taskName, "PerFileRescoring", StringComparison.OrdinalIgnoreCase))
@@ -308,30 +372,40 @@ namespace pwiz.Osprey
             }
             if (string.Equals(taskName, "SecondPassFDR", StringComparison.OrdinalIgnoreCase))
             {
-                task = HpcTask.MergeNode;
+                task = HpcTask.SecondPassFdr;
+                return null;
+            }
+            if (string.Equals(taskName, "SpectraCache", StringComparison.OrdinalIgnoreCase))
+            {
+                task = HpcTask.SpectraCache;
                 return null;
             }
             task = default;
             return string.Format(
-                "--task: unknown task '{0}'. Valid tasks: PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR.",
+                "--task: unknown task '{0}'. Valid tasks: SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR.",
                 taskName);
         }
 
         /// <summary>
-        /// The CLI <c>--task</c> name for an <see cref="HpcTask"/> -- the inverse of
-        /// <see cref="ResolveTask"/>, used to echo the selected task in the startup
-        /// settings block. The enum members and CLI spellings differ
-        /// (FirstJoin/FirstPassFDR, PerFileRescore/PerFileRescoring,
-        /// MergeNode/SecondPassFDR), so this maps back to what the user typed.
+        /// The canonical CLI <c>--task</c> token for an <see cref="HpcTask"/> - the
+        /// inverse of <see cref="ResolveTask"/>, used to echo the selected task in the
+        /// startup settings block. Not necessarily the spelling the operator typed:
+        /// <see cref="ResolveTask"/> matches case-insensitively, and only the resolved
+        /// enum value reaches this method, so <c>--task firstpassfdr</c> echoes as
+        /// <c>FirstPassFDR</c>. The members now spell their own CLI token, so the only
+        /// differences left are the FDR casing (<c>FirstPassFdr</c> vs the all-caps
+        /// acronym the CLI takes) and PerFileRescore vs PerFileRescoring - which is why
+        /// <c>task.ToString()</c> is still not a substitute for this switch.
         /// </summary>
         private static string TaskCliName(HpcTask task)
         {
             switch (task)
             {
                 case HpcTask.PerFileScoring: return "PerFileScoring";
-                case HpcTask.FirstJoin: return "FirstPassFDR";
+                case HpcTask.FirstPassFdr: return "FirstPassFDR";
                 case HpcTask.PerFileRescore: return "PerFileRescoring";
-                case HpcTask.MergeNode: return "SecondPassFDR";
+                case HpcTask.SecondPassFdr: return "SecondPassFDR";
+                case HpcTask.SpectraCache: return "SpectraCache";
                 default: return task.ToString();
             }
         }
@@ -351,10 +425,33 @@ namespace pwiz.Osprey
             bool hasInputScores = config.InputScores != null && config.InputScores.Count > 0;
             bool hasInputFiles = config.InputFiles != null && config.InputFiles.Count > 0;
 
+            // OSPREY_EXPERIMENT_AGG family, before any I/O. Checked here rather than at the
+            // Stage-5 consuming site so a bad combination costs a second instead of the hours a
+            // large run spends reaching FirstPassFDR, and so a warm resume - which skips
+            // FirstPassFdrTask.Run entirely - is still checked.
+            string aggErr = OspreyEnvironment.ValidateExperimentAggSettings(
+                ExperimentAggFileCount(config, hasInputScores, hasInputFiles));
+            if (aggErr != null)
+                return aggErr;
+
             if (config.SelectedTask.HasValue)
             {
                 switch (config.SelectedTask.Value)
                 {
+                    case HpcTask.SpectraCache:
+                        // Stage 1 alone: inputs in, .spectra.bin out. Deliberately
+                        // does NOT require --library: caching depends only on the
+                        // input file, and demanding one would make staging a dataset
+                        // wait on a library that is often chosen later.
+                        if (hasInputScores)
+                        {
+                            return "--task SpectraCache takes -i <file>, not --input-scores " +
+                                   "(it builds spectra caches from raw inputs, not from scores).";
+                        }
+                        if (!hasInputFiles)
+                            return "--task SpectraCache requires --input <file...>.";
+                        return null;
+
                     case HpcTask.PerFileScoring:
                         // Stage 1-4 worker: mzML in, per-file .scores.parquet out.
                         if (hasInputScores)
@@ -377,14 +474,14 @@ namespace pwiz.Osprey
                             return "--task PerFileRescoring requires --library and --output.";
                         return null;
 
-                    case HpcTask.FirstJoin:
+                    case HpcTask.FirstPassFdr:
                         if (hasInputFiles)
                             return "--task FirstPassFDR cannot be combined with --input. Use --input-scores instead.";
                         if (!hasInputScores)
                             return "--task FirstPassFDR requires --input-scores <path...>.";
                         if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
                             return "--task FirstPassFDR requires --library and --output.";
-                        // FirstJoin writes the Stage 5 → Stage 6 boundary file
+                        // FirstPassFDR writes the Stage 5 → Stage 6 boundary file
                         // pair, only meaningful with 2+ siblings to reconcile
                         // against and reconciliation enabled. Reject early.
                         if (config.InputScores.Count < 2)
@@ -399,7 +496,7 @@ namespace pwiz.Osprey
                                    "only meaningful when reconciliation runs.";
                         return null;
 
-                    case HpcTask.MergeNode:
+                    case HpcTask.SecondPassFdr:
                         if (hasInputFiles)
                             return "--task SecondPassFDR cannot be combined with --input. Use --input-scores instead.";
                         if (!hasInputScores)
@@ -427,6 +524,28 @@ namespace pwiz.Osprey
             if (string.IsNullOrEmpty(config.OutputBlib))
                 return "No output path specified. Use -o <output.blib>";
             return null;
+        }
+
+        /// <summary>
+        /// How many runs this invocation will aggregate across for the experiment-wide
+        /// competition, or 0 when that is not a property of this invocation. The per-file HPC
+        /// workers (SpectraCache / PerFileScoring / PerFileRescoring) each see ONE input and
+        /// never compute an experiment-wide score, so reporting their input count would refuse
+        /// every worker of a legitimate distributed mean(best-N) run.
+        /// </summary>
+        private static int ExperimentAggFileCount(
+            OspreyConfig config, bool hasInputScores, bool hasInputFiles)
+        {
+            switch (config.SelectedTask)
+            {
+                case HpcTask.SpectraCache:
+                case HpcTask.PerFileScoring:
+                case HpcTask.PerFileRescore:
+                    return 0;
+            }
+            if (hasInputScores)
+                return config.InputScores.Count;
+            return hasInputFiles ? config.InputFiles.Count : 0;
         }
 
         /// <summary>
@@ -471,7 +590,7 @@ namespace pwiz.Osprey
                 foreach (string f in originals)
                     if (!reconciledSet.Contains(ParquetScoreCache.ReconciledPathFromScoresPath(f)))
                         result.Add(f);                                   // original with no reconciled sibling
-                result.Sort(StringComparer.Ordinal); // unique filenames, no ties
+                result.Sort(StringComparer.Ordinal); // Array.Sort OK: unique filenames, so the comparator never ties
                 return result;
             }
 

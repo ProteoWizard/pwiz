@@ -86,7 +86,7 @@ td {
 <tr><td><nobr>--import-lockmass-positive</nobr>=&lt;number&gt;</td><td>Waters lockmass correction m/z for positive ion scans.</td></tr>
 <tr><td><nobr>--import-lockmass-negative</nobr>=&lt;number&gt;</td><td>Waters lockmass correction m/z for negative ion scans.</td></tr>
 <tr><td><nobr>--import-lockmass-tolerance</nobr>=&lt;number&gt;</td><td>Waters lockmass correction tolerance m/z.</td></tr>
-<tr><td><nobr>--import-peak-boundaries</nobr>=path/to/file</td><td>Read peak boundaries from a comma or tab separated file</td></tr>
+<tr><td><nobr>--import-peak-boundaries</nobr>=path/to/file</td><td>Read peak boundaries from a comma or tab separated file. Rows are matched to results by a FileName column, or alternatively by a ReplicateName column; for a replicate that contains more than one file, add a SampleName column to identify a single file.</td></tr>
 </table>
 <div class="RowType">Reintegrate with advanced peak picking models</div>
 <table>
@@ -226,8 +226,8 @@ Red &lt; 0.5</td></tr>
 <tr><td><nobr>--report-file</nobr>=path/to/file.csv</td><td>The path to export the report to. Required if <nobr>--report-name</nobr> is specified.</td></tr>
 <tr><td><nobr>--report-add</nobr>=path/to/file.skyr</td><td>Add reports from a saved report template file to the running program.</td></tr>
 <tr><td><nobr>--report-conflict-resolution</nobr>=<br/>&lt;overwrite | skip&gt;</td><td>Specifies how to resolve report name conflicts, by either overwriting or skipping them, when using <nobr>--report-add</nobr> (default is to output an error message for conflicts)</td></tr>
-<tr><td><nobr>--report-format</nobr>=&lt;csv | tsv&gt;</td><td>CSV for <nobr>comma-separated</nobr> reports (or semicolon separated, depending on your localization) or TSV for tab separated reports [default CSV]</td></tr>
-<tr><td><nobr>--report-invariant</nobr></td><td>Exports the report with the “Invariant” language setting, using English (US) number formats and header text without spaces, ideal for use with the R statistical programming environment.</td></tr>
+<tr><td><nobr>--report-format</nobr>=<br/>&lt;csv | tsv | parquet&gt;</td><td>CSV for <nobr>comma-separated</nobr> reports (or semicolon separated, depending on your localization), TSV for tab separated reports, or PARQUET for Apache Parquet files. When this argument is omitted, the format is CSV unless the <nobr>--report-file</nobr> name ends in &quot;.parquet&quot; [default CSV]</td></tr>
+<tr><td><nobr>--report-invariant</nobr>[=True&nbsp;or&nbsp;False]</td><td>Exports the report with the “Invariant” language setting, using English (US) number formats and header text without spaces, ideal for use with the R statistical programming environment. Specify <nobr>--report-invariant</nobr>=False to get localized text instead. When this argument is omitted, PARQUET reports are invariant and the other formats are localized.</td></tr>
 </table>
 <div class="RowType">Exporting chromatograms</div>
 <table>

@@ -30,7 +30,7 @@ using pwiz.Osprey.FDR.Reconciliation;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// Stage 6 planning subsystem extracted from <see cref="FirstJoinTask"/>.
+    /// Stage 6 planning subsystem extracted from <see cref="FirstPassFdrTask"/>.
     /// Runs the four cross-file planning phases that produce the rescore plan
     /// <see cref="PerFileRescoreTask"/> executes: multi-charge consensus per
     /// file, cross-run consensus RTs, per-file calibration refit, and
@@ -43,13 +43,13 @@ namespace pwiz.Osprey.Tasks
     /// <c>OspreyDiagnosticsLog.ExitAfterDump</c>), preserving the Stage-6 dump
     /// call order bisection relies on. Pure planning -- writing the
     /// .reconciliation.json envelopes and publishing the typed byproduct slots
-    /// stays in <see cref="FirstJoinTask"/>.
+    /// stays in <see cref="FirstPassFdrTask"/>.
     /// </summary>
     internal sealed class Stage6Planner
     {
         /// <summary>
         /// The four cross-file planning byproducts Stage 6 produces. Consumed by
-        /// <see cref="FirstJoinTask"/> to write the reconciliation envelopes and
+        /// <see cref="FirstPassFdrTask"/> to write the reconciliation envelopes and
         /// to publish the typed byproduct slots <see cref="PerFileRescoreTask"/>
         /// reads. <see cref="ReconciliationActions"/> is null when reconciliation
         /// was skipped (single-file / empty consensus).
@@ -173,7 +173,7 @@ namespace pwiz.Osprey.Tasks
                     ? ConsensusRts.Compute(
                         perFileForRecon, perFileCalibrations,
                         config.Reconciliation.ConsensusFdr,
-                        config.ProteinFdr ?? 0.0,
+                        config.EffectiveProteinFdr,
                         invPredictTrace)
                     : Array.Empty<PeptideConsensusRT>();
 
@@ -217,12 +217,22 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config)
         {
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
-            foreach (var kvp in perFileEntries)
+            // Per-file progress: the LOESS calibration refit runs per file and only logged its
+            // completion count, so it went silent for ~0.5s/file (41s at 82 files, O(files) toward
+            // minutes at 500). Report through the standard throttled reporter so it never goes silent.
+            using (var refitProgress = new ProgressReporter(
+                string.Format(@"Reconciliation calibration refit across {0} file(s)", perFileEntries.Count),
+                perFileEntries.Count))
             {
-                var refined = CalibrationRefit.Refit(consensus, kvp.Value,
-                    config.Reconciliation.ConsensusFdr);
-                if (refined != null)
-                    refinedCalibrations[kvp.Key] = refined;
+                int refitDone = 0;
+                foreach (var kvp in perFileEntries)
+                {
+                    var refined = CalibrationRefit.Refit(consensus, kvp.Value,
+                        config.Reconciliation.ConsensusFdr);
+                    if (refined != null)
+                        refinedCalibrations[kvp.Key] = refined;
+                    refitProgress.Report(++refitDone);
+                }
             }
             _ctx.LogInfo(string.Format(
                 @"Reconciliation calibration refit: {0}/{1} files produced refined calibrations",
@@ -264,8 +274,14 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config)
         {
             IReadOnlyDictionary<(string File, int Index), ReconcileAction> reconciliationActions = null;
-            var perFileCwtCandidates = CwtCandidateLoader.Load(
-                perFileEntries, perFileParquetPaths, _ctx.LogWarning);
+            // Fail-fast: a footer-only metadata check confirms every file's stubs are in
+            // range of its parquet (no decode, nothing resident -- the former eager
+            // all-files load was the buffer that OOM'd the 82-file Stage-6 planning). A
+            // missing / corrupt / out-of-range Stage-4 parquet THROWS here, aborting the
+            // run with a clear "delete + regenerate {file}" error rather than reconciling
+            // only the good files. The planner then streams each file's candidates on
+            // demand (LoadOneFile, which throws the same way on a corrupt CWT blob).
+            CwtCandidateLoader.ValidateAllInRange(perFileEntries, perFileParquetPaths);
             var perFileForPlan = new List<KeyValuePair<string,
                 IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
             foreach (var kvp in perFileEntries)
@@ -273,13 +289,14 @@ namespace pwiz.Osprey.Tasks
                 perFileForPlan.Add(new KeyValuePair<string,
                     IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
             }
-            if (perFileCwtCandidates.Count == perFileEntries.Count
-                && consensus.Count > 0)
+            // Empty consensus (single-file / no cross-file evidence) is a legitimate
+            // skip, not an error -- only a corrupt input aborts (above).
+            if (consensus.Count > 0)
             {
                 reconciliationActions = ReconciliationPlanner.Plan(
                     consensus,
                     perFileForPlan,
-                    perFileCwtCandidates,
+                    fileName => CwtCandidateLoader.LoadOneFile(fileName, perFileParquetPaths),
                     refinedCalibrations,
                     perFileCalibrations,
                     config.Reconciliation.ConsensusFdr);
@@ -287,15 +304,9 @@ namespace pwiz.Osprey.Tasks
                     @"Reconciliation: {0} per-(file, entry) actions planned",
                     reconciliationActions.Count));
             }
-            else if (consensus.Count == 0)
-            {
-                _ctx.LogInfo(@"Reconciliation: skipped (empty consensus; single-file or no cross-file evidence)");
-            }
             else
             {
-                _ctx.LogInfo(string.Format(
-                    @"Reconciliation: skipped (CWT candidates loaded for {0}/{1} files)",
-                    perFileCwtCandidates.Count, perFileEntries.Count));
+                _ctx.LogInfo(@"Reconciliation: skipped (empty consensus; single-file or no cross-file evidence)");
             }
 
             // Stage 6 cross-impl bisection dump for the planner output. Fires

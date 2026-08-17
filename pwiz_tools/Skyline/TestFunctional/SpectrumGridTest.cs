@@ -55,16 +55,18 @@ namespace pwiz.SkylineTestFunctional
             CollectionAssert.DoesNotContain(initialChromatogramPointCounts, 0);
             var spectrumGrid = ShowDialog<SpectrumGridForm>(() => SkylineWindow.ViewMenu.ShowSpectrumGridForm());
             RunUI(()=>SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.MoleculeGroups, 0));
-            WaitForCondition(() => spectrumGrid.IsComplete());
+            // The grid populates its rows asynchronously, so wait for it to settle at the expected row count
+            // rather than asserting the count the instant IsComplete() first returns true.
+            WaitForConditionUI(() => spectrumGrid.IsComplete() && spectrumGrid.DataGridView.RowCount == 3,
+                () => string.Format("Expected 3 rows but found {0}", spectrumGrid.DataGridView.RowCount));
             RunUI(()=>
             {
-                Assert.AreEqual(3, spectrumGrid.DataGridView.RowCount);
                 SkylineWindow.SelectedPath = peptideIdentityPath;
             });
-            WaitForConditionUI(() => spectrumGrid.IsComplete());
+            WaitForConditionUI(() => spectrumGrid.IsComplete() && spectrumGrid.DataGridView.RowCount == 2,
+                () => string.Format("Expected 2 rows but found {0}", spectrumGrid.DataGridView.RowCount));
             RunUI(()=>
             {
-                AssertEx.AreEqual(2, spectrumGrid.DataGridView.RowCount);
                 spectrumGrid.SetSpectrumClassColumnCheckState(SpectrumClassColumn.PresetScanConfiguration, CheckState.Unchecked);
                 spectrumGrid.SetSpectrumClassColumnCheckState(SpectrumClassColumn.Ms2Precursors, CheckState.Unchecked);
                 spectrumGrid.SetSpectrumClassColumnCheckState(SpectrumClassColumn.IsolationWindowWidth, CheckState.Unchecked);

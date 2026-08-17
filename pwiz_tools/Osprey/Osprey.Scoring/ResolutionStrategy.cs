@@ -28,16 +28,19 @@ namespace pwiz.Osprey.Scoring
 {
     /// <summary>
     /// Opaque handle to a per-window pre-preprocessed XCorr cache.
-    /// Unit-res stores f64 (calibration-equivalent precision, small arrays);
-    /// HRAM stores f32 (halves the ~800 KB per-spectrum cost, within the
-    /// precision Rust upstream uses). The strategy owns the type; callers
-    /// pass the handle back to <see cref="IResolutionStrategy.ScoreXcorr"/>
-    /// and <see cref="IResolutionStrategy.ReleaseWindowCache"/>.
+    /// Unit-res stores f64 dense (calibration-equivalent precision, NBins ~2K,
+    /// ~16 KB per array). HRAM stores the sparse form
+    /// (<see cref="SparseXcorrSpectrum"/>): the dense f32 cache it replaced cost
+    /// 391 KB per spectrum on the LOH, which reached tens of GB across the
+    /// concurrent windows of an Astral run (issue #4398). The strategy owns the
+    /// type; callers pass the handle back to
+    /// <see cref="IResolutionStrategy.ScoreXcorr"/> and
+    /// <see cref="IResolutionStrategy.ReleaseWindowCache"/>.
     /// </summary>
     public sealed class WindowXcorrCache
     {
         internal readonly double[][] Doubles;
-        internal readonly float[][] Floats;
+        internal readonly SparseXcorrSpectrum[] Sparse;
         internal readonly bool[] VisitedBins;
 
         internal WindowXcorrCache(double[][] dd, int nBins)
@@ -46,13 +49,13 @@ namespace pwiz.Osprey.Scoring
             VisitedBins = new bool[nBins];
         }
 
-        internal WindowXcorrCache(float[][] ff, int nBins)
+        internal WindowXcorrCache(SparseXcorrSpectrum[] sparse, int nBins)
         {
-            Floats = ff;
+            Sparse = sparse;
             VisitedBins = new bool[nBins];
         }
 
-        public int Count { get { return Doubles != null ? Doubles.Length : Floats.Length; } }
+        public int Count { get { return Doubles != null ? Doubles.Length : Sparse.Length; } }
     }
 
     /// <summary>
@@ -147,11 +150,13 @@ namespace pwiz.Osprey.Scoring
     }
 
     /// <summary>
-    /// HRAM resolution: dense bin arrays are large (NBins ~100K). Uses the
-    /// pool and an f32 cache to bring the Rust HRAM fast path
-    /// (pipeline.rs:5954 preprocessed_xcorr per window) while halving the
-    /// per-spectrum cost vs f64. Computation is still f64 internally; only
-    /// the final store narrows to f32.
+    /// HRAM resolution: dense bin arrays are large (NBins ~100K). Brings the Rust
+    /// HRAM fast path (pipeline.rs:5954 preprocessed_xcorr per window), but caches
+    /// each spectrum in the sparse form rather than as a dense f32[NBins]. The dense
+    /// cache cost 391 KB per spectrum on the LOH -- ~2,000 spectra per window times
+    /// NThreads concurrent windows put scoring at ~18-37 GB (issue #4398). The sparse
+    /// form keeps only the ~1-3K nonzero windowed bins (~20 B each) and recovers each
+    /// probed bin's post-subtraction value on demand, bit-identically.
     /// </summary>
     internal sealed class HramStrategy : IResolutionStrategy
     {
@@ -168,15 +173,12 @@ namespace pwiz.Osprey.Scoring
             if (scratchPool == null)
                 return null;
 
-            var pp = new float[spectra.Count][];
+            var pp = new SparseXcorrSpectrum[spectra.Count];
             var scratch = scratchPool.Rent();
             try
             {
                 for (int i = 0; i < spectra.Count; i++)
-                {
-                    pp[i] = scratchPool.RentBins();
-                    scorer.PreprocessSpectrumForXcorrInto(spectra[i], scratch, pp[i]);
-                }
+                    pp[i] = scorer.PreprocessSpectrumForXcorrSparse(spectra[i], scratch);
             }
             finally { scratchPool.Return(scratch); }
             return new WindowXcorrCache(pp, scorer.BinConfig.NBins);
@@ -184,21 +186,19 @@ namespace pwiz.Osprey.Scoring
 
         public void ReleaseWindowCache(WindowXcorrCache cache, XcorrScratchPool scratchPool)
         {
-            if (cache == null || scratchPool == null)
-                return;
-            scratchPool.ReturnBinsArray(cache.Floats);
+            // The sparse cache holds no pooled buffers; it is dropped with the window.
         }
 
         public double ScoreXcorr(WindowXcorrCache preprocessed, int spectrumIndex,
             Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer,
             XcorrScratchPool scratchPool)
         {
-            if (preprocessed != null && preprocessed.Floats != null &&
-                spectrumIndex >= 0 && spectrumIndex < preprocessed.Floats.Length &&
-                preprocessed.Floats[spectrumIndex] != null)
+            if (preprocessed != null && preprocessed.Sparse != null &&
+                spectrumIndex >= 0 && spectrumIndex < preprocessed.Sparse.Length &&
+                preprocessed.Sparse[spectrumIndex] != null)
             {
-                return scorer.XcorrFromPreprocessed(
-                    preprocessed.Floats[spectrumIndex], entry, preprocessed.VisitedBins);
+                return scorer.XcorrFromSparse(
+                    preprocessed.Sparse[spectrumIndex], entry, preprocessed.VisitedBins);
             }
 
             if (scratchPool == null)

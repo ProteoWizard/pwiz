@@ -53,18 +53,54 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Load library entries from a DIA-NN TSV file.
         /// </summary>
-        public List<LibraryEntry> Load(string path)
+        public List<LibraryEntry> Load(string path, Action<string> logInfo = null)
         {
-            using (var reader = new StreamReader(path))
+            // Report progress over the file's BYTES rather than its rows: a 13 GB entrapment
+            // TSV otherwise runs for over a minute with nothing on the console between
+            // LibraryLoader's "Loading spectral library from ..." and the interning summary.
+            // Byte progress needs the stream, so it is wired here rather than in ParseReader,
+            // which stays a plain TextReader entry point for tests. Mirrors MzmlReader.
+            // bufferSize 1 disables FileStream's own buffering: StreamReader below asks in 1 MB
+            // blocks, so a second buffer underneath would copy every byte twice (and a 16 MB one
+            // would sit on the LOH for the whole parse, including for the ~200-byte TSVs the unit
+            // tests load). The reader's buffer is what must be large - at the BCL default of 1 KB
+            // this issues a ProgressStream.Read, and therefore a locking Report, once per KB:
+            // ~13.6M calls on the 13 GB entrapment library to print about a dozen lines.
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
+                FileShare.Read, 1))
             {
-                return ParseReader(reader);
+                // NOT a using: this reporter measures the READ, which finishes partway through
+                // ParseReader. Disposing it with the stack would force its 100% out after phase 2
+                // and after the interning summary - a completion line for a phase that ended
+                // minutes earlier. ParseReader disposes it when the stream is exhausted.
+                var readProgress = new ProgressReporter(
+                    string.Format("Parsing {0}", Path.GetFileName(path)), stream.Length,
+                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+                using (var progressStream = new ProgressStream(stream, readProgress))
+                // leaveOpen so ownership of progressStream is explicit rather than resting on
+                // ProgressStream declining to override Dispose (see MzmlReader's single-close note).
+                using (var reader = new StreamReader(progressStream, Encoding.UTF8, true, 1 << 20, true))
+                {
+                    return ParseReader(reader, logInfo, readProgress);
+                }
             }
         }
 
         /// <summary>
         /// Parse library entries from a text reader (for testability).
         /// </summary>
-        public List<LibraryEntry> ParseReader(TextReader reader)
+        public List<LibraryEntry> ParseReader(TextReader reader, Action<string> logInfo = null)
+        {
+            return ParseReader(reader, logInfo, null);
+        }
+
+        /// <summary>
+        /// As <see cref="ParseReader(TextReader,Action{string})"/>, but disposes
+        /// <paramref name="readProgress"/> when the READ finishes rather than when the caller's
+        /// scope ends - the row loop below is only the first half of this method.
+        /// </summary>
+        private List<LibraryEntry> ParseReader(TextReader reader, Action<string> logInfo,
+            IDisposable readProgress)
         {
             string headerLine = reader.ReadLine();
             if (headerLine == null)
@@ -86,31 +122,76 @@ namespace pwiz.Osprey.IO
                 string[] fields = line.Split('\t');
                 ParseRow(fields, cols, rowNum, precursorMap);
             }
+            // Stream exhausted: the byte progress is complete and must say so HERE.
+            readProgress?.Dispose();
 
-            // Convert to LibraryEntry list
+            // Convert to LibraryEntry list. Intern the repeated strings
+            // (sequences, modification names, protein / gene accessions) as the
+            // interned arrays are filled, so no member is mutated after
+            // assignment. One pool per load call; only object identity changes,
+            // so output is unchanged.
             var entries = new List<LibraryEntry>(precursorMap.Count);
+            var interner = new LibraryStringInterner();
             uint id = 0;
+
+            // Phase 2. The byte progress above ends when the stream is exhausted, so without this
+            // the console sat at 100% through the whole materialization pass. Constructed rather
+            // than `using`d so the loop needs no re-indent and so an exception here does not print
+            // a completed-looking 100% while unwinding.
+            var progress = new ProgressReporter(@"Building library entries", precursorMap.Count,
+                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+            long nBuilt = 0;
 
             foreach (var data in precursorMap.Values)
             {
+                progress.Report(++nBuilt);
                 if (data.Fragments.Count < _minFragments)
                     continue;
 
-                var modifications = ParseModifications(data.ModifiedSequence);
+                // Checked here, after the min-fragment filter, so a row that is not going
+                // into the library at all cannot fail the run.
+                LibraryValidation.ValidatePeptideLength(data.Sequence);
 
-                var entry = new LibraryEntry(id, data.Sequence, data.ModifiedSequence,
+                var modifications = BuildInternedModifications(
+                    ParseModifications(data.ModifiedSequence), interner);
+
+                var entry = new LibraryEntry(id,
+                    interner.Intern(data.Sequence),
+                    interner.Intern(data.ModifiedSequence),
                     data.Charge, data.PrecursorMz, data.RetentionTime);
                 entry.Modifications = modifications;
-                entry.Fragments = data.Fragments;
-                entry.ProteinIds = data.ProteinIds;
-                entry.GeneNames = data.GeneNames;
+                entry.Fragments = data.Fragments.ToArray();
+                entry.ProteinIds = interner.InternToArray(data.ProteinIds);
+                entry.GeneNames = interner.InternToArray(data.GeneNames);
                 entry.IsDecoy = data.IsDecoy;
 
                 entries.Add(entry);
                 id++;
             }
 
+            progress.Dispose();
+            interner.LogSummary(logInfo);
             return entries;
+        }
+
+        /// <summary>
+        /// Intern each modification's <see cref="Modification.Name"/> and return
+        /// the mods as an array (empty -> shared empty array). Values other than
+        /// string identity are unchanged.
+        /// </summary>
+        private static Modification[] BuildInternedModifications(
+            List<Modification> mods, LibraryStringInterner interner)
+        {
+            if (mods == null || mods.Count == 0)
+                return Array.Empty<Modification>();
+            var result = new Modification[mods.Count];
+            for (int i = 0; i < mods.Count; i++)
+            {
+                var m = mods[i];
+                m.Name = interner.Intern(m.Name);
+                result[i] = m;
+            }
+            return result;
         }
 
         private void ParseRow(string[] fields, ColumnIndices cols, int rowNum,
@@ -150,17 +231,19 @@ namespace pwiz.Osprey.IO
             if (!string.IsNullOrEmpty(fragChargeStr))
                 byte.TryParse(fragChargeStr, out fragmentCharge);
 
-            NeutralLoss neutralLoss = null;
+            NeutralLossCode lossCode = NeutralLossCode.None;
+            double lossMass = 0.0;
             string lossStr = GetFieldOrNull(fields, cols.FragmentLossType);
             if (!string.IsNullOrEmpty(lossStr))
-                neutralLoss = NeutralLoss.Parse(lossStr);
+                (lossCode, lossMass) = NeutralLoss.Parse(lossStr);
 
             var annotation = new FragmentAnnotation
             {
                 IonType = ionType,
                 Ordinal = ordinal,
                 Charge = fragmentCharge,
-                NeutralLoss = neutralLoss
+                NeutralLoss = lossCode,
+                CustomLossMass = lossMass
             };
 
             // Protein and gene info

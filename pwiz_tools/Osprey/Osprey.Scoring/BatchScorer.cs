@@ -455,7 +455,7 @@ namespace pwiz.Osprey.Scoring
         /// in the given spectrum.
         /// </summary>
         public static byte CountTop6MatchedAtApex(
-            List<LibraryFragment> libraryFragments,
+            IReadOnlyList<LibraryFragment> libraryFragments,
             double[] spectrumMzs,
             FragmentToleranceConfig tolerance)
         {
@@ -468,7 +468,11 @@ namespace pwiz.Osprey.Scoring
             var indexed = new List<KeyValuePair<int, float>>();
             for (int i = 0; i < libraryFragments.Count; i++)
                 indexed.Add(new KeyValuePair<int, float>(i, libraryFragments[i].RelativeIntensity));
-            indexed.Sort((a, b) => b.Value.CompareTo(a.Value));
+            // Array.Sort OK: intensity-descending top-6 selection -- tie hazard, conversion
+            // deferred (would need a golden update; not one of the #4362 approved U-sites).
+            // Two fragments with identical RelativeIntensity straddling the top-6 boundary
+            // could change the count; RelativeIntensity ties are rare in practice.
+            indexed.Sort((a, b) => b.Value.CompareTo(a.Value)); // Array.Sort OK: (see above) top-6 by intensity tie hazard, conversion deferred; not a #4362 approved U-site
 
             byte count = 0;
             for (int t = 0; t < nTop; t++)

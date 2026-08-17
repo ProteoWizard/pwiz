@@ -84,20 +84,32 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// A sidecar-write failure is non-fatal: Stamp must route it to the
         /// warning callback and not throw (the output is already on disk; only
-        /// the resume-skip hint is lost). Writing under a non-existent directory
-        /// forces the failure.
+        /// the resume-skip hint is lost). FileSaver creates the destination
+        /// directory, so the failure is forced with a parent path that is an
+        /// existing FILE -- allocating the sibling temp under it throws.
         /// </summary>
         [TestMethod]
         public void TestStampSwallowsWriteFailure()
         {
-            string missingDir = Path.Combine(Path.GetTempPath(),
-                "osprey-resume-driver-missing-dir", "out.parquet");
-            var warnings = new List<string>();
+            string blocker = Path.Combine(Path.GetTempPath(), "osprey-resume-blocker-file");
+            if (File.Exists(blocker))
+                File.Delete(blocker);
+            File.WriteAllText(blocker, "x");
+            try
+            {
+                string badPath = Path.Combine(blocker, "out.parquet"); // parent is a file
+                var warnings = new List<string>();
 
-            PerFileResumeDriver.Stamp(missingDir, TASK, VERSION, "key1",
-                new[] { "input.mzML" }, warnings.Add);
+                PerFileResumeDriver.Stamp(badPath, TASK, VERSION, "key1",
+                    new[] { "input.mzML" }, warnings.Add);
 
-            Assert.AreEqual(1, warnings.Count);
+                Assert.AreEqual(1, warnings.Count);
+            }
+            finally
+            {
+                if (File.Exists(blocker))
+                    File.Delete(blocker);
+            }
         }
     }
 }

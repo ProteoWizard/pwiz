@@ -86,7 +86,7 @@ namespace pwiz.Osprey.Core
                     foreach (var p in _config.DecoyPrefixes)
                         prefixes.Add(p == null ? string.Empty : p.ToLowerInvariant());
                 }
-                prefixes.Sort(StringComparer.Ordinal);
+                prefixes.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to render a stable display string of distinct decoy prefixes; equal strings are byte-identical so tie order is irrelevant
                 var prefixList = new StringBuilder("[");
                 for (int i = 0; i < prefixes.Count; i++)
                 {
@@ -252,7 +252,7 @@ namespace pwiz.Osprey.Core
         /// file stems. Used by per-file Stage 6 rescore workers, whose
         /// <see cref="OspreyConfig.InputFiles"/> only carries this worker's single
         /// parquet — the hash that the downstream <c>--task SecondPassFDR</c>
-        /// merge node expects is computed over ALL files in the join, so
+        /// SecondPassFDR node expects is computed over ALL files in the join, so
         /// the worker must read the full set from the planner's
         /// <c>reconciliation.json</c> envelope and pass it in here. The
         /// stems are sorted + deduped internally so the hash is invariant
@@ -285,7 +285,7 @@ namespace pwiz.Osprey.Core
                             stems.Add(stem);
                     }
                 }
-                stems.Sort(StringComparer.Ordinal);
+                stems.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to dedup adjacent identical stems below; equal keys are byte-identical so tie order is irrelevant
                 // Dedup in place (stems is sorted, so duplicates are
                 // adjacent). Rust does `dedup()` on a sorted Vec; same here.
                 int write = 0;

@@ -48,7 +48,7 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Load library entries from a blib file.
         /// </summary>
-        public List<LibraryEntry> Load(string path)
+        public List<LibraryEntry> Load(string path, Action<string> logInfo = null)
         {
             string connStr = string.Format("Data Source={0};Read Only=True;", path);
             using (var conn = new SQLiteConnection(connStr))
@@ -58,8 +58,15 @@ namespace pwiz.Osprey.IO
                 if (!TableExists(conn, "RefSpectra"))
                     throw new InvalidOperationException("Invalid blib file: RefSpectra table not found");
 
-                var entries = LoadSpectra(conn);
-                LoadProteinMappings(conn, entries);
+                // Intern the repeated strings (sequences, modification names,
+                // protein accessions) as the interned arrays are filled, so no
+                // member is mutated after assignment. One pool spans both the
+                // spectra and the protein-mapping pass; only object identity
+                // changes, so output is unchanged.
+                var interner = new LibraryStringInterner();
+                var entries = LoadSpectra(conn, interner);
+                LoadProteinMappings(conn, entries, interner);
+                interner.LogSummary(logInfo);
                 return entries;
             }
         }
@@ -77,7 +84,7 @@ namespace pwiz.Osprey.IO
             }
         }
 
-        private List<LibraryEntry> LoadSpectra(SQLiteConnection conn)
+        private List<LibraryEntry> LoadSpectra(SQLiteConnection conn, LibraryStringInterner interner)
         {
             var entries = new List<LibraryEntry>();
 
@@ -112,15 +119,23 @@ namespace pwiz.Osprey.IO
                         byte[] peakMzBlob = reader.IsDBNull(7) ? null : (byte[])reader[7];
                         byte[] peakIntBlob = reader.IsDBNull(8) ? null : (byte[])reader[8];
 
-                        var modifications = ParseBlibModifications(peptideModSeq);
+                        // The same bound the TSV loader enforces. An invariant only one
+                        // format checks is not an invariant, and DecoyGenerator's
+                        // fragment-overlap gate relies on this one whatever the library
+                        // was built from.
+                        LibraryValidation.ValidatePeptideLength(peptideSeq);
 
-                        List<LibraryFragment> fragments;
+                        var modifications = BuildInternedModifications(
+                            ParseBlibModifications(peptideModSeq), interner);
+
+                        LibraryFragment[] fragments;
                         if (peakMzBlob != null && peakIntBlob != null)
-                            fragments = DecodeBlibPeaks(peakMzBlob, peakIntBlob, numPeaks);
+                            fragments = DecodeBlibPeaks(peakMzBlob, peakIntBlob, numPeaks).ToArray();
                         else
-                            fragments = new List<LibraryFragment>();
+                            fragments = Array.Empty<LibraryFragment>();
 
-                        var entry = new LibraryEntry((uint)id, peptideSeq, peptideModSeq,
+                        var entry = new LibraryEntry((uint)id,
+                            interner.Intern(peptideSeq), interner.Intern(peptideModSeq),
                             (byte)precursorCharge, precursorMz, retentionTime);
                         entry.Modifications = modifications;
                         entry.Fragments = fragments;
@@ -133,7 +148,8 @@ namespace pwiz.Osprey.IO
             return entries;
         }
 
-        private void LoadProteinMappings(SQLiteConnection conn, List<LibraryEntry> entries)
+        private void LoadProteinMappings(SQLiteConnection conn, List<LibraryEntry> entries,
+            LibraryStringInterner interner)
         {
             if (!TableExists(conn, "RefSpectraProteins") || !TableExists(conn, "Proteins"))
                 return;
@@ -169,9 +185,34 @@ namespace pwiz.Osprey.IO
             foreach (var entry in entries)
             {
                 List<string> proteins;
-                if (proteinMap.TryGetValue(entry.Id, out proteins))
-                    entry.ProteinIds = proteins;
+                if (proteinMap.TryGetValue(entry.Id, out proteins) && proteins.Count > 0)
+                {
+                    var interned = new string[proteins.Count];
+                    for (int i = 0; i < proteins.Count; i++)
+                        interned[i] = interner.Intern(proteins[i]);
+                    entry.ProteinIds = interned;
+                }
             }
+        }
+
+        /// <summary>
+        /// Intern each modification's <see cref="Modification.Name"/> and return
+        /// the mods as an array (empty -> shared empty array). Only string
+        /// identity changes.
+        /// </summary>
+        private static Modification[] BuildInternedModifications(
+            List<Modification> mods, LibraryStringInterner interner)
+        {
+            if (mods == null || mods.Count == 0)
+                return Array.Empty<Modification>();
+            var result = new Modification[mods.Count];
+            for (int i = 0; i < mods.Count; i++)
+            {
+                var m = mods[i];
+                m.Name = interner.Intern(m.Name);
+                result[i] = m;
+            }
+            return result;
         }
 
         /// <summary>
@@ -375,8 +416,12 @@ namespace pwiz.Osprey.IO
 
             if (maxIntensity > 0f)
             {
-                foreach (var f in fragments)
+                for (int i = 0; i < fragments.Count; i++)
+                {
+                    var f = fragments[i];
                     f.RelativeIntensity /= maxIntensity;
+                    fragments[i] = f;
+                }
             }
 
             return fragments;

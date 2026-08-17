@@ -130,8 +130,12 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 }
                 else
                 {
-                    // Tie on score → lower q-value wins.
-                    isBetter = entry.RunPrecursorQvalue < bestQvalue;
+                    // Tie on score → lower q-value wins; on a FULL tie (equal score
+                    // AND equal q-value) the LATER entry wins, matching Rust max_by,
+                    // which returns the last element among equal maxima
+                    // (pipeline.rs:7665-7679). C# previously kept the first (`<`),
+                    // diverging on an exact score+q tie between two charge states.
+                    isBetter = entry.RunPrecursorQvalue <= bestQvalue;
                 }
 
                 if (isBetter)

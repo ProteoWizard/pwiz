@@ -11,6 +11,7 @@
     <RootNamespace>pwiz.Common</RootNamespace>
     <AssemblyName>pwiz.CommonUtil</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <RuntimeIdentifiers>win;win-x64;win-x86</RuntimeIdentifiers>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -217,6 +218,7 @@
     <Compile Include="SystemUtil\StreamEx.cs" />
     <Compile Include="SystemUtil\StringSearch.cs" />
     <Compile Include="Spectra\SpectrumMetadata.cs" />
+    <Compile Include="Spectra\SpectrumMetadataTerm.cs" />
     <Compile Include="Spectra\SpectrumPrecursor.cs" />
     <Compile Include="SystemUtil\SubstringFinder.cs" />
     <Compile Include="Collections\UniqueList.cs" />

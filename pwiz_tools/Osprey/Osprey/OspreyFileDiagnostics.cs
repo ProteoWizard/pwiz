@@ -325,7 +325,7 @@ namespace pwiz.Osprey
         /// FDR state (gate input + ranking input + propagated output) to
         /// cs_stage6_protein_fdr.tsv after RunFirstPassProteinFdr completes.
         /// Used to bisect the SQC[UniMod:4]LQVPER borderline cross-impl
-        /// divergence in run_protein_qvalue: matching against
+        /// divergence in experiment_protein_qvalue: matching against
         /// rust_stage6_protein_fdr.tsv shows whether the gate input
         /// (best_qvalue), the ranking input (score), or the algorithm output
         /// (protein_qvalue) is responsible.
@@ -499,7 +499,7 @@ namespace pwiz.Osprey
                     "{0}\t{1}\t{2}\t{3:F4}\t{4:F4}",
                     e.Id, e.ModifiedSequence, e.Charge, e.PrecursorMz, e.RetentionTime));
             }
-            tuples.Sort(StringComparer.Ordinal);
+            tuples.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
             using (var w = new StreamWriter(dumpPath))
             {
                 w.WriteLine("id\tmodseq\tcharge\tmz\trt");
@@ -557,7 +557,7 @@ namespace pwiz.Osprey
                         var ids = new List<uint>(cell.Count);
                         foreach (int ti in cell)
                             ids.Add(targets[ti].Id);
-                        ids.Sort();
+                        ids.Sort(); // Array.Sort OK: diagnostic dump only, not parity-sensitive
                         var sb = new StringBuilder();
                         for (int k = 0; k < ids.Count; k++)
                         {
@@ -617,7 +617,7 @@ namespace pwiz.Osprey
             if (s_calWindowRows == null)
                 return;
             var rows = new List<string>(s_calWindowRows);
-            rows.Sort(StringComparer.Ordinal);
+            rows.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
             using (var w = new StreamWriter(@"cs_cal_windows.txt"))
             {
                 w.WriteLine("entry_id\tis_decoy\tcharge\tprecursor_mz\tlibrary_rt\tiso_lower\tiso_upper\texpected_rt\trt_window_start\trt_window_end");
@@ -649,7 +649,7 @@ namespace pwiz.Osprey
                 matchById[m.EntryId] = m;
 
             var sortedSampled = new List<LibraryEntry>(sampledEntries);
-            sortedSampled.Sort((a, b) => a.Id.CompareTo(b.Id));
+            sortedSampled.Sort((a, b) => a.Id.CompareTo(b.Id)); // Array.Sort OK: diagnostic dump only, not parity-sensitive
 
             int nMatched = 0, nUnmatched = 0;
             var inv = CultureInfo.InvariantCulture;
@@ -797,7 +797,7 @@ namespace pwiz.Osprey
             var pairs = new List<KeyValuePair<double, double>>(libRts.Length);
             for (int i = 0; i < libRts.Length; i++)
                 pairs.Add(new KeyValuePair<double, double>(libRts[i], measuredRts[i]));
-            pairs.Sort((a, b) =>
+            pairs.Sort((a, b) => // Array.Sort OK: diagnostic dump only, not parity-sensitive
             {
                 int c = a.Key.CompareTo(b.Key);
                 if (c != 0)
@@ -948,7 +948,7 @@ namespace pwiz.Osprey
                 var sortedByIntensity = new List<KeyValuePair<int, float>>(entry.Fragments.Count);
                 for (int fi = 0; fi < entry.Fragments.Count; fi++)
                     sortedByIntensity.Add(new KeyValuePair<int, float>(fi, entry.Fragments[fi].RelativeIntensity));
-                sortedByIntensity.Sort((a, b) => b.Value.CompareTo(a.Value));
+                sortedByIntensity.Sort((a, b) => b.Value.CompareTo(a.Value)); // Array.Sort OK: diagnostic dump only, not parity-sensitive
                 int topN = Math.Min(6, sortedByIntensity.Count);
 
                 dw.WriteLine("# TOP-6 FRAGMENTS (selected by intensity desc)");
@@ -1498,7 +1498,7 @@ namespace pwiz.Osprey
                 foreach (var e in kvp.Value)
                     rows.Add(new KeyValuePair<string, FdrEntry>(fileName, e));
             }
-            rows.Sort((a, b) =>
+            rows.Sort((a, b) => // Array.Sort OK: diagnostic dump only, not parity-sensitive
             {
                 int cmp = string.CompareOrdinal(a.Key, b.Key);
                 if (cmp != 0) return cmp;
@@ -1508,7 +1508,7 @@ namespace pwiz.Osprey
             using (var sw = new StreamWriter(path))
             {
                 sw.NewLine = "\n";
-                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	run_protein_q	experiment_precursor_q	experiment_peptide_q");
+                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	experiment_protein_q	experiment_precursor_q	experiment_peptide_q");
                 foreach (var row in rows)
                 {
                     var e = row.Value;
@@ -1521,7 +1521,7 @@ namespace pwiz.Osprey
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunProteinQvalue));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentProteinQvalue));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
                     sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
                 }
@@ -1576,7 +1576,7 @@ namespace pwiz.Osprey
             using (var sw = new StreamWriter(path))
             {
                 sw.NewLine = "\n";
-                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	run_protein_q	experiment_precursor_q	experiment_peptide_q");
+                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	experiment_protein_q	experiment_precursor_q	experiment_peptide_q");
                 foreach (var row in rows)
                 {
                     var e = row.Value;
@@ -1589,7 +1589,7 @@ namespace pwiz.Osprey
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunProteinQvalue));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentProteinQvalue));
                     sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
                     sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
                 }
@@ -1667,7 +1667,7 @@ namespace pwiz.Osprey
                     rows.Add((kvp.Key, entries[t.Index].EntryId, t.Apex, t.Start, t.End));
                 }
             }
-            rows.Sort((a, b) =>
+            rows.Sort((a, b) => // Array.Sort OK: diagnostic dump only, not parity-sensitive
             {
                 int cmp = string.CompareOrdinal(a.FileName, b.FileName);
                 if (cmp != 0) return cmp;
@@ -1703,7 +1703,7 @@ namespace pwiz.Osprey
             const string path = @"cs_stage6_refit.tsv";
 
             var fileNames = new List<string>(refinedCalibrations.Keys);
-            fileNames.Sort(StringComparer.Ordinal);
+            fileNames.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
 
             using (var sw = new StreamWriter(path))
             {
@@ -1724,7 +1724,7 @@ namespace pwiz.Osprey
 
         /// <summary>
         /// Dump the per-(file, entry) <see cref="ReconcileAction"/> map
-        /// produced by <see cref="ReconciliationPlanner.Plan"/> to
+        /// produced by <c>ReconciliationPlanner.Plan</c> to
         /// <c>cs_stage6_reconciliation.tsv</c>. Used for cross-impl parity
         /// of the planner output -- pairs with the Rust
         /// <c>dump_stage6_reconciliation</c> helper. Columns:
@@ -1759,7 +1759,7 @@ namespace pwiz.Osprey
                     continue;
                 rows.Add((kvp.Key.File, entries[kvp.Key.Index].EntryId, kvp.Value));
             }
-            rows.Sort((a, b) =>
+            rows.Sort((a, b) => // Array.Sort OK: diagnostic dump only, not parity-sensitive
             {
                 int cmp = string.CompareOrdinal(a.FileName, b.FileName);
                 if (cmp != 0) return cmp;
@@ -1855,7 +1855,7 @@ namespace pwiz.Osprey
             const string path = @"cs_stage6_inv_predict.tsv";
 
             var sorted = new List<InvPredictRecord>(records);
-            sorted.Sort((a, b) =>
+            sorted.Sort((a, b) => // Array.Sort OK: diagnostic dump only, not parity-sensitive
             {
                 int cmp = a.IsDecoy.CompareTo(b.IsDecoy);
                 if (cmp != 0) return cmp;
@@ -1904,7 +1904,7 @@ namespace pwiz.Osprey
         /// run q-value, min across files). score is the input ranking
         /// (max SVM discriminant across files). protein_qvalue is the
         /// propagated output -- the value PropagateProteinQvalues will
-        /// write to FdrEntry.RunProteinQvalue (1.0 if the peptide is
+        /// write to FdrEntry.ExperimentProteinQvalue (1.0 if the peptide is
         /// not in proteinFdr.PeptideQvalues, matching the
         /// PropagateProteinQvalues default). Rows sorted by
         /// (is_decoy, modified_sequence) for stable diff.
@@ -1922,7 +1922,7 @@ namespace pwiz.Osprey
             const string path = @"cs_stage6_protein_fdr.tsv";
 
             var rows = new List<KeyValuePair<string, PeptideScore>>(bestScores);
-            rows.Sort((a, b) =>
+            rows.Sort((a, b) => // Array.Sort OK: diagnostic dump only, not parity-sensitive
             {
                 int cmp = a.Value.IsDecoy.CompareTo(b.Value.IsDecoy);
                 if (cmp != 0) return cmp;
@@ -2003,7 +2003,7 @@ namespace pwiz.Osprey
                     bestScore = double.NaN;
 
                 var accs = new List<string>(g.Accessions);
-                accs.Sort(StringComparer.Ordinal);
+                accs.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
 
                 rows.Add(new Stage7Row
                 {
@@ -2016,7 +2016,7 @@ namespace pwiz.Osprey
                 });
             }
 
-            rows.Sort((a, b) =>
+            rows.Sort((a, b) => // Array.Sort OK: diagnostic dump only, not parity-sensitive
             {
                 // Target winners first (DESC on bool == true before false).
                 int cmp = b.IsTargetWinner.CompareTo(a.IsTargetWinner);
@@ -2070,7 +2070,7 @@ namespace pwiz.Osprey
             const string path = @"cs_stage6_loess_fit.tsv";
 
             var fileNames = new List<string>(refinedCalibrations.Keys);
-            fileNames.Sort(StringComparer.Ordinal);
+            fileNames.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
 
             int totalRows = 0;
             using (var sw = new StreamWriter(path))
@@ -2110,7 +2110,7 @@ namespace pwiz.Osprey
         {
             const string path = @"cs_stage7_detected_peptides.txt";
             var sorted = new List<string>(detectedPeptides);
-            sorted.Sort(StringComparer.Ordinal);
+            sorted.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
             // Force LF (not File.WriteAllLines' OS newline) so this cross-impl
             // bisection artifact stays byte-stable across platforms.
             using (var w = new StreamWriter(path))

@@ -38,52 +38,36 @@ namespace pwiz.Osprey.Test
     public class ReconciledParquetWriterTest
     {
         /// <summary>
-        /// ApplyRescoredRows must: overlay re-scored rows in place by
-        /// ParquetIndex, leave hydrated stubs (Features == null) untouched,
-        /// append gap-fill rows (ParquetIndex == uint.MaxValue) at the end with a
-        /// reassigned ParquetIndex, and warn-and-skip an out-of-range index.
+        /// BuildOverlay must: key each re-scored row (Features != null,
+        /// ParquetIndex != uint.MaxValue) into the overlay map by its original
+        /// ParquetIndex, skip hydrated stubs (Features == null), and collect
+        /// gap-fill rows (ParquetIndex == uint.MaxValue) into the append list.
+        /// Out-of-range detection is the streaming write's job, so an out-of-range
+        /// index still lands in the overlay map here.
         /// </summary>
         [TestMethod]
-        public void TestApplyRescoredRowsOverlayAndAppend()
+        public void TestBuildOverlaySplit()
         {
-            // Original parquet rows (loaded read-only). Identified by EntryId.
-            var fullEntries = new List<FdrEntry>
-            {
-                new FdrEntry { EntryId = 100 },
-                new FdrEntry { EntryId = 101 },
-                new FdrEntry { EntryId = 102 },
-            };
-
             var rescored = new FdrEntry { EntryId = 201, ParquetIndex = 1, Features = new[] { 1.0 } };
             var hydratedStub = new FdrEntry { EntryId = 202, ParquetIndex = 0, Features = null };
-            var gapFill = new FdrEntry { EntryId = 203, ParquetIndex = uint.MaxValue, Features = new[] { 2.0 } };
+            var gapFillEntry = new FdrEntry { EntryId = 203, ParquetIndex = uint.MaxValue, Features = new[] { 2.0 } };
             var outOfRange = new FdrEntry { EntryId = 204, ParquetIndex = 99, Features = new[] { 3.0 } };
-            var fdrEntries = new List<FdrEntry> { rescored, hydratedStub, gapFill, outOfRange };
+            var fdrEntries = new List<FdrEntry> { rescored, hydratedStub, gapFillEntry, outOfRange };
 
-            var warnings = new List<string>();
-            int nReplaced = ReconciledParquetWriter.ApplyRescoredRows(
-                fullEntries, fdrEntries, "file1", warnings.Add, out int nAppended);
+            var overlayByIndex = new Dictionary<uint, FdrEntry>();
+            var gapFill = new List<FdrEntry>();
+            ReconciledParquetWriter.BuildOverlay(fdrEntries, overlayByIndex, gapFill);
 
-            // Only the in-range rescored row counts as a replacement.
-            Assert.AreEqual(1, nReplaced);
-            // Only the gap-fill row is appended.
-            Assert.AreEqual(1, nAppended);
+            // Re-scored in-range row keyed by its ParquetIndex; hydrated stub skipped;
+            // out-of-range row still present (the streaming write drops it, not BuildOverlay).
+            Assert.AreEqual(2, overlayByIndex.Count);
+            Assert.AreSame(rescored, overlayByIndex[1]);
+            Assert.AreSame(outOfRange, overlayByIndex[99]);
+            Assert.IsFalse(overlayByIndex.ContainsKey(0), "hydrated stub (Features == null) must be skipped");
 
-            // Row 1 was overlaid with the rescored entry; rows 0 and 2 untouched
-            // (hydrated stub at index 0 must NOT clobber its original row).
-            Assert.AreEqual(4, fullEntries.Count);
-            Assert.AreEqual(100u, fullEntries[0].EntryId);
-            Assert.AreEqual(201u, fullEntries[1].EntryId);
-            Assert.AreEqual(102u, fullEntries[2].EntryId);
-
-            // Gap-fill row appended at the end with ParquetIndex reassigned to the
-            // row it now occupies.
-            Assert.AreEqual(203u, fullEntries[3].EntryId);
-            Assert.AreEqual(3u, gapFill.ParquetIndex);
-
-            // The out-of-range index is dropped (not replaced, not appended) with
-            // exactly one warning emitted.
-            Assert.AreEqual(1, warnings.Count);
+            // Only the gap-fill row is collected for append.
+            Assert.AreEqual(1, gapFill.Count);
+            Assert.AreSame(gapFillEntry, gapFill[0]);
         }
 
         /// <summary>

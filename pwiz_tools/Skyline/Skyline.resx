@@ -520,6 +520,12 @@
   <data name="encyclopeDiaSearchMenuItem.Text" xml:space="preserve">
     <value>&amp;EncyclopeDIA Search...</value>
   </data>
+  <data name="diannSearchMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 22</value>
+  </data>
+  <data name="diannSearchMenuItem.Text" xml:space="preserve">
+    <value>&amp;DIA-NN Search...</value>
+  </data>
   <data name="importFeatureDetectionMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 22</value>
   </data>

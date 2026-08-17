@@ -47,8 +47,10 @@ namespace pwiz.Osprey.Test
         private static LibraryEntry EntryWithFragments(uint id, params double[] mzs)
         {
             var entry = new LibraryEntry(id, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0);
+            var frags = new List<LibraryFragment>();
             foreach (double mz in mzs)
-                entry.Fragments.Add(new LibraryFragment { Mz = mz, RelativeIntensity = 1.0f });
+                frags.Add(new LibraryFragment { Mz = mz, RelativeIntensity = 1.0f });
+            entry.Fragments = frags;
             return entry;
         }
 

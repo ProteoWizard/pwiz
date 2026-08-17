@@ -89,7 +89,7 @@ namespace pwiz.Osprey.Tasks
         /// duplicate). The one shared mutable buffer is registered like the rest:
         /// it is modeled as three single-producer milestone types over the same
         /// backing list (ScoredEntries -> PerFileScoring, CompactedEntries ->
-        /// FirstJoin, RescoredEntries -> PerFileRescore), so a consumer demanding
+        /// FirstPassFDR, RescoredEntries -> PerFileRescore), so a consumer demanding
         /// a given milestone resolves through this registry to the task that
         /// brings the buffer to that state. See PipelineByproducts.cs.
         /// </summary>
@@ -106,7 +106,7 @@ namespace pwiz.Osprey.Tasks
         /// records byproduct types read via <see cref="TryGet{TInfo}"/>;
         /// <see cref="_milestoneByBuffer"/> records, per backing-list reference,
         /// the milestone type last published over it. Keying on the list reference
-        /// (not a static type order) makes the guard path-independent: the merge
+        /// (not a static type order) makes the guard path-independent: the reconciled-input
         /// path publishes RescoredEntries directly over the ScoredEntries buffer,
         /// skipping CompactedEntries.
         /// </summary>
@@ -360,6 +360,56 @@ namespace pwiz.Osprey.Tasks
                     return info;
             }
             throw new UnknownByproductException(typeof(TInfo));
+        }
+
+        /// <summary>
+        /// Drop a byproduct once its consumers are done with it, so the pipeline stops
+        /// pinning it for the remainder of the run. Returns <c>true</c> if an entry was
+        /// removed; releasing an absent byproduct is a no-op.
+        ///
+        /// The cache is otherwise process-lifetime: <see cref="Publish{TInfo}"/> only ever
+        /// adds. That is fine for small handles, and wrong for the large ones -- the
+        /// first-pass <c>FdrProjections</c> is ~5.7 GiB at 191 M rows, and holding it past
+        /// Stage 5 kept it live through reconciliation and the blib write (issue #4405).
+        ///
+        /// RELEASE IS FINAL. A producer is materialized at most once per context
+        /// (<c>_materialized</c> in <see cref="DemandByType"/>), so a later
+        /// <see cref="Get{TInfo}"/> does NOT rebuild the value -- it finds no byproduct,
+        /// skips the already-materialized producer, and throws
+        /// <see cref="UnknownByproductException"/>. Re-demanding is not an option either:
+        /// a producer's <see cref="OspreyTask.Rehydrate"/> publishes all of its byproducts,
+        /// and <see cref="Publish{TInfo}"/> would throw on the siblings that are still
+        /// cached.
+        ///
+        /// Therefore: release only when every consumer has already run. The failure mode
+        /// is a loud exception at the next <see cref="Get{TInfo}"/>, not silent corruption.
+        ///
+        /// NOT for the <c>PerFileEntries</c> milestone family: the DEBUG republish guard
+        /// (<c>_consumedByproducts</c> / <c>AssertMilestoneConsumedBeforeRepublish</c>)
+        /// is not updated here, so releasing a milestone and republishing over the same
+        /// backing list would read stale state. Prefer <see cref="Consume{TInfo}"/>.
+        /// </summary>
+        public bool Release<TInfo>()
+        {
+            return _byproducts.Remove(typeof(TInfo));
+        }
+
+        /// <summary>
+        /// <see cref="Get{TInfo}"/> followed by <see cref="Release{TInfo}"/>: take the value
+        /// and drop the pipeline's reference to it in one step. For a large byproduct with a
+        /// single consumer this is the form to use -- it makes retention impossible to
+        /// reintroduce by accident, where a `Get` plus a separate `Release` call can silently
+        /// lose the release in a later refactor and re-pin the memory (issue #4405).
+        ///
+        /// Same finality as <see cref="Release{TInfo}"/>: a second <see cref="Get{TInfo}"/> or
+        /// <see cref="Consume{TInfo}"/> for the same type throws
+        /// <see cref="UnknownByproductException"/> rather than rebuilding.
+        /// </summary>
+        public TInfo Consume<TInfo>()
+        {
+            var info = Get<TInfo>();
+            Release<TInfo>();
+            return info;
         }
 
         /// <summary>

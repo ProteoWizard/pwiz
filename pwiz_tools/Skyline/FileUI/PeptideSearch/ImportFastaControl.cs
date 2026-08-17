@@ -355,6 +355,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        /// <summary>
+        /// Move the FASTA path textbox caret to the end of its text and give it focus,
+        /// so the rightmost portion (the filename) is what's visible. Used for tutorial
+        /// screenshots — without this the textbox shows only the leftmost characters of
+        /// a long absolute path.
+        /// </summary>
+        public void ShowFastaPathFileName()
+        {
+            tbxFasta.Focus();
+            tbxFasta.Select(tbxFasta.Text.Length, 0);
+        }
+
         private string GetFastaFileContent(string fastaFileName)
         {
             string fastaText = string.Empty;

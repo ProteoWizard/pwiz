@@ -202,7 +202,9 @@ namespace pwiz.Osprey.FDR.Reconciliation
 
                 // Sort by target_entry_id for deterministic output (matches
                 // Rust serializer in reconciliation_io.rs line 167).
-                targets.Sort((a, b) => a.TargetEntryId.CompareTo(b.TargetEntryId));
+                // Array.Sort OK: targets are built one per distinct (modseq, charge) key mapping
+                // to a unique TargetEntryId, so TargetEntryId is unique per file and the comparator never ties.
+                targets.Sort((a, b) => a.TargetEntryId.CompareTo(b.TargetEntryId)); // Array.Sort OK: (see above) TargetEntryId is unique per file, comparator never ties
                 result[fileName] = targets;
             }
 

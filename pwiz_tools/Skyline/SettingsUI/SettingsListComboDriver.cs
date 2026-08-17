@@ -70,7 +70,6 @@ namespace pwiz.Skyline.SettingsUI
                     if (Equals(Combo.Items[i].ToString(), selectedItemLast))
                         Combo.SelectedIndex = i;
                 }
-                // If nothing was added, add a blank to avoid starting with "Add..." selected.
                 if (Combo.Items.Count == 0)
                     Combo.Items.Add(string.Empty);
                 if (IsVisibleEditting)

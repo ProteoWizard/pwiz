@@ -24,6 +24,7 @@
 using System;
 using System.IO;
 using Newtonsoft.Json;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Chromatography
 {
@@ -46,7 +47,11 @@ namespace pwiz.Osprey.Chromatography
                 throw new ArgumentException("path must not be null or empty", nameof(path));
 
             string json = JsonConvert.SerializeObject(calibration, Formatting.Indented);
-            File.WriteAllText(path, json);
+            using (var saver = new FileSaver(path))
+            {
+                File.WriteAllText(saver.SafeName, json);
+                saver.Commit();
+            }
         }
 
         /// <summary>

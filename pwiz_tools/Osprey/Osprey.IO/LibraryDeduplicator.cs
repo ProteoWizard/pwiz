@@ -47,8 +47,16 @@ namespace pwiz.Osprey.IO
             // Group entries by (modified_sequence, charge)
             var groups = new Dictionary<string, List<LibraryEntry>>();
 
+            // Silent between the parse and "Loaded N library entries" - a full group-by over
+            // every entry (6.3M on the entrapment library). Not `using`d: no re-indent, and no
+            // completed-looking 100% if this throws.
+            var progress = new ProgressReporter(@"Deduplicating library entries", entries.Count,
+                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+            long nGrouped = 0;
+
             foreach (var entry in entries)
             {
+                progress.Report(++nGrouped);
                 string key = entry.ModifiedSequence + "\t" + entry.Charge;
                 List<LibraryEntry> group;
                 if (!groups.TryGetValue(key, out group))
@@ -60,6 +68,11 @@ namespace pwiz.Osprey.IO
             }
 
             var deduped = new List<LibraryEntry>(groups.Count);
+            // One interner for the merged (count > 1) groups' unioned protein /
+            // gene accessions, so the dedup pass keeps the loader's array-backed
+            // interning instead of re-wrapping each merge in a fresh List.
+            // Singleton groups (the vast majority) pass through untouched below.
+            var interner = new LibraryStringInterner();
 
             foreach (var group in groups.Values)
             {
@@ -98,7 +111,12 @@ namespace pwiz.Osprey.IO
                         totalIntensity += f.RelativeIntensity;
                     totalIntensities[e] = totalIntensity;
                 }
-                group.Sort((a, b) =>
+                // Array.Sort OK: picks the representative (group[0]) by fragment count then total
+                // intensity. Tie hazard, conversion deferred: two entries with identical fragment
+                // count AND identical total intensity would tie and either could become the kept
+                // representative (its Fragments/Id carry through). Not a #4362 approved U-site;
+                // adding a unique tiebreak here must be validated against the regression golden.
+                group.Sort((a, b) => // Array.Sort OK: (see above) tie hazard on (fragCount,intensity), conversion deferred; not a #4362 approved U-site
                 {
                     int fragCmp = b.Fragments.Count.CompareTo(a.Fragments.Count);
                     if (fragCmp != 0)
@@ -108,13 +126,15 @@ namespace pwiz.Osprey.IO
 
                 var best = group[0];
                 best.RetentionTime = avgRt;
-                best.ProteinIds = new List<string>(allProteins);
-                best.GeneNames = new List<string>(allGenes);
+                best.ProteinIds = interner.InternToArray(allProteins);
+                best.GeneNames = interner.InternToArray(allGenes);
                 deduped.Add(best);
             }
 
             // Sort deterministically before assigning IDs
-            deduped.Sort((a, b) =>
+            // Array.Sort OK: deduped holds one entry per (ModifiedSequence, Charge), so that key
+            // is unique and the comparator never returns 0.
+            deduped.Sort((a, b) => // Array.Sort OK: (see above) (ModifiedSequence, Charge) is unique, comparator never ties
             {
                 int cmp = string.Compare(a.ModifiedSequence, b.ModifiedSequence, StringComparison.Ordinal);
                 if (cmp != 0)
@@ -126,6 +146,7 @@ namespace pwiz.Osprey.IO
             for (int i = 0; i < deduped.Count; i++)
                 deduped[i].Id = (uint)i;
 
+            progress.Dispose();
             return deduped;
         }
     }

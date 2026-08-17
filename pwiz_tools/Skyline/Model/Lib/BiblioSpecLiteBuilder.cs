@@ -184,6 +184,13 @@ namespace pwiz.Skyline.Model.Lib
                                           @"search results file '" + fullResultsFilepath);
                     x = new IOException(messageWithFullFilepath, x);
                 }
+                else if (IsLibraryEmptyError(x))
+                {
+                    // Search produced zero entries that passed BlibBuild's score filter.
+                    // Replace the cryptic "No spectra were found" + BlibBuild file-lock
+                    // chatter with a message that points the user at the actual cause.
+                    x = new IOException(LibResources.BiblioSpecLiteBuilder_BuildLibrary_No_spectra_passed_filter_, x);
+                }
 
                 progress.UpdateProgress(status.ChangeErrorException(x));
                 return false;
@@ -251,6 +258,26 @@ namespace pwiz.Skyline.Model.Lib
             // ReSharper disable UnusedVariable
             return IsLibraryMissingExternalSpectraError(errorException, out IList<string> s1, out IList<string> s2, out string s3);
             // ReSharper restore UnusedVariable
+        }
+
+        /// <summary>
+        /// Detects the BlibBuild "No spectra were found for the new library" error.
+        /// This fires when every search-result entry is rejected by the cutoff filter
+        /// (search produced too-low-confidence IDs, or the search itself returned
+        /// nothing). The condition is engine-agnostic — DIA-NN, MSFragger, Comet, and
+        /// EncyclopeDia all surface the same BlibBuild error in this case.
+        /// </summary>
+        public static bool IsLibraryEmptyError(Exception errorException)
+        {
+            // Require BOTH the score-filter warning AND the empty-library error.
+            // BlibBuild also says "No spectra were found" for upstream parse failures
+            // (native-id mismatch, missing source spectra, etc.). Those should keep
+            // their raw WARNINGs visible — the score-filter case is the only one this
+            // friendlier message is correct for.
+            // TODO: these tests will break if BiblioSpec output is translated to other languages
+            var msg = errorException.Message;
+            return msg.Contains(@"No spectra were found for the new library") &&
+                   msg.Contains(@"No matches passed score filter");
         }
 
         public static bool IsLibraryMissingExternalSpectraError(Exception errorException, out IList<string> spectrumFilenames, out IList<string> directoriesSearched, out string resultsFilepath)

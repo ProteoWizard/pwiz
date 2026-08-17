@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -126,7 +127,11 @@ namespace pwiz.Osprey.Tasks
 
             sb.Append('}').Append('\n');
 
-            File.WriteAllText(PathFor(outputPath, taskName), sb.ToString());
+            using (var saver = new FileSaver(PathFor(outputPath, taskName)))
+            {
+                File.WriteAllText(saver.SafeName, sb.ToString());
+                saver.Commit();
+            }
         }
 
         /// <summary>

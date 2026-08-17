@@ -82,7 +82,13 @@ namespace pwiz.Osprey
                     config.InputFiles = synthetic;
                 }
 
-                var pipelineTasks = CanonicalPipeline();
+                // --task SpectraCache stages data rather than analyzing it: it runs
+                // its own one-task pipeline instead of the canonical four. Selecting
+                // it by list, not by an IsIncluded gate on every other task, keeps the
+                // canonical pipeline's membership rules about the analysis itself.
+                var pipelineTasks = config.SelectedTask == HpcTask.SpectraCache
+                    ? SpectraCachePipeline()
+                    : CanonicalPipeline();
                 var ctx = new PipelineContext(config, pipelineTasks,
                     LogInfo, LogWarning, LogError, OspreyDiagnostics.Active);
 
@@ -128,7 +134,7 @@ namespace pwiz.Osprey
 
         /// <summary>
         /// The canonical four-task pipeline in execution order:
-        /// PerFileScoring -> FirstJoin -> PerFileRescore -> MergeNode.
+        /// PerFileScoring -> FirstPassFDR -> PerFileRescore -> SecondPassFDR.
         /// Single source of truth for the task list. Tasks read upstream
         /// state through ctx.Demand&lt;T&gt;().GetX() rather than constructor
         /// args; the driver runs each task that is
@@ -141,9 +147,22 @@ namespace pwiz.Osprey
             return new OspreyTask[]
             {
                 new PerFileScoringTask(),
-                new FirstJoinTask(),
+                new FirstPassFdrTask(),
                 new PerFileRescoreTask(),
-                new MergeNodeTask(),
+                new SecondPassFdrTask(),
+            };
+        }
+
+        /// <summary>
+        /// The one-task pipeline behind <c>--task SpectraCache</c>: build every
+        /// input's <c>.spectra.bin</c> and stop, without a library or any of the
+        /// analysis stages.
+        /// </summary>
+        internal static OspreyTask[] SpectraCachePipeline()
+        {
+            return new OspreyTask[]
+            {
+                new SpectraCacheTask(),
             };
         }
 
@@ -170,7 +189,7 @@ namespace pwiz.Osprey
             // relies on for its within-task per-file skip; deletion has
             // to happen on per-file granularity for tasks that produce
             // per-file outputs. Tasks that produce a single coarse output
-            // (e.g. MergeNodeTask's output.blib) delete their own
+            // (e.g. SecondPassFdrTask's output.blib) delete their own
             // sidecars at the start of Run.
 
             var sw = Stopwatch.StartNew();
@@ -187,7 +206,7 @@ namespace pwiz.Osprey
 
             // [STAGE-WALL] one line per task->stage with parseable format
             // for Measure-Pipeline.ps1 / Osprey-workflow.html perf tables.
-            // MergeNodeTask emits its own stage7 + blib lines internally
+            // SecondPassFdrTask emits its own stage7 + blib lines internally
             // (one task -> two pipeline stages).
             string stageName = task.Name switch
             {
@@ -205,7 +224,7 @@ namespace pwiz.Osprey
             // Write sidecars whenever the task ran without setting a
             // non-zero exit code. Several tasks intentionally return
             // false on success to stop the pipeline at a configured
-            // boundary (PerFileScoringTask under --task PerFileScoring, FirstJoinTask
+            // boundary (PerFileScoringTask under --task PerFileScoring, FirstPassFdrTask
             // under --task FirstPassFDR with StopAfterStage5); gating on
             // keepGoing alone would skip sidecar writes for those
             // successful early-exit modes and break resume.

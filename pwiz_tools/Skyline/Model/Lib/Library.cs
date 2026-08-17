@@ -370,12 +370,33 @@ namespace pwiz.Skyline.Model.Lib
 
         public void ReleaseLibraries(params LibrarySpec[] specs)
         {
+            // Collect streams to close inside the lock, then close OUTSIDE the lock.
+            // CloseStream() drops into the ConnectionPool, which has its own lock —
+            // doing that while holding _loadedLibraries widens the lock scope across an
+            // unbounded operation and creates an A/B deadlock risk with any caller that
+            // takes the pool lock first.
+            List<IPooledStream> streamsToClose = null;
             lock (_loadedLibraries)
             {
                 foreach (var spec in specs)
                 {
-                    _loadedLibraries.Remove(GetKey(spec));
+                    var key = GetKey(spec);
+                    if (_loadedLibraries.TryGetValue(key, out var library))
+                    {
+                        streamsToClose ??= new List<IPooledStream>();
+                        streamsToClose.AddRange(library.ReadStreams);
+                    }
+                    _loadedLibraries.Remove(key);
                 }
+            }
+            if (streamsToClose != null)
+            {
+                // Close pooled streams (e.g. SQLite connections held by BiblioSpec) so
+                // callers that delete the underlying file right after release don't have
+                // to fall back to GC.Collect to drop the unreferenced PooledSqliteConnection's
+                // finalizer-only handle.
+                foreach (var stream in streamsToClose)
+                    stream.CloseStream();
             }
         }
 
@@ -1034,7 +1055,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public Dictionary<Target, double> GetMedianRetentionTimes()
         {
-            var allRetentionTimes = GetAllRetentionTimes(null);
+            var allRetentionTimes = GetAllRetentionTimes();
             if (allRetentionTimes == null)
             {
                 return null;
@@ -1050,33 +1071,49 @@ namespace pwiz.Skyline.Model.Lib
                 .ToDictionary(group => group.Key, MathNet.Numerics.Statistics.Statistics.Median);
         }
 
-        public virtual Dictionary<Target, double>[] GetAllRetentionTimes(IEnumerable<string> spectrumSourceFiles)
+        /// <summary>
+        /// A representative retention time for each target in each of the library's files, with
+        /// one dictionary per entry in <see cref="LibraryFiles"/>, or null if the library does not
+        /// keep retention times.
+        /// </summary>
+        public virtual Dictionary<Target, double>[] GetAllRetentionTimes()
         {
             return null;
         }
 
-        public virtual IList<double>[] GetRetentionTimesWithSequences(IEnumerable<string> spectrumSourceFiles,
-            ICollection<Target> targets)
+        /// <summary>
+        /// The retention times of the targets in each of the library's files, with one list per
+        /// entry in <see cref="LibraryFiles"/>.
+        /// </summary>
+        public virtual IList<double>[] GetRetentionTimesWithSequences(ICollection<Target> targets)
         {
-            var result = new List<IList<double>>();
-            foreach (var file in spectrumSourceFiles ?? LibraryFiles)
+            var result = new IList<double>[LibraryFiles.Count];
+            for (int fileIndex = 0; fileIndex < result.Length; fileIndex++)
             {
-                int? fileIndex = null;
-                result.Add(GetRetentionTimesWithSequences(file, targets, ref fileIndex).ToList());
+                result[fileIndex] = GetRetentionTimesWithSequences(fileIndex, targets);
             }
 
-            return result.ToArray();
+            return result;
+        }
+
+        /// <summary>
+        /// The retention times of the targets in one of the library's files.
+        /// </summary>
+        public virtual IList<double> GetRetentionTimesWithSequences(int fileIndex, ICollection<Target> targets)
+        {
+            int? iFile = null;
+            return GetRetentionTimesWithSequences(LibraryFiles[fileIndex], targets, ref iFile).ToList();
         }
 
         public IList<double> GetRetentionTimes(MsDataFileUri fileUri, ICollection<Target> targets)
         {
-            int index = LibraryFiles.FindIndexOf(fileUri);
-            if (index < 0)
+            int fileIndex = LibraryFiles.FindIndexOf(fileUri);
+            if (fileIndex < 0)
             {
                 return null;
             }
 
-            return GetRetentionTimesWithSequences(new[] { LibraryFiles[index] }, targets)?[0];
+            return GetRetentionTimesWithSequences(fileIndex, targets);
         }
 
         #region Implementation of IXmlSerializable
