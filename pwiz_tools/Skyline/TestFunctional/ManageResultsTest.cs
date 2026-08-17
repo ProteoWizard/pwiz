@@ -344,7 +344,7 @@ namespace pwiz.SkylineTestFunctional
             // apart from those of the replicate measuring the same file
             var groupPath = docImport.GetPathTo((int) SrmDocument.Level.TransitionGroups, 0);
             var nodeGroupImport = (TransitionGroupDocNode) docImport.FindNode(groupPath);
-            var chromInfoImport = nodeGroupImport.Results[iSameFile].First();
+            var chromInfoImport = ResultsUtil.GetTransitionGroupChromInfos(docImport, nodeGroupImport, iSameFile).First();
             double startTime = chromInfoImport.StartRetentionTime.Value + 0.02;
             double endTime = chromInfoImport.EndRetentionTime.Value - 0.02;
             const string note = "Note for the replicate measuring the same file";
@@ -385,11 +385,10 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreNotEqual(iSameFile, iReorder, "The replicate measuring the same file did not move");
 
             // The integration and the note must have moved with the replicate, and not been left
-            // behind on the index it used to occupy. The tree is immutable, so these must be the
-            // same instances, which reference equality shows without inspecting any content.
-            Assert.AreSame(tranChromInfoModified, GetTransitionChromInfo(docReorder, groupPath, iReorder));
+            // behind on the index it used to occupy.
+            AssertSamePeak(tranChromInfoModified, GetTransitionChromInfo(docReorder, groupPath, iReorder));
             // And the replicate that did not get the manual integration must still have its own
-            Assert.AreSame(tranChromInfoOther,
+            AssertSamePeak(tranChromInfoOther,
                 GetTransitionChromInfo(docReorder, groupPath, iReorder == 0 ? 1 : 0));
 
             // Undo the reorder, the peak and note change, and the import
@@ -404,24 +403,48 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreSame(docStart, SkylineWindow.Document);
         }
 
+        /// <summary>
+        /// The annotations of a transition's peaks are the precursor's columnar results now, so the
+        /// note goes there rather than onto a chrom info the transition no longer keeps.
+        /// </summary>
         private static SrmDocument ChangeTransitionNote(SrmDocument doc, IdentityPath groupPath,
             int replicateIndex, string note)
         {
             var nodeGroup = (TransitionGroupDocNode) doc.FindNode(groupPath);
-            var nodeTran = nodeGroup.Transitions.First();
-            var results = nodeTran.Results.ToArray();
-            results[replicateIndex] = new ChromInfoList<TransitionChromInfo>(
-                results[replicateIndex].Select(chromInfo =>
-                    chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(note))));
-            return (SrmDocument) doc.ReplaceChild(groupPath,
-                nodeTran.ChangeResults(new Results<TransitionChromInfo>(results)));
+            var transition = nodeGroup.Transitions.First().Transition;
+            foreach (var entry in nodeGroup.AbbreviatedResults
+                         .GetTransitionPeaks(transition, replicateIndex).ToArray())
+            {
+                var annotations = nodeGroup.GetTransitionAnnotations(transition, replicateIndex, entry.Key);
+                nodeGroup = nodeGroup.ChangeTransitionAnnotations(transition, replicateIndex, entry.Key,
+                    annotations.ChangeNote(note));
+            }
+            return (SrmDocument) doc.ReplaceChild(groupPath.Parent, nodeGroup);
         }
 
+        /// <summary>
+        /// One transition's peak in one replicate, rebuilt from the .skyd, since a transition no
+        /// longer holds its chrom infos.
+        /// </summary>
         private static TransitionChromInfo GetTransitionChromInfo(SrmDocument doc, IdentityPath groupPath,
             int replicateIndex)
         {
             var nodeGroup = (TransitionGroupDocNode) doc.FindNode(groupPath);
-            return nodeGroup.Transitions.First().Results[replicateIndex].First();
+            return new MoleculeResults(doc.Settings, ResultsUtil.FindMolecule(doc, nodeGroup))
+                .GetTransitionChromInfos(nodeGroup.TransitionGroup,
+                    nodeGroup.Transitions.First().Transition, replicateIndex).First();
+        }
+
+        /// <summary>
+        /// That two chrom infos describe the same peak. The chrom infos are rebuilt on each call
+        /// now, so a reference comparison would prove nothing, and this compares the values the
+        /// test made differ between the two replicates.
+        /// </summary>
+        private static void AssertSamePeak(TransitionChromInfo expected, TransitionChromInfo actual)
+        {
+            Assert.AreEqual(expected.StartRetentionTime, actual.StartRetentionTime);
+            Assert.AreEqual(expected.EndRetentionTime, actual.EndRetentionTime);
+            Assert.AreEqual(expected.Annotations.Note, actual.Annotations.Note);
         }
 
         private void WaitForGraphPositioning<TValue>(IList<GraphChromatogram> listGraphChroms, IDictionary<Point, TValue> dictGraphPositions)

@@ -330,9 +330,12 @@ namespace pwiz.SkylineTestData
                 {
                     chromatogramSet.Name,
                     FilePaths = chromatogramSet.MSDataFilePaths.Select(path => path.ToString()).ToArray(),
-                    PeakAreas = document.MoleculeTransitionGroups.SelectMany(group => group.Transitions)
-                        .SelectMany(transition => transition.GetSafeChromInfo(replicateIndex))
-                        .Select(chromInfo => chromInfo.Area)
+                    // A transition's peaks are its precursor's columnar results now, which is also
+                    // where they can be read without the .skyd this document has not loaded
+                    PeakAreas = document.MoleculeTransitionGroups
+                        .SelectMany(group => group.Transitions.SelectMany(transition =>
+                            group.AbbreviatedResults.GetTransitionPeaks(transition.Transition, replicateIndex)))
+                        .Select(entry => entry.Value.Area)
                         .ToArray()
                 }).ToDictionary(value => value.Name,
                 value => (value.FilePaths, value.PeakAreas));
