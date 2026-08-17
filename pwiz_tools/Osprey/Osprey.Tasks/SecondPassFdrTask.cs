@@ -388,6 +388,13 @@ namespace pwiz.Osprey.Tasks
             // and an unpatched record keeps whatever it held when the sidecar was written -
             // the ResetScores default for every entry Stage 6 rescored or gap-filled, since
             // RestorePass1Scalars no longer seeds this field.
+            // The patch and the report writer below shared a 125 s silence on the 82-file SEA-AD
+            // run of 2026-08-14, between "N protein groups pass ..." and the blib write (#4571).
+            // Each now carries its own ProgressReporter inside the callee rather than a heading
+            // here: a reporter prints its heading and then ONLY as many percent lines as the
+            // elapsed time needs, so a fast run costs one line and a slow one stays alive. An
+            // unconditional heading at the call site costs its line on every run forever, and
+            // duplicated the reporter's own heading to the same second.
             if (AnyReconciledParquet(config))
                 Pass2FdrSidecar.PatchPass2ProteinQvalues(ctx, perFileEntries);
 
