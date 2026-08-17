@@ -147,14 +147,31 @@ namespace pwiz.Osprey.IO
                 if (!touched)
                     continue;
                 var mapped = new SortedSet<string>(StringComparer.Ordinal);
+                bool hasNull = false;
                 for (int i = 0; i < ids.Count; i++)
                 {
                     string id = ids[i];
+                    // Nulls are carried, not dropped. Dropping changed ProteinIds.Count on
+                    // TOUCHED entries only, so two entries in the same library came out of one
+                    // load with different shapes - a hazard for any consumer that reasons about
+                    // the count or indexes it positionally against another per-entry array.
+                    // Held aside rather than added to the set because SortedSet.Add is
+                    // annotated non-null; re-inserted first below, where Ordinal would sort it.
                     if (id == null)
+                    {
+                        hasNull = true;
                         continue;
+                    }
                     mapped.Add(cleaned.TryGetValue(id, out string clean) ? clean : id);
                 }
-                entry.ProteinIds = interner.InternToArray(mapped);
+                string[] rewritten = interner.InternToArray(mapped);
+                if (hasNull)
+                {
+                    var withNull = new string[rewritten.Length + 1];
+                    Array.Copy(rewritten, 0, withNull, 1, rewritten.Length);
+                    rewritten = withNull;
+                }
+                entry.ProteinIds = rewritten;
                 nEntries++;
             }
 

@@ -27,6 +27,7 @@ using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey
 {
@@ -243,6 +244,15 @@ namespace pwiz.Osprey
                     LogInfo("Output: per-file .spectra.bin (no scoring; --output and --library are not used)");
                 else if (config.NoJoin && !fromInputScores)
                     LogInfo("Output: per-file .scores.parquet (next to each input file)");
+                else if (config.DiagnosticsOnly)
+                {
+                    // --task ModelDiagnostics regenerates the report for a COMPLETED run and
+                    // declares no other output; naming the blib here reads as "the blib is being
+                    // rebuilt", and an operator who then sees its timestamp unchanged concludes
+                    // the run failed. Same reason SpectraCache has its own branch above.
+                    LogInfo(string.Format("Output: {0} (report only; no other artifact is written)",
+                        ModelDiagnosticsReport.ReportPath(config)));
+                }
                 else
                     LogInfo(string.Format("Output: {0}", config.OutputBlib));
                 LogInfo(string.Format("Resolution: {0}", config.ResolutionMode));

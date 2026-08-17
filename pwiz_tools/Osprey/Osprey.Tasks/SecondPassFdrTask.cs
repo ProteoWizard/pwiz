@@ -278,8 +278,16 @@ namespace pwiz.Osprey.Tasks
                 WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config, ctx);
             }
             swBlib.Stop();
-            ctx.LogInfo(string.Format(@"[STAGE-WALL] blib: {0:F1}s",
-                swBlib.Elapsed.TotalSeconds));
+            // Only when a blib was actually written. [STAGE-WALL] is machine-read by the perf
+            // tooling, so emitting it for a skipped write reports a real 0.0s blib stage and
+            // drags the recorded cost toward zero whenever a regeneration is scraped alongside
+            // real runs. The "skipping the .blib write" line above is prose that tooling does
+            // not parse.
+            if (!config.DiagnosticsOnly)
+            {
+                ctx.LogInfo(string.Format(@"[STAGE-WALL] blib: {0:F1}s",
+                    swBlib.Elapsed.TotalSeconds));
+            }
             // The blib write builds several whole-run indexes over the pool (passing
             // precursors, best-per-precursor, shared boundaries, cross-file observations),
             // so it is the other candidate reason the pool cannot be consumed per file.
@@ -423,7 +431,12 @@ namespace pwiz.Osprey.Tasks
             // elapsed time needs, so a fast run costs one line and a slow one stays alive. An
             // unconditional heading at the call site costs its line on every run forever, and
             // duplicated the reporter's own heading to the same second.
-            if (AnyReconciledParquet(config))
+            // Not under --task ModelDiagnostics, whose contract is that it rewrites the report
+            // and touches no other artifact. The patch is idempotent, so a regeneration wrote
+            // the same bytes back - invisible to a content comparison, but it reset every
+            // 2nd-pass sidecar's mtime, which is exactly the signal used to tell when a run's
+            // inputs were produced. Caught by the mode 7 regeneration leg.
+            if (AnyReconciledParquet(config) && !config.DiagnosticsOnly)
                 Pass2FdrSidecar.PatchPass2ProteinQvalues(ctx, perFileEntries);
 
             // Cross-impl bisection dump (env-var-gated, no-op in production).
