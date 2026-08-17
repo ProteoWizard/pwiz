@@ -27,6 +27,10 @@ pass1.coAssign.experiment.decoy.n	1101
 pass1.coAssign.experiment.decoy.nBetter	319
 pass1.coAssign.experiment.enrichment	NaN
 pass1.coAssign.cutoff	0.39026927081205753
+pass1.coAssign.cutoffInStratum	NaN
+pass1.coAssign.cutoffOffStratum	NaN
+pass1.coAssign.acceptedInStratum	0
+pass1.coAssign.acceptedOffStratum	0
 pass1.coAssign.fdrCrossing	0.38750132437071616
 pass1.coAssign.fdrCrossingDecoys	1103
 pass1.coAssign.fdrCrossingNonDecoys	110329
@@ -41,10 +45,14 @@ pass2.coAssign.experiment.target.n	117719
 pass2.coAssign.experiment.target.nBetter	13283
 pass2.coAssign.experiment.entrapment.n	n/a
 pass2.coAssign.experiment.entrapment.nBetter	n/a
-pass2.coAssign.experiment.decoy.n	1122
+pass2.coAssign.experiment.decoy.n	1118
 pass2.coAssign.experiment.decoy.nBetter	342
 pass2.coAssign.experiment.enrichment	NaN
 pass2.coAssign.cutoff	-0.07487270315967538
+pass2.coAssign.cutoffInStratum	-0.07487270315967538
+pass2.coAssign.cutoffOffStratum	0.3907084066007002
+pass2.coAssign.acceptedInStratum	117067
+pass2.coAssign.acceptedOffStratum	652
 pass2.coAssign.fdrCrossing	-0.1218683761399754
 pass2.coAssign.fdrCrossingDecoys	1198
 pass2.coAssign.fdrCrossingNonDecoys	119862
