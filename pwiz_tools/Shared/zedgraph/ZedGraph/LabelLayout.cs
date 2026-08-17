@@ -47,12 +47,20 @@ using Newtonsoft.Json;
 
 namespace ZedGraph
 {
+    /// <summary>
+    /// Computes label placements for a graph pane. The constructor must be called on the UI
+    /// thread: it captures an immutable snapshot of the point-marker geometry from the live
+    /// curve list. All subsequent layout work, including <see cref="ComputePlacementsSimulatedAnnealing"/>
+    /// running on a background thread, reads only that snapshot, so it is never affected by
+    /// the UI thread modifying the graph's curves while the layout is being computed.
+    /// </summary>
     public class LabelLayout
     {
         private GraphPane _graph;
         private int _cellSize;
         private Random _randGenerator = new Random(123);
         private PointF _chartOffset;
+        private readonly MarkerInfo[] _markers;
         private Dictionary<TextObj, LabeledPoint> _labeledPoints = new Dictionary<TextObj, LabeledPoint>();
         private const float CROSSOVER_PENALTY = 5000f;
         private const float LABEL_OVERLAP_PENALTY = 5000f;
@@ -80,6 +88,7 @@ namespace ZedGraph
             _cellSize = cellSize;
             var chartRect = _graph.Chart.Rect;
             _chartOffset = new PointF(chartRect.Location.X, chartRect.Location.Y);
+            _markers = SnapshotMarkers();
             FillDensityGrid();
         }
 
@@ -130,112 +139,48 @@ namespace ZedGraph
         }
 
         /// <summary>
-        /// Enumerates the screen-pixel rectangles of every visible point marker on the graph.
+        /// Captures the screen-pixel rectangle and center of every visible point marker on the
+        /// graph. Called once from the constructor, on the UI thread, because it iterates the
+        /// live curve list; everything else reads the returned immutable snapshot.
+        /// </summary>
+        private MarkerInfo[] SnapshotMarkers()
+        {
+            var markers = new List<MarkerInfo>();
+            foreach (var line in _graph.CurveList.OfType<LineItem>().Where(c => c.Symbol.Type != SymbolType.None))
+            {
+                for (var i = 0; i < line.Points.Count; i++)
+                {
+                    if (!line.GetCoords(_graph, i, out var coords))
+                        continue;
+
+                    var sides = Array.ConvertAll(coords.Split(','), int.Parse);
+                    var rect = new RectangleF(sides[0], sides[1], sides[2] - sides[0], sides[3] - sides[1]);
+                    var point = line.Points[i];
+                    var center = _graph.TransformCoord(point.X, point.Y, CoordType.AxisXYScale);
+                    markers.Add(new MarkerInfo(center, rect));
+                }
+            }
+            return markers.ToArray();
+        }
+
+        /// <summary>
+        /// Enumerates the marker rectangles captured at construction.
         /// Shared by the density grid and the overlap pruner.
         /// </summary>
         private IEnumerable<RectangleF> EnumerateMarkerRectangles()
         {
-            foreach (var line in GetMarkerLinesSnapshot())
-            {
-                int pointCount;
-                try
-                {
-                    pointCount = line.Points.Count;
-                }
-                catch (InvalidOperationException)
-                {
-                    continue;
-                }
-
-                for (var i = 0; i < pointCount; i++)
-                {
-                    RectangleF markerRect;
-                    try
-                    {
-                        if (!line.GetCoords(_graph, i, out var coords))
-                            continue;
-
-                        var sides = Array.ConvertAll(coords.Split(','), int.Parse);
-                        markerRect = new RectangleF(sides[0], sides[1], sides[2] - sides[0], sides[3] - sides[1]);
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        break;
-                    }
-                    catch (ArgumentOutOfRangeException)
-                    {
-                        break;
-                    }
-                    yield return markerRect;
-                }
-            }
-        }
-
-        private LineItem[] GetMarkerLinesSnapshot()
-        {
-            try
-            {
-                return _graph.CurveList.OfType<LineItem>().Where(c => c.Symbol.Type != SymbolType.None).ToArray();
-            }
-            catch (InvalidOperationException)
-            {
-                return Array.Empty<LineItem>();
-            }
+            return _markers.Select(m => m.Rect);
         }
 
         private void GetPointMarkerRectangle(PointF pt, out RectangleF rect)
         {
             rect = RectangleF.Empty;
-            foreach (var line in GetMarkerLinesSnapshot())
+            foreach (var marker in _markers)
             {
-                int pointCount;
-                try
+                if (Math.Abs(marker.Center.X - pt.X) < 1 && Math.Abs(marker.Center.Y - pt.Y) < 1)
                 {
-                    pointCount = line.Points.Count;
-                }
-                catch (InvalidOperationException)
-                {
-                    continue;
-                }
-
-                for (var i = 0; i < pointCount; i++)
-                {
-                    PointF screenPt;
-                    try
-                    {
-                        var point = line.Points[i];
-                        screenPt = _graph.TransformCoord(point.X, point.Y, CoordType.AxisXYScale);
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        break;
-                    }
-                    catch (ArgumentOutOfRangeException)
-                    {
-                        break;
-                    }
-
-                    if (Math.Abs(screenPt.X - pt.X) < 1 && Math.Abs(screenPt.Y - pt.Y) < 1 )
-                    {
-                        try
-                        {
-                            if (!line.GetCoords(this._graph, i, out var coords))
-                            {
-                                continue;
-                            }
-                            var sides = Array.ConvertAll(coords.Split(','), int.Parse);
-                            rect = new Rectangle(sides[0], sides[1], sides[2] - sides[0], sides[3] - sides[1]);
-                            return;
-                        }
-                        catch (InvalidOperationException)
-                        {
-                            break;
-                        }
-                        catch (ArgumentOutOfRangeException)
-                        {
-                            break;
-                        }
-                    }
+                    rect = marker.Rect;
+                    return;
                 }
             }
         }
@@ -904,6 +849,22 @@ namespace ZedGraph
                 }
                 return hash;
             }
+        }
+
+        /// <summary>
+        /// Immutable snapshot of a single point marker: its screen rectangle (as reported by
+        /// <see cref="LineItem.GetCoords"/>) and the transformed center of the data point.
+        /// </summary>
+        private readonly struct MarkerInfo
+        {
+            public MarkerInfo(PointF center, RectangleF rect)
+            {
+                Center = center;
+                Rect = rect;
+            }
+
+            public PointF Center { get; }
+            public RectangleF Rect { get; }
         }
 
         private readonly struct LabelRect

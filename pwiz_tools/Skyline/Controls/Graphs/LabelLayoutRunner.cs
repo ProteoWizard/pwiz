@@ -379,8 +379,10 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                         else
                         {
-                            var minLabelHeight = heights.FindAll(h => h > 0).Min();
-                            var labelLayout = workItem.LabelLayout ?? new LabelLayout(workItem.Pane, (int)Math.Ceiling(minLabelHeight));
+                            // The LabelLayout is always created on the UI thread in StartDebounced,
+                            // where it snapshots the marker geometry; the worker must never
+                            // construct one because that snapshot iterates the live curve list.
+                            var labelLayout = workItem.LabelLayout;
                             var progress = new WorkerProgress(progressPercent =>
                             {
                                 runOnUiThread(() =>
