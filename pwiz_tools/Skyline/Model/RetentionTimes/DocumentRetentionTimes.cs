@@ -554,7 +554,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
             var library = alignmentParam.Library;
             var spectrumSourceFiles = library.LibraryFiles.FilePaths;
-            var allRetentionTimes = library.GetAllRetentionTimes(null);
+            var allRetentionTimes = library.GetAllRetentionTimes();
             if (allRetentionTimes == null)
             {
                 return Alignments.EMPTY;

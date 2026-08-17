@@ -208,7 +208,7 @@
     <value>214, 20</value>
   </data>
   <data name="tbxViewName.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;tbxViewName.Name" xml:space="preserve">
     <value>tbxViewName</value>
@@ -276,21 +276,6 @@
   <data name="&gt;&gt;tabPageColumns.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="tabPageSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabPageSource.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabPageSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>614, 309</value>
-  </data>
-  <data name="tabPageSource.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="tabPageSource.Text" xml:space="preserve">
-    <value>Source</value>
-  </data>
   <data name="&gt;&gt;tabPageSource.Name" xml:space="preserve">
     <value>tabPageSource</value>
   </data>
@@ -327,168 +312,36 @@
   <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="tabPageSource.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPageSource.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPageSource.Size" type="System.Drawing.Size, System.Drawing">
+    <value>614, 309</value>
+  </data>
+  <data name="tabPageSource.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tabPageSource.Text" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="&gt;&gt;tabPageSource.Name" xml:space="preserve">
+    <value>tabPageSource</value>
+  </data>
+  <data name="&gt;&gt;tabPageSource.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageSource.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabPageSource.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <metadata name="toolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="toolButtonUndo.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="toolButtonUndo.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAF7SURBVDhPvZFNSwJhFIX9M0EraRGBWdEqi1qUKdEHVqJG
-        bSKNaBUqJVFERNYiNBArs4VI5BiZRUlkDjIQWGCftkvEJJ3RmMXJqYjCAVGoZ/m+5zxc7hX8C5ePLJwB
-        Bj4qi/DNG76eixOKspjaorFKMFjcpbHkZrB9wsB1xvBLGrVX3x/Ufb68SUNrzUCiu0Cdxot6NYFOwxNs
-        hwy8JI9EPHwOVygL8o7FhD0DlTkNkXIPDSo3lIZjDEz7IFLY0DOfhDvII6ju92BkLY0xSwZq8yuqOq0Q
-        D+7AsR/9CHOjN6ms6NDfw+bPFgqEcjtajQn0LqQxYUlg1ESAjDz/CnaPOyEzxrB+xCOobFtBje4BLcb4
-        xyRmD10QatbYIZ1+huOUR1DRNAdOIpRtoLqfQG1+Jz8Xy1HT54LUlICfei0UFCMQjkEyeYOh5ZfSyxx9
-        +hDksyl4g/HSBQdkEu0zKShMnxcpCeo2h665/HlXYuWNfnbNIhDJlVf+YwSCd8eF8t6939QTAAAAAElF
-        TkSuQmCC
-</value>
-  </data>
-  <data name="toolButtonUndo.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="toolButtonUndo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 22</value>
-  </data>
-  <data name="toolButtonUndo.Text" xml:space="preserve">
-    <value>Undo</value>
-  </data>
-  <data name="toolButtonRedo.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="toolButtonRedo.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAF8SURBVDhPxZNLS0JhEIb9M0EraRGBWdFKi1qUF6ISK1Gj
-        NmGGtBIVkzAiImsRGkgXs4VIpEZmUSKZIgcCC6ws2yVi4uUcw8VbR4KIE2QS9Czn/eYZZuBj/Smx21f4
-        CQrOIImrxwo+yrXhCpHYPSOx7CaxtF/CmpeEdqeESKIGkS9Kwn5MQqh/QrvCizalD3z1JaZtRWi3SyCS
-        n5LO6Wum0B0mMbSQBUdqx6jRD5n+FB1yNziyA8gtBWg2i4jeV+CKUOBOXDAF9gCFfl0SPLkN9Cp0zXGY
-        AHdsD01CGxSWPFTWIibXC2ge8TAFGycURIYUBmecX8Jo/BlTJi801gyGFwvoMWTAFm8yBY5zCgLjM7qU
-        zNDiKVUndxvSaFE/oLF3lSkIEHkITBm0SFxfQvpgre87N494wRZtVZsbeGamgGZ85QX82VsEY6nvH/yE
-        L5yGeD4HiS5Sn4BGakqgby6Ho2i2folqNYUBcwHEXbl+STBeRujml3/hn2Cx3gDp9PLeefazYAAAAABJ
-        RU5ErkJggg==
-</value>
-  </data>
-  <data name="toolButtonRedo.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="toolButtonRedo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 22</value>
-  </data>
-  <data name="toolButtonRedo.Text" xml:space="preserve">
-    <value>Redo</value>
-  </data>
-  <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>6, 25</value>
-  </data>
-  <data name="toolButtonFind.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABhSURBVDhPzY/BCQAxCATtvwN7sqc7kEQWXSX5HDfgZ5yE
-        RH7JA7NhroXFzLVgzGbEI1XNh7JrYTFzBVzeTODCzHJQJjWBC/L0TbjuK2yJQbibCzJjg7IsF2MzLhcn
-        zeeIvK7WkD3AZ8ECAAAAAElFTkSuQmCC
-</value>
-  </data>
-  <data name="toolButtonFind.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="toolButtonFind.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 22</value>
-  </data>
-  <data name="toolButtonFind.Text" xml:space="preserve">
-    <value>Find Column</value>
-  </data>
-  <data name="toolButtonAlphabetical.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFnSURBVDhPY0AG/mWH/kOZWMGDBw9A8v+hNCpoW3jtv2v2
-        9v9LN53HaQheA+IaDv2PrNjx3zVpGukGnL/1/r93wU6woHFA5/+Dp+9jNQSnAdmdx/7HVu/63zln/3/b
-        yAn/M+rXkmaAf9FuuMDhsw/+G/t3/L/35B2GIVgNyOs+9t8masr/jXuvggUdoiaADYjIn0ucAaQAnAZs
-        75v7f1PLpP/7Z634v6l9+v+lGbn/L61fTbwLNtU2wwXmR8b87/N0RFHwHwhANLoBMHE4ODR9/v86fdX/
-        V3ZuwzCgrq7u/5YtW8AG7Nq1639paSlIGKHu6eUb/ye5+/5fWZKHaioUwGyHYQxvLMpv/j/VzeY/yCCo
-        EAoAaRATEwNr5uLiQjXg2KK1//vt7f5fWLcKLri5ugTDoEePHoENuHXrFqpcr43R/xoT7f8bGqr/ry0v
-        +N9iZ/Z/XV0FhgEgW1taWjCdTwpA1czAAAAaXidra4m7BQAAAABJRU5ErkJggg==
-</value>
-  </data>
-  <data name="toolButtonAlphabetical.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="toolButtonAlphabetical.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 22</value>
-  </data>
-  <data name="toolButtonAlphabetical.Text" xml:space="preserve">
-    <value>Alphabetical</value>
-  </data>
-  <data name="toolButtonShowHiddenColumns.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABiSURBVDhPrZABCgAhCAR9uj8vNpTWkAxyYNiSWu6SLoYJ
-        XjOAIR94sRFV9UZurzJiJS7gfeaGvuAPFHlZlQEM2Wx2ui62QY1IXt8yYiUu4H3mpu2f+IGqDGDIZrPT
-        dfEfkQm8LZukEz4LtgAAAABJRU5ErkJggg==
-</value>
-  </data>
-  <data name="toolButtonShowHiddenColumns.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="toolButtonShowHiddenColumns.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 22</value>
-  </data>
-  <data name="toolButtonShowHiddenColumns.Text" xml:space="preserve">
-    <value>Show Hidden Columns</value>
-  </data>
-  <data name="helpToolStripButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
-        YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
-        0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
-        bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
-        VzOOpHI7Jr376Hi9ogHqFIANO0/MmmmbmSmm9a8ze+I4MrNWAdjtoJgWcx+PSzg166yZZ8xM8XvXDix9
-        c4jIqFYAjoriBV9AhEPv1mH/sonogha0afbZMMZz+yreTGyhpusHwtNNCsA5U1zS4BLxzJIfg299qO32
-        Ir7UJtZfftyATqeT+8o2D8JSjQrAJblrncYL7ZJ2+bfaFnC/1S1NjL3diRat7qrO7wLRP3HjWsojBeCo
-        mDEo5mNjuweFGvjWg2EBhCbpkW78htSHHwRyNdmgAFzPEee2iFkzayy2OLXzT4gr6UdUnlXrullsxxQ+
-        kx0g8BTA3aZlButjSTyjODq/WcQcW/B/Je4OQhLvKQDnzN1mp0nnkvAhR8VuMzNrpm1mpjgkoVwB/v8D
-        TgDQASA1MVpwzwAAAABJRU5ErkJggg==
-</value>
-  </data>
-  <data name="helpToolStripButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="helpToolStripButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 22</value>
-  </data>
-  <data name="helpToolStripButton.Text" xml:space="preserve">
-    <value>?</value>
-  </data>
-  <data name="helpToolStripButton.ToolTipText" xml:space="preserve">
-    <value>Show Column Documentation</value>
-  </data>
-  <data name="uiModeDropdown.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
-        YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
-        0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
-        bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
-        VzOOpHI7Jr376Hi9ogHqFIANO0/MmmmbmSmm9a8ze+I4MrNWAdjtoJgWcx+PSzg166yZZ8xM8XvXDix9
-        c4jIqFYAjoriBV9AhEPv1mH/sonogha0afbZMMZz+yreTGyhpusHwtNNCsA5U1zS4BLxzJIfg299qO32
-        Ir7UJtZfftyATqeT+8o2D8JSjQrAJblrncYL7ZJ2+bfaFnC/1S1NjL3diRat7qrO7wLRP3HjWsojBeCo
-        mDEo5mNjuweFGvjWg2EBhCbpkW78htSHHwRyNdmgAFzPEee2iFkzayy2OLXzT4gr6UdUnlXrullsxxQ+
-        kx0g8BTA3aZlButjSTyjODq/WcQcW/B/Je4OQhLvKQDnzN1mp0nnkvAhR8VuMzNrpm1mpjgkoVwB/v8D
-        TgDQASA1MVpwzwAAAABJRU5ErkJggg==
-</value>
-  </data>
-  <data name="uiModeDropdown.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="uiModeDropdown.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 22</value>
-  </data>
-  <data name="uiModeDropdown.Text" xml:space="preserve">
-    <value>User interface selection</value>
-  </data>
   <data name="toolStrip.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
@@ -513,6 +366,165 @@
   <data name="&gt;&gt;toolStrip.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="toolButtonUndo.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="toolButtonUndo.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAF6SURBVDhPvZFLSwIBFIX9M0EraSFCWdEqi1pUKlGJlWhh
+        m9AiWolKSRQRkbaIDMTKaiESOUb2oEQyBxkILMhetkvEJJ3RmMWJMYjKiTCob3vP+bjcKxD8B+f3LDaD
+        DAJUHtH4C77OvyVyxcK4TmORYDC3TWPey2DjmIEnxPBLGgwX7wPqloVxjYbBkYN05Ay1A37UaQnIzA9w
+        7jPwkzwSie4Unkge5A2LMVcOGlsW1eod1Gu8UJuP0DcRQLXKie6ZNLxhHoGo14ehpSz0yzlobc+okjkg
+        6d+Ce/eqGOZWb9Q40G66hfMgXyoQKlxosaTQM5vF2HIKw1YCZOzxU7BrdBNySwIrhzyCylY7xCN3aLYk
+        i5vYfHRJqGnAhY6JR7hPeAQVjdPgJEL5KkS9BGp0p/h4WA6x0oMOawoH1HOp4CeC0QSk43EMLjyVX+ZQ
+        miJQTGXgDyfLF+yRabRNZqCyvn2kLKjrAjqns9DbE+WXOUKXLIKxwu/Kf84rx4Xy3mniBPwAAAAASUVO
+        RK5CYII=
+</value>
+  </data>
+  <data name="toolButtonUndo.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="toolButtonUndo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="toolButtonUndo.Text" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="toolButtonRedo.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="toolButtonRedo.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAF8SURBVDhPzZJNSwJRGIX9M0EraSFCWdFKi1qUH0QlWqGF
+        bUINaSUlJWFERNYiMhArq4VI5BiZRYloDiEEFmhZtivEpHFmChcnpk3YRIW06Fnec+5zeV+uQPCXnGde
+        EUqy2I4wuLgr43P+Lb4og60TBgt+BvO7NJYJBtZNGon0L0RBkoH7kIFi8h5NegKNQ0HIzGcwuUqwbtBI
+        Zj8kLaZLvtAfZ9A7W0C9xo3+qRAGJ4/RrPOjfnAPOicFi6cE8qYMX4KFxBDjC9xhFl0TWUh1LnCjcGfe
+        /TQkAzuoU7igdz7DuFrCyAoFkTbAF6wdsVDacugZ264IydQDRu0ELKt59M1RaLflIVR5+ALvKQv51ANa
+        h/ihM0C/v9xme4TYfIvajiVeRxBOPkNuz0Os9lWE3MIaDDGItASEyvX3yzVSB1/AMbz4BNl4BpHz3NeF
+        nwjGH6GaKUI9kahOwKGxp9E5XcQBWaheYlzKodtBIXn9Ur0kknpB9OoXX/hf8Abp9PLeVSh34gAAAABJ
+        RU5ErkJggg==
+</value>
+  </data>
+  <data name="toolButtonRedo.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="toolButtonRedo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="toolButtonRedo.Text" xml:space="preserve">
+    <value>Redo</value>
+  </data>
+  <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>6, 25</value>
+  </data>
+  <data name="toolButtonFind.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABZSURBVDhPzY5RCgAgCEO9/w28k3cq6EvnlIKgHuxnvkYi
+        PzJcuq6Eyawr8TJLy5JUFR9hV8Jk1iXSg83EATNDIQWcOEC+Hu7EicLtAaR1fJmOOw4ejgfeMQGu1pA9
+        N6DP8wAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="toolButtonFind.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="toolButtonFind.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="toolButtonFind.Text" xml:space="preserve">
+    <value>Find Column</value>
+  </data>
+  <data name="toolButtonAlphabetical.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFtSURBVDhPY2BAAv5lh/4j89HBgwcPQPL/oTQqaFt47b9r
+        9vb/Szedx5SEArwGxDUc+h9ZseO/a9I0TEkowGnA+Vvv/3sX7AQLGgd0/j94+j5WQ3AakN157H9s9a7/
+        nXP2/7eNnPA/o34taQb4F+2GCxw+++C/sX/H/3tP3mEYgtWAvO5j/22ipvzfuPcqWNAhagLYgIj8ucQZ
+        QArAacD2vrn/N7VM+r9/1or/m9qn/1+akfv/0vrVGLbgNGBTbTNcYH5kzP8+T0cUBf///wfz0Q2AicPB
+        oenz/9fpq/6/snMbhgF1dXX/t2zZAjZg165d/0tLS0HCCHVPL9/4P8nd9//KkjwMp4MAzHYYxvDGovzm
+        /1PdbP6DDEKRgAKQBjExMbBmLi4uVAOOLVr7v9/e7v+FdavggpurSzAMevToEdiAW7duocr12hj9rzHR
+        /r+hofr/2vKC/y12Zv/X1VVgGACytaWlBdP5pAB0zQAaXidrZ2D8rAAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="toolButtonAlphabetical.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="toolButtonAlphabetical.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="toolButtonAlphabetical.Text" xml:space="preserve">
+    <value>Alphabetical</value>
+  </data>
+  <data name="toolButtonShowHiddenColumns.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABaSURBVDhPrZABCgAhCAR7uj+/CBTa6bDIBpaVwAls7RGf
+        J+aTFig4yUPMjL/HnLXiEgqyLMt1hihkuxZikYIsdNSYjPOBdq24hIIsy3IdHjFr4e/CfGPouKYDvC2b
+        pLUvWv8AAAAASUVORK5CYII=
+</value>
+  </data>
+  <data name="toolButtonShowHiddenColumns.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="toolButtonShowHiddenColumns.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="toolButtonShowHiddenColumns.Text" xml:space="preserve">
+    <value>Show Hidden Columns</value>
+  </data>
+  <data name="helpToolStripButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIFSURBVDhPpZLtS1NhGMbPPxJmmlYSgqHiKzGU1EDxg4iK
+        YKyG2WBogqMYJQOtCEVRFBGdTBCJfRnkS4VaaWNT5sqx1BUxRXxDHYxAJLvkusEeBaPAB+5z4Jzn+t3X
+        /aLhnEfjo8m+dCoa+7/C3O2Hqe0zDC+8KG+cRZHZhdzaaWTVTCLDMIY0vfM04Nfh77/G/sEhwpEDbO3t
+        I7TxE8urEVy99fT/AL5gWDLrTB/hnF4XsW0khCu5ln8DmJliT2AXrcNBsU1gj/MH4nMeKwBrPktM28xM
+        cX79DFKrHHD5d9D26hvicx4pABt2lpg10zYzU0zr7+e3xXGcrkEB2O2TNec9nJFwB3alZn5jZorfeDZh
+        6Q3g8s06BeCoKF4MRURoH1+BY2oNCbeb0TIclIYxOhzf8frTOuo7FxCbbVIAzpni0iceEc8vhzEwGkJD
+        lx83ymxifejdKjRNk/8PWnyIyTQqAJek0jqHwfEVscu31baIu8+90sTE4nY025dQ2/5FIPpnXlzKuK8A
+        HBUzHot52djqQ6HZhfR7IwK4mKpHtvEDMqvfCiQ6zaAAXM8x94aIWTNrLLG4kVUzgaTSPlzLtyJOZxbb
+        1wtfyg4Q+AfA3aZlButjSfxGcUJBk4g5tuP3haQKRKXcUQDOmbvNTpPOJeFFjordZmbWTNvMTHFUcpUC
+        nOccAdABIDXXE1nzAAAAAElFTkSuQmCC
+</value>
+  </data>
+  <data name="helpToolStripButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="helpToolStripButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="helpToolStripButton.Text" xml:space="preserve">
+    <value>?</value>
+  </data>
+  <data name="helpToolStripButton.ToolTipText" xml:space="preserve">
+    <value>Show Column Documentation</value>
+  </data>
+  <data name="uiModeDropdown.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIFSURBVDhPpZLtS1NhGMbPPxJmmlYSgqHiKzGU1EDxg4iK
+        YKyG2WBogqMYJQOtCEVRFBGdTBCJfRnkS4VaaWNT5sqx1BUxRXxDHYxAJLvkusEeBaPAB+5z4Jzn+t3X
+        /aLhnEfjo8m+dCoa+7/C3O2Hqe0zDC+8KG+cRZHZhdzaaWTVTCLDMIY0vfM04Nfh77/G/sEhwpEDbO3t
+        I7TxE8urEVy99fT/AL5gWDLrTB/hnF4XsW0khCu5ln8DmJliT2AXrcNBsU1gj/MH4nMeKwBrPktM28xM
+        cX79DFKrHHD5d9D26hvicx4pABt2lpg10zYzU0zr7+e3xXGcrkEB2O2TNec9nJFwB3alZn5jZorfeDZh
+        6Q3g8s06BeCoKF4MRURoH1+BY2oNCbeb0TIclIYxOhzf8frTOuo7FxCbbVIAzpni0iceEc8vhzEwGkJD
+        lx83ymxifejdKjRNk/8PWnyIyTQqAJek0jqHwfEVscu31baIu8+90sTE4nY025dQ2/5FIPpnXlzKuK8A
+        HBUzHot52djqQ6HZhfR7IwK4mKpHtvEDMqvfCiQ6zaAAXM8x94aIWTNrLLG4kVUzgaTSPlzLtyJOZxbb
+        1wtfyg4Q+AfA3aZlButjSfxGcUJBk4g5tuP3haQKRKXcUQDOmbvNTpPOJeFFjordZmbWTNvMTHFUcpUC
+        nOccAdABIDXXE1nzAAAAAElFTkSuQmCC
+</value>
+  </data>
+  <data name="uiModeDropdown.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="uiModeDropdown.Size" type="System.Drawing.Size, System.Drawing">
+    <value>29, 22</value>
+  </data>
+  <data name="uiModeDropdown.Text" xml:space="preserve">
+    <value>User interface selection</value>
+  </data>
   <data name="btnPreview.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -523,7 +535,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnPreview.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="btnPreview.Text" xml:space="preserve">
     <value>Preview...</value>
@@ -691,6 +703,6 @@
     <value>ViewEditor</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Common.Controls.CommonFormEx, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Common.SystemUtil.CommonFormEx, pwiz.CommonUtil, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

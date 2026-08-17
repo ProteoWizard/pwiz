@@ -81,11 +81,8 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            RunUI(()=>
-            {
-                SkylineWindow.OpenFile(GetTestPath("Rat_plasma.sky"));
-                SkylineWindow.ShowAuditLog();
-            });
+            FileOpen(GetTestPath("Rat_plasma.sky"));
+            RunUI(() => SkylineWindow.ShowAuditLog());
             var auditLogForm = FindOpenForm<AuditLogForm>();
             Assert.IsNotNull(auditLogForm);
             PauseForScreenShot(auditLogForm, "Audit log view empty");

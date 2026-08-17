@@ -214,39 +214,79 @@ namespace pwiz.Common.SystemUtil
 
         private const int ERROR_SHARING_VIOLATION = unchecked((int)0x80070020);
 
+        /// <summary>
+        /// If <paramref name="x"/> is a sharing violation, wrap it in an exception that names the
+        /// process holding the lock, which is otherwise impossible to determine after the fact.
+        /// Returns the exception unchanged if there is nothing to add.
+        /// <para>
+        /// The quoted path in the exception message may be either a full path (as <see cref="FileStream"/>
+        /// reports) or a bare name to locate beneath <paramref name="dirPath"/> (as a failed directory
+        /// delete reports). Callers that already have a rooted path may pass a null <paramref name="dirPath"/>.
+        /// </para>
+        /// This never throws, so it is safe to call from a catch block, including on the UI thread.
+        /// </summary>
         public static Exception ToFileLockingException(Exception x, string dirPath)
         {
             // If it's a file locking issue, wrap the exception to report the locking process
-            if (x is IOException { HResult: ERROR_SHARING_VIOLATION } ioException)
-            {
-                var match = Regex.Match(ioException.Message, "'([^']+)'");
-                if (match.Success)
-                {
-                    string lockedFileName = match.Captures[0].Value.Trim('\'');
-                    var isDirectory = Directory.Exists(lockedFileName);
-                    string[] lockedFilePaths = isDirectory ? 
-                        Array.Empty<string>() : // It's a locked directory, not a locked file
-                        Directory.GetFiles(dirPath, lockedFileName, SearchOption.AllDirectories);
-                    if (lockedFilePaths.Length == 0 && !isDirectory)
-                    {
-                        return new IOException(
-                            string.Format(MessageResources.FileLockingProcessFinder_ToFileLockingException_The_file___0___was_locked_but_has_since_been_deleted_from___1__, lockedFileName, dirPath), x);
-                    }
-                    else
-                    {
-                        string lockedFilePath = isDirectory ? lockedFileName : lockedFilePaths[0];
-                        int currentProcessId = Process.GetCurrentProcess().Id;
-                        Func<int, string> pidOrThisProcess = pid =>
-                            pid == currentProcessId ? MessageResources.FileLockingProcessFinder_ToFileLockingException_this_process : $@"PID: {pid}";
-                        var processesLockingFile = GetProcessesUsingFile(lockedFilePath);
-                        var names = string.Join(@", ",
-                            processesLockingFile.Select(p => $@"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
-                        return new IOException(string.Format(MessageResources.FileLockingProcessFinder_ToFileLockingException_The_file___0___is_locked_by___1_, lockedFilePath, names), x);
-                    }
-                }
-            }
+            if (!(x is IOException { HResult: ERROR_SHARING_VIOLATION } ioException))
+                return x;
 
-            return x;
+            var match = Regex.Match(ioException.Message, "'([^']+)'");
+            if (!match.Success)
+                return x;
+
+            try
+            {
+                string lockedName = match.Groups[1].Value;
+                string lockedFilePath = ResolveLockedPath(lockedName, dirPath);
+                if (lockedFilePath == null)
+                {
+                    // It was locked at the time of the failure, but is gone now
+                    var searchedDir = dirPath ?? Path.GetDirectoryName(lockedName);
+                    return new IOException(
+                        string.Format(MessageResources.FileLockingProcessFinder_ToFileLockingException_The_file___0___was_locked_but_has_since_been_deleted_from___1__, lockedName, searchedDir), x);
+                }
+
+                var processesLockingFile = GetProcessesUsingFile(lockedFilePath);
+                if (processesLockingFile.Count == 0)
+                    return x;   // Nothing to add beyond the original message; keep it
+
+                int currentProcessId = Process.GetCurrentProcess().Id;
+                Func<int, string> pidOrThisProcess = pid =>
+                    pid == currentProcessId ? MessageResources.FileLockingProcessFinder_ToFileLockingException_this_process : $@"PID: {pid}";
+                var names = string.Join(@", ",
+                    processesLockingFile.Select(p => $@"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
+                return new IOException(string.Format(MessageResources.FileLockingProcessFinder_ToFileLockingException_The_file___0___is_locked_by___1_, lockedFilePath, names), x);
+            }
+            catch (Exception)
+            {
+                // The restart manager is not always available to name the locker, and losing the
+                // original exception to that would be worse than not knowing
+                return x;
+            }
+        }
+
+        /// <summary>
+        /// Resolves the path quoted in a sharing violation message to something that exists, or null
+        /// if it does not. The message may carry a full path, or a bare name to locate beneath
+        /// <paramref name="dirPath"/>.
+        /// </summary>
+        private static string ResolveLockedPath(string lockedName, string dirPath)
+        {
+            if (Path.IsPathRooted(lockedName))
+                return File.Exists(lockedName) || Directory.Exists(lockedName) ? lockedName : null;
+
+            if (dirPath == null)
+                return null;
+
+            // Look directly beneath dirPath first, so that a locked directory is recognized as one
+            // instead of being sought among the files
+            var candidate = Path.Combine(dirPath, lockedName);
+            if (File.Exists(candidate) || Directory.Exists(candidate))
+                return candidate;
+
+            var lockedFilePaths = Directory.GetFiles(dirPath, lockedName, SearchOption.AllDirectories);
+            return lockedFilePaths.Length > 0 ? lockedFilePaths[0] : null;
         }
     }
 }

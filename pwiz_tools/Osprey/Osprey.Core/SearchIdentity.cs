@@ -252,7 +252,7 @@ namespace pwiz.Osprey.Core
         /// file stems. Used by per-file Stage 6 rescore workers, whose
         /// <see cref="OspreyConfig.InputFiles"/> only carries this worker's single
         /// parquet — the hash that the downstream <c>--task SecondPassFDR</c>
-        /// merge node expects is computed over ALL files in the join, so
+        /// SecondPassFDR node expects is computed over ALL files in the join, so
         /// the worker must read the full set from the planner's
         /// <c>reconciliation.json</c> envelope and pass it in here. The
         /// stems are sorted + deduped internally so the hash is invariant

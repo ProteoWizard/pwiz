@@ -30,7 +30,7 @@ using pwiz.Osprey.FDR.Reconciliation;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// Stage 6 planning subsystem extracted from <see cref="FirstJoinTask"/>.
+    /// Stage 6 planning subsystem extracted from <see cref="FirstPassFdrTask"/>.
     /// Runs the four cross-file planning phases that produce the rescore plan
     /// <see cref="PerFileRescoreTask"/> executes: multi-charge consensus per
     /// file, cross-run consensus RTs, per-file calibration refit, and
@@ -43,13 +43,13 @@ namespace pwiz.Osprey.Tasks
     /// <c>OspreyDiagnosticsLog.ExitAfterDump</c>), preserving the Stage-6 dump
     /// call order bisection relies on. Pure planning -- writing the
     /// .reconciliation.json envelopes and publishing the typed byproduct slots
-    /// stays in <see cref="FirstJoinTask"/>.
+    /// stays in <see cref="FirstPassFdrTask"/>.
     /// </summary>
     internal sealed class Stage6Planner
     {
         /// <summary>
         /// The four cross-file planning byproducts Stage 6 produces. Consumed by
-        /// <see cref="FirstJoinTask"/> to write the reconciliation envelopes and
+        /// <see cref="FirstPassFdrTask"/> to write the reconciliation envelopes and
         /// to publish the typed byproduct slots <see cref="PerFileRescoreTask"/>
         /// reads. <see cref="ReconciliationActions"/> is null when reconciliation
         /// was skipped (single-file / empty consensus).
@@ -217,12 +217,22 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config)
         {
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
-            foreach (var kvp in perFileEntries)
+            // Per-file progress: the LOESS calibration refit runs per file and only logged its
+            // completion count, so it went silent for ~0.5s/file (41s at 82 files, O(files) toward
+            // minutes at 500). Report through the standard throttled reporter so it never goes silent.
+            using (var refitProgress = new ProgressReporter(
+                string.Format(@"Reconciliation calibration refit across {0} file(s)", perFileEntries.Count),
+                perFileEntries.Count))
             {
-                var refined = CalibrationRefit.Refit(consensus, kvp.Value,
-                    config.Reconciliation.ConsensusFdr);
-                if (refined != null)
-                    refinedCalibrations[kvp.Key] = refined;
+                int refitDone = 0;
+                foreach (var kvp in perFileEntries)
+                {
+                    var refined = CalibrationRefit.Refit(consensus, kvp.Value,
+                        config.Reconciliation.ConsensusFdr);
+                    if (refined != null)
+                        refinedCalibrations[kvp.Key] = refined;
+                    refitProgress.Report(++refitDone);
+                }
             }
             _ctx.LogInfo(string.Format(
                 @"Reconciliation calibration refit: {0}/{1} files produced refined calibrations",

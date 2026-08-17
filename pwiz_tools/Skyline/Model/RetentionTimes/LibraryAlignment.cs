@@ -67,30 +67,38 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public IEnumerable<double> GetNormalizedRetentionTimes(ICollection<string> spectrumSourceFiles, IList<Target> targets)
         {
-            var times = Library.GetRetentionTimesWithSequences(Alignments.LibraryFiles, targets);
+            var times = Library.GetRetentionTimesWithSequences(targets);
             if (times == null)
             {
                 yield break;
             }
 
+            // The times are in the order of the library's files. Alignments.LibraryFiles is not
+            // the same list: it holds only the files which could be aligned, so its indexes line
+            // up with the library's only when every file aligned. Look the alignment up by file
+            // name rather than sharing an index between the two.
             for (int iFile = 0; iFile < times.Length; iFile++)
             {
-                if (false == spectrumSourceFiles?.Contains(Library.LibraryFiles.FilePaths[iFile]))
+                if (times[iFile].Count == 0)
                 {
                     continue;
                 }
-                if (times[iFile].Count > 0)
+
+                string libraryFile = Library.LibraryFiles[iFile];
+                if (false == spectrumSourceFiles?.Contains(libraryFile))
                 {
-                    var alignment = Alignments.GetAlignmentFunction(Alignments.LibraryFiles[iFile], true);
-                    if (alignment != null)
-                    {
-                        foreach (var time in times[iFile])
-                        {
-                            var normalizedTime = alignment.GetX(time);
-                            // Console.Out.WriteLine("Normalizing time {0} in file {1} to {2}", time, Alignments.LibraryFiles[iFile], normalizedTime);
-                            yield return normalizedTime;
-                        }
-                    }
+                    continue;
+                }
+
+                var alignment = Alignments.GetAlignmentFunction(libraryFile, true);
+                if (alignment == null)
+                {
+                    continue;
+                }
+
+                foreach (var time in times[iFile])
+                {
+                    yield return alignment.GetX(time);
                 }
             }
         }

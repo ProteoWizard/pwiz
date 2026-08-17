@@ -44,9 +44,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         /// <summary>
         /// Sidecar carrying the fully-built pass-1 <see cref="ModelDiagnosticsData"/>
-        /// from FirstJoinTask (pre-compaction) forward to MergeNodeTask, where the
+        /// from FirstPassFdrTask (pre-compaction) forward to SecondPassFdrTask, where the
         /// pass-2 (final reported pool) FDP views are appended and the page is
-        /// re-rendered. The pass-1 pool and trained model are gone by MergeNode, so
+        /// re-rendered. The pass-1 pool and trained model are gone by SecondPassFDR, so
         /// the data model is stashed on disk rather than recomputed; deleted once
         /// consumed. A JSON round-trip (Newtonsoft, camelCase, NaN/Infinity as
         /// literals) so it reloads into the same object graph the HTML embeds.
@@ -88,7 +88,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
                 var data = ModelDiagnosticsData.Build(
                     perFileEntries, contributions, classByBaseId, pairByBaseId,
-                    entrapmentRatio, config.RunFdr, config.FdrLevel);
+                    entrapmentRatio, config.RunFdr, config.FdrLevel,
+                    BuildPrecursorMzLookup(libraryById));
                 // The CAL view: per-file calibration diagnostics captured at Stage 3
                 // (null when none were captured -- a resumed run, or no files calibrated).
                 // Serialized into the pass-1 data sidecar below, so it round-trips into
@@ -111,7 +112,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // NUnclassified warning needed (it counts the same intended drops).
 
                 string outPath = RenderAndWrite(data, config);
-                // Stash the pass-1 data so MergeNodeTask can append the pass-2
+                // Stash the pass-1 data so SecondPassFdrTask can append the pass-2
                 // (final reported pool) FDP views and re-render one page with both.
                 WriteDataSidecar(data, config);
 
@@ -128,25 +129,31 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// Projection-path counterpart of <see cref="Write"/>: build and write the pass-1 report
         /// from the streamed <see cref="ModelDiagnosticsData.Accumulator"/> (fed per-row by the
         /// first-pass score sink) instead of the resident pre-compaction pool that OOM'd an
-        /// 82-file run at the join. The accumulator already holds the entrapment classification
+        /// 82-file run at FirstPassFDR. The accumulator already holds the entrapment classification
         /// (built by <see cref="BuildClassificationFromLibrary"/> when it was constructed, and
         /// logged once there), so this only assembles the data model, attaches the CAL view + run
-        /// metadata, renders the HTML, and stashes the pass-1 data sidecar for MergeNodeTask's
+        /// metadata, renders the HTML, and stashes the pass-1 data sidecar for SecondPassFdrTask's
         /// pass-2 enrichment. Byte-identical to <see cref="Write"/> on the same input: the
         /// accumulator's streamed reductions reproduce the resident reductions (they are
         /// order-independent). Any failure is logged and swallowed; a diagnostics artifact never
         /// aborts a real run.
+        ///
+        /// <c>coAssignment</c> is the pass-1 peak co-assignment panel (issue #4522), built by
+        /// <see cref="PeakCoAssignmentSource"/> off the per-file FDR sidecars rather than the
+        /// streamed fold, which carries no apex RT. Null leaves the panel out.
         /// </summary>
         public static void WriteFromAccumulator(
             ModelDiagnosticsData.Accumulator accumulator,
             FeatureContributions contributions,
             ModelDiagnosticsData.CalibrationData cal,
             OspreyConfig config,
-            Action<string> logInfo)
+            Action<string> logInfo,
+            ModelDiagnosticsData.CoAssignmentData coAssignment = null)
         {
             try
             {
                 var data = accumulator.Build(contributions);
+                data.CoAssignment = coAssignment;
                 // The CAL view: per-file calibration diagnostics captured at Stage 3 (null when
                 // none were captured -- a resumed run, or no files calibrated). Serialized into the
                 // pass-1 data sidecar below so it round-trips into WritePass2AndFinalize's reloaded
@@ -162,7 +169,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 data.OutputName = OutputStem(config);
 
                 string outPath = RenderAndWrite(data, config);
-                // Stash the pass-1 data so MergeNodeTask can append the pass-2 (final reported pool)
+                // Stash the pass-1 data so SecondPassFdrTask can append the pass-2 (final reported pool)
                 // FDP views and re-render one page with both.
                 WriteDataSidecar(data, config);
 
@@ -179,12 +186,12 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// End-of-run enrichment: reload the pass-1 data sidecar, compute the
         /// pass-2 (final reported pool) FDP calibration views from the
         /// post-compaction, second-pass-q-valued <paramref name="perFileEntries"/>
-        /// (MergeNodeTask's <c>RescoredEntries</c>), append them, and re-render the
+        /// (SecondPassFdrTask's <c>RescoredEntries</c>), append them, and re-render the
         /// page so its FDR-calibration view selector offers both passes. Uses the
         /// same library-derived classification / pairing as pass 1, so the HTML
         /// pass-2 curve matches stock FDRBench (<c>--fdrbench-pass 2</c>) by
         /// construction. A no-op (with a log line) if the sidecar is absent -- the
-        /// pass-1 page FirstJoin already wrote then stands unchanged. Any failure is
+        /// pass-1 page FirstPassFDR already wrote then stands unchanged. Any failure is
         /// logged and swallowed; a diagnostics artifact never aborts a real run.
         /// </summary>
         public static void WritePass2AndFinalize(
@@ -216,12 +223,21 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // re-source the whole page. The structural half is null under
                 // confidence-transfer mode (pass2Contributions == null); the q-driven
                 // half is always built (FdpViews empty without an entrapment pool).
+                // These two steps shared a 71 s silence on the 82-file SEA-AD run of 2026-08-14,
+                // between the classification's [ENTRAPMENT] line and "finalized report" (#4571).
+                // BuildPass2 owns essentially all of it and carries its own per-card
+                // ProgressReporter; no heading is added here, because a reporter already prints
+                // one and then only as many percent lines as the elapsed time needs, while a
+                // heading at this call site would print unconditionally on every run forever.
+                // Measured 2026-08-15: the render that follows completes inside the same second
+                // it starts, so it gets no line at all.
                 data.Pass2 = ModelDiagnosticsData.BuildPass2(
                     perFileEntries, pass2Contributions, classByBaseId, pairByBaseId,
-                    entrapmentRatio, config.RunFdr, config.FdrLevel);
+                    entrapmentRatio, config.RunFdr, config.FdrLevel,
+                    BuildPrecursorMzLookup(libraryById));
 
                 string outPath = RenderAndWrite(data, config);
-                // Consume the FirstJoin -> MergeNode hand-off sidecar unconditionally
+                // Consume the FirstPassFDR -> SecondPassFDR hand-off sidecar unconditionally
                 // once the report is finalized (deleting it in every path avoids
                 // leaving a stray .data.json in the output directory).
                 TryDelete(sidecarPath);
@@ -259,7 +275,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             string dir = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(dir))
                 Directory.CreateDirectory(dir);
-            // Atomic write: MergeNode consumes this sidecar, so a partial write must
+            // Atomic write: SecondPassFDR consumes this sidecar, so a partial write must
             // never surface as a corrupt pass-1 data model.
             using (var saver = new FileSaver(path))
             {
@@ -279,7 +295,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         private static void TryDelete(string path)
         {
             try { if (File.Exists(path)) File.Delete(path); }
-            catch { /* leftover sidecar is harmless; FirstJoin rewrites it each run */ }
+            catch { /* leftover sidecar is harmless; FirstPassFDR rewrites it each run */ }
         }
 
         /// <summary>
@@ -356,6 +372,39 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             pairing.LogSummary(logInfo);
         }
 
+        /// <summary>
+        /// Library precursor m/z by FULL entry id (decoy bit included) for the co-assignment
+        /// panel, or null when there is no library to read.
+        ///
+        /// <para>A decoy is NOT always present in this task's library index, while its target twin
+        /// always is, and a decoy carries its target's precursor m/z by construction (same
+        /// composition), so an unresolved decoy falls back to its base id. Without that fallback
+        /// the caller's <c>double.IsNaN(mz)</c> guard drops the row, and the streaming path
+        /// measured what that costs: ~97% of detected decoys silently gone (19 counted against
+        /// 598) and a decoy rate 30x too low. This lookup feeds the PASS 2 panel - the numbers the
+        /// user actually receives - which has no admitted-vs-tallied log check to expose it, so
+        /// the two paths must resolve identically. See
+        /// <c>PeakCoAssignmentSource.ScanCurrentFile</c>, which does the same thing.</para>
+        ///
+        /// <para>A lookup rather than a materialized map on purpose: the panel needs m/z only for
+        /// DETECTED rows, a small fraction of a library that reaches 6.3M entries on the Astral
+        /// runs, and the library is already resident wherever this is called.</para>
+        ///
+        /// </summary>
+        internal static Func<uint, double> BuildPrecursorMzLookup(
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById)
+        {
+            if (libraryById == null)
+                return null;
+            return entryId =>
+            {
+                if ((!libraryById.TryGetValue(entryId, out var lib) || lib == null) &&
+                    (entryId & LibraryEntry.DECOY_ID_BIT) != 0)
+                    libraryById.TryGetValue(entryId & ~LibraryEntry.DECOY_ID_BIT, out lib);
+                return lib != null ? lib.PrecursorMz : double.NaN;
+            };
+        }
+
         /// <summary>Mask clearing the decoy high bit to get the shared target/decoy base-id.</summary>
         private const uint BASE_ID_MASK = 0x7FFFFFFF;
 
@@ -364,6 +413,19 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (!string.IsNullOrEmpty(config.OutputBlib))
                 return Path.GetFileNameWithoutExtension(config.OutputBlib);
             return @"osprey";
+        }
+
+        /// <summary>
+        /// The report path this run would write, for callers that must reason about the file
+        /// before it exists. <see cref="SecondPassFdrTask"/> declares it as an OUTPUT when
+        /// <c>--model-diagnostics</c> is on, which is what lets a completed run regenerate a
+        /// deleted report: task validity requires every declared output to exist, so a missing
+        /// HTML invalidates that one task and nothing else. Without this the flag was inert on
+        /// a cached directory - every task reported "outputs valid", and no report appeared.
+        /// </summary>
+        public static string ReportPath(OspreyConfig config)
+        {
+            return ResolveReportPath(config);
         }
 
         private static string ResolveReportPath(OspreyConfig config)

@@ -246,7 +246,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
             if (entry.RunPrecursorQvalue > consensusFdr)
                 return false;
             return entry.RunPeptideQvalue <= consensusFdr ||
-                   (proteinFdrThreshold > 0.0 && entry.RunProteinQvalue <= proteinFdrThreshold);
+                   (proteinFdrThreshold > 0.0 && entry.ExperimentProteinQvalue <= proteinFdrThreshold);
         }
 
         private static bool IsFinite(double d)
