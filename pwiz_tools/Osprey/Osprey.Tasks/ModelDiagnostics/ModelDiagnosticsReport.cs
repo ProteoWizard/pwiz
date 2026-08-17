@@ -223,6 +223,14 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // re-source the whole page. The structural half is null under
                 // confidence-transfer mode (pass2Contributions == null); the q-driven
                 // half is always built (FdpViews empty without an entrapment pool).
+                // These two steps shared a 71 s silence on the 82-file SEA-AD run of 2026-08-14,
+                // between the classification's [ENTRAPMENT] line and "finalized report" (#4571).
+                // BuildPass2 owns essentially all of it and carries its own per-card
+                // ProgressReporter; no heading is added here, because a reporter already prints
+                // one and then only as many percent lines as the elapsed time needs, while a
+                // heading at this call site would print unconditionally on every run forever.
+                // Measured 2026-08-15: the render that follows completes inside the same second
+                // it starts, so it gets no line at all.
                 data.Pass2 = ModelDiagnosticsData.BuildPass2(
                     perFileEntries, pass2Contributions, classByBaseId, pairByBaseId,
                     entrapmentRatio, config.RunFdr, config.FdrLevel,

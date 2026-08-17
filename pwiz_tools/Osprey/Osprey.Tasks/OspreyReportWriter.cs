@@ -119,46 +119,58 @@ namespace pwiz.Osprey.Tasks
             // scan the whole library rather than reuse the detected-only parsimony.
             var libPeptideToProteins = BuildLibraryPeptideProteins(fullLibrary, result.DetectedPeptides);
 
+            // Reported for the same reason as the per-replicate FDR below (#4571). This half of
+            // the report writer ran silent: it scans the whole library above and then walks every
+            // group here, and its only bracketing line is a [COUNT] that OspreyOutput.IsStatLine
+            // drops unless --perf-stats. A run configured with --protein-report but no summary
+            // report therefore produced no visible output for the entire report step.
+            int groupIdx = 0;
             var rows = new List<string[]>(groups.Count);
-            foreach (var g in groups)
+            using (var progress = new ProgressReporter(
+                       string.Format(@"Building the protein-group report over {0} group(s)", groups.Count),
+                       groups.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                double q = groupQ.TryGetValue(g.Id, out double qv) ? qv : 1.0;
-                bool passes = q <= config.EffectiveProteinFdr;
-
-                // Peptides used for the grouping = every detected peptide supporting the
-                // group (unique-among-detected + shared-among-detected), sorted for a
-                // stable file.
-                var grouping = g.UniquePeptides
-                    .Concat(g.SharedPeptides)
-                    .OrderBy(x => x, StringComparer.Ordinal)
-                    .ToList();
-
-                var accessionSet = new HashSet<string>(g.Accessions, StringComparer.Ordinal);
-                var libUnique = new List<string>();
-                foreach (string pep in grouping)
+                foreach (var g in groups)
                 {
-                    // Library-unique iff all of the peptide's library proteins are in this
-                    // group. A peptide absent from the map (no library entry captured)
-                    // cannot be asserted unique, so it is treated as not-unique.
-                    if (libPeptideToProteins.TryGetValue(pep, out var libProts) &&
-                        libProts.Count > 0 &&
-                        libProts.All(accessionSet.Contains))
+                    progress.Report(++groupIdx);
+                    double q = groupQ.TryGetValue(g.Id, out double qv) ? qv : 1.0;
+                    bool passes = q <= config.EffectiveProteinFdr;
+
+                    // Peptides used for the grouping = every detected peptide supporting the
+                    // group (unique-among-detected + shared-among-detected), sorted for a
+                    // stable file.
+                    var grouping = g.UniquePeptides
+                        .Concat(g.SharedPeptides)
+                        .OrderBy(x => x, StringComparer.Ordinal)
+                        .ToList();
+
+                    var accessionSet = new HashSet<string>(g.Accessions, StringComparer.Ordinal);
+                    var libUnique = new List<string>();
+                    foreach (string pep in grouping)
                     {
-                        libUnique.Add(pep);
+                        // Library-unique iff all of the peptide's library proteins are in this
+                        // group. A peptide absent from the map (no library entry captured)
+                        // cannot be asserted unique, so it is treated as not-unique.
+                        if (libPeptideToProteins.TryGetValue(pep, out var libProts) &&
+                            libProts.Count > 0 &&
+                            libProts.All(accessionSet.Contains))
+                        {
+                            libUnique.Add(pep);
+                        }
                     }
-                }
 
-                rows.Add(new[]
-                {
-                    string.Join(@";", g.Accessions),
-                    string.Join(@";", g.Accessions.Select(ProteinName)),
-                    grouping.Count.ToString(CultureInfo.InvariantCulture),
-                    libUnique.Count.ToString(CultureInfo.InvariantCulture),
-                    q.ToString(@"0.######e+00", CultureInfo.InvariantCulture),
-                    passes ? @"1" : @"0",
-                    string.Join(@";", grouping),
-                    string.Join(@";", libUnique),
-                });
+                    rows.Add(new[]
+                    {
+                        string.Join(@";", g.Accessions),
+                        string.Join(@";", g.Accessions.Select(ProteinName)),
+                        grouping.Count.ToString(CultureInfo.InvariantCulture),
+                        libUnique.Count.ToString(CultureInfo.InvariantCulture),
+                        q.ToString(@"0.######e+00", CultureInfo.InvariantCulture),
+                        passes ? @"1" : @"0",
+                        string.Join(@";", grouping),
+                        string.Join(@";", libUnique),
+                    });
+                }
             }
 
             // Deterministic order: passing first, then most confident, then by accessions
@@ -234,19 +246,30 @@ namespace pwiz.Osprey.Tasks
             // Per replicate: precursors + peptides passing RUN-level FDR in that file, and
             // an INDEPENDENT run-level protein FDR (its own parsimony + picked-protein FDR
             // on that replicate's detected peptides -- not a slice of the experiment set).
-            foreach (var kvp in perFileEntries)
+            // Reported because each iteration runs an INDEPENDENT parsimony + picked-protein FDR
+            // over the whole library for one replicate, so the loop costs roughly one protein-FDR
+            // pass per file - a 46 s silence at 82 files on the 2026-08-15 measurement, with only
+            // the caller's heading in front of it (#4571).
+            int runIdx = 0;
+            using (var progress = new ProgressReporter(
+                       string.Format(@"Per-replicate protein FDR over {0} run(s)", perFileEntries.Count),
+                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                CountPrecursorsPeptides(new[] { kvp }, level, config, runLevel: true,
-                    out int precursors, out int peptides);
-                int proteins = ProteinFdrEngine.CountPassingProteinGroups(
-                    new List<KeyValuePair<string, List<FdrEntry>>> { kvp }, fullLibrary, config, runLevel: true);
-                rows.Add(new[]
+                foreach (var kvp in perFileEntries)
                 {
-                    RunName(kvp.Key),
-                    precursors.ToString(CultureInfo.InvariantCulture),
-                    peptides.ToString(CultureInfo.InvariantCulture),
-                    proteins.ToString(CultureInfo.InvariantCulture),
-                });
+                    progress.Report(++runIdx);
+                    CountPrecursorsPeptides(new[] { kvp }, level, config, runLevel: true,
+                        out int precursors, out int peptides);
+                    int proteins = ProteinFdrEngine.CountPassingProteinGroups(
+                        new List<KeyValuePair<string, List<FdrEntry>>> { kvp }, fullLibrary, config, runLevel: true);
+                    rows.Add(new[]
+                    {
+                        RunName(kvp.Key),
+                        precursors.ToString(CultureInfo.InvariantCulture),
+                        peptides.ToString(CultureInfo.InvariantCulture),
+                        proteins.ToString(CultureInfo.InvariantCulture),
+                    });
+                }
             }
 
             // Experiment row: precursors + peptides passing EXPERIMENT-level FDR (a

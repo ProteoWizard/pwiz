@@ -72,17 +72,55 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The LogWaitTime / MinPercentTime levers, modelled on Skyline's LongWaitDlg delay: a
+        /// scope that finishes inside the wait leaves NO trace at all. The constructor bounds
+        /// both by the report interval, which is what makes the two display rules structural
+        /// rather than checked: the heading always precedes the first percent, and a scope that
+        /// showed a sub-100% percent always closes with 100%.
+        /// </summary>
+        [TestMethod]
+        public void TestProgressReporterSuppressesFastScopes()
+        {
+            // Inside the wait: nothing at all, heading included. Reported at 50% so this proves
+            // the THRESHOLD suppressed the output, not an absent Report call.
+            var fast = CaptureLines(total: 100, intervalSeconds: 60.0, heartbeatSeconds: 60.0,
+                act: p => p.Report(50), logWaitSeconds: 60.0, minPercentSeconds: 60.0);
+            Assert.AreEqual(0, fast.Count,
+                @"a scope finishing inside LogWaitTime must print nothing at all, heading included");
+
+            // Past MinPercentTime but still inside LogWaitTime, so no percent line was ever
+            // printed: the deferred heading must still come out WITH the completion line,
+            // never a bare 100% under no heading.
+            var announced = CaptureLines(total: 100, intervalSeconds: 60.0, heartbeatSeconds: 60.0,
+                act: p => p.Report(50), logWaitSeconds: 60.0, minPercentSeconds: 0.0);
+            Assert.AreEqual(2, announced.Count, @"expected the heading and its completion line");
+            StringAssert.Contains(announced[0], @"phase...");
+            StringAssert.Contains(announced[1], @"100%");
+
+            // Both thresholds are clamped to the interval, so asking for a wait longer than the
+            // reporting cadence cannot produce a scope that shows 50% and then never closes.
+            var partial = CaptureLines(total: 100, intervalSeconds: 0.0, heartbeatSeconds: 60.0,
+                act: p => p.Report(50), logWaitSeconds: 60.0, minPercentSeconds: 60.0);
+            StringAssert.Contains(string.Join("\n", partial), @"50%");
+            StringAssert.Contains(partial[partial.Count - 1], @"100%");
+        }
+
+        /// <summary>
         /// Run <paramref name="act"/> against a <see cref="ProgressReporter"/> whose output is
         /// captured through a scoped writer (AsyncLocal, so no cross-test static leak) and
         /// return the non-empty output lines.
         /// </summary>
         private static List<string> CaptureLines(long total, double intervalSeconds,
-            double heartbeatSeconds, Action<ProgressReporter> act)
+            double heartbeatSeconds, Action<ProgressReporter> act,
+            double logWaitSeconds = 0.0, double minPercentSeconds = 0.0)
         {
             var writer = new StringWriter();
             using (OspreyOutput.PushScopedOut(writer))
+            // logWait / minPercent default to 0 here so the display tests keep exercising the
+            // format at millisecond durations, the same reason they already inject a 0.05 s
+            // heartbeat. The suppression behaviour those two govern has its own tests below.
             using (var reporter = new ProgressReporter(@"phase", total, string.Empty,
-                intervalSeconds, heartbeatSeconds))
+                intervalSeconds, heartbeatSeconds, logWaitSeconds, minPercentSeconds))
             {
                 act(reporter);
             }
