@@ -652,6 +652,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         }
 
         /// <summary>
+        /// Cards <see cref="BuildPass2"/> always builds, and the extra ones it builds only when
+        /// the second pass retrained. Counts rather than derived values because the reporter
+        /// needs its total up front; keep them in step with the <c>Report</c> calls, which use
+        /// <c>++cardIdx</c> so only the totals are hand-maintained. A stale total shows a run
+        /// stalling short of 100% or, since <see cref="ProgressReporter"/> does not clamp,
+        /// printing past it.
+        /// </summary>
+        private const int PASS2_BASE_CARDS = 6;
+
+        private const int PASS2_STRUCTURAL_CARDS = 3;
+
+        /// <summary>
         /// Build the complete pass-2 (final reported pool) bundle behind the report's
         /// top-level Pass 1 / Pass 2 switch. Called by the end-of-run writer
         /// (SecondPassFdrTask) with the post-compaction, second-pass-q-valued pool
@@ -680,39 +692,86 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             double entrapmentRatio,
             double runFdr,
             FdrLevel fdrLevel,
-            Func<uint, double> precursorMzByEntryId = null)
+            Func<uint, double> precursorMzByEntryId = null,
+            HashSet<uint> stratumBaseIds = null)
         {
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
+
+            // Reported per CARD, not per file (#4571). This is not one loop: it is six
+            // independent whole-pool builds, each of which walks every survivor observation
+            // (89,068,375 at 82 files), and together they were the long half of a 71 s silence
+            // between the classification's [ENTRAPMENT] line and "finalized report". A per-file
+            // reporter would have to live inside each build separately; the cards are the
+            // granularity that actually says WHICH one is slow, which is the question a reader
+            // has when the page takes a minute to appear.
+            //
+            // Written as sequential locals rather than an object initializer for that reason -
+            // an initializer cannot report between its members. Evaluation order is unchanged.
+            var pass2 = new Pass2Data();
+
+            // The total covers the STRUCTURAL cards too when they will run, and they are inside
+            // the same reporter. Reporting only the q-driven six printed "100%" and then left
+            // BuildModelPass2 and BuildWinFraction - both whole-pool walks - running silently
+            // behind a completed bar, which is the gap #4571 exists to remove wearing a disguise.
+            // BuildModelPass2 returns null iff contributions are null (its first statement), so
+            // this flag predicts the structural half exactly; the guard below tests Model for the
+            // same condition rather than trusting the two to stay in step.
+            bool structural = pass2Contributions != null;
+            int cards = PASS2_BASE_CARDS + (structural ? PASS2_STRUCTURAL_CARDS : 0);
+            // NOT `using`d, matching LibraryDeduplicator: Dispose forces a final 100% from the
+            // finally block, and WritePass2AndFinalize catches and logs our exception as one
+            // line - so a card that threw would read "all cards done" immediately followed by
+            // "pass-2 enrichment failed". The last Report on the success path prints 100% anyway.
+            // The heading counts CARDS because that is what the total is; labelling it with the
+            // file count would invite a completion estimate from unequal-cost units.
+            int cardIdx = 0;
+            var progress = new ProgressReporter(
+                string.Format(@"Building {0} pass-2 diagnostics card(s)", cards),
+                cards, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+
+            // Indented one level: this reporter nests inside the card reporter, and without it
+            // the two percent streams print at the same column - the inner one reaching 100%
+            // immediately before the outer prints its next card.
             var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                out _, out _);
+                out _, out _, @"  ");
+            progress.Report(++cardIdx);
 
-            var pass2 = new Pass2Data
-            {
-                // Q-driven half: available whenever a second pass produced reported
-                // q-values (retrain OR confidence transfer). Entrapment-independent
-                // except FdpViews (which is empty without an entrapment pool).
-                PerFile = BuildPerFile(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel),
-                IdYield = BuildIdYield(precs),
-                CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
-                    entrapmentRatio, runFdr, fdrLevel),
-                FdpViews = BuildPass2FdpViews(perFileEntries, classByBaseId, pairByBaseId, entrapmentRatio),
-                // Single-peak co-assignment on the REPORTED pool (issue #4522). Post-Stage-6, so
-                // it includes co-assignment reconciliation itself introduced; the pass-1 panel is
-                // the uncontaminated scoring picture and the two are meant to be read together.
-                CoAssignment = BuildCoAssignment(perFileEntries, classByBaseId, precursorMzByEntryId,
-                    runFdr, fdrLevel, 2, true),
-            };
+            // Q-driven half: available whenever a second pass produced reported
+            // q-values (retrain OR confidence transfer). Entrapment-independent
+            // except FdpViews (which is empty without an entrapment pool).
+            pass2.PerFile = BuildPerFile(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel);
+            progress.Report(++cardIdx);
+            pass2.IdYield = BuildIdYield(precs);
+            progress.Report(++cardIdx);
+            pass2.CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
+                entrapmentRatio, runFdr, fdrLevel);
+            progress.Report(++cardIdx);
+            // Reuses the reduction computed for the ID-yield card above rather than
+            // recomputing an identical one from the same inputs.
+            pass2.FdpViews = BuildPass2FdpViews(precs, entrapmentRatio);
+            progress.Report(++cardIdx);
+            // Single-peak co-assignment on the REPORTED pool (issue #4522). Post-Stage-6, so
+            // it includes co-assignment reconciliation itself introduced; the pass-1 panel is
+            // the uncontaminated scoring picture and the two are meant to be read together.
+            // Takes the pass-2 stratum so each decoy is judged against its own q system's
+            // acceptance boundary (issue #4573); null in every non-stratified mode.
+            pass2.CoAssignment = BuildCoAssignment(perFileEntries, classByBaseId, precursorMzByEntryId,
+                runFdr, fdrLevel, 2, true, stratumBaseIds);
+            progress.Report(++cardIdx);
 
-            // Structural half: only when the second pass retrained on the reported pool.
-            // BuildModelPass2 returns null when contributions are null (transfer mode),
-            // which leaves DensityRatio / WinFraction null too -- the report's structural
-            // cards then show their n/a note under the top-level Pass 2 mode.
-            pass2.Model = BuildModelPass2(perFileEntries, pass2Contributions, classByBaseId, pairByBaseId);
+            // Structural half: only when the second pass retrained on the reported pool. Null
+            // contributions (transfer mode) leave Model, DensityRatio and WinFraction null and
+            // the report's structural cards show their n/a note. Takes the reduction computed
+            // above; it used to recompute a bit-identical one from the same inputs.
+            pass2.Model = BuildModelPass2(pass2Contributions, precs);
             if (pass2.Model != null)
             {
+                progress.Report(++cardIdx);
                 bool hasEntrapment = precs.Any(p => p.Class == EntrapmentClass.PTarget);
                 pass2.DensityRatio = BuildDensityRatio(pass2.Model.Scores, hasEntrapment);
+                progress.Report(++cardIdx);
                 pass2.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
+                progress.Report(++cardIdx);
             }
             return pass2;
         }
@@ -811,8 +870,23 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             if (contributions == null)
                 return null;
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
-            var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                out _, out _);
+            return BuildModelPass2(contributions,
+                ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
+                    out _, out _));
+        }
+
+        /// <summary>
+        /// The same card from an ALREADY-reduced precursor list, so a caller holding one does not
+        /// pay for the reduction again. <see cref="BuildPass2"/> is that caller: it reduces once
+        /// for the ID-yield card and used to re-derive a bit-identical reduction here from the
+        /// same inputs - the same ~16 s / 89 M-observation walk at 82 files, O(observations), so
+        /// ~32 s at 163. Sharing is safe for the reasons given on
+        /// <see cref="BuildPass2FdpViews(List{Prec}, double)"/>.
+        /// </summary>
+        private static ModelPass BuildModelPass2(FeatureContributions contributions, List<Prec> precs)
+        {
+            if (contributions == null)
+                return null;
             return new ModelPass
             {
                 Composite = contributions.Composite,
@@ -839,8 +913,36 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             double entrapmentRatio)
         {
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
-            var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                out _, out _);
+            return BuildPass2FdpViews(
+                ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
+                    out _, out _),
+                entrapmentRatio);
+        }
+
+        /// <summary>
+        /// The same views from an ALREADY-reduced precursor list, so a caller that has one does
+        /// not pay for the reduction twice. <see cref="BuildPass2"/> is that caller: it reduces
+        /// once for the ID-yield card and then built these views from a second, identical
+        /// reduction of the same inputs - ~16 s duplicated at 82 files on the 2026-08-15
+        /// measurement, and it is O(survivor observations), so ~32 s at 163 files.
+        ///
+        /// <para>Sharing the list is safe because every consumer only READS it:
+        /// <see cref="BuildIdYield"/> projects into new collections, and
+        /// <see cref="BuildFdpView"/> sorts the double lists it extracts rather than the input.
+        /// That is the property to check when adding a card - it is the one that holds whatever
+        /// <c>Prec</c> is declared as.</para>
+        ///
+        /// <para><c>Prec</c> being a <c>struct</c> is deliberately NOT the argument, even though
+        /// value-copy semantics would stop one card writing through to another. Copy semantics do
+        /// not make a stray mutation harmless, they make it silently INEFFECTIVE, which is a
+        /// different defect rather than the absence of one - and this file already depends on
+        /// that subtlety: <see cref="ReduceToPrecs"/> mutates a local copy and the
+        /// <c>best[key] = cur</c> write-back at the end of its loop is what commits it. Remove
+        /// that line as redundant - which it would be for a class - and the reduction quietly
+        /// stops updating.</para>
+        /// </summary>
+        private static List<FdpView> BuildPass2FdpViews(List<Prec> precs, double entrapmentRatio)
+        {
             bool hasEntrapment = precs.Any(p => p.Class == EntrapmentClass.PTarget);
             if (!hasEntrapment)
                 return new List<FdpView>();
@@ -878,58 +980,72 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, uint> pairByBaseId,
             bool haveManifest,
-            out int nWithClass, out int nWithoutClass)
+            out int nWithClass, out int nWithoutClass,
+            string indent = "")
         {
             var best = new Dictionary<string, Prec>(StringComparer.Ordinal);
             int wc = 0, woc = 0;
-            foreach (var kvp in perFileEntries)
+            // Reported from INSIDE the per-file loop, not merely around the call (#4571). This
+            // walks every survivor observation - 89,068,375 at 82 files - and measured ~16 s
+            // there on 2026-08-15. It is O(observations), so it is ~32 s at 163 files and worse
+            // beyond: a caller-level reporter would print a heading and then go silent for the
+            // whole of it, which is the gap this issue exists to remove, merely deferred to a
+            // larger dataset. The reporter's throttle means a small run still costs one line.
+            int reduceIdx = 0;
+            using (var progress = new ProgressReporter(
+                       string.Format(@"Reducing {0} file(s) to best-per-precursor", perFileEntries.Count),
+                       perFileEntries.Count, indent, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                foreach (var e in kvp.Value)
+                foreach (var kvp in perFileEntries)
                 {
-                    uint baseId = e.EntryId & BASE_ID_MASK;
-                    EntrapmentClass cls = Classify(e.IsDecoy, baseId, classByBaseId, haveManifest,
-                        ref wc, ref woc);
-                    uint pairIdx = 0;
-                    bool hasPair = pairByBaseId != null &&
-                        pairByBaseId.TryGetValue(baseId, out pairIdx);
-                    string key = e.ModifiedSequence + "|" + e.Charge;
-                    if (!best.TryGetValue(key, out var cur))
+                    progress.Report(++reduceIdx);
+                    foreach (var e in kvp.Value)
                     {
-                        cur = new Prec
+                        uint baseId = e.EntryId & BASE_ID_MASK;
+                        EntrapmentClass cls = Classify(e.IsDecoy, baseId, classByBaseId, haveManifest,
+                            ref wc, ref woc);
+                        uint pairIdx = 0;
+                        bool hasPair = pairByBaseId != null &&
+                            pairByBaseId.TryGetValue(baseId, out pairIdx);
+                        string key = e.ModifiedSequence + "|" + e.Charge;
+                        if (!best.TryGetValue(key, out var cur))
                         {
-                            Score = e.Score,
-                            // Precursor-level q at both scopes -- the axes the
-                            // FDR-calibration views plot. Experiment scope is what
-                            // --fdrbench emits (and thus reproduces its plots); run
-                            // scope is the per-run picture. Each precursor takes its
-                            // BEST (min) q across observations, matching
-                            // FdrBenchInputWriter's dedup, while Score stays the max
-                            // (for density / the score histogram).
-                            QRunPrecursor = e.RunPrecursorQvalue,
-                            QExpPrecursor = e.ExperimentPrecursorQvalue,
-                            IsDecoy = e.IsDecoy,
-                            Class = cls,
-                            PairIndex = pairIdx,
-                            Charge = e.Charge,
-                            HasPair = hasPair,
-                        };
-                    }
-                    else
-                    {
-                        if (e.Score > cur.Score)
-                        {
-                            cur.Score = e.Score;
-                            cur.IsDecoy = e.IsDecoy;
-                            cur.Class = cls;
-                            cur.PairIndex = pairIdx;
-                            cur.HasPair = hasPair;
+                            cur = new Prec
+                            {
+                                Score = e.Score,
+                                // Precursor-level q at both scopes -- the axes the
+                                // FDR-calibration views plot. Experiment scope is what
+                                // --fdrbench emits (and thus reproduces its plots); run
+                                // scope is the per-run picture. Each precursor takes its
+                                // BEST (min) q across observations, matching
+                                // FdrBenchInputWriter's dedup, while Score stays the max
+                                // (for density / the score histogram).
+                                QRunPrecursor = e.RunPrecursorQvalue,
+                                QExpPrecursor = e.ExperimentPrecursorQvalue,
+                                IsDecoy = e.IsDecoy,
+                                Class = cls,
+                                PairIndex = pairIdx,
+                                Charge = e.Charge,
+                                HasPair = hasPair,
+                            };
                         }
-                        if (e.RunPrecursorQvalue < cur.QRunPrecursor)
-                            cur.QRunPrecursor = e.RunPrecursorQvalue;
-                        if (e.ExperimentPrecursorQvalue < cur.QExpPrecursor)
-                            cur.QExpPrecursor = e.ExperimentPrecursorQvalue;
+                        else
+                        {
+                            if (e.Score > cur.Score)
+                            {
+                                cur.Score = e.Score;
+                                cur.IsDecoy = e.IsDecoy;
+                                cur.Class = cls;
+                                cur.PairIndex = pairIdx;
+                                cur.HasPair = hasPair;
+                            }
+                            if (e.RunPrecursorQvalue < cur.QRunPrecursor)
+                                cur.QRunPrecursor = e.RunPrecursorQvalue;
+                            if (e.ExperimentPrecursorQvalue < cur.QExpPrecursor)
+                                cur.QExpPrecursor = e.ExperimentPrecursorQvalue;
+                        }
+                        best[key] = cur;
                     }
-                    best[key] = cur;
                 }
             }
             nWithClass = wc; nWithoutClass = woc;

@@ -191,8 +191,11 @@ namespace pwiz.Osprey.Tasks
                 }
                 if (missingPass2 > 0)
                 {
-                    ctx.LogVerbose(string.Format(
-                        "{0}/{1} file(s) have no precomputed second-pass FDR scores -- computing " +
+                    // LogInfo, not LogVerbose: this is the heading for the longest stretch of
+                    // work left in Stage 7, and a --verbose-only heading is invisible on the runs
+                    // that actually take the time (#4571).
+                    ctx.LogInfo(string.Format(
+                        "{0}/{1} file(s) have no precomputed second-pass FDR scores - computing " +
                         "them here from the reconciled features (reused distributed-run code path).",
                         missingPass2, totalFiles));
                     // Stage 6's post-rescore overlay calls FdrEntry.ResetScores(), which clears
@@ -292,6 +295,15 @@ namespace pwiz.Osprey.Tasks
                             if (!inputByFileName.TryGetValue(fileName, out string inputFileFlush))
                                 return;
                             string pass2PathFlush = FdrScoresSidecar.Pass2Path(inputFileFlush);
+                            // --task ModelDiagnostics touches no artifact but the report. The
+                            // sidecar it would write here holds the same q-values it is reading
+                            // back, so skipping the write changes nothing except leaving the
+                            // completed run's files untouched.
+                            if (ctx.Config.DiagnosticsOnly)
+                            {
+                                pass2Tally.AlreadyOnDisk++;
+                                return;
+                            }
                             if (FdrScoresSidecar.IsCurrentFormat(pass2PathFlush, FdrScoresSidecar.Pass.SecondPass))
                             {
                                 pass2Tally.AlreadyOnDisk++;
@@ -578,57 +590,74 @@ namespace pwiz.Osprey.Tasks
             int nRestored = 0;
             int filesRead = 0;
             var unreadable = new List<string>();
-            foreach (var kvp in perFileEntries)
+            // Reported because this is the longest silent step left in Stage 7 (#4571): it streams
+            // every file's ENTIRE 1st-pass sidecar - the PRE-compaction pool, 345,024,871 records
+            // at 82 files, not the 89 M survivors - and logged nothing while doing it. On the
+            // 82-file SEA-AD runs of 2026-08-12/14 that was the 130-141 s gap, and on the
+            // --task SecondPassFDR leg the same step is a 127 s gap. It ran unbracketed: the
+            // "N/M file(s) have no precomputed second-pass FDR scores" heading above was
+            // LogVerbose (this change promotes it to LogInfo, so it is now visible), and the
+            // swRestore duration goes out as a [STAGE-WALL] line, which OspreyOutput.IsStatLine
+            // filters unless --perf-stats. A heading alone would not cover this anyway - the
+            // step is O(records) and the silence is INSIDE it.
+            int restoreIdx = 0;
+            using (var progress = new ProgressReporter(
+                       string.Format(@"Seeding pass-1 scalars from {0} file(s)", perFileEntries.Count),
+                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                if (!inputByFileName.TryGetValue(kvp.Key, out string inputFile))
-                    continue;
-                string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
-                if (!File.Exists(pass1Path))
+                foreach (var kvp in perFileEntries)
                 {
-                    unreadable.Add(kvp.Key);
-                    continue;
-                }
-                var byEntryId = new Dictionary<uint, FdrEntry>(kvp.Value.Count);
-                foreach (var e in kvp.Value)
-                    byEntryId[e.EntryId] = e;
-
-                // Stage into a buffer and apply only on a clean read. ReadRecords documents
-                // that a false return can arrive AFTER it has invoked the callback ("with the
-                // partial callback effects the caller must discard"), and records stream in
-                // file order, so mutating in the callback would leave the entries before the
-                // fault carrying pass-1 values and the rest at reset defaults - a half-seeded
-                // pool that no warning could describe and nothing downstream could detect.
-                var staged = new List<KeyValuePair<FdrEntry, FdrScoreRecord>>();
-                bool ok = FdrScoresSidecar.ReadRecords(
-                    pass1Path, FdrScoresSidecar.Pass.FirstPass,
-                    rec =>
+                    progress.Report(++restoreIdx);
+                    if (!inputByFileName.TryGetValue(kvp.Key, out string inputFile))
+                        continue;
+                    string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
+                    if (!File.Exists(pass1Path))
                     {
-                        if (byEntryId.TryGetValue(rec.EntryId, out FdrEntry entry))
-                            staged.Add(new KeyValuePair<FdrEntry, FdrScoreRecord>(entry, rec));
-                    });
-                if (ok)
-                {
-                    foreach (var pair in staged)
-                    {
-                        pair.Key.Score = pair.Value.Score;
-                        pair.Key.Pep = pair.Value.Pep;
-                        // ExperimentProteinQvalue is deliberately NOT seeded here - see the
-                        // remarks. PatchPass2ProteinQvalues writes the second-pass value into
-                        // the 2nd-pass sidecar after the second-pass protein FDR (#4559).
-                        // The THIRD field of the same five-of-eight gap (sidecar v4, issue
-                        // #4522). ResetScores clears it with Score, and no frozen 2nd-pass mode
-                        // writes it back, so it lands in the 2nd-pass sidecar at 0.0 for every
-                        // peak Stage 6 touched. That is the whole population this method exists
-                        // to repair, and it is why the seed should follow the record rather than
-                        // an enumerated list: the list has now grown twice.
-                        pair.Key.ExperimentAggregateScore = pair.Value.ExperimentAggregateScore;
+                        unreadable.Add(kvp.Key);
+                        continue;
                     }
-                    filesRead++;
-                    nRestored += staged.Count;
-                }
-                else
-                {
-                    unreadable.Add(kvp.Key);
+                    var byEntryId = new Dictionary<uint, FdrEntry>(kvp.Value.Count);
+                    foreach (var e in kvp.Value)
+                        byEntryId[e.EntryId] = e;
+
+                    // Stage into a buffer and apply only on a clean read. ReadRecords documents
+                    // that a false return can arrive AFTER it has invoked the callback ("with the
+                    // partial callback effects the caller must discard"), and records stream in
+                    // file order, so mutating in the callback would leave the entries before the
+                    // fault carrying pass-1 values and the rest at reset defaults - a half-seeded
+                    // pool that no warning could describe and nothing downstream could detect.
+                    var staged = new List<KeyValuePair<FdrEntry, FdrScoreRecord>>();
+                    bool ok = FdrScoresSidecar.ReadRecords(
+                        pass1Path, FdrScoresSidecar.Pass.FirstPass,
+                        rec =>
+                        {
+                            if (byEntryId.TryGetValue(rec.EntryId, out FdrEntry entry))
+                                staged.Add(new KeyValuePair<FdrEntry, FdrScoreRecord>(entry, rec));
+                        });
+                    if (ok)
+                    {
+                        foreach (var pair in staged)
+                        {
+                            pair.Key.Score = pair.Value.Score;
+                            pair.Key.Pep = pair.Value.Pep;
+                            // ExperimentProteinQvalue is deliberately NOT seeded here - see the
+                            // remarks. PatchPass2ProteinQvalues writes the second-pass value into
+                            // the 2nd-pass sidecar after the second-pass protein FDR (#4559).
+                            // The THIRD field of the same five-of-eight gap (sidecar v4, issue
+                            // #4522). ResetScores clears it with Score, and no frozen 2nd-pass mode
+                            // writes it back, so it lands in the 2nd-pass sidecar at 0.0 for every
+                            // peak Stage 6 touched. That is the whole population this method exists
+                            // to repair, and it is why the seed should follow the record rather than
+                            // an enumerated list: the list has now grown twice.
+                            pair.Key.ExperimentAggregateScore = pair.Value.ExperimentAggregateScore;
+                        }
+                        filesRead++;
+                        nRestored += staged.Count;
+                    }
+                    else
+                    {
+                        unreadable.Add(kvp.Key);
+                    }
                 }
             }
 
@@ -695,40 +724,51 @@ namespace pwiz.Osprey.Tasks
             int filesPatched = 0;
             long nPatched = 0;
             var failed = new List<string>();
-            foreach (var kvp in perFileEntries)
+            // A heading alone was not enough here: with only the caller's line in place this loop
+            // was still a 54 s gap on the --task SecondPassFDR measurement of 2026-08-15. It
+            // rewrites one 8-byte field per record over every file's whole 2nd-pass sidecar, so
+            // it is per-file work and reports as such.
+            int patchIdx = 0;
+            using (var progress = new ProgressReporter(
+                       string.Format(@"Patching pass-2 protein q into {0} sidecar(s)", perFileEntries.Count),
+                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                if (!inputByName.TryGetValue(kvp.Key, out string inputFile))
-                    continue;
-                string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
-                // Two gates, deliberately, because ABSENT and UNUSABLE are different outcomes
-                // here and IsCurrentFormat alone cannot tell them apart (it is false for both).
-                // A file with no reconciled parquet legitimately has no 2nd-pass sidecar, so
-                // absent is a silent skip; a sidecar that IS present but carries a foreign magic,
-                // a different FormatVersion, the wrong pass byte or a length its own header
-                // contradicts is a real problem, and it is exactly what the warning below exists
-                // to name. Collapsing these into one IsCurrentFormat call would either report
-                // every legitimately-absent file or silently swallow the stale one.
-                if (!File.Exists(pass2Path))
-                    continue;
-                if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
+                foreach (var kvp in perFileEntries)
                 {
-                    failed.Add(kvp.Key);
-                    continue;
-                }
+                    progress.Report(++patchIdx);
+                    if (!inputByName.TryGetValue(kvp.Key, out string inputFile))
+                        continue;
+                    string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
+                    // Two gates, deliberately, because ABSENT and UNUSABLE are different outcomes
+                    // here and IsCurrentFormat alone cannot tell them apart (it is false for both).
+                    // A file with no reconciled parquet legitimately has no 2nd-pass sidecar, so
+                    // absent is a silent skip; a sidecar that IS present but carries a foreign magic,
+                    // a different FormatVersion, the wrong pass byte or a length its own header
+                    // contradicts is a real problem, and it is exactly what the warning below exists
+                    // to name. Collapsing these into one IsCurrentFormat call would either report
+                    // every legitimately-absent file or silently swallow the stale one.
+                    if (!File.Exists(pass2Path))
+                        continue;
+                    if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
+                    {
+                        failed.Add(kvp.Key);
+                        continue;
+                    }
 
-                var byEntryId = new Dictionary<uint, double>(kvp.Value.Count);
-                foreach (var e in kvp.Value)
-                    byEntryId[e.EntryId] = e.ExperimentProteinQvalue;
+                    var byEntryId = new Dictionary<uint, double>(kvp.Value.Count);
+                    foreach (var e in kvp.Value)
+                        byEntryId[e.EntryId] = e.ExperimentProteinQvalue;
 
-                if (FdrScoresSidecar.PatchProteinQvalues(
-                        pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass, out int patchedHere))
-                {
-                    filesPatched++;
-                    nPatched += patchedHere;
-                }
-                else
-                {
-                    failed.Add(kvp.Key);
+                    if (FdrScoresSidecar.PatchProteinQvalues(
+                            pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass, out int patchedHere))
+                    {
+                        filesPatched++;
+                        nPatched += patchedHere;
+                    }
+                    else
+                    {
+                        failed.Add(kvp.Key);
+                    }
                 }
             }
 
