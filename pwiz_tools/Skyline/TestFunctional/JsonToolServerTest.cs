@@ -1852,6 +1852,29 @@ namespace pwiz.SkylineTestFunctional
                 // Error: the geometry verbs reject a non-graph / missing form like the others.
                 AssertEx.ThrowsException<ArgumentException>(() =>
                     server.GetGraphZoom(@"NonexistentGraph:NoTitle"));
+
+                // A rectangle that is not four numbers must come back as the instruction saying so. Anything
+                // an LLM gets wrong here -- too few coordinates, a word where a number goes, a JSON null --
+                // has to end at that message, not as a raw FormatException from inside a conversion.
+                var graphPath = new SkylineTool.UiElementPath(
+                    server.GetControls(graphId).First().Path.Parent, null, null, @"ZedGraphControl");
+                foreach (var bad in new object[]
+                         {
+                             new object[] { 1.0, 2.0, 3.0 },              // too few
+                             new object[] { 1.0, 2.0, 3.0, 4.0, 5.0 },    // too many
+                             new object[] { 1.0, @"two", 3.0, 4.0 },      // not a number
+                             new object[] { 1.0, null, 3.0, 4.0 },        // a JSON null, which converts to 0
+                             @"[1, 2, 3]",                                // the string form, too few
+                             @"[1, two, 3, 4]"                            // the string form, not a number
+                         })
+                {
+                    // The message matters as much as the throw: it is what tells the caller what shape to
+                    // send instead, and it is what a raw conversion failure would have replaced.
+                    AssertEx.ThrowsException<ArgumentException>(
+                        () => server.PerformAction(graphPath, @"zoom_graph_to", bad),
+                        new LlmInstruction(
+                            @"This action needs a four-element [left, top, right, bottom] array of graph data coordinates. The gesture goes down at left/top and up at right/bottom, so equal corners are a single click.").ToString());
+                }
             }
             finally
             {

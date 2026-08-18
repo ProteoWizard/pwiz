@@ -100,7 +100,7 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>An element the keyboard can be driven on, without it having the focus (see
     /// <see cref="ControlElement.SendTextNow"/> and <see cref="ControlElement.SendKeyStrokeNow"/> for how the
     /// two are delivered). Every control is one. Typing and pressing a key are separate because they are
-    /// separate intents: <see cref="SendKeysNow"/> takes LITERAL text (so no character in it needs escaping),
+    /// separate intents: <see cref="SendTextNow"/> takes LITERAL text (so no character in it needs escaping),
     /// while <see cref="SendKeyStrokeNow"/> takes one key named with its modifiers ("Ctrl+V", "Down").</summary>
     public interface IKeyboardElement
     {
@@ -2305,7 +2305,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 foreach (var part in text.Trim().Trim('[', ']').Split(','))
                 {
-                    if (!double.TryParse(part.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var edge))
+                    if (!TryEdge(part, out var edge))
                     {
                         edges.Clear();
                         break;
@@ -2316,7 +2316,14 @@ namespace pwiz.Skyline.ToolsUI
             else if (value is System.Collections.IEnumerable sequence)
             {
                 foreach (var item in sequence)
-                    edges.Add(Convert.ToDouble(item, CultureInfo.InvariantCulture));
+                {
+                    if (!TryEdge(item, out var edge))
+                    {
+                        edges.Clear();
+                        break;
+                    }
+                    edges.Add(edge);
+                }
             }
             if (edges.Count == 4)
             {
@@ -2327,6 +2334,31 @@ namespace pwiz.Skyline.ToolsUI
             }
             throw new ArgumentException(new LlmInstruction(
                 @"This action needs a four-element [left, top, right, bottom] array of graph data coordinates. The gesture goes down at left/top and up at right/bottom, so equal corners are a single click."));
+        }
+
+        // One edge of a rectangle as a number, or false when the value is not one -- so that whatever the
+        // caller got wrong ends at the instruction above rather than as a raw FormatException thrown from
+        // inside a conversion. Convert.ToDouble on its own will not do that: it throws for text that is not
+        // a number, and reads a null -- a JSON null among the coordinates -- as 0 without complaint.
+        private static bool TryEdge(object value, out double edge)
+        {
+            edge = 0;
+            if (value == null)
+                return false;
+            if (value is string text)
+                return double.TryParse(text.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out edge);
+            // A JSON null arrives as a token that converts to 0 quietly, but renders as empty text.
+            if (string.IsNullOrEmpty(value.ToString()))
+                return false;
+            try
+            {
+                edge = Convert.ToDouble(value, CultureInfo.InvariantCulture);
+                return true;
+            }
+            catch (Exception e) when (e is FormatException || e is InvalidCastException || e is OverflowException)
+            {
+                return false;
+            }
         }
 
         // The [column, row] a set_current_cell_address value carries: a two-element integer array. An
