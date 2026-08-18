@@ -230,6 +230,22 @@ namespace pwiz.SkylineTestData
                     break;
             }
             return byMz[mz];
+        /// The open dialogs match source types by string equality, so the type names in
+        /// <see cref="DataSourceUtil"/> have to agree with the reader's own names wherever it
+        /// does not translate them. Agilent is such a case - the reader answers "Agilent
+        /// MassHunter" and nothing maps it - so a rename on either side would silently drop
+        /// Agilent data from the dialogs, which is what happened to Bruker FID in issue #4510.
+        /// </summary>
+        [TestMethod]
+        public void TestAgilentSourceType()
+        {
+            if (Skyline.Program.NoVendorReaders)
+                return;
+
+            var agilentPath = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Agilent, "ImsSynthAllIons.d");
+            Assert.AreEqual(DataSourceUtil.TYPE_AGILENT, MsDataFileImpl.IdentifyReaderType(agilentPath));
+            Assert.AreEqual(DataSourceUtil.TYPE_AGILENT, DataSourceUtil.GetSourceType(agilentPath));
+            Assert.IsTrue(DataSourceUtil.IsDataSource(agilentPath));
         }
 
         [TestMethod]

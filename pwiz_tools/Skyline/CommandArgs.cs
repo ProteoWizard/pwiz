@@ -442,6 +442,8 @@ namespace pwiz.Skyline
             (c, p) => c.SetRemoveBefore(p.ValueDate));
         public static readonly Argument ARG_REMOVE_ALL = new DocArgument(@"remove-all",
             (c, p) => c.SetRemoveBefore(null));
+        public static readonly Argument ARG_REORDER_REPLICATES = new DocArgument(@"reorder-replicates", PATH_TO_FILE,
+            (c, p) => c.ReorderReplicatesPath = p.ValueFullPath);
 
         private void SetRemoveBefore(DateTime? date)
         {
@@ -449,8 +451,8 @@ namespace pwiz.Skyline
             RemoveBeforeDate = date;
         }
 
-        private static readonly ArgumentGroup GROUP_REMOVE = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_REMOVE_Removing_results_replicates, false,
-            ARG_REMOVE_BEFORE, ARG_REMOVE_ALL)
+        private static readonly ArgumentGroup GROUP_MANAGE_REPLICATES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_MANAGE_REPLICATES_Managing_results_replicates, false,
+            ARG_REMOVE_BEFORE, ARG_REMOVE_ALL, ARG_REORDER_REPLICATES)
         {
             Validate = c => c.ValidateImportResultsArgs()
         };
@@ -523,6 +525,7 @@ namespace pwiz.Skyline
         public string ImportPeakBoundariesPath { get; private set; }
         public bool RemovingResults { get; private set; }
         public DateTime? RemoveBeforeDate { get; private set; }
+        public string ReorderReplicatesPath { get; private set; }
         public bool ChromatogramsDiscard{ get; private set; }
         public double? LimitNoise { get; private set; }
         public DateTime? ImportBeforeDate { get; private set; }
@@ -2457,7 +2460,7 @@ namespace pwiz.Skyline
                     new ParaUsageBlock(CommandArgUsage.CommandArgs_Usage_Until_the_section_titled_Settings_Customization_all_other_command_line_arguments_rely_on_the____in__argument_because_they_all_rely_on_having_a_Skyline_document_open_),
                     GROUP_IMPORT,
                     GROUP_REINTEGRATE,
-                    GROUP_REMOVE,
+                    GROUP_MANAGE_REPLICATES,
                     GROUP_MINIMIZE_RESULTS,
                     GROUP_IMPORT_DOC,
                     GROUP_ANNOTATIONS,

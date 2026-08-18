@@ -98,10 +98,11 @@ td {
 <tr><td><nobr>--reintegrate-overwrite-peaks</nobr></td><td>Existing manually integrated peaks will be overwritten with peaks chosen by the reintegration model. (requires <nobr>--reintegrate-model-name</nobr>)</td></tr>
 <tr><td><nobr>--reintegrate-exclude-feature</nobr>=<br/>&lt;feature&nbsp;name&gt;</td><td>Use to exclude a particular feature score by name from the model. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features.</td></tr>
 </table>
-<div class="RowType">Removing results replicates</div>
+<div class="RowType">Managing results replicates</div>
 <table>
 <tr><td><nobr>--remove-before</nobr>=&lt;date&gt;</td><td>Remove all results from the open document with an acquired time before the given date.</td></tr>
 <tr><td><nobr>--remove-all</nobr></td><td>Remove all results from the open document.</td></tr>
+<tr><td><nobr>--reorder-replicates</nobr>=path/to/file</td><td>Reorder results replicates using a <nobr>UTF-8</nobr> text file containing one existing replicate name per line. Listed replicates are placed first; unlisted replicates retain their relative order.</td></tr>
 </table>
 <div class="RowType">Minimizing results file size</div>
 <table>

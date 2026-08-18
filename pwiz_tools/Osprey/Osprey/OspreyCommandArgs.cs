@@ -208,7 +208,7 @@ namespace pwiz.Osprey
         // --task is resolved + validated in Program.Main's pre-scan; the tokenizer here only
         // consumes its value (and rejects a missing one). Declared so it appears in help.
         public static readonly OspreyArgument ARG_TASK = new OspreyArgument(@"task",
-            new[] { @"SpectraCache", @"PerFileScoring", @"FirstPassFDR", @"PerFileRescoring", @"SecondPassFDR" },
+            new[] { @"SpectraCache", @"PerFileScoring", @"FirstPassFDR", @"PerFileRescoring", @"SecondPassFDR", @"ModelDiagnostics" },
             (c, p) => true);
         public static readonly OspreyArgument ARG_INPUT_SCORES = new OspreyArgument(@"input-scores",
             () => @"<paths|dir>", (c, p) => true) { Variadic = true, ProcessVariadic = (c, toks) =>
@@ -406,7 +406,7 @@ namespace pwiz.Osprey
                     i++;
                     if (i >= args.Length || args[i].StartsWith(@"-"))
                         throw new ArgumentException(
-                            @"--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, or SecondPassFDR).");
+                            @"--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR, or ModelDiagnostics).");
                     i++;
                     continue;
                 }
@@ -690,7 +690,7 @@ namespace pwiz.Osprey
             sb.AppendLine(@"<html><head>");
             sb.AppendLine(@"<meta charset=""utf-8"">");
             sb.AppendLine(@"<title>Osprey command-line usage</title>");
-            sb.AppendLine(@"<meta name=""description"" content=""Command-line usage for Osprey, the C# (.NET 8) implementation of Mike MacCoss's peptide-centric DIA search tool: search and FDR arguments, protein inference, the SpectraCache staging task, and the four distributed HPC --task workers (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR)."">");
+            sb.AppendLine(@"<meta name=""description"" content=""Command-line usage for Osprey, the C# (.NET 8) implementation of Mike MacCoss's peptide-centric DIA search tool: search and FDR arguments, protein inference, the SpectraCache staging task, the ModelDiagnostics report-only task, and the four distributed HPC --task workers (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR)."">");
             // Self-contained stylesheet (Osprey does not reference Skyline, so it cannot call
             // DocumentationGenerator.GetStyleSheetHtml). The table rules are copied from that Skyline
             // stylesheet so Osprey's generated help matches Skyline's look (cell padding,
@@ -805,7 +805,7 @@ namespace pwiz.Osprey
                 { @"decoys-in-library", @"Trust decoys already in the spectral library instead of generating reverse decoys. Hard error if none are recognised." },
                 { @"decoy-pairing-manifest", @"FDRBench 5-column pairing manifest (TSV), used with --decoys-in-library" },
                 { @"write-pin", @"Write PIN files for external tools" },
-                { @"task", @"HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline." },
+                { @"task", @"HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. SpectraCache stages the .spectra.bin caches; ModelDiagnostics regenerates only the --model-diagnostics report for a COMPLETED run, writing no other artifact." },
                 { @"input-scores", @"HPC: one or more .scores.parquet files, or a single directory (non-recursive). Mutex with --input." },
                 { @"parallel-files", @"Input files scored concurrently (OUTER). Absent: one at a time (default). No value: auto from free RAM and cores. <N>: exactly N regardless of RAM/cores. Distinct from --threads." },
                 { @"threads", @"Per-file main-search threads (INNER; default: all cores), divided across files run concurrently by --parallel-files" },
