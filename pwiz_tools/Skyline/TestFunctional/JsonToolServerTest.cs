@@ -1842,25 +1842,32 @@ namespace pwiz.SkylineTestFunctional
             {
                 RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Filter);
                 string settingsId = server.GetOpenForms().First(f => f.Type == nameof(PeptideSettingsUI)).Id;
-                // Addressed by path, the way TestClientReadsBoolResult does: the control is located by its
-                // designer-assigned Name (so this does not depend on the UI language), which get_controls
-                // reports but the by-name lookup does not match on.
-                var excludePath = server.GetControls(settingsId).First(c => c.Name == @"textExcludeAAs").Path;
+                // The box is addressed by the LABEL beside it, which is what a user reads and the only thing
+                // the verbs match a control on -- its Name is reported for discovery but deliberately not
+                // matched, so that the connector can reach a control only the way a person could. The text is
+                // read off the live label rather than written out here, so this holds in every language the
+                // test runs in. (label3 sits immediately before the box in tab order, which is exactly what
+                // makes it the box's label; if that tab order were wrong, the box would have no label at all
+                // and there would be nothing for a user -- or this -- to call it.)
+                string excludeLabel = null;
+                RunUI(() => excludeLabel = peptideSettings.Controls.Find(@"label3", true).First().Text);
 
                 // Empty first, so what the box holds afterwards is what was typed and nothing else. The
                 // control never had the focus -- nothing here gives it any -- which is the claim send_text
                 // is named for.
-                server.PerformAction(excludePath, @"set_value", string.Empty);
-                server.PerformAction(excludePath, @"send_text", @"25");
-                AssertEx.AreEqual(@"25", (string) server.PerformAction(excludePath, @"get_value", null),
+                server.SetFormValue(settingsId, excludeLabel, string.Empty);
+                var sent = server.SendText(settingsId, excludeLabel, @"25");
+                Assert.IsTrue(sent.Completed, @"send_text should complete: " + sent.Message);
+                AssertEx.AreEqual(@"25", server.GetFormValue(settingsId, excludeLabel),
                     @"send_text did not deliver its characters to the text box.");
 
                 // A key that cannot be read is a caller-contract error, and must reach the caller as one
-                // rather than being sent as whatever key its name happened to parse into.
+                // rather than being sent as whatever key its name happened to parse into. Named by label, so
+                // that what throws is the key, not a control the server could not find.
                 AssertEx.ThrowsException<ArgumentException>(() =>
-                    server.PerformAction(excludePath, @"send_key_stroke", @"Wingding"));
+                    server.SendKeyStroke(settingsId, excludeLabel, @"Wingding"));
                 AssertEx.ThrowsException<ArgumentException>(() =>
-                    server.SendKeyStroke(settingsId, @"textExcludeAAs", @"65"));
+                    server.SendKeyStroke(settingsId, excludeLabel, @"65"));
             }
             finally
             {
