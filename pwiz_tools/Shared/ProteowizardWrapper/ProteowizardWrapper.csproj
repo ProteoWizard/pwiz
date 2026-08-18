@@ -1,10 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- ProteowizardWrapper — the Phase-2 chokepoint. Multi-target net472 (legacy
-       pwiz.CLI bindings) + net8.0-windows (pwiz-sharp managed port).
+       pwiz.CLI bindings) + PLAIN net8.0 (pwiz-sharp managed port).
+
+       The net8 target is deliberately net8.0 and NOT net8.0-windows: it was only
+       -windows because pwiz.CommonUtil set UseWindowsForms, and CommonUtil has now
+       been split (its WinForms types live in CommonBaseUI). A plain net8.0 wrapper is
+       what lets Osprey consume it on Linux instead of reading pwiz-sharp directly.
 
        Same MsDataFileImpl class name and public surface in both targets. The
-       net472 legacy MsDataFileImpl.cs is excluded on net8.0-windows — instead
+       net472 legacy MsDataFileImpl.cs is excluded on net8.0 - instead
        we pull the parallel implementation from the
        ../ProteowizardWrapper.PwizSharp/ sandbox directory, which has the same
        public API but uses pwiz-sharp internally. Eventually the sandbox file
@@ -12,14 +17,13 @@
        on net8 with zero call-site changes. -->
   <PropertyGroup>
     <ProjectGuid>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net472;net8.0</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>pwiz.ProteowizardWrapper</RootNamespace>
     <AssemblyName>ProteowizardWrapper</AssemblyName>
-    <UseWindowsForms>true</UseWindowsForms>
     <Company>University of Washington</Company>
     <Product>ProteowizardWrapper</Product>
     <AssemblyTitle>ProteowizardWrapper</AssemblyTitle>
@@ -60,7 +64,7 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
     <!-- On net8 the data layer comes from pwiz-sharp. No pwiz.CLI, no
          C++/CLI bindings. -->
     <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\MsData\MsData.csproj" />
@@ -89,16 +93,16 @@
   <ItemGroup>
     <!-- On net8 swap legacy MsDataFileImpl + siblings for the pwiz-sharp-backed
          sandbox implementation (same public surface, different internals). -->
-    <Compile Remove="MsDataFileImpl.cs" Condition="'$(TargetFramework)' == 'net8.0-windows'" />
-    <Compile Remove="MsDataFileInfo.cs" Condition="'$(TargetFramework)' == 'net8.0-windows'" />
-    <Compile Remove="IterationListenerToMonitor.cs" Condition="'$(TargetFramework)' == 'net8.0-windows'" />
+    <Compile Remove="MsDataFileImpl.cs" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <Compile Remove="MsDataFileInfo.cs" Condition="'$(TargetFramework)' == 'net8.0'" />
+    <Compile Remove="IterationListenerToMonitor.cs" Condition="'$(TargetFramework)' == 'net8.0'" />
     <!-- DiaUmpire.cs now compiles on net8 too: the pwiz.CLI dependency was only two
          enum-discriminator values, replaced with plain literals. The wrapper's job
          (write msconvert-compatible .params + parse DIA-Umpire userParams back out of mzML)
          doesn't touch the engine - msconvert runs DIA-Umpire out of process. -->
-    <Compile Include="..\ProteowizardWrapper.PwizSharp\MsDataFileImpl.cs" Condition="'$(TargetFramework)' == 'net8.0-windows'" Link="MsDataFileImpl.cs" />
-    <Compile Include="..\ProteowizardWrapper.PwizSharp\MsDataFileImpl.Vendors.cs" Condition="'$(TargetFramework)' == 'net8.0-windows'" Link="MsDataFileImpl.Vendors.cs" />
-    <Compile Include="..\ProteowizardWrapper.PwizSharp\MsDataFileInfo.cs" Condition="'$(TargetFramework)' == 'net8.0-windows'" Link="MsDataFileInfo.cs" />
+    <Compile Include="..\ProteowizardWrapper.PwizSharp\MsDataFileImpl.cs" Condition="'$(TargetFramework)' == 'net8.0'" Link="MsDataFileImpl.cs" />
+    <Compile Include="..\ProteowizardWrapper.PwizSharp\MsDataFileImpl.Vendors.cs" Condition="'$(TargetFramework)' == 'net8.0'" Link="MsDataFileImpl.Vendors.cs" />
+    <Compile Include="..\ProteowizardWrapper.PwizSharp\MsDataFileInfo.cs" Condition="'$(TargetFramework)' == 'net8.0'" Link="MsDataFileInfo.cs" />
   </ItemGroup>
 
 </Project>
