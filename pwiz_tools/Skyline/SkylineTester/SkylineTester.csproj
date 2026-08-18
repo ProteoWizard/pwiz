@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- SkylineTester - WinForms test-harness GUI (run tests / nightly / quality, build Skyline, zip
        installers, chart memory). Multi-target net472 + net8.0-windows; the classic project was a
@@ -18,7 +18,10 @@
     <RootNamespace>SkylineTester</RootNamespace>
     <AssemblyName>SkylineTester</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <!-- On: _StampBuildVersion below writes the git branch and revision into the assembly,
+         and SkylineNightly reads them back out of the zip. This project has no hand-written
+         AssemblyInfo.cs, so there is nothing for the generated attributes to collide with. -->
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <ApplicationIcon>SkylineTester.ico</ApplicationIcon>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
@@ -74,5 +77,181 @@
     <None Include="Run files\SubmitCheck.skytr" />
     <None Include="Run files\TutorialsDemo.skytr" />
   </ItemGroup>
+
+  <!-- ======================================================================
+       Distro zips. Port of the Jamfile's create_skyline_zips rule
+       (Jamfile.jam:362-381), which ran `SkylineTester.exe <name>.zip` once per
+       zip.
+
+       The artifact names would ideally BE the target names, but MSBuild rejects
+       a target whose name contains '.' (MSB5016: "The name SkylineTester.zip
+       contains an invalid character ."). So the names are passed as a
+       semicolon-separated list and this one target batches over them:
+
+         dotnet build SkylineTester.csproj -f net8.0-windows -t:DistroZips ^
+             -p:DistroZips="BiblioSpec.zip;SkylineNightly.zip"
+
+       build.bat collects any bare *.zip arguments and forwards them verbatim as
+       that property, so `build.bat Release BiblioSpec.zip` does the same thing.
+
+       This runs the STAGED SkylineTester, not this project's own output.
+       CreateZipInstallerWindow.CreateZipFile takes its own assembly location as
+       the working directory and adds member files by bare name from there
+       (SkylineTester\Program.cs:81 to CreateZipFile), so it needs the merged
+       single-bin staging layout that Stage-Net8Tests.ps1 produces, the net8
+       stand-in for the Jamfile's $(OUTPUT_PATH). Hence no DependsOnTargets on
+       Build: staging, not compilation, is the real prerequisite, and the check
+       below says so rather than failing deep inside the zip writer.
+       ====================================================================== -->
+  <PropertyGroup>
+    <SkylineStageDir>$(MSBuildThisFileDirectory)..\bin\staging-net8\$(Configuration)</SkylineStageDir>
+  </PropertyGroup>
+
+  <!-- Per-zip prerequisites. CreateZipFile adds member files by BARE NAME from the
+       staging dir, so a zip can only be built once everything it names is staged;
+       SkylineNightly.zip in particular lists SkylineNightly.exe and
+       SkylineNightlyShim.exe, which are not part of the normal Skyline build.
+       Declaring them here makes `-t:DistroZips -p:DistroZips=SkylineNightly.zip`
+       self-contained: the target builds and stages exactly what that zip needs.
+
+       Tfm is per project, not global: SkylineNightly is net8.0-windows (WinExe)
+       while SkylineNightlyShim is plain net8.0, and both also multi-target net472,
+       so the framework has to be pinned or MSBuild builds the net472 leg too. -->
+  <ItemGroup>
+    <DistroZipPrereq Include="$(MSBuildThisFileDirectory)..\SkylineNightly\SkylineNightly.csproj">
+      <Zip>SkylineNightly.zip</Zip>
+      <Tfm>net8.0-windows</Tfm>
+    </DistroZipPrereq>
+    <DistroZipPrereq Include="$(MSBuildThisFileDirectory)..\SkylineNightlyShim\SkylineNightlyShim.csproj">
+      <Zip>SkylineNightly.zip</Zip>
+      <Tfm>net8.0</Tfm>
+    </DistroZipPrereq>
+    <!-- BlibBuild and BlibFilter already reach the staging dir through Skyline's own
+         ProjectReference graph; BlibToMs2 does not, because nothing in Skyline uses it.
+         It ships only in this distro (that is the point of BiblioSpec.zip: it carries
+         BlibToMs2, which the Skyline installer does not). -->
+    <DistroZipPrereq Include="$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibToMs2\BlibToMs2.csproj">
+      <Zip>BiblioSpec.zip</Zip>
+      <Tfm>net8.0</Tfm>
+    </DistroZipPrereq>
+  </ItemGroup>
+
+  <!-- Build stamp. SkylineNightly needs to know which branch a downloaded SkylineTester.zip
+       came from (Nightly.cs). The C++ build answers that with pwiz\Version.cpp, written by
+       Jamroot's generate-version.cpp rule (Jamroot.jam:582); the net8 build never runs bjam, so
+       for a while this project synthesised that C++ file just to carry one string. It now
+       stamps the same facts into SkylineTester's own assembly metadata instead, which is what
+       a .NET build has for the purpose - SkylineNightly reads it back with FileVersionInfo,
+       no assembly load and no generated source.
+
+       Revision mirrors Jamroot's MAKE_BUILD_TIMESTAMP: last two digits of the COMMIT year (not
+       the build date, so the value is reproducible) followed by a zero-padded day of year. -->
+  <Target Name="_StampBuildVersion" BeforeTargets="GetAssemblyVersion;GenerateAssemblyInfo">
+    <!-- %25%25cs unescapes to %%cs, which cmd then collapses to %cs (git's committer date, ISO short).
+         ContinueOnError so a checkout without git still builds; the fallbacks below keep it well-formed. -->
+    <Exec Command="git rev-parse --short HEAD" WorkingDirectory="$(MSBuildThisFileDirectory)"
+          ConsoleToMSBuild="true" StandardOutputImportance="low" ContinueOnError="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GitRev" />
+    </Exec>
+    <Exec Command="git rev-parse --abbrev-ref HEAD" WorkingDirectory="$(MSBuildThisFileDirectory)"
+          ConsoleToMSBuild="true" StandardOutputImportance="low" ContinueOnError="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GitBranch" />
+    </Exec>
+    <!-- CI agents check out a commit, not a branch ref, and on a detached HEAD the command above
+         prints the literal "HEAD". SkylineNightly turns anything that is not "master" into a
+         GitHub tree URL, so "HEAD" would be reported as a successful run against a branch that
+         does not exist. name-rev resolves the commit to a ref that contains it instead. -->
+    <Exec Condition="'$(_GitBranch)' == 'HEAD'"
+          Command="git name-rev --name-only --exclude=tags/* HEAD" WorkingDirectory="$(MSBuildThisFileDirectory)"
+          ConsoleToMSBuild="true" StandardOutputImportance="low" ContinueOnError="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GitNameRev" />
+    </Exec>
+    <Exec Command="git log -1 --format=%25%25cs HEAD" WorkingDirectory="$(MSBuildThisFileDirectory)"
+          ConsoleToMSBuild="true" StandardOutputImportance="low" ContinueOnError="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GitDate" />
+    </Exec>
+
+    <PropertyGroup Condition="'$(_GitBranch)' == 'HEAD' and '$(_GitNameRev)' != ''">
+      <!-- name-rev yields e.g. "remotes/origin/master" or "origin/my-branch~2"; keep the bare name. -->
+      <_GitBranch>$([System.Text.RegularExpressions.Regex]::Replace('$(_GitNameRev)', '^(remotes/)?origin/', ''))</_GitBranch>
+      <_GitBranch>$([System.Text.RegularExpressions.Regex]::Replace('$(_GitBranch)', '[~^].*$', ''))</_GitBranch>
+    </PropertyGroup>
+    <Warning Condition="'$(_GitBranch)' == '' or '$(_GitBranch)' == 'HEAD'"
+             Text="Could not determine the git branch; this build will claim &quot;master&quot;, which SkylineNightly reports as a master run." />
+
+    <PropertyGroup>
+      <_GitRev Condition="'$(_GitRev)' == ''">0</_GitRev>
+      <_GitBranch Condition="'$(_GitBranch)' == '' or '$(_GitBranch)' == 'HEAD'">master</_GitBranch>
+      <_GitDate Condition="'$(_GitDate)' == ''">$([System.DateTime]::UtcNow.ToString('yyyy-MM-dd'))</_GitDate>
+      <_VerYear>$([System.DateTime]::Parse('$(_GitDate)').ToString('yy'))</_VerYear>
+      <_VerDay>$([System.String]::Format('{0:000}', $([System.DateTime]::Parse('$(_GitDate)').DayOfYear)))</_VerDay>
+
+      <Version>3.0.$(_VerYear)$(_VerDay)</Version>
+      <FileVersion>$(Version)</FileVersion>
+      <AssemblyVersion>$(Version)</AssemblyVersion>
+      <!-- The SDK would otherwise append its own "+sha" and we want one well-known shape.
+           SkylineNightly splits ProductVersion on ".branch." - a branch name contains '/', so
+           it cannot be the last dot-separated token of a version string. -->
+      <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+      <InformationalVersion>$(Version)+$(_GitRev).branch.$(_GitBranch)</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_StageDistroZipPrereqs"
+          Condition="'$(DistroZips)' != ''"
+          Outputs="%(DistroZipPrereq.Identity)">
+    <!-- Batched over DistroZipPrereq; Outputs above forces one pass per item so the
+         %(Tfm) metadata resolves. Only the prerequisites of a REQUESTED zip run. -->
+    <PropertyGroup>
+      <_Wanted>false</_Wanted>
+      <_Wanted Condition="$(DistroZips.Contains('%(DistroZipPrereq.Zip)'))">true</_Wanted>
+      <_PrereqOut>%(DistroZipPrereq.RootDir)%(DistroZipPrereq.Directory)bin\$(Configuration)\%(DistroZipPrereq.Tfm)</_PrereqOut>
+    </PropertyGroup>
+
+    <Message Condition="'$(_Wanted)' == 'true'" Importance="high"
+             Text="Building %(DistroZipPrereq.Filename) (%(DistroZipPrereq.Tfm)) for %(DistroZipPrereq.Zip)" />
+    <!-- Restore first, and without TargetFramework: these projects are not in build.bat's
+         BUILD_TARGET list, so nothing has restored them on a clean agent and Targets="Build"
+         alone fails with NETSDK1004 (missing project.assets.json). NuGet wants the restore
+         done for the whole project, not one TFM, hence the separate call. The
+         RemoveProperties matters too: build.bat drives this with -f net8.0-windows, and
+         that global TargetFramework would otherwise flow down and restore the wrong TFM. -->
+    <MSBuild Condition="'$(_Wanted)' == 'true'"
+             Projects="%(DistroZipPrereq.Identity)" Targets="Restore"
+             Properties="Configuration=$(Configuration)"
+             RemoveProperties="TargetFramework" />
+    <MSBuild Condition="'$(_Wanted)' == 'true'"
+             Projects="%(DistroZipPrereq.Identity)" Targets="Build"
+             Properties="Configuration=$(Configuration);TargetFramework=%(DistroZipPrereq.Tfm)" />
+
+    <!-- Same merge-into-one-bin that Stage-Net8Tests.ps1 does. robocopy returns
+         0-7 for success, so the exit code is ignored and the real check is the
+         staged-file assertion in DistroZips below. -->
+    <Exec Condition="'$(_Wanted)' == 'true'" IgnoreExitCode="true"
+          Command="robocopy &quot;$(_PrereqOut)&quot; &quot;$(SkylineStageDir)&quot; /E /XO /NP /NDL /NFL /NJH /NJS" />
+  </Target>
+
+  <Target Name="DistroZips" DependsOnTargets="_StageDistroZipPrereqs">
+    <Error Condition="'$(DistroZips)' == ''"
+           Text="No zips requested. Pass -p:DistroZips=&quot;SkylineTester.zip;BiblioSpec.zip&quot; (build.bat does this from bare *.zip arguments)." />
+    <Error Condition="!Exists('$(SkylineStageDir)\SkylineTester.exe')"
+           Text="No staged SkylineTester.exe under $(SkylineStageDir). Stage first (build.bat does this): pwsh Stage-Net8Tests.ps1 -Configuration $(Configuration) -Projects SkylineTester" />
+    <ItemGroup>
+      <!-- Unescape before splitting. The caller has to pass the separator ESCAPED
+           as %3B, because MSBuild's -p: switch treats a raw ';' (and a raw ',') as
+           the delimiter BETWEEN properties and would reject the second zip as a
+           nameless property (MSB1006). Escaping stops that, but it also stops the
+           item Include from splitting, because an escaped ';' is a literal
+           character: without this the whole list becomes one item and you get a
+           single file named "a.zip;b.zip". Unescape restores the separator. -->
+      <_DistroZip Include="$([MSBuild]::Unescape('$(DistroZips)'))" />
+    </ItemGroup>
+    <Message Importance="high" Text="Creating %(_DistroZip.Identity)" />
+    <Exec Command="&quot;$(SkylineStageDir)\SkylineTester.exe&quot; &quot;$(SkylineStageDir)\%(_DistroZip.Identity)&quot;" />
+    <!-- SkylineTester exits 0 even when it writes nothing, so verify each artifact. -->
+    <Error Condition="!Exists('$(SkylineStageDir)\%(_DistroZip.Identity)')"
+           Text="SkylineTester.exe exited 0 but produced no %(_DistroZip.Identity)" />
+    <Message Importance="high" Text="Created $(SkylineStageDir)\%(_DistroZip.Identity)" />
+  </Target>
 
 </Project>

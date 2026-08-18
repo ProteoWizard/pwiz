@@ -20,13 +20,20 @@ REM #      build check over CommonTest+Test+TestData; the localized ja/zh import
 REM #      tests; a pass1 functional subset), so the net8 build runs a superset of
 REM #      what it did before. Every mode runs even if an earlier one has failing
 REM #      tests (only a compile failure short-circuits); the build still ends red
-REM #      if any mode failed. Args forwarded verbatim.
+REM #      if any mode failed. Args forwarded verbatim, plus the distro zip
+REM #      names below - one invocation, not a separate step. build.bat writes
+REM #      the zips to bin\staging-net8\<Config> (gitignored, so the hygiene
+REM #      checks below stay clean) after staging but BEFORE the test run, so
+REM #      TC still gets its artifacts from a build whose tests failed.
 REM #   4. git ls-files --deleted: catches builds that delete tracked files.
 REM #   5. git status --porcelain: catches builds that produce stray files
 REM #      not covered by .gitignore.
 REM #
 REM # Usage:
 REM #   tcbuild.bat [Debug|Release] [--automated] [--parallel]
+REM #
+REM # The zip names are appended by this script, not taken from the caller. For a
+REM # one-off artifact (e.g. SkylineTesterWithTestData.zip) call build.bat directly.
 REM #
 REM # Args are forwarded verbatim to build.bat; see that script for flag
 REM # semantics. TC should pass --automated for the standard CI run, and
@@ -36,7 +43,8 @@ REM # Scope note:
 REM #   TestPerf and TestTutorial are intentionally EXCLUDED from the standard
 REM #   build (see build.bat header comment). If TC needs perf/tutorial runs
 REM #   they should be separate build configurations invoking those csprojs
-REM #   directly, not layered on top of this script.
+REM #   directly, not layered on top of this script. Distro zips ARE
+REM #   part of the standard build, matching what the Jamfile did.
 REM # ------------------------------------------------------------------------
 
 set SCRIPT_DIR=%~dp0
@@ -61,8 +69,12 @@ call "%SCRIPT_DIR%\CleanSkyline.bat"
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set "ERROR_TEXT=CleanSkyline.bat failed" & goto error)
 
-echo ##teamcity[progressMessage 'Skyline build.bat %*']
-call "%SCRIPT_DIR%\build.bat" %*
+REM # The three distro zips the Jamfile used to produce. Appended here rather
+REM # than left to the caller so every TC configuration yields the same artifacts.
+set DISTRO_ZIPS=SkylineTester.zip SkylineNightly.zip BiblioSpec.zip
+
+echo ##teamcity[progressMessage 'Skyline build.bat %* %DISTRO_ZIPS%']
+call "%SCRIPT_DIR%\build.bat" %* %DISTRO_ZIPS%
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set "ERROR_TEXT=build.bat failed" & goto error)
 

@@ -84,6 +84,8 @@ namespace SkylineNightly
         private static string LABKEY_CSRF = @"X-LABKEY-CSRF";
 
         private const string GIT_MASTER_URL = "https://github.com/ProteoWizard/pwiz";
+        // Delimiter SkylineTester.csproj puts before the branch name in InformationalVersion.
+        private const string BRANCH_MARKER = ".branch.";
         private const string GIT_BRANCHES_URL = GIT_MASTER_URL + "/tree/";
 
         private DateTime _startTime;
@@ -496,14 +498,20 @@ namespace SkylineNightly
                     Log("Delete zip file " + skylineTesterZipPath);
                     File.Delete(skylineTesterZipPath);
 
-                    // Figure out which branch we're working in - there's a file in the downloaded SkylineTester zip that tells us.
-                    var branchLine = File.ReadAllLines(Path.Combine(_skylineTesterDir, "SkylineTester Files", "Version.cpp"))
-                        .FirstOrDefault(l => l.Contains("Version::Branch"));
+                    // Figure out which branch we're working in - the downloaded SkylineTester
+                    // build stamps it into its own assembly (SkylineTester.csproj sets
+                    // InformationalVersion to "<version>+<sha>.branch.<branch>"). Read through
+                    // FileVersionInfo rather than loading the assembly: this runs against a build
+                    // that may target a different framework than SkylineNightly itself.
+                    var testerDll = Path.Combine(_skylineTesterDir, "SkylineTester Files", "SkylineTester.dll");
+                    var productVersion = FileVersionInfo.GetVersionInfo(testerDll).ProductVersion;
                     string branchUrl = null;
-                    if (!string.IsNullOrEmpty(branchLine))
+                    // A branch name contains '/', so it cannot be the last dot-separated token of a
+                    // version string; ".branch." delimits it instead of a plain split.
+                    var branchIndex = productVersion?.IndexOf(BRANCH_MARKER, StringComparison.Ordinal) ?? -1;
+                    if (branchIndex >= 0)
                     {
-                        // Looks like std::string Version::Branch()   {return "Skyline/skyline_9_7";}
-                        var branch = branchLine.Split(new[] { "\"" }, StringSplitOptions.None)[1];
+                        var branch = productVersion.Substring(branchIndex + BRANCH_MARKER.Length);
                         if (branch.Equals("master"))
                         {
                             branchUrl = GIT_MASTER_URL;
@@ -517,7 +525,7 @@ namespace SkylineNightly
                 }
                 catch (Exception ex)
                 {
-                    failedReason = "Unable to identify branch from Version.cpp in SkylineTester";
+                    failedReason = "Unable to identify branch from SkylineTester's assembly version";
 
                     Log("Exception while unzipping SkylineTester: " + ex.Message +
                         " (Probably still being built, will retry every 60 seconds for 30 minutes.)");

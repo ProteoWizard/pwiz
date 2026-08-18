@@ -1,5 +1,8 @@
-@echo off
-setlocal
+﻿@echo off
+REM # enabledelayedexpansion so the zip-target accumulator (!ZIPS!) and the in-block
+REM # !EXIT! checks read current values rather than parse-time ones. Matches
+REM # tcbuild.bat, which already sets it. No other '!' usage in this file.
+setlocal enabledelayedexpansion
 
 REM # ------------------------------------------------------------------------
 REM # Skyline build + test entry point. TeamCity calls this from tcbuild.bat;
@@ -34,6 +37,20 @@ REM #       Needs Docker Desktop in Windows-container mode + the always_up_runne
 REM #       image. Much faster for the full functional suite. Also settable via
 REM #       SKYLINE_TEST_PARALLEL=1.
 REM #
+REM # Distro zips:
+REM #   Pass the artifact name as a bare argument -- SkylineTester.zip,
+REM #   SkylineNightly.zip, BiblioSpec.zip, SkylineTesterWithTestData.zip -- in any
+REM #   combination, e.g.
+REM #       build.bat Release BiblioSpec.zip SkylineNightly.zip
+REM #   The names are collected and handed to the DistroZips target in
+REM #   SkylineTester.csproj, which is where the work lives (a target cannot be
+REM #   NAMED for the artifact: MSBuild rejects '.' in target names, MSB5016).
+REM #   Zips land in bin\staging-net8\<Config> and are produced after staging but
+REM #   BEFORE the test run, so obtaining one does not require a full test pass.
+REM #   SkylineTester.zip / SkylineNightly.zip feed the in-house nightly scheme;
+REM #   BiblioSpec.zip is the public download linked from the BiblioSpec support
+REM #   page (it carries BlibToMs2, which the Skyline distro does not).
+REM #
 REM # Environment:
 REM #   SKYLINE_TEST_WORKERS   parallel worker count (1 host + N-1 Docker); default 8.
 REM #   SKYLINE_TEST_PARALLEL  set to 1 to prefer the parallel Docker run (same as --parallel).
@@ -62,11 +79,25 @@ set REQUIRE_VENDOR=0
 set AUTOMATED=0
 set SEQUENTIAL=1
 set ERROR_TEXT=
+set ZIPS=
 
 if "%SKYLINE_TEST_PARALLEL%"=="1" set SEQUENTIAL=0
 if not defined SKYLINE_TEST_WORKERS set SKYLINE_TEST_WORKERS=8
 
 REM # Parse args. First non-flag arg is the configuration (Debug|Release).
+REM # NOTE: the if-chain below is ONE statement joined by `else ^` line continuations.
+REM # Do not insert comments or blank lines between its lines -- a `^` continuation
+REM # swallows the next line whatever it is, so a REM in the middle silently truncates
+REM # the chain and every later flag starts reporting "Unrecognized argument".
+REM #
+REM # The `%~x1`==".zip" arm treats any bare *.zip argument as an MSBuild target name
+REM # in SkylineTester.csproj (SkylineTester.zip, BiblioSpec.zip, ...), accumulating
+REM # them for a single -p:DistroZips. The separator is the ESCAPED semicolon %%3B:
+REM # MSBuild's -p: switch treats BOTH ';' and ',' as separators between properties,
+REM # so either raw character makes it read the second zip as a nameless property and
+REM # fail with MSB1006. It un-escapes %%3B back to ';' inside the value, which is
+REM # then what the target's item Include splits on. %~x1 is the argument's
+REM # extension, so no per-zip case is needed.
 :parseargs
 if "%~1"=="" goto endparse
 if /i "%~1"=="--i-agree-to-the-vendor-licenses" (set IAGREE=1) else ^
@@ -74,6 +105,7 @@ if /i "%~1"=="--require-vendor-support" (set REQUIRE_VENDOR=1) else ^
 if /i "%~1"=="--automated" (set AUTOMATED=1) else ^
 if /i "%~1"=="--parallel" (set SEQUENTIAL=0) else ^
 if /i "%~1"=="--coverage" (echo ##teamcity[message text='--coverage is temporarily disabled in build.bat; ignoring' status='WARNING']) else ^
+if /i "%~x1"==".zip" (set ZIPS=!ZIPS!%%3B%~1) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
 if /i "%~1"=="Release" (set CONFIG=Release) else (
     echo Unrecognized argument: %~1 1>&2
@@ -144,6 +176,41 @@ set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set ERROR_TEXT=Stage-Net8Tests.ps1 failed & goto error)
 
 set STAGE_DIR=%SCRIPT_DIR%\bin\staging-net8\%CONFIG%
+
+REM # ------------------------------------------------------------------------
+REM # Distro zips (--SkylineTester.zip / --SkylineNightly.zip / --BiblioSpec.zip /
+REM # --SkylineTesterWithTestData.zip). Port of the Jamfile's create_skyline_zips
+REM # rule (Jamfile.jam:362-381), which ran `SkylineTester.exe <name>.zip` once per
+REM # zip. SkylineTester's Program.cs:81 still routes a lone .zip argument to
+REM # CreateZipInstallerWindow.CreateZipFile, so the mechanism is unchanged; only
+REM # the build-step wiring was lost in the net8 port.
+REM #
+REM # SkylineTester is NOT in BUILD_TARGET (it is a dev/CI tool, not part of the
+REM # product or the test suites), so build and stage it on demand here. It has to
+REM # RUN from the staging dir: CreateZipFile takes its own assembly location as the
+REM # working directory, adds member files by bare name from there, and walks parent
+REM # directories looking for Skyline.sln - all three hold for bin\staging-net8\<cfg>.
+REM # ------------------------------------------------------------------------
+if not defined ZIPS goto skipzips
+
+REM # SkylineTester is not in BUILD_TARGET, so the restore loop above skipped it;
+REM # :build_one passes --no-restore, which needs an assets file to already exist.
+call :restore_one "%SCRIPT_DIR%\SkylineTester\SkylineTester.csproj"
+if %EXIT% NEQ 0 (set "ERROR_TEXT=dotnet restore SkylineTester.csproj failed" & goto error)
+
+call :build_one "%SCRIPT_DIR%\SkylineTester\SkylineTester.csproj"
+if %EXIT% NEQ 0 (set "ERROR_TEXT=dotnet build SkylineTester.csproj failed" & goto error)
+
+echo ##teamcity[progressMessage 'Stage-Net8Tests.ps1 SkylineTester (%CONFIG%)']
+pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Net8Tests.ps1" -Configuration %CONFIG% -Projects SkylineTester
+if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=staging SkylineTester failed" & goto error)
+
+echo ##teamcity[progressMessage 'DistroZips: %ZIPS:~3%']
+dotnet build "%SCRIPT_DIR%\SkylineTester\SkylineTester.csproj" -f net8.0-windows --no-restore -nologo %MSBUILD_PROPS% -t:DistroZips -p:DistroZips=%ZIPS:~3%
+if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=zip target(s) %ZIPS:~3% failed" & goto error)
+
+:skipzips
+
 set TC_TEST_RESULTS=%SCRIPT_DIR%\TestResults
 if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
 mkdir "%TC_TEST_RESULTS%"
