@@ -51,6 +51,9 @@
 param(
     [ValidateSet('Debug','Release')] [string]$Configuration = 'Release',
     [switch]$NoTests,
+    # Acknowledge the vendor SDK EULAs. pwiz-sharp gates its real vendor readers on
+    # this, so without it Osprey builds against the no-vendor-support stubs.
+    [switch]$IAgreeToVendorLicenses,
     [switch]$Coverage,
     [switch]$TeamCity,
     [ValidateSet('quiet','minimal','normal','detailed','diagnostic')]
@@ -165,6 +168,9 @@ $buildArgs = @(
     '/nologo',
     "/verbosity:$Verbosity"
 )
+if ($IAgreeToVendorLicenses) {
+    $buildArgs += '/p:IAgreeToVendorLicenses=true'
+}
 & $msbuild @buildArgs
 $buildExit = $LASTEXITCODE
 $buildSec = ((Get-Date) - $buildStart).TotalSeconds
