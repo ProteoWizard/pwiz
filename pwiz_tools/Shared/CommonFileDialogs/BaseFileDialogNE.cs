@@ -1031,10 +1031,11 @@ namespace pwiz.CommonFileDialogs
         }
 
         /// <summary>
-        /// Repopulates the list view from the current directory, e.g. after a folder was created.
+        /// Re-reads the current directory, e.g. after a folder was created.
         /// </summary>
-        protected void RefreshCurrentDirectory()
+        public void RefreshCurrentDirectory()
         {
+            _abortPopulateList = true;
             populateListViewFromDirectory(_currentDirectory);
         }
 
@@ -1044,12 +1045,16 @@ namespace pwiz.CommonFileDialogs
         }
 
         /// <summary>
-        /// Hook invoked by the Refresh command. The base implementation repopulates the list from the
-        /// current directory. Subclasses backed by a remote store override this to invalidate their
-        /// cached listing first, so the refresh actually re-fetches from the server.
+        /// Hook invoked by the Refresh command. For a remote directory the base implementation
+        /// discards the cached remote session so contents are fetched from the server again,
+        /// rather than served from the session cache (as a plain re-populate would do).
+        /// Subclasses backed by a remote store can override this with a cheaper invalidation
+        /// that clears only the current directory's cached listing and keeps the session alive.
         /// </summary>
         protected virtual void RefreshFromServer()
         {
+            if (_currentDirectory is RemoteUrl)
+                RemoteSession = null; // Drop cached contents so the server is queried again
             RefreshCurrentDirectory();
         }
 

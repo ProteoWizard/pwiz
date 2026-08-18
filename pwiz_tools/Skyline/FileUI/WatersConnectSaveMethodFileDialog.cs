@@ -28,9 +28,6 @@ namespace pwiz.Skyline.FileUI
             newFolderButton.Visible = true;
             newFolderButton.Image = Resources.AddFolder;
             newFolderButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            refreshButton.Visible = true;
-            refreshButton.Image = Resources.Refresh;
-            refreshButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
         }
 
         /// <summary>

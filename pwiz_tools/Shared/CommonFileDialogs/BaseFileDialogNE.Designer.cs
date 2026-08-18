@@ -203,12 +203,13 @@ namespace pwiz.CommonFileDialogs
             //
             // refreshButton
             //
-            // Reusable "Refresh" command, hidden by default. A subclass that supports refreshing the
-            // listing sets Visible = true (and an icon) and overrides RefreshFromServer. Text/ToolTip
-            // are assigned from resources in the constructor so they stay localizable.
+            // Always-visible Refresh command, inherited by every NE dialog. The base
+            // RefreshFromServer drops the remote session for remote folders; subclasses can
+            // override it with a cheaper cache invalidation. Text/ToolTip are assigned from
+            // resources in the constructor so they stay localizable.
             this.refreshButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.refreshButton, "refreshButton");
             this.refreshButton.Name = "refreshButton";
-            this.refreshButton.Visible = false;
             this.refreshButton.Click += new System.EventHandler(this.refreshButton_Click);
             //
             // viewsDropDownButton
