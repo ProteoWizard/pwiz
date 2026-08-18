@@ -215,7 +215,13 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
         };
 
         spec.Params.Set(CVID.MS_ms_level, msLevel);
-        spec.Params.Set(TranslateAsSpectrumType(ie.ExperimentType, msLevel));
+        // cpp SpectrumList_ABI.cpp:148 — the spectrum-type term is a pure function of the
+        // EXPERIMENT type; the ms level (:146-147) is emitted separately and does not feed into
+        // it. The two can legitimately disagree: an MRM3 wiff2 acquisition runs a full-scan
+        // ("TOFMS") experiment whose cycles report ms level 3, and cpp emits
+        // `ms level = 3` + `MS1 spectrum` for it.
+        var spectrumType = TranslateAsSpectrumType(ie.ExperimentType);
+        spec.Params.Set(spectrumType);
         if (exp.Polarity == WiffPolarity.Positive) spec.Params.Set(CVID.MS_positive_scan);
         else if (exp.Polarity == WiffPolarity.Negative) spec.Params.Set(CVID.MS_negative_scan);
 
@@ -237,12 +243,19 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
         // over the experiment-cycle RT when the SDK reports it.
         var ms = exp.GetSpectrum(ie.Cycle, addZeros: !_ignoreZeroIntensityPoints, centroid: centroid);
 
-        // cpp SpectrumList_ABI.cpp:139-141: scan_start_time comes from the spectrum's
-        // StartRT, not the experiment's per-cycle RT (the latter is one cycle later for
-        // legacy WIFF). When the SDK doesn't surface StartRT (wiff2), fall back to the
-        // experiment-cycle RT so existing wiff2 references still match.
+        // cpp SpectrumList_ABI.cpp:139-141: scan_start_time is `spectrum->getStartTime()` and is
+        // emitted only when that is > 0. It is the SPECTRUM's start time, never the experiment's
+        // per-cycle RT: legacy WIFF reports spectrumInfo->StartRT (WiffFile.cpp:810), which is one
+        // cycle earlier than the experiment-cycle RT, and wiff2 reports the cycle scan time the
+        // read request was issued with (WiffFile2.ipp:194) — both are AbstractWiffSpectrum
+        // .StartTimeMinutes here. Falling back to exp.GetRetentionTime when StartRT is 0 would
+        // synthesize a scan start time cpp does not emit (legacy WIFF reports StartRT == 0 for the
+        // first cycle of some acquisitions, e.g. UV/_Sample_Run_004.wiff cycle 1).
+        //
+        // The fallback survives only for the case cpp cannot reach: a spectrum the SDK refused to
+        // hand us at all (cpp would have thrown out of getSpectrum).
         double rtMin = ms?.StartTimeMinutes ?? 0;
-        if (rtMin <= 0)
+        if (ms is null)
         {
             try { rtMin = exp.GetRetentionTime(ie.Cycle); } catch { /* not all experiments have RT */ }
         }
@@ -273,37 +286,83 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
 
             if (msLevel > 1 && ms.HasPrecursorInfo)
             {
-                var precursor = new Precursor();
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, ms.PrecursorMz, CVID.MS_m_z);
-                if (ms.IsolationLowerOffset > 0)
-                    precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, ms.IsolationLowerOffset, CVID.MS_m_z);
-                if (ms.IsolationUpperOffset > 0)
-                    precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, ms.IsolationUpperOffset, CVID.MS_m_z);
+                // cpp SpectrumList_ABI.cpp:164-229. `centerMz` starts at 0 and is filled in only
+                // by getIsolationInfo (:172-176), which is itself gated on getHasIsolationInfo();
+                // every isolation-window cvParam below then hangs off `centerMz > 0` (:183, :200).
+                // So a cycle that has a precursor m/z but no isolation window emits
+                // selectedIonList + activation and NO isolationWindow — which is exactly what an
+                // MRM3 wiff2 acquisition looks like (its experiment is "TOFMS", and wiff2's
+                // getHasIsolationInfo is `experimentType == Product`, WiffFile2.ipp:732).
+                //
+                // cpp also does `selectedMz = centerMz` when there is isolation info (:175), but
+                // in both SDK paths that is the same number PrecursorMz already returns — legacy
+                // WiffFile.cpp:774 sets `centerMz = getHasPrecursorInfo() ? selectedMz : ...`
+                // (and this block only runs when there IS precursor info), and wiff2
+                // WiffFile2.ipp:744/:790 sources both from IsolationWindow->IsolationWindowTarget.
+                // So one property serves both roles here.
+                double centerMz = ms.HasIsolationInfo ? ms.PrecursorMz : 0;
 
-                var selected = new SelectedIon();
-                selected.Set(CVID.MS_selected_ion_m_z, ms.PrecursorMz, CVID.MS_m_z);
-                if (ms.PrecursorCharge > 0)
-                    selected.Set(CVID.MS_charge_state, ms.PrecursorCharge);
-                precursor.SelectedIons.Add(selected);
-
-                if (ms.Activation == WiffActivation.EAD)
+                if (spectrumType == CVID.MS_precursor_ion_spectrum)
                 {
-                    precursor.Activation.Set(CVID.MS_electron_activated_dissociation);
-                    if (ms.ElectronKineticEnergy > 0)
-                        precursor.Activation.Set(CVID.MS_electron_beam_energy, ms.ElectronKineticEnergy, CVID.UO_electronvolt);
+                    // cpp SpectrumList_ABI.cpp:178-194: a precursor-ion scan (Q3 parked on a
+                    // fixed fragment while Q1 scans) is modelled as a PRODUCT — the isolation
+                    // window describes the scanned-for product ion, and mzML's <product> element
+                    // carries an isolationWindow and nothing else, so no selectedIon and no
+                    // activation (and therefore no collision energy) are emitted for these.
+                    // cpp pushes the product even when it ends up empty (:193).
+                    var product = new Product();
+                    if (centerMz > 0)
+                    {
+                        product.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, centerMz, CVID.MS_m_z);
+                        if (ms.IsolationLowerOffset > 0 && ms.IsolationUpperOffset > 0)
+                        {
+                            product.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, ms.IsolationLowerOffset, CVID.MS_m_z);
+                            product.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, ms.IsolationUpperOffset, CVID.MS_m_z);
+                        }
+                    }
+                    spec.Products.Add(product);
                 }
                 else
                 {
-                    precursor.Activation.Set(CVID.MS_beam_type_collision_induced_dissociation);
+                    var precursor = new Precursor();
+                    if (centerMz > 0)
+                    {
+                        precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, centerMz, CVID.MS_m_z);
+                        // cpp SpectrumList_ABI.cpp:203-206 emits both offsets or neither, keyed on
+                        // `lowerLimit > 0 && upperLimit > 0` (the absolute window bounds, not the
+                        // offsets); the offsets themselves are those bounds' distance from centerMz.
+                        if (ms.IsolationLowerOffset > 0 && ms.IsolationUpperOffset > 0)
+                        {
+                            precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, ms.IsolationLowerOffset, CVID.MS_m_z);
+                            precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, ms.IsolationUpperOffset, CVID.MS_m_z);
+                        }
+                    }
+
+                    var selected = new SelectedIon();
+                    selected.Set(CVID.MS_selected_ion_m_z, ms.PrecursorMz, CVID.MS_m_z);
+                    if (ms.PrecursorCharge > 0)
+                        selected.Set(CVID.MS_charge_state, ms.PrecursorCharge);
+                    precursor.SelectedIons.Add(selected);
+
+                    if (ms.Activation == WiffActivation.EAD)
+                    {
+                        precursor.Activation.Set(CVID.MS_electron_activated_dissociation);
+                        if (ms.ElectronKineticEnergy > 0)
+                            precursor.Activation.Set(CVID.MS_electron_beam_energy, ms.ElectronKineticEnergy, CVID.UO_electronvolt);
+                    }
+                    else
+                    {
+                        precursor.Activation.Set(CVID.MS_beam_type_collision_induced_dissociation);
+                    }
+                    // cpp SpectrumList_ABI.cpp:223-224 — `if (collisionEnergy > 0)`, where
+                    // collisionEnergy was filled in only by getIsolationInfo (:172-176). Both halves
+                    // matter: the value comes from the isolation info (see
+                    // AbstractWiffSpectrum.CollisionEnergy), and a non-positive value is dropped
+                    // rather than emitted as 0.
+                    if (ms.CollisionEnergy > 0)
+                        precursor.Activation.Set(CVID.MS_collision_energy, ms.CollisionEnergy, CVID.UO_electronvolt);
+                    spec.Precursors.Add(precursor);
                 }
-                // cpp SpectrumList_ABI.cpp:223-224 — `if (collisionEnergy > 0)`, where
-                // collisionEnergy was filled in only by getIsolationInfo (:172-176). Both halves
-                // matter: the value comes from the isolation info (see
-                // AbstractWiffSpectrum.CollisionEnergy), and a non-positive value is dropped
-                // rather than emitted as 0.
-                if (ms.CollisionEnergy > 0)
-                    precursor.Activation.Set(CVID.MS_collision_energy, ms.CollisionEnergy, CVID.UO_electronvolt);
-                spec.Precursors.Add(precursor);
             }
 
             // TIC: cpp WiffFile2.ipp:718 reads `spectrum->getSumY()` from a precomputed per-cycle
@@ -359,11 +418,12 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
         return dst;
     }
 
-    /// <summary>Maps wiff experiment type + msLevel to a mzML spectrum-type CVID. Equivalent of
-    /// cpp <c>Reader_ABI_Detail::translateAsSpectrumType</c>.</summary>
-    public static CVID TranslateAsSpectrumType(WiffExperimentType expType, int msLevel) => expType switch
+    /// <summary>Maps a wiff experiment type to an mzML spectrum-type CVID. Port of cpp
+    /// <c>Reader_ABI_Detail.cpp:196-209 (translateAsSpectrumType)</c>, which switches on the
+    /// experiment type alone — the ms level is deliberately not consulted.</summary>
+    public static CVID TranslateAsSpectrumType(WiffExperimentType expType) => expType switch
     {
-        WiffExperimentType.MS => msLevel == 1 ? CVID.MS_MS1_spectrum : CVID.MS_MSn_spectrum,
+        WiffExperimentType.MS => CVID.MS_MS1_spectrum,
         WiffExperimentType.Product => CVID.MS_MSn_spectrum,
         WiffExperimentType.Precursor => CVID.MS_precursor_ion_spectrum,
         WiffExperimentType.NeutralGainOrLoss => CVID.MS_constant_neutral_loss_spectrum,

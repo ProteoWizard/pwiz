@@ -197,8 +197,18 @@ public static class PwizFloat
     private static string Generate<T>(T value, int precision, bool forceFixed)
         where T : IFloatingPointIeee754<T>
     {
-        // real_inserter::call short-circuits these two before consulting the policy.
-        if (T.IsNaN(value)) return "nan";
+        // real_inserter::call short-circuits these two before consulting the policy
+        // (real_utils.hpp:46-52), handing them to real_policies::nan / ::inf
+        // (real_policies.hpp:315-329). Both spellings get a leading '-' from
+        // sign_inserter::call(sink, /*is_zero*/ false, traits::test_negative(n), force_sign)
+        // (numeric_utils.hpp:719-732), and for floating point test_negative is the *sign bit*,
+        // not `n < 0` (numeric_utils.hpp:175-200 specializes is_negative<float/double/long double>
+        // on core::signbit). A NaN therefore prints as "-nan" whenever its sign bit is set, which
+        // is how MSVC's output ends up saying "-nan": the quiet NaN both runtimes circulate
+        // (0xFFF8000000000000 / 0xFFC00000 - what .NET calls double.NaN / float.NaN, and what
+        // 0.0/0.0 yields under MSVC) has the sign bit set. Mirror the bit test rather than
+        // hard-coding "-nan": a NaN with a clear sign bit really does print unsigned in karma.
+        if (T.IsNaN(value)) return T.IsNegative(value) ? "-nan" : "nan";
         if (T.IsInfinity(value)) return T.IsNegative(value) ? "-inf" : "inf";
 
         T one = T.One;

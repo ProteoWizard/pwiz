@@ -182,9 +182,58 @@ internal sealed class WiffFile : AbstractWiffFile
         }
         catch { }
 
+        // The `SampleNumber < SampleCount` term reproduces an off-by-one in cpp. See
+        // SoftwareVersionOf for why matching it is deliberate.
+        bool hasHalfSizeRtWindow = SampleNumber < SampleCount
+                                   && HasHalfSizeRtWindow(SoftwareVersionOf(_sample));
         _experiments = new WiffExperiment[_msSample.ExperimentCount];
         for (int i = 0; i < _experiments.Length; i++)
-            _experiments[i] = new WiffExperiment(_msSample.GetMSExperiment(i));
+            _experiments[i] = new WiffExperiment(_msSample.GetMSExperiment(i), hasHalfSizeRtWindow);
+    }
+
+    private static string SoftwareVersionOf(Sample sample)
+    {
+        // cpp reads batch->GetSample(sample)->Details->SoftwareVersion (WiffFile.cpp:449) and
+        // swallows any exception ("no version details? probably acquired with Analyst?").
+        //
+        // cpp passes its 1-BASED sample number to Batch::GetSample, which is 0-based — every
+        // other call site converts (WiffFile.cpp:988 `batch->GetSample(sample-1)`). So cpp reads
+        // the NEXT sample's acquisition software version, and on the LAST sample the index is out
+        // of range, the read throws, and the catch leaves hasHalfSizeRTWindow false.
+        //
+        // We match that, off-by-one included, because it is load-bearing: it decides the
+        // `start=`/`end=` tokens of every scheduled SRM/SIM chromatogram id, and reading this
+        // sample's own version instead renamed every chromatogram in 19 single-sample corpus
+        // files that previously matched cpp byte for byte.
+        //
+        // The caller expresses cpp's out-of-range case as `SampleNumber < SampleCount` rather
+        // than opening the next Sample to read one string: samples in a batch are acquired by one
+        // method with one software version, so the next sample's version is this sample's, and
+        // opening a second Sample per file would risk the native-handle leak documented on the
+        // finalizer below. If a heterogeneous-version batch ever turns up, that assumption is
+        // where it would show.
+        try { return sample.Details?.SoftwareVersion ?? string.Empty; }
+        catch { return string.Empty; }
+    }
+
+    /// <summary>
+    /// Port of cpp <c>ExperimentImpl::ExperimentImpl</c> (WiffFile.cpp:446-464): SCIEX OS below
+    /// v3.1 writes scheduled-MRM/SIM <c>RTWindow</c> values that are half the real window width,
+    /// so those files need the stored window applied at FULL width on each side of
+    /// <c>ExpectedRT</c> instead of half. Anything else — including data acquired with Analyst,
+    /// where the version string doesn't match at all — gets the plain half-width treatment.
+    /// The comparison is cpp's verbatim, quirks included: <c>!(major >= 3 &amp;&amp; minor >= 1)</c>
+    /// is true for e.g. "SCIEX OS 4.0" because that minor is 0.
+    /// </summary>
+    private static bool HasHalfSizeRtWindow(string softwareVersion)
+    {
+        if (string.IsNullOrEmpty(softwareVersion)) return false;
+        var match = System.Text.RegularExpressions.Regex.Match(softwareVersion, @"SCIEX OS (\d+)\.(\d+)");
+        if (!match.Success) return false;
+        if (!int.TryParse(match.Groups[1].Value, out int major) ||
+            !int.TryParse(match.Groups[2].Value, out int minor))
+            return false;
+        return !(major >= 3 && minor >= 1);
     }
 
     public override void Dispose()
@@ -242,10 +291,16 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
     private readonly Lazy<IReadOnlyList<WiffMrmTarget>> _srm;
     private readonly Lazy<IReadOnlyList<WiffSimTarget>> _sim;
 
-    public WiffExperiment(MSExperiment exp)
+    /// <summary>cpp <c>rtWindowMultiplier</c> (WiffFile.cpp:550 / :589): 1 when the acquisition
+    /// software stored half-size RTWindows, 0.5 otherwise. See
+    /// <see cref="WiffFile.HasHalfSizeRtWindow"/>.</summary>
+    private readonly double _rtWindowMultiplier;
+
+    public WiffExperiment(MSExperiment exp, bool hasHalfSizeRtWindow = false)
     {
         _exp = exp;
         _info = exp.Details;
+        _rtWindowMultiplier = hasHalfSizeRtWindow ? 1.0 : 0.5;
         _srm = new Lazy<IReadOnlyList<WiffMrmTarget>>(BuildSrmTargets);
         _sim = new Lazy<IReadOnlyList<WiffSimTarget>>(BuildSimTargets);
     }
@@ -586,9 +641,14 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
         {
             if (range is not MRMMassRange mrm) continue;
             double ce = ReadCollisionEnergy(mrm.CompoundDepParameters);
-            // cpp: target.startTime = ExpectedRT - RTWindow/2; target.endTime = ExpectedRT + RTWindow/2.
-            double start = mrm.ExpectedRT - mrm.RTWindow / 2.0;
-            double end = mrm.ExpectedRT + mrm.RTWindow / 2.0;
+            // cpp WiffFile.cpp:589-595:
+            //   rtWindowMultiplier = hasHalfSizeRTWindow ? 1 : 0.5;
+            //   target.startTime = ExpectedRT - RTWindow * rtWindowMultiplier;
+            //   target.endTime   = ExpectedRT + RTWindow * rtWindowMultiplier;
+            // These feed the scheduled `start=`/`end=` tokens of the SRM chromatogram id, so
+            // getting the multiplier wrong renames every scheduled-MRM chromatogram.
+            double start = mrm.ExpectedRT - mrm.RTWindow * _rtWindowMultiplier;
+            double end = mrm.ExpectedRT + mrm.RTWindow * _rtWindowMultiplier;
             targets.Add(new WiffMrmTarget
             {
                 Q1Mass = mrm.Q1Mass,
@@ -613,8 +673,9 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
         {
             if (range is not SIMMassRange sim) continue;
             double ce = ReadCollisionEnergy(sim.CompoundDepParameters);
-            double start = sim.ExpectedRT - sim.RTWindow / 2.0;
-            double end = sim.ExpectedRT + sim.RTWindow / 2.0;
+            // cpp WiffFile.cpp:550-555 — same rtWindowMultiplier as the SRM path above.
+            double start = sim.ExpectedRT - sim.RTWindow * _rtWindowMultiplier;
+            double end = sim.ExpectedRT + sim.RTWindow * _rtWindowMultiplier;
             targets.Add(new WiffSimTarget
             {
                 Mass = sim.Mass,

@@ -38,6 +38,25 @@ internal static class Reader_Sciex_Detail
     /// our <see cref="SciexInstrumentModel"/> enum. Mirrors cpp <c>WiffFileImpl::getInstrumentModel</c>:
     /// uppercase, strip spaces, strip the legacy "API" prefix, then substring-match.
     /// </summary>
+    /// <summary>
+    /// True when the SDK explicitly said the instrument is unknown, as opposed to naming
+    /// something this mapping does not recognize.
+    /// </summary>
+    /// <remarks>
+    /// cpp's <c>WiffFileImpl::getInstrumentModel</c> (<c>WiffFile.cpp:341-386</c>) returns
+    /// <c>InstrumentModel_Unknown</c> only for the literal string "UNKNOWN" and THROWS
+    /// ("unknown instrument type: ...") for anything else that falls off the end of the chain.
+    /// <see cref="ParseInstrumentName"/> collapses both onto
+    /// <see cref="SciexInstrumentModel.Unknown"/>, so callers need this to tell them apart and
+    /// route the second case through <c>ReaderConfig.InstrumentMetadataError</c>. An empty or
+    /// absent name counts as unrecognized: cpp reaches the throw for that too.
+    /// </remarks>
+    internal static bool IsExplicitlyUnknown(string? rawName)
+    {
+        if (string.IsNullOrEmpty(rawName)) return false;
+        return rawName.ToUpperInvariant().Replace(" ", string.Empty).Replace("API", string.Empty) == "UNKNOWN";
+    }
+
     internal static SciexInstrumentModel ParseInstrumentName(string? rawName)
     {
         if (string.IsNullOrEmpty(rawName)) return SciexInstrumentModel.Unknown;

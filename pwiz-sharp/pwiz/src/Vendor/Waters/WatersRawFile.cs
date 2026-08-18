@@ -964,10 +964,34 @@ internal sealed class WatersRawFile : IDisposable
         string? fromEnv = Environment.GetEnvironmentVariable(LICENSE_KEY_ENV_VAR);
         if (!string.IsNullOrWhiteSpace(fromEnv)) return fromEnv.Trim();
 
-        // Staged next to the managed output by Waters.csproj, alongside MassLynxRaw.dll itself.
-        string keyPath = Path.Combine(AppContext.BaseDirectory, LICENSE_KEY_FILE);
-        if (!File.Exists(keyPath)) return string.Empty;
-        return File.ReadAllText(keyPath).Trim();
+        // Waters.csproj stages the key next to THIS assembly, alongside MassLynxRaw.dll, so
+        // look there first. AppContext.BaseDirectory is not the same directory when pwiz-sharp
+        // is hosted rather than run as its own application: under nethost it resolves to the
+        // native host executable's directory, which has no reason to contain a Waters license.
+        // Checking the assembly's own directory first makes the lookup work for both, and the
+        // examples/cpp-nethost-reader host depends on it.
+        foreach (string dir in new[] { AssemblyDirectory(), AppContext.BaseDirectory })
+        {
+            if (string.IsNullOrEmpty(dir)) continue;
+            string keyPath = Path.Combine(dir, LICENSE_KEY_FILE);
+            if (File.Exists(keyPath)) return File.ReadAllText(keyPath).Trim();
+        }
+        return string.Empty;
+    }
+
+    /// <summary>Directory holding this assembly, or empty when it has no on-disk location
+    /// (single-file bundle), in which case the caller falls back to AppContext.BaseDirectory.</summary>
+    private static string AssemblyDirectory()
+    {
+        try
+        {
+            string location = typeof(WatersRawFile).Assembly.Location;
+            return string.IsNullOrEmpty(location) ? string.Empty : (Path.GetDirectoryName(location) ?? string.Empty);
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 
     public void Dispose()

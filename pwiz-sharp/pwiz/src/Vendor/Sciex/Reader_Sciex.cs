@@ -1,4 +1,4 @@
-using Pwiz.Data.Common.Cv;
+﻿using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Readers;
 #if !NO_VENDOR_SUPPORT
@@ -178,24 +178,55 @@ public sealed class Reader_Sciex : IReader, IMultiSampleReader
         // InstrumentConfiguration: pull the model from the SDK's instrument-name string,
         // hand it to the cpp-port detail translator. cpp hardcodes the ion source as IonSpray
         // (= MS_electrospray_ionization), which always wins over the SDK's IonSourceType.
+        var metaConfig = config ?? new ReaderConfig();
         var instrumentModel = Reader_Sciex_Detail.ParseInstrumentName(wiff.InstrumentModelName);
+        // cpp Reader_ABI.cpp:149-156: getInstrumentModel() THROWS for a name it cannot map and
+        // fillInMetadata routes that through instrumentMetadataError, so an unrecognized
+        // instrument fails the conversion unless --ignoreUnknownInstrumentError is passed. The
+        // literal "UNKNOWN" is not an error in cpp and is not one here either.
+        if (instrumentModel == Reader_Sciex_Detail.SciexInstrumentModel.Unknown &&
+            !Reader_Sciex_Detail.IsExplicitlyUnknown(wiff.InstrumentModelName))
+        {
+            metaConfig.InstrumentMetadataError(
+                "[Reader_Sciex.FillInMetadata] unable to determine instrument model " +
+                $"(unknown instrument type: {wiff.InstrumentModelName})");
+        }
         var ic = Reader_Sciex_Detail.TranslateAsInstrumentConfiguration(
             instrumentModel, CVID.MS_electrospray_ionization);
         ic.Software = analyst;
-        // cpp Reader_ABI.cpp:165 — instrument serial number when the SDK exposes one.
-        var serial = wiff.InstrumentSerialNumber;
-        if (!string.IsNullOrEmpty(serial))
-            ic.Set(CVID.MS_instrument_serial_number, serial);
+        // cpp Reader_ABI.cpp:165 — instrument serial number when the SDK exposes one. cpp wraps
+        // the SDK call in try/catch + instrumentMetadataError; the managed SDK surfaces the same
+        // failures as exceptions, so mirror the handling rather than letting them escape as an
+        // unrelated-looking read error.
+        try
+        {
+            var serial = wiff.InstrumentSerialNumber;
+            if (!string.IsNullOrEmpty(serial))
+                ic.Set(CVID.MS_instrument_serial_number, serial);
+        }
+        catch (Exception ex) when (ex is not IOException)
+        {
+            metaConfig.InstrumentMetadataError(
+                $"[Reader_Sciex.FillInMetadata] unable to read instrument serial number ({ex.Message})");
+        }
         result.InstrumentConfigurations.Add(ic);
         result.Run.DefaultInstrumentConfiguration = ic;
 
         // Sciex is one of the three readers whose host-zone shift cpp gates on the config flag
         // (Reader_ABI.cpp: getSampleAcquisitionTime(sample, adjustUnknownTimeZonesToHostTimeZone)).
-        var timeConfig = config ?? new ReaderConfig();
-        string? startTime = ReaderConfig.FormatStartTimeStamp(
-            wiff.StartTimestampRaw, timeConfig.AdjustUnknownTimeZonesToHostTimeZone);
-        if (!string.IsNullOrEmpty(startTime))
-            result.Run.StartTimeStamp = startTime;
+        // cpp Reader_ABI.cpp:177-184 guards this one too.
+        try
+        {
+            string? startTime = ReaderConfig.FormatStartTimeStamp(
+                wiff.StartTimestampRaw, metaConfig.AdjustUnknownTimeZonesToHostTimeZone);
+            if (!string.IsNullOrEmpty(startTime))
+                result.Run.StartTimeStamp = startTime;
+        }
+        catch (Exception ex) when (ex is not IOException)
+        {
+            metaConfig.InstrumentMetadataError(
+                $"[Reader_Sciex.FillInMetadata] unable to read sample acquisition time ({ex.Message})");
+        }
 
         bool simAsSpectra = config?.SimAsSpectra ?? false;
         bool srmAsSpectra = config?.SrmAsSpectra ?? false;

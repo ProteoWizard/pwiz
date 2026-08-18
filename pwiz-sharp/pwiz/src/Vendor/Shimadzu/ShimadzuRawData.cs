@@ -278,9 +278,10 @@ public sealed class ShimadzuRawData : IDisposable
             // retTimeToScanCalledAndFailed is hoisted to the method level so the retry
             // decision at the bottom of TryInitializeFromLcd can read it. Tracks whether
             // RetTimeToScan FAILED for any event we tried to query (vs. the event being
-            // skipped on purpose, e.g. MRM under srmAsSpectra=false). The fallback below
-            // only runs in the genuine-failure case so that SRM-only files don't grow
-            // phantom spectra under default config.
+            // skipped on purpose, e.g. MRM under srmAsSpectra=false, or the SDK legitimately
+            // answering "no scan near endTime" with S_OK + scan 0). The fallback below only
+            // runs in the genuine-failure case so that SRM-only files don't grow phantom
+            // spectra under default config.
             // Materialize segments 1..SegmentCount in order so empty segments still get an entry
             // (matches cpp which iterates by segment index).
             for (short seg = 1; seg <= SegmentCount; seg++)
@@ -301,12 +302,15 @@ public sealed class ShimadzuRawData : IDisposable
                     if (info is not null && !srmAsSpectra && info.AnalysisMode == ShimadzuIO.Generic.AcqModes.MRM)
                         continue;
 
-                    uint eventLastScanNumber = TryGetEventLastScanNumber(seg, eventNo, endTime);
-                    if (eventLastScanNumber == 0)
-                    {
+                    uint eventLastScanNumber = TryGetEventLastScanNumber(eventNo, endTime, out bool retTimeToScanFailed);
+                    if (retTimeToScanFailed)
                         retTimeToScanCalledAndFailed = true;
+
+                    // cpp ShimadzuReader.cpp:277-279: "if eventLastScanNumber is 0 then there is
+                    // no scan near endTime for this event" — a perfectly normal answer, distinct
+                    // from the call having failed. Both just `continue` in cpp.
+                    if (eventLastScanNumber == 0)
                         continue;
-                    }
 
                     if (_msLevels.Count < 2)
                     {
@@ -324,15 +328,19 @@ public sealed class ShimadzuRawData : IDisposable
                 }
             }
 
-            // Fallback only when at least one event was attempted but every attempt returned 0.
-            // The Q-TOF SDK on .NET 8 sometimes throws RuntimeBinderException through
-            // QtflRawDataMain.RTimeToScan (see TC build 3975296); when that happens for every
-            // event of a file, lastScanNumber stays 0 and we'd otherwise produce no spectra.
-            // Sum per-event TIC chromatogram point counts to recover a usable scan count.
-            // This is approximate vs. cpp's exact max-scan-number approach but agrees on the
-            // common case where scan numbers are 1..N contiguous. Crucially we DO NOT run the
-            // fallback when there were zero attempts (e.g. SRM-only file under default config),
-            // since that would invent spectra the cpp reference mzML doesn't carry.
+            // Fallback only when at least one RetTimeToScan call actually FAILED and nothing
+            // else produced a scan number. The Q-TOF SDK on .NET 8 sometimes throws
+            // RuntimeBinderException through QtflRawDataMain.RTimeToScan (see TC build 3975296);
+            // when that happens for every event of a file, lastScanNumber stays 0 and we'd
+            // otherwise produce no spectra. Sum per-event TIC chromatogram point counts to
+            // recover a usable scan count. This is approximate vs. cpp's exact max-scan-number
+            // approach but agrees on the common case where scan numbers are 1..N contiguous.
+            // Crucially we DO NOT run the fallback when the SDK answered successfully — whether
+            // that was zero attempts (SRM-only file under default config, every event skipped as
+            // MRM) or a clean S_OK with scan 0 (an event with no acquired scans, e.g. the
+            // PrecursorIonScan event that 20200929_QC(100x)_022.lcd carries alongside its 38 MRM
+            // channels). Either way cpp ends up with scanCount_ == 0 and no spectrumList, and
+            // inventing spectra here is exactly the diff we are avoiding.
             if (lastScanNumber == 0 && retTimeToScanCalledAndFailed)
                 lastScanNumber = SumScanCountsFromTics();
 
@@ -379,9 +387,10 @@ public sealed class ShimadzuRawData : IDisposable
         // RetTimeToScan call we tried failed and the chromatogram TIC fallback also produced
         // nothing (retTimeToScanCalledAndFailed). The latter is what bit us on TC builds
         // 3987641 + 3987655. retTimeToScanCalledAndFailed can only be true if the per-event
-        // loop tried at least one non-MRM event (the MRM continue runs before the flag is
-        // set), so header-only LCDs and SRM-only-under-default-config files won't trip it
-        // and we won't loop forever.
+        // loop tried at least one non-MRM event AND the SDK reported an error for it (the MRM
+        // continue runs before the call, and a successful S_OK/scan-0 answer no longer counts),
+        // so header-only LCDs, SRM-only-under-default-config files, and files whose only
+        // non-MRM event simply has no scans won't trip it and we won't loop forever.
         return ScanCount == 0 && (qtflBackendThrew || retTimeToScanCalledAndFailed);
     }
 
@@ -392,17 +401,27 @@ public sealed class ShimadzuRawData : IDisposable
     /// not always initialized for Q-TOF Negative-mode files; we observed it throwing
     /// <c>RuntimeBinderException</c> in TC build 3975296. Catching it lets the caller fall back
     /// to TIC-derived scan counting.</summary>
-    private uint TryGetEventLastScanNumber(short seg, short eventNo, int endTime)
+    /// <param name="eventNo">SDK event number to query.</param>
+    /// <param name="endTime">Acquisition end time from <c>GetAnalysisTime</c>.</param>
+    /// <param name="callFailed">Set when the SDK call itself failed (threw, or returned a
+    /// failure code). A successful call that reports scan 0 is NOT a failure: cpp
+    /// (ShimadzuReader.cpp:277-279) treats it as "there is no scan near endTime for this
+    /// event" and simply skips the event. Conflating the two made every SRM-only file whose
+    /// method carries one non-MRM event trip the TIC-sum fallback and invent a full spectrum
+    /// list — 20200929_QC(100x)_022.lcd grew 12884 spectra that cpp does not emit, because its
+    /// event 20 is a PrecursorIonScan with no acquired scans.</param>
+    private uint TryGetEventLastScanNumber(short eventNo, int endTime, out bool callFailed)
     {
+        callFailed = false;
         try
         {
             uint scan;
             var rt2sn = _dataObject.MS.Spectrum.RetTimeToScan(out scan, endTime, eventNo);
-            if (ShimadzuIO.Generic.Tool.Failed(rt2sn)) return 0;
+            if (ShimadzuIO.Generic.Tool.Failed(rt2sn)) { callFailed = true; return 0; }
             return scan;
         }
-        catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { return 0; }
-        catch (NullReferenceException) { return 0; }
+        catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { callFailed = true; return 0; }
+        catch (NullReferenceException) { callFailed = true; return 0; }
     }
 
     /// <summary>Sums per-event TIC chromatogram point counts across all segments + events to

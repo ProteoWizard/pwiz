@@ -148,16 +148,36 @@ public class PwizFloatTests
         AssertAll(cases, v => PwizFloat.ToKarmaNoSci(v));
     }
 
+    /// <summary>
+    /// karma signs a NaN off its <em>sign bit</em>, not off a comparison: real_policies::nan
+    /// (real_policies.hpp:315) calls sign_inserter with traits::test_negative(n), and
+    /// is_negative is specialized on core::signbit for float/double (numeric_utils.hpp:175-200).
+    /// The quiet NaN both runtimes circulate — .NET's double.NaN / float.NaN, and MSVC's
+    /// 0.0/0.0 — has that bit set, so pwiz C++ writes "-nan" into cvParams and so must we
+    /// (e.g. every empty Agilent spectrum, whose base peak m/z and intensity are NaN).
+    /// </summary>
     [TestMethod]
     public void NonFiniteValues_UseKarmaSpelling()
     {
-        Assert.AreEqual("nan", PwizFloat.ToPwizString(double.NaN));
+        Assert.AreEqual("-nan", PwizFloat.ToPwizString(double.NaN));
+        Assert.AreEqual("-nan", PwizFloat.ToPwizString(0.0 / 0.0));
         Assert.AreEqual("inf", PwizFloat.ToPwizString(double.PositiveInfinity));
         Assert.AreEqual("-inf", PwizFloat.ToPwizString(double.NegativeInfinity));
-        Assert.AreEqual("nan", PwizFloat.ToPwizString(float.NaN));
+        Assert.AreEqual("-nan", PwizFloat.ToPwizString(float.NaN));
         Assert.AreEqual("inf", PwizFloat.ToPwizString(float.PositiveInfinity));
         Assert.AreEqual("-inf", PwizFloat.ToPwizString(float.NegativeInfinity));
         Assert.AreEqual("inf", PwizFloat.ToKarmaNoSci(double.PositiveInfinity));
+        Assert.AreEqual("-nan", PwizFloat.ToKarmaNoSci(double.NaN));
+
+        // A NaN whose sign bit is clear prints unsigned — the sign really is a bit test, not a
+        // blanket "-nan" for everything non-numeric. .NET never mints one of these on its own,
+        // so it has to be assembled from bits.
+        double positiveNaN = BitConverter.Int64BitsToDouble(0x7FF8000000000000L);
+        Assert.IsTrue(double.IsNaN(positiveNaN));
+        Assert.AreEqual("nan", PwizFloat.ToPwizString(positiveNaN));
+        float positiveNaNf = BitConverter.Int32BitsToSingle(0x7FC00000);
+        Assert.IsTrue(float.IsNaN(positiveNaNf));
+        Assert.AreEqual("nan", PwizFloat.ToPwizString(positiveNaNf));
     }
 
     /// <summary>The formatted text must parse back to a value that is still the closest double to

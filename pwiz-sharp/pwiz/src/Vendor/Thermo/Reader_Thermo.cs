@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
@@ -104,7 +104,7 @@ public sealed class Reader_Thermo : IReader
         // the next test's cleanup fails with "file locked by another process".
         try
         {
-        var icByAnalyzer = FillInstrumentConfiguration(result, raw, out var pdaIc);
+        var icByAnalyzer = FillInstrumentConfiguration(result, raw, config ?? new ReaderConfig(), out var pdaIc);
 
         // Sample list: Thermo exposes a single SampleId; emit a Sample entry matching pwiz C++.
         string sampleId = TryGetSampleId(raw);
@@ -236,7 +236,7 @@ public sealed class Reader_Thermo : IReader
     /// out parameter for the PDA configuration (null if the file has no PDA controller).
     /// </summary>
     private static Dictionary<ThermoFisher.CommonCore.Data.FilterEnums.MassAnalyzerType, InstrumentConfiguration>
-        FillInstrumentConfiguration(MSData result, ThermoRawFile raw, out InstrumentConfiguration? pdaIc)
+        FillInstrumentConfiguration(MSData result, ThermoRawFile raw, ReaderConfig config, out InstrumentConfiguration? pdaIc)
     {
         // Software: Xcalibur (acquisition). pwiz Software entry is added separately by the caller.
         var xcalibur = new Software("Xcalibur")
@@ -286,6 +286,19 @@ public sealed class Reader_Thermo : IReader
                     model = methodModel;
                 }
             }
+        }
+        // cpp Reader_Thermo.cpp:242-245 raises instrumentMetadataError when the model is still
+        // unresolved AND the SDK gave both a Model and a Name — i.e. the file told us what it
+        // is and this port failed to recognize it, which is a mapping gap worth reporting.
+        // Files that supply neither (MAT95XP-File001.RAW) are deliberately NOT an error in cpp,
+        // so the emptiness test is part of the contract rather than a guard.
+        if (modelCv == CVID.MS_Thermo_Electron_instrument_model
+            && !string.IsNullOrEmpty(modelProp) && !string.IsNullOrEmpty(nameProp))
+        {
+            config.InstrumentMetadataError(
+                "[Reader_Thermo.FillInMetadata] unable to parse instrument model; make sure you are " +
+                "using the latest version of ProteoWizard; if you are, please report this error to " +
+                $"the ProteoWizard developers with this information: model({modelProp}) name({nameProp})");
         }
         if (modelCv == CVID.MS_Thermo_Electron_instrument_model && !string.IsNullOrEmpty(model))
             common.UserParams.Add(new UserParam("instrument model", model));

@@ -5,6 +5,7 @@ using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Spectra;
+using MidacMsLevel = Agilent.MassSpectrometry.MIDAC.MsLevel;
 
 #pragma warning disable CA1707
 
@@ -286,73 +287,21 @@ public sealed class ChromatogramList_Agilent : ChromatogramListBase
 
     private void FillTic(Chromatogram c, bool getBinaryData)
     {
-        // Build TIC by walking scan records (RetentionTime, TIC). cpp does the same in
-        // MassHunterDataImpl ctor: SDK's GetTIC() returns an IBDAChromData but populating it
-        // is awkward and the per-scan-record path mirrors what cpp emits exactly.
-        // For IM files, the per-frame TIC from MIDAC's frameInfo (which is what cpp's
-        // MidacDataImpl::getTicIntensities returns) gives NaN for frames with no data; the
-        // MassSpec SDK's rec.Tic gives 0.0 for those same frames. Mirror cpp's value.
-        int total = (int)_raw.TotalScansPresent;
+        // cpp ChromatogramList_Agilent.cpp:108-131 reads the run TIC straight off the raw file's
+        // cached arrays — getTicTimes(onlyMs1) / getTicIntensities(onlyMs1) — which
+        // AgilentRawData.InitializeChromatograms fills at open from the SDK's TotalIon
+        // chromatogram (non-IM) or MIDAC frame info (IM).
+        //
+        // Walking IMSScanRecord.Tic per row instead, as this used to, is NOT equivalent: on a
+        // centroided QTOF run the scan record's Tic disagrees with the TotalIon chromatogram by
+        // up to 84% relative (BSA-ms2-centroid.d: 426 of 587 points differed, max_abs 2.97e6).
+        // The spectrum list already indexes the chromatogram arrays for MS_total_ion_current
+        // (SpectrumList_Agilent.cpp:220) for the same reason.
         bool onlyMs1 = _globalChromsAreMs1Only;
-        bool isIms = _raw.HasIonMobilityData;
-        var imsReader = isIms ? _raw.ImsReader : null;
-        var times = new List<double>(total);
-        var intensities = new List<double>(total);
-        var msLevels = new List<long>(total);
-        if (isIms && imsReader is not null)
-        {
-            // IM path: one entry per MIDAC frame. Use per-frame Tic (NaN for empty frames).
-            int frames = _raw.ImsFrameCount;
-            for (int i = 0; i < frames; i++)
-            {
-                int frameNumber = _raw.ImsFrameNumber(i);
-                IMidacFrameInfo? info = null;
-                try { info = imsReader.FrameInfo(frameNumber); } catch { }
-                if (info is null) continue;
-                int level = 1;
-                double rt = 0;
-                double tic = double.NaN;
-                try { rt = info.AcqTimeRange?.Min ?? 0; } catch { }
-                try { tic = info.Tic; } catch { }
-                try
-                {
-                    var details = info.SpectrumDetails;
-                    if (details is not null)
-                    {
-                        int lvl = (int)(object)details.MsLevel!;
-                        level = lvl == 2 ? 2 : 1;
-                    }
-                }
-                catch { }
-                if (onlyMs1 && level != 1) continue;
-                times.Add(rt);
-                // cpp caches TIC intensities as BinaryData<float> (MassHunterData.cpp:144)
-                // and assigns them straight into the mzML double array, so every value it
-                // writes is float-rounded. Keeping the SDK double left all eight
-                // single-diff Agilent files off by ~5e-08 relative - float32 epsilon.
-                intensities.Add((float)tic);
-                msLevels.Add(level);
-            }
-        }
-        else
-        {
-            for (int i = 0; i < total; i++)
-            {
-                IMSScanRecord rec;
-                try { rec = _raw.GetScanRecord(i); }
-                catch { continue; }
-                int level = rec.MSLevel == MSLevel.MSMS ? 2 : 1;
-                if (onlyMs1 && level != 1) continue;
-                times.Add(rec.RetentionTime);
-                // cpp caches TIC intensities as BinaryData<float> (MassHunterData.cpp:144)
-                // and assigns them straight into the mzML double array, so every value it
-                // writes is float-rounded. Keeping the SDK double left all eight
-                // single-diff Agilent files off by ~5e-08 relative - float32 epsilon.
-                intensities.Add((float)rec.Tic);
-                msLevels.Add(level);
-            }
-        }
-        c.DefaultArrayLength = times.Count;
+        double[] times = _raw.GetTicTimes(onlyMs1);
+        float[] intensities = _raw.GetTicIntensities(onlyMs1);
+        int n = Math.Min(times.Length, intensities.Length);
+        c.DefaultArrayLength = n;
         // cpp ChromatogramList_Agilent.cpp:109-128 (MS_TIC_chromatogram) always calls
         // setTimeIntensityArrays and emplaces the "ms level" integer array whenever binary data
         // is requested, so the TIC carries time/intensity/ms-level arrays even when empty. When
@@ -360,25 +309,53 @@ public sealed class ChromatogramList_Agilent : ChromatogramListBase
         // legitimately empty, but the arrays must still exist: pwiz.ProteowizardWrapper
         // .MsDataFileImpl.GetChromatogram dereferences GetTimeArray().Data unconditionally (and
         // has an explicit empty-MS1-TIC placeholder path), so a missing time array throws
-        // NullReferenceException on import. Guarding on times.Count > 0 dropped the arrays.
+        // NullReferenceException on import. Guarding this block on n > 0 dropped the arrays.
         if (getBinaryData)
         {
             var t = new BinaryDataArray();
             t.Set(CVID.MS_time_array, "", CVID.UO_minute);
-            t.Data.AddRange(times);
+            for (int i = 0; i < n; i++) t.Data.Add(times[i]);
             var y = new BinaryDataArray();
             y.Set(CVID.MS_intensity_array, "", CVID.MS_number_of_detector_counts);
-            y.Data.AddRange(intensities);
+            // cpp holds the TIC intensities as BinaryData<float> and assigns them straight into
+            // the mzML double array, so every value it writes is float-widened, not the SDK's
+            // full-precision double.
+            for (int i = 0; i < n; i++) y.Data.Add(intensities[i]);
             c.BinaryDataArrays.Add(t);
             c.BinaryDataArrays.Add(y);
 
-            // ms-level integer array — cpp emits this on the TIC so consumers can filter by
-            // MS level without re-walking the scan list.
+            // ms-level integer array — cpp ChromatogramList_Agilent.cpp:116-126 emits this on the
+            // TIC so consumers can filter by MS level without re-walking the scan list. Under
+            // globalChromatogramsAreMs1Only the array is a constant 1; otherwise it is the MS
+            // level of scan record i, indexed positionally against the TIC points.
             var ms = new IntegerDataArray();
             ms.Set(CVID.MS_non_standard_data_array, "ms level", CVID.UO_dimensionless_unit);
-            ms.Data.AddRange(msLevels);
+            for (int i = 0; i < n; i++) ms.Data.Add(onlyMs1 ? 1L : GetMsLevel(i));
             c.IntegerDataArrays.Add(ms);
         }
+    }
+
+    /// <summary>MS level of scan record <paramref name="row"/>, as cpp's
+    /// <c>rawfile_-&gt;getScanRecord(i)-&gt;getMSLevel()</c>. IM files route through MIDAC frame
+    /// info (cpp <c>MidacScanRecord::getMSLevel</c>, MidacData.cpp:356-359); everything else
+    /// through the MassSpec SDK scan record. Defaults to 1 when the SDK refuses the row, which is
+    /// what cpp's zero-initialized entry would have been for an unreadable record.</summary>
+    private long GetMsLevel(int row)
+    {
+        if (_raw.HasIonMobilityData)
+        {
+            var reader = _raw.ImsReader;
+            if (reader is null) return 1;
+            try
+            {
+                var details = reader.FrameInfo(row + 1)?.SpectrumDetails;
+                if (details is null) return 1;
+                return details.MsLevel == MidacMsLevel.MSMS ? 2L : 1L;
+            }
+            catch { return 1; }
+        }
+        try { return _raw.GetScanRecord(row).MSLevel == MSLevel.MSMS ? 2L : 1L; }
+        catch { return 1; }
     }
 
     private void FillSignal(Chromatogram c, IndexEntry ie, bool getBinaryData)

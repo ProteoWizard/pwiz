@@ -129,7 +129,12 @@ public sealed class SpectrumList_Shimadzu : SpectrumListBase, IVendorCentroiding
         // verbatim either way (SpectrumList_Shimadzu.cpp:145-146 — `if (spectrum->getMinX() > 0)
         // scanWindows.push_back(ScanWindow(getMinX(), getMaxX()))`). Mirror that: emit when
         // StartMz is non-zero, regardless of relative ordering, and let the consumer interpret.
-        var eventInfo = _raw.TryGetEventInfo((short)info.Event);
+        //
+        // The event record is looked up by the event number the SDK stamped on the spectrum
+        // object, not the one GetMSSpectrumInfo reports: cpp builds SpectrumImpl with
+        // getEventInfo(spectrum->EventNo) (ShimadzuReader.cpp:414) and every event-scoped value
+        // below (scan window via getMinX/getMaxX, isolation half-width) reads that same record.
+        var eventInfo = _raw.TryGetEventInfo(sdkSpec.EventNo);
         if (eventInfo is not null && eventInfo.StartMz > 0)
         {
             double minX = eventInfo.StartMz * ShimadzuRawData.MassMultiplier;
@@ -137,34 +142,59 @@ public sealed class SpectrumList_Shimadzu : SpectrumListBase, IVendorCentroiding
             scan.ScanWindows.Add(new ScanWindow(minX, maxX, CVID.MS_m_z));
         }
 
-        // Precursor metadata for MS2 — cpp SpectrumList_Shimadzu.cpp:174-203 wires isolation
-        // window from getIsolationInfo (Q transmission width) when present, otherwise from the
-        // selectedIon m/z directly. Charge comes from the file's DDA precursor table.
-        if (info.MsLevel > 1 || sdkSpec.PrecursorMzList.Count > 0)
+        // Precursor m/z. cpp ShimadzuReader.cpp:113-132 (SpectrumImpl ctor) resolves it in three
+        // tiers, in this exact order:
+        //   1. the file's DDA precursor table (GetPrecursorList), which also carries the charge;
+        //   2. the per-spectrum PrecursorMzList[0], which overrides tier 1 when it is non-zero;
+        //   3. MassSpectrumObject.AcqModeMz — but ONLY when tier 1 produced nothing.
+        // Tier 3 is why cpp emits a precursorList on product-ion / precursor-ion scans that the
+        // SDK still reports as msLevel 1 (a Q3 scan with Q1 parked at a fixed mass): AcqModeMz
+        // is that parked Q1 mass. Omitting it left 20200506002_Q3scan_001.lcd and Test file.lcd
+        // with no precursorList at all on those scans. The old code also used
+        // GetMSSpectrumInfo's precursorMass as the tier-2 fallback, which cpp never consults for
+        // spectrum metadata (it only fills SpectrumInfo::precursorMz, unused by the writer).
+        bool hasDdaPrecursor = _raw.TryGetPrecursorInfo(ie.ScanNumber, out double precursorMz, out int precursorCharge);
+        if (sdkSpec.PrecursorMzList.Count > 0 && sdkSpec.PrecursorMzList[0] > 0)
+            precursorMz = sdkSpec.PrecursorMzList[0] * ShimadzuRawData.MassMultiplier;
+        else if (!hasDdaPrecursor)
+            precursorMz = sdkSpec.AcqModeMz * ShimadzuRawData.MassMultiplier;
+
+        // cpp SpectrumList_Shimadzu.cpp:174-203 gates the whole block on getHasPrecursorInfo(),
+        // i.e. `precursorMz_ > 0` alone (ShimadzuReader.cpp:155) — there is no msLevel
+        // precondition, which is the other half of the Q3-scan gap above.
+        if (precursorMz > 0)
         {
-            double selectedMz = 0;
-            if (sdkSpec.PrecursorMzList.Count > 0 && sdkSpec.PrecursorMzList[0] > 0)
-                selectedMz = sdkSpec.PrecursorMzList[0] * ShimadzuRawData.MassMultiplier;
-            else if (info.PrecursorMz > 0)
-                selectedMz = info.PrecursorMz;
+            var precursor = new Precursor();
 
-            if (selectedMz > 0)
+            // Isolation window. cpp ShimadzuReader.cpp:130-131 derives the half-width from the
+            // event's QTransmissionMzWidthNmzManual (nano-m/z units, hence PrecursorMzMultiplier)
+            // divided by 2, and getHasIsolationInfo() is `half-width > 0`. When it is set, cpp
+            // writes target + symmetric lower/upper offsets and takes the selected-ion m/z from
+            // the window center (SpectrumList_Shimadzu.cpp:181-189, where centerMz is just
+            // precursorMz_ again); otherwise it writes the bare target m/z (line 191). No file in
+            // the current corpus reports a non-zero width, so this branch is ported for fidelity
+            // rather than to fix an observed diff.
+            double isolationHalfWidth = eventInfo is null
+                ? 0
+                : eventInfo.QTransmissionMzWidthNmzManual * ShimadzuRawData.PrecursorMzMultiplier / 2;
+
+            precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, precursorMz, CVID.MS_m_z);
+            if (isolationHalfWidth > 0)
             {
-                var precursor = new Precursor();
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, selectedMz, CVID.MS_m_z);
-
-                var selected = new SelectedIon();
-                selected.Set(CVID.MS_selected_ion_m_z, selectedMz, CVID.MS_m_z);
-
-                if (_raw.TryGetPrecursorInfo(ie.ScanNumber, out _, out int charge) && charge > 0)
-                    selected.Set(CVID.MS_charge_state, charge);
-
-                // cpp assumes beam-type CID for QqTOF.
-                precursor.Activation.Set(CVID.MS_beam_type_collision_induced_dissociation);
-
-                precursor.SelectedIons.Add(selected);
-                spec.Precursors.Add(precursor);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, isolationHalfWidth, CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, isolationHalfWidth, CVID.MS_m_z);
             }
+
+            var selected = new SelectedIon();
+            selected.Set(CVID.MS_selected_ion_m_z, precursorMz, CVID.MS_m_z);
+            if (precursorCharge > 0)
+                selected.Set(CVID.MS_charge_state, precursorCharge);
+
+            // cpp assumes beam-type CID for QqTOF.
+            precursor.Activation.Set(CVID.MS_beam_type_collision_induced_dissociation);
+
+            precursor.SelectedIons.Add(selected);
+            spec.Precursors.Add(precursor);
         }
 
         // Base peak / TIC come from the scan record directly. cpp SpectrumList_Shimadzu.cpp:227-230.
@@ -193,7 +223,12 @@ public sealed class SpectrumList_Shimadzu : SpectrumListBase, IVendorCentroiding
         int totalPoints = isCentroid ? sdkSpec.CentroidList.Count : sdkSpec.ProfileList.Count;
         spec.DefaultArrayLength = totalPoints;
 
-        if (getBinaryData && totalPoints > 0)
+        // cpp SpectrumList_Shimadzu.cpp:232-242 calls setMZIntensityArrays() unconditionally
+        // whenever binary data was asked for, then copies whatever the SDK returns — so a scan
+        // with zero points still gets a <binaryDataArrayList count="2"> with two empty arrays.
+        // Guarding on totalPoints > 0 dropped that element entirely, which is what made 59
+        // empty MS2 scans in 20190607_NM16.lcd short a child versus cpp.
+        if (getBinaryData)
         {
             var mz = new double[totalPoints];
             var intensity = new double[totalPoints];

@@ -50,6 +50,55 @@ public sealed class AgilentRawData : IDisposable
     /// <summary>Top-level instrument family / device type from the file (Q-TOF / TQ / etc.).</summary>
     public DeviceType DeviceType => MSScanFileInformation.DeviceType;
 
+    // KNOWN C#-SIDE SURPLUS (deliberate): on ion-mobility files this port emits an
+    // `MS:1000529 instrument serial number` that the cpp reference mzML does not carry.
+    //
+    // cpp is not choosing to omit it. `MassHunterData::create` hands an IM .d to
+    // `MidacDataImpl`, whose `getDeviceType()` is a hard-coded `DeviceType_Unknown`
+    // (MidacData.cpp:198-201) because MIDAC exposes no device table. `getDeviceSerialNumber`
+    // then searches AcqData/Devices.xml for a device whose Type equals that, i.e. searches for
+    // type 0, never matches, and returns nothing. Keying the lookup on the scan file's real
+    // device type instead (6 = QuadrupoleTimeOfFlight) matches the row and yields the serial
+    // the file genuinely carries - SG1812C101 on mulATM4, SG1928C201 on the Dorrestein file,
+    // and the placeholder SN123456 on the synthetic ImsSynth fixtures.
+    //
+    // Because these are real values read from the same Devices.xml cpp itself parses, this is
+    // extra correct data rather than a porting gap, and it is kept. The cost is that the
+    // affected IM files never compare byte-identical to cpp; that is the intended trade.
+
+    /// <summary>
+    /// Spectrum storage mode (profile / centroid / mixed) as cpp's
+    /// <c>MassHunterDataImpl::getSpectraFormat</c> (<c>MassHunterData.cpp:514-517</c>) or
+    /// <c>MidacDataImpl::getSpectraFormat</c> (<c>MidacData.cpp:244-247</c>) reports it.
+    /// </summary>
+    /// <remarks>
+    /// For ion-mobility files cpp reads MIDAC's <c>FileInfo.TfsMsDetails.MsStorageMode</c>, not
+    /// the MassSpec SDK's <c>MSScanFileInformation.SpectraFormat</c>; the two disagree, and the
+    /// mode is what <c>Reader_Agilent::fillInMetadata</c> turns into the fileContent
+    /// <c>centroid spectrum</c> / <c>profile spectrum</c> terms. Reading the MassSpec value on an
+    /// IM file dropped <c>MS:1000127 centroid spectrum</c> from mulATM4.d.DeMP.d and the
+    /// Dorrestein fixtures and added it, wrongly, to Test_BsaFromUimf.d.
+    /// Unspecified when MIDAC won't answer, which emits neither term - closer to cpp (which
+    /// throws) than silently substituting the other SDK's opinion.
+    /// </remarks>
+    public MSStorageMode SpectraFormat
+    {
+        get
+        {
+            if (HasIonMobilityData)
+            {
+                try
+                {
+                    var details = ImsReader?.FileInfo?.TfsMsDetails;
+                    if (details is not null) return (MSStorageMode)(int)details.MsStorageMode;
+                }
+                catch { /* fall through to Unspecified */ }
+                return MSStorageMode.Unspecified;
+            }
+            return MSScanFileInformation.SpectraFormat;
+        }
+    }
+
     private IMidacImsReader? _imsReader;
     private bool? _hasImsData;
     private IImsCcsInfoReader? _imsCcsReader;
@@ -182,9 +231,28 @@ public sealed class AgilentRawData : IDisposable
     }
 
     /// <summary>Friendly device name reported by the SDK (e.g. <c>"TandemQuadrupole"</c>).
-    /// Mirrors cpp <c>MassHunterDataImpl::getDeviceName</c>.</summary>
+    /// Mirrors cpp <c>MassHunterDataImpl::getDeviceName</c> for non-IM files.
+    /// <para>On ion mobility files cpp goes through <c>MidacDataImpl::getDeviceName</c>
+    /// (<c>MidacData.cpp:203</c>), which ignores <paramref name="deviceType"/> entirely and
+    /// reports MIDAC's <c>FileInfo.InstrumentName</c> - the name the file actually carries
+    /// ("IM-MS QTOF", "Instrument 1", "IMS 11"). The MassSpec SDK answers the same call with
+    /// the generic device-TYPE name ("QTOF"), so reading it here is not a formatting
+    /// difference but a different source, and it is what the reference mzMLs carry.</para></summary>
     public string GetDeviceName(DeviceType deviceType)
     {
+        if (HasIonMobilityData)
+        {
+            var ims = ImsReader;
+            if (ims is not null)
+            {
+                try
+                {
+                    var fi = ims.FileInfo;
+                    if (fi is not null) return fi.InstrumentName ?? string.Empty;
+                }
+                catch { /* fall through to MassSpec SDK */ }
+            }
+        }
         try { return FileInformation.GetDeviceName(deviceType) ?? string.Empty; }
         catch { return string.Empty; }
     }
@@ -338,7 +406,10 @@ public sealed class AgilentRawData : IDisposable
         InitializeChromatograms();
     }
 
+    private double[] _ticTimes = Array.Empty<double>();
+    private double[] _ticTimesMs1 = Array.Empty<double>();
     private float[] _ticIntensities = Array.Empty<float>();
+    private float[] _ticIntensitiesMs1 = Array.Empty<float>();
     private float[] _bpcIntensities = Array.Empty<float>();
 
     /// <summary>
@@ -351,8 +422,25 @@ public sealed class AgilentRawData : IDisposable
     public (float[] Tic, float[] Bpc) ChromatogramIntensities => (_ticIntensities, _bpcIntensities);
 
     /// <summary>
+    /// Run-level TIC time axis, in minutes. Port of cpp
+    /// <c>MassHunterDataImpl::getTicTimes</c> / <c>MidacDataImpl::getTicTimes</c>
+    /// (MassHunterData.cpp:546-549, MidacData.cpp:300-303). <paramref name="ms1Only"/> selects
+    /// the MS1-filtered variant that <c>globalChromatogramsAreMs1Only</c> asks for.
+    /// </summary>
+    public double[] GetTicTimes(bool ms1Only = false) => ms1Only ? _ticTimesMs1 : _ticTimes;
+
+    /// <summary>
+    /// Run-level TIC intensities, aligned with <see cref="GetTicTimes"/>. Port of cpp
+    /// <c>MassHunterDataImpl::getTicIntensities</c> / <c>MidacDataImpl::getTicIntensities</c>
+    /// (MassHunterData.cpp:556-559, MidacData.cpp:310-313). cpp holds these as
+    /// <c>BinaryData&lt;float&gt;</c>, so every value the mzML carries is float-rounded.
+    /// </summary>
+    public float[] GetTicIntensities(bool ms1Only = false) => ms1Only ? _ticIntensitiesMs1 : _ticIntensities;
+
+    /// <summary>
     /// Fetches the TIC/BPC arrays, mirroring cpp <c>MassHunterDataImpl</c>'s constructor
-    /// (<c>MassHunterData.cpp:330-344</c>).
+    /// (<c>MassHunterData.cpp:330-357</c>) or, for ion-mobility files, <c>MidacDataImpl</c>'s
+    /// (<c>MidacData.cpp:160-177</c>).
     /// </summary>
     /// <remarks>
     /// Done EAGERLY, at open, because it must happen before anything else queries
@@ -364,6 +452,12 @@ public sealed class AgilentRawData : IDisposable
     /// </remarks>
     private void InitializeChromatograms()
     {
+        if (HasIonMobilityData)
+        {
+            InitializeImsChromatograms();
+            return;
+        }
+
         // Fetched through a SEPARATE reader, not _reader, and that is a deliberate deviation
         // from cpp - which uses one reader for everything.
         //
@@ -393,11 +487,29 @@ public sealed class AgilentRawData : IDisposable
 
             filter.ChromatogramType = ChromType.TotalIon;
             var tic = chromReader.GetChromatogram(filter);
-            if (tic is { Length: > 0 }) _ticIntensities = tic[0].YArray ?? Array.Empty<float>();
+            if (tic is { Length: > 0 })
+            {
+                // Copy: the SDK hands back its own buffers and a later fetch on the same reader
+                // may recycle them. cpp's ToBinaryData copies too.
+                _ticTimes = CopyOrEmpty(tic[0].XArray);
+                _ticIntensities = CopyOrEmpty(tic[0].YArray);
+            }
 
             filter.ChromatogramType = ChromType.BasePeak;
             var bpc = chromReader.GetChromatogram(filter);
-            if (bpc is { Length: > 0 }) _bpcIntensities = bpc[0].YArray ?? Array.Empty<float>();
+            if (bpc is { Length: > 0 }) _bpcIntensities = CopyOrEmpty(bpc[0].YArray);
+
+            // MS1-only variants, in cpp's order (MassHunterData.cpp:347-357). Only the TIC pair
+            // is kept: nothing in the port consumes an MS1-only BPC, and cpp's own BPC accessor
+            // is called without the flag from SpectrumList_Agilent.
+            filter.MSLevelFilter = MSLevel.MS;
+            filter.ChromatogramType = ChromType.TotalIon;
+            var ticMs1 = chromReader.GetChromatogram(filter);
+            if (ticMs1 is { Length: > 0 })
+            {
+                _ticTimesMs1 = CopyOrEmpty(ticMs1[0].XArray);
+                _ticIntensitiesMs1 = CopyOrEmpty(ticMs1[0].YArray);
+            }
         }
         catch { /* leave empty; callers fall back to the scan record */ }
         finally
@@ -407,6 +519,59 @@ public sealed class AgilentRawData : IDisposable
                 try { chromReader.CloseDataFile(); } catch { }
             }
         }
+    }
+
+    private static T[] CopyOrEmpty<T>(T[]? source) => source is null || source.Length == 0
+        ? Array.Empty<T>()
+        : (T[])source.Clone();
+
+    /// <summary>
+    /// Ion-mobility TIC, per cpp <c>MidacDataImpl</c>'s constructor (MidacData.cpp:160-177): one
+    /// point per MIDAC frame, time = <c>FrameInfo(i+1).AcqTimeRange.Min</c>, intensity =
+    /// <c>FrameInfo(i+1).Tic</c>. The MS1-only variant keeps the frames whose collision energy is
+    /// zero - cpp splits on collision energy here, NOT on MS level, because an all-ions IM frame
+    /// is stored as MS1 with a non-zero CE and must not count as MS1 for the global chromatogram.
+    /// </summary>
+    private void InitializeImsChromatograms()
+    {
+        var reader = ImsReader;
+        if (reader is null) return;
+        try
+        {
+            int frames = reader.FileInfo?.NumFrames ?? 0;
+            if (frames <= 0) return;
+            var times = new double[frames];
+            var intensities = new float[frames];
+            var timesMs1 = new List<double>(frames);
+            var intensitiesMs1 = new List<float>(frames);
+            for (int i = 0; i < frames; i++)
+            {
+                IMidacFrameInfo? info = null;
+                try { info = reader.FrameInfo(i + 1); } catch { }
+                if (info is null) continue;
+                try { times[i] = info.AcqTimeRange?.Min ?? 0; } catch { }
+                try { intensities[i] = (float)info.Tic; } catch { }
+
+                // cpp MidacScanRecord::getCollisionEnergy (MidacData.cpp:406-415).
+                double collisionEnergy = 0;
+                try
+                {
+                    var energy = info.SpectrumDetails?.FragmentationEnergyRange;
+                    if (energy is not null) collisionEnergy = System.Math.Max(energy.Min, energy.Max);
+                }
+                catch { }
+                if (collisionEnergy == 0)
+                {
+                    timesMs1.Add(times[i]);
+                    intensitiesMs1.Add(intensities[i]);
+                }
+            }
+            _ticTimes = times;
+            _ticIntensities = intensities;
+            _ticTimesMs1 = timesMs1.ToArray();
+            _ticIntensitiesMs1 = intensitiesMs1.ToArray();
+        }
+        catch { /* leave empty; the TIC chromatogram comes out empty rather than wrong */ }
     }
 
     /// <summary>Returns the lightweight scan record for row <paramref name="rowIndex"/> (0-based).</summary>

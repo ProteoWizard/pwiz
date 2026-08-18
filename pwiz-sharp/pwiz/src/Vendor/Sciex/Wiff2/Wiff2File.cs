@@ -265,7 +265,7 @@ internal sealed class Wiff2Experiment : AbstractWiffExperiment
     {
         double scanTime = GetRetentionTime(cycle1Based);
         var sdkSpec = FetchSpectrumWithRetry(scanTime, addZeros, centroid);
-        return sdkSpec is null ? null : new Wiff2Spectrum(sdkSpec, _exp);
+        return sdkSpec is null ? null : new Wiff2Spectrum(sdkSpec, _exp, scanTime);
     }
 
     public override (double[] Times, double[] Intensities) GetBpc()
@@ -365,11 +365,13 @@ internal sealed class Wiff2Spectrum : AbstractWiffSpectrum
     private readonly IExperiment _exp;
     private readonly IPrecursor? _precursor;
     private readonly IIsolationWindow? _iso;
+    private readonly double _scanTime;
 
-    public Wiff2Spectrum(ISpectrum sdk, IExperiment exp)
+    public Wiff2Spectrum(ISpectrum sdk, IExperiment exp, double scanTime)
     {
         _sdk = sdk;
         _exp = exp;
+        _scanTime = scanTime;
         _precursor = sdk.Precursor;
         _iso = _precursor?.IsolationWindow;
     }
@@ -440,11 +442,12 @@ internal sealed class Wiff2Spectrum : AbstractWiffSpectrum
             : Math.Max(0, _iso.UpperOffset - _iso.IsolationWindowTarget);
     public override double ElectronKineticEnergy => _exp.ElectronKe ?? 0;
 
-    // wiff2 SDK doesn't surface a per-spectrum StartRT; cpp's WiffFile2 path falls
-    // back to the experiment-cycle RT, which the spectrum-list already plumbs as
-    // its primary scan_start_time. Returning 0 makes SpectrumList_Sciex skip the
-    // StartTimeMinutes override and keep the cycle RT for wiff2 spectra.
-    public override double StartTimeMinutes => 0;
+    // cpp WiffFile2.ipp:194 — `Spectrum2Impl::getStartTime() { return scanTime; }`, where
+    // scanTime is the cycle retention time the spectra read request was issued with. The wiff2
+    // SDK has no per-spectrum StartRT of its own, so this IS the spectrum's start time; report
+    // it here rather than leaving SpectrumList_Sciex to fall back to the experiment-cycle RT
+    // (cpp has no such fallback — see the note there).
+    public override double StartTimeMinutes => _scanTime;
 
     // Per the existing comment in SpectrumList_Sciex, the wiff2 SDK doesn't expose
     // per-cycle base-peak metadata; cpp emits these only for legacy WIFF.

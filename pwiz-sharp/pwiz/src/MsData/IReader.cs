@@ -13,6 +13,45 @@ public sealed class ReaderConfig
     public bool UnknownFormatIsError { get; set; } = true;
 
     /// <summary>
+    /// When true, a vendor file whose instrument metadata cannot be resolved is an error rather
+    /// than something to convert with a guessed instrument. Port of
+    /// <c>pwiz::msdata::Reader::Config::unknownInstrumentIsError</c> (<c>Reader.cpp:83-88</c>);
+    /// msconvert exposes the inverse as <c>--ignoreUnknownInstrumentError</c>.
+    /// </summary>
+    /// <remarks>
+    /// Defaults to FALSE, as cpp does (<c>Reader.cpp:47</c>). Only msconvert turns it on, by
+    /// negating its own flag (<c>msconvert.cpp:507-508</c>, mirrored in
+    /// <c>Converter.BuildReaderConfig</c>) - a conversion wants the strict behaviour, because a
+    /// silently-substituted instrument is worse than a failed conversion there: downstream tools
+    /// key off the instrument configuration and a plausible-but-wrong model propagates unnoticed.
+    /// Every other consumer - Skyline, the hosted C API - gets cpp's library default, where an
+    /// unresolved instrument is a stderr warning and the read continues with whatever the reader
+    /// could determine. Defaulting this to true instead would hard-fail those callers on files
+    /// cpp and net472 open without complaint.
+    /// </remarks>
+    public bool UnknownInstrumentIsError { get; set; }
+
+    /// <summary>
+    /// Reports a piece of instrument metadata the reader could not resolve: throws when
+    /// <see cref="UnknownInstrumentIsError"/> is set, otherwise writes the message to stderr
+    /// and returns so the caller can carry on with a fallback.
+    /// </summary>
+    /// <remarks>
+    /// Port of <c>Reader::Config::instrumentMetadataError</c>, including cpp's choice to write
+    /// the non-fatal form straight to stderr rather than through a log sink — msconvert-sharp's
+    /// diagnostics go to the same place, and matching keeps the two CLIs' output comparable.
+    /// The appended hint names the msconvert flag, exactly as cpp's does, because that is the
+    /// only actionable thing a user can do with this message.
+    /// </remarks>
+    public void InstrumentMetadataError(string message)
+    {
+        if (UnknownInstrumentIsError)
+            throw new IOException(message +
+                "; if you want to convert the file anyway, use the ignoreUnknownInstrumentError flag");
+        Console.Error.WriteLine(message);
+    }
+
+    /// <summary>
     /// When non-zero, the reader only emits spectra at this MS level (1 or 2). Saves a lot of
     /// work when downstream consumers only need MS1s (deisotoping) or MS2s (identification).
     /// Port of <c>pwiz::msdata::Reader::Config::preferOnlyMsLevel</c>.

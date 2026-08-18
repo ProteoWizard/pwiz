@@ -142,7 +142,7 @@ public sealed class Reader_Shimadzu : IReader
 
         // Instrument config: cpp emits one per (parsed) instrument model. We mirror that — the
         // model is parsed from raw.SystemName via the same lookup table the cpp port uses.
-        var ic = BuildInstrumentConfiguration(raw, shimadzuSoftware, srmAsSpectra: srmAsSpectra || transitions.Count > 0);
+        var ic = BuildInstrumentConfiguration(raw, shimadzuSoftware, srmAsSpectra: srmAsSpectra || transitions.Count > 0, config);
         result.InstrumentConfigurations.Add(ic);
         result.Run.DefaultInstrumentConfiguration = ic;
 
@@ -178,17 +178,25 @@ public sealed class Reader_Shimadzu : IReader
     }
 
     private static InstrumentConfiguration BuildInstrumentConfiguration(
-        ShimadzuRawData raw, Software acquisitionSoftware, bool srmAsSpectra)
+        ShimadzuRawData raw, Software acquisitionSoftware, bool srmAsSpectra, ReaderConfig config)
     {
         var ic = new InstrumentConfiguration("IC1") { Software = acquisitionSoftware };
 
         // Instrument model: parse from system-name string. cpp Reader_Shimadzu.cpp:82-88 sets
         // the model CVID directly on the IC and falls back to MS_Shimadzu_instrument_model with
-        // a "system name" userParam when the lookup fails.
+        // a "system name" userParam when the lookup fails -- and, unlike Thermo, treats that
+        // fallback as an instrumentMetadataError unconditionally (no emptiness precondition).
         var modelCvid = TranslateInstrumentModel(raw.SystemName);
         ic.Set(modelCvid);
-        if (modelCvid == CVID.MS_Shimadzu_instrument_model && !string.IsNullOrEmpty(raw.SystemName))
-            ic.UserParams.Add(new UserParam("system name", raw.SystemName));
+        if (modelCvid == CVID.MS_Shimadzu_instrument_model)
+        {
+            config.InstrumentMetadataError(
+                "unable to parse instrument model; make sure you are using the latest version of " +
+                "ProteoWizard; if you are, please report this error to the ProteoWizard developers " +
+                $"with this information: systemName({raw.SystemName})");
+            if (!string.IsNullOrEmpty(raw.SystemName))
+                ic.UserParams.Add(new UserParam("system name", raw.SystemName));
+        }
 
         // Source: cpp always emits ESI for Shimadzu LCMS data.
         ic.ComponentList.Add(new Component(CVID.MS_ESI, 1));

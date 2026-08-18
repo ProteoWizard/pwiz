@@ -464,6 +464,11 @@ public sealed class Converter
         // Reader::Config::ignoreZeroIntensityPoints; the two names differ, which is exactly
         // why this copy was missing and the option was dead wiring for every vendor.
         IgnoreZeroIntensityPoints = _config.IgnoreMissingZeroSamples,
+        // Inverse semantics, exactly as cpp: the CLI flag says "ignore", the reader config says
+        // "is error". cpp msconvert.cpp:507 does the same negation after parsing. This copy was
+        // missing, so --ignoreUnknownInstrumentError parsed but never reached a reader, and
+        // msconvert-sharp converted unknown-instrument files that msconvert rejects.
+        UnknownInstrumentIsError = !_config.IgnoreUnknownInstrumentError,
         // cpp msconvert's Config derives from Reader::Config, so --acceptZeroLengthSpectra binds
         // straight onto the reader's field (msconvert.cpp:450-451). Here the two configs are
         // separate types, so the copy has to be explicit; without it the flag Skyline passes on

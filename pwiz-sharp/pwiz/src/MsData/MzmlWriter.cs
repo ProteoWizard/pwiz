@@ -875,9 +875,16 @@ public sealed class MzmlWriter
             // make the ref unresolvable by msdiff and by every cpp pwiz reader.
             w.WriteAttributeString("spectrumRef", p.SpectrumId);
 
-        w.WriteStartElement("isolationWindow");
-        MzmlXml.WriteParams(w, p.IsolationWindow);
-        w.WriteEndElement();
+        // cpp IO.cpp:1216 guards the element on `!precursor.isolationWindow.empty()`; the
+        // schema's minOccurs is 0. Writing it unconditionally put a bare `<isolationWindow />`
+        // on every precursor that carries only an activation - e.g. an Agilent precursor-ion
+        // scan, where the isolation window belongs to the product, not the precursor.
+        if (!p.IsolationWindow.IsEmpty)
+        {
+            w.WriteStartElement("isolationWindow");
+            MzmlXml.WriteParams(w, p.IsolationWindow);
+            w.WriteEndElement();
+        }
 
         if (p.SelectedIons.Count > 0)
         {
@@ -902,9 +909,13 @@ public sealed class MzmlWriter
     private static void WriteProduct(XmlWriter w, Product p)
     {
         w.WriteStartElement("product");
-        w.WriteStartElement("isolationWindow");
-        MzmlXml.WriteParams(w, p.IsolationWindow);
-        w.WriteEndElement();
+        // Same guard as the precursor, per cpp IO.cpp:1339.
+        if (!p.IsolationWindow.IsEmpty)
+        {
+            w.WriteStartElement("isolationWindow");
+            MzmlXml.WriteParams(w, p.IsolationWindow);
+            w.WriteEndElement();
+        }
         w.WriteEndElement();
     }
 

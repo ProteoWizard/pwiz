@@ -132,7 +132,10 @@ public sealed class Reader_Agilent : IReader
         {
             try
             {
-                var storage = raw.MSScanFileInformation.SpectraFormat;
+                // AgilentRawData.SpectraFormat, not MSScanFileInformation.SpectraFormat: cpp
+                // reads MIDAC's TfsMsDetails.MsStorageMode on ion-mobility files
+                // (MidacData.cpp:244-247) and the MassSpec SDK's value disagrees there.
+                var storage = raw.SpectraFormat;
                 if (storage == global::Agilent.MassSpectrometry.DataAnalysis.MSStorageMode.Mixed)
                 {
                     result.FileDescription.FileContent.Set(CVID.MS_centroid_spectrum);
@@ -206,9 +209,19 @@ public sealed class Reader_Agilent : IReader
         //   - cvParam: instrument serial number = SerialNumber from AcqData/Devices.xml
         var commonInstrumentParams = new ParamGroup("CommonInstrumentParams");
         commonInstrumentParams.Set(CVID.MS_Agilent_instrument_model);
-        var deviceName = raw.GetDeviceName(raw.DeviceType);
-        if (!string.IsNullOrEmpty(deviceName))
-            commonInstrumentParams.UserParams.Add(new UserParam("instrument model", deviceName));
+        // cpp pushes this userParam unconditionally whenever the model CVID is the generic
+        // Agilent one (Reader_Agilent.cpp:86-87), empty value included - so no non-empty guard.
+        commonInstrumentParams.UserParams.Add(
+            new UserParam("instrument model", raw.GetDeviceName(raw.DeviceType)));
+        // The device name above is free text (an operator-assigned name like "Instrument 1"),
+        // but the device type is a reliable SDK enum, and the CV can now express it as an
+        // instrument class. Mirrors cpp translateAsInstrumentClass.
+        var instrumentClass = TranslateInstrumentClass(raw.DeviceType, raw.HasIonMobilityData);
+        if (instrumentClass != CVID.CVID_Unknown)
+            commonInstrumentParams.Set(instrumentClass);
+        // DeviceType (the scan file's real type), NOT the Unknown that cpp's MidacDataImpl
+        // reports for ion-mobility files. This deliberately emits a serial number cpp omits;
+        // see the KNOWN C#-SIDE SURPLUS note on AgilentRawData.DeviceType for why that is kept.
         var serialNumber = raw.GetDeviceSerialNumber(raw.DeviceType);
         if (!string.IsNullOrEmpty(serialNumber))
             commonInstrumentParams.Set(CVID.MS_instrument_serial_number, serialNumber);
@@ -322,6 +335,26 @@ public sealed class Reader_Agilent : IReader
                 break;
         }
         return ic;
+    }
+
+    /// <summary>Mirrors cpp <c>translateAsInstrumentClass</c>. The MS:1003761 instrument class
+    /// branch of the CV postdates this reader; before it existed the SDK device type had
+    /// nowhere to go but the free-text "instrument model" userParam.</summary>
+    internal static CVID TranslateInstrumentClass(AgDeviceType deviceType, bool hasIonMobilityData)
+    {
+        // MIDAC exposes no device table, so cpp's getDeviceType() is a hard-coded Unknown for
+        // ion mobility files; that hardware is always a quadrupole IMS-TOF.
+        if (hasIonMobilityData) return CVID.MS_quadrupole_ion_mobility_time_of_flight;
+
+        switch (deviceType)
+        {
+            case AgDeviceType.Quadrupole: return CVID.MS_quadrupole;
+            case AgDeviceType.IonTrap: return CVID.MS_ion_trap;
+            case AgDeviceType.TimeOfFlight: return CVID.MS_time_of_flight;
+            case AgDeviceType.TandemQuadrupole: return CVID.MS_triple_quadrupole;
+            case AgDeviceType.QuadrupoleTimeOfFlight: return CVID.MS_quadrupole_time_of_flight;
+            default: return CVID.CVID_Unknown;
+        }
     }
 
     /// <summary>Mirrors cpp <c>translateAsIonizationType</c>.</summary>
