@@ -53,6 +53,14 @@ class PWIZ_API_DECL ListBase
 };
 
 
+/// Whether the peaks run along some axis other than m/z - a combined ion mobility scan, a scanning
+/// quadrupole, a diode-array wavelength trace, or an SRM/SIM spectrum whose points are transitions
+/// listed in method order rather than peaks along a continuum. Such a spectrum's peak order means
+/// nothing about whether its writer sorts by m/z, and forcing it into ascending order would destroy
+/// the only order it has. See the definition in SpectrumListBase.cpp for the full rationale.
+PWIZ_API_DECL bool hasNonMzOrderingAxis(const Spectrum& spectrum);
+
+
 /// common functionality for base SpectrumList implementations
 class PWIZ_API_DECL SpectrumListBase : public SpectrumList
 {

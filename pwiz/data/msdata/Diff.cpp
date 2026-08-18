@@ -41,21 +41,27 @@ namespace diff_impl {
 
 namespace {
 
-/// Copies of the two primary arrays with their peaks put in ascending m/z order, so that two sides
+/// Copies of the two primary arrays with their peaks put in a canonical order, so that two sides
 /// can be compared as sets of peaks rather than as ordered lists - see DiffConfig::ignorePeakOrder.
-/// Stable, matching SpectrumListBase::ensureMzAscending, which matters because a combined ion
-/// mobility spectrum repeats m/z values across bins: an unstable sort could order those ties
-/// differently on each side and report a difference that is not there.
-vector<BinaryDataArrayPtr> peaksInMzOrder(const vector<BinaryDataArrayPtr>& arrays)
+///
+/// Ordered by m/z and then by intensity, not by m/z alone. A combined ion mobility spectrum repeats
+/// the same m/z across mobility bins, and sorting those ties by m/z alone leaves their order down
+/// to whatever order each side happened to arrive in - which is not the same on both sides. The two
+/// m/z arrays then agree while the intensities sit against the wrong peaks, reported as an
+/// intensity difference at a single index. Including intensity in the key makes the order depend
+/// only on the peaks themselves, so identical sets of peaks always normalize identically.
+vector<BinaryDataArrayPtr> peaksInCanonicalOrder(const vector<BinaryDataArrayPtr>& arrays)
 {
     if (arrays.size() < 2 || !arrays[0].get() || !arrays[1].get() ||
         arrays[0]->data.size() != arrays[1]->data.size())
         return arrays;
 
     const pwiz::util::BinaryData<double>& mzs = arrays[0]->data;
+    const pwiz::util::BinaryData<double>& intensities = arrays[1]->data;
     vector<size_t> order(mzs.size());
     std::iota(order.begin(), order.end(), size_t(0));
-    std::stable_sort(order.begin(), order.end(), [&mzs](size_t x, size_t y) {return mzs[x] < mzs[y];});
+    std::sort(order.begin(), order.end(), [&mzs, &intensities](size_t x, size_t y)
+              {return mzs[x] != mzs[y] ? mzs[x] < mzs[y] : intensities[x] < intensities[y];});
 
     vector<BinaryDataArrayPtr> result;
     for (size_t i = 0; i < 2; ++i)
@@ -544,8 +550,8 @@ void diff(const Spectrum& a,
             vector<BinaryDataArrayPtr> bBDA(b.binaryDataArrayPtrs.begin(), b.binaryDataArrayPtrs.begin() + 2);
             if (config.ignorePeakOrder)
             {
-                aBDA = peaksInMzOrder(aBDA);
-                bBDA = peaksInMzOrder(bBDA);
+                aBDA = peaksInCanonicalOrder(aBDA);
+                bBDA = peaksInCanonicalOrder(bBDA);
             }
             diff(aBDA, bBDA,
                  a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs,

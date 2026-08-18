@@ -40,35 +40,6 @@ namespace {
 const size_t MIN_PEAK_COUNT_FOR_MZ_SORT_CHECK = 10;
 
 
-/// Whether the peaks run along some axis other than m/z, in which case they must be left exactly
-/// as they are and say nothing about the writer.
-///
-/// Two ways that happens. The mobility axis of a combined ion mobility scan, or a scanning
-/// quadrupole position: m/z then ascends only within each block, and a global sort would destroy
-/// the structure rather than repair it. Or the x-axis is not m/z at all - Spectrum::getMZArray()
-/// also returns a wavelength array, which the Agilent, Thermo and Bruker readers use for a
-/// diode-array trace, and judging a UV trace as if it were m/z would let it settle the verdict for
-/// every real spectrum in the file.
-///
-/// Asked by name, not by counting arrays: counting cannot tell an ordering axis from an ordinary
-/// per-peak extra like signal-to-noise, and would refuse to repair any spectrum carrying one.
-/// hasCVParamChild covers the whole ion mobility family and, like hasCVParam, looks into
-/// referenceableParamGroups - mzML writers commonly factor the repeated binaryDataArray terms out
-/// into one, where a plain scan of cvParams would miss them.
-bool hasNonMzOrderingAxis(const pwiz::msdata::Spectrum& spectrum)
-{
-    using namespace pwiz::cv;
-
-    // the ion mobility term is asked for with its children, which covers the whole family - mean,
-    // raw, inverse reduced, deconvoluted; getArrayByCVID looks into referenceableParamGroups too,
-    // where mzML writers commonly factor out the repeated binaryDataArray terms
-    return spectrum.getArrayByCVID(MS_ion_mobility_array, true).get() != NULL ||
-           spectrum.getArrayByCVID(MS_scanning_quadrupole_position_lower_bound_m_z_array).get() != NULL ||
-           spectrum.getArrayByCVID(MS_scanning_quadrupole_position_upper_bound_m_z_array).get() != NULL ||
-           spectrum.getArrayByCVID(MS_wavelength_array).get() != NULL;
-}
-
-
 /// One array gathered into the given permutation of peak indexes, ready to be swapped in.
 template <typename T>
 std::vector<T> permuted(const std::vector<size_t>& order, const pwiz::util::BinaryData<T>& data)
@@ -80,6 +51,43 @@ std::vector<T> permuted(const std::vector<size_t>& order, const pwiz::util::Bina
 }
 
 } // namespace
+
+/// Whether the peaks run along some axis other than m/z, in which case they must be left exactly
+/// as they are and say nothing about the writer.
+///
+/// Three ways that happens. The mobility axis of a combined ion mobility scan, or a scanning
+/// quadrupole position: m/z then ascends only within each block, and a global sort would destroy
+/// the structure rather than repair it. The x-axis is not m/z at all - Spectrum::getMZArray()
+/// also returns a wavelength array, which the Agilent, Thermo and Bruker readers use for a
+/// diode-array trace, and judging a UV trace as if it were m/z would let it settle the verdict for
+/// every real spectrum in the file. Or each point is a transition rather than a peak - an SRM or
+/// SIM spectrum lists one point per transition in the order the method defined them, which is the
+/// order that matters, and the x-axis values are just the transitions' target m/z, not a scan
+/// across a continuum; nothing about that order is wrong, so there is nothing to repair.
+///
+/// Asked by name, not by counting arrays: counting cannot tell an ordering axis from an ordinary
+/// per-peak extra like signal-to-noise, and would refuse to repair any spectrum carrying one.
+/// hasCVParamChild covers the whole ion mobility family and, like hasCVParam, looks into
+/// referenceableParamGroups - mzML writers commonly factor the repeated binaryDataArray terms out
+/// into one, where a plain scan of cvParams would miss them.
+///
+/// Exported (not file-local) because the same question - does this spectrum's peak order mean
+/// anything - is asked again outside this file, by tests checking that a round trip preserved
+/// ascending m/z order everywhere it is expected to hold.
+PWIZ_API_DECL bool pwiz::msdata::hasNonMzOrderingAxis(const Spectrum& spectrum)
+{
+    using namespace pwiz::cv;
+
+    // the ion mobility term is asked for with its children, which covers the whole family - mean,
+    // raw, inverse reduced, deconvoluted; getArrayByCVID looks into referenceableParamGroups too,
+    // where mzML writers commonly factor out the repeated binaryDataArray terms
+    return spectrum.getArrayByCVID(MS_ion_mobility_array, true).get() != NULL ||
+           spectrum.getArrayByCVID(MS_scanning_quadrupole_position_lower_bound_m_z_array).get() != NULL ||
+           spectrum.getArrayByCVID(MS_scanning_quadrupole_position_upper_bound_m_z_array).get() != NULL ||
+           spectrum.getArrayByCVID(MS_wavelength_array).get() != NULL ||
+           spectrum.hasCVParam(MS_SRM_spectrum) ||
+           spectrum.hasCVParam(MS_SIM_spectrum);
+}
 
 PWIZ_API_DECL void pwiz::msdata::ListBase::warn_once(const char * msg) const
 {

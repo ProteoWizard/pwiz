@@ -281,6 +281,46 @@ string headStream(istream& is, size_t maxLength)
 }
 
 
+/// Every spectrum of a round trip really came back in ascending m/z order.
+///
+/// The companion to DiffConfig::ignorePeakOrder. That flag lets a format which drops the mobility
+/// array compare equal despite presenting its peaks in a different order; on its own it would
+/// accept any permutation whatsoever, including a scrambled one. This is what pins the order down.
+void assertMzAscending(const MSData& msd, const string& format)
+{
+    if (!msd.run.spectrumListPtr.get())
+        return;
+
+    for (size_t i = 0, end = msd.run.spectrumListPtr->size(); i < end; ++i)
+    {
+        SpectrumPtr s = msd.run.spectrumListPtr->spectrum(i, true);
+        if (!s.get() || !s->getMZArray().get() || hasNonMzOrderingAxis(*s))
+            continue;
+        const BinaryData<double>& mzs = s->getMZArray()->data;
+        if (!std::is_sorted(mzs.begin(), mzs.end()))
+            throw runtime_error(unit_assert_message(__FILE__, __LINE__,
+                (format + " spectrum " + lexical_cast<string>(i) + " (\"" + s->id +
+                 "\") is not in ascending m/z order").c_str()));
+    }
+}
+
+
+/// An mz5 configuration that stores m/z verbatim.
+///
+/// mz5 delta encodes m/z by default, and that only inverts exactly while m/z ascends. A combined ion
+/// mobility spectrum's does not - it drops back to the low end of the range at every mobility bin -
+/// so the values come back a few ulps out, and peaks that shared an m/z going in no longer share one
+/// coming out. The peak-set comparisons below depend on exactly that, since they normalize each side
+/// by sorting on m/z. The reader is what these tests are about rather than mz5's compression scheme,
+/// so take the encoding out of the picture. Serializer_mz5_Test covers the encoding itself.
+pwiz::msdata::mz5::Configuration_mz5 losslessMz5Config()
+{
+    pwiz::msdata::mz5::Configuration_mz5 config;
+    config.setTranslating(false);
+    return config;
+}
+
+
 // filters out non-MSn spectra, MS1 spectra, and filters the metadata from MSn spectra
 class SpectrumList_MGF_Filter : public SpectrumListWrapper
 {
@@ -457,7 +497,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             {
                 TemporaryFile targetResultFilename_mz5(targetResultFilename.filename().replace_extension().string(), ".mz5");
                 MSData msd_mz5;
-                Serializer_mz5 serializer_mz5;
+                Serializer_mz5 serializer_mz5(losslessMz5Config());
                 serializer_mz5.write(targetResultFilename_mz5.path().string(), vendorMsd);
                 serializer_mz5.read(targetResultFilename_mz5.path().string(), msd_mz5);
 
@@ -477,19 +517,8 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                 if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
                 unit_assert(!diff_mz5);
 
-                // the other half of that bargain: every spectrum really is in ascending m/z order
-                if (msd_mz5.run.spectrumListPtr.get())
-                    for (size_t i = 0, end = msd_mz5.run.spectrumListPtr->size(); i < end; ++i)
-                    {
-                        SpectrumPtr s = msd_mz5.run.spectrumListPtr->spectrum(i, true);
-                        if (!s.get() || !s->getMZArray().get())
-                            continue;
-                        const BinaryData<double>& mzs = s->getMZArray()->data;
-                        if (!std::is_sorted(mzs.begin(), mzs.end()))
-                            throw runtime_error(unit_assert_message(__FILE__, __LINE__,
-                                ("mz5 spectrum " + lexical_cast<string>(i) + " (\"" + s->id +
-                                 "\") is not in ascending m/z order").c_str()));
-                    }
+                // the other half of that bargain
+                assertMzAscending(msd_mz5, "mz5");
             }
         }
 #endif
@@ -574,6 +603,11 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         diffConfig_non_mzML.ignoreExtraBinaryDataArrays = true;
         diffConfig_non_mzML.ignoreChromatograms = true;
 
+        // Like mz5, none of these formats carries the mobility array, so a combined ion mobility
+        // spectrum comes back without the axis its peak order depended on and is presented in
+        // ascending m/z instead. Compare the peaks as a set; assertMzAscending checks the ordering.
+        diffConfig_non_mzML.ignorePeakOrder = config.combineIonMobilitySpectra;
+
         // check if the file type is one that loses nativeIDs in translation
         string fileType = reader.identify(rawpath, rawheader);
         if (bal::contains(fileType, "WIFF") ||
@@ -601,6 +635,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             if (diff_MGF && !os_) cerr << "MGF:\n" << headStream(*serializedStreamPtr, 5000) << endl;
             if (diff_MGF) cerr << headDiff(diff_MGF, 5000) << endl;
             unit_assert(!diff_MGF);
+            assertMzAscending(msd_MGF, "MGF");
         }
 
         stringstreamPtr->str(" ");
@@ -741,15 +776,17 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                 string targetResultFilename_mz5 = bfs::change_extension(targetResultFilename, ".mz5").string();
                 {
                     MSData msd_mz5;
-                    Serializer_mz5 serializer_mz5;
+                    Serializer_mz5 serializer_mz5(losslessMz5Config());
                     serializer_mz5.write(targetResultFilename_mz5, msd);
                     serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
 
                     DiffConfig diffConfig_mz5(diffConfig);
                     diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
+                    diffConfig_mz5.ignorePeakOrder = config.combineIonMobilitySpectra;
                     Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5, diffConfig_mz5);
                     if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
                     unit_assert(!diff_mz5);
+                    assertMzAscending(msd_mz5, "mz5");
                 }
                 bfs::remove(targetResultFilename_mz5);
             }

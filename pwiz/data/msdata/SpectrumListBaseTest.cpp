@@ -322,6 +322,55 @@ void testExtraPerPeakArraysTravelWithTheirPeaks()
 }
 
 
+// An SRM or SIM spectrum lists one point per transition in the order the method defined them, not
+// peaks along an m/z continuum. That order is the meaningful one, so it must be left exactly as
+// written even when the transitions were not set up in ascending m/z.
+void testSrmSpectrumIsLeftAlone()
+{
+    vector<double> mzs, intensities;
+    unsortedPeaks(mzs, intensities);
+
+    SpectrumPtr s(new Spectrum);
+    s->id = "sample=1 period=1 cycle=1 experiment=1";
+    s->set(MS_SRM_spectrum);
+    s->setMZIntensityArrays(mzs, intensities, MS_number_of_detector_counts);
+    s->defaultArrayLength = mzs.size();
+
+    MyReaderList list;
+    list.add(s);
+
+    SpectrumPtr out = list.spectrum(0, true);
+    unit_assert(mzsOf(out) == mzs);
+    unit_assert(intensitiesOf(out) == intensities);
+}
+
+
+// The rollover guard has to run ahead of the verdict here too. An SRM spectrum with enough
+// transitions to settle the question by chance ascending would otherwise vouch for a writer it says
+// nothing about, switching the checking off for a real spectrum later in the same file.
+void testSrmSpectrumDoesNotVouchForTheWriter()
+{
+    vector<double> srmMzs, srmIntensities;
+    for (int i = 0; i < 20; ++i) {srmMzs.push_back(100.0 + i); srmIntensities.push_back(1);}
+
+    vector<double> mzs, intensities;
+    unsortedPeaks(mzs, intensities);
+
+    SpectrumPtr srm(new Spectrum);
+    srm->id = "sample=1 period=1 cycle=1 experiment=1";
+    srm->set(MS_SIM_spectrum);
+    srm->setMZIntensityArrays(srmMzs, srmIntensities, MS_number_of_detector_counts);
+    srm->defaultArrayLength = srmMzs.size();
+
+    MyReaderList list;
+    list.add(srm);
+    list.add(makeSpectrum("scan=2", mzs, intensities));
+
+    unit_assert(mzsOf(list.spectrum(0, true)) == srmMzs);
+    unit_assert_equal(200.2, mzsOf(list.spectrum(1, true))[0], 1e-9);
+}
+
+
 // A metadata-only read carries the array objects with their cvParams and no data, and consumers do
 // walk whole files that way. Such a spectrum says nothing about the writer - settling on one would
 // switch the checking off for every real spectrum after it.
@@ -353,6 +402,8 @@ int main(int argc, char* argv[])
         testCombinedIonMobilitySpectrumIsLeftAlone();
         testCombinedIonMobilitySpectrumDoesNotVouchForTheWriter();
         testWavelengthSpectrumIsNeitherSortedNorEvidence();
+        testSrmSpectrumIsLeftAlone();
+        testSrmSpectrumDoesNotVouchForTheWriter();
         testExtraPerPeakArraysTravelWithTheirPeaks();
         testMetadataOnlySpectrumSettlesNothing();
     }
