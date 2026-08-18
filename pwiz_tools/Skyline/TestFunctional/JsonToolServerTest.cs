@@ -141,6 +141,71 @@ namespace pwiz.SkylineTestFunctional
             TestUndoRedo(server);
             TestBlockedAndDisabledUIControls(server);
             TestClientReadsBoolResult(server);
+
+            // Last, because it gives the document a background proteome and a peptide of its own.
+            TestStatementCompletion(server);
+        }
+
+        // A peptide of the mini rat proteome that ships with this test's data (in Ahsg / NP_037030), and
+        // not in any document here, so completing it is visible as a peptide the document did not have.
+        private const string COMPLETION_PEPTIDE = @"TALAAFNAQNNGTYFK";
+
+        /// <summary>
+        /// Drives the Targets tree's statement completion the way a user does -- type a peptide sequence,
+        /// step the pop-up with Down, accept it with Enter -- through send_text and send_key_stroke.
+        ///
+        /// <para>This reaches the one claim the key-stroke parsing assertions cannot: that the composed
+        /// <see cref="Keys"/> value actually arrives at a handler that reads <c>e.KeyData</c> (here
+        /// <c>StatementCompletionTextBox.TextBox_KeyDown</c>). It also covers the fix to
+        /// <c>SequenceTree.OnKeyPress</c>, whose characters used to go out through SendKeys to whatever
+        /// window held the focus; they now go into the edit box, which is what raises the pop-up at all.</para>
+        /// </summary>
+        private void TestStatementCompletion(JsonToolServer server)
+        {
+            // Statement completion matches what is typed against a background proteome, so there has to be
+            // one. The mini rat proteome (two proteins) is already in this test's data.
+            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunDlg<BuildBackgroundProteomeDlg>(peptideSettingsUI.AddBackgroundProteome, dlg =>
+            {
+                dlg.BackgroundProteomeName = @"Rat mini";
+                dlg.OpenBackgroundProteome(TestFilesDir.GetTestPath(@"Rat_mini.protdb"));
+                dlg.OkDialog();
+            });
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+
+            // The empty node at the end of the tree. Completion is offered ONLY there: an existing protein
+            // or peptide node disables it (see SequenceTree.BeginEditNode).
+            RunUI(() => SkylineWindow.SequenceTree.SelectedNode =
+                SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 1]);
+
+            // Both the tree and the edit box it puts up over a node are addressed by PATH rather than by a
+            // label, because neither has one: a caption-less control is what UiElementPath is for. The named
+            // verbs (send_text, set_form_value, ...) match their controlId on the visible label alone -- only
+            // a grid is matched by control name, as a deliberate exception -- so there is nothing else here
+            // to call these two.
+            string treeFormId = server.GetOpenForms().First(f => f.Type == nameof(SequenceTreeForm)).Id;
+            var treePath = server.GetControls(treeFormId)
+                .First(c => c.Path.Type == nameof(SequenceTree)).Path;
+            server.PerformAction(treePath, @"send_text", COMPLETION_PEPTIDE);
+
+            // The pop-up is filled from a query against the proteome, so wait for it to be there and to hold
+            // a match, rather than for the document to become what this expects.
+            var completionForm = WaitForOpenForm<StatementCompletionForm>();
+            WaitForConditionUI(() => completionForm.ListView.Items.Count > 0);
+
+            // Enter accepts the focused match, on the edit box the tree puts up over the node (a TextBox
+            // with no label of its own). Only Enter is sent: the pop-up already focuses its first match, so
+            // a Down here would step nothing and assert nothing -- stepping to a LATER match is a gesture
+            // this document's two-protein proteome cannot produce, and is left uncovered rather than faked.
+            var docBefore = SkylineWindow.Document;
+            var editPath = server.GetControls(treeFormId)
+                .First(c => c.Path.Type == nameof(TextBox)).Path;
+            server.PerformAction(editPath, @"send_key_stroke", @"Enter");
+
+            var docAfter = WaitForDocumentChange(docBefore);
+            AssertEx.IsTrue(docAfter.Peptides.Any(p => Equals(p.Peptide.Sequence, COMPLETION_PEPTIDE)),
+                string.Format(@"Accepting the statement completion for {0} did not add it to the document.",
+                    COMPLETION_PEPTIDE));
         }
 
         // How long to leave a dialog alone before looking at it a second time. This test fails intermittently in
