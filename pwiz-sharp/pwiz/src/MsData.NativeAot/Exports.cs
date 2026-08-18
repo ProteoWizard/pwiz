@@ -29,6 +29,10 @@ namespace Pwiz.MsData.NativeAot;
 /// </remarks>
 public static class Exports
 {
+    [UnmanagedCallersOnly(EntryPoint = "pwiz_msdata_init")]
+    public static int Init() =>
+        ExportsImpl.Init();
+
     [UnmanagedCallersOnly(EntryPoint = "pwiz_msdata_open")]
     public static unsafe int Open(byte* path, IntPtr* outHandle) =>
         ExportsImpl.Open(path, outHandle);
@@ -76,6 +80,40 @@ public static class ExportsImpl
 
     [ThreadStatic] private static string? _lastError;
 
+    // Built once by Init(). Null until then, so a caller that skips Init() still gets the
+    // built-in cross-platform readers rather than a null-ref — Init() is only REQUIRED for
+    // the vendor-enabled (nethost-hosted) build, where it also has to hook the vendor SDK
+    // assembly resolver before any Reader_* type is touched.
+    private static ReaderList? _readers;
+    private static readonly object s_initLock = new();
+
+    private static ReaderList Readers => _readers ?? ReaderList.Default;
+
+    /// <summary>Builds the reader list and performs any backend-specific startup the readers
+    /// need. Idempotent and safe to call from multiple threads; subsequent calls are no-ops.
+    /// Callers of the vendor-enabled build MUST call this before <see cref="Open"/>, because
+    /// the vendor SDK assembly resolver has to be installed before any vendor reader type is
+    /// touched. Returns 0 on success, or a negative error code with the reason available from
+    /// <see cref="GetLastError"/>.</summary>
+    public static int Init()
+    {
+        if (_readers is not null) return Ok;
+        lock (s_initLock)
+        {
+            if (_readers is not null) return Ok;
+            try
+            {
+                _readers = VendorBootstrap.CreateReaderList();
+                return Ok;
+            }
+            catch (Exception ex)
+            {
+                _lastError = ex.Message;
+                return ErrIoFailure;
+            }
+        }
+    }
+
     /// <summary>Opens an MS data file. <c>path</c> is a UTF-8 null-terminated C string;
     /// on success, <c>*outHandle</c> receives an opaque handle that must be released via
     /// <see cref="Close"/>. Supported formats: mzML, mzXML, MGF. Returns 0 on success or
@@ -90,7 +128,7 @@ public static class ExportsImpl
         try
         {
             var msd = new MSData();
-            ReaderList.Default.Read(managedPath, msd, new ReaderConfig());
+            Readers.Read(managedPath, msd, new ReaderConfig());
             // GCHandle.Normal keeps the document rooted until the caller closes it.
             var handle = GCHandle.Alloc(msd, GCHandleType.Normal);
             *outHandle = GCHandle.ToIntPtr(handle);
