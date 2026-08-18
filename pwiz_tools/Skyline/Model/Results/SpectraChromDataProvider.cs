@@ -1627,7 +1627,7 @@ namespace pwiz.Skyline.Model.Results
                     while (_lookAheadIndex++ < _lenSpectra)
                     {
                         _rt = dataSpectrum.RetentionTime;
-                        if (_rt.HasValue && dataSpectrum.Mzs.Length != 0)
+                        if (_rt.HasValue)
                         {
                             spectrumList.Add(dataSpectrum);
                             rtTotal += dataSpectrum.RetentionTime.Value;
@@ -1646,7 +1646,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     // No need to search forward, this isn't IMS or Agilent ramped-CE data
                     rtReported = dataSpectrum.RetentionTime;
-                    if (rtReported.HasValue && dataSpectrum.Mzs.Length != 0)
+                    if (rtReported.HasValue)
                     {
                         spectrumList.Add(dataSpectrum);
                     }
