@@ -1218,9 +1218,6 @@ namespace pwiz.Skyline.Model.Results
                             // Assertion for testing ID to spectrum index support
                             //                        int iFromId = dataFile.GetSpectrumIndex(dataSpectrum.Id);
                             //                        Assume.IsTrue(i == iFromId);
-                            if (nextSpectrum.Mzs.Length == 0)
-                                continue;
-
                             double? rt = nextSpectrum.RetentionTime;
                             if (!rt.HasValue)
                                 continue;
@@ -1574,7 +1571,7 @@ namespace pwiz.Skyline.Model.Results
                     while (_lookAheadIndex++ < _lenSpectra)
                     {
                         _rt = dataSpectrum.RetentionTime;
-                        if (_rt.HasValue && dataSpectrum.Mzs.Length != 0)
+                        if (_rt.HasValue)
                         {
                             spectrumList.Add(dataSpectrum);
                             if (!rtReported.HasValue)
