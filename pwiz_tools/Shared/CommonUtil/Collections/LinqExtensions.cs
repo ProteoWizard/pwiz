@@ -23,25 +23,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows.Forms;
 
 namespace pwiz.Common.Collections
 {
     public static class SystemLinqExtensionMethods
     {
-        public static IOrderedEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, SortOrder sortOrder)
-        {
-            // ReSharper disable RedundantCaseLabel
-            switch (sortOrder)
-            {
-                case SortOrder.Ascending: return source.OrderBy(keySelector);
-                case SortOrder.Descending: return source.OrderByDescending(keySelector);
-                case SortOrder.None:
-                default: throw new ArgumentException();
-            }
-            // ReSharper restore RedundantCaseLabel
-        }
-
         public static int SequenceCompareTo<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second) where TSource : IComparable<TSource>
         {
             using (var itr1 = first.GetEnumerator())

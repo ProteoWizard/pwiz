@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.Caching
 {
@@ -116,17 +115,6 @@ namespace pwiz.Common.SystemUtil.Caching
         public WorkOrder MakeWorkOrder(TParameter workParameter)
         {
             return new WorkOrder(this, workParameter);
-        }
-
-        public Receiver<TParameter, TResult> RegisterCustomer(Control ownerControl, Action productAvailableAction)
-        {
-            var customer = new Receiver<TParameter, TResult>(ProductionFacility.DEFAULT, ownerControl, this);
-            if (productAvailableAction != null)
-            {
-                customer.ProductAvailable += productAvailableAction;
-            }
-
-            return customer;
         }
     }
 }

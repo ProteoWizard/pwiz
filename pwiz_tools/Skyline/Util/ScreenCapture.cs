@@ -27,6 +27,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
@@ -340,7 +341,7 @@ namespace pwiz.Skyline.Util
             // (e.g. Skyline is shutting down). Clear the gate and report
             // unavailable rather than pending so the LLM is not told to wait
             // on a dialog that will never open.
-            if (!CommonActionUtil.SafeBeginInvoke(ownerWindow, ShowPermissionDialog))
+            if (!ControlUtil.SafeBeginInvoke(ownerWindow, ShowPermissionDialog))
             {
                 Interlocked.Exchange(ref _promptPending, 0);
                 return PermissionResult.unavailable;
