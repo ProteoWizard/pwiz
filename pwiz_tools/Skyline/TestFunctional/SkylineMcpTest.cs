@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
         // shipped stamped 26.1.1.077 while its own info.properties Requires line
         // demanded 26.1.1.083 - a ZIP that fails its own stated requirement.)
         // When you rebuild SkylineAiConnector.zip, update this to match.
-        private const string EXPECTED_ZIP_VERSION = "26.1.1.201";
+        private const string EXPECTED_ZIP_VERSION = "26.1.1.229";
 
         // Short FASTA for a quick import test
         private const string TEST_FASTA =
@@ -657,7 +657,9 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
         private static McpCallToolResult CallGetGraphImage(Process mcpProcess, StreamWriter stdin,
             StreamReader stdout, ref int id, string graphId, string returnFormat)
         {
-            var arguments = new JObject { ["graphId"] = graphId };
+            // The argument is named for the FORM, matching skyline_get_graph_image's parameter. Sending the
+            // old "graphId" name binds to nothing, and the call fails with a bare "an error occurred".
+            var arguments = new JObject { ["formId"] = graphId };
             if (returnFormat != null)
                 arguments["returnFormat"] = returnFormat;
             return McpToolCallResult(mcpProcess, stdin, stdout, ref id, "skyline_get_graph_image", arguments);

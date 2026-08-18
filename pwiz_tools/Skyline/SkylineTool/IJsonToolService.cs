@@ -559,9 +559,10 @@ namespace SkylineTool
         /// <see cref="SendKeyStroke"/>; to paste, use the "paste" action, which takes the text to paste and so
         /// needs neither the clipboard nor a keystroke.</para>
         ///
-        /// <para>NOT for the Targets tree: <c>SequenceTree.OnKeyPress</c> forwards each character on with
-        /// <c>SendKeys.Send</c>, which posts to the FOCUSED window -- so the characters land in whatever
-        /// application is in front, arrive out of order, and leave the tree stuck editing a label.</para>
+        /// <para>The Targets tree works too: typing there starts editing the selected node and raises the
+        /// statement-completion popup, which <see cref="SendKeyStroke"/> then steps through ("Down") and
+        /// accepts ("Enter"). <c>SequenceTree.OnKeyPress</c> puts each character straight into the edit box,
+        /// so nothing depends on which window holds the focus.</para>
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">The control to type into, matched as <see cref="GetControls"/> reports it
@@ -571,7 +572,7 @@ namespace SkylineTool
 
         /// <summary>
         /// Presses one key on a control, whether or not it has the focus -- e.g. to accept or step through the
-        /// auto-completion popup <see cref="SendKeys"/> raises. The keystroke is atomic (there is no way to
+        /// auto-completion popup <see cref="SendText"/> raises. The keystroke is atomic (there is no way to
         /// leave a key down), and the control is verified enabled first.
         ///
         /// <para>This raises the control's KeyDown with the named key and modifiers, which is where a WinForms

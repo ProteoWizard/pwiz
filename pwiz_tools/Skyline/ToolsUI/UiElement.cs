@@ -707,7 +707,12 @@ namespace pwiz.Skyline.ToolsUI
                 { @"ENTER", Keys.Return }, { @"ESC", Keys.Escape },
                 { @"DEL", Keys.Delete }, { @"INS", Keys.Insert },
                 { @"BACKSPACE", Keys.Back }, { @"BS", Keys.Back },
-                { @"PGUP", Keys.PageUp }, { @"PGDN", Keys.PageDown }
+                { @"PGUP", Keys.PageUp }, { @"PGDN", Keys.PageDown },
+                // The digit keys have to be aliased, because the only other route is the Keys enum itself and
+                // the number a digit spells is that enum's underlying VALUE rather than the key of that name:
+                // "1" would read as Keys.LButton (a mouse button) and "0" as Keys.None. See TryParseKeyName.
+                { @"0", Keys.D0 }, { @"1", Keys.D1 }, { @"2", Keys.D2 }, { @"3", Keys.D3 }, { @"4", Keys.D4 },
+                { @"5", Keys.D5 }, { @"6", Keys.D6 }, { @"7", Keys.D7 }, { @"8", Keys.D8 }, { @"9", Keys.D9 }
             };
 
         private static readonly Keys[] MODIFIER_KEYS = { Keys.Control, Keys.Alt, Keys.Shift };
@@ -726,8 +731,7 @@ namespace pwiz.Skyline.ToolsUI
             bool hasKey = false;
             foreach (var segment in keyStroke.Split('+').Select(s => s.Trim()).Where(s => s.Length > 0))
             {
-                if (!KEY_ALIASES.TryGetValue(segment, out var key) &&
-                    !Enum.TryParse(segment, true, out key))
+                if (!TryParseKeyName(segment, out var key))
                 {
                     throw new ArgumentException(LlmInstruction.Format(
                         @"Unknown key '{0}' in '{1}'. Use a key name (A-Z, 0-9, Enter, Down, Up, Left, Right, Tab, Esc, Backspace, Delete, Home, End, PgUp, PgDn, F1-F12, Space) with optional Ctrl+, Shift+ and Alt+ modifiers.",
@@ -753,6 +757,24 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(LlmInstruction.Format(
                     @"'{0}' names only modifiers. Add the key they apply to, e.g. 'Ctrl+V'.", keyStroke));
             return keyData;
+        }
+
+        /// <summary>The single <see cref="Keys"/> value one '+'-separated segment names, or false when it names
+        /// none. An alias wins, then the Keys enum's own names -- but a segment that is only DIGITS is rejected
+        /// before <see cref="Enum.TryParse{TEnum}(string, bool, out TEnum)"/> sees it, because that reads a
+        /// number as the enum's underlying value: "1" would come back as Keys.LButton rather than as the "1"
+        /// key, which is Keys.D1 (the aliases map those). For the same reason a parsed name is required to
+        /// BE a Keys value, which also rejects the comma-separated lists Enum.TryParse otherwise accepts.</summary>
+        private static bool TryParseKeyName(string segment, out Keys key)
+        {
+            if (KEY_ALIASES.TryGetValue(segment, out key))
+                return true;
+            key = Keys.None;
+            if (segment.All(char.IsDigit))
+                return false;
+            // Keys.None is a defined value, but "None" names no key -- accepting it would send a KeyDown
+            // carrying nothing rather than reporting that the caller named nothing.
+            return Enum.TryParse(segment, true, out key) && key != Keys.None && Enum.IsDefined(typeof(Keys), key);
         }
 
         // The control's hosting form gates acting on it (a modal blocking the form, or a disabled ancestor). A

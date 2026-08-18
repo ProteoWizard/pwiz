@@ -563,19 +563,6 @@ namespace pwiz.Skyline.ToolsUI
             return ScreenCapture.CaptureScreen(screenRect);
         }
 
-        // Shared pre-flight for the image-capture tools. Returns null when the caller may proceed, or an LLM-facing
-        // message it must surface. Bad input (id format, form not found, wrong form type) throws ArgumentException
-        // instead -- a caller-contract violation, which must reach the caller whatever the environment, so the
-        // validation runs BEFORE the screen-capture availability check.
-        private static string CheckImageToolPreflight(string id, Action ensureExistsOnUi, bool requiresScreenCapture)
-        {
-            ValidateFormIdFormat(id);
-            // Passing an Action binds InvokeOnUiThread to the void overload,
-            // which preserves ArgumentException across the thread boundary.
-            InvokeOnUiThread(ensureExistsOnUi);
-            return requiresScreenCapture ? CheckScreenCaptureAvailability() : null;
-        }
-
         // Returns null when screen capture can proceed, or the LLM-facing
         // denial / pending / desktop-unavailable message that the form-image
         // tools should return to the caller without attempting capture.

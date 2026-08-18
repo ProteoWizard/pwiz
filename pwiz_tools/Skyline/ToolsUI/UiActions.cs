@@ -306,7 +306,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public static readonly UiAction SendText = SimpleAction<IKeyboardElement, string>(
                 @"SendText", (e, text) => { e.SendTextNow(text); return null; })
-            .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus. Named for what it does: it delivers the CHARACTERS, it does not simulate key presses -- for a key use 'send_key_stroke', and to paste use 'paste' (which takes the text, so it needs no clipboard). Do NOT type into the Targets tree: Skyline's auto-completion forwards each character through the FOCUSED window, so the characters land in whatever application is in front, arrive out of order, and leave the tree stuck editing a label."),
+            .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus. Named for what it does: it delivers the CHARACTERS, it does not simulate key presses -- for a key use 'send_key_stroke', and to paste use 'paste' (which takes the text, so it needs no clipboard). Typing into the Targets tree starts editing the selected node and raises its auto-completion popup, which 'send_key_stroke' then steps through ('Down') and accepts ('Enter')."),
                 new LlmInstruction(@"the text to type, taken literally"));
 
         public static readonly UiAction SendKeyStroke = SimpleAction<IKeyboardElement, string>(
@@ -364,7 +364,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public static readonly UiAction ClickGraph = SimpleAction<GraphElement, object>(
                 @"ClickGraph", (e, bounds) => { e.Click(UiValue.ToRectangle(bounds)); return null; })
-            .Describe(new LlmInstruction(@"Click or drag on this graph in DATA coordinates, reproducing a real mouse gesture: down at the left/top corner, up at the right/bottom one. Equal corners are a single click -- e.g. to select a data point. A rectangle whose y values fall below the x-axis drags a chromatogram peak boundary."),
+            .Describe(new LlmInstruction(@"Click or drag on this graph in DATA coordinates, reproducing a real mouse gesture: down at the left/top corner, up at the right/bottom one. Equal corners are a single click -- e.g. to select a data point. A rectangle whose y values fall below the x-axis drags a chromatogram peak boundary. Any other drag does what a user's drag does on that pane, which on most graphs means ZOOMING to the rectangle -- so use equal corners unless you mean to drag."),
                 new LlmInstruction(@"a [left, top, right, bottom] array of data coordinates; make the two corners equal for a single click"));
 
         public static readonly UiAction Expand = SimpleAction<IExpandCollapseElement, object>(

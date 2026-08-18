@@ -872,7 +872,8 @@ public static class SkylineTools
         "single point -- e.g. to select a data point such as an outlier on a regression graph (Skyline treats " +
         "it exactly as a user click, so the point becomes selected). Make them differ to DRAG: a rectangle " +
         "whose Y values fall below the X-axis (below the Bottom that skyline_get_graph_zoom reports) drags a " +
-        "chromatogram peak boundary, just as the same gesture would by hand. Get coordinates from " +
+        "chromatogram peak boundary, just as the same gesture would by hand, while any OTHER drag does what a " +
+        "user's drag does on that pane -- on most graphs, zooming to the rectangle. Get coordinates from " +
         "skyline_get_graph_data (point values) and skyline_get_graph_zoom (visible range). Operates on the " +
         "first pane. Use skyline_get_open_forms to discover graph IDs.")]
     public static string ClickGraph(
@@ -896,10 +897,9 @@ public static class SkylineTools
         "focus and you never have to arrange focus first; the control is verified enabled first. The text is " +
         "LITERAL -- no key names, nothing to escape. To press a key (Enter, Down, Ctrl+V) use " +
         "skyline_send_key_stroke; to PASTE use skyline_perform_action with action='paste', which takes the " +
-        "text and so needs neither the clipboard nor Ctrl+V. DO NOT type into the Targets tree: Skyline's " +
-        "auto-completion forwards each character through the FOCUSED window, so the characters land in " +
-        "whatever application is in front, arrive out of order, and leave the tree stuck editing a label. " +
-        "Discover control names with skyline_get_controls.")]
+        "text and so needs neither the clipboard nor Ctrl+V. Typing into the Targets tree starts editing the " +
+        "selected node and raises its auto-completion popup, which skyline_send_key_stroke then steps through " +
+        "('Down') and accepts ('Enter'). Discover control names with skyline_get_controls.")]
     public static string SendText(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Control to type into, as skyline_get_controls reports it: its visible Label, or its Type for a caption-less control (e.g. 'TreeView')")] string controlId,
@@ -914,7 +914,7 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_send_key_stroke"),
      Description("Press one key on a control, whether or not it has the focus -- e.g. to accept or step " +
-        "through the auto-completion popup that skyline_send_keys raises (type a protein name, press 'Down' " +
+        "through the auto-completion popup that skyline_send_text raises (type a protein name, press 'Down' " +
         "to pick a match, then 'Enter' to add it). The keystroke is atomic, so no key is ever left down. " +
         "NOTE: this raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather " +
         "than by a handler -- Backspace editing a text box, an arrow moving a plain list's selection -- will " +

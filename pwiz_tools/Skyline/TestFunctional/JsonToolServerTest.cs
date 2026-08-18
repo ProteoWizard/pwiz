@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -37,6 +38,7 @@ using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -121,6 +123,7 @@ namespace pwiz.SkylineTestFunctional
             TestFormImage(server);
             TestGraphDataAndImage(server);
             TestGraphInteraction(server);
+            TestKeyboardVerbs(server);
             TestTutorialFetch(server);
             TestTutorialFetchErrors(server);
 
@@ -1681,12 +1684,32 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestGraphInteraction(JsonToolServer server)
         {
-            RunUI(() => SkylineWindow.ShowPeakAreaReplicateComparison());
+            // Room for the graph before anything is asked of it. Docked into the default-sized window this
+            // pane is about 365x153, and 42 replicate labels need more vertical space than that leaves --
+            // ZedGraph then lays out a chart rect with NEGATIVE height, which contains no point at all, so
+            // every click misses and the graph looks broken when it is merely too small to draw.
+            RunUI(() =>
+            {
+                SkylineWindow.WindowState = FormWindowState.Normal;
+                SkylineWindow.Size = new Size(1200, 800);
+                SkylineWindow.ShowPeakAreaReplicateComparison();
+            });
+            // A peptide, so the graph has a bar per replicate with a real area behind it. Whatever the tests
+            // before this one left selected may have none, and a graph of empty bars has nothing to click.
+            RunUI(() => SkylineWindow.SelectedPath =
+                SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Molecules, 0));
             WaitForGraphs();
             try
             {
+                // The PEAK AREA graph specifically. Several GraphSummary forms are open by now, and taking
+                // the first would just as easily hand back the retention times graph -- whose panes this
+                // then reads coordinates from the wrong graph for. Its own title is used to pick it out, so
+                // this holds in every language the test runs in.
+                string graphTitle = null;
+                RunUI(() => graphTitle = SkylineWindow.GraphPeakArea.Text);
                 string graphId = server.GetOpenForms()
-                    .First(f => f.Type.Contains(@"GraphSummary")).Id;
+                    .First(f => f.Type.Contains(@"GraphSummary") &&
+                                f.Id.EndsWith(graphTitle, StringComparison.Ordinal)).Id;
 
                 // GetGraphZoom: a populated graph has a real, non-degenerate data range.
                 var zoom = server.GetGraphZoom(graphId);
@@ -1715,14 +1738,57 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(applied.Top, readBack.Top, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Top");
                 Assert.AreEqual(applied.Bottom, readBack.Bottom, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Bottom");
 
-                // ClickGraph: a single click (down == up) at the center of the viewport drives
-                // the full down/up/click gesture through the real ZedGraph handlers.
-                double xMid = (readBack.Left + readBack.Right) / 2;
-                double yMid = (readBack.Top + readBack.Bottom) / 2;
-                var clickResult = server.ClickGraph(graphId,
-                    new SkylineTool.Rectangle { Left = xMid, Top = yMid, Right = xMid, Bottom = yMid });
-                Assert.IsNotNull(clickResult);
-                Assert.IsTrue(clickResult.Completed, @"ClickGraph should complete: " + clickResult.Message);
+                // Back to the full range before clicking, so every bar is inside the chart rect and the
+                // gesture can reach the one this picks.
+                server.ZoomGraphTo(graphId, zoom);
+                WaitForGraphs();
+
+                // ClickGraph: a click on a replicate's bar must SELECT that replicate, which is the whole
+                // point of the verb -- asserting only that the call completed would pass just as happily on
+                // a gesture that landed nowhere at all.
+                //
+                // Two different bars are clicked and the selections compared, rather than one bar checked
+                // against an index worked out here. Which replicate a given bar stands for is the graph's
+                // business (replicates can be grouped, and the pane carries decoration curves and an "All"
+                // bar besides), and reproducing that mapping in this test would be asserting the connector
+                // against a copy of the code it is driving. That two different bars select two different
+                // replicates cannot happen unless the gesture reached the real handlers.
+                var bars = new List<KeyValuePair<double, double>>();
+                RunUI(() =>
+                {
+                    var pane = (SummaryReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl
+                        .MasterPane.PaneList[0];
+                    // The curve carrying a point per replicate bar. CurveList[0] is NOT it -- the pane also
+                    // holds one-point decoration curves -- so the longest one is taken instead of an index
+                    // that happens to work today.
+                    var points = pane.CurveList.OrderByDescending(c => c.Points.Count).First().Points;
+                    bars.AddRange(Enumerable.Range(0, points.Count)
+                        .Where(i => !points[i].IsInvalid && points[i].Y > 0)
+                        // The X axis is AxisType.Text, an ORDINAL scale: bar i stands at data x = i + 1 and
+                        // the x stored on the point is never plotted. Reading points[i].X instead lands the
+                        // click off the chart entirely, where it selects nothing at all. The y is the bar's
+                        // TOP, because that is where its data point sits and the graph matches a click to
+                        // the nearest POINT -- halfway up a tall bar is nowhere near one.
+                        .Select(i => new KeyValuePair<double, double>(i + 1, points[i].Y))
+                        // The tallest bars, which are the ones with the most room to be clicked in.
+                        .OrderByDescending(bar => bar.Value)
+                        .Take(2));
+                });
+                Assert.AreEqual(2, bars.Count, @"Need two bars with height to click.");
+
+                var selections = new List<int>();
+                foreach (var bar in bars)
+                {
+                    var clickResult = server.ClickGraph(graphId, new SkylineTool.Rectangle
+                        { Left = bar.Key, Top = bar.Value, Right = bar.Key, Bottom = bar.Value });
+                    Assert.IsNotNull(clickResult);
+                    Assert.IsTrue(clickResult.Completed, @"ClickGraph should complete: " + clickResult.Message);
+                    WaitForGraphs();
+                    RunUI(() => selections.Add(SkylineWindow.SelectedResultsIndex));
+                }
+                Assert.AreNotEqual(selections[0], selections[1], string.Format(
+                    @"Clicking the bars at x={0} and x={1} selected the same replicate ({2}), so neither click reached the graph.",
+                    bars[0].Key, bars[1].Key, selections[0]));
 
                 // Error: the geometry verbs reject a non-graph / missing form like the others.
                 AssertEx.ThrowsException<ArgumentException>(() =>
@@ -1732,6 +1798,73 @@ namespace pwiz.SkylineTestFunctional
             {
                 RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
                 WaitForGraphs();
+            }
+        }
+
+        /// <summary>
+        /// Exercises the keyboard verbs. SendText must put characters into a control that never had the
+        /// focus -- the claim the verb is named for. SendKeyStroke rests entirely on
+        /// <see cref="ControlElement.ParseKeyStroke"/>: once a key stroke is parsed, delivering it is a single
+        /// call, so the parsing is what is worth pinning -- every spelling the tool descriptions promise a
+        /// caller can use, and every shape they must be told is wrong.
+        /// </summary>
+        private void TestKeyboardVerbs(JsonToolServer server)
+        {
+            // The names the SendKeyStroke descriptions promise: a bare key, an alias, and modifiers.
+            AssertEx.AreEqual(Keys.Down, ControlElement.ParseKeyStroke(@"Down"));
+            AssertEx.AreEqual(Keys.Return, ControlElement.ParseKeyStroke(@"Enter"));
+            AssertEx.AreEqual(Keys.Control | Keys.V, ControlElement.ParseKeyStroke(@"Ctrl+V"));
+            AssertEx.AreEqual(Keys.Control | Keys.Shift | Keys.Home,
+                ControlElement.ParseKeyStroke(@"Ctrl+Shift+Home"));
+            // Modifiers in any order, and spaces around the separator, name the same key stroke.
+            AssertEx.AreEqual(ControlElement.ParseKeyStroke(@"Ctrl+Shift+Home"),
+                ControlElement.ParseKeyStroke(@"Shift + Ctrl + Home"));
+
+            // A digit names the DIGIT KEY. It must never reach Enum.TryParse, which reads a number as the
+            // enum's underlying VALUE: "1" would come back as Keys.LButton -- a mouse button -- and
+            // SendKeyStroke would quietly press something the caller never named.
+            AssertEx.AreEqual(Keys.D1, ControlElement.ParseKeyStroke(@"1"));
+            AssertEx.AreEqual(Keys.D0, ControlElement.ParseKeyStroke(@"0"));
+            AssertEx.AreEqual(Keys.Control | Keys.D9, ControlElement.ParseKeyStroke(@"Ctrl+9"));
+            // A number that is not one digit names no key at all, rather than the Keys value it spells.
+            AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"65"));
+
+            // Rejected, each with an error that says which part could not be read: nothing, only modifiers,
+            // two keys, and a name that is not a key.
+            AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(null));
+            AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"Ctrl+Shift"));
+            AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"Ctrl+A+B"));
+            AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"Wingding"));
+
+            // SendText through the server, onto a text box on a dialog that was never given the focus.
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            try
+            {
+                RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Filter);
+                string settingsId = server.GetOpenForms().First(f => f.Type == nameof(PeptideSettingsUI)).Id;
+                // Addressed by path, the way TestClientReadsBoolResult does: the control is located by its
+                // designer-assigned Name (so this does not depend on the UI language), which get_controls
+                // reports but the by-name lookup does not match on.
+                var excludePath = server.GetControls(settingsId).First(c => c.Name == @"textExcludeAAs").Path;
+
+                // Empty first, so what the box holds afterwards is what was typed and nothing else. The
+                // control never had the focus -- nothing here gives it any -- which is the claim send_text
+                // is named for.
+                server.PerformAction(excludePath, @"set_value", string.Empty);
+                server.PerformAction(excludePath, @"send_text", @"25");
+                AssertEx.AreEqual(@"25", (string) server.PerformAction(excludePath, @"get_value", null),
+                    @"send_text did not deliver its characters to the text box.");
+
+                // A key that cannot be read is a caller-contract error, and must reach the caller as one
+                // rather than being sent as whatever key its name happened to parse into.
+                AssertEx.ThrowsException<ArgumentException>(() =>
+                    server.PerformAction(excludePath, @"send_key_stroke", @"Wingding"));
+                AssertEx.ThrowsException<ArgumentException>(() =>
+                    server.SendKeyStroke(settingsId, @"textExcludeAAs", @"65"));
+            }
+            finally
+            {
+                OkDialog(peptideSettings, () => peptideSettings.DialogResult = DialogResult.Cancel);
             }
         }
 
