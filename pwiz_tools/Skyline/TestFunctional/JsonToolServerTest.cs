@@ -178,15 +178,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SequenceTree.SelectedNode =
                 SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 1]);
 
-            // Both the tree and the edit box it puts up over a node are addressed by PATH rather than by a
-            // label, because neither has one: a caption-less control is what UiElementPath is for. The named
-            // verbs (send_text, set_form_value, ...) match their controlId on the visible label alone -- only
-            // a grid is matched by control name, as a deliberate exception -- so there is nothing else here
-            // to call these two.
+            // The tree and the edit box it puts up over a node are both named by their TYPE, neither having
+            // a label: a user told to type in "the tree" picks it out by what it plainly is, and so does
+            // this. Each is the only one of its kind on the form, which is what makes the type an answer.
             string treeFormId = server.GetOpenForms().First(f => f.Type == nameof(SequenceTreeForm)).Id;
-            var treePath = server.GetControls(treeFormId)
-                .First(c => c.Path.Type == nameof(SequenceTree)).Path;
-            server.PerformAction(treePath, @"send_text", COMPLETION_PEPTIDE);
+            server.SendText(treeFormId, nameof(SequenceTree), COMPLETION_PEPTIDE);
 
             // The pop-up is filled from a query against the proteome, so wait for it to be there and to hold
             // a match, rather than for the document to become what this expects.
@@ -198,9 +194,7 @@ namespace pwiz.SkylineTestFunctional
             // a Down here would step nothing and assert nothing -- stepping to a LATER match is a gesture
             // this document's two-protein proteome cannot produce, and is left uncovered rather than faked.
             var docBefore = SkylineWindow.Document;
-            var editPath = server.GetControls(treeFormId)
-                .First(c => c.Path.Type == nameof(TextBox)).Path;
-            server.PerformAction(editPath, @"send_key_stroke", @"Enter");
+            server.SendKeyStroke(treeFormId, nameof(TextBox), @"Enter");
 
             var docAfter = WaitForDocumentChange(docBefore);
             AssertEx.IsTrue(docAfter.Peptides.Any(p => Equals(p.Peptide.Sequence, COMPLETION_PEPTIDE)),
@@ -1933,6 +1927,12 @@ namespace pwiz.SkylineTestFunctional
                     server.SendKeyStroke(settingsId, excludeLabel, @"Wingding"));
                 AssertEx.ThrowsException<ArgumentException>(() =>
                     server.SendKeyStroke(settingsId, excludeLabel, @"65"));
+
+                // A control with no label can be named by its TYPE -- but only when that picks one control.
+                // This tab has three text boxes (min length, max length, exclude AAs), so "TextBox" says
+                // nothing about which, and must be refused rather than typed into whichever comes first.
+                AssertEx.ThrowsException<ArgumentException>(() =>
+                    server.SendText(settingsId, nameof(TextBox), @"25"));
             }
             finally
             {

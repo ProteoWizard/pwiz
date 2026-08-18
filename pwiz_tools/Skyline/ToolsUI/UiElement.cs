@@ -272,36 +272,53 @@ namespace pwiz.Skyline.ToolsUI
         /// support the action. An exact (case- and symbol-sensitive) Label match is preferred over a loose
         /// one, and within a tier an interactable (visible + enabled) element wins, so a hidden duplicate --
         /// the same field on an unselected, flattened tab -- never shadows the one the user sees. An empty
-        /// <paramref name="text"/> means "the single element that supports the action". Throws an LLM-facing
-        /// error when nothing (or, for an empty text, more than one thing) matches.</summary>
+        /// <paramref name="text"/> means "the single element that supports the action".
+        ///
+        /// <para>When nothing is labeled <paramref name="text"/>, it is read as the control's TYPE instead
+        /// ("TreeView", "TextBox", "DataGridView") -- a caption-less control is one a user still picks out
+        /// by what it plainly is, so the connector can name it the same way. A label always wins over a
+        /// type, and a type must pick exactly one control to count.</para>
+        ///
+        /// <para>Throws an LLM-facing error when nothing matches, and when the match is ambiguous -- more
+        /// than one thing for an empty text, or more than one control of a named type.</para></summary>
         public UiElement FindElement(string text, UiAction action)
         {
             if (!string.IsNullOrEmpty(text))
             {
-                var element = FindElementOrNull(text, action);
-                if (element == null)
-                {
+                var labeled = FindElementOrNull(text, action);
+                if (labeled != null)
+                    return labeled;
+                // Only now is a second walk worth its cost -- and it must be a second walk, not one hoisted
+                // above the label lookup: building every element twice on the common path leaves the extra
+                // set of them behind (MethodEditTutorial's leak check catches exactly that).
+                // Nothing carries that text, so read it as the KIND of control instead: a user told to click
+                // "the tree" or type in "the text box" can pick it out on sight, with no label to read, and
+                // the connector should be able to do the same. A label always wins, so naming a type can
+                // never shadow a control that really is captioned that.
+                var ofType = SelfAndDescendants().Where(action.AppliesTo)
+                    .Where(e => e.MatchesType(text)).ToList();
+                if (ofType.Count == 0)
                     throw new ArgumentException(LlmInstruction.Format(
                         @"No control matching '{0}' supports the action '{1}'. Use skyline_get_controls to list the controls.",
                         text, action.SnakeCaseName));
-                }
-
-                return element;
+                var single = SingleOrEnabled(ofType);
+                if (single != null)
+                    return single;
+                // A kind is only an answer when it picks ONE control. With three text boxes on the form,
+                // "TextBox" says nothing about which, and typing into whichever came first in the walk is
+                // worse than saying so.
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"This form has {0} controls of type '{1}'. Name the one you mean by its label, or address it by its path (see skyline_get_controls).",
+                    ofType.Count, text));
             }
             // Empty text means "the single element that supports the action".
             var candidates = SelfAndDescendants().Where(action.AppliesTo).ToList();
             if (candidates.Count == 0)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Nothing here supports the action '{0}'.", action.SnakeCaseName));
-            if (candidates.Count == 1)
-                return candidates[0];
-            // Several support it: take the single enabled one, so a disabled sibling never makes "the form's
-            // single grid/control" ambiguous (a hidden sibling was already dropped when the elements were
-            // built -- we only build an element for a control that was visible). If more than one is still
-            // enabled, the caller must name one.
-            var enabled = candidates.Where(c => c.IsEnabled).ToList();
-            if (enabled.Count == 1)
-                return enabled[0];
+            var only = SingleOrEnabled(candidates);
+            if (only != null)
+                return only;
             throw new ArgumentException(LlmInstruction.Format(
                 @"More than one control supports the action '{0}'; pass a label or name to choose one (see skyline_get_controls).",
                 action.SnakeCaseName));
@@ -320,6 +337,18 @@ namespace pwiz.Skyline.ToolsUI
         // The best of the candidates whose text matches at the given strictness: prefer an enabled one so a
         // disabled duplicate never shadows the control the user can act on. Returns null when none matches at
         // this strictness (the caller then falls back to a looser match).
+        /// <summary>The one element to act on among several that all match, or null while the choice is still
+        /// ambiguous: the single enabled one, so a disabled sibling never makes "the form's single grid" or
+        /// "the form's one tree" ambiguous. (A hidden sibling was already dropped when the elements were
+        /// built -- an element is only built for a control that was visible.)</summary>
+        private static UiElement SingleOrEnabled(IList<UiElement> matches)
+        {
+            if (matches.Count <= 1)
+                return matches.Count == 1 ? matches[0] : null;
+            var enabled = matches.Where(c => c.IsEnabled).ToList();
+            return enabled.Count == 1 ? enabled[0] : null;
+        }
+
         private static UiElement BestMatch(IEnumerable<UiElement> candidates, string text, bool strict)
         {
             UiElement best = null;
