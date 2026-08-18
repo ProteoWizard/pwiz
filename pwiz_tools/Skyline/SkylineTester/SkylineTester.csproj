@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- SkylineTester - WinForms test-harness GUI (run tests / nightly / quality, build Skyline, zip
        installers, chart memory). Multi-target net472 + net8.0-windows; the classic project was a

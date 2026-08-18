@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Skyline - the main desktop app. Multi-target net472 + net8.0-windows.
        net472: legacy build, Skyline-daily.exe parity with today.
