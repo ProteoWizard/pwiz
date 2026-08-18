@@ -163,9 +163,10 @@ Osprey --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.b
 
 ## Build
 
-Osprey multi-targets `net472;net8.0`; the `net8.0` target framework
-is the one used on Linux. The simplest cross-platform build/run is via the
-.NET SDK (8.0+):
+Osprey targets `net8.0` only, on every platform. Spectrum reading goes
+through ProteoWizard (`pwiz-sharp`), which is managed .NET 8 as well, so a
+Linux run needs neither Wine nor a container. The simplest cross-platform
+build/run is via the .NET SDK (8.0+):
 
 ```bash
 # Framework-dependent (requires the .NET 8 runtime installed on each node):

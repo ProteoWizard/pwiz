@@ -57,11 +57,10 @@ namespace pwiz.Osprey.Tasks
         internal const uint BASE_ID_MASK = 0x7FFFFFFFu;
 
         // Serializes input parsing across concurrent ProcessFile() calls (mzML or
-        // vendor raw; the name predates vendor reading). The
-        // producer inside MzmlReader.LoadAllSpectra is a sequential XmlReader over
-        // a FileStream, so 3 files parsing in parallel means 3 sequential disk
-        // scans fighting for the same head/cache. Gating the parse step funnels
-        // the disk-bound work into one stream at a time while leaving the
+        // vendor raw; the name predates vendor reading). Reading a spectrum file is
+        // disk-bound and sequential, so 3 files parsing in parallel means 3
+        // sequential scans fighting for the same head/cache. Gating the parse step
+        // funnels the disk-bound work into one stream at a time while leaving the
         // subsequent main-search phase free to run in parallel across files.
         internal static readonly SemaphoreSlim s_mzmlReadGate = new SemaphoreSlim(1, 1);
 
@@ -170,9 +169,9 @@ namespace pwiz.Osprey.Tasks
             // Miss/stale/absent: parse the input once (materialized only transiently here),
             // optionally serialized across files, write the cache, then index it and drop the
             // parsed list. The "Processing file N/M: <path>" banner already named the file.
-            // SpectrumFileReader picks the mzML or vendor-raw reader by extension; both
-            // return the same MzmlResult, so nothing below here knows the source format.
-            MzmlResult mzmlResult;
+            // SpectrumFileReader reads every format through ProteoWizard and returns the
+            // same SpectrumFileResult, so nothing below here knows the source format.
+            SpectrumFileResult mzmlResult;
             if (serializeMzmlRead)
                 s_mzmlReadGate.Wait();
             try

@@ -22,89 +22,109 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
-#if OSPREY_VENDOR_READER
-// Only the ProteoWizard build reads OspreyEnvironment here; without the
-// conditional this is a redundant-using warning in the default build.
+using System.Linq;
+using Pwiz.Analysis;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Util.Misc;
 using pwiz.Osprey.Core;
-#endif
+using ISpectrumList = Pwiz.Data.MsData.Spectra.ISpectrumList;
+using IVendorCentroidingSpectrumList = Pwiz.Data.MsData.Spectra.IVendorCentroidingSpectrumList;
+using PwizBinaryDataArray = Pwiz.Data.MsData.Spectra.BinaryDataArray;
+using PwizPrecursor = Pwiz.Data.MsData.Spectra.Precursor;
+using PwizSpectrum = Pwiz.Data.MsData.Spectra.Spectrum;
 
 namespace pwiz.Osprey.IO
 {
     /// <summary>
-    /// Selects a spectrum reader by file extension. The single place that knows
-    /// Osprey can read more than one input format, so callers
-    /// (<c>ScoringTaskShared.EnsureSpectraCache</c>) stay unaware of the source
-    /// format and everything downstream keeps seeing one
-    /// <see cref="MzmlResult"/>.
+    /// Reads an mzML or vendor instrument file into the <see cref="SpectrumFileResult"/>
+    /// the scoring pipeline consumes. ProteoWizard is the only parser: Osprey's own
+    /// hand-written mzML reader was deleted with the .NET 8 port (issue #4497), because
+    /// it was the one component in the pipeline whose agreement with ProteoWizard,
+    /// msconvert and Skyline was unverified.
     ///
-    /// Which reader handles mzML depends on whether the build HAS ProteoWizard:
+    /// This talks to pwiz-sharp DIRECTLY rather than through
+    /// <c>pwiz_tools/Shared/ProteowizardWrapper</c>, which is how the net472 build reached
+    /// ProteoWizard (issue #4496). The wrapper's net8 target is <c>net8.0-windows</c>
+    /// because it depends on <c>pwiz.CommonUtil</c>, and Osprey has to stay plain
+    /// <c>net8.0</c> to run on Linux with no Wine container. Osprey needs seven scalars and
+    /// two arrays per spectrum out of the ~80 public members the wrapper carries for
+    /// Skyline, so this is an adapter, not an integration.
     ///
-    /// * With it (net472, <c>/p:OspreyVendorReader=true</c>): ProteoWizard reads
-    ///   everything, mzML included. One parser for all mass spec data is the
-    ///   intended end state, and byte-level parity with <see cref="MzmlReader"/>
-    ///   is proven, so there is nothing left for a second parser to add.
-    /// * Without it (net8.0, or net472 by default): <see cref="MzmlReader"/> reads
-    ///   mzML because it is the only reader present, and a vendor path is a clear
-    ///   error rather than a silent fallback that would produce nothing.
-    ///
-    /// ProteoWizard is net472-only today (<c>pwiz_data_cli</c> has no .NET 8
-    /// build). Once #4178 supplies one, <see cref="MzmlReader"/> should be removed
-    /// and this class stops having a decision to make.
+    /// Going direct means the semantics the wrapper encodes have to be reproduced here on
+    /// purpose rather than inherited, and each one is commented with the
+    /// <c>MsDataFileImpl</c> behaviour it mirrors - that is what keeps a future divergence
+    /// visible instead of silent. The spectra themselves are assembled by
+    /// <see cref="SpectrumBuilder"/>, unchanged from the readers this replaces.
     /// </summary>
-    public static class SpectrumFileReader
+    public static partial class SpectrumFileReader
     {
-#if !OSPREY_VENDOR_READER
-        // Named once so both "cannot read this file" messages say the same thing
-        // about how to get a build that can.
-        private const string VENDOR_READER_ABSENT =
-            "Vendor reading is an opt-in build capability: build the net472 configuration with " +
-            "/p:OspreyVendorReader=true, which requires a bjam build to have staged " +
-            "pwiz_tools/Shared/ProteowizardWrapper/obj/x64.";
-#endif
+        static SpectrumFileReader()
+        {
+            // ReaderList.Default carries only the built-in mzML / mzMLb / mz5 / mzXML /
+            // MGF / MSn / BTDX readers. Without this a .raw path fails with "No registered
+            // reader recognized the file".
+            RegisterVendorReaders();
+        }
 
         /// <summary>
-        /// Load all MS1 and MS2 spectra from an mzML or vendor raw file.
+        /// Load all MS1 and MS2 spectra from an mzML or vendor instrument file.
         /// </summary>
-        public static MzmlResult LoadAllSpectra(string path)
+        public static SpectrumFileResult LoadAllSpectra(string path)
         {
-            bool isMzml = IsMzml(path);
-#if OSPREY_VENDOR_READER
-            // EVERY format goes through ProteoWizard in a build that has it, mzML
-            // included. Reader-vs-reader parity is proven byte-for-byte on three
-            // datasets, so a second mzML parser earns nothing but a second place for
-            // a defect to live - and it is the one parser here that ProteoWizard,
-            // Skyline and msconvert do not already agree on. MzmlReader survives only
-            // because pwiz_data_cli has no .NET 8 build; when #4178 lands it should be
-            // deleted outright and this method collapses to a single call.
-            //
-            // OSPREY_MZML_VIA_MZMLREADER forces the hand-written reader back for one
-            // run. That is what keeps the parity check expressible: the same mzML read
-            // both ways must produce byte-identical .spectra.bin.
-            //
-            // Vendor centroiding is NOT requested for an mzML: those peaks are already
-            // centroided, and MsDataFileImpl would centroid through a
-            // VendorOnlyPeakDetector that throws with no vendor API behind it.
-            if (isMzml && OspreyEnvironment.MzmlViaMzmlReader)
-                return MzmlReader.LoadAllSpectra(path);
-            // Ask for vendor centroiding only where a vendor API can actually do it.
-            // "Not mzML" is not the same question: an .mzXML or .mgf reaches here too,
-            // and requesting it for one of those lands in MsDataFileImpl's
-            // VendorOnlyPeakDetector, whose constructor leaves a null algorithm and
-            // whose first spectrum throws NoVendorPeakPickingException - an error about
-            // peak picking that says nothing about the real problem, the format choice.
-            return VendorRawReader.LoadAllSpectra(path, requireVendorCentroiding: IsVendorFormat(path));
-#else
-            // No ProteoWizard in this build, so mzML is MzmlReader's by necessity and
-            // OSPREY_MZML_VIA_MZMLREADER is a no-op rather than an error: it asks for
-            // what already happens.
-            if (isMzml)
-                return MzmlReader.LoadAllSpectra(path);
-            throw new NotSupportedException(string.Format(
-                "Cannot read '{0}': it is not an mzML, and this build of Osprey cannot read vendor " +
-                "instrument files. {1} Otherwise convert the file to mzML with msconvert.",
-                path, VENDOR_READER_ABSENT));
-#endif
+            var ms2Spectra = new List<Spectrum>();
+            var ms1Spectra = new List<MS1Spectrum>();
+            int unsortedCount = 0;
+
+            using (var msData = new MSData())
+            {
+                try
+                {
+                    ReaderList.Default.Read(path, msData, 0, CreateReaderConfig());
+                }
+                catch (VendorSupportNotEnabledException ex)
+                {
+                    // ProteoWizard's own message is right for ProteoWizard and wrong for an
+                    // Osprey user twice over: it names no file, and it says to rebuild
+                    // pwiz-sharp with --i-agree-to-the-vendor-licenses, which is that
+                    // project's build flag rather than how Osprey is built. Restate it in
+                    // terms the reader can act on, and keep the original as InnerException.
+                    throw new NotSupportedException(string.Format(
+                        "Cannot read '{0}': this build of Osprey has no vendor instrument " +
+                        "support. Rebuild with /p:IAgreeToVendorLicenses=true on Osprey.sln, " +
+                        "or with 'bjam pwiz_tools/Osprey//Osprey " +
+                        "--i-agree-to-the-vendor-licenses'. Otherwise convert the file to " +
+                        "mzML with msconvert and read that instead.", path), ex);
+                }
+                var spectra = CreateSpectrumList(path, msData, IsVendorFormat(path));
+                // A chromatogram-only file has no spectrum list at all, so there is
+                // nothing to read and nothing to report progress against. Osprey has no
+                // use for such a file, but an empty result says so far more clearly than
+                // a NullReferenceException would.
+                if (spectra != null)
+                {
+                    int count = spectra.Count;
+                    // Per-spectrum rather than per-byte progress (a vendor reader exposes
+                    // no byte position), on the same throttled interval the mzML read used
+                    // - a large file is minutes of otherwise silent work.
+                    using (var progress = new ProgressReporter(
+                               string.Format("Reading {0}", Path.GetFileName(path)), count,
+                               string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                    {
+                        for (int i = 0; i < count; i++)
+                        {
+                            AddSpectrum(spectra.GetSpectrum(i, true), i, ms2Spectra,
+                                ms1Spectra, ref unsortedCount);
+                            progress.Report(i + 1);
+                        }
+                    }
+                }
+            }
+
+            return new SpectrumFileResult(ms2Spectra, ms1Spectra, unsortedCount);
         }
 
         /// <summary>
@@ -130,8 +150,9 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Whether this path is handled by the hand-written mzML parser. Covers
-        /// the gzipped form because <see cref="MzmlReader"/> reads it.
+        /// Whether this path is an mzML, gzipped or not. No longer selects a reader -
+        /// ProteoWizard reads every format - but callers still ask, e.g. to decide whether
+        /// an input needs a vendor runtime present.
         /// </summary>
         public static bool IsMzml(string path)
         {
@@ -139,6 +160,251 @@ namespace pwiz.Osprey.IO
             if (string.Equals(ext, @".gz", StringComparison.OrdinalIgnoreCase))
                 ext = Path.GetExtension(Path.GetFileNameWithoutExtension(path));
             return string.Equals(ext, @".mzml", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// The reader options that reproduce the msconvert command line Osprey's mzML was
+        /// produced with (ai/scripts/Osprey/SEA-AD/convert-one.cmd), and beyond that the
+        /// exact values <c>MsDataFileImpl</c> passed for the net472 vendor read - which is
+        /// the configuration the raw-vs-mzML byte parity of #4502 was measured against.
+        /// Getting these wrong does not perturb the numbers slightly, it changes WHICH
+        /// spectra exist, which shifts every record after the first difference.
+        ///
+        /// Every value is set explicitly, including the ones that match the pwiz-sharp
+        /// default, so a default change upstream cannot quietly move Osprey's input.
+        /// </summary>
+        private static ReaderConfig CreateReaderConfig()
+        {
+            return new ReaderConfig
+            {
+                // msconvert --simAsSpectra.
+                SimAsSpectra = true,
+                SrmAsSpectra = false,
+                // Zero-peak spectra are KEPT: msconvert's mzML yields a record for every
+                // acquired spectrum, and dropping them shifts every later record.
+                AcceptZeroLengthSpectra = true,
+                IgnoreZeroIntensityPoints = false,
+                PreferOnlyMsLevel = 0,
+                // Skyline's choices, inherited here so the #4502 parity claim carries
+                // over unchanged: precursor-less MS2 dropped, Waters lockmass scans
+                // dropped. They bound the claim to Thermo, where it was measured; Waters
+                // or Bruker PASEF data needs its own comparison before being trusted.
+                AllowMsMsWithoutPrecursor = false,
+                IgnoreCalibrationScans = true,
+                // FALSE, unlike the wrapper's Skyline-facing default of true. Combined
+                // frames would give one spectrum per drift-bin group instead of the
+                // per-scan spectra the mzML has - a different spectrum SET. Osprey reads
+                // no mobility dimension at all, so the combined form offers it nothing.
+                CombineIonMobilitySpectra = false,
+                ReportSonarBins = true,
+                IncludeIsolationArrays = false,
+                GlobalChromatogramsAreMs1Only = true
+            };
+        }
+
+        /// <summary>
+        /// The spectrum list to read, wrapped in vendor centroiding for a vendor path.
+        /// This is msconvert's <c>--filter "peakPicking vendor msLevel=1-"</c>, and the
+        /// same wrapper <c>MsDataFileImpl</c> applies for
+        /// <c>requireVendorCentroidedMS1/MS2</c>.
+        ///
+        /// Not requested for an mzML: those peaks are already centroided by whatever
+        /// wrote the file, and asking a format with no vendor API behind it to centroid
+        /// is an error rather than a no-op. "Not mzML" is not the same question - an
+        /// .mzXML or .mgf reaches here too - which is why the test is
+        /// <see cref="IsVendorFormat"/> rather than the negation of
+        /// <see cref="IsMzml"/>.
+        /// </summary>
+        private static ISpectrumList CreateSpectrumList(string path, MSData msData,
+            bool requireVendorCentroiding)
+        {
+            var spectra = msData.Run.SpectrumList;
+            if (spectra == null || !requireVendorCentroiding)
+                return spectra;
+
+            // NOT the string overload. SpectrumList_PeakPicker's ParseIntegerSet splits on
+            // ',' and ' ' and int.TryParse's each token, so msconvert's own "1-" spelling
+            // parses to NOTHING and the picker silently matches no MS level at all. The
+            // IntegerSet overload says the same thing in the form this API actually reads,
+            // and is what the one other managed caller doing vendor centroiding uses
+            // (pwiz-sharp/Tools/BiblioSpec/.../PwizSharpSpecFileReader.cs).
+            //
+            // algorithm: null because the vendor feed is the ONLY acceptable source here -
+            // Osprey scores centroids, and an algorithmic fallback would quietly invent
+            // peaks that ProteoWizard and Skyline never produced for the same file.
+            if (!(spectra is IVendorCentroidingSpectrumList))
+            {
+                // Refuse rather than read profile data. Every vendor Osprey lists in
+                // IsVendorFormat is expected to centroid; one that cannot (pwiz-sharp's
+                // Agilent reader does not implement the interface today) would otherwise
+                // hand back profile peaks that score as if they were centroids - wrong
+                // answers from a run that looks completely normal.
+                throw new NotSupportedException(string.Format(
+                    "Cannot read '{0}': ProteoWizard has no vendor peak picking for this " +
+                    "format, and Osprey scores centroided peaks. Convert the file to mzML " +
+                    "with msconvert --filter \"peakPicking vendor msLevel=1-\" and read that " +
+                    "instead.", path));
+            }
+            return new SpectrumList_PeakPicker(spectra, algorithm: null,
+                preferVendorPeakPicking: true,
+                msLevelsToPeakPick: new IntegerSet(1, int.MaxValue));
+        }
+
+        private static void AddSpectrum(PwizSpectrum spectrum, int spectrumIndex,
+            List<Spectrum> ms2Spectra, List<MS1Spectrum> ms1Spectra, ref int unsortedCount)
+        {
+            if (spectrum == null)
+                return;
+            int level = GetMsLevel(spectrum);
+            if (level != 1 && level != 2)
+                return;
+
+            double[] mzs = ToArray(spectrum.GetMZArray());
+            double[] rawIntensities = ToArray(spectrum.GetIntensityArray());
+            if (rawIntensities.Length != mzs.Length)
+                return;
+
+            // SpectraCache stores intensities as f32 while ProteoWizard hands back f64.
+            // Vendor intensities originate as f32, so widening then narrowing round-trips
+            // exactly; this is the same width the mzML path decoded from a 32-bit binary
+            // array.
+            float[] intensities = new float[rawIntensities.Length];
+            for (int i = 0; i < rawIntensities.Length; i++)
+                intensities[i] = (float) rawIntensities[i];
+
+            // The 0-based position in the source file, which is what the record's
+            // ScanNumber field carries (NOT a vendor scan number). Taken from the read
+            // loop rather than Spectrum.Index: pwiz-sharp documents -1 as the "unassigned"
+            // sentinel for that property, and an unchecked cast would write 4294967295
+            // into every downstream cache and .blib without anything failing.
+            uint index = (uint) spectrumIndex;
+            if (SpectrumBuilder.EnsureSorted(index, ref mzs, ref intensities))
+                unsortedCount++;
+
+            double retentionTime = GetStartTime(spectrum) ?? 0.0;
+
+            if (level == 1)
+            {
+                ms1Spectra.Add(SpectrumBuilder.CreateMs1Spectrum(index, retentionTime,
+                    mzs, intensities));
+                return;
+            }
+
+            var precursor = GetPrecursor(spectrum);
+            if (precursor == null)
+                return; // No precursor: not a usable MS2.
+
+            // The isolation window is the detail most likely to be silently wrong in a
+            // hand-rolled binding: lower_offset / upper_offset are OFFSETS from the target
+            // m/z, which is exactly what IsolationWindow(center, lowerOffset, upperOffset)
+            // wants. Not a width, not absolute bounds.
+            double? isolationTarget = GetIsolationWindowValue(precursor,
+                CVID.MS_isolation_window_target_m_z);
+            double isoLower = GetIsolationWindowValue(precursor,
+                CVID.MS_isolation_window_lower_offset) ?? 0.0;
+            double isoUpper = GetIsolationWindowValue(precursor,
+                CVID.MS_isolation_window_upper_offset) ?? 0.0;
+
+            var ms2 = SpectrumBuilder.CreateMs2Spectrum(index, retentionTime,
+                GetPrecursorMz(precursor) ?? 0.0, isolationTarget.HasValue,
+                isolationTarget ?? 0.0, isoLower, isoUpper, mzs, intensities);
+            if (ms2 != null)
+                ms2Spectra.Add(ms2);
+        }
+
+        private static int GetMsLevel(PwizSpectrum spectrum)
+        {
+            var param = spectrum.CvParam(CVID.MS_ms_level);
+            return param.IsEmpty ? 0 : param.ValueAs<int>();
+        }
+
+        /// <summary>
+        /// Retention time in MINUTES, mirroring <c>MsDataFileImpl.GetStartTime</c>.
+        ///
+        /// A value already recorded in minutes is returned as recorded.
+        /// <c>TimeInSeconds()/60</c> is NOT an identity in floating point - it multiplies
+        /// by 60 and divides again - so it silently perturbs most retention times by an
+        /// ULP: 0.5903117 becomes 0.5903116999999999. Every vendor reader that sets scan
+        /// start time in UO_minute (Thermo among them) was affected, which made a direct
+        /// raw read disagree with the mzML converted from that same raw file (PR #4501).
+        /// </summary>
+        private static double? GetStartTime(PwizSpectrum spectrum)
+        {
+            var scans = spectrum.ScanList.Scans;
+            if (scans.Count == 0)
+                return null;
+            var param = scans[0].CvParam(CVID.MS_scan_start_time);
+            if (param.IsEmpty)
+                return null;
+            if (param.Units == CVID.UO_minute)
+                return param.ValueAs<double>();
+            return param.TimeInSeconds() / 60;
+        }
+
+        /// <summary>
+        /// The precursor Osprey scores against, chosen the way
+        /// <c>MsDataSpectrum.Precursors[0]</c> chose it: precursors group by their
+        /// "ms level" user param, and the HIGHEST level group is the one exposed, so this
+        /// is the first precursor of that group rather than simply the first precursor on
+        /// the spectrum. Reproduced rather than simplified - the two differ only for a
+        /// spectrum carrying precursors at more than one level, which is precisely the
+        /// case not worth changing by accident.
+        /// </summary>
+        private static PwizPrecursor GetPrecursor(PwizSpectrum spectrum)
+        {
+            // Spectrum.Precursors is a get-only List initialised by pwiz-sharp, so it is
+            // the COUNT that decides, never a null reference.
+            var precursors = spectrum.Precursors;
+            if (precursors.Count == 0)
+                return null;
+            int maxLevel = precursors.Max(GetPrecursorMsLevel);
+            return precursors.First(p => GetPrecursorMsLevel(p) == maxLevel);
+        }
+
+        private static int GetPrecursorMsLevel(PwizPrecursor precursor)
+        {
+            var param = precursor.IsolationWindow.UserParam(@"ms level");
+            if (param.IsEmpty)
+                param = precursor.UserParam(@"ms level");
+            return param.IsEmpty ? 1 : param.ValueAs<int>();
+        }
+
+        private static double? GetPrecursorMz(PwizPrecursor precursor)
+        {
+            // Only the first selected ion m/z is considered, as in MsDataFileImpl.
+            var selectedIon = precursor.SelectedIons.FirstOrDefault();
+            if (selectedIon == null)
+                return null;
+            var param = selectedIon.CvParam(CVID.MS_selected_ion_m_z);
+            return param.IsEmpty ? null : param.ValueAs<double>();
+        }
+
+        private static double? GetIsolationWindowValue(PwizPrecursor precursor, CVID cvid)
+        {
+            var param = precursor.IsolationWindow.CvParam(cvid);
+            return param.IsEmpty ? null : param.ValueAs<double>();
+        }
+
+        private static double[] ToArray(PwizBinaryDataArray array)
+        {
+            return array == null ? new double[0] : array.Data.ToArray();
+        }
+    }
+
+    /// <summary>
+    /// Everything <see cref="SpectrumFileReader"/> pulls out of one spectrum file.
+    /// </summary>
+    public class SpectrumFileResult
+    {
+        public List<Spectrum> Ms2Spectra { get; private set; }
+        public List<MS1Spectrum> Ms1Spectra { get; private set; }
+        public int UnsortedSpectrumCount { get; private set; }
+
+        public SpectrumFileResult(List<Spectrum> ms2, List<MS1Spectrum> ms1, int unsortedSpectrumCount = 0)
+        {
+            Ms2Spectra = ms2;
+            Ms1Spectra = ms1;
+            UnsortedSpectrumCount = unsortedSpectrumCount;
         }
     }
 }

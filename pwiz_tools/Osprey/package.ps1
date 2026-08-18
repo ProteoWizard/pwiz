@@ -20,8 +20,7 @@
         (Osprey-<version>-win-x64.msi) with an Add/Remove-Programs entry.
 
     Self-contained means ZERO system-.NET dependency: copy the folder to an
-    HPC node and run it. net8.0 is the canonical distribution runtime; net472
-    is intentionally not packaged.
+    HPC node and run it.
 
     This script is standalone (build.ps1 / Osprey.sln are the dev+CI build;
     this is the redistribution step on top of them). It is NOT wired into

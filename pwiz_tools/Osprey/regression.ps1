@@ -469,7 +469,7 @@ function Remove-Scratch([string]$Path) {
 if (-not $NoBuild) {
     Write-Progress-Tc 'Building Osprey (Release, net8.0)'
     $buildPs1 = Join-Path $scriptRoot 'build.ps1'
-    & $buildPs1 -Configuration Release -Framework net8.0 -NoTests
+    & $buildPs1 -Configuration Release -NoTests
     if ($LASTEXITCODE -ne 0) { Write-Problem-Tc "Osprey build failed (exit $LASTEXITCODE)"; exit $LASTEXITCODE }
 }
 if (-not (Test-Path $ospreyExe)) {

@@ -27,7 +27,7 @@ setlocal
 REM Make dotnet global tools (wix, etc.) resolvable in this build's environment.
 set "PATH=%PATH%;%USERPROFILE%\.dotnet\tools"
 
-pwsh -NoProfile -File "%~dp0build.ps1" -TeamCity -Coverage -Configuration Release -Framework net8.0
+pwsh -NoProfile -File "%~dp0build.ps1" -TeamCity -Coverage -Configuration Release
 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
 REM Bootstrap the wix v5 tool + matching v5 UI extension if the agent lacks them
