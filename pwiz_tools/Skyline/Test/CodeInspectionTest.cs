@@ -637,13 +637,29 @@ namespace pwiz.SkylineTest
                 { typeof(User32Test), 9 }
             };
 
-            // add types from production code
-            var types = typeof(User32).Assembly.GetTypes()
+            // add types from production code. The pwiz.Common.SystemUtil.PInvoke namespace
+            // spans TWO assemblies since the CommonBaseUI split - User32 and friends moved,
+            // Kernel32/Gdi32/Advapi32/Shell32/Shlwapi did not - so scanning one assembly
+            // silently stops checking the other half.
+            var pInvokeAssemblies = new[] { typeof(User32).Assembly, typeof(Kernel32).Assembly }.Distinct();
+            var types = pInvokeAssemblies.SelectMany(a => a.GetTypes())
                 .Where(type => type.Namespace is "pwiz.Common.SystemUtil.PInvoke" && type.IsClass).ToList();
 
             // add types from test code
             types.AddRange(typeof(User32Test).Assembly.GetTypes()
                 .Where(type => type.Namespace is "TestRunnerLib.PInvoke" && type.IsClass).ToList());
+
+            // A type in the expected list that no scanned assembly produced means the scan
+            // narrowed - fail loudly rather than quietly checking less.
+            foreach (var expectedType in expectedPInvokeApi.Keys)
+            {
+                if (!types.Contains(expectedType))
+                {
+                    errors.Add("PInvoke type " + expectedType.FullName +
+                        " is in the expected list but was not found by the assembly scan - " +
+                        "add its assembly to pInvokeAssemblies.");
+                }
+            }
 
             foreach(var type in types)
             {
