@@ -18,9 +18,12 @@
   </ItemGroup>
 
   <!-- ChromatogramList_Agilent and AgilentSignal are compiled out in NO_VENDOR_SUPPORT mode
-       (the SDK's DeviceType enum is unavailable), so the table test cannot build there. -->
+       (the SDK's DeviceType enum is unavailable), so the table tests cannot build there.
+       AgilentInstrumentMetadataTests is in the same position: its mapping table is keyed on
+       DeviceType, and its fixture half needs a reader the SDK-less build cannot construct. -->
   <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
     <Compile Remove="AgilentChromatogramTypeTests.cs" />
+    <Compile Remove="AgilentInstrumentMetadataTests.cs" />
   </ItemGroup>
 
   <!-- AgilentSignal carries the SDK's DeviceType enum. Agilent.csproj's <Reference> items are

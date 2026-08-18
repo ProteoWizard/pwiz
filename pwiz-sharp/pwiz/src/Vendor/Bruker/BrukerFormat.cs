@@ -14,9 +14,9 @@ public enum BrukerFormat
     /// <summary>Bruker Analysis format (<c>analysis.baf</c>), read through baf2sql.</summary>
     Baf,
     /// <summary>Bruker/Agilent YEP format (<c>analysis.yep</c>), read through the CompassXtract
-    /// COM server (Windows only) - see <see cref="CompassXtractData"/>.</summary>
+    /// COM server (Windows only) - see <c>CompassXtractData</c>.</summary>
     Yep,
     /// <summary>FID data (a <c>fid</c> file), read through the CompassXtract COM server
-    /// (Windows only) - see <see cref="CompassXtractData"/>.</summary>
+    /// (Windows only) - see <c>CompassXtractData</c>.</summary>
     Fid,
 }
