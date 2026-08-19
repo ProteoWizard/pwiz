@@ -17,6 +17,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -42,6 +43,11 @@ namespace pwiz.CommonFileDialogs
         private RemoteSession _remoteSession;
         private readonly IList<RemoteAccount> _remoteAccounts;
         private bool _waitingForData;
+        private Label _scanningLabel;
+        private readonly Stopwatch _scanProgressTimer = new Stopwatch();
+        private long _lastScanUpdateMsec;
+        private const long SCAN_VISIBLE_DELAY_MSEC = 150;
+        private const long SCAN_PROGRESS_INTERVAL_MSEC = 100;
         private readonly IList<string> _specificDataSourceFilter; // Specific data sources to look for
         protected bool IsRemote { get; private set; }
 
@@ -471,6 +477,56 @@ namespace pwiz.CommonFileDialogs
         {
         }
 
+        /// <summary>
+        /// Covers the empty list while a directory is being read, since the rows are not added
+        /// until every entry has been looked at, and looking at one can mean asking the reader
+        /// what a directory holds. Without this the dialog shows an empty list for as long as
+        /// that takes, which reads as an empty folder rather than as work in progress.
+        /// </summary>
+        private void ShowScanningInProgress(int itemsFound)
+        {
+            var showing = _scanningLabel != null && _scanningLabel.Visible;
+            var elapsed = _scanProgressTimer.ElapsedMilliseconds;
+            // A directory that reads quickly, which is any local one, should not flash a message
+            if (!showing && elapsed < SCAN_VISIBLE_DELAY_MSEC)
+                return;
+            // Repainting the count for every entry would cost more than the scanning it reports
+            // on, in a directory holding thousands of them
+            if (showing && elapsed - _lastScanUpdateMsec < SCAN_PROGRESS_INTERVAL_MSEC)
+                return;
+            _lastScanUpdateMsec = elapsed;
+
+            if (_scanningLabel == null)
+            {
+                _scanningLabel = new Label
+                {
+                    AutoSize = false,
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    BackColor = listView.BackColor,
+                    ForeColor = SystemColors.GrayText,
+                    Visible = false
+                };
+                Controls.Add(_scanningLabel);
+            }
+            _scanningLabel.Bounds = listView.Bounds;
+            _scanningLabel.Anchor = listView.Anchor;
+            _scanningLabel.Text = itemsFound == 0
+                ? CommonFileDialogResources.BaseFileDialogNE_populateListViewFromDirectory_Scanning___
+                : string.Format(CommonFileDialogResources.BaseFileDialogNE_populateListViewFromDirectory_Scanning____0__items, itemsFound);
+            _scanningLabel.Visible = true;
+            _scanningLabel.BringToFront(); // Controls.Add puts a control at the back of the z-order, behind the list
+            _scanningLabel.Refresh();
+            listView.Cursor = Cursors.WaitCursor;
+        }
+
+        private void ScanningComplete()
+        {
+            if (_scanningLabel == null || !_scanningLabel.Visible)
+                return;
+            _scanningLabel.Visible = false;
+            listView.Cursor = Cursors.Default;
+        }
+
         private void populateListViewFromDirectory(MsDataFileUri directory)
         {
             _abortPopulateList = false;
@@ -483,6 +539,9 @@ namespace pwiz.CommonFileDialogs
                 listView.LabelEdit = false;
             }
             listView.Items.Clear();
+            ScanningComplete(); // Any message left over from a scan that was navigated away from
+            _scanProgressTimer.Restart();
+            _lastScanUpdateMsec = 0;
 
             var listSourceInfo = new List<SourceInfo>();
             if (null == directory || directory is MsDataFilePath && string.IsNullOrEmpty(((MsDataFilePath) directory).FilePath))
@@ -569,6 +628,7 @@ namespace pwiz.CommonFileDialogs
                         catch (Exception x)
                         {
                             ShowErrorMessage(this, x.Message);
+                            ScanningComplete();
                             return;
                         }
                     }
@@ -619,6 +679,7 @@ namespace pwiz.CommonFileDialogs
                     foreach (var info in arraySubDirInfo)
                     {
                         listSourceInfo.Add(getSourceInfo(info));
+                        ShowScanningInProgress(listSourceInfo.Count);
                         Application.DoEvents();
                         if (_abortPopulateList)
                         {
@@ -632,6 +693,7 @@ namespace pwiz.CommonFileDialogs
                         foreach (var info in arrayFileInfo)
                         {
                             listSourceInfo.Add(getSourceInfo(info));
+                            ShowScanningInProgress(listSourceInfo.Count);
                             Application.DoEvents();
                             if (_abortPopulateList)
                             {
@@ -647,6 +709,7 @@ namespace pwiz.CommonFileDialogs
                         CommonFileDialogResources.OpenDataSourceDialog_populateListViewFromDirectory_An_error_occurred_attempting_to_retrieve_the_contents_of_this_directory,
                         x.Message);
                     // Might throw access violation.
+                    ScanningComplete();
                     ShowErrorWithException(this, message, x);
                     return;
                 }
@@ -702,6 +765,7 @@ namespace pwiz.CommonFileDialogs
                 }
             }
             listView.Items.AddRange(items.ToArray());
+            ScanningComplete();
             ListViewPostprocessing();
         }
 

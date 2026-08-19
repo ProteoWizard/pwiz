@@ -75,6 +75,18 @@
               found reviewing #4534 was in that blind spot. Asserts presence and
               non-zero counts, never exact counts. See Test-LibraryFragmentRelease.
 
+      mode 7  --task ModelDiagnostics regeneration acceptance (issue #4573) - re-enters
+              the COMPLETED straight-through run and asserts the task's whole contract:
+              exactly one artifact changed and it is the report (a regeneration that
+              rewrote a sidecar or the blib would corrupt the run it was asked to
+              describe), AND the regenerated report still matches the same golden mode 1b
+              holds the straight-through report to (a leg that touched nothing but emitted
+              a different page is equally broken, and the file check cannot see it).
+              Nothing else reaches this task: it declares no outputs, which is precisely
+              what makes CanRehydrate return false so it re-runs on demand. Runs last, in
+              the straight-through dir, since it rewrites the report there. ~14 s per
+              dataset - it rehydrates Stages 1-5 and re-runs Stage 7 only.
+
     NO dependency on the sibling ai/ checkout: data acquisition, blib golden
     capture/compare, and the tolerance comparators all live under
     pwiz_tools/Osprey/Regression. Mirrors build.ps1's TeamCity service
@@ -527,7 +539,11 @@ function Get-DatasetCliArgs {
 # --- Run one Osprey invocation (no input copies) -------------------------
 function Invoke-OspreyRun {
     param([string[]]$Mzmls, [string]$Library, [string]$Resolution, [string]$WorkDir,
-          [string]$LogName, [switch]$DumpProteinFdr, [hashtable]$Spec, [string]$Manifest)
+          [string]$LogName, [switch]$DumpProteinFdr, [hashtable]$Spec, [string]$Manifest,
+          # Appends --task <name>. Exists so a leg that re-enters a COMPLETED run (mode 7)
+          # replays this function's own argument list rather than a copy of it - a copy is
+          # only a self-consistency oracle until the two drift, and the drift is silent.
+          [string]$TaskName)
     New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
     $logPath = Join-Path $WorkDir $LogName
     $cliArgs = @()
@@ -537,6 +553,7 @@ function Invoke-OspreyRun {
                   '--threads', $Threads.ToString(), '--work-dir', $WorkDir)
     $cliArgs += Get-DatasetCliArgs -Spec $Spec -Manifest $Manifest
     $cliArgs += $memStampArgs
+    if ($TaskName) { $cliArgs += @('--task', $TaskName) }
     if ($DumpProteinFdr) { $env:OSPREY_DUMP_STAGE7_PROTEIN_FDR = '1' }
     # Run with CWD = work dir so the -o blib and the Stage 7 protein-FDR dump
     # (both CWD-relative, NOT --work-dir-relative -- only derived artifacts +
@@ -1832,6 +1849,70 @@ foreach ($name in $selected) {
         Write-Problem-Tc "$name mode6 (library-fragment release engaged): FAIL - $($m6Issues.Count) issue(s)"
         $m6Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
         $summaryLines.Add("$name mode6 (library-fragment release engaged): FAIL ($($m6Issues.Count) issues)")
+    }
+
+    # ---- mode 7: --task ModelDiagnostics regeneration acceptance ----------------
+    # The contract of `--task ModelDiagnostics` is "regenerate the report for a COMPLETED
+    # run and touch nothing else". Nothing gated that: the task declares no outputs (which
+    # is what makes CanRehydrate return false and the task actually re-run), so no other
+    # leg can reach it, and it shipped verified only by an ad-hoc script.
+    #
+    # Two assertions, because either alone passes on a broken feature. FILE-level: exactly
+    # one artifact changed and it is the report - a regeneration that rewrote a sidecar or
+    # the blib would silently corrupt the completed run it was asked to describe. VALUE-level:
+    # the regenerated report still matches the SAME golden mode 1b compares the
+    # straight-through report against - a run that touched nothing but emitted a different
+    # page is equally broken, and the file check cannot see it.
+    #
+    # Runs LAST, in the straight-through dir, because it rewrites the report there; every
+    # leg that reads that directory has already run. Costs ~14 s per dataset against a
+    # ~5 min straight-through leg, because it rehydrates Stages 1-5 and re-runs Stage 7 only.
+    #
+    # -NoTrainedModel for mode 5's reason: a regeneration adopts q-values from the sidecars
+    # instead of training Percolator, so featureCount is pinned at 0 rather than compared.
+    if ($cfg.ModelDiagnostics) {
+        Write-Progress-Tc "${name}: diagnostics regeneration acceptance (mode 7)"
+        $m7Issues = [System.Collections.Generic.List[string]]::new()
+        $m7Before = Get-DirFingerprint -Dir $straightDir
+        $rMd = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+            -Resolution $cfg.Resolution -WorkDir $straightDir -LogName 'mdtask.log' `
+            -Spec $cfg -Manifest $inputs.Manifest -TaskName 'ModelDiagnostics'
+        Write-Host ("  regeneration wall {0:N1}s" -f $rMd.Wall.TotalSeconds)
+
+        # Logs are excluded: this leg writes its own, and every leg appends to its own log.
+        $m7Changed = @(Compare-DirFingerprint -Before $m7Before -Dir $straightDir |
+            Where-Object { $_ -notmatch '\.log$' })
+        $reportLeaf = Split-Path -Leaf $diagHtml
+        foreach ($c in $m7Changed) {
+            if ($c -ne "modified: $reportLeaf") {
+                $m7Issues.Add(("regeneration touched an artifact other than the report: {0}" -f $c))
+            }
+        }
+        if ($m7Changed.Count -eq 0) {
+            $m7Issues.Add(("regeneration changed nothing at all - the report at {0} was not " +
+                "rewritten, so the task skipped itself instead of regenerating") -f $reportLeaf)
+        }
+
+        $m7d = $null
+        try {
+            $m7d = Compare-DiagnosticsGolden -HtmlPath $diagHtml -GoldenDir $goldenDir `
+                -Tolerance $Tolerance -NoTrainedModel
+        } catch {
+            $m7Issues.Add(("the regenerated report at {0} could not be read: {1}" -f
+                $diagHtml, $_.Exception.Message))
+        }
+        if ($m7d -and -not $m7d.Pass) {
+            $m7d.Issues | ForEach-Object { $m7Issues.Add("vs golden: $_") }
+        }
+
+        if ($m7Issues.Count -eq 0) {
+            $summaryLines.Add("$name mode7 (diagnostics regeneration: report only, vs golden): PASS")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode7 (diagnostics regeneration): FAIL - $($m7Issues.Count) issue(s)"
+            $m7Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode7 (diagnostics regeneration): FAIL ($($m7Issues.Count) issues)")
+        }
     }
 
     # All legs for this dataset are done -- free its scratch now so peak disk stays

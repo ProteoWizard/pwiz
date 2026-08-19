@@ -108,6 +108,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public double ExperimentCutoff { get; set; }
             /// <summary>
+            /// The acceptance boundary for protein-compact IN-STRATUM entries - those whose q and
+            /// aggregate the pass-2 competition recomputed - or NaN outside that mode. Reported
+            /// beside <see cref="ExperimentCutoff"/> because the pooled minimum spans two q
+            /// systems and is therefore the right bar for neither (issue #4573).
+            /// </summary>
+            public double ExperimentCutoffInStratum { get; set; }
+            /// <summary>The boundary for entries carrying pass-1 q and aggregate forward, or NaN
+            /// outside protein-compact.</summary>
+            public double ExperimentCutoffOffStratum { get; set; }
+            /// <summary>Accepted precursors behind <see cref="ExperimentCutoffInStratum"/>.</summary>
+            public int AcceptedInStratum { get; set; }
+            /// <summary>Accepted precursors behind <see cref="ExperimentCutoffOffStratum"/>.</summary>
+            public int AcceptedOffStratum { get; set; }
+            /// <summary>
             /// The composite score at which THIS pass's own population reaches the target FDR by
             /// its own target-decoy count, or NaN if it never does.
             ///
@@ -358,6 +372,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// <param name="fdrLevel">FDR control level deciding which q gates detection.</param>
         /// <param name="pass">1 = pre-compaction first-pass detection, 2 = final reported pool.</param>
         /// <param name="postReconciliation">True when the pool is post-Stage-6 (pass 2).</param>
+        /// <param name="stratumBaseIds">
+        /// The protein-compact stratum, or null when the mode supplies none. Non-null splits the
+        /// experiment acceptance boundary by q system (issue #4573).
+        /// </param>
         public static CoAssignmentData BuildCoAssignment(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
@@ -365,7 +383,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             double runFdr,
             FdrLevel fdrLevel,
             int pass,
-            bool postReconciliation)
+            bool postReconciliation,
+            HashSet<uint> stratumBaseIds = null)
         {
             if (perFileEntries == null || precursorMzByEntryId == null)
                 return null;
@@ -374,7 +393,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             for (int f = 0; f < perFileEntries.Count; f++)
                 runNames[f] = perFileEntries[f].Key;
 
-            var builder = new CoAssignmentPassBuilder(runNames, pass, postReconciliation);
+            var builder = new CoAssignmentPassBuilder(runNames, pass, postReconciliation, stratumBaseIds);
 
             // Phase 1: the decoy score cutoffs, over every row at every file. Cheap - no identity
             // string, no library lookup - so it can walk the whole pool.
@@ -466,13 +485,29 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private readonly bool _postReconciliation;
             private bool _any;
 
-            public CoAssignmentPassBuilder(string[] runNames, int pass, bool postReconciliation)
+            /// <param name="runNames">Input-file names in input order.</param>
+            /// <param name="pass">1 = pre-compaction first-pass detection, 2 = final reported pool.</param>
+            /// <param name="postReconciliation">True when the pool is post-Stage-6 (pass 2).</param>
+            /// <param name="stratumBaseIds">
+            /// The <c>protein-compact</c> stratum, or null when the mode supplies none (pass 1,
+            /// and every non-protein-compact second pass). Non-null splits the experiment
+            /// boundary in two - see <see cref="ExperimentCutoffInStratum"/>. Null reproduces the
+            /// single-boundary behaviour exactly, so nothing outside protein-compact moves.
+            /// </param>
+            public CoAssignmentPassBuilder(string[] runNames, int pass, bool postReconciliation,
+                HashSet<uint> stratumBaseIds = null)
             {
                 _run = new CoAssignmentAccumulator(runNames);
                 _experiment = new CoAssignmentAccumulator(runNames);
                 _pass = pass;
                 _postReconciliation = postReconciliation;
+                // An EMPTY stratum is not the same as no stratum: it means every entry is
+                // off-stratum, which is a real (degenerate) configuration and must not silently
+                // fall back to the pooled boundary.
+                _stratumBaseIds = stratumBaseIds;
             }
+
+            private readonly HashSet<uint> _stratumBaseIds;
 
             // Score at or above which a DECOY counts as detected: the worst score among the
             // accepted target/entrapment set. Per FILE for the run scope (run-level q is computed
@@ -481,6 +516,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private readonly Dictionary<int, double> _runCutoff = new Dictionary<int, double>();
             private double _experimentCutoff = double.NaN;
             private bool _sealed;
+
+            // The experiment boundary, split by q SYSTEM (issue #4573). Under protein-compact the
+            // reported pool carries TWO: in-stratum entries had q and aggregate recomputed by the
+            // pass-2 stratified competition, off-stratum entries carry both forward from pass 1
+            // untouched. A decoy has no q of its own and is admitted on score, so it must be
+            // compared against the boundary of the system it BELONGS to; a single pooled minimum
+            // is a pass-1 quantity for in-stratum decoys or a pass-2 quantity for off-stratum
+            // ones, and which it is depends only on which side happened to produce the lower
+            // score. NaN while the corresponding side has no accepted entry, which correctly
+            // admits no decoy from that side.
+            private double _experimentCutoffInStratum = double.NaN;
+            private double _experimentCutoffOffStratum = double.NaN;
+            private int _acceptedInStratum;
+            private int _acceptedOffStratum;
 
             // The score each scope's competition actually ranks on, per precursor (entry id).
             // RUN scope: the precursor's best score WITHIN a file, reduced here from the per-row
@@ -668,9 +717,30 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             {
                 foreach (uint id in _experimentAccepted)
                 {
-                    if (_experimentBest.TryGetValue(id, out double v) &&
-                        (double.IsNaN(_experimentCutoff) || v < _experimentCutoff))
+                    if (!_experimentBest.TryGetValue(id, out double v))
+                        continue;
+                    if (double.IsNaN(_experimentCutoff) || v < _experimentCutoff)
                         _experimentCutoff = v;
+                    // The same minimum, split by which q SYSTEM the entry belongs to. Under
+                    // protein-compact, an in-stratum entry's q AND aggregate were recomputed by
+                    // the pass-2 competition, while an off-stratum entry carries both forward
+                    // from pass 1 - so one minimum over the union is a bar derived from two
+                    // incompatible score orderings, and which system produced it is an accident
+                    // of the data. See ExperimentCutoffInStratum for what this fixes.
+                    if (_stratumBaseIds == null)
+                        continue;
+                    if (_stratumBaseIds.Contains(id & BASE_ID_MASK))
+                    {
+                        if (double.IsNaN(_experimentCutoffInStratum) || v < _experimentCutoffInStratum)
+                            _experimentCutoffInStratum = v;
+                        _acceptedInStratum++;
+                    }
+                    else
+                    {
+                        if (double.IsNaN(_experimentCutoffOffStratum) || v < _experimentCutoffOffStratum)
+                            _experimentCutoffOffStratum = v;
+                        _acceptedOffStratum++;
+                    }
                 }
                 _acceptedForCutoff = _experimentAccepted.Count;
                 _experimentAccepted.Clear();
@@ -693,6 +763,27 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// distribution by eye.</para>
             /// </summary>
             public double ExperimentCutoff => _experimentCutoff;
+
+            /// <summary>
+            /// The acceptance boundary for entries whose q the pass-2 stratified competition
+            /// RECOMPUTED (protein-compact in-stratum), or NaN outside that mode. On a healthy
+            /// stratum this is the boundary MOST reported peptides are admitted on, which is why
+            /// the pooled minimum being a pass-1 quantity mattered.
+            /// </summary>
+            public double ExperimentCutoffInStratum => _experimentCutoffInStratum;
+
+            /// <summary>
+            /// The acceptance boundary for entries that carried pass-1 q and aggregate forward
+            /// untouched, or NaN outside protein-compact. A pass-1 quantity, and CORRECTLY so -
+            /// these entries never entered the pass-2 competition.
+            /// </summary>
+            public double ExperimentCutoffOffStratum => _experimentCutoffOffStratum;
+
+            /// <summary>Accepted precursors behind <see cref="ExperimentCutoffInStratum"/>.</summary>
+            public int AcceptedInStratum => _acceptedInStratum;
+
+            /// <summary>Accepted precursors behind <see cref="ExperimentCutoffOffStratum"/>.</summary>
+            public int AcceptedOffStratum => _acceptedOffStratum;
 
             /// <summary>
             /// The score at which this pass's own population reaches <see cref="_runFdr"/> by its
@@ -815,8 +906,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // then dropped by AddRow - harmless for counts, but it makes this method's
                 // contract false and hides the disagreement.
                 return AdmittedAtRunScope(fileIdx, entryId) ||
-                       (!double.IsNaN(_experimentCutoff) && ExperimentBest(entryId) >= _experimentCutoff &&
-                        WonItsPair(entryId));
+                       (ClearsExperimentBoundary(entryId) && WonItsPair(entryId));
             }
 
             /// <summary>
@@ -828,6 +918,27 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             {
                 return _admittedRunDecoys.TryGetValue(fileIdx, out var admitted) &&
                        admitted.Contains(entryId);
+            }
+
+            /// <summary>
+            /// Whether this DECOY's experiment aggregate clears the acceptance boundary OF ITS
+            /// OWN q system (issue #4573).
+            ///
+            /// <para>Without a stratum there is one system and one boundary, which is the pass-1
+            /// case and every non-protein-compact second pass. With one, an in-stratum decoy is
+            /// compared against the boundary the pass-2 stratified competition produced and an
+            /// off-stratum decoy against the pass-1 boundary it actually carries. Comparing
+            /// either against the pooled minimum admits or excludes it on a threshold derived
+            /// from the OTHER population's score ordering.</para>
+            /// </summary>
+            private bool ClearsExperimentBoundary(uint entryId)
+            {
+                double cutoff = _stratumBaseIds == null
+                    ? _experimentCutoff
+                    : (_stratumBaseIds.Contains(entryId & BASE_ID_MASK)
+                        ? _experimentCutoffInStratum
+                        : _experimentCutoffOffStratum);
+                return !double.IsNaN(cutoff) && ExperimentBest(entryId) >= cutoff;
             }
 
             private double ExperimentBest(uint entryId)
@@ -853,8 +964,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     ? AdmittedAtRunScope(fileIdx, row.EntryId)
                     : runQvalue <= runFdr;
                 bool inExperiment = isDecoy
-                    ? !double.IsNaN(_experimentCutoff) && ExperimentBest(row.EntryId) >= _experimentCutoff &&
-                      WonItsPair(row.EntryId)
+                    ? ClearsExperimentBoundary(row.EntryId) && WonItsPair(row.EntryId)
                     : experimentQvalue <= runFdr;
                 if (inRun)
                 {
@@ -935,6 +1045,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     MinNForEnrichment = CoAssignmentAccumulator.MIN_N_FOR_ENRICHMENT,
                     DeltaRtEdges = CoAssignmentAccumulator.BuildDeltaRtEdges(),
                     ExperimentCutoff = ExperimentCutoff,
+                    ExperimentCutoffInStratum = ExperimentCutoffInStratum,
+                    ExperimentCutoffOffStratum = ExperimentCutoffOffStratum,
+                    AcceptedInStratum = AcceptedInStratum,
+                    AcceptedOffStratum = AcceptedOffStratum,
                     ExperimentFdrCrossing = ExperimentFdrCrossing,
                     ExperimentFdrCrossingDecoys = ExperimentFdrCrossingDecoys,
                     ExperimentFdrCrossingNonDecoys = ExperimentFdrCrossingNonDecoys,
