@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Pwiz.Data.MsData.Readers;
 using pwiz.Osprey.Core;
 using pwiz.ProteowizardWrapper;
@@ -50,12 +51,20 @@ namespace pwiz.Osprey.IO
     /// vendor centroiding, <c>CombineIonMobilitySpectra=false</c>,
     /// <c>AllowMsMsWithoutPrecursor=false</c> and <c>IgnoreCalibrationScans=true</c>.
     /// They are now inherited from the same place Skyline gets them, so the two cannot
-    /// drift apart silently. The spectra themselves are assembled by
-    /// <see cref="SpectrumBuilder"/>, unchanged from the readers this replaces.
+    /// drift apart silently.
+    ///
+    /// What Osprey does NOT take from the wrapper is lockmass correction: it passes no
+    /// <c>LockMassParameters</c>, where Skyline does, so Waters data is read with
+    /// uncorrected m/z. That is the pre-existing behaviour rather than a regression - no
+    /// reader Osprey has ever had applied lockmass - but it is a real difference from
+    /// Skyline on the same file, and worth closing before Osprey claims Waters support.
+    ///
+    /// The spectra themselves are assembled by <see cref="SpectrumBuilder"/>, unchanged
+    /// from the readers this replaces.
     /// </summary>
     public static class SpectrumFileReader
     {
-        private static bool _vendorFailuresReported;
+        private static int _vendorFailuresReported;
 
         /// <summary>
         /// Load all MS1 and MS2 spectra from an mzML or vendor instrument file.
@@ -87,12 +96,17 @@ namespace pwiz.Osprey.IO
                 //                             spectrum SET, and Osprey reads no mobility
                 //                             dimension at all.
                 //
-                // acceptZeroLengthSpectra defaults true and is left there deliberately: a
-                // zero-peak spectrum still occupies a record in msconvert's mzML, and
-                // dropping it would shift every later record. AllowMsMsWithoutPrecursor
-                // (false) and IgnoreCalibrationScans (true) are the wrapper's own and not
-                // overridable, and right for a search either way - a Waters lockmass scan
-                // is not a place to look for peptides.
+                // acceptZeroLengthSpectra is left at the wrapper's default of true, which
+                // is NOT msconvert's default of false. It is read only by the Agilent and
+                // Sciex readers, so it cannot affect mzML or Thermo, and Osprey takes the
+                // scan number from this read loop rather than from the spectrum - so a
+                // dropped record shifts nothing either way. Where it does apply, matching
+                // msconvert would be the more defensible choice; left alone here because
+                // changing it is a Sciex/Agilent question this change cannot measure.
+                //
+                // AllowMsMsWithoutPrecursor (false) and IgnoreCalibrationScans (true) are
+                // the wrapper's own and not overridable, and right for a search either way -
+                // a Waters lockmass scan is not a place to look for peptides.
                 using (var msData = new MsDataFileImpl(path,
                            simAsSpectra: true,
                            requireVendorCentroidedMS1: vendorFormat,
@@ -118,6 +132,28 @@ namespace pwiz.Osprey.IO
                         }
                     }
                 }
+            }
+            catch (InvalidOperationException ex) when (
+                ex.Message.Contains(@"NoVendorPeakPickingException"))
+            {
+                // ProteoWizard refuses to centroid, one spectrum at a time, by throwing from
+                // VendorOnlyPeakDetector with that marker in the message - the same string
+                // Skyline matches in ChromCacheBuilder, ScanProvider and
+                // SpectraChromDataProvider. Osprey has to translate it too, or the user gets
+                // an internal peak-picker message naming neither the file nor an action.
+                //
+                // Refusing is CORRECT and must stay: Osprey scores centroids, and reading
+                // profile peaks as if they were centroids is a wrong answer from a run that
+                // looks entirely normal. The reachable case today is Agilent, whose
+                // SpectrumList_Agilent does not implement IVendorCentroidingSpectrumList
+                // while every other vendor Osprey lists does. Note MsDataFileImpl's
+                // SupportsVendorPeakPicking cannot be used to pre-empt this: it answers
+                // "is this a vendor reader" (true for Agilent), not "does it centroid".
+                throw new NotSupportedException(string.Format(
+                    "Cannot read '{0}': ProteoWizard has no vendor peak picking for this " +
+                    "format, and Osprey scores centroided peaks. Convert the file to mzML " +
+                    "with msconvert --filter \"peakPicking vendor msLevel=1-\" and read that " +
+                    "instead.", path), ex);
             }
             catch (VendorSupportNotEnabledException ex)
             {
@@ -149,7 +185,14 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static bool IsVendorFormat(string path)
         {
-            string ext = Path.GetExtension(path);
+            // TrimEnd first: Path.GetExtension returns EMPTY for a path ending in a
+            // separator, and these vendor formats are the ones most likely to arrive that
+            // way - tab completion and shell globs both append a separator to a DIRECTORY,
+            // which Agilent .d, Bruker .d and Waters .raw are. Without this, such a path
+            // reads with vendor centroiding off and Osprey scores profile peaks as
+            // centroids: no error, no warning, and a cache that looks structurally correct.
+            string ext = Path.GetExtension(
+                path?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
             if (string.IsNullOrEmpty(ext))
                 return false;
             return string.Equals(ext, @".raw", StringComparison.OrdinalIgnoreCase)      // Thermo, Waters
@@ -242,9 +285,11 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static void ReportVendorRegistrationFailures()
         {
-            if (_vendorFailuresReported)
+            // Interlocked, not a plain check-then-set: ScoringTaskShared reads files from
+            // concurrent workers, and two threads arriving together would each see false and
+            // interleave the whole list on one line.
+            if (Interlocked.Exchange(ref _vendorFailuresReported, 1) != 0)
                 return;
-            _vendorFailuresReported = true;
             foreach (string failure in VendorReaderRegistration.Failures)
                 OspreyOutput.Out.WriteLine($@"[warn] vendor reader {failure}");
         }

@@ -2056,11 +2056,17 @@ namespace pwiz.Osprey.Test
             {
                 fromRaw = SpectrumFileReader.LoadAllSpectra(rawPath);
             }
-            catch (Exception ex)
+            catch (NotSupportedException ex)
             {
                 // No vendor SDK in this build. Pin that the message at least NAMES the
                 // file, so a user is not left with a bare format complaint. Asserting on the
                 // file name rather than on wording keeps this translation-proof.
+                //
+                // NotSupportedException specifically, NOT Exception: SpectrumFileReader
+                // interpolates the path into its message, so a blanket catch would let an
+                // IOException from a file lock - or a genuine mapping defect that happened to
+                // quote the path - satisfy this assertion and skip every parity check below.
+                // The two branches have to be disjoint for the pass to mean anything.
                 StringAssert.Contains(ex.Message, Path.GetFileName(rawPath));
                 return;
             }
