@@ -742,7 +742,7 @@ namespace pwiz.Skyline.Model
 
         public bool CanTrigger(int? replicateIndex)
         {
-            return Molecules.All(p => p.CanTrigger(replicateIndex));
+            return Molecules.All(p => p.CanTrigger(replicateIndex, Settings));
         }
 
         public bool IsMixedPolarity()
@@ -2629,7 +2629,7 @@ namespace pwiz.Skyline.Model
                         foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                         {
                             var groupPrimary = primaryTransitionCount > 0
-                                ? nodePep.GetPrimaryResultsGroup(nodeGroup)
+                                ? nodePep.GetPrimaryResultsGroup(nodeGroup, Settings)
                                 : null;
                             int? rank = nodeGroup.GetRank(groupPrimary, nodeTran, schedulingReplicateIndex);
                             if (rank.HasValue && rank == 1)

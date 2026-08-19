@@ -1322,16 +1322,19 @@ namespace pwiz.Skyline.Controls.Graphs
                         var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, _document);
                         if (precursorNodePath.Peptide != null && !NormalizationMethod.RatioToLabel.Matches(ratioToLabel, nodeGroup.LabelType))
                         {
-                            // Average the rdotp across the replicate(s) this display position
-                            // represents, so the line follows replicate ordering and grouping
-                            // (skyline.ms support thread 75064) instead of indexing chrom info
-                            // by the display position directly.
+                            // Average the rdotp across the file(s) of the replicate(s) this display
+                            // position represents, so the line follows replicate ordering and
+                            // grouping (skyline.ms support thread 75064) instead of indexing chrom
+                            // info by the display position directly. The files come from the
+                            // columnar results, which is where the areas the ratio is made of are.
                             var ratioDotProducts = ReplicateGroups[indexResult].ReplicateIndexes
-                                .Select(replicateIndex =>
+                                .SelectMany(replicateIndex =>
+                                    nodeGroup.AbbreviatedResults?.ChromFileIds.GetFileIds(replicateIndex) ??
+                                    Enumerable.Empty<ChromFileInfoId>())
+                                .Select(fileId =>
                                 {
                                     var ratio = NormalizedValueCalculator.GetTransitionGroupRatioValue(
-                                        ratioToLabel, precursorNodePath.Peptide, nodeGroup,
-                                        nodeGroup.GetChromInfoEntry(replicateIndex));
+                                        ratioToLabel, precursorNodePath.Peptide, nodeGroup, fileId);
                                     return (ratio?.HasDotProduct ?? false) ? (double?) ratio.DotProduct : null;
                                 })
                                 // Ignore missing (null) and NaN dot-products so one bad

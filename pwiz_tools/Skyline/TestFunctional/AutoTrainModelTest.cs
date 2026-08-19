@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -24,6 +25,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -88,13 +90,22 @@ namespace pwiz.SkylineTestFunctional
                 // Test that all targets have z-scores and q-values.
                 doc = SkylineWindow.DocumentUI;
                 var precursors = doc.PeptideTransitionGroups.Where(nodeTranGroup => !nodeTranGroup.IsDecoy).ToArray();
-                var chromInfos = precursors.SelectMany(nodeTranGroup => nodeTranGroup.EmptyResults)
-                    .SelectMany(chromInfoList => chromInfoList).ToArray();
-                Assert.AreEqual(precursors.Length, chromInfos.Count(chromInfo => chromInfo.ZScore.HasValue));
-                Assert.AreEqual(precursors.Length, chromInfos.Count(chromInfo => chromInfo.QValue.HasValue));
+                var precursorResults = precursors.Select(nodeTranGroup => nodeTranGroup.AbbreviatedResults).ToArray();
+                Assert.AreEqual(precursors.Length, precursorResults.Sum(results =>
+                    PeakPositions(results).Count(position => results.GetZScore(position).HasValue)));
+                Assert.AreEqual(precursors.Length, precursorResults.Sum(results =>
+                    PeakPositions(results).Count(position => results.GetQValue(position).HasValue)));
 
                 SkylineWindow.SaveDocument();
             });
+        }
+
+        /// <summary>
+        /// Every peak a precursor's columnar results hold, one per file it was measured in.
+        /// </summary>
+        private static IEnumerable<int> PeakPositions(TransitionGroupResults results)
+        {
+            return Enumerable.Range(0, results?.ChromFileIds.ReplicatePositions.TotalCount ?? 0);
         }
     }
 }

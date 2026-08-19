@@ -4752,8 +4752,9 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.WriteDsvField(RTWindow.ToString(CultureInfo), FieldSeparator);
             writer.Write(FieldSeparator);
-            if (nodeTran.ResultsRank.HasValue)
-                writer.Write((nodeTran.ResultsRank == 1).ToString());
+            var resultsRank = nodeTran.ResultsRank ?? nodeTranGroup.GetTransitionAverageRank(nodeTran.Transition);
+            if (resultsRank.HasValue)
+                writer.Write((resultsRank == 1).ToString());
             else if (nodeTran.HasLibInfo)
                 writer.Write((nodeTran.LibInfo.Rank == 1).ToString());
             else

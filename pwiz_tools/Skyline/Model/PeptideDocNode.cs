@@ -542,24 +542,37 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        /// <summary>
+        /// The retention time in one file, averaged over the precursors which measured one there,
+        /// from their columnar results, so this reads no chromatogram. A null file asks about every
+        /// peak the molecule has. Null when none of them has a retention time to give.
+        /// </summary>
         public float? GetMeasuredRetentionTime(ChromFileInfoId fileId)
         {
-            double totalTime = 0;
-            int countTime = 0;
-            foreach (var chromInfo in TransitionGroups.SelectMany(nodeGroup => nodeGroup.ChromInfos))
-            {
-                if (fileId != null && !ReferenceEquals(fileId, chromInfo.FileId))
-                    continue;
-                float? retentionTime = chromInfo.RetentionTime;
-                if (!retentionTime.HasValue)
-                    continue;
+            return AverageRetentionTime(GetMeasuredRetentionTimes(fileId));
+        }
 
-                totalTime += retentionTime.Value;
-                countTime++;
+        /// <summary>
+        /// Every retention time the precursors measured in one file. See
+        /// <see cref="GetMeasuredRetentionTimes(int)"/>, which asks the same of one replicate.
+        /// </summary>
+        private IEnumerable<float> GetMeasuredRetentionTimes(ChromFileInfoId fileId)
+        {
+            foreach (var nodeGroup in TransitionGroups)
+            {
+                var results = nodeGroup.AbbreviatedResults;
+                if (results == null)
+                    continue;
+                var fileIds = results.ChromFileIds.FileIds;
+                for (int position = 0; position < fileIds.Count; position++)
+                {
+                    if (fileId != null && !ReferenceEquals(fileId, fileIds[position].Value))
+                        continue;
+                    var retentionTime = results.GetRetentionTime(position);
+                    if (retentionTime.HasValue)
+                        yield return retentionTime.Value;
+                }
             }
-            if (countTime == 0)
-                return null;
-            return (float)(totalTime / countTime);
         }
 
         /// <summary>
@@ -866,12 +879,12 @@ namespace pwiz.Skyline.Model
         /// transitions use the same ranking, and that only one isotope label type need be measured to
         /// produce a method for a document with light-heavy pairs.
         /// </summary>
-        public TransitionGroupDocNode GetPrimaryResultsGroup(TransitionGroupDocNode nodeGroup)
+        public TransitionGroupDocNode GetPrimaryResultsGroup(TransitionGroupDocNode nodeGroup, SrmSettings settings)
         {
             TransitionGroupDocNode nodeGroupPrimary = nodeGroup;
             if (TransitionGroupCount > 1)
             {
-                double maxArea = nodeGroup.AveragePeakArea ?? 0;
+                double maxArea = nodeGroup.GetAveragePeakArea(settings) ?? 0;
                 var precursorCharge = nodeGroup.TransitionGroup.PrecursorAdduct;
                 foreach (var nodeGroupChild in TransitionGroups.Where(g =>
                         g.TransitionGroup.PrecursorAdduct.Equals(precursorCharge) &&
@@ -881,7 +894,7 @@ namespace pwiz.Skyline.Model
                     if (!nodeGroup.EquivalentChildren(nodeGroupChild))
                         continue;
 
-                    float peakArea = nodeGroupChild.AveragePeakArea ?? 0;
+                    float peakArea = nodeGroupChild.GetAveragePeakArea(settings) ?? 0;
                     if (peakArea > maxArea)
                     {
                         maxArea = peakArea;
@@ -892,11 +905,11 @@ namespace pwiz.Skyline.Model
             return nodeGroupPrimary;
         }
 
-        public bool CanTrigger(int? replicateIndex)
+        public bool CanTrigger(int? replicateIndex, SrmSettings settings)
         {
             foreach (var nodeGroup in TransitionGroups)
             {
-                var nodeGroupPrimary = GetPrimaryResultsGroup(nodeGroup);
+                var nodeGroupPrimary = GetPrimaryResultsGroup(nodeGroup, settings);
                 // Return false, if any primary group lacks the ranking information necessary for tMRM/iSRM
                 if (!nodeGroupPrimary.HasReplicateRanks(replicateIndex) && !nodeGroupPrimary.HasLibRanks)
                     return false;

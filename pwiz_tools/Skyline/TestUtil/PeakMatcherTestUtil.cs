@@ -89,10 +89,12 @@ namespace pwiz.SkylineTestUtil
                 Assert.IsTrue(chromSet.FileCount == 1);
                 Assert.IsTrue(settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, out _));
                 var results = nodeTranGroup.AbbreviatedResults;
-                int position = results.ChromFileIds.ReplicatePositions.GetStart(resultsIndex);
-                // Zero is what a peak with no retention time is stored as.
-                float? rt = results.Peaks.FlatValues[position].RetentionTime;
-                Assert.IsTrue(rt != 0);
+                var fileId = results.ChromFileIds.GetFileIds(resultsIndex).FirstOrDefault();
+                Assert.IsNotNull(fileId,
+                    string.Format("{0} has no peak in replicate {1}", nodeTranGroup, chromSet.Name));
+                float? rt = results.GetRetentionTime(resultsIndex, fileId);
+                Assert.IsNotNull(rt,
+                    string.Format("{0} has no retention time in replicate {1}", nodeTranGroup, chromSet.Name));
                 var chromName = chromSet.Name;
                 Assert.IsTrue(expected.ContainsKey(chromName));
                 var expectedRt = expected[chromName];

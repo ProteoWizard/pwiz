@@ -86,12 +86,16 @@ namespace pwiz.SkylineTestFunctional
                 // Verify that the chosen peak boundaries were applied to all of the transition groups
                 foreach (var transitionGroup in peptideDocNode.TransitionGroups)
                 {
-                    var transitionGroupChromInfo = transitionGroup.ChromInfos.FirstOrDefault();
-                    Assert.IsNotNull(transitionGroupChromInfo);
-                    Assert.IsNotNull(transitionGroupChromInfo.StartRetentionTime);
-                    Assert.AreEqual(chosenPeakStartTime, transitionGroupChromInfo.StartRetentionTime.Value, 1);
-                    Assert.IsNotNull(transitionGroupChromInfo.EndRetentionTime);
-                    Assert.AreEqual(chosenPeakEndTime, transitionGroupChromInfo.EndRetentionTime.Value, 1);
+                    // The boundaries the edit set are in the precursor's columnar results
+                    var fileId = transitionGroup.FindFirstFileId(0);
+                    Assert.IsNotNull(fileId);
+                    var results = transitionGroup.AbbreviatedResults;
+                    var startTime = results.GetStartTime(0, fileId);
+                    Assert.IsNotNull(startTime);
+                    Assert.AreEqual(chosenPeakStartTime, startTime.Value, 1);
+                    var endTime = results.GetEndTime(0, fileId);
+                    Assert.IsNotNull(endTime);
+                    Assert.AreEqual(chosenPeakEndTime, endTime.Value, 1);
                 }
             });
             WaitForConditionUI(() => candidatePeakForm.IsComplete);
@@ -159,12 +163,16 @@ namespace pwiz.SkylineTestFunctional
                     var peptideDocNode = (PeptideDocNode)SkylineWindow.Document.FindNode(SkylineWindow.SelectedPath);
                     foreach (var transitionGroup in peptideDocNode.TransitionGroups)
                     {
-                        var transitionGroupChromInfo = transitionGroup.ChromInfos.FirstOrDefault();
-                        Assert.IsNotNull(transitionGroupChromInfo);
-                        Assert.IsNotNull(transitionGroupChromInfo.StartRetentionTime);
-                        Assert.AreEqual(candidatePeakGroup.PeakGroupStartTime, transitionGroupChromInfo.StartRetentionTime.Value, 1);
-                        Assert.IsNotNull(transitionGroupChromInfo.EndRetentionTime);
-                        Assert.AreEqual(candidatePeakGroup.PeakGroupEndTime, transitionGroupChromInfo.EndRetentionTime.Value, 1);
+                        // The boundaries the chosen peak set are in the precursor's columnar results
+                        var fileId = transitionGroup.FindFirstFileId(0);
+                        Assert.IsNotNull(fileId);
+                        var results = transitionGroup.AbbreviatedResults;
+                        var startTime = results.GetStartTime(0, fileId);
+                        Assert.IsNotNull(startTime);
+                        Assert.AreEqual(candidatePeakGroup.PeakGroupStartTime, startTime.Value, 1);
+                        var endTime = results.GetEndTime(0, fileId);
+                        Assert.IsNotNull(endTime);
+                        Assert.AreEqual(candidatePeakGroup.PeakGroupEndTime, endTime.Value, 1);
                     }
                 });
                 WaitForCondition(() => candidatePeakForm.IsComplete);

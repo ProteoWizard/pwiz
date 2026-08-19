@@ -328,7 +328,10 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// The mean of the ranks this transition's peaks have, which does not vary by replicate and
-        /// so is one of the few result values a transition still keeps.
+        /// so is one of the few result values a transition still keeps. Null until a results pass
+        /// has run over the document - see
+        /// <see cref="TransitionGroupDocNode.GetTransitionAverageRank"/>, which works the same rank
+        /// out from the columnar areas for a document no pass has run over.
         /// </summary>
         public int? ResultsRank { get; private set; }
 
@@ -354,7 +357,7 @@ namespace pwiz.Skyline.Model
             {
                 if (i.HasValue)
                     return nodeGroup?.GetTransitionRank(Transition, i.Value, false);
-                return ResultsRank;
+                return ResultsRank ?? nodeGroup?.GetTransitionAverageRank(Transition);
             }
             if (!useResults && HasLibInfo && LibInfo.Rank > 0)
                 return LibInfo.Rank;

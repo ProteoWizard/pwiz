@@ -100,7 +100,10 @@ namespace pwiz.Skyline.Model.Lib
             var rt = 0.0;
             var im = IonMobilityAndCCS.EMPTY;
             var imGroup = TransitionGroupIonMobilityInfo.EMPTY; // CCS may be available only at group level
-            var groupChromInfos = nodeTranGroup.GetSafeChromInfo(replicateIndex);
+            // Rebuilt from the .skyd through the MoleculeResults the transitions are read through,
+            // rather than chrom infos the precursor no longer keeps
+            var groupChromInfos =
+                moleculeResults.GetTransitionGroupChromInfos(nodeTranGroup.TransitionGroup, replicateIndex);
             if (!groupChromInfos.IsEmpty)
             {
                 var chromInfo = groupChromInfos.First(info => info.OptimizationStep == 0);

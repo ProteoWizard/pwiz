@@ -359,16 +359,9 @@ namespace pwiz.Skyline.Model.GroupComparison
                         {
                             continue;
                         }
-                        var chromInfos = nodeGroup.GetSafeChromInfo(resultsIndex);
-                        if (chromInfos.IsEmpty)
-                            continue;
-                        foreach (var groupChromInfo in chromInfos)
-                        {
-                            if (ReferenceEquals(fileId, groupChromInfo.FileId) &&
-                                    groupChromInfo.OptimizationStep == 0 &&
-                                    groupChromInfo.Area.HasValue)
-                                globalStandardArea += groupChromInfo.Area.Value;
-                        }
+                        // The areas come from the precursor's columnar results, which hold the peaks
+                        // of optimization step zero only - the step this ever summed
+                        globalStandardArea += nodeGroup.GetPeakArea(resultsIndex, fileId, settings) ?? 0;
                     }
                 }
                 return globalStandardArea;

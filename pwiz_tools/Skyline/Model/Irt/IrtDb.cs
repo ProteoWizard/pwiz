@@ -668,9 +668,17 @@ namespace pwiz.Skyline.Model.Irt
                 var nodeTranGroup = nodePepMinimal.TransitionGroups.FirstOrDefault();
                 if (nodeTranGroup != null)
                 {
-                    var transitions = nodeTranGroup.Transitions.Where(tran => tran.ResultsRank.HasValue)
-                        .OrderBy(tran => tran.ResultsRank.Value)
-                        .Select(tran => tran.ChangeResults(null))
+                    // The rank the results pass stored, and otherwise the one worked out from the
+                    // precursor's columnar areas - see TransitionGroupDocNode.GetTransitionAverageRank
+                    var transitions = nodeTranGroup.Transitions
+                        .Select(tran => new
+                        {
+                            Node = tran,
+                            Rank = tran.ResultsRank ?? nodeTranGroup.GetTransitionAverageRank(tran.Transition)
+                        })
+                        .Where(ranked => ranked.Rank.HasValue)
+                        .OrderBy(ranked => ranked.Rank.Value)
+                        .Select(ranked => ranked.Node.ChangeResults(null))
                         .Cast<DocNode>().ToList();
                     if (transitions.Count < 3)
                     {

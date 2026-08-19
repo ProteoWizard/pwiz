@@ -791,7 +791,7 @@ namespace pwiz.Skyline.Model
         /// replicate has several, and this picks the same one the chrom infos used to be walked in
         /// the order of. Null when the precursor has no peak in that replicate.
         /// </summary>
-        private ChromFileInfoId FindFirstFileId(int replicateIndex)
+        public ChromFileInfoId FindFirstFileId(int replicateIndex)
         {
             var results = AbbreviatedResults;
             if (results == null || replicateIndex < 0 || replicateIndex >= ResultsReplicateCount)
@@ -926,6 +926,101 @@ namespace pwiz.Skyline.Model
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// The place one transition takes among the precursor's when they are ordered by the mean
+        /// of their areas over every file, from the columnar results, so this reads no chromatogram.
+        /// The same rank a results pass works out and stores as
+        /// <see cref="TransitionDocNode.ResultsRank"/> - see
+        /// <see cref="TransitionGroupChromInfoListCalculator"/>, which is where the mean and the
+        /// order it is taken in come from - and what a document no pass has run over has instead.
+        /// <para>
+        /// Null when the transition has no peak anywhere, and for a precursor which has no results
+        /// or whose transition results have not been read back from the .skyd: this cannot answer
+        /// without the areas, and only the stored rank can say anything then.
+        /// </para>
+        /// </summary>
+        public int? GetTransitionAverageRank(Transition transition)
+        {
+            var ranked = GetAverageRankedTransitions();
+            for (int iRank = 0; iRank < ranked.Count; iRank++)
+            {
+                if (ReferenceEquals(ranked[iRank].Transition, transition))
+                    return iRank + 1;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Whether any of the precursor's transitions has a rank among the measured peaks. See
+        /// <see cref="GetTransitionAverageRank"/>, which is where that rank comes from.
+        /// </summary>
+        public bool HasAverageRanks
+        {
+            get { return GetAverageRankedTransitions().Count > 0; }
+        }
+
+        /// <summary>
+        /// The precursor's transitions which have a mean area above zero, most intense first. A
+        /// transition which takes no part in scoring counts as -1 at every file and one with no
+        /// peak at a file counts as zero there, which is the order the results pass put them in.
+        /// </summary>
+        private IList<TransitionDocNode> GetAverageRankedTransitions()
+        {
+            var results = AbbreviatedResults;
+            if (results == null)
+                return Array.Empty<TransitionDocNode>();
+
+            var meanAreas = new List<KeyValuePair<TransitionDocNode, double>>(Children.Count);
+            foreach (TransitionDocNode nodeTran in Children)
+            {
+                meanAreas.Add(new KeyValuePair<TransitionDocNode, double>(nodeTran,
+                    GetMeanRankArea(results, nodeTran)));
+            }
+
+            meanAreas.Sort((first, second) => Comparer<double>.Default.Compare(second.Value, first.Value));
+            var ranked = new List<TransitionDocNode>(meanAreas.Count);
+            foreach (var meanArea in meanAreas)
+            {
+                if (meanArea.Value <= 0)
+                    break;
+                ranked.Add(meanArea.Key);
+            }
+
+            return ranked;
+        }
+
+        /// <summary>
+        /// One transition's mean area over every file the precursor was measured in, which is what
+        /// its place in the average ranking is decided by. See <see cref="RankedArea.RankArea"/>
+        /// for why a transition which takes no part in scoring counts as -1.
+        /// </summary>
+        private static double GetMeanRankArea(TransitionGroupResults results, TransitionDocNode nodeTran)
+        {
+            double mean = 0;
+            int count = 0;
+            for (int replicateIndex = 0;
+                 replicateIndex < results.ChromFileIds.ReplicatePositions.ReplicateCount;
+                 replicateIndex++)
+            {
+                foreach (var fileId in results.ChromFileIds.GetFileIds(replicateIndex))
+                {
+                    double area = -1;
+                    if (nodeTran.ParticipatesInScoring)
+                    {
+                        area = results.TryGetTransitionPeak(nodeTran.Transition, replicateIndex, fileId, out var peak)
+                            ? peak.Area
+                            : 0;
+                    }
+
+                    count++;
+                    mean += (area - mean) / count;
+                }
+            }
+
+            return mean;
         }
 
         /// <summary>
@@ -1087,7 +1182,7 @@ namespace pwiz.Skyline.Model
 
         public bool HasResultRanks
         {
-            get { return Transitions.Any(nodeTran => nodeTran.ResultsRank.HasValue); }
+            get { return Transitions.Any(nodeTran => nodeTran.ResultsRank.HasValue) || HasAverageRanks; }
         }
 
         public bool HasReplicateRanks(int? replicateIndex)
@@ -1122,31 +1217,83 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public float? GetPeakArea(int i, double? qvalueCutoff = null)
+        /// <summary>
+        /// The summed area of the precursor's quantitative transitions in one replicate, from the
+        /// columnar results, so this reads no chromatogram. The same sum the results pass makes -
+        /// see <see cref="TransitionGroupChromInfoCalculator.AddChromInfo"/> - over the same
+        /// transitions, in the file a question about a replicate is answered from.
+        /// <para>
+        /// Null when the precursor has no area there, and when a q value cutoff is asked for and
+        /// the peak does not meet it. -1 asks for the mean over the replicates which have one.
+        /// </para>
+        /// </summary>
+        public float? GetPeakArea(int replicateIndex, SrmSettings settings, double? qvalueCutoff = null)
         {
-            if (i == -1)
-                return AveragePeakArea;
+            if (replicateIndex == -1)
+                return GetAveragePeakArea(settings);
 
-            // CONSIDER: Also specify the file index?
-            var chromInfo = GetChromInfoEntry(i);
-            if (chromInfo == null)
+            var fileId = FindFirstFileId(replicateIndex);
+            if (fileId == null)
                 return null;
             if (qvalueCutoff.HasValue)
             {
-                if (!(chromInfo.QValue.HasValue && chromInfo.QValue.Value < qvalueCutoff.Value))
+                var qValue = AbbreviatedResults.GetQValue(replicateIndex, fileId);
+                if (!(qValue.HasValue && qValue.Value < qvalueCutoff.Value))
                     return null;
             }
-            return chromInfo.Area;
+
+            return GetPeakArea(replicateIndex, fileId, settings);
         }
 
-        public float? AveragePeakArea
+        /// <summary>
+        /// The summed area of the precursor's quantitative transitions in one file, which is what a
+        /// <see cref="TransitionGroupChromInfo"/> held per file. See
+        /// <see cref="GetPeakArea(int,SrmSettings,double?)"/>, which asks it of a replicate and so
+        /// of the first file there.
+        /// </summary>
+        public float? GetPeakArea(int replicateIndex, ChromFileInfoId fileId, SrmSettings settings)
         {
-            get
+            var results = AbbreviatedResults;
+            if (results == null)
+                return null;
+
+            // Accumulated in float, which is what the results pass adds these up in, so that the
+            // rounding of a summed area is the same either way
+            float area = 0;
+            bool anyArea = false;
+            foreach (var nodeTran in Transitions)
             {
-                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep != 0
-                                                              ? null
-                                                              : chromInfo.Area);
+                if (!nodeTran.IsQuantitative(settings))
+                    continue;
+                if (!results.TryGetTransitionPeak(nodeTran.Transition, replicateIndex, fileId, out var peak) ||
+                    peak.IsEmpty)
+                    continue;
+                area += peak.Area;
+                anyArea = true;
             }
+
+            return anyArea ? area : (float?) null;
+        }
+
+        /// <summary>
+        /// The peak area averaged over the replicates which have one, which is what -1 asks
+        /// <see cref="GetPeakArea"/> for - the meaning the chrom info accessor it replaced gave it.
+        /// Null when the precursor has an area in no replicate at all.
+        /// </summary>
+        public float? GetAveragePeakArea(SrmSettings settings)
+        {
+            double total = 0;
+            int count = 0;
+            for (int replicateIndex = 0; replicateIndex < ResultsReplicateCount; replicateIndex++)
+            {
+                var area = GetPeakArea(replicateIndex, settings);
+                if (!area.HasValue)
+                    continue;
+                total += area.Value;
+                count++;
+            }
+
+            return count == 0 ? (float?) null : (float) (total / count);
         }
 
         public class ScheduleTimes        

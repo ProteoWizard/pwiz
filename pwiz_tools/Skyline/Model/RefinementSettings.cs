@@ -553,7 +553,8 @@ namespace pwiz.Skyline.Model
                         continue;
                     }
                     int bestResultIndex = (UseBestResult ? nodePep.BestResult : -1);
-                    var sortInfo = new PepAreaSortInfo(nodePep, internalStandardTypes, bestResultIndex, listAreaIndexes.Count);
+                    var sortInfo = new PepAreaSortInfo(nodePep, document.Settings, internalStandardTypes,
+                        bestResultIndex, listAreaIndexes.Count);
                     listAreaIndexes.Add(sortInfo);
                 }
 
@@ -714,7 +715,7 @@ namespace pwiz.Skyline.Model
                     (from g in listGroups
                         group g by g.TransitionGroup.PrecursorAdduct.Unlabeled
                         into ga
-                        select new {Adduct = ga.Key, Area = ga.Sum(gg => gg.AveragePeakArea)}).ToArray();
+                        select new {Adduct = ga.Key, Area = ga.Sum(gg => gg.GetAveragePeakArea(document.Settings))}).ToArray();
 
                 if (chargeGroups.Any(n => n.Area > 0))
                 {
@@ -1458,6 +1459,7 @@ namespace pwiz.Skyline.Model
 //            private readonly Adduct _bestCharge;
 
             public PepAreaSortInfo(PeptideDocNode nodePep,
+                                   SrmSettings settings,
                                    ICollection<IsotopeLabelType> internalStandardTypes,
                                    int bestResultIndex,
                                    int index)
@@ -1469,7 +1471,7 @@ namespace pwiz.Skyline.Model
                     from nodeGroup in nodePep.TransitionGroups
                     where !internalStandardTypes.Contains(nodeGroup.TransitionGroup.LabelType)
                     group nodeGroup by nodeGroup.TransitionGroup.PrecursorAdduct into g
-                    select new {Charge = g.Key, Area = g.Sum(ng => ng.GetPeakArea(bestResultIndex))};
+                    select new {Charge = g.Key, Area = g.Sum(ng => ng.GetPeakArea(bestResultIndex, settings))};
 
                 // Store the best charge state and its area
                 var bestChargeGroup = chargeGroups.OrderBy(cg => cg.Area).First();

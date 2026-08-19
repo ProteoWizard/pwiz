@@ -147,12 +147,15 @@ namespace pwiz.SkylineTestFunctional
         {
             foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
             {
-                var transitionGroupChromInfo = transitionGroupDocNode.GetSafeChromInfo(replicateIndex).FirstOrDefault();
-                if (transitionGroupChromInfo?.StartRetentionTime != null)
-                {
-                    return new PeakBounds(transitionGroupChromInfo.StartRetentionTime.Value,
-                        transitionGroupChromInfo.EndRetentionTime.Value);
-                }
+                // The boundaries come from the precursor's columnar results, which is where the
+                // graph reads the peak it zooms to
+                var fileId = transitionGroupDocNode.FindFirstFileId(replicateIndex);
+                if (fileId == null)
+                    continue;
+                var results = transitionGroupDocNode.AbbreviatedResults;
+                var startTime = results.GetStartTime(replicateIndex, fileId);
+                if (startTime.HasValue)
+                    return new PeakBounds(startTime.Value, results.GetEndTime(replicateIndex, fileId).Value);
             }
 
             return null;

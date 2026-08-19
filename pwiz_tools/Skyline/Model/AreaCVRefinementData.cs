@@ -107,15 +107,17 @@ namespace pwiz.Skyline.Model
                                     throw new OperationCanceledException();
 
                                 token.ThrowIfCancellationRequested();
-                                var groupChromInfo = transitionGroupDocNode.GetSafeChromInfo(replicateIndex)
-                                    .FirstOrDefault(c => c.OptimizationStep == 0);
-                                if (groupChromInfo == null)
+                                // The file the replicate's peak is read from, which is what having a
+                                // chrom info for the replicate used to say
+                                var fileId = transitionGroupDocNode.FindFirstFileId(replicateIndex);
+                                if (fileId == null)
                                     continue;
 
                                 if (qvalueCutoff.HasValue)
                                 {
-                                    if (!(groupChromInfo.QValue.HasValue &&
-                                          groupChromInfo.QValue.Value < qvalueCutoff.Value))
+                                    var qValue = transitionGroupDocNode.AbbreviatedResults
+                                        .GetQValue(replicateIndex, fileId);
+                                    if (!(qValue.HasValue && qValue.Value < qvalueCutoff.Value))
                                         continue;
                                 }
 
@@ -143,7 +145,8 @@ namespace pwiz.Skyline.Model
                                 }
                                 else
                                 {
-                                    if (!groupChromInfo.Area.HasValue)
+                                    if (!transitionGroupDocNode.GetPeakArea(replicateIndex, document.Settings)
+                                            .HasValue)
                                         continue;
                                     var index = replicateIndex;
                                     // The areas and the ranks come from the precursor's columnar
@@ -182,7 +185,7 @@ namespace pwiz.Skyline.Model
                                     else if (_settings.NormalizeOption.Is(NormalizationMethod.TIC))
                                     {
                                         var denominator = document.Settings.GetTicNormalizationDenominator(
-                                            replicateIndex, groupChromInfo.FileId);
+                                            replicateIndex, fileId);
                                         if (!denominator.HasValue)
                                         {
                                             continue;
@@ -194,11 +197,9 @@ namespace pwiz.Skyline.Model
                                              _settings.NormalizeOption.NormalizationMethod is NormalizationMethod
                                                  .RatioToLabel ratioToLabel)
                                     {
-                                        var ci = transitionGroupDocNode.GetSafeChromInfo(replicateIndex)
-                                            .FirstOrDefault(c => c.OptimizationStep == 0);
                                         var ratioValue =
                                             normalizedValueCalculator.GetTransitionGroupRatioValue(ratioToLabel,
-                                                peptide, transitionGroupDocNode, ci);
+                                                peptide, transitionGroupDocNode, fileId);
                                         if (ratioValue == null)
                                         {
                                             continue;
@@ -255,7 +256,8 @@ namespace pwiz.Skyline.Model
                     continue;
                 foreach (var nodeGroup in nodeMolecule.TransitionGroups)
                 {
-                    if (!ids.Contains(nodeGroup.Id.GlobalIndex) || nodeGroup.AveragePeakArea == null)
+                    if (!ids.Contains(nodeGroup.Id.GlobalIndex) ||
+                        nodeGroup.GetAveragePeakArea(document.Settings) == null)
                         setRemove.Add(nodeGroup.Id.GlobalIndex);
                     foreach (var trans in nodeGroup.Transitions)
                     {
@@ -286,7 +288,7 @@ namespace pwiz.Skyline.Model
 
                 for (var i = 0; i < replicates; ++i)
                 {
-                    double? area = transitionGroupDocNode.GetPeakArea(i, qvalueCutoff);
+                    double? area = transitionGroupDocNode.GetPeakArea(i, document.Settings, qvalueCutoff);
                     if (area.HasValue)
                         ++detections;
                     areas.Add(area);

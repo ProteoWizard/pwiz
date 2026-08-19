@@ -104,7 +104,10 @@ namespace pwiz.Skyline.Model.Results
                 double apexHeight = 0;
                 foreach (var groupNode in groupNodes)
                 {
-                    var transitionGroupChromInfo = groupNode.GetSafeChromInfo(ReplicateIndex)
+                    // Rebuilt from the .skyd through the MoleculeResults this already reads the
+                    // chromatograms through, rather than chrom infos the precursor no longer keeps
+                    var transitionGroupChromInfo = MoleculeResults
+                        .GetTransitionGroupChromInfos(groupNode.TransitionGroup, ReplicateIndex)
                         .FirstOrDefault(chromInfo =>
                             0 == chromInfo.OptimizationStep && ReferenceEquals(chromInfo.FileId, ChromFileInfo.FileId));
                     if (transitionGroupChromInfo?.StartRetentionTime != null)

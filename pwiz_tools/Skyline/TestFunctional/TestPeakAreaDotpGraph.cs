@@ -229,6 +229,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 var repIndex = pane.GetOriginalXAxisLabels().ToList().FindIndex(label => replicates[i].Equals(label));
                 Assert.IsTrue(repIndex >= 0, "Replicate labels of the peak area graph are incorrect.");
+                Assert.IsTrue(repIndex < dotpLine.Points.Count, string.Format(
+                    "Replicate {0} is at position {1} of {2} but the {3} line has {4} points",
+                    replicates[i], repIndex, pane.GetOriginalXAxisLabels().Length, dotpLabel, dotpLine.Points.Count));
                 Assert.AreEqual(dotps[i], Math.Round(dotpLine.Points[repIndex].Y, 2));
             }
         }

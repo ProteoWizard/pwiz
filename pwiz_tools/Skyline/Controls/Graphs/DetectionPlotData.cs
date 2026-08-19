@@ -104,11 +104,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     //get q-values for precursor replicates
                     foreach (var i in Enumerable.Range(0, ReplicateCount))
                     {
-                        var chromInfo = precursor.GetSafeChromInfo(i).FirstOrDefault(c => c.OptimizationStep == 0);
-                        if (chromInfo != null && chromInfo.QValue.HasValue)
-                            qs.Add(chromInfo.QValue.Value);
-                        else
-                            qs.Add(float.NaN);
+                        // The q value comes from the precursor's columnar results, which hold the
+                        // peaks of optimization step zero only
+                        var fileId = precursor.FindFirstFileId(i);
+                        var qValue = fileId != null
+                            ? precursor.AbbreviatedResults.GetQValue(i, fileId)
+                            : null;
+                        qs.Add(qValue ?? float.NaN);
                     }
 
                     precursorData.Add(new QData(precursor.Id, qs));

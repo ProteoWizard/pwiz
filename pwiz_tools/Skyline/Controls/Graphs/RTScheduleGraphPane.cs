@@ -332,7 +332,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         double? retentionTime = predict.PredictRetentionTime(document, nodePep, nodeGroup, input.SchedulingReplicateIndex,
                             input.SchedulingAlgorithm, singleWindow, out var timeWindow);
                         var nodeGroupPrimary = primaryTransitionCount > 0
-                            ? nodePep.GetPrimaryResultsGroup(nodeGroup)
+                            ? nodePep.GetPrimaryResultsGroup(nodeGroup, document.Settings)
                             : null;
 
                         if (retentionTime.HasValue)

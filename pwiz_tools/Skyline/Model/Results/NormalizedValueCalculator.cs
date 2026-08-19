@@ -203,7 +203,22 @@ namespace pwiz.Skyline.Model.Results
             PeptideDocNode peptideDocNode,
             TransitionGroupDocNode transitionGroupDocNode, TransitionGroupChromInfo transitionGroupChromInfo)
         {
-            if (peptideDocNode == null || transitionGroupChromInfo == null)
+            return transitionGroupChromInfo == null
+                ? null
+                : GetTransitionGroupRatioValue(ratioToLabel, peptideDocNode, transitionGroupDocNode,
+                    transitionGroupChromInfo.FileId);
+        }
+
+        /// <summary>
+        /// The ratio of a precursor's areas to its label match's in one file. The file is all the
+        /// overload which takes a <see cref="TransitionGroupChromInfo"/> ever took from one, and a
+        /// caller reading the columnar results has the file without rebuilding a chrom info.
+        /// </summary>
+        public RatioValue GetTransitionGroupRatioValue(NormalizationMethod.RatioToLabel ratioToLabel,
+            PeptideDocNode peptideDocNode,
+            TransitionGroupDocNode transitionGroupDocNode, ChromFileInfoId fileId)
+        {
+            if (peptideDocNode == null || fileId == null)
             {
                 return null;
             }
@@ -225,7 +240,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var tran in transitionGroupDocNode.Transitions.Where(tran =>
                     tran.IsQuantitative(Document.Settings)))
                 {
-                    var peak = FindMatchingTransitionPeak(transitionGroupChromInfo.FileId, transitionGroupDocNode,
+                    var peak = FindMatchingTransitionPeak(fileId, transitionGroupDocNode,
                         tran);
                     if (peak.HasValue)
                     {
@@ -235,7 +250,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var tran in otherTransitionGroup.Transitions.Where(tran =>
                     tran.IsQuantitative(Document.Settings)))
                 {
-                    var peak = FindMatchingTransitionPeak(transitionGroupChromInfo.FileId, otherTransitionGroup, tran);
+                    var peak = FindMatchingTransitionPeak(fileId, otherTransitionGroup, tran);
                     if (peak.HasValue)
                     {
                         denominators.Add(peak.Value.Area);
@@ -270,9 +285,9 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                var peak = FindMatchingTransitionPeak(transitionGroupChromInfo.FileId, transitionGroupDocNode,
+                var peak = FindMatchingTransitionPeak(fileId, transitionGroupDocNode,
                     transition);
-                var otherPeak = FindMatchingTransitionPeak(transitionGroupChromInfo.FileId, otherTransitionGroup,
+                var otherPeak = FindMatchingTransitionPeak(fileId, otherTransitionGroup,
                     otherTransition);
                 if (!peak.HasValue || peak.Value.IsEmpty || !otherPeak.HasValue || otherPeak.Value.IsEmpty)
                 {

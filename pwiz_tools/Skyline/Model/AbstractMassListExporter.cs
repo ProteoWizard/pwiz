@@ -345,7 +345,7 @@ namespace pwiz.Skyline.Model
                             continue;
 
                         var groupPrimary = IsolationList != IsolationStrategy.precursor && PrimaryTransitionCount > 0
-                            ? peptide.GetPrimaryResultsGroup(group)
+                            ? peptide.GetPrimaryResultsGroup(group, Document.Settings)
                             : null;
 
                         WriteTransitions(fileIterator, seq, peptide, group, groupPrimary);
@@ -397,7 +397,7 @@ namespace pwiz.Skyline.Model
                         double retentionTime = predict.PredictRetentionTime(Document, nodePep, nodeTranGroup, SchedulingReplicateIndex,
                             SchedulingAlgorithm, singleWindow, out var timeWindow) ?? 0;
                         var nodeTranGroupPrimary = PrimaryTransitionCount > 0
-                                                   ? nodePep.GetPrimaryResultsGroup(nodeTranGroup)
+                                                   ? nodePep.GetPrimaryResultsGroup(nodeTranGroup, Document.Settings)
                                                    : null;
 
                         var ps = new PrecursorSchedule(nodePepGroup,

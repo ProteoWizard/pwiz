@@ -894,14 +894,9 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 foreach (var nodeGroup in peptideStandards.SelectMany(nodePep => nodePep.PeptideDocNode.TransitionGroups))
                 {
-                    var chromInfos = nodeGroup.GetSafeChromInfo(resultsIndex);
-                    foreach (var groupChromInfo in chromInfos)
-                    {
-                        if (ReferenceEquals(fileInfo.FileId, groupChromInfo.FileId) &&
-                                groupChromInfo.OptimizationStep == 0 &&
-                                groupChromInfo.Area.HasValue)
-                            globalStandardArea += groupChromInfo.Area.Value;
-                    }
+                    // The areas come from the precursor's columnar results, which hold the peaks of
+                    // optimization step zero only - the step this ever summed
+                    globalStandardArea += nodeGroup.GetPeakArea(resultsIndex, fileInfo.FileId, this) ?? 0;
                 }
             }
             return globalStandardArea;

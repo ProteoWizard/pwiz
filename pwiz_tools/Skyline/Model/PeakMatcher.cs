@@ -52,15 +52,18 @@ namespace pwiz.Skyline.Model
                 resultsIndex >= abbreviatedResults.ChromFileIds.ReplicatePositions.ReplicateCount)
                 return;
 
-            var tranGroupChromInfo = nodeTranGroup.GetChromInfo(resultsIndex, resultsFile);
-            if (tranGroupChromInfo == null)
+            // The file and the peak asked about, from the columnar results rather than a chrom info
+            // the precursor no longer keeps. A null file means the replicate's first, which is what
+            // the chrom info accessor this replaced picked.
+            var fileId = resultsFile ?? nodeTranGroup.FindFirstFileId(resultsIndex);
+            if (fileId == null)
                 return;
 
             var chromSet = doc.Settings.MeasuredResults.Chromatograms[resultsIndex];
             if (!doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeTranGroup, mzMatchTolerance, out var chromGroupInfos))
                 return;
 
-            var chromGroupInfo = chromGroupInfos.FirstOrDefault(info => Equals(chromSet.GetFileInfo(tranGroupChromInfo.FileId).FilePath, info.FilePath));
+            var chromGroupInfo = chromGroupInfos.FirstOrDefault(info => Equals(chromSet.GetFileInfo(fileId).FilePath, info.FilePath));
             if (chromGroupInfo == null || chromGroupInfo.NumPeaks == 0 || !chromGroupInfo.TimeIntensitiesGroup.HasAnyPoints)
                 return;
             if (!GetTransitionChromatogramInfos(nodeTranGroup, chromGroupInfo, mzMatchTolerance).Any())
@@ -68,13 +71,16 @@ namespace pwiz.Skyline.Model
 
             runTime = chromGroupInfo.RunStartTime;
 
-            if (!tranGroupChromInfo.RetentionTime.HasValue || !tranGroupChromInfo.StartRetentionTime.HasValue || !tranGroupChromInfo.EndRetentionTime.HasValue)
+            var retentionTime = abbreviatedResults.GetRetentionTime(resultsIndex, fileId);
+            var startTime = abbreviatedResults.GetStartTime(resultsIndex, fileId);
+            var endTime = abbreviatedResults.GetEndTime(resultsIndex, fileId);
+            if (!retentionTime.HasValue || !startTime.HasValue || !endTime.HasValue)
                 return;
 
             int peakIndex = -1;
             foreach (var transition in chromGroupInfo.TransitionPointSets)
             {
-                peakIndex = transition.IndexOfPeak(tranGroupChromInfo.RetentionTime.Value);
+                peakIndex = transition.IndexOfPeak(retentionTime.Value);
                 if (peakIndex != -1)
                     break;
             }
@@ -98,7 +104,7 @@ namespace pwiz.Skyline.Model
                 // The area and the boundaries of this transition's peak, from the columnar results
                 // rather than a chrom info the transition no longer keeps.
                 if (!abbreviatedResults.TryGetTransitionPeak(nodeTran.Transition, resultsIndex,
-                        tranGroupChromInfo.FileId, out var tranPeak))
+                        fileId, out var tranPeak))
                     continue;
 
                 float area;
@@ -109,8 +115,8 @@ namespace pwiz.Skyline.Model
                     area = cachedPeak.Area;
 
                     var peakBounds = abbreviatedResults.FindTransitionPeakBounds(nodeTran.Transition, resultsIndex,
-                        tranGroupChromInfo.FileId);
-                    if (peakBounds.HasValue && cachedPeak.RetentionTime.Equals(tranGroupChromInfo.RetentionTime.Value))
+                        fileId);
+                    if (peakBounds.HasValue && cachedPeak.RetentionTime.Equals(retentionTime.Value))
                     {
                         var range = cachedPeak.EndTime - cachedPeak.StartTime;
                         referenceMatchDataList[peakIndex].ShiftLeft = (peakBounds.Value.StartTime - cachedPeak.StartTime)/range;
@@ -126,8 +132,8 @@ namespace pwiz.Skyline.Model
 
             referenceTarget = peakIndex != -1
                 ? referenceMatchDataList[peakIndex]
-                : new PeakMatchData(abundances, abundances.Sum()/totalArea, tranGroupChromInfo.RetentionTime.Value,
-                    tranGroupChromInfo.StartRetentionTime.Value, tranGroupChromInfo.EndRetentionTime.Value, timeMin, timeMax);
+                : new PeakMatchData(abundances, abundances.Sum()/totalArea, retentionTime.Value,
+                    startTime.Value, endTime.Value, timeMin, timeMax);
 
             referenceMatchData = referenceMatchDataList.ToArray();
         }

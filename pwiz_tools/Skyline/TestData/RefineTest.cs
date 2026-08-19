@@ -123,12 +123,15 @@ namespace pwiz.SkylineTestData
             refineSettings.DotProductThreshold = dotProductThreshold;
             docRefined = refineSettings.Refine(document);
             int missingResults = 0;
+            bool integrateAll = document.Settings.TransitionSettings.Integration.IsIntegrateAll;
             foreach (var nodeGroup in docRefined.PeptideTransitionGroups)
             {
-                if (!nodeGroup.HasResults || nodeGroup.EmptyResults[0].IsEmpty)
+                // Null is what the columnar results say for a precursor with no peak in the
+                // replicate, which is what an empty chrom info list used to say
+                if (!nodeGroup.GetPeakCountRatio(0, integrateAll).HasValue)
                     missingResults++;
                 else
-                    Assert.IsTrue(nodeGroup.EmptyResults[0][0].LibraryDotProduct >= dotProductThreshold);
+                    Assert.IsTrue(nodeGroup.GetLibraryDotProduct(0, document.Settings) >= dotProductThreshold);
             }
             Assert.AreNotEqual(0, missingResults);
             Assert.IsTrue(missingResults < docRefined.PeptideTransitionGroupCount);
@@ -140,7 +143,7 @@ namespace pwiz.SkylineTestData
             Assert.AreNotEqual(docRefined.PeptideCount, docRefinedRT.PeptideCount);
             // The RT threshold should have removed all precursors without results
             Assert.IsFalse(docRefinedRT.PeptideTransitionGroups.Any(nodeGroup =>
-                !nodeGroup.HasResults || nodeGroup.EmptyResults[0].IsEmpty));
+                !nodeGroup.GetPeakCountRatio(0, integrateAll).HasValue));
             // And peak count ratio
             refineSettings.MinPeakFoundRatio = 1.0;
             var docRefinedRatio = refineSettings.Refine(document);
@@ -151,7 +154,7 @@ namespace pwiz.SkylineTestData
             {
                 Assert.IsTrue(nodeGroup.HasResults);
                 Assert.IsTrue(nodeGroup.HasLibInfo);
-                Assert.AreEqual(1.0, nodeGroup.EmptyResults[0][0].PeakCountRatio);
+                Assert.AreEqual(1.0, nodeGroup.GetPeakCountRatio(0, integrateAll));
             }
             Assert.AreEqual(2, docRefinedRatio.PeptideGroupCount);
             Assert.AreEqual(7, docRefinedRatio.PeptideTransitionGroupCount);
