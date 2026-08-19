@@ -23,6 +23,9 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
+    /// <summary>
+    /// Verifies that spectra with no m/z's and intensities are still included in the extracted chromatogram.
+    /// </summary>
     [TestClass]
     public class ZeroLengthSpectraTest : AbstractFunctionalTest
     {
