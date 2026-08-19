@@ -2145,6 +2145,29 @@ namespace pwiz.Skyline.Controls.Graphs
                 double intensity = SumIntensities(fullScans, minMz, indices, minIonMobilityVal, maxIonMobilityVal);
                 maxIntensity = Math.Max(maxIntensity, intensity);
             }
+
+            if (maxMz <= 0)
+            {
+                // None of the scans have any peaks in them because they measured no ions. Show the
+                // m/z range that the instrument was scanning so that the axes still get drawn.
+                maxMz = GetMaxScanWindow(fullScans);
+            }
+        }
+
+        /// <summary>
+        /// The highest scan window upper limit declared by any of the spectra, or zero if none of
+        /// them says what m/z range it was measuring.
+        /// </summary>
+        private static double GetMaxScanWindow(IEnumerable<MsDataSpectrum> spectra)
+        {
+            double maxScanWindow = 0;
+            foreach (var spectrum in spectra)
+            {
+                var upperLimit = spectrum.Metadata?.ScanWindowUpperLimit;
+                if (upperLimit.HasValue)
+                    maxScanWindow = Math.Max(maxScanWindow, upperLimit.Value);
+            }
+            return maxScanWindow;
         }
 
         private void GetIonMobilityRange(out double minIonMobility, out double maxIonMobility)
@@ -2247,20 +2270,27 @@ namespace pwiz.Skyline.Controls.Graphs
         private void ApplyXZoomToPane(GraphPane pane)
         {
             var xScale = pane.XAxis.Scale;
-            xScale.MinAuto = xScale.MaxAuto = false;
 
             if (magnifyBtn.Checked)
             {
                 double mz = _msDataFileScanHelper.Source == ChromSource.ms1
                     ? _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].PrecursorMz
                     : _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].ProductMz;
+                xScale.MinAuto = xScale.MaxAuto = false;
                 xScale.Min = mz - 1.5;
                 xScale.Max = mz + 3.5;
             }
-            else if (_requestedRange != null)
+            else if (_requestedRange != null && _requestedRange.Max > _requestedRange.Min)
             {
+                xScale.MinAuto = xScale.MaxAuto = false;
                 xScale.Min = _requestedRange.Min;
                 xScale.Max = _requestedRange.Max;
+            }
+            else
+            {
+                // There is no m/z range to show. Leave the axis auto-scaled, since collapsing it to
+                // a single value makes ZedGraph skip drawing the axis entirely.
+                xScale.MinAuto = xScale.MaxAuto = true;
             }
         }
 
@@ -2434,6 +2464,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool HasChromatogramData => false;
 
+        /// <summary>
+        /// The maximum for an intensity axis, which is never zero. ZedGraph draws nothing at all --
+        /// not even the axes -- when the minimum of any of a pane's axis scales equals its maximum,
+        /// so a scan which measured no ions would otherwise produce a completely blank graph.
+        /// </summary>
+        private double IntensityAxisMax => _maxIntensity > 0 ? _maxIntensity * 1.1 : 1;
+
         private void ZoomYAxis()
         {
             if (_msDataFileScanHelper.ScanProvider == null || _msDataFileScanHelper.ScanProvider.Transitions.Length == 0)
@@ -2455,7 +2492,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (isSpectrum)
             {
                 yScale.Min = 0;
-                yScale.Max = _maxIntensity * 1.1;
+                yScale.Max = IntensityAxisMax;
                 if (magnifyBtn.Checked)
                 {
                     yScale.MaxAuto = true;
@@ -2516,11 +2553,11 @@ namespace pwiz.Skyline.Controls.Graphs
                             maxY = pt.Y;
                     }
                 }
-                yScale.Max = maxY > 0 ? maxY * 1.1 : _maxIntensity * 1.1;
+                yScale.Max = maxY > 0 ? maxY * 1.1 : IntensityAxisMax;
             }
             else
             {
-                yScale.Max = _maxIntensity * 1.1;
+                yScale.Max = IntensityAxisMax;
             }
             _stickSpectrumPane.AxisChange();
         }
@@ -2542,7 +2579,7 @@ namespace pwiz.Skyline.Controls.Graphs
             yScale.MinAuto = false;
             _heatMapPane.LockYAxisMinAtZero = true;
             yScale.Min = 0;
-            yScale.Max = _maxIntensity * 1.1;
+            yScale.Max = IntensityAxisMax;
             // Magnify on → auto-fit Y to data in the zoomed X range during next paint.
             yScale.MaxAuto = magnifyBtn.Checked;
         }
