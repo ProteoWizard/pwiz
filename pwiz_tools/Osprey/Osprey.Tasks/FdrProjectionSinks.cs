@@ -85,7 +85,8 @@ namespace pwiz.Osprey.Tasks
         public IReadOnlyList<int> FilePassingTargets => _fileTargets;
 
         public void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
-            byte charge, string peptide, double score, in FdrQValues q)
+            byte charge, string peptide, double score, double experimentAggregateScore,
+            in FdrQValues q)
         {
             // Tail [COUNT] tally, identical to the retired inline block: passing =
             // EffectiveRunQvalue <= RunFdr, split target/decoy; best-q-per-precursor
@@ -114,7 +115,7 @@ namespace pwiz.Osprey.Tasks
             if (_mdiagAccumulator != null)
                 _mdiagAccumulator.Add(fileIdx, peptide, charge, entryId, isDecoy, score, in q);
 
-            AcceptOutput(fileIdx, rowIdx, entryId, isDecoy, score, in q);
+            AcceptOutput(fileIdx, rowIdx, entryId, isDecoy, score, experimentAggregateScore, in q);
         }
 
         public void Finish(Action<string> logInfo)
@@ -149,7 +150,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>Handle one row's q-value output (park it, or stream it to the sidecar).</summary>
         protected abstract void AcceptOutput(int fileIdx, int rowIdx, uint entryId,
-            bool isDecoy, double score, in FdrQValues q);
+            bool isDecoy, double score, double experimentAggregateScore, in FdrQValues q);
 
         /// <summary>Flush any deferred per-file output before the [COUNT] tally is logged.</summary>
         protected virtual void OnFinish()
@@ -162,13 +163,13 @@ namespace pwiz.Osprey.Tasks
     /// score pass's per-row output straight to disk -- it keeps NO resident q-value array.
     /// During the score pass (phase 1) it buffers each file's 60-byte
     /// <see cref="FdrScoreRecord"/>s in projection order -- with the
-    /// <c>run_protein_qvalue</c> field held at its 1.0 placeholder -- and flushes the
+    /// <c>experiment_protein_qvalue</c> field held at its 1.0 placeholder -- and flushes the
     /// per-file <c>.1st-pass.fdr_scores.bin</c> via the caller's <c>flushPartial</c>
     /// callback at the file's last row, so a full pass's worth of q-values is never held
     /// resident (one file's buffer at a time). Empty survivor files are flushed with a
     /// 0-record sidecar in <see cref="OnFinish"/>. First-pass protein FDR + compaction now
-    /// stream <c>run_peptide_qvalue</c> / <c>run_protein_qvalue</c> back off this sidecar
-    /// (see <c>FirstJoinTask.RunFirstPassProteinFdrStreaming</c>), so the resident
+    /// stream <c>run_peptide_qvalue</c> / <c>experiment_protein_qvalue</c> back off this sidecar
+    /// (see <c>FirstPassFdrTask.RunFirstPassProteinFdrStreaming</c>), so the resident
     /// <c>FdrProjectionOutputs</c> array the pre-S2 sink kept is gone; protein FDR patches
     /// each record's <c>[52..60]</c> straight onto the sidecar. The byte layout is
     /// single-sourced through <c>FdrScoresSidecar.WriteRecord</c>, so the phase-1 file is
@@ -202,18 +203,20 @@ namespace pwiz.Osprey.Tasks
         public int PartialWriteFailures => _partialWriteFailures;
 
         protected override void AcceptOutput(int fileIdx, int rowIdx, uint entryId,
-            bool isDecoy, double score, in FdrQValues q)
+            bool isDecoy, double score, double experimentAggregateScore, in FdrQValues q)
         {
             // Phase 1 of the two-phase sidecar: buffer this row's PARTIAL record
-            // (run_protein_qvalue = 1.0 placeholder) in projection order and flush the
+            // (experiment_protein_qvalue = 1.0 placeholder) in projection order and flush the
             // per-file .1st-pass.fdr_scores.bin at the file's last row. All five score-pass
             // q-values (incl. run_peptide_qvalue) go straight to disk here and are never
             // kept resident; first-pass protein FDR streams them back + patches [52..60].
+            // experiment_aggregate_score [60..68] is final at write time - unlike
+            // experiment_protein_qvalue it comes from the score pass, so it needs no patch phase.
             _buffer.Add(new FdrScoreRecord(
                 entryId, score,
                 q.RunPrecursorQvalue, q.RunPeptideQvalue,
                 q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
-                q.Pep, 1.0));
+                q.Pep, 1.0, experimentAggregateScore));
 
             // RowCount, not PerFile[fileIdx].Value.Count: on the 1st-pass streaming path the
             // projection carries per-file counts but NO resident rows (issue #4355 struct-shrink
@@ -257,7 +260,7 @@ namespace pwiz.Osprey.Tasks
     /// <summary>
     /// 2nd-pass sink (issue #4355 struct-shrink S0, delivers C1): assembles each
     /// <see cref="FdrScoreRecord"/> during the score pass from the streamed q-values +
-    /// the survivor's <c>RunProteinQvalue</c> looked up by entry_id (it is no longer
+    /// the survivor's <c>ExperimentProteinQvalue</c> looked up by entry_id (it is no longer
     /// carried on the lean struct), buffers one file at a time in projection order, and
     /// flushes the per-file <c>.2nd-pass.fdr_scores.bin</c> directly via the caller's
     /// <c>flushFile</c> callback -- so the q-values are NEVER stored on the projection
@@ -287,9 +290,9 @@ namespace pwiz.Osprey.Tasks
         }
 
         protected override void AcceptOutput(int fileIdx, int rowIdx, uint entryId,
-            bool isDecoy, double score, in FdrQValues q)
+            bool isDecoy, double score, double experimentAggregateScore, in FdrQValues q)
         {
-            // Resolve this file's entry_id -> RunProteinQvalue map once, at its first
+            // Resolve this file's entry_id -> ExperimentProteinQvalue map once, at its first
             // row (rows are contiguous per file in Accept order). This is the value
             // BuildFromEntries used to carry onto the struct; the survivor buffer is
             // not mutated between projection build and here, so the lookup reproduces it.
@@ -298,15 +301,15 @@ namespace pwiz.Osprey.Tasks
                 _curFileIdx = fileIdx;
                 _curProteinQ = _resolveProteinQ(Projections.PerFile[fileIdx].Key);
             }
-            double runProteinQvalue;
-            if (_curProteinQ == null || !_curProteinQ.TryGetValue(entryId, out runProteinQvalue))
-                runProteinQvalue = 1.0;
+            double experimentProteinQvalue;
+            if (_curProteinQ == null || !_curProteinQ.TryGetValue(entryId, out experimentProteinQvalue))
+                experimentProteinQvalue = 1.0;
 
             _buffer.Add(new FdrScoreRecord(
                 entryId, score,
                 q.RunPrecursorQvalue, q.RunPeptideQvalue,
                 q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
-                q.Pep, runProteinQvalue));
+                q.Pep, experimentProteinQvalue, experimentAggregateScore));
 
             // Last row of this file: flush its sidecar and release the buffer. RowCount
             // (not the row list) so the 2nd-pass resident projection and the 1st-pass

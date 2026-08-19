@@ -98,10 +98,11 @@ td {
 <tr><td><nobr>--reintegrate-overwrite-peaks</nobr></td><td>现有的手动合并的峰将被重新整合模型选择的峰覆盖。（需要“<nobr>--reintegrate-model-name</nobr>”）</td></tr>
 <tr><td><nobr>--reintegrate-exclude-feature</nobr>=<br/>&lt;特征名称&gt;</td><td>用于从模型中按名称排除特定特征得分。名称可以在用户界面中找到。可以多次使用此参数来排除多个特征。</td></tr>
 </table>
-<div class="RowType">正在删除结果重复测定</div>
+<div class="RowType">Managing results replicates</div>
 <table>
 <tr><td><nobr>--remove-before</nobr>=&lt;日期&gt;</td><td>从打开文档中删除所有采集时间早于给定日期的结果。</td></tr>
 <tr><td><nobr>--remove-all</nobr></td><td>从打开文档中删除所有结果。</td></tr>
+<tr><td><nobr>--reorder-replicates</nobr>=路径/到/文件</td><td>Reorder results replicates using a <nobr>UTF-8</nobr> text file containing one existing replicate name per line. Listed replicates are placed first; unlisted replicates retain their relative order.</td></tr>
 </table>
 <div class="RowType">最小化结果文件大小</div>
 <table>
@@ -226,8 +227,8 @@ td {
 <tr><td><nobr>--report-file</nobr>=路径/到/文件.csv</td><td>导出报告的路径。如果指定了“<nobr>--report-name</nobr>”，则为必需。</td></tr>
 <tr><td><nobr>--report-add</nobr>=路径/到/文件.skyr</td><td>将保存的报告模板文件中的报告添加到正在运行的程序中。</td></tr>
 <tr><td><nobr>--report-conflict-resolution</nobr>=<br/>&lt;overwrite | skip&gt;</td><td>指定在使用“<nobr>--report-add</nobr>”参数时，如何通过覆盖或跳过报告名称冲突来解决报告名称冲突问题（默认情况下是为冲突输出错误消息）</td></tr>
-<tr><td><nobr>--report-format</nobr>=&lt;csv | tsv&gt;</td><td>CSV 用于以逗号分隔的报告（或以分号分隔，取决于您的本地化方式）或者TSV 用于以制表符分隔的报告[默认为 CSV]</td></tr>
-<tr><td><nobr>--report-invariant</nobr></td><td>使用“不变量”语言设置导出报告，使用“英语（美国）”数字格式和不带空格的标题文本，适合与 R 统计编程环境一起使用。</td></tr>
+<tr><td><nobr>--report-format</nobr>=<br/>&lt;csv | tsv | parquet&gt;</td><td>CSV 用于以逗号分隔的报告（或以分号分隔，取决于您的本地化方式）或者TSV 用于以制表符分隔的报告[默认为 CSV]</td></tr>
+<tr><td><nobr>--report-invariant</nobr>[=True&nbsp;或&nbsp;False]</td><td>使用“不变量”语言设置导出报告，使用“英语（美国）”数字格式和不带空格的标题文本，适合与 R 统计编程环境一起使用。</td></tr>
 </table>
 <div class="RowType">正在导出色谱图</div>
 <table>

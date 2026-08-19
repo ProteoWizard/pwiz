@@ -36,10 +36,10 @@ namespace pwiz.Osprey.Tasks
     /// transitions documented in
     /// <c>pwiz_tools/Osprey/Osprey-workflow.html</c>:
     /// <list type="bullet">
-    ///   <item>per-file scoring (Stages 1-4) → first join</item>
+    ///   <item>per-file scoring (Stages 1-4) → FirstPassFDR</item>
     ///   <item>first-pass FDR + reconciliation planning (Stage 5)</item>
-    ///   <item>per-file rescore + gap-fill (Stage 6) → second join</item>
-    ///   <item>merge-node second-pass FDR + protein FDR + blib (Stage 7)</item>
+    ///   <item>per-file rescore + gap-fill (Stage 6) → SecondPassFDR</item>
+    ///   <item>SecondPassFDR second-pass FDR + protein FDR + blib (Stage 7)</item>
     /// </list>
     ///
     /// Phase B adds <see cref="Inputs"/> / <see cref="Outputs"/> /

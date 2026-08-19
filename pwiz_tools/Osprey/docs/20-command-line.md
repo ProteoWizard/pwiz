@@ -171,7 +171,7 @@ four single-task workers — **one node = one `--task`**:
 
 ```
 PerFileScoring (split, per file) → FirstPassFDR (join, all files)
-    → PerFileRescoring (split, per file) → SecondPassFDR (merge node)
+    → PerFileRescoring (split, per file) → SecondPassFDR (join, all files)
 ```
 
 Pass the **same** `--library` and search options to every task; the parquet integrity
@@ -194,8 +194,8 @@ osprey --task SecondPassFDR     --input-scores ./reconciled_dir -l hela.tsv -o o
 ```
 
 - `--input-scores` takes a **directory** (globbed and sorted internally) or an explicit
-  file list (consumed in the order given). First-join reconciliation is order-sensitive,
-  so for the join tasks pass a directory or a deterministically sorted list.
+  file list (consumed in the order given). FirstPassFDR reconciliation is order-sensitive,
+  so for `FirstPassFDR` and `SecondPassFDR` pass a directory or a deterministically sorted list.
 - Rehydration sidecars must travel with their parquet into each worker's working
   directory. Let the scheduler fan out (one file per split process) rather than
   `--parallel-files`, which is the single-node multi-file mode.

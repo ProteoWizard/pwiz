@@ -75,7 +75,7 @@ namespace pwiz.Osprey.Core
         /// <c>3</c> (both) emits both in one run; because a single <see cref="OutputFdrBench"/>
         /// path is given, each pass is written with a <c>.pass1</c> / <c>.pass2</c> stem suffix so
         /// they do not overwrite each other (see <c>FdrBenchInputWriter.PathForPass</c>). Pass 1
-        /// is emitted from the first-join stage before compaction; pass 2 from the merge node
+        /// is emitted from the FirstPassFDR stage before compaction; pass 2 from SecondPassFDR
         /// after rescoring.
         /// </summary>
         public int FdrBenchPass { get; set; } = FDRBENCH_PASS_2;
@@ -326,7 +326,7 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// Pipeline-membership flag (read by each task's <c>IsIncluded</c>):
-        /// include only the per-file fan-out, not the join. Set by both
+        /// include only the per-file fan-out, not the joining tasks. Set by both
         /// <c>--task PerFileScoring</c> and <c>--task PerFileRescoring</c>; the
         /// concrete behavior depends on the input type. With <c>-i</c> mzML it
         /// is the Stage 1-4 worker — each input produces a
@@ -379,6 +379,16 @@ namespace pwiz.Osprey.Core
         public HpcTask? SelectedTask { get; set; }
 
         /// <summary>
+        /// True under <c>--task ModelDiagnostics</c>: recompute the pass-2 view and write ONLY
+        /// the report, suppressing the .blib, the protein/summary reports and the 2nd-pass FDR
+        /// sidecars. The point is to be able to re-judge a diagnostics change on a completed
+        /// large cohort without disturbing - or waiting for - the results it already produced.
+        /// Every suppressed artifact is one this run would otherwise REWRITE with the same
+        /// content it already holds, so skipping them costs nothing but the write.
+        /// </summary>
+        public bool DiagnosticsOnly => SelectedTask == HpcTask.ModelDiagnostics;
+
+        /// <summary>
         /// Shallow clone for per-file ProcessFile() calls. The pipeline
         /// mutates a few fields (notably <see cref="FragmentTolerance"/>
         /// after MS2 calibration); cloning at the top of ProcessFile
@@ -406,21 +416,37 @@ namespace pwiz.Osprey.Core
 
     /// <summary>
     /// A single HPC pipeline task selectable via <c>--task &lt;Name&gt;</c>
-    /// (one HPC node = one task). The names are the stable CLI contract and
-    /// match each task's <c>OspreyTask.Name</c>.
+    /// (one HPC node = one task). Each member is its task's
+    /// <c>OspreyTask.Name</c> in PascalCase, so the member, the class, and the
+    /// CLI selector are one word per task rather than three to map between.
+    /// <para>The stamp is not the member: what a task writes into its
+    /// <c>.osprey.task</c> sidecars and logs as <c>[TASK] &lt;Name&gt;</c> is
+    /// <c>OspreyTask.Name</c> verbatim, which keeps the all-caps FDR acronym
+    /// (<see cref="FirstPassFdr"/> stamps <c>FirstPassFDR</c>). Anything matching
+    /// those artifacts must use the Name, never the member or the class name.
+    /// <see cref="PerFileRescore"/> differs by more than casing - its Name is
+    /// <c>PerFileRescoring</c>.</para>
     /// </summary>
     public enum HpcTask
     {
         PerFileScoring,
-        FirstJoin,
+        FirstPassFdr,
         PerFileRescore,
-        MergeNode,
+        SecondPassFdr,
         // Stage 1 alone: build each input's .spectra.bin cache and stop. Not an
         // HPC fan-out node like the four above but the data-staging step ahead of
         // them, which is why it needs no library and publishes no byproducts.
         // Appended rather than ordered first so the existing members keep their
         // ordinal values.
-        SpectraCache
+        SpectraCache,
+        // Regenerate ONLY the --model-diagnostics HTML for a COMPLETED analysis, from that
+        // run's own outputs. Like SpectraCache this is not one of the four HPC fan-out nodes:
+        // it runs the canonical pipeline so Stages 1-5 rehydrate from their valid stamps, then
+        // lets SecondPassFDR compute the pass-2 view while suppressing every artifact write
+        // except the report. Exists because judging a diagnostics change on a large cohort
+        // otherwise means re-running the whole search - 7 hours on the 82-file SEA-AD set -
+        // or accepting a stale page written by an older build.
+        ModelDiagnostics
     }
 
     /// <summary>
@@ -472,7 +498,7 @@ namespace pwiz.Osprey.Core
         ///
         /// Use this ANYWHERE the question is "is this the Percolator pipeline?" rather
         /// than a raw <c>== FdrMethod.Percolator</c>. Those gates are scattered across the
-        /// Tasks layer -- the join's projection gate, the 2nd-pass projection gate,
+        /// Tasks layer -- FirstPassFDR's projection gate, the 2nd-pass projection gate,
         /// <c>NeedsResidentPool</c>, the Stage 5 log header -- and each one that compares
         /// against Percolator alone silently routes Gbdt down the resident
         /// <c>FdrEntry</c> path instead of the streaming projection. That fails quietly:

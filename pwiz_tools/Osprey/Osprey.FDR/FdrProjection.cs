@@ -42,7 +42,7 @@ namespace pwiz.Osprey.FDR
     /// passes. Replaces the full <see cref="FdrEntry"/> stub buffer that was
     /// held resident across first-pass Percolator + protein FDR + the 1st-pass sidecar
     /// write + compaction; full <see cref="FdrEntry"/> survivors are reloaded from
-    /// parquet + the sidecar after compaction (see <c>FirstJoinTask</c>). Held in a
+    /// parquet + the sidecar after compaction (see <c>FirstPassFdrTask</c>). Held in a
     /// <c>List</c> so the backing store is a contiguous struct array (no per-row object
     /// header, no per-row <c>ModifiedSequence</c> string -- the string is interned once
     /// into the <see cref="FdrProjectionSet.PeptideById"/> table and referenced here by
@@ -413,7 +413,7 @@ namespace pwiz.Osprey.FDR
             }
 
             /// <summary>
-            /// Open a file's row list. Files must be added in the same order the join
+            /// Open a file's row list. Files must be added in the same order FirstPassFDR
             /// expects (the scoring order), which is what fixes <see cref="FdrProjection.FileIdx"/>.
             /// </summary>
             public void BeginFile(string fileName, int capacityHint = 0)

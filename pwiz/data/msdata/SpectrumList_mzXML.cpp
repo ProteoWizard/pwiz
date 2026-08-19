@@ -99,7 +99,7 @@ SpectrumList_mzXMLImpl::SpectrumList_mzXMLImpl(shared_ptr<istream> is, const MSD
 
 const SpectrumIdentity& SpectrumList_mzXMLImpl::spectrumIdentity(size_t index) const
 {
-    if (index > index_.size())
+    if (index >= index_.size())
         throw runtime_error("[SpectrumList_mzXML::spectrumIdentity()] Index out of bounds.");
 
     return index_[index];
@@ -621,7 +621,7 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, IO::BinaryDataFlag bi
 SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, IO::BinaryDataFlag binaryDataFlag, DetailLevel detailLevel, const SpectrumPtr *defaults, bool isRecursiveCall) const
 {
     boost::lock_guard<boost::recursive_mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
-    if (index > index_.size())
+    if (index >= index_.size())
         throw runtime_error("[SpectrumList_mzXML::spectrum()] Index out of bounds.");
 
     // allocate Spectrum object and read it in

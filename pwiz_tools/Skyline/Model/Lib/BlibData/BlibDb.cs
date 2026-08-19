@@ -34,6 +34,7 @@ using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.Midas;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -526,6 +527,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 libAuthority, libId, Guid.NewGuid(), majorVer, minorVer);
 
             var listLibrary = new List<BiblioLiteSpectrumInfo>();
+            // Ion mobilities are stored by the index of the file in LibraryFiles, but the file
+            // indexes are not known until all of the spectra have been inserted, so collect the
+            // values by source file id here and index them below.
+            var listIonMobilitiesByFileId = new List<IList<KeyValuePair<int, IonMobilityAndCCS>>>();
+            var sourceFiles = new Dictionary<string, long>();
 
             var localStatus = status;
             using (ISession session = OpenWriteSession())
@@ -539,7 +545,6 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 using ITransaction transaction = session.BeginTransaction();
                 int progressPercent = -1;
                 int i = 0;
-                var sourceFiles = new Dictionary<string, long>();
                 var proteinTablesBuilder = new ProteinTablesBuilder(session);
                 using (var spectrumInserter = new SpectrumInserter(session))
                 {
@@ -547,22 +552,25 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     {
                         var dbRefSpectrum = RefSpectrumFromPeaks(session, spectrum, sourceFiles);
                         spectrumInserter.InsertSpectrum(dbRefSpectrum);
-                        var ionMobilitiesByFileId = new IndexedIonMobilities(
+                        var ionMobilitiesByFileId =
                             dbRefSpectrum.RetentionTimes.Where(rt => !Equals(rt.IonMobilityType, 0)).
                                 Select(rt =>
                                 {
                                     var ionMobilityValue = IonMobilityValue.GetIonMobilityValue(rt.IonMobility, (eIonMobilityUnits)rt.IonMobilityType);
                                     var ionMobilityAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobilityValue, rt.CollisionalCrossSectionSqA, rt.IonMobilityHighEnergyOffset);
                                     return new KeyValuePair<int, IonMobilityAndCCS>((int)rt.SpectrumSourceId, ionMobilityAndCCS);
-                                }));
+                                }).ToArray();
                         lock(listLibrary)
                         {
+                            // The file's index in LibraryFiles is not known until the library is
+                            // loaded back from the file which is being written here.
                             listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key,
                                 dbRefSpectrum.Copies,
                                 dbRefSpectrum.NumPeaks,
                                 (int)(dbRefSpectrum.Id ?? 0),
-                                (int?)dbRefSpectrum.FileId,
-                                spectrum.Protein).ChangeIonMobilities(ionMobilitiesByFileId));
+                                null,
+                                spectrum.Protein));
+                            listIonMobilitiesByFileId.Add(ionMobilitiesByFileId);
                             proteinTablesBuilder.Add(dbRefSpectrum, spectrum.Protein);
                             if (progressMonitor != null)
                             {
@@ -612,7 +620,28 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 }
             }
 
+            // The library will read its source files in id order, so that is the order that
+            // determines each file's index in LibraryFiles.
+            var fileIndexesById = new Dictionary<long, int>();
+            foreach (var fileId in sourceFiles.Values.OrderBy(id => id))
+            {
+                fileIndexesById.Add(fileId, fileIndexesById.Count);
+            }
+
             var libraryEntries = listLibrary.ToArray();
+            for (int i = 0; i < libraryEntries.Length; i++)
+            {
+                var ionMobilitiesByFileId = listIonMobilitiesByFileId[i];
+                if (ionMobilitiesByFileId.Count == 0)
+                {
+                    continue;
+                }
+
+                libraryEntries[i] = libraryEntries[i].ChangeIonMobilities(ionMobilitiesByFileId
+                    .Select(kvp => new KeyValuePair<int, IonMobilityAndCCS>(fileIndexesById[kvp.Key], kvp.Value))
+                    .ToIndexedMultiArray());
+            }
+
             return new BiblioSpecLiteLibrary(librarySpec, libLsid, majorVer, minorVer, libraryEntries, FileStreamManager.Default);
         }
 
@@ -878,7 +907,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                             new BiblioLiteSpectrumInfo(newLibKey, refSpectra.Copies,
                                                 refSpectra.NumPeaks,
                                                 (int) (refSpectra.Id ?? 0),
-                                                (int?) refSpectra.FileId,
+                                                null,
                                                 proteinName));
                                     }
 
@@ -928,7 +957,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                             refSpectra.Copies,
                                             refSpectra.NumPeaks,
                                             (int)(refSpectra.Id ?? 0),
-                                            (int?)refSpectra.FileId,
+                                            null,
                                             proteinName));
 
                                     // Save entries in the redundant library.

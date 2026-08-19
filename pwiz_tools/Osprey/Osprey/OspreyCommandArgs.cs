@@ -208,7 +208,7 @@ namespace pwiz.Osprey
         // --task is resolved + validated in Program.Main's pre-scan; the tokenizer here only
         // consumes its value (and rejects a missing one). Declared so it appears in help.
         public static readonly OspreyArgument ARG_TASK = new OspreyArgument(@"task",
-            new[] { @"SpectraCache", @"PerFileScoring", @"FirstPassFDR", @"PerFileRescoring", @"SecondPassFDR" },
+            new[] { @"SpectraCache", @"PerFileScoring", @"FirstPassFDR", @"PerFileRescoring", @"SecondPassFDR", @"ModelDiagnostics" },
             (c, p) => true);
         public static readonly OspreyArgument ARG_INPUT_SCORES = new OspreyArgument(@"input-scores",
             () => @"<paths|dir>", (c, p) => true) { Variadic = true, ProcessVariadic = (c, toks) =>
@@ -287,6 +287,13 @@ namespace pwiz.Osprey
         // format/section value (ascii | unicode | sections | html | <Section>).
         public static readonly OspreyArgument ARG_DIAGNOSTICS = new OspreyArgument(@"diagnostics",
             (c, p) => c._config.Diagnostics = true) { ShortName = @"d" };
+        // One flag, everything we know how to show. An opt-in token per expensive panel was built
+        // and removed (#4522): the peak co-assignment panel measured 7.3M rows/s, i.e. ~46s on an
+        // 82-file Astral run against a 10-hour search, so the cost never justified making anyone
+        // choose. Someone who asks for --model-diagnostics wants the diagnostics, not a decision
+        // about which ones they can afford - and a panel behind a token nobody remembers is a
+        // panel nobody sees, which defeats a diagnostic whose whole purpose is surfacing an effect
+        // users do not know to look for.
         public static readonly OspreyArgument ARG_MODEL_DIAGNOSTICS = new OspreyArgument(@"model-diagnostics",
             (c, p) => c._config.ModelDiagnostics = true);
         public static readonly OspreyArgument ARG_HELP = new OspreyArgument(@"help",
@@ -399,7 +406,7 @@ namespace pwiz.Osprey
                     i++;
                     if (i >= args.Length || args[i].StartsWith(@"-"))
                         throw new ArgumentException(
-                            @"--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, or SecondPassFDR).");
+                            @"--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR, or ModelDiagnostics).");
                     i++;
                     continue;
                 }
@@ -420,7 +427,6 @@ namespace pwiz.Osprey
                     matched.ProcessValue(this, new NameValuePair(matched.Name, parallelValue));
                     continue;
                 }
-
                 if (matched.Variadic)
                 {
                     i++;
@@ -684,7 +690,7 @@ namespace pwiz.Osprey
             sb.AppendLine(@"<html><head>");
             sb.AppendLine(@"<meta charset=""utf-8"">");
             sb.AppendLine(@"<title>Osprey command-line usage</title>");
-            sb.AppendLine(@"<meta name=""description"" content=""Command-line usage for Osprey, the C# (.NET 8) implementation of Mike MacCoss's peptide-centric DIA search tool: search and FDR arguments, protein inference, the SpectraCache staging task, and the four distributed HPC --task workers (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR)."">");
+            sb.AppendLine(@"<meta name=""description"" content=""Command-line usage for Osprey, the C# (.NET 8) implementation of Mike MacCoss's peptide-centric DIA search tool: search and FDR arguments, protein inference, the SpectraCache staging task, the ModelDiagnostics report-only task, and the four distributed HPC --task workers (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR)."">");
             // Self-contained stylesheet (Osprey does not reference Skyline, so it cannot call
             // DocumentationGenerator.GetStyleSheetHtml). The table rules are copied from that Skyline
             // stylesheet so Osprey's generated help matches Skyline's look (cell padding,
@@ -739,7 +745,7 @@ namespace pwiz.Osprey
                 @"boundaries into four single-task workers &mdash; one node = one <code>--task</code>: " +
                 @"<code>PerFileScoring</code> (split, per file) &rarr; <code>FirstPassFDR</code> (join, all " +
                 @"files) &rarr; <code>PerFileRescoring</code> (split, per file) &rarr; " +
-                @"<code>SecondPassFDR</code> (merge node). Pass the same <code>--library</code> and search " +
+                @"<code>SecondPassFDR</code> (join, all files). Pass the same <code>--library</code> and search " +
                 @"options to every task; the parquet integrity check rejects inputs whose search/library " +
                 @"hash does not match.</p>");
             sb.AppendLine(@"<pre>");
@@ -758,8 +764,8 @@ namespace pwiz.Osprey
             sb.AppendLine(@"Osprey --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"</pre>");
             sb.AppendLine(@"<p><code>--input-scores</code> takes a directory (globbed and sorted internally) " +
-                @"or an explicit file list (used in the order given). First-join reconciliation is " +
-                @"order-sensitive, so for the join tasks pass a directory or a deterministically sorted " +
+                @"or an explicit file list (used in the order given). FirstPassFDR reconciliation is " +
+                @"order-sensitive, so for <code>FirstPassFDR</code> and <code>SecondPassFDR</code> pass a directory or a deterministically sorted " +
                 @"list. The rehydration sidecars must travel with their parquet into each worker's " +
                 @"working directory. Let the scheduler do the fan-out (one file per split process) rather " +
                 @"than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>");
@@ -799,7 +805,7 @@ namespace pwiz.Osprey
                 { @"decoys-in-library", @"Trust decoys already in the spectral library instead of generating reverse decoys. Hard error if none are recognised." },
                 { @"decoy-pairing-manifest", @"FDRBench 5-column pairing manifest (TSV), used with --decoys-in-library" },
                 { @"write-pin", @"Write PIN files for external tools" },
-                { @"task", @"HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline." },
+                { @"task", @"HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. SpectraCache stages the .spectra.bin caches; ModelDiagnostics regenerates only the --model-diagnostics report for a COMPLETED run, writing no other artifact." },
                 { @"input-scores", @"HPC: one or more .scores.parquet files, or a single directory (non-recursive). Mutex with --input." },
                 { @"parallel-files", @"Input files scored concurrently (OUTER). Absent: one at a time (default). No value: auto from free RAM and cores. <N>: exactly N regardless of RAM/cores. Distinct from --threads." },
                 { @"threads", @"Per-file main-search threads (INNER; default: all cores), divided across files run concurrently by --parallel-files" },
@@ -809,7 +815,7 @@ namespace pwiz.Osprey
                 { @"perf-stats", @"Emit machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for perf tools (off by default)" },
                 { @"verbose", @"Show implementer-grade detail (e.g. per-fold Percolator iterations) hidden by default" },
                 { @"diagnostics", @"Write cross-impl bisection dumps (OSPREY_DUMP_* bundle)" },
-                { @"model-diagnostics", @"Write a self-contained interactive HTML report of the trained scoring model and FDR calibration" },
+                { @"model-diagnostics", @"Write a self-contained interactive HTML report of the trained scoring model, FDR calibration, and single-peak multiple-ID co-assignment" },
                 { @"help", @"Show this help message ([ascii|unicode|sections|html|<Section>])" },
                 { @"version", @"Show version" },
             };

@@ -158,7 +158,7 @@ namespace pwiz.Osprey.Core
         /// first-pass FDR peak through the thin <c>FdrProjection</c> struct
         /// buffer instead of holding the full <see cref="FdrEntry"/> stub buffer
         /// resident across first-pass Percolator + protein FDR + the sidecar write
-        /// + compaction. <c>FirstJoinTask</c> materializes the projection from the
+        /// + compaction. <c>FirstPassFdrTask</c> materializes the projection from the
         /// cold hand-off buffer, releases the <see cref="FdrEntry"/> stubs before the
         /// SVM peak, and reloads full <see cref="FdrEntry"/> survivors from parquet +
         /// the just-written 1st-pass sidecar after compaction.
@@ -189,6 +189,48 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static bool Stage6StreamSurvivors { get; set; } =
             IsNotZero(@"OSPREY_STAGE6_STREAM_SURVIVORS");
+
+        /// <summary>
+        /// At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library
+        /// entry that can no longer be scored or written - i.e. everything outside the
+        /// compaction survivors and the gap-fill candidates. The identity fields
+        /// (<c>ModifiedSequence</c> / <c>ProteinIds</c> / m/z / RT) are KEPT on every entry.
+        ///
+        /// DEFAULT ON. The library is held to the end of Stage 7 in order to write 37,078
+        /// spectra out of 6,275,151 entries - 0.6%. Set OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to
+        /// keep the whole library resident as the A/B byte-identity oracle, the same role
+        /// OSPREY_STAGE6_STREAM_SURVIVORS=0 plays for the Stage 6 handoff.
+        ///
+        /// <para>MEASURED, as an A/B on 4 SEA-AD files against the full 12.7 GB library: Stage 7
+        /// peak working set 28.5 -&gt; 17.7 GB, a 10.8 GB (-38%) saving, releasing 87.0% of the
+        /// entries. Few files is the MAXIMUM-saving case rather than a scaled-down one - the
+        /// library is fixed while the retained set grows with file count - so expect a smaller
+        /// (still large) saving at 82. Only the FRAGMENTS are freed, never a whole entry, and
+        /// the in-repo figure for the fragment share alone is ~3.2 GB at SEA-AD scale; do not
+        /// read a saving here as recovering the library's total footprint.</para>
+        ///
+        /// <para>Why fragments and not whole entries: <c>ProteinFdr.BuildProteinParsimony</c>
+        /// and <c>FirstPassFdrTask.BuildProteinCompactStratum</c> both walk the ENTIRE library
+        /// after Stage 5, including entries already judged false. They read only the identity
+        /// fields, never the spectra - so dropping entries would silently move protein FDR,
+        /// while dropping fragments cannot. The blib write is safe for a separate reason:
+        /// <c>BlibOutputWriter.PrecompressSpectra</c> reads fragments only for
+        /// <c>bestByPrecursor</c>, which is derived from the post-compaction survivors, so
+        /// blib-written is a SUBSET of what is retained here.</para>
+        ///
+        /// <para>Turning this OFF costs a full Stage-5 recompute rather than a resume, because
+        /// the changed validity key fails <c>CanRehydrate</c> and <c>Run</c> deletes its own
+        /// validity sidecars. The suffix is still required - the release is a Run-only side
+        /// effect, so without it an in-place A/B would adopt the other arm's reconciled parquets
+        /// and report a memory profile it never computed - but the escape hatch is not cheap.
+        /// The suffix itself lives with the release
+        /// (<c>LibraryFragmentRelease.ValidityKeySuffix</c>), keyed on whether the release
+        /// actually RAN rather than on this flag alone.</para>
+        ///
+        /// <para>A settable property (not a readonly field) so unit tests can A/B both arms.</para>
+        /// </summary>
+        public static bool ReleaseLibraryFragments { get; set; } =
+            IsNotZero(@"OSPREY_RELEASE_LIBRARY_FRAGMENTS");
 
         /// <summary>
         /// Cache-validity suffix for the Stage 6 handoff arm. EMPTY on the streamed default,
@@ -376,7 +418,7 @@ namespace pwiz.Osprey.Core
         public const int MEAN_BEST_N_MAX = 64;
 
         /// <summary>
-        /// OSPREY_PASS2_QVALUE: selects how the merge-node 2nd pass assigns the reported
+        /// OSPREY_PASS2_QVALUE: selects how the SecondPassFDR 2nd pass assigns the reported
         /// precursor/peptide q-values AFTER Stage 6 reconciliation. The 2nd-pass peak
         /// RE-SCORING (better peak choices against the consensus) is kept in ALL modes;
         /// only the q-value step changes.
@@ -418,7 +460,7 @@ namespace pwiz.Osprey.Core
         /// recognized modes. Program startup ABORTS on this rather than falling back: silently
         /// substituting the default would report numbers the caller did not ask for, and the
         /// removed <c>percolator</c> token in particular is one that existing sweep scripts
-        /// still pass. Checked at startup, not at the merge node, so the run fails in seconds
+        /// still pass. Checked at startup, not at SecondPassFDR, so the run fails in seconds
         /// instead of after Stage 1-5.</summary>
         public static readonly bool Pass2QValueUnrecognized = IsUnrecognizedPass2QValue(
             Environment.GetEnvironmentVariable(@"OSPREY_PASS2_QVALUE"));
@@ -449,7 +491,7 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the known-unfixed resident path(s) this run may
-        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=mdiag-full-resume</c>. Legal values are
+        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=fdrbench-pass1</c>. Legal values are
         /// exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>; anything else, and any resident path
         /// that is not on that list, is refused no matter what this is set to.
         ///
@@ -464,16 +506,19 @@ namespace pwiz.Osprey.Core
         ///
         /// <para>SEVERAL paths may be named, comma- or semicolon-separated, because a run can
         /// legitimately trip more than one at once and a single-value variable made that run
-        /// impossible to perform at all. The A/B that proves the Stage 6 handoff bounded is
-        /// exactly such a run: <c>regression.ps1</c> mode 2 needs
-        /// <see cref="ResidentPaths.MDIAG_FULL_RESUME"/> while the arm under test needs
-        /// <see cref="ResidentPaths.COMPACTED_ENTRIES_BUFFER"/>. A LIST keeps the property that
-        /// matters - every admitted path is still named individually, so nothing rides along
-        /// unnamed the way the blanket boolean allowed - while a single value only ever
-        /// prevented honest work.</para>
+        /// impossible to perform at all. An operator running the Stage 6 handoff A/B on a
+        /// configuration that is already resident for its own reason needs
+        /// <see cref="ResidentPaths.COMPACTED_ENTRIES_BUFFER"/> alongside that run's own token.
+        /// A LIST keeps the property that matters - every admitted path is still named
+        /// individually, so nothing rides along unnamed the way the blanket boolean allowed -
+        /// while a single value only ever prevented honest work.</para>
         ///
-        /// Read once at process start. Intended for local testing; CI names its tokens explicitly
-        /// (regression.ps1 mode 2), so what CI depends on is visible rather than ambient.
+        /// Read once at process start. Intended for local testing. The standing
+        /// <c>regression.ps1</c> gate names NO token on any leg - #4536 removed the last one -
+        /// and an INHERITED value is cleared at startup unless a deliberate A/B switch needs it.
+        /// A resident path appearing anywhere in the gate fails CI rather than riding along on
+        /// an ambient allowance, and any token the gate is ever made to require has to carry an
+        /// open issue to remove it again.
         /// </summary>
         public static readonly string AllowUnfixedResident =
             (Environment.GetEnvironmentVariable(@"OSPREY_ALLOW_UNFIXED_RESIDENT") ?? string.Empty).Trim();
@@ -490,6 +535,17 @@ namespace pwiz.Osprey.Core
             SplitResidentTokens(AllowUnfixedResident).Any(
                 v => !ResidentPaths.KNOWN_UNFIXED.Any(
                     t => string.Equals(t, v, StringComparison.OrdinalIgnoreCase)));
+
+        /// <summary>
+        /// Just the unrecognized tokens of <see cref="AllowUnfixedResident"/>, comma separated.
+        /// The warning names THESE rather than the whole value: the flag is a list and
+        /// <c>NamesResidentPath</c> tests each token independently, so a value pairing a retired
+        /// token with a live one still grants the live one. Empty when every token is known.
+        /// </summary>
+        public static readonly string UnrecognizedResidentTokens =
+            string.Join(@", ", SplitResidentTokens(AllowUnfixedResident).Where(
+                v => !ResidentPaths.KNOWN_UNFIXED.Any(
+                    t => string.Equals(t, v, StringComparison.OrdinalIgnoreCase))));
 
         /// <summary>
         /// Whether <paramref name="allowValue"/> (an OSPREY_ALLOW_UNFIXED_RESIDENT setting) names
@@ -673,7 +729,7 @@ namespace pwiz.Osprey.Core
         /// the byte-identity gate could not see it, because the gate always uses fresh directories.
         ///
         /// One helper rather than three copies: the suffix must be IDENTICAL across
-        /// <c>FirstJoinTask</c>, <c>PerFileRescoreTask</c> and <c>MergeNodeTask</c>. When only the
+        /// <c>FirstPassFdrTask</c>, <c>PerFileRescoreTask</c> and <c>SecondPassFdrTask</c>. When only the
         /// first had it, a flipped arm re-ran Stage 5 while the downstream reconciled parquets,
         /// 2nd-pass sidecars and .blib were reused from the OTHER arm - a self-inconsistent output
         /// set that no single task's key could have caught.
@@ -755,7 +811,7 @@ namespace pwiz.Osprey.Core
         /// True when <paramref name="normalizedAgg"/> names a mean(best-N) arm. Takes the arm as
         /// an ARGUMENT rather than reading <see cref="ExperimentAggMeanBest"/> so a consumer can
         /// ask about an arm RECORDED BY ANOTHER PROCESS - a distributed <c>--task SecondPassFDR</c>
-        /// merge node reloads the 1st-pass model from disk and must gate on the arm that trained
+        /// SecondPassFDR node reloads the 1st-pass model from disk and must gate on the arm that trained
         /// it, not on its own environment. Expects the normalized form
         /// (<see cref="ExperimentAgg"/>) as persisted alongside the model.
         /// </summary>
