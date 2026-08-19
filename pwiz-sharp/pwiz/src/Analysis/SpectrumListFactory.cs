@@ -323,8 +323,8 @@ public static class SpectrumListFactory
     /// <list type="bullet">
     ///   <item><c>peakPicking true [msLevels]</c> — vendor-prefer mode with LocalMaximum fallback</item>
     ///   <item><c>peakPicking false [msLevels]</c> — no vendor preference; LocalMaximum only</item>
-    ///   <item><c>peakPicking vendor [msLevel=msLevels]</c> — vendor-prefer mode; throws when
-    ///     the vendor list can't centroid</item>
+    ///   <item><c>peakPicking vendor [msLevel=msLevels]</c> — vendor-prefer mode with
+    ///     LocalMaximum fallback, same as <c>true</c></item>
     ///   <item><c>peakPicking cwt [msLevel=msLevels]</c> — reserved; CWT isn't ported yet,
     ///     falls back to LocalMaximum with a warning</item>
     /// </list>
@@ -335,7 +335,6 @@ public static class SpectrumListFactory
     {
         bool preferVendor = true;
         bool preferCwt = false;
-        bool vendorOnly = false;
         IntegerSet msLevels = new(1, int.MaxValue);
 
         string trimmed = args.Trim();
@@ -351,7 +350,7 @@ public static class SpectrumListFactory
             {
                 case "true": preferVendor = true; break;
                 case "false": preferVendor = false; break;
-                case "vendor": preferVendor = true; vendorOnly = true; break;
+                case "vendor": preferVendor = true; break;
                 case "cwt": preferVendor = false; preferCwt = true; break;
                 default:
                     // No mode token; first token might already be msLevels or a key=value pair.
@@ -391,7 +390,13 @@ public static class SpectrumListFactory
                 "[SpectrumListFactory] warning: CWT peak picking is not yet ported; " +
                 "falling back to local-maximum peak picker.");
 
-        IPeakDetector? algorithm = vendorOnly ? null : new LocalMaximumPeakDetector(3);
+        // cpp SpectrumListFactory.cpp:377-392 ALWAYS constructs a detector and passes
+        // preferVendor separately, so "vendor" is a preference, not a requirement. Passing
+        // null here made it vendor-or-nothing, with two different symptoms: readers that
+        // cannot vendor-centroid threw (Agilent, Mobilion), and readers that simply decline
+        // for a given spectrum returned it UNPICKED (Waters), which is worse because it looks
+        // like output. cpp emits no vendor-only mode at all.
+        IPeakDetector algorithm = new LocalMaximumPeakDetector(3);
         return new SpectrumList_PeakPicker(inner, algorithm, preferVendor, msLevels);
     }
 

@@ -27,7 +27,8 @@ namespace Pwiz.Vendor.Agilent;
 /// Skipped: ion-mobility frames (MIDAC), non-MS UV/DAD spectra, all-ions scan promotion. Each is
 /// a follow-up port; current scope covers the bulk of Q-TOF / TQ files.
 /// </remarks>
-public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectrumList, IIonMobilityCcsConversion
+public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectrumList,
+    IIonMobilityCcsConversion, IVendorCentroidingSpectrumList
 {
     /// <summary>True iff the .d directory carries IMS data (delegates to
     /// <see cref="AgilentRawData.HasIonMobilityData"/>).</summary>
@@ -284,7 +285,30 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
     }
 
     /// <inheritdoc/>
+    public string VendorCentroidName => "Agilent/MassHunter peak picking";
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// MHDAC centroids by being asked for PeakElseProfile storage instead of ProfileElsePeak -
+    /// the same one-enum difference as cpp getPeakSpectrumByRow vs getProfileSpectrumByRow
+    /// (MassHunterData.cpp:706-714). It cannot centroid non-TOF devices, so cpp gates on device
+    /// type (SpectrumList_Agilent.cpp:313-315) and falls back to its own detector; we do the
+    /// same by returning the profile spectrum, which SpectrumList_PeakPicker then re-picks.
+    /// Ion mobility spectra never reach here - they return from their own branches below,
+    /// matching cpp setting canCentroid=false for them.
+    /// </remarks>
+    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData)
+        => GetSpectrumImpl(index, getBinaryData, doCentroid: true);
+
+    /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+        => GetSpectrumImpl(index, getBinaryData, doCentroid: false);
+
+    /// <summary>MHDAC only centroids TOF-family devices; cpp SpectrumList_Agilent.cpp:313-315.</summary>
+    private bool CanVendorCentroid =>
+        _raw.DeviceType != DeviceType.Quadrupole && _raw.DeviceType != DeviceType.TandemQuadrupole;
+
+    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, bool doCentroid)
     {
         if (index < 0 || index >= _index.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
@@ -404,7 +428,7 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         // call in CATCH_AND_FORWARD (MassHunterData.cpp:706-710) and lets the error out of
         // SpectrumList_Agilent::spectrum, so the conversion fails loudly instead of writing
         // wrong data. Match that.
-        bool preferProfile = _raw.HasProfileData;
+        bool preferProfile = _raw.HasProfileData && !(doCentroid && CanVendorCentroid);
         IBDASpecData? specData = _raw.GetSpectrumByRow(ie.RowNumber, preferProfile);
 
         if (specData is not null)

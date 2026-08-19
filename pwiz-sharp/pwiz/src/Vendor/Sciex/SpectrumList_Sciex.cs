@@ -395,7 +395,13 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
             if (getBinaryData)
             {
                 spec.DefaultArrayLength = len;
-                if (len > 0) spec.SetMZIntensityArrays(SliceDouble(xs, len), SliceDouble(ys, len), CVID.MS_number_of_detector_counts);
+                // Unconditional, as cpp SpectrumList_ABI.cpp:250 is: it calls
+                // setMZIntensityArrays() with empty vectors and then fills them, so a spectrum
+                // with zero points still carries <binaryDataArrayList count="2"> holding two
+                // empty arrays. Guarding on len > 0 dropped the element entirely, which under
+                // vendor peak picking left 57 wiff files short a child per zero-peak spectrum
+                // versus cpp. Same defect as the one fixed in SpectrumList_Shimadzu.
+                spec.SetMZIntensityArrays(SliceDouble(xs, len), SliceDouble(ys, len), CVID.MS_number_of_detector_counts);
             }
             else
             {
