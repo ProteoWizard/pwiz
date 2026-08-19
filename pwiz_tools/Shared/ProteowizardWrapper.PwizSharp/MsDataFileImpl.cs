@@ -806,11 +806,23 @@ namespace pwiz.ProteowizardWrapper
                     _lockmassFunction = null;
                     if (_lockmassParameters != null && !_lockmassParameters.IsEmpty  && _spectrumList != null)
                     {
+#if NO_VENDOR_SUPPORT
+                        // pwiz-sharp Compile-Removes SpectrumList_LockmassRefiner when the vendor
+                        // licenses are not agreed, because it reaches into SpectrumList_Waters.
+                        // Refuse rather than drop the correction silently: the caller asked for
+                        // lockmass refinement and would otherwise get uncorrected m/z values back
+                        // from a run that looks entirely normal.
+                        throw new NotSupportedException(
+                            "Lockmass correction was requested, but this build has no vendor" +
+                            " support and ProteoWizard's lockmass refiner needs the Waters SDK." +
+                            " Rebuild with -p:IAgreeToVendorLicenses=true.");
+#else
                         // N.B. it's OK for lockmass wrapper to wrap centroiding wrapper, but not vice versa.
                         _spectrumList = new SpectrumList_LockmassRefiner(_spectrumList,
                             _lockmassParameters.LockmassPositive ?? 0,
                             _lockmassParameters.LockmassNegative ?? 0,
                             _lockmassParameters.LockmassTolerance ?? LockMassParameters.LOCKMASS_TOLERANCE_DEFAULT);
+#endif
                     }
                     // Ion mobility info
                     if (_spectrumList != null) // No ion mobility for chromatogram-only files

@@ -1,5 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Vendor-license opt-in, read the SAME two ways pwiz-sharp reads it, because the net8
+       target compiles against types pwiz-sharp drops in a no-vendor build.
+
+       There are two ways to agree, and they do NOT have the same reach:
+         * -p:IAgreeToVendorLicenses=true (build.bat / build.ps1 / Build-Skyline -VendorLicenses)
+           is a GLOBAL property, so it arrives here on its own.
+         * pwiz-sharp\i-agree-to-the-vendor-licenses.bat writes pwiz-sharp\Directory.Build.user.props,
+           which only pwiz-sharp\Directory.Build.props imports - projects outside
+           pwiz-sharp\ never see it.
+       Without this import the second route would leave pwiz-sharp compiling the lockmass
+       refiners while this project believed they were absent, silently dropping Waters
+       lockmass correction from a build that fully supports it. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\Directory.Build.user.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\Directory.Build.user.props')" />
+
   <!-- ProteowizardWrapper — the Phase-2 chokepoint. Multi-target net472 (legacy
        pwiz.CLI bindings) + PLAIN net8.0 (pwiz-sharp managed port).
 
@@ -63,6 +78,16 @@
       <Private>True</Private>
     </Reference>
   </ItemGroup>
+
+  <!-- Mirrors Analysis.csproj: when the licenses are not agreed, pwiz-sharp Compile-Removes
+       SpectrumList_LockmassRefiner / ChromatogramListLockmassRefiner and defines
+       NO_VENDOR_SUPPORT. This project consumes those types, so it has to be told the same
+       thing or it fails to compile in exactly the configuration CI and the shipped zips
+       build. net8 only - the net472 target reaches pwiz through pwiz.CLI, where the
+       refiners are always present. -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0' AND '$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
     <!-- On net8 the data layer comes from pwiz-sharp. No pwiz.CLI, no
