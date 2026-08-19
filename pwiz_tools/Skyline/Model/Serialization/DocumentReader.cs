@@ -1364,6 +1364,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
 
             var areasByPosition = new List<float[]>();
+            var flagsByPosition = new List<TransitionPeakFlags>();
             var peaks = new List<PrecursorPeak>();
             var qValues = new List<float>();
             var zScores = new List<float>();
@@ -1389,7 +1390,16 @@ namespace pwiz.Skyline.Model.Serialization
                 float? qValue = r.GetNullableFloatAttribute(ATTR.qvalue);
                 float? zScore = r.GetNullableFloatAttribute(ATTR.zscore);
                 userSets.Add(ReadUserSet(r));
-                areasByPosition.Add(ReadTransitionAreas(r));
+                var transitionAreas = ReadTransitionAreas(r);
+                areasByPosition.Add(transitionAreas);
+                // What the transitions carried here said about themselves - see
+                // MoleculeWriter.SetColumnarPrecursorPeak. Read only where there are areas, because
+                // ATTR.truncated means something else entirely on a precursor which kept chrom
+                // infos: how many of its transitions were truncated, which is a count, not a flag.
+                flagsByPosition.Add(transitionAreas == null
+                    ? TransitionPeakFlags.DEFAULT
+                    : new TransitionPeakFlags(r.GetBoolAttribute(ATTR.truncated, false),
+                        r.GetBoolAttribute(ATTR.forced_integration, false)));
 
                 var peakAnnotations = ReadPositionAnnotations(r, AnnotationDef.AnnotationTarget.precursor_result);
                 // The scores were annotations before they were attributes, and a document old
@@ -1403,7 +1413,7 @@ namespace pwiz.Skyline.Model.Serialization
                 zScores.Add(zScore ?? float.NaN);
             });
             sharedTransitionAreas = areasByPosition.Any(positionAreas => positionAreas != null)
-                ? new SharedTransitionAreas(chromFileIds, areasByPosition)
+                ? new SharedTransitionAreas(chromFileIds, areasByPosition, flagsByPosition)
                 : null;
             return new TransitionGroupResults(chromFileIds, peaks)
                 .ChangeUserSets(userSets)
@@ -1565,6 +1575,8 @@ namespace pwiz.Skyline.Model.Serialization
                 var writtenPeakMetrics = MapOnto(PeakMetrics, chromFileIds);
                 var sharedAreas = new ChromFileIdMap<float[]>(shared.ChromFileIds, shared.AreasByPosition)
                     .WithFileIds(chromFileIds);
+                var sharedFlags = new ChromFileIdMap<TransitionPeakFlags>(shared.ChromFileIds, shared.FlagsByPosition)
+                    .WithFileIds(chromFileIds);
 
                 var fileIds = new List<ChromFileInfoId>();
                 var counts = new List<int>();
@@ -1595,9 +1607,14 @@ namespace pwiz.Skyline.Model.Serialization
                         }
                         else if (sharedArea.HasValue)
                         {
-                            // No element at all means nothing beyond the area, and MakePlainPeak is
-                            // what a peak which says only that looks like.
-                            peaks.Add(TransitionGroupResults.MakePlainPeak(sharedArea.Value));
+                            // No element at all means nothing beyond the area and the flags the
+                            // precursor carried, and MakePlainPeak is what a peak which says only
+                            // that looks like.
+                            if (!sharedFlags.TryGetValue(replicateIndex, fileId, out var flags))
+                            {
+                                flags = TransitionPeakFlags.DEFAULT;
+                            }
+                            peaks.Add(TransitionGroupResults.MakePlainPeak(sharedArea.Value, flags));
                             annotations.Add(pwiz.Skyline.Model.Annotations.EMPTY);
                             peakBounds.Add(default);
                             peakMetrics.Add(null);
@@ -1712,14 +1729,22 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         private class SharedTransitionAreas
         {
-            public SharedTransitionAreas(ChromFileIds chromFileIds, IList<float[]> areasByPosition)
+            public SharedTransitionAreas(ChromFileIds chromFileIds, IList<float[]> areasByPosition,
+                IList<TransitionPeakFlags> flagsByPosition)
             {
                 ChromFileIds = chromFileIds;
                 AreasByPosition = areasByPosition;
+                FlagsByPosition = flagsByPosition;
             }
 
             public ChromFileIds ChromFileIds { get; }
             public IList<float[]> AreasByPosition { get; }
+
+            /// <summary>
+            /// What each position's peak said the transitions it carries areas for are like, which
+            /// is everything a transition left out of the document has beyond its area.
+            /// </summary>
+            public IList<TransitionPeakFlags> FlagsByPosition { get; }
 
             /// <summary>
             /// The results of one transition, or null when the precursor carried nothing for it,
@@ -1730,7 +1755,7 @@ namespace pwiz.Skyline.Model.Serialization
                 var replicatePositions = ChromFileIds.ReplicatePositions;
                 var fileIds = new List<ChromFileInfoId>();
                 var counts = new List<int>();
-                var areas = new List<float>();
+                var peaks = new List<TransitionPeak>();
                 for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
                 {
                     int count = 0;
@@ -1742,22 +1767,24 @@ namespace pwiz.Skyline.Model.Serialization
                         }
 
                         fileIds.Add(ChromFileIds.FileIds[position]);
-                        areas.Add(AreasByPosition[position][transitionIndex]);
+                        // A transition is only left out when every one of its peaks said nothing
+                        // beyond its area and the flags its precursor carried, and MakePlainPeak is
+                        // what each of them said.
+                        peaks.Add(TransitionGroupResults.MakePlainPeak(
+                            AreasByPosition[position][transitionIndex], FlagsByPosition[position]));
                         count++;
                     }
 
                     counts.Add(count);
                 }
 
-                if (areas.Count == 0)
+                if (peaks.Count == 0)
                 {
                     return null;
                 }
 
-                // A transition is only left out when every one of its peaks said nothing beyond its
-                // area, and MakePlainPeak is what each of them said.
                 return new TransitionResultsData(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
-                    areas.Select(TransitionGroupResults.MakePlainPeak).ToArray(), null, null, null);
+                    peaks.ToArray(), null, null, null);
             }
         }
 

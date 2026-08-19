@@ -162,6 +162,16 @@ namespace pwiz.Skyline.Model.Results
 
         protected override bool IsCanceled(IDocumentContainer container, object tag)
         {
+            if (tag is SrmDocument document)
+            {
+                // Work which belongs to one document rather than to the results as a whole. The
+                // container moving on is what makes it useless: CompleteProcessing can only hand a
+                // new document back in place of the one it started from, so everything done after
+                // that is thrown away. Asked by reference, because a document which merely compares
+                // equal is still not the one SetDocument will accept.
+                return !ReferenceEquals(document, container.Document);
+            }
+
             SrmSettings settings = container.Document.Settings;
             // If the document no longer contains any measured results, or the
             // measured results for the document are completely loaded.
@@ -276,7 +286,11 @@ namespace pwiz.Skyline.Model.Results
                         // everything. That also means nothing else releases the chrom infos it was
                         // read with, now that the chromatograms can be read instead. The status
                         // stops at 99: the Complete() in the finally below takes it to 100.
-                        docNew = MoleculeResults.ConvertDocumentResults(docNew, loadMonitor, ref progressStatus);
+                        // Watched on docCurrent rather than on the results, so that the conversion
+                        // stops as soon as the container moves on and CompleteProcessing below can
+                        // no longer take what it produced - see IsCanceled.
+                        var convertMonitor = new LoadMonitor(this, container, docCurrent);
+                        docNew = MoleculeResults.ConvertDocumentResults(docNew, convertMonitor, ref progressStatus);
                     } while (!CompleteProcessing(container, docNew, docCurrent));
                 }
                 finally
@@ -395,7 +409,10 @@ namespace pwiz.Skyline.Model.Results
                         // Skipping the settings change also skips the results pass, which is what
                         // would otherwise have given up the chrom infos the document was read with
                         // now that the chromatograms can be read instead.
-                        var convertMonitor = new LoadMonitor(_manager, _container, null);
+                        // Watched on docCurrent, so that the conversion stops as soon as the
+                        // container moves on and CompleteProcessing below can no longer take what
+                        // it produced - see ChromatogramManager.IsCanceled.
+                        var convertMonitor = new LoadMonitor(_manager, _container, docCurrent);
                         IProgressStatus convertStatus = new ProgressStatus();
                         var convertStatusStart = convertStatus;
                         docNew = MoleculeResults.ConvertDocumentResults(docNew, convertMonitor, ref convertStatus);

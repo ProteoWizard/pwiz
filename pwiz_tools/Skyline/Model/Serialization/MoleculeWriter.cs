@@ -315,12 +315,18 @@ namespace pwiz.Skyline.Model.Serialization
                 foreach (var fileId in chromFileIds.GetFileIds(replicateIndex))
                 {
                     var sharedAreas = results.GetSharedTransitionAreas(replicateIndex, fileId);
+                    // Only worth asking where a transition can be left out at all: the flags are on
+                    // the precursor's peak to save writing them one by one, and save nothing where
+                    // every transition is written anyway.
+                    var peakFlags = sharedAreas == null
+                        ? TransitionPeakFlags.DEFAULT
+                        : results.GetSharedTransitionPeakFlags(replicateIndex, fileId);
 
                     if (results.TryGetPrecursorPeak(replicateIndex, fileId, out _))
                     {
                         var peakElement = new XElement(EL.precursor_peak);
                         SetReplicateAndFile(peakElement, chromatogramSet, fileId);
-                        SetColumnarPrecursorPeak(peakElement, results, sharedAreas, replicateIndex, fileId);
+                        SetColumnarPrecursorPeak(peakElement, results, sharedAreas, peakFlags, replicateIndex, fileId);
                         precursorResults.Add(peakElement);
                     }
 
@@ -331,10 +337,10 @@ namespace pwiz.Skyline.Model.Serialization
                             continue;
                         }
 
-                        // Its area went on the precursor and it has nothing else to say, so there
-                        // is nothing here to write.
+                        // Its area went on the precursor, its flags are the ones the precursor
+                        // carries, and it has nothing else to say, so there is nothing to write.
                         if (sharedAreas != null &&
-                            results.IsPlainTransitionPeak(transitions[i], replicateIndex, fileId))
+                            results.IsPlainTransitionPeak(transitions[i], replicateIndex, fileId, peakFlags))
                         {
                             continue;
                         }
@@ -366,7 +372,7 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         private void SetColumnarPrecursorPeak(XElement element, TransitionGroupResults results, float[] sharedAreas,
-            int replicateIndex, ChromFileInfoId fileId)
+            TransitionPeakFlags peakFlags, int replicateIndex, ChromFileInfoId fileId)
         {
                 results.TryGetPrecursorPeak(replicateIndex, fileId, out var precursorPeak);
                 // No area: a precursor's is the sum of its transitions', which are written below it.
@@ -393,6 +399,14 @@ namespace pwiz.Skyline.Model.Serialization
                 if (sharedAreas != null)
                 {
                     element.SetFloatsAttribute(ATTR.transition_areas, sharedAreas);
+                    // What a transition left out of the document says about itself, which is the
+                    // whole of what most of them have left to say once their areas are carried
+                    // here. Absent means neither, which is what every one of them meant before a
+                    // precursor could say otherwise - see TransitionGroupResults.MakePlainPeak.
+                    // Only meaningful alongside transition_areas: on a precursor which kept chrom
+                    // infos, ATTR.truncated is that peak's own count of truncated transitions.
+                    element.SetAttribute(ATTR.truncated, peakFlags.IsTruncated, false);
+                    element.SetAttribute(ATTR.forced_integration, peakFlags.IsForcedIntegration, false);
                 }
 
                 AddAnnotations(element, results.GetAnnotations(replicateIndex, fileId));

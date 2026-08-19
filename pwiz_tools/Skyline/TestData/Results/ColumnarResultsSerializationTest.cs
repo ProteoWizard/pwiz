@@ -20,6 +20,7 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -184,11 +185,69 @@ namespace pwiz.SkylineTestData.Results
                 Assert.AreNotEqual(0, sharedAreasChecked);
 
                 CheckUserSetPeakStillWritten(docResults);
+                CheckSharedTransitionPeakFlags(docResults);
 
                 // What this does NOT cover: opening the saved document and loading its
                 // chromatograms again. Whether the peaks come back depends on UpdateResults
                 // rebuilding them from the columnar results rather than picking them afresh,
                 // which needs a document opened the way the application opens one.
+            }
+        }
+
+        /// <summary>
+        /// The two flags a peak has beyond its area are carried by its precursor, so that the
+        /// transitions which agree with what most of them say are not written at all. Every peak of
+        /// the first precursor is made truncated and forced except one, which is left disagreeing so
+        /// that the majority is what gets carried and the odd one out still writes itself.
+        /// </summary>
+        private void CheckSharedTransitionPeakFlags(SrmDocument docResults)
+        {
+            var peptideGroup = docResults.MoleculeGroups.First();
+            var nodePep = peptideGroup.Molecules.First();
+            var nodeGroup = nodePep.TransitionGroups.First();
+            var transitions = nodeGroup.Transitions.Select(nodeTran => nodeTran.Transition).ToArray();
+            Assert.IsTrue(transitions.Length > 1, @"the first precursor has nothing to disagree with");
+
+            var results = nodeGroup.AbbreviatedResults;
+            int peaksFlagged = 0;
+            // All but the last, so that truncated and forced is what most of them say.
+            for (int iTran = 0; iTran < transitions.Length - 1; iTran++)
+            {
+                var peaks = results.GetAllTransitionPeaks(transitions[iTran]).ToArray();
+                peaksFlagged += peaks.Length;
+                results = results.ChangeTransitionResults(transitions[iTran],
+                    results.GetTransitionChromFileIds(transitions[iTran]),
+                    peaks.Select(peak => new TransitionPeak(peak.Area, peak.UserSet, true, peak.IsEmpty,
+                        peak.Identified, true)), null, null, null);
+            }
+
+            Assert.AreNotEqual(0, peaksFlagged, @"no peak to flag");
+            var docFlagged = (SrmDocument) docResults.ReplaceChild(new IdentityPath(peptideGroup.Id, nodePep.Id),
+                nodeGroup.ChangeAbbreviatedResults(results));
+
+            var docRoundTrip = RoundTrip(docFlagged, false, out string compactXml);
+            // What the majority said, carried once by the precursor instead of by every one of them.
+            StringAssert.Contains(compactXml, @"truncated=""true"" forced_integration=""true""");
+            // The one which disagrees is still written, and only it.
+            StringAssert.Contains(compactXml, @"<transition_results");
+            Assert.AreEqual(peaksFlagged / (transitions.Length - 1),
+                Regex.Matches(compactXml, @"<transition_peak").Count,
+                @"a transition which agreed with its precursor was written anyway");
+
+            var expectedGroup = docFlagged.MoleculeTransitionGroups.First().AbbreviatedResults;
+            var actualNodeGroup = docRoundTrip.MoleculeTransitionGroups.First();
+            var actualGroup = actualNodeGroup.AbbreviatedResults;
+            // Each document's own transitions: the round trip made new identity objects, and results
+            // are looked up by the identity the precursor holds.
+            var actualTransitions = actualNodeGroup.Transitions.Select(nodeTran => nodeTran.Transition).ToArray();
+            Assert.AreEqual(transitions.Length, actualTransitions.Length, @"transition count");
+            for (int iTran = 0; iTran < transitions.Length; iTran++)
+            {
+                var expectedPeaks = expectedGroup.GetAllTransitionPeaks(transitions[iTran]).ToArray();
+                var actualPeaks = actualGroup.GetAllTransitionPeaks(actualTransitions[iTran]).ToArray();
+                CollectionAssert.AreEqual(expectedPeaks, actualPeaks,
+                    string.Format(@"peaks of transition {0} of {1} ({2}): expected {3}, actual {4}",
+                        iTran, transitions.Length, transitions[iTran], expectedPeaks.Length, actualPeaks.Length));
             }
         }
 
