@@ -1,13 +1,17 @@
 <Project>
 
   <PropertyGroup>
-    <!-- net8.0 only. Osprey on net472 is being retired: it releases this fall with no
-         net472 option, and the net472 leg was only ever useful for vendor raw reading
-         via the net472-only pwiz_data_cli (see OspreyVendorReaderEnabled in
-         Osprey.IO.csproj). The #4497 branch replaces that with pwiz-sharp managed
-         readers, so nothing needs net472 any more.
-         The per-project net472 ItemGroups and the two #if NET472 blocks (MzmlReader.cs,
-         NativeStrtod.cs) are now dead and can be swept in the full removal. -->
+    <!-- net8.0 only. The net472 target existed so Osprey could reach
+         pwiz_data_cli, which has no .NET 8 build (issue #4496); pwiz-sharp
+         supplies a managed net8.0 data layer instead, so there is nothing left
+         for a .NET Framework target to offer. Plain net8.0, not
+         net8.0-windows: Osprey must run on Linux/WSL with no Wine container.
+
+         NOTE: this branch now sits on the CommonUtil/CommonBaseUI split, which
+         made ProteowizardWrapper plain net8.0. Reading pwiz-sharp DIRECTLY was
+         forced by the wrapper being net8.0-windows; that constraint is gone, so
+         going back through the wrapper - and inheriting the six MsDataFileImpl
+         semantics this branch reproduces by hand - is now the open question. -->
     <TargetFramework>net8.0</TargetFramework>
     <!-- SDK-style csproj defaults to AnyCPU, but Osprey.sln uses x64
          configurations, which VS 2026 flags as "unknown project
@@ -37,9 +41,8 @@
          "<numeric>-<githash>[-dirty]"; keep the SDK from appending its own
          "+<sha>" source-revision metadata so OspreyVersion parses one clean form. -->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-    <!-- Server GC on .NET 8 is driven by runtimeconfig.json auto-generated
-         from these MSBuild properties. net472 ignores these and uses the
-         app.config gcServer/gcConcurrent settings instead. -->
+    <!-- Server GC is driven by runtimeconfig.json auto-generated from these
+         MSBuild properties. -->
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>

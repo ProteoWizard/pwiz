@@ -81,29 +81,6 @@ namespace pwiz.Osprey.Core
         public static readonly bool ExitAfterCalibration = IsSet(@"OSPREY_EXIT_AFTER_CALIBRATION");
 
         /// <summary>
-        /// OSPREY_MZML_VIA_MZMLREADER=1: read mzML with the hand-written
-        /// <c>MzmlReader</c> instead of ProteoWizard. Diagnostic only, and
-        /// meaningful only in a build that HAS ProteoWizard (net472 with
-        /// <c>/p:OspreyVendorReader=true</c>), where ProteoWizard is otherwise used
-        /// for every input format including mzML. A no-op anywhere else, since
-        /// <c>MzmlReader</c> is already the only reader there.
-        ///
-        /// This isolates the two READERS against a fixed input: run the same
-        /// mzML both ways and the resulting <c>.spectra.bin</c> files must be
-        /// byte-identical, because nothing about the source file differs. A
-        /// raw-vs-mzML comparison cannot make that claim - it varies the reader
-        /// and the file at the same time, so a difference could come from
-        /// either. Any difference this switch exposes is a defect in
-        /// <c>MzmlReader</c>, which is the only parser in the picture that is
-        /// not ProteoWizard.
-        ///
-        /// The switch is deliberately the ESCAPE HATCH rather than the opt-in: it
-        /// exists to keep that comparison possible, and it disappears along with
-        /// <c>MzmlReader</c> once ProteoWizard has a .NET 8 build (#4178).
-        /// </summary>
-        public static readonly bool MzmlViaMzmlReader = IsSetAndNotZero(@"OSPREY_MZML_VIA_MZMLREADER");
-
-        /// <summary>
         /// OSPREY_CAL_MEDIANPOLISH=1: add median-polish cosine (the dominant full-search
         /// Percolator feature) as a 5th calibration-LDA feature, computed over the
         /// peak-cropped calibration XICs. Experimental lever for raising the calibration

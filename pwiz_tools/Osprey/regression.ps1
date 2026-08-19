@@ -110,6 +110,34 @@
                             true-FDP oracle.
       Astral                hram, generated decoys, larger and slower.
 
+.PARAMETER Source
+    Which acquisition of the SAME data to search: mzML (default) or raw.
+
+    Osprey reads Thermo .raw through ProteoWizard now (issue #4497), so a raw run
+    is expected to reproduce the mzML run EXACTLY - both are compared against the
+    same committed goldens, and that identity is the assertion. A divergence here
+    is a defect to characterize, never something to rebaseline with -CreateGolden.
+
+    The two acquisitions ship as separate panorama zips extracting to separate
+    roots, so a machine can hold both. Only the -v2 zips can be compared this way:
+    their mzML was converted by an msconvert carrying PR #4501, without which the
+    conversion shifts most retention times by an ULP relative to a direct raw read
+    (the mismatch #4496 recorded; PR #4500 was closed rather than merged).
+
+.PARAMETER IAgreeToVendorLicenses
+    Acknowledge the vendor SDK licences so the build links the real Thermo reader.
+    Required with -Source raw (unless -NoBuild), and a no-op otherwise.
+
+    Passed by the invoker on purpose. This script will not set it for you just
+    because -Source raw was requested: the agreement is the builder's act, and a
+    committed file that asserts it on their behalf would invalidate the licence it
+    claims to record.
+
+    That constraint is why no CI config runs -Source raw today. Doing so means
+    configuring the agreement in TeamCity itself - a parameter or secret supplied by
+    the build configuration, never a file in this repo - which is its own piece of
+    work, alongside code signing.
+
 .PARAMETER CreateGolden
     Capture/refresh the committed golden from this run instead of comparing
     against it. Use only on an intentional, reviewed behavior change.
@@ -178,6 +206,32 @@
 param(
     [ValidateSet('Stellar', 'StellarLibDecoy', 'StellarGenDecoyEntrap', 'Astral', 'All')]
     [string]$Dataset = 'All',
+    # Which acquisition of the SAME data to search: the msconvert mzML conversions, or
+    # the Thermo .raw files they were converted from. Osprey reads both through
+    # ProteoWizard now (issue #4497), so the two must produce IDENTICAL results and are
+    # compared against the SAME goldens - proving that identity is why both zips exist,
+    # and it is a real assertion rather than a convenience switch.
+    #
+    # This is only a fair test because of the -v2 zips specifically: their mzML was
+    # converted by an msconvert carrying PR #4501, so its scan start times no longer go
+    # through the TimeInSeconds()/60 round trip that shifted most retention times by an
+    # ULP. Against a pre-#4501 conversion the two acquisitions could not agree, and
+    # #4496 recorded exactly that mismatch (PR #4500 was closed rather than merged).
+    # If a future dataset is published without that property, this switch stops being a
+    # parity check and becomes a source of unexplained ULP noise.
+    [ValidateSet('mzML', 'raw')]
+    [string]$Source = 'mzML',
+    # Acknowledge the vendor SDK licences, forwarded to build.ps1 as
+    # -p:IAgreeToVendorLicenses=true. REQUIRED with -Source raw unless -NoBuild, because
+    # a build without it compiles the vendor readers in NO_VENDOR_SUPPORT mode, where
+    # Read() throws on every .raw.
+    #
+    # A switch the INVOKER passes, deliberately, rather than something this script sets
+    # on its own when it notices -Source raw. Agreeing to a licence has to be the
+    # builder's act; a repo file that asserts it on the builder's behalf would invalidate
+    # the agreement it claims to record. Same reason Jamfile.jam only emits the property
+    # when --i-agree-to-the-vendor-licenses appears on the command line.
+    [switch]$IAgreeToVendorLicenses,
     [switch]$CreateGolden,
     [switch]$SkipResume,
     [switch]$SkipWarmRerun,
@@ -308,14 +362,27 @@ if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
 # but not live-set MAGNITUDE.
 $memStampArgs = @('--timestamp', '--memstamp')
 
-# The mzML data zip on panorama (raw-data zip is future work). The URL's
-# second-to-last segment ("perftests") maps to <Downloads>\Perftests.
+# The data zip on panorama, chosen by -Source. The URL's second-to-last segment
+# ("perftests") maps to <Downloads>\Perftests, and each zip extracts to its own root,
+# so both acquisitions can sit on one machine and neither invalidates the other.
 #
 # -v2 adds the stellar-libdecoy library WITHOUT disturbing the v1 zip: acquisition
 # is skip-if-present on the EXTRACTED ROOT, so re-publishing under the same name
 # would never reach a machine that already has the tree. A new name also leaves
 # older branches pinned to the v1 URL working exactly as before.
-$dataUrl = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/osprey-testfiles-mzML-v2.zip'
+$dataUrls = @{
+    mzML = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/osprey-testfiles-mzML-v2.zip'
+    raw  = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/osprey-testfiles-v2.zip'
+}
+$dataUrl = $dataUrls[$Source]
+
+# The input extension the selected acquisition uses. Everything downstream keys off
+# these two rather than a literal '.mzML': file discovery, the 0-byte stubs the HPC
+# chain plants for path derivation, and the phase-1 cleanup. A Thermo .raw is a FILE
+# (Waters/Agilent/Bruker directories would not survive the stub trick, which is why
+# this switch is Thermo-only today).
+$sourceExt    = if ($Source -eq 'raw') { '.raw' } else { '.mzML' }
+$sourceFilter = "*$sourceExt"
 
 # --- Dataset table (standalone; mirrors ai/ Dataset-Config.ps1) --------------
 # Folder = mzML subfolder under the extracted root; Resolution = instrument mode.
@@ -467,9 +534,24 @@ function Remove-Scratch([string]$Path) {
 
 # --- Build (unless -NoBuild) --------------------------------------------------
 if (-not $NoBuild) {
+    # Refuse -Source raw without the licence rather than building a reader that cannot
+    # open the data and failing three minutes later inside the first run, where the
+    # message is about one file rather than about the build.
+    if ($Source -eq 'raw' -and -not $IAgreeToVendorLicenses) {
+        Write-Problem-Tc ("-Source raw needs the vendor SDKs: re-run with " +
+            "-IAgreeToVendorLicenses (or -NoBuild, if the Osprey.exe already built " +
+            "there has them). Without it the vendor readers compile in " +
+            "NO_VENDOR_SUPPORT mode and every .raw throws.")
+        exit 2
+    }
     Write-Progress-Tc 'Building Osprey (Release, net8.0)'
     $buildPs1 = Join-Path $scriptRoot 'build.ps1'
-    & $buildPs1 -Configuration Release -Framework net8.0 -NoTests
+    if ($IAgreeToVendorLicenses) {
+        & $buildPs1 -Configuration Release -NoTests -IAgreeToVendorLicenses
+    }
+    else {
+        & $buildPs1 -Configuration Release -NoTests
+    }
     if ($LASTEXITCODE -ne 0) { Write-Problem-Tc "Osprey build failed (exit $LASTEXITCODE)"; exit $LASTEXITCODE }
 }
 if (-not (Test-Path $ospreyExe)) {
@@ -580,8 +662,8 @@ function Resolve-DatasetInputs {
     param([hashtable]$Spec)
     $dir = Join-Path $extractedRoot $Spec.Folder
     if (-not (Test-Path $dir)) { throw "Dataset folder not found in data: $dir" }
-    $mzmls = @(Get-ChildItem -Path $dir -Filter '*.mzML' -File | Sort-Object Name | ForEach-Object { $_.FullName })
-    if ($mzmls.Count -eq 0) { throw "No .mzML files in $dir" }
+    $mzmls = @(Get-ChildItem -Path $dir -Filter $sourceFilter -File | Sort-Object Name | ForEach-Object { $_.FullName })
+    if ($mzmls.Count -eq 0) { throw "No $sourceExt files in $dir" }
 
     $libDir = if ($Spec.LibraryFolder) { Join-Path $extractedRoot $Spec.LibraryFolder } else { $dir }
     if (-not (Test-Path $libDir)) { throw "Library folder not found in data: $libDir" }
@@ -1090,7 +1172,7 @@ function Invoke-HpcChain {
     # parquets + calibration, never its mzML (phase 3 re-copies the mzML from the
     # data dir). Drop them so they don't sit on disk through the per-file rescore loop.
     if (-not $KeepOutput) {
-        Get-ChildItem -Path $ph1 -Filter '*.mzML' -File -ErrorAction SilentlyContinue |
+        Get-ChildItem -Path $ph1 -Filter $sourceFilter -File -ErrorAction SilentlyContinue |
             Remove-Item -Force -ErrorAction SilentlyContinue
     }
 
@@ -1102,7 +1184,7 @@ function Invoke-HpcChain {
     foreach ($s in $stemList) {
         Copy-Item (Join-Path $ph1 "$s.scores.parquet")   (Join-Path $ph2 "$s.scores.parquet")
         Copy-Item (Join-Path $ph1 "$s.calibration.json") (Join-Path $ph2 "$s.calibration.json")
-        New-Item -ItemType File -Path (Join-Path $ph2 "$s.mzML") -Force | Out-Null
+        New-Item -ItemType File -Path (Join-Path $ph2 "$s$sourceExt") -Force | Out-Null
     }
     Copy-LibraryInto -Library $Library -Dir $ph2 -Manifest $Manifest
     $a2 = @('--task', 'FirstPassFDR')
@@ -1127,7 +1209,7 @@ function Invoke-HpcChain {
         $ph3Dirs[$s] = $ph3
         New-Item -ItemType Directory -Path $ph3 -Force | Out-Null
         Copy-Item (Join-Path $ph1 "$s.spectra.bin")             (Join-Path $ph3 "$s.spectra.bin")
-        New-Item -ItemType File -Path (Join-Path $ph3 "$s.mzML") -Force | Out-Null
+        New-Item -ItemType File -Path (Join-Path $ph3 "$s$sourceExt") -Force | Out-Null
         Copy-Item (Join-Path $ph1 "$s.scores.parquet")          (Join-Path $ph3 "$s.scores.parquet")
         Copy-Item (Join-Path $ph1 "$s.calibration.json")        (Join-Path $ph3 "$s.calibration.json")
         Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")
@@ -1156,7 +1238,7 @@ function Invoke-HpcChain {
         # straight-through leg's spectra caches).
         if (-not $KeepOutput) {
             Remove-Item (Join-Path $ph3 "$s.spectra.bin") -Force -ErrorAction SilentlyContinue
-            Remove-Item (Join-Path $ph3 "$s.mzML") -Force -ErrorAction SilentlyContinue
+            Remove-Item (Join-Path $ph3 "$s$sourceExt") -Force -ErrorAction SilentlyContinue
             Remove-Item (Join-Path $ph3 "$s.scores.parquet") -Force -ErrorAction SilentlyContinue
             Remove-Item (Join-Path $ph3 $libName) -Force -ErrorAction SilentlyContinue
             Remove-Item (Join-Path $ph3 ($libName + '.libcache')) -Force -ErrorAction SilentlyContinue
@@ -1188,7 +1270,7 @@ function Invoke-HpcChain {
         if (Test-Path $modelSide) { Copy-Item $modelSide (Join-Path $ph4 "$s.1st-pass.model.json") }
         $pass2 = Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"
         if (Test-Path $pass2) { Copy-Item $pass2 (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin") }
-        New-Item -ItemType File -Path (Join-Path $ph4 "$s.mzML") -Force | Out-Null
+        New-Item -ItemType File -Path (Join-Path $ph4 "$s$sourceExt") -Force | Out-Null
     }
     # SecondPassFDR now has every worker's reconciled output copied in; the phase-3
     # worker dirs are done.
