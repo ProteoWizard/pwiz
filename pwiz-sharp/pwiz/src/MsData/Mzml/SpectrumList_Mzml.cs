@@ -44,6 +44,30 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
     private readonly object _streamLock = new();
     private bool _disposed;
 
+    // Parallel-decode batch. Sequential readers (every search engine, and Skyline's
+    // chromatogram extraction) walk indices in order, so when one asks for spectrum i we
+    // parse i..i+BatchSize-1 in one pass - cheap, the XML scan is not the expensive part -
+    // deferring every base64/zlib decode, then run those decodes on the thread pool and
+    // hand out the batch from here.
+    //
+    // Parsing stays single-threaded and keeps using the one stream, so this needs no
+    // reentrancy work in MzmlReader and no second file handle; only the pure decode goes
+    // wide. Results are identical and order is unchanged - decode is a pure function of
+    // payload plus config, and each spectrum is keyed by its own index.
+    //
+    // Opt-in and off by default: PWIZ_SHARP_MZML_DECODE_THREADS=<n>. A host that already
+    // parallelises across FILES (Osprey scores several at once) would otherwise oversubscribe
+    // the machine, so the decision belongs to the host, not to this class.
+    private static readonly int DecodeThreads = ReadThreadSetting();
+    private const int BatchSize = 64;
+    private readonly System.Collections.Generic.Dictionary<int, Spectrum> _batch = new();
+
+    private static int ReadThreadSetting()
+    {
+        var raw = System.Environment.GetEnvironmentVariable("PWIZ_SHARP_MZML_DECODE_THREADS");
+        return int.TryParse(raw, out int n) && n > 1 ? n : 1;
+    }
+
     /// <summary>Constructs a lazy spectrum list backed by an arbitrary seekable stream.
     /// <paramref name="openStream"/> is invoked once on first access — for plain mzML
     /// it returns a new FileStream; for mzMLb it returns the mzML dataset stream from
@@ -121,6 +145,58 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
         lock (_streamLock)
         {
             System.ObjectDisposedException.ThrowIf(_disposed, this);
+
+            // Only worth batching when the caller actually wants peaks: a metadata-only
+            // read decodes nothing, so there is nothing to parallelise.
+            if (DecodeThreads > 1 && getBinaryData)
+            {
+                if (_batch.Remove(index, out var cached))
+                    return cached;
+                FillBatch(index);
+                if (_batch.Remove(index, out cached))
+                    return cached;
+            }
+
+            return ReadOne(index, getBinaryData);
+        }
+    }
+
+    /// <summary>Parses [start, start+BatchSize) with decoding deferred, then decodes the
+    /// whole batch in parallel. Caller holds <see cref="_streamLock"/>.</summary>
+    private void FillBatch(int start)
+    {
+        // Anything still buffered belongs to a previous, non-sequential position; a reader
+        // that jumps around gets correctness from ReadOne and simply stops benefiting.
+        _batch.Clear();
+
+        int end = System.Math.Min(start + BatchSize, _offsets.Length);
+        var pending = new System.Collections.Generic.List<MzmlReader.PendingDecode>();
+        _context.PendingDecodes = pending;
+        try
+        {
+            for (int i = start; i < end; i++)
+                _batch[i] = ReadOne(i, getBinaryData: true);
+        }
+        finally
+        {
+            // Must clear even on a parse failure, or the next non-batched read would
+            // silently produce spectra with empty arrays.
+            _context.PendingDecodes = null;
+        }
+
+        if (pending.Count == 0)
+            return;
+
+        System.Threading.Tasks.Parallel.ForEach(
+            pending,
+            new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = DecodeThreads },
+            item => item.Run());
+    }
+
+    /// <summary>The original single-spectrum read. Caller holds <see cref="_streamLock"/>.</summary>
+    private Spectrum ReadOne(int index, bool getBinaryData)
+    {
+        {
             _stream ??= _openStream();
             _stream.Position = _offsets[index];
 
