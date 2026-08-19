@@ -227,6 +227,13 @@ public sealed class ReaderConfig
     ///   </item>
     /// </list>
     /// <para>
+    /// Read-ahead engages only for a caller walking indices FORWARD. Anything else - reading
+    /// backward, by permutation, strided, or metadata-then-peaks for the same index - falls
+    /// back to the original per-spectrum path. Measured on the same 5.99 GB file, a reverse
+    /// walk takes 81.2s and a random walk 82.4s whether this is 1 or 8, so a non-linear
+    /// reader pays nothing for having it on; it simply gains nothing.
+    /// </para>
+    /// <para>
     /// Note what this does and does not parallelise. The XML parse stays single-threaded on
     /// the one stream; only the base64/zlib decode of already-extracted payloads goes wide. So
     /// no reader is ever asked for spectra concurrently, and this composes with a host's
