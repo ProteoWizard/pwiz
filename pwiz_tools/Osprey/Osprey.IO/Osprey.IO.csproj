@@ -22,55 +22,42 @@
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
   </ItemGroup>
 
-  <!-- ProteoWizard, as the ONLY spectrum reader (issue #4497). Unconditional and
-       unversioned by a property: the net472 build's OspreyVendorReader opt-in
-       existed because pwiz_data_cli had to be staged by a bjam build first, and
-       pwiz-sharp is a managed project reference with no staging step at all.
+  <!-- ProteoWizard, as the ONLY spectrum reader (issue #4497), reached through the
+       same wrapper Skyline uses rather than through pwiz-sharp directly. The wrapper's
+       net8 target was net8.0-windows until CommonUtil's WinForms half moved to
+       CommonBaseUI; it is plain net8.0 now, so a plain net8.0 Osprey can reference it and
+       still run on Linux without the Wine container.
 
-       Direct rather than through pwiz_tools/Shared/ProteowizardWrapper, whose
-       net8 target is net8.0-windows (it depends on pwiz.CommonUtil, which is
-       WinForms) - a plain net8.0 project cannot reference it, and Osprey has to
-       stay plain net8.0 to run on Linux without the Wine container.
+       ONE reference in place of twelve, and more to the point one definition of the read
+       semantics - MsDataFileImpl carries the ReaderConfig, the vendor centroiding and the
+       vendor reader registration that SpectrumFileReader.Vendors.cs used to duplicate
+       here. It pulls the same eight vendor projects transitively; a file Skyline can open
+       is a file Osprey can open, by construction rather than by matching lists.
 
-       The vendor projects carry no vendor SDK unless the build opts in to the
-       licenses (pwiz-sharp's IAgreeToVendorLicenses, plus NativeVendorsAvailable
-       for the Windows-only native SDKs); without it they compile in
-       NO_VENDOR_SUPPORT mode where Identify() works and Read() throws. So this
-       reference set costs a default developer clone nothing, and one Osprey
-       build runs on Linux with the managed Thermo SDK behind it. Vendor list
-       matches what ProteowizardWrapper registers for Skyline - see
-       SpectrumFileReader.Vendors.cs.
+       The vendor projects still carry no SDK unless the build opts in to the licenses
+       (pwiz-sharp's IAgreeToVendorLicenses, plus NativeVendorsAvailable for the
+       Windows-only native SDKs); without it they compile in NO_VENDOR_SUPPORT mode where
+       Identify() works and Read() throws. So this reference costs a default developer
+       clone nothing.
 
-       KNOWN ISSUE, deliberately not papered over here: a Release Osprey builds
-       and deploys the DEBUG build of these assemblies. Building a .sln unsets
-       Configuration and Platform across a ProjectReference to a project that is
-       not in that solution (MSBuild's ShouldUnsetParentConfigurationAndPlatform,
-       on by default), and none of pwiz-sharp is in Osprey.sln. The code is
-       correct either way - every gate and every byte comparison for #4497 was
-       run in this state - so the cost is an unoptimized ProteoWizard doing the
-       spectrum reading, not a wrong answer.
+       KNOWN ISSUE, unchanged by this swap and deliberately not papered over: a Release
+       Osprey builds and deploys the DEBUG build of the referenced assemblies. Building a
+       .sln unsets Configuration and Platform across a ProjectReference to a project that
+       is not in that solution (MSBuild's ShouldUnsetParentConfigurationAndPlatform, on by
+       default), and neither ProteowizardWrapper nor pwiz-sharp is in Osprey.sln. The code
+       is correct either way - every gate and every byte comparison for #4497 was run in
+       this state - so the cost is an unoptimized ProteoWizard doing the spectrum reading,
+       not a wrong answer.
 
-       SetConfiguration/SetPlatform metadata and clearing the property were both
-       tried and BOTH MADE IT WORSE: Osprey.exe and Osprey.Test re-resolve these
-       references transitively, each hop negotiating its own property set, so a
-       clean Release build then produced pwiz-sharp under bin/Release, bin/Debug
-       AND bin/x64 and deployed an assembly matching none of them. The fix is to
-       give these projects ONE owner - put them in Osprey.sln, the way Skyline
-       carries its shared projects - which is a structural change worth its own
-       commit rather than a rider on the reader swap. -->
+       SetConfiguration/SetPlatform metadata and clearing the property were both tried and
+       BOTH MADE IT WORSE: Osprey.exe and Osprey.Test re-resolve these references
+       transitively, each hop negotiating its own property set, so a clean Release build
+       then produced pwiz-sharp under bin/Release, bin/Debug AND bin/x64 and deployed an
+       assembly matching none of them. The fix is to give these projects ONE owner - put
+       them in Osprey.sln, the way Skyline carries its shared projects - which is a
+       structural change worth its own commit rather than a rider on the reader swap. -->
   <ItemGroup>
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\MsData\MsData.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Analysis\Analysis.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Common\Common.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Util\Util.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Thermo\Thermo.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Waters\Waters.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Sciex\Sciex.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Shimadzu\Shimadzu.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Agilent\Agilent.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Bruker\Bruker.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\UIMF\UIMF.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\UNIFI\UNIFI.csproj" />
+    <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
   </ItemGroup>
 
   <!-- DotNetZip (Ionic.Zlib) for stock-zlib-compatible deflate output.
