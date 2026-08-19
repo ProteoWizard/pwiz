@@ -73,10 +73,28 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
     private const int BatchSize = 64;
     private readonly System.Collections.Generic.Dictionary<int, Spectrum> _batch = new();
 
+    // The index a forward-walking caller would ask for next; -1 until the first read.
+    // Read-ahead only engages when the request matches, so a random-access caller pays
+    // nothing beyond the original per-spectrum path.
+    private int _nextSequential = -1;
+
     private static int ReadThreadSetting()
     {
         var raw = System.Environment.GetEnvironmentVariable("PWIZ_SHARP_MZML_DECODE_THREADS");
-        return int.TryParse(raw, out int n) && n > 1 ? n : 1;
+        if (string.IsNullOrEmpty(raw))
+            return 1;
+
+        // 0 and -1 are the natural spellings of "all cores" and .NET's "unlimited", so
+        // silently treating them as "off" would leave someone reporting that the speedup
+        // does not reproduce. Map them to the core count instead, and clamp the top end:
+        // this work is CPU-bound inflate-plus-convert, so more threads than cores only
+        // adds contention - and the host may already be parallelising across files.
+        if (!int.TryParse(raw, System.Globalization.NumberStyles.Integer,
+                          System.Globalization.CultureInfo.InvariantCulture, out int n))
+            return 1;
+        if (n <= 0)
+            return System.Environment.ProcessorCount;
+        return System.Math.Min(n, System.Environment.ProcessorCount);
     }
 
     /// <summary>Constructs a lazy spectrum list backed by an arbitrary seekable stream.
@@ -163,12 +181,29 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
             if (threads > 1 && getBinaryData)
             {
                 if (_batch.Remove(index, out var cached))
+                {
+                    _nextSequential = index + 1;
                     return cached;
-                FillBatch(index, threads);
-                if (_batch.Remove(index, out cached))
-                    return cached;
+                }
+
+                // Only read ahead when the caller is actually walking forward. Filters that
+                // read backward (SpectrumList_PrecursorRefine), by permutation
+                // (SpectrumListSorter) or scattered across the run (SpectrumListScanSummer)
+                // would otherwise parse and decode a fresh 64-spectrum batch for every
+                // single spectrum served - turning the feature into a large slowdown rather
+                // than, as an earlier comment here wrongly claimed, merely "not benefiting".
+                if (index == _nextSequential || _nextSequential < 0)
+                {
+                    FillBatch(index, threads);
+                    if (_batch.Remove(index, out cached))
+                    {
+                        _nextSequential = index + 1;
+                        return cached;
+                    }
+                }
             }
 
+            _nextSequential = index + 1;
             return ReadOne(index, getBinaryData);
         }
     }
@@ -177,8 +212,6 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
     /// whole batch in parallel. Caller holds <see cref="_streamLock"/>.</summary>
     private void FillBatch(int start, int threads)
     {
-        // Anything still buffered belongs to a previous, non-sequential position; a reader
-        // that jumps around gets correctness from ReadOne and simply stops benefiting.
         _batch.Clear();
 
         int end = System.Math.Min(start + BatchSize, _offsets.Length);
@@ -188,21 +221,50 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
         {
             for (int i = start; i < end; i++)
                 _batch[i] = ReadOne(i, getBinaryData: true);
+
+            if (pending.Count > 0)
+                DecodeInParallel(pending, threads);
+        }
+        catch
+        {
+            // EVERY entry in _batch is parsed but NOT yet decoded until DecodeInParallel
+            // returns, so a failure anywhere above leaves spectra whose binary arrays are
+            // empty. Serving those would be silent data loss rather than an error - a host
+            // with ContinueOnError would write a whole batch of spectra with no peaks and
+            // report only the one failure. Dropping the batch makes the next read take the
+            // single-spectrum path, which fails honestly on the spectrum that is actually
+            // broken.
+            _batch.Clear();
+            throw;
         }
         finally
         {
-            // Must clear even on a parse failure, or the next non-batched read would
-            // silently produce spectra with empty arrays.
             _context.PendingDecodes = null;
         }
+    }
 
-        if (pending.Count == 0)
-            return;
-
-        System.Threading.Tasks.Parallel.ForEach(
-            pending,
-            new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = threads },
-            item => item.Run());
+    /// <summary>Runs the deferred decodes, preserving the exception a sequential read would
+    /// have thrown.</summary>
+    private static void DecodeInParallel(
+        System.Collections.Generic.List<MzmlReader.PendingDecode> pending, int threads)
+    {
+        try
+        {
+            System.Threading.Tasks.Parallel.ForEach(
+                pending,
+                new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = threads },
+                item => item.Run());
+        }
+        catch (System.AggregateException ex) when (ex.InnerException is not null)
+        {
+            // Parallel.ForEach wraps everything in AggregateException, so a caller
+            // catching FormatException from a corrupt base64 payload - which is what the
+            // sequential path throws - would stop matching the moment decoding went
+            // parallel. Rethrow the original with its stack intact so turning threads on
+            // cannot change which handler fires.
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo
+                .Capture(ex.InnerException).Throw();
+        }
     }
 
     /// <summary>The original single-spectrum read. Caller holds <see cref="_streamLock"/>.</summary>
@@ -242,6 +304,9 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
         {
             if (_disposed) return;
             _disposed = true;
+            // A batch of profile MS1 spectra is gigabytes; without this they stay reachable
+            // from a disposed list for as long as anything holds a reference to it.
+            _batch.Clear();
             _stream?.Dispose();
             _stream = null;
             _ownedResource?.Dispose();
