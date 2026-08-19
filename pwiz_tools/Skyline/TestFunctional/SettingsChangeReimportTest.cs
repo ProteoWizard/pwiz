@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, transitionGroup.Results.Count);
             var transitionGroupChromInfo = transitionGroup.Results[0].First();
             // Verify the peak area is what we expect
-            Assert.AreEqual(147639168, transitionGroupChromInfo.Area.Value);
+            Assert.AreEqual(147639168f, transitionGroupChromInfo.Area.Value);
 
             // Reimport the file with "UseSelectiveExtraction" set to "true"
             RunUI(() => SkylineWindow.ModifyDocument("Change selective extraction",
