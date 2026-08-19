@@ -41,39 +41,131 @@ namespace diff_impl {
 
 namespace {
 
-/// Copies of the two primary arrays with their peaks put in a canonical order, so that two sides
-/// can be compared as sets of peaks rather than as ordered lists - see DiffConfig::ignorePeakOrder.
-///
-/// Ordered by m/z and then by intensity, not by m/z alone. A combined ion mobility spectrum repeats
-/// the same m/z across mobility bins, and sorting those ties by m/z alone leaves their order down
-/// to whatever order each side happened to arrive in - which is not the same on both sides. The two
-/// m/z arrays then agree while the intensities sit against the wrong peaks, reported as an
-/// intensity difference at a single index. Including intensity in the key makes the order depend
-/// only on the peaks themselves, so identical sets of peaks always normalize identically.
-vector<BinaryDataArrayPtr> peaksInCanonicalOrder(const vector<BinaryDataArrayPtr>& arrays)
+/// Whether two values agree within the diff's tolerance, by the same relative measure
+/// maxdiff_and_index applies downstream - so a pair this accepts is a pair that comparison accepts.
+bool withinPrecision(double x, double y, double precision)
 {
-    if (arrays.size() < 2 || !arrays[0].get() || !arrays[1].get() ||
-        arrays[0]->data.size() != arrays[1]->data.size())
-        return arrays;
+    double denominator = std::min(x, y);
+    if (denominator == 0) denominator = 1;
+    return std::fabs(x - y) / denominator <= precision;
+}
 
-    const pwiz::util::BinaryData<double>& mzs = arrays[0]->data;
-    const pwiz::util::BinaryData<double>& intensities = arrays[1]->data;
-    vector<size_t> order(mzs.size());
-    std::iota(order.begin(), order.end(), size_t(0));
-    std::sort(order.begin(), order.end(), [&mzs, &intensities](size_t x, size_t y)
-              {return mzs[x] != mzs[y] ? mzs[x] < mzs[y] : intensities[x] < intensities[y];});
 
-    vector<BinaryDataArrayPtr> result;
+/// Reorders both spectra's primary arrays so that index k on one side is the same peak as index k on
+/// the other, pairing peaks by their values - see DiffConfig::ignorePeakOrder.
+///
+/// Sorting each side independently and comparing position by position looks equivalent to this and
+/// is not, because it requires the sort key to survive whatever the round trip did to the values.
+/// It does not survive. Two writers make that plain:
+///
+/// - mz5 delta encodes m/z, so peaks that shared an m/z going in come back a few ulps apart, and a
+///   tie that existed on one side is gone on the other.
+/// - MGF writes m/z at ten significant digits, which moves every value by up to ~5e-7 at m/z 500 and
+///   manufactures exact ties that were never there - measured at 50 of them in a single centroided
+///   PASEF spectrum whose vendor-side original had none.
+///
+/// Either way one side ties where the other does not, so the two sides order those peaks by
+/// different rules - one by m/z, the other by whatever breaks the tie - and the comparison reports a
+/// wall of intensity differences sitting against m/z values that look correct. Pairing on the values
+/// themselves, within the tolerance the comparison already uses, is indifferent to all of it.
+///
+/// Ties are resolved by taking the closest intensity, which is what keeps a combined ion mobility
+/// spectrum's repeated m/z matched up with the right partner. Peaks left without one are put at the
+/// end rather than dropped, so a genuinely missing or extra peak still reports as a difference
+/// instead of being quietly paired away.
+void pairPeaksForComparison(vector<BinaryDataArrayPtr>& aArrays,
+                            vector<BinaryDataArrayPtr>& bArrays,
+                            double precision)
+{
+    if (aArrays.size() < 2 || bArrays.size() < 2)
+        return;
+    for (size_t i = 0; i < 2; ++i)
+        if (!aArrays[i].get() || !bArrays[i].get())
+            return;
+
+    const size_t n = aArrays[0]->data.size();
+    if (aArrays[1]->data.size() != n || bArrays[0]->data.size() != n || bArrays[1]->data.size() != n)
+        return; // differing lengths are themselves the finding; leave them to the comparison
+
+    const pwiz::util::BinaryData<double>& aMz = aArrays[0]->data;
+    const pwiz::util::BinaryData<double>& aIntensity = aArrays[1]->data;
+    const pwiz::util::BinaryData<double>& bMz = bArrays[0]->data;
+    const pwiz::util::BinaryData<double>& bIntensity = bArrays[1]->data;
+
+    vector<size_t> aOrder(n), bOrder(n);
+    std::iota(aOrder.begin(), aOrder.end(), size_t(0));
+    std::iota(bOrder.begin(), bOrder.end(), size_t(0));
+    std::stable_sort(aOrder.begin(), aOrder.end(), [&aMz](size_t x, size_t y) {return aMz[x] < aMz[y];});
+    std::stable_sort(bOrder.begin(), bOrder.end(), [&bMz](size_t x, size_t y) {return bMz[x] < bMz[y];});
+
+    // Both sides ascend in m/z and agree within tolerance, so a peak's candidates are a short
+    // contiguous run of the other side rather than the whole spectrum.
+    vector<bool> bTaken(n, false);
+    vector<size_t> aPaired, bPaired;
+    aPaired.reserve(n);
+    bPaired.reserve(n);
+
+    size_t windowStart = 0;
+    for (size_t ai = 0; ai < n; ++ai)
+    {
+        const size_t a = aOrder[ai];
+        while (windowStart < n &&
+               bMz[bOrder[windowStart]] < aMz[a] &&
+               !withinPrecision(bMz[bOrder[windowStart]], aMz[a], precision))
+            ++windowStart;
+
+        size_t best = n;
+        double bestIntensityDelta = 0;
+        for (size_t bi = windowStart; bi < n; ++bi)
+        {
+            const size_t b = bOrder[bi];
+            if (bMz[b] > aMz[a] && !withinPrecision(bMz[b], aMz[a], precision))
+                break; // ascending, so nothing beyond this can match either
+            if (bTaken[b] || !withinPrecision(bMz[b], aMz[a], precision))
+                continue;
+            const double delta = std::fabs(bIntensity[b] - aIntensity[a]);
+            if (best == n || delta < bestIntensityDelta)
+            {
+                best = b;
+                bestIntensityDelta = delta;
+            }
+        }
+
+        if (best != n)
+        {
+            bTaken[best] = true;
+            aPaired.push_back(a);
+            bPaired.push_back(best);
+        }
+    }
+
+    // whatever went unpaired, in m/z order so the two sides at least line up positionally
+    vector<bool> aTaken(n, false);
+    for (size_t k = 0; k < aPaired.size(); ++k)
+        aTaken[aPaired[k]] = true;
+    for (size_t ai = 0; ai < n; ++ai)
+        if (!aTaken[aOrder[ai]]) aPaired.push_back(aOrder[ai]);
+    for (size_t bi = 0; bi < n; ++bi)
+        if (!bTaken[bOrder[bi]]) bPaired.push_back(bOrder[bi]);
+
+    vector<BinaryDataArrayPtr> aResult, bResult;
     for (size_t i = 0; i < 2; ++i)
     {
-        BinaryDataArrayPtr sorted(new BinaryDataArray(*arrays[i]));
-        vector<double> reordered(order.size());
-        for (size_t j = 0; j < order.size(); ++j)
-            reordered[j] = arrays[i]->data[order[j]];
-        sorted->data.assign(reordered.begin(), reordered.end());
-        result.push_back(sorted);
+        BinaryDataArrayPtr aSorted(new BinaryDataArray(*aArrays[i]));
+        BinaryDataArrayPtr bSorted(new BinaryDataArray(*bArrays[i]));
+        vector<double> aReordered(n), bReordered(n);
+        for (size_t k = 0; k < n; ++k)
+        {
+            aReordered[k] = aArrays[i]->data[aPaired[k]];
+            bReordered[k] = bArrays[i]->data[bPaired[k]];
+        }
+        aSorted->data.assign(aReordered.begin(), aReordered.end());
+        bSorted->data.assign(bReordered.begin(), bReordered.end());
+        aResult.push_back(aSorted);
+        bResult.push_back(bSorted);
     }
-    return result;
+    aArrays.swap(aResult);
+    bArrays.swap(bResult);
 }
 
 } // namespace
@@ -550,8 +642,7 @@ void diff(const Spectrum& a,
             vector<BinaryDataArrayPtr> bBDA(b.binaryDataArrayPtrs.begin(), b.binaryDataArrayPtrs.begin() + 2);
             if (config.ignorePeakOrder)
             {
-                aBDA = peaksInCanonicalOrder(aBDA);
-                bBDA = peaksInCanonicalOrder(bBDA);
+                pairPeaksForComparison(aBDA, bBDA, config.precision);
             }
             diff(aBDA, bBDA,
                  a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs,
