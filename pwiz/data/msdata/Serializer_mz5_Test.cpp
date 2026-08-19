@@ -126,12 +126,20 @@ void testNonAscendingMzRoundTrip()
     // Values carrying a full mantissa, as real m/z does. A round number like 40.0 would defeat the
     // test: it has so few significant bits that even the large delta across a bin boundary subtracts
     // exactly, and the round trip would survive by accident.
+    //
+    // Each bin's 200 values cover nearly the same range as the others - close enough that the array
+    // still resets low at every bin boundary, which is what makes the round trip lossy - but offset by
+    // a per-bin amount many orders of magnitude above that loss, so no two of the 600 values are ever
+    // close enough for the loss to leave which-is-which ambiguous. A tied m/z would defeat the pairing
+    // check below: sorting pairs breaks a tie by intensity only while the m/z half is still bit-exact,
+    // and the loss being pinned here is exactly what unties it, so the two sides would tie-break by
+    // different rules and disagree for a reason that has nothing to do with a real mis-pairing.
     vector<double> mz, intensity;
     for (int bin = 0; bin < 3; ++bin)
         for (int i = 0; i < 200; ++i)
         {
-            mz.push_back(40.123456789012345 + i * 4.821345678901234); // same m/z in every bin
-            intensity.push_back(100.0 + i + bin * 1000);              // distinguishable intensities
+            mz.push_back(40.123456789012345 + bin * 1e-4 + i * 4.821345678901234);
+            intensity.push_back(100.0 + i + bin * 1000); // distinguishable per bin, though no longer needed to distinguish m/z
         }
     unit_assert(!std::is_sorted(mz.begin(), mz.end())); // the premise of the test
 
@@ -160,17 +168,33 @@ void testNonAscendingMzRoundTrip()
 
         SpectrumPtr roundTripped = msd2.run.spectrumListPtr->spectrum(0, true);
         const BinaryData<double>& mz2 = roundTripped->getMZArray()->data;
+        const BinaryData<double>& intensity2 = roundTripped->getIntensityArray()->data;
         unit_assert_operator_equal(mz.size(), mz2.size());
+        unit_assert_operator_equal(intensity.size(), intensity2.size());
 
-        // Compared as a set of values, not position by position: reading a spectrum whose m/z is
-        // out of order legitimately reorders it (see SpectrumListBase::ensureMzAscending), and that
-        // is not what this is about. What must hold is that every value survives untouched.
-        vector<double> expected(mz.begin(), mz.end());
-        vector<double> actual(mz2.begin(), mz2.end());
+        // Compared as a set of (m/z, intensity) pairs, not position by position: reading a spectrum
+        // whose m/z is out of order legitimately reorders it (see SpectrumListBase::ensureMzAscending),
+        // and that is not what this is about. What must hold is that every pair survives together -
+        // every m/z in the fixture is unique, so sorting each side by m/z gives a well-defined
+        // correspondence, and a mis-pairing during the delta-decode or the reordering would show up
+        // here as an intensity attached to the wrong m/z rather than disappearing into a set comparison
+        // of the m/z values alone.
+        //
+        // The m/z tolerance is not zero: mz5's delta encoding measurably drifts the low bits of m/z by
+        // design (this function's own comment above). It is tight enough to fail if that drift grows -
+        // roughly 30x the largest drift observed in this fixture - while accepting the drift as it is.
+        // The intensity tolerance is not zero either, for the same reason: mz5 stores intensity as its
+        // own binary-encoded array subject to the same encoder, even though it is not delta-encoded.
+        vector<pair<double, double> > expected, actual;
+        for (size_t i = 0; i < mz.size(); ++i) expected.push_back(make_pair(mz[i], intensity[i]));
+        for (size_t i = 0; i < mz2.size(); ++i) actual.push_back(make_pair(mz2[i], intensity2[i]));
         sort(expected.begin(), expected.end());
         sort(actual.begin(), actual.end());
         for (size_t i = 0; i < expected.size(); ++i)
-            unit_assert_equal(expected[i], actual[i], 1e-9);
+        {
+            unit_assert_equal(expected[i].first, actual[i].first, 1e-11);
+            unit_assert_equal(expected[i].second, actual[i].second, 1e-9);
+        }
     }
     catch (...)
     {

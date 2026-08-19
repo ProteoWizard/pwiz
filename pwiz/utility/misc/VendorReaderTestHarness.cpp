@@ -48,6 +48,7 @@
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include <thread>
 #include <chrono>
+#include <algorithm>
 
 
 using namespace pwiz::util;
@@ -305,6 +306,7 @@ void assertMzAscending(const MSData& msd, const string& format)
 }
 
 
+#ifndef WITHOUT_MZ5
 /// An mz5 configuration that stores m/z verbatim.
 ///
 /// mz5 delta encodes m/z by default, and that only inverts exactly while m/z ascends. A combined ion
@@ -319,6 +321,7 @@ pwiz::msdata::mz5::Configuration_mz5 losslessMz5Config()
     config.setTranslating(false);
     return config;
 }
+#endif
 
 
 // filters out non-MSn spectra, MS1 spectra, and filters the metadata from MSn spectra
@@ -497,7 +500,12 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             {
                 TemporaryFile targetResultFilename_mz5(targetResultFilename.filename().replace_extension().string(), ".mz5");
                 MSData msd_mz5;
-                Serializer_mz5 serializer_mz5(losslessMz5Config());
+
+                // Only a combined ion mobility spectrum needs the encoding taken out of the picture
+                // (see losslessMz5Config's comment). Every other file keeps mz5's default, translating
+                // configuration - the one msconvert actually writes - so this round trip still covers it.
+                Serializer_mz5 serializer_mz5(config.combineIonMobilitySpectra
+                    ? losslessMz5Config() : pwiz::msdata::mz5::Configuration_mz5());
                 serializer_mz5.write(targetResultFilename_mz5.path().string(), vendorMsd);
                 serializer_mz5.read(targetResultFilename_mz5.path().string(), msd_mz5);
 
@@ -776,7 +784,8 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                 string targetResultFilename_mz5 = bfs::change_extension(targetResultFilename, ".mz5").string();
                 {
                     MSData msd_mz5;
-                    Serializer_mz5 serializer_mz5(losslessMz5Config());
+                    Serializer_mz5 serializer_mz5(config.combineIonMobilitySpectra
+                        ? losslessMz5Config() : pwiz::msdata::mz5::Configuration_mz5());
                     serializer_mz5.write(targetResultFilename_mz5, msd);
                     serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
 

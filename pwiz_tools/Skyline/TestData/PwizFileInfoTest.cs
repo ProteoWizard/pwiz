@@ -230,6 +230,9 @@ namespace pwiz.SkylineTestData
                     break;
             }
             return byMz[mz];
+        }
+
+        /// <summary>
         /// The open dialogs match source types by string equality, so the type names in
         /// <see cref="DataSourceUtil"/> have to agree with the reader's own names wherever it
         /// does not translate them. Agilent is such a case - the reader answers "Agilent

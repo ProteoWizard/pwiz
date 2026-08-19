@@ -60,8 +60,8 @@ std::vector<T> permuted(const std::vector<size_t>& order, const pwiz::util::Bina
 /// the structure rather than repair it. The x-axis is not m/z at all - Spectrum::getMZArray()
 /// also returns a wavelength array, which the Agilent, Thermo and Bruker readers use for a
 /// diode-array trace, and judging a UV trace as if it were m/z would let it settle the verdict for
-/// every real spectrum in the file. Or each point is a transition rather than a peak - an SRM or
-/// SIM spectrum lists one point per transition in the order the method defined them, which is the
+/// every real spectrum in the file. Or each point is a transition rather than a peak - an SRM,
+/// SIM or CRM spectrum lists one point per transition in the order the method defined them, which is the
 /// order that matters, and the x-axis values are just the transitions' target m/z, not a scan
 /// across a continuum; nothing about that order is wrong, so there is nothing to repair.
 ///
@@ -86,7 +86,8 @@ PWIZ_API_DECL bool pwiz::msdata::hasNonMzOrderingAxis(const Spectrum& spectrum)
            spectrum.getArrayByCVID(MS_scanning_quadrupole_position_upper_bound_m_z_array).get() != NULL ||
            spectrum.getArrayByCVID(MS_wavelength_array).get() != NULL ||
            spectrum.hasCVParam(MS_SRM_spectrum) ||
-           spectrum.hasCVParam(MS_SIM_spectrum);
+           spectrum.hasCVParam(MS_SIM_spectrum) ||
+           spectrum.hasCVParam(MS_CRM_spectrum);
 }
 
 PWIZ_API_DECL void pwiz::msdata::ListBase::warn_once(const char * msg) const
