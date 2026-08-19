@@ -217,9 +217,13 @@ public sealed class ReaderConfig
     ///     its own parallelism.
     ///   </item>
     ///   <item>
-    ///     A host that reads one file at a time wants this near the core count. Osprey funnels
-    ///     its reads through a one-permit gate for exactly that reason, so the read phase has
-    ///     the machine to itself and nothing competes with the decode.
+    ///     A host that reads one file at a time should set it, but modestly: measured on a
+    ///     5.99 GB Astral mzML, 1 thread takes 83.4s and 8 takes 54.6s, after which the curve
+    ///     is flat - 16, 24 and 32 all land within a second of 8. The floor is the XML parse,
+    ///     which stays serial, so past the knee extra threads only add memory pressure (each
+    ///     batch holds 64 spectra). 8 is a reasonable default; core count buys nothing.
+    ///     Osprey funnels its reads through a one-permit gate, so its read phase has the
+    ///     machine to itself and nothing competes with the decode.
     ///   </item>
     /// </list>
     /// <para>
