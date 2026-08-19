@@ -145,8 +145,9 @@ PWIZ_API_DECL void pwiz::msdata::SpectrumListBase::ensureMzAscending(const Spect
     bool isFirstFoundSpectrumOutOfOrder =
         mzOrderVerdict_.exchange(MzOrderVerdict::writerDoesNotSortByMz) != MzOrderVerdict::writerDoesNotSortByMz;
 
-    // A spectrum may carry other values like signal-to-noise, baseline, resolution or charge array 
-	// alongside m/z and intensity. Make sure those other arrays are permuted in the same way as m/z and intensity.
+    // A spectrum may carry other values like signal-to-noise, baseline, resolution or charge array
+    // alongside m/z and intensity. Make sure those other arrays are permuted in the same way as m/z
+    // and intensity.
     // Stable, so peaks sharing an m/z keep the order the writer gave them.
     std::vector<size_t> order(mzs.size());
     std::iota(order.begin(), order.end(), size_t(0));
