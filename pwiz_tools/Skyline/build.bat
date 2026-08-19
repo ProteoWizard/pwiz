@@ -320,7 +320,16 @@ if not defined VSINSTALL (set EXIT=1 & set "ERROR_TEXT=No Visual Studio install 
 set "HK_MSBUILD=%VSINSTALL%\MSBuild\Current\Bin\amd64\MSBuild.exe"
 if not exist "%HK_MSBUILD%" set "HK_MSBUILD=%VSINSTALL%\MSBuild\Current\Bin\MSBuild.exe"
 if not exist "%HK_MSBUILD%" (set EXIT=1 & set "ERROR_TEXT=VS MSBuild.exe not found under %VSINSTALL%" & goto :eof)
-"%HK_MSBUILD%" "%SCRIPT_DIR%\Executables\Hardklor\Hardklor.vcxproj" -p:Configuration=%CONFIG% -p:Platform=x64 -m -nologo -v:minimal
+REM # -nodeReuse:false matters more than it looks. This is VS MSBuild.exe; every .NET project
+REM # below is built by the SDK's own MSBuild. Left to reuse nodes, this step parks worker
+REM # processes that the later dotnet builds connect to, and a node from one MSBuild version
+REM # evaluating a project for another mis-evaluates items: the SDK's default "**/*.resx" glob
+REM # reaches GenerateResource unexpanded and Skyline.csproj dies with MSB3552 when it is built
+REM # as a project reference. It fails inside this script every time and passes standalone,
+REM # because standalone runs only hit it when a stale node happens to be alive - one was found
+REM # on this machine 6.9 days old. The nodes also outlive the build, so a CI agent accumulates
+REM # them across runs.
+"%HK_MSBUILD%" "%SCRIPT_DIR%\Executables\Hardklor\Hardklor.vcxproj" -p:Configuration=%CONFIG% -p:Platform=x64 -m -nologo -v:minimal -nodeReuse:false
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=MSBuild Hardklor.vcxproj failed")
 goto :eof
 
