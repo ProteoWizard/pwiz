@@ -389,6 +389,15 @@ public interface IReader
     /// </summary>
     CVID Identify(string filename, string? head);
 
+    /// <summary>
+    /// The reader's own name for the format at <paramref name="filename"/>, or empty when it
+    /// does not recognize it. Port of cpp <c>Reader::identify</c>, which returns a type STRING
+    /// rather than a CVID. cpp gives each Bruker sub-format its own Reader class with its own
+    /// getType(); this port has a single Reader_Bruker that discriminates inside Identify, so
+    /// that reader overrides this to report the specific format.
+    /// </summary>
+    string IdentifyType(string filename, string? head)
+        => Identify(filename, head) != CVID.CVID_Unknown ? TypeName : string.Empty;
     /// <summary>Reads the file into <paramref name="result"/>. Throws on unrecognized input.</summary>
     void Read(string filename, MSData result, ReaderConfig? config = null);
 }

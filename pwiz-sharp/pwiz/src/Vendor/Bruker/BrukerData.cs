@@ -80,9 +80,10 @@ public static class BrukerData
     /// <c>Reader_Bruker_Detail::format</c>.
     /// </summary>
     /// <remarks>
-    /// The U2 (LC-only) and BAF+U2 hybrid formats cpp also recognizes report
-    /// <see cref="BrukerFormat.Unknown"/> here: cpp's own U2 reading path is commented out
-    /// (<c>CompassData.cpp:530-538</c>), so there is nothing to port.
+    /// U2 is identified but not readable, matching cpp: its U2 reading path is commented out
+    /// (<c>CompassData.cpp:530-538</c>) and Reader_Bruker_U2 is a Reader_Bruker_Dummy. cpp still
+    /// NAMES it from Reader_Bruker::identify, which is what lets a file dialog show a U2 .d as a
+    /// Bruker source; reporting Unknown here made it read as a plain folder.
     /// </remarks>
     public static BrukerFormat DetectFormat(string path)
     {
@@ -102,6 +103,7 @@ public static class BrukerData
                 "analysis.tsf" or "analysis.tsf_bin" => BrukerFormat.Tsf,
                 "analysis.yep" => BrukerFormat.Yep,
                 "analysis.baf" => BrukerFormat.Baf,
+                _ when leaf.EndsWith(".u2", StringComparison.Ordinal) => BrukerFormat.U2,
                 _ => BrukerFormat.Unknown,
             };
         }
@@ -113,6 +115,8 @@ public static class BrukerData
         if (IsFidTree(path)) return BrukerFormat.Fid;
         if (Exists(path, "analysis.yep")) return BrukerFormat.Yep;
         if (Exists(path, "analysis.baf")) return BrukerFormat.Baf;
+        // cpp Reader_Bruker_Detail.cpp:125-127: a U2 .d holds "<directory name minus .d>.u2".
+        if (HasU2(path)) return BrukerFormat.U2;
         return BrukerFormat.Unknown;
     }
 
@@ -176,6 +180,10 @@ public static class BrukerData
     private static bool Exists(string directory, string lowercaseFileName) =>
         File.Exists(Path.Combine(directory, lowercaseFileName))
         || File.Exists(Path.Combine(directory, char.ToUpperInvariant(lowercaseFileName[0]) + lowercaseFileName[1..]));
+
+    private static bool HasU2(string directory) =>
+        File.Exists(Path.Combine(directory,
+            Path.GetFileNameWithoutExtension(directory.TrimEnd(Path.DirectorySeparatorChar)) + ".u2"));
 
     private static bool HasBaf(string directory) =>
         directory.Length > 0 && Exists(directory, "analysis.baf");

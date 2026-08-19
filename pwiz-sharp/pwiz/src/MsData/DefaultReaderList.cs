@@ -97,6 +97,20 @@ public sealed class ReaderList : IReader
         return ids;
     }
 
+    /// <summary>
+    /// The matching reader's name for the format, or empty. Port of cpp
+    /// <c>ReaderList::identify</c>; without this the default would report "ReaderList".
+    /// </summary>
+    public string IdentifyType(string filename, string? head)
+    {
+        ArgumentNullException.ThrowIfNull(filename);
+        foreach (var r in _readers)
+        {
+            string type = r.IdentifyType(filename, head);
+            if (type.Length > 0) return type;
+        }
+        return string.Empty;
+    }
     /// <summary>Returns the first reader that identifies the file, or null.</summary>
     public IReader? IdentifyReader(string filename, string? head)
     {

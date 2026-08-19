@@ -19,4 +19,9 @@ public enum BrukerFormat
     /// <summary>FID data (a <c>fid</c> file), read through the CompassXtract COM server
     /// (Windows only) - see <c>CompassXtractData</c>.</summary>
     Fid,
+    /// <summary>LC-only U2 data (a <c>&lt;name&gt;.u2</c> file). Identified but NOT readable -
+    /// cpp is the same, its Reader_Bruker_U2 being a Reader_Bruker_Dummy and its U2 reading
+    /// path commented out (CompassData.cpp:530-538). Present so a .d holding one is still
+    /// recognized as a Bruker source rather than a plain folder.</summary>
+    U2,
 }

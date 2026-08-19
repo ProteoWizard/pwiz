@@ -39,6 +39,24 @@ public sealed class Reader_Bruker : IReader
     public bool CombineIonMobilitySpectra { get; set; }
 
     /// <inheritdoc/>
+    /// <inheritdoc/>
+    /// <remarks>cpp names each Bruker sub-format separately (Reader_Bruker.cpp:44-61) because
+    /// it has a Reader class per format; DataSourceUtil keys a directory off "Bruker FID".</remarks>
+    public string IdentifyType(string filename, string? head)
+    {
+        ArgumentNullException.ThrowIfNull(filename);
+        return DetectFormat(filename) switch
+        {
+            BrukerFormat.Fid => "Bruker FID",
+            BrukerFormat.Yep => "Bruker YEP",
+            BrukerFormat.Baf => "Bruker BAF",
+            BrukerFormat.Tdf => "Bruker TDF",
+            BrukerFormat.Tsf => "Bruker TSF",
+            BrukerFormat.U2 => "Bruker U2",
+            _ => string.Empty,
+        };
+    }
+
     public CVID Identify(string filename, string? head)
     {
         ArgumentNullException.ThrowIfNull(filename);
