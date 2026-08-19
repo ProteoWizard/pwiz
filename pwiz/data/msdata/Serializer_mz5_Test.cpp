@@ -33,7 +33,6 @@
 #include "boost/thread/barrier.hpp"
 #include <cstring>
 #include <cstdlib>
-#include <new>
 
 using namespace pwiz::util;
 using namespace pwiz::cv;
@@ -183,8 +182,12 @@ void testNonAscendingMzRoundTrip()
         // The m/z tolerance is not zero: mz5's delta encoding measurably drifts the low bits of m/z by
         // design (this function's own comment above). It is tight enough to fail if that drift grows -
         // roughly 30x the largest drift observed in this fixture - while accepting the drift as it is.
-        // The intensity tolerance is not zero either, for the same reason: mz5 stores intensity as its
-        // own binary-encoded array subject to the same encoder, even though it is not delta-encoded.
+        //
+        // Intensity is compared exactly, with no tolerance at all. Only m/z is delta encoded -
+        // Translator_mz5::translateIntensity and reverseTranslateIntensity are both empty bodies and
+        // the values are stored as NATIVE_DOUBLE - so intensity round trips bit for bit. Any
+        // tolerance here would weaken the one thing this comparison exists to catch, since an
+        // intensity that came back attached to the wrong m/z is exactly what it is looking for.
         vector<pair<double, double> > expected, actual;
         for (size_t i = 0; i < mz.size(); ++i) expected.push_back(make_pair(mz[i], intensity[i]));
         for (size_t i = 0; i < mz2.size(); ++i) actual.push_back(make_pair(mz2[i], intensity2[i]));
@@ -193,7 +196,7 @@ void testNonAscendingMzRoundTrip()
         for (size_t i = 0; i < expected.size(); ++i)
         {
             unit_assert_equal(expected[i].first, actual[i].first, 1e-11);
-            unit_assert_equal(expected[i].second, actual[i].second, 1e-9);
+            unit_assert_operator_equal(expected[i].second, actual[i].second);
         }
     }
     catch (...)
@@ -212,37 +215,32 @@ void testTranslatingFlagIsInitialized()
 {
     using pwiz::msdata::mz5::Configuration_mz5;
 
-    const unsigned char fills[] = { 0x00, 0xFF, 0xA5 };
     const BinaryDataEncoder::Compression uncompressed[] = {
         BinaryDataEncoder::Compression_None,
         BinaryDataEncoder::Compression_Zstd
     };
 
-    alignas(Configuration_mz5) unsigned char storage[sizeof(Configuration_mz5)];
-
     for (size_t c = 0; c < sizeof(uncompressed) / sizeof(*uncompressed); ++c)
-        for (size_t f = 0; f < sizeof(fills) / sizeof(*fills); ++f)
-        {
-            MSDataFile::WriteConfig config;
-            config.binaryDataEncoderConfig.compression = uncompressed[c];
-
-            memset(storage, fills[f], sizeof(storage));
-            Configuration_mz5* configuration = new (storage) Configuration_mz5(config);
-            bool translating = configuration->doTranslating();
-            configuration->~Configuration_mz5();
-
-            unit_assert(!translating);
-        }
+    {
+        MSDataFile::WriteConfig config;
+        config.binaryDataEncoderConfig.compression = uncompressed[c];
+        unit_assert(!Configuration_mz5(config).doTranslating());
+    }
 
     // and zlib really does turn it on
     MSDataFile::WriteConfig zlibConfig;
     zlibConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
-    memset(storage, 0x00, sizeof(storage));
-    Configuration_mz5* configuration = new (storage) Configuration_mz5(zlibConfig);
-    bool translating = configuration->doTranslating();
-    configuration->~Configuration_mz5();
+    unit_assert(Configuration_mz5(zlibConfig).doTranslating());
 
-    unit_assert(translating);
+    // Assigning a non-zlib configuration over a translating one has to clear the flag, not leave the
+    // previous answer in place. operator= re-runs init(), and this is the path that carries a stale
+    // value furthest if a compression case ever stops assigning.
+    Configuration_mz5 reused; // default ctor is zlib
+    unit_assert(reused.doTranslating());
+    MSDataFile::WriteConfig noneConfig;
+    noneConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_None;
+    reused = Configuration_mz5(noneConfig);
+    unit_assert(!reused.doTranslating());
 }
 
 void testThreadSafetyWorker(boost::barrier* testBarrier)

@@ -60,10 +60,19 @@ std::vector<T> permuted(const std::vector<size_t>& order, const pwiz::util::Bina
 /// the structure rather than repair it. The x-axis is not m/z at all - Spectrum::getMZArray()
 /// also returns a wavelength array, which the Agilent, Thermo and Bruker readers use for a
 /// diode-array trace, and judging a UV trace as if it were m/z would let it settle the verdict for
-/// every real spectrum in the file. Or each point is a transition rather than a peak - an SRM,
-/// SIM or CRM spectrum lists one point per transition in the order the method defined them, which is the
-/// order that matters, and the x-axis values are just the transitions' target m/z, not a scan
-/// across a continuum; nothing about that order is wrong, so there is nothing to repair.
+/// every real spectrum in the file. Or each point is a transition rather than a peak - an SRM or
+/// CRM spectrum lists one point per monitored reaction in the order the method defined them, which
+/// is the order that matters, and the x-axis values are just those transitions' target m/z, not a
+/// scan across a continuum; nothing about that order is wrong, so there is nothing to repair.
+///
+/// MS_SIM_spectrum is deliberately NOT in that list, even though a SIM experiment rendered as
+/// spectra is transition-ordered in exactly the same way. The term is overloaded: the readers use it
+/// far more often for an ordinary scan than for a transition list - Thermo tags every ScanType_SIM
+/// scan with it (SpectrumList_Thermo.cpp), and Agilent maps both MSScanType_SelectedIon and
+/// MSScanType_TotalIon to it (Reader_Agilent_Detail.cpp), the latter being a full-range MS1. Those
+/// are continuum scans carrying hundreds of points, so exempting the term would switch the repair
+/// off for the common case in order to protect the rare one. The trade is deliberate: an
+/// SRM-as-spectra file is protected by its own term, while --simAsSpectra output is not.
 ///
 /// Asked by name, not by counting arrays: counting cannot tell an ordering axis from an ordinary
 /// per-peak extra like signal-to-noise, and would refuse to repair any spectrum carrying one.
@@ -86,7 +95,6 @@ PWIZ_API_DECL bool pwiz::msdata::hasNonMzOrderingAxis(const Spectrum& spectrum)
            spectrum.getArrayByCVID(MS_scanning_quadrupole_position_upper_bound_m_z_array).get() != NULL ||
            spectrum.getArrayByCVID(MS_wavelength_array).get() != NULL ||
            spectrum.hasCVParam(MS_SRM_spectrum) ||
-           spectrum.hasCVParam(MS_SIM_spectrum) ||
            spectrum.hasCVParam(MS_CRM_spectrum);
 }
 

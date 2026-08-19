@@ -364,13 +364,15 @@ private:
      */
     ChromatogramLoadPolicy chromatogramLoadPolicy_;
     /**
-     * flag for translation.
+     * flag for translation. Initialized here, not just in init(), so that it cannot be left
+     * indeterminate by a compression case that forgets to assign it - the value decides whether m/z
+     * is delta encoded, and reading it when it holds neither true nor false is undefined behavior.
      */
-    mutable bool doTranslating_;
+    mutable bool doTranslating_ = false;
     /**
      * Compression level. If compression level is > 0, shuffle is enable by default.
      */
-    int deflateLvl_;
+    int deflateLvl_ = 0;
 };
 
 }

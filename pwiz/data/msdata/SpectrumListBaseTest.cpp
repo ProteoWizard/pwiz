@@ -358,7 +358,7 @@ void testSrmSpectrumDoesNotVouchForTheWriter()
 
     SpectrumPtr srm(new Spectrum);
     srm->id = "sample=1 period=1 cycle=1 experiment=1";
-    srm->set(MS_SIM_spectrum);
+    srm->set(MS_CRM_spectrum); // the other exempt term, so both are covered
     srm->setMZIntensityArrays(srmMzs, srmIntensities, MS_number_of_detector_counts);
     srm->defaultArrayLength = srmMzs.size();
 
@@ -368,6 +368,31 @@ void testSrmSpectrumDoesNotVouchForTheWriter()
 
     unit_assert(mzsOf(list.spectrum(0, true)) == srmMzs);
     unit_assert_equal(200.2, mzsOf(list.spectrum(1, true))[0], 1e-9);
+}
+
+
+// MS_SIM_spectrum must NOT be exempt, however much it resembles the SRM case. The readers use the
+// term overwhelmingly for ordinary scans rather than transition lists - Thermo tags every
+// ScanType_SIM scan with it, and Agilent maps MSScanType_TotalIon, a full-range MS1, to it - so
+// exempting it would switch the repair off for continuum spectra carrying hundreds of points.
+void testSimSpectrumIsStillRepaired()
+{
+    vector<double> mzs, intensities;
+    unsortedPeaks(mzs, intensities);
+
+    SpectrumPtr sim(new Spectrum);
+    sim->id = "controllerType=0 controllerNumber=1 scan=1";
+    sim->set(MS_SIM_spectrum);
+    sim->setMZIntensityArrays(mzs, intensities, MS_number_of_detector_counts);
+    sim->defaultArrayLength = mzs.size();
+
+    MyReaderList list;
+    list.add(sim);
+
+    SpectrumPtr out = list.spectrum(0, true);
+    vector<double> outMzs = mzsOf(out), outIntensities = intensitiesOf(out);
+    unit_assert_equal(200.2, outMzs[0], 1e-9); unit_assert_equal(40, outIntensities[0], 1e-9);
+    unit_assert_equal(700.7, outMzs[3], 1e-9); unit_assert_equal(30, outIntensities[3], 1e-9);
 }
 
 
@@ -404,6 +429,7 @@ int main(int argc, char* argv[])
         testWavelengthSpectrumIsNeitherSortedNorEvidence();
         testSrmSpectrumIsLeftAlone();
         testSrmSpectrumDoesNotVouchForTheWriter();
+        testSimSpectrumIsStillRepaired();
         testExtraPerPeakArraysTravelWithTheirPeaks();
         testMetadataOnlySpectrumSettlesNothing();
     }
