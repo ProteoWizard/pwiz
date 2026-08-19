@@ -55,10 +55,21 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
     // wide. Results are identical and order is unchanged - decode is a pure function of
     // payload plus config, and each spectrum is keyed by its own index.
     //
-    // Opt-in and off by default: PWIZ_SHARP_MZML_DECODE_THREADS=<n>. A host that already
-    // parallelises across FILES (Osprey scores several at once) would otherwise oversubscribe
-    // the machine, so the decision belongs to the host, not to this class.
-    private static readonly int DecodeThreads = ReadThreadSetting();
+    /// <summary>
+    /// Maximum threads used to decode binary arrays. 1 (the default) keeps the original
+    /// fully sequential behaviour, so this changes nothing until a host opts in.
+    ///
+    /// The host decides, not this class: a caller that already parallelises across FILES -
+    /// Osprey scores several at once - would oversubscribe the machine if the library went
+    /// wide on its own. Seeded from PWIZ_SHARP_MZML_DECODE_THREADS so it can be set for a
+    /// process that cannot easily be recompiled (benchmarks, msconvert runs), but the
+    /// property is the real interface.
+    ///
+    /// A static rather than a per-read option deliberately: it is a machine-level resource
+    /// decision, set once at startup, and threading it through ReaderConfig would touch
+    /// every reader for a setting only this one honours. Easy to move if that is preferred.
+    /// </summary>
+    public static int DecodeThreads { get; set; } = ReadThreadSetting();
     private const int BatchSize = 64;
     private readonly System.Collections.Generic.Dictionary<int, Spectrum> _batch = new();
 
@@ -148,11 +159,12 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
 
             // Only worth batching when the caller actually wants peaks: a metadata-only
             // read decodes nothing, so there is nothing to parallelise.
-            if (DecodeThreads > 1 && getBinaryData)
+            int threads = DecodeThreads;
+            if (threads > 1 && getBinaryData)
             {
                 if (_batch.Remove(index, out var cached))
                     return cached;
-                FillBatch(index);
+                FillBatch(index, threads);
                 if (_batch.Remove(index, out cached))
                     return cached;
             }
@@ -163,7 +175,7 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
 
     /// <summary>Parses [start, start+BatchSize) with decoding deferred, then decodes the
     /// whole batch in parallel. Caller holds <see cref="_streamLock"/>.</summary>
-    private void FillBatch(int start)
+    private void FillBatch(int start, int threads)
     {
         // Anything still buffered belongs to a previous, non-sequential position; a reader
         // that jumps around gets correctness from ReadOne and simply stops benefiting.
@@ -189,7 +201,7 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
 
         System.Threading.Tasks.Parallel.ForEach(
             pending,
-            new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = DecodeThreads },
+            new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = threads },
             item => item.Run());
     }
 
