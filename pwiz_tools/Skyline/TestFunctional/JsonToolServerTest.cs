@@ -1856,7 +1856,7 @@ namespace pwiz.SkylineTestFunctional
                 // A rectangle that is not four numbers must come back as the instruction saying so. Anything
                 // an LLM gets wrong here -- too few coordinates, a word where a number goes, a JSON null --
                 // has to end at that message, not as a raw FormatException from inside a conversion.
-                var graphPath = new SkylineTool.UiElementPath(
+                var graphPath = new UiElementPath(
                     server.GetControls(graphId).First().Path.Parent, null, null, @"ZedGraphControl");
                 foreach (var bad in new object[]
                          {
