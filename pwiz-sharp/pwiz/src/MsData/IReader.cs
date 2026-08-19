@@ -200,6 +200,41 @@ public sealed class ReaderConfig
     public bool VerifyNonEmptySpectraAtIndex { get; set; }
 
     /// <summary>
+    /// Threads used to decode mzML binary arrays. 1 (the default) decodes inline on the
+    /// read thread, which is the original behaviour; higher values parse a batch of spectra
+    /// with decoding deferred and then decode them in parallel.
+    /// </summary>
+    /// <remarks>
+    /// Off by default because the host, not this library, knows what else is already running.
+    /// The two shapes differ enough that neither default suits both:
+    /// <list type="bullet">
+    ///   <item>
+    ///     Skyline and MsConvertGUI process multiple FILES at once. That is the established
+    ///     answer for vendor formats, which are not purely I/O bound and go faster several at
+    ///     a time - and where per-file threading is the only safe axis, since a vendor reader
+    ///     is thread-safe on its own thread but not necessarily for concurrent spectrum
+    ///     retrieval. A host doing that should leave this at 1 rather than go wide underneath
+    ///     its own parallelism.
+    ///   </item>
+    ///   <item>
+    ///     A host that reads one file at a time wants this near the core count. Osprey funnels
+    ///     its reads through a one-permit gate for exactly that reason, so the read phase has
+    ///     the machine to itself and nothing competes with the decode.
+    ///   </item>
+    /// </list>
+    /// <para>
+    /// Note what this does and does not parallelise. The XML parse stays single-threaded on
+    /// the one stream; only the base64/zlib decode of already-extracted payloads goes wide. So
+    /// no reader is ever asked for spectra concurrently, and this composes with a host's
+    /// per-file parallelism rather than contending with it for thread-safety. It is honoured
+    /// by the mzML reader alone, in the same way <see cref="VerifyNonEmptySpectraAtIndex"/> is
+    /// read by one reader. Values below 1 are treated as 1, and the count is clamped to the
+    /// processor count.
+    /// </para>
+    /// </remarks>
+    public int MzmlDecodeThreads { get; set; } = 1;
+
+    /// <summary>
     /// When true, MS2+ spectra without precursor info are kept rather than dropped. The
     /// default (false) drops them, matching pwiz cpp. Port of
     /// <c>pwiz::msdata::Reader::Config::allowMsMsWithoutPrecursor</c>.

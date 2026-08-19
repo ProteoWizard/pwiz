@@ -55,21 +55,15 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
     // wide. Results are identical and order is unchanged - decode is a pure function of
     // payload plus config, and each spectrum is keyed by its own index.
     //
-    /// <summary>
-    /// Maximum threads used to decode binary arrays. 1 (the default) keeps the original
-    /// fully sequential behaviour, so this changes nothing until a host opts in.
-    ///
-    /// The host decides, not this class: a caller that already parallelises across FILES -
-    /// Osprey scores several at once - would oversubscribe the machine if the library went
-    /// wide on its own. Seeded from PWIZ_SHARP_MZML_DECODE_THREADS so it can be set for a
-    /// process that cannot easily be recompiled (benchmarks, msconvert runs), but the
-    /// property is the real interface.
-    ///
-    /// A static rather than a per-read option deliberately: it is a machine-level resource
-    /// decision, set once at startup, and threading it through ReaderConfig would touch
-    /// every reader for a setting only this one honours. Easy to move if that is preferred.
-    /// </summary>
-    public static int DecodeThreads { get; set; } = ReadThreadSetting();
+    // Threads used to decode binary arrays, from ReaderConfig.MzmlDecodeThreads. 1 keeps the
+    // original fully sequential behaviour, so this changes nothing until a host opts in.
+    private readonly int _decodeThreads;
+
+    /// <summary>The decode-thread count actually in effect, after clamping. Exposed so a
+    /// test can prove the ReaderConfig value reached this far: comparing one-thread output
+    /// against eight-thread output cannot tell a correctly wired setting apart from one that
+    /// never arrived, since both would then decode sequentially and agree.</summary>
+    internal int DecodeThreadsInEffect => _decodeThreads;
     private const int BatchSize = 64;
     private readonly System.Collections.Generic.Dictionary<int, Spectrum> _batch = new();
 
@@ -78,24 +72,6 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
     // nothing beyond the original per-spectrum path.
     private int _nextSequential = -1;
 
-    private static int ReadThreadSetting()
-    {
-        var raw = System.Environment.GetEnvironmentVariable("PWIZ_SHARP_MZML_DECODE_THREADS");
-        if (string.IsNullOrEmpty(raw))
-            return 1;
-
-        // 0 and -1 are the natural spellings of "all cores" and .NET's "unlimited", so
-        // silently treating them as "off" would leave someone reporting that the speedup
-        // does not reproduce. Map them to the core count instead, and clamp the top end:
-        // this work is CPU-bound inflate-plus-convert, so more threads than cores only
-        // adds contention - and the host may already be parallelising across files.
-        if (!int.TryParse(raw, System.Globalization.NumberStyles.Integer,
-                          System.Globalization.CultureInfo.InvariantCulture, out int n))
-            return 1;
-        if (n <= 0)
-            return System.Environment.ProcessorCount;
-        return System.Math.Min(n, System.Environment.ProcessorCount);
-    }
 
     /// <summary>Constructs a lazy spectrum list backed by an arbitrary seekable stream.
     /// <paramref name="openStream"/> is invoked once on first access — for plain mzML
@@ -105,8 +81,9 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
     /// for the list's lifetime).</summary>
     internal SpectrumList_Mzml(System.Func<Stream> openStream, System.IDisposable? ownedResource,
                                 MzmlReader context, string[] ids, long[] offsets,
-                                DataProcessing? dp, string source)
+                                DataProcessing? dp, string source, int decodeThreads = 1)
     {
+        _decodeThreads = System.Math.Max(1, System.Math.Min(decodeThreads, System.Environment.ProcessorCount));
         _openStream = openStream;
         _ownedResource = ownedResource;
         _context = context;
@@ -118,12 +95,14 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
 
     /// <summary>File-backed convenience overload used by <c>MzmlReaderAdapter</c>.</summary>
     internal SpectrumList_Mzml(string filename, MzmlReader context,
-                                string[] ids, long[] offsets, DataProcessing? dp)
+                                string[] ids, long[] offsets, DataProcessing? dp,
+                                int decodeThreads = 1)
         : this(
               openStream: () => new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read,
                                                 bufferSize: 1 << 16, FileOptions.RandomAccess),
               ownedResource: null,
-              context: context, ids: ids, offsets: offsets, dp: dp, source: filename)
+              context: context, ids: ids, offsets: offsets, dp: dp, source: filename,
+              decodeThreads: decodeThreads)
     { }
 
     /// <inheritdoc/>
@@ -177,7 +156,7 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
 
             // Only worth batching when the caller actually wants peaks: a metadata-only
             // read decodes nothing, so there is nothing to parallelise.
-            int threads = DecodeThreads;
+            int threads = _decodeThreads;
             if (threads > 1 && getBinaryData)
             {
                 if (_batch.Remove(index, out var cached))

@@ -7,7 +7,7 @@ using Pwiz.Data.MsData.Spectra;
 namespace Pwiz.Data.MsData.Tests.Mzml;
 
 /// <summary>
-/// Pins the one property <see cref="SpectrumList_Mzml.DecodeThreads"/> rests on: decoding
+/// Pins the one property <see cref="ReaderConfig.MzmlDecodeThreads"/> rests on: decoding
 /// binary arrays on a thread pool must produce exactly the values the sequential path
 /// produces, in the same order.
 ///
@@ -143,12 +143,10 @@ public class MzmlParallelDecodeTests
         string path = FixturePath();
         var expected = ReadAll(path, threads: 1);
 
-        int previous = SpectrumList_Mzml.DecodeThreads;
-        SpectrumList_Mzml.DecodeThreads = 8;
-        try
         {
             using var msd = new MSData();
-            ReaderList.Default.Read(path, msd, 0, new ReaderConfig());
+            ReaderList.Default.Read(path, msd, 0,
+                new ReaderConfig { MzmlDecodeThreads = 8 });
             var list = msd.Run.SpectrumList;
             Assert.IsNotNull(list);
 
@@ -158,10 +156,6 @@ public class MzmlParallelDecodeTests
                 Assert.AreEqual(expected[i].Id, spectrum.Id, $"spectrum {i} id differs in reverse order");
                 AssertArraysEqual(expected[i].Mz, ToArray(spectrum.GetMZArray()), i, "m/z (reverse)");
             }
-        }
-        finally
-        {
-            SpectrumList_Mzml.DecodeThreads = previous;
         }
     }
 
@@ -176,19 +170,17 @@ public class MzmlParallelDecodeTests
         array is null ? Array.Empty<double>() : array.Data.ToArray();
 
     /// <summary>
-    /// Reads every spectrum with binary data at the given thread setting. Restores the
-    /// previous setting so the test cannot leak a global into whatever runs next.
+    /// Reads every spectrum with binary data at the given thread setting. The setting rides
+    /// on the ReaderConfig for this read alone, so nothing leaks into another test.
     /// </summary>
     private static List<(string Id, double[] Mz, double[] Intensity, long[] Integers)> ReadAll(
         string path, int threads)
     {
-        int previous = SpectrumList_Mzml.DecodeThreads;
-        SpectrumList_Mzml.DecodeThreads = threads;
-        try
         {
             var result = new List<(string, double[], double[], long[])>();
             using var msd = new MSData();
-            ReaderList.Default.Read(path, msd, 0, new ReaderConfig());
+            ReaderList.Default.Read(path, msd, 0,
+                new ReaderConfig { MzmlDecodeThreads = threads });
             var list = msd.Run.SpectrumList;
             Assert.IsNotNull(list, "fixture has no spectrum list");
 
@@ -196,6 +188,13 @@ public class MzmlParallelDecodeTests
             // would make every assertion below pass without the new code running at all.
             Assert.IsInstanceOfType<SpectrumList_Mzml>(list,
                 "expected the lazy indexed reader - the parallel path would not be exercised otherwise");
+
+            // Prove the ReaderConfig value actually arrived. Without this the comparison
+            // below passes whether or not the setting is plumbed through, because an
+            // unwired setting leaves BOTH runs sequential and therefore identical.
+            Assert.AreEqual(Math.Min(threads, Environment.ProcessorCount),
+                ((SpectrumList_Mzml)list).DecodeThreadsInEffect,
+                "MzmlDecodeThreads did not reach the spectrum list");
 
             for (int i = 0; i < list.Count; i++)
             {
@@ -211,10 +210,6 @@ public class MzmlParallelDecodeTests
                     integers.ToArray()));
             }
             return result;
-        }
-        finally
-        {
-            SpectrumList_Mzml.DecodeThreads = previous;
         }
     }
 }
