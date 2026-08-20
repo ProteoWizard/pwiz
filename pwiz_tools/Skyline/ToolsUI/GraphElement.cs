@@ -130,10 +130,9 @@ namespace pwiz.Skyline.ToolsUI
 
             // An axis with nothing asked of it is passed no range at all, so ZoomPaneToScale leaves both its
             // scale and its auto flags alone: writing its current values back would pin it out of auto
-            // scaling, which is not what "leave this one" means. A direction the graph does not allow is
-            // dropped there too, the way HandleZoomFinish drops it at the end of a mouse drag the graph will
-            // not honor. The rectangle returned below is read back off the pane, so it shows what actually
-            // happened either way.
+            // scaling, which is not what "leave this one" means. A direction the user could not move
+            // themselves, by zoom or by pan, is dropped there too. The rectangle returned below is read back
+            // off the pane, so it shows what actually happened either way.
             Control.ZoomPaneToScale(pane,
                 wantsX ? Math.Min(bounds.Left, bounds.Right) : (double?) null,
                 wantsX ? Math.Max(bounds.Left, bounds.Right) : (double?) null,

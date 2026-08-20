@@ -852,8 +852,8 @@ public static class SkylineTools
         "and top/bottom the Y-axis range. Returns the zoom actually applied, which may be clamped to the " +
         "available data range. Give an EQUAL pair to leave that axis alone: equal left and right zoom only " +
         "vertically, equal top and bottom only horizontally, and equal corners change nothing at all. A graph " +
-        "that does not let a user zoom a direction ignores that direction here too, exactly as it would ignore a " +
-        "mouse drag that way; the returned zoom shows what actually changed. Read the " +
+        "that lets the user neither zoom nor pan a direction ignores that direction here too; the returned " +
+        "zoom shows what actually changed. Read the " +
         "current zoom first with skyline_get_graph_zoom.")]
     public static string ZoomGraphTo(
         [Description("Form identifier from skyline_get_open_forms")] string formId,

@@ -738,24 +738,27 @@ namespace ZedGraph
 			if ( pane == null )
 				return;
 
+			// Nothing asked for, or a viewport the user cannot move at all: either way leave the zoom
+			// stack alone. ZoomStateSave below CLEARS that stack before recording, so reaching it with
+			// nothing to do would throw away the unzoom history in exchange for no change.
+			if ( !xMin.HasValue && !xMax.HasValue && !yMin.HasValue && !yMax.HasValue )
+				return;
+			if ( !_isEnableHZoom && !_isEnableHPan && !_isEnableVZoom && !_isEnableVPan )
+				return;
+
+			ZoomState oldState = ZoomStateSave( pane, ZoomState.StateType.Zoom );
+
 			// Each END of each axis is independent: a value moves that end and takes it out of auto
 			// scaling, a null leaves it exactly as it was, value and auto setting both. So a caller can
 			// pin a maximum and let the minimum go on following the data, which is what the separate
 			// MinAuto and MaxAuto flags are for.
 			//
-			// A whole direction is skipped when this control does not let the user zoom it. A graph that
-			// disables one (the peak-scoring and peak-picking comparison graphs disable both; a
-			// chromatogram follows Settings.Default.LockYChrom) must not move that way for a
-			// programmatic caller when it would not for a mouse. HandleZoomFinish makes the same check
-			// at the end of a zoom-drag.
-			bool zoomX = _isEnableHZoom && ( xMin.HasValue || xMax.HasValue );
-			bool zoomY = _isEnableVZoom && ( yMin.HasValue || yMax.HasValue );
-			if ( !zoomX && !zoomY )
-				return;
-
-			ZoomState oldState = ZoomStateSave( pane, ZoomState.StateType.Zoom );
-
-			if ( zoomX )
+			// A direction moves only if the user could move it themselves, by zooming OR by panning -
+			// either one lets them change the viewport that way, and it is not worth working out which
+			// parts of a range each of them would have allowed. A graph that permits neither (the
+			// peak-scoring and peak-picking comparison graphs disable both zoom directions) must not
+			// move that way for a programmatic caller when it would not for a mouse.
+			if ( _isEnableHZoom || _isEnableHPan )
 			{
 				if ( xMin.HasValue )
 				{
@@ -768,7 +771,7 @@ namespace ZedGraph
 					pane.XAxis.Scale.MaxAuto = false;
 				}
 			}
-			if ( zoomY )
+			if ( _isEnableVZoom || _isEnableVPan )
 			{
 				if ( yMin.HasValue )
 				{
