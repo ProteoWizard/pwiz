@@ -3751,5 +3751,63 @@ namespace pwiz.Osprey.Test
             }
             Assert.IsTrue(moved > 400, string.Format(@"only {0} of 2000 draws moved with the seed", moved));
         }
+
+        /// <summary>
+        /// EVERY selection path samples a run - there is no path left that quietly takes the
+        /// cross-run maximum instead.
+        ///
+        /// <para>This is the property the default flip turns on. While the reservoir was opt-in
+        /// it reached only the callers that threaded per-file offsets in, and the callers without
+        /// them threw; the direct and non-projection streaming paths - which is what a 3-file
+        /// Stellar run takes - were both in the second group. A shipped behaviour cannot be
+        /// path-dependent, so the run index the offsets existed to supply was removed (the
+        /// reservoir never read it; it needs only the arrival count) and the abort with it.</para>
+        ///
+        /// <para>The fixture is rigged so the two rules cannot be confused: the score rises
+        /// monotonically with the run, so the maximum rule would hand EVERY precursor to the last
+        /// run. Anything spread across runs is the reservoir.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestEveryPathSamplesARun()
+        {
+            const int nRuns = 3;
+            const int nPrecursors = 300;
+            int n = nRuns * nPrecursors;
+
+            // Flat (file, row) order, exactly as the streaming paths present it.
+            var labels = new bool[n];
+            var entryIds = new uint[n];
+            var bestScores = new double[n];
+            for (int run = 0; run < nRuns; run++)
+            {
+                for (int p = 0; p < nPrecursors; p++)
+                {
+                    int i = run * nPrecursors + p;
+                    entryIds[i] = (uint)p;
+                    bestScores[i] = run; // later run always scores higher
+                }
+            }
+
+            // No per-file offsets, and an empty entries list: the shape the direct and
+            // RunPercolatorStreaming callers pass. This threw before the flip.
+            int[] selected = PercolatorSampling.SelectBestPerPrecursor(
+                labels, entryIds, Array.Empty<PercolatorEntry>(), bestScores, 42);
+
+            Assert.AreEqual(nPrecursors, selected.Length,
+                @"one observation must survive per precursor, whichever rule chose it");
+
+            var winnersPerRun = new int[nRuns];
+            foreach (int i in selected)
+                winnersPerRun[i / nPrecursors]++;
+
+            Assert.AreNotEqual(nPrecursors, winnersPerRun[nRuns - 1],
+                @"every winner came from the highest-scoring run, so this path is still taking the cross-run maximum");
+            for (int run = 0; run < nRuns; run++)
+            {
+                Assert.IsTrue(winnersPerRun[run] > nPrecursors / (nRuns * 2),
+                    string.Format(@"run {0} won only {1} of {2} precursors, which is not a uniform draw over {3} runs",
+                        run, winnersPerRun[run], nPrecursors, nRuns));
+            }
+        }
     }
 }

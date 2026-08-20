@@ -861,13 +861,9 @@ namespace pwiz.Osprey.FDR
             // silent span on an 82-file join; announce it so the console is not blank.
             logInfo(string.Format(@"Selecting training subset from {0} scored entries...", n));
             int[] bestIdx;
-            // fileStart lets the dedup honor OSPREY_TRAIN_PICK_RUN here too. Without it this path
-            // could only take the cross-run maximum, so the lever's behavior would depend on
-            // whether the output directory already held projections - the dispatch this method
-            // shares with RunStreamingFirstPass.
             int[] trainSubsetGlobalIdx = PercolatorSampling.BuildTrainingSubset(
                 labels, entryIds, peptides, Array.Empty<PercolatorEntry>(), maxTrain,
-                percConfig.Seed, out bestIdx, bestScores, fileStart);
+                percConfig.Seed, out bestIdx, bestScores);
 
             int dedupTargets = 0, dedupDecoys = 0;
             for (int i = 0; i < bestIdx.Length; i++)

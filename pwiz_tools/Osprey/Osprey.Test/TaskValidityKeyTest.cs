@@ -115,6 +115,48 @@ namespace pwiz.Osprey.Test
                 @"the pick suffix must be emitted for the default arm too - an empty default is precisely what lets a post-flip key equal a pre-flip one");
             Assert.AreNotEqual(string.Empty, OspreyEnvironment.Pass2QValueValidityKeySuffix(),
                 @"the 2nd-pass mode suffix must be emitted for the default arm too, for the same reason");
+            Assert.AreNotEqual(string.Empty, OspreyEnvironment.TrainSampleValidityKeySuffix(),
+                @"the training-selection suffix must be emitted for the default arm too - it is a flipped default, so an empty new default would equal every pre-flip key");
+        }
+
+        /// <summary>
+        /// The first-pass training-sample settings must key differently from each other and from
+        /// the default, because they change which rows train the model and therefore every score
+        /// and count downstream.
+        ///
+        /// <para>Written after the omission cost a measurement: a re-run with
+        /// OSPREY_TRAIN_PICK_RUN newly set into an existing output directory reported
+        /// "FirstPassFDR:skipping (outputs valid)" in under a second and handed back the previous
+        /// setting's numbers. That is indistinguishable from a change with no effect, which is the
+        /// most expensive way for an A/B to fail.</para>
+        ///
+        /// <para>The two halves are asserted differently on purpose. The run-vs-maximum selection
+        /// is a FLIPPED DEFAULT, so it must key for BOTH arms - an empty new default would equal
+        /// every directory written before the flip and let a resume adopt maximum-trained scores.
+        /// The training cap's default never moved, so it must stay silent when unset, exactly
+        /// like the aggregation suffix.</para>
+        /// </summary>
+        private static void AssertTrainingSampleLeversKeyDifferently()
+        {
+            Assert.AreNotEqual(string.Empty, OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+                @"the shipped reservoir arm must key, or a pre-flip directory is adopted as though it had been trained on it");
+            Assert.AreNotEqual(string.Empty, OspreyEnvironment.TrainSampleValidityKeySuffix(false, null),
+                @"the forced-maximum arm must key too");
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(false, null),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+                @"per-run picking trains on different rows than the cross-run maximum");
+            Assert.AreEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+                @"the suffix must be a pure function of its arms");
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, 3000000),
+                @"a raised training cap covers more precursors, so it must key differently");
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, 3000000),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, 600000),
+                @"two different caps must key differently, not merely differ from the default");
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(false, 3000000),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, 3000000),
+                @"the two settings are independent, so their combination is a fourth arm");
         }
 
         /// <summary>
@@ -123,35 +165,6 @@ namespace pwiz.Osprey.Test
         /// resolution-keyed default outright, so two runs can differ in nothing
         /// else.
         /// </summary>
-        /// <summary>
-        /// The first-pass training-sample levers must key differently from each other and from
-        /// the default, because they change which rows train the model and therefore every score
-        /// and count downstream.
-        ///
-        /// <para>Written after the omission cost a measurement: a re-run with
-        /// OSPREY_TRAIN_PICK_RUN newly set into an existing output directory reported
-        /// "FirstPassFDR:skipping (outputs valid)" in under a second and handed back the previous
-        /// setting's numbers. That is indistinguishable from a lever with no effect, which is the
-        /// most expensive way for an A/B to fail.</para>
-        /// </summary>
-        private static void AssertTrainingSampleLeversKeyDifferently()
-        {
-            Assert.AreEqual(string.Empty, OspreyEnvironment.TrainSampleValidityKeySuffix(false, null),
-                @"an unset lever pair must not disturb the keys of runs that never used them");
-            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(false, null),
-                OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
-                @"per-run picking trains on different rows than the cross-run maximum");
-            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(false, null),
-                OspreyEnvironment.TrainSampleValidityKeySuffix(false, 3000000),
-                @"a raised training cap covers more precursors, so it must key differently");
-            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(false, 3000000),
-                OspreyEnvironment.TrainSampleValidityKeySuffix(false, 600000),
-                @"two different caps must key differently, not merely differ from the default");
-            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
-                OspreyEnvironment.TrainSampleValidityKeySuffix(true, 3000000),
-                @"the two levers are independent, so their combination is a third arm");
-        }
-
         private static void AssertEachArmKeysDifferently()
         {
             Assert.AreNotEqual(OspreyEnvironment.PickValidityKeySuffix(true, null),

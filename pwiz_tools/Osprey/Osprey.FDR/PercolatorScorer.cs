@@ -550,9 +550,10 @@ namespace pwiz.Osprey.FDR
             public readonly uint ParquetIndex;
             public readonly double CoelutionSum;
             public readonly string Peptide;
-            /// <summary>How many runs this precursor has been seen in so far. Used only by
-            /// OSPREY_TRAIN_PICK_RUN's reservoir, which needs the running count to replace with
-            /// probability 1/Seen; the maximum path leaves it at its incremented value and
+            /// <summary>How many observations of this precursor have arrived so far - one per
+            /// run it appears in, since first-pass rows are one per precursor per run. The
+            /// default reservoir needs the running count to replace with probability 1/Seen;
+            /// the OSPREY_TRAIN_PICK_RUN=0 maximum path leaves it at its incremented value and
             /// never reads it.</summary>
             public readonly uint Seen;
 
@@ -641,11 +642,11 @@ namespace pwiz.Osprey.FDR
             // Which observation represents a precursor. Logged when it is NOT the default,
             // because nothing else in the output would say which population trained the model.
             bool pickRun = OspreyEnvironment.TrainPickRun;
-            if (pickRun)
+            if (!pickRun)
             {
                 logInfo(
-                    @"[TRAIN] OSPREY_TRAIN_PICK_RUN: each precursor's training row is sampled " +
-                    @"uniformly from the runs it appears in, not taken as its best across runs");
+                    @"[TRAIN] OSPREY_TRAIN_PICK_RUN=0: each precursor's training row is its BEST " +
+                    @"observation across runs, not a uniform sample of them (pre-26.1 behaviour)");
             }
             int g = 0;
             int nInputTargets = 0, nInputDecoys = 0;
@@ -670,13 +671,13 @@ namespace pwiz.Osprey.FDR
                     var map = isDecoy ? bestDecoy : bestTarget;
                     if (map.TryGetValue(baseId, out FirstPassDedupRow existing))
                     {
-                        // Under OSPREY_TRAIN_PICK_RUN, reservoir sampling of size one: the k-th
-                        // run this precursor appears in takes the slot with probability 1/k. That
-                        // is uniform over the runs the precursor is ACTUALLY in, which a fixed
-                        // chosen-run rule is not - a precursor absent from its chosen run would
-                        // fall back to the first run seen, and since runs stream in injection
-                        // order that fallback favours early, higher-yield runs. Same bias family
-                        // as the maximum this lever exists to remove, just weaker.
+                        // Reservoir sampling of size one: the k-th run this precursor appears in
+                        // takes the slot with probability 1/k. That is uniform over the runs the
+                        // precursor is ACTUALLY in, which a fixed chosen-run rule is not - a
+                        // precursor absent from its chosen run would fall back to the first run
+                        // seen, and since runs stream in injection order that fallback favours
+                        // early, higher-yield runs. Same bias family as the maximum this replaces,
+                        // just weaker.
                         uint seen = existing.Seen + 1;
                         bool replace = pickRun
                             ? ReservoirTakesSlot(baseId, seen, percConfig.Seed)
@@ -988,13 +989,19 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Reservoir decision for OSPREY_TRAIN_PICK_RUN: does the <paramref name="seen"/>-th run
-        /// this precursor appears in take its training slot? True with probability 1/seen, which
-        /// leaves every run the precursor actually appears in equally likely to be the survivor,
-        /// whatever order the runs stream in and however few runs contain it.
+        /// Reservoir decision for the default training selection: does the
+        /// <paramref name="seen"/>-th run this precursor appears in take its training slot? True
+        /// with probability 1/seen, which leaves every run the precursor actually appears in
+        /// equally likely to be the survivor, however few runs contain it.
+        ///
         /// Deterministic in <paramref name="baseId"/>, <paramref name="seen"/> and the training
-        /// seed rather than drawn from a shared RNG, so the selection does not depend on file
-        /// order or on how the ingest is scheduled, and a re-run trains on the same rows.
+        /// seed rather than drawn from a shared RNG. That makes the decision independent of how
+        /// the ingest is SCHEDULED - thread interleaving cannot move it, as a shared RNG's draw
+        /// order would - and reproducible across re-runs. It does not make the winner independent
+        /// of file ORDER: the surviving ordinal is fixed, so which run holds that ordinal follows
+        /// the arrival sequence. Reproducibility therefore rests on the input file list being
+        /// ordered, which it is.
+        ///
         /// Mixing is the SplitMix64 finalizer: the low bits of a raw base_id are far from uniform
         /// and comparing them directly would skew the draw.
         /// </summary>
