@@ -283,20 +283,21 @@ namespace pwiz.Skyline.ToolsUI
         /// than one thing for an empty text, or more than one control of a named type.</para></summary>
         public UiElement FindElement(string text, UiAction action)
         {
+            // Walked ONCE, for every path below. Walking is not free of side effects: enumerating opens and
+            // recloses each menu dropdown so that items built on demand are present (see EnumerateChildren),
+            // which re-fires every DropDownOpening handler on the form. Matching twice over one list costs
+            // nothing; walking twice would pay that price again.
+            var candidates = SelfAndDescendants().Where(action.AppliesTo).ToList();
             if (!string.IsNullOrEmpty(text))
             {
-                var labeled = FindElementOrNull(text, action);
+                var labeled = BestMatch(candidates, text, true) ?? BestMatch(candidates, text, false);
                 if (labeled != null)
                     return labeled;
-                // Only now is a second walk worth its cost - and it must be a second walk, not one hoisted
-                // above the label lookup: building every element twice on the common path leaves the extra
-                // set of them behind (MethodEditTutorial's leak check catches exactly that).
                 // Nothing carries that text, so read it as the KIND of control instead: a user told to click
                 // "the tree" or type in "the text box" can pick it out on sight, with no label to read, and
                 // the connector should be able to do the same. A label always wins, so naming a type can
                 // never shadow a control that really is captioned that.
-                var ofType = SelfAndDescendants().Where(action.AppliesTo)
-                    .Where(e => e.MatchesType(text)).ToList();
+                var ofType = candidates.Where(e => e.MatchesType(text)).ToList();
                 if (ofType.Count == 0)
                     throw new ArgumentException(LlmInstruction.Format(
                         @"No control matching '{0}' supports the action '{1}'. Use skyline_get_controls to list the controls.",
@@ -312,7 +313,6 @@ namespace pwiz.Skyline.ToolsUI
                     ofType.Count, text));
             }
             // Empty text means "the single element that supports the action".
-            var candidates = SelfAndDescendants().Where(action.AppliesTo).ToList();
             if (candidates.Count == 0)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Nothing here supports the action '{0}'.", action.SnakeCaseName));
