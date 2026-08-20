@@ -686,7 +686,20 @@ function Resolve-DatasetInputs {
     if ($Spec.StripDecoys) {
         $derivedDir = Join-Path $scriptRoot 'TestResults\_derived'
         New-Item -ItemType Directory -Path $derivedDir -Force | Out-Null
-        $stripped = Join-Path $derivedDir ([IO.Path]::GetFileNameWithoutExtension($library) + '.nodecoy.tsv')
+        # The derived name carries the ACQUISITION MARKER, not just the library's own filename.
+        # Both library versions extract to the same carafe_spectral_library.tsv, so a name keyed
+        # only on that would be reused across a version change - and the mtime check below cannot
+        # catch it, because ExtractToFile stamps the extracted file with the ZIP ENTRY's timestamp
+        # rather than the extraction time. A machine that derived from the old library AFTER the
+        # new zip was built therefore has a derived file NEWER than its source, reuses it, and
+        # silently runs the retired library while reporting success. That is the same
+        # "leave the old library in place and report success" failure the -Overwrite switch was
+        # added to prevent, displaced one layer down.
+        $derivedStem = [IO.Path]::GetFileNameWithoutExtension($library)
+        if ($Spec.LibraryUrl) {
+            $derivedStem += '.' + [IO.Path]::GetFileNameWithoutExtension((Split-Path -Leaf $Spec.LibraryUrl))
+        }
+        $stripped = Join-Path $derivedDir ($derivedStem + '.nodecoy.tsv')
         $srcInfo = Get-Item $library
         if ((-not (Test-Path $stripped)) -or ((Get-Item $stripped).LastWriteTimeUtc -lt $srcInfo.LastWriteTimeUtc)) {
             Write-Host "  deriving decoy-free library (one time, ~1 min)..."
