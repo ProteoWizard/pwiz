@@ -1179,7 +1179,7 @@ namespace pwiz.Skyline.EditUI
 
         public void PastePeptides()
         {
-            Paste(gridViewPeptides, EnumerateProteinsForPeptides);
+            Paste(gridViewPeptides, HasBackgroundProteome);
         }
 
         /// <summary>
@@ -1190,11 +1190,12 @@ namespace pwiz.Skyline.EditUI
         /// </summary>
         public void PastePeptides(string text)
         {
-            Paste(gridViewPeptides, text, EnumerateProteinsForPeptides);
+            Paste(gridViewPeptides, text, HasBackgroundProteome);
         }
 
-        // Peptides are matched to proteins only when there is a background proteome to match them against.
-        private bool EnumerateProteinsForPeptides =>
+        // Whether the document has a background proteome, which is what pasted peptides are matched against
+        // -- so it is also what decides whether a paste enumerates their proteins at all.
+        private bool HasBackgroundProteome =>
             !DocumentUiContainer.Document.Settings.PeptideSettings.BackgroundProteome.IsNone;
 
         /// <summary>
