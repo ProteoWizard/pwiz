@@ -1161,7 +1161,7 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
 
-            throw new InvalidOperationException(@"Neither grid is showing; the FASTA tab has no grid to paste into.");
+            throw new InvalidOperationException();
         }
 
         private void gridViewPeptides_KeyDown(object sender, KeyEventArgs e)
