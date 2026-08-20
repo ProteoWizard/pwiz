@@ -738,11 +738,8 @@ namespace ZedGraph
 			if ( pane == null )
 				return;
 
-			// Nothing asked for, or a viewport the user cannot move at all: either way leave the zoom
-			// stack alone. ZoomStateSave below CLEARS that stack before recording, so reaching it with
-			// nothing to do would throw away the unzoom history in exchange for no change.
-			if ( !xMin.HasValue && !xMax.HasValue && !yMin.HasValue && !yMax.HasValue )
-				return;
+			// A viewport the user cannot move in any direction records no state, raises no ZoomEvent and
+			// does not repaint, since nothing below can change it.
 			if ( !_isEnableHZoom && !_isEnableHPan && !_isEnableVZoom && !_isEnableVPan )
 				return;
 
