@@ -11,7 +11,19 @@
            * the .NET 8.0 target can still be built AnyCPU on other hosts
              (e.g. Arm64 macOS/Linux) without touching any csproj. -->
     <Platforms>AnyCPU;x64</Platforms>
-    <LangVersion>latest</LangVersion>
+    <!-- Osprey requires C# 14. Osprey.Scoring/PickLdaModel.cs calls
+         string[].SequenceEqual(string[]) with only "using System;" imported, which
+         binds to System.MemoryExtensions.SequenceEqual through the C# 14 implicit
+         span conversion in extension receiver position. Under C# 13 and earlier the
+         only candidate is System.Linq.Enumerable.SequenceEqual, which that file does
+         not import, so the build fails.
+         "latest" silently meant whatever the installed SDK happened to offer, so a
+         .NET 9 SDK build failed with CS1061 in unrelated source rather than saying
+         the language version was wrong. Naming the version turns an SDK mismatch
+         into "CS1617: Invalid option '14' for /langversion", which points at the
+         cause. Building Osprey therefore needs the .NET 10 SDK (VS 2026); bump this
+         deliberately rather than by way of an SDK upgrade. -->
+    <LangVersion>14</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <Company>University of Washington</Company>
