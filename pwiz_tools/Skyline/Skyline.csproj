@@ -2367,6 +2367,7 @@
     <Compile Include="Model\Serialization\DocumentSerializer.cs" />
     <Compile Include="Model\Serialization\DocumentFormat.cs" />
     <Compile Include="Model\Serialization\DocumentWriter.cs" />
+    <Compile Include="Model\Serialization\MoleculeReader.cs" />
     <Compile Include="Model\Serialization\MoleculeWriter.cs" />
     <Compile Include="Model\SkylineVersion.cs" />
     <Compile Include="Model\SmallMoleculeTransitionListReader.cs" />

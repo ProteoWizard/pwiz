@@ -315,18 +315,19 @@ namespace pwiz.Skyline.Model.Serialization
                 foreach (var fileId in chromFileIds.GetFileIds(replicateIndex))
                 {
                     var sharedAreas = results.GetSharedTransitionAreas(replicateIndex, fileId);
-                    // Only worth asking where a transition can be left out at all: the flags are on
-                    // the precursor's peak to save writing them one by one, and save nothing where
-                    // every transition is written anyway.
-                    var peakFlags = sharedAreas == null
-                        ? TransitionPeakFlags.DEFAULT
-                        : results.GetSharedTransitionPeakFlags(replicateIndex, fileId);
+                    // What most of the transitions say here, carried once by the precursor's peak.
+                    // Worked out whether or not their areas are shared: a transition which has to be
+                    // written for some other reason still writes fewer attributes for it, which is
+                    // what makes the one that differs from the rest of the group stand out.
+                    bool? truncated = results.GetCommonTruncated(replicateIndex, fileId);
+                    bool forcedIntegration = results.GetCommonForcedIntegration(replicateIndex, fileId);
 
                     if (results.TryGetPrecursorPeak(replicateIndex, fileId, out _))
                     {
                         var peakElement = new XElement(EL.precursor_peak);
                         SetReplicateAndFile(peakElement, chromatogramSet, fileId);
-                        SetColumnarPrecursorPeak(peakElement, results, sharedAreas, peakFlags, replicateIndex, fileId);
+                        SetColumnarPrecursorPeak(peakElement, results, sharedAreas, truncated, forcedIntegration,
+                            replicateIndex, fileId);
                         precursorResults.Add(peakElement);
                     }
 
@@ -337,10 +338,10 @@ namespace pwiz.Skyline.Model.Serialization
                             continue;
                         }
 
-                        // Its area went on the precursor, its flags are the ones the precursor
+                        // Its area went on the precursor, its two flags are the ones the precursor
                         // carries, and it has nothing else to say, so there is nothing to write.
-                        if (sharedAreas != null &&
-                            results.IsPlainTransitionPeak(transitions[i], replicateIndex, fileId, peakFlags))
+                        if (sharedAreas != null && results.IsPlainTransitionPeak(transitions[i], replicateIndex,
+                                fileId, truncated, forcedIntegration))
                         {
                             continue;
                         }
@@ -354,11 +355,22 @@ namespace pwiz.Skyline.Model.Serialization
                         var transitionPeak = new XElement(EL.transition_peak);
                         SetReplicateAndFile(transitionPeak, chromatogramSet, fileId);
                         SetColumnarTransitionPeak(transitionPeak, results, transitions[i], replicateIndex, fileId,
-                            peak, sharedAreas == null);
+                            peak, truncated, forcedIntegration, sharedAreas == null);
                         transitionResults[i].Add(transitionPeak);
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Truncation in the columnar shape, where it has three states and leaving the attribute off
+        /// means something else - see <see cref="DocumentSerializer.TRUNCATED_UNKNOWN"/>.
+        /// </summary>
+        private static void SetTruncated(XElement element, string name, bool? isTruncated)
+        {
+            element.SetAttribute(name, isTruncated.HasValue
+                ? isTruncated.Value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()
+                : TRUNCATED_UNKNOWN);
         }
 
         private static void SetReplicateAndFile(XElement element, ChromatogramSet chromatogramSet,
@@ -372,7 +384,7 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         private void SetColumnarPrecursorPeak(XElement element, TransitionGroupResults results, float[] sharedAreas,
-            TransitionPeakFlags peakFlags, int replicateIndex, ChromFileInfoId fileId)
+            bool? truncated, bool forcedIntegration, int replicateIndex, ChromFileInfoId fileId)
         {
                 results.TryGetPrecursorPeak(replicateIndex, fileId, out var precursorPeak);
                 // No area: a precursor's is the sum of its transitions', which are written below it.
@@ -399,15 +411,17 @@ namespace pwiz.Skyline.Model.Serialization
                 if (sharedAreas != null)
                 {
                     element.SetFloatsAttribute(ATTR.transition_areas, sharedAreas);
-                    // What a transition left out of the document says about itself, which is the
-                    // whole of what most of them have left to say once their areas are carried
-                    // here. Absent means neither, which is what every one of them meant before a
-                    // precursor could say otherwise - see TransitionGroupResults.MakePlainPeak.
-                    // Only meaningful alongside transition_areas: on a precursor which kept chrom
-                    // infos, ATTR.truncated is that peak's own count of truncated transitions.
-                    element.SetAttribute(ATTR.truncated, peakFlags.IsTruncated, false);
-                    element.SetAttribute(ATTR.forced_integration, peakFlags.IsForcedIntegration, false);
                 }
+
+                // What the transitions below say unless they say otherwise, whether their areas are
+                // carried here or not. Absent means not truncated and not forced, which is what
+                // every one of them meant before a precursor could say anything about them - see
+                // TransitionGroupResults.MakePlainPeak.
+                if (truncated != false)
+                {
+                    SetTruncated(element, ATTR.transition_truncated, truncated);
+                }
+                element.SetAttribute(ATTR.transition_forced_integration, forcedIntegration, false);
 
                 AddAnnotations(element, results.GetAnnotations(replicateIndex, fileId));
         }
@@ -424,7 +438,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         private void SetColumnarTransitionPeak(XElement element, TransitionGroupResults results,
             Transition transition, int replicateIndex, ChromFileInfoId fileId, TransitionPeak peak,
-            bool writeArea)
+            bool? truncated, bool forcedIntegration, bool writeArea)
         {
             // Left off when the precursor's transition_areas already carries it, which it does for
             // every transition of a file whenever all of them have a peak there.
@@ -433,13 +447,15 @@ namespace pwiz.Skyline.Model.Serialization
                 element.SetAttribute(ATTR.area, peak.Area);
             }
             element.SetAttribute(ATTR.user_set, peak.UserSet, UserSet.FALSE);
-            // Nothing else carries these, so a transition written out has to say them. They
-            // are the reason a peak which is anything but ordinary cannot ride its
-            // precursor's transition_areas - see TransitionResults.TryGetPlainArea, which
-            // decides that, and SharedTransitionAreas.MakeTransitionResults, which puts
-            // back exactly the values it treats as ordinary.
-            element.SetAttributeNullable(ATTR.truncated, peak.IsTruncated);
-            element.SetAttribute(ATTR.forced_integration, peak.IsForcedIntegration, false);
+            // Only where this peak differs from what its precursor says for the file. Nothing else
+            // carries these two - they are not worked out again from the .skyd like the rest of a
+            // peak - so what the precursor says is the only way for a transition not to say it, and
+            // the ones left saying it are exactly the ones which differ from the rest of the group.
+            if (peak.IsTruncated != truncated)
+            {
+                SetTruncated(element, ATTR.truncated, peak.IsTruncated);
+            }
+            element.SetAttribute(ATTR.forced_integration, peak.IsForcedIntegration, forcedIntegration);
             element.SetAttribute(ATTR.empty, peak.IsEmpty, false);
 
             var peakBounds = results.FindTransitionCustomPeakBounds(transition, replicateIndex, fileId);

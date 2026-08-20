@@ -205,49 +205,6 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
-    /// <summary>
-    /// What a precursor's peak says its transitions' peaks are like in one file, so that the ones
-    /// which agree need not be written at all. Only the two flags, because everything else a peak
-    /// which says nothing has is the same for all of them - see
-    /// <see cref="TransitionGroupResults.MakePlainPeak"/>, which is what the two together build.
-    /// <para>
-    /// <see cref="DEFAULT"/> is what a precursor peak carrying neither attribute means, and what
-    /// every one of them meant before it could carry either, so a document written then reads back
-    /// the same.
-    /// </para>
-    /// </summary>
-    public readonly struct TransitionPeakFlags
-    {
-        public static readonly TransitionPeakFlags DEFAULT = new TransitionPeakFlags(false, false);
-
-        public TransitionPeakFlags(bool isTruncated, bool isForcedIntegration)
-        {
-            IsTruncated = isTruncated;
-            IsForcedIntegration = isForcedIntegration;
-        }
-
-        public bool IsTruncated { get; }
-        public bool IsForcedIntegration { get; }
-
-        public bool Equals(TransitionPeakFlags other)
-        {
-            return IsTruncated == other.IsTruncated && IsForcedIntegration == other.IsForcedIntegration;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is TransitionPeakFlags other && Equals(other);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (IsTruncated.GetHashCode() * 397) ^ IsForcedIntegration.GetHashCode();
-            }
-        }
-    }
-
     public class TransitionGroupResults : Immutable
     {
         /// <summary>
@@ -880,52 +837,70 @@ namespace pwiz.Skyline.Model.Results
         /// <see cref="GetSharedTransitionAreas"/> there is nothing left to write for it there.
         /// </summary>
         public bool IsPlainTransitionPeak(Transition transition, int replicateIndex, ChromFileInfoId fileId,
-            TransitionPeakFlags flags)
+            bool? isTruncated, bool isForcedIntegration)
         {
-            return GetTransitionResults(transition)?.TryGetPlainArea(replicateIndex, fileId, flags, out _) == true;
+            return GetTransitionResults(transition)
+                ?.TryGetPlainArea(replicateIndex, fileId, isTruncated, isForcedIntegration, out _) == true;
         }
 
         /// <summary>
-        /// The flags most of the precursor's transitions have in one file, which its peak carries so
-        /// that none of them has to say them one by one. Counted only over the peaks which could be
-        /// left out at all: one which says anything else is written whatever the flags are, so it
-        /// has no stake in what they are.
-        /// <para>
-        /// <see cref="TransitionPeakFlags.DEFAULT"/> where nothing votes otherwise, and on a tie,
-        /// because that is what a precursor writes no attributes for. Truncation which was never
-        /// worked out does not vote either: it is a third state, and the two attributes have only
-        /// two, so a transition which has it goes on being written out.
-        /// </para>
+        /// The truncation most of the precursor's transitions have in one file, which its peak
+        /// carries so that none of them has to say it. Null for truncation which was never worked
+        /// out, which is a state of its own and can be the common one like any other. False where
+        /// nothing votes and on a tie, because that is what a precursor writing nothing means.
         /// </summary>
-        public TransitionPeakFlags GetSharedTransitionPeakFlags(int replicateIndex, ChromFileInfoId fileId)
+        public bool? GetCommonTruncated(int replicateIndex, ChromFileInfoId fileId)
         {
-            var counts = new Dictionary<TransitionPeakFlags, int>();
+            int trueCount = 0, falseCount = 0, unknownCount = 0;
+            foreach (var peak in EnumerateTransitionPeaks(replicateIndex, fileId))
+            {
+                if (!peak.IsTruncated.HasValue)
+                    unknownCount++;
+                else if (peak.IsTruncated.Value)
+                    trueCount++;
+                else
+                    falseCount++;
+            }
+
+            if (trueCount > falseCount && trueCount >= unknownCount)
+                return true;
+            if (unknownCount > falseCount && unknownCount > trueCount)
+                return null;
+            return false;
+        }
+
+        /// <summary>
+        /// Whether most of the precursor's transitions were integrated only because integration was
+        /// forced, in one file. See <see cref="GetCommonTruncated"/>, which is the same question
+        /// about the other flag a peak keeps.
+        /// </summary>
+        public bool GetCommonForcedIntegration(int replicateIndex, ChromFileInfoId fileId)
+        {
+            int trueCount = 0, falseCount = 0;
+            foreach (var peak in EnumerateTransitionPeaks(replicateIndex, fileId))
+            {
+                if (peak.IsForcedIntegration)
+                    trueCount++;
+                else
+                    falseCount++;
+            }
+
+            return trueCount > falseCount;
+        }
+
+        /// <summary>
+        /// Every peak the precursor's transitions have in one file, which is what the values its
+        /// own peak carries for them are decided by.
+        /// </summary>
+        private IEnumerable<TransitionPeak> EnumerateTransitionPeaks(int replicateIndex, ChromFileInfoId fileId)
+        {
             for (int iTran = 0; iTran < TransitionIndexes.Count; iTran++)
             {
-                if (GetTransitionResults(iTran)?.TryGetSkippableFlags(replicateIndex, fileId, out var peakFlags) !=
-                    true)
+                if (GetTransitionResults(iTran)?.Peaks.TryGetValue(replicateIndex, fileId, out var peak) == true)
                 {
-                    continue;
-                }
-
-                counts.TryGetValue(peakFlags, out int count);
-                counts[peakFlags] = count + 1;
-            }
-
-            // Starting from what writing nothing would give, so that only a strict majority for
-            // something else puts attributes on the element.
-            var best = TransitionPeakFlags.DEFAULT;
-            counts.TryGetValue(best, out int bestCount);
-            foreach (var entry in counts)
-            {
-                if (entry.Value > bestCount)
-                {
-                    best = entry.Key;
-                    bestCount = entry.Value;
+                    yield return peak;
                 }
             }
-
-            return best;
         }
 
         /// <summary>
@@ -966,10 +941,10 @@ namespace pwiz.Skyline.Model.Results
         /// <see cref="GetSharedTransitionPeakFlags"/>, which chooses the flags, and
         /// <see cref="IsPlainTransitionPeak"/>, which decides against them.
         /// </summary>
-        public static TransitionPeak MakePlainPeak(float area, TransitionPeakFlags flags)
+        public static TransitionPeak MakePlainPeak(float area, bool? isTruncated, bool isForcedIntegration)
         {
-            return new TransitionPeak(area, UserSet.FALSE, flags.IsTruncated, false, PeakIdentification.FALSE,
-                flags.IsForcedIntegration);
+            return new TransitionPeak(area, UserSet.FALSE, isTruncated, false, PeakIdentification.FALSE,
+                isForcedIntegration);
         }
 
         /// <summary>
@@ -2111,47 +2086,17 @@ namespace pwiz.Skyline.Model.Results
             /// so that a caller working across objects - a precursor's positions are not its
             /// transitions' - never has to hold a position of this one.
             /// </summary>
-            public bool TryGetPlainArea(int replicateIndex, ChromFileInfoId fileId, TransitionPeakFlags flags,
-                out float area)
+            public bool TryGetPlainArea(int replicateIndex, ChromFileInfoId fileId, bool? isTruncated,
+                bool isForcedIntegration, out float area)
             {
                 area = 0;
-                if (!Peaks.TryGetValue(replicateIndex, fileId, out var peak) || !IsPlainPeak(peak, flags) ||
-                    HasCustomPeak(replicateIndex, fileId))
+                if (!Peaks.TryGetValue(replicateIndex, fileId, out var peak) ||
+                    !IsPlainPeak(peak, isTruncated, isForcedIntegration) || HasCustomPeak(replicateIndex, fileId))
                 {
                     return false;
                 }
 
                 area = peak.Area;
-                return true;
-            }
-
-            /// <summary>
-            /// Whether one file's peak here could be left out of the document at all, and the flags
-            /// its precursor would have to carry for that. Everything but the two flags has to be
-            /// what <see cref="MakePlainPeak"/> puts back; the flags themselves are the peak's own,
-            /// since those are what the precursor can be asked to say for it.
-            /// <para>
-            /// False for a peak whose truncation was never worked out: that is a third state which
-            /// the precursor's attribute cannot carry, so such a peak has to say it itself.
-            /// </para>
-            /// </summary>
-            public bool TryGetSkippableFlags(int replicateIndex, ChromFileInfoId fileId,
-                out TransitionPeakFlags flags)
-            {
-                flags = TransitionPeakFlags.DEFAULT;
-                if (!Peaks.TryGetValue(replicateIndex, fileId, out var peak) || !peak.IsTruncated.HasValue ||
-                    HasCustomPeak(replicateIndex, fileId))
-                {
-                    return false;
-                }
-
-                var peakFlags = new TransitionPeakFlags(peak.IsTruncated.Value, peak.IsForcedIntegration);
-                if (!IsPlainPeak(peak, peakFlags))
-                {
-                    return false;
-                }
-
-                flags = peakFlags;
                 return true;
             }
 
@@ -2174,16 +2119,14 @@ namespace pwiz.Skyline.Model.Results
             }
 
             /// <summary>
-            /// Whether a peak says nothing beyond its area and the flags its precursor carries, so
+            /// Whether a peak says nothing beyond its area and the values its precursor carries, so
             /// that it can ride its precursor's shared transition areas and not be written at all.
             /// Asked by comparing against the peak the reader puts back for a transition which was
-            /// left out, so that the two cannot drift apart. A peak whose truncation was never
-            /// worked out is not ordinary against any flags: saying it was truncated or not would
-            /// be claiming something the document does not know.
+            /// left out, so that the two cannot drift apart.
             /// </summary>
-            private static bool IsPlainPeak(TransitionPeak peak, TransitionPeakFlags flags)
+            private static bool IsPlainPeak(TransitionPeak peak, bool? isTruncated, bool isForcedIntegration)
             {
-                return Equals(peak, MakePlainPeak(peak.Area, flags));
+                return Equals(peak, MakePlainPeak(peak.Area, isTruncated, isForcedIntegration));
             }
 
             /// <summary>

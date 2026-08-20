@@ -1965,11 +1965,26 @@
         <!-- The areas of the precursor's transitions, in the order of its children, written here
              rather than on each transition when that is all a transition has to say. -->
         <xs:attribute name="transition_areas" type="float_list" use="optional"/>
+        <!-- What the precursor's transitions say about themselves unless they say otherwise, so
+             that only the ones which differ from the rest of the group have anything to write.
+             Named apart from "truncated" above, which is this peak's own count of truncated
+             transitions rather than anything the transitions below say. -->
+        <xs:attribute name="transition_truncated" type="truncated_type" use="optional"/>
+        <xs:attribute name="transition_forced_integration" type="xs:boolean" use="optional"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
   <xs:simpleType name="float_list">
     <xs:list itemType="xs:float"/>
+  </xs:simpleType>
+  <!-- Truncation has three states: a peak whose truncation was never worked out is not the same
+       as one known not to be truncated. -->
+  <xs:simpleType name="truncated_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="true"/>
+      <xs:enumeration value="false"/>
+      <xs:enumeration value="unknown"/>
+    </xs:restriction>
   </xs:simpleType>
   <xs:complexType name="transition_peak_type">
     <xs:complexContent>
@@ -1993,7 +2008,9 @@
         <xs:attribute name="background" type="xs:double"/>
         <xs:attribute name="height" type="xs:double"/>
         <xs:attribute name="mass_error_ppm" type="xs:double"/>
-        <xs:attribute name="truncated" type="xs:boolean"/>
+        <!-- Left off when it is the same as the precursor's transition_truncated, so absent means
+             that rather than "never worked out", which "unknown" says outright. -->
+        <xs:attribute name="truncated" type="truncated_type"/>
         <xs:attribute name="identified" type="peak_identified_type"/>
         <xs:attribute name="rank" type="xs:integer"/>
         <xs:attribute name="rank_by_level" type="xs:integer"/>

@@ -30,6 +30,13 @@ namespace pwiz.Skyline.Model.Serialization
 
         public DocumentFormat DocumentFormat { get; protected set; }
 
+        /// <summary>
+        /// The value <see cref="ATTR.truncated"/> takes for a peak whose truncation was never
+        /// worked out. It needs one of its own in the columnar shape, where leaving the attribute
+        /// off says "the same as the precursor" rather than "not worked out".
+        /// </summary>
+        public const string TRUNCATED_UNKNOWN = "unknown";
+
         public static class EL
         {
             // v0.1 lists
@@ -209,6 +216,16 @@ namespace pwiz.Skyline.Model.Serialization
             public const string analyte_concentration = "analyte_concentration";
             public const string points_across = "points_across";
             public const string forced_integration = "forced_integration";
+
+            /// <summary>
+            /// What a precursor's peak says its transitions' peaks are like in that file, so that
+            /// the ones which agree need not say it and the ones which do not are the only ones
+            /// left saying anything. Named like <see cref="transition_areas"/>, because these are
+            /// the transitions' values and not the precursor's - <see cref="truncated"/> on a
+            /// precursor which kept chrom infos is its own count of truncated transitions.
+            /// </summary>
+            public const string transition_truncated = "transition_truncated";
+            public const string transition_forced_integration = "transition_forced_integration";
             /// <summary>
             /// Whether a transition has no peak at all here, which is not the same as a peak whose
             /// area is zero - see <see cref="TransitionPeak.IsEmpty"/>. The older shape says it by

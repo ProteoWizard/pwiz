@@ -227,12 +227,22 @@ namespace pwiz.SkylineTestData.Results
 
             var docRoundTrip = RoundTrip(docFlagged, false, out string compactXml);
             // What the majority said, carried once by the precursor instead of by every one of them.
-            StringAssert.Contains(compactXml, @"truncated=""true"" forced_integration=""true""");
+            StringAssert.Contains(compactXml,
+                @"transition_truncated=""true"" transition_forced_integration=""true""");
             // The one which disagrees is still written, and only it.
             StringAssert.Contains(compactXml, @"<transition_results");
             Assert.AreEqual(peaksFlagged / (transitions.Length - 1),
                 Regex.Matches(compactXml, @"<transition_peak").Count,
                 @"a transition which agreed with its precursor was written anyway");
+            // And it says only where it differs. Both attributes, because the precursor says both,
+            // and neither of them the same as what it says.
+            foreach (Match match in Regex.Matches(compactXml, @"<transition_peak[^>]*>"))
+            {
+                StringAssert.Contains(match.Value, @"truncated=""false""");
+                StringAssert.Contains(match.Value, @"forced_integration=""false""");
+                Assert.IsFalse(match.Value.Contains(@"area="),
+                    @"an area the precursor carries was written on the transition as well");
+            }
 
             var expectedGroup = docFlagged.MoleculeTransitionGroups.First().AbbreviatedResults;
             var actualNodeGroup = docRoundTrip.MoleculeTransitionGroups.First();
@@ -282,6 +292,17 @@ namespace pwiz.SkylineTestData.Results
 
             var docRoundTrip = RoundTrip(docMoved, false, out string compactXml);
             StringAssert.Contains(compactXml, @"<transition_results");
+            // Written for their boundaries, and saying nothing else: every one of these agrees with
+            // its precursor about truncation and forced integration, so neither is repeated here.
+            int peaksWritten = 0;
+            foreach (Match match in Regex.Matches(compactXml, @"<transition_peak[^>]*>"))
+            {
+                Assert.IsFalse(match.Value.Contains(@"truncated="), match.Value);
+                Assert.IsFalse(match.Value.Contains(@"forced_integration="), match.Value);
+                peaksWritten++;
+            }
+
+            Assert.AreNotEqual(0, peaksWritten, @"no transition peak was written to check");
 
             var expectedResults = ResultsUtil.EnumerateTransitionResults(docMoved).First();
             var actualResults = ResultsUtil.EnumerateTransitionResults(docRoundTrip).First();

@@ -1,0 +1,1886 @@
+/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Xml;
+using Google.Protobuf;
+using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+
+namespace pwiz.Skyline.Model.Serialization
+{
+    /// <summary>
+    /// Reads the &lt;peptide&gt; or &lt;molecule&gt; element of one <see cref="PeptideDocNode"/>,
+    /// and everything below it. The counterpart of <see cref="MoleculeWriter"/>.
+    /// <para>
+    /// One of these is made per molecule, which is what lets the things that are the same for all
+    /// of a molecule - and for one precursor while its transitions are being read - be fields
+    /// rather than parameters handed down through every level. Molecules are read on several
+    /// threads at once against one <see cref="DocumentReader"/>, so this is also what keeps that
+    /// state off the reader they share.
+    /// </para>
+    /// </summary>
+    public class MoleculeReader : DocumentSerializer
+    {
+        private readonly DocumentReader _documentReader;
+
+        public MoleculeReader(DocumentReader documentReader)
+        {
+            _documentReader = documentReader;
+            Settings = documentReader.Settings;
+            DocumentFormat = documentReader.DocumentFormat;
+        }
+
+        private DocumentFormat FormatVersion
+        {
+            get { return _documentReader.FormatVersion; }
+        }
+
+        private bool DocumentMayContainMoleculesWithEmbeddedIons
+        {
+            get { return _documentReader.DocumentMayContainMoleculesWithEmbeddedIons; }
+        }
+
+        private AnnotationScrubber AnnotationScrubber
+        {
+            get { return _documentReader.AnnotationScrubber; }
+        }
+
+        private Annotations ReadTargetAnnotations(XmlReader reader, AnnotationDef.AnnotationTarget target)
+        {
+            return _documentReader.ReadTargetAnnotations(reader, target);
+        }
+
+        private SpectrumHeaderInfo ReadTransitionGroupLibInfo(XmlReader reader)
+        {
+            // Look for an appropriate deserialization helper for spectrum
+            // header info on the current tag.
+            var helpers = PeptideLibraries.SpectrumHeaderXmlHelpers;
+            var helper = reader.FindHelper(helpers);
+            if (helper != null)
+            {
+                var libInfo = helper.Deserialize(reader);
+                return libInfo.ChangeLibraryName(_documentReader.GetUniqueString(libInfo.LibraryName));
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Whether the precursor whose transitions are being read kept chrom infos, which is what
+        /// says which of the two things a transition's element holds. Set from the precursor's own
+        /// element, which is always read first - see <see cref="ReadPrecursorResults"/>.
+        /// </summary>
+        private static eIonMobilityUnits GetAttributeMobilityUnits(XmlReader reader, string attrName, ChromFileInfo fileInfo)
+        {
+            string ionMobilityUnitsString = reader.GetAttribute(attrName);
+            eIonMobilityUnits ionMobilityUnits =
+              string.IsNullOrEmpty( ionMobilityUnitsString) ?
+              (fileInfo == null ? eIonMobilityUnits.none : fileInfo.IonMobilityUnits) : // Use the file-level declaration if no local declaration
+              TypeSafeEnum.Parse<eIonMobilityUnits>(ionMobilityUnitsString);
+            return ionMobilityUnits;
+        }
+
+        private static Annotations ReadAndRemoveScoreAnnotation(Annotations annotations, string annotationName, ref float? annotationValue)
+        {
+            string annotationText = annotations.GetAnnotation(annotationName);
+            if (String.IsNullOrEmpty(annotationText))
+                return annotations;
+            double scoreValue;
+            if (Double.TryParse(annotationText, out scoreValue))
+                annotationValue = (float) scoreValue;
+            return annotations.RemoveAnnotation(annotationName);
+        }
+
+        /// <summary>
+        /// What a precursor's element said, which its transitions' elements are read against: which
+        /// of the two shapes they are in, and what their peaks are like in each of its files unless
+        /// they say otherwise - see <see cref="MoleculeWriter.SetColumnarPrecursorPeak"/>.
+        /// <para>
+        /// Handed down rather than kept on the <see cref="DocumentReader"/>, because molecules are
+        /// read on several threads at once and each of them is in the middle of a different
+        /// precursor. One of these belongs to one precursor on one thread.
+        /// </para>
+        /// </summary>
+        private class PrecursorPeakDefaults
+        {
+            /// <summary>
+            /// What a transition's element is read against when there is no precursor element above
+            /// it at all, which is the v0.1 format and nothing else.
+            /// </summary>
+            public static readonly PrecursorPeakDefaults LEGACY = new PrecursorPeakDefaults(true);
+
+            public PrecursorPeakDefaults(bool isLegacyShape)
+            {
+                IsLegacyShape = isLegacyShape;
+            }
+
+            /// <summary>
+            /// Whether the precursor kept chrom infos, which is what says which of the two things a
+            /// transition's element holds.
+            /// </summary>
+            public bool IsLegacyShape { get; set; }
+
+            private readonly Dictionary<ReferenceValue<ChromFileInfoId>, bool?> _truncated =
+                new Dictionary<ReferenceValue<ChromFileInfoId>, bool?>();
+
+            private readonly Dictionary<ReferenceValue<ChromFileInfoId>, bool> _forcedIntegration =
+                new Dictionary<ReferenceValue<ChromFileInfoId>, bool>();
+
+            /// <summary>
+            /// Kept by file, because a transition's peak says only which file it is in, and a file
+            /// belongs to one replicate - so the file says on its own which peak speaks for it.
+            /// </summary>
+            public void Add(ChromFileInfoId fileId, bool? truncated, bool forcedIntegration)
+            {
+                _truncated[fileId] = truncated;
+                _forcedIntegration[fileId] = forcedIntegration;
+            }
+
+            public bool? GetTruncated(ChromFileInfoId fileId)
+            {
+                _truncated.TryGetValue(fileId, out var truncated);
+                return truncated;
+            }
+
+            public bool GetForcedIntegration(ChromFileInfoId fileId)
+            {
+                _forcedIntegration.TryGetValue(fileId, out bool forcedIntegration);
+                return forcedIntegration;
+            }
+        }
+
+        /// <summary>
+        /// Helper class for reading information from a transition element into
+        /// memory for use in both <see cref="Transition"/> and <see cref="TransitionGroup"/>.
+        ///
+        /// This class exists to share code between <see cref="ReadTransitionXml"/>
+        /// and <see cref="ReadUngroupedTransitionListXml"/>.
+        /// </summary>
+        private class TransitionInfo
+        {
+            private readonly MoleculeReader _moleculeReader;
+            private readonly PrecursorPeakDefaults _peakDefaults;
+
+            public TransitionInfo(MoleculeReader moleculeReader, PrecursorPeakDefaults peakDefaults)
+            {
+                _moleculeReader = moleculeReader;
+                _peakDefaults = peakDefaults;
+            }
+            public SrmSettings Settings { get { return _moleculeReader.Settings; } }
+            public ExplicitMods ExplicitMods { get; private set; }
+            public IonType IonType { get; private set; }
+            public int Ordinal { get; private set; }
+            public int MassIndex { get; private set; }
+            public Adduct PrecursorAdduct { get; private set; }
+            public Adduct ProductAdduct { get; private set; }
+            public int? DecoyMassShift { get; private set; }
+            public TransitionLosses Losses { get; private set; }
+
+            public List<IonOrdinal> LinkedFragmentIons { get; private set; }
+            public List<LegacyComplexFragmentIonName> LegacyFragmentIons { get; private set; }
+            public bool OrphanedCrosslinkIon { get; private set; }
+            public Annotations Annotations { get; private set; }
+            public TransitionLibInfo LibInfo { get; private set; }
+            public Results<TransitionChromInfo> Results { get; private set; }
+
+            /// <summary>
+            /// What a document written without the chrom infos has instead of them.
+            /// </summary>
+            public TransitionResultsData ColumnarResults { get; private set; }
+            public MeasuredIon MeasuredIon { get; private set; }
+            public bool Quantitative { get; private set; }
+            public ExplicitTransitionValues ExplicitValues { get; private set; }
+
+            public void ReadXml(XmlReader reader, DocumentFormat formatVersion, out double? declaredMz, ExplicitTransitionValues pre422ExplicitTransitionValues)
+            {
+                ReadXmlAttributes(reader, formatVersion, pre422ExplicitTransitionValues);
+                ReadXmlElements(reader, out declaredMz);
+            }
+
+            public void ReadXmlAttributes(XmlReader reader, DocumentFormat formatVersion, ExplicitTransitionValues pre422ExplicitTransitionValues)
+            {
+                // Accept uppercase and lowercase for backward compatibility with v0.1
+                IonType = reader.GetEnumAttribute(ATTR.fragment_type, IonType.y, XmlUtil.EnumCase.lower);
+                Ordinal = reader.GetIntAttribute(ATTR.fragment_ordinal);
+                MassIndex = reader.GetIntAttribute(ATTR.mass_index);
+                // NOTE: PrecursorCharge is used only in TransitionInfo.ReadUngroupedTransitionListXml()
+                //       to support v0.1 document format
+                PrecursorAdduct = Adduct.FromStringAssumeProtonated(reader.GetAttribute(ATTR.precursor_charge));
+                ProductAdduct = Adduct.FromStringAssumeProtonated(reader.GetAttribute(ATTR.product_charge));
+                DecoyMassShift = reader.GetNullableIntAttribute(ATTR.decoy_mass_shift);
+                Quantitative = reader.GetBoolAttribute(ATTR.quantitative, true);
+                OrphanedCrosslinkIon = reader.GetBoolAttribute(ATTR.orphaned_crosslink_ion);
+                string measuredIonName = reader.GetAttribute(ATTR.measured_ion_name);
+                if (measuredIonName != null)
+                {
+                    MeasuredIon = Settings.TransitionSettings.Filter.MeasuredIons.SingleOrDefault(
+                        i => i.Name.Equals(measuredIonName));
+                    if (MeasuredIon == null)
+                        throw new InvalidDataException(String.Format(Resources.TransitionInfo_ReadXmlAttributes_The_reporter_ion__0__was_not_found_in_the_transition_filter_settings_, measuredIonName));
+                    IonType = IonType.custom;
+                }
+
+                ExplicitValues = pre422ExplicitTransitionValues ?? ReadExplicitTransitionValuesAttributes(reader, formatVersion);
+            }
+
+            public void ReadXmlElements(XmlReader reader, out double? declaredProductMz)
+            {
+                declaredProductMz = null;
+                LinkedFragmentIons = new List<IonOrdinal>();
+                if (reader.IsEmptyElement)
+                {
+                    reader.Read();
+                }
+                else
+                {
+                    reader.ReadStartElement();
+                    Annotations = _moleculeReader.ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.transition); // This is reliably first in all versions
+                    while (reader.IsStartElement())
+                    {  // The order of these elements may depend on the version of the file being read
+                        if (reader.IsStartElement(EL.losses))
+                            Losses = ReadTransitionLosses(reader);
+                        else if (reader.IsStartElement(EL.linked_fragment_ion))
+                        {
+                            if (_moleculeReader.FormatVersion < DocumentFormat.FLAT_CROSSLINKS)
+                            {
+                                LegacyFragmentIons = LegacyFragmentIons ?? new List<LegacyComplexFragmentIonName>();
+                                LegacyFragmentIons.Add(ReadLegacyLinkedFragmentIon(reader));
+                            }
+                            else
+                            {
+                                LinkedFragmentIons.Add(ReadLinkedFragmentIon(reader));
+                            }
+                        }
+                        else if (reader.IsStartElement(EL.transition_lib_info))
+                            LibInfo = ReadTransitionLibInfo(reader);
+                        else if (reader.IsStartElement(EL.results_data))
+                            Results = ReadTransitionResults(reader);
+                        else if (reader.IsStartElement(EL.transition_results))
+                            ColumnarResults = _moleculeReader.ReadColumnarTransitionResults(reader, _peakDefaults);
+                        // Discard informational elements.  These values are always
+                        // calculated from the settings to ensure consistency.
+                        // Note that we do use product_mz for sanity checks and to disambiguate some older mass-only small molecule documents.
+                        else if (reader.IsStartElement(EL.product_mz))
+                            declaredProductMz = reader.ReadElementContentAsDoubleInvariant();
+                        else 
+                            reader.Skip();
+                    }
+                    reader.ReadEndElement();
+                }
+            }
+
+            private TransitionLosses ReadTransitionLosses(XmlReader reader)
+            {
+                if (reader.IsStartElement(EL.losses))
+                {
+                    var staticMods = Settings.PeptideSettings.Modifications.StaticModifications;
+                    MassType massType = Settings.TransitionSettings.Prediction.FragmentMassType;
+
+                    reader.ReadStartElement();
+                    var listLosses = new List<TransitionLoss>();
+                    while (reader.IsStartElement(EL.neutral_loss))
+                    {
+                        string nameMod = reader.GetAttribute(ATTR.modification_name);
+                        if (String.IsNullOrEmpty(nameMod))
+                            listLosses.Add(new TransitionLoss(null, FragmentLoss.Deserialize(reader), massType));
+                        else
+                        {
+                            int indexLoss = reader.GetIntAttribute(ATTR.loss_index);
+                            int indexMod = staticMods.IndexOf(mod => Equals(nameMod, mod.Name));
+                            if (indexMod == -1)
+                            {
+                                throw new InvalidDataException(
+                                    String.Format(Resources.TransitionInfo_ReadTransitionLosses_No_modification_named__0__was_found_in_this_document,
+                                        nameMod));
+                            }
+                            StaticMod modLoss = staticMods[indexMod];
+                            if (!modLoss.HasLoss || indexLoss >= modLoss.Losses.Count)
+                            {
+                                throw new InvalidDataException(
+                                    String.Format(Resources.TransitionInfo_ReadTransitionLosses_Invalid_loss_index__0__for_modification__1__,
+                                        indexLoss, nameMod));
+                            }
+                            listLosses.Add(new TransitionLoss(modLoss, modLoss.Losses[indexLoss], massType));
+                        }
+                        reader.Read();
+                    }
+                    reader.ReadEndElement();
+
+                    return new TransitionLosses(listLosses, massType);
+                }
+                return null;
+            }
+
+            private LegacyComplexFragmentIonName ReadLegacyLinkedFragmentIon(XmlReader reader)
+            {
+                IonOrdinal fragmentIonType;
+                string strFragmentType = reader.GetAttribute(ATTR.fragment_type);
+                if (strFragmentType == null)
+                {
+                    // blank fragment type means orphaned fragment ion
+                    fragmentIonType = IonOrdinal.Empty;
+                }
+                else
+                {
+                    fragmentIonType = new IonOrdinal(TypeSafeEnum.Parse<IonType>(strFragmentType), reader.GetIntAttribute(ATTR.fragment_ordinal));
+                }
+                    
+                var modificationSite = new ModificationSite(reader.GetIntAttribute(ATTR.index_aa),
+                    reader.GetAttribute(ATTR.modification_name));
+                var linkedIon = new LegacyComplexFragmentIonName(modificationSite, fragmentIonType);
+                bool empty = reader.IsEmptyElement;
+                reader.Read();
+                if (!empty)
+                {
+                    while (reader.IsStartElement())
+                    {
+                        if (reader.IsStartElement(EL.linked_fragment_ion))
+                        {
+                            linkedIon.Children.Add(ReadLegacyLinkedFragmentIon(reader));
+                        }
+                        else
+                        {
+                            throw new InvalidDataException();
+                        }
+                    }
+                    reader.ReadEndElement();
+                }
+
+                return linkedIon;
+            }
+
+            private IonOrdinal ReadLinkedFragmentIon(XmlReader reader)
+            {
+                var ionType = reader.GetEnumAttribute(ATTR.fragment_type, IonType.custom);
+                var ordinal = reader.GetIntAttribute(ATTR.fragment_ordinal);
+                reader.Read();
+                return ionType == IonType.custom ? IonOrdinal.Empty : new IonOrdinal(ionType, ordinal);
+            }
+
+            private static TransitionLibInfo ReadTransitionLibInfo(XmlReader reader)
+            {
+                if (reader.IsStartElement(EL.transition_lib_info))
+                {
+                    var libInfo = new TransitionLibInfo(reader.GetIntAttribute(ATTR.rank),
+                        reader.GetFloatAttribute(ATTR.intensity));
+                    reader.ReadStartElement();
+                    return libInfo;
+                }
+                return null;
+            }
+
+            /// <summary>
+            /// The chrom infos of the compact format, which is the one encoding still read as
+            /// chrom infos. They are not kept either: <see cref="TransitionResultsData"/> turns
+            /// them into the columnar results and lets them go.
+            /// </summary>
+            private Results<TransitionChromInfo> ReadTransitionResults(XmlReader reader)
+            {
+                if (reader.IsStartElement(EL.results_data))
+                {
+                    string strContent = reader.ReadElementString();
+                    byte[] data = Convert.FromBase64String(strContent);
+                    var protoTransitionResults = new SkylineDocumentProto.Types.TransitionResults();
+                    protoTransitionResults.MergeFrom(data);
+                    return TransitionChromInfo.FromProtoTransitionResults(_moleculeReader.AnnotationScrubber, Settings, protoTransitionResults);
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Deserialize any explicitly set CE, DT, etc information from transition attributes
+        /// </summary>
+        private static ExplicitTransitionValues ReadExplicitTransitionValuesAttributes(XmlReader reader, DocumentFormat formatVersion )
+        {
+            double? importedCollisionEnergy = reader.GetNullableDoubleAttribute(ATTR.explicit_collision_energy);
+            double? importedIonMobilityHighEnergyOffset =
+                reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_high_energy_offset_msec) ??
+                reader.GetNullableDoubleAttribute(ATTR.explicit_ion_mobility_high_energy_offset);
+            double? importedSLens = reader.GetNullableDoubleAttribute(formatVersion.CompareTo(DocumentFormat.VERSION_3_52) < 0 ? ATTR.s_lens_obsolete : ATTR.explicit_s_lens);
+            double? importedConeVoltage = reader.GetNullableDoubleAttribute(formatVersion.CompareTo(DocumentFormat.VERSION_3_52) < 0 ? ATTR.cone_voltage_obsolete : ATTR.explicit_cone_voltage);
+            double? importedDeclusteringPotential = reader.GetNullableDoubleAttribute(ATTR.explicit_declustering_potential);
+            return ExplicitTransitionValues.Create(importedCollisionEnergy,
+                importedIonMobilityHighEnergyOffset, importedSLens, importedConeVoltage, importedDeclusteringPotential);
+        }
+
+        /// <summary>
+        /// Deserialize any explictly set CE, DT, etc information from precursor attributes
+        /// </summary>
+        private static ExplicitTransitionGroupValues ReadExplicitTransitionGroupValuesAttributes(XmlReader reader, DocumentFormat formatVersion, out ExplicitTransitionValues pre422ExplicitValues)
+        {
+            double? importedCompensationVoltage = reader.GetNullableDoubleAttribute(ATTR.explicit_compensation_voltage); // Found in older formats, obsolete as of 4.22. Now a combination of ion mobility and ion mobility units values.
+            double? importedDriftTimeMsec = reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_msec);
+            var importedIonMobilityUnits = eIonMobilityUnits.none;
+            if (importedDriftTimeMsec.HasValue)
+            {
+                importedIonMobilityUnits = eIonMobilityUnits.drift_time_msec;
+            }
+            else if (importedCompensationVoltage.HasValue)
+            {
+                importedIonMobilityUnits = eIonMobilityUnits.compensation_V;
+            }
+            else
+            {
+                var attr = reader.GetAttribute(ATTR.explicit_ion_mobility_units);
+                importedIonMobilityUnits = SmallMoleculeTransitionListReader.IonMobilityUnitsFromAttributeValue(attr);
+            }
+            double? importedIonMobility = importedDriftTimeMsec ?? importedCompensationVoltage ?? reader.GetNullableDoubleAttribute(ATTR.explicit_ion_mobility);
+            double? importedCCS = reader.GetNullableDoubleAttribute(ATTR.explicit_ccs_sqa);
+            pre422ExplicitValues = formatVersion >= DocumentFormat.VERSION_4_22 ? null : ReadExplicitTransitionValuesAttributes(reader, formatVersion); // Formerly (pre-4.22) these per-transition values were serialized at peptide level
+            // CollisionEnergy was made per-transition in 4.22, we added a per-precursor override in 20.12
+            double? importedCollisionEnergy = pre422ExplicitValues?.CollisionEnergy ?? reader.GetNullableDoubleAttribute(ATTR.explicit_collision_energy);
+            if (pre422ExplicitValues != null)
+            {
+                pre422ExplicitValues = pre422ExplicitValues.ChangeCollisionEnergy(null); // As of 20.12 we're back to tracking this at precursor level (with per-transition overrides)
+            }
+            return ExplicitTransitionGroupValues.Create(importedCollisionEnergy, importedIonMobility, importedIonMobilityUnits, importedCCS);
+        }
+
+        /// <summary>
+        /// Deserializes a single <see cref="PeptideDocNode"/> from a <see cref="XmlReader"/>
+        /// positioned at the start element.
+        /// </summary>
+        /// <param name="reader">The reader positioned at a start element of a peptide or molecule</param>
+        /// <param name="group">A previously read parent <see cref="Identity"/></param>
+        /// <param name="isCustomMolecule">if true, we're reading a custom molecule, not a peptide</param>
+        /// <returns>A new <see cref="PeptideDocNode"/></returns>
+        public PeptideDocNode ReadPeptideXml(XmlReader reader, PeptideGroup group, bool isCustomMolecule)
+        {
+            int? start = reader.GetNullableIntAttribute(ATTR.start);
+            int? end = reader.GetNullableIntAttribute(ATTR.end);
+            string sequence = reader.GetAttribute(ATTR.sequence);
+            string lookupSequence = reader.GetAttribute(ATTR.lookup_sequence);
+            // If the group has no sequence, then this is a v0.1 peptide list or a custom ion
+            if (group.Sequence == null)
+            {
+                // Ignore the start and end values
+                start = null;
+                end = null;
+            }
+            int missedCleavages = reader.GetIntAttribute(ATTR.num_missed_cleavages);
+            // CONSIDER: Trusted value
+            int? rank = reader.GetNullableIntAttribute(ATTR.rank);
+            double? concentrationMultiplier = reader.GetNullableDoubleAttribute(ATTR.concentration_multiplier);
+            double? internalStandardConcentration =
+                reader.GetNullableDoubleAttribute(ATTR.internal_standard_concentration);
+            string normalizationMethod = reader.GetAttribute(ATTR.normalization_method);
+            string attributeGroupId = reader.GetAttribute(ATTR.attribute_group_id);
+            string surrogateCalibrationCurve = reader.GetAttribute(ATTR.surrogate_calibration_curve);
+            bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
+            bool isDecoy = reader.GetBoolAttribute(ATTR.decoy);
+            var standardType = StandardType.FromName(reader.GetAttribute(ATTR.standard_type));
+            double? importedRetentionTimeValue = reader.GetNullableDoubleAttribute(ATTR.explicit_retention_time);
+            double? importedRetentionTimeWindow = reader.GetNullableDoubleAttribute(ATTR.explicit_retention_time_window);
+            var importedRetentionTime = importedRetentionTimeValue.HasValue
+                ? new ExplicitRetentionTimeInfo(importedRetentionTimeValue.Value, importedRetentionTimeWindow)
+                : null;
+            var annotations = Annotations.EMPTY;
+            ExplicitMods mods = null, lookupMods = null;
+            CrosslinkStructure crosslinkStructure = null;
+            PeptideResults results = null;
+            TransitionGroupDocNode[] children = null;
+            Adduct adduct = Adduct.EMPTY;
+            var customMolecule = isCustomMolecule ? CustomMolecule.Deserialize(reader, out adduct) : null; // This Deserialize only reads attributes, doesn't advance the reader
+            Target chromatogramTarget = null;
+            if (customMolecule != null)
+            {
+                if (DocumentMayContainMoleculesWithEmbeddedIons && customMolecule.ParsedMolecule.IsMassOnly && customMolecule.MonoisotopicMass.IsMassH())
+                {
+                    // Defined by mass only, assume it's not massH despite how it may have been written
+                    customMolecule = new CustomMolecule(
+                        customMolecule.MonoisotopicMass.ChangeIsMassH(false),
+                        customMolecule.AverageMass.ChangeIsMassH(false),
+                        customMolecule.Name);
+                }
+                // If user changed any molecule details (other than formula or mass) after chromatogram extraction, this info continues the target->chromatogram association
+                var encodedChromatogramTarget = reader.GetAttribute(ATTR.chromatogram_target);
+                if (!string.IsNullOrEmpty(encodedChromatogramTarget))
+                {
+                    chromatogramTarget = Target.FromSerializableString(encodedChromatogramTarget);
+                }
+            }
+            Assume.IsTrue(DocumentMayContainMoleculesWithEmbeddedIons || adduct.IsEmpty); // Shouldn't be any charge info at the peptide/molecule level
+            var peptide = isCustomMolecule ?
+                new Peptide(customMolecule) :
+                new Peptide(group as FastaSequence, sequence, start, end, missedCleavages, isDecoy);
+            if (reader.IsEmptyElement)
+                reader.Read();
+            else
+            {
+                var pushReader = reader; // Preserve in case we substitute with a backward compatibility reader
+                if (isCustomMolecule && DocumentMayContainMoleculesWithEmbeddedIons)
+                {
+                    // If this is an older small molecule file, clean up any problems with former data model
+                    reader = new Pre372CustomIonTransitionGroupHandler(reader, Settings.TransitionSettings.Instrument.MzMatchTolerance).Read(ref peptide);
+                }
+                reader.ReadStartElement();
+                if (reader.IsStartElement())
+                    annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.peptide);
+                if (!isCustomMolecule)
+                {
+                    mods = ReadExplicitMods(reader, peptide)?.ConvertFromLegacyCrosslinkStructure();
+                    SkipImplicitModsElement(reader);
+                    lookupMods = ReadLookupMods(reader, lookupSequence);
+                    crosslinkStructure = ReadCrosslinkStructure(reader);
+                    if (crosslinkStructure != null && !crosslinkStructure.IsEmpty)
+                    {
+                        mods = mods ?? new ExplicitMods(peptide, null, null);
+                        mods = mods.ChangeCrosslinkStructure(crosslinkStructure);
+                    }
+                }
+                results = ReadPeptideResults(reader);
+
+                if (reader.IsStartElement(EL.precursor))
+                {
+                    children = ReadTransitionGroupListXml(reader, peptide, mods);
+                }
+                else if (reader.IsStartElement(EL.selected_transitions))
+                {
+                    // Support for v0.1
+                    if (reader.IsEmptyElement)
+                        reader.Read();
+                    else
+                    {
+                        reader.ReadStartElement(EL.selected_transitions);
+                        children = ReadUngroupedTransitionListXml(reader, peptide, mods);
+                        reader.ReadEndElement();
+                    }
+                }
+
+                pushReader.ReadEndElement();
+            }
+
+            mods = mods?.RemoveLegacyCrosslinkMap();
+            ModifiedSequenceMods sourceKey = null;
+            if (lookupSequence != null)
+                sourceKey = new ModifiedSequenceMods(lookupSequence, lookupMods);
+
+            PeptideDocNode peptideDocNode = new PeptideDocNode(peptide, Settings, mods, sourceKey, standardType, rank,
+                importedRetentionTime, annotations, results, children ?? new TransitionGroupDocNode[0], autoManageChildren);
+            peptideDocNode = peptideDocNode
+                .ChangeConcentrationMultiplier(concentrationMultiplier)
+                .ChangeInternalStandardConcentration(internalStandardConcentration)
+                .ChangeNormalizationMethod(NormalizationMethod.FromName(normalizationMethod))
+                .ChangeAttributeGroupId(attributeGroupId)
+                .ChangeSurrogateCalibrationCurve(surrogateCalibrationCurve)
+                .ChangeOriginalMoleculeTarget(chromatogramTarget);
+
+            return peptideDocNode;
+        }
+
+        private ExplicitMods ReadLookupMods(XmlReader reader, string lookupSequence)
+        {
+            if (!reader.IsStartElement(EL.lookup_modifications))
+                return null;
+            reader.Read();
+            string sequence = FastaSequence.StripModifications(lookupSequence);
+            var mods = ReadExplicitMods(reader, new Peptide(sequence));
+            reader.ReadEndElement();
+            return mods;
+        }
+
+        private CrosslinkStructure ReadCrosslinkStructure(XmlReader reader)
+        {
+            if (!reader.IsStartElement(EL.crosslinks))
+            {
+                return null;
+            }
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                return CrosslinkStructure.EMPTY;
+            }
+            reader.Read();
+            var peptides = new List<Peptide>();
+            var explicitModsList = new List<ExplicitMods>();
+            while (reader.IsStartElement(EL.linked_peptide))
+            {
+                var peptide = new Peptide(reader.GetAttribute(ATTR.sequence));
+                ExplicitMods explicitMods;
+                if (reader.IsEmptyElement)
+                {
+                    explicitMods = null;
+                    reader.Read();
+                }
+                else
+                {
+                    reader.ReadStartElement();
+                    explicitMods = ReadExplicitMods(reader, peptide);
+                    reader.ReadEndElement();
+                }
+                peptides.Add(peptide);
+                explicitModsList.Add(explicitMods);
+            }
+
+            var crosslinks = new List<Crosslink>();
+            while (reader.IsStartElement(EL.crosslink))
+            {
+                var crosslinkName = reader.GetAttribute(ATTR.modification_name);
+                StaticMod crosslinker =
+                    Settings.PeptideSettings.Modifications.StaticModifications.FirstOrDefault(mod =>
+                        mod.Name == crosslinkName);
+                if (crosslinker == null)
+                {
+                    throw new InvalidDataException(string.Format(@"Crosslinker {0} not found.", crosslinkName));
+                }
+                List<CrosslinkSite> sites = new List<CrosslinkSite>();
+                if (reader.IsEmptyElement)
+                {
+                    reader.Read();
+                }
+                else
+                {
+                    reader.ReadStartElement();
+                    while (reader.IsStartElement(EL.site))
+                    {
+                        sites.Add(new CrosslinkSite(reader.GetIntAttribute(ATTR.peptide_index), reader.GetIntAttribute(ATTR.index_aa)));
+                        reader.ReadStartElement();
+                    }
+                    crosslinks.Add(new Crosslink(crosslinker, sites));
+                    reader.ReadEndElement();
+                }
+            }
+            reader.ReadEndElement();
+            return new CrosslinkStructure(peptides, explicitModsList, crosslinks);
+        }
+
+        private void SkipImplicitModsElement(XmlReader reader)
+        {
+            if (!reader.IsStartElement(EL.implicit_modifications))
+                return;
+            reader.Skip();
+        }
+
+        public ExplicitMods ReadExplicitMods(XmlReader reader, Peptide peptide)
+        {
+            IList<ExplicitMod> staticMods = null;
+            TypedExplicitModifications staticTypedMods = null;
+            IList<TypedExplicitModifications> listHeavyMods = null;
+            bool isVariable = false;
+
+            if (reader.IsStartElement(EL.variable_modifications))
+            {
+                staticTypedMods = ReadExplicitMods(reader, EL.variable_modifications,
+                    EL.variable_modification, peptide, IsotopeLabelType.light);
+                staticMods = staticTypedMods.Modifications;
+                isVariable = true;
+            }
+            if (reader.IsStartElement(EL.explicit_modifications))
+            {
+                if (reader.IsEmptyElement)
+                {
+                    reader.Read();
+                }
+                else
+                {
+                    reader.ReadStartElement();
+
+                    if (!isVariable)
+                    {
+                        if (reader.IsStartElement(EL.explicit_static_modifications))
+                        {
+                            staticTypedMods = ReadExplicitMods(reader, EL.explicit_static_modifications,
+                                EL.explicit_modification, peptide, IsotopeLabelType.light);
+                            staticMods = staticTypedMods.Modifications;
+                        }
+                        // For format version 0.2 and earlier it was not possible
+                        // to have unmodified types.  The absence of a type simply
+                        // meant it had no modifications.
+                        else if (FormatVersion.CompareTo(DocumentFormat.VERSION_0_2) <= 0)
+                        {
+                            staticTypedMods = new TypedExplicitModifications(peptide,
+                                IsotopeLabelType.light, new ExplicitMod[0]);
+                            staticMods = staticTypedMods.Modifications;
+                        }
+                    }
+                    listHeavyMods = new List<TypedExplicitModifications>();
+                    while (reader.IsStartElement(EL.explicit_heavy_modifications))
+                    {
+                        var heavyMods = ReadExplicitMods(reader, EL.explicit_heavy_modifications,
+                            EL.explicit_modification, peptide, IsotopeLabelType.heavy);
+                        heavyMods = heavyMods.AddModMasses(staticTypedMods);
+                        listHeavyMods.Add(heavyMods);
+                    }
+                    if (FormatVersion.CompareTo(DocumentFormat.VERSION_0_2) <= 0 && listHeavyMods.Count == 0)
+                    {
+                        listHeavyMods.Add(new TypedExplicitModifications(peptide,
+                            IsotopeLabelType.heavy, new ExplicitMod[0]));
+                    }
+
+                    reader.ReadEndElement();
+                }
+            }
+            if (staticMods == null && listHeavyMods == null)
+                return null;
+
+            listHeavyMods = (listHeavyMods != null ?
+                listHeavyMods.ToArray() : new TypedExplicitModifications[0]);
+
+            return new ExplicitMods(peptide, staticMods, listHeavyMods, isVariable);
+        }
+
+        private TypedExplicitModifications ReadExplicitMods(XmlReader reader, string name,
+            string nameElMod, Peptide peptide, IsotopeLabelType labelTypeDefault)
+        {
+            if (!reader.IsStartElement(name))
+                return new TypedExplicitModifications(peptide, labelTypeDefault, new ExplicitMod[0]);
+
+            var typedMods = ReadLabelType(reader, labelTypeDefault);
+            var listMods = new List<ExplicitMod>();
+
+            if (reader.IsEmptyElement)
+                reader.Read();
+            else
+            {
+                reader.ReadStartElement();
+                while (reader.IsStartElement(nameElMod))
+                {
+                    int indexAA = reader.GetIntAttribute(ATTR.index_aa);
+                    string nameMod = reader.GetAttribute(ATTR.modification_name);
+                    int indexMod = typedMods.Modifications.IndexOf(mod => Equals(nameMod, mod.Name));
+                    if (indexMod == -1)
+                        throw new InvalidDataException(string.Format(Resources.TransitionInfo_ReadTransitionLosses_No_modification_named__0__was_found_in_this_document, nameMod));
+                    StaticMod modAdd = typedMods.Modifications[indexMod];
+                    var explicitMod = new ExplicitMod(indexAA, modAdd);
+                    if (reader.IsEmptyElement)
+                    {
+                        // Consume tag
+                        reader.Read();
+                    }
+                    else
+                    {
+                        reader.Read();
+                        explicitMod = explicitMod.ChangeLinkedPeptide(ReadLinkedPeptide(reader));
+                        reader.ReadEndElement();
+                    }
+
+                    listMods.Add(explicitMod);
+                }
+                reader.ReadEndElement();
+            }
+            return new TypedExplicitModifications(peptide, typedMods.LabelType, listMods.ToArray());
+        }
+
+        private LegacyLinkedPeptide ReadLinkedPeptide(XmlReader reader)
+        {
+            if (!reader.IsStartElement(EL.linked_peptide))
+            {
+                return null;
+            }
+
+            int indexAa = reader.GetIntAttribute(ATTR.index_aa);
+            var sequence = reader.GetAttribute(ATTR.sequence);
+            Peptide peptide = null;
+            if (!string.IsNullOrEmpty(sequence))
+            {
+                peptide = new Peptide(sequence);
+            }
+            ExplicitMods explicitMods = null;
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+            }
+            else
+            {
+                reader.ReadStartElement();
+                explicitMods = ReadExplicitMods(reader, peptide);
+                reader.ReadEndElement();
+            }
+            return new LegacyLinkedPeptide(peptide, indexAa, explicitMods);
+
+        }
+
+        /// <summary>
+        /// The two values a molecule keeps, read straight into a <see cref="PeptideResults"/>. A
+        /// document written the old way records the peak count ratio and the retention time here
+        /// too, but both are aggregated from the precursors and worked out again on demand, so they
+        /// are not even read. Null when the molecule has neither value, which is the usual case.
+        /// </summary>
+        private PeptideResults ReadPeptideResults(XmlReader reader)
+        {
+            if (!reader.IsStartElement(EL.peptide_results))
+            {
+                return null;
+            }
+
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                return null;
+            }
+
+            var measuredResults = Settings.MeasuredResults;
+            if (measuredResults == null)
+                throw new InvalidDataException(SerializationResources.SrmDocument_ReadResults_No_results_information_found_in_the_document_settings);
+
+            int replicateCount = measuredResults.Chromatograms.Count;
+            var fileIdsByReplicate = new List<ChromFileInfoId>[replicateCount];
+            var excludeByReplicate = new List<bool>[replicateCount];
+            var concentrationByReplicate = new List<double?>[replicateCount];
+            bool anythingToKeep = false;
+
+            reader.ReadStartElement();
+            ChromatogramSet chromatogramSet = null;
+            int index = -1;
+            while (reader.IsStartElement(EL.peptide_result))
+            {
+                string name = reader.GetAttribute(ATTR.replicate);
+                if (chromatogramSet == null || !Equals(name, chromatogramSet.Name))
+                {
+                    if (!measuredResults.TryGetChromatogramSet(name, out chromatogramSet, out index))
+                        throw new InvalidDataException(string.Format(SerializationResources.SrmDocument_ReadResults_No_replicate_named__0__found_in_measured_results, name));
+                }
+
+                string fileId = reader.GetAttribute(ATTR.file);
+                var fileInfoId = fileId != null
+                    ? chromatogramSet.FindFileById(fileId)
+                    : chromatogramSet.MSDataFileInfos[0].FileId;
+                if (fileInfoId == null)
+                    throw new InvalidDataException(string.Format(SerializationResources.SrmDocument_ReadResults_No_file_with_id__0__found_in_the_replicate__1__, fileId, name));
+
+                bool exclude = reader.GetBoolAttribute(ATTR.exclude_from_calibration);
+                double? concentration = reader.GetNullableDoubleAttribute(ATTR.analyte_concentration);
+                // Consume the tag
+                reader.Read();
+
+                (fileIdsByReplicate[index] = fileIdsByReplicate[index] ?? new List<ChromFileInfoId>()).Add(fileInfoId);
+                (excludeByReplicate[index] = excludeByReplicate[index] ?? new List<bool>()).Add(exclude);
+                (concentrationByReplicate[index] = concentrationByReplicate[index] ?? new List<double?>())
+                    .Add(concentration);
+                anythingToKeep = anythingToKeep || exclude || concentration.HasValue;
+            }
+            reader.ReadEndElement();
+
+            if (!anythingToKeep)
+            {
+                return null;
+            }
+
+            var fileIds = new List<ChromFileInfoId>();
+            var counts = new List<int>();
+            var excludeFromCalibration = new List<bool>();
+            var analyteConcentrations = new List<double?>();
+            for (int replicateIndex = 0; replicateIndex < replicateCount; replicateIndex++)
+            {
+                counts.Add(fileIdsByReplicate[replicateIndex]?.Count ?? 0);
+                if (fileIdsByReplicate[replicateIndex] == null)
+                    continue;
+                fileIds.AddRange(fileIdsByReplicate[replicateIndex]);
+                excludeFromCalibration.AddRange(excludeByReplicate[replicateIndex]);
+                analyteConcentrations.AddRange(concentrationByReplicate[replicateIndex]);
+            }
+
+            // Two independent maps, each keeping only the files something was set for, and null when
+            // that is none of them.
+            var chromFileIds = new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds);
+            var results = PeptideResults.EMPTY
+                .ChangeExcludeFromCalibration(new ChromFileIdMap<bool>(chromFileIds, excludeFromCalibration))
+                .ChangeAnalyteConcentrations(new ChromFileIdMap<double?>(chromFileIds, analyteConcentrations));
+            return results.NullIfEmpty();
+        }
+
+        /// <summary>
+        /// Deserializes an array of <see cref="TransitionGroupDocNode"/> objects from
+        /// a <see cref="XmlReader"/> positioned at the first element in the list.
+        /// </summary>
+        /// <param name="reader">The reader positioned at the first element</param>
+        /// <param name="peptide">A previously read parent <see cref="Identity"/></param>
+        /// <param name="mods">Explicit modifications for the peptide</param>
+        /// <returns>A new array of <see cref="TransitionGroupDocNode"/></returns>
+        private TransitionGroupDocNode[] ReadTransitionGroupListXml(XmlReader reader, Peptide peptide, ExplicitMods mods)
+        {
+            var list = new List<TransitionGroupDocNode>();
+            while (reader.IsStartElement(EL.precursor))
+                list.Add(ReadTransitionGroupXml(reader, peptide, mods));
+            return list.ToArray();
+        }
+
+        private TransitionGroupDocNode ReadTransitionGroupXml(XmlReader reader, Peptide peptide, ExplicitMods mods)
+        {
+            var precursorCharge = reader.GetIntAttribute(ATTR.charge);
+            var precursorAdduct = Adduct.FromChargeProtonated(precursorCharge);  // Read integer charge
+            var typedMods = ReadLabelType(reader, IsotopeLabelType.light);
+
+            int? decoyMassShift = reader.GetNullableIntAttribute(ATTR.decoy_mass_shift);
+            var explicitTransitionGroupValues = ReadExplicitTransitionGroupValuesAttributes(reader, FormatVersion, out var pre422ExplicitValues);
+            if (peptide.IsCustomMolecule)
+            {
+                var ionFormula = reader.GetAttribute(ATTR.ion_formula);
+                if (ionFormula != null)
+                {
+                    ionFormula = ionFormula.Trim(); // We've seen trailing spaces in the wild
+                }
+                string neutralFormula;
+                Adduct adduct;
+                var isFormulaWithAdduct = IonInfo.IsFormulaWithAdduct(ionFormula, out var _, out adduct, out neutralFormula);
+                if (isFormulaWithAdduct)
+                {
+                    precursorAdduct = adduct;
+                }
+                else
+                {
+                    Assume.Fail(@"Unable to determine adduct in " + ionFormula);
+                }
+                if (!string.IsNullOrEmpty(neutralFormula))
+                {
+                    var ion = precursorAdduct.ApplyToFormula(neutralFormula);
+                    var moleculeWithAdduct = precursorAdduct.ApplyToMolecule(peptide.CustomMolecule.ParsedMolecule);
+                    Assume.IsTrue(ion.CompareTolerant(moleculeWithAdduct, BioMassCalc.MassTolerance) == 0, @"Expected precursor ion formula to match parent molecule with adduct applied");
+                }
+            }
+            var group = new TransitionGroup(peptide, precursorAdduct, typedMods.LabelType, false, decoyMassShift);
+            var children = new TransitionDocNode[0];    // Empty until proven otherwise
+            bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
+            double? precursorConcentration = reader.GetNullableDoubleAttribute(ATTR.precursor_concentration);
+
+            TransitionGroupDocNode nodeGroup;
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+
+                nodeGroup = new TransitionGroupDocNode(group,
+                                                  Annotations.EMPTY,
+                                                  Settings,
+                                                  mods,
+                                                  null,
+                                                  explicitTransitionGroupValues,
+                                                  null,
+                                                  children,
+                                                  autoManageChildren);
+            }
+            else
+            {
+                reader.ReadStartElement();
+                var annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.precursor);
+                var spectrumClassFilter = SpectrumClassFilter.ReadXml(reader);
+                var libInfo = ReadTransitionGroupLibInfo(reader);
+                var columnarResults = ReadPrecursorResults(reader, out var sharedTransitionAreas,
+                    out var peakDefaults);
+
+                nodeGroup = new TransitionGroupDocNode(group,
+                                                  annotations,
+                                                  Settings,
+                                                  mods,
+                                                  libInfo,
+                                                  explicitTransitionGroupValues,
+                                                  // Empty, and only for the replicate count: a
+                                                  // precursor keeps no chrom infos of its own.
+                                                  columnarResults == null
+                                                      ? null
+                                                      : Settings.MeasuredResults.EmptyTransitionGroupResults,
+                                                  children,
+                                                  autoManageChildren);
+                if (!spectrumClassFilter.IsEmpty)
+                {
+                    nodeGroup = nodeGroup.ChangeSpectrumClassFilter(spectrumClassFilter);
+                }
+
+                // Which of the two things a transition's element can hold, and what it says unless
+                // it says otherwise, both come from the precursor's own element, read just above.
+                children = ReadTransitionListXml(reader, nodeGroup, mods, pre422ExplicitValues, peakDefaults,
+                    out var transitionResults);
+                transitionResults = ApplySharedTransitionAreas(transitionResults, sharedTransitionAreas);
+
+                reader.ReadEndElement();
+
+                nodeGroup = (TransitionGroupDocNode)nodeGroup.ChangeChildrenChecked(children);
+
+                // After the children, since replacing them is what discards the columnar results
+                // derived from whatever was there before, and since the transitions' results are
+                // stored by the index of the transition among them.
+                if (columnarResults != null)
+                    nodeGroup = nodeGroup.ChangeAbbreviatedResults(columnarResults);
+                if (transitionResults.Any(results => results != null))
+                {
+                    // Taken from the precursor rather than made here, because giving results the
+                    // transitions they belong to is the precursor's job and nothing else's.
+                    if (!nodeGroup.HasAbbreviatedResults)
+                        nodeGroup = nodeGroup.ChangeAbbreviatedResults(TransitionGroupResults.Empty);
+                    var groupResults = nodeGroup.AbbreviatedResults;
+                    for (int iTran = 0; iTran < transitionResults.Length; iTran++)
+                        groupResults = transitionResults[iTran]?.AddTo(groupResults, ((TransitionDocNode) children[iTran]).Transition) ?? groupResults;
+                    nodeGroup = nodeGroup.ChangeAbbreviatedResults(groupResults);
+                }
+            }
+            nodeGroup = nodeGroup.ChangePrecursorConcentration(precursorConcentration);
+            return nodeGroup;
+        }
+
+        private TypedModifications ReadLabelType(XmlReader reader, IsotopeLabelType labelTypeDefault)
+        {
+            string typeName = reader.GetAttribute(ATTR.isotope_label);
+            if (string.IsNullOrEmpty(typeName))
+                typeName = labelTypeDefault.Name;
+            var typedMods = Settings.PeptideSettings.Modifications.GetModificationsByName(typeName);
+            if (typedMods == null)
+                throw new InvalidDataException(string.Format(Resources.SrmDocument_ReadLabelType_The_isotope_modification_type__0__does_not_exist_in_the_document_settings, typeName));
+            return typedMods;
+        }
+
+        /// <summary>
+        /// The precursor's columnar results, or null when it has none. Read out of the same
+        /// element a document has always had, in either of the two things which can be on it.
+        /// <para>
+        /// A document written before <see cref="ATTR.chosen_peak_index"/> was part of the format
+        /// carries everything about each peak here. Nearly all of it is read back from the .skyd
+        /// once the peak has been matched to a candidate peak there, so only what the .skyd cannot
+        /// give back is kept, and <see cref="TransitionGroupResults.NeedsPeakIndexes"/> says the
+        /// matching still has to be done. Nothing becomes a
+        /// <see cref="TransitionGroupChromInfo"/>: the peaks are treated as though their
+        /// boundaries were set by hand until the .skyd says otherwise.
+        /// </para>
+        /// </summary>
+        private TransitionGroupResults ReadPrecursorResults(XmlReader reader,
+            out SharedTransitionAreas sharedTransitionAreas, out PrecursorPeakDefaults peakDefaults)
+        {
+            sharedTransitionAreas = null;
+            // A local, because the lambda below fills it in and an out parameter cannot be captured.
+            var defaults = new PrecursorPeakDefaults(false);
+            peakDefaults = defaults;
+            if (!reader.IsStartElement(EL.precursor_results))
+            {
+                return null;
+            }
+
+            var areasByPosition = new List<float[]>();
+            var truncatedByPosition = new List<bool?>();
+            var forcedIntegrationByPosition = new List<bool>();
+            var peaks = new List<PrecursorPeak>();
+            var qValues = new List<float>();
+            var zScores = new List<float>();
+            var userSets = new List<UserSet>();
+            var annotations = new List<Annotations>();
+            bool needsPeakIndexes = false;
+            var chromFileIds = ReadColumnarResults(reader, EL.precursor_peak, (r, fileInfoId) =>
+            {
+                int? chosenPeakIndex = r.GetNullableIntAttribute(ATTR.chosen_peak_index);
+                needsPeakIndexes = needsPeakIndexes || !chosenPeakIndex.HasValue;
+                // Which of the two shapes the transitions below are in. The peak count ratio is an
+                // aggregate of them, so only a precursor which kept chrom infos ever wrote one -
+                // see DocumentWriter.WriteTransitionGroupChromInfo, which always does, against
+                // WriteTransitionGroupResults, which never does. This used to be told from
+                // chosen_peak_index, which now says something else: a precursor can be in the
+                // columnar shape and still not know which candidate peaks its peaks are.
+                bool isLegacyPeak = r.GetNullableFloatAttribute(ATTR.peak_count_ratio).HasValue;
+                defaults.IsLegacyShape = defaults.IsLegacyShape || isLegacyPeak;
+                peaks.Add(new PrecursorPeak(r.GetFloatAttribute(ATTR.retention_time),
+                    r.GetNullableFloatAttribute(ATTR.start_time) ?? 0,
+                    r.GetNullableFloatAttribute(ATTR.end_time) ?? 0,
+                    chosenPeakIndex ?? PrecursorPeak.NO_PEAK_INDEX));
+                float? qValue = r.GetNullableFloatAttribute(ATTR.qvalue);
+                float? zScore = r.GetNullableFloatAttribute(ATTR.zscore);
+                userSets.Add(ReadUserSet(r));
+                areasByPosition.Add(ReadTransitionAreas(r));
+                // What the transitions below say unless they say otherwise - see
+                // MoleculeWriter.SetColumnarPrecursorPeak. Named apart from the precursor's own
+                // ATTR.truncated, which on a peak that kept chrom infos is something else
+                // entirely: how many of its transitions were truncated, which is a count.
+                bool? truncated = ReadTruncated(r, ATTR.transition_truncated, false);
+                bool forcedIntegration = r.GetBoolAttribute(ATTR.transition_forced_integration, false);
+                truncatedByPosition.Add(truncated);
+                forcedIntegrationByPosition.Add(forcedIntegration);
+                // Kept by file as well, for the transition elements which are read after this one.
+                defaults.Add(fileInfoId, truncated, forcedIntegration);
+
+                var peakAnnotations = ReadPositionAnnotations(r, AnnotationDef.AnnotationTarget.precursor_result);
+                // The scores were annotations before they were attributes, and a document old
+                // enough to have them that way is exactly one being upgraded here.
+                peakAnnotations = ReadAndRemoveScoreAnnotation(peakAnnotations,
+                    MProphetResultsHandler.AnnotationName, ref qValue);
+                peakAnnotations = ReadAndRemoveScoreAnnotation(peakAnnotations,
+                    MProphetResultsHandler.MAnnotationName, ref zScore);
+                annotations.Add(peakAnnotations);
+                qValues.Add(qValue ?? float.NaN);
+                zScores.Add(zScore ?? float.NaN);
+            });
+            sharedTransitionAreas = areasByPosition.Any(positionAreas => positionAreas != null)
+                ? new SharedTransitionAreas(chromFileIds, areasByPosition, truncatedByPosition,
+                    forcedIntegrationByPosition)
+                : null;
+            return new TransitionGroupResults(chromFileIds, peaks)
+                .ChangeUserSets(userSets)
+                .ChangeQValues(qValues)
+                .ChangeZScores(zScores)
+                .ChangeAnnotations(annotations)
+                .ChangeNeedsPeakIndexes(needsPeakIndexes);
+        }
+
+        /// <summary>
+        /// Reads the columnar results out of the peak elements a document has always had. One entry
+        /// per replicate and file, in that order, which is what makes the flat positions.
+        /// <para>
+        /// One entry per file, not per element. A document written before the chosen peak indexes
+        /// were part of the format has an element for every optimization step, and a cache
+        /// corruption issue could write the same one twice. Nothing kept here can differ between
+        /// the steps of one file, so the first element a file has is the one that counts.
+        /// </para>
+        /// </summary>
+        private ChromFileIds ReadColumnarResults(XmlReader reader, string peakStart,
+            Action<XmlReader, ChromFileInfoId> readPeak)
+        {
+            var results = Settings.MeasuredResults;
+            if (results == null)
+                throw new InvalidDataException(SerializationResources.SrmDocument_ReadResults_No_results_information_found_in_the_document_settings);
+
+            var counts = new int[results.Chromatograms.Count];
+            var fileIds = new List<ChromFileInfoId>();
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+                return new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds);
+            }
+
+            reader.ReadStartElement();
+            ChromatogramSet chromatogramSet = null;
+            int index = -1;
+            int replicateStart = 0;
+            while (reader.IsStartElement(peakStart))
+            {
+                string name = reader.GetAttribute(ATTR.replicate);
+                if (chromatogramSet == null || !Equals(name, chromatogramSet.Name))
+                {
+                    if (!results.TryGetChromatogramSet(name, out chromatogramSet, out index))
+                        throw new InvalidDataException(String.Format(SerializationResources.SrmDocument_ReadResults_No_replicate_named__0__found_in_measured_results, name));
+                    replicateStart = fileIds.Count;
+                }
+
+                string fileId = reader.GetAttribute(ATTR.file);
+                var fileInfoId = fileId != null
+                    ? chromatogramSet.FindFileById(fileId)
+                    : chromatogramSet.MSDataFileInfos[0].FileId;
+                if (fileInfoId == null)
+                    throw new InvalidDataException(String.Format(SerializationResources.SrmDocument_ReadResults_No_file_with_id__0__found_in_the_replicate__1__, fileId, name));
+
+                if (reader.GetIntAttribute(ATTR.step) != 0 || HasFile(fileIds, replicateStart, fileInfoId))
+                {
+                    reader.Skip();
+                    continue;
+                }
+
+                bool isEmptyElement = reader.IsEmptyElement;
+                readPeak(reader, fileInfoId);
+                if (!isEmptyElement)
+                {
+                    // Whatever the element still holds that nothing here wanted: the original and
+                    // reintegrated peaks of the older format are read back from the .skyd instead.
+                    while (reader.IsStartElement())
+                    {
+                        reader.Skip();
+                    }
+                }
+
+                fileIds.Add(fileInfoId);
+                counts[index]++;
+                // Consume the tag
+                reader.Read();
+            }
+
+            reader.ReadEndElement();
+            return new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds);
+        }
+
+        /// <summary>
+        /// Whether one replicate's entries, which start at <paramref name="replicateStart"/>,
+        /// already include a file.
+        /// </summary>
+        private static bool HasFile(IList<ChromFileInfoId> fileIds, int replicateStart, ChromFileInfoId fileInfoId)
+        {
+            for (int i = replicateStart; i < fileIds.Count; i++)
+            {
+                if (ReferenceEquals(fileIds[i], fileInfoId))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// What was read for one transition, held until the precursor which owns its results has
+        /// its children and can be told. Either the columnar values or the chrom infos a document
+        /// written the old way carries, never both.
+        /// </summary>
+        private class TransitionResultsData
+        {
+            public TransitionResultsData(ChromFileIds chromFileIds, IList<TransitionPeak> peaks,
+                IList<Annotations> annotations, IList<CustomPeakBounds> peakBounds,
+                IList<CustomPeakMetrics> peakMetrics)
+            {
+                ChromFileIds = chromFileIds;
+                Peaks = peaks;
+                Annotations = annotations;
+                PeakBounds = peakBounds;
+                PeakMetrics = peakMetrics;
+            }
+
+            public TransitionResultsData(Results<TransitionChromInfo> chromInfos)
+            {
+                ChromInfos = chromInfos;
+            }
+
+            private ChromFileIds ChromFileIds { get; }
+            private IList<TransitionPeak> Peaks { get; }
+            private IList<Annotations> Annotations { get; }
+            private IList<CustomPeakBounds> PeakBounds { get; }
+            private IList<CustomPeakMetrics> PeakMetrics { get; }
+            private Results<TransitionChromInfo> ChromInfos { get; }
+
+            /// <summary>
+            /// These results with the areas the precursor carried filled in at the files this
+            /// transition said nothing about, which is every file where all of the precursor's
+            /// transitions had nothing to say beyond their area.
+            /// <para>
+            /// Matched by file rather than by counting positions, and an entry of the transition's
+            /// own wins. That is what reads a document whose transitions were written at every
+            /// file, back when a transition was either left out of the precursor's areas
+            /// altogether or written out in full, the same way it was written.
+            /// </para>
+            /// </summary>
+            public TransitionResultsData WithSharedAreas(SharedTransitionAreas shared, int transitionIndex)
+            {
+                if (ChromInfos != null)
+                {
+                    // A document old enough to keep chrom infos has no shared areas to fill in.
+                    return this;
+                }
+
+                // Two layouts, so replicate and file are the only way across: this transition's
+                // positions are its own and the precursor's are the precursor's. The maps are put
+                // on one layout rather than one being indexed with the other's positions.
+                var chromFileIds = ChromFileIds.Union(shared.ChromFileIds);
+                var written = new ChromFileIdMap<TransitionPeak?>(ChromFileIds,
+                        Peaks.Select(peak => (TransitionPeak?) peak))
+                    .WithFileIds(chromFileIds);
+                var writtenAnnotations = MapOnto(Annotations, chromFileIds);
+                var writtenPeakBounds = MapOnto(PeakBounds.Select(bounds => (CustomPeakBounds?) bounds), chromFileIds);
+                var writtenPeakMetrics = MapOnto(PeakMetrics, chromFileIds);
+                var sharedAreas = new ChromFileIdMap<float[]>(shared.ChromFileIds, shared.AreasByPosition)
+                    .WithFileIds(chromFileIds);
+                var sharedTruncated = new ChromFileIdMap<bool?>(shared.ChromFileIds, shared.TruncatedByPosition)
+                    .WithFileIds(chromFileIds);
+                var sharedForced = new ChromFileIdMap<bool>(shared.ChromFileIds, shared.ForcedIntegrationByPosition)
+                    .WithFileIds(chromFileIds);
+
+                var fileIds = new List<ChromFileInfoId>();
+                var counts = new List<int>();
+                var peaks = new List<TransitionPeak>();
+                var annotations = new List<Annotations>();
+                var peakBounds = new List<CustomPeakBounds>();
+                var peakMetrics = new List<CustomPeakMetrics>();
+                for (int replicateIndex = 0;
+                     replicateIndex < chromFileIds.ReplicatePositions.ReplicateCount;
+                     replicateIndex++)
+                {
+                    int count = 0;
+                    foreach (var fileId in chromFileIds.GetFileIds(replicateIndex))
+                    {
+                        sharedAreas.TryGetValue(replicateIndex, fileId, out var areas);
+                        float? sharedArea = areas == null ? (float?) null : areas[transitionIndex];
+                        if (written.TryGetValue(replicateIndex, fileId, out var peak) && peak.HasValue)
+                        {
+                            // The area is the precursor's wherever it carries one: the element was
+                            // written without it, so what came off the element is nothing.
+                            peaks.Add(sharedArea.HasValue
+                                ? peak.Value.ChangeArea(sharedArea.Value)
+                                : peak.Value);
+                            annotations.Add(Get(writtenAnnotations, replicateIndex, fileId) ??
+                                            pwiz.Skyline.Model.Annotations.EMPTY);
+                            peakBounds.Add(Get(writtenPeakBounds, replicateIndex, fileId) ?? default);
+                            peakMetrics.Add(Get(writtenPeakMetrics, replicateIndex, fileId));
+                        }
+                        else if (sharedArea.HasValue)
+                        {
+                            // No element at all means nothing beyond the area and the flags the
+                            // precursor carried, and MakePlainPeak is what a peak which says only
+                            // that looks like.
+                            sharedTruncated.TryGetValue(replicateIndex, fileId, out var truncated);
+                            sharedForced.TryGetValue(replicateIndex, fileId, out var forcedIntegration);
+                            peaks.Add(TransitionGroupResults.MakePlainPeak(sharedArea.Value, truncated,
+                                forcedIntegration));
+                            annotations.Add(pwiz.Skyline.Model.Annotations.EMPTY);
+                            peakBounds.Add(default);
+                            peakMetrics.Add(null);
+                        }
+                        else
+                        {
+                            continue;
+                        }
+
+                        fileIds.Add(fileId);
+                        count++;
+                    }
+
+                    counts.Add(count);
+                }
+
+                return new TransitionResultsData(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
+                    peaks, annotations, peakBounds, peakMetrics);
+            }
+
+            /// <summary>
+            /// One of the lists read alongside the peaks, on <paramref name="chromFileIds"/> instead
+            /// of this transition's own layout.
+            /// </summary>
+            private ChromFileIdMap<T> MapOnto<T>(IEnumerable<T> values, ChromFileIds chromFileIds)
+            {
+                return values == null
+                    ? null
+                    : new ChromFileIdMap<T>(ChromFileIds, values).WithFileIds(chromFileIds);
+            }
+
+            private static T Get<T>(ChromFileIdMap<T> map, int replicateIndex, ChromFileInfoId fileId)
+            {
+                return map != null && map.TryGetValue(replicateIndex, fileId, out var value) ? value : default;
+            }
+
+            /// <summary>
+            /// The precursor's results with this transition's added at
+            /// <paramref name="transitionIndex"/>.
+            /// </summary>
+            public TransitionGroupResults AddTo(TransitionGroupResults groupResults, Transition transition)
+            {
+                return ChromInfos != null
+                    // The chrom infos are not kept: everything a peak would lose with them goes on
+                    // the transition's results instead, until the .skyd says which candidate peak
+                    // it is and gives the rest back.
+                    ? groupResults.ChangeTransitionFromChromInfos(transition, ChromInfos)
+                    : groupResults.ChangeTransitionResults(transition, ChromFileIds, Peaks, Annotations,
+                        PeakBounds, PeakMetrics);
+            }
+        }
+
+        /// <summary>
+        /// One transition's peaks, out of the same element a document has always had. The three
+        /// sparse values are read as one entry per position alongside the peaks, and it is
+        /// <see cref="TransitionGroupResults"/> which turns each of them into a map of its own
+        /// holding only the entries which say something.
+        /// <para>
+        /// The two formats put different things on the element. A document written knowing the
+        /// chosen peak indexes writes an entry only for what its precursor does not already say, so
+        /// boundaries here are ones the transition does not share. A document written before that
+        /// writes everything about the peak, so its boundaries are just where the peak is - which
+        /// is the precursor's own unless this transition disagrees, and
+        /// <see cref="TransitionGroupResults.ChangeTransitionResults"/> drops the ones which agree.
+        /// </para>
+        /// </summary>
+        private TransitionResultsData ReadColumnarTransitionResults(XmlReader reader,
+            PrecursorPeakDefaults peakDefaults)
+        {
+            bool isLegacyShape = peakDefaults.IsLegacyShape;
+            var peaks = new List<TransitionPeak>();
+            var annotations = new List<Annotations>();
+            var peakBounds = new List<CustomPeakBounds>();
+            var peakMetrics = new List<CustomPeakMetrics>();
+            var chromFileIds = ReadColumnarResults(reader, EL.transition_peak, (r, fileInfoId) =>
+            {
+                // Protect against negative areas, since they can cause real problems for ratio
+                // calculations.
+                float area = Math.Max(0, r.GetFloatAttribute(ATTR.area));
+                // Left out of the element when it is the same as the precursor's for this file,
+                // which is nearly always, so the precursor's is what it means when it is absent.
+                var userSet = ReadUserSet(r);
+                var identified = r.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict,
+                    PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
+                float? startTime = r.GetNullableFloatAttribute(ATTR.start_time);
+                float? endTime = r.GetNullableFloatAttribute(ATTR.end_time);
+                float? massError = r.GetNullableFloatAttribute(ATTR.mass_error_ppm);
+
+                // The flags are written by both shapes - see DocumentWriter.WriteTransitionResults -
+                // so they are read the same way from either. Whether the peak is empty is the one
+                // they say differently: the older shape says it by having no end time, while the
+                // columnar shape uses the end time for boundaries the user set and so says this
+                // outright.
+                bool isEmpty = isLegacyShape
+                    ? endTime.GetValueOrDefault() == 0
+                    : r.GetBoolAttribute(ATTR.empty, false);
+                // In the columnar shape these two say only what the precursor's peak for this file
+                // does not already say, so what it says is what leaving them off means. The older
+                // shape has no such thing: there, absent truncation means it was never worked out.
+                bool? truncated;
+                bool forcedIntegration;
+                if (isLegacyShape)
+                {
+                    truncated = r.GetNullableBoolAttribute(ATTR.truncated);
+                    forcedIntegration = r.GetBoolAttribute(ATTR.forced_integration, false);
+                }
+                else
+                {
+                    truncated = ReadTruncated(r, ATTR.truncated, peakDefaults.GetTruncated(fileInfoId));
+                    forcedIntegration = r.GetBoolAttribute(ATTR.forced_integration,
+                        peakDefaults.GetForcedIntegration(fileInfoId));
+                }
+
+                peaks.Add(new TransitionPeak(area, userSet, truncated, isEmpty, identified, forcedIntegration));
+
+                peakBounds.Add(startTime.HasValue && endTime.HasValue
+                    ? new CustomPeakBounds(startTime.Value, endTime.Value)
+                    : default);
+                peakMetrics.Add(CustomPeakMetrics.Create(massError, identified));
+
+                // Last, because these are the element's child elements.
+                annotations.Add(ReadPositionAnnotations(r, AnnotationDef.AnnotationTarget.transition_result));
+            });
+            return new TransitionResultsData(chromFileIds, peaks, annotations, peakBounds, peakMetrics);
+        }
+
+        /// <summary>
+        /// The transition areas a precursor carries for the transitions which had nothing else to
+        /// say, so were not written at all. See <see cref="DocumentWriter"/>.
+        /// </summary>
+        private class SharedTransitionAreas
+        {
+            public SharedTransitionAreas(ChromFileIds chromFileIds, IList<float[]> areasByPosition,
+                IList<bool?> truncatedByPosition, IList<bool> forcedIntegrationByPosition)
+            {
+                ChromFileIds = chromFileIds;
+                AreasByPosition = areasByPosition;
+                TruncatedByPosition = truncatedByPosition;
+                ForcedIntegrationByPosition = forcedIntegrationByPosition;
+            }
+
+            public ChromFileIds ChromFileIds { get; }
+            public IList<float[]> AreasByPosition { get; }
+
+            /// <summary>
+            /// What each position's peak said about the transitions it carries areas for, which is
+            /// everything a transition left out of the document has beyond its area.
+            /// </summary>
+            public IList<bool?> TruncatedByPosition { get; }
+            public IList<bool> ForcedIntegrationByPosition { get; }
+
+            /// <summary>
+            /// The results of one transition, or null when the precursor carried nothing for it,
+            /// which means it was written out on its own.
+            /// </summary>
+            public TransitionResultsData MakeTransitionResults(int transitionIndex)
+            {
+                var replicatePositions = ChromFileIds.ReplicatePositions;
+                var fileIds = new List<ChromFileInfoId>();
+                var counts = new List<int>();
+                var peaks = new List<TransitionPeak>();
+                for (int replicateIndex = 0; replicateIndex < replicatePositions.ReplicateCount; replicateIndex++)
+                {
+                    int count = 0;
+                    foreach (int position in replicatePositions[replicateIndex])
+                    {
+                        if (AreasByPosition[position] == null)
+                        {
+                            continue;
+                        }
+
+                        fileIds.Add(ChromFileIds.FileIds[position]);
+                        // A transition is only left out when every one of its peaks said nothing
+                        // beyond its area and the flags its precursor carried, and MakePlainPeak is
+                        // what each of them said.
+                        peaks.Add(TransitionGroupResults.MakePlainPeak(
+                            AreasByPosition[position][transitionIndex], TruncatedByPosition[position],
+                            ForcedIntegrationByPosition[position]));
+                        count++;
+                    }
+
+                    counts.Add(count);
+                }
+
+                if (peaks.Count == 0)
+                {
+                    return null;
+                }
+
+                return new TransitionResultsData(new ChromFileIds(ReplicatePositions.FromCounts(counts), fileIds),
+                    peaks.ToArray(), null, null, null);
+            }
+        }
+
+        /// <summary>
+        /// The transitions' results, with the areas the precursor wrote once for all of them filled
+        /// in at every file where none of them had anything of its own to say.
+        /// <para>
+        /// Filled in file by file rather than transition by transition: a transition which wrote
+        /// nothing anywhere has no element at all, and one which wrote at some files still needs
+        /// the precursor's areas at the rest.
+        /// </para>
+        /// </summary>
+        private static TransitionResultsData[] ApplySharedTransitionAreas(TransitionResultsData[] transitionResults,
+            SharedTransitionAreas sharedTransitionAreas)
+        {
+            if (sharedTransitionAreas == null)
+            {
+                return transitionResults;
+            }
+
+            var resultsNew = new TransitionResultsData[transitionResults.Length];
+            for (int iTran = 0; iTran < transitionResults.Length; iTran++)
+            {
+                resultsNew[iTran] = transitionResults[iTran] == null
+                    ? sharedTransitionAreas.MakeTransitionResults(iTran)
+                    : transitionResults[iTran].WithSharedAreas(sharedTransitionAreas, iTran);
+            }
+
+            return resultsNew;
+        }
+
+        private static float[] ReadTransitionAreas(XmlReader reader)
+        {
+            return reader.GetFloatsAttribute(ATTR.transition_areas);
+        }
+
+        /// <summary>
+        /// Truncation in the columnar shape, where leaving the attribute off means
+        /// <paramref name="defaultValue"/> and truncation which was never worked out has a value of
+        /// its own - see <see cref="DocumentSerializer.TRUNCATED_UNKNOWN"/>.
+        /// </summary>
+        private static bool? ReadTruncated(XmlReader reader, string name, bool? defaultValue)
+        {
+            string value = reader.GetAttribute(name);
+            if (value == null)
+            {
+                return defaultValue;
+            }
+
+            return Equals(value, TRUNCATED_UNKNOWN) ? (bool?) null : Convert.ToBoolean(value, CultureInfo.InvariantCulture);
+        }
+
+        private static UserSet ReadUserSet(XmlReader reader)
+        {
+            return reader.GetEnumAttribute(ATTR.user_set, UserSetFastLookup.Dict, UserSet.FALSE,
+                XmlUtil.EnumCase.upper);
+        }
+
+        /// <summary>
+        /// The annotations of one peak, which are child elements of its columnar results element.
+        /// </summary>
+        private Annotations ReadPositionAnnotations(XmlReader reader, AnnotationDef.AnnotationTarget annotationTarget)
+        {
+            if (reader.IsEmptyElement)
+            {
+                return Annotations.EMPTY;
+            }
+
+            reader.ReadStartElement();
+            return ReadTargetAnnotations(reader, annotationTarget);
+        }
+
+        /// <summary>
+        /// Deserializes ungrouped transitions in v0.1 format from a <see cref="XmlReader"/>
+        /// into an array of <see cref="TransitionGroupDocNode"/> objects with
+        /// children <see cref="TransitionDocNode"/> from the XML correctly distributed.
+        /// 
+        /// There were no "heavy" transitions in v0.1, making this a matter of
+        /// distributing multiple precursor charge states, though in most cases
+        /// there will be only one.
+        /// </summary>
+        /// <param name="reader">The reader positioned on a &lt;transition&gt; start tag</param>
+        /// <param name="peptide">A previously read <see cref="Peptide"/> instance</param>
+        /// <param name="mods">Explicit mods for the peptide</param>
+        /// <returns>An array of <see cref="TransitionGroupDocNode"/> instances for
+        ///         inclusion in a <see cref="PeptideDocNode"/> child list</returns>
+        private TransitionGroupDocNode[] ReadUngroupedTransitionListXml(XmlReader reader, Peptide peptide, ExplicitMods mods)
+        {
+            // The v0.1 format has no precursor element above these to read them against.
+            TransitionInfo info = new TransitionInfo(this, PrecursorPeakDefaults.LEGACY);
+            TransitionGroup curGroup = null;
+            List<TransitionDocNode> curList = null;
+            var listGroups = new List<TransitionGroup>();
+            var mapGroupToList = new Dictionary<TransitionGroup, List<TransitionDocNode>>();
+            while (reader.IsStartElement(EL.transition))
+            {
+                // Read a transition tag.
+                double? declaredProductMz;
+                info.ReadXml(reader, FormatVersion, out declaredProductMz, null);
+
+                // If the transition is not in the current group
+                if (curGroup == null || curGroup.PrecursorAdduct != info.PrecursorAdduct)
+                {
+                    // Look for an existing group that matches
+                    curGroup = null;
+                    foreach (TransitionGroup group in listGroups)
+                    {
+                        if (group.PrecursorAdduct == info.PrecursorAdduct)
+                        {
+                            curGroup = group;
+                            break;
+                        }
+                    }
+                    if (curGroup != null)
+                        curList = mapGroupToList[curGroup];
+                    else
+                    {
+                        // No existing group matches, so create a new one
+                        curGroup = new TransitionGroup(peptide, info.PrecursorAdduct, IsotopeLabelType.light);
+                        curList = new List<TransitionDocNode>();
+                        listGroups.Add(curGroup);
+                        mapGroupToList.Add(curGroup, curList);
+                    }
+                }
+                int offset = Transition.OrdinalToOffset(info.IonType,
+                    info.Ordinal, peptide.Length);
+                Transition transition = new Transition(curGroup, info.IonType,
+                    offset, info.MassIndex, info.ProductAdduct);
+
+                // No heavy transition support in v0.1, and no full-scan filtering
+                var massH = Settings.GetFragmentMass(null, mods, transition, null);
+                var node = new TransitionDocNode(transition, info.Losses, massH, TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY);
+                curList.Add(node);
+                ValidateSerializedVsCalculatedProductMz(declaredProductMz, node); // Sanity check
+            }
+
+            // Use collected information to create the DocNodes.
+            var list = new List<TransitionGroupDocNode>();
+            foreach (TransitionGroup group in listGroups)
+            {
+                list.Add(new TransitionGroupDocNode(group, Annotations.EMPTY,
+                    Settings, mods, null, ExplicitTransitionGroupValues.EMPTY, null, mapGroupToList[group].ToArray(), true));
+            }
+            return list.ToArray();
+        }
+
+        /// <summary>
+        /// Deserializes an array of <see cref="TransitionDocNode"/> objects from
+        /// a <see cref="TransitionDocNode"/> positioned at the first element in the list.
+        /// </summary>
+        /// <param name="reader">The reader positioned at the first element</param>
+        /// <param name="nodeGroup">A previously read parent <see cref="Identity"/></param>
+        /// <param name="mods">Explicit modifications for the peptide</param>
+        /// <param name="pre422ExplicitTransitionValues">Explicit transition values that may have been serialzied at precursor level in older formats</param>
+        /// <returns>A new array of <see cref="TransitionDocNode"/></returns>
+        private TransitionDocNode[] ReadTransitionListXml(XmlReader reader,
+            TransitionGroupDocNode nodeGroup, ExplicitMods mods, ExplicitTransitionValues pre422ExplicitTransitionValues,
+            PrecursorPeakDefaults peakDefaults, out TransitionResultsData[] transitionResults)
+        {
+            var group = nodeGroup.TransitionGroup;
+            var isotopeDist = nodeGroup.IsotopeDist;
+            var list = new List<TransitionDocNode>();
+            // One per transition, in the order they are read, which is the order the precursor
+            // stores them in. The compact format leaves these null: its transitions carry chrom
+            // infos, and the columnar form is worked out from them by UpdateResults.
+            var resultsList = new List<TransitionResultsData>();
+            CrosslinkBuilder crosslinkBuilder = new CrosslinkBuilder(Settings, nodeGroup.Peptide, mods, nodeGroup.LabelType);
+            if (reader.IsStartElement(EL.transition_data))
+            {
+                string strContent = reader.ReadElementString();
+                byte[] data = Convert.FromBase64String(strContent);
+                var transitionData = new SkylineDocumentProto.Types.TransitionData();
+                transitionData.MergeFrom(data);
+                foreach (var transitionProto in transitionData.Transitions)
+                {
+                    list.Add(TransitionDocNode.FromTransitionProto(AnnotationScrubber, Settings, group, mods,
+                        isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder, transitionProto,
+                        out var chromInfos));
+                    resultsList.Add(chromInfos == null ? null : new TransitionResultsData(chromInfos));
+                }
+            }
+            else
+            {
+                while (reader.IsStartElement(EL.transition))
+                {
+                    list.Add(ReadTransitionXml(reader, group, mods, isotopeDist, pre422ExplicitTransitionValues,
+                        crosslinkBuilder, peakDefaults, out var columnarResults));
+                    resultsList.Add(columnarResults);
+                }
+            }
+
+            transitionResults = resultsList.ToArray();
+            return list.ToArray();
+        }
+
+        /// <summary>
+        /// Deserializes a single <see cref="TransitionDocNode"/> from a <see cref="XmlReader"/>
+        /// positioned at the start element.
+        /// </summary>
+        /// <param name="reader">The reader positioned at a start element of a transition</param>
+        /// <param name="group">A previously read parent <see cref="Identity"/></param>
+        /// <param name="mods">Explicit mods for the peptide</param>
+        /// <param name="isotopeDist">Isotope peak distribution to use for assigning M+N m/z values</param>
+        /// <param name="pre422ExplicitTransitionValues">Items that may have been saved at precursor level in older formats</param>
+        /// <param name="crosslinkBuilder">CrosslinkBuilder object that can be shared across all transitions</param>
+        /// <returns>A new <see cref="TransitionDocNode"/></returns>
+        private TransitionDocNode ReadTransitionXml(XmlReader reader, TransitionGroup group,
+            ExplicitMods mods, IsotopeDistInfo isotopeDist, ExplicitTransitionValues pre422ExplicitTransitionValues,
+            CrosslinkBuilder crosslinkBuilder, PrecursorPeakDefaults peakDefaults,
+            out TransitionResultsData columnarResults)
+        {
+            TransitionInfo info = new TransitionInfo(this, peakDefaults);
+
+            // Read all the XML attributes before the reader advances through the elements
+            info.ReadXmlAttributes(reader, FormatVersion, pre422ExplicitTransitionValues);
+            var isPrecursor = Transition.IsPrecursor(info.IonType);
+            var isCustom = Transition.IsCustom(info.IonType, group);
+            CustomMolecule customMolecule = null;
+            Adduct adduct = Adduct.EMPTY;
+            if (isCustom)
+            {
+                if (info.MeasuredIon != null)
+                    customMolecule = info.MeasuredIon.SettingsCustomIon;
+                else if (isPrecursor)
+                    customMolecule = group.CustomMolecule;
+                else
+                {
+                    customMolecule = CustomMolecule.Deserialize(reader, out adduct);
+                    if (DocumentMayContainMoleculesWithEmbeddedIons && customMolecule.ParsedMolecule.IsMassOnly && customMolecule.MonoisotopicMass.IsMassH())
+                    {
+                        // Defined by mass only, assume it's not massH despite how it may have been written
+                        customMolecule = new CustomMolecule(customMolecule.MonoisotopicMass.ChangeIsMassH(false), customMolecule.AverageMass.ChangeIsMassH(false),
+                            customMolecule.Name);
+                    }
+                }
+            }
+            double? declaredProductMz;
+            info.ReadXmlElements(reader, out declaredProductMz);
+
+            if (adduct.IsEmpty)
+            {
+                adduct = info.ProductAdduct;
+                var isPre362NonReporterCustom = DocumentMayContainMoleculesWithEmbeddedIons && customMolecule != null &&
+                                                 !(customMolecule is SettingsCustomIon); // Leave reporter ions alone
+                if (isPre362NonReporterCustom && adduct.IsProteomic)
+                {
+                    adduct = Adduct.NonProteomicProtonatedFromCharge(adduct.AdductCharge);
+                }
+                // Watch all-mass declaration with mz same as mass with a charge-only adduct, which older versions don't describe succinctly
+                if (!isPrecursor && isPre362NonReporterCustom &&
+                    Math.Abs(declaredProductMz.Value - customMolecule.MonoisotopicMass / Math.Abs(adduct.AdductCharge)) < .001)
+                {
+                    CustomMolecule newFormula = null;
+                    if (!customMolecule.ParsedMolecule.IsMassOnly &&
+                        Math.Abs(customMolecule.MonoisotopicMass - Math.Abs(adduct.AdductCharge) * declaredProductMz.Value) < .01)
+                    {
+                        // Adjust hydrogen count to get a molecular mass that makes sense for charge and mz
+                        newFormula = customMolecule.AdjustElementCount(@"H", -adduct.AdductCharge);
+                    }
+                    if (!CustomMolecule.IsNullOrEmpty(newFormula))
+                    {
+                        customMolecule = newFormula;
+                    }
+                    else
+                    {
+                        // All we can really say about the adduct is that it has a charge
+                        adduct = Adduct.FromChargeNoMass(adduct.AdductCharge);
+                    }
+                }
+            }
+            else
+            {
+                // We parsed an adduct out of the molecule description, as in older versions - make sure it agrees with parsed charge
+                // ReSharper disable once PossibleNullReferenceException
+                Assume.IsTrue(adduct.AdductCharge == info.ProductAdduct.AdductCharge);
+            }
+
+            Transition transition;
+            if (isCustom)
+            {
+                transition = new Transition(group, isPrecursor ? group.PrecursorAdduct : adduct, info.MassIndex,
+                    customMolecule, info.IonType);
+            }
+            else if (isPrecursor)
+            {
+                transition = new Transition(group, info.IonType, group.Peptide.Length - 1, info.MassIndex,
+                    adduct.IsEmpty ? group.PrecursorAdduct : adduct, info.DecoyMassShift);
+            }
+            else
+            {
+                int offset = Transition.OrdinalToOffset(info.IonType,
+                    info.Ordinal, group.Peptide.Length);
+                transition = new Transition(group, info.IonType, offset, info.MassIndex, adduct, info.DecoyMassShift);
+            }
+
+            var losses = info.Losses;
+            
+            var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(transition, losses, isotopeDist);
+            if (group.DecoyMassShift.HasValue && !info.DecoyMassShift.HasValue)
+                throw new InvalidDataException(Resources.SrmDocument_ReadTransitionXml_All_transitions_of_decoy_precursors_must_have_a_decoy_mass_shift);
+            var quantInfo = new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, info.LibInfo, info.Quantitative);
+
+            TransitionDocNode node;
+            if (mods != null && mods.HasCrosslinks)
+            {
+                IEnumerable<IonOrdinal> parts;
+                if (info.LegacyFragmentIons != null)
+                {
+                    parts = LegacyComplexFragmentIonName.ToIonChain(mods.LegacyCrosslinkMap, info.LegacyFragmentIons);
+                }
+                else
+                {
+                    parts = info.LinkedFragmentIons;
+                }
+
+                parts = parts.Prepend(info.OrphanedCrosslinkIon
+                    ? IonOrdinal.Empty
+                    : IonOrdinal.FromTransition(transition));
+                var complexFragmentIon = new NeutralFragmentIon(parts, info.Losses);
+                var chargedIon = new ComplexFragmentIon(transition, complexFragmentIon, mods);
+                node = crosslinkBuilder.MakeTransitionDocNode(chargedIon, isotopeDist, info.Annotations, quantInfo,
+                    info.ExplicitValues, null);
+            }
+            else
+            {
+                var mass = Settings.GetFragmentMass(group, mods, transition, isotopeDist);
+                node = new TransitionDocNode(transition, info.Annotations, losses,
+                    mass, quantInfo, info.ExplicitValues, null);
+            }
+
+            ValidateSerializedVsCalculatedProductMz(declaredProductMz, node);  // Sanity check
+
+            // The columnar results go to the precursor, which is what keeps a transition's now. A
+            // document written the old way has its chrom infos turned into them here and then does
+            // not hold on to the chrom infos: they are read back from the .skyd, or worked out from
+            // the columnar results.
+            columnarResults = info.ColumnarResults ??
+                              (info.Results == null ? null : new TransitionResultsData(info.Results));
+
+            return node;
+        }
+
+        /// <summary>
+        /// Verify that any mz values we serialize for informational purposes agree with what we calculate upon reading in again
+        /// </summary>
+        private void ValidateSerializedVsCalculatedProductMz(double? declaredProductMz, TransitionDocNode node)
+        {
+            if (node.ComplexFragmentIon.IsCrosslinked && FormatVersion <= DocumentFormat.VERSION_22_23)
+            {
+                // Recent bugfixes for crosslinked peptides might result in different m/z's
+                return;
+            }
+            if (declaredProductMz.HasValue && Math.Abs(declaredProductMz.Value - node.Mz.Value) >= .001)
+            {
+                var toler = node.Transition.IsPrecursor() ? .5 : // We do see mz-only transition lists where precursor mz is given as double and product mz as int
+                    FormatVersion.CompareTo(DocumentFormat.VERSION_3_6) <= 0 && node.Transition.IonType == IonType.z ? 1.007826 : // Known issue fixed in SVN 7007
+                        (FormatVersion.CompareTo(DocumentFormat.VERSION_1_7) <= 0 ? .005 : .0025); // Unsure if 1.7 is the precise watershed, but this gets a couple of older tests passing
+                Assume.IsTrue(Math.Abs(declaredProductMz.Value - node.Mz.Value) < toler,
+                    string.Format(@"error reading mz values - declared mz value {0} does not match calculated value {1}",
+                        declaredProductMz.Value, node.Mz.Value));
+            }
+        }
+    }
+}
