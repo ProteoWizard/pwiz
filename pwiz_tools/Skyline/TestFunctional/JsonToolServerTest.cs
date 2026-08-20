@@ -1818,6 +1818,39 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(applied.Top, readBack.Top, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Top");
                 AssertEx.AreEqual(applied.Bottom, readBack.Bottom, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Bottom");
 
+                // An EQUAL edge pair means "no zoom in this direction", leaving that axis exactly as it was.
+                // That is also what stops a zoom ever writing Min == Max onto an axis whose auto flags it has
+                // just cleared, which nothing downstream repairs and which draws the pane collapsed.
+                double flatInset = (readBack.Right - readBack.Left) / 4;
+                var flat = new SkylineTool.Rectangle
+                {
+                    Left = readBack.Left + flatInset, Right = readBack.Right - flatInset,
+                    Top = readBack.Top, Bottom = readBack.Top
+                };
+                var afterFlat = server.ZoomGraphTo(graphId, flat);
+                AssertEx.AreEqual(readBack.Top, afterFlat.Top, 1e-6, @"Equal top/bottom should leave Y alone");
+                AssertEx.AreEqual(readBack.Bottom, afterFlat.Bottom, 1e-6, @"Equal top/bottom should leave Y alone");
+                AssertEx.IsTrue(afterFlat.Right - afterFlat.Left < readBack.Right - readBack.Left,
+                    @"Equal top/bottom should still have zoomed X");
+
+                // Equal corners ask for nothing at all, and must change nothing rather than collapse an axis.
+                var afterEmpty = server.ZoomGraphTo(graphId,
+                    new SkylineTool.Rectangle
+                    {
+                        Left = afterFlat.Left, Right = afterFlat.Left,
+                        Top = afterFlat.Top, Bottom = afterFlat.Top
+                    });
+                AssertEx.AreEqual(afterFlat.Left, afterEmpty.Left, 1e-6, @"An empty rectangle should change nothing");
+                AssertEx.AreEqual(afterFlat.Right, afterEmpty.Right, 1e-6, @"An empty rectangle should change nothing");
+                AssertEx.AreEqual(afterFlat.Top, afterEmpty.Top, 1e-6, @"An empty rectangle should change nothing");
+                AssertEx.AreEqual(afterFlat.Bottom, afterEmpty.Bottom, 1e-6, @"An empty rectangle should change nothing");
+                AssertEx.IsTrue(afterEmpty.Left < afterEmpty.Right && afterEmpty.Bottom < afterEmpty.Top,
+                    @"No zoom should ever leave an axis with Min == Max");
+
+                // A coordinate that is not a real number is rejected: an axis given one draws nothing.
+                AssertEx.ThrowsException<ArgumentException>(() => server.ZoomGraphTo(graphId,
+                    new SkylineTool.Rectangle { Left = double.NaN, Top = 1, Right = 2, Bottom = 0 }));
+
                 // Back to the full range before clicking, so every bar is inside the chart rect and the
                 // gesture can reach the one this picks.
                 server.ZoomGraphTo(graphId, zoom);

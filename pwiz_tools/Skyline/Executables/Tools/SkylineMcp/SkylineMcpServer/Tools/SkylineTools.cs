@@ -850,7 +850,11 @@ public static class SkylineTools
     [McpServerTool(Name = "skyline_zoom_graph_to"),
      Description("Zoom a graph's first pane to a DATA-coordinate rectangle: left/right set the X-axis range " +
         "and top/bottom the Y-axis range. Returns the zoom actually applied, which may be clamped to the " +
-        "available data range. Read the current zoom first with skyline_get_graph_zoom.")]
+        "available data range. Give an EQUAL pair to leave that axis alone: equal left and right zoom only " +
+        "vertically, equal top and bottom only horizontally, and equal corners change nothing at all. A graph " +
+        "that does not let a user zoom a direction ignores that direction here too, exactly as it would ignore a " +
+        "mouse drag that way; the returned zoom shows what actually changed. Read the " +
+        "current zoom first with skyline_get_graph_zoom.")]
     public static string ZoomGraphTo(
         [Description("Form identifier from skyline_get_open_forms")] string formId,
         [Description("Left edge: minimum X-axis (data) value")] double left,

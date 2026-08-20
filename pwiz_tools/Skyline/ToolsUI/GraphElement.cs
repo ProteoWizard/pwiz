@@ -111,18 +111,35 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>Zooms the first pane to the DATA-coordinate rectangle <paramref name="bounds"/>, returning
-        /// the zoom actually applied (the graph may clamp it to the data range). A zoom ignores the drag
-        /// direction, so the un-normalized edges are normalized into the Min &lt; Max ranges ZedGraph
-        /// expects.</summary>
+        /// the zoom actually applied (the graph may clamp it to the data range). A zoom has no direction, so
+        /// the un-normalized edges are normalized into the Min &lt; Max ranges ZedGraph expects.
+        ///
+        /// <para>An edge pair that is EQUAL asks for no zoom in that direction, and leaves that axis exactly
+        /// as it was: equal left and right zoom vertically only, equal top and bottom horizontally only, and a
+        /// rectangle with no width and no height changes nothing. That is also what keeps a zoom from ever
+        /// writing Min == Max, which no amount of AxisChange repairs once the auto flags are off.</para></summary>
         public SkylineTool.Rectangle ZoomTo(SkylineTool.Rectangle bounds)
         {
             RequireRectangle(bounds);
+            RequireFinite(bounds);
             var pane = FirstPane();
+            bool wantsX = bounds.Left != bounds.Right;
+            bool wantsY = bounds.Top != bounds.Bottom;
+            if (!wantsX && !wantsY)
+                return PaneRectangle(pane);
+
+            // An axis with nothing asked of it keeps the range it already has. A direction the graph does not
+            // allow is dropped by ZoomPaneToScale, the way HandleZoomFinish drops it at the end of a mouse
+            // drag the graph will not honor. The rectangle returned below is read back off the pane, so it
+            // shows what actually happened either way.
             Control.ZoomPaneToScale(pane,
-                Math.Min(bounds.Left, bounds.Right), Math.Max(bounds.Left, bounds.Right),
-                Math.Min(bounds.Top, bounds.Bottom), Math.Max(bounds.Top, bounds.Bottom));
+                wantsX ? Math.Min(bounds.Left, bounds.Right) : pane.XAxis.Scale.Min,
+                wantsX ? Math.Max(bounds.Left, bounds.Right) : pane.XAxis.Scale.Max,
+                wantsY ? Math.Min(bounds.Top, bounds.Bottom) : pane.YAxis.Scale.Min,
+                wantsY ? Math.Max(bounds.Top, bounds.Bottom) : pane.YAxis.Scale.Max);
             return PaneRectangle(pane);
         }
+
 
         /// <summary>Clicks or drags on the graph in DATA coordinates, reproducing a real mouse gesture: the
         /// mouse goes down at the Left/Top corner of <paramref name="bounds"/> and is released at the
@@ -168,6 +185,18 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (bounds == null)
                 throw new ArgumentException(new LlmInstruction(@"A rectangle is required."));
+        }
+
+        // A coordinate has to be a real number. "NaN" and "Infinity" parse as doubles, and an axis given one
+        // draws nothing at all, with no way back short of unzooming by hand.
+        private static void RequireFinite(SkylineTool.Rectangle bounds)
+        {
+            foreach (var edge in new[] { bounds.Left, bounds.Top, bounds.Right, bounds.Bottom })
+            {
+                if (double.IsNaN(edge) || double.IsInfinity(edge))
+                    throw new ArgumentException(new LlmInstruction(
+                        @"Graph coordinates have to be real numbers; NaN and Infinity are not points on an axis."));
+            }
         }
 
         // The pane's current zoom as a rectangle in data coordinates: Left/Right are the X-axis range and

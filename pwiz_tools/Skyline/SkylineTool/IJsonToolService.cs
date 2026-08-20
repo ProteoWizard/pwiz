@@ -532,6 +532,11 @@ namespace SkylineTool
         /// set the X range, <see cref="Rectangle.Top"/>/<see cref="Rectangle.Bottom"/> the Y
         /// range). Returns the zoom actually applied, which may differ from the request when
         /// the graph clamps it to the available data range.
+        ///
+        /// <para>An EQUAL edge pair asks for no zoom in that direction and leaves that axis exactly as it
+        /// was, so equal left and right zoom vertically only, equal top and bottom horizontally only, and a
+        /// rectangle with neither width nor height changes nothing. A direction the graph does not let a user
+        /// zoom is ignored, as a mouse drag that way would be.</para>
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="bounds">The DATA-coordinate region to zoom to.</param>

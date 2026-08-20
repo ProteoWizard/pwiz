@@ -359,8 +359,8 @@ namespace pwiz.Skyline.ToolsUI
 
         public static readonly UiAction ZoomGraphTo = SimpleAction<GraphElement, object>(
                 @"ZoomGraphTo", (e, bounds) => e.ZoomTo(UiValue.ToRectangle(bounds)))
-            .Describe(new LlmInstruction(@"Zoom this graph to a region of DATA coordinates. Returns the zoom actually applied, which the graph may clamp to the data range."),
-                new LlmInstruction(@"a [left, top, right, bottom] array of data coordinates"));
+            .Describe(new LlmInstruction(@"Zoom this graph to a region of DATA coordinates. Returns the zoom actually applied, which the graph may clamp to the data range. An edge pair that is EQUAL asks for no zoom in that direction and leaves that axis untouched: equal left and right zoom only vertically, equal top and bottom only horizontally, and equal corners change nothing. A direction this graph does not let a user zoom is ignored, exactly as a mouse drag that way would be; the returned zoom shows what actually changed."),
+                new LlmInstruction(@"a [left, top, right, bottom] array of data coordinates; make one pair equal to leave that axis alone"));
 
         public static readonly UiAction ClickGraph = SimpleAction<GraphElement, object>(
                 @"ClickGraph", (e, bounds) => { e.Click(UiValue.ToRectangle(bounds)); return null; })
