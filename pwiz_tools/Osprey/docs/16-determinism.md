@@ -166,6 +166,32 @@ port also avoids nondeterministic parallel float reduction: the SVM training and
 scoring reductions are per-row and per-lane deterministic, not a thread-order
 `Parallel` sum.
 
+### The one parallel float accumulation, and why it is still deterministic
+
+`GradientBoostedTrees.AccumulateHistograms`
+(`Osprey.ML/GradientBoostedTrees.cs`) is the single place in the port that sums
+floats across threads, gated behind `GbtParams.MaxDegreeOfParallelism`. It is
+deterministic only because of one non-obvious invariant, which has to survive
+any future edit:
+
+> **Work is partitioned ACROSS FEATURES, never across rows.** One thread owns
+> one feature's histogram for the whole node and walks that node's rows in
+> ascending order, so every `hg[histStart + b] += g[i]` for a given bin happens
+> in the same sequence no matter how many threads run. No two threads ever touch
+> the same histogram slot, and there is no cross-thread reduction step.
+
+Partitioning over ROWS instead - the obvious "optimization" if the invariant is
+not understood - would make each bin's summation order depend on where the range
+boundaries fell, and would silently break the `1e-9` cross-impl parity gate that
+`regression.ps1` enforces. Sibling-subtraction histogram construction (deriving
+a child's histogram as parent minus its sibling) is off limits for the same
+reason: it changes the arithmetic, not merely its order.
+
+`MaxDegreeOfParallelism` defaults to **1**, so the FDR path stays sequential
+unless a caller opts in. `MLTest.TestGbtSquaredErrorObjective` asserts the ten
+golden logistic scores at both 1 and 4 threads, which is what keeps the claim
+above enforced rather than aspirational.
+
 ## Step 8 — Canonical entry order across Parquet and process boundaries
 
 The deterministic entry order established during scoring must be reproduced after
