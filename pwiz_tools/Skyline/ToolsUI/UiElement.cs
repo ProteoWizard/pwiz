@@ -2076,18 +2076,12 @@ namespace pwiz.Skyline.ToolsUI
 
         // Pasting into a grid is normally the same as set_grid_text: tab-separated text filled from the current
         // cell. SetGridText owns the gating/marshaling, so that case just delegates to it.
-        //
-        // The Insert Proteins / Insert Peptides form is the exception, and the reason this is not simply
-        // SetGridTextNow: its paste is not a fill at all -- it RESOLVES what is pasted against the background
-        // proteome, which is the whole point of the form (each peptide gets its protein). That work hangs off
-        // the form's Ctrl+V handler, so filling the cells directly produces a grid with the sequences in place
-        // and the protein columns empty, and the peptides then insert as a bare list. Hand those grids to the
-        // form's own paste with the text instead: identical to a user's Ctrl+V, minus the clipboard.
         public void PasteNow(string text)
         {
-            if (Control.FindForm() is EditUI.PasteDlg pasteDlg &&
-                pasteDlg.TryPasteIntoGrid(_dataGridView, text))
+            if (Control.FindForm() is EditUI.PasteDlg pasteDlg)
             {
+                // PasteDlg has its own way of pasting into grid
+                pasteDlg.PasteIntoGrid(text);
                 return;
             }
             SetGridTextNow(text);

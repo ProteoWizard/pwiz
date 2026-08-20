@@ -1129,40 +1129,39 @@ namespace pwiz.Skyline.EditUI
             tbxFasta.Text = ClipboardHelper.GetClipboardText(this);
         }
 
-        public void PasteProteins()
+        /// <summary>
+        /// Pastes the given text into the proteins grid.
+        /// </summary>
+        /// <param name="text">Text to be pasted, or null to use the clipboard text</param>
+        public void PasteProteins(string text = null)
         {
-            Paste(gridViewProteins, false);
+            text ??= ClipboardHelper.GetClipboardText(this);
+            if (text == null)
+            {
+                return;
+            }
+            PasteAndFilterMatches(gridViewProteins, text, false);
         }
 
         /// <summary>
-        /// Pastes the given text into the proteins grid exactly as a Ctrl+V of that text would -- the same
-        /// resolution against the background proteome, not a plain fill of the cells. For the connector (and
-        /// functional tests), which supply the text rather than going through the user's clipboard.
+        /// Pastes <paramref name="text"/> into whichever grid is showing, as a Ctrl+V of that text would.
+        /// The peptides and proteins grids sit on tabs of their own, so at most one of them is ever visible
+        /// and the caller does not have to say which -- it hands over the text and nothing else.
         /// </summary>
-        public void PasteProteins(string text)
+        public void PasteIntoGrid(string text)
         {
-            Paste(gridViewProteins, text, false);
-        }
-
-        /// <summary>
-        /// Pastes <paramref name="text"/> into <paramref name="dataGridView"/> as a Ctrl+V of that text would,
-        /// when it is one of this form's resolving grids; returns false for any other grid, leaving the caller
-        /// to paste it as ordinary tab-separated text. Lets the connector hand a grid to the form without
-        /// knowing which grids this form has.
-        /// </summary>
-        public bool TryPasteIntoGrid(DataGridView dataGridView, string text)
-        {
-            if (ReferenceEquals(dataGridView, gridViewPeptides))
+            if (gridViewPeptides.Visible)
             {
                 PastePeptides(text);
-                return true;
+                return;
             }
-            if (ReferenceEquals(dataGridView, gridViewProteins))
+            if (gridViewProteins.Visible)
             {
                 PasteProteins(text);
-                return true;
+                return;
             }
-            return false;
+
+            throw new InvalidOperationException(@"Neither grid is showing; the FASTA tab has no grid to paste into.");
         }
 
         private void gridViewPeptides_KeyDown(object sender, KeyEventArgs e)
@@ -1179,24 +1178,20 @@ namespace pwiz.Skyline.EditUI
 
         public void PastePeptides()
         {
-            Paste(gridViewPeptides, HasBackgroundProteome);
+            PastePeptides(null);
         }
-
-        /// <summary>
-        /// Pastes the given text into the peptides grid exactly as a Ctrl+V of that text would -- so each
-        /// peptide is still resolved against the background proteome and its protein columns filled in, which
-        /// is the entire point of this form. For the connector (and functional tests), which supply the text
-        /// rather than going through the user's clipboard.
-        /// </summary>
         public void PastePeptides(string text)
         {
-            Paste(gridViewPeptides, text, HasBackgroundProteome);
-        }
+            text ??= ClipboardHelper.GetClipboardText(this);
+            if (text == null)
+            {
+                return;
+            }
 
-        // Whether the document has a background proteome, which is what pasted peptides are matched against
-        // -- so it is also what decides whether a paste enumerates their proteins at all.
-        private bool HasBackgroundProteome =>
-            !DocumentUiContainer.Document.Settings.PeptideSettings.BackgroundProteome.IsNone;
+            bool hasBackgroundProteome =
+                !DocumentUiContainer.Document.Settings.PeptideSettings.BackgroundProteome.IsNone;
+            PasteAndFilterMatches(gridViewPeptides, text, hasBackgroundProteome);
+        }
 
         /// <summary>
         /// Removes the given number of last rows in the given DataGridView.
@@ -1219,20 +1214,17 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private void Paste(DataGridView dataGridView, bool enumerateProteins)
-        {
-            string text = ClipboardHelper.GetClipboardText(this);
-            if (text == null)
-            {
-                return;
-            }
-            Paste(dataGridView, text, enumerateProteins);
-        }
-
-        // Everything the Ctrl+V path does once it HAS the text: the match against the background proteome and
-        // the filtering dialog it may raise. Split out from the clipboard read so a caller that already has the
-        // text (the connector, a functional test) gets the identical behavior without touching the clipboard.
-        private void Paste(DataGridView dataGridView, string text, bool enumerateProteins)
+        /// <summary>
+        /// A complete paste, as the user experiences it: fill the grid, and then deal with whatever that
+        /// turned up -- a message and a rollback for text that could not be parsed, and the
+        /// <see cref="FilterMatchedPeptidesDlg"/> prompt for peptides that matched no protein, matched
+        /// several, or were filtered out, redoing the paste with the answer.
+        ///
+        /// <para>The <see cref="Paste(DataGridView,string,bool,bool,out int,out int,out int)"/> it calls is
+        /// the single pass underneath: that one only adds the rows and COUNTS what it could not resolve,
+        /// asking nothing and showing nothing. This runs it twice when the user changes the filtering.</para>
+        /// </summary>
+        private void PasteAndFilterMatches(DataGridView dataGridView, string text, bool enumerateProteins)
         {
             int numUnmatched;
             int numMultipleMatches;
@@ -1281,9 +1273,10 @@ namespace pwiz.Skyline.EditUI
         }
 
         /// <summary>
-        /// Paste the clipboard text into the specified DataGridView.
-        /// The clipboard text is assumed to be tab separated values.
-        /// The values are matched up to the columns in the order they are displayed.
+        /// One pass of a paste: add a row per line of <paramref name="text"/>, which is assumed to be tab
+        /// separated values, matched up to the columns in the order they are displayed. Reports what it could
+        /// not resolve through the out parameters -- it asks the user nothing and shows nothing, which is what
+        /// lets <see cref="PasteAndFilterMatches"/> run it a second time with the answer.
         /// </summary>
         private void Paste(DataGridView dataGridView, string text, bool enumerateProteins, bool keepAllPeptides,
             out int numUnmatched, out int numMulitpleMatches, out int numFiltered)
