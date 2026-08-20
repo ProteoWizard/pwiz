@@ -641,6 +641,55 @@ namespace pwiz.Osprey.Test
             return x;
         }
 
+        /// <summary>
+        /// A model flattened to <see cref="GbtModelData"/> and rebuilt must score
+        /// identically. Persistence that changed a margin would move q-values on reload.
+        /// The validation on the way back in matters just as much: a truncated or
+        /// hand-edited model file must fail at load rather than score silently wrong.
+        /// </summary>
+        [TestMethod]
+        public void TestGbtModelDataRoundTrip()
+        {
+            double[][] x = GoldenFeatures();
+            var isDecoy = new bool[x.Length];
+            for (int i = 0; i < x.Length; i++)
+                isDecoy[i] = x[i][0] + x[i][3] < 2.5;
+
+            var model = GradientBoostedTrees.Train(x, isDecoy, FastGbt());
+            var reloaded = GradientBoostedTrees.FromModelData(model.ToModelData());
+
+            double[][] probes = GoldenProbes();
+            for (int k = 0; k < probes.Length; k++)
+            {
+                Assert.AreEqual(model.ScoreSingle(probes[k]), reloaded.ScoreSingle(probes[k]), string.Format(
+                    @"round-tripped model scores differ at probe {0}", k));
+            }
+
+            // Mutating the snapshot must not reach back into the model it came from.
+            var data = model.ToModelData();
+            data.Leaf[0] = 12345.0;
+            Assert.AreEqual(model.ScoreSingle(probes[0]),
+                GradientBoostedTrees.FromModelData(model.ToModelData()).ScoreSingle(probes[0]));
+
+            var truncated = model.ToModelData();
+            truncated.Leaf = new double[truncated.Leaf.Length - 1];
+            Assert.ThrowsException<ArgumentException>(() => GradientBoostedTrees.FromModelData(truncated));
+
+            var dangling = model.ToModelData();
+            for (int i = 0; i < dangling.Feature.Length; i++)
+            {
+                if (dangling.Feature[i] < 0)
+                    continue;
+                dangling.Left[i] = dangling.Feature.Length + 10;
+                break;
+            }
+            Assert.ThrowsException<ArgumentException>(() => GradientBoostedTrees.FromModelData(dangling));
+
+            var noTrees = model.ToModelData();
+            noTrees.TreeRoot = new int[0];
+            Assert.ThrowsException<ArgumentException>(() => GradientBoostedTrees.FromModelData(noTrees));
+        }
+
         private static double[][] GoldenProbes()
         {
             return new[]

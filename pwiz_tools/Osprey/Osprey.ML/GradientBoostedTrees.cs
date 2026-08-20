@@ -100,6 +100,27 @@ namespace pwiz.Osprey.ML
     }
 
     /// <summary>
+    /// A trained ensemble reduced to plain arrays, so callers that need to persist a model
+    /// can serialize it without reflecting over private state. Round-trips exactly: the
+    /// arrays ARE the model, and <see cref="GradientBoostedTrees.FromModelData"/> rebuilds
+    /// a scorer that returns bit-identical margins.
+    ///
+    /// Internal nodes have Feature >= 0 and branch on Threshold (value &lt;= Threshold goes
+    /// to Left); leaves have Feature == -1 and contribute Leaf, already scaled by the
+    /// learning rate. TreeRoot holds the node index each tree starts at.
+    /// </summary>
+    public sealed class GbtModelData
+    {
+        public int[] Feature;
+        public double[] Threshold;
+        public int[] Left;
+        public int[] Right;
+        public double[] Leaf;
+        public int[] TreeRoot;
+        public double BaseScore;
+    }
+
+    /// <summary>
     /// Gradient-boosted decision trees (Newton boosting) with L1/L2 leaf regularization.
     /// Trained via <see cref="Train(double[][], bool[], GbtParams, double[])"/> for binary
     /// classification or <see cref="Train(double[][], double[], GbtParams, double[])"/> for
@@ -302,6 +323,65 @@ namespace pwiz.Osprey.ML
                 f += _leaf[node];
             }
             return f;
+        }
+
+        /// <summary>Flatten this model to plain arrays for persistence. The arrays are
+        /// copies; mutating them does not affect this instance.</summary>
+        public GbtModelData ToModelData()
+        {
+            return new GbtModelData
+            {
+                Feature = (int[])_feature.Clone(),
+                Threshold = (double[])_threshold.Clone(),
+                Left = (int[])_left.Clone(),
+                Right = (int[])_right.Clone(),
+                Leaf = (double[])_leaf.Clone(),
+                TreeRoot = (int[])_treeRoot.Clone(),
+                BaseScore = _baseScore
+            };
+        }
+
+        /// <summary>Rebuild a scorer from persisted arrays. Validates the node graph rather
+        /// than trusting it: a truncated or hand-edited model file would otherwise surface
+        /// as an index-out-of-range deep inside scoring, or worse, as silently wrong
+        /// scores.</summary>
+        public static GradientBoostedTrees FromModelData(GbtModelData data)
+        {
+            if (data == null)
+                throw new ArgumentNullException(nameof(data));
+            if (data.Feature == null || data.Threshold == null || data.Left == null ||
+                data.Right == null || data.Leaf == null || data.TreeRoot == null)
+            {
+                throw new ArgumentException(@"GradientBoostedTrees.FromModelData: incomplete model data");
+            }
+
+            int nodes = data.Feature.Length;
+            if (data.Threshold.Length != nodes || data.Left.Length != nodes ||
+                data.Right.Length != nodes || data.Leaf.Length != nodes)
+            {
+                throw new ArgumentException(@"GradientBoostedTrees.FromModelData: node arrays must be the same length");
+            }
+            if (data.TreeRoot.Length == 0)
+                throw new ArgumentException(@"GradientBoostedTrees.FromModelData: model has no trees");
+
+            for (int i = 0; i < nodes; i++)
+            {
+                if (data.Feature[i] < 0)
+                    continue;
+                if (data.Left[i] < 0 || data.Left[i] >= nodes || data.Right[i] < 0 || data.Right[i] >= nodes)
+                    throw new ArgumentException(string.Format(
+                        @"GradientBoostedTrees.FromModelData: node {0} has a child index outside the node array", i));
+            }
+            for (int t = 0; t < data.TreeRoot.Length; t++)
+            {
+                if (data.TreeRoot[t] < 0 || data.TreeRoot[t] >= nodes)
+                    throw new ArgumentException(string.Format(
+                        @"GradientBoostedTrees.FromModelData: tree {0} root is outside the node array", t));
+            }
+
+            return new GradientBoostedTrees((int[])data.Feature.Clone(), (double[])data.Threshold.Clone(),
+                (int[])data.Left.Clone(), (int[])data.Right.Clone(), (double[])data.Leaf.Clone(),
+                (int[])data.TreeRoot.Clone(), data.BaseScore);
         }
 
         private static double Sigmoid(double z)
