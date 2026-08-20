@@ -788,20 +788,24 @@ namespace pwiz.Skyline.ToolsUI
             return keyData;
         }
 
-        /// <summary>The single <see cref="Keys"/> value one '+'-separated segment names, or false when it names
-        /// none. An alias wins, then the Keys enum's own names -- but a segment that is only DIGITS is rejected
-        /// before <see cref="Enum.TryParse{TEnum}(string, bool, out TEnum)"/> sees it, because that reads a
-        /// number as the enum's underlying value: "1" would come back as Keys.LButton rather than as the "1"
-        /// key, which is Keys.D1 (the aliases map those). For the same reason a parsed name is required to
-        /// BE a Keys value, which also rejects the comma-separated lists Enum.TryParse otherwise accepts.</summary>
+        /// <summary>The single <see cref="Keys"/> value one '+'-separated segment names, or false when it
+        /// names none. An alias wins, then the Keys enum's own names, but only for a segment that looks like
+        /// a name at all - see the comment below for what
+        /// <see cref="Enum.TryParse{TEnum}(string, bool, out TEnum)"/> would otherwise accept.</summary>
         private static bool TryParseKeyName(string segment, out Keys key)
         {
             if (KEY_ALIASES.TryGetValue(segment, out key))
                 return true;
             key = Keys.None;
-            if (segment.All(char.IsDigit))
+            // The segment has to look like a key NAME, because Enum.TryParse is far more permissive than
+            // that. It reads a number as the enum's underlying VALUE, so "1" comes back as Keys.LButton
+            // rather than as the "1" key (Keys.D1, which the aliases map). It also reads a comma-separated
+            // list as the bitwise OR of its members, so "Down,Enter" comes back as 40|13 = 45 = Keys.Insert,
+            // which is a defined value and would sail through every check below. Either way SendKeyStroke
+            // would press a key the caller never named, and report that it had done what was asked.
+            if (segment.All(char.IsDigit) || !segment.All(char.IsLetterOrDigit))
                 return false;
-            // Keys.None is a defined value, but "None" names no key -- accepting it would send a KeyDown
+            // Keys.None is a defined value, but "None" names no key: accepting it would send a KeyDown
             // carrying nothing rather than reporting that the caller named nothing.
             return Enum.TryParse(segment, true, out key) && key != Keys.None && Enum.IsDefined(typeof(Keys), key);
         }

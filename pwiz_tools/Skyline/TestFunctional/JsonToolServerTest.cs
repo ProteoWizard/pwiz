@@ -200,6 +200,27 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsTrue(docAfter.Peptides.Any(p => Equals(p.Peptide.Sequence, COMPLETION_PEPTIDE)),
                 string.Format(@"Accepting the statement completion for {0} did not add it to the document.",
                     COMPLETION_PEPTIDE));
+
+            // Typing over a node that HAS a name replaces it, as typing over selected text does anywhere.
+            // The edit box opens holding the node's name with all of it selected, so a character that is
+            // appended instead of inserted turns a rename into a concatenation. The completion above cannot
+            // catch that: it edits the empty node at the end of the tree, whose text is blanked before the
+            // edit begins, so appending and replacing look identical there.
+            string nodeText = null;
+            RunUI(() =>
+            {
+                var named = SkylineWindow.SequenceTree.Nodes[0];
+                nodeText = named.Text;
+                SkylineWindow.SequenceTree.SelectedNode = named;
+            });
+            AssertEx.IsFalse(string.IsNullOrEmpty(nodeText), @"Need a named node to type over.");
+            server.SendText(treeFormId, nameof(SequenceTree), @"ZZZ");
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(@"ZZZ", SkylineWindow.SequenceTree.StatementCompletionEditBox.TextBox.Text,
+                    @"Typing over a named node should replace its name, not extend it.");
+                SkylineWindow.SequenceTree.CommitEditBox(true);
+            });
         }
 
         // How long to leave a dialog alone before looking at it a second time. This test fails intermittently in
@@ -1910,6 +1931,12 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqual(Keys.Control | Keys.D9, ControlElement.ParseKeyStroke(@"Ctrl+9"));
             // A number that is not one digit names no key at all, rather than the Keys value it spells.
             AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"65"));
+            AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"-65536"));
+            // Nor does a comma-separated list, which Enum.TryParse would otherwise read as the bitwise OR of
+            // its members: "Down,Enter" is 40|13 = 45, a defined Keys value (Insert) that passes every other
+            // check and presses a key nobody named.
+            AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"Down,Enter"));
+            AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"Up,Down"));
 
             // Rejected, each with an error that says which part could not be read: nothing, only modifiers,
             // two keys, and a name that is not a key.
