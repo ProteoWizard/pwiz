@@ -134,6 +134,19 @@ namespace pwiz.ProteowizardWrapper
             return FULL_READER_LIST.readIds(path);
         }
 
+        /// <summary>
+        /// Returns the reader's own name for the format of the file or directory at the given
+        /// path, e.g. "Bruker FID", or an empty string if no reader recognizes it. These are
+        /// the reader's names, not the display types callers may know a format by, so a caller
+        /// with its own vocabulary has to translate them. Throws if the path cannot be examined
+        /// at all. Recognizing a directory format that carries no distinguishing extension
+        /// takes looking inside it, which is what this does.
+        /// </summary>
+        public static string IdentifyReaderType(string path)
+        {
+            return FULL_READER_LIST.identify(path);
+        }
+
         public static bool SupportsMultipleSamples(string path)
         {
             path = path.ToLowerInvariant();
@@ -2102,6 +2115,15 @@ namespace pwiz.ProteowizardWrapper
             using CVParam param = scans[0].cvParam(CVID.MS_scan_start_time);
             if (param.empty())
                 return null;
+            // A value already recorded in minutes is returned as recorded.
+            // timeInSeconds()/60 is NOT an identity in floating point - it
+            // multiplies by 60 and divides again - so it silently perturbs most
+            // retention times by an ULP: 0.5903117 becomes 0.5903116999999999.
+            // Every vendor reader that sets scan start time in UO_minute (Thermo
+            // among them) was affected, which made a direct raw read disagree
+            // with the mzML converted from that same raw file.
+            if (param.units == CVID.UO_minute)
+                return param.value;
             return param.timeInSeconds() / 60;
         }
 

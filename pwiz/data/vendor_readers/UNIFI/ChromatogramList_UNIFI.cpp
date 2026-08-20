@@ -60,7 +60,7 @@ PWIZ_API_DECL size_t ChromatogramList_UNIFI::size() const
 PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_UNIFI::chromatogramIdentity(size_t index) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_UNIFI::createIndex, this));
-    if (index>size_)
+    if (index>=size_)
         throw runtime_error(("[ChromatogramList_UNIFI::chromatogramIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
     return index_[index];
@@ -147,7 +147,7 @@ PWIZ_API_DECL void ChromatogramList_UNIFI::makeFullFileChromatogram(pwiz::msdata
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_UNIFI::chromatogram(size_t index, DetailLevel detailLevel) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_UNIFI::createIndex, this));
-    if (index>size_)
+    if (index>=size_)
         throw runtime_error(("[ChromatogramList_UNIFI::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 

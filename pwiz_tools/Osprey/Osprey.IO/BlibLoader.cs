@@ -119,6 +119,12 @@ namespace pwiz.Osprey.IO
                         byte[] peakMzBlob = reader.IsDBNull(7) ? null : (byte[])reader[7];
                         byte[] peakIntBlob = reader.IsDBNull(8) ? null : (byte[])reader[8];
 
+                        // The same bound the TSV loader enforces. An invariant only one
+                        // format checks is not an invariant, and DecoyGenerator's
+                        // fragment-overlap gate relies on this one whatever the library
+                        // was built from.
+                        LibraryValidation.ValidatePeptideLength(peptideSeq);
+
                         var modifications = BuildInternedModifications(
                             ParseBlibModifications(peptideModSeq), interner);
 

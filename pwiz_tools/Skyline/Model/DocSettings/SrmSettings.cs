@@ -1382,7 +1382,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     continue;
                 }
 
-                result.AddRange(library.GetRetentionTimesWithSequences(null, targets).SelectMany(list=>list));
+                result.AddRange(library.GetRetentionTimesWithSequences(targets).SelectMany(list=>list));
                 if (library is MidasLibrary)
                 {
                     foreach (var midasSpectra in precursorMzs.Select(precursorMz => GetMidasSpectra(precursorMz.Value)))
@@ -2980,6 +2980,7 @@ namespace pwiz.Skyline.Model.DocSettings
                               // MS1 filtering changed select peaks
                               newTran.FullScan.PrecursorIsotopes != oldTran.FullScan.PrecursorIsotopes ||
                               newTran.FullScan.PrecursorIsotopeFilter != oldTran.FullScan.PrecursorIsotopeFilter ||
+                              newTran.FullScan.IncludeMinusOnePrecursor != oldTran.FullScan.IncludeMinusOnePrecursor ||
                               (newTran.FullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None && enrichmentsChanged) ||
                               !Equals(newTran.FullScan.PrecursorRes, oldTran.FullScan.PrecursorRes) ||
                               !Equals(newTran.FullScan.PrecursorResMz, oldTran.FullScan.PrecursorResMz);
@@ -3075,9 +3076,19 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             for (int i = 0; i < measuredResultsNew.Chromatograms.Count; i++)
             {
-                var chromatogramSetNew = measuredResultsNew.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
+                var chromatogramSetNewSource = measuredResultsNew.Chromatograms[i];
+                var chromatogramSetOldSource = measuredResultsOld.Chromatograms[i];
+                // The comparison below ignores the name, and everything else it compares can be
+                // identical for two replicates measuring the same file. Without this check,
+                // reordering them looks like no change, DiffResults stays false, and the node
+                // results are left on their old indexes while the ChromatogramSet list moves.
+                if (!ReferenceEquals(chromatogramSetNewSource.Id, chromatogramSetOldSource.Id))
+                {
+                    return false;
+                }
+                var chromatogramSetNew = chromatogramSetNewSource.ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
                     .ChangeAnalyteConcentration(null).ChangeSampleType(SampleType.DEFAULT).ChangeName(string.Empty);
-                var chromatogramSetOld = measuredResultsOld.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
+                var chromatogramSetOld = chromatogramSetOldSource.ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
                     .ChangeAnalyteConcentration(null).ChangeSampleType(SampleType.DEFAULT).ChangeName(string.Empty);
                 if (!chromatogramSetNew.Equals(chromatogramSetOld))
                 {

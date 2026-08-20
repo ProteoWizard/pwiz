@@ -360,6 +360,9 @@
   <data name="_remove_before" xml:space="preserve">
     <value>Remove all results from the open document with an acquired time before the given date.</value>
   </data>
+  <data name="_reorder_replicates" xml:space="preserve">
+    <value>Reorder results replicates using a UTF-8 text file containing one existing replicate name per line. Listed replicates are placed first; unlisted replicates retain their relative order.</value>
+  </data>
   <data name="_report_add" xml:space="preserve">
     <value>Add reports from a saved report template file to the running program.</value>
   </data>
@@ -370,10 +373,10 @@
     <value>The path to export the report to. Required if --report-name is specified.</value>
   </data>
   <data name="_report_format" xml:space="preserve">
-    <value>CSV for comma-separated reports (or semicolon separated, depending on your localization) or TSV for tab separated reports [default CSV]</value>
+    <value>CSV for comma-separated reports (or semicolon separated, depending on your localization), TSV for tab separated reports, or PARQUET for Apache Parquet files. When this argument is omitted, the format is CSV unless the --report-file name ends in ".parquet" [default CSV]</value>
   </data>
   <data name="_report_invariant" xml:space="preserve">
-    <value>Exports the report with the “Invariant” language setting, using English (US) number formats and header text without spaces, ideal for use with the R statistical programming environment.</value>
+    <value>Exports the report with the “Invariant” language setting, using English (US) number formats and header text without spaces, ideal for use with the R statistical programming environment. Specify --report-invariant=False to get localized text instead. When this argument is omitted, PARQUET reports are invariant and the other formats are localized.</value>
   </data>
   <data name="_report_name" xml:space="preserve">
     <value>The name of a report to export as it appears in the Skyline Export Report form.</value>
@@ -411,8 +414,8 @@
   <data name="CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library" xml:space="preserve">
     <value>Creating an ion mobility library</value>
   </data>
-  <data name="CommandArgs_GROUP_REMOVE_Removing_results_replicates" xml:space="preserve">
-    <value>Removing results replicates</value>
+  <data name="CommandArgs_GROUP_MANAGE_REPLICATES_Managing_results_replicates" xml:space="preserve">
+    <value>Managing results replicates</value>
   </data>
   <data name="CommandArgs_GROUP_IMPORT_DOC_Importing_other_Skyline_documents" xml:space="preserve">
     <value>Importing other Skyline documents</value>

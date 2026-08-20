@@ -61,6 +61,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public const double IO_INTERVAL_SECONDS = 5.0;
 
+
         /// <summary>
         /// Idle threshold for the frozen-percent heartbeat. When a determinate phase
         /// progresses slower than 1% per this many seconds, the integer percent does not
@@ -75,10 +76,33 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public const double HEARTBEAT_SECONDS = 30.0;
 
+        /// <summary>
+        /// How long an operation must run before the reporter prints ANYTHING, heading included.
+        /// A scope that finishes inside this window is silent: no heading, no completion line.
+        /// Skyline's LongWaitDlg works the same way - it does not appear until its delay passes,
+        /// so a fast operation never shows a dialog - and the reason is the same. A heading plus
+        /// a forced 100% for a sub-second step is two lines that carry no information, and a run
+        /// with many such scopes buries the lines that do.
+        /// </summary>
+        public const double LOG_WAIT_SECONDS = 0.5;
+
+        /// <summary>
+        /// Minimum elapsed time before <see cref="Dispose"/> forces its completion line. Above
+        /// <see cref="LOG_WAIT_SECONDS"/> so an operation that ran long enough to announce itself
+        /// is also given a chance to advance on its own before a 100% is synthesized for it.
+        /// </summary>
+        public const double MIN_PERCENT_SECONDS = 1.0;
+
         private readonly long _total;
         private readonly string _indent;
+        private readonly string _activity;
         private readonly double _intervalSeconds;
         private readonly double _heartbeatSeconds;
+        private readonly double _logWaitSeconds;
+        private readonly double _minPercentSeconds;
+        // Guards the deferred heading: every path that prints must call WriteHeading first, so
+        // a percent or completion line can never appear above the heading it belongs to.
+        private bool _headingWritten;
         private readonly Stopwatch _stopwatch;
         private readonly object _lock = new object();
         // Non-null only inside a MultiProgressReporter per-file scope (--parallel-files):
@@ -104,16 +128,42 @@ namespace pwiz.Osprey.Core
         /// <param name="intervalSeconds">Minimum seconds between percent lines (timer throttle).</param>
         /// <param name="heartbeatSeconds">Idle threshold for the frozen-percent heartbeat
         /// (see <see cref="HEARTBEAT_SECONDS"/>). Injectable so tests can trip it quickly.</param>
+        /// <param name="logWaitSeconds">Time to wait before printing ANYTHING, heading included
+        /// (see <see cref="LOG_WAIT_SECONDS"/>).</param>
+        /// <param name="minPercentSeconds">Minimum elapsed time before the forced completion line
+        /// is printed (see <see cref="MIN_PERCENT_SECONDS"/>).</param>
         public ProgressReporter(string activity, long total, string indent = "", double intervalSeconds = 1.0,
-            double heartbeatSeconds = HEARTBEAT_SECONDS)
+            double heartbeatSeconds = HEARTBEAT_SECONDS, double logWaitSeconds = LOG_WAIT_SECONDS,
+            double minPercentSeconds = MIN_PERCENT_SECONDS)
         {
             _total = total;
             _indent = indent;
+            _activity = activity;
             _intervalSeconds = intervalSeconds;
             _heartbeatSeconds = heartbeatSeconds;
+            // NEITHER threshold may exceed the report interval, and clamping here is what makes
+            // the display rules hold by construction rather than by extra checks at the printing
+            // sites. The first sub-100% line cannot appear before the interval has elapsed
+            // (_lastReportSeconds starts at 0), so bounding both by it means: anything that
+            // printed a percent has necessarily passed _minPercentSeconds, hence Dispose always
+            // closes with 100% and a display can never be left hanging at 83%. A caller that
+            // asks for a longer wait than its own reporting cadence is describing a state this
+            // class should not be able to hold, so it is corrected rather than honoured.
+            _logWaitSeconds = Math.Min(logWaitSeconds, intervalSeconds);
+            _minPercentSeconds = Math.Min(minPercentSeconds, intervalSeconds);
             _sink = MultiProgressReporter.CurrentSink;
             _stopwatch = Stopwatch.StartNew();
-            OspreyOutput.Out.WriteLine("{0}{1}...", indent, activity);
+            // The heading is NOT written here. It is deferred until the operation has run long
+            // enough to be worth announcing, so a scope that completes quickly prints nothing at
+            // all rather than a heading plus a forced 100% - two lines that say only "this was
+            // too fast to watch". Modelled on Skyline's LongWaitDlg, which does not appear until
+            // its own delay has passed, so opening a small file shows no dialog.
+            //
+            // Inside a MultiProgressReporter scope the heading buffers into the file's narrative
+            // block rather than racing other files to the console, and that block is only shown
+            // for a file that is actually being worked; write it immediately there.
+            if (_sink != null)
+                WriteHeading();
         }
 
         /// <summary>
@@ -140,8 +190,15 @@ namespace pwiz.Osprey.Core
                     return;
                 }
                 double now = _stopwatch.Elapsed.TotalSeconds;
+                // Nothing at all until the operation has proved it is worth watching. Checked
+                // before the throttle rather than folded into it: _lastReportSeconds starts at 0,
+                // so an interval alone would let the first line through immediately on a phase
+                // that then finishes in milliseconds.
+                if (now < _logWaitSeconds)
+                    return;
                 if (percent > _lastPercent && now - _lastReportSeconds >= _intervalSeconds)
                 {
+                    WriteHeading();
                     OspreyOutput.Out.WriteLine("{0}  {1}%", _indent, percent);
                     _lastPercent = percent;
                     _lastReportSeconds = now;
@@ -158,6 +215,7 @@ namespace pwiz.Osprey.Core
                     // when the phase calls Report; a phase that blocks inside one bulk
                     // operation (no Report calls) needs to be wrapped in a reporter first.
                     double pctExact = _total > 0 ? 100.0 * current / _total : 100.0;
+                    WriteHeading();
                     OspreyOutput.Out.WriteLine(string.Format(CultureInfo.InvariantCulture,
                         "{0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed)",
                         _indent, pctExact, current, _total, FormatElapsed(_stopwatch.Elapsed)));
@@ -179,9 +237,31 @@ namespace pwiz.Osprey.Core
                     _sink.Report(100);
                     return;
                 }
-                if (_lastPercent < 100)
+                // No explicit "did we already show a percent?" test: the constructor bounds
+                // _minPercentSeconds by the report interval, and a sub-100% line cannot print
+                // before that interval has elapsed, so any scope that showed progress has
+                // necessarily passed this threshold and closes with 100%. The threshold's only
+                // real job is the scope that has printed NOTHING - it decides whether a step
+                // that finished quietly is worth announcing at all.
+                if (_lastPercent < 100 && _stopwatch.Elapsed.TotalSeconds >= _minPercentSeconds)
+                {
+                    WriteHeading();
                     OspreyOutput.Out.WriteLine("{0}  100%", _indent);
+                }
             }
+        }
+
+        /// <summary>
+        /// Print the deferred heading, once. Called from every path that is about to print, so
+        /// the heading cannot be skipped by a phase whose first output is a percent or the forced
+        /// completion line. Callers hold <see cref="_lock"/>.
+        /// </summary>
+        private void WriteHeading()
+        {
+            if (_headingWritten)
+                return;
+            _headingWritten = true;
+            OspreyOutput.Out.WriteLine("{0}{1}...", _indent, _activity);
         }
 
         /// <summary>

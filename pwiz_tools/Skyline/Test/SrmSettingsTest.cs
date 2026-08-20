@@ -32,6 +32,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -57,6 +58,27 @@ namespace pwiz.SkylineTest
         public void SettingsSerializeDefaultsTest()
         {
             AssertEx.Serializable(SrmSettingsList.GetDefault(), AssertEx.SettingsCloned);
+        }
+
+        [TestMethod]
+        public void ReplicateOrderSettingsDiffTest()
+        {
+            var replicateOne = new ChromatogramSet("One", new[] { "same.raw" });
+            var replicateTwo = new ChromatogramSet("Two", new[] { "same.raw" });
+            var settings = SrmSettingsList.GetDefault();
+            var oldResults = new MeasuredResults(new[] { replicateOne, replicateTwo });
+            var oldSettings = settings.ChangeMeasuredResults(oldResults);
+
+            var reorderedResults = oldResults.ChangeChromatograms(new[] { replicateTwo, replicateOne });
+            Assert.IsTrue(new SrmSettingsDiff(oldSettings,
+                settings.ChangeMeasuredResults(reorderedResults)).DiffResults);
+
+            var renamedResults = oldResults.ChangeChromatograms(new[]
+            {
+                (ChromatogramSet) replicateOne.ChangeName("Renamed"), replicateTwo
+            });
+            Assert.IsFalse(new SrmSettingsDiff(oldSettings,
+                settings.ChangeMeasuredResults(renamedResults)).DiffResults);
         }
 
         /// <summary>
@@ -941,6 +963,12 @@ namespace pwiz.SkylineTest
             // Isotope enrichments
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.tof + "\" " +
                 "precursor_res=\"" + validHiRes + "\">" + VALID_ISOTOPE_ENRICHMENT_XML + "</transition_full_scan>");
+            // M-1 precursor isotope
+            var fullScanMinusOne = AssertEx.Deserialize<TransitionFullScan>("<transition_full_scan precursor_isotopes=\"" +
+                FullScanPrecursorIsotopes.Count + "\" precursor_isotope_filter=\"3\" include_minus_one_precursor=\"true\" precursor_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.tof + "\" precursor_res=\"" + validHiRes + "\"/>");
+            Assert.IsTrue(fullScanMinusOne.IncludeMinusOnePrecursor);
+            AssertEx.Serializable(fullScanMinusOne, (expected, actual) => Assert.AreEqual(expected, actual));
 
             // Errors
             string overMaxMulti = ToXml(TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER * 2);
@@ -959,6 +987,10 @@ namespace pwiz.SkylineTest
                 "product_resolution=\"" + validLoRes + "\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
                 FullScanAcquisitionMethod.Targeted + "\" ignore_sim_scans=\"true\"/>");
+            // The M-1 precursor isotope requires a high resolution mass analyzer
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_isotopes=\"" +
+                FullScanPrecursorIsotopes.Count + "\" precursor_isotope_filter=\"1\" include_minus_one_precursor=\"true\" precursor_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.qit + "\" precursor_res=\"" + validLoRes + "\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
                 "Unknown" + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");

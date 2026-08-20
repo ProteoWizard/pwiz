@@ -359,18 +359,35 @@ namespace SkylineAiConnector
             {
                 if (checkGeminiCli.Checked)
                 {
-                    ChatAppRegistry.AddToGeminiCli();
-                    labelSetupStatus.Text = "Gemini CLI: Registered.";
+                    bool registeredAny = false;
+                    if (ChatAppRegistry.IsGeminiCliInstalled())
+                    {
+                        ChatAppRegistry.AddToGeminiCli();
+                        registeredAny = true;
+                    }
+                    if (ChatAppRegistry.IsAntigravityInstalled())
+                    {
+                        ChatAppRegistry.AddToAntigravity();
+                        registeredAny = true;
+                    }
+                    labelSetupStatus.Text = registeredAny ? "Gemini / Antigravity: Registered." : "Gemini / Antigravity: No installation found.";
                 }
                 else
                 {
-                    ChatAppRegistry.RemoveFromGeminiCli();
-                    labelSetupStatus.Text = "Gemini CLI: Removed.";
+                    if (ChatAppRegistry.IsGeminiCliInstalled())
+                    {
+                        ChatAppRegistry.RemoveFromGeminiCli();
+                    }
+                    if (ChatAppRegistry.IsAntigravityInstalled())
+                    {
+                        ChatAppRegistry.RemoveFromAntigravity();
+                    }
+                    labelSetupStatus.Text = "Gemini / Antigravity: Removed.";
                 }
             }
             catch (Exception ex)
             {
-                labelSetupStatus.Text = "Gemini CLI: " + ex.Message;
+                labelSetupStatus.Text = "Gemini / Antigravity: " + ex.Message;
                 RevertCheckbox(checkGeminiCli);
             }
         }
@@ -472,13 +489,23 @@ namespace SkylineAiConnector
                 else
                     checkClaudeCode.Text = "Claude Code (not installed)";
 
-                // Gemini CLI
+                // Gemini / Antigravity
                 bool geminiInstalled = ChatAppRegistry.IsGeminiCliInstalled();
-                checkGeminiCli.Enabled = geminiInstalled;
-                if (geminiInstalled)
-                    checkGeminiCli.Checked = ChatAppRegistry.IsRegisteredInGeminiCli();
+                bool antigravityInstalled = ChatAppRegistry.IsAntigravityInstalled();
+                bool eitherInstalled = geminiInstalled || antigravityInstalled;
+                checkGeminiCli.Enabled = eitherInstalled;
+                if (eitherInstalled)
+                {
+                    bool geminiRegistered = !geminiInstalled || ChatAppRegistry.IsRegisteredInGeminiCli();
+                    bool antigravityRegistered = !antigravityInstalled || ChatAppRegistry.IsRegisteredInAntigravity();
+                    checkGeminiCli.Checked = geminiRegistered && antigravityRegistered;
+                    checkGeminiCli.Text = "&Gemini / Antigravity";
+                }
                 else
-                    checkGeminiCli.Text = "Gemini CLI (not installed)";
+                {
+                    checkGeminiCli.Checked = false;
+                    checkGeminiCli.Text = "Gemini / Antigravity (not installed)";
+                }
 
                 // VS Code (Copilot)
                 bool vscodeInstalled = ChatAppRegistry.IsVSCodeInstalled();
