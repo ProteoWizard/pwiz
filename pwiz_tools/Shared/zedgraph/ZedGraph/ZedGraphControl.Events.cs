@@ -670,17 +670,11 @@ namespace ZedGraph
 
 		#region Automated mouse input
 
-		// These entry points let a caller that has no operating-system mouse produce a
-		// user gesture programmatically, in the spirit of IButtonControl.PerformClick.
-		// In Skyline the caller is the ClickGraph verb of the JSON tool service, which
-		// is how an external client - in practice the MCP server an AI model drives --
-		// clicks and drags on a graph; functional tests reach the same verbs. Each
-		// raises the same event the operating system raises for a real mouse message,
-		// so every MouseDown/MouseMove/MouseUp subscriber AND ZedGraph's own
-		// zoom/pan/edit state machine (which subscribes to those events like anyone
-		// else - see the ZedGraphControl constructor) behave identically to a genuine
-		// press, drag, and release. A stationary click is a down followed by an up with
-		// no intervening move; a drag is a down, one or more moves, then an up.
+		// Produce a mouse gesture without a mouse, in the spirit of IButtonControl.PerformClick.
+		// Each raises the event the operating system raises for a real mouse message, so every
+		// subscriber and the control's own zoom/pan/edit state machine behave as they would for
+		// a genuine press, drag and release. A stationary click is a down and an up with no move
+		// between them; a drag is a down, one or more moves, then an up.
 
 		/// <summary>
 		/// Perform a mouse-down at the client point carried by <paramref name="e" />
@@ -711,10 +705,7 @@ namespace ZedGraph
 
 		/// <summary>
 		/// Perform the click the operating system raises after a stationary press and
-		/// release at one point (the WinForms MouseClick event). Some graph panes select
-		/// on click rather than on mouse-down, so a faithful stationary click is a
-		/// <see cref="PerformMouseDown" />, a <see cref="PerformMouseUp" />, then this.
-		/// A drag raises no click and must omit it.
+		/// release at one point (the WinForms MouseClick event). A drag raises no click.
 		/// </summary>
 		public void PerformMouseClick( MouseEventArgs e )
 		{
@@ -722,11 +713,10 @@ namespace ZedGraph
 		}
 
 		/// <summary>
-		/// Zoom <paramref name="pane" /> so an axis end takes the scale value supplied for it
-		/// (leaving each Min below its Max is the caller's business), recording the change on
-		/// the zoom stack so the user can unzoom and raising <see cref="ZoomEvent" />, just as
-		/// the end of an interactive zoom-drag does. Intended for automation harnesses (e.g.
-		/// IJsonToolService.ZoomGraphTo).
+		/// Zoom <paramref name="pane" /> so each axis end takes the scale value supplied for
+		/// it, recording the change on the zoom stack and raising <see cref="ZoomEvent" /> as
+		/// the end of an interactive zoom-drag does. Keeping each Min below its Max is the
+		/// caller's business.
 		/// </summary>
 		/// <param name="pane">The pane to zoom.</param>
 		/// <param name="xMin">Low end of the X range, or null to leave that end as it is.</param>
@@ -738,23 +728,15 @@ namespace ZedGraph
 			if ( pane == null )
 				return;
 
-			// A viewport the user cannot move in any direction records no state, raises no ZoomEvent and
-			// does not repaint, since nothing below can change it.
+			// A viewport that cannot move at all records no state and does not repaint.
 			if ( !_isEnableHZoom && !_isEnableHPan && !_isEnableVZoom && !_isEnableVPan )
 				return;
 
 			ZoomState oldState = ZoomStateSave( pane, ZoomState.StateType.Zoom );
 
-			// Each END of each axis is independent: a value moves that end and takes it out of auto
-			// scaling, a null leaves it exactly as it was, value and auto setting both. So a caller can
-			// pin a maximum and let the minimum go on following the data, which is what the separate
-			// MinAuto and MaxAuto flags are for.
-			//
-			// A direction moves only if the user could move it themselves, by zooming OR by panning -
-			// either one lets them change the viewport that way, and it is not worth working out which
-			// parts of a range each of them would have allowed. A graph that permits neither (the
-			// peak-scoring and peak-picking comparison graphs disable both zoom directions) must not
-			// move that way for a programmatic caller when it would not for a mouse.
+			// Each axis end is independent: a value moves that end and takes it out of auto scaling,
+			// a null leaves both alone. A direction moves only where the user could move it, by
+			// zooming or by panning.
 			if ( _isEnableHZoom || _isEnableHPan )
 			{
 				if ( xMin.HasValue )
