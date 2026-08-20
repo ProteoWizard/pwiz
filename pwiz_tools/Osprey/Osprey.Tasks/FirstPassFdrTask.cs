@@ -249,6 +249,7 @@ namespace pwiz.Osprey.Tasks
                 + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx);
         }
 

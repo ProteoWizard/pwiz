@@ -203,6 +203,7 @@ namespace pwiz.Osprey.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + OspreyEnvironment.Stage6StreamSurvivorsValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx);
         }

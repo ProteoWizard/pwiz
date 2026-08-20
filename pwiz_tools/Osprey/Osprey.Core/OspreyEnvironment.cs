@@ -353,6 +353,21 @@ namespace pwiz.Osprey.Core
         /// time. Null when unset -- keeps the 300k default.</summary>
         public static readonly int? MaxTrainSizeOverride = ParseIntOrNull(@"OSPREY_MAX_TRAIN_SIZE");
 
+        /// <summary>OSPREY_TRAIN_PICK_RUN: represent each precursor in the first-pass training
+        /// subset by ONE deterministically chosen run's observation instead of by its best
+        /// observation across all runs. Unset (default) keeps the historical cross-run maximum.
+        ///
+        /// Why the lever exists: the cross-run maximum makes every training row an extreme value
+        /// over however many files were batched together, so the training population drifts away
+        /// from the per-run population the model is then applied to, and it drifts further as the
+        /// batch grows (mean coelution_sum 1.19 at one file vs 5.75 at 82, against 1.18 in the
+        /// scored population). This lever trains on ordinary per-run observations at the same row
+        /// count and the same memory, so the two designs can be compared directly.
+        ///
+        /// Honored only by the streaming first-pass path, which is the one large joins take; the
+        /// other selection paths ABORT rather than silently ignore it.</summary>
+        public static readonly bool TrainPickRun = IsSetAndNotZero(@"OSPREY_TRAIN_PICK_RUN");
+
         /// <summary>Inner-fold count for the GBDT's held-out iteration selection
         /// (OSPREY_GBT_INNER_FOLDS, default 5 -> hold out 20% of each training fold to pick
         /// the boosting iteration honestly). A value &lt;= 1 turns held-out selection OFF and
@@ -805,6 +820,38 @@ namespace pwiz.Osprey.Core
         public static string Pass2QValueValidityKeySuffix(string normalizedPass2QValue)
         {
             return @";pass2=" + normalizedPass2QValue;
+        }
+
+        /// <summary>
+        /// Validity-key suffix for the first-pass TRAINING-SAMPLE levers
+        /// (<see cref="TrainPickRun"/>, <see cref="MaxTrainSizeOverride"/>). Both change which
+        /// rows train the model and therefore every score, q and count downstream, so a directory
+        /// written under one setting must not be adopted under another.
+        ///
+        /// Without this a re-run under a changed lever reports "FirstPassFDR:skipping (outputs
+        /// valid)" in seconds and hands back the PREVIOUS setting's numbers - which reads exactly
+        /// like a lever that had no effect, the most expensive possible failure for an A/B.
+        /// Empty when both are unset, so default runs keep their existing keys and no golden is
+        /// disturbed.
+        /// </summary>
+        public static string TrainSampleValidityKeySuffix()
+        {
+            return TrainSampleValidityKeySuffix(TrainPickRun, MaxTrainSizeOverride);
+        }
+
+        /// <summary>
+        /// <see cref="TrainSampleValidityKeySuffix()"/> for explicitly supplied levers, so the
+        /// arms can be compared without mutating process-wide state the environment reads once.
+        /// </summary>
+        public static string TrainSampleValidityKeySuffix(bool trainPickRun, int? maxTrainSizeOverride)
+        {
+            string suffix = string.Empty;
+            if (trainPickRun)
+                suffix += @";trainpick=run";
+            if (maxTrainSizeOverride.HasValue)
+                suffix += @";maxtrain=" +
+                          maxTrainSizeOverride.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            return suffix;
         }
 
         /// <summary>

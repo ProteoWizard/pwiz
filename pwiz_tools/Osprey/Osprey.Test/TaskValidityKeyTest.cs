@@ -49,6 +49,7 @@ namespace pwiz.Osprey.Test
         {
             AssertSuffixesAreUnconditional();
             AssertEachArmKeysDifferently();
+            AssertTrainingSampleLeversKeyDifferently();
             AssertEveryTaskCarriesTheSuffixesItNeeds();
             AssertLibraryFragmentArmIsPinnedToThePipeline();
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
@@ -122,6 +123,35 @@ namespace pwiz.Osprey.Test
         /// resolution-keyed default outright, so two runs can differ in nothing
         /// else.
         /// </summary>
+        /// <summary>
+        /// The first-pass training-sample levers must key differently from each other and from
+        /// the default, because they change which rows train the model and therefore every score
+        /// and count downstream.
+        ///
+        /// <para>Written after the omission cost a measurement: a re-run with
+        /// OSPREY_TRAIN_PICK_RUN newly set into an existing output directory reported
+        /// "FirstPassFDR:skipping (outputs valid)" in under a second and handed back the previous
+        /// setting's numbers. That is indistinguishable from a lever with no effect, which is the
+        /// most expensive way for an A/B to fail.</para>
+        /// </summary>
+        private static void AssertTrainingSampleLeversKeyDifferently()
+        {
+            Assert.AreEqual(string.Empty, OspreyEnvironment.TrainSampleValidityKeySuffix(false, null),
+                @"an unset lever pair must not disturb the keys of runs that never used them");
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(false, null),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+                @"per-run picking trains on different rows than the cross-run maximum");
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(false, null),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(false, 3000000),
+                @"a raised training cap covers more precursors, so it must key differently");
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(false, 3000000),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(false, 600000),
+                @"two different caps must key differently, not merely differ from the default");
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, 3000000),
+                @"the two levers are independent, so their combination is a third arm");
+        }
+
         private static void AssertEachArmKeysDifferently()
         {
             Assert.AreNotEqual(OspreyEnvironment.PickValidityKeySuffix(true, null),

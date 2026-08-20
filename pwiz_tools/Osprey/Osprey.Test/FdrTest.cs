@@ -3692,5 +3692,64 @@ namespace pwiz.Osprey.Test
                 new List<KeyValuePair<string, List<FdrEntry>>> { fileA, fileB }, library, config, runLevel: false);
             Assert.AreEqual(2, protExp, "experiment scope sees both PROT_A and PROT_B");
         }
+
+        /// <summary>
+        /// The reservoir behind OSPREY_TRAIN_PICK_RUN, which replaces a cross-run MAXIMUM with one
+        /// run's ordinary observation. The property that matters is UNIFORMITY over the runs a
+        /// precursor actually appears in: an earlier chosen-run rule fell back to the first run
+        /// seen whenever the precursor was missing from its chosen one, and since runs stream in
+        /// injection order that favoured early, higher-yield runs - the same bias family the lever
+        /// exists to remove. Simulating the streaming loop is the only way to test that, because
+        /// the bias lived in the interaction between the rule and the arrival order.
+        /// </summary>
+        [TestMethod]
+        public void TestTrainingRunReservoir()
+        {
+            const ulong seed = 42;
+
+            // The first run a precursor appears in always takes the slot; there is nothing to
+            // compare against yet.
+            for (uint baseId = 0; baseId < 100; baseId++)
+                Assert.IsTrue(PercolatorScorer.ReservoirTakesSlot(baseId, 1, seed));
+
+            // Simulate the dedup loop over runs and record which run each precursor ends on.
+            // Every precursor here appears in EVERY run, so a uniform sampler must spread the
+            // winners evenly - the biased rule this replaced piled them onto run 0.
+            const int nRuns = 82;
+            const int nPrecursors = 200000;
+            var winners = new int[nRuns];
+            for (uint baseId = 0; baseId < nPrecursors; baseId++)
+            {
+                int held = 0;
+                for (int run = 1; run < nRuns; run++)
+                {
+                    if (PercolatorScorer.ReservoirTakesSlot(baseId, (uint)(run + 1), seed))
+                        held = run;
+                }
+                winners[held]++;
+            }
+            int expected = nPrecursors / nRuns;
+            for (int run = 0; run < nRuns; run++)
+            {
+                Assert.IsTrue(Math.Abs(winners[run] - expected) < expected / 4,
+                    string.Format(@"run {0} won {1} slots against an expected {2}", run, winners[run], expected));
+            }
+
+            // A precursor in a single run keeps that run, so the lever is a no-op on one file.
+            for (uint baseId = 0; baseId < 100; baseId++)
+                Assert.IsTrue(PercolatorScorer.ReservoirTakesSlot(baseId, 1, seed));
+
+            // The seed participates, so the choice is not a fixed property of the base_id.
+            int moved = 0;
+            for (uint baseId = 0; baseId < 2000; baseId++)
+            {
+                if (PercolatorScorer.ReservoirTakesSlot(baseId, 3, seed) !=
+                    PercolatorScorer.ReservoirTakesSlot(baseId, 3, seed + 1))
+                {
+                    moved++;
+                }
+            }
+            Assert.IsTrue(moved > 400, string.Format(@"only {0} of 2000 draws moved with the seed", moved));
+        }
     }
 }

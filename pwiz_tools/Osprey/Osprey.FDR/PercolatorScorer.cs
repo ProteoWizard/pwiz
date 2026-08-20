@@ -550,9 +550,14 @@ namespace pwiz.Osprey.FDR
             public readonly uint ParquetIndex;
             public readonly double CoelutionSum;
             public readonly string Peptide;
+            /// <summary>How many runs this precursor has been seen in so far. Used only by
+            /// OSPREY_TRAIN_PICK_RUN's reservoir, which needs the running count to replace with
+            /// probability 1/Seen; the maximum path leaves it at its incremented value and
+            /// never reads it.</summary>
+            public readonly uint Seen;
 
             public FirstPassDedupRow(int g, string fileName, uint entryId, byte charge, bool isDecoy,
-                uint parquetIndex, double coelutionSum, string peptide)
+                uint parquetIndex, double coelutionSum, string peptide, uint seen = 1)
             {
                 G = g;
                 FileName = fileName;
@@ -562,6 +567,7 @@ namespace pwiz.Osprey.FDR
                 ParquetIndex = parquetIndex;
                 CoelutionSum = coelutionSum;
                 Peptide = peptide;
+                Seen = seen;
             }
         }
 
@@ -632,6 +638,15 @@ namespace pwiz.Osprey.FDR
             // (byte-identical to Features[0] on the 1st pass), so no feature load is needed here.
             var bestTarget = new Dictionary<uint, FirstPassDedupRow>();
             var bestDecoy = new Dictionary<uint, FirstPassDedupRow>();
+            // Which observation represents a precursor. Logged when it is NOT the default,
+            // because nothing else in the output would say which population trained the model.
+            bool pickRun = OspreyEnvironment.TrainPickRun;
+            if (pickRun)
+            {
+                logInfo(
+                    @"[TRAIN] OSPREY_TRAIN_PICK_RUN: each precursor's training row is sampled " +
+                    @"uniformly from the runs it appears in, not taken as its best across runs");
+            }
             int g = 0;
             int nInputTargets = 0, nInputDecoys = 0;
             // This pass streams every file's parquet rows before the [PATH] line below, so it is a
@@ -655,9 +670,32 @@ namespace pwiz.Osprey.FDR
                     var map = isDecoy ? bestDecoy : bestTarget;
                     if (map.TryGetValue(baseId, out FirstPassDedupRow existing))
                     {
-                        if (coelutionSum > existing.CoelutionSum)
+                        // Under OSPREY_TRAIN_PICK_RUN, reservoir sampling of size one: the k-th
+                        // run this precursor appears in takes the slot with probability 1/k. That
+                        // is uniform over the runs the precursor is ACTUALLY in, which a fixed
+                        // chosen-run rule is not - a precursor absent from its chosen run would
+                        // fall back to the first run seen, and since runs stream in injection
+                        // order that fallback favours early, higher-yield runs. Same bias family
+                        // as the maximum this lever exists to remove, just weaker.
+                        uint seen = existing.Seen + 1;
+                        bool replace = pickRun
+                            ? ReservoirTakesSlot(baseId, seen, percConfig.Seed)
+                            : coelutionSum > existing.CoelutionSum;
+                        if (replace)
+                        {
                             map[baseId] = new FirstPassDedupRow(
-                                g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum, buffer.Peptides[r]);
+                                g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum,
+                                buffer.Peptides[r], seen);
+                        }
+                        else if (pickRun)
+                        {
+                            // The count must advance even when the slot does not, or every later
+                            // run would be judged against a stale k and the choice would skew.
+                            map[baseId] = new FirstPassDedupRow(
+                                existing.G, existing.FileName, existing.EntryId, existing.Charge,
+                                existing.IsDecoy, existing.ParquetIndex, existing.CoelutionSum,
+                                existing.Peptide, seen);
+                        }
                     }
                     else
                     {
@@ -947,6 +985,33 @@ namespace pwiz.Osprey.FDR
             }
             sink.Finish(logInfo);
             return false;
+        }
+
+        /// <summary>
+        /// Reservoir decision for OSPREY_TRAIN_PICK_RUN: does the <paramref name="seen"/>-th run
+        /// this precursor appears in take its training slot? True with probability 1/seen, which
+        /// leaves every run the precursor actually appears in equally likely to be the survivor,
+        /// whatever order the runs stream in and however few runs contain it.
+        /// Deterministic in <paramref name="baseId"/>, <paramref name="seen"/> and the training
+        /// seed rather than drawn from a shared RNG, so the selection does not depend on file
+        /// order or on how the ingest is scheduled, and a re-run trains on the same rows.
+        /// Mixing is the SplitMix64 finalizer: the low bits of a raw base_id are far from uniform
+        /// and comparing them directly would skew the draw.
+        /// </summary>
+        internal static bool ReservoirTakesSlot(uint baseId, uint seen, ulong seed)
+        {
+            if (seen <= 1)
+                return true;
+            // Wrapping is the point here - this is a hash mixer, not a quantity - so the
+            // multiplications are marked unchecked rather than left to look like an oversight.
+            unchecked
+            {
+                ulong x = baseId + seed * 0x9E3779B97F4A7C15UL + seen * 0xD1B54A32D192ED03UL;
+                x = (x ^ (x >> 30)) * 0xBF58476D1CE4E5B9UL;
+                x = (x ^ (x >> 27)) * 0x94D049BB133111EBUL;
+                x ^= x >> 31;
+                return x % seen == 0;
+            }
         }
 
         /// <summary>

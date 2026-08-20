@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR
 {
@@ -160,9 +161,9 @@ namespace pwiz.Osprey.FDR
         internal static int[] BuildTrainingSubset(
             bool[] labels, uint[] entryIds, string[] peptides,
             IList<PercolatorEntry> entries, int maxTrainSize, ulong seed,
-            out int[] bestPerPrecursor, double[] bestScores = null)
+            out int[] bestPerPrecursor, double[] bestScores = null, int[] fileStart = null)
         {
-            bestPerPrecursor = SelectBestPerPrecursor(labels, entryIds, entries, bestScores);
+            bestPerPrecursor = SelectBestPerPrecursor(labels, entryIds, entries, bestScores, fileStart, seed);
             if (maxTrainSize <= 0 || bestPerPrecursor.Length <= maxTrainSize)
                 return bestPerPrecursor;
 
@@ -206,12 +207,21 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public static int[] SelectBestPerPrecursor(
             bool[] labels, uint[] entryIds, IList<PercolatorEntry> entries,
-            double[] bestScores = null)
+            double[] bestScores = null, int[] fileStart = null, ulong seed = 0)
         {
             int n = labels.Length;
             // Map base_id to best target index, separately for targets and decoys
             var bestTarget = new Dictionary<uint, int>();
             var bestDecoy = new Dictionary<uint, int>();
+
+            // OSPREY_TRAIN_PICK_RUN needs to know which run each row came from and how many runs
+            // the precursor has been seen in. fileStart gives the first, as per-file start offsets
+            // into the flat arrays, so the run is read off a cursor rather than an int per row -
+            // 552 MB at an 82-file join. The seen counts live in their own map so the default
+            // path's dictionaries keep the value type, and memory, they have always had.
+            bool pickRun = OspreyEnvironment.TrainPickRun && fileStart != null;
+            var seenBy = pickRun ? new Dictionary<uint, uint>() : null;
+            int file = 0;
 
             for (int i = 0; i < n; i++)
             {
@@ -222,9 +232,28 @@ namespace pwiz.Osprey.FDR
                 int existing;
                 if (map.TryGetValue(baseId, out existing))
                 {
-                    double existingScore = bestScores != null
-                        ? bestScores[existing] : entries[existing].Features[0];
-                    if (score > existingScore)
+                    bool replace;
+                    if (pickRun)
+                    {
+                        // Rows arrive in (file, row) order, so advancing a cursor to the range
+                        // holding i is O(1) amortized over the whole pass.
+                        while (file + 1 < fileStart.Length - 1 && i >= fileStart[file + 1])
+                            file++;
+                        // Targets and decoys of one base_id are separate precursors here, but they
+                        // share a key; keying the count on the decoy bit as well keeps their draws
+                        // independent, exactly as the two dictionaries keep their slots.
+                        uint seenKey = baseId | (labels[i] ? 0x80000000u : 0u);
+                        uint seen = (seenBy.TryGetValue(seenKey, out uint prior) ? prior : 1u) + 1u;
+                        seenBy[seenKey] = seen;
+                        replace = PercolatorScorer.ReservoirTakesSlot(baseId, seen, seed);
+                    }
+                    else
+                    {
+                        double existingScore = bestScores != null
+                            ? bestScores[existing] : entries[existing].Features[0];
+                        replace = score > existingScore;
+                    }
+                    if (replace)
                         map[baseId] = i;
                 }
                 else
@@ -240,6 +269,18 @@ namespace pwiz.Osprey.FDR
             foreach (int i in bestDecoy.Values)
                 result[idx++] = i;
             Array.Sort(result); // Array.Sort OK: result holds unique entry indices (one per base_id from bestTarget/bestDecoy), so no ties
+            // With fileStart the reservoir above already honored the lever. Without it this
+            // selection cannot know which run a row came from, so a collapse here would silently
+            // take the cross-run MAXIMUM while the log claims otherwise - refuse instead.
+            // Collapsing nothing is the idempotent re-application the streaming path makes on its
+            // own already-deduped subset, which is fine either way.
+            if (OspreyEnvironment.TrainPickRun && fileStart == null && result.Length < n)
+            {
+                throw new InvalidOperationException(
+                    @"OSPREY_TRAIN_PICK_RUN reached a multi-run selection with no per-file offsets, " +
+                    @"so the run it would train on cannot be determined. This is an Osprey defect, " +
+                    @"not a configuration error.");
+            }
             return result;
         }
 
