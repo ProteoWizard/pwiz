@@ -151,8 +151,8 @@ namespace pwiz.SkylineTestFunctional
         private const string COMPLETION_PEPTIDE = @"TALAAFNAQNNGTYFK";
 
         /// <summary>
-        /// Drives the Targets tree's statement completion the way a user does -- type a peptide sequence,
-        /// step the pop-up with Down, accept it with Enter -- through send_text and send_key_stroke.
+        /// Drives the Targets tree's statement completion the way a user does - type a peptide sequence,
+        /// step the pop-up with Down, accept it with Enter - through send_text and send_key_stroke.
         ///
         /// <para>This reaches the one claim the key-stroke parsing assertions cannot: that the composed
         /// <see cref="Keys"/> value actually arrives at a handler that reads <c>e.KeyData</c> (here
@@ -191,7 +191,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Enter accepts the focused match, on the edit box the tree puts up over the node (a TextBox
             // with no label of its own). Only Enter is sent: the pop-up already focuses its first match, so
-            // a Down here would step nothing and assert nothing -- stepping to a LATER match is a gesture
+            // a Down here would step nothing and assert nothing - stepping to a LATER match is a gesture
             // this document's two-protein proteome cannot produce, and is left uncovered rather than faked.
             var docBefore = SkylineWindow.Document;
             server.SendKeyStroke(treeFormId, nameof(TextBox), @"Enter");
@@ -1755,7 +1755,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Exercises the graph geometry verbs -- GetGraphZoom, ZoomGraphTo, and ClickGraph --
+        /// Exercises the graph geometry verbs - GetGraphZoom, ZoomGraphTo, and ClickGraph --
         /// against a populated summary graph. GetGraphZoom must report the pane's data
         /// bounds; ZoomGraphTo must narrow the view and the getter must read back exactly
         /// what the setter reports applying; ClickGraph must drive a full mouse gesture
@@ -1782,7 +1782,7 @@ namespace pwiz.SkylineTestFunctional
             try
             {
                 // The PEAK AREA graph specifically. Several GraphSummary forms are open by now, and taking
-                // the first would just as easily hand back the retention times graph -- whose panes this
+                // the first would just as easily hand back the retention times graph - whose panes this
                 // then reads coordinates from the wrong graph for. Its own title is used to pick it out, so
                 // this holds in every language the test runs in.
                 string graphTitle = null;
@@ -1794,8 +1794,8 @@ namespace pwiz.SkylineTestFunctional
                 // GetGraphZoom: a populated graph has a real, non-degenerate data range.
                 var zoom = server.GetGraphZoom(graphId);
                 Assert.IsNotNull(zoom);
-                Assert.IsTrue(zoom.Left < zoom.Right, $@"Expected Left < Right, got {zoom.Left}..{zoom.Right}");
-                Assert.IsTrue(zoom.Bottom < zoom.Top, $@"Expected Bottom < Top, got {zoom.Bottom}..{zoom.Top}");
+                AssertEx.IsTrue(zoom.Left < zoom.Right, $@"Expected Left < Right, got {zoom.Left}..{zoom.Right}");
+                AssertEx.IsTrue(zoom.Bottom < zoom.Top, $@"Expected Bottom < Top, got {zoom.Bottom}..{zoom.Top}");
 
                 // ZoomGraphTo an inner rectangle: the applied X range narrows, and
                 // GetGraphZoom reads back exactly what ZoomGraphTo reports applying.
@@ -1810,13 +1810,13 @@ namespace pwiz.SkylineTestFunctional
                 };
                 var applied = server.ZoomGraphTo(graphId, request);
                 Assert.IsNotNull(applied);
-                Assert.IsTrue(applied.Right - applied.Left < zoom.Right - zoom.Left,
+                AssertEx.IsTrue(applied.Right - applied.Left < zoom.Right - zoom.Left,
                     @"ZoomGraphTo should have narrowed the X range.");
                 var readBack = server.GetGraphZoom(graphId);
-                Assert.AreEqual(applied.Left, readBack.Left, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Left");
-                Assert.AreEqual(applied.Right, readBack.Right, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Right");
-                Assert.AreEqual(applied.Top, readBack.Top, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Top");
-                Assert.AreEqual(applied.Bottom, readBack.Bottom, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Bottom");
+                AssertEx.AreEqual(applied.Left, readBack.Left, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Left");
+                AssertEx.AreEqual(applied.Right, readBack.Right, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Right");
+                AssertEx.AreEqual(applied.Top, readBack.Top, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Top");
+                AssertEx.AreEqual(applied.Bottom, readBack.Bottom, 1e-6, @"ZoomGraphTo/GetGraphZoom disagree on Bottom");
 
                 // Back to the full range before clicking, so every bar is inside the chart rect and the
                 // gesture can reach the one this picks.
@@ -1824,7 +1824,7 @@ namespace pwiz.SkylineTestFunctional
                 WaitForGraphs();
 
                 // ClickGraph: a click on a replicate's bar must SELECT that replicate, which is the whole
-                // point of the verb -- asserting only that the call completed would pass just as happily on
+                // point of the verb - asserting only that the call completed would pass just as happily on
                 // a gesture that landed nowhere at all.
                 //
                 // Two different bars are clicked and the selections compared, rather than one bar checked
@@ -1838,8 +1838,8 @@ namespace pwiz.SkylineTestFunctional
                 {
                     var pane = (SummaryReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl
                         .MasterPane.PaneList[0];
-                    // The curve carrying a point per replicate bar. CurveList[0] is NOT it -- the pane also
-                    // holds one-point decoration curves -- so the longest one is taken instead of an index
+                    // The curve carrying a point per replicate bar. CurveList[0] is NOT it - the pane also
+                    // holds one-point decoration curves - so the longest one is taken instead of an index
                     // that happens to work today.
                     var points = pane.CurveList.OrderByDescending(c => c.Points.Count).First().Points;
                     bars.AddRange(Enumerable.Range(0, points.Count)
@@ -1848,13 +1848,13 @@ namespace pwiz.SkylineTestFunctional
                         // the x stored on the point is never plotted. Reading points[i].X instead lands the
                         // click off the chart entirely, where it selects nothing at all. The y is the bar's
                         // TOP, because that is where its data point sits and the graph matches a click to
-                        // the nearest POINT -- halfway up a tall bar is nowhere near one.
+                        // the nearest POINT - halfway up a tall bar is nowhere near one.
                         .Select(i => new KeyValuePair<double, double>(i + 1, points[i].Y))
                         // The tallest bars, which are the ones with the most room to be clicked in.
                         .OrderByDescending(bar => bar.Value)
                         .Take(2));
                 });
-                Assert.AreEqual(2, bars.Count, @"Need two bars with height to click.");
+                AssertEx.AreEqual(2, bars.Count, @"Need two bars with height to click.");
 
                 var selections = new List<int>();
                 foreach (var bar in bars)
@@ -1862,11 +1862,11 @@ namespace pwiz.SkylineTestFunctional
                     var clickResult = server.ClickGraph(graphId, new SkylineTool.Rectangle
                         { Left = bar.Key, Top = bar.Value, Right = bar.Key, Bottom = bar.Value });
                     Assert.IsNotNull(clickResult);
-                    Assert.IsTrue(clickResult.Completed, @"ClickGraph should complete: " + clickResult.Message);
+                    AssertEx.IsTrue(clickResult.Completed, @"ClickGraph should complete: " + clickResult.Message);
                     WaitForGraphs();
                     RunUI(() => selections.Add(SkylineWindow.SelectedResultsIndex));
                 }
-                Assert.AreNotEqual(selections[0], selections[1], string.Format(
+                AssertEx.AreNotEqual(selections[0], selections[1], string.Format(
                     @"Clicking the bars at x={0} and x={1} selected the same replicate ({2}), so neither click reached the graph.",
                     bars[0].Key, bars[1].Key, selections[0]));
 
@@ -1875,7 +1875,7 @@ namespace pwiz.SkylineTestFunctional
                     server.GetGraphZoom(@"NonexistentGraph:NoTitle"));
 
                 // A rectangle that is not four numbers must come back as the instruction saying so. Anything
-                // an LLM gets wrong here -- too few coordinates, a word where a number goes, a JSON null --
+                // an LLM gets wrong here - too few coordinates, a word where a number goes, a JSON null --
                 // has to end at that message, not as a raw FormatException from inside a conversion.
                 var graphPath = new UiElementPath(
                     server.GetControls(graphId).First().Path.Parent, null, null, @"ZedGraphControl");
@@ -1906,9 +1906,9 @@ namespace pwiz.SkylineTestFunctional
 
         /// <summary>
         /// Exercises the keyboard verbs. SendText must put characters into a control that never had the
-        /// focus -- the claim the verb is named for. SendKeyStroke rests entirely on
+        /// focus - the claim the verb is named for. SendKeyStroke rests entirely on
         /// <see cref="ControlElement.ParseKeyStroke"/>: once a key stroke is parsed, delivering it is a single
-        /// call, so the parsing is what is worth pinning -- every spelling the tool descriptions promise a
+        /// call, so the parsing is what is worth pinning - every spelling the tool descriptions promise a
         /// caller can use, and every shape they must be told is wrong.
         /// </summary>
         private void TestKeyboardVerbs(JsonToolServer server)
@@ -1924,7 +1924,7 @@ namespace pwiz.SkylineTestFunctional
                 ControlElement.ParseKeyStroke(@"Shift + Ctrl + Home"));
 
             // A digit names the DIGIT KEY. It must never reach Enum.TryParse, which reads a number as the
-            // enum's underlying VALUE: "1" would come back as Keys.LButton -- a mouse button -- and
+            // enum's underlying VALUE: "1" would come back as Keys.LButton - a mouse button - and
             // SendKeyStroke would quietly press something the caller never named.
             AssertEx.AreEqual(Keys.D1, ControlElement.ParseKeyStroke(@"1"));
             AssertEx.AreEqual(Keys.D0, ControlElement.ParseKeyStroke(@"0"));
@@ -1952,21 +1952,21 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Filter);
                 string settingsId = server.GetOpenForms().First(f => f.Type == nameof(PeptideSettingsUI)).Id;
                 // The box is addressed by the LABEL beside it, which is what a user reads and the only thing
-                // the verbs match a control on -- its Name is reported for discovery but deliberately not
+                // the verbs match a control on - its Name is reported for discovery but deliberately not
                 // matched, so that the connector can reach a control only the way a person could. The text is
                 // read off the live label rather than written out here, so this holds in every language the
                 // test runs in. (label3 sits immediately before the box in tab order, which is exactly what
                 // makes it the box's label; if that tab order were wrong, the box would have no label at all
-                // and there would be nothing for a user -- or this -- to call it.)
+                // and there would be nothing for a user - or this - to call it.)
                 string excludeLabel = null;
                 RunUI(() => excludeLabel = peptideSettings.Controls.Find(@"label3", true).First().Text);
 
                 // Empty first, so what the box holds afterwards is what was typed and nothing else. The
-                // control never had the focus -- nothing here gives it any -- which is the claim send_text
+                // control never had the focus - nothing here gives it any - which is the claim send_text
                 // is named for.
                 server.SetFormValue(settingsId, excludeLabel, string.Empty);
                 var sent = server.SendText(settingsId, excludeLabel, @"25");
-                Assert.IsTrue(sent.Completed, @"send_text should complete: " + sent.Message);
+                AssertEx.IsTrue(sent.Completed, @"send_text should complete: " + sent.Message);
                 AssertEx.AreEqual(@"25", server.GetFormValue(settingsId, excludeLabel),
                     @"send_text did not deliver its characters to the text box.");
 
@@ -1978,7 +1978,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.ThrowsException<ArgumentException>(() =>
                     server.SendKeyStroke(settingsId, excludeLabel, @"65"));
 
-                // A control with no label can be named by its TYPE -- but only when that picks one control.
+                // A control with no label can be named by its TYPE - but only when that picks one control.
                 // This tab has three text boxes (min length, max length, exclude AAs), so "TextBox" says
                 // nothing about which, and must be refused rather than typed into whichever comes first.
                 AssertEx.ThrowsException<ArgumentException>(() =>

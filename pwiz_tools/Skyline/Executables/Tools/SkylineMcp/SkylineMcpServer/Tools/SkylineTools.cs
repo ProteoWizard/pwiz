@@ -827,7 +827,7 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_get_graph_zoom"),
-     Description("Get the region of DATA coordinates a graph is currently zoomed to -- the X and Y axis " +
+     Description("Get the region of DATA coordinates a graph is currently zoomed to - the X and Y axis " +
         "ranges of its first pane. Returns Left/Right (the X-axis range) and Top/Bottom (the Y-axis range, " +
         "Top the upper edge). These are the same coordinates skyline_click_graph and skyline_zoom_graph_to " +
         "take, so they show what is valid to pass those tools: in particular the Bottom edge is the X-axis " +
@@ -869,11 +869,11 @@ public static class SkylineTools
     [McpServerTool(Name = "skyline_click_graph"),
      Description("Click or drag on a graph in DATA coordinates, reproducing a real mouse gesture: the mouse " +
         "goes down at (left, top) and releases at (right, bottom). Set the two corners EQUAL to click a " +
-        "single point -- e.g. to select a data point such as an outlier on a regression graph (Skyline treats " +
+        "single point - e.g. to select a data point such as an outlier on a regression graph (Skyline treats " +
         "it exactly as a user click, so the point becomes selected). Make them differ to DRAG: a rectangle " +
         "whose Y values fall below the X-axis (below the Bottom that skyline_get_graph_zoom reports) drags a " +
         "chromatogram peak boundary, just as the same gesture would by hand, while any OTHER drag does what a " +
-        "user's drag does on that pane -- on most graphs, zooming to the rectangle. Get coordinates from " +
+        "user's drag does on that pane - on most graphs, zooming to the rectangle. Get coordinates from " +
         "skyline_get_graph_data (point values) and skyline_get_graph_zoom (visible range). Operates on the " +
         "first pane. Use skyline_get_open_forms to discover graph IDs.")]
     public static string ClickGraph(
@@ -893,9 +893,9 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_send_text"),
      Description("Type text into one control on a form. Named for what it does: it delivers the CHARACTERS " +
-        "to that control's own window, it does not simulate key presses -- so the control does NOT need the " +
+        "to that control's own window, it does not simulate key presses - so the control does NOT need the " +
         "focus and you never have to arrange focus first; the control is verified enabled first. The text is " +
-        "LITERAL -- no key names, nothing to escape. To press a key (Enter, Down, Ctrl+V) use " +
+        "LITERAL - no key names, nothing to escape. To press a key (Enter, Down, Ctrl+V) use " +
         "skyline_send_key_stroke; to PASTE use skyline_perform_action with action='paste', which takes the " +
         "text and so needs neither the clipboard nor Ctrl+V. Typing into the Targets tree starts editing the " +
         "selected node and raises its auto-completion popup, which skyline_send_key_stroke then steps through " +
@@ -913,11 +913,11 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_send_key_stroke"),
-     Description("Press one key on a control, whether or not it has the focus -- e.g. to accept or step " +
+     Description("Press one key on a control, whether or not it has the focus - e.g. to accept or step " +
         "through the auto-completion popup that skyline_send_text raises (type a protein name, press 'Down' " +
         "to pick a match, then 'Enter' to add it). The keystroke is atomic, so no key is ever left down. " +
         "NOTE: this raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather " +
-        "than by a handler -- Backspace editing a text box, an arrow moving a plain list's selection -- will " +
+        "than by a handler - Backspace editing a text box, an arrow moving a plain list's selection - will " +
         "NOT take effect. Discover control names with skyline_get_controls.")]
     public static string SendKeyStroke(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,

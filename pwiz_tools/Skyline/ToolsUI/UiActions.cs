@@ -306,12 +306,12 @@ namespace pwiz.Skyline.ToolsUI
 
         public static readonly UiAction SendText = SimpleAction<IKeyboardElement, string>(
                 @"SendText", (e, text) => { e.SendTextNow(text); return null; })
-            .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus. Named for what it does: it delivers the CHARACTERS, it does not simulate key presses -- for a key use 'send_key_stroke', and to paste use 'paste' (which takes the text, so it needs no clipboard). Typing into the Targets tree starts editing the selected node and raises its auto-completion popup, which 'send_key_stroke' then steps through ('Down') and accepts ('Enter')."),
+            .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus. Named for what it does: it delivers the CHARACTERS, it does not simulate key presses - for a key use 'send_key_stroke', and to paste use 'paste' (which takes the text, so it needs no clipboard). Typing into the Targets tree starts editing the selected node and raises its auto-completion popup, which 'send_key_stroke' then steps through ('Down') and accepts ('Enter')."),
                 new LlmInstruction(@"the text to type, taken literally"));
 
         public static readonly UiAction SendKeyStroke = SimpleAction<IKeyboardElement, string>(
                 @"SendKeyStroke", (e, keyStroke) => { e.SendKeyStrokeNow(keyStroke); return null; })
-            .Describe(new LlmInstruction(@"Press one key on this control, whether or not it has the focus -- e.g. to accept or step through the auto-completion popup that typing raises. Raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather than by a handler (Backspace editing text, an arrow moving a plain list's selection) will not take effect."),
+            .Describe(new LlmInstruction(@"Press one key on this control, whether or not it has the focus - e.g. to accept or step through the auto-completion popup that typing raises. Raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather than by a handler (Backspace editing text, an arrow moving a plain list's selection) will not take effect."),
                 new LlmInstruction(@"the key with any modifiers, '+'-separated, e.g. ""Down"", ""Enter"" or ""Ctrl+V"""));
 
         public static readonly UiAction CheckItem = SimpleAction<ICheckItemsElement, string>(
@@ -350,12 +350,12 @@ namespace pwiz.Skyline.ToolsUI
                 @"SetCurrentCellAddress", (e, arg) => { var cell = UiValue.ToColumnRow(arg); e.SetCurrentCellAddressNow(cell[0], cell[1]); return null; })
             .Describe(new LlmInstruction(@"Move the grid's current cell (do this before set_grid_text or opening a cell's menu)."), new LlmInstruction(@"a [column, row] array, e.g. [0, 1]"));
 
-        // The graph's own actions, on GraphElement the way the grid actions are on GridElement -- so a graph
+        // The graph's own actions, on GraphElement the way the grid actions are on GridElement - so a graph
         // takes part in the same machinery as every other control: get_actions lists them, perform_action drives
         // them, and a form with a single graph resolves them without the caller naming the control.
         public static readonly UiFunction<Rectangle> GetGraphZoom = SimpleFunction<GraphElement, Rectangle>(
                 @"GetGraphZoom", e => e.GetZoom())
-            .Describe(new LlmInstruction(@"Get the region of DATA coordinates this graph is zoomed to, as [left, top, right, bottom] -- the coordinates zoom_graph_to and click_graph take. The bottom edge is the x-axis line, so a click below it falls below the axis."));
+            .Describe(new LlmInstruction(@"Get the region of DATA coordinates this graph is zoomed to, as [left, top, right, bottom] - the coordinates zoom_graph_to and click_graph take. The bottom edge is the x-axis line, so a click below it falls below the axis."));
 
         public static readonly UiAction ZoomGraphTo = SimpleAction<GraphElement, object>(
                 @"ZoomGraphTo", (e, bounds) => e.ZoomTo(UiValue.ToRectangle(bounds)))
@@ -364,7 +364,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public static readonly UiAction ClickGraph = SimpleAction<GraphElement, object>(
                 @"ClickGraph", (e, bounds) => { e.Click(UiValue.ToRectangle(bounds)); return null; })
-            .Describe(new LlmInstruction(@"Click or drag on this graph in DATA coordinates, reproducing a real mouse gesture: down at the left/top corner, up at the right/bottom one. Equal corners are a single click -- e.g. to select a data point. A rectangle whose y values fall below the x-axis drags a chromatogram peak boundary. Any other drag does what a user's drag does on that pane, which on most graphs means ZOOMING to the rectangle -- so use equal corners unless you mean to drag."),
+            .Describe(new LlmInstruction(@"Click or drag on this graph in DATA coordinates, reproducing a real mouse gesture: down at the left/top corner, up at the right/bottom one. Equal corners are a single click - e.g. to select a data point. A rectangle whose y values fall below the x-axis drags a chromatogram peak boundary. Any other drag does what a user's drag does on that pane, which on most graphs means ZOOMING to the rectangle - so use equal corners unless you mean to drag."),
                 new LlmInstruction(@"a [left, top, right, bottom] array of data coordinates; make the two corners equal for a single click"));
 
         public static readonly UiAction Expand = SimpleAction<IExpandCollapseElement, object>(

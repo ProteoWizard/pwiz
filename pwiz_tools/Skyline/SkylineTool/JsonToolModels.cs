@@ -64,7 +64,7 @@ namespace SkylineTool
     /// <see cref="Left"/>/<see cref="Right"/> are X-axis values and
     /// <see cref="Top"/>/<see cref="Bottom"/> are Y-axis values, with
     /// <see cref="Top"/> the upper edge (normally the larger Y). The rectangle is
-    /// intentionally NOT normalized -- the stored values are exactly as supplied,
+    /// intentionally NOT normalized - the stored values are exactly as supplied,
     /// even when <see cref="Right"/> is less than <see cref="Left"/> or
     /// <see cref="Bottom"/> is greater than <see cref="Top"/>.</para>
     ///

@@ -517,11 +517,11 @@ namespace SkylineTool
 
         /// <summary>
         /// Returns the region of DATA coordinates the graph is currently zoomed to --
-        /// the X and Y axis ranges of the first (or only) pane -- as a
+        /// the X and Y axis ranges of the first (or only) pane - as a
         /// <see cref="Rectangle"/>. The returned edges can be handed straight back to
         /// <see cref="ZoomGraphTo"/>, and they tell a caller what coordinate ranges are
         /// valid to pass to <see cref="ClickGraph"/> (whose <see cref="Rectangle.Bottom"/>
-        /// edge is the X-axis line -- coordinates below it fall below the axis).
+        /// edge is the X-axis line - coordinates below it fall below the axis).
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>
         Rectangle GetGraphZoom(string formId);
@@ -552,10 +552,10 @@ namespace SkylineTool
 
         /// <summary>
         /// Types text into one control on a form, whether or not it has the focus. Named for what it does: it
-        /// delivers the CHARACTERS to that control's own window, it does not simulate key presses -- so the
+        /// delivers the CHARACTERS to that control's own window, it does not simulate key presses - so the
         /// caller never has to arrange focus first, and the control is verified enabled first.
         ///
-        /// <para>The text is literal -- no key names and nothing to escape. To press a key, use
+        /// <para>The text is literal - no key names and nothing to escape. To press a key, use
         /// <see cref="SendKeyStroke"/>; to paste, use the "paste" action, which takes the text to paste and so
         /// needs neither the clipboard nor a keystroke.</para>
         ///
@@ -571,13 +571,13 @@ namespace SkylineTool
         ActionResult SendText(string formId, string controlId, string text);
 
         /// <summary>
-        /// Presses one key on a control, whether or not it has the focus -- e.g. to accept or step through the
+        /// Presses one key on a control, whether or not it has the focus - e.g. to accept or step through the
         /// auto-completion popup <see cref="SendText"/> raises. The keystroke is atomic (there is no way to
         /// leave a key down), and the control is verified enabled first.
         ///
         /// <para>This raises the control's KeyDown with the named key and modifiers, which is where a WinForms
         /// handler reads a keystroke from. A key handled by the control's DEFAULT behavior rather than by a
-        /// handler -- Backspace editing a text box, an arrow moving a plain list's selection -- will NOT take
+        /// handler - Backspace editing a text box, an arrow moving a plain list's selection - will NOT take
         /// effect through this.</para>
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>

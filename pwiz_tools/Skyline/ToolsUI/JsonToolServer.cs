@@ -1081,8 +1081,8 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // The graph verbs all resolve the formId to its form and act on that form's single graph (its
-        // GraphElement), on the form's UI thread. There is no separate graph id -- a graph form is assumed to
-        // have exactly one graph -- so the parameter is the same formId GetOpenForms reports.
+        // GraphElement), on the form's UI thread. There is no separate graph id - a graph form is assumed to
+        // have exactly one graph - so the parameter is the same formId GetOpenForms reports.
 
         public string GetGraphData(string formId, string filePath = null)
         {
@@ -1123,7 +1123,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Both find the control the way set_value does (by the label/type GetControls reports). InvokeNow gates
-        // it -- a missing, blocked or disabled control throws -- before anything is sent, and runs the gesture
+        // it - a missing, blocked or disabled control throws - before anything is sent, and runs the gesture
         // on the form's UI thread.
         public ActionResult SendText(string formId, string controlId, string text)
         {

@@ -673,12 +673,12 @@ namespace ZedGraph
 		// These entry points let a caller that has no operating-system mouse produce a
 		// user gesture programmatically, in the spirit of IButtonControl.PerformClick.
 		// In Skyline the caller is the ClickGraph verb of the JSON tool service, which
-		// is how an external client -- in practice the MCP server an AI model drives --
+		// is how an external client - in practice the MCP server an AI model drives --
 		// clicks and drags on a graph; functional tests reach the same verbs. Each
 		// raises the same event the operating system raises for a real mouse message,
 		// so every MouseDown/MouseMove/MouseUp subscriber AND ZedGraph's own
 		// zoom/pan/edit state machine (which subscribes to those events like anyone
-		// else -- see the ZedGraphControl constructor) behave identically to a genuine
+		// else - see the ZedGraphControl constructor) behave identically to a genuine
 		// press, drag, and release. A stationary click is a down followed by an up with
 		// no intervening move; a drag is a down, one or more moves, then an up.
 

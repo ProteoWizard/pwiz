@@ -1146,7 +1146,7 @@ namespace pwiz.Skyline.EditUI
         /// <summary>
         /// Pastes <paramref name="text"/> into whichever grid is showing, as a Ctrl+V of that text would.
         /// The peptides and proteins grids sit on tabs of their own, so at most one of them is ever visible
-        /// and the caller does not have to say which -- it hands over the text and nothing else.
+        /// and the caller does not have to say which - it hands over the text and nothing else.
         /// </summary>
         public void PasteIntoGrid(string text)
         {
@@ -1216,7 +1216,7 @@ namespace pwiz.Skyline.EditUI
 
         /// <summary>
         /// A complete paste, as the user experiences it: fill the grid, and then deal with whatever that
-        /// turned up -- a message and a rollback for text that could not be parsed, and the
+        /// turned up - a message and a rollback for text that could not be parsed, and the
         /// <see cref="FilterMatchedPeptidesDlg"/> prompt for peptides that matched no protein, matched
         /// several, or were filtered out, redoing the paste with the answer.
         ///
@@ -1275,7 +1275,7 @@ namespace pwiz.Skyline.EditUI
         /// <summary>
         /// One pass of a paste: add a row per line of <paramref name="text"/>, which is assumed to be tab
         /// separated values, matched up to the columns in the order they are displayed. Reports what it could
-        /// not resolve through the out parameters -- it asks the user nothing and shows nothing, which is what
+        /// not resolve through the out parameters - it asks the user nothing and shows nothing, which is what
         /// lets <see cref="PasteAndFilterMatches"/> run it a second time with the answer.
         /// </summary>
         private void Paste(DataGridView dataGridView, string text, bool enumerateProteins, bool keepAllPeptides,

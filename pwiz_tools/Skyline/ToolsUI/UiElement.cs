@@ -275,11 +275,11 @@ namespace pwiz.Skyline.ToolsUI
         /// <paramref name="text"/> means "the single element that supports the action".
         ///
         /// <para>When nothing is labeled <paramref name="text"/>, it is read as the control's TYPE instead
-        /// ("TreeView", "TextBox", "DataGridView") -- a caption-less control is one a user still picks out
+        /// ("TreeView", "TextBox", "DataGridView") - a caption-less control is one a user still picks out
         /// by what it plainly is, so the connector can name it the same way. A label always wins over a
         /// type, and a type must pick exactly one control to count.</para>
         ///
-        /// <para>Throws an LLM-facing error when nothing matches, and when the match is ambiguous -- more
+        /// <para>Throws an LLM-facing error when nothing matches, and when the match is ambiguous - more
         /// than one thing for an empty text, or more than one control of a named type.</para></summary>
         public UiElement FindElement(string text, UiAction action)
         {
@@ -288,7 +288,7 @@ namespace pwiz.Skyline.ToolsUI
                 var labeled = FindElementOrNull(text, action);
                 if (labeled != null)
                     return labeled;
-                // Only now is a second walk worth its cost -- and it must be a second walk, not one hoisted
+                // Only now is a second walk worth its cost - and it must be a second walk, not one hoisted
                 // above the label lookup: building every element twice on the common path leaves the extra
                 // set of them behind (MethodEditTutorial's leak check catches exactly that).
                 // Nothing carries that text, so read it as the KIND of control instead: a user told to click
@@ -340,7 +340,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>The one element to act on among several that all match, or null while the choice is still
         /// ambiguous: the single enabled one, so a disabled sibling never makes "the form's single grid" or
         /// "the form's one tree" ambiguous. (A hidden sibling was already dropped when the elements were
-        /// built -- an element is only built for a control that was visible.)</summary>
+        /// built - an element is only built for a control that was visible.)</summary>
         private static UiElement SingleOrEnabled(IList<UiElement> matches)
         {
             if (matches.Count <= 1)
@@ -695,7 +695,7 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>TYPES <paramref name="text"/> into the control: each character is delivered to the
         /// control's own window as the WM_CHAR the message pump would send, which is what inserts text and what
-        /// raises Skyline's auto-completion popup. The text is literal throughout -- no key names, no escaping,
+        /// raises Skyline's auto-completion popup. The text is literal throughout - no key names, no escaping,
         /// no reserved characters.</summary>
         public virtual void SendTextNow(string text)
         {
@@ -706,20 +706,20 @@ namespace pwiz.Skyline.ToolsUI
                 User32.SendMessage(handle, User32.WinMessageType.WM_CHAR, (IntPtr) c, IntPtr.Zero);
         }
 
-        /// <summary>PRESSES ONE KEY on the control, named with its modifiers -- "Ctrl+V", "Down", "Enter",
+        /// <summary>PRESSES ONE KEY on the control, named with its modifiers - "Ctrl+V", "Down", "Enter",
         /// "Ctrl+Shift+Home", "Alt+F4". It raises the control's KeyDown with the composed <see cref="Keys"/>
         /// value, which is where a WinForms handler reads the keystroke from (Skyline's own paste handlers test
         /// <c>e.KeyData</c> exactly this way). Composing the value is what lets a modifier be expressed at all:
         /// a delivered key message carries only the virtual key, and WinForms would fill the modifiers in from
-        /// the GLOBAL keyboard -- so "Ctrl+V" sent as a message arrives as a bare "V" unless the real keyboard
+        /// the GLOBAL keyboard - so "Ctrl+V" sent as a message arrives as a bare "V" unless the real keyboard
         /// state is doctored, which this deliberately does not do.
         ///
-        /// <para>A keystroke is atomic -- there is no way to press a key and leave it down. Nothing here can
+        /// <para>A keystroke is atomic - there is no way to press a key and leave it down. Nothing here can
         /// strand a key or a modifier in the down state.</para>
         ///
         /// <para>KNOWN LIMIT of the KeyDown route: it raises the event, it does not run the control's default
         /// window procedure. A key whose effect comes from that default handling rather than from a handler --
-        /// Backspace editing a text box, an arrow moving a plain list's selection -- will not take effect this
+        /// Backspace editing a text box, an arrow moving a plain list's selection - will not take effect this
         /// way. Handler-driven keys (Skyline's auto-completion popup, its grid paste) do.</para></summary>
         public virtual void SendKeyStrokeNow(string keyStroke)
         {
@@ -746,7 +746,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private static readonly Keys[] MODIFIER_KEYS = { Keys.Control, Keys.Alt, Keys.Shift };
 
-        /// <summary>The <see cref="Keys"/> value <paramref name="keyStroke"/> names -- the key OR-ed with its
+        /// <summary>The <see cref="Keys"/> value <paramref name="keyStroke"/> names - the key OR-ed with its
         /// modifiers, '+'-separated and in any order. Throws an LLM-facing error naming the offending segment
         /// when it cannot be read. It touches no control, so it would move up to <see cref="UiElement"/> if a
         /// keystroke ever needed to be sent to a native window.</summary>
@@ -1203,8 +1203,8 @@ namespace pwiz.Skyline.ToolsUI
         // The form's graph as a GraphElement. A graph form is assumed to have exactly one graph, so the graph
         // verbs resolve a formId to this form and act on the element found here; there is no separate graph id.
         // The ZedGraphControl is found the way GetOpenForms' HasGraph is (by the form's graph property), so a
-        // graph on a background dock tab -- whose controls report not-visible, and so are absent from the
-        // control walk -- is still found; ElementFor then wraps it as the GraphElement the factory builds for a
+        // graph on a background dock tab - whose controls report not-visible, and so are absent from the
+        // control walk - is still found; ElementFor then wraps it as the GraphElement the factory builds for a
         // ZedGraphControl. Throws a clear error when the form has no graph. Must be called on the form's UI thread.
         internal GraphElement FindGraph()
         {
@@ -2334,10 +2334,10 @@ namespace pwiz.Skyline.ToolsUI
                 @"This action needs a four-element [left, top, right, bottom] array of graph data coordinates. The gesture goes down at left/top and up at right/bottom, so equal corners are a single click."));
         }
 
-        // One edge of a rectangle as a number, or false when the value is not one -- so that whatever the
+        // One edge of a rectangle as a number, or false when the value is not one - so that whatever the
         // caller got wrong ends at the instruction above rather than as a raw FormatException thrown from
         // inside a conversion. Convert.ToDouble on its own will not do that: it throws for text that is not
-        // a number, and reads a null -- a JSON null among the coordinates -- as 0 without complaint.
+        // a number, and reads a null - a JSON null among the coordinates - as 0 without complaint.
         private static bool TryEdge(object value, out double edge)
         {
             edge = 0;

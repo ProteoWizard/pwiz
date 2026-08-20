@@ -34,8 +34,8 @@ namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
     /// The element for a <see cref="ZedGraphControl"/> on a form. <see cref="StandaloneForm"/> builds one of
-    /// these wherever the control walk finds a graph, and the graph verbs -- GetGraphData, GetGraphImage /
-    /// GetGraphImageBytes, GetGraphZoom, ZoomGraphTo, ClickGraph -- resolve a formId to its form, find that
+    /// these wherever the control walk finds a graph, and the graph verbs - GetGraphData, GetGraphImage /
+    /// GetGraphImageBytes, GetGraphZoom, ZoomGraphTo, ClickGraph - resolve a formId to its form, find that
     /// form's single GraphElement, and call the matching method here. So the graph-specific work lives on the
     /// graph element rather than in the JSON-RPC server, which only marshals to the form's thread.
     ///
@@ -53,7 +53,7 @@ namespace pwiz.Skyline.ToolsUI
         {
         }
 
-        /// <summary>Exports the graph's data -- the same content as its "Copy Data" clipboard format -- to a
+        /// <summary>Exports the graph's data - the same content as its "Copy Data" clipboard format - to a
         /// TSV file and returns the path, or the empty string when the graph has no data. Writes to a temp
         /// path when <paramref name="filePath"/> is null.</summary>
         public string GetData(string filePath)
@@ -103,8 +103,8 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        /// <summary>The region of DATA coordinates the graph is currently zoomed to -- the first pane's X and
-        /// Y axis ranges -- as a <see cref="SkylineTool.Rectangle"/>.</summary>
+        /// <summary>The region of DATA coordinates the graph is currently zoomed to - the first pane's X and
+        /// Y axis ranges - as a <see cref="SkylineTool.Rectangle"/>.</summary>
         public SkylineTool.Rectangle GetZoom()
         {
             return PaneRectangle(FirstPane());
@@ -126,7 +126,7 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>Clicks or drags on the graph in DATA coordinates, reproducing a real mouse gesture: the
         /// mouse goes down at the Left/Top corner of <paramref name="bounds"/> and is released at the
-        /// Right/Bottom corner. A zero-size rectangle is a stationary click -- down, up, then the click the OS
+        /// Right/Bottom corner. A zero-size rectangle is a stationary click - down, up, then the click the OS
         /// raises after them, because some panes select on mouse-down (the RT regression graph) and others only
         /// on click (the CV histogram). A non-degenerate rectangle is a drag, which needs at least one move so
         /// listeners that track it (e.g. the chromatogram peak-boundary adjust) advance, and raises no
