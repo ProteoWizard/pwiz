@@ -207,6 +207,13 @@ namespace pwiz.Osprey.Test
             var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
             string pick = OspreyEnvironment.PickValidityKeySuffix();
             string pass2 = OspreyEnvironment.Pass2QValueValidityKeySuffix();
+            // The training-selection arm is hand-wired into the same three tasks the
+            // library-fragment arm is, so without it here any one of those lines can be dropped in
+            // a merge and the suite stays green - and the failure it lets through is precisely the
+            // "skipping (outputs valid)" adoption of another selection's numbers that this file
+            // exists to prevent. Same exemption shape: the tasks that run before a model is
+            // trained cannot key on how it was trained.
+            string train = OspreyEnvironment.TrainSampleValidityKeySuffix();
 
             foreach (var task in tasks)
             {
@@ -217,6 +224,12 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(expectPass2, key.Contains(pass2), string.Format(
                     @"{0} must {1} key on the 2nd-pass q-value mode",
                     task.Name, expectPass2 ? @"" : @"NOT "));
+                bool expectTrain = task.Name == @"FirstPassFDR" ||
+                                   task.Name == @"PerFileRescoring" ||
+                                   task.Name == @"SecondPassFDR";
+                Assert.AreEqual(expectTrain, key.Contains(train), string.Format(
+                    @"{0} must {1} key on the first-pass training selection",
+                    task.Name, expectTrain ? @"" : @"NOT "));
             }
         }
 

@@ -550,15 +550,8 @@ namespace pwiz.Osprey.FDR
             public readonly uint ParquetIndex;
             public readonly double CoelutionSum;
             public readonly string Peptide;
-            /// <summary>How many observations of this precursor have arrived so far - one per
-            /// run it appears in, since first-pass rows are one per precursor per run. The
-            /// default reservoir needs the running count to replace with probability 1/Seen;
-            /// the OSPREY_TRAIN_PICK_RUN=0 maximum path leaves it at its incremented value and
-            /// never reads it.</summary>
-            public readonly uint Seen;
-
             public FirstPassDedupRow(int g, string fileName, uint entryId, byte charge, bool isDecoy,
-                uint parquetIndex, double coelutionSum, string peptide, uint seen = 1)
+                uint parquetIndex, double coelutionSum, string peptide)
             {
                 G = g;
                 FileName = fileName;
@@ -568,7 +561,6 @@ namespace pwiz.Osprey.FDR
                 ParquetIndex = parquetIndex;
                 CoelutionSum = coelutionSum;
                 Peptide = peptide;
-                Seen = seen;
             }
         }
 
@@ -639,6 +631,9 @@ namespace pwiz.Osprey.FDR
             // (byte-identical to Features[0] on the 1st pass), so no feature load is needed here.
             var bestTarget = new Dictionary<uint, FirstPassDedupRow>();
             var bestDecoy = new Dictionary<uint, FirstPassDedupRow>();
+            // Run bookkeeping for the reservoir, allocated only when it is on so the default-off
+            // arm keeps exactly the dictionaries, and the memory, it has always had.
+            var runPick = OspreyEnvironment.TrainPickRun ? new Dictionary<uint, PercolatorSampling.RunPickState>() : null;
             // Which observation represents a precursor. Logged when it is NOT the default,
             // because nothing else in the output would say which population trained the model.
             bool pickRun = OspreyEnvironment.TrainPickRun;
@@ -671,37 +666,59 @@ namespace pwiz.Osprey.FDR
                     var map = isDecoy ? bestDecoy : bestTarget;
                     if (map.TryGetValue(baseId, out FirstPassDedupRow existing))
                     {
-                        // Reservoir sampling of size one: the k-th run this precursor appears in
-                        // takes the slot with probability 1/k. That is uniform over the runs the
-                        // precursor is ACTUALLY in, which a fixed chosen-run rule is not - a
-                        // precursor absent from its chosen run would fall back to the first run
-                        // seen, and since runs stream in injection order that fallback favours
-                        // early, higher-yield runs. Same bias family as the maximum this replaces,
-                        // just weaker.
-                        uint seen = existing.Seen + 1;
-                        bool replace = pickRun
-                            ? ReservoirTakesSlot(baseId, seen, percConfig.Seed)
-                            : coelutionSum > existing.CoelutionSum;
+                        bool replace;
+                        if (pickRun)
+                        {
+                            // Reservoir of size one over RUNS - not over rows. Pass 1 is
+                            // PRE-COMPACTION, so a precursor carries several candidate-peak rows
+                            // within one file; drawing per row would both weight a run by how many
+                            // candidates it produced AND leave a RANDOM candidate as the training
+                            // row instead of that run's best peak.
+                            uint seenKey = baseId | (isDecoy ? 0x80000000u : 0u);
+                            PercolatorSampling.RunPickState state = runPick[seenKey];
+                            if (f == state.LastRun)
+                            {
+                                // Another candidate peak from the run already drawn for: resolve it
+                                // by score, so the surviving row is this run's BEST peak.
+                                replace = state.HolderIsCurrentRun && coelutionSum > existing.CoelutionSum;
+                            }
+                            else
+                            {
+                                uint runs = state.RunsSeen + 1u;
+                                // The DRAW takes the decoy bit too. BASE_ID_MASK clears the high
+                                // bit, so drawing on the masked base_id would make a target and its
+                                // paired decoy decide identically at every k and land on the same
+                                // run for essentially every precursor.
+                                replace = ReservoirTakesSlot(seenKey, runs, percConfig.Seed);
+                                state.RunsSeen = runs;
+                                state.LastRun = f;
+                                state.HolderIsCurrentRun = replace;
+                                runPick[seenKey] = state;
+                            }
+                        }
+                        else
+                        {
+                            replace = coelutionSum > existing.CoelutionSum;
+                        }
                         if (replace)
                         {
                             map[baseId] = new FirstPassDedupRow(
                                 g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum,
-                                buffer.Peptides[r], seen);
-                        }
-                        else if (pickRun)
-                        {
-                            // The count must advance even when the slot does not, or every later
-                            // run would be judged against a stale k and the choice would skew.
-                            map[baseId] = new FirstPassDedupRow(
-                                existing.G, existing.FileName, existing.EntryId, existing.Charge,
-                                existing.IsDecoy, existing.ParquetIndex, existing.CoelutionSum,
-                                existing.Peptide, seen);
+                                buffer.Peptides[r]);
                         }
                     }
                     else
                     {
                         map[baseId] = new FirstPassDedupRow(
                             g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum, buffer.Peptides[r]);
+                        if (pickRun)
+                        {
+                            uint seenKey = baseId | (isDecoy ? 0x80000000u : 0u);
+                            runPick[seenKey] = new PercolatorSampling.RunPickState
+                            {
+                                RunsSeen = 1u, LastRun = f, HolderIsCurrentRun = true
+                            };
+                        }
                     }
                     if (isDecoy) nInputDecoys++; else nInputTargets++;
                     g++;

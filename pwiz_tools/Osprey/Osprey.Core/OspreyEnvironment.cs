@@ -354,9 +354,14 @@ namespace pwiz.Osprey.Core
         public static readonly int? MaxTrainSizeOverride = ParseIntOrNull(@"OSPREY_MAX_TRAIN_SIZE");
 
         /// <summary>OSPREY_TRAIN_PICK_RUN: represent each precursor in the first-pass training
-        /// subset by ONE uniformly sampled run's observation instead of by its best observation
-        /// across all runs. ON by default -- this is the shipped selection, not a lever; setting
-        /// the variable to 0 restores the historical cross-run maximum for A/B work.
+        /// subset by ONE uniformly sampled RUN -- contributing that run's best candidate peak --
+        /// instead of by its best observation across all runs. ON by default; setting the variable
+        /// to 0 restores the historical cross-run maximum for A/B work.
+        ///
+        /// The two halves are both load-carrying. Pass 1 is PRE-COMPACTION, so a precursor has
+        /// several candidate-peak rows per run; drawing per ROW rather than per RUN would weight a
+        /// run by how many candidates it produced AND leave a random candidate as the training row,
+        /// which measured -17.4% identifications on 3-file Stellar.
         ///
         /// Why the default moved: the cross-run maximum makes every training row an extreme value
         /// over however many files were batched together, so the training population drifts away
@@ -867,8 +872,10 @@ namespace pwiz.Osprey.Core
         {
             string suffix = @";trainpick=" + (trainPickRun ? @"run" : @"max");
             if (maxTrainSizeOverride.HasValue)
+            {
                 suffix += @";maxtrain=" +
                           maxTrainSizeOverride.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            }
             return suffix;
         }
 

@@ -3735,9 +3735,10 @@ namespace pwiz.Osprey.Test
                     string.Format(@"run {0} won {1} slots against an expected {2}", run, winners[run], expected));
             }
 
-            // A precursor in a single run keeps that run, so the lever is a no-op on one file.
-            for (uint baseId = 0; baseId < 100; baseId++)
-                Assert.IsTrue(PercolatorScorer.ReservoirTakesSlot(baseId, 1, seed));
+            // The k=1 case above already covers the single-run precursor; asserting it a second
+            // time here (as this test used to) restated the same call and proved nothing further.
+            // What makes the one-file case a genuine no-op is not this primitive but the caller
+            // keeping the run's BEST peak - see TestReservoirKeepsTheBestPeakWithinTheDrawnRun.
 
             // The seed participates, so the choice is not a fixed property of the base_id.
             int moved = 0;
@@ -3774,24 +3775,31 @@ namespace pwiz.Osprey.Test
             const int nPrecursors = 300;
             int n = nRuns * nPrecursors;
 
-            // Flat (file, row) order, exactly as the streaming paths present it.
+            // Flat (file, row) order, exactly as the streaming paths present it. Run identity
+            // comes from PercolatorEntry.FileName here - NOT from per-file offsets - because that
+            // is what the direct (PercolatorTrainer) and RunPercolatorStreaming callers supply.
             var labels = new bool[n];
             var entryIds = new uint[n];
-            var bestScores = new double[n];
+            var entries = new List<PercolatorEntry>(n);
             for (int run = 0; run < nRuns; run++)
             {
                 for (int p = 0; p < nPrecursors; p++)
                 {
                     int i = run * nPrecursors + p;
                     entryIds[i] = (uint)p;
-                    bestScores[i] = run; // later run always scores higher
+                    entries.Add(new PercolatorEntry
+                    {
+                        EntryId = (uint)p,
+                        FileName = string.Format(@"run{0}.mzML", run),
+                        // Later run always scores higher, so the cross-run maximum would hand
+                        // every precursor to the last run.
+                        Features = new[] { (double)run }
+                    });
                 }
             }
 
-            // No per-file offsets, and an empty entries list: the shape the direct and
-            // RunPercolatorStreaming callers pass. This threw before the flip.
             int[] selected = PercolatorSampling.SelectBestPerPrecursor(
-                labels, entryIds, Array.Empty<PercolatorEntry>(), bestScores, 42);
+                labels, entryIds, entries, null, 42);
 
             Assert.AreEqual(nPrecursors, selected.Length,
                 @"one observation must survive per precursor, whichever rule chose it");
@@ -3800,6 +3808,7 @@ namespace pwiz.Osprey.Test
             foreach (int i in selected)
                 winnersPerRun[i / nPrecursors]++;
 
+
             Assert.AreNotEqual(nPrecursors, winnersPerRun[nRuns - 1],
                 @"every winner came from the highest-scoring run, so this path is still taking the cross-run maximum");
             for (int run = 0; run < nRuns; run++)
@@ -3807,6 +3816,79 @@ namespace pwiz.Osprey.Test
                 Assert.IsTrue(winnersPerRun[run] > nPrecursors / (nRuns * 2),
                     string.Format(@"run {0} won only {1} of {2} precursors, which is not a uniform draw over {3} runs",
                         run, winnersPerRun[run], nPrecursors, nRuns));
+            }
+        }
+
+        /// <summary>
+        /// The reservoir draws over RUNS, and within the drawn run it keeps that run's BEST
+        /// candidate peak.
+        ///
+        /// <para>Pass 1 is PRE-COMPACTION: a precursor carries several candidate-peak rows per
+        /// file (PercolatorScorer's own comment, and ModelDiagnosticsData.CoAssignment's -- the
+        /// parquet is (entry_id, charge, scan)-sorted for exactly that reason). The first cut of
+        /// this change drew once per ROW, which did two wrong things at once: it weighted a run by
+        /// how many candidate peaks it happened to produce, and it left a RANDOM candidate as the
+        /// training row rather than that run's best. Both are the bias family the change exists to
+        /// remove, moved onto a different axis.</para>
+        ///
+        /// <para>It cost 17.4% of identifications on the 3-file Stellar regression (29,300 ->
+        /// 24,214 RefSpectra), where there are too few runs for the run-level gain to hide it.
+        /// This fixture reproduces the shape that exposed it: several candidates per precursor per
+        /// run, with the best one NOT first in arrival order, so a row-level draw cannot pass.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestReservoirKeepsTheBestPeakWithinTheDrawnRun()
+        {
+            const int nRuns = 4;
+            const int nPrecursors = 250;
+            const int nPeaks = 3;
+            int perRun = nPrecursors * nPeaks;
+            int n = nRuns * perRun;
+
+            var labels = new bool[n];
+            var entryIds = new uint[n];
+            var bestScores = new double[n];
+            var fileStart = new int[nRuns + 1];
+            for (int run = 0; run < nRuns; run++)
+            {
+                fileStart[run] = run * perRun;
+                for (int p = 0; p < nPrecursors; p++)
+                {
+                    for (int k = 0; k < nPeaks; k++)
+                    {
+                        int i = run * perRun + p * nPeaks + k;
+                        entryIds[i] = (uint)p;
+                        // Middle candidate is the best, so neither "first seen" nor "last seen"
+                        // can masquerade as "best".
+                        bestScores[i] = run + (k == 1 ? 0.9 : 0.1 * k);
+                    }
+                }
+            }
+            fileStart[nRuns] = n;
+
+            int[] selected = PercolatorSampling.SelectBestPerPrecursor(
+                labels, entryIds, Array.Empty<PercolatorEntry>(), bestScores, 42, fileStart);
+
+            Assert.AreEqual(nPrecursors, selected.Length,
+                @"exactly one candidate peak must survive per precursor");
+
+            var winnersPerRun = new int[nRuns];
+            foreach (int i in selected)
+            {
+                int run = i / perRun;
+                int k = (i % perRun) % nPeaks;
+                winnersPerRun[run]++;
+                Assert.AreEqual(1, k, string.Format(
+                    @"row {0} survived from candidate {1} of run {2}; the drawn run must contribute its BEST peak, not a random one",
+                    i, k, run));
+            }
+
+            // ...and the run itself is still drawn uniformly, so fixing the peak choice did not
+            // reintroduce a preference for early runs.
+            for (int run = 0; run < nRuns; run++)
+            {
+                Assert.IsTrue(winnersPerRun[run] > nPrecursors / (nRuns * 2),
+                    string.Format(@"run {0} won only {1} of {2} precursors", run, winnersPerRun[run], nPrecursors));
             }
         }
     }
