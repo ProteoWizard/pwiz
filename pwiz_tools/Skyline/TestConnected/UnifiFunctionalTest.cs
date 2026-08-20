@@ -123,13 +123,17 @@ namespace pwiz.SkylineTestConnected
             RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangeServerUrl("https://asdfdsafads.local"))); // non-resolving hostname
             AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), DnsResolutionFailedMessage);
 
-            // Test invalid client id, scope, and secret
-            RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientId("foobar")));
-            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret);
-            RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientSecret("foobar")));
-            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret);
-            RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientScope("foobar")));
-            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "invalid_scope"); // not L10N
+            // Test invalid client id, scope, and secret. Only waters_connect authenticates with these --
+            // TestUnifi shares this DoTest with a UnifiAccount, where the cast below yields null.
+            if (_testAccount is WatersConnectAccount watersConnectAccount)
+            {
+                RunUI(() => editAccountDlg.SetRemoteAccount(watersConnectAccount.ChangeClientId("foobar")));
+                AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret);
+                RunUI(() => editAccountDlg.SetRemoteAccount(watersConnectAccount.ChangeClientSecret("foobar")));
+                AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret);
+                RunUI(() => editAccountDlg.SetRemoteAccount(watersConnectAccount.ChangeClientScope("foobar")));
+                AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "invalid_scope"); // not L10N
+            }
 
             // Test invalid password, the error message tested is a non-L10N string from Waters server
             RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangePassword("wrongpassword")));
