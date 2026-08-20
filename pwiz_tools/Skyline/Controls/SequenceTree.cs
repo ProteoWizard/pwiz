@@ -1129,26 +1129,19 @@ namespace pwiz.Skyline.Controls
         {
             if (IsEditableNode(SelectedNode) && !Char.IsControl(e.KeyChar))
             {
-                // Start editing on the first character. A second one arriving before the edit box has taken
-                // the keyboard must NOT start another edit: StartLabelEdit builds a new box every time, and
-                // what had been typed so far would go with the old one.
+                // Only the first character starts the edit. StartLabelEdit builds a new box every time, so
+                // starting a second one would take what had been typed so far with the old box.
                 bool startedEdit = _editTextBox == null;
                 if (startedEdit)
                     BeginEdit(true);
-                // Put the character straight into the edit box. It used to be handed to SendKeys.Send, an
-                // asynchronous post to whatever window held the FOCUS, so a character could land in another
-                // application and characters could arrive out of order. Writing here is synchronous and goes
-                // nowhere else; TextChanged still drives statement completion. (It also retires the escaping
-                // of the characters SendKeys syntax reserves, which only ever existed to satisfy SendKeys,
-                // and the CapsLock correction, which only ever cancelled out SendKeys re-applying the live
-                // CapsLock state to a character that already had it.)
+                // Write into the edit box directly rather than posting the character to the focused window,
+                // where it could land in another application or arrive out of order. TextChanged drives
+                // statement completion from here.
                 //
-                // The character that STARTS the edit replaces the node's name outright, which is what typing
-                // over a selected label does. It cannot be left to the selection to do that: BeginEdit seeds
-                // the box from node.Text and focuses it, but the select-all that focus brings happens in
-                // OnGotFocus, and this is running inside the character's own message - so whether anything is
-                // selected yet depends on when the focus messages get pumped. SendKeys never met that race
-                // because its characters arrived after focus had settled.
+                // The character that STARTS the edit replaces the node's name outright, as typing over a
+                // selected label does. Leaving that to the selection would be a race: BeginEdit seeds the box
+                // from node.Text and focuses it, but the select-all that focus brings happens in OnGotFocus,
+                // after this runs inside the character's own message.
                 if (_editTextBox != null)
                 {
                     string keyChar = e.KeyChar.ToString(LocalizationHelper.CurrentCulture);

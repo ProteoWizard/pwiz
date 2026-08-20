@@ -1215,14 +1215,12 @@ namespace pwiz.Skyline.EditUI
         }
 
         /// <summary>
-        /// A complete paste, as the user experiences it: fill the grid, and then deal with whatever that
-        /// turned up - a message and a rollback for text that could not be parsed, and the
+        /// A complete paste, as the user experiences it: fill the grid, then deal with what that turned up -
+        /// a message and a rollback for text that could not be parsed, and the
         /// <see cref="FilterMatchedPeptidesDlg"/> prompt for peptides that matched no protein, matched
-        /// several, or were filtered out, redoing the paste with the answer.
-        ///
-        /// <para>The <see cref="Paste(DataGridView,string,bool,bool,out int,out int,out int)"/> it calls is
-        /// the single pass underneath: that one only adds the rows and COUNTS what it could not resolve,
-        /// asking nothing and showing nothing. This runs it twice when the user changes the filtering.</para>
+        /// several, or were filtered out, redoing the paste with the answer. The
+        /// <see cref="Paste(DataGridView,string,bool,bool,out int,out int,out int)"/> underneath is the
+        /// single pass, which only adds rows and counts.
         /// </summary>
         private void PasteAndFilterMatches(DataGridView dataGridView, string text, bool enumerateProteins)
         {

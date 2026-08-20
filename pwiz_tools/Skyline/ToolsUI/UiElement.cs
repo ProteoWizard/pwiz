@@ -97,11 +97,9 @@ namespace pwiz.Skyline.ToolsUI
     /// peptide group), as a user does by editing the node label and pressing Enter.</summary>
     public interface IRenameNodeElement { void RenameNodeNow(string value); }
 
-    /// <summary>An element the keyboard can be driven on, without it having the focus (see
-    /// <see cref="ControlElement.SendTextNow"/> and <see cref="ControlElement.SendKeyStrokeNow"/> for how the
-    /// two are delivered). Every control is one. Typing and pressing a key are separate because they are
-    /// separate intents: <see cref="SendTextNow"/> takes LITERAL text (so no character in it needs escaping),
-    /// while <see cref="SendKeyStrokeNow"/> takes one key named with its modifiers ("Ctrl+V", "Down").</summary>
+    /// <summary>An element the keyboard can be driven on, without it having the focus. Every control is one.
+    /// <see cref="SendTextNow"/> takes LITERAL text, so nothing in it needs escaping;
+    /// <see cref="SendKeyStrokeNow"/> takes one key named with its modifiers ("Ctrl+V", "Down").</summary>
     public interface IKeyboardElement
     {
         void SendTextNow(string text);
@@ -283,20 +281,16 @@ namespace pwiz.Skyline.ToolsUI
         /// than one thing for an empty text, or more than one control of a named type.</para></summary>
         public UiElement FindElement(string text, UiAction action)
         {
-            // Walked ONCE, for every path below. Walking is not free of side effects: enumerating opens and
-            // recloses each menu dropdown so that items built on demand are present (see EnumerateChildren),
-            // which re-fires every DropDownOpening handler on the form. Matching twice over one list costs
-            // nothing; walking twice would pay that price again.
+            // Walked once, for every path below. Enumerating opens and recloses each menu dropdown so that
+            // items built on demand are present (see EnumerateChildren), which is not worth doing twice.
             var candidates = SelfAndDescendants().Where(action.AppliesTo).ToList();
             if (!string.IsNullOrEmpty(text))
             {
                 var labeled = BestMatch(candidates, text, true) ?? BestMatch(candidates, text, false);
                 if (labeled != null)
                     return labeled;
-                // Nothing carries that text, so read it as the KIND of control instead: a user told to click
-                // "the tree" or type in "the text box" can pick it out on sight, with no label to read, and
-                // the connector should be able to do the same. A label always wins, so naming a type can
-                // never shadow a control that really is captioned that.
+                // Nothing carries that text, so read it as the KIND of control, which a user picks a
+                // caption-less control out by. A label always wins, so a type never shadows a real caption.
                 var ofType = candidates.Where(e => e.MatchesType(text)).ToList();
                 if (ofType.Count == 0)
                     throw new ArgumentException(LlmInstruction.Format(
@@ -305,9 +299,8 @@ namespace pwiz.Skyline.ToolsUI
                 var single = SingleOrEnabled(ofType);
                 if (single != null)
                     return single;
-                // A kind is only an answer when it picks ONE control. With three text boxes on the form,
-                // "TextBox" says nothing about which, and typing into whichever came first in the walk is
-                // worse than saying so.
+                // A kind is only an answer when it picks ONE control: with three text boxes on the form,
+                // "TextBox" says nothing about which.
                 throw new ArgumentException(LlmInstruction.Format(
                     @"This form has {0} controls of type '{1}'. Name the one you mean by its label, or address it by its path (see skyline_get_controls).",
                     ofType.Count, text));
@@ -688,10 +681,6 @@ namespace pwiz.Skyline.ToolsUI
 
         public Control Control { get; }
 
-        // Keyboard input goes to this control itself, so it does not need the focus. UiAction has already gated
-        // the control (VerifyEnabled) and marshaled onto its UI thread. Typing and pressing a key are two
-        // separate operations because they are two different intents, and mixing them would mean inventing an
-        // escape syntax for text.
 
         /// <summary>TYPES <paramref name="text"/> into the control: each character is delivered to the
         /// control's own window as the WM_CHAR the message pump would send, which is what inserts text and what
@@ -707,27 +696,21 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>PRESSES ONE KEY on the control, named with its modifiers - "Ctrl+V", "Down", "Enter",
-        /// "Ctrl+Shift+Home", "Alt+F4". It raises the control's KeyDown with the composed <see cref="Keys"/>
-        /// value, which is where a WinForms handler reads the keystroke from (Skyline's own paste handlers test
-        /// <c>e.KeyData</c> exactly this way). Composing the value is what lets a modifier be expressed at all:
-        /// a delivered key message carries only the virtual key, and WinForms would fill the modifiers in from
-        /// the GLOBAL keyboard - so "Ctrl+V" sent as a message arrives as a bare "V" unless the real keyboard
-        /// state is doctored, which this deliberately does not do.
+        /// "Ctrl+Shift+Home". It raises KeyDown with the composed <see cref="Keys"/> value, which is where a
+        /// WinForms handler reads a keystroke from. Composing the value is what lets a modifier be expressed:
+        /// a delivered key message carries only the virtual key, and WinForms fills the modifiers in from the
+        /// GLOBAL keyboard state, which this does not touch.
         ///
-        /// <para>A keystroke is atomic - there is no way to press a key and leave it down. Nothing here can
-        /// strand a key or a modifier in the down state.</para>
-        ///
-        /// <para>KNOWN LIMIT of the KeyDown route: it raises the event, it does not run the control's default
-        /// window procedure. A key whose effect comes from that default handling rather than from a handler --
-        /// Backspace editing a text box, an arrow moving a plain list's selection - will not take effect this
-        /// way. Handler-driven keys (Skyline's auto-completion popup, its grid paste) do.</para></summary>
+        /// <para>KNOWN LIMIT: raising KeyDown does not run the control's default window procedure, so a key
+        /// whose effect comes from that rather than from a handler - Backspace editing a text box, an arrow
+        /// moving a plain list's selection - has no effect.</para></summary>
         public virtual void SendKeyStrokeNow(string keyStroke)
         {
             RaiseProtectedHandler(Control, @"OnKeyDown", new KeyEventArgs(ParseKeyStroke(keyStroke)));
         }
 
-        // Spellings a caller is likely to use for keys whose Keys name differs. Everything else is matched
-        // against the Keys enum itself, so "V", "Down", "F2", "Delete", "Space" all just work.
+        // Spellings for keys whose Keys name differs. Everything else is matched against the Keys enum, so
+        // "V", "Down", "F2", "Delete" and "Space" all work as they are.
         private static readonly Dictionary<string, Keys> KEY_ALIASES =
             new Dictionary<string, Keys>(StringComparer.OrdinalIgnoreCase)
             {
@@ -797,12 +780,10 @@ namespace pwiz.Skyline.ToolsUI
             if (KEY_ALIASES.TryGetValue(segment, out key))
                 return true;
             key = Keys.None;
-            // The segment has to look like a key NAME, because Enum.TryParse is far more permissive than
-            // that. It reads a number as the enum's underlying VALUE, so "1" comes back as Keys.LButton
-            // rather than as the "1" key (Keys.D1, which the aliases map). It also reads a comma-separated
-            // list as the bitwise OR of its members, so "Down,Enter" comes back as 40|13 = 45 = Keys.Insert,
-            // which is a defined value and would sail through every check below. Either way SendKeyStroke
-            // would press a key the caller never named, and report that it had done what was asked.
+            // The segment has to look like a key NAME. Enum.TryParse reads a number as the enum's underlying
+            // VALUE, so "1" comes back as Keys.LButton rather than the "1" key, and reads a comma-separated
+            // list as the bitwise OR of its members, so "Down,Enter" comes back as 40|13 = 45 = Keys.Insert.
+            // Both are defined values that would pass every check below and press a key nobody named.
             if (segment.All(char.IsDigit) || !segment.All(char.IsLetterOrDigit))
                 return false;
             // Keys.None is a defined value, but "None" names no key: accepting it would send a KeyDown
@@ -1145,9 +1126,8 @@ namespace pwiz.Skyline.ToolsUI
                 // caller names when it asks for a menu item on a particular strip, and MainToolStrip finds the
                 // form's menu bar among these.
                 case ToolStrip toolStrip: return ToolStripElement.ForToolStrip(toolStrip, token);
-                // A ZedGraphControl (a graph) is its own element, so a graph form has a GraphElement to act on
-                // and does not walk into the graph's internal controls (its scrollbars). It derives from
-                // UserControl, so this case must win over the UserControl case below.
+                // A graph is its own element rather than a container walked into for its scrollbars. It
+                // derives from UserControl, so this case must win over the UserControl case below.
                 case ZedGraph.ZedGraphControl zedGraph: return new GraphElement(zedGraph, token);
                 // A UserControl (including a DataboundGridControl) is a boundary that owns its (flattened)
                 // children; everything else that contains controls is transparent. A nested Form (rare as a
@@ -1200,12 +1180,9 @@ namespace pwiz.Skyline.ToolsUI
             return (GridElement) FindElement(controlId ?? string.Empty, UiActions.SetGridText);
         }
 
-        // The form's graph as a GraphElement. A graph form is assumed to have exactly one graph, so the graph
-        // verbs resolve a formId to this form and act on the element found here; there is no separate graph id.
-        // The ZedGraphControl is found the way GetOpenForms' HasGraph is (by the form's graph property), so a
-        // graph on a background dock tab - whose controls report not-visible, and so are absent from the
-        // control walk - is still found; ElementFor then wraps it as the GraphElement the factory builds for a
-        // ZedGraphControl. Throws a clear error when the form has no graph. Must be called on the form's UI thread.
+        // The form's single graph, which is why the graph verbs take a formId and no graph id. Found by the
+        // form's graph property rather than by the control walk, so a graph on a background dock tab - whose
+        // controls report not-visible - is still found. Must be called on the form's UI thread.
         internal GraphElement FindGraph()
         {
             var zedGraph = Form is DockableFormEx dockable ? JsonUiService.TryGetZedGraphControl(dockable) : null;
@@ -2084,7 +2061,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (Control.FindForm() is EditUI.PasteDlg pasteDlg)
             {
-                // PasteDlg has its own way of pasting into grid
+                // PasteDlg resolves what is pasted against the background proteome, so it pastes its own way
                 pasteDlg.PasteIntoGrid(text);
                 return;
             }
@@ -2288,11 +2265,9 @@ namespace pwiz.Skyline.ToolsUI
         public static string NormalizeNewlines(string value) =>
             value == null ? null : Regex.Replace(value, @"\r\n?|\n", "\r\n");
 
-        // The graph rectangle a zoom_graph_to / click_graph value carries, in the graph's DATA coordinates. An
-        // in-process caller (a typed verb) passes the SkylineTool.Rectangle itself; over the wire it is the
-        // four-element JSON array [left, top, right, bottom] (a JArray, or that text through a string-valued
-        // parameter), the same shape set_current_cell_address uses for [column, row]. The order is the one the
-        // gesture reads: down at Left/Top, up at Right/Bottom.
+        // The graph rectangle a zoom_graph_to / click_graph value carries, in DATA coordinates. A typed
+        // caller passes the SkylineTool.Rectangle itself; over the wire it is the four-element JSON array
+        // [left, top, right, bottom], or that text through a string-valued parameter.
         public static Rectangle ToRectangle(object value)
         {
             if (value is Rectangle rectangle)
@@ -2334,10 +2309,9 @@ namespace pwiz.Skyline.ToolsUI
                 @"This action needs a four-element [left, top, right, bottom] array of graph data coordinates. The gesture goes down at left/top and up at right/bottom, so equal corners are a single click."));
         }
 
-        // One edge of a rectangle as a number, or false when the value is not one - so that whatever the
-        // caller got wrong ends at the instruction above rather than as a raw FormatException thrown from
-        // inside a conversion. Convert.ToDouble on its own will not do that: it throws for text that is not
-        // a number, and reads a null - a JSON null among the coordinates - as 0 without complaint.
+        // One edge of a rectangle as a number, or false when the value is not one, so that bad input ends at
+        // the instruction above rather than as a FormatException. Convert.ToDouble alone will not do: it
+        // throws for text that is not a number, and reads a null as 0 without complaint.
         private static bool TryEdge(object value, out double edge)
         {
             edge = 0;

@@ -33,19 +33,14 @@ using ZedGraph;
 namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
-    /// The element for a <see cref="ZedGraphControl"/> on a form. <see cref="StandaloneForm"/> builds one of
-    /// these wherever the control walk finds a graph, and the graph verbs - GetGraphData, GetGraphImage /
-    /// GetGraphImageBytes, GetGraphZoom, ZoomGraphTo, ClickGraph - resolve a formId to its form, find that
-    /// form's single GraphElement, and call the matching method here. So the graph-specific work lives on the
-    /// graph element rather than in the JSON-RPC server, which only marshals to the form's thread.
+    /// The element for a <see cref="ZedGraphControl"/> on a form, holding the work behind the graph verbs:
+    /// GetGraphData, GetGraphImage / GetGraphImageBytes, GetGraphZoom, ZoomGraphTo and ClickGraph. Each
+    /// resolves a formId to its form and calls the matching method here.
     ///
-    /// <para>Every method runs on the form's UI thread: the caller reaches this through
-    /// <see cref="JsonUiService.InvokeOnForm"/>, and <see cref="StandaloneForm.FindGraph"/> itself walks the
-    /// element tree on that thread.</para>
+    /// <para>Every method runs on the form's UI thread.</para>
     /// </summary>
     internal class GraphElement : ControlElement<ZedGraphControl>
     {
-        // The temp-file prefix for a graph export (data TSV or image PNG).
         private const string GRAPH_FILE_PREFIX = @"skyline-graph";
 
         public GraphElement(ZedGraphControl control, CancellationToken cancellationToken)
@@ -112,12 +107,12 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>Zooms the first pane to the DATA-coordinate rectangle <paramref name="bounds"/>, returning
         /// the zoom actually applied (the graph may clamp it to the data range). A zoom has no direction, so
-        /// the un-normalized edges are normalized into the Min &lt; Max ranges ZedGraph expects.
+        /// the edges are normalized into the Min &lt; Max ranges ZedGraph expects.
         ///
-        /// <para>An edge pair that is EQUAL asks for no zoom in that direction, and leaves that axis exactly
-        /// as it was: equal left and right zoom vertically only, equal top and bottom horizontally only, and a
-        /// rectangle with no width and no height changes nothing. That is also what keeps a zoom from ever
-        /// writing Min == Max, which no amount of AxisChange repairs once the auto flags are off.</para></summary>
+        /// <para>An EQUAL edge pair asks for no zoom in that direction and leaves that axis exactly as it was:
+        /// equal left and right zoom vertically only, equal top and bottom horizontally only, and a rectangle
+        /// with no width and no height changes nothing. That is also what keeps a zoom from writing
+        /// Min == Max, which nothing repairs once the auto flags are off.</para></summary>
         public SkylineTool.Rectangle ZoomTo(SkylineTool.Rectangle bounds)
         {
             RequireRectangle(bounds);
@@ -128,11 +123,9 @@ namespace pwiz.Skyline.ToolsUI
             if (!wantsX && !wantsY)
                 return PaneRectangle(pane);
 
-            // An axis with nothing asked of it is passed no range at all, so ZoomPaneToScale leaves both its
-            // scale and its auto flags alone: writing its current values back would pin it out of auto
-            // scaling, which is not what "leave this one" means. A direction the user could not move
-            // themselves, by zoom or by pan, is dropped there too. The rectangle returned below is read back
-            // off the pane, so it shows what actually happened either way.
+            // An axis with nothing asked of it is passed no range, which leaves its auto flags alone as well
+            // as its scale. The rectangle returned is read back off the pane, so it shows what a direction
+            // the graph refused to move actually did.
             Control.ZoomPaneToScale(pane,
                 wantsX ? Math.Min(bounds.Left, bounds.Right) : (double?) null,
                 wantsX ? Math.Max(bounds.Left, bounds.Right) : (double?) null,
@@ -142,19 +135,18 @@ namespace pwiz.Skyline.ToolsUI
         }
 
 
-        /// <summary>Clicks or drags on the graph in DATA coordinates, reproducing a real mouse gesture: the
-        /// mouse goes down at the Left/Top corner of <paramref name="bounds"/> and is released at the
-        /// Right/Bottom corner. A zero-size rectangle is a stationary click - down, up, then the click the OS
-        /// raises after them, because some panes select on mouse-down (the RT regression graph) and others only
-        /// on click (the CV histogram). A non-degenerate rectangle is a drag, which needs at least one move so
-        /// listeners that track it (e.g. the chromatogram peak-boundary adjust) advance, and raises no
-        /// click.</summary>
+        /// <summary>Clicks or drags on the graph in DATA coordinates: the mouse goes down at the Left/Top
+        /// corner of <paramref name="bounds"/> and is released at the Right/Bottom corner. A zero-size
+        /// rectangle is a stationary click - down, up, then the click, since some panes select on mouse-down
+        /// (the RT regression graph) and others only on click (the CV histogram). Anything larger is a drag,
+        /// which raises no click and needs a move for listeners that track one (the chromatogram
+        /// peak-boundary adjust).</summary>
         public void Click(SkylineTool.Rectangle bounds)
         {
             RequireRectangle(bounds);
             var pane = FirstPane();
-            // GeneralTransform extrapolates past the axes, so a Y below the axis line maps below the chart --
-            // the peak-boundary band.
+            // GeneralTransform extrapolates past the axes, so a Y below the axis line maps below the chart,
+            // into the peak-boundary band.
             var down = pane.GeneralTransform(new PointF((float) bounds.Left, (float) bounds.Top), CoordType.AxisXYScale);
             var up = pane.GeneralTransform(new PointF((float) bounds.Right, (float) bounds.Bottom), CoordType.AxisXYScale);
             bool isDrag = bounds.Left != bounds.Right || bounds.Top != bounds.Bottom;
@@ -171,7 +163,6 @@ namespace pwiz.Skyline.ToolsUI
             return Control.MasterPane.GetImage(Control.MasterPane.IsAntiAlias);
         }
 
-        // The first (or only) pane, on which the zoom/click geometry acts.
         private GraphPane FirstPane()
         {
             var panes = Control.MasterPane.PaneList;
@@ -188,8 +179,7 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(new LlmInstruction(@"A rectangle is required."));
         }
 
-        // A coordinate has to be a real number. "NaN" and "Infinity" parse as doubles, and an axis given one
-        // draws nothing at all, with no way back short of unzooming by hand.
+        // "NaN" and "Infinity" parse as doubles, and an axis given one draws nothing.
         private static void RequireFinite(SkylineTool.Rectangle bounds)
         {
             foreach (var edge in new[] { bounds.Left, bounds.Top, bounds.Right, bounds.Bottom })
@@ -200,8 +190,7 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // The pane's current zoom as a rectangle in data coordinates: Left/Right are the X-axis range and
-        // Top/Bottom the Y-axis range, with Top the upper edge (normally the larger Y).
+        // Left/Right are the X-axis range and Top/Bottom the Y-axis range, Top being the larger Y.
         private static SkylineTool.Rectangle PaneRectangle(GraphPane pane)
         {
             return new SkylineTool.Rectangle

@@ -151,19 +151,15 @@ namespace pwiz.SkylineTestFunctional
         private const string COMPLETION_PEPTIDE = @"TALAAFNAQNNGTYFK";
 
         /// <summary>
-        /// Drives the Targets tree's statement completion the way a user does - type a peptide sequence,
-        /// step the pop-up with Down, accept it with Enter - through send_text and send_key_stroke.
-        ///
-        /// <para>This reaches the one claim the key-stroke parsing assertions cannot: that the composed
-        /// <see cref="Keys"/> value actually arrives at a handler that reads <c>e.KeyData</c> (here
-        /// <c>StatementCompletionTextBox.TextBox_KeyDown</c>). It also covers the fix to
-        /// <c>SequenceTree.OnKeyPress</c>, whose characters used to go out through SendKeys to whatever
-        /// window held the focus; they now go into the edit box, which is what raises the pop-up at all.</para>
+        /// Drives the Targets tree's statement completion through send_text and send_key_stroke: type a
+        /// peptide sequence, accept the pop-up with Enter. This is the one test that reaches a handler
+        /// reading <c>e.KeyData</c> (<c>StatementCompletionTextBox.TextBox_KeyDown</c>), which the key-stroke
+        /// parsing assertions cannot.
         /// </summary>
         private void TestStatementCompletion(JsonToolServer server)
         {
             // Statement completion matches what is typed against a background proteome, so there has to be
-            // one. The mini rat proteome (two proteins) is already in this test's data.
+            // one. The mini rat proteome is already in this test's data.
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunDlg<BuildBackgroundProteomeDlg>(peptideSettingsUI.AddBackgroundProteome, dlg =>
             {
@@ -178,9 +174,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SequenceTree.SelectedNode =
                 SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 1]);
 
-            // The tree and the edit box it puts up over a node are both named by their TYPE, neither having
-            // a label: a user told to type in "the tree" picks it out by what it plainly is, and so does
-            // this. Each is the only one of its kind on the form, which is what makes the type an answer.
+            // The tree and its edit box are named by TYPE, neither having a label. Each is the only one of
+            // its kind on the form, which is what makes the type an answer.
             string treeFormId = server.GetOpenForms().First(f => f.Type == nameof(SequenceTreeForm)).Id;
             server.SendText(treeFormId, nameof(SequenceTree), COMPLETION_PEPTIDE);
 
@@ -189,10 +184,9 @@ namespace pwiz.SkylineTestFunctional
             var completionForm = WaitForOpenForm<StatementCompletionForm>();
             WaitForConditionUI(() => completionForm.ListView.Items.Count > 0);
 
-            // Enter accepts the focused match, on the edit box the tree puts up over the node (a TextBox
-            // with no label of its own). Only Enter is sent: the pop-up already focuses its first match, so
-            // a Down here would step nothing and assert nothing - stepping to a LATER match is a gesture
-            // this document's two-protein proteome cannot produce, and is left uncovered rather than faked.
+            // Enter accepts the focused match. Only Enter is sent: the pop-up already focuses its first
+            // match, so a Down would step nothing here. Stepping to a LATER match needs a multi-match list,
+            // which this two-protein proteome cannot produce, and is left uncovered.
             var docBefore = SkylineWindow.Document;
             server.SendKeyStroke(treeFormId, nameof(TextBox), @"Enter");
 
@@ -201,11 +195,9 @@ namespace pwiz.SkylineTestFunctional
                 string.Format(@"Accepting the statement completion for {0} did not add it to the document.",
                     COMPLETION_PEPTIDE));
 
-            // Typing over a node that HAS a name replaces it, as typing over selected text does anywhere.
-            // The edit box opens holding the node's name with all of it selected, so a character that is
-            // appended instead of inserted turns a rename into a concatenation. The completion above cannot
-            // catch that: it edits the empty node at the end of the tree, whose text is blanked before the
-            // edit begins, so appending and replacing look identical there.
+            // Typing over a node that HAS a name replaces it, rather than extending it. The completion above
+            // cannot catch that: it edits the empty node at the end of the tree, whose text is blanked before
+            // the edit begins, so appending and replacing look identical there.
             string nodeText = null;
             RunUI(() =>
             {
@@ -1755,19 +1747,15 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Exercises the graph geometry verbs - GetGraphZoom, ZoomGraphTo, and ClickGraph --
-        /// against a populated summary graph. GetGraphZoom must report the pane's data
-        /// bounds; ZoomGraphTo must narrow the view and the getter must read back exactly
-        /// what the setter reports applying; ClickGraph must drive a full mouse gesture
-        /// (down, up, then the click the OS raises) through the real ZedGraph handlers and
-        /// complete. The same faithful gesture path is what a user click takes.
+        /// Exercises GetGraphZoom, ZoomGraphTo and ClickGraph against a populated summary graph:
+        /// GetGraphZoom reports the pane's data bounds, ZoomGraphTo narrows the view and reads back what it
+        /// reports applying, and ClickGraph selects the replicate whose bar it clicked.
         /// </summary>
         private void TestGraphInteraction(JsonToolServer server)
         {
-            // Room for the graph before anything is asked of it. Docked into the default-sized window this
-            // pane is about 365x153, and 42 replicate labels need more vertical space than that leaves --
-            // ZedGraph then lays out a chart rect with NEGATIVE height, which contains no point at all, so
-            // every click misses and the graph looks broken when it is merely too small to draw.
+            // Room for the graph. Docked into the default-sized window this pane is about 365x153, and 42
+            // replicate labels leave no vertical space for a chart: ZedGraph lays out a rect with NEGATIVE
+            // height, which contains no point, so every click misses.
             RunUI(() =>
             {
                 SkylineWindow.WindowState = FormWindowState.Normal;
@@ -1781,17 +1769,15 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             try
             {
-                // The PEAK AREA graph specifically. Several GraphSummary forms are open by now, and taking
-                // the first would just as easily hand back the retention times graph - whose panes this
-                // then reads coordinates from the wrong graph for. Its own title is used to pick it out, so
-                // this holds in every language the test runs in.
+                // The PEAK AREA graph specifically: several GraphSummary forms are open by now, and taking
+                // the first would as easily hand back the retention times graph. Matched on its own title,
+                // so this holds in every language the test runs in.
                 string graphTitle = null;
                 RunUI(() => graphTitle = SkylineWindow.GraphPeakArea.Text);
                 string graphId = server.GetOpenForms()
                     .First(f => f.Type.Contains(@"GraphSummary") &&
                                 f.Id.EndsWith(graphTitle, StringComparison.Ordinal)).Id;
 
-                // GetGraphZoom: a populated graph has a real, non-degenerate data range.
                 var zoom = server.GetGraphZoom(graphId);
                 Assert.IsNotNull(zoom);
                 AssertEx.IsTrue(zoom.Left < zoom.Right, $@"Expected Left < Right, got {zoom.Left}..{zoom.Right}");
@@ -1946,74 +1932,59 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestKeyboardVerbs(JsonToolServer server)
         {
-            // The names the SendKeyStroke descriptions promise: a bare key, an alias, and modifiers.
             AssertEx.AreEqual(Keys.Down, ControlElement.ParseKeyStroke(@"Down"));
             AssertEx.AreEqual(Keys.Return, ControlElement.ParseKeyStroke(@"Enter"));
             AssertEx.AreEqual(Keys.Control | Keys.V, ControlElement.ParseKeyStroke(@"Ctrl+V"));
             AssertEx.AreEqual(Keys.Control | Keys.Shift | Keys.Home,
                 ControlElement.ParseKeyStroke(@"Ctrl+Shift+Home"));
-            // Modifiers in any order, and spaces around the separator, name the same key stroke.
             AssertEx.AreEqual(ControlElement.ParseKeyStroke(@"Ctrl+Shift+Home"),
                 ControlElement.ParseKeyStroke(@"Shift + Ctrl + Home"));
 
-            // A digit names the DIGIT KEY. It must never reach Enum.TryParse, which reads a number as the
-            // enum's underlying VALUE: "1" would come back as Keys.LButton - a mouse button - and
-            // SendKeyStroke would quietly press something the caller never named.
+            // A digit names the DIGIT KEY. Enum.TryParse would read it as the enum's underlying VALUE, so
+            // "1" would come back as Keys.LButton, a mouse button.
             AssertEx.AreEqual(Keys.D1, ControlElement.ParseKeyStroke(@"1"));
             AssertEx.AreEqual(Keys.D0, ControlElement.ParseKeyStroke(@"0"));
             AssertEx.AreEqual(Keys.Control | Keys.D9, ControlElement.ParseKeyStroke(@"Ctrl+9"));
-            // A number that is not one digit names no key at all, rather than the Keys value it spells.
             AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"65"));
             AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"-65536"));
-            // Nor does a comma-separated list, which Enum.TryParse would otherwise read as the bitwise OR of
-            // its members: "Down,Enter" is 40|13 = 45, a defined Keys value (Insert) that passes every other
-            // check and presses a key nobody named.
+            // Nor does a comma-separated list, which Enum.TryParse reads as the bitwise OR of its members:
+            // "Down,Enter" is 40|13 = 45, which is Keys.Insert and passes every other check.
             AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"Down,Enter"));
             AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"Up,Down"));
 
-            // Rejected, each with an error that says which part could not be read: nothing, only modifiers,
-            // two keys, and a name that is not a key.
             AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(null));
             AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"Ctrl+Shift"));
             AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"Ctrl+A+B"));
             AssertEx.ThrowsException<ArgumentException>(() => ControlElement.ParseKeyStroke(@"Wingding"));
 
-            // SendText through the server, onto a text box on a dialog that was never given the focus.
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             try
             {
                 RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Filter);
                 string settingsId = server.GetOpenForms().First(f => f.Type == nameof(PeptideSettingsUI)).Id;
-                // The box is addressed by the LABEL beside it, which is what a user reads and the only thing
-                // the verbs match a control on - its Name is reported for discovery but deliberately not
-                // matched, so that the connector can reach a control only the way a person could. The text is
-                // read off the live label rather than written out here, so this holds in every language the
-                // test runs in. (label3 sits immediately before the box in tab order, which is exactly what
-                // makes it the box's label; if that tab order were wrong, the box would have no label at all
-                // and there would be nothing for a user - or this - to call it.)
+                // The box is addressed by the LABEL beside it, the only thing the verbs match a control on.
+                // label3 sits immediately before the box in tab order, which is what makes it the box's
+                // label. Its text is read off the live control, so this holds in every language.
                 string excludeLabel = null;
                 RunUI(() => excludeLabel = peptideSettings.Controls.Find(@"label3", true).First().Text);
 
-                // Empty first, so what the box holds afterwards is what was typed and nothing else. The
-                // control never had the focus - nothing here gives it any - which is the claim send_text
-                // is named for.
+                // Empty first, so what the box holds afterwards is what was typed. Nothing here gives the
+                // control the focus, which is the claim send_text is named for.
                 server.SetFormValue(settingsId, excludeLabel, string.Empty);
                 var sent = server.SendText(settingsId, excludeLabel, @"25");
                 AssertEx.IsTrue(sent.Completed, @"send_text should complete: " + sent.Message);
                 AssertEx.AreEqual(@"25", server.GetFormValue(settingsId, excludeLabel),
                     @"send_text did not deliver its characters to the text box.");
 
-                // A key that cannot be read is a caller-contract error, and must reach the caller as one
-                // rather than being sent as whatever key its name happened to parse into. Named by label, so
-                // that what throws is the key, not a control the server could not find.
+                // A key that cannot be read reaches the caller as an error rather than being sent as some
+                // other key. Named by label, so that what throws is the key, not a missing control.
                 AssertEx.ThrowsException<ArgumentException>(() =>
                     server.SendKeyStroke(settingsId, excludeLabel, @"Wingding"));
                 AssertEx.ThrowsException<ArgumentException>(() =>
                     server.SendKeyStroke(settingsId, excludeLabel, @"65"));
 
-                // A control with no label can be named by its TYPE - but only when that picks one control.
-                // This tab has three text boxes (min length, max length, exclude AAs), so "TextBox" says
-                // nothing about which, and must be refused rather than typed into whichever comes first.
+                // A TYPE names a control only when it picks one. This tab has three text boxes, so "TextBox"
+                // says nothing about which and must be refused.
                 AssertEx.ThrowsException<ArgumentException>(() =>
                     server.SendText(settingsId, nameof(TextBox), @"25"));
             }

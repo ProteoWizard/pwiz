@@ -3710,11 +3710,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         #region Test support
 
-        // These drive the ZedGraph control by raising the very events the operating
-        // system raises for a real mouse message (PerformMouseDown/Move/Up), so a
-        // gesture a test produces is indistinguishable from a user's. It is the same
-        // mechanism the ClickGraph verb uses to let an external client drive a graph,
-        // reached here through a different entry point.
+        // These raise the events the operating system raises for a real mouse message, so a gesture a
+        // test produces is indistinguishable from a user's.
         public void TestMouseMove(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
