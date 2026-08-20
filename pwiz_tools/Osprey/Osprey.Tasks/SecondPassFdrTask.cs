@@ -82,8 +82,42 @@ namespace pwiz.Osprey.Tasks
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)
         {
+            // A diagnostics-only regeneration declares NOTHING. Any declared output would let
+            // the driver skip this task the moment that file exists - and the report existing
+            // is exactly the case the caller is asking to redo. CanRehydrate returns false on an
+            // empty output list, so zero outputs is what makes "regenerate on demand" mean it.
+            // It also keeps the task from requiring the .blib and 2nd-pass sidecars it
+            // deliberately leaves untouched, which would otherwise fail on a directory that no
+            // longer has them.
+            if (ctx.Config.DiagnosticsOnly)
+                yield break;
             if (!string.IsNullOrEmpty(ctx.Config.OutputBlib))
                 yield return ctx.Config.OutputBlib;
+            // The --model-diagnostics report is an output of THIS task (it is finalized in
+            // WritePass2AndFinalize), so declare it and let ordinary task validity regenerate
+            // it. Task validity requires every declared output to exist, so a deleted or
+            // renamed report invalidates this task alone - Stages 1-5 stay cached and the
+            // pass-1 panel is rebuilt by rehydrating the 1st-pass sidecars, the same path
+            // regression mode 5 already covers.
+            //
+            // CONDITIONAL ON THE FLAG, deliberately. Declaring it unconditionally would make
+            // every run that never asked for diagnostics permanently invalid, re-running
+            // SecondPassFDR forever.
+            //
+            // Without this the flag was inert on a completed directory: --model-diagnostics is
+            // in no validity key and the HTML was in no Outputs list, so adding it to a re-run
+            // changed nothing, every task reported "outputs valid", and no report was produced.
+            //
+            // AND conditional on FirstPassFDR being in this graph. WritePass2AndFinalize needs
+            // the pass-1 .data.json hand-off sidecar, which only FirstPassFdrTask writes - so
+            // under `--task SecondPassFDR --model-diagnostics` no report can ever be produced.
+            // Declaring it there recreated the very loop the paragraph above set out to avoid,
+            // one step later: CanRehydrate requires every declared output to exist, so the task
+            // was never skippable and every invocation re-ran pass-2 Percolator, protein FDR and
+            // the whole .blib write, still producing no report.
+            if (ctx.Config.ModelDiagnostics && FirstPassFdrTask.IsIncludedFor(ctx.Config))
+                yield return ModelDiagnosticsReport.ReportPath(ctx.Config);
+
             // 2nd-pass FDR sidecars are written whenever Stage 6 rescored entries
             // (independent of protein FDR -- the second Percolator pass runs on the
             // reconciled features), so declare them on that same condition.
@@ -104,7 +138,20 @@ namespace pwiz.Osprey.Tasks
             // The 2nd-pass mode decides the q this task writes into the .blib and the 2nd-pass
             // sidecars, so it invalidates them by exactly the argument the aggregation suffix
             // makes above - one arm's .blib must never be reused as another's.
+            // And the sidecar format version, for the same reason FirstPassFdrTask carries it:
+            // this task writes the 2nd-pass sidecars, so a record-layout change invalidates them.
+            // And the MEANING of the 2nd-pass sidecar's protein column, which issue #4559
+            // changed from a pass-1 to a pass-2 value without moving a byte. The format version
+            // cannot carry that: no offset, width or type changed, so a v4 record written before
+            // #4559 is structurally valid and silently holds the wrong pass. Without this token
+            // a post-#4559 build resuming into a pre-#4559 output directory finds every declared
+            // output present and the validity key unchanged, skips this task entirely, and keeps
+            // the stale column - which then reds regression mode 1c against a build that is in
+            // fact correct. A key token forces the regeneration a version bump would have forced,
+            // without breaking any reader or moving a golden.
             return base.ValidityKey(ctx)
+                + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
+                + @";pass2proteinq=2"
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
@@ -218,13 +265,29 @@ namespace pwiz.Osprey.Tasks
             // the blib, restores "reported => some run genuinely passed" for the final output.
             PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
 
-            // Write output blib
+            // Write output blib - unless this is a diagnostics-only regeneration, whose whole
+            // contract is that it touches no artifact but the report.
             ctx.LogInfo(string.Empty);
             var swBlib = Stopwatch.StartNew();
-            WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config, ctx);
+            if (config.DiagnosticsOnly)
+            {
+                ctx.LogInfo(@"--task ModelDiagnostics: skipping the .blib write (report only).");
+            }
+            else
+            {
+                WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config, ctx);
+            }
             swBlib.Stop();
-            ctx.LogInfo(string.Format(@"[STAGE-WALL] blib: {0:F1}s",
-                swBlib.Elapsed.TotalSeconds));
+            // Only when a blib was actually written. [STAGE-WALL] is machine-read by the perf
+            // tooling, so emitting it for a skipped write reports a real 0.0s blib stage and
+            // drags the recorded cost toward zero whenever a regeneration is scraped alongside
+            // real runs. The "skipping the .blib write" line above is prose that tooling does
+            // not parse.
+            if (!config.DiagnosticsOnly)
+            {
+                ctx.LogInfo(string.Format(@"[STAGE-WALL] blib: {0:F1}s",
+                    swBlib.Elapsed.TotalSeconds));
+            }
             // The blib write builds several whole-run indexes over the pool (passing
             // precursors, best-per-precursor, shared boundaries, cross-file observations),
             // so it is the other candidate reason the pool cannot be consumed per file.
@@ -275,9 +338,19 @@ namespace pwiz.Osprey.Tasks
             // this post-compaction, second-pass-q-valued pool -- the same
             // RescoredEntries the pass-2 FDRBench TSV is written from. Opt-in and
             // off the default output path; a failure is logged and swallowed.
+            // The protein-compact stratum splits the pass-2 acceptance boundary in two (#4573):
+            // in-stratum entries were re-competed, off-stratum ones carry pass-1 q and aggregate
+            // forward. Absent outside protein-compact, which leaves the panel on one boundary.
             if (config.ModelDiagnostics)
+            {
+                HashSet<uint> stratumBaseIds = null;
+                if (OspreyEnvironment.Pass2ProteinCompact &&
+                    ctx.TryGet<ProteinCompactStratum>(out var pcStratum))
+                    stratumBaseIds = pcStratum.BaseIds;
                 ModelDiagnosticsReport.WritePass2AndFinalize(
-                    perFileEntries, pass2Contributions, libraryById, config, ctx.LogInfo);
+                    perFileEntries, pass2Contributions, libraryById, config, ctx.LogInfo,
+                    stratumBaseIds);
+            }
 
             return true;
         }
@@ -342,6 +415,30 @@ namespace pwiz.Osprey.Tasks
             var result = ProteinFdrEngine.RunSecondPass(
                 perFileEntries, fullLibrary, config, ctx.LogInfo);
 
+            // The 2nd-pass sidecar was written BEFORE this protein FDR ran - it is one of its
+            // inputs - so the protein column it carries is still the pass-1 value at this point.
+            // Patch it now that the pass-2 value exists, so every column in that file is a
+            // pass-2 value (issue #4559). Cheap: 8 bytes per record, one file at a time, and
+            // only where a 2nd-pass sidecar was written.
+            // This MUST precede the dumps below: Stage7ProteinFdrOnly ends the process there,
+            // and an unpatched record keeps whatever it held when the sidecar was written -
+            // the ResetScores default for every entry Stage 6 rescored or gap-filled, since
+            // RestorePass1Scalars no longer seeds this field.
+            // The patch and the report writer below shared a 125 s silence on the 82-file SEA-AD
+            // run of 2026-08-14, between "N protein groups pass ..." and the blib write (#4571).
+            // Each now carries its own ProgressReporter inside the callee rather than a heading
+            // here: a reporter prints its heading and then ONLY as many percent lines as the
+            // elapsed time needs, so a fast run costs one line and a slow one stays alive. An
+            // unconditional heading at the call site costs its line on every run forever, and
+            // duplicated the reporter's own heading to the same second.
+            // Not under --task ModelDiagnostics, whose contract is that it rewrites the report
+            // and touches no other artifact. The patch is idempotent, so a regeneration wrote
+            // the same bytes back - invisible to a content comparison, but it reset every
+            // 2nd-pass sidecar's mtime, which is exactly the signal used to tell when a run's
+            // inputs were produced. Caught by the mode 7 regeneration leg.
+            if (AnyReconciledParquet(config) && !config.DiagnosticsOnly)
+                Pass2FdrSidecar.PatchPass2ProteinQvalues(ctx, perFileEntries);
+
             // Cross-impl bisection dump (env-var-gated, no-op in production).
             if (ctx.Diagnostics?.DumpDetectedPeptides ?? false)
                 ctx.Diagnostics?.WriteStage7DetectedPeptidesDump(result.DetectedPeptides);
@@ -363,7 +460,7 @@ namespace pwiz.Osprey.Tasks
             // byte-parity gate (blib + Stage-7 dump) is unaffected. The per-replicate
             // protein counts re-run protein FDR per run, so this is the one place with the
             // full per-file pool + library in hand.
-            if (config.WriteProteinReport || config.WriteSummaryReport)
+            if ((config.WriteProteinReport || config.WriteSummaryReport) && !config.DiagnosticsOnly)
             {
                 OspreyReportWriter.WriteReports(result, perFileEntries, fullLibrary, config, ctx.LogInfo);
             }

@@ -381,7 +381,21 @@ namespace pwiz.Osprey.Tasks
             // resident-pool consumer FDRBench pass 1, which walks the full pre-compaction
             // FdrEntry pool -- still needs the fat stubs here. --model-diagnostics is NOT
             // one of them any more (#4505): it streams its report on every path.
-            bool needsResidentPool = NeedsResidentPool(ctx.Config);
+            // The fat/lean decision, and the guard that checks it, key off CanUseLeanProjection -
+            // the same predicate the two sibling sites use. Bare NeedsResidentPool no longer
+            // excludes ExpectReconciledInput (#4486), so a config with it set reached here with
+            // needsResidentPool == false: GuardResidentPool was handed false and refused nothing,
+            // and the lean branch streamed projection rows with no FdrEntry allocated, handing
+            // Stage 7 empty per-file lists. That is precisely what ResidentPoolGuardTest asserts
+            // must never happen.
+            //
+            // NOT reachable today, and the claim that it was is wrong: Program.cs rejects
+            // --task SecondPassFDR combined with --input and requires --input-scores, so
+            // ExpectReconciledInput implies InputScores.Count > 0 and IsIncluded returns false -
+            // Run is never entered on that config. This is aligned with its two siblings so the
+            // one decision has one predicate, not so that a live defect is closed.
+            bool needsResidentPool = !CanUseLeanProjection(ctx.Config, hasReconSidecars: false,
+                                                           OspreyEnvironment.UseFdrProjection);
             GuardResidentPool(ctx.Config, needsResidentPool);
 
             FdrProjectionSet projections = null;
@@ -1751,8 +1765,10 @@ namespace pwiz.Osprey.Tasks
                 if (!streamed)
                 {
                     foreach (var kvp in perFileEntries)
+                    {
                         foreach (var entry in kvp.Value)
                             entry.Features = null;
+                    }
                 }
                 ctx.LogInfo(string.Format(
                     @"Hydrated rescore bundle for {0} file(s) ({1} reconciliation actions, " +
@@ -1808,7 +1824,11 @@ namespace pwiz.Osprey.Tasks
             foreach (var parquetPath in config.InputScores)
             {
                 string syntheticInput = RescoreHydration.SyntheticInputFromParquet(parquetPath);
-                if (!File.Exists(FdrScoresSidecar.Pass1Path(syntheticInput))
+                // Version-fenced like every other sidecar gate: a v3 file left by an older build
+                // is present but unreadable, and answering "yes, all sidecars are here" off
+                // File.Exists keeps the fat pool on a path whose overlay then cannot load it.
+                if (!FdrScoresSidecar.IsCurrentFormat(FdrScoresSidecar.Pass1Path(syntheticInput),
+                                                     FdrScoresSidecar.Pass.FirstPass)
                     || !File.Exists(ReconciliationFile.PathForInput(syntheticInput)))
                     return false;
             }

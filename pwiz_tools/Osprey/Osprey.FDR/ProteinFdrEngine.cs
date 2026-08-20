@@ -50,7 +50,7 @@ namespace pwiz.Osprey.FDR
         /// First-pass protein FDR (pre-Stage-6, full pre-compaction pool): builds
         /// parsimony from peptides passing peptide-level run FDR, runs picked-protein
         /// FDR at <see cref="OspreyConfig.RunFdr"/>, and writes
-        /// <see cref="FdrEntry.RunProteinQvalue"/> on every stub. The pure computation
+        /// <see cref="FdrEntry.ExperimentProteinQvalue"/> on every stub. The pure computation
         /// lives in <c>ProteinFdr.RunFirstPassProteinFdr</c>; this adds the
         /// summary logging and returns the artifacts so the Tasks facade can emit the
         /// Stage-6 diagnostic dump + <c>ProteinFdrOnly</c> early-exit WITHOUT
@@ -103,9 +103,10 @@ namespace pwiz.Osprey.FDR
         /// Second-pass / run-wide protein FDR (SecondPassFDR, post Stage-6): collects
         /// best peptide scores, gates the detected-peptide set on experiment-level
         /// q-value, builds parsimony, runs picked-protein FDR at
-        /// <see cref="OspreyConfig.RunFdr"/>, and propagates both
-        /// <see cref="FdrEntry.RunProteinQvalue"/> and
-        /// <see cref="FdrEntry.ExperimentProteinQvalue"/> onto every stub. Logs
+        /// <see cref="OspreyConfig.RunFdr"/>, and propagates
+        /// <see cref="FdrEntry.ExperimentProteinQvalue"/> onto every stub, OVERWRITING the
+        /// first-pass value the Stage-5 run left there (the pass-1 value has already been
+        /// captured into the 1st-pass sidecar by then). Logs
         /// summary counts via <paramref name="logInfo"/> (which may be null for a
         /// silent run, like <c>RunFirstPass</c>) and returns the parsimony /
         /// FDR artifacts so the Tasks facade can emit the Stage-7 detected-peptides
@@ -196,7 +197,7 @@ namespace pwiz.Osprey.FDR
             // the dumps do not read, so emitting the dump after propagation is
             // output-invariant -- and matches the first-pass ordering, where
             // RunFirstPassProteinFdr likewise propagates before the facade dump.
-            ProteinFdr.PropagateProteinQvalues(perFileEntries, proteinFdr, true, true);
+            ProteinFdr.PropagateProteinQvalues(perFileEntries, proteinFdr);
 
             return new SecondPassProteinFdrResult(detectedPeptides, parsimony, proteinFdr);
         }

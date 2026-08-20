@@ -749,19 +749,39 @@ namespace pwiz.Osprey.FDR
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
 
-            // Winner's q-value keyed by base_id -- assigned to all observations sharing the
-            // same base_id (both target and decoy sides) at expand/assign time. Matches
-            // Rust's base_id_exp_prec_q HashMap at osprey-fdr/src/percolator.rs:2168 --
-            // without this, non-winning per-file observations of a multi-file precursor stay
-            // at q=1.0 and downstream stages that gate on experiment_precursor_qvalue (Stage
-            // 6 calibration refit and reconciliation) miss the bulk of the consensus pool.
-            var baseIdExpQ = new Dictionary<uint, double>();
+            // Winner's q-value keyed by the winner's FULL entry_id -- decoy bit intact.
+            //
+            // The reason for a map at all is unchanged: it assigns the q to every per-file
+            // observation of the winning precursor, so that non-winning observations of a
+            // multi-file precursor do not stay at q=1.0 and leave Stage 6 calibration refit
+            // and reconciliation missing the bulk of the consensus pool. Keying on entry_id
+            // still does that - all observations of one entry share an entry_id across files.
+            //
+            // What it must NOT do is cross the target/decoy boundary, and keying on base_id
+            // did: a target and its decoy SHARE a base_id, so when the decoy won the
+            // competition the target inherited the winner's q. Measured on the 82-file SEA-AD
+            // run before this fix: 5 accepted precursors carried their paired decoy's q to 12
+            // decimal places while scoring below it - e.g. base 1205336, target aggregate
+            // -0.0521 against its decoy's +1.5943, both reporting q=0.004766. Those 5 are
+            // reported at q <= 1% having LOST their pair, and they drag any score-space
+            // acceptance boundary built from the accepted set onto the DECOY's scale (the
+            // --model-diagnostics decoy row read 15.7x its definition because of them).
+            //
+            // This is the same rule ClampExperimentQToBestRun already states for the run-level
+            // floors: "never the shared base_id / bare sequence - a target must not inherit its
+            // paired decoy's good run". The loser of a competition is not in the ranking, so it
+            // keeps the 1.0 default, which is what TDC means.
+            //
+            // Rust's base_id_exp_prec_q (osprey-fdr/src/percolator.rs) carried the identical
+            // defect and was fixed with it in maccoss/osprey#63 (02d3df0), across all three of
+            // its sites. Cross-impl is green again on this pair - precursors 29300 on both
+            // sides, FDR sidecars per-field at 1e-9 - so the two are matched, not C#-ahead.
+            var expQByWinnerId = new Dictionary<uint, double>();
             for (int rank = 0; rank < wi.Length; rank++)
             {
-                uint baseId = entryIds[wi[rank]] & PercolatorEntry.BASE_ID_MASK;
-                baseIdExpQ[baseId] = q[rank];
+                expQByWinnerId[entryIds[wi[rank]]] = q[rank];
             }
-            return baseIdExpQ;
+            return expQByWinnerId;
         }
 
         /// <summary>
@@ -777,13 +797,53 @@ namespace pwiz.Osprey.FDR
         {
             int n = scores.Length;
             var qvalues = new double[n];
-            var baseIdExpQ = ComputeExperimentPrecursorQMap(scores, labels, entryIds, applyExperimentAgg);
+            var expQByWinnerId = ComputeExperimentPrecursorQMap(scores, labels, entryIds, applyExperimentAgg);
             for (int i = 0; i < n; i++)
             {
+                // Full entry_id, NOT the base id: an entry takes the q only when it was the
+                // side that won its own competition. See the map builder for why.
                 double qv;
-                qvalues[i] = baseIdExpQ.TryGetValue(entryIds[i] & PercolatorEntry.BASE_ID_MASK, out qv) ? qv : 1.0;
+                qvalues[i] = expQByWinnerId.TryGetValue(entryIds[i], out qv) ? qv : 1.0;
             }
             return qvalues;
+        }
+
+        /// <summary>
+        /// Bounded (O(distinct entry_ids)) map of the score the EXPERIMENT-scope competitions
+        /// rank each entry on: <c>entry_id -&gt; aggregate score</c> (sidecar v4, issue #4522).
+        /// Persisted beside the experiment q-values it produced, so a consumer can build a
+        /// score-space acceptance boundary at experiment scope without rebuilding the roll-up
+        /// itself - the reconstruction that has to branch on <c>OSPREY_EXPERIMENT_AGG</c> and is
+        /// therefore silently wrong on exactly the arms where the aggregation is under study.
+        ///
+        /// <para>Uses the SAME <c>effScores</c> selection as
+        /// <see cref="ComputeExperimentPrecursorQMap"/> / <see cref="ComputeExperimentPeptideQMap"/>,
+        /// so it cannot report a score those competitions did not rank on. Under the default
+        /// aggregation <c>effScores == scores</c> and the max-per-entry reduction below is the
+        /// same reduction <see cref="TargetDecoyCompetition.CompeteAll"/> performs per base_id;
+        /// under mean-best-N every row of an entry already carries the group value, so the max
+        /// is the identity. Either way every row of an entry gets the same number and the
+        /// consumer just compares.</para>
+        ///
+        /// <para>Keyed by FULL entry_id, not base_id: a target and its decoy are distinct
+        /// entries with distinct aggregates (and
+        /// <see cref="TargetDecoyCompetition.ComputeBaseIdMeanBestN"/> likewise accumulates
+        /// them separately), even though the competition that consumes them pairs the two.</para>
+        /// </summary>
+        internal static Dictionary<uint, double> ComputeExperimentAggregateScoreMap(
+            double[] scores, bool[] labels, uint[] entryIds, bool applyExperimentAgg = true)
+        {
+            double[] effScores = applyExperimentAgg && OspreyEnvironment.ExperimentAggMeanBest
+                ? TargetDecoyCompetition.ComputeBaseIdMeanBestN(scores, labels, entryIds, OspreyEnvironment.MeanBestN)
+                : scores;
+
+            var aggByEntryId = new Dictionary<uint, double>();
+            for (int i = 0; i < effScores.Length; i++)
+            {
+                if (!aggByEntryId.TryGetValue(entryIds[i], out double cur) || effScores[i] > cur)
+                    aggByEntryId[entryIds[i]] = effScores[i];
+            }
+            return aggByEntryId;
         }
 
         /// <summary>

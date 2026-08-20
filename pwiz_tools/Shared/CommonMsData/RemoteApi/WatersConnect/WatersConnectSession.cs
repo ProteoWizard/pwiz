@@ -104,6 +104,43 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             return false;
         }
 
+        /// <summary>
+        /// Creates a new folder under the folder identified by <paramref name="parentFolderId"/> via
+        /// PUT /waters_connect/v2.0/folders/{parentFolderId}. Returns the HTTP status code so the caller
+        /// can give specific feedback (e.g. Forbidden when the user lacks folder-create permission).
+        /// On success the cached folder list is refreshed so the new folder resolves and appears in the
+        /// next listing. Does not throw on HTTP error - the status code is returned instead.
+        /// </summary>
+        public HttpStatusCode CreateFolder(string parentFolderId, string name, string description, out string responseBody)
+        {
+            var requestUri = new Uri(WatersConnectAccount.GetFoldersUrl() + RemoteUrl.PATH_SEPARATOR + parentFolderId);
+            var body = new JObject { [@"Name"] = name, [@"Description"] = description ?? string.Empty }.ToString();
+            var request = new HttpRequestMessage(HttpMethod.Put, requestUri) { Content = new StringContent(body) };
+            request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(@"application/json") { CharSet = @"utf-8" };
+            HttpResponseMessage response;
+            try
+            {
+                response = _httpClient.SendAsync(request).Result;
+            }
+            catch (Exception e)
+            {
+                // Network/TLS/DNS failures must not escape as an unhandled exception from the wait
+                // dialog: return a failure status and surface the detail through responseBody.
+                responseBody = ((e as AggregateException)?.Flatten().InnerException ?? e).Message;
+                return HttpStatusCode.ServiceUnavailable;
+            }
+            responseBody = response.Content?.ReadAsStringAsync().Result;
+            if (response.StatusCode < HttpStatusCode.BadRequest)
+            {
+                // Invalidate the cached folder list and refetch so the new folder becomes visible.
+                // RetryFetch alone is a no-op while a successful response is already cached (which it
+                // is once the dialog has listed the parent), so the cache must be cleared first.
+                ClearResultsFor<ImmutableList<WatersConnectFolderObject>>(GetRootContentsUrl());
+                RetryFetch(GetRootContentsUrl(), GetFolders);
+            }
+            return response.StatusCode;
+        }
+
         protected void EnsureSuccess(HttpResponseMessage response)
         {
             if (response.StatusCode >= HttpStatusCode.BadRequest)
@@ -266,6 +303,32 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 RetryFetch(GetSampleSetsUrl(watersConnectUrl), GetFolders);
             if (watersConnectUrl.Type == WatersConnectUrl.ItemType.sample_set)
                 RetryFetch(GetInjectionsUrl(watersConnectUrl), GetFiles);
+        }
+
+        /// <summary>
+        /// Discards the cached contents for <paramref name="remoteUrl"/> so the next listing re-fetches
+        /// from the server. Unlike <see cref="RetryFetchContents"/> (a no-op while a successful response
+        /// is cached), this forces a fresh fetch, letting the Refresh command pick up folders or methods
+        /// added on the server since the directory was last loaded. The cleared request types mirror
+        /// those fetched by <see cref="AsyncFetchContents"/> for the same directory.
+        /// </summary>
+        public void RefreshContents(RemoteUrl remoteUrl)
+        {
+            var watersConnectUrl = (WatersConnectUrl) remoteUrl;
+            // Resolve the child URLs before clearing the root cache: GetSampleSetsUrl/GetInjectionsUrl
+            // can fall back to the cached root folder list to resolve a path-only URL, so clearing root
+            // first could make them return null and silently skip their own cache invalidation.
+            var sampleSetsUrl = watersConnectUrl.Type == WatersConnectUrl.ItemType.folder
+                ? GetSampleSetsUrl(watersConnectUrl)
+                : null;
+            var injectionsUrl = watersConnectUrl.Type == WatersConnectUrl.ItemType.sample_set
+                ? GetInjectionsUrl(watersConnectUrl)
+                : null;
+            ClearResultsFor<ImmutableList<WatersConnectFolderObject>>(GetRootContentsUrl());
+            if (sampleSetsUrl != null)
+                ClearResultsFor<ImmutableList<WatersConnectFolderObject>>(sampleSetsUrl);
+            if (injectionsUrl != null)
+                ClearResultsFor<ImmutableList<WatersConnectFileObject>>(injectionsUrl);
         }
 
         protected Uri GetRootContentsUrl()
