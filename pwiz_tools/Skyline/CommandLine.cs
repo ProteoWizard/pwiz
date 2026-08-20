@@ -40,6 +40,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
@@ -548,6 +549,11 @@ namespace pwiz.Skyline
                 // Some of the results that were just imported may have been acquired before the remove-before 
                 // date and we want to remove them.
                 RemoveResults(commandArgs.RemoveBeforeDate);
+            }
+
+            if (!ReorderReplicates(commandArgs))
+            {
+                return false;
             }
 
             if (commandArgs.Reintegrating && !ReintegratePeaks(commandArgs))
@@ -2411,6 +2417,70 @@ namespace pwiz.Skyline
 
                 ModifyDocument(d => d.ChangeMeasuredResults(newMeasuredResults));
             }
+        }
+
+        private bool ReorderReplicates(CommandArgs commandArgs)
+        {
+            if (string.IsNullOrEmpty(commandArgs.ReorderReplicatesPath))
+            {
+                return true;
+            }
+
+            string[] requestedNames;
+            try
+            {
+                requestedNames = File.ReadAllLines(PathEx.SafePath(commandArgs.ReorderReplicatesPath), Encoding.UTF8)
+                    .Select(line => line.Trim())
+                    .Where(line => line.Length > 0)
+                    .ToArray();
+            }
+            catch (Exception exception)
+            {
+                _out.WriteLine(Resources.CommandStatusWriter_WriteLine_Error_ + @" " +
+                    string.Format(SkylineResources.CommandLine_ReorderReplicates_Error__Could_not_read_replicate_order_file__0____1_,
+                        commandArgs.ReorderReplicatesPath, exception.Message));
+                return false;
+            }
+
+            if (requestedNames.Length == 0)
+            {
+                _out.WriteLine(Resources.CommandStatusWriter_WriteLine_Error_ + @" " +
+                    string.Format(SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate_order_file_does_not_contain_any_replicate_names_,
+                        commandArgs.ReorderReplicatesPath));
+                return false;
+            }
+
+            var duplicateName = requestedNames.GroupBy(name => name, StringComparer.Ordinal)
+                .FirstOrDefault(group => group.Count() > 1)?.Key;
+            if (duplicateName != null)
+            {
+                _out.WriteLine(Resources.CommandStatusWriter_WriteLine_Error_ + @" " +
+                    string.Format(SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate_name__0__appears_more_than_once_in_the_order_file_,
+                        duplicateName, commandArgs.ReorderReplicatesPath));
+                return false;
+            }
+
+            if (Document.MeasuredResults == null || Document.MeasuredResults.Chromatograms.Count == 0)
+            {
+                _out.WriteLine(Resources.CommandStatusWriter_WriteLine_Error_ + @" " +
+                    SkylineResources.CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replicates_);
+                return false;
+            }
+
+            var replicatesByName = Document.MeasuredResults.Chromatograms
+                .ToDictionary(chromatogramSet => chromatogramSet.Name, StringComparer.Ordinal);
+            var unknownName = requestedNames.FirstOrDefault(name => !replicatesByName.ContainsKey(name));
+            if (unknownName != null)
+            {
+                _out.WriteLine(Resources.CommandStatusWriter_WriteLine_Error_ + @" " +
+                    string.Format(SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate__0__was_not_found_in_the_document_,
+                        unknownName, commandArgs.ReorderReplicatesPath));
+                return false;
+            }
+
+            var replicateRefs = requestedNames.Select(name => ReplicateRef.FromChromatogramSet(replicatesByName[name]));
+            SetDocument(new ElementReorderer(CancellationToken.None, Document).SetNewOrder(replicateRefs));
+            return true;
         }
 
         public bool MinimizeResults(CommandArgs commandArgs)

@@ -472,6 +472,30 @@ namespace pwiz.Osprey.FDR
 
                 foreach (var entry in kvp.Value)
                 {
+                    // The score this mode's competition ranks on, recorded for EVERY entry -
+                    // decoys and non-passing targets included. A consumer drawing a score-space
+                    // acceptance boundary (the co-assignment panel) needs it on both sides of the
+                    // comparison, and a decoy has no q to fall back on. Left at ResetScores' 0.0
+                    // it would not merely be missing: 0.0 sits mid distribution for a signed
+                    // score, so it would read as a real value and collapse the boundary.
+                    // NOT setting entry.Score here, deliberately. It stays at ResetScores' 0.0
+                    // for every entry in this mode, which means the co-assignment panel renders a
+                    // uniform "no co-assignment anywhere" page under --fdr-method simple (the
+                    // per-file cutoff is 0.0 and `partner.Score > row.Score` is never true).
+                    // Assigning CoelutionSum fixes the panel but is NOT free: ProteinFdr's
+                    // CollectBestPeptideScores and ComputeProteinFdr both rank on Score, so it
+                    // silently moves protein q-values and passing-protein counts for this mode -
+                    // and --fdr-method simple appears nowhere in regression.ps1 or the goldens,
+                    // so nothing would catch a regression. The mode is slated for removal
+                    // (only Percolator is well tested), so a diagnostics-only gain is not worth
+                    // an unpinned scoring change in it.
+                    //
+                    // CoelutionSum is per-ROW, so unlike the Percolator paths this does not
+                    // satisfy "every row of an entry carries the same aggregate". The panel's
+                    // reduction takes the max over real values, which turns it into the entry's
+                    // best coelution - a sensible entry-level aggregate for this mode - but a
+                    // consumer that assumes the read is a non-reduction must not rely on it here.
+                    entry.ExperimentAggregateScore = entry.CoelutionSum;
                     if (!entry.IsDecoy && passingIds.Contains(entry.EntryId))
                     {
                         entry.RunPrecursorQvalue = result.FdrAtThreshold;
@@ -533,6 +557,7 @@ namespace pwiz.Osprey.FDR
                     fdrEntry.ExperimentPrecursorQvalue = result.ExperimentPrecursorQvalue;
                     fdrEntry.ExperimentPeptideQvalue = result.ExperimentPeptideQvalue;
                     fdrEntry.Pep = result.Pep;
+                    fdrEntry.ExperimentAggregateScore = result.ExperimentAggregateScore;
                 }
             }
         }

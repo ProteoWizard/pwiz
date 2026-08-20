@@ -104,7 +104,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 // We manually set numpy to the latest version before 2.0 because of a backward incompatibility issue
                 // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
                 // TODO: delete the following line after the issue above is resolved
-                new PythonPackage { Name = @"numpy", Version = @"1.26.4" }
+                new PythonPackage { Name = @"numpy", Version = @"1.26.4" },
+
+                // xxhash 4.0.0 (2026-08-12) stopped accepting str and now requires bytes, which breaks
+                // alphabase.peptide.precursor.hash_mod_seq_df ("TypeError: Strings must be encoded before hashing").
+                // alphabase only requires an unpinned "xxhash", so pip picks up 4.0.0. Pin to the version
+                // alphabase itself pins in its requirements.txt.
+                // TODO: delete the following line once alphabase encodes its strings before hashing
+                new PythonPackage { Name = @"xxhash", Version = @"3.5.0" }
             };
 
             return new PythonInstaller(packages, writer, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);

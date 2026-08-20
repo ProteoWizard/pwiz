@@ -98,10 +98,11 @@ td {
 <tr><td><nobr>--reintegrate-overwrite-peaks</nobr></td><td>手動で積分された既存のピークは、再積分モデルで選択されたピークによって上書きされます。（必要なのは、<nobr>--reintegrate-model-nameです</nobr>。）</td></tr>
 <tr><td><nobr>--reintegrate-exclude-feature</nobr>=<br/>&lt;フィーチャー名&gt;</td><td>モデルから名前別で特定のフィーチャースコアを除外するのに使用します。名前はユーザーインターフェイスで見つけることができます。この引数は複数フィーチャーを除外するため複数回使用することができます。</td></tr>
 </table>
-<div class="RowType">結果の繰り返し測定を削除中</div>
+<div class="RowType">Managing results replicates</div>
 <table>
 <tr><td><nobr>--remove-before</nobr>=&lt;日付&gt;</td><td>指定された日付以前に取得時間のある、開いているドキュメントからすべての結果を削除します。</td></tr>
 <tr><td><nobr>--remove-all</nobr></td><td>開いているドキュメントからすべての結果を削除します。</td></tr>
+<tr><td><nobr>--reorder-replicates</nobr>=path/to/file（ファイル）</td><td>Reorder results replicates using a <nobr>UTF-8</nobr> text file containing one existing replicate name per line. Listed replicates are placed first; unlisted replicates retain their relative order.</td></tr>
 </table>
 <div class="RowType">結果ファイルサイズを最小にする</div>
 <table>
