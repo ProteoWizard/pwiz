@@ -901,9 +901,10 @@ public static class SkylineTools
         "focus and you never have to arrange focus first; the control is verified enabled first. The text is " +
         "LITERAL - no key names, nothing to escape. To press a key (Enter, Down, Ctrl+V) use " +
         "skyline_send_key_stroke; to PASTE use skyline_perform_action with action='paste', which takes the " +
-        "text and so needs neither the clipboard nor Ctrl+V. Typing into the Targets tree starts editing the " +
-        "selected node and raises its auto-completion popup, which skyline_send_key_stroke then steps through " +
-        "('Down') and accepts ('Enter'). Discover control names with skyline_get_controls.")]
+        "text and so needs neither the clipboard nor Ctrl+V. DO NOT type into the Targets tree: it forwards " +
+        "each character through the FOCUSED window, so the characters land in whatever application is in " +
+        "front and arrive out of order - use skyline_perform_action with action='rename_node' to set a " +
+        "node's text. Discover control names with skyline_get_controls.")]
     public static string SendText(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Control to type into, as skyline_get_controls reports it: its visible Label, or its Type for a caption-less control (e.g. 'TreeView')")] string controlId,
@@ -918,8 +919,7 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_send_key_stroke"),
      Description("Press one key on a control, whether or not it has the focus - e.g. to accept or step " +
-        "through the auto-completion popup that skyline_send_text raises (type a protein name, press 'Down' " +
-        "to pick a match, then 'Enter' to add it). The keystroke is atomic, so no key is ever left down. " +
+        "through a popup, or to paste with 'Ctrl+V' where a form's own handler does the pasting. " +
         "NOTE: this raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather " +
         "than by a handler - Backspace editing a text box, an arrow moving a plain list's selection - will " +
         "NOT take effect. Discover control names with skyline_get_controls.")]

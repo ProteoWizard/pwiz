@@ -37,7 +37,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -585,9 +584,8 @@ namespace pwiz.SkylineTestTutorial
             {
                 var node = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 1];
                 SkylineWindow.SequenceTree.SelectedNode = node;
-                var treeForm = new StandaloneForm(SkylineWindow.SequenceTree.FindForm(), CancellationToken.None);
-                var treeElement = (ControlElement) treeForm.GetChild(new SkylineTool.UiElementPath(null, null, null, nameof(SequenceTree)));
-                treeElement.SendTextNow(text);
+                SkylineWindow.SequenceTree.BeginEdit(false);
+                SkylineWindow.SequenceTree.StatementCompletionEditBox.TextBox.Text = text;
             });
             var statementCompletionForm = WaitForOpenForm<StatementCompletionForm>();
             Assert.IsNotNull(statementCompletionForm);

@@ -1129,32 +1129,15 @@ namespace pwiz.Skyline.Controls
         {
             if (IsEditableNode(SelectedNode) && !Char.IsControl(e.KeyChar))
             {
-                // Only the first character starts the edit. StartLabelEdit builds a new box every time, so
-                // starting a second one would take what had been typed so far with the old box.
-                bool startedEdit = _editTextBox == null;
-                if (startedEdit)
-                    BeginEdit(true);
-                // Write into the edit box directly rather than posting the character to the focused window,
-                // where it could land in another application or arrive out of order. TextChanged drives
-                // statement completion from here.
-                //
-                // The character that STARTS the edit replaces the node's name outright, as typing over a
-                // selected label does. Leaving that to the selection would be a race: BeginEdit seeds the box
-                // from node.Text and focuses it, but the select-all that focus brings happens in OnGotFocus,
-                // after this runs inside the character's own message.
-                if (_editTextBox != null)
+                BeginEdit(true);
+                string keyChar = e.KeyChar.ToString(LocalizationHelper.CurrentCulture);
+                if (IsKeyLocked(Keys.CapsLock))
+                    keyChar = keyChar.ToLower();
+                if (@"+^%~(){}[]".IndexOf(keyChar, StringComparison.Ordinal) >= 0)
                 {
-                    string keyChar = e.KeyChar.ToString(LocalizationHelper.CurrentCulture);
-                    if (startedEdit)
-                    {
-                        _editTextBox.TextBox.Text = keyChar;
-                        _editTextBox.TextBox.SelectionStart = keyChar.Length;
-                    }
-                    else
-                    {
-                        _editTextBox.TextBox.SelectedText = keyChar;
-                    }
+                    keyChar = @"{" + keyChar + @"}";
                 }
+                SendKeys.Send(keyChar);
                 e.Handled = true;
             }
             else

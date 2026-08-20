@@ -306,12 +306,12 @@ namespace pwiz.Skyline.ToolsUI
 
         public static readonly UiAction SendText = SimpleAction<IKeyboardElement, string>(
                 @"SendText", (e, text) => { e.SendTextNow(text); return null; })
-            .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus. Named for what it does: it delivers the CHARACTERS, it does not simulate key presses - for a key use 'send_key_stroke', and to paste use 'paste' (which takes the text, so it needs no clipboard). Typing into the Targets tree starts editing the selected node and raises its auto-completion popup, which 'send_key_stroke' then steps through ('Down') and accepts ('Enter')."),
+            .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus. Named for what it does: it delivers the CHARACTERS, it does not simulate key presses - for a key use 'send_key_stroke', and to paste use 'paste' (which takes the text, so it needs no clipboard). Do NOT type into the Targets tree: it forwards each character through the FOCUSED window, so the characters land in whatever application is in front, arrive out of order, and leave the tree stuck editing a label. Use 'rename_node' to set a node's text."),
                 new LlmInstruction(@"the text to type, taken literally"));
 
         public static readonly UiAction SendKeyStroke = SimpleAction<IKeyboardElement, string>(
                 @"SendKeyStroke", (e, keyStroke) => { e.SendKeyStrokeNow(keyStroke); return null; })
-            .Describe(new LlmInstruction(@"Press one key on this control, whether or not it has the focus - e.g. to accept or step through the auto-completion popup that typing raises. Raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather than by a handler (Backspace editing text, an arrow moving a plain list's selection) will not take effect."),
+            .Describe(new LlmInstruction(@"Press one key on this control, whether or not it has the focus - e.g. to accept a choice in a popup, or to paste with 'Ctrl+V' where the form's own handler does the pasting. Raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather than by a handler (Backspace editing text, an arrow moving a plain list's selection) will not take effect."),
                 new LlmInstruction(@"the key with any modifiers, '+'-separated, e.g. ""Down"", ""Enter"" or ""Ctrl+V"""));
 
         public static readonly UiAction CheckItem = SimpleAction<ICheckItemsElement, string>(

@@ -564,10 +564,9 @@ namespace SkylineTool
         /// <see cref="SendKeyStroke"/>; to paste, use the "paste" action, which takes the text to paste and so
         /// needs neither the clipboard nor a keystroke.</para>
         ///
-        /// <para>The Targets tree works too: typing there starts editing the selected node and raises the
-        /// statement-completion popup, which <see cref="SendKeyStroke"/> then steps through ("Down") and
-        /// accepts ("Enter"). <c>SequenceTree.OnKeyPress</c> puts each character straight into the edit box,
-        /// so nothing depends on which window holds the focus.</para>
+        /// <para>NOT for the Targets tree: <c>SequenceTree.OnKeyPress</c> forwards each character on with
+        /// <c>SendKeys.Send</c>, which posts to the FOCUSED window, so the characters land in whatever
+        /// application is in front and arrive out of order. Use the "rename_node" action instead.</para>
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">The control to type into, matched as <see cref="GetControls"/> reports it
@@ -576,9 +575,9 @@ namespace SkylineTool
         ActionResult SendText(string formId, string controlId, string text);
 
         /// <summary>
-        /// Presses one key on a control, whether or not it has the focus - e.g. to accept or step through the
-        /// auto-completion popup <see cref="SendText"/> raises. The keystroke is atomic (there is no way to
-        /// leave a key down), and the control is verified enabled first.
+        /// Presses one key on a control, whether or not it has the focus - e.g. to accept a choice in a
+        /// popup, or to paste with "Ctrl+V" where the form's own handler does the pasting. The control is
+        /// verified enabled first.
         ///
         /// <para>This raises the control's KeyDown with the named key and modifiers, which is where a WinForms
         /// handler reads a keystroke from. A key handled by the control's DEFAULT behavior rather than by a

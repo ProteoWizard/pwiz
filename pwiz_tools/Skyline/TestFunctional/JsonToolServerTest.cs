@@ -40,6 +40,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Startup;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
@@ -142,13 +143,14 @@ namespace pwiz.SkylineTestFunctional
             TestBlockedAndDisabledUIControls(server);
             TestClientReadsBoolResult(server);
 
-            // Last, because it gives the document a background proteome and a peptide of its own.
-            TestStatementCompletion(server);
+            // Last, because it gives the document a background proteome.
+            TestPasteKeyStroke(server);
         }
 
-        // A peptide of the mini rat proteome that ships with this test's data (in Ahsg / NP_037030), and
-        // not in any document here, so completing it is visible as a peptide the document did not have.
-        private const string COMPLETION_PEPTIDE = @"TALAAFNAQNNGTYFK";
+        // A peptide of the mini rat proteome that ships with this test's data, and the protein it belongs
+        // to, which only a paste that resolves against the proteome fills in.
+        private const string PASTE_PEPTIDE = @"TALAAFNAQNNGTYFK";
+        private const string PASTE_PROTEIN = @"NP_037030";
 
         /// <summary>
         /// Drives the Targets tree's statement completion through send_text and send_key_stroke: type a
@@ -156,10 +158,11 @@ namespace pwiz.SkylineTestFunctional
         /// reading <c>e.KeyData</c> (<c>StatementCompletionTextBox.TextBox_KeyDown</c>), which the key-stroke
         /// parsing assertions cannot.
         /// </summary>
-        private void TestStatementCompletion(JsonToolServer server)
+        private void TestPasteKeyStroke(JsonToolServer server)
         {
-            // Statement completion matches what is typed against a background proteome, so there has to be
-            // one. The mini rat proteome is already in this test's data.
+            // The mini rat proteome that ships with this test's data. With one, the Insert Peptides paste
+            // RESOLVES each peptide against it and fills in the protein column, which is the whole point of
+            // that form and the branch the connector's paste routes through.
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunDlg<BuildBackgroundProteomeDlg>(peptideSettingsUI.AddBackgroundProteome, dlg =>
             {
@@ -169,50 +172,29 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
-            // The empty node at the end of the tree. Completion is offered ONLY there: an existing protein
-            // or peptide node disables it (see SequenceTree.BeginEditNode).
-            RunUI(() => SkylineWindow.SequenceTree.SelectedNode =
-                SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 1]);
-
-            // The tree and its edit box are named by TYPE, neither having a label. Each is the only one of
-            // its kind on the form, which is what makes the type an answer.
-            string treeFormId = server.GetOpenForms().First(f => f.Type == nameof(SequenceTreeForm)).Id;
-            server.SendText(treeFormId, nameof(SequenceTree), COMPLETION_PEPTIDE);
-
-            // The pop-up is filled from a query against the proteome, so wait for it to be there and to hold
-            // a match, rather than for the document to become what this expects.
-            var completionForm = WaitForOpenForm<StatementCompletionForm>();
-            WaitForConditionUI(() => completionForm.ListView.Items.Count > 0);
-
-            // Enter accepts the focused match. Only Enter is sent: the pop-up already focuses its first
-            // match, so a Down would step nothing here. Stepping to a LATER match needs a multi-match list,
-            // which this two-protein proteome cannot produce, and is left uncovered.
-            var docBefore = SkylineWindow.Document;
-            server.SendKeyStroke(treeFormId, nameof(TextBox), @"Enter");
-
-            var docAfter = WaitForDocumentChange(docBefore);
-            AssertEx.IsTrue(docAfter.Peptides.Any(p => Equals(p.Peptide.Sequence, COMPLETION_PEPTIDE)),
-                string.Format(@"Accepting the statement completion for {0} did not add it to the document.",
-                    COMPLETION_PEPTIDE));
-
-            // Typing over a node that HAS a name replaces it, rather than extending it. The completion above
-            // cannot catch that: it edits the empty node at the end of the tree, whose text is blanked before
-            // the edit begins, so appending and replacing look identical there.
-            string nodeText = null;
-            RunUI(() =>
+            var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
+            try
             {
-                var named = SkylineWindow.SequenceTree.Nodes[0];
-                nodeText = named.Text;
-                SkylineWindow.SequenceTree.SelectedNode = named;
-            });
-            AssertEx.IsFalse(string.IsNullOrEmpty(nodeText), @"Need a named node to type over.");
-            server.SendText(treeFormId, nameof(SequenceTree), @"ZZZ");
-            RunUI(() =>
+                SetClipboardText(PASTE_PEPTIDE);
+                string pasteFormId = server.GetOpenForms().First(f => f.Type == nameof(PasteDlg)).Id;
+
+                // Ctrl+V reaches gridViewPeptides_KeyDown, which tests ClipboardHelper.IsPaste(e.KeyData).
+                // This is the one place a composed Keys value is shown to arrive at a handler that reads
+                // KeyData; everything else about SendKeyStroke is settled by the parsing assertions.
+                var pasted = server.SendKeyStroke(pasteFormId, @"gridViewPeptides", @"Ctrl+V");
+                Assert.IsNotNull(pasted);
+                AssertEx.IsTrue(pasted.Completed, @"Ctrl+V should complete: " + pasted.Message);
+
+                // The protein column is filled in from the proteome, which a plain cell fill would leave empty.
+                WaitForConditionUI(() => pasteDlg.PeptideRowCount > 0, @"The Ctrl+V never reached the grid");
+                string grid = server.GetGridText(pasteFormId, @"gridViewPeptides");
+                AssertEx.Contains(grid, PASTE_PEPTIDE);
+                AssertEx.Contains(grid, PASTE_PROTEIN);
+            }
+            finally
             {
-                AssertEx.AreEqual(@"ZZZ", SkylineWindow.SequenceTree.StatementCompletionEditBox.TextBox.Text,
-                    @"Typing over a named node should replace its name, not extend it.");
-                SkylineWindow.SequenceTree.CommitEditBox(true);
-            });
+                OkDialog(pasteDlg, pasteDlg.CancelDialog);
+            }
         }
 
         // How long to leave a dialog alone before looking at it a second time. This test fails intermittently in
