@@ -30,7 +30,7 @@
 #include <boost/make_shared.hpp>
 #include <stdexcept>
 #include <iostream>
-#include <atomic>
+#include <boost/atomic.hpp>
 
 
 namespace pwiz {
@@ -125,7 +125,7 @@ class PWIZ_API_DECL SpectrumListBase : public SpectrumList
     // mutable and atomic because spectrum() is const and is called from worker threads;
     // condemnation is an unconditional store while the good verdict is a compare-exchange from
     // unsettled, so no late-arriving good spectrum can un-condemn a file
-    mutable std::atomic<MzOrderVerdict> mzOrderVerdict_;
+    mutable boost::atomic<MzOrderVerdict> mzOrderVerdict_;
 };
 
 

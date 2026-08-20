@@ -28,6 +28,8 @@
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/range/iterator_range.hpp>
+#include "pwiz/utility/misc/sort_together.hpp"
 #include <algorithm>
 #include <numeric>
 
@@ -39,16 +41,6 @@ namespace {
 // about the writer rather than as coincidence.
 const size_t MIN_PEAK_COUNT_FOR_MZ_SORT_CHECK = 10;
 
-
-/// One array gathered into the given permutation of peak indexes, ready to be swapped in.
-template <typename T>
-std::vector<T> permuted(const std::vector<size_t>& order, const pwiz::util::BinaryData<T>& data)
-{
-    std::vector<T> result(order.size());
-    for (size_t i = 0; i < order.size(); ++i)
-        result[i] = data[order[i]];
-    return result;
-}
 
 } // namespace
 
@@ -112,30 +104,26 @@ PWIZ_API_DECL void pwiz::msdata::SpectrumListBase::ensureMzAscending(const Spect
         mzOrderVerdict_.load() == MzOrderVerdict::writerSortsByMz) // Already established this file is fine
         return;
 
-    // Nothing to reorder, and nothing to learn, until the binary data is actually here. Tested
-    // first because a metadata-only read still carries the array objects with their cvParams - IO
-    // builds those and skips only the base64 decode - so without this every metadata pass would pay
-    // for the scans below and, having no data, could never settle the verdict to stop paying.
-    // Sizes come off the arrays rather than from defaultArrayLength, which is only guaranteed from
-    // DetailLevel_FullMetadata up.
-    bool hasPeakData = false;
-    for (size_t i = 0; i < spectrum->binaryDataArrayPtrs.size() && !hasPeakData; ++i)
-        hasPeakData = spectrum->binaryDataArrayPtrs[i].get() &&
-                      spectrum->binaryDataArrayPtrs[i]->data.size() >= 2;
-    if (!hasPeakData)
+    // Nothing to reorder, and nothing to learn, until the binary data is actually here: a
+    // metadata-only read still carries the array objects with their cvParams, since IO builds those
+    // and skips only the base64 decode. Asking the m/z array settles that, and it is the lookup this
+    // needs anyway, so a metadata pass pays for one array lookup rather than that plus the cvParam
+    // scans below. The size comes off the array rather than from defaultArrayLength, which is only
+    // guaranteed from DetailLevel_FullMetadata up; fewer than two peaks is indeterminate sortedness
+    // and settles nothing either way.
+    BinaryDataArrayPtr mzArray = spectrum->getMZArray();
+    if (!mzArray.get() || mzArray->data.size() < 2)
         return;
 
     if (hasNonMzOrderingAxis(*spectrum))
         return;
 
-    BinaryDataArrayPtr mzArray = spectrum->getMZArray();
     BinaryDataArrayPtr intensityArray = spectrum->getIntensityArray();
-    if (!mzArray.get() || !intensityArray.get())
+    if (!intensityArray.get())
         return;
 
     auto& mzs = mzArray->data;
-    if (mzs.size() != intensityArray->data.size() || // Sanity check, flagged elsewhere if wrong
-        mzs.size() < 2) // Indeterminate sortedness
+    if (mzs.size() != intensityArray->data.size()) // Sanity check, flagged elsewhere if wrong
         return;
 
     if (std::is_sorted(mzs.begin(), mzs.end()))
@@ -154,38 +142,27 @@ PWIZ_API_DECL void pwiz::msdata::SpectrumListBase::ensureMzAscending(const Spect
         mzOrderVerdict_.exchange(MzOrderVerdict::writerDoesNotSortByMz) != MzOrderVerdict::writerDoesNotSortByMz;
 
     // A spectrum may carry other values like signal-to-noise, baseline, resolution or charge array
-    // alongside m/z and intensity. Make sure those other arrays are permuted in the same way as m/z
-    // and intensity.
-    // Stable, so peaks sharing an m/z keep the order the writer gave them.
-    std::vector<size_t> order(mzs.size());
-    std::iota(order.begin(), order.end(), size_t(0));
-    std::stable_sort(order.begin(), order.end(),
-                     [&mzs](size_t a, size_t b) { return mzs[a] < mzs[b]; });
+    // alongside m/z and intensity, and every one of them has to be permuted the same way. The double
+    // arrays and the integer arrays are separate members of Spectrum, hence the two range sets;
+    // sort_together gathers both before writing either back. Stable, so peaks sharing an m/z keep
+    // the order the writer gave them.
+    typedef pwiz::util::BinaryData<double>::iterator DoubleItr;
+    typedef pwiz::util::BinaryData<IntegerDataArray::value_type>::iterator IntegerItr;
 
-    // Every array is gathered first and only swapped in once they all succeeded. Doing it one array
-    // at a time would let a throw part way through leave m/z sorted against unsorted intensities -
-    // every value plausible and every pairing wrong - and nothing could detect it afterwards, since
-    // the m/z axis would by then ascend and this function would take the "seems fine" branch
-    // forever. The swap itself cannot throw.
-    std::vector<std::pair<pwiz::util::BinaryData<double>*, std::vector<double> > > doubleArrays;
+    std::vector<boost::iterator_range<DoubleItr>> doubleArrays;
     for (size_t i = 0; i < spectrum->binaryDataArrayPtrs.size(); ++i)
         if (spectrum->binaryDataArrayPtrs[i].get() &&
-            spectrum->binaryDataArrayPtrs[i]->data.size() == order.size())
-            doubleArrays.push_back(std::make_pair(&spectrum->binaryDataArrayPtrs[i]->data,
-                                                 permuted(order, spectrum->binaryDataArrayPtrs[i]->data)));
+            spectrum->binaryDataArrayPtrs[i].get() != mzArray.get() &&
+            spectrum->binaryDataArrayPtrs[i]->data.size() == mzs.size())
+            doubleArrays.push_back(boost::make_iterator_range(spectrum->binaryDataArrayPtrs[i]->data));
 
-    typedef IntegerDataArray::value_type IntegerValue;
-    std::vector<std::pair<pwiz::util::BinaryData<IntegerValue>*, std::vector<IntegerValue> > > integerArrays;
+    std::vector<boost::iterator_range<IntegerItr>> integerArrays;
     for (size_t i = 0; i < spectrum->integerDataArrayPtrs.size(); ++i)
         if (spectrum->integerDataArrayPtrs[i].get() &&
-            spectrum->integerDataArrayPtrs[i]->data.size() == order.size())
-            integerArrays.push_back(std::make_pair(&spectrum->integerDataArrayPtrs[i]->data,
-                                                  permuted(order, spectrum->integerDataArrayPtrs[i]->data)));
+            spectrum->integerDataArrayPtrs[i]->data.size() == mzs.size())
+            integerArrays.push_back(boost::make_iterator_range(spectrum->integerDataArrayPtrs[i]->data));
 
-    for (size_t i = 0; i < doubleArrays.size(); ++i)
-        doubleArrays[i].first->swap(doubleArrays[i].second);
-    for (size_t i = 0; i < integerArrays.size(); ++i)
-        integerArrays[i].first->swap(integerArrays[i].second);
+    pwiz::util::sort_together(mzs, doubleArrays, integerArrays, true);
 
     if (isFirstFoundSpectrumOutOfOrder)
         warn_once(("[SpectrumListBase] peaks were not written in ascending m/z order (first seen at \"" +
