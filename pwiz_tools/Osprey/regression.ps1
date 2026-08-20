@@ -317,6 +317,22 @@ $memStampArgs = @('--timestamp', '--memstamp')
 # older branches pinned to the v1 URL working exactly as before.
 $dataUrl = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/osprey-testfiles-mzML-v2.zip'
 
+# The Stellar library-decoy library, published SEPARATELY from the mzML bundle.
+#
+# It has to be separate. The bundle is 24.6 GB and its acquisition is
+# skip-if-present on the extracted root, so folding a new library into a -v3
+# bundle would either never reach a machine that already has the tree, or force
+# every machine to re-download the mzML to get a 258 MB library. Splitting the
+# two lets a library revision cost only the library.
+#
+# v3 vs the v2 copy inside the bundle: v2 carries 21 entrapment peptides whose
+# I/L-normalised sequence collides with a real target, which target-decoy
+# competition then resolves on the target's own signal. An exact-string audit
+# shows 0 collisions for BOTH versions - only the I/L-normalised check separates
+# them - so the version cannot be told from the library contents at a glance,
+# which is exactly why the zip name is the marker.
+$libDecoyV3Url = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/stellar-libdecoy-v3.zip'
+
 # --- Dataset table (standalone; mirrors ai/ Dataset-Config.ps1) --------------
 # Folder = mzML subfolder under the extracted root; Resolution = instrument mode.
 # Input mzML files and the .tsv library are discovered from the folder so
@@ -328,6 +344,11 @@ $dataUrl = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/
 #                    datasets share a Folder, or their goldens collide.
 #   NestedZip        zip inside LibraryFolder holding the library, extracted on
 #                    demand so datasets that are not selected cost nothing.
+#   LibraryUrl       a library published separately from the mzML bundle,
+#                    downloaded into LibraryFolder when its ZIP is absent there
+#                    and extracted OVER whatever the bundle staged. Wins over
+#                    NestedZip. The zip file is both the payload and the
+#                    version marker, so it stays on disk after extraction.
 #   Library          explicit library filename; bypasses the exactly-one-.tsv
 #                    discovery rule (the libdecoy folder also holds a manifest).
 #   Manifest         FDRBench pairing manifest -> --decoy-pairing-manifest.
@@ -356,6 +377,7 @@ $datasets = [ordered]@{
         LibraryFolder    = 'stellar-libdecoy'
         GoldenFolder     = 'stellar-libdecoy'
         NestedZip        = 'libdecoy-entrapment.zip'
+        LibraryUrl       = $libDecoyV3Url
         Library          = 'carafe_spectral_library.tsv'
         Manifest         = 'osprey_library_db_pairing.tsv'
         Resolution       = 'unit'
@@ -377,6 +399,7 @@ $datasets = [ordered]@{
         LibraryFolder    = 'stellar-libdecoy'
         GoldenFolder     = 'stellar-gendecoy-entrap'
         NestedZip        = 'libdecoy-entrapment.zip'
+        LibraryUrl       = $libDecoyV3Url
         Library          = 'carafe_spectral_library.tsv'
         StripDecoys      = $true
         Resolution       = 'unit'
@@ -586,17 +609,51 @@ function Resolve-DatasetInputs {
     $libDir = if ($Spec.LibraryFolder) { Join-Path $extractedRoot $Spec.LibraryFolder } else { $dir }
     if (-not (Test-Path $libDir)) { throw "Library folder not found in data: $libDir" }
 
+    # LibraryUrl: a library that ships SEPARATELY from the mzML bundle, so a new
+    # library version does not force every machine to re-download 24.6 GB of mzML.
+    # Independent acquisition, and it runs FIRST so a machine that has taken this
+    # library never falls through to the NestedZip branch below and gets clobbered
+    # back to the bundled version.
+    #
+    # The presence check is the downloaded ZIP ITSELF, not the library it yields.
+    # Both versions extract to the same three entry names, so testing for the
+    # extracted carafe_spectral_library.tsv would look satisfied on a machine
+    # holding the OLD library and pin it there forever. The zip's name is the
+    # version marker, which is why it stays on disk after extraction.
+    $libraryFromUrl = $false
+    if ($Spec.LibraryUrl) {
+        $marker = Join-Path $libDir (Split-Path -Leaf $Spec.LibraryUrl)
+        if (-not (Test-Path $marker)) {
+            Write-Host "  downloading library $(Split-Path -Leaf $Spec.LibraryUrl) (one time, ~258 MB)..."
+            New-Item -ItemType Directory -Path $libDir -Force | Out-Null
+            # Download beside the destination and rename in, so an interrupted
+            # download cannot leave a truncated file whose NAME says "v3 present"
+            # and suppress every later attempt.
+            $tmp = "$marker.part"
+            Remove-Item $tmp -Force -ErrorAction SilentlyContinue
+            Save-UrlToFile -Url $Spec.LibraryUrl -OutFile $tmp
+            Move-Item $tmp $marker -Force
+        }
+        # Overwrite: this library REPLACES whatever the bundle staged under the
+        # same three names, so a DoNotOverwrite extraction would silently keep
+        # the old one. Re-extracting a present zip is cheap and makes a
+        # half-extracted tree self-heal.
+        Expand-ZipInto -ZipPath $marker -DestFolder $libDir -Overwrite
+        $libraryFromUrl = $true
+    }
+
     # Nested zip: the library ships compressed inside the outer zip and is
     # extracted only when its dataset is actually selected, so a run that does
     # not use it never pays the multi-GB extraction. Skip-if-present, like the
-    # outer acquisition.
-    if ($Spec.NestedZip) {
+    # outer acquisition. Kept for backward compatibility with bundles whose
+    # dataset spec carries no LibraryUrl.
+    if ($Spec.NestedZip -and -not $libraryFromUrl) {
         $expected = Join-Path $libDir $Spec.Library
         if (-not (Test-Path $expected)) {
             $nested = Join-Path $libDir $Spec.NestedZip
             if (-not (Test-Path $nested)) { throw "Nested library zip not found: $nested" }
             Write-Host "  extracting nested library zip $($Spec.NestedZip) (one time)..."
-            Expand-ZipNoOverwrite -ZipPath $nested -DestFolder $libDir
+            Expand-ZipInto -ZipPath $nested -DestFolder $libDir
             if (-not (Test-Path $expected)) { throw "Nested zip did not yield $($Spec.Library): $nested" }
         }
     }
