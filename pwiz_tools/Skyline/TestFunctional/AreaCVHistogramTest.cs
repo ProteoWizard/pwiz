@@ -307,8 +307,6 @@ namespace pwiz.SkylineTestFunctional
             string[][] items = null;
             RunUI(() =>
             {
-                // Raise the real mouse events, as a user click does, rather than calling
-                // the pane's handlers directly (same mechanism as the ClickGraph verb).
                 var graphControl = pane.GraphSummary.GraphControl;
                 graphControl.PerformMouseMove(mouseEventArgs);
                 graphControl.PerformMouseClick(mouseEventArgs);
