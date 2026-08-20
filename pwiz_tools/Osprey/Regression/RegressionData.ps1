@@ -91,20 +91,19 @@ function Save-UrlToFile {
     }
 }
 
-function Expand-ZipInto {
+function Expand-ZipNoOverwrite {
     <#
-    Extract a zip into a destination.
+    Extract a zip into a destination, leaving any already-present file untouched
+    (DoNotOverwrite). New files are written; existing ones are skipped. This is
+    what makes a partially-staged tree safe to re-extract.
 
-    Default is DoNotOverwrite: any already-present file is left untouched and
-    only new files are written, which is what makes a partially-staged tree safe
-    to re-extract.
-
-    -Overwrite replaces existing files instead. That is required when a zip
-    REPLACES a previous version of the same payload -- the library versions ship
-    the same three entry names, so a DoNotOverwrite extraction of the new zip
-    would silently leave the old library in place and report success.
+    There is deliberately NO overwrite mode. A zip that supersedes an earlier
+    version of the same payload is extracted into its OWN version-named folder
+    (see LibraryUrl in regression.ps1) rather than over the older one, so nothing
+    in this repo needs to replace files in place -- and an older checkout that
+    shares the tree keeps working.
     #>
-    param([string]$ZipPath, [string]$DestFolder, [switch]$Overwrite)
+    param([string]$ZipPath, [string]$DestFolder)
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     # Canonical destination root for the zip-slip guard below.
@@ -127,8 +126,8 @@ function Expand-ZipInto {
             }
             $dir = Split-Path -Parent $destPath
             if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
-            if ($Overwrite -or -not (Test-Path $destPath)) {
-                [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $destPath, [bool]$Overwrite)
+            if (-not (Test-Path $destPath)) {
+                [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $destPath, $false)
             }
         }
     } finally {
@@ -174,7 +173,7 @@ function Get-RegressionData {
     }
 
     & $Log ("extracting into {0}" -f $t.TargetFolder)
-    Expand-ZipInto -ZipPath $t.ZipPath -DestFolder $t.TargetFolder
+    Expand-ZipNoOverwrite -ZipPath $t.ZipPath -DestFolder $t.TargetFolder
     if (-not (Test-Path $t.ExtractedRoot)) {
         throw "Extraction did not produce expected root: $($t.ExtractedRoot)"
     }

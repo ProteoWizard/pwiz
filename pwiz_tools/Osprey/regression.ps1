@@ -611,34 +611,65 @@ function Resolve-DatasetInputs {
 
     # LibraryUrl: a library that ships SEPARATELY from the mzML bundle, so a new
     # library version does not force every machine to re-download 24.6 GB of mzML.
-    # Independent acquisition, and it runs FIRST so a machine that has taken this
-    # library never falls through to the NestedZip branch below and gets clobbered
-    # back to the bundled version.
     #
-    # The presence check is the downloaded ZIP ITSELF, not the library it yields.
-    # Both versions extract to the same three entry names, so testing for the
-    # extracted carafe_spectral_library.tsv would look satisfied on a machine
-    # holding the OLD library and pin it there forever. The zip's name is the
-    # version marker, which is why it stays on disk after extraction.
+    # STRICTLY ADDITIVE. The zip extracts into its OWN version-named subfolder
+    # (<libDir>\stellar-libdecoy-v3\), never over the bundle's extraction point.
+    # That is not tidiness, it is a correctness requirement: an older checkout of
+    # this script knows nothing about LibraryUrl. It resolves
+    # <libDir>\carafe_spectral_library.tsv, and its NestedZip branch is
+    # skip-if-present on exactly that path. Overwriting it in place would leave
+    # that older code silently running the NEW library while believing it had the
+    # bundled one - with no marker it understands and no way to repair the
+    # directory for its own use. Extracting beside it leaves the bundle's tree
+    # untouched, so switching branches keeps working in both directions.
+    #
+    # The zip on disk is the version marker AND the payload; it is what makes a
+    # version change detectable, since every version yields the same three entry
+    # names and the extracted files cannot say which one they are.
     $libraryFromUrl = $false
     if ($Spec.LibraryUrl) {
-        $marker = Join-Path $libDir (Split-Path -Leaf $Spec.LibraryUrl)
+        $zipName = Split-Path -Leaf $Spec.LibraryUrl
+        $marker = Join-Path $libDir $zipName
+        $versionDir = Join-Path $libDir ([IO.Path]::GetFileNameWithoutExtension($zipName))
         if (-not (Test-Path $marker)) {
-            Write-Host "  downloading library $(Split-Path -Leaf $Spec.LibraryUrl) (one time, ~258 MB)..."
+            Write-Host "  downloading library $zipName (one time, ~258 MB)..."
             New-Item -ItemType Directory -Path $libDir -Force | Out-Null
             # Download beside the destination and rename in, so an interrupted
-            # download cannot leave a truncated file whose NAME says "v3 present"
-            # and suppress every later attempt.
+            # download cannot leave a truncated file whose NAME says the version
+            # is present and suppress every later attempt.
             $tmp = "$marker.part"
             Remove-Item $tmp -Force -ErrorAction SilentlyContinue
             Save-UrlToFile -Url $Spec.LibraryUrl -OutFile $tmp
+            # Prove it is a zip BEFORE promoting it to the marker name. A proxy or
+            # sign-in interstitial served as HTTP 200 would otherwise be renamed
+            # into place, and every later run would skip the download and die in
+            # OpenRead forever, with no -Force path to recover.
+            try {
+                $probe = [System.IO.Compression.ZipFile]::OpenRead($tmp)
+                $probe.Dispose()
+            } catch {
+                Remove-Item $tmp -Force -ErrorAction SilentlyContinue
+                throw "Downloaded library is not a readable zip (server error page?): $($Spec.LibraryUrl)"
+            }
             Move-Item $tmp $marker -Force
         }
-        # Overwrite: this library REPLACES whatever the bundle staged under the
-        # same three names, so a DoNotOverwrite extraction would silently keep
-        # the old one. Re-extracting a present zip is cheap and makes a
-        # half-extracted tree self-heal.
-        Expand-ZipInto -ZipPath $marker -DestFolder $libDir -Overwrite
+        # Extract only when the payload is not already unpacked. A partially
+        # extracted tree still self-heals: the expected library being absent is
+        # what triggers a re-extract, and DoNotOverwrite fills in whatever is
+        # missing. Testing the extracted file is safe HERE - unlike at the
+        # version gate above - because the version dir already pins the version,
+        # so this is only asking "did the unpack finish", not "which library is this".
+        $expectedFromUrl = Join-Path $versionDir $Spec.Library
+        if (-not (Test-Path $expectedFromUrl)) {
+            Write-Host "  extracting $zipName into $(Split-Path -Leaf $versionDir) (one time)..."
+            Expand-ZipNoOverwrite -ZipPath $marker -DestFolder $versionDir
+            if (-not (Test-Path $expectedFromUrl)) {
+                throw "Library zip did not yield $($Spec.Library): $marker"
+            }
+        }
+        # Everything downstream - the library, the pairing manifest, the derived
+        # decoy-free copy - resolves inside the version dir from here on.
+        $libDir = $versionDir
         $libraryFromUrl = $true
     }
 
@@ -653,7 +684,7 @@ function Resolve-DatasetInputs {
             $nested = Join-Path $libDir $Spec.NestedZip
             if (-not (Test-Path $nested)) { throw "Nested library zip not found: $nested" }
             Write-Host "  extracting nested library zip $($Spec.NestedZip) (one time)..."
-            Expand-ZipInto -ZipPath $nested -DestFolder $libDir
+            Expand-ZipNoOverwrite -ZipPath $nested -DestFolder $libDir
             if (-not (Test-Path $expected)) { throw "Nested zip did not yield $($Spec.Library): $nested" }
         }
     }
