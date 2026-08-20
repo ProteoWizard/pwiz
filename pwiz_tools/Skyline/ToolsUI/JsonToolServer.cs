@@ -1104,19 +1104,19 @@ namespace pwiz.Skyline.ToolsUI
         // rather than the action machinery's "the form's single element that supports this": a graph on a
         // background dock tab reports its controls not-visible and so is absent from the control walk, and these
         // verbs have always worked on a graph whichever tab it is on.
-        public SkylineTool.Rectangle GetGraphZoom(string formId)
+        public Rectangle GetGraphZoom(string formId)
         {
-            return CallOnForm<StandaloneForm, SkylineTool.Rectangle>(formId, form =>
+            return CallOnForm<StandaloneForm, Rectangle>(formId, form =>
                 UiActions.GetGraphZoom.CallNow(form.FindGraph()));
         }
 
-        public SkylineTool.Rectangle ZoomGraphTo(string formId, SkylineTool.Rectangle bounds)
+        public Rectangle ZoomGraphTo(string formId, Rectangle bounds)
         {
-            return CallOnForm<StandaloneForm, SkylineTool.Rectangle>(formId, form =>
-                (SkylineTool.Rectangle) UiActions.ZoomGraphTo.InvokeNow(form.FindGraph(), bounds));
+            return CallOnForm<StandaloneForm, Rectangle>(formId, form =>
+                (Rectangle) UiActions.ZoomGraphTo.InvokeNow(form.FindGraph(), bounds));
         }
 
-        public ActionResult ClickGraph(string formId, SkylineTool.Rectangle bounds)
+        public ActionResult ClickGraph(string formId, Rectangle bounds)
         {
             return InvokeOnForm<StandaloneForm>(formId, form =>
                 UiActions.ClickGraph.InvokeNow(form.FindGraph(), bounds));

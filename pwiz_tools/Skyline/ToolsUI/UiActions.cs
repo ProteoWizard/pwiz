@@ -353,7 +353,7 @@ namespace pwiz.Skyline.ToolsUI
         // The graph's own actions, on GraphElement the way the grid actions are on GridElement -- so a graph
         // takes part in the same machinery as every other control: get_actions lists them, perform_action drives
         // them, and a form with a single graph resolves them without the caller naming the control.
-        public static readonly UiFunction<SkylineTool.Rectangle> GetGraphZoom = SimpleFunction<GraphElement, SkylineTool.Rectangle>(
+        public static readonly UiFunction<Rectangle> GetGraphZoom = SimpleFunction<GraphElement, Rectangle>(
                 @"GetGraphZoom", e => e.GetZoom())
             .Describe(new LlmInstruction(@"Get the region of DATA coordinates this graph is zoomed to, as [left, top, right, bottom] -- the coordinates zoom_graph_to and click_graph take. The bottom edge is the x-axis line, so a click below it falls below the axis."));
 

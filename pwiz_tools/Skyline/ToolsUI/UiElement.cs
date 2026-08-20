@@ -2085,7 +2085,7 @@ namespace pwiz.Skyline.ToolsUI
         // form's own paste with the text instead: identical to a user's Ctrl+V, minus the clipboard.
         public void PasteNow(string text)
         {
-            if (Control.FindForm() is pwiz.Skyline.EditUI.PasteDlg pasteDlg &&
+            if (Control.FindForm() is EditUI.PasteDlg pasteDlg &&
                 pasteDlg.TryPasteIntoGrid(_dataGridView, text))
             {
                 return;
@@ -2295,9 +2295,9 @@ namespace pwiz.Skyline.ToolsUI
         // four-element JSON array [left, top, right, bottom] (a JArray, or that text through a string-valued
         // parameter), the same shape set_current_cell_address uses for [column, row]. The order is the one the
         // gesture reads: down at Left/Top, up at Right/Bottom.
-        public static SkylineTool.Rectangle ToRectangle(object value)
+        public static Rectangle ToRectangle(object value)
         {
-            if (value is SkylineTool.Rectangle rectangle)
+            if (value is Rectangle rectangle)
                 return rectangle;
 
             var edges = new List<double>();
@@ -2327,7 +2327,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             if (edges.Count == 4)
             {
-                return new SkylineTool.Rectangle
+                return new Rectangle
                 {
                     Left = edges[0], Top = edges[1], Right = edges[2], Bottom = edges[3]
                 };
