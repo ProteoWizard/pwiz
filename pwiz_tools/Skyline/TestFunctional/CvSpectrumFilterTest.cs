@@ -17,13 +17,17 @@
  * limitations under the License.
  */
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results.Spectra;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -50,6 +54,14 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Ms1SpectrumFilterTest.sky")));
             Assert.AreEqual(1, SkylineWindow.Document.MoleculeTransitionGroupCount);
             Assert.IsTrue(SkylineWindow.Document.MoleculeTransitions.All(t => t.IsMs1));
+
+            // A copy of the document as it is now, before any CV filter exists. Importing into this copy at
+            // the end of the test gives a document whose cache captured no CV terms, which is the case the
+            // scanner exists for and the only one where the head-of-file read answers the CV columns.
+            // Copied on disk rather than saved through the window, which would be a Save As and would carry
+            // the live document - and everything done to it below - along to the new path.
+            File.Copy(TestFilesDir.GetTestPath("Ms1SpectrumFilterTest.sky"),
+                TestFilesDir.GetTestPath("NoCvFilter.sky"));
 
             var precursorPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups, 0);
 
@@ -116,6 +128,126 @@ namespace pwiz.SkylineTestFunctional
             VerifyEditorPreservesUnofferedCvClause();
             VerifyEditorAcceptsStringOperatorOnNumericCvColumn();
             VerifyCvFilterReconstructsFriendlyName();
+            VerifyScannerReadsCvTermsFromFile();
+            VerifyScannerReadsCvTermsWithoutCapture();
+            VerifyStylingHelpOpens();
+        }
+
+        /// <summary>
+        /// The help that explains the Property column's styling opens and closes. It describes a
+        /// convention no assertion can check - that is the point of a person reading it - so this covers
+        /// only that the button reaches a form that builds without throwing.
+        /// </summary>
+        private void VerifyStylingHelpOpens()
+        {
+            RunUI(() => SkylineWindow.SelectedPath =
+                SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups, 0));
+            var editDlg = ShowDialog<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter);
+            var helpDlg = ShowDialog<SpectrumFilterStylingHelpDlg>(editDlg.ShowStylingHelp);
+            OkDialog(helpDlg, helpDlg.Close);
+            OkDialog(editDlg, editDlg.Close);
+        }
+
+        /// <summary>
+        /// The bootstrap case the scanner exists for: a document with results whose import captured no CV
+        /// terms, because it carried no CV filter at the time. Nothing is stored to discover, so the only
+        /// way the editor can know what the data carries is to read the file.
+        ///
+        /// Note the accession cache is warm by the time this runs - an earlier check read the same file,
+        /// and the cache is keyed by format and instrument, which match. So this covers the wiring (no
+        /// capture, yet still answered) but not a cold read; that is covered directly against
+        /// MsDataFileImpl in <see cref="VerifyScannerReadsCvTermsFromFile"/>.
+        /// </summary>
+        private void VerifyScannerReadsCvTermsWithoutCapture()
+        {
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("NoCvFilter.sky")));
+            ImportResultsFile(TestFilesDir.GetTestPath("Ms1SpectrumFilterTest.mzML"));
+
+            // Import captured nothing, so there is no CV column to discover from the cache at all.
+            Assert.AreEqual(0, SpectrumClassColumn.DiscoverCvColumns(SkylineWindow.Document).Count,
+                @"a document imported without a CV filter should have captured no CV terms");
+
+            var bpiColumn = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity", true);
+            var zoomScanColumn = SpectrumClassColumn.CvParam(@"MS:1000497", @"zoom scan", false);
+            var candidates = SpectrumClassColumn.ALL.Concat(new[] { bpiColumn, zoomScanColumn }).ToList();
+            var availability = SpectrumColumnScanner.GetAvailability(SkylineWindow.Document, candidates,
+                SkylineWindow.DocumentFilePath, null);
+
+            // ...and yet the terms are still known, because the file was read for them.
+            Assert.AreEqual(SpectrumColumnScanner.Standing.Answerable,
+                availability.GetStanding(bpiColumn.PropertyPath, true),
+                @"base peak intensity is in the file, so reading it must answer the column");
+            Assert.AreEqual(SpectrumColumnScanner.Standing.Unanswerable,
+                availability.GetStanding(zoomScanColumn.PropertyPath, true),
+                @"zoom scan is absent from the file, which reading it establishes");
+            // The interpreted columns never depended on capture, so they answer from the cache as always.
+            Assert.AreEqual(SpectrumColumnScanner.Standing.Answerable,
+                availability.GetStanding(SpectrumClassColumn.MsLevel.PropertyPath, false),
+                @"MS level is answered from the per-file metadata, with no file read needed");
+        }
+
+        /// <summary>
+        /// The terms a file carries can be learned by reading the head of it, which is how the filter
+        /// editor marks the worthwhile terms for a document that has never filtered on a CV param and so
+        /// has none of them persisted in its cache. Reads the file directly, since going only through the
+        /// document would be answered from what import already stored and would not exercise the read.
+        /// </summary>
+        private void VerifyScannerReadsCvTermsFromFile()
+        {
+            var dataFilePath = TestFilesDir.GetTestPath("Ms1SpectrumFilterTest.mzML");
+            using (var dataFile = new MsDataFileImpl(dataFilePath))
+            {
+                var accessions = dataFile
+                    .GetDistinctOtherParams(SpectrumColumnScanner.MAX_SPECTRA_PER_FILE, CancellationToken.None)
+                    .Select(term => term.Accession).ToHashSet();
+                Assert.IsTrue(accessions.Contains(@"MS:1000505"),
+                    @"base peak intensity not found by reading the head of the file");
+                Assert.IsTrue(accessions.Contains(@"MS:1000512"),
+                    @"filter string not found by reading the head of the file");
+                // Absent from this data, so it must not be marked - the whole point of the marking is that
+                // it distinguishes the terms this file actually carries from the rest of the ontology.
+                Assert.IsFalse(accessions.Contains(@"MS:1000497"),
+                    @"zoom scan is not in this data and must not be reported");
+            }
+
+            // The document-level scan judges the interpreted columns and the CV terms the same way, and
+            // tolerates a null wait broker.
+            var bpiColumn = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity", true);
+            var zoomScanColumn = SpectrumClassColumn.CvParam(@"MS:1000497", @"zoom scan", false);
+            var candidates = SpectrumClassColumn.ALL
+                .Concat(new[] { bpiColumn, zoomScanColumn }).ToList();
+            var availability = SpectrumColumnScanner.GetAvailability(SkylineWindow.Document, candidates,
+                SkylineWindow.DocumentFilePath, null);
+
+            SpectrumColumnScanner.Standing Standing(SpectrumClassColumn column) => availability.GetStanding(
+                column.PropertyPath, SpectrumClassColumn.IsCvParamColumn(column));
+
+            Assert.AreEqual(SpectrumColumnScanner.Standing.Answerable, Standing(bpiColumn),
+                @"base peak intensity is in this data");
+            Assert.AreEqual(SpectrumColumnScanner.Standing.Unanswerable, Standing(zoomScanColumn),
+                @"zoom scan was looked for and is absent from this data");
+            // This is MS1-only data, so MS level is answerable but the MS2 precursor, dissociation and
+            // collision energy columns are not - the distinction the styling exists to draw.
+            Assert.AreEqual(SpectrumColumnScanner.Standing.Answerable, Standing(SpectrumClassColumn.MsLevel),
+                @"MS level is answerable for any data, and is what teaches the reader what the accent means");
+            Assert.AreEqual(SpectrumColumnScanner.Standing.Unanswerable, Standing(SpectrumClassColumn.Ms2Precursors),
+                @"MS2 precursors are absent from MS1-only data");
+            Assert.AreEqual(SpectrumColumnScanner.Standing.Unanswerable, Standing(SpectrumClassColumn.DissociationMethod),
+                @"dissociation method is absent from MS1-only data");
+            Assert.AreEqual(SpectrumColumnScanner.Standing.Unanswerable, Standing(SpectrumClassColumn.CollisionEnergy),
+                @"collision energy is absent from data that records none");
+
+            // A document with no results establishes nothing, which is neither of the other two states: the
+            // columns are not known to be absent, they were never examined. Conflating this with absence
+            // would style an entire filter written before importing anything.
+            var emptyAvailability = SpectrumColumnScanner.GetAvailability(new SrmDocument(SrmSettingsList.GetDefault()),
+                candidates, null, null);
+            Assert.AreEqual(SpectrumColumnScanner.Standing.Undetermined,
+                emptyAvailability.GetStanding(zoomScanColumn.PropertyPath, true),
+                @"a document with no results has established nothing about a CV term");
+            Assert.AreEqual(SpectrumColumnScanner.Standing.Undetermined,
+                emptyAvailability.GetStanding(SpectrumClassColumn.Ms2Precursors.PropertyPath, false),
+                @"a document with no results has established nothing about an interpreted column");
         }
 
         /// <summary>

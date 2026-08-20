@@ -35,6 +35,21 @@ namespace pwiz.Common.DataBinding.Filtering
     /// </summary>
     public class FilterClauseSerializer
     {
+        /// <summary>
+        /// How the operand-less blank tests are written. They have no readable operator symbol of their
+        /// own (OpSymbol falls back to an internal token like "isnullorblank"), so the syntax supplies
+        /// these. Being distinct from any comparison, they leave "= ''" free to mean what it says.
+        ///
+        /// The SQL spelling is deliberate. This syntax is culture-independent, while the operator names
+        /// the editor shows are localized, so no wording here can match what a user sees in the dropdown
+        /// except in English - which leaves reading like the query language it already resembles ("and",
+        /// "or", "=", "&lt;&gt;") as the better aim. It also borrows a distinction users already hold:
+        /// "is null" and "= ''" are famously not the same test, which is exactly the difference these two
+        /// forms now carry.
+        /// </summary>
+        private const string IS_NULL = @"is null";
+        private const string IS_NOT_NULL = @"is not null";
+
         private readonly ColumnDescriptor _rootColumn;
         private readonly Regex _regexNumber;
 
@@ -57,8 +72,9 @@ namespace pwiz.Common.DataBinding.Filtering
         /// Returns a list of filter clauses as a human-readable string that can be parsed back.
         /// FilterSpecs within a clause are joined by " and ", clauses by " or ". A clause with more
         /// than one spec is wrapped in parentheses when there is more than one clause, e.g.
-        /// "(a and b) or c". The operand-less blank tests render against the empty string:
-        /// "Column = ''" for is-blank and the not-equals form for is-not-blank.
+        /// "(a and b) or c". The operand-less blank tests render as "Column is null" and
+        /// "Column is not null", distinct from the "Column = ''" that means equality with the
+        /// empty string.
         /// </summary>
         public string ToFilterString(IList<FilterClause> clauses)
         {
@@ -109,19 +125,17 @@ namespace pwiz.Common.DataBinding.Filtering
             var sb = new StringBuilder();
             sb.Append(QuoteColumnIfNeeded(spec.Column));
             sb.Append(@" ");
-            // The operand-less blank tests have no readable operator symbol (their OpSymbol falls back
-            // to an internal token like "isnullorblank"), so render them as a comparison against the
-            // empty string. This keeps the output in the readable "<column> <operator> <value>" form;
-            // ParseFilterString maps "= ''" / "<> ''" back to the blank operators.
+            // The operand-less blank tests get their own syntax rather than being rendered as a comparison
+            // against the empty string, so that "= ''" is left to mean equality with the empty string.
+            // The two are not interchangeable: for a CV/user parameter, blank means the term is absent,
+            // which is the opposite of it being present and carrying no value.
             if (Equals(spec.Operation, FilterOperations.OP_IS_BLANK))
             {
-                sb.Append(FilterOperations.OP_EQUALS.OpSymbol);
-                sb.Append(@" ''");
+                sb.Append(IS_NULL);
             }
             else if (Equals(spec.Operation, FilterOperations.OP_IS_NOT_BLANK))
             {
-                sb.Append(FilterOperations.OP_NOT_EQUALS.OpSymbol);
-                sb.Append(@" ''");
+                sb.Append(IS_NOT_NULL);
             }
             else
             {
@@ -277,45 +291,44 @@ namespace pwiz.Common.DataBinding.Filtering
                 .Select(name => Parse.String(name).Text())
                 .Aggregate((a, b) => a.Or(b));
 
+            // The operand-less blank tests, which have no OpSymbol a reader would recognize. Tried before
+            // the general operator parser, and the negative form before the positive one, so that
+            // "is not null" is never read as "is null" with trailing input.
+            var blankOperator = Parse.String(IS_NOT_NULL).Return(FilterOperations.OP_IS_NOT_BLANK)
+                .Or(Parse.String(IS_NULL).Return(FilterOperations.OP_IS_BLANK));
+
             // FilterSpec: identifier operator operand?
             var filterSpec = identifier
-                .Then(column => ws.Then(_ => operatorParser)
-                    .Then(opSymbol =>
-                    {
-                        var op = FilterOperations.GetOperationBySymbol(opSymbol);
-                        var columnId = PropertyPath.Parse(column);
-                        if (!op.HasOperand())
+                .Then(column =>
+                {
+                    // The column text is turned into a PropertyPath only once an operator has matched.
+                    // PropertyPath.Parse throws its own exception rather than failing as a parse, which
+                    // would escape this grammar as a hard error; and an identifier alone is not yet known
+                    // to be a column - "CollisionEnergy=17", written without spaces, is a single identifier
+                    // token, and must be allowed to fail as a malformed filter so the caller can offer the
+                    // "<Property> <Operator> <Value>" guidance rather than a character-level complaint.
+                    var blankSpec = ws.Then(_ => blankOperator)
+                        .Select(op => new FilterSpec(PropertyPath.Parse(column), new FilterPredicate(op, null)));
+                    var comparisonSpec = ws.Then(_ => operatorParser)
+                        .Then(opSymbol =>
                         {
-                            return Parse.Return(new FilterSpec(columnId,
-                                new FilterPredicate(op, null)));
-                        }
-                        return ws.Then(_ => operandTokens)
-                            .Select(tokens =>
+                            var op = FilterOperations.GetOperationBySymbol(opSymbol);
+                            var columnId = PropertyPath.Parse(column);
+                            if (!op.HasOperand())
                             {
-                                // "= ''" / "<> ''" (a single empty-string operand) are the readable
-                                // rendering of the operand-less blank tests; map them back accordingly.
-                                // This intentionally treats an equals/not-equals empty-string operand as
-                                // is-blank/is-not-blank, which also matches null values (blank means
-                                // null-or-empty) -- slightly wider than a literal OP_EQUALS "" (non-null
-                                // empty only). That is the intended semantics here; a distinct "equals the
-                                // empty string" is not separately expressible (or needed) in this syntax.
-                                // A non-empty value containing quotes (e.g. "''''''") is not empty, so it
-                                // stays a normal equals comparison.
-                                if (tokens.Count == 1 && string.IsNullOrEmpty(tokens[0]))
-                                {
-                                    if (Equals(op, FilterOperations.OP_EQUALS))
-                                    {
-                                        return new FilterSpec(columnId, new FilterPredicate(FilterOperations.OP_IS_BLANK, null));
-                                    }
-                                    if (Equals(op, FilterOperations.OP_NOT_EQUALS))
-                                    {
-                                        return new FilterSpec(columnId, new FilterPredicate(FilterOperations.OP_IS_NOT_BLANK, null));
-                                    }
-                                }
-                                return new FilterSpec(columnId,
-                                    new FilterPredicate(op, TokensToInvariantText(columnId, op, tokens)));
-                            });
-                    }));
+                                return Parse.Return(new FilterSpec(columnId,
+                                    new FilterPredicate(op, null)));
+                            }
+                            // "= ''" means equality with the empty string, and nothing more. It used to be
+                            // the rendering of is-blank, which made the two indistinguishable on the way
+                            // back in; the blank tests now have their own syntax, so this no longer has to
+                            // stand in for them and a filter round-trips as whatever it was authored as.
+                            return ws.Then(_ => operandTokens)
+                                .Select(tokens => new FilterSpec(columnId,
+                                    new FilterPredicate(op, TokensToInvariantText(columnId, op, tokens))));
+                        });
+                    return blankSpec.Or(comparisonSpec);
+                });
 
             // FilterSpec possibly wrapped in parentheses
             var parenFilterSpec = Parse.Char('(')

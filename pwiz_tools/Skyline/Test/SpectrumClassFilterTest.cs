@@ -236,20 +236,34 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(Numeric(FilterOperations.OP_EQUALS, @"1000")(big));
             Assert.IsFalse(Numeric(FilterOperations.OP_EQUALS, @"999")(big));
 
-            // A numeric filter that meets a present but non-numeric value hard-fails with filter context
-            // (user decision), so chromatogram extraction reports a clear error rather than skipping it.
-            // The column is reconstructed from the persisted filter path, whose friendly name is resolved
-            // from the compiled-in ontology catalog, so the error names the property the same way the
-            // interactive surfaces do.
+            // A numeric filter that meets a present but non-numeric value warns and does not match, rather
+            // than aborting: failing the whole extraction over one odd value would cost everything
+            // imported so far. The column is reconstructed from the persisted filter path, whose friendly
+            // name is resolved from the compiled-in ontology catalog, so the warning names the property the
+            // same way the interactive surfaces do.
             var nonNumeric = CvSpectrum(@"bad", accession, name, @"not a number", unit);
             var columnDisplay = SpectrumClassColumn.FindColumn(numericColumn.PropertyPath)
                 .GetLocalizedColumnName(CultureInfo.CurrentCulture);
-            AssertEx.ThrowsException<InvalidDataException>(
-                () => Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500")(nonNumeric),
-                string.Format(SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,
-                    string.Format(
-                        SpectraResources.SpectrumClassFilter_CoerceCvValue_The_value___0___of_spectrum_property___1___is_not_a_number,
-                        @"not a number", columnDisplay)));
+            var warnings = new List<string>();
+            var writeUserMessage = Messages.WriteUserMessage;
+            try
+            {
+                Messages.WriteUserMessage = (message, args) => warnings.Add(string.Format(message, args));
+                var greaterThan500 = Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500");
+                Assert.IsFalse(greaterThan500(nonNumeric),
+                    @"a value that is not a number has nothing to compare, so it must not match");
+                // Every spectrum carrying the term would report the same thing, so it is said once.
+                Assert.IsFalse(greaterThan500(CvSpectrum(@"bad2", accession, name, @"also not", unit)));
+                Assert.AreEqual(1, warnings.Count, @"the non-numeric warning should be issued only once");
+                Assert.AreEqual(string.Format(
+                        SpectraResources.SpectrumClassFilter_WarnNonNumericValue_Spectrum_property___0___has_values_that_are_not_numbers__starting_with___1____Those_spectra_do_not_match_this_filter_,
+                        columnDisplay, @"not a number"),
+                    warnings[0]);
+            }
+            finally
+            {
+                Messages.WriteUserMessage = writeUserMessage;
+            }
 
             // An ordered comparison whose OPERAND is not a number (e.g. a typo) is rejected with the same
             // spectrum-filter context when the predicate is compiled, rather than throwing a raw parse
@@ -271,6 +285,51 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(StringFilter(FilterOperations.OP_CONTAINS, @"ESI")(thermo));
             Assert.IsFalse(StringFilter(FilterOperations.OP_CONTAINS, @"CID")(thermo));
             Assert.IsTrue(StringFilter(FilterOperations.OP_EQUALS, @"FTMS + p ESI Full ms")(thermo));
+
+            // An ordered comparison IS offered on a term the ontology declares as text, deliberately: the
+            // declaration describes the term, not every value a vendor writes under it, and a text-declared
+            // term holding numbers is a real thing. Since an unparseable value now warns and does not match
+            // rather than aborting, the user is allowed to try. Do not "fix" this by hiding the comparison
+            // operators on text terms - that would withhold a filter that works on data like this.
+            var numericText = CvSpectrum(@"numericText", @"MS:1000512", @"filter string", @"1500", null);
+            Assert.IsTrue(StringFilter(FilterOperations.OP_IS_GREATER_THAN, @"500")(numericText));
+            Assert.IsFalse(StringFilter(FilterOperations.OP_IS_LESS_THAN, @"500")(numericText));
+            // ...and the same filter simply does not match a value that is not a number.
+            var warningsText = new List<string>();
+            var writeUserMessageText = Messages.WriteUserMessage;
+            try
+            {
+                Messages.WriteUserMessage = (message, args) => warningsText.Add(string.Format(message, args));
+                Assert.IsFalse(StringFilter(FilterOperations.OP_IS_GREATER_THAN, @"500")(thermo));
+                Assert.AreEqual(1, warningsText.Count, @"the unparseable value should be reported once");
+            }
+            finally
+            {
+                Messages.WriteUserMessage = writeUserMessageText;
+            }
+
+            // An ordered comparison against a non-numeric operand parses and resolves happily - the column
+            // exists and the operand is a valid string - so only compiling the filter catches it. Validation
+            // compiles, so a transition list or grid cell carrying this is rejected where it is written
+            // rather than importing cleanly and failing later during chromatogram extraction. Unlike the
+            // value above, this filter is wrong for every spectrum, not just the ones with odd values.
+            var badOrdered = new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(stringColumn.PropertyPath, FilterOperations.OP_IS_GREATER_THAN, @"abc") }));
+            var badOrderedString = badOrdered.ToFilterString();
+            var stringColumnDisplay = SpectrumClassColumn.FindColumn(stringColumn.PropertyPath)
+                .GetLocalizedColumnName(CultureInfo.CurrentCulture);
+            Assert.AreEqual(
+                string.Format(SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,
+                    string.Format(
+                        SpectraResources.SpectrumClassFilter_CompileCvSpec_The_filter_value___0___for_spectrum_property___1___is_not_a_number,
+                        @"abc", stringColumnDisplay)),
+                SpectrumClassFilter.ValidateFilterString(badOrderedString),
+                @"validation should reject an ordered comparison whose operand is not a number: " + badOrderedString);
+
+            // A well-formed filter still validates, so compiling has not made validation reject good input.
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString(
+                new SpectrumClassFilter(new FilterClause(new[]
+                    { new FilterSpec(stringColumn.PropertyPath, FilterOperations.OP_CONTAINS, @"ESI") })).ToFilterString()));
 
             // Identity is the accession alone: a column matches a term with the same accession regardless
             // of the unit the term happens to carry.
@@ -312,6 +371,24 @@ namespace pwiz.SkylineTest
             const string name = @"zoom scan";
             var flagColumn = SpectrumClassColumn.CvParam(accession, name, false);
 
+            // The ontology declares no value type for this term, which is what tells the filter editor to
+            // offer only the blank tests for it - a comparison against a term that cannot carry a value
+            // could never match. Terms that do declare a value type, numeric or text alike, are unaffected,
+            // as is a vendor userParam, whose type the ontology has no way to know.
+            Assert.IsTrue(SpectrumClassColumn.IsValuelessCvColumn(flagColumn),
+                @"zoom scan declares no value type and should be treated as a flag");
+            Assert.IsFalse(SpectrumClassColumn.IsValuelessCvColumn(
+                    SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity", true)),
+                @"base peak intensity declares a numeric value type");
+            Assert.IsFalse(SpectrumClassColumn.IsValuelessCvColumn(
+                    SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", false)),
+                @"filter string declares a text value type");
+            Assert.IsFalse(SpectrumClassColumn.IsValuelessCvColumn(
+                    SpectrumClassColumn.CvParam(@"vendorSetting", @"vendorSetting", false)),
+                @"a userParam has no ontology entry, so its operators must not be restricted");
+            Assert.IsFalse(SpectrumClassColumn.IsValuelessCvColumn(SpectrumClassColumn.MsLevel),
+                @"an interpreted column is not a CV flag");
+
             Predicate<SpectrumMetadata> Blankness(IFilterOperation op) =>
                 new SpectrumClassFilter(new FilterClause(new[] { new FilterSpec(flagColumn.PropertyPath, op, (string)null) }))
                     .MakePredicate();
@@ -344,18 +421,22 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(EqualsEmpty()(valued));
             Assert.IsFalse(EqualsEmpty()(absent));
 
-            // That test survives in the document and the cache, which persist the operator itself, but NOT
-            // in a filter string: the readable syntax renders Is Blank as "= ''" and reads "= ''" back as Is
-            // Blank, so an equals-empty filter taken through a filter string comes back as Is Blank. For a
-            // term the ontology gives no value type - a pure flag like this one, which can only ever be
-            // present with an empty value - equals-empty says exactly what Is Not Blank says, so the
-            // asymmetry costs nothing here; it would only bite a term declared to carry a value that some
-            // file wrote out empty anyway.
+            // That test survives a filter string as well as the document and the cache. The blank tests
+            // have their own syntax ("is null" / "is not null"), so "= ''" is left to mean equality with
+            // the empty string and comes back as such. While Is Blank rendered as "= ''", the two were
+            // indistinguishable on the way back and this returned as Is Blank - which for a term absent
+            // from a spectrum is the opposite answer.
             var equalsEmptyString = new SpectrumClassFilter(new FilterClause(new[]
                 { new FilterSpec(flagColumn.PropertyPath, FilterOperations.OP_EQUALS, string.Empty) })).ToFilterString();
-            Assert.AreEqual(FilterOperations.OP_IS_BLANK,
-                SpectrumClassFilter.ParseFilterString(equalsEmptyString).Clauses.Single().FilterSpecs.Single().Operation,
-                @"equals-empty is not separately expressible in a filter string: " + equalsEmptyString);
+            var equalsEmptyRoundTripped =
+                SpectrumClassFilter.ParseFilterString(equalsEmptyString).Clauses.Single().FilterSpecs.Single();
+            Assert.AreEqual(FilterOperations.OP_EQUALS, equalsEmptyRoundTripped.Operation,
+                @"equals-empty should round-trip as itself: " + equalsEmptyString);
+            // And it still means what it meant: matching the present flag, not the spectrum lacking the term.
+            var equalsEmptyPredicate = new SpectrumClassFilter(
+                new FilterClause(new[] { equalsEmptyRoundTripped })).MakePredicate();
+            Assert.IsTrue(equalsEmptyPredicate(flagPresent));
+            Assert.IsFalse(equalsEmptyPredicate(absent));
 
             // A blank filter references a CV column, so it triggers term capture during extraction, and its
             // persisted filter string validates and re-parses to a predicate that behaves identically.

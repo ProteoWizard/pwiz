@@ -167,6 +167,9 @@
   <data name="SpectrumClassFilter_CoerceCvValue_The_value___0___of_spectrum_property___1___is_not_a_number" xml:space="preserve">
     <value>The value '{0}' of spectrum property '{1}' is not a number.</value>
   </data>
+  <data name="SpectrumClassFilter_WarnNonNumericValue_Spectrum_property___0___has_values_that_are_not_numbers__starting_with___1____Those_spectra_do_not_match_this_filter_" xml:space="preserve">
+    <value>Spectrum property '{0}' has values that are not numbers, starting with '{1}'. Those spectra do not match this filter.</value>
+  </data>
   <data name="SpectrumClassFilter_CompileCvSpec_The_filter_value___0___for_spectrum_property___1___is_not_a_number" xml:space="preserve">
     <value>The filter value '{0}' for spectrum property '{1}' is not a number.</value>
   </data>

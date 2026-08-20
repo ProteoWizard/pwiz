@@ -133,6 +133,15 @@ namespace pwiz.Skyline.Model.Results.Spectra {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Spectrum property &apos;{0}&apos; has values that are not numbers, starting with &apos;{1}&apos;. Those spectra do not match this filter..
+        /// </summary>
+        public static string SpectrumClassFilter_WarnNonNumericValue_Spectrum_property___0___has_values_that_are_not_numbers__starting_with___1____Those_spectra_do_not_match_this_filter_ {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_WarnNonNumericValue_Spectrum_property___0___has_values_that_are_not_numbers__starting_with___1____Those_spectra_do_not_match_this_filter_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The filter value &apos;{0}&apos; for spectrum property &apos;{1}&apos; is not a number..
         /// </summary>
         public static string SpectrumClassFilter_CompileCvSpec_The_filter_value___0___for_spectrum_property___1___is_not_a_number {

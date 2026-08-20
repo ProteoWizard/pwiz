@@ -200,6 +200,39 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         /// <summary>
+        /// True if <paramref name="column"/> is a CV term the ontology declares no value type for - a pure
+        /// flag, such as "zoom scan", which a spectrum either carries or does not. Nothing can be compared
+        /// against such a term, so only its presence is worth asking about. False for every other column,
+        /// including a vendor userParam, whose type the ontology cannot tell us.
+        /// </summary>
+        public static bool IsValuelessCvColumn(SpectrumClassColumn column)
+        {
+            return column is CvParamColumn cvParamColumn && !cvParamColumn.CanHaveValue;
+        }
+
+        /// <summary>
+        /// Whether the ontology declares that a term carries a value. A term with no declared value type
+        /// is a flag. A term the catalog does not know - a vendor userParam, or a term outside the
+        /// spectrum-level subset - is assumed to carry one, since assuming otherwise would withhold
+        /// operators that do work.
+        /// </summary>
+        private static bool CanTermHaveValue(string accession)
+        {
+            return !CatalogHolder.TermsByAccession.TryGetValue(accession, out var term) ||
+                   term.ValueType != null;
+        }
+
+        /// <summary>
+        /// The CV accession (or userParam name) a CV/user-parameter column filters on, or null for any
+        /// other kind of column. Lets a caller match an offered column against terms found in the data
+        /// without reaching into the column's encoded <see cref="ColumnName"/>.
+        /// </summary>
+        public static string GetCvAccession(SpectrumClassColumn column)
+        {
+            return (column as CvParamColumn)?.Accession;
+        }
+
+        /// <summary>
         /// Builds the dynamic CV/user-parameter columns present across the given spectra: one per
         /// distinct accession (the term's CV accession or userParam name). A CV term is typed from the
         /// ontology; a userParam, which the ontology does not know, is typed from the values seen for it
@@ -555,18 +588,31 @@ namespace pwiz.Skyline.Model.Results.Spectra
             private readonly string _accession;
             private readonly string _name;
             private readonly bool _isNumeric;
+            private readonly bool _canHaveValue;
 
             public CvParamColumn(string accession, string name, bool isNumeric)
             {
                 _accession = accession;
                 _name = name;
                 _isNumeric = isNumeric;
+                // Read from the ontology rather than taken from the caller, so every way of making this
+                // column - catalog, discovery, or reconstruction from a saved filter - agrees about it.
+                _canHaveValue = CanTermHaveValue(accession);
                 ColumnName = EncodeCvParamColumnName(accession);
             }
 
             public string Accession
             {
                 get { return _accession; }
+            }
+
+            /// <summary>
+            /// Whether the term can carry a value at all. False makes this a pure flag, present or absent
+            /// and nothing more (see <see cref="SpectrumClassColumn.IsValuelessCvColumn"/>).
+            /// </summary>
+            public bool CanHaveValue
+            {
+                get { return _canHaveValue; }
             }
 
             public override string ColumnName { get; }

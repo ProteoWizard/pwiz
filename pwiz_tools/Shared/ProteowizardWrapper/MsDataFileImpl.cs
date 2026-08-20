@@ -839,6 +839,32 @@ namespace pwiz.ProteowizardWrapper
             return GetSpectrumMetadata(_msDataFile.run.spectrumList.spectrum(spectrumIndex, DetailLevel.FullMetadata));
         }
 
+        /// <summary>
+        /// The distinct uninterpreted CV/user parameters carried by the first <paramref name="maxSpectra"/>
+        /// spectra, one entry per accession (first value seen wins). This reports which terms a file
+        /// carries without importing it, so a caller can tell the user which of the ontology's terms are
+        /// worth filtering on. <see cref="CaptureOtherParams"/> serves the import path instead, where the
+        /// terms are captured onto every spectrum and persisted; here nothing is retained per spectrum.
+        /// </summary>
+        public IList<SpectrumMetadataTerm> GetDistinctOtherParams(int maxSpectra, CancellationToken cancellationToken)
+        {
+            var termsByAccession = new Dictionary<string, SpectrumMetadataTerm>();
+            int spectrumCount = Math.Min(maxSpectra, SpectrumCount);
+            for (int i = 0; i < spectrumCount; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                using var spectrum = SpectrumList.spectrum(i, DetailLevel.FullMetadata);
+                foreach (var term in GetOtherParams(spectrum))
+                {
+                    if (!termsByAccession.ContainsKey(term.Accession))
+                    {
+                        termsByAccession.Add(term.Accession, term);
+                    }
+                }
+            }
+            return termsByAccession.Values.ToList();
+        }
+
         public double? GetMaxIonMobility()
         {
             return GetMaxIonMobilityInList();

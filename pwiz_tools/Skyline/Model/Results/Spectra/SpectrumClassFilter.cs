@@ -23,11 +23,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -266,9 +268,21 @@ namespace pwiz.Skyline.Model.Results.Spectra
                         spec.Predicate.InvariantOperandText, columnDisplay)));
             }
             var rawPredicate = spec.Predicate.MakePredicate(dataSchema, type);
+            // Warned at most once per compiled predicate: a non-numeric value is a property of the term,
+            // so every spectrum carrying it would otherwise report the same thing, millions of times.
+            int warned = 0;
             return metadata =>
             {
-                var value = CoerceCvValue(column.GetValue(metadata), type, columnDisplay);
+                var value = CoerceCvValue(column.GetValue(metadata), type, columnDisplay,
+                    text =>
+                    {
+                        if (Interlocked.Exchange(ref warned, 1) == 0)
+                        {
+                            Messages.WriteAsyncUserMessage(
+                                SpectraResources.SpectrumClassFilter_WarnNonNumericValue_Spectrum_property___0___has_values_that_are_not_numbers__starting_with___1____Those_spectra_do_not_match_this_filter_,
+                                columnDisplay, text);
+                        }
+                    });
                 return rawPredicate(value);
             };
         }
@@ -311,7 +325,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// throws with spectrum-filter context (user decision: hard-fail rather than silently skip), so
         /// chromatogram extraction reports a clear error.
         /// </summary>
-        private static object CoerceCvValue(object rawValue, Type type, string columnDisplay)
+        private static object CoerceCvValue(object rawValue, Type type, string columnDisplay,
+            Action<string> onNotANumber)
         {
             if (type != typeof(double))
             {
@@ -329,11 +344,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 return number;
             }
 
-            throw new InvalidDataException(string.Format(
-                SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,
-                string.Format(
-                    SpectraResources.SpectrumClassFilter_CoerceCvValue_The_value___0___of_spectrum_property___1___is_not_a_number,
-                    text, columnDisplay)));
+            // A value that cannot be compared numerically warns and does not match, rather than aborting.
+            // Failing the whole extraction over one odd value costs the user everything imported so far,
+            // and a term whose values are numeric in most spectra and text in a few is a real thing for
+            // vendor files to do. Reported as null so this spectrum is treated as having nothing to
+            // compare, which is how an absent value is already treated.
+            onNotANumber(text);
+            return null;
         }
 
         /// <summary>
@@ -880,6 +897,21 @@ namespace pwiz.Skyline.Model.Results.Spectra
                             filterSpec.Column);
                     }
                 }
+            }
+
+            // Compile as well as parse. An operator and an operand can each be valid on their own and
+            // still not go together - an ordered comparison against a value that is not a number - which
+            // only compiling detects, because only then is the operand read as the type the operator
+            // implies. Doing it here reports the problem where the filter was written, rather than leaving
+            // it to surface when a chromatogram is later extracted with it, in a different operation from
+            // the one that introduced it. Compiling touches no data, so this costs nothing to check.
+            try
+            {
+                filter.MakePredicate();
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
             }
             return null;
         }

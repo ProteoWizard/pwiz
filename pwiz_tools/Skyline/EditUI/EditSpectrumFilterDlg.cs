@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -38,7 +39,24 @@ namespace pwiz.Skyline.EditUI
         private FilterPages _originalFilterPages;
         private ColumnDescriptor _rootColumn;
         private Dictionary<string, FilterColumn> _propertyColumns = new Dictionary<string, FilterColumn>();
+        /// <summary>
+        /// All that can be asked of a column whose term carries no value: whether the spectrum has it.
+        ///
+        /// Has Any Value is deliberately absent, though it is offered everywhere else. It means "no
+        /// criterion" - it matches every row and is dropped when the clause is built - but beside these
+        /// two it reads as the presence test they actually perform, and would silently filter nothing.
+        /// The name is doubly wrong here: a flag that is present carries an empty value, so "has any
+        /// value" is untrue of every spectrum, present or absent. Leaving the operation blank still means
+        /// no criterion, and the row delete button still removes one.
+        /// </summary>
+        private static readonly IList<IFilterOperation> VALUELESS_COLUMN_OPERATIONS = new[]
+        {
+            FilterOperations.OP_IS_BLANK, FilterOperations.OP_IS_NOT_BLANK
+        };
+
         private IList<SpectrumClassColumn> _extraColumns;
+        private SpectrumColumnScanner.Availability _columnAvailability = SpectrumColumnScanner.Availability.UNKNOWN;
+        private Font _unanswerableFont;
         private bool _updating;
 
         public EditSpectrumFilterDlg(ColumnDescriptor rootColumn, FilterPages filterPages)
@@ -238,6 +256,24 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        /// <summary>
+        /// Explains the property list's styling. The three states are conveyed by appearance alone,
+        /// with nowhere on the form to say what they mean, so this is where the rule is written down.
+        /// </summary>
+        private void btnHelp_Click(object sender, EventArgs e)
+        {
+            ShowStylingHelp();
+        }
+
+        /// <summary>
+        /// Public so a test can open the help the way the button does, rather than reaching for the button.
+        /// </summary>
+        public void ShowStylingHelp()
+        {
+            using var dlg = new SpectrumFilterStylingHelpDlg();
+            dlg.ShowDialog(this);
+        }
+
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
@@ -374,6 +410,98 @@ namespace pwiz.Skyline.EditUI
             get { return _rowBindingList; }
         }
 
+        /// <summary>
+        /// What this document's data was found to answer, which the property dropdown marks (see
+        /// <see cref="propertyComboBox_DrawItem"/>). May be set after construction; nothing is precomputed
+        /// from it, so late assignment still takes effect. Defaults to
+        /// <see cref="SpectrumColumnScanner.Availability.UNKNOWN"/>, so a dialog opened by a caller that
+        /// never scanned marks nothing rather than marking everything.
+        /// </summary>
+        public SpectrumColumnScanner.Availability ColumnAvailability
+        {
+            get { return _columnAvailability; }
+            set { _columnAvailability = value ?? SpectrumColumnScanner.Availability.UNKNOWN; }
+        }
+
+        /// <summary>
+        /// Where the column behind a dropdown caption stands for this document's data.
+        /// </summary>
+        private SpectrumColumnScanner.Standing GetCaptionStanding(string caption)
+        {
+            if (caption == null || !_propertyColumns.TryGetValue(caption, out var filterColumn))
+            {
+                return SpectrumColumnScanner.Standing.Undetermined;
+            }
+            return _columnAvailability.GetStanding(filterColumn.PropertyPath,
+                SpectrumClassColumn.IsCvParamColumn(filterColumn.SpectrumColumn));
+        }
+
+        /// <summary>
+        /// Shows where each column stands for this document's data, in three states rather than two:
+        ///
+        ///   accent color  - this data has it, so a filter on it will match something
+        ///   plain         - nothing is known either way, which is a document with no results yet
+        ///   italic        - this data was examined and has nothing to match on
+        ///
+        /// Two states would have to conflate one pair, and every pairing misleads: merging "has it" with
+        /// "unknown" hides the only positive signal, and merging "unknown" with "does not have it" claims
+        /// an absence never observed.
+        ///
+        /// The accent also acts as the legend. There is nowhere to explain what the styling means, so a
+        /// familiar column that any data answers - MS level, say - is left marked rather than suppressed
+        /// as redundant: it lets the reader confirm the rule against data they already understand before
+        /// trusting the styling on a CV term they have never heard of.
+        ///
+        /// Italic, not gray, for the absent. Graying is the scheme's disabled treatment, and these entries
+        /// are anything but - a term absent from today's data is a reasonable thing to filter on for data
+        /// yet to be imported. Italic carries "of a different kind" without borrowing that meaning, keeps
+        /// full contrast, and follows any color scheme for free.
+        /// </summary>
+        private void propertyComboBox_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0)
+            {
+                return;
+            }
+            var comboBox = (ComboBox) sender;
+            var caption = comboBox.Items[e.Index].ToString();
+            var standing = GetCaptionStanding(caption);
+            e.DrawBackground();
+            // The selected item keeps the scheme's own selection colors: the accent is unreadable on the
+            // selection background, and the item the user is already on needs no guidance toward it.
+            var foreColor = (e.State & DrawItemState.Selected) != 0
+                ? SystemColors.HighlightText
+                : SpectrumColumnStyle.GetForeColor(standing, e.ForeColor);
+            var font = SpectrumColumnStyle.GetFontStyle(standing) == FontStyle.Italic
+                ? GetUnanswerableFont(e.Font)
+                : e.Font;
+            TextRenderer.DrawText(e.Graphics, caption, font, e.Bounds, foreColor,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
+            e.DrawFocusRectangle();
+        }
+
+        /// <summary>
+        /// The italic form of the list font, built once and reused: this is asked for on every item of
+        /// every repaint, and a Font per draw would leak handles for as long as the dialog is open.
+        /// </summary>
+        private Font GetUnanswerableFont(Font baseFont)
+        {
+            if (_unanswerableFont == null || !Equals(_unanswerableFont.FontFamily, baseFont.FontFamily) ||
+                _unanswerableFont.SizeInPoints != baseFont.SizeInPoints)
+            {
+                _unanswerableFont?.Dispose();
+                _unanswerableFont = new Font(baseFont, baseFont.Style | FontStyle.Italic);
+            }
+            return _unanswerableFont;
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            _unanswerableFont?.Dispose();
+            _unanswerableFont = null;
+            base.OnFormClosed(e);
+        }
+
         private void dataGridViewEx1_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
             int columnIndex = dataGridViewEx1.CurrentCell.ColumnIndex;
@@ -408,6 +536,48 @@ namespace pwiz.Skyline.EditUI
                     textBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
                 }
             }
+
+            if (columnIndex == propertyColumn.Index && e.Control is ComboBox comboBox)
+            {
+                comboBox.DrawMode = DrawMode.OwnerDrawFixed;
+                // The grid reuses one editing control across cells, so the handler is removed before it is
+                // added rather than accumulating a copy per edit.
+                comboBox.DrawItem -= propertyComboBox_DrawItem;
+                comboBox.DrawItem += propertyComboBox_DrawItem;
+            }
+
+            if (columnIndex == operationColumn.Index && e.Control is ComboBox operationComboBox &&
+                rowIndex >= 0 && rowIndex < _rowBindingList.Count)
+            {
+                PopulateOperationItems(operationComboBox, _rowBindingList[rowIndex]);
+            }
+        }
+
+        /// <summary>
+        /// The operations worth offering for a row's column. A CV term the ontology declares no value type
+        /// for is a pure flag: a spectrum either carries it or does not, so the blank tests are the only
+        /// questions that can be asked, and offering a comparison invites a filter that can never match.
+        ///
+        /// Only the list offered while editing is narrowed, never <see cref="operationColumn"/>'s own
+        /// items, so a committed value is still validated against the full set and cannot be rejected. An
+        /// operation an existing filter already uses is kept in the list even where it would not be offered
+        /// now, so opening and confirming this dialog cannot quietly rewrite a filter someone saved.
+        /// </summary>
+        private void PopulateOperationItems(ComboBox comboBox, Row row)
+        {
+            var operations = FilterOperations.ListOperations();
+            if (row.Property != null && _propertyColumns.TryGetValue(row.Property, out var filterColumn) &&
+                SpectrumClassColumn.IsValuelessCvColumn(filterColumn.SpectrumColumn))
+            {
+                operations = VALUELESS_COLUMN_OPERATIONS;
+            }
+            var displayNames = operations.Select(op => op.DisplayName).ToList();
+            if (!string.IsNullOrEmpty(row.Operation) && !displayNames.Contains(row.Operation))
+            {
+                displayNames.Add(row.Operation);
+            }
+            comboBox.Items.Clear();
+            comboBox.Items.AddRange(displayNames.Cast<object>().ToArray());
         }
 
         private void tabClauses_SelectedIndexChanged(object sender, EventArgs e)
