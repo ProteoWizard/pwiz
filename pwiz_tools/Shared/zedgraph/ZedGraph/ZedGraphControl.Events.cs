@@ -722,39 +722,46 @@ namespace ZedGraph
 		}
 
 		/// <summary>
-		/// Zoom <paramref name="pane" /> so its X and Y axes span exactly the supplied
-		/// scale ranges (each Min must be less than its Max), recording the change on the zoom stack so
-		/// the user can unzoom and raising <see cref="ZoomEvent" />, just as the end of an
-		/// interactive zoom-drag does. Intended for automation harnesses (e.g.
-		/// IJsonToolService.ZoomGraphTo). A direction this control does not let the user zoom
-		/// (<see cref="IsEnableHZoom" />, <see cref="IsEnableVZoom" />) is left alone, so pass
-		/// an axis its current Min and Max to mean "do not change this one".
+		/// Zoom <paramref name="pane" /> so an axis spans exactly the scale range supplied for
+		/// it (each Min less than its Max), recording the change on the zoom stack so the user
+		/// can unzoom and raising <see cref="ZoomEvent" />, just as the end of an interactive
+		/// zoom-drag does. Intended for automation harnesses (e.g. IJsonToolService.ZoomGraphTo).
 		/// </summary>
-		public void ZoomPaneToScale( GraphPane pane, double xMin, double xMax, double yMin, double yMax )
+		/// <param name="pane">The pane to zoom.</param>
+		/// <param name="xMin">Low end of the X range, or null to leave the X axis alone.</param>
+		/// <param name="xMax">High end of the X range, or null to leave the X axis alone.</param>
+		/// <param name="yMin">Low end of the Y range, or null to leave the Y axis alone.</param>
+		/// <param name="yMax">High end of the Y range, or null to leave the Y axis alone.</param>
+		public void ZoomPaneToScale( GraphPane pane, double? xMin, double? xMax, double? yMin, double? yMax )
 		{
 			if ( pane == null )
 				return;
 
-			// Only a direction this control lets the user zoom is applied. A graph that disables one
-			// (the peak-scoring and peak-picking comparison graphs disable both; a chromatogram follows
+			// An axis is left exactly as it is - its scale AND its auto flags - unless a range was given
+			// for it AND zooming that direction is something the user could do here. Both matter. A
+			// caller that asked to zoom only horizontally must not have the vertical scale pinned out of
+			// auto behind its back, and a graph that disables a zoom direction (the peak-scoring and
+			// peak-picking comparison graphs disable both; a chromatogram follows
 			// Settings.Default.LockYChrom) must not move that way for a programmatic caller when it
-			// would not for a mouse. HandleZoomFinish makes the same check at the end of a zoom-drag.
-			if ( !_isEnableHZoom && !_isEnableVZoom )
+			// would not for a mouse. HandleZoomFinish makes the same checks at the end of a zoom-drag.
+			bool zoomX = xMin.HasValue && xMax.HasValue && _isEnableHZoom;
+			bool zoomY = yMin.HasValue && yMax.HasValue && _isEnableVZoom;
+			if ( !zoomX && !zoomY )
 				return;
 
 			ZoomState oldState = ZoomStateSave( pane, ZoomState.StateType.Zoom );
 
-			if ( _isEnableHZoom )
+			if ( zoomX )
 			{
-				pane.XAxis.Scale.Min = xMin;
-				pane.XAxis.Scale.Max = xMax;
+				pane.XAxis.Scale.Min = xMin.Value;
+				pane.XAxis.Scale.Max = xMax.Value;
 				pane.XAxis.Scale.MinAuto = false;
 				pane.XAxis.Scale.MaxAuto = false;
 			}
-			if ( _isEnableVZoom )
+			if ( zoomY )
 			{
-				pane.YAxis.Scale.Min = yMin;
-				pane.YAxis.Scale.Max = yMax;
+				pane.YAxis.Scale.Min = yMin.Value;
+				pane.YAxis.Scale.Max = yMax.Value;
 				pane.YAxis.Scale.MinAuto = false;
 				pane.YAxis.Scale.MaxAuto = false;
 			}

@@ -128,15 +128,17 @@ namespace pwiz.Skyline.ToolsUI
             if (!wantsX && !wantsY)
                 return PaneRectangle(pane);
 
-            // An axis with nothing asked of it keeps the range it already has. A direction the graph does not
-            // allow is dropped by ZoomPaneToScale, the way HandleZoomFinish drops it at the end of a mouse
-            // drag the graph will not honor. The rectangle returned below is read back off the pane, so it
-            // shows what actually happened either way.
+            // An axis with nothing asked of it is passed no range at all, so ZoomPaneToScale leaves both its
+            // scale and its auto flags alone: writing its current values back would pin it out of auto
+            // scaling, which is not what "leave this one" means. A direction the graph does not allow is
+            // dropped there too, the way HandleZoomFinish drops it at the end of a mouse drag the graph will
+            // not honor. The rectangle returned below is read back off the pane, so it shows what actually
+            // happened either way.
             Control.ZoomPaneToScale(pane,
-                wantsX ? Math.Min(bounds.Left, bounds.Right) : pane.XAxis.Scale.Min,
-                wantsX ? Math.Max(bounds.Left, bounds.Right) : pane.XAxis.Scale.Max,
-                wantsY ? Math.Min(bounds.Top, bounds.Bottom) : pane.YAxis.Scale.Min,
-                wantsY ? Math.Max(bounds.Top, bounds.Bottom) : pane.YAxis.Scale.Max);
+                wantsX ? Math.Min(bounds.Left, bounds.Right) : (double?) null,
+                wantsX ? Math.Max(bounds.Left, bounds.Right) : (double?) null,
+                wantsY ? Math.Min(bounds.Top, bounds.Bottom) : (double?) null,
+                wantsY ? Math.Max(bounds.Top, bounds.Bottom) : (double?) null);
             return PaneRectangle(pane);
         }
 
