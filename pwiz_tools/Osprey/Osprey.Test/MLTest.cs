@@ -511,9 +511,23 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestGbtSquaredErrorObjective()
         {
-            AssertLogisticGoldenUnchanged();
+            AssertLogisticGoldenUnchanged(1);
+
+            // The class documents bit-identity "at any MaxDegreeOfParallelism", and the FDR
+            // path is what that promise protects. Asserting it only under squared error
+            // would leave the logistic path unverified against the parallel branch.
+            AssertLogisticGoldenUnchanged(4);
+
             AssertRegressionFitsContinuousTarget();
             AssertRegressionThreadInvariant();
+        }
+
+        // Owned by the golden assertion rather than shared with the other GBT tests: these
+        // constants were captured under exactly these parameters, so a future tweak to
+        // FastGbt to speed the suite up must not fail here blaming the boosting code.
+        private static GbtParams GoldenGbt()
+        {
+            return new GbtParams { NTrees = 40, MaxDepth = 4, Seed = 42 };
         }
 
         /// <summary>
@@ -522,14 +536,16 @@ namespace pwiz.Osprey.Test
         /// guarantee being protected is bit-identity, and a tolerance would let real
         /// numerical drift through.
         /// </summary>
-        private static void AssertLogisticGoldenUnchanged()
+        private static void AssertLogisticGoldenUnchanged(int threads)
         {
             double[][] x = GoldenFeatures();
             var isDecoy = new bool[x.Length];
             for (int i = 0; i < x.Length; i++)
                 isDecoy[i] = x[i][0] + x[i][3] < 2.5;
 
-            var model = GradientBoostedTrees.Train(x, isDecoy, FastGbt());
+            var parameters = GoldenGbt();
+            parameters.MaxDegreeOfParallelism = threads;
+            var model = GradientBoostedTrees.Train(x, isDecoy, parameters);
 
             var expected = new[]
             {
@@ -548,7 +564,8 @@ namespace pwiz.Osprey.Test
             for (int k = 0; k < probes.Length; k++)
             {
                 Assert.AreEqual(expected[k], model.ScoreSingle(probes[k]), string.Format(
-                    @"logistic score for probe {0} moved: the shared boosting code is no longer bit-identical", k));
+                    @"logistic score for probe {0} at {1} thread(s) moved: the shared boosting code is no longer bit-identical",
+                    k, threads));
             }
         }
 
@@ -665,11 +682,15 @@ namespace pwiz.Osprey.Test
                     @"round-tripped model scores differ at probe {0}", k));
             }
 
-            // Mutating the snapshot must not reach back into the model it came from.
+            // Mutating the snapshot must not reach back into the model it came from. The
+            // reference score has to be taken BEFORE the mutation: comparing two values that
+            // are both recomputed afterwards passes even when ToModelData hands out the live
+            // internal arrays, which is the bug this is here to catch.
+            double beforeMutation = model.ScoreSingle(probes[0]);
             var data = model.ToModelData();
             data.Leaf[0] = 12345.0;
-            Assert.AreEqual(model.ScoreSingle(probes[0]),
-                GradientBoostedTrees.FromModelData(model.ToModelData()).ScoreSingle(probes[0]));
+            data.Feature[0] = 0;
+            Assert.AreEqual(beforeMutation, model.ScoreSingle(probes[0]));
 
             var truncated = model.ToModelData();
             truncated.Leaf = new double[truncated.Leaf.Length - 1];

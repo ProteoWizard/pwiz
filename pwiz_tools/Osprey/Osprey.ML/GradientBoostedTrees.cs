@@ -85,7 +85,10 @@ namespace pwiz.Osprey.ML
         public double RegLambda = 1.0;
         /// <summary>L1 penalty on leaf weights (alpha).</summary>
         public double RegAlpha = 0.0;
-        /// <summary>Histogram bins per feature (&lt;= 255 so bin indices fit a byte).</summary>
+        /// <summary>Histogram bins per feature. CLAMPED to [2, 255] at the start of training,
+        /// because a bin index has to fit a byte. Note that XGBoost's own <c>max_bin</c>
+        /// default is 256, so a value transcribed from a Python configuration trains with 255
+        /// here rather than the 256 it asks for.</summary>
         public int MaxBins = 64;
         /// <summary>Seed for the row/column subsampling PRNG. Drives
         /// <see cref="XorShift64"/> -- see the determinism note on
@@ -105,9 +108,14 @@ namespace pwiz.Osprey.ML
     /// arrays ARE the model, and <see cref="GradientBoostedTrees.FromModelData"/> rebuilds
     /// a scorer that returns bit-identical margins.
     ///
-    /// Internal nodes have Feature >= 0 and branch on Threshold (value &lt;= Threshold goes
-    /// to Left); leaves have Feature == -1 and contribute Leaf, already scaled by the
-    /// learning rate. TreeRoot holds the node index each tree starts at.
+    /// Internal nodes have Feature in [0, FeatureCount) and branch on Threshold
+    /// (value &lt;= Threshold goes to Left), with Left and Right both greater than the
+    /// node's own index and different from each other. Leaves have Feature == -1, carry
+    /// -1 in BOTH Left and Right, and contribute Leaf, already scaled by the learning
+    /// rate. TreeRoot holds the node index each tree starts at.
+    ///
+    /// A writer that omits Left/Right for leaves rather than emitting -1 will be rejected
+    /// on load; those two fields are part of the contract, not an implementation detail.
     /// </summary>
     public sealed class GbtModelData
     {
@@ -118,6 +126,16 @@ namespace pwiz.Osprey.ML
         public double[] Leaf;
         public int[] TreeRoot;
         public double BaseScore;
+
+        /// <summary>Feature-vector width the model was trained on. Lets the load bounds-check
+        /// every split feature, so a corrupted index fails there rather than as an
+        /// index-out-of-range inside <see cref="GradientBoostedTrees.ScoreSingle"/>.</summary>
+        public int FeatureCount;
+
+        /// <summary>Objective the model was trained under. Recorded because the node arrays
+        /// alone cannot distinguish a squared-error margin from a log-odds one, and feeding a
+        /// reloaded regression margin to q-value or PEP estimation would be silently wrong.</summary>
+        public GbtObjective Objective;
     }
 
     /// <summary>
@@ -164,13 +182,24 @@ namespace pwiz.Osprey.ML
         private readonly double[] _leaf;
         private readonly int[] _treeRoot;
         private readonly double _baseScore;
+        private readonly int _featureCount;
+        private readonly GbtObjective _objective;
 
         private GradientBoostedTrees(int[] feature, double[] threshold, int[] left, int[] right,
-            double[] leaf, int[] treeRoot, double baseScore)
+            double[] leaf, int[] treeRoot, double baseScore, int featureCount, GbtObjective objective)
         {
             _feature = feature; _threshold = threshold; _left = left; _right = right;
             _leaf = leaf; _treeRoot = treeRoot; _baseScore = baseScore;
+            _featureCount = featureCount; _objective = objective;
         }
+
+        /// <summary>Feature-vector width this model expects.</summary>
+        public int FeatureCount { get { return _featureCount; } }
+
+        /// <summary>Objective this model was trained under. A margin from
+        /// <see cref="GbtObjective.SquaredError"/> is a prediction, not a log-odds, and must
+        /// not be handed to q-value or PEP estimation.</summary>
+        public GbtObjective Objective { get { return _objective; } }
 
         /// <summary>
         /// Train on <paramref name="x"/> (rows = samples, cols = features) with binary
@@ -223,6 +252,62 @@ namespace pwiz.Osprey.ML
             {
                 throw new ArgumentException(
                     @"GradientBoostedTrees.Train: sample weight length must match the row count");
+            }
+
+            // Under squared error the hessian IS the weight, with no positive floor of the
+            // kind the logistic branch applies. A negative weight can then drive a node's
+            // summed hessian to exactly -RegLambda and divide by zero in LeafValue, and one
+            // NaN leaf poisons every later round through the margin update. RegLambda is
+            // settable to 0 from the environment, so this is reachable in production.
+            if (sampleWeight != null)
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    if (double.IsNaN(sampleWeight[i]) || double.IsInfinity(sampleWeight[i]) || sampleWeight[i] < 0)
+                    {
+                        throw new ArgumentException(string.Format(
+                            @"GradientBoostedTrees.Train: sample weight {0} is {1}; weights must be finite and non-negative",
+                            i, sampleWeight[i]));
+                    }
+                }
+            }
+
+            switch (p.Objective)
+            {
+                case GbtObjective.LogisticBinary:
+                    // The logistic gradient is sigmoid(f) - y, which only means anything for a
+                    // y in [0, 1]. Leaving Objective at its default and passing a continuous
+                    // target through this overload would otherwise train a finite-looking but
+                    // meaningless model with no diagnostic at all.
+                    for (int i = 0; i < n; i++)
+                    {
+                        if (double.IsNaN(y[i]) || y[i] < 0.0 || y[i] > 1.0)
+                        {
+                            throw new ArgumentException(string.Format(
+                                @"GradientBoostedTrees.Train: target {0} is {1}; GbtObjective.LogisticBinary requires targets in [0, 1]. Set Objective to SquaredError for regression.",
+                                i, y[i]));
+                        }
+                    }
+
+                    break;
+
+                case GbtObjective.SquaredError:
+                    for (int i = 0; i < n; i++)
+                    {
+                        if (double.IsNaN(y[i]) || double.IsInfinity(y[i]))
+                        {
+                            throw new ArgumentException(string.Format(
+                                @"GradientBoostedTrees.Train: target {0} is {1}; targets must be finite", i, y[i]));
+                        }
+                    }
+
+                    break;
+
+                default:
+                    // An out-of-range cast would otherwise fall through to the logistic branch
+                    // and train the wrong loss silently.
+                    throw new ArgumentException(string.Format(
+                        @"GradientBoostedTrees.Train: unknown objective {0}", p.Objective));
             }
 
             int nFeat = x[0].Length;
@@ -284,7 +369,7 @@ namespace pwiz.Osprey.ML
             var allFeat = new int[nFeat];
             for (int j = 0; j < nFeat; j++) allFeat[j] = j;
 
-            var workspace = new TreeWorkspace(n, nFeat, maxBins, p);
+            var workspace = new TreeWorkspace(n, nColUse, maxBins, p, bin, g, h);
 
             // --- 3. Boosting rounds ---
             for (int t = 0; t < p.NTrees; t++)
@@ -314,8 +399,8 @@ namespace pwiz.Osprey.ML
                 // Column subsample for this tree.
                 var feats = SampleColumns(allFeat, nColUse, rng);
 
-                workspace.Reset(rows, feats, bin, n, g, h);
-                int root = BuildTree(workspace, 0, rows.Length, 0, cuts, p, maxBins,
+                workspace.Reset(rows, feats);
+                int root = BuildTree(workspace, 0, rows.Length, 0, cuts, p,
                     nodesFeature, nodesThresh, nodesLeft, nodesRight, nodesLeaf);
                 treeRoots.Add(root);
 
@@ -333,7 +418,7 @@ namespace pwiz.Osprey.ML
 
             return new GradientBoostedTrees(nodesFeature.ToArray(), nodesThresh.ToArray(),
                 nodesLeft.ToArray(), nodesRight.ToArray(), nodesLeaf.ToArray(),
-                treeRoots.ToArray(), baseScore);
+                treeRoots.ToArray(), baseScore, nFeat, p.Objective);
         }
 
         /// <summary>Raw additive margin for one feature vector: a log-odds under
@@ -341,6 +426,19 @@ namespace pwiz.Osprey.ML
         /// <see cref="GbtObjective.SquaredError"/>.</summary>
         public double ScoreSingle(double[] x)
         {
+            if (x == null)
+                throw new ArgumentNullException(nameof(x));
+
+            // A short vector would otherwise read past the caller's array only for whichever
+            // features the traversal happens to touch, so the failure would depend on the
+            // data rather than on the mistake.
+            if (x.Length < _featureCount)
+            {
+                throw new ArgumentException(string.Format(
+                    @"GradientBoostedTrees.ScoreSingle: model expects {0} features, got {1}",
+                    _featureCount, x.Length));
+            }
+
             double f = _baseScore;
             for (int t = 0; t < _treeRoot.Length; t++)
             {
@@ -364,7 +462,9 @@ namespace pwiz.Osprey.ML
                 Right = (int[])_right.Clone(),
                 Leaf = (double[])_leaf.Clone(),
                 TreeRoot = (int[])_treeRoot.Clone(),
-                BaseScore = _baseScore
+                BaseScore = _baseScore,
+                FeatureCount = _featureCount,
+                Objective = _objective
             };
         }
 
@@ -390,9 +490,20 @@ namespace pwiz.Osprey.ML
             }
             if (data.TreeRoot.Length == 0)
                 throw new ArgumentException(@"GradientBoostedTrees.FromModelData: model has no trees");
+            if (data.FeatureCount <= 0)
+                throw new ArgumentException(@"GradientBoostedTrees.FromModelData: feature count must be positive");
 
             for (int i = 0; i < nodes; i++)
             {
+                // Bounds-checking the split feature here is what keeps a corrupted index from
+                // surfacing as an index-out-of-range inside ScoreSingle instead.
+                if (data.Feature[i] >= data.FeatureCount)
+                {
+                    throw new ArgumentException(string.Format(
+                        @"GradientBoostedTrees.FromModelData: node {0} splits on feature {1}, outside the {2} the model was trained on",
+                        i, data.Feature[i], data.FeatureCount));
+                }
+
                 if (data.Feature[i] < 0)
                 {
                     // A leaf owns no children. Rejecting stale indices here stops a partial
@@ -432,7 +543,7 @@ namespace pwiz.Osprey.ML
 
             return new GradientBoostedTrees((int[])data.Feature.Clone(), (double[])data.Threshold.Clone(),
                 (int[])data.Left.Clone(), (int[])data.Right.Clone(), (double[])data.Leaf.Clone(),
-                (int[])data.TreeRoot.Clone(), data.BaseScore);
+                (int[])data.TreeRoot.Clone(), data.BaseScore, data.FeatureCount, data.Objective);
         }
 
         private static double Sigmoid(double z)
@@ -447,50 +558,76 @@ namespace pwiz.Osprey.ML
         // millions of short-lived arrays on a multi-million-row training set.
         private sealed class TreeWorkspace
         {
+            // Only these two change per boosting round; everything else is fixed for the
+            // whole Train call and is therefore set once, in the constructor.
             public int[] Rows;
             public int[] Feats;
-            public byte[] Bin;
-            public int RowStride;
-            public double[] G;
-            public double[] H;
 
+            public readonly byte[] Bin;
+            public readonly int RowStride;
+            public readonly double[] G;
+            public readonly double[] H;
             public readonly int MaxBins;
             public readonly int MaxDegreeOfParallelism;
+
             private readonly double[][] _gradHist;
             private readonly double[][] _hessHist;
             private readonly int[] _partition;
+            private readonly ParallelOptions _parallelOptions;
 
-            public TreeWorkspace(int n, int nFeat, int maxBins, GbtParams p)
+            public TreeWorkspace(int n, int nColUse, int maxBins, GbtParams p,
+                byte[] bin, double[] g, double[] h)
             {
                 MaxBins = maxBins;
                 MaxDegreeOfParallelism = Math.Max(1, p.MaxDegreeOfParallelism);
+                Bin = bin;
+                RowStride = n;
+                G = g;
+                H = h;
                 _partition = new int[n];
 
-                // One histogram buffer per depth: a node's histogram is dead once its split
-                // is chosen, so the two children share the next level's buffer in turn.
-                int levels = Math.Max(1, p.MaxDepth) + 1;
+                // Allocated once rather than at every node. A depth-6 tree has up to 63
+                // internal nodes, so per-node allocation would be ~12,600 throwaway objects
+                // per fold per boosting run.
+                _parallelOptions = MaxDegreeOfParallelism > 1
+                    ? new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism }
+                    : null;
+
+                // One histogram buffer per depth that can still split: a node's histogram is
+                // dead once its split is chosen, so the two children share the next level's
+                // buffer in turn, and a node at MaxDepth is always a leaf and never builds one.
+                // Width is nColUse, not nFeat, because only the sampled columns are indexed.
+                int levels = Math.Max(1, p.MaxDepth);
                 _gradHist = new double[levels][];
                 _hessHist = new double[levels][];
                 for (int d = 0; d < levels; d++)
                 {
-                    _gradHist[d] = new double[nFeat * maxBins];
-                    _hessHist[d] = new double[nFeat * maxBins];
+                    _gradHist[d] = new double[nColUse * maxBins];
+                    _hessHist[d] = new double[nColUse * maxBins];
                 }
             }
 
-            public void Reset(int[] rows, int[] feats, byte[] bin, int rowStride, double[] g, double[] h)
+            public ParallelOptions ParallelOptions
             {
-                Rows = rows; Feats = feats; Bin = bin; RowStride = rowStride; G = g; H = h;
+                get { return _parallelOptions; }
             }
 
+            public void Reset(int[] rows, int[] feats)
+            {
+                Rows = rows; Feats = feats;
+            }
+
+            // Indexed directly: AccumulateHistograms is only reached for a node that can
+            // still split, so depth is always below MaxDepth. Clamping instead would let an
+            // out-of-contract depth quietly alias a parent's buffer rather than throw.
             public double[] GradHist(int depth)
             {
-                return _gradHist[Math.Min(depth, _gradHist.Length - 1)];
+                return _gradHist[depth];
             }
 
             public double[] HessHist(int depth)
             {
-                return _hessHist[Math.Min(depth, _hessHist.Length - 1)];
+                return _hessHist[depth];
             }
 
             public int[] PartitionBuffer
@@ -503,9 +640,10 @@ namespace pwiz.Osprey.ML
         // row permutation; appends nodes to the shared flat lists and returns the node
         // index of this subtree's root.
         private static int BuildTree(TreeWorkspace ws, int start, int count, int depth,
-            double[][] cuts, GbtParams p, int maxBins,
+            double[][] cuts, GbtParams p,
             List<int> nFeat, List<double> nThr, List<int> nLeft, List<int> nRight, List<double> nLeaf)
         {
+            int maxBins = ws.MaxBins;
             var rows = ws.Rows;
             var g = ws.G;
             var h = ws.H;
@@ -517,11 +655,11 @@ namespace pwiz.Osprey.ML
             double bestGain = p.Gamma; // require gain strictly above gamma
             if (!leaf)
             {
-                AccumulateHistograms(ws, start, count, depth);
-
                 var hg = ws.GradHist(depth);
                 var hh = ws.HessHist(depth);
                 var feats = ws.Feats;
+                AccumulateHistograms(ws, start, count, depth, hg, hh, feats);
+
                 double parentTerm = gSum * gSum / (hSum + p.RegLambda);
                 for (int fi = 0; fi < feats.Length; fi++)
                 {
@@ -553,8 +691,8 @@ namespace pwiz.Osprey.ML
 
             int self = nFeat.Count;
             nFeat.Add(bestFeat); nThr.Add(cuts[bestFeat][bestBin]); nLeft.Add(-1); nRight.Add(-1); nLeaf.Add(0);
-            int lc = BuildTree(ws, start, leftCount, depth + 1, cuts, p, maxBins, nFeat, nThr, nLeft, nRight, nLeaf);
-            int rc = BuildTree(ws, start + leftCount, count - leftCount, depth + 1, cuts, p, maxBins, nFeat, nThr, nLeft, nRight, nLeaf);
+            int lc = BuildTree(ws, start, leftCount, depth + 1, cuts, p, nFeat, nThr, nLeft, nRight, nLeaf);
+            int rc = BuildTree(ws, start + leftCount, count - leftCount, depth + 1, cuts, p, nFeat, nThr, nLeft, nRight, nLeaf);
             nLeft[self] = lc; nRight[self] = rc;
             return self;
         }
@@ -562,24 +700,36 @@ namespace pwiz.Osprey.ML
         // Fill this depth's pooled histogram with the node's gradient and hessian sums per
         // (sampled feature, bin). One thread owns a feature and walks the node's rows in
         // ascending order, so the sums do not depend on the thread count.
-        private static void AccumulateHistograms(TreeWorkspace ws, int start, int count, int depth)
+        // Smallest node worth handing to the scheduler, in row-by-feature accumulation steps.
+        // Node population halves at every level, so most nodes in a depth-6 tree are far too
+        // small to repay a parallel dispatch; the million-row cost this exists for lives in
+        // the handful of wide nodes near the root.
+        private const long PARALLEL_WORK_THRESHOLD = 1L << 16;
+
+        private static void AccumulateHistograms(TreeWorkspace ws, int start, int count, int depth,
+            double[] hg, double[] hh, int[] feats)
         {
-            var hg = ws.GradHist(depth);
-            var hh = ws.HessHist(depth);
-            var feats = ws.Feats;
             int used = feats.Length * ws.MaxBins;
             Array.Clear(hg, 0, used);
             Array.Clear(hh, 0, used);
 
-            if (ws.MaxDegreeOfParallelism <= 1)
+            // NOTE on the choice of Parallel.For over this assembly's own OspreyParallel.For:
+            // OspreyParallel allocates dedicated Threads per call, which is right at fold
+            // granularity (a handful of calls per run) but not here, where a call happens at
+            // every internal node. Thread creation would swamp the work it parallelizes.
+            // The trade-off is that this path uses the shared ThreadPool, so it must not be
+            // turned on inside fold-parallel training; MaxDegreeOfParallelism defaults to 1
+            // and the FDR path never enters this branch.
+            if (ws.MaxDegreeOfParallelism <= 1 ||
+                (long)count * feats.Length < PARALLEL_WORK_THRESHOLD)
             {
                 for (int fi = 0; fi < feats.Length; fi++)
                     AccumulateFeature(ws, start, count, fi, hg, hh);
                 return;
             }
 
-            var options = new ParallelOptions { MaxDegreeOfParallelism = ws.MaxDegreeOfParallelism };
-            Parallel.For(0, feats.Length, options, fi => AccumulateFeature(ws, start, count, fi, hg, hh));
+            Parallel.For(0, feats.Length, ws.ParallelOptions,
+                fi => AccumulateFeature(ws, start, count, fi, hg, hh));
         }
 
         private static void AccumulateFeature(TreeWorkspace ws, int start, int count, int fi,
