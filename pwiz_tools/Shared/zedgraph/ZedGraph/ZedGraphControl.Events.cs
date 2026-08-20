@@ -722,30 +722,34 @@ namespace ZedGraph
 		}
 
 		/// <summary>
-		/// Zoom <paramref name="pane" /> so an axis spans exactly the scale range supplied for
-		/// it (each Min less than its Max), recording the change on the zoom stack so the user
-		/// can unzoom and raising <see cref="ZoomEvent" />, just as the end of an interactive
-		/// zoom-drag does. Intended for automation harnesses (e.g. IJsonToolService.ZoomGraphTo).
+		/// Zoom <paramref name="pane" /> so an axis end takes the scale value supplied for it
+		/// (leaving each Min below its Max is the caller's business), recording the change on
+		/// the zoom stack so the user can unzoom and raising <see cref="ZoomEvent" />, just as
+		/// the end of an interactive zoom-drag does. Intended for automation harnesses (e.g.
+		/// IJsonToolService.ZoomGraphTo).
 		/// </summary>
 		/// <param name="pane">The pane to zoom.</param>
-		/// <param name="xMin">Low end of the X range, or null to leave the X axis alone.</param>
-		/// <param name="xMax">High end of the X range, or null to leave the X axis alone.</param>
-		/// <param name="yMin">Low end of the Y range, or null to leave the Y axis alone.</param>
-		/// <param name="yMax">High end of the Y range, or null to leave the Y axis alone.</param>
+		/// <param name="xMin">Low end of the X range, or null to leave that end as it is.</param>
+		/// <param name="xMax">High end of the X range, or null to leave that end as it is.</param>
+		/// <param name="yMin">Low end of the Y range, or null to leave that end as it is.</param>
+		/// <param name="yMax">High end of the Y range, or null to leave that end as it is.</param>
 		public void ZoomPaneToScale( GraphPane pane, double? xMin, double? xMax, double? yMin, double? yMax )
 		{
 			if ( pane == null )
 				return;
 
-			// An axis is left exactly as it is - its scale AND its auto flags - unless a range was given
-			// for it AND zooming that direction is something the user could do here. Both matter. A
-			// caller that asked to zoom only horizontally must not have the vertical scale pinned out of
-			// auto behind its back, and a graph that disables a zoom direction (the peak-scoring and
-			// peak-picking comparison graphs disable both; a chromatogram follows
-			// Settings.Default.LockYChrom) must not move that way for a programmatic caller when it
-			// would not for a mouse. HandleZoomFinish makes the same checks at the end of a zoom-drag.
-			bool zoomX = xMin.HasValue && xMax.HasValue && _isEnableHZoom;
-			bool zoomY = yMin.HasValue && yMax.HasValue && _isEnableVZoom;
+			// Each END of each axis is independent: a value moves that end and takes it out of auto
+			// scaling, a null leaves it exactly as it was, value and auto setting both. So a caller can
+			// pin a maximum and let the minimum go on following the data, which is what the separate
+			// MinAuto and MaxAuto flags are for.
+			//
+			// A whole direction is skipped when this control does not let the user zoom it. A graph that
+			// disables one (the peak-scoring and peak-picking comparison graphs disable both; a
+			// chromatogram follows Settings.Default.LockYChrom) must not move that way for a
+			// programmatic caller when it would not for a mouse. HandleZoomFinish makes the same check
+			// at the end of a zoom-drag.
+			bool zoomX = _isEnableHZoom && ( xMin.HasValue || xMax.HasValue );
+			bool zoomY = _isEnableVZoom && ( yMin.HasValue || yMax.HasValue );
 			if ( !zoomX && !zoomY )
 				return;
 
@@ -753,17 +757,29 @@ namespace ZedGraph
 
 			if ( zoomX )
 			{
-				pane.XAxis.Scale.Min = xMin.Value;
-				pane.XAxis.Scale.Max = xMax.Value;
-				pane.XAxis.Scale.MinAuto = false;
-				pane.XAxis.Scale.MaxAuto = false;
+				if ( xMin.HasValue )
+				{
+					pane.XAxis.Scale.Min = xMin.Value;
+					pane.XAxis.Scale.MinAuto = false;
+				}
+				if ( xMax.HasValue )
+				{
+					pane.XAxis.Scale.Max = xMax.Value;
+					pane.XAxis.Scale.MaxAuto = false;
+				}
 			}
 			if ( zoomY )
 			{
-				pane.YAxis.Scale.Min = yMin.Value;
-				pane.YAxis.Scale.Max = yMax.Value;
-				pane.YAxis.Scale.MinAuto = false;
-				pane.YAxis.Scale.MaxAuto = false;
+				if ( yMin.HasValue )
+				{
+					pane.YAxis.Scale.Min = yMin.Value;
+					pane.YAxis.Scale.MinAuto = false;
+				}
+				if ( yMax.HasValue )
+				{
+					pane.YAxis.Scale.Max = yMax.Value;
+					pane.YAxis.Scale.MaxAuto = false;
+				}
 			}
 
 			ApplyToAllPanes( pane );
