@@ -529,9 +529,10 @@ namespace pwiz.Skyline.Model.Serialization
                 try
                 {
                     // One per molecule, made here because this is the one thing every thread does
-                    // on its own: what it works out about a molecule belongs to that molecule.
+                    // on its own: what it works out about a molecule belongs to that molecule. The
+                    // element is what the queue already holds, so nothing is re-parsed to hand it on.
                     var peptideDocNode = new MoleculeReader(DocumentReader).ReadPeptideXml(
-                        CreateReaderFromElement(peptideWorkItem.XElement),
+                        peptideWorkItem.XElement,
                         peptideWorkItem.PeptideGroupData.PeptideGroup, peptideWorkItem.XElement.Name == EL.molecule);
                     peptideWorkItem.PeptideGroupData.AddPeptide(peptideWorkItem.Order, peptideDocNode);
                 }

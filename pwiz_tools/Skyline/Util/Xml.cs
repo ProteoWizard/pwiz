@@ -816,6 +816,143 @@ namespace pwiz.Skyline.Util
             return defaultValue;
         }
 
+        /// <summary>
+        /// The attribute getters above, asked of an <see cref="XElement"/> instead of a reader
+        /// walking past it. Everything goes through the same converters, so an element and a reader
+        /// read the same text the same way and cannot drift apart.
+        /// <para>
+        /// A reader can only answer about where it is standing, which is why code using one has to
+        /// take what it needs in the order the file happens to be in. An element can be asked
+        /// anything at any time, so a caller which needs two parts of a molecule at once - a
+        /// transition's peak and the precursor peak which speaks for it, say - can simply hold both.
+        /// </para>
+        /// </summary>
+        public static string GetAttribute(this XElement element, string name)
+        {
+            return element.Attribute(name)?.Value;
+        }
+
+        public static TOutput? GetAttribute<TOutput>(this XElement element, string name,
+            Converter<string, TOutput> converter)
+            where TOutput : struct
+        {
+            string value = element.GetAttribute(name);
+            if (value == null)
+                return null;
+            try
+            {
+                return converter(value);
+            }
+            catch (Exception x)
+            {
+                throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name), x);
+            }
+        }
+
+        public static bool? GetNullableBoolAttribute(this XElement element, string name)
+        {
+            return element.GetAttribute(name, ConvertToBoolean);
+        }
+
+        public static bool GetBoolAttribute(this XElement element, string name)
+        {
+            return element.GetBoolAttribute(name, false);
+        }
+
+        public static bool GetBoolAttribute(this XElement element, string name, bool defaultValue)
+        {
+            return element.GetNullableBoolAttribute(name) ?? defaultValue;
+        }
+
+        public static int? GetNullableIntAttribute(this XElement element, string name)
+        {
+            return element.GetAttribute(name, ConvertToInt32);
+        }
+
+        public static int GetIntAttribute(this XElement element, string name)
+        {
+            return element.GetIntAttribute(name, 0);
+        }
+
+        public static int GetIntAttribute(this XElement element, string name, int defaultValue)
+        {
+            return element.GetNullableIntAttribute(name) ?? defaultValue;
+        }
+
+        public static double? GetNullableDoubleAttribute(this XElement element, string name)
+        {
+            return element.GetAttribute(name, ConvertToDouble);
+        }
+
+        public static double GetDoubleAttribute(this XElement element, string name)
+        {
+            return element.GetDoubleAttribute(name, 0.0);
+        }
+
+        public static double GetDoubleAttribute(this XElement element, string name, double defaultValue)
+        {
+            return element.GetNullableDoubleAttribute(name) ?? defaultValue;
+        }
+
+        public static float? GetNullableFloatAttribute(this XElement element, string name)
+        {
+            return element.GetAttribute(name, ConvertToSingle);
+        }
+
+        public static float GetFloatAttribute(this XElement element, string name)
+        {
+            return element.GetFloatAttribute(name, 0.0f);
+        }
+
+        public static float GetFloatAttribute(this XElement element, string name, float defaultValue)
+        {
+            return element.GetNullableFloatAttribute(name) ?? defaultValue;
+        }
+
+        /// <summary>
+        /// See <see cref="GetFloatsAttribute(XmlReader,string)"/>, which this is the element form of.
+        /// </summary>
+        public static float[] GetFloatsAttribute(this XElement element, string name)
+        {
+            string value = element.GetAttribute(name);
+            if (value == null)
+            {
+                return null;
+            }
+
+            return value.Split(' ')
+                .Select(part => float.Parse(part, CultureInfo.InvariantCulture))
+                .ToArray();
+        }
+
+        public static TAttr GetEnumAttribute<TAttr>(this XElement element, string name, TAttr defaultValue,
+            EnumCase enumCase)
+        {
+            return element.GetEnumAttribute(name, null, defaultValue, enumCase);
+        }
+
+        public static TAttr GetEnumAttribute<TAttr>(this XElement element, string name,
+            IDictionary<string, TAttr> lookup, TAttr defaultValue, EnumCase enumCase)
+        {
+            string value = element.GetAttribute(name);
+            if (!string.IsNullOrEmpty(value))
+            {
+                if (lookup != null && lookup.TryGetValue(value, out var cached))
+                    return cached;
+
+                try
+                {
+                    return (TAttr)Enum.Parse(typeof(TAttr), GetEnumString(value, enumCase));
+                }
+                catch (ArgumentException x)
+                {
+                    throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name), x);
+                }
+            }
+
+            return defaultValue;
+        }
+
         private static string GetEnumString(string value, EnumCase enumCase)
         {
             switch (enumCase)
