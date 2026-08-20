@@ -181,6 +181,20 @@ namespace pwiz.Osprey.ML
         {
             if (isDecoy == null)
                 throw new ArgumentNullException(nameof(isDecoy));
+            if (p == null)
+                throw new ArgumentNullException(nameof(p));
+
+            // This overload promises a log-odds margin from binary labels, and callers rank
+            // by it. A GbtParams instance carried over from a regression call would otherwise
+            // quietly fit squared error to 0/1 targets and return something that is not a
+            // log-odds at all, which q-value and PEP estimation downstream would not survive.
+            if (p.Objective != GbtObjective.LogisticBinary)
+            {
+                throw new ArgumentException(string.Format(
+                    @"GradientBoostedTrees.Train: the binary-label overload requires GbtObjective.LogisticBinary, not {0}. Use the continuous-target overload for regression.",
+                    p.Objective));
+            }
+
             var y = new double[isDecoy.Length];
             for (int i = 0; i < isDecoy.Length; i++)
                 y[i] = isDecoy[i] ? 0.0 : 1.0;
@@ -194,10 +208,23 @@ namespace pwiz.Osprey.ML
         /// </summary>
         public static GradientBoostedTrees Train(double[][] x, double[] y, GbtParams p, double[] sampleWeight = null)
         {
+            if (x == null)
+                throw new ArgumentNullException(nameof(x));
+            if (p == null)
+                throw new ArgumentNullException(nameof(p));
             int n = x.Length;
             if (n == 0) throw new ArgumentException(@"GradientBoostedTrees.Train: empty training set");
             if (y == null || y.Length != n)
                 throw new ArgumentException(@"GradientBoostedTrees.Train: target length must match the row count");
+
+            // Caught here rather than as an index-out-of-range partway through boosting,
+            // which would leave the caller guessing which array was the wrong length.
+            if (sampleWeight != null && sampleWeight.Length != n)
+            {
+                throw new ArgumentException(
+                    @"GradientBoostedTrees.Train: sample weight length must match the row count");
+            }
+
             int nFeat = x[0].Length;
             int maxBins = Math.Max(2, Math.Min(255, p.MaxBins));
             if ((long)n * nFeat > int.MaxValue)
@@ -367,10 +394,34 @@ namespace pwiz.Osprey.ML
             for (int i = 0; i < nodes; i++)
             {
                 if (data.Feature[i] < 0)
+                {
+                    // A leaf owns no children. Rejecting stale indices here stops a partial
+                    // edit from leaving a node that scores as a leaf but still points somewhere.
+                    if (data.Left[i] != -1 || data.Right[i] != -1)
+                    {
+                        throw new ArgumentException(string.Format(
+                            @"GradientBoostedTrees.FromModelData: leaf {0} carries a child index", i));
+                    }
+
                     continue;
+                }
+
                 if (data.Left[i] < 0 || data.Left[i] >= nodes || data.Right[i] < 0 || data.Right[i] >= nodes)
+                {
                     throw new ArgumentException(string.Format(
                         @"GradientBoostedTrees.FromModelData: node {0} has a child index outside the node array", i));
+                }
+
+                // BuildTree appends a node before recursing into its children, so a child
+                // index always exceeds its parent's and the two differ. Requiring that on load
+                // is what rules out a cycle: without it, corrupted data makes ScoreSingle spin
+                // forever instead of failing.
+                if (data.Left[i] <= i || data.Right[i] <= i || data.Left[i] == data.Right[i])
+                {
+                    throw new ArgumentException(string.Format(
+                        @"GradientBoostedTrees.FromModelData: node {0} has child indices {1} and {2} that do not both increase, which would make scoring cycle",
+                        i, data.Left[i], data.Right[i]));
+                }
             }
             for (int t = 0; t < data.TreeRoot.Length; t++)
             {

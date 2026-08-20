@@ -688,6 +688,66 @@ namespace pwiz.Osprey.Test
             var noTrees = model.ToModelData();
             noTrees.TreeRoot = new int[0];
             Assert.ThrowsException<ArgumentException>(() => GradientBoostedTrees.FromModelData(noTrees));
+
+            // A child index that does not increase is a cycle. Range checks alone let it
+            // through, and ScoreSingle would then spin forever rather than fail.
+            var cycle = model.ToModelData();
+            for (int i = 0; i < cycle.Feature.Length; i++)
+            {
+                if (cycle.Feature[i] < 0)
+                    continue;
+                cycle.Left[i] = i;
+                break;
+            }
+            Assert.ThrowsException<ArgumentException>(() => GradientBoostedTrees.FromModelData(cycle));
+
+            var leafWithChild = model.ToModelData();
+            for (int i = 0; i < leafWithChild.Feature.Length; i++)
+            {
+                if (leafWithChild.Feature[i] >= 0)
+                    continue;
+                leafWithChild.Left[i] = 0;
+                break;
+            }
+            Assert.ThrowsException<ArgumentException>(() => GradientBoostedTrees.FromModelData(leafWithChild));
+        }
+
+        /// <summary>
+        /// Argument validation on both Train overloads. Every case here would otherwise
+        /// surface as a NullReferenceException or an index-out-of-range partway through
+        /// boosting, pointing at boosting internals rather than at the bad argument.
+        /// </summary>
+        [TestMethod]
+        public void TestGbtTrainArgumentValidation()
+        {
+            double[][] x = GoldenFeatures();
+            var isDecoy = new bool[x.Length];
+            double[] y = RegressionTarget(x);
+
+            Assert.ThrowsException<ArgumentNullException>(
+                () => GradientBoostedTrees.Train(null, y, RegressionGbt()));
+            Assert.ThrowsException<ArgumentNullException>(
+                () => GradientBoostedTrees.Train(x, y, null));
+            Assert.ThrowsException<ArgumentNullException>(
+                () => GradientBoostedTrees.Train(x, (bool[])null, FastGbt()));
+            Assert.ThrowsException<ArgumentNullException>(
+                () => GradientBoostedTrees.Train(x, isDecoy, null));
+
+            Assert.ThrowsException<ArgumentException>(
+                () => GradientBoostedTrees.Train(x, new double[x.Length - 1], RegressionGbt()));
+            Assert.ThrowsException<ArgumentException>(
+                () => GradientBoostedTrees.Train(x, y, RegressionGbt(), new double[x.Length - 1]));
+
+            // The binary-label overload returns a log-odds margin that callers rank by, so it
+            // must refuse a params instance carried over from a regression call rather than
+            // silently fitting squared error to 0/1 labels.
+            var regressionParams = RegressionGbt();
+            Assert.ThrowsException<ArgumentException>(
+                () => GradientBoostedTrees.Train(x, isDecoy, regressionParams));
+
+            // The same instance is fine once the objective matches the entry point.
+            regressionParams.Objective = GbtObjective.LogisticBinary;
+            Assert.IsNotNull(GradientBoostedTrees.Train(x, isDecoy, regressionParams));
         }
 
         private static double[][] GoldenProbes()
