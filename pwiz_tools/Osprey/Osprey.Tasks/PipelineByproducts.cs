@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -240,12 +241,17 @@ namespace pwiz.Osprey.Tasks
         public virtual List<KeyValuePair<string, List<FdrEntry>>> Value => _buffer;
 
         /// <summary>
-        /// The backing list WITHOUT materializing a deferred milestone - for identity
-        /// comparison only (the DEBUG milestone-ordering guard in
-        /// <see cref="PipelineContext"/>, which must not become the thing that pulls).
-        /// Never read entries through this.
+        /// The backing list as an OPAQUE reference, for identity comparison only - the DEBUG
+        /// milestone-ordering guard in <see cref="PipelineContext"/> keys on which milestone
+        /// was last published over a given buffer, and reading <see cref="Value"/> to get it
+        /// would make the guard itself the thing that pulls.
+        ///
+        /// <para>Typed as <see cref="object"/> on purpose. The same accessor typed as the
+        /// list would sit one keystroke from <c>Value</c> in every task in this assembly, and
+        /// on a deferred milestone it hands back 82 empty per-file lists with no exception and
+        /// no warning - a blib with no precursors. Nothing can read entries through this.</para>
         /// </summary>
-        internal List<KeyValuePair<string, List<FdrEntry>>> BackingBuffer => _buffer;
+        internal object BufferIdentity => _buffer;
     }
 
     /// <summary>The buffer as produced by PerFileScoring (per-file scored stubs).</summary>
@@ -287,11 +293,17 @@ namespace pwiz.Osprey.Tasks
     /// nothing pulled it rather than because a predicate asked whether its own consumer was
     /// going to run (issue #4597).</para>
     ///
-    /// <para>Read on the pipeline thread only: the build is guarded once, not locked.</para>
+    /// <para>Run-once, and a FAILED build stays failed: the build overlays reconciled
+    /// parquets and appends gap-fill rows, so running it a second time over one buffer
+    /// duplicates them, and resuming from a half-filled buffer reports a plausible wrong
+    /// number rather than an error. <see cref="Lazy{T}"/> in
+    /// <see cref="LazyThreadSafetyMode.ExecutionAndPublication"/> is exactly those two
+    /// semantics - one execution however many readers arrive, and a cached exception
+    /// rethrown to every later reader instead of a silently partial pool.</para>
     /// </summary>
     internal sealed class RescoredEntries : PerFileEntries
     {
-        private Action _materialize;
+        private readonly Lazy<bool> _materialize;
 
         /// <summary>The buffer already at its post-rescore state - nothing deferred.</summary>
         public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
@@ -300,26 +312,22 @@ namespace pwiz.Osprey.Tasks
         /// <paramref name="materialize"/>.</param>
         /// <param name="materialize">Brings <paramref name="value"/> to its post-rescore
         /// state on the first <see cref="Value"/> read. Throws on failure - a deferred build
-        /// has no return channel to the driver loop.</param>
+        /// has no return channel to the driver loop - and the throw is cached, so a second
+        /// reader sees the same failure rather than a partially built pool.</param>
         public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value, Action materialize)
             : base(value)
         {
-            _materialize = materialize;
+            _materialize = new Lazy<bool>(() => { materialize(); return true; },
+                LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
         public override List<KeyValuePair<string, List<FdrEntry>>> Value
         {
             get
             {
-                var materialize = _materialize;
-                if (materialize != null)
-                {
-                    // Cleared BEFORE the call, so a build that reads this property (or a
-                    // second reader after one that threw) cannot run it twice onto the same
-                    // buffer - the overlay it performs is not idempotent.
-                    _materialize = null;
-                    materialize();
-                }
+                // Reading Lazy.Value IS the build; the bool it yields carries no information.
+                if (_materialize != null && !_materialize.Value)
+                    throw new InvalidOperationException(@"Deferred RescoredEntries build did not complete.");
                 return base.Value;
             }
         }

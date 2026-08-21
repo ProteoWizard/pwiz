@@ -181,32 +181,39 @@ namespace pwiz.Osprey.Tasks
             // reconciled-input compaction when the driver skipped it), which is what
             // produces the post-rescore version this stage reads.
             //
-            // This read is also what BUILDS the global survivor pool after a streamed
-            // rescore (issue #4597): PerFileRescore leaves the milestone deferred, because
-            // re-reading every file's artifacts is whole-run join work and that task is a
-            // per-file HPC exit point. Stage 7 is the stage that needs a global pool - the
-            // protein-compact competition is over a global stratum - so Stage 7 is where
+            // Reading .Value on that milestone is also what BUILDS the global survivor pool
+            // after a streamed rescore (issue #4597): PerFileRescore leaves it deferred,
+            // because re-reading every file's artifacts is whole-run join work and that task
+            // is a per-file HPC exit point. Stage 7 is the stage that needs a global pool -
+            // the protein-compact competition is over a global stratum - so Stage 7 is where
             // the work lands, and a worker that never reaches this line never pays it.
-            var perFileEntries = ctx.Get<RescoredEntries>().Value;
-            var fullLibrary = ctx.Get<FullLibrary>().Value;
-            var libraryById = ctx.Get<LibraryById>().Value;
-            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+            // Taken as a TOKEN first, so the probes below can bracket that build.
+            var rescored = ctx.Get<RescoredEntries>();
 
             // Stage 7's INHERITED baseline, post-GC, before this stage does any work
             // (#4486). Every figure that issue has ever quoted came from --memstamp, i.e.
             // GC.GetTotalMemory(false), which includes uncollected garbage and so cannot
             // tell a live survivor pool from Server-GC committed-but-free gray - which is
-            // precisely the question. The demand above has already materialized
-            // RescoredEntries, so this measures what Stage 7 is handed rather than what it
-            // builds; the probes below then attribute each substep's own contribution.
-            // "Inherited" is still the right word after issue #4597 moved the pool build
-            // onto that demand: the pool is what Stage 7 is handed, no matter which stage's
-            // wall clock pays for assembling it.
-            int nFiles = perFileEntries.Count;
+            // precisely the question.
+            //
+            // BEFORE the .Value read, deliberately. #4597 moved the pool build onto that
+            // read, and this probe exists to separate what Stage 7 inherits from what it
+            // allocates - so taking it after the build would fold the build's own transients
+            // (each file's pre-filter stub superset, the overlay's loaded list and maps) into
+            // the "inherited" number and break comparability with the whole #4486 series.
+            // The stage7-pool probe below is the one that measures the build.
+            int nFiles = ctx.Config.InputFiles?.Count ?? 0;
             string memDetail = string.Format(@"(files={0})", nFiles);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"stage7 start (pre-GC)");
             ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-inherited",
                 string.Format(@"(post-GC, entering Stage 7, files={0})", nFiles));
+
+            var perFileEntries = rescored.Value;
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-pool",
+                string.Format(@"(post-GC, survivor pool built, files={0})", perFileEntries.Count));
+            var fullLibrary = ctx.Get<FullLibrary>().Value;
+            var libraryById = ctx.Get<LibraryById>().Value;
+            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
 
             ReleaseUnscorableLibraryFragments(perFileEntries, fullLibrary, ctx);
 

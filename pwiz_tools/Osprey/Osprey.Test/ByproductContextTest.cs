@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
@@ -350,18 +351,19 @@ namespace pwiz.Osprey.Test
         /// appends gap-fill rows; running it twice over one buffer would duplicate them.</para>
         ///
         /// <para>Not reading builds nothing. That is the whole point: a
-        /// <c>--task PerFileRescoring</c> worker skips the join because nothing pulled it,
-        /// not because a predicate asked whether its own consumer was going to run.</para>
+        /// <c>--task PerFileRescoring</c> worker skips the join because nothing pulled it.</para>
         /// </summary>
         [TestMethod]
         public void TestDeferredMilestoneBuildsOnFirstValueRead()
         {
             var ctx = ContextFor(new StubProducerTask(publishBeforeStop: false, exitCode: 0));
-            var buffer = new List<KeyValuePair<string, List<FdrEntry>>>
-            {
-                new KeyValuePair<string, List<FdrEntry>>(@"file1", new List<FdrEntry>())
-            };
+            var buffer = BufferWithOneFile();
             int builds = 0;
+            // Over a buffer that already carries an earlier milestone, which is the real
+            // pipeline shape: PerFileScoring -> FirstPassFDR -> PerFileRescore all publish over
+            // ONE list, and the DEBUG ordering guard runs on the second publish, not the first.
+            ctx.Publish(new CompactedEntries(buffer));
+            Assert.IsTrue(ctx.TryGet<CompactedEntries>(out _));
             ctx.Publish(new RescoredEntries(buffer, () =>
             {
                 builds++;
@@ -371,6 +373,8 @@ namespace pwiz.Osprey.Test
 
             Assert.IsTrue(ctx.TryGet<RescoredEntries>(out var milestone));
             Assert.AreEqual(0, builds, @"Holding the milestone token is not a pull");
+            Assert.AreSame(buffer, milestone.BufferIdentity);
+            Assert.AreEqual(0, builds, @"Reading the buffer's identity is not a pull either");
 
             Assert.AreSame(buffer, milestone.Value);
             Assert.AreEqual(1, builds);
@@ -382,6 +386,42 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// A build that THROWS stays thrown. The build refills survivor lists, then overlays
+        /// reconciled parquets and appends gap-fill rows, so a second attempt over the same
+        /// buffer would duplicate whatever the first one finished - and a reader who quietly
+        /// got the half-filled pool instead would write a blib from part of the run and report
+        /// a plausible wrong number. The failure is cached and re-thrown, and the partial work
+        /// is never resumed.
+        /// </summary>
+        [TestMethod]
+        public void TestDeferredMilestoneRethrowsAndDoesNotRebuildAfterFailure()
+        {
+            var buffer = BufferWithOneFile();
+            int builds = 0;
+            var milestone = new RescoredEntries(buffer, () =>
+            {
+                builds++;
+                buffer[0].Value.Add(new FdrEntry());   // the partial fill a retry must not repeat
+                throw new InvalidDataException(@"survivor refill failed");
+            });
+
+            for (int read = 0; read < 2; read++)
+            {
+                try
+                {
+                    var unused = milestone.Value;
+                    Assert.Fail(@"Expected the deferred build's failure to surface on read");
+                }
+                catch (InvalidDataException)
+                {
+                    // expected on BOTH reads: the exception is cached, not re-attempted
+                }
+            }
+            Assert.AreEqual(1, builds, @"A failed build must not be retried by the next reader");
+            Assert.AreEqual(1, buffer[0].Value.Count, @"and must not add to its own partial work");
+        }
+
+        /// <summary>
         /// The undeferred constructor is the arm where the buffer already holds its
         /// post-rescore state (the resident survivor pool, and both rehydrate paths): reading
         /// it hands back the same list with nothing to run.
@@ -389,14 +429,20 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestUndeferredMilestoneReadsStraightThrough()
         {
-            var buffer = new List<KeyValuePair<string, List<FdrEntry>>>
-            {
-                new KeyValuePair<string, List<FdrEntry>>(@"file1", new List<FdrEntry> { new FdrEntry() })
-            };
+            var buffer = BufferWithOneFile();
+            buffer[0].Value.Add(new FdrEntry());
             var milestone = new RescoredEntries(buffer);
             Assert.AreSame(buffer, milestone.Value);
-            Assert.AreSame(buffer, milestone.BackingBuffer);
+            Assert.AreSame(buffer, milestone.BufferIdentity);
             Assert.AreEqual(1, milestone.Value[0].Value.Count);
+        }
+
+        private static List<KeyValuePair<string, List<FdrEntry>>> BufferWithOneFile()
+        {
+            return new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                new KeyValuePair<string, List<FdrEntry>>(@"file1", new List<FdrEntry>())
+            };
         }
     }
 }

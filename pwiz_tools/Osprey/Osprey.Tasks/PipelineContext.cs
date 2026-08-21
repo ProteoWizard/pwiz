@@ -153,14 +153,12 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public int ExitCode { get; set; }
 
-        /// <summary>
-        /// The tasks participating in this pipeline, in execution order.
-        /// The driver walks this list (running each that is
-        /// <see cref="OspreyTask.IsIncluded"/> and not already valid on disk);
-        /// tasks that need state from an upstream sibling reach it through
-        /// <see cref="Demand{T}"/>.
-        /// </summary>
-        public IReadOnlyList<OspreyTask> Tasks { get; }
+        // No public list of the pipeline's tasks. The driver walks its own list, and a task
+        // that needs state from a sibling asks Get/Demand for the state, never the task.
+        // The one reader this property ever had was a predicate asking whether ITS OWN
+        // consumer was going to run, so it could decide whether to do whole-run work - the
+        // second copy of IsIncluded's truth table that issue #4597 deleted. Leaving the hook
+        // in place is an invitation to write that predicate again.
 
         /// <summary>
         /// The cross-implementation bisection diagnostics sink for this run, or
@@ -217,7 +215,6 @@ namespace pwiz.Osprey.Tasks
                     _producerByByproduct.Add(byproductType, task.GetType());
                 }
             }
-            Tasks = list;
         }
 
         public void LogInfo(string message) { _logInfo(message); }
@@ -452,11 +449,11 @@ namespace pwiz.Osprey.Tasks
         {
             if (!(info is PerFileEntries milestone))
                 return;
-            // BackingBuffer, not Value: this guard needs list identity only, and reading
+            // BufferIdentity, not Value: this guard needs list identity only, and reading
             // Value would MATERIALIZE a deferred milestone (RescoredEntries), making the
             // DEBUG build pay at publish time the very work deferral exists to move to the
             // consumer's pull - and pay it before the rescore that fills it has run.
-            object buffer = milestone.BackingBuffer;
+            object buffer = milestone.BufferIdentity;
             if (buffer == null)
                 return;
             if (_milestoneByBuffer.TryGetValue(buffer, out var priorMilestone))
