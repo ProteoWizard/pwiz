@@ -114,7 +114,8 @@ public sealed class MzMlbReaderAdapter : IReader
                     ids: idx.Value.SpectrumIds,
                     offsets: idx.Value.SpectrumOffsets,
                     dp: dpPwiz,
-                    source: filename);
+                    source: filename,
+                    decodeThreads: config?.MzmlDecodeThreads ?? 1);
                 conn = null!; // ownership transferred to SpectrumList_Mzml
                 return;
             }
