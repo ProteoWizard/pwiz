@@ -154,6 +154,17 @@ namespace TestRunnerLib
         public static string CheckAfterTest(string testName, int dotMemoryWarmupRuns,
             Exception exception, Action<string, object[]> log)
         {
+            // SKYLINE_GC_LEAK_ROOTS=smoke exercises the reporter on every test, whether or not
+            // anything leaked, so the ClrMD snapshot path can be proven to work in an environment
+            // (notably a Windows container) without waiting out the ~30,000 executions it takes to
+            // hit a real leak. RunTests is alive and rooted here, so it should produce a root path;
+            // SkylineWindow should normally report no live instance.
+            if (string.Equals(Environment.GetEnvironmentVariable(ROOT_PATHS), @"smoke", StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var line in GcRootReporter.DescribeRoots(new[] { @"SkylineWindow", @"RunTests" }))
+                    log("# GCROOT-SMOKE {0}\n", new object[] { line });
+            }
+
             if (dotMemoryWarmupRuns > 0)
             {
                 PinSurvivors();
@@ -187,6 +198,7 @@ namespace TestRunnerLib
 
             // Phase 3: Still leaking after retries - pin survivors and report. Dump BEFORE pinning,
             // so the only roots in the dump are the ones actually holding the survivors.
+            WriteRootPathsIfRequested(log);
             WriteLeakDumpIfRequested(testName, log);
             PinSurvivors();
 #if NET472
@@ -208,6 +220,46 @@ namespace TestRunnerLib
         /// Unset (the normal case) costs one environment read per leak.
         /// </summary>
         public const string LEAK_DUMP_DIR = "SKYLINE_GC_LEAK_DUMP";
+
+        /// <summary>
+        /// Root-chain reporting is ON by default; set this to "off" to suppress it, or to "smoke"
+        /// to exercise it on every test (see <see cref="CheckAfterTest"/>).
+        ///
+        /// <para>On by default deliberately. This is the cheap alternative to
+        /// <see cref="LEAK_DUMP_DIR"/> - it answers the only question a dump gets opened to answer,
+        /// "what is still holding this", in a few lines of text. And it has to be on by default to
+        /// be useful at all in parallel mode: an environment variable cannot reach a Docker worker,
+        /// because TestRunner passes no -e arguments and the AlwaysUp .\TestUser service session
+        /// would not inherit them anyway. Worker stdout IS relayed to the server log, so a default
+        /// -on reporter gets the answer out of a container with no plumbing whatsoever - including
+        /// from TeamCity, which is where most executions happen.</para>
+        ///
+        /// <para>The cost is a PSS snapshot and one heap walk, paid only when a leak has already
+        /// survived every retry - about once per 30,000 test executions - on a test that is failing
+        /// regardless.</para>
+        /// </summary>
+        public const string ROOT_PATHS = "SKYLINE_GC_LEAK_ROOTS";
+
+        private static void WriteRootPathsIfRequested(Action<string, object[]> log)
+        {
+            if (string.Equals(Environment.GetEnvironmentVariable(ROOT_PATHS), @"off", StringComparison.OrdinalIgnoreCase))
+                return;
+            try
+            {
+                var typeNames = new HashSet<string>();
+                lock (_lock)
+                {
+                    foreach (var survivor in _trackedObjects)
+                        typeNames.Add(survivor.TypeName);
+                }
+                foreach (var line in GcRootReporter.DescribeRoots(typeNames))
+                    log("# GCROOT {0}\n", new object[] { line });
+            }
+            catch (Exception x)
+            {
+                log("\n# GC root reporting failed: {0}: {1}\n", new object[] { x.GetType().Name, x.Message });
+            }
+        }
 
         private static void WriteLeakDumpIfRequested(string testName, Action<string, object[]> log)
         {

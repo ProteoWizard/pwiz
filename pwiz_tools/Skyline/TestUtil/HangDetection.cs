@@ -245,7 +245,10 @@ namespace pwiz.SkylineTestUtil
 
         public static IEnumerable<string> GetAllThreadsCallstacks(int processId)
         {
-            using var dataTarget = DataTarget.AttachToProcess(processId, 5000, AttachFlag.Passive);
+            // ClrMD 3.x dropped AttachFlag. A PSS snapshot is the closest equivalent to the old
+            // passive attach - it reads a copy-on-write clone rather than suspending anything -
+            // and it is safe to take of the current process, which is what this is used for.
+            using var dataTarget = DataTarget.CreateSnapshotAndAttach(processId);
             var runtime = dataTarget.ClrVersions[0].CreateRuntime();
 
             foreach (var thread in runtime.Threads)
