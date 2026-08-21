@@ -37,13 +37,30 @@ namespace pwiz.Skyline.Util
     {
         public const int REFERENCE_DPI = 96;
 
+        private static float _factor;
+
         /// <summary>
-        /// Ratio of the control's rendering DPI to the classic 96 DPI baseline
-        /// (1.0 at 100% display scaling, 1.25 at 125%, etc.).
+        /// Ratio of the process's rendering DPI to the classic 96 DPI baseline
+        /// (1.0 at 100% display scaling, 1.25 at 125%, etc.). Control.DeviceDpi is NOT
+        /// used: on .NET Framework 4.7.2 it stays 96 in a system-DPI-aware process (it is
+        /// only maintained under per-monitor-V2 awareness), before AND after handle
+        /// creation. The screen DC is the reliable source, and because the system DPI is
+        /// fixed for the process lifetime in system-aware mode, the value is read once and
+        /// cached - this property is called from per-node paint paths. The control
+        /// parameter is kept for the day per-monitor V2 makes DPI genuinely per-control
+        /// (.NET 8 port, issue #4599).
         /// </summary>
         public static float GetFactor(Control control)
         {
-            return control.DeviceDpi / (float)REFERENCE_DPI;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (_factor == 0)
+            {
+                using (var g = Graphics.FromHwnd(IntPtr.Zero))
+                {
+                    _factor = g.DpiX / REFERENCE_DPI;
+                }
+            }
+            return _factor;
         }
 
         /// <summary>
@@ -90,6 +107,9 @@ namespace pwiz.Skyline.Util
             var source = new Bitmap(image);
             var scaled = new Bitmap((int)Math.Round(image.Width * factor),
                 (int)Math.Round(image.Height * factor), PixelFormat.Format32bppArgb);
+            // Tag as 96-DPI so consumers that honor DPI metadata (e.g. DrawImageUnscaled)
+            // treat the bitmap as pixel-sized instead of re-inflating it.
+            scaled.SetResolution(REFERENCE_DPI, REFERENCE_DPI);
             using (source)
             using (var g = Graphics.FromImage(scaled))
             {
@@ -100,6 +120,32 @@ namespace pwiz.Skyline.Util
                 g.DrawImage(source, new Rectangle(Point.Empty, scaled.Size));
             }
             return scaled;
+        }
+
+        /// <summary>
+        /// Scales a tool strip's glyphs to the current DPI: raises ImageScalingSize and
+        /// replaces each item's 96-DPI image with a bicubic pre-scaled copy, which looks
+        /// noticeably better than the linear scaling ToolStrip applies on its own. Each
+        /// item's ImageTransparentColor is applied before interpolation so the key color
+        /// cannot fringe the glyph. Images assigned to items later (e.g. mode-UI buttons)
+        /// still display at the scaled size via ImageScalingSize, with ToolStrip's own
+        /// scaling quality. No-op at 100% scaling. A stopgap until higher-resolution
+        /// glyph assets exist (issue #4599).
+        /// </summary>
+        public static void ScaleToolStripImages(ToolStrip toolStrip)
+        {
+            var factor = GetFactor(toolStrip);
+            if (Math.Abs(factor - 1) < 0.01f)
+                return;
+            toolStrip.ImageScalingSize = ScaleSize(toolStrip, toolStrip.ImageScalingSize);
+            foreach (ToolStripItem item in toolStrip.Items)
+            {
+                if (item.Image == null)
+                    continue;
+                var key = item.ImageTransparentColor;
+                item.Image = ScaleImageForList(toolStrip, item.Image,
+                    key.IsEmpty ? (Color?)null : key);
+            }
         }
 
         /// <summary>

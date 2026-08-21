@@ -145,6 +145,8 @@ namespace pwiz.Skyline
         public SkylineWindow(string[] args = null)
         {
             InitializeComponent();
+            // Scale the 96-DPI toolbar glyphs to the display DPI (issue #4599).
+            DpiUtil.ScaleToolStripImages(mainToolStrip);
             InitializeMenus();
             _undoManager = new UndoManager(this);
             _undoRedoButtons = new UndoRedoButtons(_undoManager,

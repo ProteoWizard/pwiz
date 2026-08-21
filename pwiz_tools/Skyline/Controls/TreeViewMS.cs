@@ -673,16 +673,19 @@ namespace pwiz.Skyline.Controls
             // to the DPI-sized ImageList.ImageSize, which agrees with ImgWidth.
             int imgLocX = XIndent + treeView.DashLength;
             int imgWidth = treeView.ImgWidth, imgHeight = treeView.ImgWidth;
+            // Draw into explicit destination rectangles: DrawImageUnscaled honors the
+            // image's DPI metadata, so bitmaps created in a high-DPI process would be
+            // re-inflated past the layout's imgWidth and overlap their neighbors.
             if (StateImageIndex != -1)
             {
                 Image stateImg = TreeView.StateImageList.Images[StateImageIndex];
-                g.DrawImageUnscaled(stateImg, imgLocX, bounds.Top + (bounds.Height - imgHeight) / 2, imgWidth, imgHeight);
+                g.DrawImage(stateImg, new Rectangle(imgLocX, bounds.Top + (bounds.Height - imgHeight) / 2, imgWidth, imgHeight));
                 imgLocX += imgWidth;
             }
             if (ImageIndex != -1)
             {
                 Image nodeImg = TreeView.ImageList.Images[ImageIndex];
-                g.DrawImageUnscaled(nodeImg, imgLocX, bounds.Top + (bounds.Height - imgHeight) / 2, imgWidth, imgHeight);
+                g.DrawImage(nodeImg, new Rectangle(imgLocX, bounds.Top + (bounds.Height - imgHeight) / 2, imgWidth, imgHeight));
             }
 
             DrawTextMS(g);
