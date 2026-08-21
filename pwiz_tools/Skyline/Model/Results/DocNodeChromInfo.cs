@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -167,7 +168,7 @@ namespace pwiz.Skyline.Model.Results
     /// Chromatogram results summary of a single <see cref="TransitionGroupDocNode"/> from
     /// a single raw file of a single replicate.
     /// </summary>
-    public sealed class TransitionGroupChromInfo : ChromInfo
+    public sealed class TransitionGroupChromInfo : ChromInfo, IExplainDiff
     {
         [Flags]
         private enum Flags
@@ -466,6 +467,54 @@ namespace pwiz.Skyline.Model.Results
         #endregion
 
         #region object overrides
+
+        /// <summary>
+        /// Names the members that make this unequal to <paramref name="other"/>. Kept beside
+        /// <see cref="Equals(TransitionGroupChromInfo)"/> so the two stay in step; the list below
+        /// is exactly what that method compares.
+        ///
+        /// <para>FileIndex is deliberately NOT reported: <see cref="ChromInfo.Equals(ChromInfo)"/>
+        /// treats all FileIds as equal, so a differing index is not what made these unequal, and
+        /// naming it sends the reader after the wrong thing.</para>
+        /// </summary>
+        public string ExplainDiff(object other)
+        {
+            if (!(other is TransitionGroupChromInfo info))
+                return string.Format(@"other is {0}, not TransitionGroupChromInfo", other?.GetType().Name ?? @"null");
+            var members = new (string Name, object Mine, object Theirs)[]
+            {
+                (@"PeakCountRatio", PeakCountRatio, info.PeakCountRatio),
+                (@"RetentionTime", RetentionTime, info.RetentionTime),
+                (@"StartRetentionTime", StartRetentionTime, info.StartRetentionTime),
+                (@"EndRetentionTime", EndRetentionTime, info.EndRetentionTime),
+                (@"IonMobilityInfo", IonMobilityInfo, info.IonMobilityInfo),
+                (@"Fwhm", Fwhm, info.Fwhm),
+                (@"Area", Area, info.Area),
+                (@"AreaMs1", AreaMs1, info.AreaMs1),
+                (@"AreaFragment", AreaFragment, info.AreaFragment),
+                (@"BackgroundArea", BackgroundArea, info.BackgroundArea),
+                (@"BackgroundAreaMs1", BackgroundAreaMs1, info.BackgroundAreaMs1),
+                (@"BackgroundAreaFragment", BackgroundAreaFragment, info.BackgroundAreaFragment),
+                (@"Height", Height, info.Height),
+                (@"Truncated", Truncated, info.Truncated),
+                (@"Identified", Identified, info.Identified),
+                (@"LibraryDotProduct", LibraryDotProduct, info.LibraryDotProduct),
+                (@"IsotopeDotProduct", IsotopeDotProduct, info.IsotopeDotProduct),
+                (@"QValue", QValue, info.QValue),
+                (@"ZScore", ZScore, info.ZScore),
+                (@"Annotations", Annotations, info.Annotations),
+                (@"OptimizationStep", OptimizationStep, info.OptimizationStep),
+                (@"UserSet", UserSet, info.UserSet),
+                (@"OriginalPeak", OriginalPeak, info.OriginalPeak),
+                (@"ReintegratedPeak", ReintegratedPeak, info.ReintegratedPeak)
+            };
+            var differences = members
+                .Where(m => !Equals(m.Mine, m.Theirs))
+                .Select(m => string.Format(@"{0} {1} vs {2}",
+                    m.Name, m.Mine ?? (object)@"(null)", m.Theirs ?? (object)@"(null)"))
+                .ToList();
+            return differences.Count == 0 ? null : TextUtil.LineSeparate(differences);
+        }
 
         public bool Equals(TransitionGroupChromInfo other)
         {
