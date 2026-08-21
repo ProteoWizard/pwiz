@@ -322,6 +322,7 @@
     <Compile Include="InstrumentMinMaxTimeTest.cs" />
     <Compile Include="InvalidPeptideRankIdTest.cs" />
     <Compile Include="InvalidPeptidesInLibraryTest.cs" />
+    <Compile Include="LayoutExportImportTest.cs" />
     <Compile Include="LegacyCrosslinkTest.cs" />
     <Compile Include="ListClusteringTest.cs" />
     <Compile Include="LongWaitDlgResizeTest.cs" />

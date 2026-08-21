@@ -2108,6 +2108,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failure attempting to save the window layout file {0}..
+        /// </summary>
+        public static string SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Window Layout Files.
+        /// </summary>
+        public static string SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files {
+            get {
+                return ResourceManager.GetString("SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Background Proteome.
         /// </summary>
         public static string SkylineWindow_FindBackgroundProteome_Background_Proteome {
@@ -3360,6 +3378,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Export Window Layout.
+        /// </summary>
+        public static string SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Export Spectral Library.
         /// </summary>
         public static string SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library {
@@ -3387,6 +3414,15 @@ namespace pwiz.Skyline {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Import Window Layout.
+        /// </summary>
+        public static string SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The document must be fully loaded before importing a peptide search..
         /// </summary>
