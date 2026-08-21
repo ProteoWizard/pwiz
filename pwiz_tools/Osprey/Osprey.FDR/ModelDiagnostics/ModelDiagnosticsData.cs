@@ -692,7 +692,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             double entrapmentRatio,
             double runFdr,
             FdrLevel fdrLevel,
-            Func<uint, double> precursorMzByEntryId = null)
+            Func<uint, double> precursorMzByEntryId = null,
+            HashSet<uint> stratumBaseIds = null)
         {
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
 
@@ -752,8 +753,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // Single-peak co-assignment on the REPORTED pool (issue #4522). Post-Stage-6, so
             // it includes co-assignment reconciliation itself introduced; the pass-1 panel is
             // the uncontaminated scoring picture and the two are meant to be read together.
+            // Takes the pass-2 stratum so each decoy is judged against its own q system's
+            // acceptance boundary (issue #4573); null in every non-stratified mode.
             pass2.CoAssignment = BuildCoAssignment(perFileEntries, classByBaseId, precursorMzByEntryId,
-                runFdr, fdrLevel, 2, true);
+                runFdr, fdrLevel, 2, true, stratumBaseIds);
             progress.Report(++cardIdx);
 
             // Structural half: only when the second pass retrained on the reported pool. Null
