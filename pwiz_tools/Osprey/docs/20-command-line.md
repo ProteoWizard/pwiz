@@ -213,6 +213,8 @@ CLI; they are read once at process start. The ones most likely to matter:
 |----------|--------------|-----|
 | `OSPREY_PICK_LDA` / `OSPREY_PICK_LDA_MODEL` | Learned linear pick model, **on by default**; `OSPREY_PICK_LDA=0` restores the legacy product pick, and `OSPREY_PICK_LDA_MODEL` overrides the built-in with a JSON file | [06](06-peak-detection.md) |
 | `OSPREY_PICK_DUMP_CANDIDATES` | Dump per-candidate pick terms for offline model training | [peak-model-training.md](peak-model-training.md) |
+| `OSPREY_TRAIN_PICK_RUN` | First-pass training selection, **on by default**: each precursor is represented by one uniformly drawn run's best candidate peak. `OSPREY_TRAIN_PICK_RUN=0` restores the pre-26.1 cross-run maximum. C#-only — Rust still takes the maximum | [07](07-fdr-control.md) |
+| `OSPREY_MAX_TRAIN_SIZE` | Cap on training rows (default 300000). Unchanged by the 26.1 selection flip: at matched FDP, 300K and 1M are indistinguishable | [07](07-fdr-control.md) |
 | `OSPREY_PASS2_QVALUE` | Second-pass q-value mode: `protein-compact` (**default**) / `transfer-compete` / `transfer`. An unrecognized value is a startup ERROR - `percolator` was removed | [12](12-second-pass-fdr.md) |
 | `OSPREY_GBT_*` | GBDT hyperparameters (with `--fdr-method gbdt`) | [07](07-fdr-control.md) |
 | `OSPREY_EXPERIMENT_AGG` | Experimental first-pass experiment-wide aggregation (`max` / `mean-best-<N>`) | [07](07-fdr-control.md) |
