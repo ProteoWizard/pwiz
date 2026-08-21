@@ -473,9 +473,11 @@ namespace pwiz.Skyline.Model.Results
         /// <see cref="Equals(TransitionGroupChromInfo)"/> so the two stay in step; the list below
         /// is exactly what that method compares.
         ///
-        /// <para>FileIndex is deliberately NOT reported: <see cref="ChromInfo.Equals(ChromInfo)"/>
-        /// treats all FileIds as equal, so a differing index is not what made these unequal, and
-        /// naming it sends the reader after the wrong thing.</para>
+        /// <para>FileIndex is deliberately NOT reported. Equals here is content equality, as it is
+        /// throughout Skyline - a document saved and read back must come out Equals, which no
+        /// reference comparison could satisfy - so <see cref="ChromInfo.Equals(ChromInfo)"/>
+        /// compares all FileIds as equal. A differing index therefore is not what made these
+        /// unequal, and naming it sends the reader after the wrong thing.</para>
         /// </summary>
         public string ExplainDiff(object other)
         {
