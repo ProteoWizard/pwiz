@@ -18,14 +18,7 @@
            * the .NET 8.0 target can still be built AnyCPU on other hosts
              (e.g. Arm64 macOS/Linux) without touching any csproj. -->
     <Platforms>AnyCPU;x64</Platforms>
-    <!-- Pinned, not "latest": the repo-root global.json pins the .NET SDK to the
-         8.0.4xx band, whose compiler tops out at C# 12, but build.ps1 drives VS
-         MSBuild, whose compiler offers C# 14. "latest" therefore means a different
-         language to each of Osprey's two build paths, and code that only VS ever
-         compiled failed in package.ps1's dotnet publish. Naming the version makes
-         both paths agree, and keeps ReSharper agreeing with the compiler. Raise it
-         only together with the SDK pin. -->
-    <LangVersion>12.0</LangVersion>
+    <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <Company>University of Washington</Company>
