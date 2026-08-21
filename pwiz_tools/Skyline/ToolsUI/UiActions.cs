@@ -340,12 +340,12 @@ namespace pwiz.Skyline.ToolsUI
             .Describe(new LlmInstruction(@"Set this control's value."), new LlmInstruction(@"the new value -- a bool, a number, or a string"));
 
         public static readonly UiAction SendText = SimpleAction<IKeyboardElement, string>(
-                @"SendText", (e, text) => { e.SendTextNow(UiValue.RequireText(text, @"type")); return null; })
+                @"SendText", (e, text) => { e.SendTextNow(text); return null; })
             .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus. Named for what it does: it delivers the CHARACTERS, it does not simulate key presses - for a key use 'send_key_stroke', and to paste use 'paste' (which takes the text, so it needs no clipboard). Do NOT type into the Targets tree: it forwards each character through the FOCUSED window, so the characters land in whatever application is in front, arrive out of order, and leave the tree stuck editing a label. Use 'rename_node' to set a node's text."),
                 new LlmInstruction(@"the text to type, taken literally"));
 
         public static readonly UiAction SendKeyStroke = SimpleAction<IKeyboardElement, string>(
-                @"SendKeyStroke", (e, keyStroke) => { e.SendKeyStrokeNow(UiValue.RequireText(keyStroke, @"press")); return null; })
+                @"SendKeyStroke", (e, keyStroke) => { e.SendKeyStrokeNow(keyStroke); return null; })
             .Describe(new LlmInstruction(@"Press one key on this control, whether or not it has the focus - e.g. to accept a choice in a popup, or to paste with 'Ctrl+V' where the form's own handler does the pasting. Raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather than by a handler (Backspace editing text, an arrow moving a plain list's selection) will not take effect."),
                 new LlmInstruction(@"the key with any modifiers, '+'-separated, e.g. ""Down"", ""Enter"" or ""Ctrl+V"""));
 
@@ -423,7 +423,7 @@ namespace pwiz.Skyline.ToolsUI
         // Pastes the given text into a control that can paste (text box, grid, Targets tree, main window) --
         // for the tutorial paste steps, without touching the clipboard.
         public static readonly UiAction Paste = SimpleAction<IClipboardElement, string>(@"Paste",
-                (e, text) => { e.PasteNow(UiValue.RequireText(text, @"paste")); return null; })
+                (e, text) => { e.PasteNow(text); return null; })
             .Describe(new LlmInstruction(@"Paste text into this element (a text box, a grid, the Targets tree, or the main Skyline window) without using the clipboard."),
                 new LlmInstruction(@"the text to paste"));
 

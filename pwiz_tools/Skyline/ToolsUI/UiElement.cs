@@ -2270,15 +2270,6 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Converts any bare CR or LF to CRLF -- the line ending a multi-line TextBox uses for Enter.
-        // The text an action was given, which has to be there: an action told to type or press nothing has
-        // not done what was asked and must not report that it has.
-        public static string RequireText(string text, string verb)
-        {
-            if (string.IsNullOrEmpty(text))
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Nothing to {0}. Pass the text or key as the action's value.", verb));
-            return text;
-        }
 
         public static string NormalizeNewlines(string value) =>
             value == null ? null : Regex.Replace(value, @"\r\n?|\n", "\r\n");
