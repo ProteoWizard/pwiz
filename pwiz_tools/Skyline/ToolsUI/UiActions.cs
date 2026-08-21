@@ -20,7 +20,6 @@
 
 using System;
 using System.Linq;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
