@@ -1,6 +1,7 @@
 /*
  * Original author: Rita Chupalov <ritach .at. uw.edu>
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5) <noreply .at. anthropic.com>
  *
  * Copyright 2025 University of Washington - Seattle, WA
  *
@@ -38,6 +39,18 @@ namespace pwiz.Common.Mock
         public void CreateReplaceHandler(string handlerName, HttpMessageHandler handler)
         {
             _handlers[handlerName] = handler;
+        }
+
+        /// <summary>
+        /// Returns the handler registered under the given name, or null if none is registered.
+        /// Callers that cache HttpClient pipelines (e.g. through IHttpClientFactory) should use
+        /// this to detect a registered test handler and build their client on it directly, so a
+        /// replacement installed by <see cref="CreateReplaceHandler"/> takes effect immediately
+        /// instead of being masked by a pooled pipeline built around a previous handler.
+        /// </summary>
+        public HttpMessageHandler GetRegisteredHandler(string handlerName)
+        {
+            return _handlers.TryGetValue(handlerName, out var handler) ? handler : null;
         }
 
         public HttpMessageHandler getMessageHandler(string handlerName, Func<HttpMessageHandler> defaultHandlerFactory = null)

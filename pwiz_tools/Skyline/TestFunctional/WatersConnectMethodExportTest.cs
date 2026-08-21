@@ -1,6 +1,7 @@
 /*
  * Original author: Rita Chupalov <ritach .at. uw.edu>
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5) <noreply .at. anthropic.com>
  *
  * Copyright 2025 University of Washington - Seattle, WA
  *
@@ -65,6 +66,8 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
             TestTemplateSelection(exportMethodDlg);
             TestMethodExport(exportMethodDlg);
+
+            VerifyHandlerReplacement();
 
             SetAuthenticationErrorHandler();
             exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
@@ -208,14 +211,7 @@ namespace pwiz.SkylineTestFunctional
             var schedulingDataDlg = ShowDialog<SchedulingOptionsDlg>(() => warningDlg.ClickOk(), 1000);
             var methodFileDlg = ShowDialog<WatersConnectSaveMethodFileDialog>(() => schedulingDataDlg.OkDialog());
             ValidateSkylineFolder(methodFileDlg);
-            RunUI(() =>
-            {
-                var folderToSelect = methodFileDlg.ListViewItems.FirstOrDefault(item => item.Text == @"FolderA");
-                Assert.IsNotNull(folderToSelect, "FolderA not found in the list of folders.");
-                folderToSelect.Selected = true;
-                methodFileDlg.KeyPressHandler(Keys.Enter);
-            });
-            WaitForConditionUI(1000, () => methodFileDlg.ListViewItems.Count == 11, () => "Template selection dialog is not populated within allotted time.");
+            NavigateIntoFolderA(methodFileDlg, 11);
             RunUI(() =>
             {
                 Assert.AreEqual(0, methodFileDlg.ListViewItems.Count(item => item.ImageIndex == (int)BaseFileDialogNE.ImageIndex.ReadOnlyFolder));
@@ -247,6 +243,58 @@ namespace pwiz.SkylineTestFunctional
                 uploadResultDlg.OkDialog();
             });
             WaitForClosedForm<ExportMethodDlg>();
+        }
+
+        /// <summary>
+        /// Selects FolderA in the current listing, enters it, and waits for the expected number of
+        /// items. On timeout the message reports the actual listing so a count mismatch (e.g. stale
+        /// mock data leaking between runs) is diagnosable from the failure alone.
+        /// </summary>
+        private void NavigateIntoFolderA(WatersConnectSaveMethodFileDialog methodFileDlg, int expectedItemCount)
+        {
+            RunUI(() =>
+            {
+                var folderToSelect = methodFileDlg.ListViewItems.FirstOrDefault(item => item.Text == @"FolderA");
+                Assert.IsNotNull(folderToSelect, "FolderA not found in the list of folders.");
+                folderToSelect.Selected = true;
+                methodFileDlg.KeyPressHandler(Keys.Enter);
+            });
+            WaitForConditionUI(1000, () => methodFileDlg.ListViewItems.Count == expectedItemCount,
+                () => string.Format(@"FolderA listing is not populated within allotted time. Expected {0} items, found {1}: {2}",
+                    expectedItemCount, methodFileDlg.ListViewItems.Count,
+                    string.Join(@"; ", methodFileDlg.ListViewItems.Select(i => i.Text))));
+        }
+
+        /// <summary>
+        /// Verifies that a replacement mock handler registered mid-process (CreateReplaceHandler)
+        /// takes effect for the next waters_connect client. Reproduces in a single pass the
+        /// state leak the nightly hit across language passes: the pooled IHttpClientFactory pipeline
+        /// kept serving the previously installed handler (with its stale created-folder state), so the
+        /// next run's fresh handler was silently ignored and FolderA listed 13 items instead of 11.
+        /// See <see cref="WatersConnectAccount.GetAuthenticatedHttpClient"/>.
+        /// </summary>
+        private void VerifyHandlerReplacement()
+        {
+            const string extraMethodName = "HandlerSwapMethod";
+            // Both the old and the replacement handler close over this test instance's created-folder
+            // list; clear it so their FolderA listings differ only by the replacement's extra method.
+            _createdFolders.Clear();
+            InstallWcHandler(extraMethodName);
+
+            var exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
+                SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
+            var warningDlg = ShowDialog<MultiButtonMsgDlg>(() => exportMethodDlg.OkDialog(), 1000);
+            var schedulingDataDlg = ShowDialog<SchedulingOptionsDlg>(() => warningDlg.ClickOk(), 1000);
+            var methodFileDlg = ShowDialog<WatersConnectSaveMethodFileDialog>(() => schedulingDataDlg.OkDialog());
+            // The dialog reopens in the last-used folder. The replacement handler serves the same
+            // methods listing for every folder, so wherever the dialog opens, its extra method must
+            // appear - unless the pooled pipeline is still serving the old handler.
+            WaitForConditionUI(5000, () => methodFileDlg.ListViewItems.Any(i => i.Text == extraMethodName),
+                () => string.Format(@"The replacement handler's extra method did not appear; the previously installed handler is still being served. Listing ({0} items): {1}",
+                    methodFileDlg.ListViewItems.Count,
+                    string.Join(@"; ", methodFileDlg.ListViewItems.Select(i => i.Text))));
+            CancelDialog(methodFileDlg);
+            CancelDialog(exportMethodDlg);
         }
 
         /// <summary>
@@ -443,9 +491,12 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Installs the waters_connect request handler. Folder creation (PUT) returns Forbidden while
         /// <see cref="_folderCreateForbidden"/> is set, otherwise success; the flag is read per request
-        /// so tests can toggle it on the live handler.
+        /// so tests can toggle it on the live handler. When <paramref name="extraMethodName"/> is set,
+        /// the methods listing carries one additional method with that name, so
+        /// <see cref="VerifyHandlerReplacement"/> can tell this handler's responses from a previously
+        /// installed handler's.
         /// </summary>
-        private void InstallWcHandler()
+        private void InstallWcHandler(string extraMethodName = null)
         {
             var wcHandler = new MockHttpMessageHandler();
             // ReSharper disable StringIndexOfIsCultureSpecific.1
@@ -493,9 +544,26 @@ namespace pwiz.SkylineTestFunctional
                     return root.ToString();
                 }));
             // Methods enumeration request
-            wcHandler.AddMatcher(new RequestMatcherFile(
-                req => req.RequestUri.ToString().IndexOf(WatersConnectSessionAcquisitionMethod.GET_METHODS_ENDPOINT) >= 0,
-                TestFilesDir.GetTestPath("MockHttpData\\WCMethods.json")));
+            if (extraMethodName == null)
+            {
+                wcHandler.AddMatcher(new RequestMatcherFile(
+                    req => req.RequestUri.ToString().IndexOf(WatersConnectSessionAcquisitionMethod.GET_METHODS_ENDPOINT) >= 0,
+                    TestFilesDir.GetTestPath("MockHttpData\\WCMethods.json")));
+            }
+            else
+            {
+                wcHandler.AddMatcher(new RequestMatcherFunction(
+                    req => req.RequestUri.ToString().IndexOf(WatersConnectSessionAcquisitionMethod.GET_METHODS_ENDPOINT) >= 0,
+                    req =>
+                    {
+                        var methods = JArray.Parse(File.ReadAllText(TestFilesDir.GetTestPath("MockHttpData\\WCMethods.json")));
+                        var extraMethod = (JObject) methods[0].DeepClone();
+                        extraMethod["name"] = extraMethodName;
+                        extraMethod["readOnlyProperties"]["methodVersionId"] = "00000000-0000-0000-0000-000000000def";
+                        methods.Add(extraMethod);
+                        return methods.ToString();
+                    }));
+            }
             // Method upload request
             wcHandler.AddMatcher(new RequestMatcherFunction(
                 req => req.RequestUri.ToString().IndexOf(WatersConnectSessionAcquisitionMethod.UPLOAD_METHOD_ENDPOINT) >= 0,
