@@ -588,6 +588,15 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exporting report &apos;{0}&apos;.
+        /// </summary>
+        public static string JsonToolServer_ExportReport_Exporting_report___0__ {
+            get {
+                return ResourceManager.GetString("JsonToolServer_ExportReport_Exporting_report___0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Add spectral library.
         /// </summary>
         public static string LibrarySpec_Add_spectral_library {
