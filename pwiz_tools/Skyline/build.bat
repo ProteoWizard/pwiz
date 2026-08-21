@@ -17,7 +17,7 @@ REM # below for the exact commands and the SKYLINE_TEST_ARGS escape hatch.
 REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
-REM #             [--require-vendor-support] [--automated] [--parallel]
+REM #             [--require-vendor-support] [--automated] [--parallel] [--no-tests]
 REM #
 REM # Flags:
 REM #   --i-agree-to-the-vendor-licenses
@@ -36,6 +36,11 @@ REM #       parallelmode=server) instead of the default host-only sequential run
 REM #       Needs Docker Desktop in Windows-container mode + the always_up_runner
 REM #       image. Much faster for the full functional suite. Also settable via
 REM #       SKYLINE_TEST_PARALLEL=1.
+REM #   --no-tests
+REM #       Build and stage (and produce any requested distro zips) but do not run
+REM #       the test suite. For callers that drive their own testing afterwards --
+REM #       SkylineTester's build step does this, because it then runs the tests
+REM #       itself under its own duration budget and per-test requeue logic.
 REM #
 REM # Distro zips:
 REM #   Pass the artifact name as a bare argument -- SkylineTester.zip,
@@ -78,6 +83,7 @@ set IAGREE=0
 set REQUIRE_VENDOR=0
 set AUTOMATED=0
 set SEQUENTIAL=1
+set NOTESTS=0
 set ERROR_TEXT=
 set ZIPS=
 
@@ -104,6 +110,7 @@ if /i "%~1"=="--i-agree-to-the-vendor-licenses" (set IAGREE=1) else ^
 if /i "%~1"=="--require-vendor-support" (set REQUIRE_VENDOR=1) else ^
 if /i "%~1"=="--automated" (set AUTOMATED=1) else ^
 if /i "%~1"=="--parallel" (set SEQUENTIAL=0) else ^
+if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
 if /i "%~1"=="--coverage" (echo ##teamcity[message text='--coverage is temporarily disabled in build.bat; ignoring' status='WARNING']) else ^
 if /i "%~x1"==".zip" (set ZIPS=!ZIPS!%%3B%~1) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
@@ -210,6 +217,11 @@ dotnet build "%SCRIPT_DIR%\SkylineTester\SkylineTester.csproj" -f net8.0-windows
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=zip target(s) %ZIPS:~3% failed" & goto error)
 
 :skipzips
+
+REM # --no-tests: build + stage (+ zips) only. Jumps before the STAGE_DIR pushd below so
+REM # the single popd at :tests_done still balances the pushd at the top of the script.
+REM # Also leaves any existing TestResults alone, since we are not producing new ones.
+if %NOTESTS%==1 goto tests_done
 
 set TC_TEST_RESULTS=%SCRIPT_DIR%\TestResults
 if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
