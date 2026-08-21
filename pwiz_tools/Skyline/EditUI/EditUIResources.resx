@@ -480,6 +480,36 @@ Example: Looplink: T [4]
   <data name="EditSpectrumFilterDlg_GetFilterTabNames_Criteria" xml:space="preserve">
     <value>Criteria</value>
   </data>
+  <data name="SpectrumFilterStylingHelpDlg_What_is_a_spectrum_filter" xml:space="preserve">
+    <value>A spectrum filter limits which spectra are used to extract chromatograms for a precursor. Each row is one criterion: a spectrum property, an operator, and a value. A spectrum has to satisfy every row to be used. Where a filter has more than one tab, the tabs are alternatives, and a spectrum matching any one of them is used.</value>
+  </data>
+  <data name="SpectrumFilterStylingHelpDlg_Styling_intro" xml:space="preserve">
+    <value>The Property column display uses different text styles to show what this document's currently imported results can match:</value>
+  </data>
+  <data name="SpectrumFilterStylingHelpDlg_Style_name_accent_color" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="SpectrumFilterStylingHelpDlg_Style_name_plain" xml:space="preserve">
+    <value>Plain</value>
+  </data>
+  <data name="SpectrumFilterStylingHelpDlg_Style_name_italic" xml:space="preserve">
+    <value>Italic</value>
+  </data>
+  <data name="SpectrumFilterStylingHelpDlg_Title_Property_styling" xml:space="preserve">
+    <value>Spectrum Filters</value>
+  </data>
+  <data name="SpectrumFilterStylingHelpDlg_Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="SpectrumFilterStylingHelpDlg_Explains_answerable" xml:space="preserve">
+    <value> - the currently imported results have values for this property, so a filter on it can match spectra.</value>
+  </data>
+  <data name="SpectrumFilterStylingHelpDlg_Explains_undetermined" xml:space="preserve">
+    <value> - usability unknown until results are imported.</value>
+  </data>
+  <data name="SpectrumFilterStylingHelpDlg_Explains_unanswerable" xml:space="preserve">
+    <value> - the currently imported results have no values for this property. A filter on it will match nothing in this document, but remains potentially valid for results imported later.</value>
+  </data>
   <data name="EditSpectrumFilterDlg_GetFilterTabNames_Criteria__0_" xml:space="preserve">
     <value>Criteria {0}</value>
   </data>

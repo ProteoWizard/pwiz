@@ -1855,7 +1855,11 @@ namespace pwiz.Skyline.Menus
             var skylineDataSchema = new SkylineDataSchema(SkylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var rootColumn = ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SpectrumClass));
             using var autoComplete = new SpectrumFilterAutoComplete(SkylineWindow);
-            using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages);
+            var cvColumns = SpectrumClassColumn.GetEditorCvColumns(document);
+            // Learned before the dialog exists, so the files are read while nothing needs disposing.
+            var columnAvailability = GetColumnAvailability(document, cvColumns);
+            using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages, cvColumns);
+            dlg.ColumnAvailability = columnAvailability;
             dlg.AutoComplete = autoComplete;
             if (filterPagesSet.Count != 1)
             {
@@ -1875,6 +1879,31 @@ namespace pwiz.Skyline.Menus
                 return;
             }
             ChangeSpectrumFilter(transitionGroupPaths, SpectrumClassFilter.FromFilterPages(dlg.FilterPages), dlg.CreateCopy);
+        }
+
+        /// <summary>
+        /// Which of the columns offered in the filter editor this document's data can actually answer, for
+        /// the editor to mark. Reading the files can be slow the first time, so it runs behind a wait
+        /// dialog - one that never appears when the answer is already cached, which is every time after the
+        /// first. A failure here costs only the marking, so it is not raised at the user: they asked to
+        /// edit a filter, not to open their raw files.
+        /// </summary>
+        private SpectrumColumnScanner.Availability GetColumnAvailability(SrmDocument document,
+            IEnumerable<SpectrumClassColumn> cvColumns)
+        {
+            if (document.Settings.MeasuredResults == null)
+            {
+                return SpectrumColumnScanner.Availability.UNKNOWN;
+            }
+            var candidates = SpectrumClassColumn.ALL.Concat(cvColumns).ToList();
+            var availability = SpectrumColumnScanner.Availability.UNKNOWN;
+            using var longWaitDlg = new LongWaitDlg();
+            longWaitDlg.Message =
+                MenusResources.EditMenu_EditSpectrumFilter_Looking_for_spectrum_parameters_in_the_data_files;
+            longWaitDlg.PerformWork(SkylineWindow, 800, broker =>
+                availability = SpectrumColumnScanner.GetAvailability(document, candidates,
+                    SkylineWindow.DocumentFilePath, broker));
+            return availability;
         }
 
         public void ChangeSpectrumFilter(ICollection<IdentityPath> precursorIdentityPaths,
