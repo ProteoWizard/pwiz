@@ -1,4 +1,6 @@
 using Pwiz.Analysis.PeakPicking;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 
 namespace Pwiz.Analysis.Tests.SpectrumProcessing;
 
@@ -141,5 +143,38 @@ public class PeakPickingTests
         new LocalMaximumPeakDetector(3).Detect(
             Array.Empty<double>(), Array.Empty<double>(), xPeaks, yPeaks);
         Assert.AreEqual(0, xPeaks.Count);
+    }
+
+    [TestMethod]
+    public void SpectrumList_PeakPicker_StringOverloadParsesPwizIntervalSyntax()
+    {
+        // The string ctor is what MsDataFileImpl (Skyline, Osprey) reaches ProteoWizard
+        // through, and it used a local split-and-TryParse that could not read a trailing
+        // dash. "1-" therefore produced an EMPTY level set, which GetSpectrum treats as
+        // "picks nothing" - the failure is silent, because a vendor list still delivers
+        // its own centroids through the vendor path and only formats without vendor
+        // centroiding (Agilent) hand back unpicked profile data.
+        var cases = new (string Spec, int[] LevelsIn, int[] LevelsOut)[]
+        {
+            ("1-",  new[] { 1, 2, 7 }, Array.Empty<int>()),
+            ("2-",  new[] { 2, 7 },    new[] { 1 }),
+            ("1",   new[] { 1 },       new[] { 2 }),
+            ("1,2", new[] { 1, 2 },    new[] { 3 }),
+            ("2-3", new[] { 2, 3 },    new[] { 1, 4 })
+        };
+        foreach (var (spec, levelsIn, levelsOut) in cases)
+        {
+            var picker = new SpectrumList_PeakPicker(
+                new SpectrumListSimple(), algorithm: null, preferVendorPeakPicking: true, spec);
+            foreach (int level in levelsIn)
+                Assert.IsTrue(picker.MsLevels.Contains(level), $"'{spec}' should include MS level {level}");
+            foreach (int level in levelsOut)
+                Assert.IsFalse(picker.MsLevels.Contains(level), $"'{spec}' should exclude MS level {level}");
+
+            // The two overloads are the same parser reached two ways, so they must agree.
+            var parsed = new IntegerSet();
+            parsed.Parse(spec);
+            Assert.AreEqual(parsed.ToString(), picker.MsLevels.ToString(), $"overloads disagree for '{spec}'");
+        }
     }
 }

@@ -30,6 +30,10 @@ REM #       Fail if vendor support isn't enabled (guards against silently shippi
 REM #       a stripped, no-vendor artifact).
 REM #   --automated
 REM #       Tag InformationalVersion "(automated build)" (-p:AutomatedBuild=true).
+REM #   --no-tests
+REM #       Build only; skip staging and the whole test step. This is what the
+REM #       top-level bs.bat gives a developer: the same projects and properties
+REM #       TeamCity builds, without the hour of tests that follows.
 REM #   --parallel
 REM #       Run the tests in parallel across Docker workers (TestRunner
 REM #       parallelmode=server) instead of the default host-only sequential run.
@@ -77,6 +81,7 @@ set CONFIG=Release
 set IAGREE=0
 set REQUIRE_VENDOR=0
 set AUTOMATED=0
+set NOTESTS=0
 set SEQUENTIAL=1
 set ERROR_TEXT=
 set ZIPS=
@@ -103,6 +108,7 @@ if "%~1"=="" goto endparse
 if /i "%~1"=="--i-agree-to-the-vendor-licenses" (set IAGREE=1) else ^
 if /i "%~1"=="--require-vendor-support" (set REQUIRE_VENDOR=1) else ^
 if /i "%~1"=="--automated" (set AUTOMATED=1) else ^
+if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
 if /i "%~1"=="--parallel" (set SEQUENTIAL=0) else ^
 if /i "%~1"=="--coverage" (echo ##teamcity[message text='--coverage is temporarily disabled in build.bat; ignoring' status='WARNING']) else ^
 if /i "%~x1"==".zip" (set ZIPS=!ZIPS!%%3B%~1) else ^
@@ -160,6 +166,13 @@ if %EXIT% NEQ 0 goto error
 
 for %%P in (%BUILD_TARGET%) do call :build_one "%%~P"
 if %EXIT% NEQ 0 goto error
+
+REM # --no-tests stops here. Note we have NOT pushd'd STAGE_DIR yet, so this needs
+REM # its own exit path rather than :tests_done, which pops it.
+if %NOTESTS%==1 (
+    echo Build succeeded; skipping tests ^(--no-tests^).
+    goto build_only_done
+)
 
 REM # ------------------------------------------------------------------------
 REM # Test step
@@ -287,6 +300,10 @@ popd
 if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner reported test failures" & goto error)
 
 :tests_done
+popd
+exit /b 0
+
+:build_only_done
 popd
 exit /b 0
 

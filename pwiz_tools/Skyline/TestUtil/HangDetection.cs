@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using Microsoft.Diagnostics.Runtime;
+using pwiz.Common.Controls;
 using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
@@ -191,7 +192,7 @@ namespace pwiz.SkylineTestUtil
                     string.Format(@"ThreadExceptionDialog appeared while waiting for UI action: {0}",
                         TryGetDialogText(dialog))));
 
-                CommonActionUtil.SafeBeginInvoke(dialog, () =>
+                ControlUtil.SafeBeginInvoke(dialog, () =>
                 {
                     try
                     {

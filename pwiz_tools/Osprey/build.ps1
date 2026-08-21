@@ -48,7 +48,7 @@
 
 .EXAMPLE
     # Local dev: pick a specific framework, skip tests
-    .\build.bat -Framework net472 -NoTests
+    .\build.bat -NoTests
 
 .EXAMPLE
     # TeamCity (what tcbuild.bat invokes)
@@ -56,7 +56,9 @@
 #>
 param(
     [ValidateSet('Debug','Release')] [string]$Configuration = 'Release',
-    [ValidateSet('net8.0','net472','both')] [string]$Framework = 'net8.0',
+    # net472 and 'both' are gone with the net472 build; the parameter stays so existing
+    # invocations keep working, but net8.0 is the only thing produced now.
+    [ValidateSet('net8.0')] [string]$Framework = 'net8.0',
     [switch]$NoTests,
     [switch]$Coverage,
     [switch]$TeamCity,

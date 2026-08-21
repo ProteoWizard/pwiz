@@ -38,6 +38,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\CommonBaseUI\CommonBaseUI.csproj" />
     <ProjectReference Include="..\MSGraph\MSGraph.csproj" />
     <ProjectReference Include="..\zedgraph\ZedGraph.csproj" />
   </ItemGroup>
