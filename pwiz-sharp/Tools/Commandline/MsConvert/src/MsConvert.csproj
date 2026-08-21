@@ -113,4 +113,8 @@
     <Copy SourceFiles="$(_SciexWiff2DepsDir)\Unity.Abstractions.dll" DestinationFiles="$(_Wiff2OutDir)\Unity.Abstractions.dll" OverwriteReadOnlyFiles="true" />
   </Target>
 
+
+  <!-- VC++ redistributable beside the vendor DLLs; see the targets file. -->
+  <Import Project="$(PwizRepoRoot)\pwiz_tools\Shared\Lib\VendorNativeCrt.targets" />
+
 </Project>

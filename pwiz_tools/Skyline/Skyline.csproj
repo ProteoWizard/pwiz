@@ -558,4 +558,8 @@
     <Message Importance="normal" Text="Generated $(AppConfig) from App.config" />
   </Target>
 
+
+  <!-- VC++ redistributable beside the vendor DLLs; see the targets file. -->
+  <Import Project="..\Shared\Lib\VendorNativeCrt.targets" />
+
 </Project>
