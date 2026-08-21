@@ -19,7 +19,7 @@
  */
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Net.Http;
 
 namespace pwiz.Common.Mock
@@ -34,7 +34,8 @@ namespace pwiz.Common.Mock
             // Can create a handler here for quick testing. Otherwise, they should be created by the test code.
         }
 
-        private readonly Dictionary<string, HttpMessageHandler> _handlers = new Dictionary<string, HttpMessageHandler>();
+        // Written by tests and read on session-creation paths from other threads.
+        private readonly ConcurrentDictionary<string, HttpMessageHandler> _handlers = new ConcurrentDictionary<string, HttpMessageHandler>();
 
         public void CreateReplaceHandler(string handlerName, HttpMessageHandler handler)
         {
@@ -55,9 +56,10 @@ namespace pwiz.Common.Mock
 
         public HttpMessageHandler getMessageHandler(string handlerName, Func<HttpMessageHandler> defaultHandlerFactory = null)
         {
-            if (_handlers.TryGetValue(handlerName, out var handler))
+            var handler = GetRegisteredHandler(handlerName);
+            if (handler != null)
                 return handler;
-            else if (defaultHandlerFactory != null)
+            if (defaultHandlerFactory != null)
             {
                 var defaultHandler = defaultHandlerFactory();
                 if (defaultHandler != null)

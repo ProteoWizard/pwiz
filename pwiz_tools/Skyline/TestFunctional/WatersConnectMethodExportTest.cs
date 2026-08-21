@@ -272,13 +272,14 @@ namespace pwiz.SkylineTestFunctional
         /// kept serving the previously installed handler (with its stale created-folder state), so the
         /// next run's fresh handler was silently ignored and FolderA listed 13 items instead of 11.
         /// See <see cref="WatersConnectAccount.GetAuthenticatedHttpClient"/>.
+        /// Premise: the guard only detects a regression while the pooled pipeline entry is inside
+        /// its default 2-minute lifetime. This method runs well under a minute into the test, so
+        /// the entry created by the earlier phases is still live; a machine slow enough to void
+        /// that margin would be timing out the test's other waits first.
         /// </summary>
         private void VerifyHandlerReplacement()
         {
             const string extraMethodName = "HandlerSwapMethod";
-            // Both the old and the replacement handler close over this test instance's created-folder
-            // list; clear it so their FolderA listings differ only by the replacement's extra method.
-            _createdFolders.Clear();
             InstallWcHandler(extraMethodName);
 
             var exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
@@ -286,15 +287,19 @@ namespace pwiz.SkylineTestFunctional
             var warningDlg = ShowDialog<MultiButtonMsgDlg>(() => exportMethodDlg.OkDialog(), 1000);
             var schedulingDataDlg = ShowDialog<SchedulingOptionsDlg>(() => warningDlg.ClickOk(), 1000);
             var methodFileDlg = ShowDialog<WatersConnectSaveMethodFileDialog>(() => schedulingDataDlg.OkDialog());
-            // The dialog reopens in the last-used folder. The replacement handler serves the same
-            // methods listing for every folder, so wherever the dialog opens, its extra method must
-            // appear - unless the pooled pipeline is still serving the old handler.
+            // The dialog opens in the template's folder (ExportMethodDlg.OkDialog sets
+            // InitialDirectory from the template URL). The replacement handler serves the same
+            // methods listing for every folder, so its extra method must appear - unless the
+            // pooled pipeline is still serving the old handler.
             WaitForConditionUI(5000, () => methodFileDlg.ListViewItems.Any(i => i.Text == extraMethodName),
                 () => string.Format(@"The replacement handler's extra method did not appear; the previously installed handler is still being served. Listing ({0} items): {1}",
                     methodFileDlg.ListViewItems.Count,
                     string.Join(@"; ", methodFileDlg.ListViewItems.Select(i => i.Text))));
             CancelDialog(methodFileDlg);
             CancelDialog(exportMethodDlg);
+
+            // Restore the standard handler so later phases do not see the extra method.
+            InstallWcHandler();
         }
 
         /// <summary>
@@ -552,17 +557,18 @@ namespace pwiz.SkylineTestFunctional
             }
             else
             {
-                wcHandler.AddMatcher(new RequestMatcherFunction(
+                // Build the augmented listing once at install time so a bad fixture fails fast
+                // here instead of surfacing as an HTTP 400 and a misleading listing timeout.
+                var methods = JArray.Parse(File.ReadAllText(TestFilesDir.GetTestPath("MockHttpData\\WCMethods.json")));
+                var extraMethod = (JObject) methods[0].DeepClone();
+                extraMethod["name"] = extraMethodName;
+                var readOnlyProperties = (JObject) extraMethod["readOnlyProperties"];
+                Assert.IsNotNull(readOnlyProperties, "WCMethods.json fixture is missing readOnlyProperties.");
+                readOnlyProperties["methodVersionId"] = "00000000-0000-0000-0000-000000000def";
+                methods.Add(extraMethod);
+                wcHandler.AddMatcher(new RequestMatcherString(
                     req => req.RequestUri.ToString().IndexOf(WatersConnectSessionAcquisitionMethod.GET_METHODS_ENDPOINT) >= 0,
-                    req =>
-                    {
-                        var methods = JArray.Parse(File.ReadAllText(TestFilesDir.GetTestPath("MockHttpData\\WCMethods.json")));
-                        var extraMethod = (JObject) methods[0].DeepClone();
-                        extraMethod["name"] = extraMethodName;
-                        extraMethod["readOnlyProperties"]["methodVersionId"] = "00000000-0000-0000-0000-000000000def";
-                        methods.Add(extraMethod);
-                        return methods.ToString();
-                    }));
+                    methods.ToString()));
             }
             // Method upload request
             wcHandler.AddMatcher(new RequestMatcherFunction(
