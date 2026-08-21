@@ -325,9 +325,10 @@ namespace pwiz.Osprey.Tasks
         {
             get
             {
-                // Reading Lazy.Value IS the build; the bool it yields carries no information.
-                if (_materialize != null && !_materialize.Value)
-                    throw new InvalidOperationException(@"Deferred RescoredEntries build did not complete.");
+                // Reading Lazy.Value IS the build - once however many readers arrive, and a
+                // failure cached and rethrown rather than retried. The bool it yields only
+                // exists because Lazy needs a value type to hand back; discard it.
+                _ = _materialize?.Value;
                 return base.Value;
             }
         }
