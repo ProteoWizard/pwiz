@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Port of pwiz_tools/Bumbershoot/idpicker/Util/STL_Containers/. The legacy code is the
+    Java-port-of-STL Map<K,V> / Set<T> / RBTree<T> set that pwiz.Common.Collections.Map
+    is built on; SeeMS's Annotation/Processing UI panels rely on Map<K,V>'s order-stable
+    iteration + nearest-key lookup that Dictionary<K,V> doesn't offer.
+
+    Same wrapper pattern as src/ZedGraph and src/MSGraph: an SDK-style csproj that
+    compiles the legacy source for net8.0 with analyzers turned off, so the strict
+    pwiz-sharp Directory.Build.props rules don't generate hundreds of "errors" against
+    code we don't own.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>System.Collections.Generic</RootNamespace>
+    <AssemblyName>StlContainers</AssemblyName>
+
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CS0612;CS0618;CS1591;CS8981;CA1416;CA1822;CA1031;CA2326;CA2352;CA1051;CA1715;CA2200;CA1825;NU1701;SYSLIB0003;SYSLIB0011;SYSLIB0050;SYSLIB0051</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <AnalysisLevel>none</AnalysisLevel>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+</Project>

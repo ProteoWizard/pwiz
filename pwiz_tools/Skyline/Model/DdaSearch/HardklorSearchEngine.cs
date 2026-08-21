@@ -167,7 +167,14 @@ namespace pwiz.Skyline.Model.DdaSearch
             var hkFile = _inputsAndOutputs[input];
             // var matchFile = GetBullseyeMatchFilename(hkFile);  MS2 stuff
             // var noMatchFile = GetBullseyeNoMatchFilename(hkFile);  MS2 stuff
+#if NET472
             exeName = @"BullseyeSharp";
+#else
+            // net8: BullseyeSharp ships as the managed pwiz-sharp tool "bullseye-sharp.exe" bundled
+            // next to Skyline (see Skyline.csproj). Resolve its absolute path here because net8
+            // Process.Start won't locate a bare exe name via the working directory.
+            exeName = PathEx.ResolveBundledExe(@"bullseye-sharp");
+#endif
             var ppm = GetPPM();
             args = $@"-c 0 " + // Don't eliminate long elutions
                    $@"-r {ppm.ToString(CultureInfo.InvariantCulture)} " +
@@ -182,7 +189,14 @@ namespace pwiz.Skyline.Model.DdaSearch
             string exeName;
             var paramsFilename = GenerateHardklorConfigFile(skylineWorkingDirectory, input);
 
+#if NET472
             exeName = @"Hardklor";
+#else
+            // net8: Hardklor.exe is the native pwiz tool bundled next to Skyline (see Skyline.csproj).
+            // Resolve its absolute path here because net8 Process.Start won't locate a bare exe name
+            // via the working directory.
+            exeName = PathEx.ResolveBundledExe(@"Hardklor");
+#endif
             args = $@"""{paramsFilename}""";
             description = DdaSearchResources.HardklorSearchEngine_Run_Searching_for_peptide_like_features;
             return exeName;
@@ -1262,7 +1276,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     status = status.ChangeMessage(convertMessage);
                     progressMonitorForFile.UpdateProgress(status); // Update main window log
                     var pr = new ProcessRunner();
-                    var psi = new ProcessStartInfo(MSCONVERT_EXE)
+                    var psi = new ProcessStartInfo(PathEx.ResolveBundledExe(MSCONVERT_EXE))
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,

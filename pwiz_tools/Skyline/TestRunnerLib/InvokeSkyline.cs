@@ -38,9 +38,17 @@ namespace TestRunnerLib
 
         public InvokeSkyline()
         {
+            // On net8 the managed entry point is Skyline-daily.dll; the .exe is a native
+            // apphost that Assembly.LoadFrom can't load ("Bad IL format"). net472 loads the .exe.
+#if NET472
             var skylinePath = GetAssemblyPath("Skyline-daily.exe"); // Keep -daily
             if (!File.Exists(skylinePath))
                 skylinePath = GetAssemblyPath("Skyline.exe");
+#else
+            var skylinePath = GetAssemblyPath("Skyline-daily.dll"); // Keep -daily
+            if (!File.Exists(skylinePath))
+                skylinePath = GetAssemblyPath("Skyline.dll");
+#endif
             var skylineAssembly = LoadFromAssembly.Try(skylinePath);
             _skylineProgram = skylineAssembly.GetType("pwiz.Skyline.Program");
         }

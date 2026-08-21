@@ -1396,6 +1396,7 @@ namespace pwiz.Skyline.Alerts
             };
         }
 
+#if NET472
         public class CoreWebView2ExceptionWrapper : Exception
         {
             private readonly CoreWebView2ScriptException _ex;
@@ -1410,6 +1411,12 @@ namespace pwiz.Skyline.Alerts
                 return _ex.ToJson;
             }
         }
+#else
+        public class CoreWebView2ExceptionWrapper : Exception
+        {
+            public CoreWebView2ExceptionWrapper(object ex) : base(ex?.ToString()) { }
+        }
+#endif
 
         private async Task<string> ExecuteScriptAsync(string script, bool showExceptions = true)
         {

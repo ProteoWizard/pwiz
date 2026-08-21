@@ -99,7 +99,12 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             var packages = new[]
             {
-                new PythonPackage { Name = @"peptdeep", Version = null },
+                // Pin peptdeep to a specific release so the predicted-library baselines used by
+                // TestAlphaPeptDeepBuildLibrary stay reproducible. An unpinned install pulls the
+                // latest peptdeep (and pretrained model), whose predictions drift at the 7th
+                // significant figure -- enough to reorder near-tied fragments and break the exact
+                // baseline comparison. Bump this (and re-record the baselines) intentionally.
+                new PythonPackage { Name = @"peptdeep", Version = @"1.5.0" },
 
                 // We manually set numpy to the latest version before 2.0 because of a backward incompatibility issue
                 // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
@@ -401,7 +406,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             {
                 valueToAdd = 0; // CONSIDER: Zero is a valid value for a normalized-RT
             }
-            line.Add(valueToAdd.ToString(CultureInfo.InvariantCulture));
+            // Pin to G15 so net8's shortest-round-trip double formatting matches
+            // net472's implicit G15 default (keeps the transformed .tsv byte-identical).
+            line.Add(valueToAdd.ToString(@"G15", CultureInfo.InvariantCulture));
         }
 
         public void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)

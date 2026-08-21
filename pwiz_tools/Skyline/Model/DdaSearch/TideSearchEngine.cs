@@ -529,15 +529,16 @@ namespace pwiz.Skyline.Model.DdaSearch
                     else if (line.Contains(@"</search_hit"))
                     {
                         string psmIdAndRank = $@"{lastPsmId}.{lastRank}";
-                        if (qvalueByPsmId.ContainsKey(psmIdAndRank))
-                        {
-                            fixedPepXmlFile.WriteLine(@"    <search_score name=""percolator_qvalue"" value=""{0}"" />", qvalueByPsmId[psmIdAndRank].ToString(CultureInfo.InvariantCulture));
-                            fixedPepXmlFile.WriteLine(line);
-                            continue;
-                        }
-                        // MCC: This happens when percolator's text tables drops a PSM that is in pepXML; I'm not sure why it happens though.
-                        //else
-                        //    Console.WriteLine($"{lastPsmId} not found in percolator scores.");
+                        if (qvalueByPsmId.TryGetValue(psmIdAndRank, out var qvalue))
+                            fixedPepXmlFile.WriteLine(@"    <search_score name=""percolator_qvalue"" value=""{0}"" />", qvalue.ToString(CultureInfo.InvariantCulture));
+                        else
+                            // Percolator dropped this PSM from its output tables. Without a percolator_qvalue,
+                            // BiblioSpec's PepXMLreader treats the hit as q-value 0 and admits it to the library
+                            // unfiltered; emit a failing q-value (1) so it is excluded, matching the MSFragger
+                            // and Comet integrations.
+                            fixedPepXmlFile.WriteLine(@"    <search_score name=""percolator_qvalue"" value=""1"" />");
+                        fixedPepXmlFile.WriteLine(line);
+                        continue;
                     }
                     else if (line.Contains(@"</search_summary>"))
                     {

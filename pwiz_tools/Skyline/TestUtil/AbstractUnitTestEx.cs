@@ -159,24 +159,55 @@ namespace pwiz.SkylineTestUtil
         {
             if (!_systemResources.TryGetValue(CultureInfo.CurrentUICulture, out var resourceSet))
             {
+#if NET472
                 var assembly = Assembly.GetAssembly(typeof(object));
-                var assemblyName = assembly.GetName().Name;
-                var manager = new ResourceManager(assemblyName, assembly);
-
-                if (!_systemResources.ContainsKey(CultureInfo.CurrentUICulture))
-                {
-                    resourceSet = _systemResources[CultureInfo.CurrentUICulture] = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
-                    _systemResourceString[resourceSet] = new Dictionary<string, string>();
-                }
-
-                resourceSet = _systemResources[CultureInfo.CurrentUICulture];
+                var manager = new ResourceManager(assembly.GetName().Name, assembly);
+                resourceSet = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
+#else
+                resourceSet = GetCoreLibStringResourceSet();
+#endif
+                _systemResources[CultureInfo.CurrentUICulture] = resourceSet;
+                _systemResourceString[resourceSet] = new Dictionary<string, string>();
             }
 
+#if NET472
+            var lookupId = resourceId;
+#else
+            // net8 renamed these ids from mscorlib's dotted form to System.Private.CoreLib's underscored
+            // form, e.g. "IO.FileNotFound_FileName" -> "IO_FileNotFound_FileName".
+            var lookupId = resourceId.Replace('.', '_');
+#endif
             if (!_systemResourceString[resourceSet!].TryGetValue(resourceId, out var formatString))
-                formatString = _systemResourceString[resourceSet][resourceId] = resourceSet.GetString(resourceId) ??
+                formatString = _systemResourceString[resourceSet][resourceId] = resourceSet.GetString(lookupId) ??
                     throw new ArgumentException(nameof(resourceId));
             return string.Format(formatString, args);
         }
+
+#if !NET472
+        /// <summary>
+        /// Reads the .NET runtime's built-in message strings on net8. They live in
+        /// System.Private.CoreLib's embedded "System.Private.CoreLib.Strings" resource, NOT in a
+        /// "System.Private.CoreLib.resources" stream. Reaching them through
+        /// new ResourceManager(assembly.GetName().Name /* "System.Private.CoreLib" */, ...) makes
+        /// ResourceManager grovel for a stream that does not exist and call Environment.FailFast
+        /// ("System.Private.CoreLib.resources couldn't be found!"), which uncatchably kills the whole
+        /// test process (it took down the net8 TestRunner mid-suite). Reading the manifest stream
+        /// directly can only ever return null -- a catchable error -- never FailFast.
+        /// Note: this reads the neutral (invariant) strings and does not honor culture-specific
+        /// satellites, which is fine for the English-only net8 CI; a mismatch elsewhere fails a test
+        /// assertion rather than crashing the run.
+        /// </summary>
+        private static ResourceSet GetCoreLibStringResourceSet()
+        {
+            var assembly = Assembly.GetAssembly(typeof(object));
+            var streamName = assembly.GetManifestResourceNames()
+                .FirstOrDefault(n => n.EndsWith(".Strings.resources", StringComparison.Ordinal))
+                ?? "System.Private.CoreLib.Strings.resources";
+            var stream = assembly.GetManifestResourceStream(streamName)
+                ?? throw new NotSupportedException($"Could not find the .NET runtime string resource stream '{streamName}'.");
+            return new ResourceSet(stream);
+        }
+#endif
 
         private static Dictionary<CultureInfo, ResourceSet> _systemResources = new Dictionary<CultureInfo, ResourceSet>();
         private static Dictionary<ResourceSet, Dictionary<string, string>> _systemResourceString =

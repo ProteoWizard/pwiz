@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using SharedBatch;
 using SkylineBatch;
 using SharedBatchTest;
@@ -61,6 +63,14 @@ namespace SkylineBatchTest
 
         protected override void InitProgram()
         {
+        }
+
+        [TestCleanup]
+        public void CleanupHttpTestBehavior()
+        {
+            // Defensive: a test that installed an HttpClientWithProgress.TestBehavior (e.g.
+            // RemoteFileSourceFunctionalTest's Panorama mock) must not leak it to later tests.
+            HttpClientWithProgress.TestBehavior = null;
         }
 
         protected override void StartProgram()

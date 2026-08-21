@@ -96,9 +96,13 @@ namespace pwiz.SkylineTest
                     "--exp-template=" + thermoTemplate,
                     "--exp-file=" + thermoOut);
                 // This means that BuildThermoMethod was actually run and failed when the Thermo API
-                // tried to find the OrbitrapAstral that the test case said exists
+                // tried to find the OrbitrapAstral that the test case said exists.
+                // net8's Process.Start requires a rooted exe path (MethodExporter resolves the bundled
+                // BuildThermoMethod to an absolute path next to Skyline.exe via Export.ResolveToolPath),
+                // so the echoed command-line is now the absolute BuildThermoMethod.exe path rather than
+                // the relative name net472 showed. Match the stable tail of that path.
                 AssertEx.Contains(output, "Registry key (Software\\Thermo Instruments\\TNG\\OrbitrapAstral) not found. OrbitrapAstral is not installed on this machine.",
-                    "Command-line: Method\\Thermo\\BuildThermoMethod -t OrbitrapAstral");
+                    "Method\\Thermo\\BuildThermoMethod.exe -t OrbitrapAstral");
             }
             finally
             {

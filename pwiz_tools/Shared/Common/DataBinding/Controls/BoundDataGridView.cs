@@ -416,6 +416,21 @@ namespace pwiz.Common.DataBinding.Controls
         protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
         {
             base.OnCellFormatting(e);
+
+            // Emulate .NET Framework's round-trip ("R") number formatting on net8 so grid cells match the
+            // report export (DsvWriter) and the historical net472 output. Invariant-language grids format
+            // every double/float column with "R" (SkylineViewContext.InitializeColumn), and net8's native
+            // "R" prints fewer digits than net472's for some values.
+            if (!e.FormattingApplied && e.DesiredType == typeof(string))
+            {
+                var roundTrip = RoundTripFormat.FormatOrNull(e.Value, e.CellStyle.Format, e.CellStyle.FormatProvider);
+                if (roundTrip != null)
+                {
+                    e.Value = roundTrip;
+                    e.FormattingApplied = true;
+                }
+            }
+
             if (ReportColorScheme == null)
             {
                 return;

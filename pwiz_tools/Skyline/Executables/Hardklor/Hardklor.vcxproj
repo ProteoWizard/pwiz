@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+    Production MSBuild port of Jamfile.jam (bjam is retired in the .NET 8 build).
+    Builds the native x64 Hardklor.exe bundled next to Skyline for the Hardklor/Bullseye
+    feature-detection pipeline. Sources, include dirs and preprocessor defines mirror
+    Jamfile.jam exactly so this artifact matches the historical bjam-built Hardklor.exe.
+
+    dotnet build (the .NET SDK MSBuild) cannot build a C++ vcxproj, so the net8 Skyline
+    build produces this exe via a separate VS MSBuild step (see pwiz_tools\Skyline\build.bat)
+    and Skyline.csproj deploys it via a Content include (see Skyline.csproj).
+  -->
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
@@ -26,42 +28,28 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
+  <!-- Prefer the VS2022 v143 toolset (the documented Skyline build requirement); fall back to
+       v145 on newer-only VS installs that don't ship v143. A command-line
+       -p:PlatformToolset=<name> still overrides both. -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset Condition="!Exists('$(VCTargetsPath)\Platforms\x64\PlatformToolsets\v143')">v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset Condition="!Exists('$(VCTargetsPath)\Platforms\x64\PlatformToolsets\v143')">v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -70,47 +58,21 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)..\libraries\boost_aux;$(SolutionDir)..\libraries\boost_1_76_0\boost;$(SolutionDir)..\libraries\boost_1_76_0;$(SolutionDir)..\..\pwiz\data\msdata;$(SolutionDir)..\..\pwiz\data\msdata\MSToolkit\include;$(SolutionDir)..\..;$(IncludePath)</IncludePath>
+  <!-- Keep build artifacts inside the project's own bin\obj (both gitignored) so the
+       output path is deterministic for Skyline.csproj's Content include. -->
+  <PropertyGroup>
+    <OutDir>$(ProjectDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)..\libraries\boost_aux;$(SolutionDir)..\libraries\boost_1_76_0\boost;$(SolutionDir)..\libraries\boost_1_76_0;$(SolutionDir)..\..\pwiz\data\msdata;$(SolutionDir)..\..\pwiz\data\msdata\MSToolkit\include;$(SolutionDir)..\..;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_PROTEOWIZARD;_CRT_SECURE_NO_WARNINGS;_NO_THERMORAW;_NOSQLITE;_LARGEFILE_SOURCE;_FILE_OFFSET_BITS=64;HAVE_MEMMOVE</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\..\..\libraries\zlib-1.2.3;..\..\..\..\libraries\expat-2.0.1\lib;$(SolutionDir)MSToolKit\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <SDLCheck>false</SDLCheck>
+      <ConformanceMode>false</ConformanceMode>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;XML_STATIC;_PROTEOWIZARD;_CRT_SECURE_NO_WARNINGS;_NO_THERMORAW;_NOSQLITE;_LARGEFILE_SOURCE;_FILE_OFFSET_BITS=64;HAVE_MEMMOVE;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>MSToolkit\include;..\..\..\..\libraries\expat-2.0.1\lib;..\..\..\..\libraries\zlib-1.2.3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4131;4244;4127;4100;4189;4389;4101;4706;4505;5286;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -122,10 +84,12 @@
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_PROTEOWIZARD;_CRT_SECURE_NO_WARNINGS;_NO_THERMORAW;_NOSQLITE;_LARGEFILE_SOURCE;_FILE_OFFSET_BITS=64;HAVE_MEMMOVE</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\..\..\libraries\zlib-1.2.3;..\..\..\..\libraries\expat-2.0.1\lib;$(SolutionDir)MSToolKit\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <SDLCheck>false</SDLCheck>
+      <ConformanceMode>false</ConformanceMode>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;XML_STATIC;_PROTEOWIZARD;_CRT_SECURE_NO_WARNINGS;_NO_THERMORAW;_NOSQLITE;_LARGEFILE_SOURCE;_FILE_OFFSET_BITS=64;HAVE_MEMMOVE;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>MSToolkit\include;..\..\..\..\libraries\expat-2.0.1\lib;..\..\..\..\libraries\zlib-1.2.3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4131;4244;4127;4100;4189;4389;4101;4706;4505;5286;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,6 +98,24 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <!--
+    zlib-1.2.3 and expat-2.0.1 ship as tarballs under $(PWIZ_ROOT_PATH)\libraries and are
+    extracted at build time (the Jam build does this via ext-zlib.jam / expat.jam). Replicate
+    that here with the repo's bundled bsdtar so the vcxproj builds standalone, without bjam
+    having run first. Idempotent: skipped once the sources are present. The extracted trees
+    (libraries\zlib-1.2.3, libraries\expat-2.0.1) are gitignored.
+  -->
+  <Target Name="ExtractBundledLibs" BeforeTargets="ClCompile">
+    <PropertyGroup>
+      <LibrariesDir>$(ProjectDir)..\..\..\..\libraries</LibrariesDir>
+    </PropertyGroup>
+    <Exec Condition="!Exists('$(LibrariesDir)\zlib-1.2.3\zlib.h')"
+          Command="&quot;$(LibrariesDir)\bsdtar.exe&quot; -xjf &quot;$(LibrariesDir)\zlib-1.2.3.tar.bz2&quot; *.c *.h"
+          WorkingDirectory="$(LibrariesDir)" />
+    <Exec Condition="!Exists('$(LibrariesDir)\expat-2.0.1\lib\expat.h')"
+          Command="&quot;$(LibrariesDir)\bsdtar.exe&quot; -xjf &quot;$(LibrariesDir)\expat-2.0.1.tar.bz2&quot; *.c *.h"
+          WorkingDirectory="$(LibrariesDir)" />
+  </Target>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\adler32.c" />
     <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\compress.c" />
@@ -152,22 +134,22 @@
     <ClCompile Include="..\..\..\..\libraries\expat-2.0.1\lib\xmltok.c" />
     <ClCompile Include="..\..\..\..\libraries\expat-2.0.1\lib\xmltok_impl.c" />
     <ClCompile Include="..\..\..\..\libraries\expat-2.0.1\lib\xmltok_ns.c" />
-    <ClCompile Include="MSToolKit\src\MSToolkit\MSObject.cpp" />
-    <ClCompile Include="MSToolKit\src\MSToolkit\MSReader.cpp" />
-    <ClCompile Include="MSToolKit\src\MSToolkit\mzMLWriter.cpp" />
-    <ClCompile Include="MSToolKit\src\MSToolkit\pepXMLWriter.cpp" />
-    <ClCompile Include="MSToolKit\src\MSToolkit\Spectrum.cpp" />
-    <ClCompile Include="MSToolKit\src\mzParser\BasicChromatogram.cpp" />
-    <ClCompile Include="MSToolKit\src\mzParser\BasicSpectrum.cpp" />
-    <ClCompile Include="MSToolKit\src\mzParser\Czran.cpp" />
-    <ClCompile Include="MSToolKit\src\mzParser\MSNumpress.cpp" />
-    <ClCompile Include="MSToolKit\src\mzParser\mzParser.cpp" />
-    <ClCompile Include="MSToolKit\src\mzParser\mzp_base64.cpp" />
-    <ClCompile Include="MSToolKit\src\mzParser\PWIZface.cpp" />
-    <ClCompile Include="MSToolKit\src\mzParser\RAMPface.cpp" />
-    <ClCompile Include="MSToolKit\src\mzParser\saxhandler.cpp" />
-    <ClCompile Include="MSToolKit\src\mzParser\saxmzmlhandler.cpp" />
-    <ClCompile Include="MSToolKit\src\mzParser\saxmzxmlhandler.cpp" />
+    <ClCompile Include="MSToolkit\src\MSToolkit\MSObject.cpp" />
+    <ClCompile Include="MSToolkit\src\MSToolkit\MSReader.cpp" />
+    <ClCompile Include="MSToolkit\src\MSToolkit\mzMLWriter.cpp" />
+    <ClCompile Include="MSToolkit\src\MSToolkit\pepXMLWriter.cpp" />
+    <ClCompile Include="MSToolkit\src\MSToolkit\Spectrum.cpp" />
+    <ClCompile Include="MSToolkit\src\mzParser\BasicChromatogram.cpp" />
+    <ClCompile Include="MSToolkit\src\mzParser\BasicSpectrum.cpp" />
+    <ClCompile Include="MSToolkit\src\mzParser\Czran.cpp" />
+    <ClCompile Include="MSToolkit\src\mzParser\MSNumpress.cpp" />
+    <ClCompile Include="MSToolkit\src\mzParser\mzParser.cpp" />
+    <ClCompile Include="MSToolkit\src\mzParser\mzp_base64.cpp" />
+    <ClCompile Include="MSToolkit\src\mzParser\PWIZface.cpp" />
+    <ClCompile Include="MSToolkit\src\mzParser\RAMPface.cpp" />
+    <ClCompile Include="MSToolkit\src\mzParser\saxhandler.cpp" />
+    <ClCompile Include="MSToolkit\src\mzParser\saxmzmlhandler.cpp" />
+    <ClCompile Include="MSToolkit\src\mzParser\saxmzxmlhandler.cpp" />
     <ClCompile Include="Hardklor\CAveragine.cpp" />
     <ClCompile Include="Hardklor\CHardklor.cpp" />
     <ClCompile Include="Hardklor\CHardklor2.cpp" />

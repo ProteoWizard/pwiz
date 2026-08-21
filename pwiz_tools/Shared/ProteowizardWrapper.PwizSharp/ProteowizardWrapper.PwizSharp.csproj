@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>pwiz.ProteowizardWrapper</RootNamespace>
+    <AssemblyName>ProteowizardWrapper.PwizSharp</AssemblyName>
+    <Description>Phase 2 net8 sandbox: refactored MsDataFileImpl + siblings backed by pwiz-sharp instead of pwiz.CLI. Demonstrates the data-layer swap before the wider Skyline csproj cascade lands.</Description>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <UseWindowsForms>false</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Util\Util.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Common\Common.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+</Project>

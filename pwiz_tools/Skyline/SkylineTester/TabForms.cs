@@ -152,8 +152,15 @@ namespace SkylineTester
             ((DataGridViewLinkColumn) MainWindow.FormsGrid.Columns[0]).LinkBehavior = LinkBehavior.NeverUnderline;
             ((DataGridViewLinkColumn) MainWindow.FormsGrid.Columns[1]).LinkBehavior = LinkBehavior.NeverUnderline;
 
-            var skylinePath = Path.Combine(MainWindow.ExeDir, "Skyline.exe");
-            var skylineDailyPath = Path.Combine(MainWindow.ExeDir, "Skyline-daily.exe"); // Keep -daily
+            // On net8 the managed entry point is Skyline(-daily).dll; the .exe is a native apphost
+            // that Assembly.LoadFrom can't load ("Bad IL format"). net472 loads the .exe.
+#if NET472
+            const string skylineModule = "Skyline.exe", skylineDailyModule = "Skyline-daily.exe"; // Keep -daily
+#else
+            const string skylineModule = "Skyline.dll", skylineDailyModule = "Skyline-daily.dll"; // Keep -daily
+#endif
+            var skylinePath = Path.Combine(MainWindow.ExeDir, skylineModule);
+            var skylineDailyPath = Path.Combine(MainWindow.ExeDir, skylineDailyModule);
             skylinePath = File.Exists(skylinePath) ? skylinePath : skylineDailyPath;
             var assembly = LoadFromAssembly.Try(skylinePath);
             var types = assembly.GetTypes().ToList();

@@ -140,7 +140,11 @@ namespace pwiz.Common.SystemUtil
                 }
             }
             message.Append(value);
-            _writer.WriteLine(message);
+            // Pass a string, not the StringBuilder: net8 added TextWriter.WriteLine(StringBuilder),
+            // which routes through Write(char) - unimplemented by some TextWriter subclasses (e.g.
+            // the Immediate Window sink) - so output was silently dropped. WriteLine(string) is the
+            // overload every sink reliably overrides.
+            _writer.WriteLine(message.ToString());
             Flush();
 
             if (!IsErrorReported && IsErrorMessage(value))

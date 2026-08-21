@@ -98,7 +98,6 @@ namespace pwiz.SkylineTestData
             DoConsoleReplicateOutTest(true);
         }
 
-        [TestMethod]
         private void DoConsoleReplicateOutTest(bool auditLogging)
         {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
@@ -1235,7 +1234,6 @@ namespace pwiz.SkylineTestData
             DoConsoleAnnotationsExportToImportTest(true);
         }
 
-        [TestMethod]
         private void DoConsoleAnnotationsExportToImportTest(bool auditLogging)
         {
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleAnnotationsExportToImportTest.zip");
@@ -4141,7 +4139,7 @@ namespace pwiz.SkylineTestData
         {
             TestSkylineRunnerErrorDetection(null);
             TestSkylineRunnerErrorDetection(new CultureInfo("ja"));
-            TestSkylineRunnerErrorDetection(new CultureInfo("zh-CHS"));
+            TestSkylineRunnerErrorDetection(new CultureInfo("zh-Hans"));
         }
 
         private void TestSkylineRunnerErrorDetection(CultureInfo ci)
