@@ -593,7 +593,7 @@ public static class SkylineTools
         [Description("Action: get_actions, get_children, click, get_value, set_value, send_text, send_key_stroke, get_options, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, get_graph_zoom, zoom_graph_to, click_graph, expand, collapse, select_tab, dismiss, paste, select_all, rename_node")] string action,
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
-        [Description("Value for set_value/set_grid_text, the text for send_text/rename_node, the text for paste (omit it to paste what is on the clipboard), the key for send_key_stroke (e.g. 'Ctrl+V'), a [column, row] array for set_current_cell_address, a [left, top, right, bottom] array of graph data coordinates for zoom_graph_to/click_graph, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
+        [Description("Value for set_value/set_grid_text, the text for send_text/paste/rename_node, the key for send_key_stroke (e.g. 'Ctrl+V'), a [column, row] array for set_current_cell_address, a [left, top, right, bottom] array of graph data coordinates for zoom_graph_to/click_graph, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
         [Description("A full UiElementPath as JSON (e.g. one straight from get_children, or wrapped as a ContextMenu); overrides label/type when given (optional)")] string path = null)
     {
         return Invoke(connection =>

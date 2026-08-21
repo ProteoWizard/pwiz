@@ -215,18 +215,22 @@ namespace pwiz.Skyline.ToolsUI
                 return _invoke(typed, ToArgument(argument));
             }
 
-            // The action's value, or an error when it is of the wrong kind. A mismatch used to become
-            // default(TArg), which for a string is null, so an action given a number quietly did nothing and
-            // reported that it had done it. A null argument still means "not given" and is passed on, since
-            // some actions have something to do without one.
+            // The action's value, which has to be of the kind the action takes. Only an action declared to
+            // take object may be given nothing: those are the ones with no value at all, and the ones that
+            // read the value themselves. Anything else that arrives null or of another kind used to become
+            // default(TArg) - a null string for most actions - so the action quietly did nothing and
+            // reported that it had done it.
             private TArg ToArgument(object argument)
             {
                 switch (argument)
                 {
-                    case null:
-                        return default;
                     case TArg typed:
                         return typed;
+                    case null when typeof(TArg) == typeof(object):
+                        return default;
+                    case null:
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"The action '{0}' needs a value: {1}.", SnakeCaseName, DescribeType(typeof(TArg))));
                     default:
                         throw new ArgumentException(LlmInstruction.Format(
                             @"The action '{0}' takes {1}, but was given {2}.",
@@ -419,9 +423,9 @@ namespace pwiz.Skyline.ToolsUI
         // Pastes the given text into a control that can paste (text box, grid, Targets tree, main window) --
         // for the tutorial paste steps, without touching the clipboard.
         public static readonly UiAction Paste = SimpleAction<IClipboardElement, string>(@"Paste",
-                (e, text) => { e.PasteNow(text ?? ClipboardEx.GetText()); return null; })
-            .Describe(new LlmInstruction(@"Paste text into this element (a text box, a grid, the Targets tree, or the main Skyline window) without using the clipboard. Pass no value to paste what IS on the clipboard instead."),
-                new LlmInstruction(@"the text to paste, or nothing to paste the clipboard's own contents"));
+                (e, text) => { e.PasteNow(UiValue.RequireText(text, @"paste")); return null; })
+            .Describe(new LlmInstruction(@"Paste text into this element (a text box, a grid, the Targets tree, or the main Skyline window) without using the clipboard."),
+                new LlmInstruction(@"the text to paste"));
 
         // Selects everything in a control that can paste -- e.g. before a paste, to replace the contents.
         public static readonly UiAction SelectAll = SimpleAction<IClipboardElement>(@"SelectAll", e => { e.SelectAllNow(); return null; })

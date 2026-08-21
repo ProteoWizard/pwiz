@@ -191,15 +191,12 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.Contains(grid, PASTE_PEPTIDE);
                 AssertEx.Contains(grid, PASTE_PROTEIN);
 
-                // The paste action with no value pastes what is ON the clipboard, which is how a caller asks
-                // for the clipboard without having to read it first. A value that is not a string is its own
-                // text, so a number pastes its digits rather than falling through to the clipboard.
+                // An action that takes a value has to be given one, of the kind it takes. Neither a missing
+                // value nor one of the wrong kind may become a null string and have the action do nothing
+                // while reporting that it had done it.
                 var gridPath = server.GetControls(pasteFormId).First(c => c.Name == @"gridViewPeptides").Path;
-                RunUI(() => pasteDlg.ClearRows());
-                server.PerformAction(gridPath, @"paste", null);
-                WaitForConditionUI(() => pasteDlg.PeptideRowCount > 0, @"An empty paste should take the clipboard");
-                AssertEx.Contains(server.GetGridText(pasteFormId, @"gridViewPeptides"), PASTE_PEPTIDE);
-
+                AssertEx.ThrowsException<ArgumentException>(() =>
+                    server.PerformAction(gridPath, @"paste", null));
                 AssertEx.ThrowsException<ArgumentException>(() =>
                     server.PerformAction(gridPath, @"paste", 25));
             }
