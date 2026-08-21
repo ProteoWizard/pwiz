@@ -135,6 +135,49 @@ function Expand-ZipNoOverwrite {
     }
 }
 
+function Get-ZipEntryMismatches {
+    <#
+    Paths under $DestFolder that EXIST but do not match their entry in $ZipPath,
+    compared on uncompressed length and last-write time. Absent files are NOT
+    reported -- absence is what the ordinary skip-if-present extraction already
+    handles; this reports files whose CONTENT is not what the zip says it is.
+
+    Why this is needed at all: the LibraryUrl acquisition shipped 2026-08-19
+    extracted a separately-published library OVER the bundle's extraction point.
+    Every library version ships the same three entry names, so the files left
+    behind record nothing about which version they are, and a checkout that
+    resolves them through the bundle searches the wrong library while reporting
+    success. Comparing against the bundle's own nested zip -- already on disk --
+    is what makes that state detectable without re-downloading anything.
+
+    Length and last-write time rather than a content hash: both come from the
+    zip's central directory and the filesystem, so the check is O(entries)
+    instead of a multi-GB read, and ExtractToFile stamps the entry's timestamp
+    onto the file it writes, which makes the pair a version signature. Zip
+    timestamps have 2-second granularity, hence the tolerance.
+    #>
+    param([string]$ZipPath, [string]$DestFolder)
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $mismatched = @()
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($ZipPath)
+    try {
+        foreach ($entry in $zip.Entries) {
+            if ($entry.FullName.EndsWith('/')) { continue }
+            $destPath = Join-Path $DestFolder $entry.FullName
+            if (-not (Test-Path $destPath)) { continue }
+            $file = Get-Item $destPath
+            $skew = [Math]::Abs(($file.LastWriteTime - $entry.LastWriteTime.LocalDateTime).TotalSeconds)
+            if ($file.Length -ne $entry.Length -or $skew -gt 2) {
+                $mismatched += $destPath
+            }
+        }
+    } finally {
+        $zip.Dispose()
+    }
+    return $mismatched
+}
+
 function Get-RegressionData {
     <#
     Ensure the regression data zip is downloaded + extracted, skipping when the

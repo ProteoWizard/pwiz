@@ -346,9 +346,10 @@ $libDecoyV3Url = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perf
 #                    demand so datasets that are not selected cost nothing.
 #   LibraryUrl       a library published separately from the mzML bundle,
 #                    downloaded into LibraryFolder when its ZIP is absent there
-#                    and extracted OVER whatever the bundle staged. Wins over
-#                    NestedZip. The zip file is both the payload and the
-#                    version marker, so it stays on disk after extraction.
+#                    and extracted into a version-named subfolder BESIDE whatever
+#                    the bundle staged, never over it. Wins over NestedZip. The
+#                    zip file is both the payload and the version marker, so it
+#                    stays on disk after extraction.
 #   Library          explicit library filename; bypasses the exactly-one-.tsv
 #                    discovery rule (the libdecoy folder also holds a manifest).
 #   Manifest         FDRBench pairing manifest -> --decoy-pairing-manifest.
@@ -608,6 +609,10 @@ function Resolve-DatasetInputs {
 
     $libDir = if ($Spec.LibraryFolder) { Join-Path $extractedRoot $Spec.LibraryFolder } else { $dir }
     if (-not (Test-Path $libDir)) { throw "Library folder not found in data: $libDir" }
+    # The bundle's own extraction point, captured BEFORE the LibraryUrl branch
+    # below can point $libDir at a version subfolder. The repair step needs it
+    # because what it repairs is the bundle's tree, not this run's library.
+    $bundleLibDir = $libDir
 
     # LibraryUrl: a library that ships SEPARATELY from the mzML bundle, so a new
     # library version does not force every machine to re-download 24.6 GB of mzML.
@@ -671,6 +676,43 @@ function Resolve-DatasetInputs {
         # decoy-free copy - resolves inside the version dir from here on.
         $libDir = $versionDir
         $libraryFromUrl = $true
+    }
+
+    # SELF-HEAL a tree that the pre-2026-08-20 LibraryUrl acquisition clobbered.
+    #
+    # That version extracted the separately-published library OVER the bundle's
+    # extraction point with -Overwrite. A machine that ran it holds the NEW
+    # library under the bundled library's names, with nothing on disk recording
+    # the swap. This script is no longer fooled - it resolves its own library
+    # from the version subfolder - but anything else reading the bundle's tree is:
+    # an older checkout, another branch, and the golden comparison, which is how
+    # this surfaced (a session spent hours proving the golden was fine while the
+    # library under it had been replaced).
+    #
+    # Repaired from the bundle's own nested zip, which is already on disk, so the
+    # fix costs no download and no manual cleanup - the affected machines include
+    # a TeamCity agent whose data lives under the agent user's profile.
+    #
+    # Runs regardless of $libraryFromUrl: the whole point is to restore the tree
+    # this run is NOT using, and only a run that takes the URL path can have
+    # damaged it.
+    if ($Spec.NestedZip) {
+        $bundleNested = Join-Path $bundleLibDir $Spec.NestedZip
+        if (Test-Path $bundleNested) {
+            $stale = @(Get-ZipEntryMismatches -ZipPath $bundleNested -DestFolder $bundleLibDir)
+            if ($stale.Count -gt 0) {
+                Write-Host "  repairing $($stale.Count) bundled library file(s) overwritten by a separately-shipped library..."
+                foreach ($f in $stale) {
+                    Write-Host "    restoring $(Split-Path -Leaf $f)"
+                    Remove-Item $f -Force
+                }
+                Expand-ZipNoOverwrite -ZipPath $bundleNested -DestFolder $bundleLibDir
+                $stillStale = @(Get-ZipEntryMismatches -ZipPath $bundleNested -DestFolder $bundleLibDir)
+                if ($stillStale.Count -gt 0) {
+                    throw "Could not restore bundled library from $bundleNested (still mismatched: $($stillStale -join ', '))"
+                }
+            }
+        }
     }
 
     # Nested zip: the library ships compressed inside the outer zip and is
