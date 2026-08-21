@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -332,6 +332,71 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(typeof(StubByproduct), ex.RequestedType);
             }
             Assert.AreEqual(1, producer.RehydrateCount);
+        }
+
+        /// <summary>
+        /// A DEFERRED milestone does its work on the first <c>Value</c> read, not when it is
+        /// published (issue #4597). PerFileRescore publishes <see cref="RescoredEntries"/>
+        /// that way because reaching the milestone after the streamed rescore means
+        /// re-reading every file's artifacts - whole-run join work at the end of a per-file
+        /// HPC task whose process exits there. Three things are pinned:
+        ///
+        /// <para>Publishing must not build. The DEBUG milestone-ordering guard inspects every
+        /// published <see cref="PerFileEntries"/>, so a guard that reached through
+        /// <c>Value</c> would make the DEBUG build pay the whole join at publish time - and
+        /// pay it before the rescore that fills the buffer has even run.</para>
+        ///
+        /// <para>Reading builds, exactly once. The build overlays reconciled parquets and
+        /// appends gap-fill rows; running it twice over one buffer would duplicate them.</para>
+        ///
+        /// <para>Not reading builds nothing. That is the whole point: a
+        /// <c>--task PerFileRescoring</c> worker skips the join because nothing pulled it,
+        /// not because a predicate asked whether its own consumer was going to run.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestDeferredMilestoneBuildsOnFirstValueRead()
+        {
+            var ctx = ContextFor(new StubProducerTask(publishBeforeStop: false, exitCode: 0));
+            var buffer = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                new KeyValuePair<string, List<FdrEntry>>(@"file1", new List<FdrEntry>())
+            };
+            int builds = 0;
+            ctx.Publish(new RescoredEntries(buffer, () =>
+            {
+                builds++;
+                buffer[0].Value.Add(new FdrEntry());
+            }));
+            Assert.AreEqual(0, builds, @"Publishing a deferred milestone must not build it");
+
+            Assert.IsTrue(ctx.TryGet<RescoredEntries>(out var milestone));
+            Assert.AreEqual(0, builds, @"Holding the milestone token is not a pull");
+
+            Assert.AreSame(buffer, milestone.Value);
+            Assert.AreEqual(1, builds);
+            Assert.AreEqual(1, buffer[0].Value.Count, @"The build fills the shared buffer in place");
+
+            var unused = milestone.Value;
+            Assert.AreEqual(1, builds, @"A second read must not re-run the build");
+            Assert.AreEqual(1, buffer[0].Value.Count);
+        }
+
+        /// <summary>
+        /// The undeferred constructor is the arm where the buffer already holds its
+        /// post-rescore state (the resident survivor pool, and both rehydrate paths): reading
+        /// it hands back the same list with nothing to run.
+        /// </summary>
+        [TestMethod]
+        public void TestUndeferredMilestoneReadsStraightThrough()
+        {
+            var buffer = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                new KeyValuePair<string, List<FdrEntry>>(@"file1", new List<FdrEntry> { new FdrEntry() })
+            };
+            var milestone = new RescoredEntries(buffer);
+            Assert.AreSame(buffer, milestone.Value);
+            Assert.AreSame(buffer, milestone.BackingBuffer);
+            Assert.AreEqual(1, milestone.Value[0].Value.Count);
         }
     }
 }

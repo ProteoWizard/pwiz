@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -452,7 +452,11 @@ namespace pwiz.Osprey.Tasks
         {
             if (!(info is PerFileEntries milestone))
                 return;
-            object buffer = milestone.Value;
+            // BackingBuffer, not Value: this guard needs list identity only, and reading
+            // Value would MATERIALIZE a deferred milestone (RescoredEntries), making the
+            // DEBUG build pay at publish time the very work deferral exists to move to the
+            // consumer's pull - and pay it before the rescore that fills it has run.
+            object buffer = milestone.BackingBuffer;
             if (buffer == null)
                 return;
             if (_milestoneByBuffer.TryGetValue(buffer, out var priorMilestone))

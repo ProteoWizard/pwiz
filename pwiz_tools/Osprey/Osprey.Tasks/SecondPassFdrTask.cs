@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -180,6 +180,13 @@ namespace pwiz.Osprey.Tasks
             // demanding it materializes PerFileRescore (running its rescore /
             // reconciled-input compaction when the driver skipped it), which is what
             // produces the post-rescore version this stage reads.
+            //
+            // This read is also what BUILDS the global survivor pool after a streamed
+            // rescore (issue #4597): PerFileRescore leaves the milestone deferred, because
+            // re-reading every file's artifacts is whole-run join work and that task is a
+            // per-file HPC exit point. Stage 7 is the stage that needs a global pool - the
+            // protein-compact competition is over a global stratum - so Stage 7 is where
+            // the work lands, and a worker that never reaches this line never pays it.
             var perFileEntries = ctx.Get<RescoredEntries>().Value;
             var fullLibrary = ctx.Get<FullLibrary>().Value;
             var libraryById = ctx.Get<LibraryById>().Value;
@@ -192,6 +199,9 @@ namespace pwiz.Osprey.Tasks
             // precisely the question. The demand above has already materialized
             // RescoredEntries, so this measures what Stage 7 is handed rather than what it
             // builds; the probes below then attribute each substep's own contribution.
+            // "Inherited" is still the right word after issue #4597 moved the pool build
+            // onto that demand: the pool is what Stage 7 is handed, no matter which stage's
+            // wall clock pays for assembling it.
             int nFiles = perFileEntries.Count;
             string memDetail = string.Format(@"(files={0})", nFiles);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"stage7 start (pre-GC)");
