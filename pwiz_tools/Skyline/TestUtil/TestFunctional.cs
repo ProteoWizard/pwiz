@@ -2884,6 +2884,63 @@ namespace pwiz.SkylineTestUtil
 #endif
         }
 
+        /// <summary>
+        /// TEMPORARY diagnostic. Dumps Microsoft.Win32.SystemEvents' static handler table, naming
+        /// each subscriber and its delegate target, to identify what subscribes
+        /// UserPreferenceChanged with SkylineWindow as the target. Reflection rather than a
+        /// reference, so TestUtil takes no new dependency. Remove once the leak is understood.
+        /// </summary>
+        /// <summary>
+        /// TEMPORARY verifier. Set SKYLINE_FORCE_SYSEVENTS_LEAK=1 to reproduce, on demand, the
+        /// framework condition that otherwise appears about once per 30,000 test executions:
+        /// a SystemEvents.UserPreferenceChanged hook on SkylineWindow that outlives its disposal.
+        ///
+        /// <para>Adds a second, identical subscription of WinForms' own private
+        /// Control.UserPreferenceChanged handler for the main window. WinForms removes one matching
+        /// entry when the window is disposed, so exactly one is left behind - which is precisely
+        /// the leak that has been observed in the wild.</para>
+        /// </summary>
+        // TEMPORARY. Roots SkylineWindow the way a real Skyline regression would - a static
+        // reference that has nothing to do with SystemEvents - so the counter-case can be checked:
+        // the framework-hook classification must NOT excuse this one.
+        // ReSharper disable once CollectionNeverQueried.Local
+        private static readonly List<object> _forcedRealLeak = new List<object>();
+
+        private static void ForceSystemEventsLeak()
+        {
+            var mode = Environment.GetEnvironmentVariable(@"SKYLINE_FORCE_SYSEVENTS_LEAK");
+            if (mode == null || SkylineWindow == null)
+                return;
+            if (mode.Contains(@"real"))
+            {
+                _forcedRealLeak.Add(SkylineWindow);
+                Console.WriteLine(@"FORCELEAK added static reference to SkylineWindow (genuine leak)");
+            }
+            if (!mode.Contains(@"hook") && mode != @"1")
+                return;
+            try
+            {
+                var seType = Type.GetType(@"Microsoft.Win32.SystemEvents, Microsoft.Win32.SystemEvents");
+                var controlType = typeof(Control);
+                var handlerType = seType?.GetEvent(@"UserPreferenceChanged")?.EventHandlerType;
+                var method = controlType.GetMethod(@"UserPreferenceChanged",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (handlerType == null || method == null)
+                {
+                    Console.WriteLine(@"FORCELEAK could not find Control.UserPreferenceChanged");
+                    return;
+                }
+                var del = Delegate.CreateDelegate(handlerType, SkylineWindow, method);
+                seType.GetEvent(@"UserPreferenceChanged").AddEventHandler(null, del);
+                Console.WriteLine(@"FORCELEAK added duplicate {0}.{1} hook for SkylineWindow",
+                    method.DeclaringType?.Name, method.Name);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(@"FORCELEAK FAILED {0}: {1}", e.GetType().Name, e.Message);
+            }
+        }
+
         private void RunTest()
         {
             if (null != SkylineWindow)
@@ -2924,6 +2981,8 @@ namespace pwiz.SkylineTestUtil
             {
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
             }
+
+            ForceSystemEventsLeak();
 
             DoTest();
 
