@@ -20,6 +20,8 @@
 
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Windows.Forms;
 
 namespace pwiz.Skyline.Util
@@ -50,6 +52,54 @@ namespace pwiz.Skyline.Util
         public static int Scale(Control control, int pixels)
         {
             return (int)Math.Round(pixels * GetFactor(control));
+        }
+
+        /// <summary>
+        /// Scales a 96-DPI pixel measurement using the DPI of a Graphics surface, for
+        /// static drawing code that has no control reference.
+        /// </summary>
+        public static int Scale(Graphics g, int pixels)
+        {
+            return (int)Math.Round(pixels * g.DpiX / REFERENCE_DPI);
+        }
+
+        /// <summary>
+        /// Scales a 96-DPI size to the control's rendering DPI.
+        /// </summary>
+        public static Size ScaleSize(Control control, Size size)
+        {
+            var factor = GetFactor(control);
+            return new Size((int)Math.Round(size.Width * factor), (int)Math.Round(size.Height * factor));
+        }
+
+        /// <summary>
+        /// Prepares a 96-DPI icon for an ImageList whose ImageSize has been scaled to the
+        /// current DPI. At 100% scaling the original image is returned untouched, preserving
+        /// the list's existing color-key behavior. At higher scaling the image is converted
+        /// to 32-bit ARGB, its transparency key (if any) is applied before interpolation so
+        /// the key color cannot bleed into the glyph edges, and it is resampled with
+        /// high-quality bicubic interpolation - noticeably better than the nearest-neighbor
+        /// scaling ImageList applies internally. A stopgap until higher-resolution icon
+        /// assets exist (issue #4599).
+        /// </summary>
+        public static Image ScaleImageForList(Control control, Image image, Color? transparentKey = null)
+        {
+            var factor = GetFactor(control);
+            if (Math.Abs(factor - 1) < 0.01f)
+                return image;
+            var source = new Bitmap(image);
+            var scaled = new Bitmap((int)Math.Round(image.Width * factor),
+                (int)Math.Round(image.Height * factor), PixelFormat.Format32bppArgb);
+            using (source)
+            using (var g = Graphics.FromImage(scaled))
+            {
+                if (transparentKey.HasValue)
+                    source.MakeTransparent(transparentKey.Value);
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.DrawImage(source, new Rectangle(Point.Empty, scaled.Size));
+            }
+            return scaled;
         }
 
         /// <summary>
