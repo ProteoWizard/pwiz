@@ -704,8 +704,10 @@ namespace ZedGraph
 		}
 
 		/// <summary>
-		/// Perform the click the operating system raises after a stationary press and
-		/// release at one point (the WinForms MouseClick event). A drag raises no click.
+		/// Raise the WinForms MouseClick event, which a stationary press and release at one
+		/// point produces and a drag does not. Windows raises it from within the mouse-up,
+		/// before MouseUp itself, so a caller composing a whole gesture out of these calls
+		/// does not reproduce that order exactly.
 		/// </summary>
 		public void PerformMouseClick( MouseEventArgs e )
 		{
