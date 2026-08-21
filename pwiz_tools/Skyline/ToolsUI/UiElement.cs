@@ -2287,7 +2287,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 foreach (var part in text.Trim().Trim('[', ']').Split(','))
                 {
-                    if (!TryEdge(part, out var edge))
+                    if (!TryConvertToDouble(part, out var edge))
                     {
                         edges.Clear();
                         break;
@@ -2299,7 +2299,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 foreach (var item in sequence)
                 {
-                    if (!TryEdge(item, out var edge))
+                    if (!TryConvertToDouble(item, out var edge))
                     {
                         edges.Clear();
                         break;
@@ -2318,22 +2318,22 @@ namespace pwiz.Skyline.ToolsUI
                 @"This action needs a four-element [left, top, right, bottom] array of graph data coordinates. The gesture goes down at left/top and up at right/bottom, so equal corners are a single click."));
         }
 
-        // One edge of a rectangle as a number, or false when the value is not one, so that bad input ends at
-        // the instruction above rather than as a FormatException. Convert.ToDouble alone will not do: it
-        // throws for text that is not a number, and reads a null as 0 without complaint.
-        private static bool TryEdge(object value, out double edge)
+        // A value as a number, or false when it is not one, so that bad input ends at the instruction above
+        // rather than as a FormatException. Convert.ToDouble alone will not do: it throws for text that is
+        // not a number, and reads a null as 0 without complaint.
+        private static bool TryConvertToDouble(object value, out double result)
         {
-            edge = 0;
+            result = 0;
             if (value == null)
                 return false;
             if (value is string text)
-                return double.TryParse(text.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out edge);
+                return double.TryParse(text.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out result);
             // A JSON null arrives as a token that converts to 0 quietly, but renders as empty text.
             if (string.IsNullOrEmpty(value.ToString()))
                 return false;
             try
             {
-                edge = Convert.ToDouble(value, CultureInfo.InvariantCulture);
+                result = Convert.ToDouble(value, CultureInfo.InvariantCulture);
                 return true;
             }
             catch (Exception e) when (e is FormatException || e is InvalidCastException || e is OverflowException)
