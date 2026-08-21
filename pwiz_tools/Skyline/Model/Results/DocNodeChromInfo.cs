@@ -1612,11 +1612,12 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            // TODO: This is not very strong equality, since all FileIds are equal
-            //       It would be better to check reference equality, but this would
-            //       break document equality tests across serialization/deserialization
-            //       At the momement, we rely on it being very unlikely that two
-            //       peaks from different files are exactly equal.
+            // All ChromFileInfoIds compare equal, so this contributes nothing on its own and the
+            // derived class's members do the real work. That is deliberate, not a shortcoming:
+            // Equals is content equality throughout Skyline, because a document saved to disk and
+            // read back must come out Equals to the original, and no reference comparison could
+            // satisfy that. We rely on it being very unlikely that two peaks from different files
+            // are exactly equal in every other member.
             return Equals(other.FileId, FileId);
         }
 
