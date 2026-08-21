@@ -1983,6 +1983,23 @@ namespace pwiz.SkylineTestFunctional
                 // says nothing about which and must be refused.
                 AssertEx.ThrowsException<ArgumentException>(() =>
                     server.SendText(settingsId, nameof(TextBox), @"25"));
+
+                // Nothing to type is an error, not a no-op reported as success: a value that is not a string
+                // arrives as its own text, so only a genuinely absent one lands here.
+                var excludePath = server.GetControls(settingsId).First(c => c.Name == @"textExcludeAAs").Path;
+                AssertEx.ThrowsException<ArgumentException>(() =>
+                    server.PerformAction(excludePath, @"send_text", null));
+
+                // A number types its digits rather than converting to a null string and doing nothing.
+                server.SetFormValue(settingsId, excludeLabel, string.Empty);
+                server.PerformAction(excludePath, @"send_text", 25);
+                AssertEx.AreEqual(@"25", server.GetFormValue(settingsId, excludeLabel),
+                    @"A non-string send_text value should type its own text.");
+
+                // A control that discards WM_CHAR says so rather than reporting that it typed.
+                var okPath = server.GetControls(settingsId).First(c => c.Name == @"btnOk").Path;
+                AssertEx.ThrowsException<ArgumentException>(() =>
+                    server.PerformAction(okPath, @"send_text", @"nope"));
             }
             finally
             {

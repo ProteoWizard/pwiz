@@ -688,8 +688,16 @@ namespace pwiz.Skyline.ToolsUI
         /// no reserved characters.</summary>
         public virtual void SendTextNow(string text)
         {
-            if (string.IsNullOrEmpty(text))
-                return;
+            // A window that does nothing with a character says so, rather than taking the text and reporting
+            // that it typed it. A button, a tab or a graph discards WM_CHAR; a text box, a combo box, a grid,
+            // a list and a tree each do something with it.
+            if (!(Control is TextBoxBase || Control is ComboBox || Control is DataGridView ||
+                  Control is ListControl || Control is TreeView))
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"The control '{0}' cannot be typed into: it is a {1}, which does nothing with a character. Use 'set_value' to give a control a value, or 'click' to press it.",
+                    Label ?? NullIfEmpty(Name) ?? ElementType.Name, ElementType.Name));
+            }
             var handle = Control.Handle;
             foreach (char c in text)
                 User32.SendMessage(handle, User32.WinMessageType.WM_CHAR, (IntPtr) c, IntPtr.Zero);
@@ -2262,6 +2270,18 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Converts any bare CR or LF to CRLF -- the line ending a multi-line TextBox uses for Enter.
+        // The text an action was given, which has to be there. A value that is not a string is its own text,
+        // so a JSON number arrives as its digits instead of converting to a null string - which would have
+        // the action do nothing and report that it had done it.
+        public static string ToRequiredText(object value, string verb)
+        {
+            var text = value as string ?? value?.ToString();
+            if (string.IsNullOrEmpty(text))
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Nothing to {0}. Pass the text or key as the action's value.", verb));
+            return text;
+        }
+
         // The text a paste puts in: what the caller passed, or the clipboard's own contents when it passed
         // nothing. A non-string value is its text, so a number pastes its digits rather than falling through
         // to the clipboard. Read with ClipboardEx rather than ClipboardHelper: a locked clipboard has to
