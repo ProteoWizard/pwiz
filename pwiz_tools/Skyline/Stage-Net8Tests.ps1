@@ -47,12 +47,49 @@ function Get-ProjectOutput([string] $project) {
     return Join-Path $skylineDir "$project\bin\$Configuration\$tfm"
 }
 
+# Warn when a project is about to be staged from output older than its own sources. Staging
+# happily copies whatever is on disk, so a project that was not rebuilt is staged silently - and
+# build.bat deliberately excludes TestPerf and TestTutorial from the standard build while this
+# script stages them by default, which makes that easy to hit.
+#
+# Note this does NOT catch a stale *dependency*. robocopy /XO below means "exclude older", so a
+# file whose source copy has an older timestamp than the staged one is skipped - which is how a
+# NuGet DLL, carrying the package's original timestamp, can lose to an older assembly already in
+# the staging directory and stay there through any number of re-stages.
+function Warn-IfOutputStale([string] $project, [string] $outputDir) {
+    $sourceDir = if ($project -eq 'Skyline') { $skylineDir } else { Join-Path $skylineDir $project }
+    if (-not (Test-Path $sourceDir)) { return }
+    # Skyline's directory contains the test projects as subdirectories; their sources are not its.
+    # Only Skyline needs this: its directory physically contains the test projects.
+    $siblings = @()
+    if ($project -eq 'Skyline') {
+        $siblings = $Projects | Where-Object { $_ -ne 'Skyline' } | ForEach-Object { Join-Path $skylineDir $_ }
+    }
+    $newestSource = Get-ChildItem -Path $sourceDir -Recurse -File -Include *.cs, *.resx, *.csproj -ErrorAction SilentlyContinue |
+        Where-Object {
+            $path = $_.FullName
+            if ($path -match '\\(bin|obj)\\') { return $false }
+            # For Skyline, drop anything under a sibling test project - those are not its sources.
+            -not ($siblings | Where-Object { $path.StartsWith($_, [System.StringComparison]::OrdinalIgnoreCase) })
+        } |
+        Sort-Object LastWriteTime | Select-Object -Last 1
+    if (-not $newestSource) { return }
+    $newestOutput = Get-ChildItem -Path $outputDir -File -Filter *.dll -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime | Select-Object -Last 1
+    if ($newestOutput -and $newestSource.LastWriteTime -gt $newestOutput.LastWriteTime) {
+        Write-Warning ("$project output looks stale: $($newestSource.Name) changed " +
+            "$($newestSource.LastWriteTime.ToString('MM-dd HH:mm')) but the newest built assembly is " +
+            "$($newestOutput.LastWriteTime.ToString('MM-dd HH:mm')). Staging it anyway - rebuild $project if that is not intended.")
+    }
+}
+
 foreach ($project in $Projects) {
     $src = Get-ProjectOutput $project
     if (-not (Test-Path $src)) {
         Write-Warning "Skipping $project - no output at $src (build it first)."
         continue
     }
+    Warn-IfOutputStale $project $src
     Write-Host "Staging $project  ($src)"
     # /E recurse (satellite resource dirs), /XO keep newest on identical shared deps,
     # /NP /NDL /NFL /NJH /NJS quiet. robocopy exit codes 0-7 are success.
