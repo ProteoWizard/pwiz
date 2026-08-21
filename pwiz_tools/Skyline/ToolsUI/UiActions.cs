@@ -390,11 +390,11 @@ namespace pwiz.Skyline.ToolsUI
         // them, and a form with a single graph resolves them without the caller naming the control.
         public static readonly UiFunction<Rectangle> GetGraphZoom = SimpleFunction<GraphElement, Rectangle>(
                 @"GetGraphZoom", e => e.GetZoom())
-            .Describe(new LlmInstruction(@"Get the region of DATA coordinates this graph is zoomed to, as [left, top, right, bottom] - the coordinates zoom_graph_to and click_graph take. The bottom edge is the x-axis line, so a click below it falls below the axis."));
+            .Describe(new LlmInstruction(@"Get the region of DATA coordinates this graph is zoomed to, as an object with left, top, right and bottom values. Those are the coordinates zoom_graph_to and click_graph take, but they take them as a [left, top, right, bottom] ARRAY, so build one from these values rather than passing this object back. The bottom edge is the x-axis line, so a click below it falls below the axis."));
 
         public static readonly UiAction ZoomGraphTo = SimpleAction<GraphElement, object>(
                 @"ZoomGraphTo", (e, bounds) => e.ZoomTo(UiValue.ToRectangle(bounds)))
-            .Describe(new LlmInstruction(@"Zoom this graph to a region of DATA coordinates. Returns the zoom actually applied, which the graph may clamp to the data range. An edge pair that is EQUAL asks for no zoom in that direction and leaves that axis untouched: equal left and right zoom only vertically, equal top and bottom only horizontally, and equal corners change nothing. A direction this graph lets the user neither zoom nor pan is ignored; the returned zoom shows what actually changed."),
+            .Describe(new LlmInstruction(@"Zoom this graph to a region of DATA coordinates. An edge pair that is EQUAL asks for no zoom in that direction and leaves that axis untouched: equal left and right zoom only vertically, equal top and bottom only horizontally, and equal corners change nothing. A direction this graph lets the user neither zoom nor pan is ignored, and the graph may clamp what it is given to the data range, so read the zoom back with get_graph_zoom to see what actually changed."),
                 new LlmInstruction(@"a [left, top, right, bottom] array of data coordinates; make one pair equal to leave that axis alone"));
 
         public static readonly UiAction ClickGraph = SimpleAction<GraphElement, object>(
