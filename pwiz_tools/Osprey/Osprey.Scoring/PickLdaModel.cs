@@ -23,6 +23,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using pwiz.Osprey.Core;
 
