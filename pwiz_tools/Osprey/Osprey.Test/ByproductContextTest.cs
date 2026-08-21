@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
@@ -332,6 +333,116 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(typeof(StubByproduct), ex.RequestedType);
             }
             Assert.AreEqual(1, producer.RehydrateCount);
+        }
+
+        /// <summary>
+        /// A DEFERRED milestone does its work on the first <c>Value</c> read, not when it is
+        /// published (issue #4597). PerFileRescore publishes <see cref="RescoredEntries"/>
+        /// that way because reaching the milestone after the streamed rescore means
+        /// re-reading every file's artifacts - whole-run join work at the end of a per-file
+        /// HPC task whose process exits there. Three things are pinned:
+        ///
+        /// <para>Publishing must not build. The DEBUG milestone-ordering guard inspects every
+        /// published <see cref="PerFileEntries"/>, so a guard that reached through
+        /// <c>Value</c> would make the DEBUG build pay the whole join at publish time - and
+        /// pay it before the rescore that fills the buffer has even run.</para>
+        ///
+        /// <para>Reading builds, exactly once. The build overlays reconciled parquets and
+        /// appends gap-fill rows; running it twice over one buffer would duplicate them.</para>
+        ///
+        /// <para>Not reading builds nothing. That is the whole point: a
+        /// <c>--task PerFileRescoring</c> worker skips the join because nothing pulled it.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestDeferredMilestoneBuildsOnFirstValueRead()
+        {
+            var ctx = ContextFor(new StubProducerTask(publishBeforeStop: false, exitCode: 0));
+            var buffer = BufferWithOneFile();
+            int builds = 0;
+            // Over a buffer that already carries an earlier milestone, which is the real
+            // pipeline shape: PerFileScoring -> FirstPassFDR -> PerFileRescore all publish over
+            // ONE list, and the DEBUG ordering guard runs on the second publish, not the first.
+            ctx.Publish(new CompactedEntries(buffer));
+            Assert.IsTrue(ctx.TryGet<CompactedEntries>(out _));
+            ctx.Publish(new RescoredEntries(buffer, () =>
+            {
+                builds++;
+                buffer[0].Value.Add(new FdrEntry());
+            }));
+            Assert.AreEqual(0, builds, @"Publishing a deferred milestone must not build it");
+
+            Assert.IsTrue(ctx.TryGet<RescoredEntries>(out var milestone));
+            Assert.AreEqual(0, builds, @"Holding the milestone token is not a pull");
+            Assert.AreSame(buffer, milestone.BufferIdentity);
+            Assert.AreEqual(0, builds, @"Reading the buffer's identity is not a pull either");
+
+            Assert.AreSame(buffer, milestone.Value);
+            Assert.AreEqual(1, builds);
+            Assert.AreEqual(1, buffer[0].Value.Count, @"The build fills the shared buffer in place");
+
+            var unused = milestone.Value;
+            Assert.AreEqual(1, builds, @"A second read must not re-run the build");
+            Assert.AreEqual(1, buffer[0].Value.Count);
+        }
+
+        /// <summary>
+        /// A build that THROWS stays thrown. The build refills survivor lists, then overlays
+        /// reconciled parquets and appends gap-fill rows, so a second attempt over the same
+        /// buffer would duplicate whatever the first one finished - and a reader who quietly
+        /// got the half-filled pool instead would write a blib from part of the run and report
+        /// a plausible wrong number. The failure is cached and re-thrown, and the partial work
+        /// is never resumed.
+        /// </summary>
+        [TestMethod]
+        public void TestDeferredMilestoneRethrowsAndDoesNotRebuildAfterFailure()
+        {
+            var buffer = BufferWithOneFile();
+            int builds = 0;
+            var milestone = new RescoredEntries(buffer, () =>
+            {
+                builds++;
+                buffer[0].Value.Add(new FdrEntry());   // the partial fill a retry must not repeat
+                throw new InvalidDataException(@"survivor refill failed");
+            });
+
+            for (int read = 0; read < 2; read++)
+            {
+                try
+                {
+                    var unused = milestone.Value;
+                    Assert.Fail(@"Expected the deferred build's failure to surface on read");
+                }
+                catch (InvalidDataException)
+                {
+                    // expected on BOTH reads: the exception is cached, not re-attempted
+                }
+            }
+            Assert.AreEqual(1, builds, @"A failed build must not be retried by the next reader");
+            Assert.AreEqual(1, buffer[0].Value.Count, @"and must not add to its own partial work");
+        }
+
+        /// <summary>
+        /// The undeferred constructor is the arm where the buffer already holds its
+        /// post-rescore state (the resident survivor pool, and both rehydrate paths): reading
+        /// it hands back the same list with nothing to run.
+        /// </summary>
+        [TestMethod]
+        public void TestUndeferredMilestoneReadsStraightThrough()
+        {
+            var buffer = BufferWithOneFile();
+            buffer[0].Value.Add(new FdrEntry());
+            var milestone = new RescoredEntries(buffer);
+            Assert.AreSame(buffer, milestone.Value);
+            Assert.AreSame(buffer, milestone.BufferIdentity);
+            Assert.AreEqual(1, milestone.Value[0].Value.Count);
+        }
+
+        private static List<KeyValuePair<string, List<FdrEntry>>> BufferWithOneFile()
+        {
+            return new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                new KeyValuePair<string, List<FdrEntry>>(@"file1", new List<FdrEntry>())
+            };
         }
     }
 }

@@ -227,8 +227,9 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 # invisible in a token audit. #4536 was exactly that until it landed - the rehydrate
 # published no survivor loader, so Stage6ResidentHandoffGuardError no-oped and nothing
 # asked for a token. #4486 was the standing example: the survivor buffer is rebuilt for
-# SecondPassFDR to read, so it is resident from the end of Stage 6 to the end of Stage 7
-# on EVERY path, and no guard covers that because it is not a resume or a mode - it is
+# SecondPassFDR to read, so it is resident for the whole of Stage 7 on EVERY path (#4597
+# moved the rebuild onto SecondPassFDR's own pull, which changes WHO pays for it and not
+# how big it is), and no guard covers that because it is not a resume or a mode - it is
 # what Stage 7 takes as input. It is still uncovered, and now MEASURED: 0.196 GB/file
 # live, post-GC, which is not what fails at scale. What did was the --task SecondPassFDR
 # pre-compaction RELOAD at 2.07 GB/file (~186 GB projected at 82 files), streamed by
@@ -257,7 +258,7 @@ $knownResidentGaps = @(
     @{
         Issue = '#4486'
         Token = 'NONE'
-        Path  = 'Stage 6 rebuilds the whole-run survivor buffer for SecondPassFDR to read; resident from the end of Stage 6 to the end of Stage 7.'
+        Path  = 'SecondPassFDR pulling RescoredEntries rebuilds the whole-run survivor buffer it reads (#4597 moved the build off the end of Stage 6, which does not shrink it); resident for the whole of Stage 7.'
         # One model, stated explicitly: a fixed library term plus a per-file slope, both from
         # the 4/8/16-file A/B. Quoting a straight-through 82-file endpoint next to that rig's
         # marginal slope produced three numbers no single model reproduced (24.43/82 = 0.298,
