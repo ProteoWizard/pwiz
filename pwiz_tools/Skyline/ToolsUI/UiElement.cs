@@ -2264,11 +2264,12 @@ namespace pwiz.Skyline.ToolsUI
         // Converts any bare CR or LF to CRLF -- the line ending a multi-line TextBox uses for Enter.
         // The text a paste puts in: what the caller passed, or the clipboard's own contents when it passed
         // nothing. A non-string value is its text, so a number pastes its digits rather than falling through
-        // to the clipboard. The owner is only used to place the message an unreadable clipboard raises.
-        public static string ToPasteText(IClipboardElement element, object value)
+        // to the clipboard. Read with ClipboardEx rather than ClipboardHelper: a locked clipboard has to
+        // reach the caller as an error, where ClipboardHelper would put up a message box nobody is there
+        // to dismiss.
+        public static string ToPasteText(object value)
         {
-            return value as string ?? value?.ToString() ??
-                   ClipboardHelper.GetClipboardText((element as ControlElement)?.Control);
+            return value as string ?? value?.ToString() ?? ClipboardEx.GetText();
         }
 
         public static string NormalizeNewlines(string value) =>
