@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -826,6 +827,13 @@ public static class SkylineTools
             fileCall: (c, fp) => SavedToPath("Graph image", c.GetGraphImage(formId, fp))));
     }
 
+    // A graph coordinate as text a caller can hand straight back to skyline_zoom_graph_to or
+    // skyline_click_graph, which read one as invariant text whatever the machine's culture is.
+    private static string Coordinate(double value)
+    {
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+
     [McpServerTool(Name = "skyline_get_graph_zoom"),
      Description("Get the region of DATA coordinates a graph is currently zoomed to - the X and Y axis " +
         "ranges of its first pane. Returns Left/Right (the X-axis range) and Top/Bottom (the Y-axis range, " +
@@ -839,11 +847,16 @@ public static class SkylineTools
         return Invoke(connection =>
         {
             var r = connection.GetGraphZoom(formId);
+            if (r == null)
+                return $"No zoom reported for {formId}.";
+            // Invariant, because these go back out to skyline_zoom_graph_to and skyline_click_graph, which
+            // read a coordinate as invariant text. Formatted in the machine's own culture, a decimal comma
+            // would come back as a different number or as none at all.
             return "Edge\tData value\n" +
-                   $"Left (X min)\t{r.Left}\n" +
-                   $"Right (X max)\t{r.Right}\n" +
-                   $"Top (Y max)\t{r.Top}\n" +
-                   $"Bottom (Y min)\t{r.Bottom}";
+                   $"Left (X min)\t{Coordinate(r.Left)}\n" +
+                   $"Right (X max)\t{Coordinate(r.Right)}\n" +
+                   $"Top (Y max)\t{Coordinate(r.Top)}\n" +
+                   $"Bottom (Y min)\t{Coordinate(r.Bottom)}";
         });
     }
 
@@ -866,7 +879,10 @@ public static class SkylineTools
         {
             var r = connection.ZoomGraphTo(formId,
                 new SkylineTool.Rectangle { Left = left, Top = top, Right = right, Bottom = bottom });
-            return $"Zoomed to Left={r.Left}, Top={r.Top}, Right={r.Right}, Bottom={r.Bottom}.";
+            if (r == null)
+                return $"No zoom reported for {formId}.";
+            return $"Zoomed to Left={Coordinate(r.Left)}, Top={Coordinate(r.Top)}, " +
+                   $"Right={Coordinate(r.Right)}, Bottom={Coordinate(r.Bottom)}.";
         });
     }
 
