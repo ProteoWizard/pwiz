@@ -670,15 +670,23 @@ namespace pwiz.Osprey.Tasks
             // worker-supplied RescoreBundle, Stage 6 runs the rescore and refills one file at a
             // time from the source above. Having built the bundle from our OWN sidecars, there
             // is no rescore to run at all: PerFileRescore self-gates to a no-op (didPlan is
-            // false and RescoreBundle is null) and refills the WHOLE buffer immediately, so
-            // releasing here would buy a window no consumer uses and cost a full extra parquet
-            // + sidecar pass over every file to undo.
+            // false and RescoreBundle is null) and its refill is the whole of the deferred
+            // pool build, so releasing here would cost a full extra parquet + sidecar pass
+            // over every file to undo.
+            //
+            // Since #4597 that refill happens on SecondPassFDR's pull rather than at the end
+            // of Stage 6, so releasing here WOULD buy a real window on this arm - the width
+            // of the rescore that does not happen. Left alone deliberately: the arm's own
+            // point is that there is no rescore to bound, and paying a whole-run reload to
+            // free a buffer Stage 7 immediately rebuilds is the trade #4526 was careful not
+            // to make. Reconsider only alongside #4486, which is what makes Stage 7's
+            // whole-run input smaller rather than moving it.
             //
             // The buffer is therefore still resident from here to the end of Stage 7 on that
-            // arm - as it is on EVERY arm, because Stage 6 deliberately rebuilds it for
-            // SecondPassFDR to read (PerFileRescoreTask's end-of-loop rebuild). That residency
-            // is a property of Stage 7's whole-run input, not of resuming, and it is #4486's
-            // to remove. This issue bounds the RESCORE window, which is the part Stage 6 owns.
+            // arm - as it is on EVERY arm, because that whole-run pool is what Stage 7 takes
+            // as input, however it is built. That residency is a property of Stage 7's input,
+            // not of resuming, and it is #4486's to remove. This issue bounds the RESCORE
+            // window, which is the part Stage 6 owns.
             bool rescoreWillStream = !builtOwnBundle && !config.StopAfterStage5;
             // Same call Run makes. streamingAvailable is "this run will stream", not "a loader
             // exists": passing the latter would refuse an OSPREY_STAGE6_STREAM_SURVIVORS=0
