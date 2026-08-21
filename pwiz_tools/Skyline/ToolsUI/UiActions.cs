@@ -20,6 +20,7 @@
 
 using System;
 using System.Linq;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
@@ -211,7 +212,37 @@ namespace pwiz.Skyline.ToolsUI
                 if (typed == null)
                     throw new ArgumentException(LlmInstruction.Format(
                         @"The action '{0}' does not apply to this control.", SnakeCaseName));
-                return _invoke(typed, argument is TArg arg ? arg : default(TArg));
+                return _invoke(typed, ToArgument(argument));
+            }
+
+            // The action's value, or an error when it is of the wrong kind. A mismatch used to become
+            // default(TArg), which for a string is null, so an action given a number quietly did nothing and
+            // reported that it had done it. A null argument still means "not given" and is passed on, since
+            // some actions have something to do without one.
+            private TArg ToArgument(object argument)
+            {
+                switch (argument)
+                {
+                    case null:
+                        return default;
+                    case TArg typed:
+                        return typed;
+                    default:
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"The action '{0}' takes {1}, but was given {2}.",
+                            SnakeCaseName, DescribeType(typeof(TArg)), DescribeType(argument.GetType())));
+                }
+            }
+
+            private static string DescribeType(Type type)
+            {
+                if (type == typeof(string))
+                    return @"text";
+                if (type == typeof(bool))
+                    return @"true or false";
+                if (type == typeof(double) || type == typeof(int))
+                    return @"a number";
+                return type.Name;
             }
         }
 
@@ -304,13 +335,13 @@ namespace pwiz.Skyline.ToolsUI
                 @"SetValue", (e, value) => { e.SetValueNow(UiElement.ConvertValue(value)); return null; })
             .Describe(new LlmInstruction(@"Set this control's value."), new LlmInstruction(@"the new value -- a bool, a number, or a string"));
 
-        public static readonly UiAction SendText = SimpleAction<IKeyboardElement, object>(
-                @"SendText", (e, value) => { e.SendTextNow(UiValue.ToRequiredText(value, @"type")); return null; })
+        public static readonly UiAction SendText = SimpleAction<IKeyboardElement, string>(
+                @"SendText", (e, text) => { e.SendTextNow(UiValue.RequireText(text, @"type")); return null; })
             .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus. Named for what it does: it delivers the CHARACTERS, it does not simulate key presses - for a key use 'send_key_stroke', and to paste use 'paste' (which takes the text, so it needs no clipboard). Do NOT type into the Targets tree: it forwards each character through the FOCUSED window, so the characters land in whatever application is in front, arrive out of order, and leave the tree stuck editing a label. Use 'rename_node' to set a node's text."),
                 new LlmInstruction(@"the text to type, taken literally"));
 
-        public static readonly UiAction SendKeyStroke = SimpleAction<IKeyboardElement, object>(
-                @"SendKeyStroke", (e, value) => { e.SendKeyStrokeNow(UiValue.ToRequiredText(value, @"press")); return null; })
+        public static readonly UiAction SendKeyStroke = SimpleAction<IKeyboardElement, string>(
+                @"SendKeyStroke", (e, keyStroke) => { e.SendKeyStrokeNow(UiValue.RequireText(keyStroke, @"press")); return null; })
             .Describe(new LlmInstruction(@"Press one key on this control, whether or not it has the focus - e.g. to accept a choice in a popup, or to paste with 'Ctrl+V' where the form's own handler does the pasting. Raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather than by a handler (Backspace editing text, an arrow moving a plain list's selection) will not take effect."),
                 new LlmInstruction(@"the key with any modifiers, '+'-separated, e.g. ""Down"", ""Enter"" or ""Ctrl+V"""));
 
@@ -387,8 +418,8 @@ namespace pwiz.Skyline.ToolsUI
 
         // Pastes the given text into a control that can paste (text box, grid, Targets tree, main window) --
         // for the tutorial paste steps, without touching the clipboard.
-        public static readonly UiAction Paste = SimpleAction<IClipboardElement, object>(@"Paste",
-                (e, value) => { e.PasteNow(UiValue.ToPasteText(value)); return null; })
+        public static readonly UiAction Paste = SimpleAction<IClipboardElement, string>(@"Paste",
+                (e, text) => { e.PasteNow(text ?? ClipboardEx.GetText()); return null; })
             .Describe(new LlmInstruction(@"Paste text into this element (a text box, a grid, the Targets tree, or the main Skyline window) without using the clipboard. Pass no value to paste what IS on the clipboard instead."),
                 new LlmInstruction(@"the text to paste, or nothing to paste the clipboard's own contents"));
 

@@ -200,10 +200,8 @@ namespace pwiz.SkylineTestFunctional
                 WaitForConditionUI(() => pasteDlg.PeptideRowCount > 0, @"An empty paste should take the clipboard");
                 AssertEx.Contains(server.GetGridText(pasteFormId, @"gridViewPeptides"), PASTE_PEPTIDE);
 
-                RunUI(() => pasteDlg.ClearRows());
-                server.PerformAction(gridPath, @"paste", 25);
-                WaitForConditionUI(() => pasteDlg.PeptideRowCount > 0, @"A number should paste as its digits");
-                AssertEx.Contains(server.GetGridText(pasteFormId, @"gridViewPeptides"), @"25");
+                AssertEx.ThrowsException<ArgumentException>(() =>
+                    server.PerformAction(gridPath, @"paste", 25));
             }
             finally
             {
@@ -1990,11 +1988,10 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.ThrowsException<ArgumentException>(() =>
                     server.PerformAction(excludePath, @"send_text", null));
 
-                // A number types its digits rather than converting to a null string and doing nothing.
-                server.SetFormValue(settingsId, excludeLabel, string.Empty);
-                server.PerformAction(excludePath, @"send_text", 25);
-                AssertEx.AreEqual(@"25", server.GetFormValue(settingsId, excludeLabel),
-                    @"A non-string send_text value should type its own text.");
+                // A value of the wrong kind is an error naming what the action takes, where it used to become
+                // a null string and leave the action doing nothing.
+                AssertEx.ThrowsException<ArgumentException>(() =>
+                    server.PerformAction(excludePath, @"send_text", 25));
 
                 // A control that discards WM_CHAR says so rather than reporting that it typed.
                 var okPath = server.GetControls(settingsId).First(c => c.Name == @"btnOk").Path;

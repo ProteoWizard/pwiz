@@ -2270,26 +2270,14 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Converts any bare CR or LF to CRLF -- the line ending a multi-line TextBox uses for Enter.
-        // The text an action was given, which has to be there. A value that is not a string is its own text,
-        // so a JSON number arrives as its digits instead of converting to a null string - which would have
-        // the action do nothing and report that it had done it.
-        public static string ToRequiredText(object value, string verb)
+        // The text an action was given, which has to be there: an action told to type or press nothing has
+        // not done what was asked and must not report that it has.
+        public static string RequireText(string text, string verb)
         {
-            var text = value as string ?? value?.ToString();
             if (string.IsNullOrEmpty(text))
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Nothing to {0}. Pass the text or key as the action's value.", verb));
             return text;
-        }
-
-        // The text a paste puts in: what the caller passed, or the clipboard's own contents when it passed
-        // nothing. A non-string value is its text, so a number pastes its digits rather than falling through
-        // to the clipboard. Read with ClipboardEx rather than ClipboardHelper: a locked clipboard has to
-        // reach the caller as an error, where ClipboardHelper would put up a message box nobody is there
-        // to dismiss.
-        public static string ToPasteText(object value)
-        {
-            return value as string ?? value?.ToString() ?? ClipboardEx.GetText();
         }
 
         public static string NormalizeNewlines(string value) =>
