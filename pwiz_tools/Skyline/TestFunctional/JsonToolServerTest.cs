@@ -190,6 +190,20 @@ namespace pwiz.SkylineTestFunctional
                 string grid = server.GetGridText(pasteFormId, @"gridViewPeptides");
                 AssertEx.Contains(grid, PASTE_PEPTIDE);
                 AssertEx.Contains(grid, PASTE_PROTEIN);
+
+                // The paste action with no value pastes what is ON the clipboard, which is how a caller asks
+                // for the clipboard without having to read it first. A value that is not a string is its own
+                // text, so a number pastes its digits rather than falling through to the clipboard.
+                var gridPath = server.GetControls(pasteFormId).First(c => c.Name == @"gridViewPeptides").Path;
+                RunUI(() => pasteDlg.ClearRows());
+                server.PerformAction(gridPath, @"paste", null);
+                WaitForConditionUI(() => pasteDlg.PeptideRowCount > 0, @"An empty paste should take the clipboard");
+                AssertEx.Contains(server.GetGridText(pasteFormId, @"gridViewPeptides"), PASTE_PEPTIDE);
+
+                RunUI(() => pasteDlg.ClearRows());
+                server.PerformAction(gridPath, @"paste", 25);
+                WaitForConditionUI(() => pasteDlg.PeptideRowCount > 0, @"A number should paste as its digits");
+                AssertEx.Contains(server.GetGridText(pasteFormId, @"gridViewPeptides"), @"25");
             }
             finally
             {

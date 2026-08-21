@@ -2262,6 +2262,15 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Converts any bare CR or LF to CRLF -- the line ending a multi-line TextBox uses for Enter.
+        // The text a paste puts in: what the caller passed, or the clipboard's own contents when it passed
+        // nothing. A non-string value is its text, so a number pastes its digits rather than falling through
+        // to the clipboard. The owner is only used to place the message an unreadable clipboard raises.
+        public static string ToPasteText(IClipboardElement element, object value)
+        {
+            return value as string ?? value?.ToString() ??
+                   ClipboardHelper.GetClipboardText((element as ControlElement)?.Control);
+        }
+
         public static string NormalizeNewlines(string value) =>
             value == null ? null : Regex.Replace(value, @"\r\n?|\n", "\r\n");
 

@@ -387,8 +387,10 @@ namespace pwiz.Skyline.ToolsUI
 
         // Pastes the given text into a control that can paste (text box, grid, Targets tree, main window) --
         // for the tutorial paste steps, without touching the clipboard.
-        public static readonly UiAction Paste = SimpleAction<IClipboardElement, string>(@"Paste", (e, text) => { e.PasteNow(text); return null; })
-            .Describe(new LlmInstruction(@"Paste text into this element (a text box, a grid, the Targets tree, or the main Skyline window) without using the clipboard."), new LlmInstruction(@"the text to paste"));
+        public static readonly UiAction Paste = SimpleAction<IClipboardElement, object>(@"Paste",
+                (e, value) => { e.PasteNow(UiValue.ToPasteText(e, value)); return null; })
+            .Describe(new LlmInstruction(@"Paste text into this element (a text box, a grid, the Targets tree, or the main Skyline window) without using the clipboard. Pass no value to paste what IS on the clipboard instead."),
+                new LlmInstruction(@"the text to paste, or nothing to paste the clipboard's own contents"));
 
         // Selects everything in a control that can paste -- e.g. before a paste, to replace the contents.
         public static readonly UiAction SelectAll = SimpleAction<IClipboardElement>(@"SelectAll", e => { e.SelectAllNow(); return null; })
