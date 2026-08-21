@@ -19,7 +19,9 @@
 param(
     [ValidateSet('Debug', 'Release')] [string] $Configuration = 'Debug',
     [string] $StagingDir = '',
-    [string[]] $Projects = @('Skyline', 'CommonTest', 'Test', 'TestData', 'TestFunctional', 'TestConnected', 'TestRunner'),
+    # TestTutorial and TestPerf are in SkylineTester's TEST_DLLS list, so omitting them here left
+    # the Tutorials tab (and the perf tests) empty even after a successful staging run.
+    [string[]] $Projects = @('Skyline', 'CommonTest', 'Test', 'TestData', 'TestFunctional', 'TestConnected', 'TestRunner', 'TestTutorial', 'TestPerf'),
     # Bundle a portable .NET 8 Desktop runtime into <staging>\dotnet so the Docker workers can run
     # the net8 apphost without any runtime installed in the container (pointed at via DOTNET_ROOT).
     [switch] $NoRuntime,

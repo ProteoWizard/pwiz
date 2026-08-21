@@ -748,8 +748,12 @@ namespace SkylineTester
                 return null;
             try
             {
+                // Check BOTH configurations: Stage-Net8Tests.ps1 defaults to -Configuration
+                // Debug, and looking only under "Release" made a correctly staged Debug build
+                // invisible. The slot then came back null, GetTestInfos fell back to ExeDir
+                // (which holds no test DLLs), and every tab rendered empty with no hint why.
                 var candidates = Directory.GetDirectories(binDir, "staging-net8*")
-                    .Select(d => Path.Combine(d, "Release"))
+                    .SelectMany(d => new[] { Path.Combine(d, "Release"), Path.Combine(d, "Debug") })
                     .Where(d => File.Exists(Path.Combine(d, "TestRunner.exe")))
                     .ToList();
                 // Prefer the canonical "staging-net8" (the full default staging) over workflow-specific
@@ -1294,7 +1298,8 @@ namespace SkylineTester
         {
             try
             {
-                Process.Start(DocumentationLink);
+                // UseShellExecute is required for a URL on net8 (defaults false there, true on net472).
+                Process.Start(new ProcessStartInfo(DocumentationLink) { UseShellExecute = true });
             }
             catch (Exception)
             {

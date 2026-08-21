@@ -16,7 +16,7 @@
        would have forced NHibernate, SQLite, WebView2 and ZedGraph onto all of them. -->
   <PropertyGroup>
     <ProjectGuid>{6C0B2B6E-4C39-4F5A-9E2D-7A1B3C8D5E40}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

@@ -162,9 +162,48 @@ namespace pwiz.Skyline
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
+        private static bool _defaultFontSet;
+
+        /// <summary>
+        /// Pins the WinForms default font to the one .NET Framework used.
+        ///
+        /// .NET Core 3.0 changed <see cref="Control.DefaultFont"/> from Microsoft Sans Serif
+        /// 8.25pt to Segoe UI 9pt. Nearly every Skyline form uses AutoScaleMode.Font, so that
+        /// one change silently resizes all of them - which moves graph chart areas, changes how
+        /// many labels a plot can fit (see LabelLayoutTest), and would alter essentially every
+        /// recorded tutorial screenshot. Pinning the font keeps the UI identical across the
+        /// net472 -> net8 port, so the port is not entangled with a UI redesign.
+        ///
+        /// Adopting a modern font is a deliberate UI change to make on its own terms, alongside
+        /// DPI awareness and a re-recording of the tutorial screenshots.
+        ///
+        /// Must run before the first window is created. The flag is because a functional test
+        /// process re-enters Main once per test, and SetDefaultFont throws after the first
+        /// window exists.
+        /// </summary>
+        public static void SetDefaultFont()
+        {
+            if (_defaultFontSet)
+                return;
+            _defaultFontSet = true;
+            try
+            {
+                Application.SetDefaultFont(new Font(@"Microsoft Sans Serif", 8.25f));
+            }
+            catch (InvalidOperationException)
+            {
+                // Reachable only when something in this process already created a window - a test
+                // host that ran other tests first, for example. The font cannot be changed at that
+                // point, and throwing would fail an unrelated test with a baffling message. The
+                // test runner calls this at process start so the harness never lands here.
+            }
+        }
+
         [STAThread]
         public static int Main(string[] args = null)
         {
+            SetDefaultFont();
+
             if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID
                 Settings.Default.InstallationId = Guid.NewGuid().ToString();
 

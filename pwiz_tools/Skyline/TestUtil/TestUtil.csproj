@@ -7,7 +7,7 @@
        Assert / TestContext types referenced by AbstractUnitTest, AssertEx. -->
   <PropertyGroup>
     <ProjectGuid>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

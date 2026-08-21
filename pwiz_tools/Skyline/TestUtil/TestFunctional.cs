@@ -25,6 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -2349,6 +2350,20 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected void RunFunctionalTest(string defaultUiMode = UiModes.PROTEOMIC)
         {
+            // WinForms requires an STA thread: creating a TreeView calls SetAcceptDrops, which
+            // makes OLE calls and throws "DragDrop registration did not succeed" from MTA.
+            // The console harness and Skyline both mark Main [STAThread], so harness runs never
+            // hit this. Visual Studio / ReSharper used to match, because VSTest defaults
+            // ExecutionThreadApartmentState to STA on .NET Framework - but that setting is not
+            // supported on net8, so the test host thread is MTA and every functional test failed
+            // there with the DragDrop error. Marshal onto an STA thread instead of requiring
+            // every test class to be attributed (MSTest 3.2 has no [STATestClass] for net8).
+            if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+            {
+                RunOnStaThread(() => RunFunctionalTest(defaultUiMode));
+                return;
+            }
+
             if (IsPerfTest && !RunPerfTests)
             {
                 return; // Don't want to run this lengthy test right now
@@ -2395,6 +2410,32 @@ namespace pwiz.SkylineTestUtil
                 //Log<AbstractFunctionalTest>.Fail(@"Functional test did not complete");
                 Assert.Fail("Functional test did not complete");
             }
+        }
+
+        /// <summary>
+        /// Runs <paramref name="action"/> on a dedicated STA thread and blocks until it finishes,
+        /// rethrowing any exception with its original stack trace intact so the test framework
+        /// still reports the real failure rather than a wrapper.
+        /// </summary>
+        private static void RunOnStaThread(Action action)
+        {
+            Exception pending = null;
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    action();
+                }
+                catch (Exception x)
+                {
+                    pending = x;
+                }
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+            if (pending != null)
+                ExceptionDispatchInfo.Capture(pending).Throw();
         }
 
         private void RunFunctionalTestAttempt(string defaultUiMode)
