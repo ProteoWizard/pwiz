@@ -42,15 +42,12 @@
   </compatibility>
   <application xmlns="urn:schemas-microsoft-com:asm.v3">
 	  <windowsSettings>
-		  <!-- 
-	        Indicates that the application is DPI-aware and will not be automatically scaled by Windows at higher
-            DPIs. Windows Presentation Foundation (WPF) applications are automatically DPI-aware and do not need 
-            to opt in. Windows Forms applications targeting .NET Framework 4.6 that opt into this setting, should 
-             also set the 'EnableWindowsFormsHighDpiAutoResizing' setting to 'true' in their app.config. 
-	      -->
 		  <!--
-            <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware> 
+	        System-DPI-aware: the app renders at the primary monitor's scale factor instead of being
+            bitmap-stretched from 96 DPI. Requires 'EnableWindowsFormsHighDpiAutoResizing' in app.config
+            so WinForms rescales layouts. Per-monitor V2 is deferred to the .NET 8 port (issue #4599).
 	      -->
+		  <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware>
 		  <!-- 
 		    Makes the application long-path aware. See https://docs.microsoft.com/windows/win32/fileio/maximum-file-path-limitation  
 		    https://learn.microsoft.com/en-us/archive/blogs/jeremykuhne/net-4-6-2-and-long-paths-on-windows-10 

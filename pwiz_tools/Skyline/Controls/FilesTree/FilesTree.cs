@@ -27,6 +27,7 @@ using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
@@ -74,30 +75,41 @@ namespace pwiz.Skyline.Controls.FilesTree
             _timerUpdate = new System.Windows.Forms.Timer { Interval = UPDATE_DELAY_MS };
             _timerUpdate.Tick += OnUpdateTimer;
 
-            // Icons size is 16x16
+            // Icons are 16x16 at 96 DPI; AddNodeImage pre-scales them to the DPI-sized
+            // ImageList.ImageSize (issue #4599).
             ImageList = new ImageList
             {
                 TransparentColor = Color.Magenta,
-                ColorDepth = ColorDepth.Depth32Bit 
+                ColorDepth = ColorDepth.Depth32Bit
             };
+            if (DpiUtil.GetFactor(this) > 1)
+            {
+                ImageList.TransparentColor = Color.Transparent;
+                ImageList.ImageSize = DpiUtil.ScaleSize(this, ImageList.ImageSize);
+            }
 
-            ImageList.Images.Add(Resources.Blank);              // 1bpp
-            ImageList.Images.Add(Resources.Folder);             // 32bpp
-            ImageList.Images.Add(Resources.FolderMissing);      // 32bpp
-            ImageList.Images.Add(Resources.File);               // 8bpp
-            ImageList.Images.Add(Resources.FileMissing);        // 32bpp
-            ImageList.Images.Add(Resources.Replicate);          // 24bpp
-            ImageList.Images.Add(Resources.ReplicateMissing);   // 24bpp // CONSIDER: improve icon?
-            ImageList.Images.Add(Resources.DataProcessing);     // 8bpp
-            ImageList.Images.Add(Resources.PeptideLib);         // 4bpp
-            ImageList.Images.Add(Resources.Skyline_FilesTree);  // 24bpp
-            ImageList.Images.Add(Resources.AuditLog);           // 32bpp
-            ImageList.Images.Add(Resources.CacheFile);          // 32bpp
-            ImageList.Images.Add(Resources.ViewFile);           // 32bpp
-            ImageList.Images.Add(Resources.ProtDB);             // 32bpp
-            ImageList.Images.Add(Resources.ImsDB);              // 32bpp
-            ImageList.Images.Add(Resources.OptDB);              // 32bpp
-            ImageList.Images.Add(Resources.IrtCalculator);      // 32bpp
+            AddNodeImage(Resources.Blank);              // 1bpp
+            AddNodeImage(Resources.Folder);             // 32bpp
+            AddNodeImage(Resources.FolderMissing);      // 32bpp
+            AddNodeImage(Resources.File);               // 8bpp
+            AddNodeImage(Resources.FileMissing);        // 32bpp
+            AddNodeImage(Resources.Replicate);          // 24bpp
+            AddNodeImage(Resources.ReplicateMissing);   // 24bpp // CONSIDER: improve icon?
+            AddNodeImage(Resources.DataProcessing);     // 8bpp
+            AddNodeImage(Resources.PeptideLib);         // 4bpp
+            AddNodeImage(Resources.Skyline_FilesTree);  // 24bpp
+            AddNodeImage(Resources.AuditLog);           // 32bpp
+            AddNodeImage(Resources.CacheFile);          // 32bpp
+            AddNodeImage(Resources.ViewFile);           // 32bpp
+            AddNodeImage(Resources.ProtDB);             // 32bpp
+            AddNodeImage(Resources.ImsDB);              // 32bpp
+            AddNodeImage(Resources.OptDB);              // 32bpp
+            AddNodeImage(Resources.IrtCalculator);      // 32bpp
+        }
+
+        private void AddNodeImage(Image image)
+        {
+            ImageList.Images.Add(DpiUtil.ScaleImageForList(this, image, Color.Magenta));
         }
 
         [Browsable(false)]

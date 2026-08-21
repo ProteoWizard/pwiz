@@ -46,6 +46,12 @@ namespace pwiz.Skyline.Controls
         // Width of images associated with the tree
         protected internal const int IMG_WIDTH = 16;
 
+        // Per-DPI versions of the 96-DPI layout constants above (issue #4599). The image
+        // width must agree with the DPI-scaled ImageList.ImageSize set by subclasses.
+        protected internal int DashLength { get { return DpiUtil.Scale(this, HORZ_DASH_LENGTH); } }
+        protected internal int TextPadding { get { return DpiUtil.Scale(this, PADDING); } }
+        protected internal int ImgWidth { get { return DpiUtil.Scale(this, IMG_WIDTH); } }
+
         private TreeNodeMS _anchorNode;
         private bool _inRightClick;
 
@@ -65,7 +71,7 @@ namespace pwiz.Skyline.Controls
 
             DashBrush = new TextureBrush(Resources.Dash) { WrapMode = WrapMode.Tile };
             SetStyle(ControlStyles.UserPaint, true);
-            ItemHeight = DEFAULT_ITEM_HEIGHT;
+            ItemHeight = DpiUtil.Scale(this, DEFAULT_ITEM_HEIGHT);
 
             TreeStateRestorer = new TreeViewMSStateRestorer(this);
             AutoExpandSingleNodes = true;
@@ -322,8 +328,18 @@ namespace pwiz.Skyline.Controls
 
         public virtual void OnTextZoomChanged()
         {
-            ItemHeight = (int)(DEFAULT_ITEM_HEIGHT * Settings.Default.TextZoom);
+            // The font is in points, which scale with DPI on their own; the item height
+            // is in pixels and needs both the zoom and the DPI factor.
+            ItemHeight = DpiUtil.Scale(this, (int)(DEFAULT_ITEM_HEIGHT * Settings.Default.TextZoom));
             Font = new Font(Font.FontFamily, (float)(DEFAULT_FONT_SIZE * Settings.Default.TextZoom));
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            // Designer files assign ItemHeight in 96-DPI pixels after the constructor runs;
+            // reapply the DPI- and zoom-scaled height once the handle exists.
+            ItemHeight = DpiUtil.Scale(this, (int)(DEFAULT_ITEM_HEIGHT * Settings.Default.TextZoom));
         }
 
         private void InvalidateChangedNodes(IEnumerable<TreeNodeMS> nodes, ICollection<TreeNodeMS> unchangedNodes)
@@ -566,12 +582,13 @@ namespace pwiz.Skyline.Controls
             // Finds the X coordinate of the indent for this node, accounting for horizontal scrolling.
             get
             {
-                int treeIndent = TreeViewMS.HORZ_DASH_LENGTH + TreeViewMS.PADDING;
+                var treeView = TreeViewMS;
+                int treeIndent = treeView.DashLength + treeView.TextPadding;
                 // Always indent for the node image, whether it has one or not
-                treeIndent += TreeViewMS.IMG_WIDTH;
+                treeIndent += treeView.ImgWidth;
                 // Only indent for the state image, if it has one
                 if (StateImageIndex != -1)
-                    treeIndent += TreeViewMS.IMG_WIDTH;
+                    treeIndent += treeView.ImgWidth;
                 return BoundsMS.X - treeIndent;
             }
         }
@@ -580,7 +597,7 @@ namespace pwiz.Skyline.Controls
         {
             get
             {
-                return XIndent - (Level*TreeView.Indent + 11);
+                return XIndent - (Level*TreeView.Indent + TreeViewMS.DashLength);
             }
         }
 
@@ -600,7 +617,7 @@ namespace pwiz.Skyline.Controls
             // Horizontal line.
             dashBrush.TranslateTransform(Level % 2 + HorizScrollDiff, 0);
             g.FillRectangle(dashBrush, XIndent, bounds.Top + bounds.Height / 2,
-                TreeViewMS.HORZ_DASH_LENGTH, 1);
+                treeView.DashLength, 1);
             // Vertical lines corresponding to the horizontal level of this node.
             dashBrush.TranslateTransform(-Level % 2 - HorizScrollDiff, 0);
             // Check if this is the Root.
@@ -644,23 +661,31 @@ namespace pwiz.Skyline.Controls
             if (Nodes.Count > 0)
             {
                 Image expandCollapse = IsExpanded ? Resources.Collapse : Resources.Expand;
-                g.DrawImage(expandCollapse, XIndent - expandCollapse.Width/2,
-                    bounds.Top + (BoundsMS.Height - expandCollapse.Height + 1) / 2);
+                // Scale the 96-DPI expander glyphs to the rendering DPI so they keep
+                // pace with the DPI-scaled text and row height.
+                int expandWidth = DpiUtil.Scale(treeView, expandCollapse.Width);
+                int expandHeight = DpiUtil.Scale(treeView, expandCollapse.Height);
+                g.DrawImage(expandCollapse, XIndent - expandWidth/2,
+                    bounds.Top + (bounds.Height - expandHeight + 1) / 2, expandWidth, expandHeight);
             }
 
-            // Draw images associated with the node.
-            int imgLocX = XIndent + TreeViewMS.HORZ_DASH_LENGTH;
-            const int imgWidth = TreeViewMS.IMG_WIDTH, imgHeight = TreeViewMS.IMG_WIDTH;
+            // Draw images associated with the node. The ImageList images are pre-scaled
+            // to the DPI-sized ImageList.ImageSize, which agrees with ImgWidth.
+            int imgLocX = XIndent + treeView.DashLength;
+            int imgWidth = treeView.ImgWidth, imgHeight = treeView.ImgWidth;
+            // Draw into explicit destination rectangles: DrawImageUnscaled honors the
+            // image's DPI metadata, so bitmaps created in a high-DPI process would be
+            // re-inflated past the layout's imgWidth and overlap their neighbors.
             if (StateImageIndex != -1)
             {
                 Image stateImg = TreeView.StateImageList.Images[StateImageIndex];
-                g.DrawImageUnscaled(stateImg, imgLocX, bounds.Top + (bounds.Height - imgHeight) / 2, imgWidth, imgHeight);
+                g.DrawImage(stateImg, new Rectangle(imgLocX, bounds.Top + (bounds.Height - imgHeight) / 2, imgWidth, imgHeight));
                 imgLocX += imgWidth;
             }
             if (ImageIndex != -1)
             {
                 Image nodeImg = TreeView.ImageList.Images[ImageIndex];
-                g.DrawImageUnscaled(nodeImg, imgLocX, bounds.Top + (bounds.Height - imgHeight) / 2, imgWidth, imgHeight);
+                g.DrawImage(nodeImg, new Rectangle(imgLocX, bounds.Top + (bounds.Height - imgHeight) / 2, imgWidth, imgHeight));
             }
 
             DrawTextMS(g);
