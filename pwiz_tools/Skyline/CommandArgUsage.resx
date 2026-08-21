@@ -360,6 +360,9 @@
   <data name="_remove_before" xml:space="preserve">
     <value>Remove all results from the open document with an acquired time before the given date.</value>
   </data>
+  <data name="_reorder_replicates" xml:space="preserve">
+    <value>Reorder results replicates using a UTF-8 text file containing one existing replicate name per line. Listed replicates are placed first; unlisted replicates retain their relative order.</value>
+  </data>
   <data name="_report_add" xml:space="preserve">
     <value>Add reports from a saved report template file to the running program.</value>
   </data>
@@ -411,8 +414,8 @@
   <data name="CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library" xml:space="preserve">
     <value>Creating an ion mobility library</value>
   </data>
-  <data name="CommandArgs_GROUP_REMOVE_Removing_results_replicates" xml:space="preserve">
-    <value>Removing results replicates</value>
+  <data name="CommandArgs_GROUP_MANAGE_REPLICATES_Managing_results_replicates" xml:space="preserve">
+    <value>Managing results replicates</value>
   </data>
   <data name="CommandArgs_GROUP_IMPORT_DOC_Importing_other_Skyline_documents" xml:space="preserve">
     <value>Importing other Skyline documents</value>

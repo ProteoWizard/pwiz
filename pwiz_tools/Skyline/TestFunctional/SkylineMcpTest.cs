@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
         // shipped stamped 26.1.1.077 while its own info.properties Requires line
         // demanded 26.1.1.083 - a ZIP that fails its own stated requirement.)
         // When you rebuild SkylineAiConnector.zip, update this to match.
-        private const string EXPECTED_ZIP_VERSION = "26.1.1.218";
+        private const string EXPECTED_ZIP_VERSION = "26.1.1.232";
 
         // Short FASTA for a quick import test
         private const string TEST_FASTA =
@@ -76,6 +76,9 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
         protected override void DoTest()
         {
             // 1. Test tool installation from ZIP
+            // 0. The tool schema has to describe the actions that actually exist
+            ValidatePerformActionDescription();
+
             TestToolInstallation();
 
             // 2. Test MCP server end-to-end with blank document
@@ -240,6 +243,31 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
                 names.Add(m.Groups[1].Value);
             Assert.IsTrue(names.Count > 0, @"No [McpServerTool(Name = ...)] attributes parsed from SkylineTools.cs");
             return names;
+        }
+
+        /// <summary>
+        /// The action names skyline_perform_action's own [Description] advertises must be exactly the actions
+        /// that exist. That description is an attribute, so it cannot be built from
+        /// <see cref="UiActions.AllActions"/> at compile time and has to be written out by hand - which is
+        /// the whole reason to check it here rather than trust a comment asking the next person to keep two
+        /// lists in step. An action missing from it is invisible to the model reading the tool schema, even
+        /// though ByName would resolve it.
+        /// </summary>
+        private void ValidatePerformActionDescription()
+        {
+            string sourcePath = TestContext.GetProjectDirectory(
+                @"Executables\Tools\SkylineMcp\SkylineMcpServer\Tools\SkylineTools.cs");
+            Assert.IsTrue(File.Exists(sourcePath), @"SkylineTools.cs source not found at " + sourcePath);
+            var match = Regex.Match(File.ReadAllText(sourcePath), @"\[Description\(""Action: ([^""]+)""\)\] string action");
+            Assert.IsTrue(match.Success,
+                @"Could not find skyline_perform_action's action [Description] in SkylineTools.cs");
+
+            var advertised = match.Groups[1].Value.Split(',').Select(a => a.Trim()).ToArray();
+            var actual = UiActions.AllActions.Select(a => a.SnakeCaseName).ToArray();
+            AssertEx.AreEqual(string.Join(@", ", actual), string.Join(@", ", advertised),
+                TextUtil.LineSeparate(
+                    @"skyline_perform_action's action description does not match UiActions.AllActions.",
+                    @"Update the [Description] in SkylineTools.cs (and rebuild the tool ZIP) to list every action, in AllActions order."));
         }
 
         private void ValidateMcpProtocol(Process mcpProcess, JsonToolServer server)
@@ -657,7 +685,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
         private static McpCallToolResult CallGetGraphImage(Process mcpProcess, StreamWriter stdin,
             StreamReader stdout, ref int id, string graphId, string returnFormat)
         {
-            var arguments = new JObject { ["graphId"] = graphId };
+            var arguments = new JObject { ["formId"] = graphId };
             if (returnFormat != null)
                 arguments["returnFormat"] = returnFormat;
             return McpToolCallResult(mcpProcess, stdin, stdout, ref id, "skyline_get_graph_image", arguments);

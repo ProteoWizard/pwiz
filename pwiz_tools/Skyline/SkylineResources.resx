@@ -1277,4 +1277,19 @@ Do you want to save the document now?</value>
   <data name="CommandLine_ApplySettings_Settings___0___applied_to_document_" xml:space="preserve">
     <value>Settings '{0}' applied to document.</value>
   </data>
+  <data name="CommandLine_ReorderReplicates_Error__Could_not_read_replicate_order_file__0____1_" xml:space="preserve">
+    <value>The --reorder-replicates option could not read replicate order file '{0}': {1}</value>
+  </data>
+  <data name="CommandLine_ReorderReplicates_Error__The_replicate_order_file_does_not_contain_any_replicate_names_" xml:space="preserve">
+    <value>The --reorder-replicates order file '{0}' does not contain any replicate names.</value>
+  </data>
+  <data name="CommandLine_ReorderReplicates_Error__The_replicate_name__0__appears_more_than_once_in_the_order_file_" xml:space="preserve">
+    <value>The replicate name '{0}' appears more than once in the --reorder-replicates order file '{1}'.</value>
+  </data>
+  <data name="CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replicates_" xml:space="preserve">
+    <value>The --reorder-replicates option cannot be used because the document does not contain results replicates.</value>
+  </data>
+  <data name="CommandLine_ReorderReplicates_Error__The_replicate__0__was_not_found_in_the_document_" xml:space="preserve">
+    <value>The replicate '{0}' from the --reorder-replicates order file '{1}' was not found in the document.</value>
+  </data>
 </root>

@@ -27,6 +27,7 @@ using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey
 {
@@ -123,6 +124,10 @@ namespace pwiz.Osprey
                 // main.rs wiring. SelectedTask is kept so ValidateArgs can enforce
                 // the task<->input-type contract and name the typed task.
                 config.SelectedTask = selectedTask;
+                // --task ModelDiagnostics IS the request for the report; without the flag the
+                // run would recompute the pass-2 view and write nothing, a silent no-op.
+                if (selectedTask == HpcTask.ModelDiagnostics)
+                    config.ModelDiagnostics = true;
                 config.NoJoin = selectedTask == HpcTask.PerFileScoring || selectedTask == HpcTask.PerFileRescore;
                 config.StopAfterStage5 = selectedTask == HpcTask.FirstPassFdr;
                 config.ExpectReconciledInput = selectedTask == HpcTask.SecondPassFdr;
@@ -239,6 +244,15 @@ namespace pwiz.Osprey
                     LogInfo("Output: per-file .spectra.bin (no scoring; --output and --library are not used)");
                 else if (config.NoJoin && !fromInputScores)
                     LogInfo("Output: per-file .scores.parquet (next to each input file)");
+                else if (config.DiagnosticsOnly)
+                {
+                    // --task ModelDiagnostics regenerates the report for a COMPLETED run and
+                    // declares no other output; naming the blib here reads as "the blib is being
+                    // rebuilt", and an operator who then sees its timestamp unchanged concludes
+                    // the run failed. Same reason SpectraCache has its own branch above.
+                    LogInfo(string.Format("Output: {0} (report only; no other artifact is written)",
+                        ModelDiagnosticsReport.ReportPath(config)));
+                }
                 else
                     LogInfo(string.Format("Output: {0}", config.OutputBlib));
                 LogInfo(string.Format("Resolution: {0}", config.ResolutionMode));
@@ -277,6 +291,31 @@ namespace pwiz.Osprey
                         OspreyEnvironment.PASS2_QVALUE_TRANSFER_COMPETE,
                         OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
                     return 1;
+                }
+                // A token that names nothing admits nothing, so the run proceeds - but say so
+                // (#4486). 'hpc-merge' was retired when --task SecondPassFDR started streaming
+                // its reconciled-input load, making it the first previously-VALID token to
+                // become invalid, and committed automation still passes it. Silence there is
+                // the bad outcome: the operator believes they granted an allowance, and if the
+                // run later needs a real one the guard says only "does not name this path",
+                // which reads as a typo rather than a retirement. A warning, not an error -
+                // unlike OSPREY_PASS2_QVALUE above, a stale allowance cannot change any
+                // reported number, it can only fail to permit something.
+                if (OspreyEnvironment.AllowUnfixedResidentUnrecognized)
+                {
+                    // Name the UNRECOGNIZED tokens, not the whole value: the flag is a comma
+                    // separated list and NamesResidentPath tests each token independently, so
+                    // 'projection-off,hpc-merge' still grants projection-off. Condemning the
+                    // whole value would push the operator to rewrite or unset a variable whose
+                    // valid half the run still needs, and the run then aborts on a guard the
+                    // warning said was not engaged.
+                    LogWarning(string.Format(
+                        "OSPREY_ALLOW_UNFIXED_RESIDENT contains unrecognized token(s) that grant " +
+                        "nothing: {0}. Recognized: {1}. ('hpc-merge' was retired - the " +
+                        "--task SecondPassFDR reconciled-input load streams and needs no allowance.) " +
+                        "Any recognized token in the same value is still honored.",
+                        OspreyEnvironment.UnrecognizedResidentTokens,
+                        string.Join(", ", ResidentPaths.KNOWN_UNFIXED)));
                 }
                 LogInfo(string.Format("Protein FDR: {0:P1}", config.EffectiveProteinFdr));
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
@@ -355,9 +394,17 @@ namespace pwiz.Osprey
                 task = HpcTask.SpectraCache;
                 return null;
             }
+            if (string.Equals(taskName, "ModelDiagnostics", StringComparison.OrdinalIgnoreCase))
+            {
+                // The selector IS the request for the report, so it implies the flag rather than
+                // requiring both. Without --model-diagnostics the task would run the pass-2
+                // compute and write nothing at all, which reads as a silent no-op.
+                task = HpcTask.ModelDiagnostics;
+                return null;
+            }
             task = default;
             return string.Format(
-                "--task: unknown task '{0}'. Valid tasks: SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR.",
+                "--task: unknown task '{0}'. Valid tasks: SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR, ModelDiagnostics.",
                 taskName);
         }
 
@@ -381,6 +428,7 @@ namespace pwiz.Osprey
                 case HpcTask.PerFileRescore: return "PerFileRescoring";
                 case HpcTask.SecondPassFdr: return "SecondPassFDR";
                 case HpcTask.SpectraCache: return "SpectraCache";
+                case HpcTask.ModelDiagnostics: return "ModelDiagnostics";
                 default: return task.ToString();
             }
         }

@@ -193,10 +193,17 @@ namespace pwiz.Osprey.Tasks
             // The Stage 6 handoff arm joins them: the streamed and resident arms are supposed
             // to write byte-identical reconciled parquets, and an in-place A/B that silently
             // adopted the other arm's outputs would report that identity without testing it.
+            // The sidecar format version belongs here too, not only in FirstPassFdrTask: this
+            // task WRITES the 2nd-pass sidecar, so a record-layout change (v3 -> v4) invalidates
+            // its output exactly as it invalidates the 1st-pass one. Without it, FirstPassFDR
+            // re-ran and rewrote v4 while this task and SecondPassFDR considered themselves
+            // valid against v3 files.
             return base.ValidityKey(ctx)
+                + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + OspreyEnvironment.Stage6StreamSurvivorsValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx);
         }
@@ -255,7 +262,12 @@ namespace pwiz.Osprey.Tasks
             {
                 foreach (var inputFile in ctx.Config.InputFiles)
                 {
-                    if (File.Exists(FdrScoresSidecar.Pass2Path(inputFile)))
+                    // Presence is not readability. A bare File.Exists cannot see a version, so a
+                    // sidecar left by a build before the v3 -> v4 record change satisfied this
+                    // gate and made the WHOLE Stage 6 rescore a no-op - the run then finished
+                    // green carrying 1st-pass q-values into the picked-protein FDR and the .blib.
+                    if (FdrScoresSidecar.IsCurrentFormat(FdrScoresSidecar.Pass2Path(inputFile),
+                                                         FdrScoresSidecar.Pass.SecondPass))
                     {
                         anyPass2Present = true;
                         break;
@@ -335,7 +347,15 @@ namespace pwiz.Osprey.Tasks
             // than keeping it live through the loop - is the whole point: it is resident
             // from here to the end of Stage 7 instead of for the entire rescore. Identical
             // to what the resume path reconstructs, which regression.ps1 mode 2 gates.
-            if (survivorLoader != null)
+            //
+            // Skipped when SecondPassFDR will not run in THIS process, because it is the only
+            // reader of RescoredEntries and the rebuild exists solely to serve it. That is the
+            // ordinary case for a --task PerFileRescoring worker (NoJoin, so
+            // SecondPassFdrTask.IsIncluded is false), where the block would otherwise re-read
+            // every .scores.parquet and 1st-pass sidecar and then re-read the
+            // .scores-reconciled.parquet this task has just written - a full extra pass per
+            // worker, per file, for a buffer the process exits without touching.
+            if (survivorLoader != null && SecondPassFdrWillRun(ctx))
             {
                 if (!MaterializeAllSurvivors(survivorLoader, ctx))
                     return false;
@@ -459,7 +479,7 @@ namespace pwiz.Osprey.Tasks
             if (bundle != null)
             {
                 // First-pass protein FDR BEFORE compaction. The 1st-pass FDR
-                // sidecar v3 already carries RunProteinQvalue from the original
+                // sidecar v3 already carries ExperimentProteinQvalue from the original
                 // straight-through pipeline, but Rust pipeline.rs:4292 (gated by
                 // `!can_skip_fdr || config.expect_reconciled_input`) recomputes
                 // it inline in the --task SecondPassFDR path. The recompute uses the
@@ -468,8 +488,8 @@ namespace pwiz.Osprey.Tasks
                 // upstream rebuild has nudged peptide q-values or score values
                 // even at the ULP level). RescoreCompaction below now retains the
                 // persisted global first-pass base_id set and does NOT consult
-                // RunProteinQvalue, so this recompute no longer affects the
-                // compacted set; it is kept to hold RunProteinQvalue byte-consistent
+                // ExperimentProteinQvalue, so this recompute no longer affects the
+                // compacted set; it is kept to hold ExperimentProteinQvalue byte-consistent
                 // with the straight-through pipeline for the downstream 2nd-pass
                 // protein FDR and cross-impl parity (before recon-v3 read the
                 // persisted set, omitting it diverged the post-compaction set from
@@ -478,7 +498,43 @@ namespace pwiz.Osprey.Tasks
                 // Runs unconditionally (not gated on --protein-fdr), matching Rust where
                 // first-pass protein FDR is gated only on !can_skip_fdr || expect_reconciled_input
                 // (pipeline.rs:4529). Mirrors Rust pipeline.rs:4292-4358.
-                if (bundle.PerFileEntries.Count > 0)
+                //
+                // SKIPPED when the bundle arrives ALREADY COMPACTED (#4486). The streaming
+                // hydrate compacts each file as it loads - RescoreHydration's
+                // stubs.RemoveAll(...) runs before perFileEntries.Add(...) - so on that path
+                // "BEFORE compaction" above is no longer true and this call would recompute
+                // over survivors only.
+                //
+                // The reason to skip is the SHAPE of that subset, not a measured defect. The
+                // retained set is driven by which TARGETS passed, and a target and its paired
+                // decoy share a base_id, so retaining a base_id retains both. That drops the
+                // high-scoring decoys whose own targets did not pass - precisely the ones that
+                // would compete near the threshold - which biases any FDR recomputed on the
+                // survivors OPTIMISTIC. Subsetting without that bias needs a composite-score
+                // cutoff admitting targets AND decoys above it plus their pairs, which this
+                // pool is not. So do not run an FDR over it.
+                //
+                // Two things this comment previously asserted are MEASURED FALSE (#4486), and
+                // must not be restored:
+                //   * That recomputing here over the compacted pool drives protein q
+                //     anti-conservatively low. A/B on StellarGenDecoyEntrap: recompute over the
+                //     compacted pool vs over the uncompacted pool is BYTE-IDENTICAL across all
+                //     260,419 records. This statistic is insensitive to the bias above (its
+                //     decoy side comes from q-gated detected peptides either way), so the skip
+                //     is a conservative choice, not a bug fix. It moves 740 records (0.28%)
+                //     upward and changes no output.
+                //   * That the 1st-pass sidecar's ExperimentProteinQvalue is "what the straight-through
+                //     pipeline computed". It is not: the join node's value differs from
+                //     straight-through for 12.46% of records (1.57% at 82 files), always lower.
+                //     That divergence is PRE-EXISTING - master's routing differs by 12.74% - and
+                //     is tracked separately in #4553, which also covers the regression.ps1 gap
+                //     that lets it pass green (mode 3 compares the blib, never these sidecars).
+                //
+                // PreCompactionTallies is the same "was this pre-compacted" signal
+                // RescoreCompaction.Apply keys its own invariant on, so the two cannot
+                // disagree about which path they are on.
+                bool preCompacted = bundle.PreCompactionTallies != null;
+                if (bundle.PerFileEntries.Count > 0 && !preCompacted)
                 {
                     var fullLibrary = ctx.Get<FullLibrary>().Value;
                     // Silent (logInfo: null) -- the rehydration recompute runs
@@ -488,9 +544,19 @@ namespace pwiz.Osprey.Tasks
                         bundle.PerFileEntries, fullLibrary, ctx.Config, null);
                 }
                 var stats = RescoreCompaction.Apply(bundle);
+                // On the streaming hydrate stats.EntriesBefore EQUALS EntriesAfter by
+                // construction - RescoreCompaction sums an already-compacted pool and makes
+                // "removes nothing" a hard invariant - so reporting it raw prints
+                // "N -> N entries" where ~350 M stubs were actually reduced, which is
+                // indistinguishable from a broken retain set. TotalPreCompactionStubs is the
+                // real figure on that path, and FirstPassFdrTask reads it for the same
+                // reason (#4486).
+                long entriesBefore = preCompacted
+                    ? bundle.TotalPreCompactionStubs
+                    : stats.EntriesBefore;
                 ctx.LogInfo(string.Format(
                     @"--task SecondPassFDR compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
-                    stats.EntriesBefore, stats.EntriesAfter,
+                    entriesBefore, stats.EntriesAfter,
                     stats.FirstPassBaseIds, stats.DroppedActions));
             }
             return true;
@@ -1636,6 +1702,23 @@ namespace pwiz.Osprey.Tasks
             if (!OspreyEnvironment.Stage6StreamSurvivors)
                 return null;
             return ctx.TryGet<FirstPassSurvivorSource>(out var source) ? source?.Value : null;
+        }
+
+        /// <summary>
+        /// True when <see cref="SecondPassFdrTask"/> is part of THIS process's pipeline, i.e.
+        /// when the <c>RescoredEntries</c> milestone will actually be read. Asked of the task
+        /// itself rather than re-derived from the config, so the answer cannot drift from
+        /// <see cref="OspreyTask.IsIncluded"/> - a second copy of that truth table is how a
+        /// worker ends up doing whole-run work nothing in the process consumes.
+        /// </summary>
+        private static bool SecondPassFdrWillRun(PipelineContext ctx)
+        {
+            foreach (var task in ctx.Tasks)
+            {
+                if (task is SecondPassFdrTask)
+                    return task.IsIncluded(ctx);
+            }
+            return false;
         }
 
         /// <summary>

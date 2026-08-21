@@ -214,6 +214,11 @@ namespace pwiz.Osprey.FDR
                 out peps, out runPrecursorQvalues, out runPeptideQvalues,
                 out expPrecursorQvalues, out expPeptideQvalues, applyExperimentAgg);
 
+            // The score the experiment competitions above ranked each entry on (sidecar v4,
+            // issue #4522), from the same effScores selection they used.
+            var expAggByEntryId = PercolatorQValues.ComputeExperimentAggregateScoreMap(
+                finalScores, labels, entryIds, applyExperimentAgg);
+
             var results = new List<PercolatorResult>(n);
             for (int i = 0; i < n; i++)
             {
@@ -224,7 +229,9 @@ namespace pwiz.Osprey.FDR
                     RunPeptideQvalue = runPeptideQvalues[i],
                     ExperimentPrecursorQvalue = expPrecursorQvalues[i],
                     ExperimentPeptideQvalue = expPeptideQvalues[i],
-                    Pep = peps[i]
+                    Pep = peps[i],
+                    ExperimentAggregateScore = expAggByEntryId.TryGetValue(entryIds[i], out double eav)
+                        ? eav : finalScores[i]
                 });
             }
 
@@ -423,12 +430,20 @@ namespace pwiz.Osprey.FDR
                 if (kvp.Value.Count > 0)
                     nonEmptyFiles++;
             bool isSingleFile = nonEmptyFiles <= 1;
-            Dictionary<uint, double> expPrecByBaseId = isSingleFile
+            Dictionary<uint, double> expPrecByWinnerId = isSingleFile
                 ? null : PercolatorQValues.ComputeExperimentPrecursorQMap(
                     finalScores, labels, entryIds, applyExperimentAgg);
             Dictionary<string, double> expPeptByPeptide = isSingleFile
                 ? null : PercolatorQValues.ComputeExperimentPeptideQMap(
                     finalScores, labels, entryIds, peptides, applyExperimentAgg);
+
+            // The score those experiment competitions ranked each entry on (sidecar v4, issue
+            // #4522), persisted beside the q-values they produced. Built even on the
+            // single-file shortcut: there the experiment scope IS the run scope, so the
+            // aggregate is the entry's max over its own rows -- which is still not the per-row
+            // Score, because a precursor carries several pre-compaction rows per file.
+            var expAggByEntryId = PercolatorQValues.ComputeExperimentAggregateScoreMap(
+                finalScores, labels, entryIds, applyExperimentAgg);
 
             // Best-of-runs monotonicity floors (issue #4390): the min-over-runs combined run q
             // that ClampExperimentQToBestRunFlat floors experiment q up to, keyed by EntryId and
@@ -484,7 +499,7 @@ namespace pwiz.Osprey.FDR
                     // shortcut), floored up to the entry's min-over-runs combined run q.
                     double ep = isSingleFile
                         ? rp
-                        : (expPrecByBaseId.TryGetValue(entryIds[g] & PercolatorEntry.BASE_ID_MASK, out double epv)
+                        : (expPrecByWinnerId.TryGetValue(entryIds[g], out double epv)
                             ? epv : 1.0);
                     if (minRunBothByEntryId.TryGetValue(entryIds[g], out double floorPrec) &&
                         floorPrec > ep)
@@ -504,9 +519,12 @@ namespace pwiz.Osprey.FDR
 
                     double pep = pepByWinnerIdx.TryGetValue(g, out double pv) ? pv : 1.0;
 
+                    double ea = expAggByEntryId.TryGetValue(entryIds[g], out double eav)
+                        ? eav : finalScores[g];
+
                     projRows[r] = projRows[r].WithScore(finalScores[g]);
                     sink.Accept(fileIdx, r, projRows[r].EntryId, projRows[r].IsDecoy,
-                        projRows[r].Charge, pept, finalScores[g],
+                        projRows[r].Charge, pept, finalScores[g], ea,
                         new FdrQValues(rp, rpe, ep, epe, pep));
                 }
                 wgi += count;
@@ -532,7 +550,6 @@ namespace pwiz.Osprey.FDR
             public readonly uint ParquetIndex;
             public readonly double CoelutionSum;
             public readonly string Peptide;
-
             public FirstPassDedupRow(int g, string fileName, uint entryId, byte charge, bool isDecoy,
                 uint parquetIndex, double coelutionSum, string peptide)
             {
@@ -614,6 +631,18 @@ namespace pwiz.Osprey.FDR
             // (byte-identical to Features[0] on the 1st pass), so no feature load is needed here.
             var bestTarget = new Dictionary<uint, FirstPassDedupRow>();
             var bestDecoy = new Dictionary<uint, FirstPassDedupRow>();
+            // Run bookkeeping for the reservoir, allocated only when it is on so the default-off
+            // arm keeps exactly the dictionaries, and the memory, it has always had.
+            var runPick = OspreyEnvironment.TrainPickRun ? new Dictionary<uint, PercolatorSampling.RunPickState>() : null;
+            // Which observation represents a precursor. Logged when it is NOT the default,
+            // because nothing else in the output would say which population trained the model.
+            bool pickRun = OspreyEnvironment.TrainPickRun;
+            if (!pickRun)
+            {
+                logInfo(
+                    @"[TRAIN] OSPREY_TRAIN_PICK_RUN=0: each precursor's training row is its BEST " +
+                    @"observation across runs, not a uniform sample of them (pre-26.1 behaviour)");
+            }
             int g = 0;
             int nInputTargets = 0, nInputDecoys = 0;
             // This pass streams every file's parquet rows before the [PATH] line below, so it is a
@@ -637,14 +666,59 @@ namespace pwiz.Osprey.FDR
                     var map = isDecoy ? bestDecoy : bestTarget;
                     if (map.TryGetValue(baseId, out FirstPassDedupRow existing))
                     {
-                        if (coelutionSum > existing.CoelutionSum)
+                        bool replace;
+                        if (pickRun)
+                        {
+                            // Reservoir of size one over RUNS - not over rows. Pass 1 is
+                            // PRE-COMPACTION, so a precursor carries several candidate-peak rows
+                            // within one file; drawing per row would both weight a run by how many
+                            // candidates it produced AND leave a RANDOM candidate as the training
+                            // row instead of that run's best peak.
+                            uint seenKey = baseId | (isDecoy ? 0x80000000u : 0u);
+                            PercolatorSampling.RunPickState state = runPick[seenKey];
+                            if (f == state.LastRun)
+                            {
+                                // Another candidate peak from the run already drawn for: resolve it
+                                // by score, so the surviving row is this run's BEST peak.
+                                replace = state.HolderIsCurrentRun && coelutionSum > existing.CoelutionSum;
+                            }
+                            else
+                            {
+                                uint runs = state.RunsSeen + 1u;
+                                // The DRAW takes the decoy bit too. BASE_ID_MASK clears the high
+                                // bit, so drawing on the masked base_id would make a target and its
+                                // paired decoy decide identically at every k and land on the same
+                                // run for essentially every precursor.
+                                replace = ReservoirTakesSlot(seenKey, runs, percConfig.Seed);
+                                state.RunsSeen = runs;
+                                state.LastRun = f;
+                                state.HolderIsCurrentRun = replace;
+                                runPick[seenKey] = state;
+                            }
+                        }
+                        else
+                        {
+                            replace = coelutionSum > existing.CoelutionSum;
+                        }
+                        if (replace)
+                        {
                             map[baseId] = new FirstPassDedupRow(
-                                g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum, buffer.Peptides[r]);
+                                g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum,
+                                buffer.Peptides[r]);
+                        }
                     }
                     else
                     {
                         map[baseId] = new FirstPassDedupRow(
                             g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum, buffer.Peptides[r]);
+                        if (pickRun)
+                        {
+                            uint seenKey = baseId | (isDecoy ? 0x80000000u : 0u);
+                            runPick[seenKey] = new PercolatorSampling.RunPickState
+                            {
+                                RunsSeen = 1u, LastRun = f, HolderIsCurrentRun = true
+                            };
+                        }
                     }
                     if (isDecoy) nInputDecoys++; else nInputTargets++;
                     g++;
@@ -859,10 +933,15 @@ namespace pwiz.Osprey.FDR
             // matching ScoreProjectionAndComputeFdrInPlace exactly.
             var pepByWinnerIdx = streamingQ.BuildPepWinnerMap();
             bool isSingleFile = nonEmptyFiles <= 1;
-            Dictionary<uint, double> expPrecByBaseId = isSingleFile
+            Dictionary<uint, double> expPrecByWinnerId = isSingleFile
                 ? null : streamingQ.BuildExperimentPrecursorQMap();
             Dictionary<string, double> expPeptByPeptide = isSingleFile
                 ? null : streamingQ.BuildExperimentPeptideQMap();
+
+            // The score those competitions ranked each entry on (sidecar v4, issue #4522).
+            // Built unconditionally -- see ScoreProjectionAndComputeFdrInPlace for why the
+            // single-file shortcut does NOT apply to the aggregate.
+            var expAggByEntryId = streamingQ.BuildExperimentAggregateScoreMap();
 
             // ---- Pass 2: re-score + assign the 5 q-values + stream to the sink ----
             // Progress-reported (log-only) like Pass 1 so the second streaming pass over all rows
@@ -899,7 +978,7 @@ namespace pwiz.Osprey.FDR
 
                     double ep = isSingleFile
                         ? rp
-                        : (expPrecByBaseId.TryGetValue(fEntryIds[r] & PercolatorEntry.BASE_ID_MASK, out double epv) ? epv : 1.0);
+                        : (expPrecByWinnerId.TryGetValue(fEntryIds[r], out double epv) ? epv : 1.0);
                     if (minRunBothByEntryId.TryGetValue(fEntryIds[r], out double floorPrec) && floorPrec > ep)
                         ep = floorPrec;
 
@@ -913,7 +992,10 @@ namespace pwiz.Osprey.FDR
 
                     double pep = pepByWinnerIdx.TryGetValue(gEmit + r, out double pv) ? pv : 1.0;
 
-                    sink.Accept(f, r, fEntryIds[r], fLabels[r], fCharges[r], pept, fScores[r],
+                    double ea = expAggByEntryId.TryGetValue(fEntryIds[r], out double eav)
+                        ? eav : fScores[r];
+
+                    sink.Accept(f, r, fEntryIds[r], fLabels[r], fCharges[r], pept, fScores[r], ea,
                         new FdrQValues(rp, rpe, ep, epe, pep));
                     emitProgress.Report(gEmit + r + 1);
                 }
@@ -921,6 +1003,39 @@ namespace pwiz.Osprey.FDR
             }
             sink.Finish(logInfo);
             return false;
+        }
+
+        /// <summary>
+        /// Reservoir decision for the default training selection: does the
+        /// <paramref name="seen"/>-th run this precursor appears in take its training slot? True
+        /// with probability 1/seen, which leaves every run the precursor actually appears in
+        /// equally likely to be the survivor, however few runs contain it.
+        ///
+        /// Deterministic in <paramref name="baseId"/>, <paramref name="seen"/> and the training
+        /// seed rather than drawn from a shared RNG. That makes the decision independent of how
+        /// the ingest is SCHEDULED - thread interleaving cannot move it, as a shared RNG's draw
+        /// order would - and reproducible across re-runs. It does not make the winner independent
+        /// of file ORDER: the surviving ordinal is fixed, so which run holds that ordinal follows
+        /// the arrival sequence. Reproducibility therefore rests on the input file list being
+        /// ordered, which it is.
+        ///
+        /// Mixing is the SplitMix64 finalizer: the low bits of a raw base_id are far from uniform
+        /// and comparing them directly would skew the draw.
+        /// </summary>
+        internal static bool ReservoirTakesSlot(uint baseId, uint seen, ulong seed)
+        {
+            if (seen <= 1)
+                return true;
+            // Wrapping is the point here - this is a hash mixer, not a quantity - so the
+            // multiplications are marked unchecked rather than left to look like an oversight.
+            unchecked
+            {
+                ulong x = baseId + seed * 0x9E3779B97F4A7C15UL + seen * 0xD1B54A32D192ED03UL;
+                x = (x ^ (x >> 30)) * 0xBF58476D1CE4E5B9UL;
+                x = (x ^ (x >> 27)) * 0x94D049BB133111EBUL;
+                x ^= x >> 31;
+                return x % seen == 0;
+            }
         }
 
         /// <summary>

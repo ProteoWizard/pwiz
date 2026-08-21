@@ -379,6 +379,16 @@ namespace pwiz.Osprey.Core
         public HpcTask? SelectedTask { get; set; }
 
         /// <summary>
+        /// True under <c>--task ModelDiagnostics</c>: recompute the pass-2 view and write ONLY
+        /// the report, suppressing the .blib, the protein/summary reports and the 2nd-pass FDR
+        /// sidecars. The point is to be able to re-judge a diagnostics change on a completed
+        /// large cohort without disturbing - or waiting for - the results it already produced.
+        /// Every suppressed artifact is one this run would otherwise REWRITE with the same
+        /// content it already holds, so skipping them costs nothing but the write.
+        /// </summary>
+        public bool DiagnosticsOnly => SelectedTask == HpcTask.ModelDiagnostics;
+
+        /// <summary>
         /// Shallow clone for per-file ProcessFile() calls. The pipeline
         /// mutates a few fields (notably <see cref="FragmentTolerance"/>
         /// after MS2 calibration); cloning at the top of ProcessFile
@@ -428,7 +438,15 @@ namespace pwiz.Osprey.Core
         // them, which is why it needs no library and publishes no byproducts.
         // Appended rather than ordered first so the existing members keep their
         // ordinal values.
-        SpectraCache
+        SpectraCache,
+        // Regenerate ONLY the --model-diagnostics HTML for a COMPLETED analysis, from that
+        // run's own outputs. Like SpectraCache this is not one of the four HPC fan-out nodes:
+        // it runs the canonical pipeline so Stages 1-5 rehydrate from their valid stamps, then
+        // lets SecondPassFDR compute the pass-2 view while suppressing every artifact write
+        // except the report. Exists because judging a diagnostics change on a large cohort
+        // otherwise means re-running the whole search - 7 hours on the 82-file SEA-AD set -
+        // or accepting a stale page written by an older build.
+        ModelDiagnostics
     }
 
     /// <summary>

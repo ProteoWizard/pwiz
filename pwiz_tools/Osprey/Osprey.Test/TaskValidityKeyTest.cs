@@ -21,9 +21,11 @@
  * limitations under the License.
  */
 
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey.Test
 {
@@ -47,8 +49,57 @@ namespace pwiz.Osprey.Test
         {
             AssertSuffixesAreUnconditional();
             AssertEachArmKeysDifferently();
+            AssertTrainingSampleLeversKeyDifferently();
             AssertEveryTaskCarriesTheSuffixesItNeeds();
             AssertLibraryFragmentArmIsPinnedToThePipeline();
+            AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
+        }
+
+        /// <summary>
+        /// The <c>--model-diagnostics</c> report must be a DECLARED OUTPUT of the task that
+        /// finalizes it, and only when the flag is on.
+        ///
+        /// <para>Declared, because that is the whole mechanism by which a completed run can
+        /// regenerate a deleted report: task validity requires every declared output to exist,
+        /// so a missing HTML invalidates SecondPassFDR alone, Stages 1-5 stay cached, and the
+        /// pass-1 panel is rebuilt by rehydrating the 1st-pass sidecars. Before this the flag
+        /// was INERT on a cached directory - it is in no validity key, the HTML was in no
+        /// Outputs list, so re-running with it added skipped every task and produced no
+        /// report at all.</para>
+        ///
+        /// <para>Only when asked, because declaring it unconditionally would leave every run
+        /// that never wanted diagnostics permanently invalid, re-running SecondPassFDR on
+        /// every resume forever.</para>
+        /// </summary>
+        private static void AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked()
+        {
+            foreach (bool wanted in new[] { false, true })
+            {
+                var config = new OspreyConfig
+                {
+                    OutputBlib = @"C:\runs\out.blib",
+                    ModelDiagnostics = wanted
+                };
+                var tasks = AnalysisPipeline.CanonicalPipeline();
+                var ctx = new PipelineContext(config, tasks, null, null, null);
+                OspreyTask second = null;
+                foreach (var t in tasks)
+                {
+                    if (t.Name == @"SecondPassFDR")
+                        second = t;
+                }
+                Assert.IsNotNull(second, @"SecondPassFDR must be in the canonical pipeline");
+
+                bool declared = false;
+                foreach (string o in second.Outputs(ctx))
+                {
+                    if (o != null && o.EndsWith(ModelDiagnosticsReport.HtmlSuffix, StringComparison.Ordinal))
+                        declared = true;
+                }
+                Assert.AreEqual(wanted, declared, wanted
+                    ? @"the report must be a declared output when --model-diagnostics is on, or a deleted report cannot be regenerated"
+                    : @"the report must NOT be declared when --model-diagnostics is off, or every plain run is permanently invalid");
+            }
         }
 
         /// <summary>
@@ -64,6 +115,48 @@ namespace pwiz.Osprey.Test
                 @"the pick suffix must be emitted for the default arm too - an empty default is precisely what lets a post-flip key equal a pre-flip one");
             Assert.AreNotEqual(string.Empty, OspreyEnvironment.Pass2QValueValidityKeySuffix(),
                 @"the 2nd-pass mode suffix must be emitted for the default arm too, for the same reason");
+            Assert.AreNotEqual(string.Empty, OspreyEnvironment.TrainSampleValidityKeySuffix(),
+                @"the training-selection suffix must be emitted for the default arm too - it is a flipped default, so an empty new default would equal every pre-flip key");
+        }
+
+        /// <summary>
+        /// The first-pass training-sample settings must key differently from each other and from
+        /// the default, because they change which rows train the model and therefore every score
+        /// and count downstream.
+        ///
+        /// <para>Written after the omission cost a measurement: a re-run with
+        /// OSPREY_TRAIN_PICK_RUN newly set into an existing output directory reported
+        /// "FirstPassFDR:skipping (outputs valid)" in under a second and handed back the previous
+        /// setting's numbers. That is indistinguishable from a change with no effect, which is the
+        /// most expensive way for an A/B to fail.</para>
+        ///
+        /// <para>The two halves are asserted differently on purpose. The run-vs-maximum selection
+        /// is a FLIPPED DEFAULT, so it must key for BOTH arms - an empty new default would equal
+        /// every directory written before the flip and let a resume adopt maximum-trained scores.
+        /// The training cap's default never moved, so it must stay silent when unset, exactly
+        /// like the aggregation suffix.</para>
+        /// </summary>
+        private static void AssertTrainingSampleLeversKeyDifferently()
+        {
+            Assert.AreNotEqual(string.Empty, OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+                @"the shipped reservoir arm must key, or a pre-flip directory is adopted as though it had been trained on it");
+            Assert.AreNotEqual(string.Empty, OspreyEnvironment.TrainSampleValidityKeySuffix(false, null),
+                @"the forced-maximum arm must key too");
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(false, null),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+                @"per-run picking trains on different rows than the cross-run maximum");
+            Assert.AreEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+                @"the suffix must be a pure function of its arms");
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, 3000000),
+                @"a raised training cap covers more precursors, so it must key differently");
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, 3000000),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, 600000),
+                @"two different caps must key differently, not merely differ from the default");
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(false, 3000000),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, 3000000),
+                @"the two settings are independent, so their combination is a fourth arm");
         }
 
         /// <summary>
@@ -114,6 +207,13 @@ namespace pwiz.Osprey.Test
             var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
             string pick = OspreyEnvironment.PickValidityKeySuffix();
             string pass2 = OspreyEnvironment.Pass2QValueValidityKeySuffix();
+            // The training-selection arm is hand-wired into the same three tasks the
+            // library-fragment arm is, so without it here any one of those lines can be dropped in
+            // a merge and the suite stays green - and the failure it lets through is precisely the
+            // "skipping (outputs valid)" adoption of another selection's numbers that this file
+            // exists to prevent. Same exemption shape: the tasks that run before a model is
+            // trained cannot key on how it was trained.
+            string train = OspreyEnvironment.TrainSampleValidityKeySuffix();
 
             foreach (var task in tasks)
             {
@@ -124,6 +224,12 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(expectPass2, key.Contains(pass2), string.Format(
                     @"{0} must {1} key on the 2nd-pass q-value mode",
                     task.Name, expectPass2 ? @"" : @"NOT "));
+                bool expectTrain = task.Name == @"FirstPassFDR" ||
+                                   task.Name == @"PerFileRescoring" ||
+                                   task.Name == @"SecondPassFDR";
+                Assert.AreEqual(expectTrain, key.Contains(train), string.Format(
+                    @"{0} must {1} key on the first-pass training selection",
+                    task.Name, expectTrain ? @"" : @"NOT "));
             }
         }
 
