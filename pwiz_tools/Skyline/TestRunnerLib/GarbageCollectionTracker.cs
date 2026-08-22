@@ -337,14 +337,39 @@ namespace TestRunnerLib
                 return unhooked;
 
             var isDisposed = controlType.GetProperty(@"IsDisposed");
-            foreach (var info in ((System.Collections.IEnumerable)handlers[key]).Cast<object>().ToArray())
+            // SystemEvents mutates this list under its own private lock whenever a Control is
+            // created or disposed on any thread, so an unsynchronized snapshot can throw
+            // "Collection was modified". Upstream swallows that into "could not check the
+            // hook", which then reports the very GC-LEAK this method exists to suppress -
+            // intermittently, which is the hardest form to diagnose. Retake the snapshot.
+            object[] entries = null;
+            for (int attempt = 0; attempt < 3 && entries == null; attempt++)
+            {
+                try
+                {
+                    entries = ((System.Collections.IEnumerable)handlers[key]).Cast<object>().ToArray();
+                }
+                catch (InvalidOperationException)
+                {
+                    // Modified while reading - fall through and take a fresh snapshot.
+                }
+            }
+            if (entries == null)
+                return unhooked;
+
+            foreach (var info in entries)
             {
                 if (!(info?.GetType().GetField(@"_delegate", inst)?.GetValue(info) is Delegate del))
                     continue;
                 // Only the framework's own per-window hook, only on a survivor, only once disposed.
                 bool isHook = del.Method.DeclaringType == controlType && del.Method.Name == @"UserPreferenceChanged";
                 bool isSurvivor = del.Target != null && survivors.Any(s => ReferenceEquals(s, del.Target));
-                bool disposed = isSurvivor && true.Equals(isDisposed?.GetValue(del.Target));
+                // Check the type first: a tracked survivor need not be a Control (SrmDocument
+                // is registered too), and PropertyInfo.GetValue against a non-Control throws
+                // TargetException, which escapes the loop and skips every remaining entry -
+                // including the genuine framework hooks that would have explained the leak.
+                bool disposed = isSurvivor && controlType.IsInstanceOfType(del.Target) &&
+                                true.Equals(isDisposed?.GetValue(del.Target));
                 if (!isSurvivor)
                     continue;   // static and unrelated subscribers are the normal case, not news
                 // A survivor found in the table is always worth logging, including when it is not
