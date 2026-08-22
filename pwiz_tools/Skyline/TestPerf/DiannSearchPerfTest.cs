@@ -37,6 +37,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf
@@ -464,6 +465,36 @@ namespace TestPerf
             AssertEx.IsTrue(File.Exists(searchDlg.SearchControl.OutputSpecLibPath));
         }
 
+        /// <summary>
+        /// Assert the chromatograms page matched exactly the <see cref="MZML_FILES"/> we
+        /// searched. The 4 entries DiannSearchDlg prefills are always matched, so a missing
+        /// entry is really an EXTRA one added by InitializeSpectrumSourceFiles when the .blib
+        /// spelled a spectrum source differently than the prefill key (e.g. "X.mzML" instead
+        /// of "X.half"). Otherwise that only shows up as an unexpected "Some results files are
+        /// still missing" prompt on the next click, which times out naming neither.
+        /// </summary>
+        private static void VerifyResultsFilesMatched(ImportPeptideSearchDlg importDlg)
+        {
+            RunUI(() =>
+            {
+                var control = importDlg.ImportResultsControl;
+                var found = control.FoundResultsFiles;
+                var missing = control.MissingResultsFiles.ToArray();
+                if (found.Count == MZML_FILES.Length && missing.Length == 0)
+                    return;
+
+                AssertEx.Fail(TextUtil.LineSeparate(
+                    string.Format(@"Chromatograms page matched {0} results file(s) and left {1} unmatched; expected {2} and 0.",
+                        found.Count, missing.Length, MZML_FILES.Length),
+                    @"Expected:",
+                    TextUtil.LineSeparate(MZML_FILES),
+                    @"Matched:",
+                    TextUtil.LineSeparate(found.Select(f => string.Format(@"{0} -> {1}", f.Name, f.Path))),
+                    @"Unmatched (spectrum source names from the document library):",
+                    TextUtil.LineSeparate(missing)));
+            });
+        }
+
         private void ImportToSkylineDocument(DiannSearchDlg searchDlg)
         {
             string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath);
@@ -481,6 +512,7 @@ namespace TestPerf
 
             // Extract chromatograms page.
             WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+            VerifyResultsFilesMatched(importDlg);
             PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>(@"Extract chromatograms page");
             // With >1 file the rename/prefix dialog pops up; accept defaults.
             if (MZML_FILES.Length > 1)

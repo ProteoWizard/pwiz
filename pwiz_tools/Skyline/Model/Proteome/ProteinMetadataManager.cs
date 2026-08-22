@@ -88,11 +88,6 @@ namespace pwiz.Skyline.Model.Proteome
             return IsNotLoadedExplainedHelper(document) == null;
         }
 
-        protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
-        {
-            return new IPooledStream[0];
-        }
-
         protected override bool IsCanceled(IDocumentContainer container, object tag)
         {
             // For our purposes, a better name for this would be "IsInterrupted": if the

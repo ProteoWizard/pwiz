@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Collections
 {
@@ -168,6 +169,22 @@ namespace pwiz.Common.Collections
                 return null;
             }
             FileStream fileStream = stream as FileStream;
+            if (fileStream == null && stream is SliceStream sliceStream)
+            {
+                // A window onto part of a FileStream (e.g. a .skyd stored uncompressed in a .sky.zip)
+                // can be read directly too: the window is positioned by its base stream, which is
+                // where the direct read reads from and leaves it. The direct read goes to the
+                // FileStream, which knows nothing of the window, so it is only safe if the items
+                // being read really are inside the window.
+                if (stream.Position + (long) count * ItemSizeOnDisk <= stream.Length)
+                {
+                    while (sliceStream.BaseStream is SliceStream)
+                    {
+                        sliceStream = (SliceStream)sliceStream.BaseStream;
+                    }
+                    fileStream = sliceStream.BaseStream as FileStream;
+                }
+            }
             if (fileStream == null)
             {
                 return null;

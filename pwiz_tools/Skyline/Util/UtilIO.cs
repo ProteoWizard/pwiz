@@ -30,6 +30,7 @@ using System.Threading;
 using System.Windows.Forms;
 using NHibernate;
 using pwiz.Common.Collections;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -211,9 +212,9 @@ namespace pwiz.Skyline.Util
         private readonly Dictionary<ReferenceValue<Identity>, IDisposable> _connections =
             new Dictionary<ReferenceValue<Identity>, IDisposable>();
 
-        // Tracking data keyed by GlobalIndex: persists across connect/disconnect cycles
-        private readonly Dictionary<int, List<PoolEvent>> _history =
-            new Dictionary<int, List<PoolEvent>>();
+        // Tracking data keyed by Identity: persists across connect/disconnect cycles
+        private readonly Dictionary<ReferenceValue<Identity>, List<PoolEvent>> _history =
+            new Dictionary<ReferenceValue<Identity>, List<PoolEvent>>();
 
         /// <summary>
         /// True if the connection for this <see cref="Identity"/> is currently
@@ -245,12 +246,13 @@ namespace pwiz.Skyline.Util
                 IDisposable connection;
                 if (_connections.TryGetValue(id, out connection))
                     return connection;
+                DocumentStreams.EnsureTracked(id);
                 // Connection must be made inside lock to keep the get and add
                 // within a single synchronized block.
                 connection = connect();
                 _connections.Add(id, connection);
                 if (_trackHistory)
-                    RecordEvent(id.GlobalIndex, PoolEventType.Connect);
+                    RecordEvent(id, PoolEventType.Connect);
                 return connection;
             }
         }
@@ -269,7 +271,7 @@ namespace pwiz.Skyline.Util
                     return;
                 _connections.Remove(id);
                 if (_trackHistory)
-                    RecordEvent(id.GlobalIndex, PoolEventType.Disconnect);
+                    RecordEvent(id, PoolEventType.Disconnect);
                 // Disconnect inside lock, since a new attempt to connect
                 // may fail if the old connection is not fully disconnected.
                 connection.Dispose();
@@ -283,7 +285,7 @@ namespace pwiz.Skyline.Util
                 using (stream.ReaderWriterLock.CancelAndGetWriteLock())
                 {
                     if (_trackHistory)
-                        RecordEvent(stream.GlobalIndex, PoolEventType.DisconnectWhile);
+                        RecordEvent((Identity) stream, PoolEventType.DisconnectWhile);
                     stream.CloseStream();
                     act();
                 }
@@ -325,7 +327,7 @@ namespace pwiz.Skyline.Util
                 {
                     var id = connection.Key.Value;
                     sb.AppendLine(FormatConnectionLine(id));
-                    if (_trackHistory && _history.TryGetValue(id.GlobalIndex, out var events))
+                    if (_trackHistory && _history.TryGetValue(id, out var events))
                     {
                         foreach (var poolEvent in events)
                             sb.AppendLine(FormatEventLine(poolEvent));
@@ -358,14 +360,21 @@ namespace pwiz.Skyline.Util
         }
 
         // Must be called inside lock(this)
-        private void RecordEvent(int globalIndex, PoolEventType eventType)
+        private void RecordEvent(Identity id, PoolEventType eventType)
         {
-            if (!_history.TryGetValue(globalIndex, out var events))
+            if (!_history.TryGetValue(id, out var events))
             {
                 events = new List<PoolEvent>();
-                _history[globalIndex] = events;
+                _history[id] = events;
             }
-            events.Add(new PoolEvent(eventType, DateTime.Now, new StackTrace(true)));
+            var poolEvent = new PoolEvent(eventType, DateTime.Now, new StackTrace(true));
+            events.Add(poolEvent);
+
+            if (true == DocumentStreams.DumpStreamsRegex?.IsMatch(id.ToString()))
+            {
+                Console.Out.WriteLine(FormatConnectionLine(id));
+                Console.Out.WriteLine(FormatEventLine(poolEvent));
+            }
         }
     }
 
@@ -732,7 +741,16 @@ namespace pwiz.Skyline.Util
                 if (mode != FileMode.Open)
                     stream = new FileStream(path, mode);
                 else
-                    stream = new FileStream(path, mode, FileAccess.Read, FileShare.Read);
+                {
+                    // Reading may be from a file stored inside a .zip (e.g. an in-place .sky.zip).
+                    // These are the binary caches (.skyd and the library caches), which seek - they
+                    // read their header from the end of the file - so this must be a random-access
+                    // stream, like the FileStream it stands in for.
+                    var filePath = new FilePath(path);
+                    stream = filePath.IsInZipFile
+                        ? filePath.OpenRandomAccessStream()
+                        : new FileStream(path, mode, FileAccess.Read, FileShare.Read);
+                }
             }
             catch (Exception x)
             {
@@ -755,6 +773,10 @@ namespace pwiz.Skyline.Util
 
         public IPooledStream CreatePooledStream(string path, bool buffer)
         {
+            // The file may be stored inside a .zip (e.g. a .skyd in an in-place .sky.zip).
+            var entry = new FilePath(path).GetZipEntry();
+            if (entry != null)
+                return new PooledZipEntryStream(ConnectionPool, entry);
             return new PooledFileStream(this, path, buffer);
         }
 

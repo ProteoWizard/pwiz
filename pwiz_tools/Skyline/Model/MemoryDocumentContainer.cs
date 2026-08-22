@@ -57,6 +57,9 @@ namespace pwiz.Skyline.Model
 
         public bool SetDocument(SrmDocument docNew, SrmDocument docOriginal, bool wait)
         {
+            // Remember the streams of the document being replaced, so that the ones which the new
+            // document does not have get closed.
+            using var documentStreams = new DocumentStreams(this);
             var docResult = Interlocked.CompareExchange(ref _document, docNew, docOriginal);
             if (!ReferenceEquals(docResult, docOriginal))
                 return false;

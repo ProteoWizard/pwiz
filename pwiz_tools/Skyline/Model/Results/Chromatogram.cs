@@ -153,13 +153,6 @@ namespace pwiz.Skyline.Model.Results
             _multiFileLoader.Dispose();
         }
 
-        protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
-        {
-            if (document == null || !document.Settings.HasResults)
-                return new IPooledStream[0];
-            return document.Settings.MeasuredResults.ReadStreams;
-        }
-
         protected override bool IsCanceled(IDocumentContainer container, object tag)
         {
             SrmSettings settings = container.Document.Settings;
@@ -401,6 +394,11 @@ namespace pwiz.Skyline.Model.Results
                                 // Then update caches
                                 if (results != null)
                                     results = results.UpdateCaches(documentPath, resultsLoad);
+                                // Loading the caches opens streams which belong to no document
+                                // yet. If the document they are being loaded for never makes it
+                                // into the container, then this is what closes them.
+                                using var documentStreams = new DocumentStreams(_container);
+                                documentStreams.AddStreams(results);
                                 docNew = docCurrent.ChangeMeasuredResults(results, settingsChangeMonitor);
                                 docNew = _manager.ApplyMetadataRules(docNew);
                                 docNew = UpdateUserRevisionIndex(docCurrent, docNew);

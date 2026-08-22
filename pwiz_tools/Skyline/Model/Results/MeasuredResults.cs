@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results.Spectra;
@@ -1312,12 +1313,15 @@ namespace pwiz.Skyline.Model.Results
 
         public MeasuredResults LoadFinalCache(string cachePath, IProgressStatus status, ILoadMonitor loader, SrmDocument doc)
         {
-            if (!File.Exists(cachePath))
+            // The cache (.skyd) may live inside an in-place .sky.zip, so go through FilePath.
+            var cacheFilePath = new FilePath(cachePath);
+            if (!cacheFilePath.Exists())
             {
                 return ChangeFinalCacheIncomplete(true);
             }
 
-            using var stream = File.OpenRead(cachePath);
+            // The cache header is at the END of the .skyd, so this reader seeks.
+            using var stream = cacheFilePath.OpenRandomAccessStream();
             var cachedFilePaths = ChromatogramCache.GetCachedFilePaths(stream).ToHashSet();
             if (!Chromatograms.SelectMany(chrom => chrom.MSDataFilePaths).All(cachedFilePaths.Contains))
             {
@@ -1599,7 +1603,8 @@ namespace pwiz.Skyline.Model.Results
                 // If the final cache exists and it is not in the partial caches or partial caches
                 // contain the final cache, but it is not open (Undo-Redo case), then make sure it
                 // is reloaded from scratch, as it may have changed since it was last open.
-                if (_resultsClone._cacheRecalc == null && File.Exists(cachePath))
+                // The cache (.skyd) may be inside an in-place .sky.zip, so check via FilePath.
+                if (_resultsClone._cacheRecalc == null && new FilePath(cachePath).Exists())
                 {
                     if (_resultsClone._listPartialCaches != null)
                     {
