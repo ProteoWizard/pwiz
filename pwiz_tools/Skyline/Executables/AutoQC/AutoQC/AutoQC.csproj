@@ -11,7 +11,7 @@
   <PropertyGroup>
     <ProjectGuid>{87D6B185-C2D3-48A9-95B3-A0F528F3F446}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
