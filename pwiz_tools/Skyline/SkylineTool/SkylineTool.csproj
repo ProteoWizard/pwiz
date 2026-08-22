@@ -7,7 +7,7 @@
        extra package needed there. -->
   <PropertyGroup>
     <ProjectGuid>{3FD4E167-8F9C-4116-8122-67C7AD143490}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

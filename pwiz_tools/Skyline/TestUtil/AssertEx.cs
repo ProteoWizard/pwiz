@@ -1841,6 +1841,7 @@ namespace pwiz.SkylineTestUtil
             return null;
         }
 
+
         private static SrmDocument ForceDocumentLoad(SrmDocument target, string testDir)
         {
             string xmlSaved = null;
@@ -1861,6 +1862,15 @@ namespace pwiz.SkylineTestUtil
                 using (var docContainer = new ResultsTestDocumentContainer(null, tmpSky))
                 {
                     docContainer.SetDocument(docLoad, null, true);
+                    // SetDocument's wait ends at MemoryDocumentContainer.IsFinal, which
+                    // deliberately reports final for a document that never flipped to loaded, so
+                    // the test surface fails fast rather than hanging. That leaves the library
+                    // loader still running, and since ForceDocumentLoad is called on BOTH sides of
+                    // a comparison, each side raced independently: when only one had finished,
+                    // PeptideLibraries compared unequal purely on load state, in either direction.
+                    // Wait on the background loaders too, as DocLoadLibraryTest does for the same
+                    // reason. Was about 6% of RefineConvertToSmallMoleculesTest runs.
+                    docContainer.WaitForProcessing();
                     docContainer.AssertComplete();
                     return docContainer.Document;
                 }
@@ -1910,6 +1920,7 @@ namespace pwiz.SkylineTestUtil
             Cloned(target.PeptideSettings.Enzyme, copy.PeptideSettings.Enzyme, defPep.Enzyme);
             Cloned(target.PeptideSettings.DigestSettings, copy.PeptideSettings.DigestSettings, defPep.DigestSettings);
             Cloned(target.PeptideSettings.Filter, copy.PeptideSettings.Filter, defPep.Filter);
+            EqualityExplainer.AssertEqual(target.PeptideSettings.Libraries, copy.PeptideSettings.Libraries, @"PeptideLibraries not cloned equal");
             Cloned(target.PeptideSettings.Libraries, copy.PeptideSettings.Libraries, defPep.Libraries);
             Cloned(target.PeptideSettings.Modifications, copy.PeptideSettings.Modifications, defPep.Modifications);
             Cloned(target.PeptideSettings.Prediction, copy.PeptideSettings.Prediction, defPep.Prediction);
@@ -2080,7 +2091,8 @@ namespace pwiz.SkylineTestUtil
                 return;
             }
             if (!Equals(group.Results, convertedGroup.Results))
-                AreEqual(group.Results, convertedGroup.Results, group + " vs " + convertedGroup);
+                EqualityExplainer.AssertEqual(group.Results, convertedGroup.Results,
+                    string.Format(@"TransitionGroupChromInfo results differ: {0} vs {1}", group, convertedGroup));
         }
 
         private static void ConvertedSmallMoleculeIsSimilar(PeptideDocNode convertedMol, PeptideDocNode mol, RefinementSettings.ConvertToSmallMoleculesMode conversionMode)

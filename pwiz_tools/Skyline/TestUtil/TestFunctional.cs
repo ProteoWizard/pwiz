@@ -25,6 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -2349,6 +2350,20 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected void RunFunctionalTest(string defaultUiMode = UiModes.PROTEOMIC)
         {
+            // WinForms requires an STA thread: creating a TreeView calls SetAcceptDrops, which
+            // makes OLE calls and throws "DragDrop registration did not succeed" from MTA.
+            // The console harness and Skyline both mark Main [STAThread], so harness runs never
+            // hit this. Visual Studio / ReSharper used to match, because VSTest defaults
+            // ExecutionThreadApartmentState to STA on .NET Framework - but that setting is not
+            // supported on net8, so the test host thread is MTA and every functional test failed
+            // there with the DragDrop error. Marshal onto an STA thread instead of requiring
+            // every test class to be attributed (MSTest 3.2 has no [STATestClass] for net8).
+            if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+            {
+                RunOnStaThread(() => RunFunctionalTest(defaultUiMode));
+                return;
+            }
+
             if (IsPerfTest && !RunPerfTests)
             {
                 return; // Don't want to run this lengthy test right now
@@ -2395,6 +2410,39 @@ namespace pwiz.SkylineTestUtil
                 //Log<AbstractFunctionalTest>.Fail(@"Functional test did not complete");
                 Assert.Fail("Functional test did not complete");
             }
+        }
+
+        /// <summary>
+        /// Runs <paramref name="action"/> on a dedicated STA thread and blocks until it finishes,
+        /// rethrowing any exception with its original stack trace intact so the test framework
+        /// still reports the real failure rather than a wrapper.
+        /// </summary>
+        private static void RunOnStaThread(Action action)
+        {
+            Exception pending = null;
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    // This thread is about to run Skyline's message loop, and WinForms keeps the
+                    // exception mode and the ThreadException subscription PER THREAD. Program.Init
+                    // only establishes them once per process, so without this the second and later
+                    // functional tests in a test-host process route no UI exceptions: WinForms shows
+                    // its own modal dialog and Join below waits on it forever.
+                    Program.InitUiThreadExceptionHandling();
+                    action();
+                }
+                catch (Exception x)
+                {
+                    pending = x;
+                }
+            });
+            thread.Name = @"Functional test STA thread";   // named so hang dumps identify it
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+            if (pending != null)
+                ExceptionDispatchInfo.Capture(pending).Throw();
         }
 
         private void RunFunctionalTestAttempt(string defaultUiMode)
@@ -2843,6 +2891,63 @@ namespace pwiz.SkylineTestUtil
 #endif
         }
 
+        /// <summary>
+        /// TEMPORARY diagnostic. Dumps Microsoft.Win32.SystemEvents' static handler table, naming
+        /// each subscriber and its delegate target, to identify what subscribes
+        /// UserPreferenceChanged with SkylineWindow as the target. Reflection rather than a
+        /// reference, so TestUtil takes no new dependency. Remove once the leak is understood.
+        /// </summary>
+        /// <summary>
+        /// TEMPORARY verifier. Set SKYLINE_FORCE_SYSEVENTS_LEAK=1 to reproduce, on demand, the
+        /// framework condition that otherwise appears about once per 30,000 test executions:
+        /// a SystemEvents.UserPreferenceChanged hook on SkylineWindow that outlives its disposal.
+        ///
+        /// <para>Adds a second, identical subscription of WinForms' own private
+        /// Control.UserPreferenceChanged handler for the main window. WinForms removes one matching
+        /// entry when the window is disposed, so exactly one is left behind - which is precisely
+        /// the leak that has been observed in the wild.</para>
+        /// </summary>
+        // TEMPORARY. Roots SkylineWindow the way a real Skyline regression would - a static
+        // reference that has nothing to do with SystemEvents - so the counter-case can be checked:
+        // the framework-hook classification must NOT excuse this one.
+        // ReSharper disable once CollectionNeverQueried.Local
+        private static readonly List<object> _forcedRealLeak = new List<object>();
+
+        private static void ForceSystemEventsLeak()
+        {
+            var mode = Environment.GetEnvironmentVariable(@"SKYLINE_FORCE_SYSEVENTS_LEAK");
+            if (mode == null || SkylineWindow == null)
+                return;
+            if (mode.Contains(@"real"))
+            {
+                _forcedRealLeak.Add(SkylineWindow);
+                Console.WriteLine(@"FORCELEAK added static reference to SkylineWindow (genuine leak)");
+            }
+            if (!mode.Contains(@"hook") && mode != @"1")
+                return;
+            try
+            {
+                var seType = Type.GetType(@"Microsoft.Win32.SystemEvents, Microsoft.Win32.SystemEvents");
+                var controlType = typeof(Control);
+                var handlerType = seType?.GetEvent(@"UserPreferenceChanged")?.EventHandlerType;
+                var method = controlType.GetMethod(@"UserPreferenceChanged",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (handlerType == null || method == null)
+                {
+                    Console.WriteLine(@"FORCELEAK could not find Control.UserPreferenceChanged");
+                    return;
+                }
+                var del = Delegate.CreateDelegate(handlerType, SkylineWindow, method);
+                seType.GetEvent(@"UserPreferenceChanged").AddEventHandler(null, del);
+                Console.WriteLine(@"FORCELEAK added duplicate {0}.{1} hook for SkylineWindow",
+                    method.DeclaringType?.Name, method.Name);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(@"FORCELEAK FAILED {0}: {1}", e.GetType().Name, e.Message);
+            }
+        }
+
         private void RunTest()
         {
             if (null != SkylineWindow)
@@ -2883,6 +2988,8 @@ namespace pwiz.SkylineTestUtil
             {
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
             }
+
+            ForceSystemEventsLeak();
 
             DoTest();
 

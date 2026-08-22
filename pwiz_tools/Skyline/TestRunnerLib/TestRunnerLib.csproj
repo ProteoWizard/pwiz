@@ -5,7 +5,7 @@
        it under net8.0-windows too. -->
   <PropertyGroup>
     <ProjectGuid>{E3F0E34F-F9E6-4360-996F-E2054E4FA1AE}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -51,6 +51,10 @@
     <PackageReference Include="log4net" Version="2.0.17" />
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+    <!-- Used by GarbageCollectionTracker to report what is still rooting a survivor. Same
+         version as TestUtil and SkylineNightly: staging flattens every project's output into
+         one directory, so a second Microsoft.Diagnostics.Runtime.dll would silently win. -->
+    <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="3.1.512801" />
   </ItemGroup>
 
 </Project>

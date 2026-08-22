@@ -5,7 +5,7 @@
        fixtures are flat *.zip files copied to output. Compile items are auto-globbed. -->
   <PropertyGroup>
     <ProjectGuid>{1B7E62FF-463B-4B3E-8E37-72F1A7C2BFD9}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

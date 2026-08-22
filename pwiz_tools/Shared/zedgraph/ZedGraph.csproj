@@ -5,7 +5,7 @@
        named via the existing ZedGraph.snk. -->
   <PropertyGroup>
     <ProjectGuid>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
