@@ -2424,6 +2424,12 @@ namespace pwiz.SkylineTestUtil
             {
                 try
                 {
+                    // This thread is about to run Skyline's message loop, and WinForms keeps the
+                    // exception mode and the ThreadException subscription PER THREAD. Program.Init
+                    // only establishes them once per process, so without this the second and later
+                    // functional tests in a test-host process route no UI exceptions: WinForms shows
+                    // its own modal dialog and Join below waits on it forever.
+                    Program.InitUiThreadExceptionHandling();
                     action();
                 }
                 catch (Exception x)
@@ -2431,6 +2437,7 @@ namespace pwiz.SkylineTestUtil
                     pending = x;
                 }
             });
+            thread.Name = @"Functional test STA thread";   // named so hang dumps identify it
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
             thread.Join();

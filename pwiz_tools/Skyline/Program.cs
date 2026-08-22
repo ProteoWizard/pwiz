@@ -157,6 +157,7 @@ namespace pwiz.Skyline
         public static bool MultiProcImport { get; set; }
  
         private static bool _initialized;                           // Flag to do some initialization just once per process.
+        [ThreadStatic] private static bool _uiExceptionHandlingInitialized;   // Per-THREAD, see InitUiThreadExceptionHandling
         private static string _name;                                // Program name.
 
         /// <summary>
@@ -755,6 +756,25 @@ namespace pwiz.Skyline
             Settings.Default.SearchToolList = SearchToolList.CopyTools(toolList);
         }
 
+        /// <summary>
+        /// Routes unhandled UI-thread exceptions to Skyline's handler, which hands them to the
+        /// test harness when one is running and reports them otherwise.
+        /// <para>Both the exception mode and the ThreadException subscription are PER-THREAD in
+        /// WinForms. A message loop started on a thread that has not called this shows the
+        /// framework's own modal ThreadExceptionDialog instead, which under a test harness is an
+        /// indefinite hang rather than a reported failure. <see cref="Init"/> covers the first
+        /// thread; anything starting a message loop on a NEW thread must call this there too.</para>
+        /// <para>Idempotent per thread, so a caller need not know whether Init already ran on it.</para>
+        /// </summary>
+        public static void InitUiThreadExceptionHandling()
+        {
+            if (_uiExceptionHandlingInitialized)
+                return;
+            _uiExceptionHandlingInitialized = true;
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += ThreadExceptionEventHandler;
+        }
+
         public static void Init()
         {
             if (!_initialized)
@@ -763,8 +783,7 @@ namespace pwiz.Skyline
                 CommonActionUtil.ExceptionReporter = ReportException;
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-                Application.ThreadException += ThreadExceptionEventHandler;
+                InitUiThreadExceptionHandling();
 
                 // Add handler for non-UI thread exceptions. 
                 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
