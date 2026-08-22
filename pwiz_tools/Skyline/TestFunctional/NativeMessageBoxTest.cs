@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
 
             // 1) First Save As: save to a name that does not exist yet -- no confirmation.
             McpConnector.ClickMainMenuItem(saveAsMenu);
-            var fileDialogId = WaitForNativeFileDialog();
+            var fileDialogId = WaitForNativeDlg<NativeFileDialog>().FormId;
             AssertComplete(McpConnector.SetFormValue(fileDialogId, @"FileName", savePath));
             AssertComplete(McpConnector.DismissWithAcceptButton(fileDialogId));
             WaitForCondition(() => !McpConnector.GetOpenForms().Any(form => form.IsNative));
@@ -81,9 +81,9 @@ namespace pwiz.SkylineTestFunctional
             fileDialogId = actionResult.FormId;
             Assert.IsNotNull(fileDialogId);
             Assert.AreEqual(modalNestingCount, GetModalNestingCount(fileDialogId));
-            // The id is reported as soon as the window exists, which is before the shell has shown the file-name
-            // field; typing into it in that window throws "The file dialog is still opening".
-            WaitForNativeFileDialogReady(fileDialogId);
+            // Set straight away, with no readiness wait: a file dialog is not named in an ActionResult (nor listed
+            // by GetOpenForms) until the shell has shown the field this types into -- see NativeDialog.Create. This
+            // set failing with "The file dialog is still opening" would mean that gate had regressed.
             AssertComplete(McpConnector.SetFormValue(fileDialogId, @"FileName", savePath));
             actionResult = McpConnector.DismissWithAcceptButton(fileDialogId);
             Assert.IsFalse(actionResult.Completed);
