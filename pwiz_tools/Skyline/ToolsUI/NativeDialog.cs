@@ -98,9 +98,11 @@ namespace pwiz.Skyline.ToolsUI
         /// <see cref="NativeFileDialog.FileNameTextBox"/>).
         ///
         /// <para>The window becomes classifiable a moment BEFORE the shell has SHOWN the controls that classified
-        /// it -- they are created, then displayed -- which is the gap this closes. A dialog whose classification
-        /// already proves its controls are shown needs nothing more, which is the default here; only
-        /// <see cref="NativeFileDialog"/>, classified by a field that exists before it appears, overrides it.</para>
+        /// it -- they are created, then displayed -- which is the gap this closes. Every dialog classified by a
+        /// control it later acts on has that gap and overrides this (<see cref="NativeFileDialog"/> by its
+        /// file-name field, <see cref="NativeFolderBrowserDialog"/> by its tree). The default is for the generic
+        /// message box, which is classified by nothing and driven through buttons the caller reads by caption --
+        /// so it has no control whose appearance it could wait on, and is ready when its window is shown.</para>
         /// </summary>
         protected virtual bool IsOpenComplete => true;
 
