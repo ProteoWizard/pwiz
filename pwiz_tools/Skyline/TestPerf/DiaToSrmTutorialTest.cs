@@ -317,7 +317,7 @@ namespace TestPerf
         {
             // Import Document opens the native Open dialog (a dialog), so it does not complete; resolve it from the
             // menu action's ActionResult, then accept it to import.
-            var importDlg = ResolveNativeFileDialog(McpConnector.ClickMainMenuItem(MenuPath<SkylineWindow>(
+            var importDlg = ResolveModal(McpConnector.ClickMainMenuItem(MenuPath<SkylineWindow>(
                 "fileToolStripMenuItem", "importToolStripMenuItem", "importDocumentMenuItem")));
             McpConnector.SetFormValue(importDlg, "FileName", GetTestPath("PRTC.sky"));
             McpConnector.DismissWithAcceptButton(importDlg);
@@ -432,7 +432,7 @@ namespace TestPerf
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete -- resolve the
             // dialog from its ActionResult.FormId.
-            var saveDlg = ResolveNativeFileDialog(McpConnector.ClickMainMenuItem(
+            var saveDlg = ResolveModal(McpConnector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem")));
             McpConnector.SetFormValue(saveDlg, "FileName", GetTestPath("DIA_to_SRM_Tutorial-filtered.sky"));
             McpConnector.DismissWithAcceptButton(saveDlg);
@@ -498,7 +498,7 @@ namespace TestPerf
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete -- resolve the
             // dialog from its ActionResult.FormId.
-            var saveDlg = ResolveNativeFileDialog(McpConnector.ClickMainMenuItem(
+            var saveDlg = ResolveModal(McpConnector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem")));
             McpConnector.SetFormValue(saveDlg, "FileName", GetTestPath("SRM_targets.sky"));
             McpConnector.DismissWithAcceptButton(saveDlg);
