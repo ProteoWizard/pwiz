@@ -295,6 +295,15 @@ namespace pwiz.Osprey.Tasks
                             if (!inputByFileName.TryGetValue(fileName, out string inputFileFlush))
                                 return;
                             string pass2PathFlush = FdrScoresSidecar.Pass2Path(inputFileFlush);
+                            // --task ModelDiagnostics touches no artifact but the report. The
+                            // sidecar it would write here holds the same q-values it is reading
+                            // back, so skipping the write changes nothing except leaving the
+                            // completed run's files untouched.
+                            if (ctx.Config.DiagnosticsOnly)
+                            {
+                                pass2Tally.AlreadyOnDisk++;
+                                return;
+                            }
                             if (FdrScoresSidecar.IsCurrentFormat(pass2PathFlush, FdrScoresSidecar.Pass.SecondPass))
                             {
                                 pass2Tally.AlreadyOnDisk++;

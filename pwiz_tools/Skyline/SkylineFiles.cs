@@ -1347,7 +1347,7 @@ namespace pwiz.Skyline
 
             try
             {
-                SaveLayout(fileName);
+                SaveLayout(GetViewFile(fileName));
 
                 if (includingCacheFile)
                 {
@@ -1531,16 +1531,149 @@ namespace pwiz.Skyline
             }, (int) SrmDocument.Level.TransitionGroups);
         }
 
-        private void SaveLayout(string fileName)
+        private void SaveLayout(string viewFilePath)
         {
-            using (var saverUser = new FileSaver(GetViewFile(fileName)))
+            using (var saverUser = new FileSaver(viewFilePath))
             {
-                if (saverUser.CanSave())
+                // Pass the parent: without it CanSave swallows read-only and access-denied and
+                // returns false, so Export Window Layout would write nothing and say nothing.
+                if (saverUser.CanSave(this))
                 {
                     dockPanel.SaveAsXml(saverUser.SafeName, new UTF8Encoding(false)); // UTF-8 without BOM
                     saverUser.Commit();
                 }
             }
+        }
+
+        public const string EXT_SKY_VIEW = ".sky.view";
+        public static string FILTER_SKY_VIEW
+        {
+            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_SKY_VIEW); }
+        }
+
+        /// <summary>
+        /// Where the layout dialogs start: beside the document, since that is where its ".sky.view"
+        /// belongs and what the Export dialog names the file after. Only falls back to
+        /// <see cref="Settings.ActiveDirectory"/> for an unsaved document - that setting is the last
+        /// folder ANY file operation used, including unrelated ones like picking an iRT database, so
+        /// on its own it can put a file named after this document somewhere else entirely.
+        /// Share Document starts from the document folder for the same reason.
+        /// </summary>
+        private string GetLayoutDirectory()
+        {
+            return !string.IsNullOrEmpty(DocumentFilePath)
+                ? Path.GetDirectoryName(DocumentFilePath)
+                : Settings.Default.ActiveDirectory;
+        }
+
+        private void exportLayoutMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowExportLayoutDlg();
+        }
+
+        public void ShowExportLayoutDlg()
+        {
+            using (var dlg = new SaveFileDialog())
+            {
+                dlg.Title = SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout;
+                dlg.SupportMultiDottedExtensions = true;
+                dlg.Filter = FILTER_SKY_VIEW;
+                dlg.InitialDirectory = GetLayoutDirectory();
+                dlg.DefaultExt = EXT_SKY_VIEW;
+                if (!string.IsNullOrEmpty(DocumentFilePath))
+                    dlg.FileName = Path.GetFileNameWithoutExtension(DocumentFilePath);
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                var exportPath = dlg.FileName;
+                if (exportPath.EndsWith(EXT_SKY_VIEW + EXT_SKY_VIEW))
+                {
+                    // Offering ".view" as a second filter entry also stops the doubling, but is worse:
+                    // switching the file type back to ".sky.view" then swaps the last extension of
+                    // "Doc.sky.view" and offers "Doc.sky.sky.view".
+                    // If the path ends in ".sky.view.sky.view" strip off the last ".sky.view";
+                    var stripped = exportPath.Substring(0, exportPath.Length - EXT_SKY_VIEW.Length);
+                    // Only strip off the extension if neither form of the file existed.
+                    // If the stripped filename had exists, the dialog would not have added the extra extension, and
+                    // we also would need to prompt the user again to overwrite.
+                    // If the duplicated filename exists, the user was already prompted to overwrite so we should not change the name.
+                    if (!File.Exists(exportPath) && !File.Exists(stripped))
+                    {
+                        exportPath = stripped;
+                    }
+                }
+                ExportLayout(exportPath);
+            }
+        }
+
+
+        public void ExportLayout(string viewFilePath)
+        {
+            try
+            {
+                SaveLayout(viewFilePath);
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(this,
+                    string.Format(SkylineResources.SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__, viewFilePath), x);
+            }
+        }
+
+        private void importLayoutMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowImportLayoutDlg();
+        }
+
+        public void ShowImportLayoutDlg()
+        {
+            using (var dlg = new OpenFileDialog())
+            {
+                dlg.Title = SkylineResources.SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout;
+                dlg.Filter = FILTER_SKY_VIEW;
+                dlg.InitialDirectory = GetLayoutDirectory();
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                ImportLayout(dlg.FileName);
+            }
+        }
+
+        public void ImportLayout(string viewFilePath)
+        {
+            MemoryStream previousLayout = null;
+            try
+            {
+                using var stream = File.OpenRead(viewFilePath);
+                try
+                {
+                    MemoryStream memoryStream = new MemoryStream();
+                    // Remember the current layout in case something goes wrong.
+                    dockPanel.SaveAsXml(memoryStream, new UTF8Encoding(false), true); // UTF-8 without BOM
+                    memoryStream.Position = 0;
+                    previousLayout = memoryStream;
+                }
+                catch
+                {
+                    // Failed to save the current layout (maybe too big). Continue without a backup.
+                }
+                LoadLayout(stream);
+            }
+            catch (Exception x)
+            {
+                if (previousLayout != null)
+                {
+                    try
+                    {
+                        LoadLayout(previousLayout);
+                    }
+                    catch (Exception restoreException)
+                    {
+                        x = new AggregateException(x, restoreException);
+                    }
+                }
+                MessageDlg.ShowWithException(this,
+                    string.Format(SkylineResources.SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__, viewFilePath), x);
+            }
+            EnsureApplicableForms();
         }
 
         private void SetActiveFile(string path)
@@ -1655,8 +1788,8 @@ namespace pwiz.Skyline
                     {
                         var tempDocumentPath = Path.Combine(sharing.EnsureTempDir().DirPath,
                             sharing.GetDocumentFileName());
-                        SaveLayout(tempDocumentPath);
                         sharing.ViewFilePath = GetViewFile(tempDocumentPath);
+                        SaveLayout(sharing.ViewFilePath);
                     }
                     else if (DocumentFilePath != null)
                     {

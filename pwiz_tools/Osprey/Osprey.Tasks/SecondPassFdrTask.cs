@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -82,6 +82,15 @@ namespace pwiz.Osprey.Tasks
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)
         {
+            // A diagnostics-only regeneration declares NOTHING. Any declared output would let
+            // the driver skip this task the moment that file exists - and the report existing
+            // is exactly the case the caller is asking to redo. CanRehydrate returns false on an
+            // empty output list, so zero outputs is what makes "regenerate on demand" mean it.
+            // It also keeps the task from requiring the .blib and 2nd-pass sidecars it
+            // deliberately leaves untouched, which would otherwise fail on a directory that no
+            // longer has them.
+            if (ctx.Config.DiagnosticsOnly)
+                yield break;
             if (!string.IsNullOrEmpty(ctx.Config.OutputBlib))
                 yield return ctx.Config.OutputBlib;
             // The --model-diagnostics report is an output of THIS task (it is finalized in
@@ -108,6 +117,7 @@ namespace pwiz.Osprey.Tasks
             // the whole .blib write, still producing no report.
             if (ctx.Config.ModelDiagnostics && FirstPassFdrTask.IsIncludedFor(ctx.Config))
                 yield return ModelDiagnosticsReport.ReportPath(ctx.Config);
+
             // 2nd-pass FDR sidecars are written whenever Stage 6 rescored entries
             // (independent of protein FDR -- the second Percolator pass runs on the
             // reconciled features), so declare them on that same condition.
@@ -145,6 +155,7 @@ namespace pwiz.Osprey.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx);
         }
 
@@ -170,23 +181,40 @@ namespace pwiz.Osprey.Tasks
             // demanding it materializes PerFileRescore (running its rescore /
             // reconciled-input compaction when the driver skipped it), which is what
             // produces the post-rescore version this stage reads.
-            var perFileEntries = ctx.Get<RescoredEntries>().Value;
-            var fullLibrary = ctx.Get<FullLibrary>().Value;
-            var libraryById = ctx.Get<LibraryById>().Value;
-            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+            //
+            // Reading .Value on that milestone is also what BUILDS the global survivor pool
+            // after a streamed rescore (issue #4597): PerFileRescore leaves it deferred,
+            // because re-reading every file's artifacts is whole-run join work and that task
+            // is a per-file HPC exit point. Stage 7 is the stage that needs a global pool -
+            // the protein-compact competition is over a global stratum - so Stage 7 is where
+            // the work lands, and a worker that never reaches this line never pays it.
+            // Taken as a TOKEN first, so the probes below can bracket that build.
+            var rescored = ctx.Get<RescoredEntries>();
 
             // Stage 7's INHERITED baseline, post-GC, before this stage does any work
             // (#4486). Every figure that issue has ever quoted came from --memstamp, i.e.
             // GC.GetTotalMemory(false), which includes uncollected garbage and so cannot
             // tell a live survivor pool from Server-GC committed-but-free gray - which is
-            // precisely the question. The demand above has already materialized
-            // RescoredEntries, so this measures what Stage 7 is handed rather than what it
-            // builds; the probes below then attribute each substep's own contribution.
-            int nFiles = perFileEntries.Count;
+            // precisely the question.
+            //
+            // BEFORE the .Value read, deliberately. #4597 moved the pool build onto that
+            // read, and this probe exists to separate what Stage 7 inherits from what it
+            // allocates - so taking it after the build would fold the build's own transients
+            // (each file's pre-filter stub superset, the overlay's loaded list and maps) into
+            // the "inherited" number and break comparability with the whole #4486 series.
+            // The stage7-pool probe below is the one that measures the build.
+            int nFiles = ctx.Config.InputFiles?.Count ?? 0;
             string memDetail = string.Format(@"(files={0})", nFiles);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"stage7 start (pre-GC)");
             ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-inherited",
                 string.Format(@"(post-GC, entering Stage 7, files={0})", nFiles));
+
+            var perFileEntries = rescored.Value;
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-pool",
+                string.Format(@"(post-GC, survivor pool built, files={0})", perFileEntries.Count));
+            var fullLibrary = ctx.Get<FullLibrary>().Value;
+            var libraryById = ctx.Get<LibraryById>().Value;
+            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
 
             ReleaseUnscorableLibraryFragments(perFileEntries, fullLibrary, ctx);
 
@@ -255,13 +283,29 @@ namespace pwiz.Osprey.Tasks
             // the blib, restores "reported => some run genuinely passed" for the final output.
             PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
 
-            // Write output blib
+            // Write output blib - unless this is a diagnostics-only regeneration, whose whole
+            // contract is that it touches no artifact but the report.
             ctx.LogInfo(string.Empty);
             var swBlib = Stopwatch.StartNew();
-            WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config, ctx);
+            if (config.DiagnosticsOnly)
+            {
+                ctx.LogInfo(@"--task ModelDiagnostics: skipping the .blib write (report only).");
+            }
+            else
+            {
+                WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config, ctx);
+            }
             swBlib.Stop();
-            ctx.LogInfo(string.Format(@"[STAGE-WALL] blib: {0:F1}s",
-                swBlib.Elapsed.TotalSeconds));
+            // Only when a blib was actually written. [STAGE-WALL] is machine-read by the perf
+            // tooling, so emitting it for a skipped write reports a real 0.0s blib stage and
+            // drags the recorded cost toward zero whenever a regeneration is scraped alongside
+            // real runs. The "skipping the .blib write" line above is prose that tooling does
+            // not parse.
+            if (!config.DiagnosticsOnly)
+            {
+                ctx.LogInfo(string.Format(@"[STAGE-WALL] blib: {0:F1}s",
+                    swBlib.Elapsed.TotalSeconds));
+            }
             // The blib write builds several whole-run indexes over the pool (passing
             // precursors, best-per-precursor, shared boundaries, cross-file observations),
             // so it is the other candidate reason the pool cannot be consumed per file.
@@ -312,9 +356,19 @@ namespace pwiz.Osprey.Tasks
             // this post-compaction, second-pass-q-valued pool -- the same
             // RescoredEntries the pass-2 FDRBench TSV is written from. Opt-in and
             // off the default output path; a failure is logged and swallowed.
+            // The protein-compact stratum splits the pass-2 acceptance boundary in two (#4573):
+            // in-stratum entries were re-competed, off-stratum ones carry pass-1 q and aggregate
+            // forward. Absent outside protein-compact, which leaves the panel on one boundary.
             if (config.ModelDiagnostics)
+            {
+                HashSet<uint> stratumBaseIds = null;
+                if (OspreyEnvironment.Pass2ProteinCompact &&
+                    ctx.TryGet<ProteinCompactStratum>(out var pcStratum))
+                    stratumBaseIds = pcStratum.BaseIds;
                 ModelDiagnosticsReport.WritePass2AndFinalize(
-                    perFileEntries, pass2Contributions, libraryById, config, ctx.LogInfo);
+                    perFileEntries, pass2Contributions, libraryById, config, ctx.LogInfo,
+                    stratumBaseIds);
+            }
 
             return true;
         }
@@ -395,7 +449,12 @@ namespace pwiz.Osprey.Tasks
             // elapsed time needs, so a fast run costs one line and a slow one stays alive. An
             // unconditional heading at the call site costs its line on every run forever, and
             // duplicated the reporter's own heading to the same second.
-            if (AnyReconciledParquet(config))
+            // Not under --task ModelDiagnostics, whose contract is that it rewrites the report
+            // and touches no other artifact. The patch is idempotent, so a regeneration wrote
+            // the same bytes back - invisible to a content comparison, but it reset every
+            // 2nd-pass sidecar's mtime, which is exactly the signal used to tell when a run's
+            // inputs were produced. Caught by the mode 7 regeneration leg.
+            if (AnyReconciledParquet(config) && !config.DiagnosticsOnly)
                 Pass2FdrSidecar.PatchPass2ProteinQvalues(ctx, perFileEntries);
 
             // Cross-impl bisection dump (env-var-gated, no-op in production).
@@ -419,7 +478,7 @@ namespace pwiz.Osprey.Tasks
             // byte-parity gate (blib + Stage-7 dump) is unaffected. The per-replicate
             // protein counts re-run protein FDR per run, so this is the one place with the
             // full per-file pool + library in hand.
-            if (config.WriteProteinReport || config.WriteSummaryReport)
+            if ((config.WriteProteinReport || config.WriteSummaryReport) && !config.DiagnosticsOnly)
             {
                 OspreyReportWriter.WriteReports(result, perFileEntries, fullLibrary, config, ctx.LogInfo);
             }
