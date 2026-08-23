@@ -455,7 +455,7 @@ namespace pwiz.Common.Collections
         {
             get
             {
-                return _hasValueList[index] == 0 ? (T?) null : _values[index];
+                return _hasValueList[index] == 0 ? null : _values[index];
             }
         }
     }

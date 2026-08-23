@@ -90,6 +90,11 @@ namespace pwiz.Common.Collections
             }
 
             CompareKey compareKey = null;
+            // The Cast is redundant on net8, where MatchCollection is IEnumerable<Match>, but
+            // required on net472, where it is only non-generic IEnumerable and Reverse() would
+            // not compile. inspectcode reports the union of both target frameworks, so this
+            // arrives as a warning that cannot be fixed by deleting the cast.
+            // ReSharper disable once RedundantEnumerableCastCall
             foreach (Match segment in REGEX.Matches(s).Cast<Match>().Reverse())
             {
                 var stringPart = segment.Groups[1].Value;

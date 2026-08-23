@@ -509,7 +509,11 @@ namespace pwiz.Common.SystemUtil
                 var cookies = _cookieContainer.GetCookies(request.RequestUri);
                 if (cookies.Count > 0)
                 {
-                    var cookieHeader = string.Join(@"; ", 
+                    // Redundant on net8, where CookieCollection is ICollection<Cookie>, but
+                    // required on net472, where it is only non-generic. See NaturalComparer for
+                    // the same net472/net8 split.
+                    // ReSharper disable once RedundantEnumerableCastCall
+                    var cookieHeader = string.Join(@"; ",
                         cookies.Cast<Cookie>().Select(c => $@"{c.Name}={c.Value}"));
                     request.Headers.Add(cookieHeaderName, cookieHeader);
                 }
