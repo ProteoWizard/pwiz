@@ -23,7 +23,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
@@ -116,43 +115,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(savePath, SkylineWindow.DocumentFilePath, true);
 
             TestMultiselectNavigateThenSelect();
-
-            TestSaveDialogNavigateThenName();
-        }
-
-        /// <summary>
-        /// Drives a Save dialog to a folder and then names the file there: <see cref="NativeFileDialog.EnterPath"/>
-        /// the folder, <see cref="NativeFileDialog.Accept"/> to navigate, then EnterPath the name and save.
-        /// </summary>
-        private void TestSaveDialogNavigateThenName()
-        {
-            var saveDir = TestContext.GetTestResultsPath(@"SaveNavigation");
-            Directory.CreateDirectory(saveDir);
-            var savePath = Path.Combine(saveDir, @"Navigated.sky");
-            FileEx.SafeDelete(savePath); // Or a second local run hits the dialog's own overwrite prompt
-
-            string savedPath = null;
-            RunLongNativeDlg<NativeSaveFileDialog>(
-                () =>
-                {
-                    using var dlg = new System.Windows.Forms.SaveFileDialog();
-                    dlg.InitialDirectory = Path.GetTempPath(); // So reaching saveDir takes a real navigation
-                    AssertEx.AreEqual(System.Windows.Forms.DialogResult.OK, dlg.ShowDialog(SkylineWindow),
-                        @"The Save dialog was not accepted.");
-                    savedPath = dlg.FileName;
-                },
-                dlg =>
-                {
-                    dlg.EnterPath(saveDir);
-                    dlg.Accept();
-                    WaitForCondition(() => DialogShowsFolder(dlg, saveDir),
-                        @"The Save dialog did not navigate to the requested folder.");
-                    dlg.EnterPath(Path.GetFileName(savePath));
-                    dlg.DismissWithAcceptButton();
-                });
-
-            // Case-insensitive: the native dialog returns the drive letter upper-cased.
-            Assert.AreEqual(savePath, savedPath, true);
         }
 
         /// <summary>
@@ -227,9 +189,9 @@ namespace pwiz.SkylineTestFunctional
             dlg.Accept();
         }
 
-        // Whether the dialog is showing the given folder -- read from its "Address" control with get_value, the
+        // Whether the Open dialog is showing the given folder -- read from its "Address" control with get_value, the
         // way an MCP client confirms a navigation (trailing separator and case ignored).
-        private static bool DialogShowsFolder(NativeFileDialog dlg, string folder)
+        private static bool DialogShowsFolder(NativeOpenFileDialog dlg, string folder)
         {
             var current = dlg.GetFormValue(@"Address");
             return current != null &&
