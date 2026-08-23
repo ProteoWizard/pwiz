@@ -319,6 +319,11 @@ namespace SkylineTester
                 return;
             }
 
+            // Tests run from a staged directory, not from what the IDE just built. Bring it up to
+            // date, or stop: running stale binaries silently is how a fixed bug keeps "reproducing".
+            if (!EnsureStagedBuildCurrent(selectedBuildDir))
+                return;
+
             //MemoryChartWindow.Start("TestRunnerMemory.log");
             TestsRun = 0;
             if (Directory.Exists(_resultsDir))
