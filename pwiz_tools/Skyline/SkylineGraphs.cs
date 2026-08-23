@@ -447,10 +447,7 @@ namespace pwiz.Skyline
             } // layoutLock.Dispose()
 
             // Do this after layout is unlocked, because it messes up the selected graph otherwise
-            if (_sequenceTreeForm == null)
-            {
-                ShowSequenceTreeForm(true);
-            }
+            EnsureApplicableForms();
 
             // Just about any change could potentially change these panes.
             if (settingsNew.HasResults)
@@ -461,6 +458,27 @@ namespace pwiz.Skyline
             }
 
             UpdateGraphPanes(listUpdateGraphs);
+        }
+
+        /// <summary>
+        /// Shows required and closes inapplicable forms.
+        /// </summary>
+        private void EnsureApplicableForms()
+        {
+            if (_sequenceTreeForm == null)
+            {
+                ShowSequenceTreeForm(true);
+            }
+            if (!DocumentUI.Settings.HasResults)
+            {
+                UpdateUIGraphRetentionTime(IsRetentionTimeGraphTypeEnabled);
+                UpdateUIGraphPeakArea(false);
+                UpdateUIGraphMassError(false);
+                UpdateUIGraphDetection(false);
+                ShowResultsGrid(false);
+                DestroyCandidatePeakForm();
+                DestroyGraphFullScan();
+            }
             FoldChangeForm.CloseInapplicableForms(this);
             ListGridForm.CloseInapplicableForms(this);
         }
