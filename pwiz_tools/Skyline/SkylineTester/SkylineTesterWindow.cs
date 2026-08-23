@@ -714,74 +714,38 @@ namespace SkylineTester
             // per-project bin\...\net8.0-windows dirs). net8 is x64-only, so only the 64-bit "bin"
             // slot is populated with the most recent staging-net8*\Release build in the checkout;
             // the other slots are unused (hidden).
-            // The Build and Nightly slots matter even though net8 is x64-only: TabNightly.Stop
-            // explicitly selects BuildDirs.nightly64 after a successful build, and TabBuild works
-            // against GetBuildRoot(). Leaving those null made GetSelectedBuildDir return null, so
-            // AddTestRunner reported "No Skyline build containing TestRunner.exe was found" and ran
-            // nothing -- even when the build had succeeded. net472 populated the equivalent slots
-            // from GetBuildRoot()/GetNightlyBuildRoot(); these are the staged-directory analogues.
+            // Offer BOTH staged configurations. Only one used to be listed, so a developer could
+            // not run the other without rebuilding this program - and while Release was picked
+            // unconditionally, that silently ran stale Release binaries against a fresh Debug build.
+            var preferred = PreferredConfiguration();
+            var other = Equals(preferred, "Debug") ? "Release" : "Debug";
             return new[]
             {
-                null,                                                       // bin (32 bit) - n/a on net8
-                GetNet8StagingDir(),                                        // bin (64 bit) - staged build in this checkout
-                null,                                                       // Build (32 bit) - n/a on net8
-                FindNet8StagingDir(SkylineDirUnder(GetBuildRoot())),        // Build (64 bit)
-                null,                                                       // Nightly (32 bit) - n/a on net8
-                FindNet8StagingDir(SkylineDirUnder(NightlyCheckoutDir())),  // Nightly (64 bit)
-                null,                                                       // zip (32 bit)
-                null,                                                       // zip (64 bit)
+                null,                             // bin (32 bit)   - n/a on net8
+                GetNet8StagingDir(preferred),     // bin (64 bit)   - staged, this build's configuration
+                null,                             // Build (32 bit)
+                GetNet8StagingDir(other),         // Build (64 bit) - staged, the other configuration
+                null,          // Nightly (32 bit)
+                null,          // Nightly (64 bit)
+                null,          // zip (32 bit)
+                null,          // zip (64 bit)
             };
 #endif
         }
 
 #if !NET472
-        // Locate the most recently staged net8 test directory in this checkout. Stage-Net8Tests.ps1
-        // assembles TestRunner.exe + the test DLLs + Skyline-daily under
-        // <checkout>\pwiz_tools\Skyline\bin\staging-net8[/-record/-validate]\Release. Find the
-        // checkout's Skyline dir (the ancestor named exactly "Skyline", not "SkylineTester") and
-        // pick the newest staging dir that actually contains TestRunner.exe.
-        /// <summary>The Skyline source dir inside a checkout root, or null if the root is unset.</summary>
-        private static string SkylineDirUnder(string checkoutRoot)
-        {
-            return string.IsNullOrEmpty(checkoutRoot)
-                ? null
-                : Path.Combine(checkoutRoot, "pwiz_tools", "Skyline");
-        }
-
         /// <summary>
-        /// The checkout the nightly builds in. TabNightly clones/updates into "pwiz" beneath the
-        /// nightly build root, so the staged output lives under that, not under the root itself.
+        /// The staged test directory for one configuration, or null when nothing is staged there.
+        /// <para>The staging script assembles TestRunner.exe, the test DLLs and Skyline under
+        /// &lt;checkout&gt;\pwiz_tools\Skyline\bin\staging-net8[-record/-validate]\&lt;Config&gt;. The
+        /// canonical "staging-net8" wins over the workflow-specific subsets when both are present.</para>
         /// </summary>
-        private string NightlyCheckoutDir()
-        {
-            var nightlyRoot = GetNightlyBuildRoot();
-            return string.IsNullOrEmpty(nightlyRoot) ? null : Path.Combine(nightlyRoot, "pwiz");
-        }
-
-        /// <summary>
-        /// Locates the staged net8 test directory belonging to SkylineTester's OWN checkout, by
-        /// walking up to the ancestor named exactly "Skyline" (not "SkylineTester").
-        ///
-        /// Only works when SkylineTester runs from inside a checkout. Under the nightly it runs from
-        /// a "SkylineTester Files" folder that is a SIBLING of the checkout, so this returns null
-        /// there and the Nightly slot above supplies the directory instead.
-        /// </summary>
-        private string GetNet8StagingDir()
+        private string GetNet8StagingDir(string configuration)
         {
             var skylineDir = ExeDir;
             while (skylineDir != null &&
                    !string.Equals(Path.GetFileName(skylineDir), "Skyline", StringComparison.OrdinalIgnoreCase))
                 skylineDir = Path.GetDirectoryName(skylineDir);
-            return FindNet8StagingDir(skylineDir);
-        }
-
-        /// <summary>
-        /// Picks the staged net8 test directory under a given Skyline source dir. Stage-Net8Tests.ps1
-        /// assembles TestRunner.exe + the test DLLs + Skyline-daily under
-        /// &lt;Skyline&gt;\bin\staging-net8[-record/-validate]\Release.
-        /// </summary>
-        private static string FindNet8StagingDir(string skylineDir)
-        {
             if (skylineDir == null)
                 return null;
             var binDir = Path.Combine(skylineDir, "bin");
@@ -789,30 +753,12 @@ namespace SkylineTester
                 return null;
             try
             {
-                // Check BOTH configurations: Stage-Net8Tests.ps1 defaults to -Configuration
-                // Debug, and looking only under "Release" made a correctly staged Debug build
-                // invisible. The slot then came back null, GetTestInfos fell back to ExeDir
-                // (which holds no test DLLs), and every tab rendered empty with no hint why.
-                //
-                // Look under the configuration THIS SkylineTester was built as first. Both
-                // configurations can be staged at the same time, and taking Release whenever it
-                // exists meant a Debug SkylineTester silently ran Release TestRunner: a developer
-                // who had just built and staged Debug got tests from whatever Release build
-                // happened to be lying around, reporting failures already fixed in the tree.
-#if DEBUG
-                var configsInPreferenceOrder = new[] { "Debug", "Release" };
-#else
-                var configsInPreferenceOrder = new[] { "Release", "Debug" };
-#endif
-                var candidates = (from stagingDir in Directory.GetDirectories(binDir, "staging-net8*")
-                                  from config in configsInPreferenceOrder
-                                  select Path.Combine(stagingDir, config))
+                var candidates = Directory.GetDirectories(binDir, TestStager.STAGING_ROOT + "*")
+                    .Select(d => Path.Combine(d, configuration))
                     .Where(d => File.Exists(Path.Combine(d, "TestRunner.exe")))
                     .ToList();
-                // Prefer the canonical "staging-net8" (the full default staging) over workflow-specific
-                // subsets like "-record"/"-validate"; otherwise fall back to the most recent.
                 return candidates.FirstOrDefault(d =>
-                           string.Equals(Path.GetFileName(Path.GetDirectoryName(d)), "staging-net8",
+                           string.Equals(Path.GetFileName(Path.GetDirectoryName(d)), TestStager.STAGING_ROOT,
                                StringComparison.OrdinalIgnoreCase))
                        ?? candidates.OrderByDescending(Directory.GetLastWriteTimeUtc).FirstOrDefault();
             }
@@ -820,6 +766,18 @@ namespace SkylineTester
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// The configuration this program was built as, taken from its own location
+        /// (...\SkylineTester\bin\&lt;Config&gt;\&lt;tfm&gt;) rather than from conditional compilation,
+        /// so one rule covers however it was built. Defaults to Debug when the layout is not
+        /// recognized, which is the configuration a developer iterating in the IDE is running.
+        /// </summary>
+        private string PreferredConfiguration()
+        {
+            var config = Path.GetFileName(Path.GetDirectoryName(ExeDir) ?? string.Empty);
+            return Equals(config, "Release") ? "Release" : "Debug";
         }
 #endif
 
@@ -910,6 +868,11 @@ namespace SkylineTester
                 else
                 {
                     item.Visible = true;
+                    // A staged slot is named after its configuration. The fixed menu text ("bin
+                    // (64 bit)") says nothing about which build is about to run, which is how a
+                    // Release staging got tested against a Debug build without anyone noticing.
+                    if (IsStagingDir(buildDirs[i]))
+                        item.Text = "Staged " + Path.GetFileName(buildDirs[i]);
                     defaultIndex = Math.Min(defaultIndex, i);
                 }
             }
