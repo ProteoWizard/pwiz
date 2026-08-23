@@ -34,38 +34,63 @@ namespace SkylineBatch
         public void DownloadAsync(Uri remoteUri, string downloadPath, string username, string password,
             long expectedSize)
         {
-            using (var wc = new WebClient())
+            // Despite the name, this has always blocked until the download finished - the old
+            // implementation started WebClient.DownloadFileAsync and then span on
+            // Thread.Sleep(100) waiting for it. HttpClientWithProgress.DownloadFile does the same
+            // job synchronously, reports progress from the transfer rather than by stat-ing the
+            // partial file, and honours cancellation through the monitor.
+            var progressMonitor = new DownloadProgressMonitor(ProgressHandler, CancelToken);
+            using (var httpClient = new HttpClientWithProgress(progressMonitor))
             {
                 if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                 {
-                    wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
+                    httpClient.AddAuthorizationHeader(Server.GetBasicAuthHeader(username, password));
                 }
 
-                var completed = false;
-                Exception error = null;
-                wc.DownloadFileAsync(remoteUri, downloadPath);
-                wc.DownloadFileCompleted += ((sender, e) =>
+                try
                 {
-                    error = e.Error;
-                    completed = true;
-                });
-                var progressChanged = new DownloadProgressChangedEventHandler((sender, e) => {
-                    var percent = expectedSize > 0 ? new FileInfo(downloadPath).Length * 100 / expectedSize : 0;
-                    ProgressHandler((int)percent, null);
-                });
-                wc.DownloadProgressChanged += progressChanged;
-                while (!completed)
-                {
-                    if (CancelToken.IsCancellationRequested)
-                    {
-                        wc.CancelAsync();
-                    }
-
-                    if (error != null)
-                        ProgressHandler(-1, error);
-                    Thread.Sleep(100);
+                    httpClient.DownloadFile(remoteUri, downloadPath, expectedSize > 0 ? expectedSize : (long?)null);
                 }
-                wc.DownloadProgressChanged -= progressChanged;
+                catch (Exception e)
+                {
+                    // Cancellation is what the caller asked for, not a download failure. The old
+                    // loop reported it as one, because CancelAsync surfaced through the same
+                    // error path.
+                    if (!CancelToken.IsCancellationRequested)
+                        ProgressHandler(-1, e);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adapts the <see cref="Update"/> delegate this class reports through to the
+        /// <see cref="IProgressMonitor"/> that <see cref="HttpClientWithProgress"/> expects, and
+        /// carries the cancellation token so a cancelled download stops rather than running to
+        /// completion.
+        /// </summary>
+        private class DownloadProgressMonitor : IProgressMonitorWithCancellationToken
+        {
+            private readonly Update _progressHandler;
+
+            public DownloadProgressMonitor(Update progressHandler, CancellationToken cancellationToken)
+            {
+                _progressHandler = progressHandler;
+                CancellationToken = cancellationToken;
+            }
+
+            public CancellationToken CancellationToken { get; }
+
+            public bool IsCanceled => CancellationToken.IsCancellationRequested;
+
+            public bool HasUI => false;
+
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            {
+                if (IsCanceled)
+                    return UpdateProgressResponse.cancel;
+
+                _progressHandler(status.PercentComplete, null);
+                return UpdateProgressResponse.normal;
             }
         }
 
