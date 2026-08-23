@@ -54,8 +54,13 @@ namespace pwiz.Common.SystemUtil
             {
                 if (ExceptionDetail != null)
                 {
-                    // ToString() is nullable, and Message must not be: fall back rather than
-                    // hand a null message to whatever is reporting the error.
+                    // The two legs contradict each other here: object.ToString() is string? in
+                    // net8's annotated BCL, and non-null under ReSharper's net472 annotations.
+                    // Drop the coalesce and net8 reports AssignNullToNotNullAttribute; keep it
+                    // and net472 reports ConstantNullCoalescingCondition. No single form is
+                    // clean on both, so keep the defensive one - Message must never be null -
+                    // and silence the leg that considers it unnecessary.
+                    // ReSharper disable once ConstantNullCoalescingCondition
                     return ExceptionDetail.ToString() ?? base.Message;
                 }
                 return base.Message;

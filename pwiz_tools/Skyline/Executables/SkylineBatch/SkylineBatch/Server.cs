@@ -2,7 +2,11 @@ using SharedBatch;
 using System;
 using System.Collections.Immutable;
 using System.IO;
+#if NET472
+// AllKeys.Contains below binds to Enumerable.Contains on net472; on net8 it resolves on the
+// BCL type itself, which is why inspectcode reports this using as redundant.
 using System.Linq;
+#endif
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;

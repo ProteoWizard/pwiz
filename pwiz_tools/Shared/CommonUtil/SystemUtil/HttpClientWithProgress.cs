@@ -25,7 +25,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
+#if !NET472
+// Only the net8 arm of IsDnsResolutionFailure names SocketException.
 using System.Net.Sockets;
+#endif
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
