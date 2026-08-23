@@ -255,6 +255,26 @@ namespace TestRunner
             }
         }
 
+        /// <summary>
+        /// Assembles the staged test directory that net8 tests run from, and reports what it did.
+        /// </summary>
+        private static int StageTests(CommandLineArgs commandLineArgs)
+        {
+            try
+            {
+                var skylineDir = GetSkylineDirectory().FullName;
+                var configuration = commandLineArgs.ArgAsString("configuration");
+                var stager = new TestStager(skylineDir, configuration, Console.WriteLine);
+                stager.Stage();
+                return 0;
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Staging failed: " + e.Message);
+                return 1;
+            }
+        }
+
         static readonly string commandLineOptions =
             "?;/?;-?;help;skylinetester;debug;results;" +
             "test;skip;filter;form;" +
@@ -263,6 +283,7 @@ namespace TestRunner
             "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
             "demo=off;showformnames=off;status=off;buildcheck=0;" +
+            "stage=off;configuration=Debug;" +
             "quality=off;qualityonly=off;pass0=off;pass1=off;pass2=on;" +
             "perftests=off;" +
             "retrydatadownloads=off;" +
@@ -345,6 +366,12 @@ namespace TestRunner
             // it stays available for diagnosing heap issues without a rebuild.
             if (commandLineArgs.ArgAsBool("skipsystemheaps"))
                 RunTests.SkipSystemHeaps = true;
+
+            // stage=1 assembles the staged test directory and exits. This is the same code the
+            // staging script and SkylineTester use, so there is one implementation of staging
+            // rather than one per caller.
+            if (commandLineArgs.ArgAsBool("stage"))
+                return StageTests(commandLineArgs);
 
             switch (commandLineArgs.SearchArgs("?;/?;-?;help;report"))
             {

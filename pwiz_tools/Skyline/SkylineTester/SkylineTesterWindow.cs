@@ -853,24 +853,24 @@ namespace SkylineTester
             if (skylineDir == null)
                 return true;
 
-            var script = Path.Combine(skylineDir, STAGING_SCRIPT);
-            if (!File.Exists(script))
+            // Run the stager straight out of the build output, never the staged copy: staging with
+            // a stale stager is how staging quietly stops keeping up with its own fixes.
+            var stagerExe = Path.Combine(skylineDir, "TestRunner", "bin", configuration,
+                TestStager.TFM, "TestRunner.exe");
+            if (!File.Exists(stagerExe))
             {
                 MessageBox.Show(this, string.Join(Environment.NewLine,
-                    "Tests run from a staged directory, which is assembled by " + STAGING_SCRIPT + ".",
-                    "That script was not found, so the tests would run whatever was staged last",
-                    "rather than what you just built.",
+                    "Tests run from a staged directory, assembled by TestRunner.",
+                    "It was not found, so the tests would run whatever was staged last rather than",
+                    "what you just built.",
                     string.Empty,
-                    "Expected it at: " + script));
+                    "Expected it at: " + stagerExe));
                 return false;
             }
 
-            commandShell.Add("{0} -NoProfile -File {1} -Configuration {2}",
-                "pwsh", script.Quote(), configuration);
+            commandShell.Add("{0} stage=1 configuration={1}", stagerExe.Quote(), configuration);
             return true;
         }
-
-        private const string STAGING_SCRIPT = "Stage-Net8Tests.ps1";
 
         /// <summary>
         /// True for the staged directories the staging script assembles
@@ -883,7 +883,7 @@ namespace SkylineTester
             if (string.IsNullOrEmpty(buildDir))
                 return false;
             var stagingRoot = Path.GetFileName(Path.GetDirectoryName(buildDir) ?? string.Empty);
-            return stagingRoot.StartsWith("staging-net8", StringComparison.OrdinalIgnoreCase);
+            return stagingRoot.StartsWith(TestStager.STAGING_ROOT, StringComparison.OrdinalIgnoreCase);
         }
 
         public void FindBuilds()
