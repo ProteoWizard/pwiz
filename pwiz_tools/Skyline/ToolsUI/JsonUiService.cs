@@ -487,9 +487,10 @@ namespace pwiz.Skyline.ToolsUI
                     dialog.Path = formPath;
                     return dialog;
                 }
-            // The managed form, already built (with its handle) by GetOpenFormElements; recording its path is a
-            // plain field set, so no UI-thread marshal is needed.
-            var formElement = (StandaloneForm) FindFormById(formId, cancellationToken);
+            // Otherwise the window the id names, already built (with its handle) by FindFormById; recording its path
+            // is a plain field set, so no UI-thread marshal is needed. It can still be a native dialog: this walk
+            // enumerates both, and a dialog the shell finishes bringing up between the two walks lands here.
+            var formElement = FindFormById(formId, cancellationToken);
             formElement.Path = formPath;
             return formElement;
         }

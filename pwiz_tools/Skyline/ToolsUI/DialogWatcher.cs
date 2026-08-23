@@ -127,8 +127,24 @@ namespace pwiz.Skyline.ToolsUI
         private static ActionResult PerformActionAndWait(IntPtr hwnd, Action action, Func<bool> waitCondition,
             CancellationToken cancellationToken)
         {
-            return PerformActionAndWait(Control.FromHandle(hwnd) ?? UiThreadWindow, action, waitCondition,
-                cancellationToken);
+            var control = Control.FromHandle(hwnd);
+            if (control == null)
+            {
+                var uiThreadWindow = UiThreadWindow;
+                // IntPtr.Zero names no window: the work simply needs the UI thread (JsonToolServer runs a CLI
+                // command that way). A real native window must be ON that thread, because that is the thread the
+                // BeginInvoke below reaches -- marshaling its work anywhere else would run it off the thread that
+                // owns it, silently.
+                if (hwnd != IntPtr.Zero &&
+                    User32.GetWindowThreadProcessId(hwnd, out _) !=
+                    User32.GetWindowThreadProcessId(uiThreadWindow.Handle, out _))
+                {
+                    throw new InvalidOperationException(new LlmInstruction(string.Format(@"Native window {0} is on the wrong thread", hwnd)));
+                }
+
+                control = uiThreadWindow;
+            }
+            return PerformActionAndWait(control, action, waitCondition, cancellationToken);
         }
         /// <summary>
         /// Snapshots -- on the caller thread, FIRST -- the nesting count and open top-level windows (pruning the
