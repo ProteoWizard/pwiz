@@ -528,12 +528,26 @@ namespace pwiz.Skyline.Util
             FilePath = filePath;
             Buffered = buffered;
             FileTime = File.GetLastWriteTime(FilePath);
+            FileSize = FileSizeOrMissing(FilePath);
+        }
+
+        private static long FileSizeOrMissing(string filePath)
+        {
+            try
+            {
+                return new FileInfo(filePath).Length;
+            }
+            catch (Exception)
+            {
+                return -1;  // Only ever reported alongside a failure, never acted on
+            }
         }
 
         public IStreamManager StreamManager { get; private set; }
         public string FilePath { get; private set; }
         public bool Buffered { get; private set; }
         public DateTime FileTime { get; private set; }
+        public long FileSize { get; private set; }
 
         /// <summary>
         /// Handles actually opening the stream.
@@ -544,7 +558,15 @@ namespace pwiz.Skyline.Util
             // Check to see if the file was modified, during the time
             // it was closed.
             if (IsModified)
-                throw new FileModifiedException(string.Format(UtilResources.PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened, FilePath));
+            {
+                // Say BY HOW MUCH, and whether the size moved with it. "Has been modified" alone
+                // cannot distinguish a genuine rewrite from a last-write-time that Windows had not
+                // yet flushed to the directory entry when it was first read - the file is unchanged
+                // in the second case, and the two want opposite fixes.
+                throw new FileModifiedException(TextUtil.LineSeparate(
+                    string.Format(UtilResources.PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened, FilePath),
+                    ModifiedExplanation, SizeExplanation));
+            }
             // Create the stream
             return StreamManager.CreateStream(FilePath, FileMode.Open, Buffered);
         }
@@ -591,6 +613,29 @@ namespace pwiz.Skyline.Util
                 catch (Exception exception)
                 {
                     return string.Format(@"Unable to read file time: {0}", exception.Message);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The file's size now against its size when first opened. A timestamp that moved while the
+        /// size did not is the signature of a last-write-time that had simply not been flushed to
+        /// the directory entry yet, rather than of anything having rewritten the file.
+        /// </summary>
+        public string SizeExplanation
+        {
+            get
+            {
+                try
+                {
+                    var sizeNow = new FileInfo(FilePath).Length;
+                    return Equals(sizeNow, FileSize)
+                        ? string.Format(@"Size unchanged at {0} bytes", sizeNow)
+                        : string.Format(@"Size was {0} bytes, now {1}", FileSize, sizeNow);
+                }
+                catch (Exception exception)
+                {
+                    return string.Format(@"Unable to read file size: {0}", exception.Message);
                 }
             }
         }
