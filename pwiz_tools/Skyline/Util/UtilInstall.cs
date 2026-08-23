@@ -317,15 +317,25 @@ namespace pwiz.Skyline.Util
                     Directory.CreateDirectory(requiredFile.InstallPath);
                     try
                     {
-                        using (var zipFile = new ZipFile(downloadFilename))
+                        // Retry a locked overwrite. These archives hold tool executables and the MSVC
+                        // runtime DLLs beside them, and a search engine process that has just been
+                        // waited on can keep them open for a moment after it exits - long enough to
+                        // deny the overwrite, not long enough to be worth failing a test over. The
+                        // lock is transient by construction, so give it a few seconds before giving up.
+                        var installPath = requiredFile.InstallPath;
+                        var overwrite = requiredFile.OverwriteExisting;
+                        TryHelper.Try<Exception>(() =>
                         {
-                            zipFile.ExtractAll(requiredFile.InstallPath, requiredFile.OverwriteExisting ? ExtractExistingFileAction.OverwriteSilently : ExtractExistingFileAction.DoNotOverwrite);
-                        }
+                            using (var zipFile = new ZipFile(downloadFilename))
+                            {
+                                zipFile.ExtractAll(installPath, overwrite ? ExtractExistingFileAction.OverwriteSilently : ExtractExistingFileAction.DoNotOverwrite);
+                            }
+                        }, 4, 1000);
                     }
                     catch (Exception x) when (x is UnauthorizedAccessException || x is IOException)
                     {
-                        // Overwriting a file another process has loaded fails with nothing but
-                        // "access to the path is denied", which cannot be acted on. Name the holder.
+                        // Still locked after retrying. "Access to the path is denied" on its own cannot
+                        // be acted on, so name whatever is holding the file.
                         throw FileLockingProcessFinder.ToFileLockingException(x, requiredFile.InstallPath);
                     }
 

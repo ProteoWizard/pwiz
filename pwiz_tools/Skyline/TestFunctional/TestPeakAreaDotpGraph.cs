@@ -7,6 +7,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -49,6 +50,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(SkylineWindow.UpdatePeakAreaGraph);
             FindNode((600.8278).ToString(LocalizationHelper.CurrentCulture) + "++");
             WaitForGraphs();
+            WaitForPaneShowingSelection(0);
             var expectedRDotp1 = new[] {0.62, 1.00, 0.61, 0.53};
             RunUI(() =>
             {
@@ -122,6 +124,7 @@ namespace pwiz.SkylineTestFunctional
 
             FindNode((529.2855).ToString(LocalizationHelper.CurrentCulture) + "++");
             WaitForGraphs();
+            WaitForPaneShowingSelection(0);
             var expectedRDotp2 = new[] {0.72, 0.98, 0.88, 0.92};
             RunUI(() =>
             {
@@ -154,6 +157,8 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(propertyDialog, propertyDialog.OkDialog);
             FindNode((873.9438).ToString(LocalizationHelper.CurrentCulture) + "++");
             WaitForGraphs();
+            WaitForPaneShowingSelection(0);
+            WaitForPaneShowingSelection(1);
             RunUI(() =>
             {
                 VerifyDotpLine(replicates, expectedIDotp, @"idotp");
@@ -235,6 +240,27 @@ namespace pwiz.SkylineTestFunctional
 
         // Returns the unrounded rdotp line value at the given replicate's displayed position.
         // Must be called on the UI thread.
+        /// <summary>
+        /// Waits for a peak area pane to catch up to the selected precursor.
+        /// <para><see cref="WaitForGraphs"/> is not enough on its own. It reports only that no graph
+        /// update is queued, and an update can leave that queue without having happened: the timer
+        /// tick in SkylineGraphs pops a pane and removes it unconditionally, while
+        /// GraphSummary.UpdateGraph returns early whenever the document and the selection are
+        /// momentarily out of sync. The pending flag then goes false with the pane still drawing the
+        /// PREVIOUS precursor, which is how this test read one precursor's dotp values against
+        /// another's expectations, roughly once in 460 executions.</para>
+        /// </summary>
+        private void WaitForPaneShowingSelection(int paneIndex)
+        {
+            WaitForConditionUI(() =>
+            {
+                var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.MasterPane[paneIndex];
+                var selected = SkylineWindow.SequenceTree.GetNodeOfType<TransitionGroupTreeNode>()?.DocNode;
+                return selected != null && pane.ParentGroupNode != null &&
+                       ReferenceEquals(pane.ParentGroupNode.TransitionGroup, selected.TransitionGroup);
+            }, () => string.Format("Peak area pane {0} did not catch up to the selected precursor.", paneIndex));
+        }
+
         private double GetRdotpLineValue(string replicate, int paneIndex = 0)
         {
             var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.MasterPane[paneIndex];
