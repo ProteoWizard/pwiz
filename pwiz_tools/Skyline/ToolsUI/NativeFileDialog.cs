@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Threading;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Util.Extensions;
+using SkylineTool;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -119,15 +120,19 @@ namespace pwiz.Skyline.ToolsUI
             return textBox.GetValueNow() as string ?? string.Empty;
         }
 
-        /// <summary>Commits without waiting for the dialog to close, because it may not: a FOLDER path navigates
-        /// and leaves it open (read the "AddressBar" control to tell), and on the multiselect Open dialog the click
-        /// can be spent closing the combo's autocomplete drop-down instead of committing -- so a caller checks
-        /// whether the dialog closed and clicks again if it did not. Use
-        /// <see cref="NativeDialog.DismissWithAcceptButton"/> when it must close. The BM_CLICK is SENT, so call
-        /// this OFF the UI thread.</summary>
-        public void Accept()
+        /// <summary>Clicks the commit button, which is <see cref="StandaloneWindow.ClickButton"/> by control id
+        /// rather than by the button's localized caption -- the one thing a test cannot key on. Same marshal: ONE
+        /// trip onto the dialog's thread, and a modal the click raises comes back named rather than pinning this
+        /// thread. Must be called off the dialog's own thread.
+        ///
+        /// <para>Does not wait for the dialog to close, because it may not: a FOLDER path navigates and leaves it
+        /// open (read the "AddressBar" control to tell), and on the multiselect Open dialog the click can be spent
+        /// closing the combo's autocomplete drop-down instead of committing -- so a caller checks whether the dialog
+        /// closed and clicks again if it did not. Use <see cref="NativeDialog.DismissWithAcceptButton"/> when it
+        /// must close.</para></summary>
+        public ActionResult Accept()
         {
-            AcceptButton.ClickNow();
+            return PerformAction(() => UiActions.Click.InvokeNow(AcceptButton, null));
         }
 
         protected NativeButton AcceptButton => RequireButton(IDOK, CommitButtonDescription);
