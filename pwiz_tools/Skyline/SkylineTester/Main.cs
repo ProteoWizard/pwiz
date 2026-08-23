@@ -319,9 +319,10 @@ namespace SkylineTester
                 return;
             }
 
-            // Tests run from a staged directory, not from what the IDE just built. Bring it up to
-            // date, or stop: running stale binaries silently is how a fixed bug keeps "reproducing".
-            if (!EnsureStagedBuildCurrent(selectedBuildDir))
+            // Tests run from a staged directory, not from what the IDE just built, so stage first.
+            // Queued ahead of the test commands below so it streams progress to the log; running
+            // stale binaries silently is how a fixed bug keeps "reproducing".
+            if (!AddStagingCommand(selectedBuildDir))
                 return;
 
             //MemoryChartWindow.Start("TestRunnerMemory.log");

@@ -824,79 +824,53 @@ namespace SkylineTester
 #endif
 
         /// <summary>
-        /// Brings the staged test directory up to date with the current build, and refuses the run
-        /// if it cannot.
+        /// Queues the staging step that brings the staged test directory up to date with the current
+        /// build, returning false only if it cannot be queued at all.
         /// <para>net8 tests execute from a staged directory assembled by the staging script, not from
         /// the per-project build output Visual Studio writes. Building in the IDE therefore has NO
         /// effect on what the tests load until something re-stages, and nothing used to say so: a
         /// developer would edit code, rebuild, run tests, and silently exercise whatever was staged
-        /// last - in one observed case a build from the previous night. Staging here, at the moment
-        /// tests are launched, keeps ordinary Visual Studio iteration honest without making anyone
-        /// run a script. It also cannot collide with a test run in progress, which a post-build step
-        /// would.</para>
-        /// <para>Staging is a robocopy merge that skips files already identical, so re-staging after
-        /// an incremental build copies only what changed.</para>
+        /// last - in one observed case a build from the previous night.</para>
+        /// <para>This runs as a queued command rather than inline. Staging inline blocked the UI
+        /// thread with no progress, so the window simply looked hung, and reading the script's output
+        /// streams in sequence could deadlock outright once it filled a pipe buffer. Queued, it
+        /// streams to the log like every other step and the window stays alive. Staging is a robocopy
+        /// merge that skips files already identical, so it is cheap enough to run every time, which
+        /// is safer than trusting a staleness heuristic to notice every kind of change.</para>
         /// </summary>
         /// <param name="buildDir">The directory tests will run from</param>
-        /// <returns>True if that directory can be trusted to match the build</returns>
-        public bool EnsureStagedBuildCurrent(string buildDir)
+        /// <returns>False if tests run from a staged directory that cannot be staged</returns>
+        public bool AddStagingCommand(string buildDir)
         {
             // Only a staged directory can drift from the build. Where tests run straight out of the
             // build output there is nothing to bring up to date.
             if (!IsStagingDir(buildDir))
                 return true;
 
-            string staleReason;
-            try
+            // <Skyline>\bin\staging-net8\<Config> - the configuration is the leaf
+            var configuration = Path.GetFileName(buildDir);
+            var skylineDir = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(buildDir)));
+            if (skylineDir == null)
+                return true;
+
+            var script = Path.Combine(skylineDir, STAGING_SCRIPT);
+            if (!File.Exists(script))
             {
-                // <Skyline>\bin\staging-net8\<Config> - the configuration is the leaf
-                var configuration = Path.GetFileName(buildDir);
-                var skylineDir = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(buildDir)));
-                if (skylineDir == null)
-                    return true;
-
-                var script = Path.Combine(skylineDir, STAGING_SCRIPT);
-                if (!File.Exists(script))
-                {
-                    staleReason = script + " was not found.";
-                }
-                else
-                {
-                    commandShell.Log($"Staging {configuration} build for testing...");
-                    if (RunStagingScript(script, skylineDir, configuration, out var stagingError))
-                        return true;
-                    staleReason = stagingError;
-                }
-
-                // Staging did not run. Only block if a file that would actually be LOADED is older
-                // than the build copy of that same file, so a missing PowerShell 7 does not stop
-                // someone whose staging is fine.
-                var stale = FindStaleStagedFile(buildDir, skylineDir, configuration);
-                if (stale == null)
-                    return true;
-
                 MessageBox.Show(this, string.Join(Environment.NewLine,
-                    "The staged test files are older than the build, so the tests would not run the code you just built.",
+                    "Tests run from a staged directory, which is assembled by " + STAGING_SCRIPT + ".",
+                    "That script was not found, so the tests would run whatever was staged last",
+                    "rather than what you just built.",
                     string.Empty,
-                    $"{stale.Value.Name} staged {stale.Value.Staged.ToLocalTime():g}, built {stale.Value.Built.ToLocalTime():g}",
-                    buildDir,
-                    string.Empty,
-                    "Could not stage automatically: " + staleReason,
-                    string.Empty,
-                    "Stage it, then try again:",
-                    $"    pwsh -File \"{Path.Combine(skylineDir, STAGING_SCRIPT)}\" -Configuration {configuration}"));
+                    "Expected it at: " + script));
                 return false;
             }
-            catch (Exception e)
-            {
-                // Never let this check be the thing that stops a run it cannot prove is stale
-                commandShell.Log("Could not verify that staged tests match the build: " + e.Message);
-                return true;
-            }
+
+            commandShell.Add("{0} -NoProfile -File {1} -Configuration {2}",
+                "pwsh", script.Quote(), configuration);
+            return true;
         }
 
         private const string STAGING_SCRIPT = "Stage-Net8Tests.ps1";
-        private const int STAGING_TIMEOUT_MINUTES = 10;
 
         /// <summary>
         /// True for the staged directories the staging script assembles
@@ -910,123 +884,6 @@ namespace SkylineTester
                 return false;
             var stagingRoot = Path.GetFileName(Path.GetDirectoryName(buildDir) ?? string.Empty);
             return stagingRoot.StartsWith("staging-net8", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private bool RunStagingScript(string script, string workingDir, string configuration, out string error)
-        {
-            error = null;
-            try
-            {
-                var psi = new ProcessStartInfo("pwsh",
-                    $"-NoProfile -File {script.Quote()} -Configuration {configuration}")
-                {
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    WorkingDirectory = workingDir
-                };
-                using (var process = Process.Start(psi))
-                {
-                    if (process == null)
-                    {
-                        error = "PowerShell 7 (pwsh) could not be started.";
-                        return false;
-                    }
-
-                    var output = process.StandardOutput.ReadToEnd();
-                    var stdErr = process.StandardError.ReadToEnd();
-                    if (!process.WaitForExit(STAGING_TIMEOUT_MINUTES * 60 * 1000))
-                    {
-                        error = $"Staging did not finish within {STAGING_TIMEOUT_MINUTES} minutes.";
-                        return false;
-                    }
-
-                    if (process.ExitCode != 0)
-                    {
-                        error = $"Staging failed (exit {process.ExitCode}). {stdErr.Trim()}";
-                        return false;
-                    }
-
-                    foreach (var line in output.Split('\n').Select(l => l.TrimEnd())
-                                 .Where(l => l.StartsWith("Staged", StringComparison.Ordinal)))
-                        commandShell.Log(line);
-                    return true;
-                }
-            }
-            catch (Exception e)
-            {
-                error = e.Message;
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// The first staged binary that is older than the build's copy of the same file, or null when
-        /// everything the tests would load is current.
-        /// <para>Compares only files that are actually staged, rather than the newest build output
-        /// anywhere. Some projects - this one included - are built but deliberately never staged, so
-        /// a plain newest-wins comparison would call a perfectly good staging directory stale.</para>
-        /// </summary>
-        private static StaleFile? FindStaleStagedFile(string buildDir, string skylineDir, string configuration)
-        {
-            var built = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
-            foreach (var outputDir in BuildOutputDirs(skylineDir, configuration))
-            {
-                foreach (var file in EnumerateBinaries(outputDir))
-                {
-                    var name = Path.GetFileName(file);
-                    var written = File.GetLastWriteTimeUtc(file);
-                    if (!built.TryGetValue(name, out var previous) || written > previous)
-                        built[name] = written;
-                }
-            }
-
-            foreach (var stagedFile in EnumerateBinaries(buildDir))
-            {
-                var name = Path.GetFileName(stagedFile);
-                if (built.TryGetValue(name, out var builtTime))
-                {
-                    var stagedTime = File.GetLastWriteTimeUtc(stagedFile);
-                    if (builtTime > stagedTime)
-                        return new StaleFile { Name = name, Staged = stagedTime, Built = builtTime };
-                }
-            }
-            return null;
-        }
-
-        private struct StaleFile
-        {
-            public string Name;
-            public DateTime Staged;
-            public DateTime Built;
-        }
-
-        private static IEnumerable<string> EnumerateBinaries(string dir)
-        {
-            if (!Directory.Exists(dir))
-                return new string[0];
-            return Directory.EnumerateFiles(dir, "*.*", SearchOption.TopDirectoryOnly)
-                .Where(f => f.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) ||
-                            f.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
-        }
-
-        /// <summary>
-        /// The per-project output directories a build writes to for this configuration: the Skyline
-        /// project's own, plus one for every sibling project.
-        /// </summary>
-        private static IEnumerable<string> BuildOutputDirs(string skylineDir, string configuration)
-        {
-            var targetDir = Path.Combine("bin", configuration, "net8.0-windows");
-            var own = Path.Combine(skylineDir, targetDir);
-            if (Directory.Exists(own))
-                yield return own;
-            foreach (var projectDir in Directory.EnumerateDirectories(skylineDir))
-            {
-                var output = Path.Combine(projectDir, targetDir);
-                if (Directory.Exists(output))
-                    yield return output;
-            }
         }
 
         public void FindBuilds()
