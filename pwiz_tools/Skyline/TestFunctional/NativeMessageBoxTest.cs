@@ -81,9 +81,9 @@ namespace pwiz.SkylineTestFunctional
             fileDialogId = actionResult.FormId;
             Assert.IsNotNull(fileDialogId);
             Assert.AreEqual(modalNestingCount, GetModalNestingCount(fileDialogId));
-            // Set straight away, with no readiness wait: a file dialog is not named in an ActionResult (nor listed
-            // by GetOpenForms) until the shell has shown the field this types into -- see NativeDialog.Create. This
-            // set failing with "The file dialog is still opening" would mean that gate had regressed.
+            // Set straight away, with no readiness wait of the test's own: a file dialog is not named in an
+            // ActionResult (nor listed by GetOpenForms) until the shell has brought it up (see NativeDialog.Create),
+            // and the set waits for the file-name field to be shown (see NativeFileDialog.EnterPath).
             AssertComplete(McpConnector.SetFormValue(fileDialogId, @"FileName", savePath));
             actionResult = McpConnector.DismissWithAcceptButton(fileDialogId);
             Assert.IsFalse(actionResult.Completed);

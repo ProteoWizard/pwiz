@@ -487,9 +487,10 @@ namespace pwiz.Skyline.ToolsUI
                     dialog.Path = formPath;
                     return dialog;
                 }
-            // The managed form, already built (with its handle) by GetOpenFormElements; recording its path is a
-            // plain field set, so no UI-thread marshal is needed.
-            var formElement = (StandaloneForm) FindFormById(formId, cancellationToken);
+            // Otherwise the window the id names, already built (with its handle) by FindFormById; recording its path
+            // is a plain field set, so no UI-thread marshal is needed. It can still be a native dialog: this walk
+            // enumerates both, and a dialog the shell finishes bringing up between the two walks lands here.
+            var formElement = FindFormById(formId, cancellationToken);
             formElement.Path = formPath;
             return formElement;
         }
@@ -681,9 +682,9 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Finds a managed form by its TypeName:Title identifier -- the main window, a form docked in it, or an
-        /// open dialog -- and returns it as the already-built <see cref="StandaloneForm"/> (its window handle already
-        /// captured). Matches the same set <see cref="GetOpenForms"/> reports, and may be called from any thread.
+        /// Finds a window by its TypeName:Title identifier -- the main window, a form docked in it, an open dialog,
+        /// or a native one -- already built, with its window handle captured. Matches the same set
+        /// <see cref="GetOpenForms"/> reports, and may be called from any thread.
         /// </summary>
         private static StandaloneWindow FindFormById(string formId, CancellationToken cancellationToken)
         {

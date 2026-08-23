@@ -60,12 +60,8 @@ namespace pwiz.Skyline.ToolsUI
                 .FindDescendants(NativeControl.TREE_CLASS).Any();
         }
 
-        /// <summary>The folder browser has finished opening once the shell has SHOWN its folder tree -- the
-        /// control it is classified by, and the one <see cref="SetValueCore"/> acts on. Existence is not enough,
-        /// for the same reason it is not for the file dialogs: <see cref="NativeDialog.FindDescendants"/> matches
-        /// on class alone, so the tree it finds was created but may not be displayed yet. Selecting a folder in
-        /// that window fails SILENTLY -- BFFM_SETSELECTION has no read-back to catch it, unlike
-        /// <see cref="NativeFileDialog.EnterPath"/> -- and the dialog is then accepted on the default folder.</summary>
+        /// <summary>Shown, not merely present: BFFM_SETSELECTION on a tree the shell has not displayed yet fails
+        /// silently, and the dialog is then accepted on the default folder.</summary>
         protected override bool IsOpenComplete =>
             FindDescendants(NativeControl.TREE_CLASS).Any(User32.IsWindowVisible);
 
@@ -74,7 +70,6 @@ namespace pwiz.Skyline.ToolsUI
         // returns; it merely navigates the tree (no nested modal), so the synchronous send does not wedge.
         protected override void SetValueCore(string value)
         {
-            BringToForeground();
             var pathPtr = Marshal.StringToHGlobalUni(value);
             try
             {
