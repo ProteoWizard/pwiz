@@ -434,8 +434,7 @@ namespace pwiz.SkylineTestUtil
 
         /// <summary>
         /// Waits for a native dialog (a Win32 "#32770") of the given type to appear in this process and returns its
-        /// automation wrapper -- the native-dialog analog of <see cref="WaitForOpenForm{TDlg}(int)"/>. A test is the
-        /// driver of a native dialog, so the wait lives here in the test rather than baked into the dialog itself.
+        /// automation wrapper -- the native-dialog analog of <see cref="WaitForOpenForm{TDlg}(int)"/>.
         /// </summary>
         protected static TDlg WaitForNativeDlg<TDlg>() where TDlg : NativeDialog
         {

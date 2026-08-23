@@ -102,29 +102,37 @@ namespace pwiz.Skyline.ToolsUI
         /// 1001 for the Save dialog's DirectUI-hosted field.</summary>
         protected abstract int FileNameControlId { get; }
 
-        /// <summary>The dialog's file-name field, found by its CONTROL ID, or a RETRYABLE error if the shell has
-        /// not shown it yet.
+        /// <summary>The dialog's file-name field, found by its CONTROL ID -- by id, because the field is not "the
+        /// dialog's only text box": the address bar carries a second, collapsed Edit.
         ///
-        /// <para>By control id, because the field is not "the dialog's only text box": the address bar carries a
-        /// second, collapsed Edit. Not-shown-yet is possible because a native dialog becomes discoverable -- its
-        /// window exists, GetOpenForms reports it, and it classifies as a file dialog -- a moment BEFORE the shell
-        /// has finished showing and populating it, and typing into the field in that window does nothing (the shell
-        /// overwrites the text as it initializes, and the dialog then accepts an empty name).</para>
-        ///
-        /// <para>Rather than BLOCK here polling for the field, this throws an instruction the caller acts on, so the
-        /// wait lives with the DRIVER, not inside the primitive both drivers share: the model waits and re-issues
-        /// the call, and a test driving the dialog waits on its own state. A single tool call never sits inside a
-        /// 30-second sleep.</para></summary>
+        /// <para>The throw is a GUARD, not a wait a caller is expected to retry: a dialog whose field the shell has
+        /// not shown is not handed out at all (<see cref="NativeDialog.Create"/> gates on
+        /// <see cref="IsOpenComplete"/>, which is this same condition), so nobody holding this dialog should reach
+        /// it. It stands because the alternative is silent: typing into a field the shell is still initializing
+        /// does nothing -- the shell overwrites the text, and the dialog then accepts an empty name.</para></summary>
         protected NativeTextBox FileNameTextBox
         {
             get
             {
-                var hwnd = FindFileNameEdit();
-                if (hwnd == IntPtr.Zero || !User32.IsWindowVisible(hwnd))
+                var hwnd = FindShownFileNameEdit();
+                if (hwnd == IntPtr.Zero)
                     throw new InvalidOperationException(LlmInstruction.Format(
                         @"The file dialog is still opening. Wait a moment and try again."));
                 return new NativeTextBox(hwnd, CancellationToken);
             }
+        }
+
+        /// <summary>A file dialog has finished opening once the shell has SHOWN its file-name field -- the field
+        /// every gesture here needs. Existence is not enough, and is exactly the trap: the field is what
+        /// <see cref="NativeDialog.Create"/> classifies the dialog by, so it is already there (created, still
+        /// hidden) throughout the window in which typing into the dialog does nothing.</summary>
+        protected override bool IsOpenComplete => FindShownFileNameEdit() != IntPtr.Zero;
+
+        // The file-name Edit once the shell has shown it, else IntPtr.Zero.
+        private IntPtr FindShownFileNameEdit()
+        {
+            var hwnd = FindFileNameEdit();
+            return hwnd != IntPtr.Zero && User32.IsWindowVisible(hwnd) ? hwnd : IntPtr.Zero;
         }
 
         /// <summary>The window handle of the file-name Edit, or IntPtr.Zero until it exists. By default the Edit
