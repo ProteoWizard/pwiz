@@ -106,6 +106,7 @@ namespace AutoQCTest
                 Path.Combine(skylineProjectDir, "bin", "x64", "Release", "net8.0-windows"),
                 Path.Combine(skylineProjectDir, "bin", "x64", "Debug", "net8.0-windows"),
                 Path.Combine(skylineProjectDir, "bin", "staging-net8", "Release"),
+                Path.Combine(skylineProjectDir, "bin", "staging-net8", "Debug"),
 #endif
                 Path.Combine(skylineProjectDir, "bin", "x64", "Release"),
                 Path.Combine(skylineProjectDir, "bin", "x64", "Debug"),

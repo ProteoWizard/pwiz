@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+#if NET472
+// Only the net472 branch of GetLogLocation reads Assembly.CodeBase; net8 uses
+// AppContext.BaseDirectory, where this using is flagged as redundant.
 using System.Reflection;
+#endif
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -145,7 +149,7 @@ namespace AutoQCStarter
             // CodeBase: The location of the assembly as specified originally (https://docs.microsoft.com/en-us/dotnet/api/system.reflection.assembly.codebase?)
             // Location: The location of the loaded file that contains the manifest. If the loaded file was shadow-copied, the location is that of the file after being shadow-copied (https://docs.microsoft.com/en-us/dotnet/api/system.reflection.assembly.location?)
             // Using Location can be a problem in some unit testing scenarios (https://corengen.wordpress.com/2011/08/03/assembly-location-and-codebase/)
-            var file = Assembly.GetExecutingAssembly().CodeBase ?? string.Empty;
+            var file = Assembly.GetExecutingAssembly().CodeBase;
 
             // How to convert CodeBase to filesystem path: https://stackoverflow.com/questions/4107625/how-can-i-convert-assembly-codebase-into-a-filesystem-path-in-c
             // Ended up using the code below from the SkylineNightlyShim project
