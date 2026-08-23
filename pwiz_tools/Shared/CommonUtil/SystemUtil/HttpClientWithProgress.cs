@@ -25,6 +25,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -1108,15 +1109,44 @@ namespace pwiz.Common.SystemUtil
             // DNS resolution failure (e.g., 'The remote name could not be resolved')
             // This is real and has been seen in a debugger. The InnerException is a WebException
             // HttpClient appears to use HttpWebRequest, but wrap its exceptions in HttpRequestException
-            if (httpEx.InnerException is WebException { Status: WebExceptionStatus.NameResolutionFailure })
+            //
+            // That is true of net472 only. On net8 HttpClient runs on SocketsHttpHandler, which
+            // never produces a WebException - a name that will not resolve arrives as
+            // HttpRequestError.NameResolutionError, with an inner SocketException of HostNotFound.
+            // Without the net8 arm every DNS failure fell through to the generic connection
+            // failure below, so an unreachable server was reported as unreachable-but-present
+            // rather than missing.
+            if (IsDnsResolutionFailure(httpEx))
                 return new NetworkRequestException(
                     string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server), 
                     NetworkFailureType.DnsResolution, uri, httpEx);
 
             // Generic connection failure (no HTTP response received)
             return new NetworkRequestException(
-                string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server), 
+                string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server),
                 NetworkFailureType.ConnectionFailed, uri, httpEx);
+        }
+
+        /// <summary>
+        /// Whether the request failed because the host name could not be resolved, as opposed to
+        /// resolving and then failing to connect. The two report differently to the user, and the
+        /// two target frameworks signal it in completely different ways.
+        /// </summary>
+        private static bool IsDnsResolutionFailure(HttpRequestException httpEx)
+        {
+            // net472: HttpClient sits on HttpWebRequest and wraps a WebException.
+            if (httpEx.InnerException is WebException { Status: WebExceptionStatus.NameResolutionFailure })
+                return true;
+#if !NET472
+            // net8: SocketsHttpHandler. HttpRequestError is the documented signal; the inner
+            // SocketException is checked too, because the error enum is only populated for
+            // failures the handler itself classifies.
+            if (httpEx.HttpRequestError == HttpRequestError.NameResolutionError)
+                return true;
+            if (httpEx.InnerException is SocketException { SocketErrorCode: SocketError.HostNotFound })
+                return true;
+#endif
+            return false;
         }
 
         public static bool IsNetworkReallyAvailable()
