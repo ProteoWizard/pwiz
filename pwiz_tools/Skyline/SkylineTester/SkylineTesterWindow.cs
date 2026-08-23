@@ -793,8 +793,20 @@ namespace SkylineTester
                 // Debug, and looking only under "Release" made a correctly staged Debug build
                 // invisible. The slot then came back null, GetTestInfos fell back to ExeDir
                 // (which holds no test DLLs), and every tab rendered empty with no hint why.
-                var candidates = Directory.GetDirectories(binDir, "staging-net8*")
-                    .SelectMany(d => new[] { Path.Combine(d, "Release"), Path.Combine(d, "Debug") })
+                //
+                // Look under the configuration THIS SkylineTester was built as first. Both
+                // configurations can be staged at the same time, and taking Release whenever it
+                // exists meant a Debug SkylineTester silently ran Release TestRunner: a developer
+                // who had just built and staged Debug got tests from whatever Release build
+                // happened to be lying around, reporting failures already fixed in the tree.
+#if DEBUG
+                var configsInPreferenceOrder = new[] { "Debug", "Release" };
+#else
+                var configsInPreferenceOrder = new[] { "Release", "Debug" };
+#endif
+                var candidates = (from stagingDir in Directory.GetDirectories(binDir, "staging-net8*")
+                                  from config in configsInPreferenceOrder
+                                  select Path.Combine(stagingDir, config))
                     .Where(d => File.Exists(Path.Combine(d, "TestRunner.exe")))
                     .ToList();
                 // Prefer the canonical "staging-net8" (the full default staging) over workflow-specific
