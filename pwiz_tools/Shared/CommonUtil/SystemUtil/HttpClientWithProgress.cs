@@ -505,7 +505,9 @@ namespace pwiz.Common.SystemUtil
             }
 
             // Add cookies from cookie container
-            if (_cookieContainer != null && !request.Headers.Contains(cookieHeaderName))
+            // RequestUri is nullable on HttpRequestMessage and GetCookies rejects null. Every
+            // request that reaches here has one, but there are no cookies to attach without it.
+            if (_cookieContainer != null && request.RequestUri != null && !request.Headers.Contains(cookieHeaderName))
             {
                 var cookies = _cookieContainer.GetCookies(request.RequestUri);
                 if (cookies.Count > 0)

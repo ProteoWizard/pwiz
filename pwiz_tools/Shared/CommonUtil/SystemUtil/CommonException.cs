@@ -54,7 +54,9 @@ namespace pwiz.Common.SystemUtil
             {
                 if (ExceptionDetail != null)
                 {
-                    return ExceptionDetail.ToString();
+                    // ToString() is nullable, and Message must not be: fall back rather than
+                    // hand a null message to whatever is reporting the error.
+                    return ExceptionDetail.ToString() ?? base.Message;
                 }
                 return base.Message;
             }
