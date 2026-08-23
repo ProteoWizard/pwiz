@@ -311,35 +311,46 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("Heavy precursor chromatogram");
 
-            RunUI(()=>
+            var auditRowsBefore = CallUI(() => SkylineWindow.AuditLogForm?.DataGridView.Rows.Count ?? 0);
+
+            // Wait for the document this produces before moving on. Without it the peak bounds
+            // change and the calibration exclusion further down could be written to the audit log
+            // in either order, and the log is compared line by line - the entries swapped places
+            // roughly one run in five. Every other document change in this test already does this.
+            using (new WaitDocumentChange())
             {
-                var pathHeavy = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, 1);
-
-                var graphChrom = SkylineWindow.GetGraphChrom(unknownReplicate);
-                Assert.IsNotNull(graphChrom);
-                Assert.AreEqual(unknownReplicate, graphChrom.NameSet);
-
-                var firstGroupInfo = graphChrom.ChromGroupInfos.FirstOrDefault();
-                Assert.IsNotNull(firstGroupInfo, "Missing group info");
-                var firstChromItem = graphChrom.GraphItems.FirstOrDefault(gci => gci.TransitionChromInfo != null);
-                Assert.IsNotNull(firstChromItem, "Missing graph item");
-
-                var listChanges = new List<ChangedPeakBoundsEventArgs>
+                RunUI(() =>
                 {
-                    new ChangedPeakBoundsEventArgs(pathHeavy,
-                        null,
-                        graphChrom.NameSet,
-                        firstGroupInfo.FilePath,
-                        firstChromItem.GetValidPeakBoundaryTime(20.65),
-                        firstChromItem.GetValidPeakBoundaryTime(21.15),
-                        PeakIdentification.FALSE,
-                        PeakBoundsChangeType.both)
-                };
-                graphChrom.SimulateChangedPeakBounds(listChanges);
-            });
+                    var pathHeavy = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, 1);
+
+                    var graphChrom = SkylineWindow.GetGraphChrom(unknownReplicate);
+                    Assert.IsNotNull(graphChrom);
+                    Assert.AreEqual(unknownReplicate, graphChrom.NameSet);
+
+                    var firstGroupInfo = graphChrom.ChromGroupInfos.FirstOrDefault();
+                    Assert.IsNotNull(firstGroupInfo, "Missing group info");
+                    var firstChromItem = graphChrom.GraphItems.FirstOrDefault(gci => gci.TransitionChromInfo != null);
+                    Assert.IsNotNull(firstChromItem, "Missing graph item");
+
+                    var listChanges = new List<ChangedPeakBoundsEventArgs>
+                    {
+                        new ChangedPeakBoundsEventArgs(pathHeavy,
+                            null,
+                            graphChrom.NameSet,
+                            firstGroupInfo.FilePath,
+                            firstChromItem.GetValidPeakBoundaryTime(20.65),
+                            firstChromItem.GetValidPeakBoundaryTime(21.15),
+                            PeakIdentification.FALSE,
+                            PeakBoundsChangeType.both)
+                    };
+                    graphChrom.SimulateChangedPeakBounds(listChanges);
+                });
+            }
 
             ShowAndPositionAuditLog(true, 50, 200);
-            WaitForConditionUI(500, () => SkylineWindow.AuditLogForm.DataGridView.Rows.Count > 0);
+            // Not "any rows": the audit log form has been shown three times before this and is
+            // already full, so that condition was true before the change above was even made.
+            WaitForConditionUI(() => SkylineWindow.AuditLogForm.DataGridView.Rows.Count > auditRowsBefore);
 
             PauseForScreenShot<AuditLogForm>("Audit Log form with changed integration boundary.");
             int reasonIndex = 2;
