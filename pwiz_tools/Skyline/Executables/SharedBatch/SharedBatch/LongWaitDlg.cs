@@ -81,10 +81,10 @@ namespace SharedBatch
             Completed = true;
             try
             {
-                Invoke(new Action(() =>
+                Invoke(() =>
                 {
                     if (Visible) Close();
-                }));
+                });
             }
             catch (ObjectDisposedException)
             {

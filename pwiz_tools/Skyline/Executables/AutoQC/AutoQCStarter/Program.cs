@@ -140,11 +140,12 @@ namespace AutoQCStarter
 
         private static string GetLogLocation()
         {
+#if NET472
             // Why use CodeBase instead of Location?
             // CodeBase: The location of the assembly as specified originally (https://docs.microsoft.com/en-us/dotnet/api/system.reflection.assembly.codebase?)
             // Location: The location of the loaded file that contains the manifest. If the loaded file was shadow-copied, the location is that of the file after being shadow-copied (https://docs.microsoft.com/en-us/dotnet/api/system.reflection.assembly.location?)
             // Using Location can be a problem in some unit testing scenarios (https://corengen.wordpress.com/2011/08/03/assembly-location-and-codebase/)
-            var file = Assembly.GetExecutingAssembly().CodeBase;
+            var file = Assembly.GetExecutingAssembly().CodeBase ?? string.Empty;
 
             // How to convert CodeBase to filesystem path: https://stackoverflow.com/questions/4107625/how-can-i-convert-assembly-codebase-into-a-filesystem-path-in-c
             // Ended up using the code below from the SkylineNightlyShim project
@@ -157,6 +158,13 @@ namespace AutoQCStarter
                 file = file.Substring(1);
             }
             return Path.GetDirectoryName(file);
+#else
+            // Assembly.CodeBase is obsolete on net8 (SYSLIB0012) and throws for a single-file
+            // publish. The shadow-copy hazard the net472 comment above is guarding against does
+            // not exist here - net8 has no shadow copying - so AppContext.BaseDirectory is both
+            // correct and simpler than round-tripping a file: URI back into a path.
+            return AppContext.BaseDirectory;
+#endif
         }
 
         private static string GetAppRefPath()

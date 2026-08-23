@@ -582,7 +582,7 @@ namespace SharedBatchTest
         public static double? ParseNullableDouble(string s)
         {
             double d;
-            return double.TryParse(s, out d) ? d : (double?)null;
+            return double.TryParse(s, out d) ? d : null;
         }
 
         public static string NullableDoubleToString(double? d)
