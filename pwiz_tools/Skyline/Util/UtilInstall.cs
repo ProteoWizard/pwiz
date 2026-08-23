@@ -317,20 +317,10 @@ namespace pwiz.Skyline.Util
                     Directory.CreateDirectory(requiredFile.InstallPath);
                     try
                     {
-                        // Retry a locked overwrite. These archives hold tool executables and the MSVC
-                        // runtime DLLs beside them, and a search engine process that has just been
-                        // waited on can keep them open for a moment after it exits - long enough to
-                        // deny the overwrite, not long enough to be worth failing a test over. The
-                        // lock is transient by construction, so give it a few seconds before giving up.
                         var installPath = requiredFile.InstallPath;
                         var overwrite = requiredFile.OverwriteExisting;
-                        TryHelper.Try<Exception>(() =>
-                        {
-                            using (var zipFile = new ZipFile(downloadFilename))
-                            {
-                                zipFile.ExtractAll(installPath, overwrite ? ExtractExistingFileAction.OverwriteSilently : ExtractExistingFileAction.DoNotOverwrite);
-                            }
-                        }, 4, 1000);
+                        TryHelper.Try<Exception>(() => ExtractChangedFiles(downloadFilename, installPath, overwrite),
+                            4, 1000);
                     }
                     catch (Exception x) when (x is UnauthorizedAccessException || x is IOException)
                     {
@@ -369,6 +359,40 @@ namespace pwiz.Skyline.Util
         public static string GetCachedDownloadsDirectory()
         {
             return Path.Combine(ToolDescriptionHelpers.GetSkylineInstallationPath(), @"CachedDownloadsForTests");
+        }
+
+        /// <summary>
+        /// Extracts an archive, leaving alone any file that is already the size the archive says it
+        /// should be.
+        /// <para>These archives hold version-pinned tool executables and the MSVC runtime DLLs beside
+        /// them, so re-extracting rewrites files that are already byte for byte correct. That is not
+        /// merely wasteful: overwriting renames the existing file aside and deletes it, and Windows
+        /// lets a DLL that some process has LOADED be renamed but never deleted. A tool process
+        /// launched out of this directory - crux or comet, which load their neighbours - therefore
+        /// made every re-extraction fail with nothing but "access to the path is denied", on a file
+        /// that did not need replacing at all. Skipping what already matches removes the collision
+        /// rather than racing it.</para>
+        /// </summary>
+        private static void ExtractChangedFiles(string zipPath, string installPath, bool overwriteExisting)
+        {
+            var existingAction = overwriteExisting
+                ? ExtractExistingFileAction.OverwriteSilently
+                : ExtractExistingFileAction.DoNotOverwrite;
+            using (var zipFile = new ZipFile(zipPath))
+            {
+                foreach (var entry in zipFile.Entries)
+                {
+                    if (!entry.IsDirectory && IsAlreadyExtracted(entry, installPath))
+                        continue;
+                    entry.Extract(installPath, existingAction);
+                }
+            }
+        }
+
+        private static bool IsAlreadyExtracted(ZipEntry entry, string installPath)
+        {
+            var destination = Path.Combine(installPath, entry.FileName.Replace('/', Path.DirectorySeparatorChar));
+            return File.Exists(destination) && new FileInfo(destination).Length == (long) entry.UncompressedSize;
         }
     }
 

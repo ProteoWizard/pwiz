@@ -1120,13 +1120,32 @@ namespace TestRunner
                     // Every language, not just the first few: pass 1 keeps going while it is still
                     // deciding on a leak, so it can wrap around the list any number of times.
                     var cultures = Pass == 1 ? allLanguages : new[] { Language };
-                    // Deliberately the language as queued rather than a CultureInfo round trip, which
-                    // throws on a name GetCanonicalLanguage did not recognize. These are the same
-                    // strings the client builds its CultureInfo from, so they are what the directory
-                    // ends up named after, and a bad one should fail the test that uses it rather than
-                    // the server handing it out.
                     return cultures.Select(culture =>
-                        PathEx.GetTestDirectoryName(TestInfo.TestMethod.Name, culture));
+                        PathEx.GetTestDirectoryName(TestInfo.TestMethod.Name, ResolvedCultureName(culture)));
+                }
+            }
+
+            /// <summary>
+            /// The culture name the CLIENT ends up running under, which is what its tools directory
+            /// gets named after.
+            /// <para>It is NOT always the string that was queued. .NET silently normalizes deprecated
+            /// names - "zh-CHS" becomes "zh-Hans" - so reserving the queued string locked a directory
+            /// that culture never writes and left the one it does write unprotected. Both spellings
+            /// were found side by side in a staging directory, which is what that looks like on disk.
+            /// </para>
+            /// <para>Falls back to the string as queued for a name CultureInfo does not recognize, so
+            /// an unusable language still fails the test that asked for it rather than throwing while
+            /// the server is handing work out.</para>
+            /// </summary>
+            private static string ResolvedCultureName(string culture)
+            {
+                try
+                {
+                    return new CultureInfo(culture).Name;
+                }
+                catch (CultureNotFoundException)
+                {
+                    return culture;
                 }
             }
 
