@@ -1402,7 +1402,12 @@ namespace TestRunner
                 CheckDocker(commandLineArgs);
 
             // open socket that listens for workers to connect
+            // workerNames is declared out here so the teardown scope can read the names as they
+            // are launched. Disposing that scope is what stops the workers when a run finishes
+            // normally; the console control handler installed below only covers outside termination.
+            string workerNames = null;
             using (var receiver = new PullSocket())
+            using (new RunTests.ParallelWorkerTeardown(HostWorkerPid, () => workerNames))
             {
                 // get system-assigned port which will passed to workers with "workerport" parameter
                 int workerPort;
@@ -1417,7 +1422,6 @@ namespace TestRunner
                     workerPort = UnusedPortFinder.FindUnusedPort(9810, 65535);
                 }
                 receiver.Bind($"tcp://*:{workerPort}");
-                string workerNames = null;
 
                 // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
                 Kernel32Test.SetConsoleCtrlHandler(c =>

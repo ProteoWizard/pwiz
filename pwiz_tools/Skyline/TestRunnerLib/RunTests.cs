@@ -1461,22 +1461,96 @@ namespace TestRunnerLib
             try
             {
                 if (hostWorkerPid > 0)
-                    Process.GetProcessById(hostWorkerPid).Kill();
+                {
+                    var hostWorker = Process.GetProcessById(hostWorkerPid);
+                    if (!hostWorker.HasExited)
+                        hostWorker.Kill();
+                }
+            }
+            catch (ArgumentException)
+            {
+                // No such process, which is the ordinary end of a run that finished on its own
             }
             catch (Exception ex)
             {
                 Console.WriteLine(@"Failed to kill host worker process: " + ex.Message);
             }
 
-            workerNames ??= string.Join(" ", GetDockerWorkerNames());
-            if (string.IsNullOrEmpty(workerNames))
+            string namesToKill;
+            try
+            {
+                namesToKill = GetWorkersStillRunning(workerNames);
+            }
+            catch (Exception ex)
+            {
+                // Docker may be absent or wedged. Fall back to killing whatever was launched: a kill
+                // for a container that is already gone is noisy, and leaking one is worse than noisy.
+                Console.WriteLine(@"Could not list running workers: " + ex.Message);
+                namesToKill = workerNames ?? string.Empty;
+            }
+
+            if (string.IsNullOrEmpty(namesToKill))
                 return; // No containers to kill
 
-            Console.WriteLine(@$"Sending docker kill command to: {workerNames}");
-            var psi = new ProcessStartInfo("docker", $@"kill {workerNames}");
+            Console.WriteLine(@$"Sending docker kill command to: {namesToKill}");
+            var psi = new ProcessStartInfo("docker", $@"kill {namesToKill}");
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;
             Process.Start(psi)?.WaitForExit();
+        }
+
+        /// <summary>
+        /// The subset of <paramref name="workerNames"/> whose containers are still running, or every
+        /// running worker container when it is null. Filtering to what is actually up keeps the end of
+        /// a normal run quiet, since docker writes an error for a container that already stopped.
+        /// </summary>
+        private static string GetWorkersStillRunning(string workerNames)
+        {
+            var running = new HashSet<string>(
+                GetDockerWorkerNames().Select(name => name.Trim()).Where(name => !string.IsNullOrEmpty(name)),
+                StringComparer.OrdinalIgnoreCase);
+            if (workerNames == null)
+                return string.Join(@" ", running);
+
+            var launched = workerNames.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            return string.Join(@" ", launched.Where(running.Contains));
+        }
+
+        /// <summary>
+        /// Kills the parallel workers when disposed, so they are torn down on every exit from a
+        /// parallel run.
+        /// <para>A worker is a container, and a container outlives the run that started it unless
+        /// something stops it. Teardown used to hang solely off the console control handler, which
+        /// only fires when the process is terminated from outside, so a run that simply FINISHED left
+        /// its workers alive. They then held the mounted checkout open indefinitely - long enough to
+        /// wedge a later run's staging step with no error, just silence.</para>
+        /// </summary>
+        public class ParallelWorkerTeardown : IDisposable
+        {
+            private readonly int _hostWorkerPid;
+            private readonly Func<string> _getWorkerNames;
+
+            /// <param name="hostWorkerPid">Process id of the host worker, or 0 if there is none</param>
+            /// <param name="getWorkerNames">Reads the launched worker names at teardown time, since
+            /// workers are still being launched when this scope is created</param>
+            public ParallelWorkerTeardown(int hostWorkerPid, Func<string> getWorkerNames)
+            {
+                _hostWorkerPid = hostWorkerPid;
+                _getWorkerNames = getWorkerNames;
+            }
+
+            public void Dispose()
+            {
+                try
+                {
+                    KillParallelWorkers(_hostWorkerPid, _getWorkerNames());
+                }
+                catch (Exception ex)
+                {
+                    // Never let teardown replace the result of the run it is cleaning up after
+                    Console.WriteLine(@"Failed to tear down parallel workers: " + ex.Message);
+                }
+            }
         }
     }
 }
