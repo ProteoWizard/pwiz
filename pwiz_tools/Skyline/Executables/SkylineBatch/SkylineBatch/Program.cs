@@ -242,7 +242,15 @@ namespace SkylineBatch
         {
             if (SkylineInstallations.FindSkyline())
                 return true;
-            
+
+            // FindSkylineForm is modal and there is no one to answer it under a functional test,
+            // so on a machine with no Skyline installation the whole test run hangs here instead
+            // of failing. Carry on without the settings: tests that need a Skyline path build
+            // their own SkylineSettings, and a missing installation then surfaces as a test
+            // failure with a message rather than as a run that never finishes.
+            if (FunctionalTest)
+                return true;
+
             var form = new FindSkylineForm(AppName(), Icon());
             Application.Run(form);
             if (form.DialogResult == DialogResult.OK)

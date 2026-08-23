@@ -363,26 +363,44 @@ namespace SkylineBatchTest
             return configList;
         }
 
+        /// <summary>
+        /// The directory of a Skyline build in this checkout, for the tests that need a real
+        /// SkylineCmd.exe to point a configuration at.
+        ///
+        /// Release comes first so a machine with both keeps the behaviour it had, but Debug is
+        /// probed too: the batch-tool build scripts default to Debug, and before that was
+        /// allowed for every one of these tests failed on a Debug tree with "Could not find a
+        /// Skyline installation at this location: ...\bin\Release\net8.0-windows" - a directory
+        /// that had never been built.
+        /// </summary>
         public static string GetSkylineDir()
         {
 #if NET472
-            return GetProjectDirectory("bin\\x64\\Release");
+            var candidates = new[]
+            {
+                "bin\\x64\\Release",
+                "bin\\x64\\Debug"
+            };
 #else
-            // net8 Skyline builds to bin\Release\net8.0-windows (or a Stage-Net8Tests staging dir)
-            // rather than the net472 bin\x64\Release. Return whichever holds SkylineCmd.exe.
-            foreach (var rel in new[]
-                     {
-                         "bin\\Release\\net8.0-windows",
-                         "bin\\x64\\Release\\net8.0-windows",
-                         "bin\\staging-net8\\Release"
-                     })
+            // net8 Skyline builds to bin\<Config>\net8.0-windows, or to a Stage-Net8Tests
+            // staging directory, rather than the net472 bin\x64\<Config>.
+            var candidates = new[]
+            {
+                "bin\\Release\\net8.0-windows",
+                "bin\\Debug\\net8.0-windows",
+                "bin\\x64\\Release\\net8.0-windows",
+                "bin\\x64\\Debug\\net8.0-windows",
+                "bin\\staging-net8\\Release",
+                "bin\\staging-net8\\Debug"
+            };
+#endif
+            foreach (var rel in candidates)
             {
                 var dir = GetProjectDirectory(rel);
-                if (dir != null && File.Exists(Path.Combine(dir, "SkylineCmd.exe")))
+                if (dir != null && File.Exists(Path.Combine(dir, SkylineInstallations.SkylineCmdExe)))
                     return dir;
             }
-            return GetProjectDirectory("bin\\Release\\net8.0-windows");
-#endif
+            return GetProjectDirectory(candidates[0]);
         }
 
         public static string GetProjectDirectory(string relativePath)

@@ -1,9 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- SkylineBatchTest - MSTest unit tests for SkylineBatch. Multi-target net472;net8.0-windows.
-       net472 uses the GAC QualityTools framework; net8 uses the MSTest NuGet stack
-       (Microsoft.NET.Test.Sdk + MSTest.TestAdapter + MSTest.TestFramework) so `dotnet test` runs it.
-       Vestigial CodedUI/UITesting references dropped. -->
+       The MSTest NuGet stack (Microsoft.NET.Test.Sdk + MSTest.TestAdapter + MSTest.TestFramework)
+       is used for BOTH targets, so `dotnet test` and vstest run either one and neither depends on
+       a Visual Studio install. net472 previously carried a path-less
+       Microsoft.VisualStudio.QualityTools.UnitTestFramework reference, which only resolves in a
+       legacy csproj (the VS test-project flavor targets add Common7\IDE\PublicAssemblies to
+       AssemblySearchPaths); once this became SDK-style it stopped resolving and net472 no longer
+       compiled. Vestigial CodedUI/UITesting references dropped. -->
   <PropertyGroup>
     <ProjectGuid>{415D56D0-D83D-45D2-A833-E2D7E46E7A69}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -30,17 +34,33 @@
     <ProjectReference Include="..\SkylineBatch\SkylineBatch.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+  <ItemGroup>
     <PackageReference Include="MSTest.TestAdapter" Version="3.2.0" />
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
+  </ItemGroup>
+
+  <!-- Microsoft.NET.Test.Sdk is net8-only on purpose. On net472 it drags in
+       System.Collections.Immutable 1.5.0 (assembly 1.2.3.0) through
+       Microsoft.TestPlatform.ObjectModel, and the package asset beats the HintPath every other
+       net472 project in this solution uses (Shared\Lib\System.Collections.Immutable.dll, assembly
+       5.0.0.0). That mismatch is CS1705 at compile time, not a warning. net472 only needs the
+       framework and adapter to build and be discovered. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
     <Reference Include="Newtonsoft.Json"><HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
-    <Reference Include="System.Collections.Immutable"><HintPath>..\..\..\..\Shared\Lib\System.Collections.Immutable.dll</HintPath></Reference>
+    <!-- Immutable comes from NuGet here rather than the Shared\Lib HintPath the rest of the
+         net472 projects use. MSTest.TestAdapter pulls it transitively
+         (TestPlatform.ObjectModel -> System.Reflection.Metadata 1.6.0 -> Immutable 1.5.0), and a
+         package asset beats a HintPath, so the HintPath silently lost and the 1.2.3.0 assembly it
+         resolved instead is CS1705 against SharedBatch/SkylineBatch, which compile against
+         5.0.0.0. Asking NuGet for 5.0.0 wins the resolution at the version Shared\Lib ships, so
+         every assembly in the graph agrees. Keep this in step with
+         Shared\Lib\System.Collections.Immutable.dll. -->
+    <PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
     <Reference Include="System.Configuration" />
   </ItemGroup>
 

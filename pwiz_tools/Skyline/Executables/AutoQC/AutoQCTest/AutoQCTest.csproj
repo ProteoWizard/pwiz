@@ -1,9 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- AutoQCTest - MSTest unit + functional tests for AutoQC. Multi-target net472;net8.0-windows.
-       net472 uses the GAC QualityTools framework + on-disk HintPath DLLs; net8 uses the MSTest NuGet
-       stack (Microsoft.NET.Test.Sdk + MSTest.TestAdapter + MSTest.TestFramework) so `dotnet test` runs
-       it. Vestigial CodedUI/UITesting references dropped. -->
+       The MSTest NuGet stack (Microsoft.NET.Test.Sdk + MSTest.TestAdapter + MSTest.TestFramework)
+       is used for BOTH targets, so `dotnet test` and vstest run either one and neither depends on
+       a Visual Studio install. net472 previously carried a path-less
+       Microsoft.VisualStudio.QualityTools.UnitTestFramework reference, which only resolves in a
+       legacy csproj (the VS test-project flavor targets add Common7\IDE\PublicAssemblies to
+       AssemblySearchPaths); once this became SDK-style it stopped resolving and net472 no longer
+       compiled. Other net472 dependencies stay on their on-disk HintPath DLLs.
+       Vestigial CodedUI/UITesting references dropped. -->
   <PropertyGroup>
     <ProjectGuid>{4955F974-381E-4902-8BAD-BAC7174CFC9F}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -31,16 +36,25 @@
     <ProjectReference Include="..\AutoQC\AutoQC.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+  <ItemGroup>
     <PackageReference Include="MSTest.TestAdapter" Version="3.2.0" />
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
+  </ItemGroup>
+
+  <!-- Microsoft.NET.Test.Sdk is net8-only on purpose - see the matching note in
+       SkylineBatchTest.csproj. On net472 it pulls System.Collections.Immutable 1.5.0 in over the
+       Shared\Lib HintPath every other net472 project here uses, which is CS1705, not a warning. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="log4net" Version="2.0.17" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
+    <!-- See the matching note in SkylineBatchTest.csproj: MSTest.TestAdapter drags
+         System.Collections.Immutable 1.5.0 in transitively, which is CS1705 against AutoQC and
+         SharedBatch (both 5.0.0.0). Pin it up to the version Shared\Lib ships. -->
+    <PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
     <Reference Include="log4net"><HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath></Reference>
     <Reference Include="Newtonsoft.Json"><HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
     <Reference Include="Microsoft.CSharp" />

@@ -1,9 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- SharedBatchTest - MSTest helper library (test base classes / utilities; no [TestMethod]s of
-       its own) shared by SkylineBatchTest / AutoQCTest. Multi-target net472;net8.0-windows. net472
-       uses the GAC QualityTools MSTest framework + on-disk HintPath DLLs; net8 uses the MSTest
-       framework NuGet + managed equivalents. Vestigial CodedUI/UITesting references dropped. -->
+       its own) shared by SkylineBatchTest / AutoQCTest. Multi-target net472;net8.0-windows. The
+       MSTest framework comes from NuGet for BOTH targets: the path-less
+       Microsoft.VisualStudio.QualityTools.UnitTestFramework reference net472 used to carry only
+       resolves in a legacy csproj, where the VS test-project flavor targets add
+       Common7\IDE\PublicAssemblies to AssemblySearchPaths. This project is SDK-style, so that
+       reference silently stopped resolving and net472 has not compiled since the conversion.
+       Everything else stays per-target: net472 uses on-disk HintPath DLLs, net8 uses NuGet.
+       Vestigial CodedUI/UITesting references dropped. -->
   <PropertyGroup>
     <ProjectGuid>{69531D2C-BAD8-4E79-9DF3-482A74D6D0BF}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -27,15 +32,17 @@
     <ProjectReference Include="..\SharedBatch\SharedBatch.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup>
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
     <PackageReference Include="DotNetZip" Version="1.16.0" />
     <PackageReference Include="log4net" Version="2.0.17" />
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
     <Reference Include="DotNetZip"><HintPath>..\..\..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath></Reference>
     <Reference Include="log4net"><HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath></Reference>
     <Reference Include="JetBrains.Annotations"><HintPath>..\..\..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath></Reference>

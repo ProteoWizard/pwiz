@@ -114,6 +114,12 @@ namespace SharedBatch
 
         public static SkylineSettings ReadXmlVersion_20_2(XmlReader reader)
         {
+            // NOTE: unlike ReadXml above, this does NOT retype the configuration to Local when a
+            // local SkylineCmd.exe exists. That asymmetry is real and looks like a bug - the same
+            // configuration in the two formats can end up with different Skyline settings on the
+            // same machine - but the BcfgTestFiles round-trip baselines encode the current
+            // behaviour (they expect type="Skyline" to survive an old-format import/export), so
+            // changing it is a deliberate decision with baselines to regenerate, not a drive-by.
             var type = (SkylineType)Enum.Parse(typeof(SkylineType), reader.GetAttribute(Attr.Type), false);
             var cmdPath = reader.GetAttribute(Attr.CmdPath);
             if (type == SkylineType.Custom)
