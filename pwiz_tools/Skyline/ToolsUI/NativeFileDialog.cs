@@ -79,6 +79,8 @@ namespace pwiz.Skyline.ToolsUI
         /// <para>To select several files in a multiselect Open dialog, FIRST navigate to their folder (EnterPath
         /// the folder path, accept), THEN EnterPath their names -- BARE names in that folder, double-quoted and
         /// space-separated (<c>"a.raw" "b.raw"</c>). A list of FULL paths does not work.</para>
+        ///
+        /// <para>Must be called OFF the dialog's own thread: the typing is posted to that thread and waited for.</para>
         /// </summary>
         public void EnterPath(string path)
         {
@@ -118,7 +120,9 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>Commits without waiting for the dialog to close, because it may not: a FOLDER path navigates
-        /// and leaves it open (read the "AddressBar" control to tell). Use
+        /// and leaves it open (read the "AddressBar" control to tell), and on the multiselect Open dialog the click
+        /// can be spent closing the combo's autocomplete drop-down instead of committing -- so a caller checks
+        /// whether the dialog closed and clicks again if it did not. Use
         /// <see cref="NativeDialog.DismissWithAcceptButton"/> when it must close. The BM_CLICK is SENT, so call
         /// this OFF the UI thread.</summary>
         public void Accept()
@@ -132,8 +136,8 @@ namespace pwiz.Skyline.ToolsUI
         protected abstract string CommitButtonDescription { get; }
 
         /// <summary>The label the file-name box is presented under, so a caller can read/set it by name (see
-        /// <see cref="EnumerateChildren"/>). Ours, not the shell's, so it is the same in every UI language -- which
-        /// is also what lets a driver wait for the field to exist by looking for this name in GetControls.</summary>
+        /// <see cref="EnumerateChildren"/>). Ours, not the shell's, so it is the same in every UI language. It names
+        /// the box only while the shell is SHOWING it, since GetControls lists the shown children.</summary>
         public const string FILE_NAME_FIELD = @"File name";
 
         /// <summary>The control id of this dialog's file-name Edit -- 1148 for the Open dialog's classic combo,

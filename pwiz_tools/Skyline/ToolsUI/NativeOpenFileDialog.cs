@@ -64,9 +64,7 @@ namespace pwiz.Skyline.ToolsUI
         /// Open commits in one message. With a file name in the box the dialog opens THAT (not any file-list
         /// selection), which is what the caller typed. OkDialog SENDS the click on the dialog's own thread and waits
         /// for it to close -- so a click that raises a nested modal (an overwrite/error prompt) blocks there,
-        /// counted, rather than pinning the pipe thread.
-        /// That drop-down also means one <see cref="NativeFileDialog.Accept"/> may not commit -- the click can be
-        /// spent closing it -- so a caller checks whether the dialog closed and clicks again if not.</summary>
+        /// counted, rather than pinning the pipe thread.</summary>
         public override ActionResult DismissWithAcceptButton()
         {
             return OkDialog(AcceptButton.ClickNow);

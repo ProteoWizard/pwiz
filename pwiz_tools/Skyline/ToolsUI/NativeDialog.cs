@@ -32,8 +32,10 @@ namespace pwiz.Skyline.ToolsUI
     /// One open native Windows dialog (window class "#32770" -- a message box, or the common Open/Save/folder
     /// dialog), identified by its window handle. Not a WinForms form, so it is absent from FormUtil.OpenForms and
     /// none of the managed element model reaches it: it is driven entirely by Win32 (EnumChildWindows to find its
-    /// controls, WM_SETTEXT / BM_CLICK / WM_CLOSE to act on them). Those are window-manager calls, so they are safe
-    /// from ANY thread -- which matters, because the dialog's modal loop is running on the UI thread.
+    /// controls, WM_SETTEXT / BM_CLICK / WM_CLOSE to act on them). Those are window-manager calls, so a READ is safe
+    /// from any thread -- which matters, because the dialog's modal loop is running on the UI thread. A gesture that
+    /// rides the dialog-watch (<see cref="NativeFileDialog.EnterPath"/>, the DismissWith... verbs) must run OFF that
+    /// thread, which is where it is posting the work and waiting for it.
     ///
     /// <para>Concrete: this class alone drives any "#32770" (list its buttons, click one by caption, accept by its
     /// default button, cancel by WM_CLOSE). <see cref="NativeFileDialog"/> adds the file-name field. Obtain one

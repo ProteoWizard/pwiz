@@ -704,8 +704,8 @@ namespace pwiz.SkylineTestFunctional
         }
 
         // Adds the input files. A SINGLE file is added by driving the real native "Add Input Files" (Open) dialog --
-        // type its full path and accept -- so the build still
-        // exercises the connector's native-dialog automation. MULTIPLE files are added directly through
+        // type its full path and accept -- so the build still exercises the connector's native-dialog automation
+        // (from the test thread, which is where those gestures run). MULTIPLE files are added directly through
         // BuildLibraryDlg.AddInputFiles, which shows no dialog; driving a multiselect Open dialog by name is
         // exercised on its own by NativeFileDialogTest.
         private void AddInputFilesThroughDialog(BuildLibraryDlg buildLibraryDlg, IList<string> inputPaths)

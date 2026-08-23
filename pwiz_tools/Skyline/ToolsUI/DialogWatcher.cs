@@ -131,17 +131,16 @@ namespace pwiz.Skyline.ToolsUI
             if (control == null)
             {
                 var uiThreadWindow = UiThreadWindow;
-                // IntPtr.Zero names no window: the work simply needs the UI thread (JsonToolServer runs a CLI
-                // command that way). A real native window must be ON that thread, because that is the thread the
-                // BeginInvoke below reaches -- marshaling its work anywhere else would run it off the thread that
-                // owns it, silently.
-                if (hwnd != IntPtr.Zero &&
-                    User32.GetWindowThreadProcessId(hwnd, out _) !=
-                    User32.GetWindowThreadProcessId(uiThreadWindow.Handle, out _))
+                if (hwnd != IntPtr.Zero)
                 {
-                    throw new InvalidOperationException(new LlmInstruction(string.Format(@"Native window {0} is on the wrong thread", hwnd)));
+                    // If the hwnd is valid, verify that the UiThreadWindow is actually the appropriate thread for the window.
+                    var windowThreadId = User32.GetWindowThreadProcessId(hwnd, out _);
+                    // Thread ID zero means hwnd already destroyed
+                    if (windowThreadId != 0 && windowThreadId != User32.GetWindowThreadProcessId(uiThreadWindow.Handle, out _))
+                    {
+                        throw new InvalidOperationException(new LlmInstruction(string.Format(@"Native window {0} is on the wrong thread", hwnd)));
+                    }
                 }
-
                 control = uiThreadWindow;
             }
             return PerformActionAndWait(control, action, waitCondition, cancellationToken);
