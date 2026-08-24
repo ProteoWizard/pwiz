@@ -21,9 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -303,7 +303,7 @@ namespace TestPerf
         private static void DownloadFile(string url, string targetPath)
         {
             var tmp = targetPath + @".part";
-            using (var client = new WebClient())
+            using (var client = new HttpClientWithProgress())
                 client.DownloadFile(url, tmp);
             if (File.Exists(targetPath)) File.Delete(targetPath);
             File.Move(tmp, targetPath);

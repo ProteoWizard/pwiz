@@ -142,7 +142,16 @@ namespace pwiz.SkylineTest
                 true, // Pattern is a regular expression
                 @"WebClient is obsolete on net8 (SYSLIB0014). pwiz.Common.SystemUtil.HttpClientWithProgress is the project standard for HTTP: it reports progress, supports cancellation, and is testable through its TestBehavior seam. There is no inline opt-out for this rule - if you believe you have a legitimate exception, add it to this inspection in CodeInspectionTest.cs so it gets reviewed.",
                 null, // No inline opt-out - see the note above this inspection
-                4); // Known remaining uses, tolerated as warnings so no NEW ones can be added: Executables\Installer\SetupDeployProject.cs, SkylineNightly\Nightly.cs, SkylineNightlyShim\Program.cs, TestPerf\DiannSearchLFQbenchTest.cs
+                // Known remaining uses, tolerated as warnings so no NEW ones can be added. Lower this
+                // number as each is migrated - it is the only thing tracking them.
+                //   Executables\Installer\SetupDeployProject.cs - the installer strategy is expected to
+                //     change wholesale with net8, so migrating it now would likely be wasted work.
+                //   SkylineNightly\Nightly.cs, SkylineNightlyShim\Program.cs - these may not have
+                //     HttpClientWithProgress available. The Shim especially is a deliberately tiny
+                //     program that runs on developer machines during nightly testing, only to check
+                //     that SkylineNightly itself is current; plain HttpClient with much simpler
+                //     handling is likely the right answer there rather than the full wrapper.
+                3);
 
             // Looking for forgotten "RunPerfTests=true" statements that will force running possibly unintended tests
             AddTextInspection(@"*.cs", // Examine files with this mask
