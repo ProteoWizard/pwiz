@@ -59,13 +59,5 @@ namespace pwiz.SkylineTest
             // blind spot documented on TryGetThreadDump. Asserting it would encode the wrong
             // expectation and fail forever.
         }
-
-        [TestMethod]
-        public void TestMiniDumpOffUnlessRequested()
-        {
-            // Costs a caller nothing to ask when it is switched off, which is what lets the wait
-            // timeouts call it unconditionally.
-            AssertEx.AreEqual(string.Empty, HangDetection.TryWriteMiniDump(@"UnitTest"));
-        }
     }
 }

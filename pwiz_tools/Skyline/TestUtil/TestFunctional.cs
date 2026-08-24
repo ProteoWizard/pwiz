@@ -1236,7 +1236,7 @@ namespace pwiz.SkylineTestUtil
                     : " (" + timeoutMessage + ")";
                 AssertEx.Fail(@"Timeout {0} seconds exceeded in WaitForCondition{1}. Open forms: {2}{3}{4}",
                     waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString(),
-                    Environment.NewLine, HangDetection.TryGetThreadDump() + HangDetection.TryWriteMiniDump(@"WaitForCondition"));
+                    Environment.NewLine, HangDetection.TryGetThreadDump());
             }
             return false;
         }
@@ -1302,7 +1302,7 @@ namespace pwiz.SkylineTestUtil
 
                 AssertEx.Fail(@"Timeout {0} seconds exceeded in WaitForConditionUI{1}. Open forms: {2}{3}{4}",
                     waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString(),
-                    Environment.NewLine, HangDetection.TryGetThreadDump() + HangDetection.TryWriteMiniDump(@"WaitForConditionUI"));
+                    Environment.NewLine, HangDetection.TryGetThreadDump());
             }
             return false;
         }
