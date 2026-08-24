@@ -242,7 +242,7 @@ namespace pwiz.SkylineTestFunctional
         // Must be called on the UI thread.
         /// <summary>
         /// Waits for a peak area pane to catch up to the selected precursor.
-        /// <para><see cref="WaitForGraphs"/> is not enough on its own. It reports only that no graph
+        /// <para><see cref="AbstractFunctionalTest.WaitForGraphs"/> is not enough on its own. It reports only that no graph
         /// update is queued, and an update can leave that queue without having happened: the timer
         /// tick in SkylineGraphs pops a pane and removes it unconditionally, while
         /// GraphSummary.UpdateGraph returns early whenever the document and the selection are

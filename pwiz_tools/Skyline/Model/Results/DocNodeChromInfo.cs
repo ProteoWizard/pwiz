@@ -511,7 +511,7 @@ namespace pwiz.Skyline.Model.Results
             var differences = members
                 .Where(m => !Equals(m.Mine, m.Theirs))
                 .Select(m => string.Format(@"{0} {1} vs {2}",
-                    m.Name, m.Mine ?? (object)@"(null)", m.Theirs ?? (object)@"(null)"))
+                    m.Name, m.Mine ?? @"(null)", m.Theirs ?? @"(null)"))
                 .ToList();
             return differences.Count == 0 ? null : TextUtil.LineSeparate(differences);
         }

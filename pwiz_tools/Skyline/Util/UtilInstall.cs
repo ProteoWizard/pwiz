@@ -392,7 +392,7 @@ namespace pwiz.Skyline.Util
         private static bool IsAlreadyExtracted(ZipEntry entry, string installPath)
         {
             var destination = Path.Combine(installPath, entry.FileName.Replace('/', Path.DirectorySeparatorChar));
-            return File.Exists(destination) && new FileInfo(destination).Length == (long) entry.UncompressedSize;
+            return File.Exists(destination) && new FileInfo(destination).Length == entry.UncompressedSize;
         }
     }
 
