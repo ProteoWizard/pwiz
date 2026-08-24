@@ -3,14 +3,33 @@ setlocal
 @echo off
 
 set VERBOSE=1
-if /I "%1"=="-quiet" set VERBOSE=0
-if /I "%1"=="-q" set VERBOSE=0
+set CLEANCPP=0
+
+REM # By default this cleans only the .NET applications and leaves the C++ build alone.
+REM # Wiping the C++ tree means re-extracting and rebuilding boost and the vendor APIs,
+REM # which dominates the cost of a rebuild and is almost never what you want when the
+REM # thing you actually need cleaned is a managed bin/obj or a stale staging directory.
+REM # Pass -cpp (or -all) for the old full clean.
+:parseargs
+if "%~1"=="" goto endparse
+if /I "%~1"=="-quiet" set VERBOSE=0
+if /I "%~1"=="-q" set VERBOSE=0
+if /I "%~1"=="-cpp" set CLEANCPP=1
+if /I "%~1"=="-all" set CLEANCPP=1
+shift
+goto parseargs
+:endparse
 
 REM # Get the location of quickbuild.bat and drop trailing slash
 set PWIZ_ROOT=%~dp0
 set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
 pushd "%PWIZ_ROOT%"
 
+if %CLEANCPP%==1 goto CLEAN_CPP
+if %VERBOSE%==1 echo   Keeping C++ build ^(pass -cpp to clean it too^)...
+goto SKIP_CPP
+
+:CLEAN_CPP
 if %VERBOSE%==1 echo   Cleaning build directories...
 IF EXIST build-nt-x86 rmdir /s /q build-nt-x86
 IF EXIST build-nt-x86_64 rmdir /s /q build-nt-x86_64
@@ -89,6 +108,7 @@ git clean -f -d -X pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data > nul
 git clean -f -d -X pwiz\data\vendor_readers\Mobilion\Reader_Mobilion_Test.data > nul
 git clean -f -d -X pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data > nul
 
+:SKIP_CPP
 IF EXIST pwiz_tools\clean-apps.bat call pwiz_tools\clean-apps.bat
 
 popd
