@@ -1463,8 +1463,14 @@ namespace TestRunnerLib
                 if (hostWorkerPid > 0)
                 {
                     var hostWorker = Process.GetProcessById(hostWorkerPid);
-                    if (!hostWorker.HasExited)
+                    // Check the name before killing. On the normal-exit path the host worker has
+                    // usually exited already, which is exactly when Windows is free to hand its pid
+                    // to something else, and killing a stranger is worse than leaking a process.
+                    if (!hostWorker.HasExited &&
+                        Equals(hostWorker.ProcessName, Process.GetCurrentProcess().ProcessName))
+                    {
                         hostWorker.Kill();
+                    }
                 }
             }
             catch (ArgumentException)
@@ -1527,15 +1533,17 @@ namespace TestRunnerLib
         /// </summary>
         public class ParallelWorkerTeardown : IDisposable
         {
-            private readonly int _hostWorkerPid;
+            private readonly Func<int> _getHostWorkerPid;
             private readonly Func<string> _getWorkerNames;
 
-            /// <param name="hostWorkerPid">Process id of the host worker, or 0 if there is none</param>
+            /// <param name="getHostWorkerPid">Reads the host worker process id at teardown time, or 0
+            /// if there is none. Deferred for the same reason as the names: the host worker has not
+            /// been launched yet when this scope is created, so reading it now captures 0</param>
             /// <param name="getWorkerNames">Reads the launched worker names at teardown time, since
             /// workers are still being launched when this scope is created</param>
-            public ParallelWorkerTeardown(int hostWorkerPid, Func<string> getWorkerNames)
+            public ParallelWorkerTeardown(Func<int> getHostWorkerPid, Func<string> getWorkerNames)
             {
-                _hostWorkerPid = hostWorkerPid;
+                _getHostWorkerPid = getHostWorkerPid;
                 _getWorkerNames = getWorkerNames;
             }
 
@@ -1543,7 +1551,9 @@ namespace TestRunnerLib
             {
                 try
                 {
-                    KillParallelWorkers(_hostWorkerPid, _getWorkerNames());
+                    // Never null: null means "every worker container on this machine", which would
+                    // kill a concurrent run's workers when this one launched none of its own.
+                    KillParallelWorkers(_getHostWorkerPid(), _getWorkerNames() ?? string.Empty);
                 }
                 catch (Exception ex)
                 {

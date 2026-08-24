@@ -1426,7 +1426,7 @@ namespace TestRunner
             // normally; the console control handler installed below only covers outside termination.
             string workerNames = null;
             using (var receiver = new PullSocket())
-            using (new RunTests.ParallelWorkerTeardown(HostWorkerPid, () => workerNames))
+            using (new RunTests.ParallelWorkerTeardown(() => HostWorkerPid, () => workerNames))
             {
                 // get system-assigned port which will passed to workers with "workerport" parameter
                 int workerPort;
