@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 REM # enabledelayedexpansion so the zip-target accumulator (!ZIPS!) and the in-block
 REM # !EXIT! checks read current values rather than parse-time ones. Matches
 REM # tcbuild.bat, which already sets it. No other '!' usage in this file.
