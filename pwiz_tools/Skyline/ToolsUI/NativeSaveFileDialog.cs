@@ -40,7 +40,6 @@ namespace pwiz.Skyline.ToolsUI
         // the breadcrumb is a ToolbarWindow32 -- so class + id identifies the Edit unambiguously, and nothing has to
         // walk to the DirectUI host that owns it.
         private const int FILE_NAME_EDIT_ID = 1001;
-        private const int IDOK = 1; // the Save button
 
         public override string DialogTypeName => @"SaveFileDialog";
 
@@ -72,7 +71,6 @@ namespace pwiz.Skyline.ToolsUI
             return OkDialog(saveButton.ClickNow);
         }
 
-        // The Save button, by its control id rather than its (localized) caption.
-        private NativeButton AcceptButton => RequireButton(IDOK, @"Save");
+        protected override string CommitButtonDescription => @"Save";
     }
 }

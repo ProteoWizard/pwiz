@@ -281,6 +281,7 @@
     <None Include="PwizFileInfoTest.zip" />
     <None Include="Refine.zip" />
     <None Include="WatersLockmassMzml.zip" />
+    <None Include="UnsortedMzArraysMzml.zip" />
     <None Include="Results\AgilentCEOpt.zip" />
     <None Include="Results\AgilentMix.zip" />
     <None Include="Results\AgilentMse.zip" />

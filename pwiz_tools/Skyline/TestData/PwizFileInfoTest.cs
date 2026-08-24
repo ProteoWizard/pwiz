@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -220,6 +221,129 @@ namespace pwiz.SkylineTestData
             CollectionAssert.AreEqual(new[] { 1, 2 }, msLevels, path);
         }
    
+        /// Ascending m/z is nowhere required by the mzML specification, but it is what every consumer
+        /// assumes, and extraction binary searches the m/z axis - so on a file presented in any other
+        /// order the search lands nowhere useful and every chromatogram comes out empty, with no
+        /// error. Spectra must therefore arrive m/z sorted whatever order the writer used.
+        /// pwiz orders ordinary spectra on read, and this verifies that guarantee survives the trip
+        /// out through pwiz_data_cli. It does not cover combined ion mobility spectra, which pwiz
+        /// deliberately leaves alone because their m/z ascends only within each mobility bin -
+        /// Skyline sorts those itself, in SpectraChromDataProvider.EnsureSortedMzs and
+        /// ScanProvider, and those are not redundant with this.
+        /// The fixture here is ordered by ascending intensity, one shape this has taken in practice.
+        /// Its first spectrum is short and does happen to ascend, which is the case a probe of the
+        /// first spectrum alone gets wrong: three peaks in order say nothing about the writer, and
+        /// an early scan really can precede the sample and carry almost no peaks.
+        /// </summary>
+        [TestMethod]
+        public void TestUnsortedMzArrays()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\UnsortedMzArraysMzml.zip");
+
+            var path = TestFilesDir.GetTestPath("DataConvert5_unsorted_mz.mzML");
+
+            // Pin the shape of the fixture, both halves of it. Every assertion below is satisfied by
+            // an already-sorted file, so without this the fixture could be regenerated in m/z order
+            // - by an msconvert round trip, say - and the test would stay green covering nothing.
+            // The leading spectrum being the ordered one is just as essential: reorder the file and
+            // the test stops covering the too-few-peaks-to-mean-anything rule that keeps a short
+            // ordered spectrum from settling the question for the whole file.
+            AssertEx.IsTrue(IsMzArrayAscendingInFile(path, 0), path);
+            AssertEx.IsFalse(IsMzArrayAscendingInFile(path, 1), path);
+            AssertEx.IsFalse(IsMzArrayAscendingInFile(path, 2), path);
+
+            using var msDataFile = new MsDataFileImpl(path);
+            AssertEx.AreEqual(3, msDataFile.SpectrumCount);
+
+            for (var i = 0; i < msDataFile.SpectrumCount; i++)
+            {
+                var spectrum = msDataFile.GetSpectrum(i);
+                CollectionAssert.AreEqual(ExpectedMzs(i), spectrum.Mzs, @"spectrum " + i);
+
+                // The intensity paired with each m/z has to travel with it. Sorting the m/z array on
+                // its own would leave every value plausible and every pairing wrong, which is worse
+                // than the defect being fixed.
+                for (var j = 0; j < spectrum.Mzs.Length; j++)
+                {
+                    AssertEx.AreEqual(ExpectedIntensity(i, spectrum.Mzs[j]), spectrum.Intensities[j],
+                        string.Format(@"spectrum {0} m/z {1}", i, spectrum.Mzs[j]));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Read one m/z array straight out of the mzML text and report whether it ascends.
+        /// Deliberately does not go through <see cref="MsDataFileImpl"/>, which hands back what pwiz
+        /// already corrected - the point is to see the order the file is actually stored in. The
+        /// fixture is written
+        /// uncompressed 64-bit precisely so this stays a few lines.
+        /// </summary>
+        private static bool IsMzArrayAscendingInFile(string path, int spectrumIndex)
+        {
+            var text = File.ReadAllText(path);
+            var arrayAt = -1;
+            for (var i = 0; i <= spectrumIndex; i++)
+            {
+                arrayAt = text.IndexOf(@"name=""m/z array""", arrayAt + 1, StringComparison.Ordinal);
+                AssertEx.IsTrue(arrayAt > 0, path);
+            }
+            // These two must be found inside this binaryDataArray element, not just anywhere before
+            // it - searching back from the m/z array term would otherwise be satisfied by a
+            // preceding array's params, and the decode below would read the wrong format silently.
+            var elementAt = text.LastIndexOf(@"<binaryDataArray", arrayAt, StringComparison.Ordinal);
+            AssertEx.IsTrue(elementAt > 0, path);
+            AssertEx.IsTrue(text.LastIndexOf(@"name=""no compression""", arrayAt, StringComparison.Ordinal) > elementAt, path);
+            AssertEx.IsTrue(text.LastIndexOf(@"name=""64-bit float""", arrayAt, StringComparison.Ordinal) > elementAt, path);
+
+            var open = text.IndexOf(@"<binary>", arrayAt, StringComparison.Ordinal) + @"<binary>".Length;
+            var close = text.IndexOf(@"</binary>", open, StringComparison.Ordinal);
+            var bytes = Convert.FromBase64String(text.Substring(open, close - open));
+            AssertEx.IsTrue(bytes.Length % sizeof(double) == 0, path);
+
+            var previous = double.NegativeInfinity;
+            for (var i = 0; i < bytes.Length; i += sizeof(double))
+            {
+                var mz = BitConverter.ToDouble(bytes, i);
+                if (mz < previous)
+                    return false;
+                previous = mz;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// The m/z values the fixture holds, in the order they have to come back in. The short
+        /// leading spectrum is a set of its own; the two after it share one.
+        /// </summary>
+        private static double[] ExpectedMzs(int spectrumIndex)
+        {
+            return spectrumIndex == 0
+                ? new[] { 150.1, 250.2, 350.3 }
+                : new[] { 200.2, 300.3, 400.4, 500.5, 600.6, 700.7 };
+        }
+
+        /// <summary>
+        /// The intensities the fixture pairs with each m/z, independent of the order they are stored in.
+        /// </summary>
+        private static double ExpectedIntensity(int spectrumIndex, double mz)
+        {
+            Dictionary<double, double> byMz;
+            switch (spectrumIndex)
+            {
+                case 0:
+                    byMz = new Dictionary<double, double> { { 150.1, 5 }, { 250.2, 7 }, { 350.3, 9 } };
+                    break;
+                case 1:
+                    byMz = new Dictionary<double, double> { { 500.5, 10 }, { 300.3, 20 }, { 700.7, 30 }, { 200.2, 40 }, { 600.6, 50 }, { 400.4, 60 } };
+                    break;
+                default:
+                    byMz = new Dictionary<double, double> { { 400.4, 15 }, { 700.7, 25 }, { 200.2, 35 }, { 600.6, 45 }, { 300.3, 55 }, { 500.5, 65 } };
+                    break;
+            }
+            return byMz[mz];
+        }
+
+        /// <summary>
         /// The open dialogs match source types by string equality, so the type names in
         /// <see cref="DataSourceUtil"/> have to agree with the reader's own names wherever it
         /// does not translate them. Agilent is such a case - the reader answers "Agilent

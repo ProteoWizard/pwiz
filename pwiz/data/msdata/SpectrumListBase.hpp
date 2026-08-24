@@ -30,6 +30,7 @@
 #include <boost/make_shared.hpp>
 #include <stdexcept>
 #include <iostream>
+#include <boost/atomic.hpp>
 
 
 namespace pwiz {
@@ -52,11 +53,22 @@ class PWIZ_API_DECL ListBase
 };
 
 
+/// Whether the peaks run along some axis other than m/z - a combined ion mobility scan, a scanning
+/// quadrupole, a diode-array wavelength trace, or an SRM/CRM spectrum whose points are transitions
+/// listed in method order rather than peaks along a continuum. Such a spectrum's peak order means
+/// nothing about whether its writer sorts by m/z, and forcing it into ascending order would destroy
+/// the only order it has. See the definition in SpectrumListBase.cpp for the full rationale.
+PWIZ_API_DECL bool hasNonMzOrderingAxis(const Spectrum& spectrum);
+
+
 /// common functionality for base SpectrumList implementations
 class PWIZ_API_DECL SpectrumListBase : public SpectrumList
 {
     public:
-    SpectrumListBase() : spectrum_id_mismatch_hash_(impl_.hash("spectrum id mismatch")) {}
+    SpectrumListBase()
+    :   spectrum_id_mismatch_hash_(impl_.hash("spectrum id mismatch")),
+        mzOrderVerdict_(MzOrderVerdict::unsettled)
+    {}
 
     /// issues a warning once per list instance (based on string hash)
     void warn_once(const char* msg) const { impl_.warn_once(msg); }
@@ -72,6 +84,32 @@ class PWIZ_API_DECL SpectrumListBase : public SpectrumList
     // when find() fails to find a spectrum id, check whether the id fields of the input id and the spectrum list are matching
     size_t checkNativeIdFindResult(size_t result, const std::string& id) const;
 
+    /// Put a spectrum's peaks in ascending m/z order if its writer did not, carrying every array
+    /// that holds one value per peak along with them.
+    ///
+    /// Call this on the way out of spectrum(), from a list that reads a format some other tool
+    /// wrote. Ascending m/z is nowhere required by any of those specifications, but it is what
+    /// every consumer assumes: extraction binary searches the m/z axis, so a spectrum presented in
+    /// another order makes the search land nowhere useful and the chromatogram comes out empty with
+    /// no error at all. Writers that use another order do exist - one shipped peaks in ascending
+    /// intensity - so the order is checked rather than trusted.
+    ///
+    /// The vendor lists do not call this, on the grounds that peaks arriving through a vendor API
+    /// are already ascending. That reasoning is weakest for the readers whose input is a file some
+    /// other desktop tool wrote rather than an instrument stream - ABI T2D, UIMF, Mobilion,
+    /// waters_connect - and nothing enforces the ordering for them; none has been observed to
+    /// produce anything else. A format added later that forgets simply goes uncorrected, which is
+    /// the same as today and the safe direction to fail in.
+    ///
+    /// The question is settled from the first few spectra of a file rather than re-asked for every
+    /// one, since walking every m/z array of every file to catch a rare writer is a cost the whole
+    /// world would pay for the few. The first spectrum alone will not do: early scans can precede
+    /// the sample and carry almost no peaks, and a spectrum with two of them ascends half the time
+    /// by chance. So the two verdicts are not symmetric - one spectrum out of order proves the
+    /// writer does not sort however few peaks it holds, while peaks found in order are only
+    /// believed from a spectrum with enough of them to mean it.
+    void ensureMzAscending(const SpectrumPtr& spectrum) const;
+
     // Useful for avoiding repeated ctor when you just want an empty set
     const pwiz::util::IntegerSet MSLevelsNone;
 
@@ -80,6 +118,14 @@ class PWIZ_API_DECL SpectrumListBase : public SpectrumList
     private:
     ListBase impl_;
     size_t spectrum_id_mismatch_hash_;
+
+    /// what this file has shown so far about the way its writer orders peaks
+    enum class MzOrderVerdict { unsettled, writerSortsByMz, writerDoesNotSortByMz };
+
+    // mutable and atomic because spectrum() is const and is called from worker threads;
+    // condemnation is an unconditional store while the good verdict is a compare-exchange from
+    // unsettled, so no late-arriving good spectrum can un-condemn a file
+    mutable boost::atomic<MzOrderVerdict> mzOrderVerdict_;
 };
 
 
