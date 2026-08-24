@@ -198,6 +198,7 @@
     <Compile Include="DownloadDlg.Designer.cs">
       <DependentUpon>DownloadDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="DownloadProgressMonitor.cs" />
     <Compile Include="DownloadingFileControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

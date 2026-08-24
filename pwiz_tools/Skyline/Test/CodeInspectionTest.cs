@@ -122,6 +122,41 @@ namespace pwiz.SkylineTest
                 false, // Pattern is not a regular expression
                 @"Trace should not be used directly. The Messages class is the proper way to produce non-blocking user-facing messages, and permanent dev-facing messages."); // Explanation for prohibition, appears in report
 
+            // Looking for new WebClient use. HttpClientWithProgress replaced it project-wide during
+            // the 2025 migration; this check was promised then and never added, which is how the
+            // remaining uses stayed invisible. Matches construction rather than the identifier,
+            // because a good deal of code holds other download clients in a variable named
+            // webClient and those are not what this is about.
+            // Deliberately no inline exemption comment. Several inspections here can be waived with a
+            // magic comment, which suits rules that have occasional legitimate exceptions. This one
+            // does not: an inline opt-out is a silent route back to WebClient, and a silent route
+            // back is how the original migration lost track of the uses it left behind. Anyone who
+            // believes they have a real exception has to edit this test, which puts it in front of a
+            // reviewer.
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // Nothing exempted - notably not Executables, which NonSkylineDirectories would have skipped, and which is where the migration was missed
+                string.Empty, // No file content required for inspection
+                // Both the imported and the fully-qualified name, and both construction forms.
+                // The qualified form matters here because this migration removed "using System.Net"
+                // from the files it touched, so System.Net.WebClient is what the next person reaches
+                // for; the brace form has no parenthesis to anchor on.
+                @"new\s+(System\.Net\.)?WebClient\s*[({]", // Forbidden pattern
+                true, // Pattern is a regular expression
+                @"WebClient is obsolete on modern .NET (SYSLIB0014), so it has to go before the port. pwiz.Common.SystemUtil.HttpClientWithProgress is the project standard for HTTP: it reports progress, supports cancellation, and is testable through its TestBehavior seam. There is no inline opt-out for this rule - if you believe you have a legitimate exception, add it to this inspection in CodeInspectionTest.cs so it gets reviewed.",
+                null, // No inline opt-out - see the note above this inspection
+                // Known remaining uses, tolerated as warnings so no NEW ones can be added. Lower this
+                // number as each is migrated - it is the only thing tracking them.
+                //   Executables\Installer\SetupDeployProject.cs - the installer strategy is expected to
+                //     change wholesale with the .NET port, so migrating it now would likely be wasted work.
+                //   SkylineNightly\Nightly.cs, SkylineNightlyShim\Program.cs - these may not have
+                //     HttpClientWithProgress available. The Shim especially is a deliberately tiny
+                //     program that runs on developer machines during nightly testing, only to check
+                //     that SkylineNightly itself is current; plain HttpClient with much simpler
+                //     handling is likely the right answer there rather than the full wrapper.
+                3);
+
             // Looking for forgotten "RunPerfTests=true" statements that will force running possibly unintended tests
             AddTextInspection(@"*.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files
