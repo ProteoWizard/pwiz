@@ -483,7 +483,13 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
 
             int n = specData.TotalDataPoints;
             spec.DefaultArrayLength = n;
-            if (getBinaryData && n > 0)
+            // Unconditional, as cpp SpectrumList_Agilent.cpp:416-419 is: inside
+            // DetailLevel_FullData it calls setMZIntensityArrays() with empty vectors and then
+            // fills them, so a spectrum with zero points still carries
+            // <binaryDataArrayList count="2"> holding two empty arrays. Guarding on n > 0
+            // dropped the element entirely. Same defect as the ones fixed in
+            // SpectrumList_Sciex and SpectrumList_Shimadzu.
+            if (getBinaryData)
             {
                 double[] x = specData.XArray ?? Array.Empty<double>();
                 float[] y = specData.YArray ?? Array.Empty<float>();
