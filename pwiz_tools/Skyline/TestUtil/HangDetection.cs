@@ -21,11 +21,13 @@ using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
+using TestRunnerLib;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -75,17 +77,7 @@ namespace pwiz.SkylineTestUtil
             }
             catch (ThreadInterruptedException)
             {
-                try
-                {
-                    var threadDumpLines = new List<string> { "*** Hang detected. Thread dump:" };
-                    threadDumpLines.AddRange(GetAllThreadsCallstacks(Process.GetCurrentProcess().Id));
-                    threadDumpLines.Add("*** End of thread dump");
-                    Console.Out.WriteLine(TextUtil.LineSeparate(threadDumpLines));
-                }
-                catch (Exception ex)
-                {
-                    Console.Out.WriteLine("Unable to get thread dump: {0}", ex);
-                }
+                Console.Out.WriteLine(TextUtil.LineSeparate(@"*** Hang detected.", TryGetThreadDump()));
 
                 try
                 {
@@ -240,6 +232,81 @@ namespace pwiz.SkylineTestUtil
             }
 
             _watchdogThread.Join();
+        }
+
+        /// <summary>
+        /// Every managed thread's call stack right now, for a failure that means something never
+        /// finished. A wait that times out can say what it was waiting for but not what was - or
+        /// was not - working on it, and that is usually the only fact worth having.
+        /// <para>KNOWN BLIND SPOT, measured rather than assumed: this attaches to its own process
+        /// passively, which cannot walk a stack that is in motion. Blocked and sleeping threads
+        /// come out complete, but the thread calling this - and any other thread running at that
+        /// instant - is listed with NO frames at all. An empty stack here therefore means "could
+        /// not read", NOT "idle", and the UI thread is usually one of the empty ones. When the
+        /// question is what the UI thread was doing, take a minidump as well; see
+        /// <see cref="TryWriteMiniDump"/>.</para>
+        /// <para>Never throws. A diagnostic that replaces the failure it exists to explain is worse
+        /// than no diagnostic, so a dump that cannot be taken reports only that.</para>
+        /// </summary>
+        public static string TryGetThreadDump()
+        {
+            try
+            {
+                var threadDumpLines = new List<string> { @"*** Thread dump:" };
+                threadDumpLines.AddRange(GetAllThreadsCallstacks(Process.GetCurrentProcess().Id));
+                threadDumpLines.Add(@"*** End of thread dump");
+                return TextUtil.LineSeparate(threadDumpLines);
+            }
+            catch (Exception ex)
+            {
+                return string.Format(@"*** Thread dump unavailable: {0}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Environment variable that turns on a minidump beside every wait timeout. Off by default
+        /// because the dumps are large; turn it on for a long soak that is hunting a stall.
+        /// </summary>
+        public const string ENV_DUMP_ON_TIMEOUT = "SKYLINE_DUMP_ON_WAIT_TIMEOUT";
+
+        /// <summary>
+        /// Most minidumps one process will write. A dump of a Skyline test process runs to a few
+        /// hundred MB, and a long soak can time out many times, so an uncapped switch fills the
+        /// disk and takes the run down with it. The first few carry the same information.
+        /// </summary>
+        private const int MAX_MINI_DUMPS = 3;
+
+        private static int _miniDumpsWritten;
+
+        /// <summary>
+        /// Writes a minidump of this process when <see cref="ENV_DUMP_ON_TIMEOUT"/> is set, and
+        /// returns a line naming it. Unlike <see cref="TryGetThreadDump"/> a minidump captures
+        /// every thread faithfully, including the ones that were running, so it can answer what
+        /// the UI thread was doing when nothing finished.
+        /// <para>Never throws, and returns an empty string when disabled so it costs a caller
+        /// nothing to ask.</para>
+        /// </summary>
+        public static string TryWriteMiniDump(string reason)
+        {
+            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(ENV_DUMP_ON_TIMEOUT)))
+                return string.Empty;
+            if (Interlocked.Increment(ref _miniDumpsWritten) > MAX_MINI_DUMPS)
+                return TextUtil.LineSeparate(string.Empty,
+                    string.Format(@"*** Minidump skipped: already wrote {0} in this process", MAX_MINI_DUMPS));
+
+            try
+            {
+                var process = Process.GetCurrentProcess();
+                var path = Path.Combine(Path.GetDirectoryName(process.MainModule?.FileName) ?? Path.GetTempPath(),
+                    string.Format(@"{0}-{1}-{2}.dmp", reason, process.Id, DateTime.UtcNow.ToString(@"HHmmss")));
+                return MiniDump.WriteMiniDump(path)
+                    ? TextUtil.LineSeparate(string.Empty, string.Format(@"*** Minidump written to {0}", path))
+                    : TextUtil.LineSeparate(string.Empty, string.Format(@"*** Minidump could not be written to {0}", path));
+            }
+            catch (Exception ex)
+            {
+                return TextUtil.LineSeparate(string.Empty, string.Format(@"*** Minidump unavailable: {0}", ex.Message));
+            }
         }
 
         public static IEnumerable<string> GetAllThreadsCallstacks(int processId)
