@@ -430,7 +430,7 @@ namespace pwiz.Skyline.EditUI
         {
             if (caption == null || !_propertyColumns.TryGetValue(caption, out var filterColumn))
             {
-                return SpectrumColumnScanner.Standing.Undetermined;
+                return SpectrumColumnScanner.Standing.undetermined;
             }
             return _columnAvailability.GetStanding(filterColumn.PropertyPath,
                 SpectrumClassColumn.IsCvParamColumn(filterColumn.SpectrumColumn));

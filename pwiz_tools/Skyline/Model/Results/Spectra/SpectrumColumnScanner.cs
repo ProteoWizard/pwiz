@@ -53,8 +53,24 @@ namespace pwiz.Skyline.Model.Results.Spectra
     /// file - the vendor format, the instrument, the conversion that produced it - not of the sample in it.
     /// A hundred replicates off one instrument therefore cost one file open, not a hundred.
     /// </summary>
-    public static class SpectrumColumnScanner
+    public class SpectrumColumnScanner
     {
+        private readonly MeasuredResults _measuredResults;
+        private readonly string _documentFilePath;
+        private IList<SpectrumMetadata> _sampledSpectra;
+        private IList<ChromFileInfo> _filesToScan;
+
+        /// <summary>
+        /// Scans one document's results. Built around them rather than taking them per call, so the work
+        /// that does not depend on which columns are being asked about - choosing the files to examine and
+        /// sampling their stored metadata - is done once and kept, however many times it is asked.
+        /// </summary>
+        public SpectrumColumnScanner(MeasuredResults measuredResults, string documentFilePath)
+        {
+            _measuredResults = measuredResults;
+            _documentFilePath = documentFilePath;
+        }
+
         /// <summary>
         /// How many spectra of a file to consider, whether read from it or taken from its stored metadata.
         /// A value that appears at all generally appears from the start, so the head of a run answers the
@@ -93,11 +109,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public enum Standing
         {
             /// <summary>Nothing was established - no results, or the data could not be examined.</summary>
-            Undetermined,
+            undetermined,
             /// <summary>This data has values for the column.</summary>
-            Answerable,
+            answerable,
             /// <summary>This data was examined for the column and has nothing to match on.</summary>
-            Unanswerable
+            unanswerable
         }
 
         public class Availability
@@ -128,16 +144,16 @@ namespace pwiz.Skyline.Model.Results.Spectra
             {
                 if (propertyPath == null)
                 {
-                    return Standing.Undetermined;
+                    return Standing.undetermined;
                 }
                 if (Answerable.Contains(propertyPath))
                 {
                     // Only ever populated for a column that was examined, so this needs no flag check.
-                    return Standing.Answerable;
+                    return Standing.answerable;
                 }
                 return (isCvColumn ? CvDetermined : InterpretedDetermined)
-                    ? Standing.Unanswerable
-                    : Standing.Undetermined;
+                    ? Standing.unanswerable
+                    : Standing.undetermined;
             }
         }
 
@@ -159,19 +175,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// <see cref="Availability.UNKNOWN"/> when the document has no results, so a filter authored
         /// before importing anything is not marked up on the strength of no evidence at all.
         /// </summary>
-        public static Availability GetAvailability(SrmDocument document,
-            IEnumerable<SpectrumClassColumn> candidates, string documentFilePath, ILongWaitBroker broker)
+        public Availability GetAvailability(IEnumerable<SpectrumClassColumn> candidates, ILongWaitBroker broker)
         {
-            var measuredResults = document.Settings.MeasuredResults;
-            if (measuredResults == null)
+            if (_measuredResults == null)
             {
                 return Availability.UNKNOWN;
             }
 
-            var representatives = GetFilesToScan(measuredResults);
-            var sampledSpectra = GetSampledSpectra(measuredResults);
-            var accessions = GetObservedAccessions(representatives, sampledSpectra, documentFilePath, broker,
-                out bool cvDetermined);
+            var sampledSpectra = SampledSpectra;
+            var accessions = GetObservedAccessions(FilesToScan, sampledSpectra, broker, out bool cvDetermined);
 
             // The interpreted properties read typed fields that import always records, so having sampled
             // any spectrum at all settles them; having sampled none settles nothing.
@@ -216,10 +228,20 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// every document with results, and the CV terms too for a document that was already filtering on
         /// them when it was imported.
         /// </summary>
-        private static IList<SpectrumMetadata> GetSampledSpectra(MeasuredResults measuredResults)
+        private IList<SpectrumMetadata> SampledSpectra
+        {
+            get { return _sampledSpectra = _sampledSpectra ?? BuildSampledSpectra(); }
+        }
+
+        private IList<ChromFileInfo> FilesToScan
+        {
+            get { return _filesToScan = _filesToScan ?? BuildFilesToScan(); }
+        }
+
+        private IList<SpectrumMetadata> BuildSampledSpectra()
         {
             var sampled = new List<SpectrumMetadata>();
-            foreach (var metadata in measuredResults.GetResultFileMetadatas().Values)
+            foreach (var metadata in _measuredResults.GetResultFileMetadatas().Values)
             {
                 sampled.AddRange(metadata.SpectrumMetadatas.Take(MAX_SPECTRA_PER_FILE));
             }
@@ -235,9 +257,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// be - a document shared without its raw data, or a cancelled scan - then nothing is known about
         /// which terms the data carries, which is different from knowing it carries none.
         /// </summary>
-        private static HashSet<string> GetObservedAccessions(IList<ChromFileInfo> representatives,
-            IEnumerable<SpectrumMetadata> sampledSpectra, string documentFilePath, ILongWaitBroker broker,
-            out bool determined)
+        private HashSet<string> GetObservedAccessions(IList<ChromFileInfo> representatives,
+            IEnumerable<SpectrumMetadata> sampledSpectra, ILongWaitBroker broker, out bool determined)
         {
             var accessions = new HashSet<string>();
             bool anyCaptured = false;
@@ -261,7 +282,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     }
                     broker.ProgressValue = i * 100 / representatives.Count;
                 }
-                if (ReadAccessionsCached(representatives[i], documentFilePath, broker, out var fileAccessions))
+                if (ReadAccessionsCached(representatives[i], broker, out var fileAccessions))
                 {
                     anyFileRead = true;
                     accessions.UnionWith(fileAccessions);
@@ -274,10 +295,10 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// <summary>
         /// One file per distinct signature, in replicate order, capped at <see cref="MAX_FILES_SCANNED"/>.
         /// </summary>
-        private static IList<ChromFileInfo> GetFilesToScan(MeasuredResults measuredResults)
+        private IList<ChromFileInfo> BuildFilesToScan()
         {
             var bySignature = new Dictionary<string, ChromFileInfo>();
-            foreach (var fileInfo in measuredResults.MSDataFileInfos)
+            foreach (var fileInfo in _measuredResults.MSDataFileInfos)
             {
                 if (fileInfo.FilePath == null || bySignature.Count >= MAX_FILES_SCANNED)
                 {
@@ -312,8 +333,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// Reads one file's terms, or reports that it could not. False means nothing was learned from this
         /// file, which the caller needs to tell apart from learning that it carries no terms.
         /// </summary>
-        private static bool ReadAccessionsCached(ChromFileInfo fileInfo, string documentFilePath,
-            ILongWaitBroker broker, out HashSet<string> accessions)
+        private bool ReadAccessionsCached(ChromFileInfo fileInfo, ILongWaitBroker broker,
+            out HashSet<string> accessions)
         {
             var signature = FileSignature(fileInfo);
             lock (ACCESSIONS_BY_SIGNATURE)
@@ -325,7 +346,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
             }
 
-            accessions = ReadAccessions(fileInfo.FilePath, documentFilePath,
+            accessions = ReadAccessions(fileInfo.FilePath,
                 broker?.CancellationToken ?? CancellationToken.None);
             if (accessions == null)
             {
@@ -347,14 +368,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// failure as "nothing learned" rather than raising it at the user, who did not ask for a file to
         /// be opened and cannot act on the news that one is gone.
         /// </summary>
-        private static HashSet<string> ReadAccessions(MsDataFileUri filePath, string documentFilePath,
-            CancellationToken cancellationToken)
+        private HashSet<string> ReadAccessions(MsDataFileUri filePath, CancellationToken cancellationToken)
         {
             try
             {
                 var openParams = new OpenMsDataFileParams(cancellationToken)
                 {
-                    DownloadPath = Path.GetDirectoryName(documentFilePath) ?? Directory.GetCurrentDirectory()
+                    DownloadPath = Path.GetDirectoryName(_documentFilePath) ?? Directory.GetCurrentDirectory()
                 };
                 using var dataFile = filePath.OpenMsDataFile(openParams);
                 return dataFile.GetDistinctOtherParams(MAX_SPECTRA_PER_FILE, cancellationToken)

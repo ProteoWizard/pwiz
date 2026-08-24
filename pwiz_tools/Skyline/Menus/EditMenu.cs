@@ -1900,9 +1900,10 @@ namespace pwiz.Skyline.Menus
             using var longWaitDlg = new LongWaitDlg();
             longWaitDlg.Message =
                 MenusResources.EditMenu_EditSpectrumFilter_Looking_for_spectrum_parameters_in_the_data_files;
+            var scanner = new SpectrumColumnScanner(document.Settings.MeasuredResults,
+                SkylineWindow.DocumentFilePath);
             longWaitDlg.PerformWork(SkylineWindow, 800, broker =>
-                availability = SpectrumColumnScanner.GetAvailability(document, candidates,
-                    SkylineWindow.DocumentFilePath, broker));
+                availability = scanner.GetAvailability(candidates, broker));
             return availability;
         }
 

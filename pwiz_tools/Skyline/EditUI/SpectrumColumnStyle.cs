@@ -39,7 +39,7 @@ namespace pwiz.Skyline.EditUI
         /// </summary>
         public static Color GetForeColor(SpectrumColumnScanner.Standing standing, Color defaultColor)
         {
-            return standing == SpectrumColumnScanner.Standing.Answerable ? SystemColors.HotTrack : defaultColor;
+            return standing == SpectrumColumnScanner.Standing.answerable ? SystemColors.HotTrack : defaultColor;
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace pwiz.Skyline.EditUI
         /// </summary>
         public static FontStyle GetFontStyle(SpectrumColumnScanner.Standing standing)
         {
-            return standing == SpectrumColumnScanner.Standing.Unanswerable ? FontStyle.Italic : FontStyle.Regular;
+            return standing == SpectrumColumnScanner.Standing.unanswerable ? FontStyle.Italic : FontStyle.Regular;
         }
     }
 }

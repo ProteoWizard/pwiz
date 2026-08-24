@@ -147,9 +147,9 @@ namespace pwiz.Skyline.EditUI
         {
             var ordered = new[]
             {
-                SpectrumColumnScanner.Standing.Answerable,
-                SpectrumColumnScanner.Standing.Unanswerable,
-                SpectrumColumnScanner.Standing.Undetermined
+                SpectrumColumnScanner.Standing.answerable,
+                SpectrumColumnScanner.Standing.unanswerable,
+                SpectrumColumnScanner.Standing.undetermined
             };
             return ordered.Concat(Enum.GetValues(typeof(SpectrumColumnScanner.Standing))
                 .Cast<SpectrumColumnScanner.Standing>().Where(standing => !ordered.Contains(standing)));
@@ -159,9 +159,9 @@ namespace pwiz.Skyline.EditUI
         {
             switch (standing)
             {
-                case SpectrumColumnScanner.Standing.Answerable:
+                case SpectrumColumnScanner.Standing.answerable:
                     return EditUIResources.SpectrumFilterStylingHelpDlg_Style_name_accent_color;
-                case SpectrumColumnScanner.Standing.Unanswerable:
+                case SpectrumColumnScanner.Standing.unanswerable:
                     return EditUIResources.SpectrumFilterStylingHelpDlg_Style_name_italic;
                 default:
                     return EditUIResources.SpectrumFilterStylingHelpDlg_Style_name_plain;
@@ -172,9 +172,9 @@ namespace pwiz.Skyline.EditUI
         {
             switch (standing)
             {
-                case SpectrumColumnScanner.Standing.Answerable:
+                case SpectrumColumnScanner.Standing.answerable:
                     return EditUIResources.SpectrumFilterStylingHelpDlg_Explains_answerable;
-                case SpectrumColumnScanner.Standing.Unanswerable:
+                case SpectrumColumnScanner.Standing.unanswerable:
                     return EditUIResources.SpectrumFilterStylingHelpDlg_Explains_unanswerable;
                 default:
                     return EditUIResources.SpectrumFilterStylingHelpDlg_Explains_undetermined;

@@ -174,18 +174,18 @@ namespace pwiz.SkylineTestFunctional
             // document with imported results gives, so this also pins that such a document still gets its
             // CV terms determined.
             SpectrumColumnScanner.ResetCacheForTest();
-            var availability = SpectrumColumnScanner.GetAvailability(SkylineWindow.Document, candidates,
-                null, null);
+            var availability = new SpectrumColumnScanner(
+                    SkylineWindow.Document.Settings.MeasuredResults, null).GetAvailability(candidates, null);
 
             // ...and yet the terms are still known, because the file was read for them.
-            Assert.AreEqual(SpectrumColumnScanner.Standing.Answerable,
+            Assert.AreEqual(SpectrumColumnScanner.Standing.answerable,
                 availability.GetStanding(bpiColumn.PropertyPath, true),
                 @"base peak intensity is in the file, so reading it must answer the column");
-            Assert.AreEqual(SpectrumColumnScanner.Standing.Unanswerable,
+            Assert.AreEqual(SpectrumColumnScanner.Standing.unanswerable,
                 availability.GetStanding(zoomScanColumn.PropertyPath, true),
                 @"zoom scan is absent from the file, which reading it establishes");
             // The interpreted columns never depended on capture, so they answer from the cache as always.
-            Assert.AreEqual(SpectrumColumnScanner.Standing.Answerable,
+            Assert.AreEqual(SpectrumColumnScanner.Standing.answerable,
                 availability.GetStanding(SpectrumClassColumn.MsLevel.PropertyPath, false),
                 @"MS level is answered from the per-file metadata, with no file read needed");
         }
@@ -220,36 +220,38 @@ namespace pwiz.SkylineTestFunctional
             var zoomScanColumn = SpectrumClassColumn.CvParam(@"MS:1000497", @"zoom scan", false);
             var candidates = SpectrumClassColumn.ALL
                 .Concat(new[] { bpiColumn, zoomScanColumn }).ToList();
-            var availability = SpectrumColumnScanner.GetAvailability(SkylineWindow.Document, candidates,
-                SkylineWindow.DocumentFilePath, null);
+            var availability = new SpectrumColumnScanner(
+                    SkylineWindow.Document.Settings.MeasuredResults, SkylineWindow.DocumentFilePath)
+                .GetAvailability(candidates, null);
 
             SpectrumColumnScanner.Standing Standing(SpectrumClassColumn column) => availability.GetStanding(
                 column.PropertyPath, SpectrumClassColumn.IsCvParamColumn(column));
 
-            Assert.AreEqual(SpectrumColumnScanner.Standing.Answerable, Standing(bpiColumn),
+            Assert.AreEqual(SpectrumColumnScanner.Standing.answerable, Standing(bpiColumn),
                 @"base peak intensity is in this data");
-            Assert.AreEqual(SpectrumColumnScanner.Standing.Unanswerable, Standing(zoomScanColumn),
+            Assert.AreEqual(SpectrumColumnScanner.Standing.unanswerable, Standing(zoomScanColumn),
                 @"zoom scan was looked for and is absent from this data");
             // This is MS1-only data, so MS level is answerable but the MS2 precursor, dissociation and
             // collision energy columns are not - the distinction the styling exists to draw.
-            Assert.AreEqual(SpectrumColumnScanner.Standing.Answerable, Standing(SpectrumClassColumn.MsLevel),
+            Assert.AreEqual(SpectrumColumnScanner.Standing.answerable, Standing(SpectrumClassColumn.MsLevel),
                 @"MS level is answerable for any data, and is what teaches the reader what the accent means");
-            Assert.AreEqual(SpectrumColumnScanner.Standing.Unanswerable, Standing(SpectrumClassColumn.Ms2Precursors),
+            Assert.AreEqual(SpectrumColumnScanner.Standing.unanswerable, Standing(SpectrumClassColumn.Ms2Precursors),
                 @"MS2 precursors are absent from MS1-only data");
-            Assert.AreEqual(SpectrumColumnScanner.Standing.Unanswerable, Standing(SpectrumClassColumn.DissociationMethod),
+            Assert.AreEqual(SpectrumColumnScanner.Standing.unanswerable, Standing(SpectrumClassColumn.DissociationMethod),
                 @"dissociation method is absent from MS1-only data");
-            Assert.AreEqual(SpectrumColumnScanner.Standing.Unanswerable, Standing(SpectrumClassColumn.CollisionEnergy),
+            Assert.AreEqual(SpectrumColumnScanner.Standing.unanswerable, Standing(SpectrumClassColumn.CollisionEnergy),
                 @"collision energy is absent from data that records none");
 
             // A document with no results establishes nothing, which is neither of the other two states: the
             // columns are not known to be absent, they were never examined. Conflating this with absence
             // would style an entire filter written before importing anything.
-            var emptyAvailability = SpectrumColumnScanner.GetAvailability(new SrmDocument(SrmSettingsList.GetDefault()),
-                candidates, null, null);
-            Assert.AreEqual(SpectrumColumnScanner.Standing.Undetermined,
+            var emptyAvailability = new SpectrumColumnScanner(
+                    new SrmDocument(SrmSettingsList.GetDefault()).Settings.MeasuredResults, null)
+                .GetAvailability(candidates, null);
+            Assert.AreEqual(SpectrumColumnScanner.Standing.undetermined,
                 emptyAvailability.GetStanding(zoomScanColumn.PropertyPath, true),
                 @"a document with no results has established nothing about a CV term");
-            Assert.AreEqual(SpectrumColumnScanner.Standing.Undetermined,
+            Assert.AreEqual(SpectrumColumnScanner.Standing.undetermined,
                 emptyAvailability.GetStanding(SpectrumClassColumn.Ms2Precursors.PropertyPath, false),
                 @"a document with no results has established nothing about an interpreted column");
         }
