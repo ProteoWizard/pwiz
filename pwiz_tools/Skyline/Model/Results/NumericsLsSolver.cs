@@ -22,7 +22,9 @@ using System.Linq;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
 using MathNet.Numerics.LinearAlgebra.Factorization;
+#if NET472
 using LinProvider = MathNet.Numerics.Providers.LinearAlgebra.ManagedLinearAlgebraProvider;
+#endif
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -325,7 +327,9 @@ namespace pwiz.Skyline.Model.Results
 
         private static void SetMathNetParameters()
         {
+#if NET472
             MathNet.Numerics.Control.LinearAlgebraProvider = new LinProvider();
+#endif
         }
 
         protected virtual void ClearMatrices()

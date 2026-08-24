@@ -142,7 +142,7 @@ namespace pwiz.SkylineTest
             for (int i = 3; i < 7; i ++)
             {
                 Transition tran = docReporterIon.MoleculeTransitions.ElementAt(i).Transition;
-                Assert.AreNotEqual(tran.CustomIon, reporterIons);
+                Assert.AreNotEqual((object)tran.CustomIon, reporterIons);
             }
             var optionalIon = new MeasuredIon(hydrogenPeroxide, formula, null, null, Adduct.SINGLY_PROTONATED, true);
             SrmDocument optionalDoc = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>

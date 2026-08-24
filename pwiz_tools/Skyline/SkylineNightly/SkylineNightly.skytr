@@ -1,4 +1,4 @@
-<SkylineTester>
+﻿<SkylineTester>
   <tabs>tabNightly</tabs>
   <nightlyStartTime></nightlyStartTime>
   <nightlyRoot></nightlyRoot>
@@ -11,5 +11,7 @@
   <nightlyBranch>false</nightlyBranch>
   <nightlyBranchUrl></nightlyBranchUrl>
   <nightlyExit>true</nightlyExit>
+  <nukeBuild>true</nukeBuild>
+  <updateBuild>false</updateBuild>
   <buildRoot></buildRoot>
 </SkylineTester>

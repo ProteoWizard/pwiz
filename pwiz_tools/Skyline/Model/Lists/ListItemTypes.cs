@@ -42,7 +42,11 @@ namespace pwiz.Skyline.Model.Lists
         private ListItemTypes()
         {
             var assemblyName = new AssemblyName(@"ListItemTypes" + Guid.NewGuid());
+#if NET472
             var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+#else
+            var assemblyBuilder = System.Reflection.Emit.AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+#endif
             _moduleBuilder = assemblyBuilder.DefineDynamicModule(@"ListItemTypes");
         }
 

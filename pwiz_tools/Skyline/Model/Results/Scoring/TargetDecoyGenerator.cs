@@ -254,7 +254,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
             double meanWeightedDiff = meanDiff * peakScoringModel.Parameters.Weights[index];
             if (meanDiffAll == 0 || double.IsNaN(meanDiffAll) || double.IsNaN(meanDiff))
                 return null;
-            return meanWeightedDiff / meanDiffAll;
+            var percentContribution = meanWeightedDiff / meanDiffAll;
+            // meanWeightedDiff can be a negative zero (0.0 * a negative weight per IEEE 754), which
+            // .NET Core formats as "-0.0%" where .NET Framework dropped the sign. Normalize to positive
+            // zero (numerically identical) so grid/command-line displays are sign-consistent across frameworks.
+            return percentContribution == 0 ? 0.0 : percentContribution;
         }
 
         private void GetActiveScoredValues(IPeakScoringModel peakScoringModel,

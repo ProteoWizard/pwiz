@@ -60,6 +60,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
+using ReplicateValue = pwiz.Skyline.Model.Results.ReplicateValue;
 
 namespace pwiz.Skyline
 {

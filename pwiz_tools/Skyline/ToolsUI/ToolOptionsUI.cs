@@ -126,7 +126,7 @@ namespace pwiz.Skyline.ToolsUI
         private class KoinaPingRequest : KoinaHelpers.KoinaRequest
         {
             private static KoinaConfig _koinaConfig;
-            private static Channel _channel;
+            private static ChannelBase _channel;
 
             static KoinaPingRequest()
             {

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,9 +25,12 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+#if NET472
 using System.ServiceModel;
+#endif
 using System.Windows.Forms;
 using Microsoft.Win32.TaskScheduler;
+using pwiz.Common.SystemUtil;
 using ZedGraph;
 using Timer = System.Windows.Forms.Timer;
 
@@ -368,8 +371,13 @@ namespace SkylineTester
                 ? @"https://github.com/ProteoWizard/pwiz"
                 : MainWindow.NightlyBranchUrl.Text;
             var buildRoot = Path.Combine(MainWindow.GetNightlyBuildRoot(), "pwiz");
-            // Build Skyline.exe without testing during the build
-            if (!TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList, true, false, false))
+            // Build Skyline.exe without testing during the build.
+            // Honor the Build tab's nuke/update choice rather than always nuking: SkylineNightly's
+            // --reuse-checkout writes updateBuild into the .skytr so an existing tree is synced with
+            // "git pull" instead of deleted and re-cloned. Defaults are unchanged - nukeBuild is the
+            // designer default, and a .skytr that says nothing still nukes.
+            if (!TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList,
+                    MainWindow.NukeBuild.Checked, MainWindow.UpdateBuild.Checked, false))
                 MainWindow.CommandShell.Add("# Nightly cancelled.");
             else
             {
@@ -687,7 +695,8 @@ namespace SkylineTester
 
         public void BrowseBuild()
         {
-            using (var dlg = new FolderBrowserDialog())
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            using (var dlg = FormUtil.CreateFolderBrowserDialog())
             {
                 dlg.Description = "Select or create a root folder for build source files.";
                 dlg.ShowNewFolderButton = true;
@@ -805,6 +814,7 @@ namespace SkylineTester
 
         BackgroundWorker SkylineTesterWindow.IMemoryGraphContainer.UpdateWorker { get; set; }
 
+#if NET472
         // Facilitates IPC so that we can receive signals from SkylineNightly
         [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
         public class NightlyListener: IEndTimeSetter
@@ -852,5 +862,44 @@ namespace SkylineTester
             [OperationContract]
             void SetEndTime(DateTime endTime);
         }
+#else
+        // net8 has no self-hosted WCF: ServiceHost / NetNamedPipeBinding require CoreWCF, a different
+        // (ASP.NET-Core-based) hosting model than the net472 System.ServiceModel self-host above. The
+        // nightly end-time IPC callback from SkylineNightly (itself still net472) is net472-only for
+        // now; this stub keeps the callers (InitNightlyListener / cleanup) framework-agnostic and
+        // no-ops the hosting. The stop-timer logic is retained so a future net8-native IPC (e.g. a
+        // plain named pipe or CoreWCF) can drive SetEndTime directly.
+        public class NightlyListener
+        {
+            private readonly Timer _stopTimer;
+
+            public NightlyListener(Timer stopTimer)
+            {
+                _stopTimer = stopTimer;
+            }
+
+            public void Stop()
+            {
+            }
+
+            public void SetEndTime(DateTime endTime)
+            {
+                if (_stopTimer == null)
+                    return;
+
+                _stopTimer.Stop();
+
+                var now = DateTime.Now;
+                if (endTime <= now)
+                {
+                    MainWindow.StopByTimer();
+                    return;
+                }
+
+                _stopTimer.Interval = (int) endTime.Subtract(now).TotalMilliseconds;
+                _stopTimer.Start();
+            }
+        }
+#endif
     }
 }

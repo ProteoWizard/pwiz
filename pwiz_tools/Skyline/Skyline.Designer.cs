@@ -181,6 +181,13 @@ namespace pwiz.Skyline
             // 
             this.dockPanel.ActiveAutoHideContent = null;
             resources.ApplyResources(this.dockPanel, "dockPanel");
+            // Docked rather than anchored, and set here rather than in Skyline[.<lang>].resx, where
+            // Anchor/Location/Size used to live. Anchoring on all four sides only works if the panel
+            // really starts at its designer size; in a Windows container it does not -- the size is
+            // lost and the panel is left at Control's 200x100 default with anchor deltas it can
+            // never grow out of, so the docked panes collapse to nothing and every graph geometry
+            // test reads wrong values. Filling is what the four-sided anchor was emulating anyway.
+            this.dockPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dockPanel.Name = "dockPanel";
             this.dockPanel.ActiveDocumentChanged += new System.EventHandler(this.dockPanel_ActiveDocumentChanged);
             // 

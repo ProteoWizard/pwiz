@@ -963,11 +963,15 @@ namespace pwiz.Skyline.Util
         {
         }
 
+        // Formatter-based serialization: obsolete on .NET 8, which dropped BinaryFormatter, but this
+        // constructor is part of the type's shape on both legs and subclasses chain to it.
+#pragma warning disable SYSLIB0051
         protected FileModifiedException(
             SerializationInfo info,
             StreamingContext context) : base(info, context)
         {
         }
+#pragma warning restore SYSLIB0051
     }
 
     public static class FileTimeEx

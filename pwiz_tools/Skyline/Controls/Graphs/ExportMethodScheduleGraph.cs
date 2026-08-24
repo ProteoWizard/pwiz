@@ -19,7 +19,11 @@
 
 using System;
 using System.Windows.Forms;
+#if NET472
 using pwiz.CLI.Bruker.PrmScheduling;
+#else
+using Pwiz.Vendor.Bruker.PrmScheduling;
+#endif
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
@@ -115,7 +119,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public string Name { get; }
             public SchedulingMetrics Metrics { get; }
 
-            public MetricDisplay(string name, SchedulingMetrics metrics = (SchedulingMetrics)(-1))
+            public MetricDisplay(string name, SchedulingMetrics metrics = unchecked((SchedulingMetrics)(-1)))
             {
                 Name = name;
                 Metrics = metrics;

@@ -94,32 +94,42 @@ namespace AutoQCTest
             var skylineProjectDir = ExtensionTestContext.GetProjectDirectory("")
                                     ?? throw new InvalidOperationException("Unable to find Skyline project directory");
 
-            var debugPath = Path.Combine(skylineProjectDir, "bin", "x64", "Debug");
-            var releasePath = Path.Combine(skylineProjectDir, "bin", "x64", "Release");
+            // net472 builds to bin\x64\<config>; net8 to bin\<config>\net8.0-windows (or a
+            // Stage-Net8Tests staging dir). Return whichever candidate holds SkylineCmd.exe, preferring
+            // the most recently built. The net8 candidates are only considered on net8 so a net472 test
+            // run never picks up a newer net8 build that happens to be present on the same machine.
+            var candidates = new[]
+            {
+#if !NET472
+                Path.Combine(skylineProjectDir, "bin", "Release", "net8.0-windows"),
+                Path.Combine(skylineProjectDir, "bin", "Debug", "net8.0-windows"),
+                Path.Combine(skylineProjectDir, "bin", "x64", "Release", "net8.0-windows"),
+                Path.Combine(skylineProjectDir, "bin", "x64", "Debug", "net8.0-windows"),
+                Path.Combine(skylineProjectDir, "bin", "staging-net8", "Release"),
+#endif
+                Path.Combine(skylineProjectDir, "bin", "x64", "Release"),
+                Path.Combine(skylineProjectDir, "bin", "x64", "Debug"),
+            };
 
-            var debugExists = Directory.Exists(debugPath);
-            var releaseExists = Directory.Exists(releasePath);
+            string best = null;
+            var bestTime = DateTime.MinValue;
+            foreach (var dir in candidates)
+            {
+                var cmd = Path.Combine(dir, SkylineInstallations.SkylineCmdExe);
+                if (!File.Exists(cmd))
+                    continue;
+                var time = File.GetLastWriteTime(cmd);
+                if (best == null || time > bestTime)
+                {
+                    best = dir;
+                    bestTime = time;
+                }
+            }
 
-            if (!debugExists && !releaseExists)
-                throw new DirectoryNotFoundException(
-                    $"Neither Debug nor Release bin directory found at {debugPath} or {releasePath}");
-
-            // If only one exists, return it
-            if (!debugExists) return releasePath;
-            if (!releaseExists) return debugPath;
-
-            // Both exist - compare SkylineCmd.exe modification times
-            var debugCmd = Path.Combine(debugPath, SkylineInstallations.SkylineCmdExe);
-            var releaseCmd = Path.Combine(releasePath, SkylineInstallations.SkylineCmdExe);
-
-            var debugCmdExists = File.Exists(debugCmd);
-            var releaseCmdExists = File.Exists(releaseCmd);
-
-            if (debugCmdExists && releaseCmdExists)
-                return File.GetLastWriteTime(debugCmd) > File.GetLastWriteTime(releaseCmd)
-                    ? debugPath : releasePath;
-
-            return debugCmdExists ? debugPath : releasePath;
+            if (best != null)
+                return best;
+            throw new DirectoryNotFoundException(
+                $"No {SkylineInstallations.SkylineCmdExe} found under {Path.Combine(skylineProjectDir, "bin")}");
         }
 
         public static MainSettings GetTestMainSettings() => GetTestMainSettings(string.Empty, string.Empty, string.Empty);

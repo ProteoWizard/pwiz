@@ -237,6 +237,17 @@ namespace SkylineTester
 
         public void AddTestRunner(string args)
         {
+            // Running tests needs a selected build directory that actually contains TestRunner.exe.
+            // When SkylineTester is launched standalone (e.g. from its own build output) no build is
+            // discovered, so bail out with a clear message instead of failing deep in the run.
+            var selectedBuildDir = GetSelectedBuildDir();
+            if (string.IsNullOrEmpty(selectedBuildDir) || !File.Exists(Path.Combine(selectedBuildDir, "TestRunner.exe")))
+            {
+                MessageBox.Show(this,
+                    "No Skyline build containing TestRunner.exe was found. Use the Build menu to select a build directory that has been built and staged before running tests.");
+                return;
+            }
+
             //MemoryChartWindow.Start("TestRunnerMemory.log");
             TestsRun = 0;
             if (Directory.Exists(_resultsDir))
@@ -364,10 +375,14 @@ namespace SkylineTester
         {
             foreach (var language in GetLanguages())
             {
-                yield return _languageNames
+                // Skip any language discovered in the build dir that has no display-name mapping
+                // (e.g. a newly added culture) rather than throwing on First().
+                var name = _languageNames
                     .Where(lang => lang.Key.StartsWith(language))
                     .Select(lang => lang.Value)
-                    .First();
+                    .FirstOrDefault();
+                if (name != null)
+                    yield return name;
             }
         }
 

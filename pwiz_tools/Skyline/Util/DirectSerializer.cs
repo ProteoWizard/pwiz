@@ -52,8 +52,20 @@ namespace pwiz.Skyline.Util
             {
                 try
                 {
+                    // Save the caller's logical position, then Flush() to make FileStream
+                    // discard its read-ahead buffer and align its cursor + the OS handle
+                    // to that position. On net472 the FileStream.Read strategy did this
+                    // implicitly on every operation; on net8 the buffer is preserved
+                    // across the P/Invoke read, so the SafeFileHandle read pulls bytes
+                    // from a position AHEAD of the logical position. After the P/Invoke,
+                    // manually restore FileStream's logical position past the bytes we
+                    // read - the OS cursor is already there, but FileStream's cached
+                    // _position is stale.
+                    long logicalPos = stream.Position;
+                    stream.Flush();
+                    stream.Position = logicalPos;
                     var result = _readFunc(stream.SafeFileHandle, count);
-                    stream.Seek(0, SeekOrigin.Current);
+                    stream.Position = logicalPos + System.Runtime.InteropServices.Marshal.SizeOf<TItem>() * (long)count;
                     return result;
                 }
                 catch (BulkReadException)
@@ -70,9 +82,15 @@ namespace pwiz.Skyline.Util
                 }
                 try
                 {
+                    // Same rationale as ReadArray - Flush to align the OS cursor with
+                    // FileStream's logical position before the P/Invoke write, then
+                    // manually advance FileStream's cached position past the bytes we
+                    // wrote so subsequent FileStream writes go to the right offset.
+                    long logicalPos = stream.Position;
+                    stream.Flush();
+                    stream.Position = logicalPos;
                     _writeAction(stream.SafeFileHandle, items);
-                    // Tell the stream to ask for its current position from the underlying file handle.
-                    stream.Seek(0, SeekOrigin.Current);
+                    stream.Position = logicalPos + System.Runtime.InteropServices.Marshal.SizeOf<TItem>() * (long)items.Length;
                     return true;
                 }
                 catch (BulkReadException)

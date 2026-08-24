@@ -232,7 +232,7 @@ namespace pwiz.SkylineTestFunctional
                 dlg.OkDialog();
             });
 
-            Directory.CreateDirectory(TestContext.TestDir);
+            Directory.CreateDirectory(TestContext.TestRunDirectory);
             string saveFilePath = TestContext.GetTestResultsPath("TestExplicitVariable.sky");
             WaitForProteinMetadataBackgroundLoaderCompletedUI(); // make sure doc is complete before save
 

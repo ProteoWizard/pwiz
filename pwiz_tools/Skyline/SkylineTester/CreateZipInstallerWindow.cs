@@ -19,7 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
@@ -34,10 +36,55 @@ namespace SkylineTester
         {
             "testresults",
             "skylinetester.zip",
+            "skylinetesterwithtestdata.zip",
+            "skylinenightly.zip",
+            "bibliospec.zip",
             "testrunner.log",
             "microsoft.visualstudio.qualitytools.unittestframework.dll", // Ignore if this appears in a build dir - gets added explicitly
-            "testrunnermemory.log"
+            "testrunnermemory.log",
+            "cacheddownloadsfortests" // ~1 GB of test downloads; SkylineTester fetches its own
         };
+
+        /// <summary>
+        /// True for output that only exists because TestRunner RUNS from the directory this
+        /// zip is built from.
+        /// </summary>
+        /// <remarks>
+        /// On net472 the zip was assembled from Skyline's build output, which contained
+        /// nothing but build products. The net8 build assembles a single merged
+        /// bin\staging-net8\&lt;Config&gt; and TestRunner executes there, so the same directory
+        /// accumulates per-test tool installs, per-test data archives and scratch files. The
+        /// "add every subdirectory" pass below swept all of it in, taking the archive past
+        /// 20 GB and over the 4 GB zip limit. Excluding it restores the ~100 MB of build
+        /// products the 2023 no-test-zips change intended, plus the bundled runtime.
+        /// </remarks>
+        private static bool IsTestRunResidue(string fileOrDirectory)
+        {
+            var name = Path.GetFileName(fileOrDirectory) ?? string.Empty;
+
+            // Per-test tool installs, 564 of them / ~14 GB on a machine that has run the
+            // functional suite. Both spellings are deliberate: the tests install into
+            // non-ASCII paths on purpose to catch i18n bugs, so both the plain "Tools_" and
+            // the o-umlaut "Tools_" spelling occur, and the pattern has to match either.
+            if (Regex.IsMatch(name, "^T(oo|öö)ls_", RegexOptions.IgnoreCase))
+                return true;
+
+            var extension = (Path.GetExtension(name) ?? string.Empty).ToLowerInvariant();
+
+            // Per-test data archives. Shipping these is exactly what the 2023 change below
+            // stopped doing; on net8 they arrive by a different route (staged into the bin
+            // directory) rather than through FindZipFiles, so they need excluding here too.
+            // The WithTestData variant still collects them from the source tree.
+            if (extension == ".zip")
+                return true;
+
+            // DotNetZip writes its output to a <name>.tmp beside the target and renames on
+            // success, so a failed run leaves a multi-GB file for the next run to pick up.
+            if (extension == ".tmp")
+                return true;
+
+            return false;
+        }
 
         public string ZipDirectory { get; private set; }
 
@@ -49,7 +96,8 @@ namespace SkylineTester
 
         private void buttonBrowse_Click(object sender, EventArgs e)
         {
-            using (var dlg = new FolderBrowserDialog())
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            using (var dlg = FormUtil.CreateFolderBrowserDialog())
             {
                 dlg.Description = "Select a folder to contain the zip file.";
                 dlg.ShowNewFolderButton = true;
@@ -68,6 +116,65 @@ namespace SkylineTester
             }
 
             Close();
+        }
+
+        /// <summary>
+        /// File names of every runtime and native asset a .deps.json declares, flattened to
+        /// bare names because the staging dir is a single merged bin.
+        /// </summary>
+        /// <remarks>
+        /// Used to assemble the BiblioSpec distro. The alternative, a hand-maintained member
+        /// list, was viable when the tools were standalone native executables; the net8 ports
+        /// are framework-dependent and drag the whole vendor assembly stack behind them.
+        /// Returns nothing if the file is absent or unreadable so a malformed deps.json cannot
+        /// abort the zip; the caller reports whatever it could not find on disk.
+        /// </remarks>
+        private static IEnumerable<string> RuntimeClosureFromDeps(string depsJsonPath)
+        {
+            var result = new List<string>();
+            if (!File.Exists(depsJsonPath))
+                return result;
+            try
+            {
+                using (var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(depsJsonPath)))
+                {
+                    if (!doc.RootElement.TryGetProperty("targets", out var targets))
+                        return result;
+                    foreach (var target in targets.EnumerateObject())
+                    foreach (var library in target.Value.EnumerateObject())
+                    foreach (var section in new[] { "runtime", "native", "runtimeTargets" })
+                    {
+                        if (!library.Value.TryGetProperty(section, out var assets))
+                            continue;
+                        foreach (var asset in assets.EnumerateObject())
+                        {
+                            // runtimeTargets is per-RID: every platform's copy is listed, but
+                            // only the build RID's assets get flattened into the output dir.
+                            // Taking bare names indiscriminately would ask the zip for
+                            // libhdf5.so and report it missing. This is also where
+                            // SQLite.Interop.dll lives - BlibBuild cannot write a .blib
+                            // without it, and no other section mentions it.
+                            if (section == "runtimeTargets" && !IsWindowsRuntimeAsset(asset.Value))
+                                continue;
+                            result.Add(Path.GetFileName(asset.Name.Replace('/', '\\')));
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("WARNING: could not read {0}: {1}", depsJsonPath, e.Message);
+            }
+            return result;
+        }
+
+        /// <summary>True when a deps.json runtimeTargets asset targets a Windows RID.</summary>
+        private static bool IsWindowsRuntimeAsset(System.Text.Json.JsonElement asset)
+        {
+            if (!asset.TryGetProperty("rid", out var rid))
+                return false;
+            var value = rid.GetString();
+            return value != null && value.StartsWith("win", StringComparison.OrdinalIgnoreCase);
         }
 
         public static void CreateZipFile(string zipPath, bool addTestZipFiles = false)
@@ -99,15 +206,34 @@ namespace SkylineTester
                 zipFile.ParallelDeflateThreshold = -1;
                 zipFile.AlternateEncodingUsage = ZipOption.Always;
                 zipFile.AlternateEncoding = System.Text.Encoding.UTF8;
+                // The original zip format caps entry sizes and archive offsets at 4 GB; past
+                // that DotNetZip throws at Save() ("Compressed or Uncompressed size, or offset
+                // exceeds the maximum value"), after having already done all the compression.
+                // SkylineTester.zip is built from the whole staged output and is well over that
+                // now, so ask for Zip64 headers only on the entries that actually need them --
+                // Always would add them everywhere and break older extractors for no reason.
+                zipFile.UseZip64WhenSaving = Zip64Option.AsNecessary;
 
                 if ((String.Empty + Path.GetFileName(zipPath)).ToLower() == "skylinenightly.zip")
                 {
                     // Add files to top level of zip file.
+                    // net8 layout. Both .exe files are apphost launchers only: without the
+                    // matching .dll, .deps.json and .runtimeconfig.json beside them the
+                    // extracted zip cannot start at all, so they are members too. The old
+                    // net472 list needed just the .exe plus a .exe.config; net8 emits
+                    // <name>.dll.config instead, and never a .exe.config.
                     var files = new[]
                     {
                         "SkylineNightlyShim.exe",
+                        "SkylineNightlyShim.dll",
+                        "SkylineNightlyShim.dll.config",
+                        "SkylineNightlyShim.deps.json",
+                        "SkylineNightlyShim.runtimeconfig.json",
                         "SkylineNightly.exe",
-                        "SkylineNightly.exe.config",
+                        "SkylineNightly.dll",
+                        "SkylineNightly.dll.config",
+                        "SkylineNightly.deps.json",
+                        "SkylineNightly.runtimeconfig.json",
                         "SkylineNightly.pdb",
                         "Microsoft.Diagnostics.Runtime.dll",
                         "Microsoft.Win32.TaskScheduler.dll",
@@ -122,41 +248,67 @@ namespace SkylineTester
 
                 else if ((String.Empty + Path.GetFileName(zipPath)).ToLower() == "bibliospec.zip")
                 {
-                    // Create a BiblioSpec distro
-                    var files = new List<string>
+                    // Create a BiblioSpec distro.
+                    //
+                    // net472 could name the members: the tools were essentially standalone
+                    // native executables plus a handful of vendor DLLs. The net8 ports are
+                    // framework-dependent managed apps, so a runnable distro needs their whole
+                    // dependency closure (86 assemblies for BlibBuild alone, including the
+                    // Clearcore2 / Bruker / Shimadzu vendor stacks). Enumerating that by hand
+                    // would be wrong the first time somebody adds a package reference, so read
+                    // it from each tool's .deps.json, which the build already maintains.
+                    //
+                    // BlibToMs2 comes from the staging dir like the others now. The old code
+                    // reached for Shared\BiblioSpec\obj\x64\BlibToMs2.exe, an artifact of the
+                    // C++ build that the net8 tree does not produce.
+                    var tools = new[] { "BlibBuild", "BlibFilter", "BlibToMs2" };
+                    var files = new List<string>();
+                    foreach (var tool in tools)
                     {
-                        "BlibBuild.exe",
-                        "BlibBuild.exe.config",
-                        "BlibFilter.exe",
-                        "BlibFilter.exe.config",
+                        // The apphost .exe cannot start without these three beside it.
+                        files.Add(tool + ".exe");
+                        files.Add(tool + ".dll");
+                        files.Add(tool + ".deps.json");
+                        files.Add(tool + ".runtimeconfig.json");
+                        files.AddRange(RuntimeClosureFromDeps(tool + ".deps.json"));
+                    }
+                    // Native vendor libraries and data files that NO .deps.json mentions: the
+                    // readers P/Invoke them by name at runtime rather than referencing them, so
+                    // the closure above cannot see them. This is the part of the original
+                    // net472 member list that is still load-bearing.
+                    files.AddRange(new[]
+                    {
                         "MassLynxRaw.dll",
                         "timsdata.dll",
                         "baf2sql_c.dll",
                         "cdt.dll",
-                        "modifications.xml",
-                        "quantitation_1.xsd",
-                        "quantitation_2.xsd",
-                        "unimod_2.xsd"
-                    };
-                    var dir = Directory.GetCurrentDirectory();
-                    files.Add(dir.Contains("Debug") ? "msparserD.dll" : "msparser.dll");
+                        "modifications.xml"
+                    });
+                    files.Add(Directory.GetCurrentDirectory().Contains("Debug") ? "msparserD.dll" : "msparser.dll");
 
-                    // Locate BlibToMS2
-                    var parent = dir.IndexOf("Skyline\\", StringComparison.Ordinal);
-                    if (parent > 0)
-                    {
-                        dir = dir.Substring(0, parent);
-                        var blib2ms2 = dir + "Shared\\BiblioSpec\\obj\\x64\\BlibToMs2.exe";
-                        if (File.Exists(blib2ms2)) // Don't worry about this for a 32 bit build, we don't distribute that
-                        {
-                            files.Add(blib2ms2);
-                        }
-                    }
+                    var missing = files.Distinct().Where(f => !File.Exists(f)).ToList();
+                    files = files.Distinct().Where(File.Exists).ToList();
                     foreach (var file in files)
                     {
                         Console.WriteLine(file);
                         zipFile.AddFile(file, string.Empty);
                     }
+                    // The msparser schemas moved into a msparser-config\ subdirectory in the
+                    // net8 layout; keep that shape in the zip so msparser still finds them.
+                    const string msparserConfig = "msparser-config";
+                    if (Directory.Exists(msparserConfig))
+                    {
+                        foreach (var xsd in Directory.EnumerateFiles(msparserConfig, "*.xsd"))
+                        {
+                            Console.WriteLine(xsd);
+                            zipFile.AddFile(xsd, msparserConfig);
+                        }
+                    }
+                    // Report rather than silently ship a short distro; a name that disappears
+                    // from the staging dir is a build regression worth seeing.
+                    if (missing.Count > 0)
+                        Console.WriteLine("NOTE: {0} closure entries absent from the staging dir and skipped: {1}",
+                            missing.Count, string.Join(", ", missing.Take(10)));
                 }
 
                 else
@@ -245,9 +397,6 @@ namespace SkylineTester
                         }
                     }
 
-                    // Add the file that we use to determine which branch this is from
-                    AddFile(Path.Combine(solutionDirectory,"..\\..\\pwiz\\Version.cpp"), zipFile);
-
                     // Add unit testing DLL.
                     const string relativeUnitTestingDll =
                         @"PublicAssemblies\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll";
@@ -270,7 +419,9 @@ namespace SkylineTester
         static bool Include(string fileOrDirectory)
         {
             var name = Path.GetFileName(fileOrDirectory);
-            return (name != null && !EXCLUDED_FILES.Contains(name.ToLower()));
+            if (name == null || EXCLUDED_FILES.Contains(name.ToLower()))
+                return false;
+            return !IsTestRunResidue(fileOrDirectory);
         }
 
         static void AddFile(string filePath, ZipFile zipFile, string zipDirectory = SkylineTesterWindow.SkylineTesterFiles)

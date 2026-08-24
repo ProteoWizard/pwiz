@@ -30,7 +30,11 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+#if NET472
 using pwiz.CLI.Bruker.PrmScheduling;
+#else
+using Pwiz.Vendor.Bruker.PrmScheduling;
+#endif
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -2521,11 +2525,14 @@ namespace pwiz.Skyline.Model
             }
             string averagePeakAreaText = averagePeakArea.HasValue ? averagePeakArea.Value.ToString(CultureInfo) : string.Empty;
 
-            var rtWindowText = RTWindow.Window.ToString(CultureInfo);
+            // Format with G15 (the .NET Framework default double precision) so net8's
+            // shortest-round-trippable ToString does not emit an extra digit and diverge from
+            // the net472 reference for this computed RT-window value.
+            var rtWindowText = RTWindow.Window.ToString(@"G15", CultureInfo);
             if (!RTWindow.IsExplicit)
             {
                 var variableRtWindow = GetVariableRtWindow(maxRtDiff);
-                rtWindowText = variableRtWindow.HasValue ? variableRtWindow.Value.ToString(CultureInfo) : string.Empty;
+                rtWindowText = variableRtWindow.HasValue ? variableRtWindow.Value.ToString(@"G15", CultureInfo) : string.Empty;
             }
 
             string primaryOrSecondary = string.Empty;
@@ -4674,7 +4681,8 @@ namespace pwiz.Skyline.Model
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
 
-            if (MethodType == ExportMethodType.Standard && !(this is WatersConnectMethodExporter))
+            if (MethodType == ExportMethodType.Standard
+                && !(this is WatersConnectMethodExporter))
             {
                 RTWindow = RunLength;   // Store for later use
                 writer.Write((RunLength / 2).ToString(CultureInfo));
@@ -5212,6 +5220,11 @@ namespace pwiz.Skyline.Model
                                         Dictionary<string, StringBuilder> dictTranLists,
                                         IProgressMonitor progressMonitor)
         {
+            // .NET 8's Process.Start no longer searches the current directory when the
+            // FileName has no rooted path, so resolve the bundled method-builder exe next
+            // to Skyline.exe (AppContext.BaseDirectory). See BlibBuild.ResolveBlibBuildPath.
+            exeName = ResolveToolPath(exeName);
+
             string baseName = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty,
                                            Path.GetFileNameWithoutExtension(fileName) ?? string.Empty);
             string ext = Path.GetExtension(fileName);
@@ -5284,6 +5297,13 @@ namespace pwiz.Skyline.Model
                 foreach (var fs in listFileSavers)
                     fs.Dispose();
             }
+        }
+
+        private static string ResolveToolPath(string exeName)
+        {
+            // Method-builder tools ship as Windows .exe files next to Skyline.exe. Root the path so
+            // they launch on net8, whose Process.Start no longer searches the working directory.
+            return PathEx.ResolveBundledExe(exeName);
         }
     }
 

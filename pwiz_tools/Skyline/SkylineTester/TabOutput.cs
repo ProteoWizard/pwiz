@@ -22,10 +22,14 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+#if NET472
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+#endif
 using System.Windows.Forms;
+#if NET472
 using EnvDTE;
+#endif
 using TestRunnerLib.PInvoke;
 
 namespace SkylineTester
@@ -214,6 +218,7 @@ namespace SkylineTester
             var file = text.Substring(fileStart, lineNumberStart - fileLinePattern.Length - fileStart);
             var lineNumberText = text.Substring(lineNumberStart, lineEnd - lineNumberStart);
 
+#if NET472
             var dte = GetDTE(file, lineNumberText);
             if (dte == null)
                 return;
@@ -233,8 +238,14 @@ namespace SkylineTester
             }
 
             Marshal.ReleaseComObject(dte);
+#else
+            // net8 has no EnvDTE COM automation; degrade to launching devenv.exe on the enclosing
+            // Skyline solution with an Edit.Goto (see OpenFileInVisualStudio).
+            OpenFileInVisualStudio(file, lineNumberText);
+#endif
         }
 
+#if NET472
         // from http://blogs.msdn.com/b/kirillosenkov/archive/2011/08/10/how-to-get-dte-from-visual-studio-process-id.aspx
         public static DTE GetDTE(string file, string lineNumberText)
         {
@@ -318,6 +329,28 @@ namespace SkylineTester
 
             return null;
         }
+#else
+        // net8 has no EnvDTE (VS COM automation). The "open the clicked stack-trace line in a
+        // running Visual Studio" convenience degrades to launching devenv.exe on the enclosing
+        // Skyline solution with an Edit.Goto command (the same fallback the net472 path uses when
+        // no running VS instance owns the file). No-op if no Skyline.sln / devenv is found.
+        private static void OpenFileInVisualStudio(string file, string lineNumberText)
+        {
+            var parentDirectory = Path.GetDirectoryName(file);
+            while (parentDirectory != null)
+            {
+                var skylineSln = Path.Combine(parentDirectory, "Skyline.sln");
+                var vsExe = SkylineTesterWindow.GetExistingVsIdeFilePath("devenv.exe");
+                if (vsExe != null && File.Exists(skylineSln))
+                {
+                    System.Diagnostics.Process.Start(vsExe,
+                        @"{0} {1} /command ""Edit.Goto {2}""".With(skylineSln, file, lineNumberText));
+                    return;
+                }
+                parentDirectory = Path.GetDirectoryName(parentDirectory);
+            }
+        }
+#endif
 
         public void ErrorSelectionChanged()
         {

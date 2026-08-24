@@ -1,0 +1,44 @@
+<Project>
+
+  <!--
+    Central Skyline build-version composition, shared by Skyline.csproj and the
+    standalone tools that must stamp the same version (e.g. the AI Connector tool
+    ZIP). Builds on the Jam-free git-date pieces from pwiz-sharp\build\PwizVersion.targets
+    and composes Skyline's YEAR.ORDINAL.BRANCH.DOY scheme (DOY accumulates across
+    years like Jamfile.jam: (YY - YEAR)*365 + day-of-year of the git commit date).
+
+    Depend on ComputeSkylineVersion and read:
+      $(SkylineNumericVersion)        e.g. 26.1.1.203  (also the AssemblyVersion)
+      $(SkylineInformationalVersion)  e.g. 26.1.1.203-b4bf6df10d (developer build)
+    Override either with -p:SkylineNumericVersion=... / -p:SkylineInformationalVersion=... .
+
+    This file is target-framework-agnostic. A consumer that also builds net472
+    should gate its import per-TFM (as Skyline.csproj does) so the git-date
+    computation runs only on the net8 pass.
+  -->
+  <Import Project="..\..\pwiz-sharp\build\PwizVersion.targets"
+          Condition="Exists('..\..\pwiz-sharp\build\PwizVersion.targets')" />
+
+  <PropertyGroup>
+    <SkylineVersionYear>26</SkylineVersionYear>
+    <SkylineVersionOrdinal>1</SkylineVersionOrdinal>
+    <!-- 0 = release, 1 = daily, 9 = feature-complete daily (mirrors SKYLINE_BRANCH
+         in Jamfile.jam). This is the .Build component, which TestDocumentFormatCurrent
+         keys off (skips the version/format sync check on feature-complete builds). -->
+    <SkylineVersionBranch>1</SkylineVersionBranch>
+    <_SkylineBuildKindSuffix Condition="'$(AutomatedBuild)' == 'true'">automated build</_SkylineBuildKindSuffix>
+    <_SkylineBuildKindSuffix Condition="'$(AutomatedBuild)' != 'true'">developer build</_SkylineBuildKindSuffix>
+  </PropertyGroup>
+
+  <Target Name="ComputeSkylineVersion" DependsOnTargets="ComputePwizBuildVersion">
+    <PropertyGroup>
+      <!-- Floor at 0: a commit dated before SkylineVersionYear (e.g. building an older commit
+           after the base year was bumped) would otherwise yield a negative, invalid version component. -->
+      <_SkylineDoy>$([System.Math]::Max(0, $([MSBuild]::Add($([MSBuild]::Multiply($([MSBuild]::Subtract($(PwizVersionYear2), $(SkylineVersionYear))), 365)), $(PwizVersionDayOfYearRaw)))))</_SkylineDoy>
+      <!-- Plain numeric version YEAR.ORDINAL.BRANCH.DOY, e.g. 26.1.1.203 -->
+      <SkylineNumericVersion Condition="'$(SkylineNumericVersion)' == ''">$(SkylineVersionYear).$(SkylineVersionOrdinal).$(SkylineVersionBranch).$(_SkylineDoy)</SkylineNumericVersion>
+      <SkylineInformationalVersion Condition="'$(SkylineInformationalVersion)' == ''">$(SkylineNumericVersion)-$(PwizVersionGitHash) ($(_SkylineBuildKindSuffix))</SkylineInformationalVersion>
+    </PropertyGroup>
+  </Target>
+
+</Project>

@@ -66,7 +66,7 @@ namespace pwiz.SkylineTest
                 if (loop==1)
                 {
                     dbIonMobilityValue.DbPrecursorIon = new DbPrecursorIon(new Target("foo"), Adduct.SINGLY_PROTONATED) { Id = 1234567 };
-                    Assert.AreNotEqual(dbIonMobilityValue.DbPrecursorIon.GetTarget(), dbMolecule);
+                    Assert.AreNotEqual((object)dbIonMobilityValue.DbPrecursorIon.GetTarget(), dbMolecule);
                 }
                 else
                 {

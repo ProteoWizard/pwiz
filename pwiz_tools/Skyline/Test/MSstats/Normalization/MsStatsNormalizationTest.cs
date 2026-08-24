@@ -53,7 +53,9 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             StringWriter stringWriter = new StringWriter();
             viewContext.ExportToWriter(view.ViewSpec, stringWriter, TextUtil.SEPARATOR_CSV);
             string expectedReport = new StreamReader(OpenTestFile("BrudererSubset_MSstatsInput.csv")).ReadToEnd();
-            AssertEx.NoDiff(expectedReport, stringWriter.ToString());
+            // FieldsEqual with a tolerance (rather than NoDiff) absorbs net8 vs net472
+            // float ToString() digit differences in the numeric report columns.
+            AssertEx.FieldsEqual(expectedReport, stringWriter.ToString(), 1e-4);
         }
 
         [TestMethod]

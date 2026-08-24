@@ -132,7 +132,7 @@ namespace pwiz.SkylineTestFunctional
                 documentSettingsDlg.OkDialog();
             });
             string skylineDocumentPath = TestContext.GetTestResultsPath("ListClusteringTest.sky");
-            RunUI(()=>SkylineWindow.SaveDocument(Path.Combine(TestContext.TestDir, skylineDocumentPath)));
+            RunUI(()=>SkylineWindow.SaveDocument(Path.Combine(TestContext.TestRunDirectory, skylineDocumentPath)));
             AssertEx.Serializable(SkylineWindow.Document);
             RunUI(()=>listGrid.DataboundGridControl.ShowHeatMap());
             var heatMap = WaitForOpenForm<HeatMapGraph>();

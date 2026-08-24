@@ -175,21 +175,58 @@ namespace TestRunnerLib
             for (int retry = 0; retry < GC_RETRY_COUNT; retry++)
             {
                 Thread.Sleep(GC_RETRY_SLEEP_MS);
+                // Force a full GC on every runtime. CheckForLeaks never collects on its
+                // own, so without this the net8 retry loop only slept and re-read the
+                // WeakReferences - transiently-rooted objects were falsely reported as
+                // leaks. FlushMemory is net8-safe (already called unguarded before the check).
                 RunTests.MemoryManagement.FlushMemory();
                 leakMessage = CheckForLeaks();
                 if (leakMessage == null)
                     return null;
             }
 
-            // Phase 3: Still leaking after retries - pin survivors and report
+            // Phase 3: Still leaking after retries - pin survivors and report. Dump BEFORE pinning,
+            // so the only roots in the dump are the ones actually holding the survivors.
+            WriteLeakDumpIfRequested(testName, log);
             PinSurvivors();
+#if NET472
             if (MemoryProfiler.IsReady)
             {
                 var snapshotName = testName + @"_GC_LEAK";
                 log("\n# GC leak detected - taking dotMemory snapshot: {0}\n", new object[] { snapshotName });
                 MemoryProfiler.Snapshot(snapshotName);
             }
+#endif
             return leakMessage;
+        }
+
+        /// <summary>
+        /// Environment variable naming a directory to write a full-memory dump into when a leak
+        /// survives the retries. Written before the survivors are pinned, so the only roots in the
+        /// dump are the ones actually holding them:
+        ///     dotnet-dump analyze &lt;dmp&gt; -c "dumpheap -type pwiz.Skyline.SkylineWindow" -c "gcroot &lt;addr&gt;"
+        /// Unset (the normal case) costs one environment read per leak.
+        /// </summary>
+        public const string LEAK_DUMP_DIR = "SKYLINE_GC_LEAK_DUMP";
+
+        private static void WriteLeakDumpIfRequested(string testName, Action<string, object[]> log)
+        {
+            var dumpDir = Environment.GetEnvironmentVariable(LEAK_DUMP_DIR);
+            if (string.IsNullOrEmpty(dumpDir))
+                return;
+            try
+            {
+                System.IO.Directory.CreateDirectory(dumpDir);
+                var path = System.IO.Path.Combine(dumpDir, testName + @"_GC_LEAK.dmp");
+                if (MiniDump.WriteMiniDump(path))
+                    log("\n# GC leak dump written to {0}\n", new object[] { path });
+                else
+                    log("\n# GC leak dump to {0} failed\n", new object[] { path });
+            }
+            catch (Exception x)
+            {
+                log("\n# GC leak dump failed: {0}\n", new object[] { x.Message });
+            }
         }
 
         private class TrackedObject

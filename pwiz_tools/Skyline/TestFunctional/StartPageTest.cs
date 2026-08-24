@@ -241,7 +241,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            Directory.CreateDirectory(TestContext.TestDir);
+            Directory.CreateDirectory(TestContext.TestRunDirectory);
             {
                 var types = new List<PasteDlgTab>
                 {
@@ -296,7 +296,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            Directory.CreateDirectory(TestContext.TestDir);
+            Directory.CreateDirectory(TestContext.TestRunDirectory);
 
             var startPage = WaitForOpenForm<StartPage>();
             RunUI(() => startPage.TestImportAction(ActionImport.DataType.peptide_search_dda,
@@ -399,7 +399,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            Directory.CreateDirectory(TestContext.TestDir);
+            Directory.CreateDirectory(TestContext.TestRunDirectory);
 
             var skylineWindow = WaitForOpenForm<SkylineWindow>();
             var startPage = ShowDialog<StartPage>(skylineWindow.OpenStartPage);

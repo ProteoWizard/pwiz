@@ -1,85 +1,35 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- BuildThermoMethod - Thermo vendor method builder (Exe). FEASIBILITY port to multi-target
+       net472;net8.0-windows. The Thermo.TNG.MethodXML* interface DLLs are net40 MSIL (net8-loadable)
+       and are referenced for both TFMs. NOTE: this only proves the tool COMPILES on net8; at runtime
+       it calls into the installed Thermo TNG method software, whose net8 compatibility is untested
+       (needs a machine with the Thermo instrument software). -->
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{664912C6-00DC-4499-B1C8-EEF4E85E8351}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>BuildThermoMethod</RootNamespace>
     <AssemblyName>BuildThermoMethod</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-    <FileAlignment>512</FileAlignment>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);NU1701;MSB3277</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>..\..\..\Method\Thermo\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\..\Method\Thermo\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject>BuildThermoMethod.Program</StartupObject>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="Thermo.TNG.MethodXMLFactory, Version=2.0.0.0, Culture=neutral, PublicKeyToken=35efc4498449bc4c, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Thermo.TNG.MethodXMLFactory">
       <HintPath>.\Thermo.TNG.MethodXMLFactory.dll</HintPath>
     </Reference>
-    <Reference Include="Thermo.TNG.MethodXMLInterface, Version=2.0.0.0, Culture=neutral, PublicKeyToken=35efc4498449bc4c, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Thermo.TNG.MethodXMLInterface">
       <HintPath>.\Thermo.TNG.MethodXMLInterface.dll</HintPath>
     </Reference>
     <Reference Include="Thermo.TNG.MethodXMLInterface2">
       <HintPath>.\Thermo.TNG.MethodXMLInterface2.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="XmlCalcium\MethodModifications.cs" />
-    <Compile Include="XmlCalcium\MethodModifications_4_2.cs" />
-    <Compile Include="XmlExploris\MethodModifications.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="XmlExploris\MethodModifications_4_4.cs" />
-    <Compile Include="XmlFusion\MethodModifications.cs" />
-    <Compile Include="XmlStellar\MethodModifications.cs" />
-    <Compile Include="XmlTsq\HyperionMethod.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>

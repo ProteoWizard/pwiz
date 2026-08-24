@@ -70,12 +70,33 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (path == null)
                 return null;
 
+            // .NET Framework's Path.GetFullPath threw ArgumentException for paths containing illegal
+            // characters, and Normalize relied on that to return null (issue #4098). .NET (Core/5+/8)
+            // removed that validation and even dropped '"', '<', '>' from Path.GetInvalidPathChars(),
+            // so check explicitly to preserve the "null for invalid paths" contract callers depend on.
+            if (path.IndexOfAny(INVALID_PATH_CHARS) >= 0)
+                return null;
+
             try
             {
                 return Path.GetFullPath(path);
             }
             catch (NotSupportedException) { return path; }
             catch (ArgumentException) { return null; }
+        }
+
+        // The full set net472's Path.GetFullPath rejected: the current runtime's invalid path chars
+        // (pipe + control chars) plus the quote/angle brackets net8 no longer reports as invalid.
+        private static readonly char[] INVALID_PATH_CHARS = BuildInvalidPathChars();
+
+        private static char[] BuildInvalidPathChars()
+        {
+            var runtimeChars = Path.GetInvalidPathChars();
+            var extra = new[] { '"', '<', '>' };
+            var all = new char[runtimeChars.Length + extra.Length];
+            runtimeChars.CopyTo(all, 0);
+            extra.CopyTo(all, runtimeChars.Length);
+            return all;
         }
 
         /// <summary>

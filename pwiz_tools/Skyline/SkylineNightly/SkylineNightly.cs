@@ -198,6 +198,10 @@ namespace SkylineNightly
         {
             using (var dlg = new FolderBrowserDialog())
             {
+                // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+#if !NET472
+                dlg.AutoUpgradeEnabled = false;
+#endif
                 // ReSharper disable LocalizableElement
                 dlg.Description = "Select or create a nightly build folder."; // ReSharper restore LocalizableElement
                 dlg.ShowNewFolderButton = true;

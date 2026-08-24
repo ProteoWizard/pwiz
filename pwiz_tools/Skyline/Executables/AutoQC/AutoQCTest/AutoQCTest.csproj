@@ -1,135 +1,53 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- AutoQCTest - MSTest unit + functional tests for AutoQC. Multi-target net472;net8.0-windows.
+       net472 uses the GAC QualityTools framework + on-disk HintPath DLLs; net8 uses the MSTest NuGet
+       stack (Microsoft.NET.Test.Sdk + MSTest.TestAdapter + MSTest.TestFramework) so `dotnet test` runs
+       it. Vestigial CodedUI/UITesting references dropped. -->
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{4955F974-381E-4902-8BAD-BAC7174CFC9F}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>AutoQCTest</RootNamespace>
     <AssemblyName>AutoQCTest</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
-    <IsCodedUITest>False</IsCodedUITest>
-    <TestProjectType>UnitTest</TestProjectType>
-    <TargetFrameworkProfile />
+    <UseWindowsForms>true</UseWindowsForms>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);NU1605;NU1701</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\..\..\..\Shared\PanoramaClient\PanoramaClient.csproj" />
+    <ProjectReference Include="..\..\SharedBatch\SharedBatchTest\SharedBatchTest.csproj" />
+    <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj" />
+    <ProjectReference Include="..\AutoQCStarter\AutoQCStarter.csproj" />
+    <ProjectReference Include="..\AutoQC\AutoQC.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.2.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="log4net" Version="2.0.17" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
+    <Reference Include="log4net"><HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
     <Reference Include="System.Configuration" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
-  <Choose>
-    <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
-      <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-      </ItemGroup>
-    </When>
-    <Otherwise>
-      <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
-      </ItemGroup>
-    </Otherwise>
-  </Choose>
-  <ItemGroup>
-    <Compile Include="AutoQcBaseFunctionalTest.cs" />
-    <Compile Include="AutoQcFunctionalTest.cs" />
-    <Compile Include="ConfigManagerTest.cs" />
-    <Compile Include="PanoramaWebFunctionalTest.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="AutoQcConfigTest.cs" />
-    <Compile Include="TestUtils.cs" />
-    <Compile Include="AutoQcFileSystemWatcherTest.cs" />
-    <Compile Include="PanoramaTest.cs" />
-  </ItemGroup>
+
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Test\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj">
-      <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
-      <Name>CommonUtil</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Shared\PanoramaClient\PanoramaClient.csproj">
-      <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>
-      <Name>PanoramaClient</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\SharedBatch\SharedBatchTest\SharedBatchTest.csproj">
-      <Project>{69531d2c-bad8-4e79-9df3-482a74d6d0bf}</Project>
-      <Name>SharedBatchTest</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">
-      <Project>{8DC37752-C356-446F-A1EE-6AA6D8A23B6F}</Project>
-      <Name>SharedBatch</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\AutoQCStarter\AutoQCStarter.csproj">
-      <Project>{296123d9-c4d5-4bd7-818e-02283762a636}</Project>
-      <Name>AutoQCStarter</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\AutoQC\AutoQC.csproj">
-      <Project>{87d6b185-c2d3-48a9-95b3-a0f528f3f446}</Project>
-      <Name>AutoQC</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Choose>
-    <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
-      <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.QualityTools.CodedUITestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-          <Private>False</Private>
-        </Reference>
-        <Reference Include="Microsoft.VisualStudio.TestTools.UITest.Common, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-          <Private>False</Private>
-        </Reference>
-        <Reference Include="Microsoft.VisualStudio.TestTools.UITest.Extension, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-          <Private>False</Private>
-        </Reference>
-        <Reference Include="Microsoft.VisualStudio.TestTools.UITesting, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-          <Private>False</Private>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
-  <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>
