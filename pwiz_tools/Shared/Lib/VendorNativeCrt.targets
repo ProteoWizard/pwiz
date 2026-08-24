@@ -1,0 +1,82 @@
+<Project>
+
+  <!-- Native CRT for the vendor DLLs, the MSBuild counterpart of Jamroot.jam's .msvcrt-x64
+       (pwiz_tools/Shared/Lib/$(.msvcrt-x64), fed to the C++ targets as <assembly-dependency>).
+       The vendor readers are native and P/Invoked by name, and they import the VC++
+       redistributable - MassLynxRaw, hdf5 and MascotShim all need msvcp140, vcruntime140 and
+       vcruntime140_1. A machine without the redistributable installed fails to LoadLibrary
+       them with ERROR_MOD_NOT_FOUND (126), which reads as "the specified module could not be
+       found" and so looks like the vendor DLL is missing when it is present and its DEPENDENCY
+       is not.
+
+       Not hypothetical: the parallel test workers run Skyline straight out of the bind-mounted
+       host tree inside a Windows container that has no redistributable, so every Waters, mzMLb
+       and Mascot test failed there while passing on the host. Shipping the CRT beside the
+       binaries makes the output directory self-contained, which is what the C++ build has
+       always done.
+
+       This file sits next to the DLLs it copies, so it needs no root property - importers just
+       point at it. x64 only: the net8 build has no x86 leg.
+       Keep in sync with Jamroot.jam .msvcrt-x64. -->
+
+  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC110.CRT\x64\msvcp110.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC110.CRT\x64\msvcr110.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC110.CRT\x64\vcomp110.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC120.CRT\x64\msvcp120.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC120.CRT\x64\msvcr120.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-console-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-datetime-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-debug-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-errorhandling-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-file-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-file-l1-2-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-file-l2-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-handle-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-heap-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-interlocked-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-libraryloader-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-localization-l1-2-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-memory-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-namedpipe-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-processenvironment-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-processthreads-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-processthreads-l1-1-1.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-profile-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-rtlsupport-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-string-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-synch-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-synch-l1-2-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-sysinfo-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-timezone-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-core-util-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-conio-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-convert-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-environment-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-filesystem-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-heap-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-locale-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-math-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-multibyte-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-private-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-process-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-runtime-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-stdio-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-string-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-time-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\api-ms-win-crt-utility-l1-1-0.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\msvcp140.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\ucrtbase.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\vcomp140.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\vcruntime140.dll" />
+    <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\vcruntime140_1.dll" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+    <None Include="@(VendorNativeCrtFile)"
+          Link="%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false" />
+  </ItemGroup>
+
+</Project>

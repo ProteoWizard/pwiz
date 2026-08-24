@@ -201,7 +201,10 @@ namespace pwiz.Common.GUI
         private void AddMessageBoxButtons(MessageBoxButtons messageBoxButtons, DialogResult defaultDialogResult)
         {
             var buttons = new Dictionary<DialogResult, Button>();
-            foreach (var dialogResult in GetDialogResults(messageBoxButtons).Reverse())
+            // On net8, .Reverse() on an array resolves to the in-place void Span<T>.Reverse()
+            // extension rather than LINQ's IEnumerable<T>.Reverse(). Use the explicit
+            // Enumerable form so both net472 and net8 pick the same overload.
+            foreach (var dialogResult in Enumerable.Reverse(GetDialogResults(messageBoxButtons)))
             {
                 buttons.Add(dialogResult, AddButton(dialogResult));
             }

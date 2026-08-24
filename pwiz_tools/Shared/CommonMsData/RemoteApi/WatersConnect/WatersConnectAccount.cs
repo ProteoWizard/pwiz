@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
 using System.Security.Authentication;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -107,8 +108,16 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 // Get mock handler for testing purposes.
                 CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(
                     HANDLER_NAME,
+#if NET472
                     () => new WebRequestHandler()
-                        { UnsafeAuthenticatedConnectionSharing = true, PreAuthenticate = true })
+                        { UnsafeAuthenticatedConnectionSharing = true, PreAuthenticate = true }
+#else
+                    // WebRequestHandler is not available on net8. HttpClientHandler.PreAuthenticate
+                    // is enough for the standard OAuth flow; the connection-sharing option is a
+                    // System.Net legacy toggle unnecessary for our .NET 8 usage.
+                    () => new HttpClientHandler { PreAuthenticate = true }
+#endif
+                )
             );
             var provider = services.BuildServiceProvider();
             _httpClientFactory = provider.GetService<IHttpClientFactory>();
@@ -226,14 +235,25 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             {
                 return tokenCacheEntry.TokenResponse;
             }
-            // Get mock handler for testing purposes.
+            // IdentityModel 7: TokenClient/TokenClientOptions were removed. Use the
+            // HttpClient.RequestPasswordTokenAsync / RequestRefreshTokenAsync extensions with
+            // PasswordTokenRequest / RefreshTokenRequest instead. Get mock handler for testing purposes.
             var authHandler = CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(AUTH_HANDLER_NAME, () => new HttpClientHandler());
-            var tokenClient = new TokenClient(IdentityServer + IdentityConnectEndpoint, ClientId,
-                ClientSecret, authHandler);
+            using var tokenClient = new HttpClient(authHandler, disposeHandler: false);
+            var tokenEndpoint = IdentityServer + IdentityConnectEndpoint;
             // Try to refresh the token if we have an expired one
             if (_authenticationTokens.TryGetValue(this, out var expiredTokenCacheEntry))
             {
-                var refreshedToken = tokenClient.RequestRefreshTokenAsync(expiredTokenCacheEntry.TokenResponse.RefreshToken).Result;
+                // Offload the blocking token call to the thread pool. Authenticate() runs on the UI
+                // thread (e.g. via SupportsMethodDevelopment) and blocking on the HTTP call's result
+                // directly would deadlock the captured WinForms SynchronizationContext on net8.
+                var refreshedToken = Task.Run(() => tokenClient.RequestRefreshTokenAsync(new RefreshTokenRequest
+                {
+                    Address = tokenEndpoint,
+                    ClientId = ClientId,
+                    ClientSecret = ClientSecret,
+                    RefreshToken = expiredTokenCacheEntry.TokenResponse.RefreshToken
+                })).Result;
                 if (!refreshedToken.IsError)
                 {
                     // If the refresh token worked, update the cache with the new token
@@ -243,7 +263,15 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 }
             }
             // Otherwise, request a new token using the username and password
-            var newToken = tokenClient.RequestResourceOwnerPasswordAsync(Username, Password, ClientScope).Result;
+            var newToken = Task.Run(() => tokenClient.RequestPasswordTokenAsync(new PasswordTokenRequest
+            {
+                Address = tokenEndpoint,
+                ClientId = ClientId,
+                ClientSecret = ClientSecret,
+                UserName = Username,
+                Password = Password,
+                Scope = ClientScope
+            })).Result;
             if (newToken.IsError)
             {
                 AuthenticationException ex;
@@ -276,6 +304,11 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 var errorType = (tokenResponse[@"error"] ?? "").ToString();
                 if (errorType == @"invalid_scope")
                 {
+                    // Surface the identity server's raw (non-localized) error detail so the user sees the
+                    // rejected scope. On net472 IdentityModel left TokenResponse.Raw empty, so this went
+                    // through the generic path below that showed the same detail; net8's IdentityModel 7
+                    // populates Raw and reaches this branch, which otherwise left the message blank.
+                    message = error;
                     return AuthenticationErrorType.InvalidClientScope;
                 }
                 else if (errorType == @"invalid_client")
@@ -284,6 +317,10 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 }
                 else if (errorType == @"invalid_grant")
                 {
+                    // As with invalid_scope, surface the identity server's raw (non-localized) detail
+                    // (e.g. "password entered for this user is incorrect") that net472 showed via the
+                    // generic path before net8's IdentityModel 7 started populating TokenResponse.Raw.
+                    message = error;
                     return AuthenticationErrorType.InvalidPassword;
                 }
                 else if (!string.IsNullOrEmpty(error))

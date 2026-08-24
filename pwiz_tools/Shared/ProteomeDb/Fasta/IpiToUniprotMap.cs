@@ -21,7 +21,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+#if NET472
 using Ionic.Zip;
+#else
+using System.IO.Compression;
+#endif
 
 namespace pwiz.ProteomeDatabase.Fasta
 {
@@ -111,6 +115,7 @@ namespace pwiz.ProteomeDatabase.Fasta
 
             // Add the mappings from an embedded resouce file.  See notes above for why this is done dynamically.
             var streamInfo = Assembly.GetExecutingAssembly().GetManifestResourceStream(@"pwiz.ProteomeDatabase.Fasta.IpiToUniprotMap.zip");
+#if NET472
             using (var zip = ZipFile.Read(streamInfo))
             {
                 var entry = zip[@"MapUniprotIPI.txt"];
@@ -130,6 +135,28 @@ namespace pwiz.ProteomeDatabase.Fasta
                     }
                 }
             }
+#else
+            // BCL System.IO.Compression on net8 replaces Ionic.Zip — same logical
+            // operation, different shape. ZipArchive's leaveOpen ctor lets the
+            // outer Stream caller continue managing the underlying stream.
+            using (var archive = new ZipArchive(streamInfo, ZipArchiveMode.Read))
+            {
+                var entry = archive.GetEntry("MapUniprotIPI.txt");
+                using (var zstream = entry.Open())
+                using (var stream = new StreamReader(zstream))
+                {
+                    string line = stream.ReadLine();
+                    while (line != null)
+                    {
+                        var pair = line.Split(' ');
+                        _ipi[added / SEGMENT_SIZE][added % SEGMENT_SIZE] = Convert.ToInt32(pair[0]);
+                        _accession[added / SEGMENT_SIZE][added % SEGMENT_SIZE] = pair[1];
+                        added++;
+                        line = stream.ReadLine();
+                    }
+                }
+            }
+#endif
             while (added < SEGMENT_SIZE * SEGMENT_COUNT)
             {
                 _ipi[added / SEGMENT_SIZE][added % SEGMENT_SIZE] = int.MaxValue; // Fill out the last chunk so binary search works properly

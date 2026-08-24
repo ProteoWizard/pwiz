@@ -114,7 +114,7 @@ namespace pwiz.Common.DataBinding
                     if (value is IFormattable formattable)
                     {
                         var formatString = GetFormatString(formattable, propertyDescriptor);
-                        return formattable.ToString(formatString, FormatProvider);
+                        return FormatRoundTripCompatible(formattable, formatString, FormatProvider);
                     }
                 }
                 catch (Exception)
@@ -128,6 +128,17 @@ namespace pwiz.Common.DataBinding
                 Thread.CurrentThread.CurrentUICulture = oldUiCulture;
                 Thread.CurrentThread.CurrentCulture = oldCulture;
             }
+        }
+
+        /// <summary>
+        /// Formats a value, emulating .NET Framework's round-trip ("R") algorithm on net8 (see
+        /// <see cref="RoundTripFormat"/>) so invariant report exports stay byte-identical across
+        /// frameworks and match the invariant grid preview.
+        /// </summary>
+        private static string FormatRoundTripCompatible(IFormattable value, string formatString, IFormatProvider provider)
+        {
+            return RoundTripFormat.FormatOrNull(value, formatString, provider)
+                   ?? value.ToString(formatString, provider);
         }
 
         protected virtual string GetFormatString(IFormattable value, PropertyDescriptor propertyDescriptor)

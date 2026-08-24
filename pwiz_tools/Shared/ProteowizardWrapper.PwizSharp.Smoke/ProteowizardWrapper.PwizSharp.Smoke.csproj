@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>pwiz.ProteowizardWrapper.Smoke</RootNamespace>
+    <AssemblyName>ProteowizardWrapper.PwizSharp.Smoke</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProteowizardWrapper.PwizSharp\ProteowizardWrapper.PwizSharp.csproj" />
+  </ItemGroup>
+
+</Project>
