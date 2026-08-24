@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- net8.0-windows so we can use Microsoft.Win32.Registry and
+         System.Security.Principal.WindowsPrincipal to detect elevation. -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <!-- CA1416 (platform-specific API) fires on every Registry / WindowsPrincipal
+         call; we already constrain to Windows via the TFM. -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.6.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.6.1" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+  </ItemGroup>
+
+  <!-- TestHarness brings PwizSharpPaths (anchored fixture/installer/Reference
+       path resolution). The installer Setup.exe itself isn't referenced — it's
+       exercised at runtime via PwizSharpPaths.InstallerBuildDir, skipping
+       Inconclusive when build.ps1 hasn't run yet. -->
+  <ItemGroup>
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\TestHarness\TestHarness.csproj" />
+  </ItemGroup>
+
+</Project>

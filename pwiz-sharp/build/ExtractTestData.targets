@@ -1,0 +1,82 @@
+<Project>
+
+  <!--
+    Shared MSBuild target for harness-test projects: extracts the per-vendor
+    Reader_<Vendor>_Test.data.tar.bz2 archive into its containing directory so the
+    .d/.raw/.wiff fixtures are available to VendorReaderTestHarness.
+
+    Importing test projects must set either:
+      - VendorTestArchive  : absolute path to the .tar.bz2
+      - VendorTestDataParent : directory into which to extract (the tarball's internal
+        paths are rooted at Reader_<Vendor>_Test.data/, so this should be the folder
+        *containing* Reader_<Vendor>_Test.data).
+    or, for a project whose tests read more than one vendor's raw data (Skyline's TestData
+    reads Agilent, Bruker and Thermo in a single assembly, which the property pair cannot
+    express), the VendorTestArchives item group, each item being the .tar.bz2 path with
+    Parent metadata naming its destination. The single-property form is folded into that
+    item group below so there is one code path.
+
+    Uses the bsdtar binary checked in at libraries/bsdtar.exe rather than %WinDir%\System32\
+    tar.exe. The system32 build of bsdtar isn't always present (Windows 10 1803+ shipped it,
+    but pre-1803 / Server SKUs / restricted images don't), and the Git-for-Windows GNU tar
+    that may shadow it on PATH is wrong for our purposes anyway — GNU tar's -k errors when
+    files exist instead of skipping them.
+
+    -k is essential, not just an optimization: the reference mzMLs tracked in git are
+    newer than the copies baked into the tarball, so overwriting them with the tar
+    contents would regress test oracles. We only want to fill in fixtures that aren't
+    on disk yet (the big vendor .d/.raw directories that aren't committed to git).
+
+    The libraries/bsdtar.exe binary is libarchive 2.7 — older than the system32 one. With
+    -k it does the right thing (skips existing files without overwriting), but it reports
+    each skip as a warning and then exits with status 1 ("Error exit delayed from previous
+    errors"). Set IgnoreExitCode="true" to swallow that — an actual extraction failure
+    would also produce missing files, which the tests would surface immediately. The
+    Inputs/Outputs incremental build skips the call entirely when the archive hasn't
+    changed since the sentinel was touched.
+    -->
+
+  <ItemGroup>
+    <VendorTestArchives Include="$(VendorTestArchive)" Condition="'$(VendorTestArchive)' != ''">
+      <Parent>$(VendorTestDataParent)</Parent>
+    </VendorTestArchives>
+  </ItemGroup>
+
+  <Target Name="ExtractVendorTestData"
+          BeforeTargets="BeforeBuild"
+          Condition="'@(VendorTestArchives)' != ''"
+          Inputs="@(VendorTestArchives)"
+          Outputs="$(IntermediateOutputPath)vendor-test-data.extracted">
+    <PropertyGroup>
+      <!-- libraries/bsdtar.exe is a Windows PE; running it off-Windows fails with
+           "Exec format error", and because IgnoreExitCode swallows that while the sentinel
+           below still gets touched, the extraction silently never happens and the fixtures
+           just aren't there. Use the system tar elsewhere. GNU tar's -k errors on existing
+           files rather than skipping (the reason bsdtar is used on Windows at all), so ask
+           for the skip-old-files flag instead, which is the skip-quietly spelling. -->
+      <_TarExe Condition="'$(OS)' == 'Windows_NT'">$(MSBuildThisFileDirectory)..\..\libraries\bsdtar.exe</_TarExe>
+      <_TarKeepArgs Condition="'$(OS)' == 'Windows_NT'">-xkf</_TarKeepArgs>
+      <_TarExe Condition="'$(OS)' != 'Windows_NT'">tar</_TarExe>
+      <_TarKeepArgs Condition="'$(OS)' != 'Windows_NT'">--skip-old-files -xf</_TarKeepArgs>
+    </PropertyGroup>
+    <!-- An archive a checkout does not carry is not an error; skip it rather than failing
+         the build over a vendor this machine was never going to test. -->
+    <MakeDir Directories="@(VendorTestArchives->'%(Parent)');$(IntermediateOutputPath)" />
+    <Message Importance="high" Text="Extracting %(VendorTestArchives.Identity) -&gt; %(VendorTestArchives.Parent)"
+             Condition="Exists('%(VendorTestArchives.Identity)')" />
+    <Exec Command="&quot;$(_TarExe)&quot; $(_TarKeepArgs) &quot;%(VendorTestArchives.Identity)&quot; -C &quot;%(VendorTestArchives.Parent)&quot;"
+          Condition="Exists('%(VendorTestArchives.Identity)')"
+          IgnoreExitCode="true"
+          IgnoreStandardErrorWarningFormat="true">
+      <Output TaskParameter="ExitCode" PropertyName="_TarExitCode" />
+    </Exec>
+    <!-- Windows bsdtar 2.7 exits 1 just for reporting skipped files, so its exit code says
+         nothing; GNU tar exits 0 in skip-old-files mode unless something really went wrong.
+         With several archives the Exec batches and this holds the last one's code, which is
+         enough to notice a broken extraction on Linux; the tests name the missing data anyway. -->
+    <Warning Condition="'$(OS)' != 'Windows_NT' and '$(_TarExitCode)' != '' and '$(_TarExitCode)' != '0'"
+             Text="Extracting vendor test data failed (exit $(_TarExitCode)); fixtures will be missing and their tests will report Inconclusive." />
+    <Touch Files="$(IntermediateOutputPath)vendor-test-data.extracted" AlwaysCreate="true" />
+  </Target>
+
+</Project>

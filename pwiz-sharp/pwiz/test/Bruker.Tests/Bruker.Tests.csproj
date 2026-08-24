@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.6.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.6.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Vendor\Bruker\Bruker.csproj" />
+    <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
+  </ItemGroup>
+
+  <!-- Reference/ holds pwiz-sharp-specific override reference mzMLs. The combineIMS Hela_QC_PASEF
+       profile references shipped in Reader_Bruker_Test.data.tar.bz2 still carry the old plain
+       "merged=N" combined-spectrum native id, but the reader now emits the canonical C++ 4-field
+       form "merged=N frame=F scanStart=S scanEnd=E" (SpectrumList_Bruker.cpp:785). VendorReader-
+       TestHarness checks <bin>/Reference/<filename> first, then falls back to the cpp tree, so
+       these override the stale profile references without editing the shared archive. Remove once
+       the archive is regenerated. README.md documents the policy. -->
+  <ItemGroup>
+    <None Update="Reference\*.mzML">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- TimsBinaryDataSmokeTests exercises Reader_Bruker.Read() against diaPASEF.d directly to
+       cover DiaFrameWindow / DiaWindowGroup / TdfMetadata.HasDiaPasefData — the harness path
+       can't reach those because the only diaPASEF.d reference mzML uses an unported
+       isolation-mz-and-mobility filter. The smoke tests also call P/Invoke against
+       timsdata.dll, so they need vendor extraction at build time. -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <Compile Remove="TimsBinaryDataSmokeTests.cs" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <VendorTestArchive>$(PwizCppRoot)\data\vendor_readers\Bruker\Reader_Bruker_Test.data.tar.bz2</VendorTestArchive>
+    <VendorTestDataParent>$(PwizCppRoot)\data\vendor_readers\Bruker</VendorTestDataParent>
+  </PropertyGroup>
+  <Import Project="..\..\..\build\ExtractTestData.targets" />
+
+</Project>

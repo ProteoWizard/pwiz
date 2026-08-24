@@ -1,0 +1,771 @@
+//
+// $Id$
+//
+//
+// Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+//
+// Copyright 2009 Vanderbilt University - Nashville, TN 37232
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Text;
+using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Params;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Sources;
+using Pwiz.Data.MsData.Instruments;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
+using Pwiz.SeeMS.Misc;
+using Spectrum = Pwiz.Data.MsData.Spectra.Spectrum;
+using Pwiz.Data.MsData.Processing;
+
+namespace Pwiz.SeeMS
+{
+	public delegate void SpectrumListCellClickHandler( object sender, SpectrumListCellClickEventArgs e );
+	public delegate void SpectrumListCellDoubleClickHandler( object sender, SpectrumListCellDoubleClickEventArgs e );
+    public delegate void SpectrumListFilterChangedHandler( object sender, SpectrumListFilterChangedEventArgs e );
+
+	public partial class SpectrumListForm : DockableForm
+	{
+        Dictionary<int, MassSpectrum> spectrumList; // indexable by MassSpectrum.Index
+        TreeViewForm treeViewTooltip;
+        System.Windows.Forms.Timer hoverTimer;
+
+        public DataGridView GridView { get { return gridView; } }
+
+		public event SpectrumListCellClickHandler CellClick;
+		public event SpectrumListCellDoubleClickHandler CellDoubleClick;
+        public event SpectrumListFilterChangedHandler FilterChanged;
+
+		protected void OnCellClick( DataGridViewCellMouseEventArgs e )
+		{
+			if( CellClick != null )
+				CellClick( this, new SpectrumListCellClickEventArgs( this, e ) );
+		}
+
+		protected void OnCellDoubleClick( DataGridViewCellMouseEventArgs e )
+		{
+			if( CellDoubleClick != null )
+				CellDoubleClick( this, new SpectrumListCellDoubleClickEventArgs( this, e ) );
+		}
+
+        protected void OnFilterChanged()
+        {
+            if( FilterChanged != null )
+                FilterChanged( this, new SpectrumListFilterChangedEventArgs( this, spectrumDataSet ) );
+        }
+
+        public SpectrumListForm( CVID nativeIdFormat )
+		{
+			InitializeComponent();
+
+            initializeGridView( nativeIdFormat );
+
+            treeViewTooltip = new TreeViewForm();
+            hoverTimer = new System.Windows.Forms.Timer { Interval = 3000 };
+
+            hoverTimer.Tick += (sender, args) =>
+            {
+                treeViewTooltip.Hide();
+                hoverTimer.Stop();
+            };
+            treeViewTooltip.TreeView.MouseHover += (sender, args) => hoverTimer.Stop();
+            treeViewTooltip.TreeView.MouseLeave += (sender, args) => hoverTimer.Start();
+
+            var columnHasDetailTooltip = new SortedSet<int>
+            {
+                IcId.Index,
+                DpId.Index,
+                PrecursorInfo.Index,
+                IsolationWindows.Index,
+                ScanInfo.Index
+            };
+
+            gridView.CellMouseMove += (sender, args) =>
+            {
+                if (columnHasDetailTooltip.Contains(args.ColumnIndex))
+                    Cursor = Cursors.Hand;
+                else
+                    Cursor = Cursors.Arrow;
+            };
+        }
+
+        private CVID nativeIdFormat = CVID.CVID_Unknown;
+        public CVID NativeIdFormat { get { return nativeIdFormat; } }
+
+        private bool hasMergedSpectra = false;
+        private bool hasNativeIdSpectra = false;
+
+		private void initializeGridView( CVID nativeIdFormat )
+		{
+            // force handle creation
+            IntPtr dummy = gridView.Handle;
+            spectrumList = new Dictionary<int, MassSpectrum>();
+
+            this.nativeIdFormat = nativeIdFormat;
+            if ((nativeIdFormat != CVID.CVID_Unknown) && (nativeIdFormat != CVID.MS_no_nativeID_format))
+            {
+                string nativeIdDefinition = new CVTermInfo( nativeIdFormat ).Def.Replace("Native format defined by ", "");
+                string[] nameValuePairs = nativeIdDefinition.Split( " ".ToCharArray() );
+                for( int i = 0; i < nameValuePairs.Length; ++i )
+                {
+                    string[] nameValuePair = nameValuePairs[i].Split( "=".ToCharArray() );
+                    DataGridViewColumn nameColumn = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
+                    nameColumn.Name = nameValuePair[0] + "NativeIdColumn";
+                    nameColumn.HeaderText = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase( nameValuePair[0] );
+                    nameColumn.DataPropertyName = nameValuePair[0];
+                    gridView.Columns.Insert( 1 + i, nameColumn );
+                    string type = null;
+                    if( nameValuePair[0] == "file" || nameValuePair[1] == "xsd:string" )
+                        type = "System.String";
+                    else
+                        type = "System.Int32";
+                    spectrumDataSet.SpectrumTable.Columns.Add( nameValuePair[0], Type.GetType( type ) );
+                }
+            }
+
+            gridView.Columns["SpectrumType"].ToolTipText = new CVTermInfo(CVID.MS_spectrum_type).Def;
+            gridView.Columns["MsLevel"].ToolTipText = new CVTermInfo( CVID.MS_ms_level ).Def;
+            gridView.Columns["ScanTime"].ToolTipText = new CVTermInfo( CVID.MS_scan_start_time ).Def;
+            gridView.Columns["BasePeakMz"].ToolTipText = new CVTermInfo( CVID.MS_base_peak_m_z ).Def;
+            gridView.Columns["BasePeakIntensity"].ToolTipText = new CVTermInfo( CVID.MS_base_peak_intensity ).Def;
+            gridView.Columns["TotalIonCurrent"].ToolTipText = new CVTermInfo( CVID.MS_total_ion_current ).Def;
+
+	        gridView.Columns["ScanTime"].HeaderText += Pwiz.SeeMS.Settings.Default.TimeInMinutes ? " (min)" : " (sec)";
+
+            gridView.DataBindingComplete += new DataGridViewBindingCompleteEventHandler( gridView_DataBindingComplete );
+        }
+
+        void gridView_DataBindingComplete( object sender, DataGridViewBindingCompleteEventArgs e )
+        {
+            if( e.ListChangedType == ListChangedType.Reset )
+                OnFilterChanged();
+        }
+
+        public void updateRow( SpectrumDataSet.SpectrumTableRow row, MassSpectrum spectrum )
+        {
+            spectrumList[spectrum.Index] = spectrum;
+
+            Spectrum s = spectrum.Element; //GetElement(false);
+            DataProcessing dp = spectrum.DataProcessing;
+            Scan scan = null;
+            InstrumentConfiguration ic = null;
+
+            if(s.ScanList.Scans.Count > 0)
+            {
+                scan = s.ScanList.Scans[0];
+                ic = scan.InstrumentConfiguration;
+            }
+
+            if( dp == null )
+                dp = s.DataProcessing;
+
+            CVParam param;
+
+            param = s.Params.CvParam( CVID.MS_ms_level );
+            row.MsLevel = !param.IsEmpty ? param.ValueAs<int>() : 0;
+
+            param = scan != null ? scan.Params.CvParam( CVID.MS_scan_start_time ) : new CVParam();
+            row.ScanTime = !param.IsEmpty ? param.TimeInSeconds() : 0;
+            if (Pwiz.SeeMS.Settings.Default.TimeInMinutes)
+                row.ScanTime /= 60;
+
+            param = s.Params.CvParam( CVID.MS_base_peak_m_z );
+            row.BasePeakMz = !param.IsEmpty ? param.ValueAs<double>() : 0;
+
+            param = s.Params.CvParam( CVID.MS_base_peak_intensity );
+            row.BasePeakIntensity = !param.IsEmpty ? param.ValueAs<double>() : 0;
+
+            param = s.Params.CvParam( CVID.MS_total_ion_current );
+            row.TotalIonCurrent = !param.IsEmpty ? param.ValueAs<double>() : 0;
+
+            var precursorInfo = new StringBuilder();
+            var isolationWindows = new StringBuilder();
+            if( row.MsLevel == 1 || s.Precursors.Count == 0 )
+            {
+                precursorInfo.Append( "n/a" );
+                isolationWindows.Append( "n/a" );
+            }
+            else
+            {
+                foreach( Precursor p in s.Precursors )
+                {
+                    foreach( SelectedIon si in p.SelectedIons )
+                    {
+                        if( precursorInfo.Length > 0 )
+                            precursorInfo.Append( "," );
+                        precursorInfo.AppendFormat("{0:G8}", si.Params.CvParam( CVID.MS_selected_ion_m_z ).ValueAs<double>() );
+                    }
+
+                    var iw = p.IsolationWindow;
+                    CVParam isolationTarget = iw.Params.CvParam(CVID.MS_isolation_window_target_m_z);
+                    if (!isolationTarget.IsEmpty)
+                    {
+                        double iwMz = isolationTarget.ValueAs<double>();
+
+                        if (isolationWindows.Length > 0)
+                            isolationWindows.Append(",");
+
+                        CVParam lowerOffset = iw.Params.CvParam(CVID.MS_isolation_window_lower_offset);
+                        CVParam upperOffset = iw.Params.CvParam(CVID.MS_isolation_window_upper_offset);
+                        if (lowerOffset.IsEmpty || upperOffset.IsEmpty)
+                            isolationWindows.AppendFormat("{0:G8}", iwMz);
+                        else
+                            isolationWindows.AppendFormat("[{0:G8}-{1:G8}]", iwMz - lowerOffset.ValueAs<double>(), iwMz + upperOffset.ValueAs<double>());
+                    }
+                }
+            }
+
+            if( precursorInfo.Length == 0 )
+                precursorInfo.Append( "unknown" );
+            row.PrecursorInfo = precursorInfo.ToString();
+
+            if (isolationWindows.Length == 0)
+                isolationWindows.Append("unknown");
+            row.IsolationWindows = isolationWindows.ToString();
+
+            StringBuilder scanInfo = new StringBuilder();
+            foreach( Scan scan2 in s.ScanList.Scans )
+            {
+                if( scan2.ScanWindows.Count > 0 )
+                {
+                    foreach( ScanWindow sw in scan2.ScanWindows )
+                    {
+                        if( scanInfo.Length > 0 )
+                            scanInfo.Append( "," );
+                        scanInfo.AppendFormat( "[{0:G8}-{1:G8}]",
+                                              sw.Params.CvParam( CVID.MS_scan_window_lower_limit ).ValueAs<double>(),
+                                              sw.Params.CvParam( CVID.MS_scan_window_upper_limit ).ValueAs<double>() );
+                    }
+                }
+            }
+
+            if( scanInfo.Length == 0 )
+                scanInfo.Append( "unknown" );
+            row.ScanInfo = scanInfo.ToString();
+
+            row.IonMobility = scan != null ? scan.Params.CvParam(CVID.MS_ion_mobility_drift_time).ValueAs<double>() : 0;
+            if (row.IonMobility == 0 && scan != null)
+            {
+                row.IonMobility = scan.Params.CvParam(CVID.MS_inverse_reduced_ion_mobility).ValueAs<double>();
+                if (row.IonMobility == 0)
+                {
+                    // Early version of drift time info, before official CV params
+                    var userparam = scan.Params.UserParam("drift time");
+                    if (!userparam.IsEmpty)
+                        row.IonMobility = userparam.TimeInSeconds() * 1000.0;
+
+                }
+            }
+
+            if (row.IonMobility == 0)
+            {
+                row.IonMobility = s.Params.CvParam(CVID.MS_FAIMS_compensation_voltage).ValueAs<double>();
+                row.IonMobilityType = SpectrumDataSet.IonMobilityType_CompensationVoltage;
+            }
+
+            if (row.IonMobilityType == SpectrumDataSet.IonMobilityType_None && row.IonMobility != 0)
+                row.IonMobilityType = SpectrumDataSet.IonMobilityType_SingleValue;
+            else if ((s.Id.Contains("frame=") && s.Id.Contains("scan=")) ||
+                     s.Id.Contains("block=") ||
+                     s.GetIonMobilityArray() != null)
+                row.IonMobilityType = SpectrumDataSet.IonMobilityType_Array;
+
+            row.SpotId = s.SpotId;
+            row.SpectrumType = s.Params.CvParamChild( CVID.MS_spectrum_type ).Name;
+            row.DataPoints = (ulong) s.DefaultArrayLength;
+            row.IcId = ( ic == null || ic.Id.Length == 0 ? "unknown" : ic.Id );
+            row.DpId = ( dp == null || dp.Id.Length == 0 ? "unknown" : dp.Id );
+        }
+
+        public IEnumerable<SpectrumDataSet.SpectrumTableRow> GetIonMobilityRows()
+        {
+            var dgv = GridView;
+
+            foreach (DataGridViewRow row in dgv.Rows)
+            {
+                var spectrumRow = (SpectrumDataSet.SpectrumTableRow)((DataRowView)row.DataBoundItem).Row;
+                if (spectrumRow.IonMobilityType == SpectrumDataSet.IonMobilityType_None ||
+                    spectrumRow.IonMobilityType == SpectrumDataSet.IonMobilityType_CompensationVoltage)
+                    continue;
+
+                if (spectrumRow.DataPoints == 0 ||
+                    (spectrumRow.IonMobilityType == Misc.SpectrumDataSet.IonMobilityType_SingleValue && spectrumRow.IonMobility == 0))
+                    continue;
+
+                yield return spectrumRow;
+            }
+        }
+
+        public void BeginBulkLoad()
+        {
+            spectrumDataSet.SpectrumTable.BeginLoadData();
+            spectraSource.SuspendBinding();
+            spectraSource.RaiseListChangedEvents = false;
+        }
+
+        public void EndBulkLoad()
+        {
+            spectrumDataSet.SpectrumTable.EndLoadData();
+            spectraSource.ResumeBinding();
+            spectraSource.RaiseListChangedEvents = true;
+            spectraSource.ResetBindings(true);
+        }
+
+		public void Add( MassSpectrum spectrum )
+		{
+            SpectrumDataSet.SpectrumTableRow row = spectrumDataSet.SpectrumTable.NewSpectrumTableRow();
+            row.Id = spectrum.Id;
+
+            if (spectrum.Id.StartsWith("merged="))
+            {
+                if (!hasMergedSpectra)
+                {
+                    hasMergedSpectra = true;
+                    gridView.Columns["Id"].Visible = true;
+                }
+
+                if (!hasNativeIdSpectra)
+                {
+                    foreach (DataGridViewColumn column in gridView.Columns)
+                        if (column.Name.EndsWith("NativeIdColumn"))
+                            column.Visible = false;
+                }
+            }
+            else if( nativeIdFormat != CVID.CVID_Unknown )
+            {
+                if (!hasMergedSpectra)
+                    gridView.Columns["Id"].Visible = false;
+
+                if (!hasNativeIdSpectra)
+                {
+                    hasNativeIdSpectra = true;
+                    foreach (DataGridViewColumn column in gridView.Columns)
+                        if (column.Name.EndsWith("NativeIdColumn"))
+                            column.Visible = true;
+                }
+
+                // guard against case where input is mzXML which
+                // is identified as, say, Agilent-derived, but 
+                // which uses "scan" (as mzXML must) instead
+                // of the Agilent "scanID" (as this mzML-centric code expects)
+                bool foundit = false;
+
+                string[] nameValuePairs = spectrum.Id.Split(' ');
+                foreach( string nvp in nameValuePairs )
+                {
+                    string[] nameValuePair = nvp.Split('=');
+                    if (row.Table.Columns.Contains(nameValuePair[0]))
+                    {
+                        row[nameValuePair[0]] = nameValuePair[1];
+                        foundit = true;
+                    }
+                }
+                if (!foundit)
+                {
+                    // mismatch between nativeID format and actual (probably mzXML) format
+                    // better to show an ill-fit match - eg "scan" (mzXML) and "scanID" (Agilent)
+                    // than no info at all
+                    string nativeIdDefinition = new CVTermInfo(nativeIdFormat).Def;
+                    string[] idPair = nativeIdDefinition.Split('=');
+                    if (row.Table.Columns.Contains(idPair[0]))
+                    {
+                        string[] valPair = spectrum.Id.Split('=');
+                        row[idPair[0]] = (valPair.Length > 1) ? valPair[1] : spectrum.Id;
+                        foundit = true;
+                    }
+                }
+            }
+
+            row.Index = spectrum.Index;
+            updateRow( row, spectrum );
+            spectrumDataSet.SpectrumTable.LoadDataRow(row.ItemArray, true);
+
+            //int rowIndex = gridView.Rows.Add();
+			//gridView.Rows[rowIndex].Tag = spectrum;
+            spectrum.Tag = this;
+
+
+            if (row.IonMobility != 0)
+                gridView.Columns["IonMobility"].Visible = true;
+
+            if( spectrum.Element.SpotId.Length > 0 )
+                gridView.Columns["SpotId"].Visible = true;
+
+            //UpdateRow( rowIndex );
+		}
+
+        public int IndexOf( MassSpectrum spectrum )
+        {
+            return spectraSource.Find( "Id", spectrum.Id );
+        }
+
+        public MassSpectrum GetSpectrum( int index )
+        {
+            return spectrumList[(int) (spectraSource[index] as DataRowView)[1]];
+        }
+
+        public void UpdateAllRows()
+        {
+            for( int i = 0; i < gridView.RowCount; ++i )
+                UpdateRow( i );
+        }
+
+        public void UpdateRow( int rowIndex )
+        {
+            UpdateRow( rowIndex, null );
+        }
+
+        public void UpdateRow( int rowIndex, ISpectrumList spectrumList )
+        {
+            SpectrumDataSet.SpectrumTableRow row = ( spectraSource[rowIndex] as DataRowView ).Row as SpectrumDataSet.SpectrumTableRow;
+
+            if( spectrumList != null )
+            {
+                this.spectrumList[row.Index].SpectrumList = spectrumList;
+                updateRow( row, this.spectrumList[row.Index] );
+                //dp = rowSpectrum.DataProcessing;
+                //row.Tag = rowSpectrum = new MassSpectrum( rowSpectrum, s );
+                //rowSpectrum.DataProcessing = dp;
+            } else
+            {
+                updateRow( row, this.spectrumList[row.Index] );
+                //s = rowSpectrum.Element;
+                //dp = rowSpectrum.DataProcessing;
+            }
+        }
+
+		private void gridView_CellMouseClick( object sender, DataGridViewCellMouseEventArgs e )
+		{
+            if( e.RowIndex > -1 )
+                gridView_ShowCellToolTip( gridView[e.ColumnIndex, e.RowIndex] );
+			OnCellClick( e );
+		}
+
+		private void gridView_CellMouseDoubleClick( object sender, DataGridViewCellMouseEventArgs e )
+		{
+			OnCellDoubleClick( e );
+		}
+
+        private void selectColumnsToolStripMenuItem_Click( object sender, EventArgs e )
+        {
+            SelectColumnsDialog dialog = new SelectColumnsDialog( gridView );
+            dialog.ShowDialog();
+        }
+
+        private void gridView_ColumnHeaderMouseClick( object sender, DataGridViewCellMouseEventArgs e )
+        {
+            if( e.Button == MouseButtons.Right )
+            {
+                Rectangle cellRectangle = gridView.GetCellDisplayRectangle( e.ColumnIndex, e.RowIndex, true );
+                Point cellLocation = new Point( cellRectangle.Left, cellRectangle.Top );
+                cellLocation.Offset( e.Location );
+                selectColumnsMenuStrip.Show( gridView, cellLocation );
+            }
+        }
+
+        private void addParamsToTreeNode( ParamContainer pc, TreeNode node)
+        {
+            foreach( ParamGroup pg in pc.ParamGroups )
+                addParamsToTreeNode( pg as ParamContainer, node);
+
+            foreach( CVParam param in pc.CVParams )
+            {
+                if( param.IsEmpty )
+                    continue;
+
+                string nodeText;
+                string paramValue = param.Value.ToString();
+                if (paramValue.Length > 0 )
+                {
+                    if (double.TryParse(paramValue, out double dblValue))
+                        paramValue = dblValue.ToString("G6");
+
+                    // has value
+                    if( param.Units != CVID.CVID_Unknown )
+                    {
+                        // has value and units
+                        nodeText = String.Format( "{0}: {1} {2}", param.Name, paramValue, param.UnitsName);
+                    } else
+                    {
+                        // has value but no units
+                        nodeText = String.Format( "{0}: {1}", param.Name, paramValue);
+                    }
+                } else
+                {
+                    // has controlled value, look up category in the CV
+                    nodeText = String.Format( "{0}: {1}", new CVTermInfo(new CVTermInfo(param.Cvid).ParentsIsA[0]).Name, param.Name);
+                }
+                TreeNode childNode = node.Nodes.Add(nodeText);
+                childNode.ToolTipText = new CVTermInfo( param.Cvid ).Def;
+            }
+
+            foreach( UserParam param in pc.UserParams )
+            {
+                string nodeText;
+                if( param.Value.ToString().Length > 0 )
+                {
+                    // has value
+                    if( param.Units != CVID.CVID_Unknown )
+                    {
+                        // has value and units
+                        nodeText = String.Format( "{0}: {1} {2}", param.Name, param.Value, new CVTermInfo(param.Units).Name);
+                    } else
+                    {
+                        // has value but no units
+                        nodeText = String.Format( "{0}: {1}", param.Name, param.Value);
+                    }
+                } else
+                {
+                    // has uncontrolled value
+                    nodeText = String.Format( "{0}", param.Name);
+                }
+                TreeNode childNode = node.Nodes.Add(nodeText);
+                childNode.ToolTipText = param.Type;
+            }
+        }
+
+        private void gridView_ShowCellToolTip( DataGridViewCell cell )
+        {
+            MassSpectrum spectrum = GetSpectrum(cell.RowIndex);
+            Spectrum s = spectrum.Element;
+
+            treeViewTooltip.Hide();
+
+            TreeView tv = treeViewTooltip.TreeView;
+            tv.Nodes.Clear();
+
+            string columnName = gridView.Columns[cell.ColumnIndex].Name;
+
+            if (columnName == "PrecursorInfo" || columnName == "IsolationWindows")
+            {
+                treeViewTooltip.Text = "Precursor Details";
+                if( s.Precursors.Count == 0 )
+                    tv.Nodes.Add( "No precursor information available." );
+                else
+                {
+                    foreach( Precursor p in s.Precursors )
+                    {
+                        string pNodeText = "Precursor scan";
+                        if( p.SourceFile != null && p.ExternalSpectrumId.Length > 0 )
+                            pNodeText += String.Format( ": {0}:{1}", p.SourceFile.Name, p.ExternalSpectrumId );
+                        else if( p.SpectrumId.Length > 0 )
+                            pNodeText += String.Format( ": {0}", p.SpectrumId );
+
+                        TreeNode pNode = tv.Nodes.Add( pNodeText );
+                        addParamsToTreeNode( p as ParamContainer, pNode );
+
+                        if( p.SelectedIons.Count == 0 )
+                            pNode.Nodes.Add( "No selected ion list available." );
+                        else
+                        {
+                            foreach( SelectedIon si in p.SelectedIons )
+                            {
+                                TreeNode siNode = pNode.Nodes.Add( "Selected ion" );
+                                //siNode.ToolTipText = new CVTermInfo(CVID.MS_selected_ion); // not yet in CV
+                                addParamsToTreeNode( si as ParamContainer, siNode );
+                            }
+                        }
+
+                        if( p.Activation.IsEmpty )
+                            pNode.Nodes.Add( "No activation details available." );
+                        else
+                        {
+                            TreeNode actNode = pNode.Nodes.Add( "Activation" );
+                            addParamsToTreeNode( p.Activation as ParamContainer, actNode );
+                        }
+
+                        if( p.IsolationWindow.IsEmpty )
+                            pNode.Nodes.Add( "No isolation window details available." );
+                        else
+                        {
+                            TreeNode iwNode = pNode.Nodes.Add( "Isolation Window" );
+                            addParamsToTreeNode( p.IsolationWindow as ParamContainer, iwNode );
+                        }
+                    }
+                }
+            } else if (columnName == "ScanInfo")
+            {
+                treeViewTooltip.Text = "Scan Configuration Details";
+                if( s.ScanList.IsEmpty )
+                    tv.Nodes.Add( "No scan details available." );
+                else
+                {
+                    TreeNode slNode = tv.Nodes.Add( "Scan List" );
+                    addParamsToTreeNode( s.ScanList as ParamContainer, slNode );
+
+                    foreach( Scan scan in s.ScanList.Scans )
+                    {
+                        TreeNode scanNode = slNode.Nodes.Add( "Acquisition" );
+                        addParamsToTreeNode( scan as ParamContainer, scanNode );
+
+                        foreach( ScanWindow sw in scan.ScanWindows )
+                        {
+                            TreeNode swNode = scanNode.Nodes.Add( "Scan Window" );
+                            addParamsToTreeNode( sw as ParamContainer, swNode );
+                        }
+                    }
+                }
+            } else if (columnName == "IcId")
+            {
+                treeViewTooltip.Text = "Instrument Configuration Details";
+                InstrumentConfiguration ic = s.ScanList.Scans[0].InstrumentConfiguration;
+                if( ic == null || ic.IsEmpty )
+                    tv.Nodes.Add( "No instrument configuration details available." );
+                else
+                {
+                    TreeNode icNode = tv.Nodes.Add( String.Format( "Instrument Configuration ({0})", ic.Id ) );
+                    addParamsToTreeNode( ic as ParamContainer, icNode );
+
+                    if( ic.ComponentList.Count == 0 )
+                        icNode.Nodes.Add( "No component list available." );
+                    else
+                    {
+                        TreeNode clNode = icNode.Nodes.Add( "Component List" );
+                        foreach( Pwiz.Data.MsData.Instruments.Component c in ic.ComponentList )
+                        {
+                            string cNodeText;
+                            switch( c.Type )
+                            {
+                                case Pwiz.Data.MsData.Instruments.ComponentType.Source:
+                                    cNodeText = "Source";
+                                    break;
+                                case Pwiz.Data.MsData.Instruments.ComponentType.Analyzer:
+                                    cNodeText = "Analyzer";
+                                    break;
+                                default:
+                                case Pwiz.Data.MsData.Instruments.ComponentType.Detector:
+                                    cNodeText = "Detector";
+                                    break;
+                            }
+                            TreeNode cNode = clNode.Nodes.Add( cNodeText );
+                            addParamsToTreeNode( c as ParamContainer, cNode );
+                        }
+                    }
+
+                    Software sw = ic.Software;
+                    if( sw == null || sw.IsEmpty )
+                        icNode.Nodes.Add( "No software details available." );
+                    else
+                    {
+                        TreeNode swNode = icNode.Nodes.Add( String.Format( "Software ({0})", sw.Id ) );
+                        CVParam softwareParam = sw.Params.CvParamChild( CVID.MS_software );
+                        TreeNode swNameNode = swNode.Nodes.Add( "Name: " + softwareParam.Name );
+                        swNameNode.ToolTipText = new CVTermInfo( softwareParam.Cvid ).Def;
+                        swNode.Nodes.Add( "Version: " + sw.Version );
+                    }
+                }
+            } else if (columnName == "DpId")
+            {
+                treeViewTooltip.Text = "Data Processing Details";
+                DataProcessing dp = s.DataProcessing;
+                if( dp == null || dp.IsEmpty )
+                    tv.Nodes.Add( "No data processing details available." );
+                else
+                {
+                    TreeNode dpNode = tv.Nodes.Add( String.Format( "Data Processing ({0})", dp.Id ) );
+
+                    if( dp.ProcessingMethods.Count == 0 )
+                        dpNode.Nodes.Add( "No component list available." );
+                    else
+                    {
+                        TreeNode pmNode = dpNode.Nodes.Add( "Processing Methods" );
+                        foreach( ProcessingMethod pm in dp.ProcessingMethods )
+                        {
+                            addParamsToTreeNode( pm as ParamContainer, pmNode );
+                        }
+                    }
+                }
+            } else
+                return;
+
+            tv.ExpandAll();
+            treeViewTooltip.DoAutoSize();
+            treeViewTooltip.StartPosition = FormStartPosition.Manual;
+
+            Point tentativeLocation = MousePosition;
+            if (tentativeLocation.X + treeViewTooltip.Width > Screen.FromControl(gridView).WorkingArea.Right)
+                tentativeLocation.Offset(-treeViewTooltip.Width, 0);
+            else
+                tentativeLocation.Offset(Cursor.Size.Width, 0);
+            if (tentativeLocation.Y + treeViewTooltip.Height > Screen.FromControl(gridView).WorkingArea.Bottom)
+                tentativeLocation.Offset(0, -treeViewTooltip.Height);
+            treeViewTooltip.Location = tentativeLocation;
+
+            if (treeViewTooltip.Visible)
+                treeViewTooltip.Refresh();
+            else
+                treeViewTooltip.Show( this );
+            hoverTimer.Stop();
+            hoverTimer.Start();
+            this.Focus();
+        }
+	}
+
+    public class SpectrumListCellClickEventArgs : DataGridViewCellMouseEventArgs
+	{
+		private MassSpectrum spectrum;
+		public MassSpectrum Spectrum { get { return spectrum; } }
+
+		internal SpectrumListCellClickEventArgs( SpectrumListForm sender, DataGridViewCellMouseEventArgs e )
+            : base( e.ColumnIndex, e.RowIndex, e.X, e.Y, e )
+		{
+            if( e.RowIndex > -1 && e.RowIndex < sender.GridView.RowCount )
+                spectrum = sender.GetSpectrum( e.RowIndex );
+		}
+	}
+
+    public class SpectrumListCellDoubleClickEventArgs : DataGridViewCellMouseEventArgs
+	{
+		private MassSpectrum spectrum;
+		public MassSpectrum Spectrum { get { return spectrum; } }
+
+		internal SpectrumListCellDoubleClickEventArgs( SpectrumListForm sender, DataGridViewCellMouseEventArgs e )
+            : base( e.ColumnIndex, e.RowIndex, e.X, e.Y, e )
+		{
+            if( e.RowIndex > -1 && e.RowIndex < sender.GridView.RowCount )
+                spectrum = sender.GetSpectrum( e.RowIndex );
+		}
+	}
+
+    public class SpectrumListFilterChangedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The number of spectra that matched the new filter.
+        /// </summary>
+        public int Matches { get { return matches; } }
+        private int matches;
+
+        /// <summary>
+        /// The total number of spectra.
+        /// </summary>
+        public int Total { get { return total; } }
+        private int total;
+
+        internal SpectrumListFilterChangedEventArgs( SpectrumListForm sender, SpectrumDataSet dataSet )
+        {
+            matches = sender.GridView.RowCount;
+            total = dataSet.SpectrumTable.Count;
+        }
+    }
+}

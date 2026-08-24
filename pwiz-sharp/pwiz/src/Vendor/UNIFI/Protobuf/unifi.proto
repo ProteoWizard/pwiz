@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+// Legacy UNIFI spectrum schema. Mirrors the contracts inlined in cpp UnifiData.cpp:91-190.
+// Used for the /spectra endpoint with Accept: application/octet-stream.
+//
+// proto3 — protoc 3.8 only emits C# from proto3, and the wire format stays compatible
+// with cpp UNIFI's protobuf-net 2.x output (both follow the protobuf binary spec; "field
+// missing on wire" decodes as default(T) on either side, which is what cpp expects).
+//
+// The Spectrum -> MassSpectrum -> {MSe, DDA} hierarchy is encoded as nested message
+// fields so each subtype lives in its own tag (the cpp port uses [ProtoInclude(N, T)]
+// attributes which serialize identically — a singleton-of-T at tag N).
+
+package pwiz.unifi;
+
+option csharp_namespace = "Pwiz.Vendor.UNIFI.Protobuf";
+
+// UNIFI MSe energy level. Wire values match cpp ProtoEnergyLevel (UnifiData.cpp:91-97).
+enum ProtoEnergyLevel {
+    ENERGY_LEVEL_UNKNOWN = 0;
+    ENERGY_LEVEL_LOW = 1;
+    ENERGY_LEVEL_HIGH = 2;
+}
+
+// UNIFI scan polarity. Wire values match cpp ProtoPolarity (UnifiData.cpp:99-105).
+enum ProtoPolarity {
+    POLARITY_UNKNOWN = 0;
+    POLARITY_NEGATIVE = 1;
+    POLARITY_POSITIVE = 2;
+}
+
+// UNIFI DDA spectrum MS level. Wire values match cpp ProtoMSType (UnifiData.cpp:107-113).
+enum ProtoMSType {
+    MS_TYPE_UNKNOWN = 0;
+    MS_TYPE_MS1 = 1;
+    MS_TYPE_MS2 = 2;
+}
+
+// Abstract spectrum root. cpp Spectrum (UnifiData.cpp:119-132) — carries the intensity
+// axis and uses [ProtoInclude(200, MassSpectrum)] to delegate to a runtime-typed subtype.
+// Encoded here as a MassSpectrum at tag 200 (nullable on the C# side).
+//
+// NB: the cpp class declares `array<double>^ Intensities`, but the UNIFI server emits
+// single-precision floats on the wire (observed: tag 0d = field 1, wire-type 5 = fixed32).
+// protobuf-net is forgiving about float→double widening on read, so the cpp port works.
+// Google.Protobuf is strict, so declare `float` here to match the wire.
+message Spectrum {
+    repeated float intensities = 1;
+    MassSpectrum mass_spectrum = 200;
+}
+
+// Abstract mass-spectrum subtype carrying the m/z axis. cpp MassSpectrum
+// (UnifiData.cpp:134-151). Picks one of mse_mass_spectrum / dda_mass_spectrum at tags 100/101.
+//
+// NB: same float-on-the-wire quirk as Spectrum.intensities — declare `float`.
+message MassSpectrum {
+    repeated float masses = 1;
+    repeated int32 scan_size = 2;
+    MSeMassSpectrum mse_mass_spectrum = 100;
+    DDAMassSpectrum dda_mass_spectrum = 101;
+}
+
+// MSe spectrum (alternating low/high collision energy).
+// cpp MSeMassSpectrum (UnifiData.cpp:153-172).
+message MSeMassSpectrum {
+    double retention_time = 1;
+    ProtoEnergyLevel energy_level = 2;
+    ProtoPolarity ionization_polarity = 3;
+}
+
+// DDA spectrum (data-dependent acquisition with isolation).
+// cpp DDAMassSpectrum (UnifiData.cpp:174-190).
+message DDAMassSpectrum {
+    double retention_time = 1;
+    float set_mass = 2;
+    ProtoMSType ms_type = 3;
+}

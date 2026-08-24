@@ -1,0 +1,60 @@
+<Project>
+
+  <!--
+    Jam-free replacement for libraries/generate-version.jam + Jamroot.jam's
+    MAKE_BUILD_TIMESTAMP / day_of_year. Derives the build-version pieces from the
+    git commit date so a plain `dotnet build` (no bjam) produces the same version
+    the Boost/Jam build used to. Consumed by both pwiz-sharp and Skyline, which
+    compose their own scheme on top:
+      * pwiz cpp / pwiz-sharp:  major.minor.{YY}{DDD}   (e.g. 4.0.26181)
+      * Skyline:                YEAR.ORDINAL.{DOY}       where DOY accumulates
+                                across years like the Jamfile ((YY-YEAR)*365 + DDD)
+
+    A consuming project depends on ComputePwizBuildVersion and reads:
+      $(PwizVersionYear2)         two-digit year, e.g. 26
+      $(PwizVersionDayOfYearRaw)  day of year 1..366, e.g. 181
+      $(PwizVersionDayOfYear)     day of year zero-padded to 3, e.g. 181 / 005
+      $(PwizVersionGitHash)       short commit hash, e.g. b4bf6df10d ("0" if no git)
+
+    Notes on the git invocation:
+      * %25%25ci -> MSBuild decodes %25 to '%', the batch runner collapses %% to
+        '%', so git receives %ci (ISO committer date). %cs would be cleaner but
+        needs git >= 2.20.
+      * Falls back to the current UTC date when git is unavailable (shallow clone,
+        no git, or non-date output), matching the Jam fallback to JAMDATE.
+  -->
+  <Target Name="ComputePwizBuildVersion">
+    <Exec Command="git log -1 --format=%25%25ci HEAD"
+          ConsoleToMSBuild="true"
+          EchoOff="true"
+          StandardOutputImportance="low"
+          ContinueOnError="true"
+          WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_PwizGitCommitDate" />
+    </Exec>
+    <Exec Command="git rev-parse --short HEAD"
+          ConsoleToMSBuild="true"
+          EchoOff="true"
+          StandardOutputImportance="low"
+          ContinueOnError="true"
+          WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_PwizGitHashRaw" />
+    </Exec>
+    <PropertyGroup>
+      <PwizVersionGitHash>$(_PwizGitHashRaw.Trim())</PwizVersionGitHash>
+      <PwizVersionGitHash Condition="'$([System.Text.RegularExpressions.Regex]::IsMatch($(PwizVersionGitHash), `^[0-9a-f]+$`))' != 'true'">0</PwizVersionGitHash>
+    </PropertyGroup>
+    <PropertyGroup>
+      <_PwizRaw>$(_PwizGitCommitDate.Trim())</_PwizRaw>
+      <_PwizVersionDate Condition="'$([System.Text.RegularExpressions.Regex]::IsMatch($(_PwizRaw), `^[0-9]{4}-[0-9]{2}-[0-9]{2}`))' == 'true'">$(_PwizRaw.Substring(0,10))</_PwizVersionDate>
+      <_PwizVersionDate Condition="'$(_PwizVersionDate)' == ''">$([System.DateTime]::UtcNow.ToString('yyyy-MM-dd'))</_PwizVersionDate>
+      <_PwizY>$([MSBuild]::Add($(_PwizVersionDate.Substring(0,4)), 0))</_PwizY>
+      <_PwizM>$([MSBuild]::Add($(_PwizVersionDate.Substring(5,2)), 0))</_PwizM>
+      <_PwizD>$([MSBuild]::Add($(_PwizVersionDate.Substring(8,2)), 0))</_PwizD>
+      <PwizVersionYear2>$([MSBuild]::Subtract($(_PwizY), 2000))</PwizVersionYear2>
+      <PwizVersionDayOfYearRaw>$([System.DateTime]::new($(_PwizY), $(_PwizM), $(_PwizD)).DayOfYear)</PwizVersionDayOfYearRaw>
+      <PwizVersionDayOfYear>$(PwizVersionDayOfYearRaw.PadLeft(3, '0'))</PwizVersionDayOfYear>
+    </PropertyGroup>
+  </Target>
+
+</Project>

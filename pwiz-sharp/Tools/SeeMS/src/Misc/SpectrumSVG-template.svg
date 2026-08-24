@@ -1,0 +1,3630 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" version="1.1"
+ xmlns="http://www.w3.org/2000/svg"
+ xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+ xmlns:xlink="http://www.w3.org/1999/xlink"
+ style="text-rendering:auto;shape-rendering:crispEdges"
+ onload='Init(evt)' onmousedown='Grab(evt)' onmousemove='Drag(evt)' onmouseup='Drop(evt)' >
+<!-- SVG GUI objects are downloaded from "http://www.carto.net/papers/svg/gui" -->
+<title>SpectrumSVG: %SCAN_NAME_STRING%</title>
+<script><![CDATA[
+	var SVGns = "http://www.w3.org/2000/svg"
+	var SVGDocument = null;
+	var SVGRoot = null;
+	var myMapApp;
+
+	var scanName = "%SCAN_NAME_STRING%";
+	var PrecursorMz = %PRECURSOR_MZ%;
+	var PrecursorCharge = %PRECURSOR_CHARGE%;
+	var Peaks = %PEAK_ARRAY_ASCENDING_BY_MZ%; 
+	var PeaksByIntensity = %PEAK_INDEX_DESCENDING_BY_INTENSITY%;
+	var NumPeaks = %NUM_PEAKS%;
+
+	var IntensityRankFilter;
+	var IntensityFilter;
+
+	var NumChargeStates = %NUM_CHARGE_STATES%;
+	var FragmentMzTolerance = %FRAGMENT_MZ_TOLERANCE%;
+	var IsotopeMzTolerance = %ISOTOPE_MZ_TOLERANCE%;
+	var PROTON = 1.007276;
+	var NumFragmentChargeStates = PrecursorCharge-1;
+
+	var PixelToPeakMap = new Array;
+	var HighlightedPixels = new Array;
+	var PixelWithPeak = null;
+	var DisplayWidth;
+	var FullWidth;
+	var FullHeight;
+	var LeftMargin = 40;
+	var RightMargin = 40;
+	var TopMargin = 15;
+	var BottomMargin = 60;
+	var VerticalScaleFactor = 0.75;
+	var BaseLine;
+	var Xscaling;
+	var Yscaling;
+	var ZoomLevels = new Array;
+	var LoMZ;
+	var HiMZ;
+	var MaxInten;
+	var LabelToMajorTickRatio;
+
+	var BackDrop;
+	var GraphicsContainerElement = null;
+	var InteractiveOnlyContainer = null;
+
+	var GrabPoint;
+	var GrabPixelWithPeak;
+	var DragPoint;
+	var LastDragPoint;
+	var DragLine;
+
+	var GrabViewOn = false;
+	var GrabViewCount = 0;
+
+	var ComplementArcList = new Array;
+
+	var TagArcList = new Array;
+	var MaxTagCount = 25;
+
+	var IsotopeArcList = new Array;
+	var MaxIsotopeCount = 4;
+
+	var SelectedTool;
+	var UndoZoomTool;
+	var ZoomTool;
+	var DeNovoTool;
+	var PrintTool;
+	var GrabViewTool;
+
+	var Toolbox = new Object;
+	var FilterOptions = new Object;
+	var DeNovoOptions = new Object;
+	var LabelOptions = { styles:{"font-family":"Courier New,monospace", "font-size":"10pt", "text-anchor":"middle"} };
+
+	var DebugText1;
+	var DebugText2;
+
+	function round( number, precision )
+	{
+		var multiplier = Math.pow( 10, precision );
+		return Math.round( number*multiplier ) / multiplier;
+	}
+
+	var ResidueMassToNameMap = new Array();
+	function GetResidueByMass( mass, tolerance )
+	{
+		for( var r in ResidueMassToNameMap )
+		{
+			var r_mass = parseFloat(r);
+			if( (r_mass - tolerance) < mass && (r_mass + tolerance) > mass )
+				return ResidueMassToNameMap[r];
+		}
+		return null;
+	}
+
+	function CalculateComplementMz( IonMz, IonCharge )
+	{
+		var chargedPrecursorMass = ( PrecursorMz * PrecursorCharge );
+		var chargedFragmentMass = IonMz * IonCharge;
+		var chargedComplementMass = chargedPrecursorMass - chargedFragmentMass;
+		var complementCharge = PrecursorCharge - IonCharge;
+		return chargedComplementMass / complementCharge;
+	}
+
+	function PixelToMz(x)
+	{
+		return (x - LeftMargin) / Xscaling + LoMZ;
+	}
+
+	function MzToPixel(mz)
+	{
+		return Math.ceil( LeftMargin + (Xscaling * (mz - LoMZ)) );
+	}
+
+	function GetPeakNearPixel(x, pixelTolerance, preferIntensity)
+	{
+		if( PixelToPeakMap[x] == null )
+			return null;
+		if( preferIntensity != null && preferIntensity == true )
+		{
+			var bestIntensity = 0;
+			for( var x2 = Math.max( 0, x - pixelTolerance ); x2 <= Math.min( FullWidth-1, x + pixelTolerance ); ++x2 )
+				if( PixelToPeakMap[x2][0] != null &&
+				    Peaks[ PixelToPeakMap[x2][0] ][1] > bestIntensity )
+				{
+					PeakIndex = PixelToPeakMap[x2][0];
+					bestIntensity = Peaks[ PixelToPeakMap[x2][0] ][1];
+				}
+		} else
+		{
+			var PeakIndex = PixelToPeakMap[x][0];
+			if( PeakIndex == null )
+				for( var i=1; i < pixelTolerance; ++i )
+				{
+					PeakIndex = PixelToPeakMap[x+i][0];
+					if( PeakIndex != null )
+						break;
+					PeakIndex = PixelToPeakMap[x-i][0];
+					if( PeakIndex != null )
+						break;
+				}
+		}
+		if( PeakIndex != null )
+			return Peaks[PeakIndex];
+		else
+			return null;
+	}
+
+	function GetPeakNearMz(mz, mzTolerance, preferIntensity)
+	{
+		var bestPeak = null;
+		var lowMzLimit = mz - mzTolerance;
+		var highMzLimit = mz + mzTolerance;
+		var lowPixel = MzToPixel(lowMzLimit);
+		var highPixel = MzToPixel(highMzLimit);
+		if( lowPixel < LeftMargin || highPixel > FullWidth-RightMargin )
+			return null;
+		if( preferIntensity != null && preferIntensity == true )
+		{
+			var bestIntensity = 0;
+			for( var x = lowPixel; x <= highPixel; ++x )
+				if( PixelToPeakMap[x][0] != null &&
+				    Peaks[ PixelToPeakMap[x][0] ][1] > bestIntensity &&
+				    Math.abs( Peaks[ PixelToPeakMap[x][0] ][0] - mz ) <= mzTolerance )
+				{
+					bestPeak = Peaks[ PixelToPeakMap[x][0] ];
+					bestIntensity = Peaks[ PixelToPeakMap[x][0] ][1];
+				}
+		} else
+		{
+			var bestMzError = mzTolerance;
+			for( var x = lowPixel; x <= highPixel; ++x )
+				for( var i = 0; i < PixelToPeakMap[x].length; ++i )
+					if( PixelToPeakMap[x][i] != null &&
+					    Math.abs( Peaks[ PixelToPeakMap[x][i] ][0] - mz ) < bestMzError )
+					{
+						bestPeak = Peaks[ PixelToPeakMap[x][i] ];
+						bestMzError = Math.abs( Peaks[ PixelToPeakMap[x][i] ][0] - mz );
+					}
+			if( bestMzError > mzTolerance )
+				bestPeak = null;
+		}
+		return bestPeak;
+	}
+
+	function Init(evt)
+	{
+		SVGDocument = evt.target.ownerDocument;
+		SVGRoot = SVGDocument.documentElement;
+		SVGRoot.addEventListener( 'keypress', HandleKeypress, false );
+		myMapApp = new mapApp(false,Resize);
+		myMapApp.resizeTimer = new Timer(myMapApp);
+		myMapApp.DoResize = DoResize;
+		myMapApp.DelayInit = DelayInit;
+
+		if( NumPeaks > 0 )
+		{
+			if( PrecursorMz == 0 )
+				LoMZ = Peaks[0][0];
+			else
+				LoMZ = Peaks[1][0];
+			HiMZ = Peaks[Peaks.length-1][0];
+		} else
+		{
+			LoMZ = 0;
+			HiMZ = 1000;
+		}
+		ZoomLevels[0] = [ LoMZ, HiMZ ];
+
+		IntensityRankFilter = Peaks.length;
+		IntensityFilter = Peaks[PeaksByIntensity[PeaksByIntensity.length-1]-1][1];
+
+		for( var i=0; i < NumPeaks; ++i )
+			if( Peaks[i][2] == null )
+				Peaks[i][2] = new Object;
+
+		var SVGArgs = window.location.toString().split('?');
+		if( SVGArgs.length > 1 )
+		{
+			SVGArgs = SVGArgs[1].split('&');
+			for( var i=0; i < SVGArgs.length; ++i )
+			{
+				var KeyValuePair = SVGArgs[i].split('=');
+				if( KeyValuePair[0] == "LoMZ" )
+					LoMZ = parseFloat(KeyValuePair[1]);
+				else if( KeyValuePair[0] == "HiMZ" )
+					HiMZ = parseFloat(KeyValuePair[1]);
+			}
+
+			if( LoMZ != ZoomLevels[0][0] || HiMZ != ZoomLevels[0][1] )
+				ZoomLevels[1] = [ LoMZ, HiMZ ];
+		}
+
+		GrabPoint = SVGRoot.createSVGPoint();
+		DragPoint = SVGRoot.createSVGPoint();
+		LastDragPoint = SVGRoot.createSVGPoint();
+
+		ResidueMassToNameMap[ 57.02 ] = "G";
+		ResidueMassToNameMap[ 71.04 ] = "A";
+		ResidueMassToNameMap[ 87.03 ] = "S";
+		ResidueMassToNameMap[ 97.05 ] = "P";
+		ResidueMassToNameMap[ 99.07 ] = "V";
+		ResidueMassToNameMap[ 101.05 ] = "T";
+		ResidueMassToNameMap[ 103.01 ] = "C";
+		ResidueMassToNameMap[ 113.08 ] = "I/L";
+		ResidueMassToNameMap[ 114.04 ] = "N";
+		ResidueMassToNameMap[ 115.03 ] = "D";
+		ResidueMassToNameMap[ 128.06 ] = "Q";
+		ResidueMassToNameMap[ 128.09 ] = "K";
+		ResidueMassToNameMap[ 129.04 ] = "E";
+		ResidueMassToNameMap[ 131.04 ] = "M";
+		ResidueMassToNameMap[ 137.06 ] = "H";
+		ResidueMassToNameMap[ 147.07 ] = "F";
+		ResidueMassToNameMap[ 156.10 ] = "R";
+		ResidueMassToNameMap[ 163.06 ] = "Y";
+		ResidueMassToNameMap[ 186.08 ] = "W";
+
+		PixelWithPeak = null;
+
+		GraphicsContainerElement = SVGDocument.createElementNS(SVGns, "g");
+		InteractiveOnlyContainer = SVGDocument.createElementNS(SVGns, "g");
+		SVGRoot.appendChild(GraphicsContainerElement);
+
+		BackDrop = SVGDocument.createElementNS(SVGns, "rect");
+		BackDrop.setAttributeNS( null, "x", 0 );
+		BackDrop.setAttributeNS( null, "y", 0 );
+		BackDrop.setAttributeNS( null, "fill", "white" );
+
+		DebugText1 = SVGDocument.createTextNode("");
+		var renderText2 = SVGDocument.createElementNS(SVGns, "text");
+		renderText2.setAttributeNS( null, "x", LeftMargin );
+		renderText2.setAttributeNS( null, "y", TopMargin+25 );
+		renderText2.appendChild(DebugText1);
+		InteractiveOnlyContainer.appendChild(renderText2);
+
+		DebugText2 = SVGDocument.createTextNode("");
+		var renderText3 = SVGDocument.createElementNS(SVGns, "text");
+		renderText3.setAttributeNS( null, "x", LeftMargin );
+		renderText3.setAttributeNS( null, "y", TopMargin+50 );
+		renderText3.appendChild(DebugText2);
+		InteractiveOnlyContainer.appendChild(renderText3);
+
+		var tooltipGroup = SVGDocument.createElementNS(SVGns, "g");
+		tooltipGroup.setAttributeNS( null, "id", "tooltipGroup" );
+		SVGRoot.appendChild(tooltipGroup);
+
+		DeNovoOptions.group = SVGDocument.createElementNS(SVGns, "svg");
+		DeNovoOptions.group.setAttributeNS( null, "id", "DeNovoOptions" );
+		DeNovoOptions.group.setAttributeNS( null, "overflow", "visible" );
+
+		DeNovoOptions.ShowComplementsLabel = SVGDocument.createElementNS(SVGns, "text");
+		DeNovoOptions.ShowComplementsLabel.appendChild( SVGDocument.createTextNode("Show complement ions:") );
+		DeNovoOptions.ShowComplementsLabel.setAttributeNS( null, "text-anchor", "end" );
+		DeNovoOptions.ShowComplementsLabel.setAttributeNS( null, "x", 274 );
+		DeNovoOptions.group.appendChild( DeNovoOptions.ShowComplementsLabel );
+		DeNovoOptions.ShowComplements = new checkBox("DeNovoOptions.ShowComplements",DeNovoOptions.group,292,8,"checkBoxRect","checkBoxCross",true,"",0,0,0,0,ApplyDeNovoOptions);
+
+		DeNovoOptions.ShowTagsLabel = SVGDocument.createElementNS(SVGns, "text");
+		DeNovoOptions.ShowTagsLabel.appendChild( SVGDocument.createTextNode("Show sequence tags:") );
+		DeNovoOptions.ShowTagsLabel.setAttributeNS( null, "text-anchor", "end" );
+		DeNovoOptions.ShowTagsLabel.setAttributeNS( null, "x", 274 );
+		DeNovoOptions.group.appendChild( DeNovoOptions.ShowTagsLabel );
+		DeNovoOptions.ShowTags = new checkBox("DeNovoOptions.ShowTags",DeNovoOptions.group,292,39,"checkBoxRect","checkBoxCross",true,"",0,0,0,0,ApplyDeNovoOptions);
+
+		DeNovoOptions.ShowIsotopesLabel = SVGDocument.createElementNS(SVGns, "text");
+		DeNovoOptions.ShowIsotopesLabel.appendChild( SVGDocument.createTextNode("Show isotopic series:") );
+		DeNovoOptions.ShowIsotopesLabel.setAttributeNS( null, "text-anchor", "end" );
+		DeNovoOptions.ShowIsotopesLabel.setAttributeNS( null, "x", 274 );
+		DeNovoOptions.group.appendChild( DeNovoOptions.ShowIsotopesLabel );
+		DeNovoOptions.ShowIsotopes = new checkBox("DeNovoOptions.ShowIsotopes",DeNovoOptions.group,292,70,"checkBoxRect","checkBoxCross",true,"",0,0,0,0,ApplyDeNovoOptions);
+
+		FilterOptions.group = SVGDocument.createElementNS(SVGns, "svg");
+		FilterOptions.group.setAttributeNS( null, "id", "FilterOptions" );
+		FilterOptions.group.setAttributeNS( null, "overflow", "visible" );
+
+		FilterOptions.ShowPeakMZsLabel = SVGDocument.createElementNS(SVGns, "text");
+		FilterOptions.ShowPeakMZsLabel.appendChild( SVGDocument.createTextNode("ShowPeakMZs:") );
+		FilterOptions.ShowPeakMZsLabel.setAttributeNS( null, "text-anchor", "end" );
+		FilterOptions.ShowPeakMZsLabel.setAttributeNS( null, "x", 274 );
+		FilterOptions.group.appendChild( FilterOptions.ShowPeakMZsLabel );
+		FilterOptions.ShowPeakMZs = new checkBox("FilterOptions.ShowPeakMZs",FilterOptions.group,292,8,"checkBoxRect","checkBoxCross",true,"",0,0,0,0,ApplyFilterOptions);
+
+		var textStyles = {"font-family":"Arial,Helvetica","font-size":16,"fill":"black"};
+		var boxStyles = {"fill":"white","stroke":"black","stroke-width":1.5};
+		var cursorStyles = {"stroke":"red","stroke-width":1.5};
+		var selBoxStyles = {"fill":"blue","opacity":0.5};
+		FilterOptions.MaxPeakCountLabel = SVGDocument.createElementNS(SVGns, "text");
+		FilterOptions.MaxPeakCountLabel.appendChild( SVGDocument.createTextNode("MaxPeakCount:") );
+		FilterOptions.MaxPeakCountLabel.setAttributeNS( null, "text-anchor", "end" );
+		FilterOptions.MaxPeakCountLabel.setAttributeNS( null, "x", 230 );
+		FilterOptions.group.appendChild( FilterOptions.MaxPeakCountLabel );
+		FilterOptions.MaxPeakCount = new textbox("FilterOptions.MaxPeakCount",FilterOptions.group,NumPeaks-1,6,240,26,60,25,20,textStyles,boxStyles,cursorStyles,selBoxStyles,"[0-9]", ApplyFilterOptions);
+
+		FilterOptions.MinPeakIntensityLabel = SVGDocument.createElementNS(SVGns, "text");
+		FilterOptions.MinPeakIntensityLabel.appendChild( SVGDocument.createTextNode("MinPeakIntensity:") );
+		FilterOptions.MinPeakIntensityLabel.setAttributeNS( null, "text-anchor", "end" );
+		FilterOptions.MinPeakIntensityLabel.setAttributeNS( null, "x", 200 );
+		FilterOptions.group.appendChild( FilterOptions.MinPeakIntensityLabel );
+		var LeastIntensePeak = Peaks[PeaksByIntensity[PeaksByIntensity.length-1]-1];
+		FilterOptions.MinPeakIntensity = new textbox("FilterOptions.MinPeakIntensity",FilterOptions.group,LeastIntensePeak[1],50,210,61,90,25,20,textStyles,boxStyles,cursorStyles,selBoxStyles,"[0-9.]", ApplyFilterOptions);
+
+		myMapApp.resizeTimer.setTimeout("DelayInit", 100);
+	}
+
+	function DelayInit()
+	{
+		var testLabelText = SVGDocument.createTextNode("");
+		var testLabel = SVGDocument.createElementNS(SVGns, "text");
+		testLabel.appendChild(testLabelText);
+		testLabel.setAttributeNS(null, "x", 0);
+		testLabel.setAttributeNS(null, "y", 0);
+		for( var property in LabelOptions.styles )
+			testLabel.setAttributeNS(null, property, LabelOptions.styles[property]);
+		SVGRoot.appendChild(testLabel);
+		LabelOptions.MaxCharHeight = 0;
+		LabelOptions.MaxCharWidth = 0;
+		for( var c=0; c < 10; ++c )
+		{
+			testLabelText.data = "";
+			for( var i=0; i < 10; ++i )
+				testLabelText.data += c;
+			var extent = testLabel.getBBox();
+			LabelOptions.MaxCharHeight = Math.max( LabelOptions.MaxCharHeight, extent.height );
+			LabelOptions.MaxCharWidth = Math.max( LabelOptions.MaxCharWidth, extent.width / testLabelText.data.length );
+		}
+		LabelOptions.MaxCharHeight = Math.ceil( LabelOptions.MaxCharHeight );
+		LabelOptions.MaxCharWidth = Math.ceil( LabelOptions.MaxCharWidth );
+		//alert(LabelOptions.MaxCharHeight + " " + LabelOptions.MaxCharWidth);
+		SVGRoot.removeChild(testLabel);
+
+		SVGRoot.appendChild(DeNovoOptions.group);
+		DeNovoOptions.ShowComplementsLabel.setAttributeNS( null, "y", (DeNovoOptions.ShowComplementsLabel.getBBox().height+16)/2-2 );
+		DeNovoOptions.ShowTagsLabel.setAttributeNS( null, "y", 29+(DeNovoOptions.ShowTagsLabel.getBBox().height+16)/2 );
+		DeNovoOptions.ShowIsotopesLabel.setAttributeNS( null, "y", 58+(DeNovoOptions.ShowTagsLabel.getBBox().height+16)/2+2 );
+		SVGRoot.removeChild(DeNovoOptions.group);
+
+		SVGRoot.appendChild(FilterOptions.group);
+		FilterOptions.ShowPeakMZsLabel.setAttributeNS( null, "y", (FilterOptions.ShowPeakMZsLabel.getBBox().height+16)/2 );
+		FilterOptions.MaxPeakCountLabel.setAttributeNS( null, "y", 26+(FilterOptions.MaxPeakCountLabel.getBBox().height+25)/2 );
+		FilterOptions.MinPeakIntensityLabel.setAttributeNS( null, "y", 61+(FilterOptions.MinPeakIntensityLabel.getBBox().height+25)/2 );
+		SVGRoot.removeChild(FilterOptions.group);
+
+		Draw();
+		var tooltipTextStyles = {"font-family":"Arial,Helvetica","fill":"black","font-size":12};
+		var tooltipRectStyles = {"fill":"LightYellow","stroke":"black"};
+		myMapApp.initTooltips("tooltipGroup",tooltipTextStyles,tooltipRectStyles,3,30,3);
+		myMapApp.addTooltip("UndoZoomTool","Undo zoom",true,false,"currentTarget",undefined);
+		myMapApp.addTooltip("ZoomTool","Zoom",true,false,"currentTarget",undefined);
+		myMapApp.addTooltip("DeNovoTool","De novo",true,false,"currentTarget",undefined);
+		myMapApp.addTooltip("GrabViewTool","Grab/Scroll view",true,false,"currentTarget",undefined);
+		myMapApp.addTooltip("OptionsTool","Change display options",true,false,"currentTarget",undefined);
+		myMapApp.addTooltip("PrintTool","Print",true,false,"currentTarget",undefined);
+	}
+
+	function UndoZoom()
+	{
+		if( ZoomLevels.length > 1 )
+		{
+			LoMZ = ZoomLevels[ ZoomLevels.length-2 ][0];
+			HiMZ = ZoomLevels[ ZoomLevels.length-2 ][1];
+			--ZoomLevels.length;
+			//window.location.replace(window.location.href.split('?')[0]+"?LoMZ="+LoMZ+"&HiMZ="+HiMZ);
+			PixelWithPeak = null;
+			GrabPixelWithPeak = null;
+			Draw();
+		}
+	}
+
+	function Grab(evt)
+	{
+		if( !BackDrop.hasFocus )
+			return;
+		//evt.preventDefault();
+		if( evt.button == 0 )
+		{
+			GrabPoint.x = evt.clientX;
+			GrabPoint.y = evt.clientY;
+			DragPoint.x = GrabPoint.x;
+			DragPoint.y = GrabPoint.y;
+
+			if( SelectedTool == GrabViewTool )
+			{
+				GrabViewOn = true;
+				myMapApp.GrabViewTimerRunning = null;
+				return;
+			} else if( SelectedTool == DeNovoTool && PixelWithPeak != null )
+				GrabPixelWithPeak = PixelWithPeak;
+
+			DragLine = SVGDocument.createElementNS(SVGns, "line");
+			DragLine.setAttributeNS( null, "stroke", "black" );
+			DragLine.setAttributeNS( null, "x1", GrabPoint.x );
+			DragLine.setAttributeNS( null, "y1", GrabPoint.y );
+			DragLine.setAttributeNS( null, "x2", GrabPoint.x );
+			DragLine.setAttributeNS( null, "y2", GrabPoint.y );
+			GraphicsContainerElement.appendChild(DragLine);
+
+		} else if( evt.button == 1 )
+		{
+			UndoZoom();
+		}
+	}
+
+	function HighlightPeak(peak)
+	{
+		peak.peakNode.setAttributeNS( null, "stroke", "black" );
+		if( peak.width != null )
+			peak.peakNode.setAttributeNS( null, "stroke-width", peak.width+1 );
+		else
+			peak.peakNode.setAttributeNS( null, "stroke-width", 2 );
+		if( peak.labelNode != null )
+			peak.labelNode.setAttributeNS( null, "fill", "black" );
+	}
+
+	function UnhighlightPeak(peak)
+	{
+		peak.peakNode.setAttributeNS( null, "stroke", peak.color );
+		if( peak.width != null )
+			peak.peakNode.setAttributeNS( null, "stroke-width", peak.width );
+		else
+			peak.peakNode.setAttributeNS( null, "stroke-width", 1 );
+		if( peak.labelNode != null )
+			peak.labelNode.setAttributeNS( null, "fill", peak.color );
+	}
+
+	function DoGrabView()
+	{
+		if( GrabViewOn && Math.abs(GrabViewCount) > 3 )
+		{
+			var MZrange = HiMZ - LoMZ;
+			for( var div=10000; div > 0.0001; div /= 10 ) { if( MZrange / div >= 10 ) break; }
+			var GrabViewSpeed = div / LabelToMajorTickRatio;
+			if( GrabViewCount < 0 )
+			{
+				LoMZ -= GrabViewSpeed;
+				HiMZ -= GrabViewSpeed;
+			} else
+			{
+				LoMZ += GrabViewSpeed;
+				HiMZ += GrabViewSpeed;
+			}
+			Draw();
+			DragLine = SVGDocument.createElementNS(SVGns, "line");
+			GraphicsContainerElement.appendChild(DragLine);
+			DragLine.setAttributeNS( null, "stroke", "black" );
+			DragLine.setAttributeNS( null, "x1", GrabPoint.x );
+			DragLine.setAttributeNS( null, "y1", GrabPoint.y );
+			DragLine.setAttributeNS( null, "y2", GrabPoint.y );
+			DragLine.setAttributeNS( null, "x2", DragPoint.x );
+			myMapApp.resizeTimer.setTimeout("DoGrabView", myMapApp.GrabViewSpeed);
+		} else
+			myMapApp.GrabViewTimerRunning = null;
+	}
+
+	function Drag(evt)
+	{
+		LastDragPoint.x = DragPoint.x;
+		DragPoint.x = evt.clientX;
+		DragPoint.y = evt.clientY;
+
+		if( SelectedTool == GrabViewTool && GrabViewOn )
+		{
+			GrabViewCount = DragPoint.x - GrabPoint.x;
+			var GrabWidth = round( Math.abs( GrabViewCount ) / FullWidth * 100, 0 );
+			if( GrabWidth < 5 )
+				myMapApp.GrabViewSpeed = 500;
+			else if( GrabWidth < 10 )
+				myMapApp.GrabViewSpeed = 300;
+			else if( GrabWidth < 20 )
+				myMapApp.GrabViewSpeed = 200;
+			else if( GrabWidth < 40 )
+				myMapApp.GrabViewSpeed = 100;
+			else if( GrabWidth < 60 )
+				myMapApp.GrabViewSpeed = 35;
+			else if( GrabWidth < 80 )
+				myMapApp.GrabViewSpeed = 20;
+			else
+				myMapApp.GrabViewSpeed = 10;
+			myMapApp.DoGrabView = DoGrabView;
+			if( DragLine == null )
+			{
+				DragLine = SVGDocument.createElementNS(SVGns, "line");
+				GraphicsContainerElement.appendChild(DragLine);
+				DragLine.setAttributeNS( null, "stroke", "black" );
+				DragLine.setAttributeNS( null, "x1", GrabPoint.x );
+				DragLine.setAttributeNS( null, "y1", GrabPoint.y );
+				DragLine.setAttributeNS( null, "y2", GrabPoint.y );
+			}
+			DragLine.setAttributeNS( null, "x2", DragPoint.x );
+			if( myMapApp.GrabViewTimerRunning == null )
+			{
+				myMapApp.GrabViewTimerRunning = true;
+				myMapApp.resizeTimer.setTimeout("DoGrabView", 10);
+			}
+			return;
+		}
+
+		// highlight peak under mouse
+		if( SelectedTool == ZoomTool && DragLine == null ||
+		    SelectedTool == DeNovoTool ||
+		    SelectedTool == FilterTool )
+		{
+			var NewPixelWithPeak = GetPeakNearPixel( DragPoint.x, 2, true );
+			if( NewPixelWithPeak != null )
+				NewPixelWithPeak = NewPixelWithPeak[2].pixel;
+
+			// was on peak, now on same peak: do nothing
+			if( !(PixelWithPeak != null && NewPixelWithPeak != null && PixelWithPeak == NewPixelWithPeak) )
+			{
+				// now on a peak
+				if( NewPixelWithPeak != null )
+				{
+					// was on a peak
+					for( var i=0; i < HighlightedPixels.length; ++i )
+						if( HighlightedPixels[i] != GrabPixelWithPeak )
+							UnhighlightPeak( Peaks[ PixelToPeakMap[HighlightedPixels[i]][0] ][2] );
+	
+					HighlightedPixels.length = 0;
+					if( GrabPixelWithPeak != null )
+						HighlightedPixels.push(GrabPixelWithPeak);
+
+					PixelWithPeak = NewPixelWithPeak;
+					var CurPeakIndex = PixelToPeakMap[ PixelWithPeak ][0];
+					HighlightPeak( Peaks[CurPeakIndex][2] );
+					HighlightedPixels.push(PixelWithPeak);
+					if( Peaks[CurPeakIndex][2].labelNode != null )
+						Peaks[CurPeakIndex][2].labelNode.setAttributeNS( null, "fill", "black" );
+					DebugText1.data = "Observed peak: m/z=" + Peaks[CurPeakIndex][0] + "  intensity=" + Peaks[CurPeakIndex][1];
+					if( Peaks[CurPeakIndex][2].label != null )
+						DebugText1.data += "  (" + Peaks[CurPeakIndex][2].label + ")";
+					DebugText2.data = "";
+
+					if( SelectedTool == DeNovoTool )
+					{
+						if( DeNovoOptions.ShowComplements.checkedStatus )
+						{
+							if( ComplementArcList.length > 0 )
+								for( var i=0; i < ComplementArcList.length; ++i )
+									InteractiveOnlyContainer.removeChild( ComplementArcList[i] );
+							ComplementArcList.length = 0;
+							for( var z=1; z <= NumFragmentChargeStates; ++z )
+							{
+								var ComplementPeakMz = CalculateComplementMz( Peaks[CurPeakIndex][0], z );
+								var ComplementPeak = GetPeakNearMz( ComplementPeakMz, FragmentMzTolerance, true );
+								if( ComplementPeak != null )
+								{
+									HighlightPeak( ComplementPeak[2] );
+									HighlightedPixels.push( ComplementPeak[2].pixel );
+									DebugText1.data += "  (as +" + z + " fragment: +" + (PrecursorCharge-z) + " complement at " + ComplementPeak[0];
+									if( ComplementPeak[2].label != null )
+										DebugText1.data += " " + ComplementPeak[2].label;
+									DebugText1.data += ")";
+								}
+								var newComplementArc = MakeArcBetween( PixelWithPeak, MzToPixel( ComplementPeakMz ), BaseLine+1, 61 );
+								ComplementArcList.push(newComplementArc);
+								InteractiveOnlyContainer.appendChild(newComplementArc);
+							}
+						}
+						if( DeNovoOptions.ShowTags.checkedStatus )
+						{
+							if( TagArcList.length > 0 )
+								for( var i=0; i < TagArcList.length; ++i )
+									InteractiveOnlyContainer.removeChild( TagArcList[i] );
+							TagArcList.length = 0;
+							var tagCount;
+							DebugText2.data += "# of tags generated:";
+							for( var z=1; z <= NumFragmentChargeStates; ++z )
+							{
+								tagCount = 0;
+								for( var r in ResidueMassToNameMap )
+								{
+									var r_mass = parseFloat(r);
+									var r_name = ResidueMassToNameMap[r];
+		
+									var NextPeakMz = Peaks[CurPeakIndex][0] + r_mass/z;
+									var NextPeak = GetPeakNearMz( NextPeakMz, FragmentMzTolerance, true );
+									if( NextPeak != null )
+									{
+										for( var r2 in ResidueMassToNameMap )
+										{
+											var r2_mass = parseFloat(r2);
+											var r2_name = ResidueMassToNameMap[r2];
+				
+											var NextPeakMz2 = NextPeakMz + r2_mass/z;
+											var NextPeak2 = GetPeakNearMz( NextPeakMz2, FragmentMzTolerance, true );
+											if( NextPeak2 != null )
+											{
+												for( var r3 in ResidueMassToNameMap )
+												{
+													var r3_mass = parseFloat(r3);
+													var r3_name = ResidueMassToNameMap[r3];
+						
+													var NextPeakMz3 = NextPeakMz2 + r3_mass/z;
+													var NextPeak3 = GetPeakNearMz( NextPeakMz3, FragmentMzTolerance, true );
+													if( NextPeak3 != null )
+													{
+														++tagCount;
+														var intensity = Peaks[CurPeakIndex][1] * NextPeak[1] * NextPeak2[1] * NextPeak3[1];
+														HighlightPeak( NextPeak[2] );
+														HighlightedPixels.push( NextPeak[2].pixel );
+														var newTagArc = MakeArcBetween( PixelWithPeak, MzToPixel( NextPeakMz ), BaseLine+1, 61, {width:1,color:"red",opacity:"100"} );
+														TagArcList.push(newTagArc);
+														InteractiveOnlyContainer.appendChild(newTagArc);
+		
+														HighlightPeak( NextPeak2[2] );
+														HighlightedPixels.push( NextPeak2[2].pixel );
+														newTagArc = MakeArcBetween( MzToPixel(NextPeakMz), MzToPixel(NextPeakMz2), BaseLine+1, 41, {width:1,color:"orange",opacity:"75"} );
+														TagArcList.push(newTagArc);
+														InteractiveOnlyContainer.appendChild(newTagArc);
+														
+														HighlightPeak( NextPeak3[2] );
+														HighlightedPixels.push( NextPeak3[2].pixel );
+														newTagArc = MakeArcBetween( MzToPixel(NextPeakMz2), MzToPixel(NextPeakMz3), BaseLine+1, 21, {width:1,color:"yellow",opacity:"50"} );
+														TagArcList.push(newTagArc);
+														InteractiveOnlyContainer.appendChild(newTagArc);
+														
+														if( tagCount == MaxTagCount )
+															break;
+													}
+												}
+											}
+											if( tagCount == MaxTagCount )
+												break;
+										}
+									}
+									if( tagCount == MaxTagCount )
+										break;
+								}
+								DebugText2.data += " (at z=" + z + ": " + tagCount + ")";
+							}
+						}
+						if( DeNovoOptions.ShowIsotopes.checkedStatus )
+						{
+							if( IsotopeArcList.length > 0 )
+								for( var i=0; i < IsotopeArcList.length; ++i )
+									InteractiveOnlyContainer.removeChild( IsotopeArcList[i] );
+							IsotopeArcList.length = 0;
+							var isotopeCount;
+							DebugText2.data += " - - - # of isotopes:";
+							for( var z=1; z <= NumFragmentChargeStates; ++z )
+							{
+								var isotopePeakList = [ Peaks[CurPeakIndex] ];
+								isotopeCount = 0;
+								for( var i=0; i < MaxIsotopeCount; ++i )
+								{
+									var NextPeakMz = isotopePeakList[isotopePeakList.length-1][0] + PROTON/z;
+									var NextPeak = GetPeakNearMz( NextPeakMz, IsotopeMzTolerance, false );
+									if( NextPeak == null )
+										break;
+									isotopePeakList.push(NextPeak);
+									++isotopeCount;
+								}
+								for( var i=1; i < isotopePeakList.length; ++i )
+								{
+									var CurPeak = isotopePeakList[i-1];
+									var NextPeak = isotopePeakList[i];
+									if( NextPeak[2].peakNode == null )
+										break;
+									HighlightPeak( NextPeak[2] );
+									HighlightedPixels.push( NextPeak[2].pixel );
+									var newIsotopeArc = MakeArcBetween( CurPeak[2].pixel, NextPeak[2].pixel, BaseLine+1, 41, {width:1,color:"green"} );
+									IsotopeArcList.push(newIsotopeArc);
+									InteractiveOnlyContainer.appendChild(newIsotopeArc);
+								}
+								DebugText2.data += " (at z=" + z + ": " + isotopeCount + ")";
+							}
+						}
+					}
+					SVGRoot.forceRedraw();
+				}
+				// not on a peak now
+				else
+				{
+					// was on a peak
+					for( var i=0; i < HighlightedPixels.length; ++i )
+						if( HighlightedPixels[i] != GrabPixelWithPeak )
+							UnhighlightPeak( Peaks[PixelToPeakMap[HighlightedPixels[i]][0]][2] );
+					HighlightedPixels.length = 0;
+					if( GrabPixelWithPeak != null )
+						HighlightedPixels.push(GrabPixelWithPeak);
+
+					PixelWithPeak = null;
+					var CurMZ = PixelToMz(DragPoint.x);
+					CurMZ = round( CurMZ, 3 );
+					//DebugText1.data = "Cursor at: (" + DragPoint.x + "," + DragPoint.y + ")";
+					//DebugText1.data = "Cursor at m/z: " + CurMZ;
+					//DebugText2.data = "";
+					SVGRoot.forceRedraw();
+				}
+			}
+		}
+
+		// draw drag line
+		if( DragLine != null )
+		{
+			DragLine.setAttributeNS( null, "x2", DragPoint.x );
+			// ignore the change in y
+			//DragLine.setAttributeNS( null, "y2", DragPoint.y );
+
+			var CurLoMZ;
+			var CurHiMZ;
+			if( DragPoint.x < GrabPoint.x )
+			{
+				CurLoMZ = PixelToMz(DragPoint.x);
+				CurHiMZ = PixelToMz(GrabPoint.x);
+			} else
+			{
+				CurLoMZ = PixelToMz(GrabPoint.x);
+				CurHiMZ = PixelToMz(DragPoint.x);
+			}
+
+			CurLoMZ = round( CurLoMZ, 3 );
+			CurHiMZ = round( CurHiMZ, 3 );
+
+			if( GrabPixelWithPeak && PixelWithPeak )
+			{
+				var LeftPeak;
+				var RightPeak;
+				if( DragPoint.x < GrabPoint.x )
+				{
+					LeftPeak = PixelWithPeak;
+					RightPeak = GrabPixelWithPeak;
+				} else
+				{
+					LeftPeak = GrabPixelWithPeak;
+					RightPeak = PixelWithPeak;
+				}
+				var LeftPeakIndex = PixelToPeakMap[ LeftPeak ][0];
+				var RightPeakIndex = PixelToPeakMap[ RightPeak ][0];
+				var GapWidth = round( Peaks[ RightPeakIndex ][0] - Peaks[ LeftPeakIndex ][0], 3 );
+				DebugText1.data = "Left peak m/z: " + Peaks[ LeftPeakIndex ][0] + "   Right peak m/z: " + Peaks[ RightPeakIndex ][0] + "   Difference is: " + GapWidth;
+				DebugText2.data = "";
+
+				for( var z=1; z <= NumChargeStates; ++z )
+				{
+					var GapResidue = GetResidueByMass( GapWidth*z, FragmentMzTolerance );
+					if( GapResidue )
+						DebugText1.data += " (at z=" + z + ": approx. mass of " + GapResidue + ")";
+				}
+			} else
+			{
+				//DebugText1.data = "Grabbed at: (" + GrabPoint.x + "," + GrabPoint.y + ")" + "   Dragged to: (" + DragPoint.x + "," + DragPoint.y + ")"
+				DebugText1.data = "Grabbed at: " + CurLoMZ + "   Dragged to: " + CurHiMZ + "   Difference is: " + round( CurHiMZ - CurLoMZ, 3 );
+				DebugText2.data = "";
+			}
+		}
+	}
+
+	function Drop(evt)
+	{
+		if( !BackDrop.hasFocus )
+			return;
+		//evt.preventDefault();
+		if( GrabViewOn )
+		{
+			GrabViewOn = false;
+			if( DragLine )
+			{
+				GraphicsContainerElement.removeChild( DragLine );
+				DragLine = null;
+			}
+			Draw();
+			return;
+		}
+
+		if( DragLine )
+		{
+			GraphicsContainerElement.removeChild( DragLine );
+			DragLine = null;
+
+			if( SelectedTool == ZoomTool && Math.abs( DragPoint.x - GrabPoint.x ) > 2 )
+			{
+				var MZrange = HiMZ - LoMZ;
+				for( var div=10000; div > 0.0001; div /= 10 ) { if( MZrange / div >= 10 ) break; }
+
+				if( DragPoint.x < GrabPoint.x )
+				{
+					HiMZ = (GrabPoint.x - LeftMargin) / Xscaling + LoMZ;
+					LoMZ = (DragPoint.x - LeftMargin) / Xscaling + LoMZ;
+				} else
+				{
+					HiMZ = (DragPoint.x - LeftMargin) / Xscaling + LoMZ;
+					LoMZ = (GrabPoint.x - LeftMargin) / Xscaling + LoMZ;
+				}
+
+				LoMZ = Math.floor( LoMZ / div ) * div;
+				HiMZ = Math.ceil( HiMZ / div ) * div;
+				//window.location.replace(window.location.href.split('?')[0]+"?LoMZ="+LoMZ+"&HiMZ="+HiMZ);
+				ZoomLevels[ ZoomLevels.length ] = [ LoMZ, HiMZ ];
+				if( LoMZ < HiMZ )
+					Draw();
+			}
+			if( SelectedTool == DeNovoTool )
+			{
+				if( PixelWithPeak != null )
+				{
+					var OldPeakIndex = PixelToPeakMap[ PixelWithPeak ][0];
+					Peaks[OldPeakIndex][2].peakNode.setAttributeNS( null, "stroke", Peaks[OldPeakIndex][2].color );
+					if( Peaks[OldPeakIndex][2].width != null )
+						Peaks[OldPeakIndex][2].peakNode.setAttributeNS( null, "stroke-width", Peaks[OldPeakIndex][2].width );
+					else
+						Peaks[OldPeakIndex][2].peakNode.setAttributeNS( null, "stroke-width", 1 );
+					if( Peaks[OldPeakIndex][2].labelNode != null )
+						Peaks[OldPeakIndex][2].labelNode.setAttributeNS( null, "fill", Peaks[OldPeakIndex][2].color );
+				}
+
+				if( GrabPixelWithPeak != null )
+				{
+					var OldPeakIndex = PixelToPeakMap[ GrabPixelWithPeak ][0];
+					Peaks[OldPeakIndex][2].peakNode.setAttributeNS( null, "stroke", Peaks[OldPeakIndex][2].color );
+					if( Peaks[OldPeakIndex][2].width != null )
+						Peaks[OldPeakIndex][2].peakNode.setAttributeNS( null, "stroke-width", Peaks[OldPeakIndex][2].width );
+					else
+						Peaks[OldPeakIndex][2].peakNode.setAttributeNS( null, "stroke-width", 1 );
+					if( Peaks[OldPeakIndex][2].labelNode != null )
+						Peaks[OldPeakIndex][2].labelNode.setAttributeNS( null, "fill", Peaks[OldPeakIndex][2].color );
+				}
+			}
+			PixelWithPeak = null;
+			GrabPixelWithPeak = null;
+		}
+	}
+
+	function Resize(evt)
+	{
+		myMapApp.resizeTimer.clearTimeout();
+		myMapApp.resizeTimer.setTimeout("DoResize",200);
+	}
+
+	function DoResize()
+	{
+		Draw();
+	}
+
+	function Draw()
+	{
+		InitDrawing();
+		DrawTB();
+		DrawAxis();
+		DrawSpectrum();
+	}
+
+	function MakeArcBetween(x1, x2, y, height, styles)
+	{
+		var strokeColor = "black";
+		var strokeWidth = 2;
+		var strokeOpacity = "100%";
+		if( styles != null )
+		{
+			if( styles.color != null )
+				strokeColor = styles.color;
+			if( styles.width != null )
+				strokeWidth = styles.width;
+			if( styles.opacity != null )
+				strokeOpacity = styles.opacity;
+		}
+		var arc = SVGDocument.createElementNS(SVGns, "path");
+		arc.setAttributeNS( null, "d", "M"+x1+","+y+" C"+x1+","+(y+height)+" "+x2+","+(y+height)+" "+x2+","+y );
+		arc.setAttributeNS( null, "fill", "none" );
+		arc.setAttributeNS( null, "stroke", strokeColor );
+		arc.setAttributeNS( null, "stroke-width", strokeWidth );
+		//arc.setAttributeNS( null, "stroke-opacity", strokeOpacity );
+		return arc;
+	}
+
+	function InitDrawing()
+	{
+		HighlightedPixels.length = 0;
+
+		var n = GraphicsContainerElement.firstChild;
+		while( n != null )
+		{
+			var e = n;
+			n = n.nextSibling;
+			GraphicsContainerElement.removeChild(e);
+		}
+
+		FullWidth = window.innerWidth;
+		FullHeight = window.innerHeight;
+		DisplayWidth = FullWidth - RightMargin - LeftMargin;
+
+		for( var i=0; i < FullWidth; ++i )
+			PixelToPeakMap[i] = new Array;
+
+		DragLine = null;
+
+		BackDrop.setAttributeNS( null, "width", FullWidth );
+		BackDrop.setAttributeNS( null, "height", FullHeight );
+		GraphicsContainerElement.appendChild(BackDrop);
+		BackDrop.hasFocus = true;
+
+		DeNovoOptions.group.setAttributeNS( null, "x", FullWidth-RightMargin-300 );
+		DeNovoOptions.group.setAttributeNS( null, "y", 100 );
+
+		FilterOptions.group.setAttributeNS( null, "x", FullWidth-RightMargin-300 );
+		FilterOptions.group.setAttributeNS( null, "y", 100 );
+
+		GraphicsContainerElement.appendChild(InteractiveOnlyContainer);
+
+		var renderData1 = SVGDocument.createTextNode("Scan: " + scanName);
+		var renderText1 = SVGDocument.createElementNS(SVGns, "text");
+		renderText1.setAttributeNS( null, "x", LeftMargin );
+		renderText1.setAttributeNS( null, "y", TopMargin );
+		renderText1.appendChild(renderData1);
+		GraphicsContainerElement.appendChild(renderText1);
+	}
+
+	function HandleKeypress(evt)
+	{
+		if( !BackDrop.hasFocus )
+			return;
+		if( evt.keyCode )
+			var charCode = evt.keyCode;
+		else
+			var charCode = evt.charCode;
+		var key = String.fromCharCode(charCode);
+		//alert(evt.keyCode);
+		if( key >= "1" && key <= Toolbox.tools.length )
+		{
+			evt.preventDefault();
+			ActivateTool( parseInt(key)-1 );
+		}
+	}
+
+	function ApplyDeNovoOptions(id)
+	{
+		if( !DeNovoOptions.ShowComplements.checkedStatus )
+		{
+			if( ComplementArcList.length > 0 )
+				for( var i=0; i < ComplementArcList.length; ++i )
+					InteractiveOnlyContainer.removeChild(ComplementArcList[i]);
+			ComplementArcList.length = 0;
+		}
+
+		if( !DeNovoOptions.ShowTags.checkedStatus )
+		{
+			if( TagArcList.length > 0 )
+				for( var i=0; i < TagArcList.length; ++i )
+					InteractiveOnlyContainer.removeChild(TagArcList[i]);
+			TagArcList.length = 0;
+		}
+
+		if( !DeNovoOptions.ShowIsotopes.checkedStatus )
+		{
+			if( IsotopeArcList.length > 0 )
+				for( var i=0; i < IsotopeArcList.length; ++i )
+					InteractiveOnlyContainer.removeChild(IsotopeArcList[i]);
+			IsotopeArcList.length = 0;
+		}
+	}
+
+	function ApplyFilterOptions(id)
+	{
+		if( id == "FilterOptions.ShowPeakMZs" )
+		{
+			Draw();
+		} else if( BackDrop.hasFocus )
+		{
+			var OldIntensityRankFilter = IntensityRankFilter;
+			var inputValue = parseInt(FilterOptions.MaxPeakCount.getValue())+1;
+			IntensityRankFilter = Math.min(NumPeaks-1, inputValue);
+			if(inputValue != IntensityRankFilter)
+				FilterOptions.MaxPeakCount.setValue(IntensityRankFilter);
+
+			var OldIntensityFilter = IntensityFilter;
+			var inputValue = parseFloat(FilterOptions.MinPeakIntensity.getValue());
+			IntensityFilter = Math.max(0, inputValue);
+			if(inputValue != IntensityFilter)
+				FilterOptions.MinPeakIntensity.setValue(IntensityFilter);
+
+			if( IntensityRankFilter != OldIntensityRankFilter || IntensityFilter != OldIntensityFilter )
+				Draw();
+		}
+	}
+
+	function DeactivateTool(tool)
+	{
+		switch(tool)
+		{
+			case GrabViewTool:
+				BackDrop.style.cursor = null;
+				break;
+			case PrintTool:
+				GraphicsContainerElement.appendChild(InteractiveOnlyContainer);
+				myMapApp.enableTooltips();
+				break;
+			case FilterTool:
+				InteractiveOnlyContainer.removeChild(FilterOptions.group);
+				break;
+			case DeNovoTool:
+				InteractiveOnlyContainer.removeChild(DeNovoOptions.group);
+
+				if( ComplementArcList.length > 0 )
+					for( var i=0; i < ComplementArcList.length; ++i )
+						InteractiveOnlyContainer.removeChild(ComplementArcList[i]);
+				ComplementArcList.length = 0;
+
+				if( TagArcList.length > 0 )
+					for( var i=0; i < TagArcList.length; ++i )
+						InteractiveOnlyContainer.removeChild(TagArcList[i]);
+				TagArcList.length = 0;
+				
+				if( IsotopeArcList.length > 0 )
+					for( var i=0; i < IsotopeArcList.length; ++i )
+						InteractiveOnlyContainer.removeChild(IsotopeArcList[i]);
+				IsotopeArcList.length = 0;
+
+				break;
+		}
+	}
+
+	function ActivateTool(toolName)
+	{
+		var tool = Toolbox.tools[toolName];
+		if( tool != SelectedTool )
+			DeactivateTool(SelectedTool);
+
+		switch(tool)
+		{
+			case GrabViewTool:
+				BackDrop.style.cursor = "pointer";
+				break;
+			case FilterTool:
+				InteractiveOnlyContainer.appendChild(FilterOptions.group);
+				break;
+			case DeNovoTool:
+				InteractiveOnlyContainer.appendChild(DeNovoOptions.group);
+		}
+
+		if( tool == UndoZoomTool )
+		{
+			UndoZoomTool.container.setAttributeNS( null, "stroke", "red" );
+			UndoZoomTool.container.setAttributeNS( null, "stroke-width", "3" );
+			SVGRoot.forceRedraw();
+			UndoZoom();
+		} else if( SelectedTool != PrintTool && tool == PrintTool )
+		{
+			alert( "To print the graph as you see it from a browser, press \"Print Screen\" on your keyboard to copy the browser graphics to the clipboard, open a simple graphics editor (like MS Paint), and paste the clipboard contents there.  You'll probably want to size the browser window so that it is the same size as you want it to be printed.  After you click OK, the toolbox and text will be hidden.  Press number 2 to return to interactive mode." );
+			SelectedTool = PrintTool;
+			GraphicsContainerElement.removeChild(InteractiveOnlyContainer);
+			myMapApp.disableTooltips();
+			for( var i=0; i < HighlightedPixels.length; ++i )
+				if( HighlightedPixels[i] != GrabPixelWithPeak )
+					UnhighlightPeak( Peaks[PixelToPeakMap[HighlightedPixels[i]][0]][2] );
+	
+			HighlightedPixels.length = 0;
+			SVGRoot.forceRedraw();
+		} else
+		{
+			SelectedTool = Toolbox.tools[toolName];
+		}
+		DrawTB();
+	}
+
+	function AddTBTool(name, width, height)
+	{
+		var tool = new Object;
+		tool.group = SVGDocument.createElementNS(SVGns, "svg");
+		tool.group.setAttributeNS( null, "overflow", "visible" );
+		tool.group.setAttributeNS( null, "id", name + "Tool" );
+		tool.container = SVGDocument.createElementNS(SVGns, "rect");
+		tool.group.setAttributeNS( null, "x", Toolbox.margin * (Toolbox.tools.length+1) + width * Toolbox.tools.length );
+		tool.group.setAttributeNS( null, "y", Toolbox.margin );
+		tool.container.setAttributeNS( null, "width", width );
+		tool.container.setAttributeNS( null, "height", height );
+		tool.container.setAttributeNS( null, "fill", "white" );
+		tool.container.setAttributeNS( null, "stroke", "black" );
+		tool.icon = SVGDocument.createElementNS(SVGns, "use");
+		tool.icon.setAttributeNS( xlinkNS, "href", "#" + name + "ToolIcon" );
+		tool.group.setAttributeNS( null, "onclick", "ActivateTool('" + name + "')" );
+		tool.group.appendChild(tool.container);
+		tool.group.appendChild(tool.icon);
+		Toolbox.group.appendChild(tool.group);
+		Toolbox.tools[name] = tool;
+		Toolbox.tools[Toolbox.tools.length] = tool;
+		//++Toolbox.tools.length;
+		return tool;
+	}
+	
+	function DrawTB()
+	{
+		var ItemWidth = 32;
+		var ItemHeight = 32;
+		var ItemMargin = 5;
+		var NumItems = 6;
+		var RightCoord = FullWidth - RightMargin;
+		var LeftCoord = RightCoord - ItemMargin*(NumItems+1) - ItemWidth*NumItems;
+		var ElementWidth = RightCoord - LeftCoord;
+		var TopCoord = TopMargin;
+		var BottomCoord = TopCoord + ItemHeight + ItemMargin*2;
+		var ElementHeight = BottomCoord - TopCoord;
+
+		if( Toolbox.group == null )
+		{
+			Toolbox.group = SVGDocument.createElementNS(SVGns, "svg");
+			Toolbox.group.setAttributeNS( null, "overflow", "visible" );
+			Toolbox.container = SVGDocument.createElementNS(SVGns, "rect");
+			Toolbox.container.setAttributeNS( null, "width", ElementWidth );
+			Toolbox.container.setAttributeNS( null, "height", ElementHeight );
+			Toolbox.container.setAttributeNS( null, "fill", "navajowhite" );
+			Toolbox.container.setAttributeNS( null, "stroke", "black" );
+			Toolbox.group.appendChild(Toolbox.container);
+
+			Toolbox.tools = new Array;
+			Toolbox.margin = ItemMargin;
+
+			UndoZoomTool = AddTBTool( "UndoZoom", ItemWidth, ItemHeight );
+			ZoomTool = AddTBTool( "Zoom",ItemWidth, ItemHeight );
+			DeNovoTool = AddTBTool( "DeNovo", ItemWidth, ItemHeight );
+			GrabViewTool = AddTBTool( "GrabView", ItemWidth, ItemHeight );
+			FilterTool = AddTBTool( "Options", ItemWidth, ItemHeight );
+			PrintTool = AddTBTool( "Print", ItemWidth, ItemHeight );
+			SelectedTool = ZoomTool; // zoom tool is default
+			InteractiveOnlyContainer.appendChild(Toolbox.group);
+		}
+
+		Toolbox.group.setAttributeNS( null, "x", LeftCoord );
+		Toolbox.group.setAttributeNS( null, "y", TopCoord );
+
+		for( var i=0; i < Toolbox.tools.length; ++i )
+		{
+			var tool = Toolbox.tools[i];
+			tool.container.setAttributeNS( null, "stroke", "grey" );
+			tool.container.setAttributeNS( null, "stroke-width", "1" );
+		}
+		SelectedTool.container.setAttributeNS( null, "stroke", "red" );
+		SelectedTool.container.setAttributeNS( null, "stroke-width", "3" );
+	}
+
+	function DrawAxis()
+	{
+		var XCoord = LeftMargin;
+		var RightCoord = FullWidth - RightMargin;
+
+		// Calculate the MZ distance between low and high MZs
+		var MZrange = HiMZ - LoMZ;
+		if(MZrange == 0)
+		{
+			LoMZ -= 1;
+			HiMZ += 1;
+			MZrange = HiMZ - LoMZ;
+		}
+		for( var div=10000; div > 0.0001; div /= 10 ) { if( MZrange / div >= 10 ) break; }
+		LoMZ = Math.floor( LoMZ / div ) * div;
+		HiMZ = Math.ceil( HiMZ / div ) * div;
+		MZrange = HiMZ - LoMZ;
+
+		var pixelsPerChar = 11;
+		var decimals = Math.max( 0, Math.round( -Math.log(div) / Math.log(10) ) );
+		MZrange = round( MZrange, decimals );
+		var numMajorTicks = Math.round( MZrange / div );
+		var numLabelTicks = numMajorTicks;
+		LabelToMajorTickRatio = numLabelTicks / numMajorTicks;
+		var majorTicks = 0;
+		var labelTicks = 0;
+		var fullAxisLabel = LoMZ.toFixed(decimals);
+		for( var i=0, mz=LoMZ+div; i < numMajorTicks; ++i, mz+=div )
+			fullAxisLabel += " " + mz.toFixed(decimals);
+		while( (fullAxisLabel.length + numLabelTicks) * pixelsPerChar > DisplayWidth )
+		{
+			var fullAxisLabel = LoMZ.toFixed(decimals);
+			majorTicks = 1;
+			labelTicks = 1;
+			numLabelTicks = Math.floor( numLabelTicks / 2 );
+			if( numLabelTicks < 1 )
+			{
+				alert( "Cannot render." );
+				return;
+			}
+			LabelToMajorTickRatio = numLabelTicks / numMajorTicks;
+
+			for( var i=0, mz=LoMZ+div; i < numMajorTicks; ++i, mz+=div, ++majorTicks )
+				if( labelTicks / majorTicks <= LabelToMajorTickRatio )
+				{
+					++labelTicks;
+					fullAxisLabel += " " + mz.toFixed(decimals);
+				}
+		}
+
+		if( !GrabViewOn )
+		{
+			MaxInten = 0;
+			for( var i = 0; i < NumPeaks; ++i )
+			{
+				if( Peaks[i][0] >= LoMZ && Peaks[i][0] <= HiMZ )
+					if( Math.abs(Peaks[i][1]) > MaxInten )
+						MaxInten = Math.abs( Peaks[i][1] );
+			}
+		}
+
+		BaseLine = FullHeight - BottomMargin;
+		Xscaling = (FullWidth - LeftMargin - RightMargin) / MZrange;
+		Yscaling = (BaseLine - TopMargin) / MaxInten * VerticalScaleFactor;
+
+		var Xaxis = SVGDocument.createElementNS(SVGns, "line");
+		Xaxis.setAttributeNS( null, "x1", LeftMargin );
+		Xaxis.setAttributeNS( null, "x2", (FullWidth-RightMargin) );
+		Xaxis.setAttributeNS( null, "y1", BaseLine );
+		Xaxis.setAttributeNS( null, "y2", BaseLine );
+		Xaxis.setAttributeNS( null, "stroke", "black" );
+		GraphicsContainerElement.appendChild(Xaxis);
+
+		var majorTickWidth = div * Xscaling;
+		var MZvalue = LoMZ;
+		LabelToMajorTickRatio = numLabelTicks / numMajorTicks;
+		var majorTicks = 0;
+		var labelTicks = 0;
+		while( true )
+		{
+			var DisplayCoord = XCoord - LeftMargin;
+			var Length = 5;
+
+			if( labelTicks == 0 || labelTicks / majorTicks <= LabelToMajorTickRatio )
+			{
+				++labelTicks;
+				Length = 10;
+				var data = SVGDocument.createTextNode(MZvalue.toFixed(decimals));
+				var text = SVGDocument.createElementNS(SVGns, "text");
+				text.setAttributeNS( null, "x", XCoord );
+				text.setAttributeNS( null, "y", BaseLine+25 );
+				text.setAttributeNS( null, "fill", "black" );
+				text.setAttributeNS( null, "text-anchor", "middle" );
+				text.appendChild(data);
+				GraphicsContainerElement.appendChild(text);
+			}
+
+			++majorTicks;
+			var Xaxis = SVGDocument.createElementNS(SVGns, "line");
+			Xaxis.setAttributeNS( null, "x1", XCoord );
+			Xaxis.setAttributeNS( null, "x2", XCoord );
+			Xaxis.setAttributeNS( null, "y1", BaseLine );
+			Xaxis.setAttributeNS( null, "y2", BaseLine + Length );
+			Xaxis.setAttributeNS( null, "stroke", "black" );
+			GraphicsContainerElement.appendChild(Xaxis);
+
+			XCoord += majorTickWidth;
+			if( labelTicks > numLabelTicks )
+				break;
+			MZvalue += div;
+		}
+	}
+
+	function DrawSpectrum()
+	{
+		if( NumPeaks == 0 )
+			return;
+
+		var PeaksToDraw = new Array;
+		for( var i = 0; i < IntensityRankFilter; ++i )
+		{
+			var Peak = Peaks[PeaksByIntensity[i]-1];
+			Peak[2].peakNode = null;
+			if( Peak[0] >= LoMZ && Peak[0] <= HiMZ && ( Peak[2].height == null ? Peak[1] >= IntensityFilter : true ) )
+			{
+				var XCoord = MzToPixel( Peak[0] );
+				var width = Peak[2].width ? Peak[2].width : 1;
+				for( var x = 0; x < width; ++x )
+				{
+					var ExistingPeak = PixelToPeakMap[XCoord+x][0];
+					var ExistingPeakWidth = ExistingPeak ? ( Peaks[ExistingPeak][2].width ? Peaks[ExistingPeak][2].width : 1 ) : 1;
+					if( ExistingPeak == null )
+					{
+						Peak[2].pixel = XCoord;
+						PeaksToDraw.push(Peak);
+						break;
+					} else if( width > ExistingPeakWidth )
+					{
+						Peak[2].pixel = XCoord;
+						PeaksToDraw.push(Peak);
+						break;
+					}
+				}
+				for( var x = 0; x < width; ++x )
+					PixelToPeakMap[ XCoord+x ].push( PeaksByIntensity[i]-1 );
+			}
+		}
+
+		for( var i=0; i < PeaksToDraw.length; ++i )
+		{
+			var Peak = PeaksToDraw[i];
+			Peak[2].labelNode = null;
+			var x = Peak[2].pixel;
+			var PeakElement = SVGDocument.createElementNS(SVGns, "line");
+			PeakElement.setAttributeNS( null, "x1", x );
+			PeakElement.setAttributeNS( null, "x2", x );
+			var PeakBase = PeakBase = BaseLine - 0.5;
+			if( Peak[2].height != null )
+			{
+				if( Peak[2].height < 0 )
+					PeakBase = BaseLine + 0.5;
+				PeakElement.setAttributeNS( null, "y2", PeakBase - Peak[2].height );
+			} else
+				PeakElement.setAttributeNS( null, "y2", PeakBase - (Yscaling * Peak[1]) );
+			PeakElement.setAttributeNS( null, "y1", PeakBase );
+
+			if( Peak[2].color == null )
+				Peak[2].color = "grey";
+			PeakElement.setAttributeNS( null, "stroke", Peak[2].color );
+			if( Peak[2].width != null )
+				PeakElement.setAttributeNS( null, "stroke-width", Peak[2].width );
+			if( Peak[2].dasharray != null )
+			{
+				PeakElement.setAttributeNS( null, "stroke-dasharray", Peak[2].dasharray.join() );
+				PeakElement.setAttributeNS( null, "fill", "none" );
+			}
+
+			Peak[2].peakNode = PeakElement;
+			GraphicsContainerElement.appendChild(PeakElement);
+		}
+
+		var widestLabel = 0;
+		for( var i=0; i < PeaksToDraw.length; ++i )
+		{
+			var Peak = PeaksToDraw[i];
+			if( Peak != Peaks[ PixelToPeakMap[ Peak[2].pixel ][0] ] )
+				continue;
+			var x = Peak[2].pixel;
+			var y = parseInt( Peak[2].peakNode.getAttributeNS( null, "y2" ) );
+			Peak[2].labelLines = new Array;
+			Peak[2].labelHeight = 0;
+			Peak[2].labelWidth = 0;
+			if( Peak[2].label != null )
+			{
+				Peak[2].labelLines.push(Peak[2].label);
+				Peak[2].labelWidth = Peak[2].label.length/2;
+				Peak[2].labelHeight += LabelOptions.MaxCharHeight;
+			}
+
+			if( FilterOptions.ShowPeakMZs.checkedStatus )
+			{
+				Peak[2].labelLines.push(Peak[0].toFixed(2));
+				Peak[2].labelWidth = Math.max( Peak[2].labelWidth, Peak[0].toFixed(2).length/2 );
+				Peak[2].labelHeight += LabelOptions.MaxCharHeight;
+			}
+
+			if( Peak[2].labelLines.length == 0 )
+				continue;
+
+			var currTextXCoord = x;//parseInt( text.getAttributeNS( null, "x" ) );
+			var currTextYCoord = y - 5;//parseInt( text.getAttributeNS( null, "y" ) );
+			var labelWidth = Math.ceil(Peak[2].labelWidth*LabelOptions.MaxCharWidth);
+			var labelX1 = x - labelWidth;
+			var labelX2 = x + labelWidth;
+
+			var drawLabel = true;
+			for( var n = labelX1 - widestLabel; n <= labelX2 + widestLabel; ++n )
+			{
+				if( n < 0 || n >= FullWidth || n == x )
+					continue;
+				if( Peak[2].height != null && Peak[2].height < 0 )
+					break;
+				var peakIdx = PixelToPeakMap[n][0];
+				if( peakIdx != null )
+				{
+					var nextPeak = Peaks[peakIdx];
+					if( nextPeak[2].height != null && nextPeak[2].height < 0 )
+						continue;
+					if( nextPeak[2].labelNode != null )
+					{
+						var nextLabelWidth = Math.ceil(nextPeak[2].labelWidth)*LabelOptions.MaxCharWidth;
+						var nextLabelX1 = n - nextLabelWidth;
+						var nextLabelX2 = n + nextLabelWidth;
+						if( ( n < x && labelX1 <= nextLabelX2 ) ||
+						    ( n > x && labelX2 >= nextLabelX1 ) )
+						{
+							if( y - nextPeak[2].labelHeight <= parseInt( nextPeak[2].peakNode.getAttributeNS( null, "y2" ) ) )
+							{
+								drawLabel = false;
+								break;
+							}
+						}
+					}
+
+					if( n >= labelX1 && n <= labelX2 && currTextYCoord >= parseInt( nextPeak[2].peakNode.getAttributeNS( null, "y2" ) ) )
+					{
+						drawLabel = false;
+						break;
+					}
+				}
+			}
+
+			if( drawLabel )
+			{
+				var text = createMultiLineTextElement(Peak[2].labelLines,x);
+				text.setAttributeNS( null, "x", x );
+				if( Peak[2].height != null && Peak[2].height < 0 )
+					text.setAttributeNS( null, "y", y + 8 );
+				else
+					text.setAttributeNS( null, "y", y - Peak[2].labelHeight + "px" );
+				text.setAttributeNS( null, "fill", Peak[2].color );
+				for( var property in LabelOptions.styles )
+					text.setAttributeNS( null, property, LabelOptions.styles[property] );
+				GraphicsContainerElement.appendChild(text);
+				Peak[2].labelNode = text;
+				if( labelWidth > widestLabel )
+					widestLabel = labelWidth;
+			} else
+				Peak[2].labelNode = null;
+		}
+	}
+
+	function createMultiLineTextElement(lines,x)
+	{
+		var text = SVGDocument.createElementNS(SVGns, "text");
+		for( var i=0; i < lines.length; ++i )
+		{
+			var data = SVGDocument.createTextNode(lines[i]);
+			var span = SVGDocument.createElementNS(SVGns, "tspan");
+			span.appendChild(data);
+			span.setAttributeNS(null, "x", x);
+			span.setAttributeNS(null, "dy", (i*LabelOptions.MaxCharHeight+3) + "px");
+			text.appendChild(span);
+		}
+		return text;
+	}
+
+	function textbox(id,parentNode,defaultVal,maxChars,x,y,boxWidth,boxHeight,textYOffset,textStyles,boxStyles,cursorStyles,selBoxStyles,allowedChars,functionToCall)
+	{
+		var nrArguments = 15;
+		var createTextBox= true;
+		if(arguments.length == nrArguments)
+		{
+			this.id = id;
+			this.parentNode = parentNode;
+			this.maxChars = maxChars;
+			this.defaultVal = defaultVal.toString();
+			this.x = x;
+			this.y = y;
+			this.boxWidth = boxWidth;
+			this.boxHeight = boxHeight;
+			this.textYOffset = textYOffset;
+			this.textStyles = textStyles;
+			if(!this.textStyles["font-size"]) {
+				this.textStyles["font-size"] = 15;
+			}
+			this.boxStyles = boxStyles;
+			this.cursorStyles = cursorStyles;
+			this.selBoxStyles = selBoxStyles;
+			if(allowedChars) {
+				if(typeof(allowedChars) == "string") {
+					if(allowedChars.length > 0) {
+						this.RegExp = new RegExp(allowedChars);
+					}
+				}
+			}
+			else {
+				this.RegExp = undefined;
+			}
+			this.functionToCall = functionToCall;
+			this.textboxRect = null;
+			this.textboxText = null;
+			this.textboxTextContent = null;
+			this.textboxCursor = null;
+			this.textboxStatus = 0;
+			this.cursorPosition = 0;
+			this.transX = 0;
+			this.textVal = this.defaultVal;
+			this.shiftDown = false;
+			this.mouseDown = false;
+			this.startSelection = 0;
+			this.startOrigSelection = 0;
+			this.endSelection = 0;
+			this.selectionRectVisible = false;
+			this.svg = null;
+			this.supportsCharGeom = true;
+		}
+		else {
+			createTextBox = false;
+			alert("Error ("+id+"): wrong nr of arguments! You have to pass over "+nrArguments+" parameters.");
+		}
+		if(createTextBox) {
+			this.timer = new Timer(this);
+			this.timerMs = 200;
+			this.createTextbox();
+		}
+		else {
+			alert("Could not create textbox with id '"+id+"' due to errors in the constructor parameters");		
+		}
+	}
+
+	textbox.prototype.createTextbox = function()
+	{
+		var result = this.testParent();
+		if(result) {
+			this.textboxParent = document.createElementNS(svgNS,"g");
+			this.parentGroup.appendChild(this.textboxParent);
+
+			this.textboxRect = document.createElementNS(svgNS,"rect");
+			this.textboxRect.setAttributeNS(null,"x",this.x);
+			this.textboxRect.setAttributeNS(null,"y",this.y);
+			this.textboxRect.setAttributeNS(null,"width",this.boxWidth);
+			this.textboxRect.setAttributeNS(null,"height",this.boxHeight);
+			this.textboxRect.setAttributeNS(null,"pointer-events","fill");
+			for (var attrib in this.boxStyles) {
+				this.textboxRect.setAttributeNS(null,attrib,this.boxStyles[attrib]);
+			}
+			this.textboxParent.appendChild(this.textboxRect);
+
+			this.svg = document.createElementNS(svgNS,"svg");
+			this.svg.setAttributeNS(null,"x",this.x + this.textStyles["font-size"] / 4);
+			this.svg.setAttributeNS(null,"y",this.y + this.boxHeight * 0.02);
+			this.svg.setAttributeNS(null,"width",this.boxWidth - (this.textStyles["font-size"]) / 2);
+			this.svg.setAttributeNS(null,"height",this.boxHeight * 0.96);
+			this.svg.setAttributeNS(null,"viewBox",(this.x + this.textStyles["font-size"] / 4)+" "+(this.y + this.boxHeight * 0.02)+" "+(this.boxWidth - (this.textStyles["font-size"]) / 2)+" "+(this.boxHeight * 0.96));
+			this.textboxParent.appendChild(this.svg);
+
+			this.textboxTextGroup = document.createElementNS(svgNS,"g");
+			this.svg.appendChild(this.textboxTextGroup);
+
+			this.textboxText = document.createElementNS(svgNS,"text");
+			this.textboxText.setAttributeNS(null,"x",(this.x + this.textStyles["font-size"] / 3));
+			this.textboxText.setAttributeNS(null,"y",(this.y + this.textYOffset));
+			for (var attrib in this.textStyles) {
+				value = this.textStyles[attrib];
+				if(attrib == "font-size") {
+					value += "px";
+				}
+				this.textboxText.setAttributeNS(null,attrib,value);
+			}
+			this.textboxText.setAttributeNS(null,"id",this.id+"Text");
+			if(myMapApp.navigator != "Opera") {
+				this.textboxText.setAttributeNS(null,"pointer-events","none");
+			}
+			this.textboxText.setAttributeNS("http://www.w3.org/XML/1998/namespace","space","preserve");
+
+			if(this.defaultVal.length <= this.maxChars) {
+				this.textboxTextContent = document.createTextNode(this.defaultVal);
+				this.cursorPosition = this.defaultVal.length - 1;
+			}
+			else {
+				alert("the default textbox value is longer than the maximum of allowed characters\nDefault val will be truncated.");
+				this.textVal = this.defaultVal.substr(0,(this.maxChars - 1));
+				this.textboxTextContent = document.createTextNode(this.textVal);
+				this.cursorPosition = this.maxChars - 1;
+			}
+			this.textboxText.appendChild(this.textboxTextContent);
+			this.textboxTextGroup.appendChild(this.textboxText);
+
+			this.selectionRect = document.createElementNS(svgNS,"rect");
+			this.selectionRect.setAttributeNS(null,"x",(this.x + this.textStyles["font-size"] / 3));
+			this.selectionRect.setAttributeNS(null,"y",(this.y + this.textYOffset - this.textStyles["font-size"] * 0.9));
+			this.selectionRect.setAttributeNS(null,"width",(this.textStyles["font-size"] * 2));
+			this.selectionRect.setAttributeNS(null,"height",this.textStyles["font-size"] * 1.1);
+			for (var attrib in this.selBoxStyles) {
+				this.selectionRect.setAttributeNS(null,attrib,this.selBoxStyles[attrib]);
+			}
+			this.selectionRect.setAttributeNS(null,"display","none");
+			this.textboxTextGroup.appendChild(this.selectionRect);
+
+			this.textboxCursor = document.createElementNS(svgNS,"line");
+			this.textboxCursor.setAttributeNS(null,"x1",this.x);
+			this.textboxCursor.setAttributeNS(null,"y1",(this.y + this.textYOffset + this.textStyles["font-size"] * 0.2));
+			this.textboxCursor.setAttributeNS(null,"x2",this.x);
+			this.textboxCursor.setAttributeNS(null,"y2",(this.y + this.textYOffset - this.textStyles["font-size"] * 0.9));
+			for (var attrib in this.cursorStyles) {
+				this.textboxCursor.setAttributeNS(null,attrib,this.cursorStyles[attrib]);
+			}
+			this.textboxCursor.setAttributeNS(null,"id",this.id+"Cursor");
+			this.textboxCursor.setAttributeNS(null,"visibility","hidden");
+			this.textboxTextGroup.appendChild(this.textboxCursor);
+
+			this.textboxParent.addEventListener("mousedown",this,false);
+			this.textboxParent.addEventListener("mousemove",this,false);
+			this.textboxParent.addEventListener("mouseup",this,false);
+			this.textboxParent.setAttributeNS(null,"cursor","text");
+
+			this.timer.setTimeout("testSupportsChar",this.timerMs);
+		}
+		else {
+			alert("could not create or reference 'parentNode' of textbox with id '"+this.id+"'");
+		}
+	}
+
+	textbox.prototype.testSupportsChar = function()
+	{
+		var isEmpty = false;
+		if(this.textVal.length == 0) {
+			isEmpty = true;
+			this.textboxTextContent.nodeValue = " ";
+		}
+		try {
+			var dummy = this.textboxText.getStartPositionOfChar(0).x;
+		}
+		catch(er) {
+			this.supportsCharGeom = false;
+		}
+		if(isEmpty) {
+			this.textboxTextContent.nodeValue = "";
+		}
+	}
+
+	textbox.prototype.testParent = function()
+	{
+		var nodeValid = false;
+		if(typeof(this.parentNode) == "object") {
+			if(this.parentNode.nodeName == "svg" || this.parentNode.nodeName == "g" || this.parentNode.nodeName == "svg:svg" || this.parentNode.nodeName == "svg:g") {
+				this.parentGroup = this.parentNode;
+				nodeValid = true;
+			}
+		}
+		else if(typeof(this.parentNode) == "string") {
+			if(!document.getElementById(this.parentNode)) {
+				this.parentGroup = document.createElementNS(svgNS,"g");
+				this.parentGroup.setAttributeNS(null,"id",this.parentNode);
+				document.documentElement.appendChild(this.parentGroup);
+				nodeValid = true;
+			}
+			else {
+				this.parentGroup = document.getElementById(this.parentNode);
+				nodeValid = true;
+			}
+		}
+		return nodeValid;
+	}
+
+	textbox.prototype.removeTextbox = function()
+	{
+		this.parentGroup.removeChild(this.textboxParent);
+	}
+
+	textbox.prototype.handleEvent = function(evt)
+	{
+		if(evt.type == "mousedown") {
+			if((evt.currentTarget.nodeName == "svg" || evt.currentTarget.nodeName == "svg:svg") && this.textboxStatus == 2) {
+				this.release();
+			}
+			else {
+				if(evt.currentTarget.nodeName == "g" || evt.currentTarget.nodeName == "svg:g") {
+					this.calcCursorPosFromMouseEvt(evt);
+					if(this.textboxStatus == 0) {
+						if(myMapApp.navigator == "Adobe") {
+							document.documentElement.addEventListener("keydown",this,false);
+						}
+						document.documentElement.addEventListener("keypress",this,false);
+						document.documentElement.addEventListener("mousedown",this,false);
+						document.documentElement.addEventListener("mouseup",this,false);
+						document.documentElement.addEventListener("mousemove",this,false);
+						this.textboxStatus = 1;
+						this.textboxCursor.setAttributeNS(null,"visibility","visible");
+						BackDrop.hasFocus = false;
+					}
+					else {
+						evt.stopPropagation();
+					}
+					this.setCursorPos();
+					this.startOrigSelection = this.cursorPosition + 1;
+					this.startSelection = this.cursorPosition + 1;
+					this.endSelection = this.cursorPosition + 2;
+					this.selectionRect.setAttributeNS(null,"display","none");
+					this.selectionRectVisible = false;
+					this.shiftDown = true;
+					this.mouseDown = true;
+				}
+				else {
+					this.textboxStatus = 2;
+				}
+			}
+		}
+		if(evt.type == "mousemove") {
+			if(this.textboxStatus == 2 && this.shiftDown && this.mouseDown && this.supportsCharGeom) {
+					this.calcCursorPosFromMouseEvt(evt);
+					this.setCursorPos();
+					if(this.cursorPosition + 1 != this.startOrigSelection) {
+						if(this.cursorPosition + 1 < this.startOrigSelection) {
+							this.endSelection = this.startOrigSelection;
+							this.startSelection = this.cursorPosition + 1;				
+						}
+						else {
+							this.startSelection = this.startOrigSelection;
+							this.endSelection = this.cursorPosition + 1;				
+						}
+						this.selectionRect.setAttributeNS(null,"display","inherit");
+						this.selectionRectVisible = true;
+						var rectX = this.textboxText.getStartPositionOfChar(this.startSelection).x
+						this.selectionRect.setAttributeNS(null,"x",rectX);
+						this.selectionRect.setAttributeNS(null,"width",(this.textboxText.getEndPositionOfChar(this.endSelection - 1).x - rectX));
+						var cursorX = parseInt(this.textboxCursor.getAttributeNS(null,"x1"));
+						if((cursorX + this.transX) > (this.x + this.boxWidth - this.textStyles["font-size"] / 3)) {
+							this.transX = (this.x + this.boxWidth - this.textStyles["font-size"] / 3) - cursorX;
+							this.textboxTextGroup.setAttributeNS(null,"transform","translate("+this.transX+",0)");
+						}
+						if((cursorX + this.transX) < (this.x + this.textStyles["font-size"] / 3)) {
+							this.transX += (this.x + this.textStyles["font-size"] / 3) - (cursorX + this.transX);
+							if(this.transX * -1 < (this.boxWidth - this.textStyles["font-size"])) {
+								this.transX = 0;
+							}
+							this.textboxTextGroup.setAttributeNS(null,"transform","translate("+this.transX+",0)");
+						}
+					}
+			}
+		}
+		if(evt.type == "mouseup") {
+			if(this.textboxStatus == 2 && this.shiftDown && this.mouseDown) {
+					this.mouseDown = false;
+			}
+		}
+		if(evt.type == "keypress") {
+			if(evt.keyCode) {
+				var charCode = evt.keyCode;
+			}
+			else {
+				var charCode = evt.charCode;
+			}
+			var keyCode = parseInt(charCode);
+			var charCode = undefined;
+			this.changed = false;
+
+			if(myMapApp.navigator != "Adobe") {
+				this.specialCharacters(evt);
+			}
+
+			if(myMapApp.navigator == "Opera") {
+				if(evt.keyCode > 31 && evt.keyCode != 35 && evt.keyCode != 36 && evt.keyCode != 37 && evt.keyCode != 39 && evt.keyCode != 46) {
+					evt.charCode = evt.keyCode;
+				}
+			}
+
+			if(keyCode > 31 && keyCode != 127 && keyCode < 65535 && evt.charCode && evt.charCode < 65535) {			
+				var textChanged = false;
+				var keychar = String.fromCharCode(keyCode);
+				var result = 0;
+				if(this.RegExp) {
+					result = keychar.search(this.RegExp);
+				}
+				if(result == 0) {
+					if(this.shiftDown && this.selectionRectVisible) {
+						var tempText = this.textVal.substring(0,this.startSelection) + keychar + this.textVal.substring(this.endSelection,this.textVal.length);
+						this.textVal = tempText;
+						this.cursorPosition = this.startSelection - 1;
+						textChanged = true;
+						this.releaseShift();
+					}
+					else if(this.textVal.length < this.maxChars) {
+						if(this.cursorPosition == this.textVal.length -1) {
+							this.textVal += keychar;
+						}
+						else {
+							var tempText = this.textVal.substring(0,(this.cursorPosition + 1)) + keychar + this.textVal.substring((this.cursorPosition + 1),(this.textVal.length));
+							this.textVal = tempText;
+						}
+						textChanged = true;
+					}
+					if(this.textVal.length < this.maxChars) {
+						this.cursorPosition++;
+					}
+					else {
+						if(textChanged) {
+							if(this.cursorPosition < this.textVal.length) {
+								this.cursorPosition++;	
+							}
+							else {
+								this.cursorPosition = this.textVal.length - 1;
+							}
+						}	
+					}
+					this.startSelection = this.cursorPosition;
+					this.endSelection = this.cursorPosition;
+					this.shiftDown = false;
+					if(textChanged) {
+						this.textboxTextContent.nodeValue=this.textVal;
+						this.changed = true;
+						this.setCursorPos();
+						var cursorX = parseInt(this.textboxCursor.getAttributeNS(null,"x1"));
+						if((cursorX + this.transX) > (this.x + this.boxWidth - this.textStyles["font-size"] / 3)) {
+							this.transX = (this.x + this.boxWidth - this.textStyles["font-size"] / 3) - (cursorX + this.transX) + this.transX;
+							this.textboxTextGroup.setAttributeNS(null,"transform","translate("+this.transX+",0)");
+						}
+					}
+				}
+			}
+			if(this.changed) {
+				this.timer.setTimeout("fireFunction",this.timerMs);
+			}
+			evt.preventDefault();
+		}
+		if(evt.type == "keydown") {
+			this.specialCharacters(evt);
+		}
+	}
+
+	textbox.prototype.specialCharacters = function(evt)
+	{
+		if(evt.keyCode) {
+			var charCode = evt.keyCode;
+		}
+		else {
+			var charCode = evt.charCode;
+		}
+		var keyCode = parseInt(charCode);
+		var charCode = undefined;
+
+		if(keyCode == 8) {
+			if(this.textVal.length > 0 && this.cursorPosition > -2) {
+				if(this.shiftDown && this.selectionRectVisible) {
+					var tempText = this.textVal.substring(0,this.startSelection) + this.textVal.substring(this.endSelection,this.textVal.length);
+					this.textVal = tempText;
+					this.cursorPosition = this.startSelection - 1;
+					this.releaseShift();
+				}
+				else { 
+					if(this.cursorPosition == this.textVal.length - 1) {
+						this.textVal=this.textVal.substring(0,this.textVal.length-1);
+					}
+					else {
+						var tempText = this.textVal.substring(0,(this.cursorPosition)) + this.textVal.substring((this.cursorPosition + 1),(this.textVal.length));
+						this.textVal = tempText;
+					}
+					if(this.cursorPosition > -1) {
+						this.cursorPosition--;
+					}
+				}
+				this.textboxTextContent.nodeValue=this.textVal;
+				this.setCursorPos();
+				if(this.cursorPosition > 0) {
+					if(this.supportsCharGeom) {
+						var cursorX = this.textboxText.getStartPositionOfChar(this.cursorPosition).x;
+					}
+					else {
+						var bbox = this.textboxText.getBBox();
+						var cursorX = bbox.x + bbox.width;
+					}
+					if((cursorX + this.transX) < (this.x + this.textStyles["font-size"] / 3)) {
+						this.transX += (this.x + this.textStyles["font-size"] / 3) - (cursorX + this.transX);
+						if(this.transX * -1 < (this.boxWidth - this.textStyles["font-size"])) {
+							this.transX = 0;
+						}
+						this.textboxTextGroup.setAttributeNS(null,"transform","translate("+this.transX+",0)");
+					}
+				}
+				this.changed = true;
+			}
+		}
+		else if(keyCode == 10 || keyCode == 13) {
+			this.release();
+		}
+		else if(keyCode == 35 && !(charCode)) {
+			if(evt.shiftKey) {
+				if(this.shiftDown == false) {
+					this.startOrigSelection = this.cursorPosition + 1;
+					this.startSelection = this.cursorPosition + 1;
+					this.shiftDown = true;
+				}
+			}
+			this.cursorPosition = this.textVal.length - 1;
+			this.setCursorPos();
+			var cursorX = parseInt(this.textboxCursor.getAttributeNS(null,"x1"));
+			if((cursorX + this.transX) > (this.x + this.boxWidth - this.textStyles["font-size"] / 3)) {
+				this.transX = (this.x + this.boxWidth - this.textStyles["font-size"] / 3) - cursorX;
+				this.textboxTextGroup.setAttributeNS(null,"transform","translate("+this.transX+",0)");
+			}
+			this.setCursorPos();
+			if(evt.shiftKey) {
+				if(this.shiftDown == false) {
+					this.startOrigSelection = this.cursorPosition;
+					this.startSelection = this.cursorPosition;
+					this.shiftDown = true;
+				}
+				this.endSelection = this.cursorPosition + 1;
+				this.selectionRect.setAttributeNS(null,"display","inherit");
+				this.selectionRectVisible = true;
+				if(this.supportsCharGeom) {
+					var rectX = this.textboxText.getStartPositionOfChar(this.startSelection).x;
+					var width = (this.textboxText.getEndPositionOfChar(this.endSelection - 1).x - rectX);
+				}
+				else {
+					var bbox = this.textboxText.getBBox();
+					var rectX = this.x + this.textStyles["font-size"] / 3;
+					var width = this.x + bbox.width + this.textStyles["font-size"] / 3;
+				}
+				this.selectionRect.setAttributeNS(null,"x",rectX);		
+				this.selectionRect.setAttributeNS(null,"width",width);
+			}
+			if(this.shiftDown && evt.shiftKey == false) {
+				this.releaseShift();
+			}
+		}
+		else if(keyCode == 36 && !(charCode)) {
+			if(evt.shiftKey) {
+				if(this.shiftDown == false) {
+					this.startOrigSelection = this.cursorPosition + 1;
+					this.startSelection = this.cursorPosition + 1;
+					this.shiftDown = true;
+				}
+			}
+			this.cursorPosition = -1;
+			this.textboxText.setAttributeNS(null,"x",(this.x + this.textStyles["font-size"] / 3));
+			this.textboxTextGroup.setAttributeNS(null,"transform","translate(0,0)");
+			this.transX = 0;
+			this.setCursorPos();
+			if(evt.shiftKey) {
+				if(this.shiftDown == false) {
+					this.startOrigSelection = this.cursorPosition;
+					this.startSelection = this.cursorPosition;
+					this.shiftDown = true;
+				}
+				this.endSelection = this.startSelection;
+				this.startSelection = 0;
+				this.selectionRect.setAttributeNS(null,"display","inherit");
+				this.selectionRectVisible = true;
+				if(this.supportsCharGeom) {
+					var rectX = this.textboxText.getStartPositionOfChar(this.startSelection).x;
+					var width = (this.textboxText.getEndPositionOfChar(this.endSelection - 1).x - rectX);
+				}
+				else {
+					var bbox = this.textboxText.getBBox();
+					var rectX = this.x + this.textStyles["font-size"] / 3;
+					var width = this.x + bbox.width + this.textStyles["font-size"] / 3;
+				}
+				this.selectionRect.setAttributeNS(null,"x",rectX);	
+				this.selectionRect.setAttributeNS(null,"width",width);			
+			}
+			if(this.shiftDown && evt.shiftKey == false) {
+					this.releaseShift();
+			}
+		}
+		else if(keyCode == 37 && !(charCode)) {
+			if(this.cursorPosition > -1) {
+				this.cursorPosition--;
+				this.setCursorPos();
+				var cursorX = parseInt(this.textboxCursor.getAttributeNS(null,"x1"));
+				if((cursorX + this.transX) < (this.x + this.textStyles["font-size"] / 3)) {
+					this.transX += (this.x + this.textStyles["font-size"] / 3) - (cursorX + this.transX);
+					if(this.transX * -1 < (this.boxWidth - this.textStyles["font-size"])) {
+						this.transX = 0;
+					}
+					this.textboxTextGroup.setAttributeNS(null,"transform","translate("+this.transX+",0)");
+				}
+				if(evt.shiftKey && this.supportsCharGeom) {
+					if(this.shiftDown == false) {
+						this.startOrigSelection = this.cursorPosition + 2;
+						this.startSelection = this.cursorPosition + 2;
+						this.shiftDown = true;
+					}
+					this.endSelection = this.startOrigSelection;
+					this.startSelection = this.cursorPosition + 1;
+					this.selectionRect.setAttributeNS(null,"display","inherit");
+					this.selectionRectVisible = true;
+					var rectX = this.textboxText.getStartPositionOfChar(this.startSelection).x
+					this.selectionRect.setAttributeNS(null,"x",rectX);
+					this.selectionRect.setAttributeNS(null,"width",(this.textboxText.getEndPositionOfChar(this.endSelection - 1).x - rectX));
+				}
+				else {
+					if(this.shiftDown) {
+						this.releaseShift();
+					}
+				}
+			}
+		}
+		else if(keyCode == 39 && !(charCode)) {
+			if(this.cursorPosition < this.textVal.length - 1) {
+				this.cursorPosition++;
+				this.setCursorPos();
+				var cursorX = parseInt(this.textboxCursor.getAttributeNS(null,"x1"));
+				if((cursorX + this.transX) > (this.x + this.boxWidth - this.textStyles["font-size"] / 3)) {
+					this.transX = (this.x + this.boxWidth - this.textStyles["font-size"] / 3) - cursorX;
+					this.textboxTextGroup.setAttributeNS(null,"transform","translate("+this.transX+",0)");
+				}
+				if(evt.shiftKey && this.supportsCharGeom) {
+					if(this.shiftDown == false) {
+						this.startOrigSelection = this.cursorPosition;
+						this.startSelection = this.cursorPosition;
+						this.shiftDown = true;
+					}
+					this.endSelection = this.cursorPosition + 1;
+					this.selectionRect.setAttributeNS(null,"display","inherit");
+					this.selectionRectVisible = true;
+					var rectX = this.textboxText.getStartPositionOfChar(this.startSelection).x
+					this.selectionRect.setAttributeNS(null,"x",rectX);
+					this.selectionRect.setAttributeNS(null,"width",(this.textboxText.getEndPositionOfChar(this.endSelection - 1).x - rectX));
+				}
+				else {
+					if(this.shiftDown) {
+						this.releaseShift();
+					}
+				}
+			}
+		}
+		else if((keyCode == 127 || keyCode == 12 || keyCode == 46) && !(charCode)) {
+			if((this.textVal.length > 0) && (this.cursorPosition < (this.textVal.length))) {
+					var tempText = null;
+					if(this.shiftDown && evt.shiftKey == false && this.startSelection < this.textVal.length) {
+						var tempText = this.textVal.substring(0,this.startSelection) + this.textVal.substring(this.endSelection,this.textVal.length);
+						this.cursorPosition = this.startSelection - 1;
+						this.releaseShift();
+						this.changed = true;
+					}
+					else {
+						if(this.cursorPosition < (this.textVal.length - 1)) {
+							var tempText = this.textVal.substring(0,(this.cursorPosition + 1)) + this.textVal.substring((this.cursorPosition + 2),(this.textVal.length));
+							this.changed = true;
+						}
+					}
+					if(this.changed) {
+						if(tempText != null) {
+							this.textVal = tempText;
+							this.textboxTextContent.nodeValue=this.textVal;
+							this.setCursorPos();
+						}
+					}
+			}
+		}
+		if(myMapApp.navigator == "Adobe") {
+			if(this.changed) {
+				this.timer.setTimeout("fireFunction",this.timerMs);
+			}
+		}
+	}
+
+	textbox.prototype.setCursorPos = function()
+	{
+			if(this.cursorPosition > -1) {
+				if(this.supportsCharGeom) {
+					if(this.textVal.length > 0) {
+						var cursorPos = this.textboxText.getEndPositionOfChar(this.cursorPosition).x;
+					}
+					else {
+						var cursorPos = (this.x + this.textStyles["font-size"] / 3);
+					}
+					this.textboxCursor.setAttributeNS(null,"x1",cursorPos);
+					this.textboxCursor.setAttributeNS(null,"x2",cursorPos);
+				}
+				else {
+					var bbox = this.textboxText.getBBox();
+					this.textboxCursor.setAttributeNS(null,"x1",(bbox.x + bbox.width + this.textStyles["font-size"] / 3));
+					this.textboxCursor.setAttributeNS(null,"x2",(bbox.x + bbox.width + this.textStyles["font-size"] / 3));
+				}
+			}
+			else {
+				this.textboxText.setAttributeNS(null,"x",(this.x + this.textStyles["font-size"] / 3));
+				this.textboxTextGroup.setAttributeNS(null,"transform","translate(0,0)");
+				this.transX = 0;
+				if(this.supportsCharGeom) {
+					if(this.textboxTextContent.length > 0) {
+						var cursorPos = this.textboxText.getStartPositionOfChar(0).x;
+					}
+					else {
+						var cursorPos = this.x + this.textStyles["font-size"] / 3;
+					}
+				}
+				else {
+					var cursorPos = this.x + this.textStyles["font-size"] / 3;
+				}
+				this.textboxCursor.setAttributeNS(null,"x1",cursorPos);
+				this.textboxCursor.setAttributeNS(null,"x2",cursorPos);
+			}
+	}
+
+	textbox.prototype.fireFunction = function()
+	{
+		var changeType = "change";
+		if(this.textboxStatus == 0) {
+			changeType = "release";
+		}
+		if(this.textboxStatus == 5) {
+			this.textboxStatus = 0;
+			changeType = "set";
+		}
+		if(typeof(this.functionToCall) == "function") {
+			this.functionToCall(this.id,this.textVal,changeType);
+		}
+		if(typeof(this.functionToCall) == "object") {
+			this.functionToCall.textboxChanged(this.id,this.textVal,changeType);	
+		}
+		if(typeof(this.functionToCall) == undefined) {
+			return;
+		}
+	}
+
+	textbox.prototype.getValue = function()
+	{
+		return this.textVal;
+	}
+
+	textbox.prototype.setValue = function(value,fireFunction)
+	{
+		this.textVal = value.toString();
+		this.textboxTextContent.nodeValue=this.textVal;
+		this.cursorPosition = -1;
+		this.setCursorPos();
+		if(fireFunction == true) {
+			this.textboxStatus = 5;
+			this.fireFunction();
+		}
+	}
+
+	textbox.prototype.release = function()
+	{
+		this.textboxStatus = 0;
+		document.documentElement.removeEventListener("keypress",this,false);
+		if(myMapApp.navigator == "Adobe") {
+			document.documentElement.removeEventListener("keydown",this,false);
+		}
+		document.documentElement.removeEventListener("mousedown",this,false);
+		document.documentElement.removeEventListener("mousemove",this,false);
+		document.documentElement.removeEventListener("mouseup",this,false);
+		this.textboxCursor.setAttributeNS(null,"visibility","hidden");
+		this.releaseShift();
+		this.timer.setTimeout("fireFunction",this.timerMs);
+		BackDrop.hasFocus = true;
+	}
+
+	textbox.prototype.releaseShift = function()
+	{
+		this.selectionRect.setAttributeNS(null,"display","none");
+		this.selectionRectVisible = false;
+		this.shiftDown = false;
+	}
+
+	textbox.prototype.calcCursorPosFromMouseEvt = function(evt)
+	{
+		var myCoords = myMapApp.calcCoord(evt,this.textboxText);
+		var mySVGPoint = document.documentElement.createSVGPoint();
+		mySVGPoint.x = myCoords.x;
+		mySVGPoint.y = myCoords.y;
+		if(this.textboxTextContent.length > 0) {
+			if(this.supportsCharGeom) {
+				this.cursorPosition = this.textboxText.getCharNumAtPosition(mySVGPoint);
+				if(this.cursorPosition > this.textVal.length - 1) {
+					this.cursorPosition = this.textVal.length - 1;
+				}
+				if(this.cursorPosition == -1) {
+					mySVGPoint.y = (this.textboxText.getBBox().y + this.textStyles["font-size"] * 0.5);
+					this.cursorPosition = this.textboxText.getCharNumAtPosition(mySVGPoint);
+					if(this.cursorPosition == -1) {
+						if(mySVGPoint.x > (this.textboxText.getBBox().x + this.textboxText.getBBox().width)) {
+							this.cursorPosition = this.textVal.length - 1;
+						}
+					}
+				}
+			}
+			else {
+				var bbox = this.textboxText.getBBox();
+				var diffLeft = Math.abs(mySVGPoint.x - bbox.x);
+				var diffRight = Math.abs(mySVGPoint.x - (bbox.x + bbox.width));
+				if(diffLeft < diffRight) {
+					this.cursorPosition = -1;
+				}
+				else {
+					this.cursorPosition = this.textVal.length - 1;
+				}
+			}
+		}
+		else {
+			this.cursorPosition = -1;
+		}
+	}
+
+	textbox.prototype.moveTo = function(moveX,moveY)
+	{
+		this.x = moveX;
+		this.y = moveY;
+		this.textboxRect.setAttributeNS(null,"x",this.x);
+		this.textboxRect.setAttributeNS(null,"y",this.y);
+		this.svg.setAttributeNS(null,"x",this.x + this.textStyles["font-size"] / 4);
+		this.svg.setAttributeNS(null,"y",this.y + this.boxHeight * 0.02);
+		this.svg.setAttributeNS(null,"viewBox",(this.x + this.textStyles["font-size"] / 4)+" "+(this.y + this.boxHeight * 0.02)+" "+(this.boxWidth - (this.textStyles["font-size"]) / 2)+" "+(this.boxHeight * 0.96));
+		this.textboxText.setAttributeNS(null,"x",(this.x + this.textStyles["font-size"] / 3));
+		this.textboxText.setAttributeNS(null,"y",(this.y + this.textYOffset));
+		this.selectionRect.setAttributeNS(null,"x",(this.x + this.textStyles["font-size"] / 3));
+		this.selectionRect.setAttributeNS(null,"y",(this.y + this.textYOffset - this.textStyles["font-size"] * 0.9));
+		this.textboxCursor.setAttributeNS(null,"x1",this.x);
+		this.textboxCursor.setAttributeNS(null,"y1",(this.y + this.textYOffset + this.textStyles["font-size"] * 0.2));
+		this.textboxCursor.setAttributeNS(null,"x2",this.x);
+		this.textboxCursor.setAttributeNS(null,"y2",(this.y + this.textYOffset - this.textStyles["font-size"] * 0.9));
+		this.cursorPosition = -1;
+		this.setCursorPos();	
+	}
+
+	textbox.prototype.resize = function(newWidth)
+	{
+		this.boxWidth = newWidth;
+		this.textboxRect.setAttributeNS(null,"width",this.boxWidth);
+		this.svg.setAttributeNS(null,"width",this.boxWidth - (this.textStyles["font-size"]) / 2);
+		this.svg.setAttributeNS(null,"viewBox",(this.x + this.textStyles["font-size"] / 4)+" "+(this.y + this.boxHeight * 0.02)+" "+(this.boxWidth - (this.textStyles["font-size"]) / 2)+" "+(this.boxHeight * 0.96));
+		this.cursorPosition = -1;
+		this.setCursorPos();	
+	}
+
+	function checkBox(id,parentNode,x,y,checkboxId,checkcrossId,checkedStatus,labelText,textStyles,labelDistance,labelYOffset,radioButtonGroup,functionToCall)
+	{
+		var nrArguments = 13;
+		var createCheckbox= true;
+		if(arguments.length == nrArguments) {	
+			this.id = id;
+			this.parentNode = parentNode;
+			this.x = x;
+			this.y = y;
+			this.checkboxId = checkboxId;
+			this.checkcrossId = checkcrossId;
+			this.checkedStatus = checkedStatus;
+			this.labelText = labelText;
+			this.textStyles = textStyles;
+			if(!this.textStyles["font-size"]) {
+				this.textStyles["font-size"] = 12;
+			}
+			this.labelDistance = labelDistance;
+			this.labelYOffset = labelYOffset;
+			this.radioButtonGroup = radioButtonGroup;
+			this.functionToCall = functionToCall;
+			this.exists = true;
+			this.label = undefined;
+		}
+		else {
+			createCheckbox = false;
+			alert("Error in checkbox ("+id+"): wrong nr of arguments! You have to pass over "+nrArguments+" parameters.");
+		}
+		if(createCheckbox) {
+			this.timer = new Timer(this);
+			if(this.radioButtonGroup) {
+				this.timerMs = 0;
+			}
+			else {
+				this.timerMs = 200;
+			}
+			this.createCheckBox();
+		}
+		else {
+			alert("Could not create checkbox with id '"+id+"' due to errors in the constructor parameters");		
+		}
+	}
+
+	checkBox.prototype.createCheckBox = function()
+	{
+		if(typeof(this.parentNode) == "string") {
+			this.parentNode = document.getElementById(this.parentNode);
+		}
+		this.checkBox = document.createElementNS(svgNS,"use");
+		this.checkBox.setAttributeNS(null,"x",this.x);
+		this.checkBox.setAttributeNS(null,"y",this.y);
+		this.checkBox.setAttributeNS(xlinkNS,"href","#"+this.checkboxId);
+		this.checkBox.addEventListener("click",this,false);
+		this.checkBox.setAttributeNS(null,"cursor","pointer");
+		this.parentNode.appendChild(this.checkBox);
+		this.checkCross = document.createElementNS(svgNS,"use");
+		this.checkCross.setAttributeNS(null,"x",this.x);
+		this.checkCross.setAttributeNS(null,"y",this.y);
+		this.checkCross.setAttributeNS(xlinkNS,"href","#"+this.checkcrossId);
+		this.parentNode.appendChild(this.checkCross);
+		if(this.checkedStatus == false) {
+			this.checkCross.setAttributeNS(null,"display","none");
+		}
+		if(this.labelText) {
+			if(this.labelText.length > 0) {
+				this.label = document.createElementNS(svgNS,"text");
+				for (var attrib in this.textStyles) {
+					var value = this.textStyles[attrib];
+					if(attrib == "font-size") {
+						value += "px";
+					}
+					this.label.setAttributeNS(null,attrib,value);
+				}
+				this.label.setAttributeNS(null,"x",(this.x + this.labelDistance));
+				this.label.setAttributeNS(null,"y",(this.y + this.labelYOffset));
+				this.label.setAttributeNS(null,"cursor","pointer");
+				var labelTextNode = document.createTextNode(this.labelText);
+				this.label.appendChild(labelTextNode);
+				this.label.setAttributeNS(null,"pointer-events","all");
+				this.label.addEventListener("click",this,false);
+				this.parentNode.appendChild(this.label);
+			}
+		}
+		if(this.radioButtonGroup) {
+			this.radioButtonGroup.addCheckBox(this);
+		}
+	}
+
+	checkBox.prototype.handleEvent = function(evt)
+	{
+		if(evt.type == "click") {
+			if(this.checkedStatus == true) {
+				this.checkCross.setAttributeNS(null,"display","none");
+				this.checkedStatus = false;
+			}
+			else {
+				this.checkCross.setAttributeNS(null,"display","inline");
+				this.checkedStatus = true;
+			}
+		}
+		this.timer.setTimeout("fireFunction",this.timerMs);
+	}
+
+	checkBox.prototype.fireFunction = function()
+	{
+		if(this.radioButtonGroup) {
+			this.radioButtonGroup.selectById(this.id,true);
+		}
+		else {
+			if(typeof(this.functionToCall) == "function") {
+				this.functionToCall(this.id,this.checkedStatus,this.labelText);
+			}
+			if(typeof(this.functionToCall) == "object") {
+				this.functionToCall.checkBoxChanged(this.id,this.checkedStatus,this.labelText);
+			}
+			if(typeof(this.functionToCall) == undefined) {
+				return;
+			}
+		}
+	}
+
+	checkBox.prototype.check = function(FireFunction)
+	{
+		this.checkCross.setAttributeNS(null,"display","inherit");
+		this.checkedStatus = true;
+		if(FireFunction) {
+			this.timer.setTimeout("fireFunction",this.timerMs);
+		}
+	}
+
+	checkBox.prototype.uncheck = function(FireFunction)
+	{
+		this.checkCross.setAttributeNS(null,"display","none");
+		this.checkedStatus = false;
+		if(FireFunction) {
+			this.timer.setTimeout("fireFunction",this.timerMs);
+		}
+	}
+
+	checkBox.prototype.moveTo = function(moveX,moveY)
+	{
+		this.x = moveX;
+		this.y = moveY;
+		this.checkBox.setAttributeNS(null,"x",this.x);
+		this.checkBox.setAttributeNS(null,"y",this.y);
+		this.checkCross.setAttributeNS(null,"x",this.x);
+		this.checkCross.setAttributeNS(null,"y",this.y);
+		if(this.labelText) {
+			this.label.setAttributeNS(null,"x",(this.x + this.labelDistance));
+			this.label.setAttributeNS(null,"y",(this.y + this.labelYOffset));
+		}
+	}
+
+	checkBox.prototype.remove = function(FireFunction)
+	{
+		this.parentNode.removeChild(this.checkBox);
+		this.parentNode.removeChild(this.checkCross);
+		if(this.label) {
+			this.parentNode.removeChild(this.label);	
+		}
+		this.exists = false;
+	}
+
+	checkBox.prototype.setLabelText = function(labelText)
+	{
+		this.labelText = labelText
+		if(this.label) {
+			this.label.firstChild.nodeValue = labelText;
+		}
+		else {
+			if(this.labelText.length > 0) {
+				this.label = document.createElementNS(svgNS,"text");
+				for (var attrib in this.textStyles) {
+					value = this.textStyles[attrib];
+					if(attrib == "font-size") {
+						value += "px";
+					}
+					this.label.setAttributeNS(null,attrib,value);
+				}
+				this.label.setAttributeNS(null,"x",(this.x + this.labelDistance));
+				this.label.setAttributeNS(null,"y",(this.y + this.textStyles["font-size"] * 0.3));
+				var labelTextNode = document.createTextNode(this.labelText);
+				this.label.appendChild(labelTextNode);
+				this.parentNode.appendChild(this.label);
+			}	
+		}
+	}
+
+	function mapApp(adjustVBonWindowResize,resizeCallbackFunction)
+	{
+		this.adjustVBonWindowResize = adjustVBonWindowResize;
+		this.resizeCallbackFunction = resizeCallbackFunction;
+		this.initialized = false;
+		if(!document.documentElement.getScreenCTM) {
+			document.documentElement.addEventListener("SVGScroll",this,false);
+			document.documentElement.addEventListener("SVGZoom",this,false);
+		}
+		try {
+			window.addEventListener("resize",this,false);
+		}
+		catch(er) {
+			document.documentElement.addEventListener("SVGResize",this,false);
+		}
+		this.navigator = "Batik";
+		if(window.navigator) {
+			if(window.navigator.appName.match(/Adobe/gi)) {
+				this.navigator = "Adobe";
+			}
+			if(window.navigator.appName.match(/Netscape/gi)) {
+				this.navigator = "Mozilla";
+			}
+			if(window.navigator.userAgent) {
+				if(window.navigator.userAgent.match(/Opera/gi)) {
+					this.navigator = "Opera";
+				}
+				if(window.navigator.userAgent.match(/AppleWebKit/gi) || window.navigator.userAgent.match(/Safari/gi) ) {
+					this.navigator = "Safari";
+				}
+			}
+		}
+		this.tooltipsEnabled = false;
+		this.Windows = new Array();
+		this.checkBoxes = new Array();
+		this.radioButtonGroups = new Array();
+		this.tabgroups = new Array();
+		this.textboxes = new Array();
+		this.buttons = new Array();	
+		this.selectionLists = new Array();	
+		this.comboboxes = new Array();	
+		this.sliders = new Array();
+		this.scrollbars = new Array();
+		this.colourPickers = new Array();
+		this.htmlAreas = new Array();
+		this.tables = new Array();
+	}
+
+	mapApp.prototype.handleEvent = function(evt)
+	{
+		if(evt.type == "SVGResize" || evt.type == "resize" || evt.type == "SVGScroll" || evt.type == "SVGZoom") {
+			this.resetFactors();
+		}
+		if((evt.type == "mouseover" || evt.type == "mouseout" || evt.type == "mousemove") && this.tooltipsEnabled) {
+			this.displayTooltip(evt);
+		}
+	}
+
+	mapApp.prototype.resetFactors = function()
+	{
+		if(window.innerWidth) {
+			this.innerWidth = window.innerWidth;
+			this.innerHeight = window.innerHeight;
+		}
+		else {
+			var viewPort = document.documentElement.viewport;
+			this.innerWidth = viewPort.width;
+			this.innerHeight = viewPort.height;
+		}
+		if(this.adjustVBonWindowResize) {
+			this.adjustViewBox();
+		}
+		if(!document.documentElement.getScreenCTM) {
+			var svgroot = document.documentElement;
+			this.viewBox = new ViewBox(svgroot);
+			var trans = svgroot.currentTranslate;
+			var scale = svgroot.currentScale;
+			this.m = this.viewBox.getTM();
+			this.m = this.m.scale( 1/scale );
+			this.m = this.m.translate(-trans.x, -trans.y);
+		}
+		if(this.resizeCallbackFunction && this.initialized) {
+			if(typeof(this.resizeCallbackFunction) == "function") {
+				this.resizeCallbackFunction();
+			}
+		}
+		this.initialized = true;
+	}
+
+	mapApp.prototype.adjustViewBox = function()
+	{
+		document.documentElement.setAttributeNS(null,"viewBox","0 0 "+this.innerWidth+" "+this.innerHeight);
+	}
+
+	mapApp.prototype.calcCoord = function(evt,ctmNode)
+	{
+		var svgPoint = document.documentElement.createSVGPoint();
+		svgPoint.x = evt.clientX;
+		svgPoint.y = evt.clientY;
+		if(!document.documentElement.getScreenCTM) {
+			if(ctmNode) {
+				var matrix = getTransformToRootElement(ctmNode);
+			}
+			else {
+				var matrix = getTransformToRootElement(evt.target);			
+			}
+			svgPoint = svgPoint.matrixTransform(matrix.inverse().multiply(this.m));
+		}
+		else {
+			if(ctmNode) {
+				var matrix = ctmNode.getScreenCTM();
+			}
+			else {
+				var matrix = evt.target.getScreenCTM();		
+			}
+		svgPoint = svgPoint.matrixTransform(matrix.inverse());
+		}
+		return svgPoint;
+	}
+
+	mapApp.prototype.calcInvCoord = function(svgPoint)
+	{
+		if(!document.documentElement.getScreenCTM) {
+			var matrix = getTransformToRootElement(document.documentElement);
+		}
+		else {
+			var matrix = document.documentElement.getScreenCTM();
+		}
+		svgPoint = svgPoint.matrixTransform(matrix);
+		return svgPoint;
+	}
+
+	mapApp.prototype.initTooltips = function(groupId,tooltipTextAttribs,tooltipRectAttribs,xOffset,yOffset,padding)
+	{
+		var nrArguments = 6;
+		if(arguments.length == nrArguments) {
+			this.toolTipGroup = document.getElementById(groupId);
+			this.tooltipTextAttribs = tooltipTextAttribs;
+			if(!this.tooltipTextAttribs["font-size"]) {
+				this.tooltipTextAttribs["font-size"] = 12;
+			}	
+			this.tooltipRectAttribs = tooltipRectAttribs;
+			this.xOffset = xOffset;
+			this.yOffset = yOffset;
+			this.padding = padding;
+			if(!this.toolTipGroup) {
+				alert("Error: could not find tooltip group with id '"+groupId+"'. Please specify a correct tooltip parent group id!");
+			}
+			else {
+				this.toolTipGroup.setAttributeNS(null,"visibility","hidden");
+				this.toolTipGroup.setAttributeNS(null,"pointer-events","none");
+				this.tooltipsEnabled = true;
+				this.tooltipText = document.createElementNS(svgNS,"text");
+				for (var attrib in this.tooltipTextAttribs) {
+					value = this.tooltipTextAttribs[attrib];
+					if(attrib == "font-size") {
+						value += "px";
+					}
+					this.tooltipText.setAttributeNS(null,attrib,value);
+				}
+				var textNode = document.createTextNode("Tooltip");
+				this.tooltipText.appendChild(textNode);
+				this.toolTipGroup.appendChild(this.tooltipText);
+				var bbox = this.tooltipText.getBBox();
+				this.tooltipRect = document.createElementNS(svgNS,"rect");
+				this.tooltipRect.setAttributeNS(null,"x",bbox.x-this.padding);
+				this.tooltipRect.setAttributeNS(null,"y",bbox.y-this.padding);
+				this.tooltipRect.setAttributeNS(null,"width",bbox.width+this.padding*2);
+				this.tooltipRect.setAttributeNS(null,"height",bbox.height+this.padding*2);
+				for (var attrib in this.tooltipRectAttribs) {
+					this.tooltipRect.setAttributeNS(null,attrib,this.tooltipRectAttribs[attrib]);
+				}
+				this.toolTipGroup.insertBefore(this.tooltipRect,this.tooltipText);
+			}
+		}
+		else {
+				alert("Error in method 'initTooltips': wrong nr of arguments! You have to pass over "+nrArguments+" parameters.");			
+		}
+	}
+
+	mapApp.prototype.addTooltip = function(tooltipNode,tooltipTextvalue,followmouse,checkForUpdates,targetOrCurrentTarget,childAttrib)
+	{
+		var nrArguments = 6;
+		if(arguments.length == nrArguments) {
+			if(typeof(tooltipNode) == "string") {
+				tooltipNode = document.getElementById(tooltipNode);
+			}
+			if(!tooltipNode.hasAttributeNS(attribNS,"tooltip")) {
+				if(tooltipTextvalue) {
+					tooltipNode.setAttributeNS(attribNS,"tooltip",tooltipTextvalue);
+				}
+				else {
+					tooltipNode.setAttributeNS(attribNS,"tooltip","Tooltip");
+				}
+			}
+			if(checkForUpdates) {
+				tooltipNode.setAttributeNS(attribNS,"tooltipUpdates","true");
+			}
+			if(targetOrCurrentTarget == "target") {
+				tooltipNode.setAttributeNS(attribNS,"tooltipParent","true");
+			}
+			if(childAttrib) {
+				tooltipNode.setAttributeNS(attribNS,"tooltipAttrib",childAttrib);
+			}
+			tooltipNode.addEventListener("mouseover",this,false);
+			tooltipNode.addEventListener("mouseout",this,false);
+			if(followmouse) {
+				tooltipNode.addEventListener("mousemove",this,false);
+			}
+		}
+		else {
+			alert("Error in method 'addTooltip()': wrong nr of arguments! You have to pass over "+nrArguments+" parameters.");
+		}
+	}
+
+	mapApp.prototype.displayTooltip = function(evt)
+	{
+		var curEl = evt.currentTarget;
+		var coords = this.calcCoord(evt,this.toolTipGroup.parentNode);
+		if(evt.type == "mouseover") {
+			this.toolTipGroup.setAttributeNS(null,"visibility","visible");
+			this.toolTipGroup.setAttributeNS(null,"transform","translate("+(coords.x+this.xOffset)+","+(coords.y+this.yOffset)+")");
+			this.updateTooltip(evt);
+		}
+		if(evt.type == "mouseout") {
+			this.toolTipGroup.setAttributeNS(null,"visibility","hidden");
+		}
+		if(evt.type == "mousemove") {
+			this.toolTipGroup.setAttributeNS(null,"transform","translate("+(coords.x+this.xOffset)+","+(coords.y+this.yOffset)+")");
+			if(curEl.hasAttributeNS(attribNS,"tooltipUpdates")) {
+				this.updateTooltip(evt);
+			}
+		}
+	}
+
+	mapApp.prototype.updateTooltip = function(evt)
+	{
+		var el = evt.currentTarget;
+		if(el.hasAttributeNS(attribNS,"tooltipParent")) {
+			var attribName = "tooltip";
+			if(el.hasAttributeNS(attribNS,"tooltipAttrib")) {
+				attribName = el.getAttributeNS(attribNS,"tooltipAttrib");
+			}
+			el = evt.target;
+			var myText = el.getAttributeNS(attribNS,attribName);
+		}
+		else {
+			var myText = el.getAttributeNS(attribNS,"tooltip");
+		}
+		if(myText) {
+			var textArray = myText.split("\\n");
+			while(this.tooltipText.hasChildNodes()) {
+				this.tooltipText.removeChild(this.tooltipText.lastChild);
+			}
+			for (var i=0;i<textArray.length;i++) {
+				var tspanEl = document.createElementNS(svgNS,"tspan");
+				tspanEl.setAttributeNS(null,"x",0);
+				var dy = this.tooltipTextAttribs["font-size"];
+				if(i == 0) {
+					var dy = 0;
+				}
+				tspanEl.setAttributeNS(null,"dy",dy);
+				var textNode = document.createTextNode(textArray[i]);
+				tspanEl.appendChild(textNode);
+				this.tooltipText.appendChild(tspanEl);
+			}
+			var bbox = this.tooltipText.getBBox();
+			this.tooltipRect.setAttributeNS(null,"x",bbox.x-this.padding);
+			this.tooltipRect.setAttributeNS(null,"y",bbox.y-this.padding);
+			this.tooltipRect.setAttributeNS(null,"width",bbox.width+this.padding*2);
+			this.tooltipRect.setAttributeNS(null,"height",bbox.height+this.padding*2);
+		}
+		else {
+			this.toolTipGroup.setAttributeNS(null,"visibility","hidden");
+		}
+	}
+
+	mapApp.prototype.enableTooltips = function()
+	{
+		this.tooltipsEnabled = true;
+	}
+
+	mapApp.prototype.disableTooltips = function()
+	{
+		this.tooltipsEnabled = false;
+		this.toolTipGroup.setAttributeNS(null,"visibility","hidden");
+	}
+
+	ViewBox.VERSION = "1.0";
+
+	function ViewBox(svgNode)
+	{
+		if( arguments.length > 0 ) {
+			this.init(svgNode);
+		}
+	}
+
+	ViewBox.prototype.init = function(svgNode)
+	{
+		var viewBox = svgNode.getAttributeNS(null, "viewBox");
+		var preserveAspectRatio = svgNode.getAttributeNS(null, "preserveAspectRatio");
+		if( viewBox != "" ) {
+			var params = viewBox.split(/\s*,\s*|\s+/);
+			this.x      = parseFloat( params[0] );
+			this.y      = parseFloat( params[1] );
+			this.width  = parseFloat( params[2] );
+			this.height = parseFloat( params[3] );
+		} else {
+			this.x      = 0;
+			this.y      = 0;
+			this.width  = innerWidth;
+			this.height = innerHeight;
+	}
+
+	this.setPAR(preserveAspectRatio);
+	var dummy = this.getTM();
+};
+
+	ViewBox.prototype.getTM = function()
+	{
+		var svgRoot      = document.documentElement;
+		var matrix       = document.documentElement.createSVGMatrix();
+		this.windowWidth = svgRoot.getAttributeNS(null,"width");
+		if(this.windowWidth.match(/%/) || this.windowWidth == null) {
+			if(this.windowWidth == null) {
+				if(window.innerWidth) {
+					this.windowWidth = window.innerWidth;
+				}
+				else {
+					this.windowWidth = svgRoot.viewport.width;
+				}
+			}
+			else {
+				var factor = parseFloat(this.windowWidth.replace(/%/,""))/100;
+				if(window.innerWidth) {
+					this.windowWidth = window.innerWidth * factor;
+				}
+				else {
+					this.windowWidth = svgRoot.viewport.width * factor;
+				}
+			}
+		}
+		else {
+			this.windowWidth = parseFloat(this.windowWidth);
+		}
+		this.windowHeight = svgRoot.getAttributeNS(null,"height");
+		if(this.windowHeight.match(/%/) || this.windowHeight == null) {
+			if(this.windowHeight == null) {
+				if(window.innerHeight) {
+					this.windowHeight = window.innerHeight;
+				}
+				else {
+					this.windowHeight = svgRoot.viewport.height;
+				}
+			}
+			else {
+				var factor = parseFloat(this.windowHeight.replace(/%/,""))/100;
+				if(window.innerHeight) {
+					this.windowHeight = window.innerHeight * factor;
+				}
+				else {
+					this.windowHeight = svgRoot.viewport.height * factor;
+				}
+			}
+		}
+		else {
+			this.windowHeight = parseFloat(this.windowHeight);
+		}
+		var x_ratio = this.width  / this.windowWidth;
+		var y_ratio = this.height / this.windowHeight;
+
+		matrix = matrix.translate(this.x, this.y);
+		if( this.alignX == "none" ) {
+		matrix = matrix.scaleNonUniform( x_ratio, y_ratio );
+		} else {
+			if( x_ratio < y_ratio && this.meetOrSlice == "meet" ||
+			x_ratio > y_ratio && this.meetOrSlice == "slice"   )
+			{
+				var x_trans = 0;
+				var x_diff  = this.windowWidth*y_ratio - this.width;
+				if( this.alignX == "Mid" )
+					x_trans = -x_diff/2;
+				else if( this.alignX == "Max" )
+					x_trans = -x_diff;
+				matrix = matrix.translate(x_trans, 0);
+				matrix = matrix.scale( y_ratio );
+			}
+			else if( x_ratio > y_ratio && this.meetOrSlice == "meet" || x_ratio < y_ratio && this.meetOrSlice == "slice" )
+			{
+				var y_trans = 0;
+				var y_diff  = this.windowHeight*x_ratio - this.height;
+				if( this.alignY == "Mid" )
+					y_trans = -y_diff/2;
+				else if( this.alignY == "Max" )
+					y_trans = -y_diff;
+				matrix = matrix.translate(0, y_trans);
+				matrix = matrix.scale( x_ratio );
+			}
+			else
+			{
+				matrix = matrix.scale( x_ratio );
+			}
+		}
+	return matrix;
+	}
+
+	ViewBox.prototype.setPAR = function(PAR)
+	{
+		if( PAR ) {
+			var params = PAR.split(/\s+/);
+			var align  = params[0];
+			if( align == "none" ) {
+				this.alignX = "none";
+				this.alignY = "none";
+			} else {
+				this.alignX = align.substring(1,4);
+				this.alignY = align.substring(5,9);
+			}
+			if( params.length == 2 ) {
+				this.meetOrSlice = params[1];
+			} else {
+				this.meetOrSlice = "meet";
+			}
+		} else {
+			this.align  = "xMidYMid";
+			this.alignX = "Mid";
+			this.alignY = "Mid";
+			this.meetOrSlice = "meet";
+		}
+	};
+
+var svgNS = "http://www.w3.org/2000/svg";
+var xlinkNS = "http://www.w3.org/1999/xlink";
+var cartoNS = "http://www.carto.net/attrib";
+var attribNS = "http://www.carto.net/attrib";
+var batikNS = "http://xml.apache.org/batik/ext";
+
+function toPolarDir(xdiff,ydiff)
+{
+	var direction = (Math.atan2(ydiff,xdiff));
+	return(direction);
+}
+
+function toPolarDist(xdiff,ydiff)
+{
+	var distance = Math.sqrt(xdiff * xdiff + ydiff * ydiff);
+	return(distance);
+}
+
+function toRectX(direction,distance)
+{
+	var x = distance * Math.cos(direction);
+	return(x);
+}
+
+function toRectY(direction,distance)
+{
+	y = distance * Math.sin(direction);
+	return(y);
+}
+
+function DegToRad(deg)
+{
+	return (deg / 180.0 * Math.PI);
+}
+
+function RadToDeg(rad)
+{
+	return (rad / Math.PI * 180.0);
+}
+
+function dd2dms(dd)
+{
+	var minutes = (Math.abs(dd) - Math.floor(Math.abs(dd))) * 60;
+	var seconds = (minutes - Math.floor(minutes)) * 60;
+	var minutes = Math.floor(minutes);
+	if(dd >= 0) {
+		var degrees = Math.floor(dd);
+	}
+	else {
+		var degrees = Math.ceil(dd);       
+	}
+	return {deg:degrees,min:minutes,sec:seconds};
+}
+
+function dms2dd(deg,min,sec)
+{
+	if(deg < 0) {
+		return deg - (min / 60) - (sec / 3600);
+	}
+	else {
+		return deg + (min / 60) + (sec / 3600);
+	}
+}
+
+function log(x,b)
+{
+	if(b==null) b=Math.E;
+	return Math.log(x)/Math.log(b);
+}
+
+function intBilinear(za,zb,zc,zd,xpos,ypos,ax,ay,cellsize)
+{
+	var e = (xpos - ax) / cellsize;
+	var f = (ypos - ay) / cellsize;
+	var wa = (1 - e) * (1 - f);
+	var wb = e * (1 - f);
+	var wc = e * f;
+	var wd = f * (1 - e);
+	var interpol_value = wa * zc + wb * zd + wc * za + wd * zb;
+	return interpol_value;	
+}
+
+function leftOfTest(pointx,pointy,linex1,liney1,linex2,liney2)
+{
+	var result = (liney1 - pointy) * (linex2 - linex1) - (linex1 - pointx) * (liney2 - liney1);
+	if(result < 0) {
+		var leftof = 1;
+	}
+	else {
+		var leftof = 0;	
+	}
+	return leftof;
+}
+
+function distFromLine(xpoint,ypoint,linex1,liney1,linex2,liney2)
+{
+	var dx = linex2 - linex1;
+	var dy = liney2 - liney1;
+	var distance = (dy * (xpoint - linex1) - dx * (ypoint - liney1)) / Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2));
+	return distance;
+}
+
+function angleBetwTwoLines(ax,ay,bx,by)
+{
+	var angle = Math.acos((ax * bx + ay * by) / (Math.sqrt(Math.pow(ax,2) + Math.pow(ay,2)) * Math.sqrt(Math.pow(bx,2) + Math.pow(by,2))));
+	return angle;
+}
+
+function calcBisectorVector(ax,ay,bx,by)
+{
+	var betraga = Math.sqrt(Math.pow(ax,2) + Math.pow(ay,2));
+	var betragb = Math.sqrt(Math.pow(bx,2) + Math.pow(by,2));
+	var c = new Array();
+	c[0] = ax / betraga + bx / betragb;
+	c[1] = ay / betraga + by / betragb;
+	return c;
+}
+
+function calcBisectorAngle(ax,ay,bx,by)
+{
+	var betraga = Math.sqrt(Math.pow(ax,2) + Math.pow(ay,2));
+	var betragb = Math.sqrt(Math.pow(bx,2) + Math.pow(by,2));
+	var c1 = ax / betraga + bx / betragb;
+	var c2 = ay / betraga + by / betragb;
+	var angle = toPolarDir(c1,c2);
+	return angle;
+}
+
+function intersect2lines(line1x1,line1y1,line1x2,line1y2,line2x1,line2y1,line2x2,line2y2)
+{
+	var interSectPoint = new Object();
+	var denominator = (line2y2 - line2y1)*(line1x2 - line1x1) - (line2x2 - line2x1)*(line1y2 - line1y1);
+	if(denominator == 0) {
+		alert("lines are parallel");
+	}
+	else {
+		var ua = ((line2x2 - line2x1)*(line1y1 - line2y1) - (line2y2 - line2y1)*(line1x1 - line2x1)) / denominator;
+		var ub = ((line1x2 - line1x1)*(line1y1 - line2y1) - (line1y2 - line1y1)*(line1x1 - line2x1)) / denominator;
+	}
+	interSectPoint["x"] = line1x1 + ua * (line1x2 - line1x1);
+	interSectPoint["y"] = line1y1 + ua * (line1y2 - line1y1);
+	return interSectPoint;
+}
+
+function formatNumberString(inputNumber,separator)
+{
+	if(typeof(inputNumber) == "Number") {
+		var myTempString = inputNumber.toString();
+	}
+	else {
+		var myTempString = inputNumber;
+	}
+	var newString="";
+	var splitResults = myTempString.split(".");
+	var myCounter = splitResults[0].length;
+	if(myCounter > 3) {
+		while(myCounter > 0) {
+			if(myCounter > 3) {
+				newString = separator + splitResults[0].substr(myCounter - 3,3) + newString;
+			}
+			else {
+				newString = splitResults[0].substr(0,myCounter) + newString;
+			}
+			myCounter -= 3;
+		}
+	}
+	else {
+		newString = splitResults[0];
+	}
+	if(splitResults[1]) {
+		newString = newString + "." + splitResults[1];
+	}
+	return newString;
+}
+
+function statusChange(statusText)
+{
+	document.getElementById("statusText").firstChild.nodeValue = "Statusbar: " + statusText;
+}
+
+function scaleObject(evt,factor)
+{
+	var element = evt.currentTarget;
+	var myX = element.getAttributeNS(null,"x");
+	var myY = element.getAttributeNS(null,"y");
+	var newtransform = "scale(" + factor + ") translate(" + (myX * 1 / factor - myX) + " " + (myY * 1 / factor - myY) +")";
+	element.setAttributeNS(null,'transform', newtransform);
+}
+
+function getTransformToRootElement(node)
+{
+ 	try {
+		var CTM = node.getTransformToElement(document.documentElement);
+	}
+	catch (ex) {
+		var CTM = node.getCTM();
+		while ( ( node = node.parentNode ) != document ) {
+			CTM = node.getCTM().multiply(CTM);
+		}
+	}
+	return CTM;
+}
+
+function getTransformToElement(node,targetNode)
+{
+	try {
+		var CTM = node.getTransformToElement(targetNode);
+	}
+	catch (ex) {
+		var CTM = node.getCTM();
+		while ( ( node = node.parentNode ) != targetNode ) {
+			CTM = node.getCTM().multiply(CTM);
+		}
+	}
+	return CTM;
+}
+
+function hsv2rgb(hue,sat,val)
+{
+	var rgbArr = new Object();
+	if( sat == 0) {
+		rgbArr["red"] = Math.round(val * 255);
+		rgbArr["green"] = Math.round(val * 255);
+		rgbArr["blue"] = Math.round(val * 255);
+	}
+	else {
+		var h = hue / 60;
+		var i = Math.floor(h);
+		var f = h - i;
+		if(i % 2 == 0) {
+			f = 1 - f;
+		}
+		var m = val * (1 - sat); 
+		var n = val * (1 - sat * f);
+		switch(i) {
+			case 0:
+				rgbArr["red"] = val;
+				rgbArr["green"] = n;
+				rgbArr["blue"] = m;
+				break;
+			case 1:
+				rgbArr["red"] = n;
+				rgbArr["green"] = val;
+				rgbArr["blue"] = m;
+				break;
+			case 2:
+				rgbArr["red"] = m;
+				rgbArr["green"] = val;
+				rgbArr["blue"] = n;
+				break;
+			case 3:
+				rgbArr["red"] = m;
+				rgbArr["green"] = n;
+				rgbArr["blue"] = val;
+				break;
+			case 4:
+				rgbArr["red"] = n;
+				rgbArr["green"] = m;
+				rgbArr["blue"] = val;
+				break;
+			case 5:
+				rgbArr["red"] = val;
+				rgbArr["green"] = m;
+				rgbArr["blue"] = n;
+				break;
+			case 6:
+				rgbArr["red"] = val;
+				rgbArr["green"] = n;
+				rgbArr["blue"] = m;
+				break;
+		}
+		rgbArr["red"] = Math.round(rgbArr["red"] * 255);
+		rgbArr["green"] = Math.round(rgbArr["green"] * 255);
+		rgbArr["blue"] = Math.round(rgbArr["blue"] * 255);
+	}
+	return rgbArr;
+}
+
+function rgb2hsv(red,green,blue)
+{
+	var hsvArr = new Object();
+	red = red / 255;
+	green = green / 255;
+	blue = blue / 255;
+	myMax = Math.max(red, Math.max(green,blue));
+	myMin = Math.min(red, Math.min(green,blue));
+	v = myMax;
+	if(myMax > 0) {
+		s = (myMax - myMin) / myMax;
+	}
+	else {
+		s = 0;
+	}
+	if(s > 0) {
+		myDiff = myMax - myMin;
+		rc = (myMax - red) / myDiff;
+		gc = (myMax - green) / myDiff;
+		bc = (myMax - blue) / myDiff;
+		if(red == myMax) {
+			h = (bc - gc) / 6;
+		}
+		if(green == myMax) {
+			h = (2 + rc - bc) / 6;
+		}
+		if(blue == myMax) {
+			h = (4 + gc - rc) / 6;
+		}
+	}
+	else {
+		h = 0;
+	}
+	if(h < 0) {
+		h += 1;
+	}
+	hsvArr["hue"] = Math.round(h * 360);
+	hsvArr["sat"] = s;
+	hsvArr["val"] = v;
+	return hsvArr;
+}
+
+function arrayPopulate(arrayKeys,arrayValues)
+{
+	var returnArray = new Array();
+	if(arrayKeys.length != arrayValues.length) {
+		alert("error: arrays do not have the same length!");
+	}
+	else {
+		for (i=0;i<arrayKeys.length;i++) {
+			returnArray[arrayKeys[i]] = arrayValues[i];
+		}
+	}
+	return returnArray;
+}
+
+function getData(url,callBackFunction,returnFormat,method,postText,additionalParams)
+{
+	this.url = url;
+	this.callBackFunction = callBackFunction;
+	this.returnFormat = returnFormat;
+	this.method = method;
+	this.additionalParams = additionalParams;
+	if(method != "get" && method != "post") {
+		alert("Error in network request: parameter 'method' must be 'get' or 'post'");
+	}
+	this.postText = postText;
+	this.xmlRequest = null;
+} 
+
+getData.prototype.getData = function()
+{
+	if(window.getURL) {
+		if(this.method == "get") {
+			getURL(this.url,this);
+		}
+		if(this.method == "post") {
+			postURL(this.url,this.postText,this);
+		}
+	}
+	else if(window.XMLHttpRequest) {
+		var _this = this;
+		this.xmlRequest = new XMLHttpRequest();
+		if(this.method == "get") {
+			if(this.returnFormat == "xml") {
+				this.xmlRequest.overrideMimeType("text/xml");
+			}
+			this.xmlRequest.open("GET",this.url,true);
+		}
+		if(this.method == "post") {
+			this.xmlRequest.open("POST",this.url,true);
+		}
+		this.xmlRequest.onreadystatechange = function() {_this.handleEvent()};
+		if(this.method == "get") {
+			this.xmlRequest.send(null);
+		}
+		if(this.method == "post") {
+			var reallyPost = true;
+			if(!this.postText) {
+				reallyPost = false;
+				alert("Error in network post request: missing parameter 'postText'!");
+			}
+			if(typeof(this.postText) != "string") {
+				reallyPost = false;
+				alert("Error in network post request: parameter 'postText' has to be of type 'string')");
+			}
+			if(reallyPost) {
+				this.xmlRequest.send(this.postText);
+			}
+		}
+	}
+	else {
+		alert("your browser/svg viewer neither supports window.getURL nor window.XMLHttpRequest!");
+	}	
+}
+
+getData.prototype.operationComplete = function(data)
+{
+	if(data.success) {
+		if(this.returnFormat == "xml") {
+			var node = parseXML(data.content,document);
+			if(typeof(this.callBackFunction) == "function") {
+				this.callBackFunction(node.firstChild,this.additionalParams);
+			}
+			if(typeof(this.callBackFunction) == "object") {
+				this.callBackFunction.receiveData(node.firstChild,this.additionalParams);
+			}
+		}
+		if(this.returnFormat == "json") {
+			if(typeof(this.callBackFunction) == "function") {
+				this.callBackFunction(data.content,this.additionalParams);
+			}
+			if(typeof(this.callBackFunction) == "object") {
+				this.callBackFunction.receiveData(data.content,this.additionalParams);
+			}			
+		}
+	}
+	else {
+		alert("something went wrong with dynamic loading of geometry!");
+	}
+}
+
+getData.prototype.handleEvent = function()
+{
+	if(this.xmlRequest.readyState == 4) {
+		if(this.returnFormat == "xml") {
+			var importedNode = document.importNode(this.xmlRequest.responseXML.documentElement,true);
+			if(typeof(this.callBackFunction) == "function") {
+				this.callBackFunction(importedNode,this.additionalParams);
+			}
+			if(typeof(this.callBackFunction) == "object") {
+				this.callBackFunction.receiveData(importedNode,this.additionalParams);
+			}			
+		}
+		if(this.returnFormat == "json") {
+			if(typeof(this.callBackFunction) == "function") {
+				this.callBackFunction(this.xmlRequest.responseText,this.additionalParams);
+			}
+			if(typeof(this.callBackFunction) == "object") {
+				this.callBackFunction.receiveData(this.xmlRequest.responseText,this.additionalParams);
+			}			
+		}		
+	}	
+}
+
+function serializeNode(node)
+{
+	if(typeof XMLSerializer != 'undefined') {
+		return new XMLSerializer().serializeToString(node);
+	}
+	else if(typeof node.xml != 'undefined') {
+		return node.xml;
+	}
+	else if(typeof printNode != 'undefined') {
+		return printNode(node);
+	}
+	else if(typeof Packages != 'undefined') {
+		try {
+			var stringWriter = new java.io.StringWriter();
+			Packages.org.apache.batik.dom.util.DOMUtilities.writeNode(node,stringWriter);
+			return stringWriter.toString();
+		}
+		catch (e) {
+			 alert("Sorry, your SVG viewer does not support the printNode/serialize function.");
+			 return '';
+		}
+	}
+	else {
+		alert("Sorry, your SVG viewer does not support the printNode/serialize function.");
+		return '';
+	}
+}
+
+function startAnimation(id)
+{
+	document.getElementById(id).beginElement();
+}
+
+function Timer()
+{
+	this.obj = (arguments.length)?arguments[0]:window;
+	return this;
+}
+
+Timer.prototype.setInterval = function(func, msec)
+{
+	var i = Timer.getNew();
+	var t = Timer.buildCall(this.obj, i, arguments);
+	Timer.set[i].timer = window.setInterval(t,msec);
+	return i;
+}
+
+Timer.prototype.setTimeout = function(func, msec)
+{
+	var i = Timer.getNew();
+	Timer.buildCall(this.obj, i, arguments);
+	Timer.set[i].timer = window.setTimeout("Timer.callOnce("+i+");",msec);
+	return i;
+}
+
+Timer.prototype.clearInterval = function(i)
+{
+	if(i == undefined)
+		for( var i=0; i < Timer.set.length; ++i )
+			this.clearInterval(i);
+	if(!Timer.set[i]) return;
+	window.clearInterval(Timer.set[i].timer);
+	Timer.set[i] = null;
+}
+
+Timer.prototype.clearTimeout = function(i)
+{
+	if(i == undefined)
+		for( var i=0; i < Timer.set.length; ++i )
+			this.clearTimeout(i);
+	if(!Timer.set[i]) return;
+	window.clearTimeout(Timer.set[i].timer);
+	Timer.set[i] = null;
+}
+
+Timer.set = new Array();
+Timer.buildCall = function(obj, i, args)
+{
+	var t = "";
+	Timer.set[i] = new Array();
+	if(obj != window){
+		Timer.set[i].obj = obj;
+		t = "Timer.set["+i+"].obj.";
+	}
+	t += args[0]+"(";
+	if(args.length > 2){
+		Timer.set[i][0] = args[2];
+		t += "Timer.set["+i+"][0]";
+		for(var j=1; (j+2)<args.length; j++){
+			Timer.set[i][j] = args[j+2];
+			t += ", Timer.set["+i+"]["+j+"]";
+		}
+	}
+	t += ");";
+	Timer.set[i].call = t;
+	return t;
+}
+
+Timer.callOnce = function(i)
+{
+	if(!Timer.set[i]) return;
+	eval(Timer.set[i].call);
+	Timer.set[i] = null;
+}
+
+Timer.getNew = function()
+{
+	var i = 0;
+	while(Timer.set[i]) i++;
+	return i;
+}
+]]></script>
+<defs>
+<linearGradient id="linearGradient4336">
+<stop style="stop-color:#000000;stop-opacity:0.30927834" offset="0" id="stop4338" />
+<stop style="stop-color:#000000;stop-opacity:0.21649484" offset="0.05375364" id="stop10431" />
+<stop style="stop-color:#000000;stop-opacity:0.2371134" offset="0.11357412" id="stop10433" />
+<stop style="stop-color:#000000;stop-opacity:0.10309278" offset="0.28514513" id="stop10435" />
+<stop style="stop-color:#000000;stop-opacity:0.19587629" offset="0.96170419" id="stop10437" />
+<stop style="stop-color:#000000;stop-opacity:0.29896906" offset="1" id="stop4340" />
+</linearGradient>
+<linearGradient id="linearGradient4118">
+<stop style="stop-color:#000000;stop-opacity:0.556701" offset="0" id="stop4120" />
+<stop style="stop-color:#000000;stop-opacity:0.14432989" offset="0.60714287" id="stop4126" />
+<stop style="stop-color:#000000;stop-opacity:0.63917524" offset="1" id="stop4122" />
+</linearGradient>
+<linearGradient id="linearGradient3187">
+<stop style="stop-color:#575757;stop-opacity:0.39175257" offset="0" id="stop3189" />
+<stop style="stop-color:#a3a3a3;stop-opacity:0" offset="1" id="stop3191" />
+</linearGradient>
+<linearGradient x1="23.679199" y1="19.6987" x2="23.679199" y2="28.9786" id="XMLID_28_" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#f7f7f7;stop-opacity:1" offset="0" id="stop1183" />
+<stop style="stop-color:#e5f0f8;stop-opacity:1" offset="0.0425" id="stop1184" />
+<stop style="stop-color:#6bc2fc;stop-opacity:1" offset="0.33880001" id="stop1185" />
+<stop style="stop-color:#1ea4fe;stop-opacity:1" offset="0.54189998" id="stop1186" />
+<stop style="stop-color:#0099ff;stop-opacity:1" offset="0.63480002" id="stop1187" />
+<stop style="stop-color:#006dff;stop-opacity:1" offset="1" id="stop1188" />
+</linearGradient>
+<linearGradient x1="23.700701" y1="4.5127001" x2="23.700701" y2="19.908199" id="XMLID_25_" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#9a9ab1;stop-opacity:1" offset="0" id="stop1156" />
+<stop style="stop-color:#585868;stop-opacity:1" offset="1" id="stop1157" />
+</linearGradient>
+<linearGradient x1="23.679199" y1="30.654301" x2="23.679199" y2="15.8262" id="XMLID_24_" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#949494;stop-opacity:1" offset="0" id="stop1149" />
+<stop style="stop-color:#616161;stop-opacity:1" offset="1" id="stop1150" />
+</linearGradient>
+<linearGradient x1="-6.3134999" y1="-38.7192" x2="-6.3134999" y2="-38.1609" id="XMLID_23_" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.7071,-0.7071,0.7071,0.7071,71.522,44.5771)">
+<stop style="stop-color:#ffffff;stop-opacity:1" offset="0" id="stop1139" />
+<stop style="stop-color:#4c4c47;stop-opacity:1" offset="1" id="stop1140" />
+</linearGradient>
+<linearGradient x1="-6.4966002" y1="-38.180698" x2="-6.3817" y2="-37.491199" id="XMLID_22_" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.7071,-0.7071,0.7071,0.7071,71.522,44.5771)">
+<stop style="stop-color:#72716e;stop-opacity:1" offset="0" id="stop1132" />
+<stop style="stop-color:#3c3c3c;stop-opacity:1" offset="1" id="stop1133" />
+</linearGradient>
+<linearGradient x1="23.6978" y1="37.0439" x2="23.6978" y2="32.7383" id="XMLID_21_" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#666666;stop-opacity:1" offset="0" id="stop1122" />
+<stop style="stop-color:#333333;stop-opacity:1" offset="1" id="stop1123" />
+</linearGradient>
+<linearGradient x1="23.7017" y1="31.960899" x2="23.7017" y2="37.149399" id="XMLID_20_" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#b2b2b2;stop-opacity:1" offset="0" id="stop1115" />
+<stop style="stop-color:#828282;stop-opacity:1" offset="1" id="stop1116" />
+</linearGradient>
+<linearGradient x1="20.9858" y1="39.3223" x2="31.818399" y2="50.1548" id="XMLID_19_" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#9a9ab1;stop-opacity:1" offset="0" id="stop1108" />
+<stop style="stop-color:#585868;stop-opacity:1" offset="1" id="stop1109" />
+</linearGradient>
+<linearGradient x1="23.7017" y1="31.458" x2="23.7017" y2="2.1292" id="XMLID_18_" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#f7f7f7;stop-opacity:1" offset="0" id="stop1097" />
+<stop style="stop-color:#bdbdcf;stop-opacity:1" offset="0.50559998" id="stop1098" />
+<stop style="stop-color:#b1b1c5;stop-opacity:1" offset="1" id="stop1099" />
+</linearGradient>
+<linearGradient x1="23.7017" y1="32.068401" x2="23.7017" y2="1.5501" id="XMLID_17_" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#f7f7f7;stop-opacity:1" offset="0" id="stop1086" />
+<stop style="stop-color:#f3f3f4;stop-opacity:1" offset="0.23459999" id="stop1087" />
+<stop style="stop-color:#e6e6eb;stop-opacity:1" offset="0.47710001" id="stop1088" />
+<stop style="stop-color:#d2d2dc;stop-opacity:1" offset="0.72299999" id="stop1089" />
+<stop style="stop-color:#b5b5c8;stop-opacity:1" offset="0.97009999" id="stop1090" />
+<stop style="stop-color:#b1b1c5;stop-opacity:1" offset="1" id="stop1091" />
+</linearGradient>
+<linearGradient x1="23.700701" y1="40.502899" x2="23.700701" y2="29.894501" id="XMLID_16_" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#cecedb;stop-opacity:1" offset="0" id="stop1073" />
+<stop style="stop-color:#e9e9ef;stop-opacity:1" offset="0.18539999" id="stop1074" />
+<stop style="stop-color:#cecedb;stop-opacity:1" offset="0.52249998" id="stop1075" />
+<stop style="stop-color:#b1b1c5;stop-opacity:1" offset="1" id="stop1076" />
+</linearGradient>
+<linearGradient x1="23.700701" y1="41.6758" x2="23.700701" y2="14.3296" id="XMLID_15_" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#616161;stop-opacity:1" offset="0" id="stop1063" />
+<stop style="stop-color:#555555;stop-opacity:1" offset="0.52249998" id="stop1064" />
+<stop style="stop-color:#494949;stop-opacity:1" offset="1" id="stop1065" />
+</linearGradient>
+<linearGradient x1="23.700701" y1="41.6758" x2="23.700701" y2="14.3296" id="linearGradient2294" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#616161;stop-opacity:1" offset="0" id="stop2296" />
+<stop style="stop-color:#555555;stop-opacity:1" offset="0.52249998" id="stop2298" />
+<stop style="stop-color:#494949;stop-opacity:1" offset="1" id="stop2300" />
+</linearGradient>
+<linearGradient x1="23.700701" y1="40.502899" x2="23.700701" y2="29.894501" id="linearGradient2303" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#cecedb;stop-opacity:1" offset="0" id="stop2305" />
+<stop style="stop-color:#e9e9ef;stop-opacity:1" offset="0.18539999" id="stop2307" />
+<stop style="stop-color:#cecedb;stop-opacity:1" offset="0.52249998" id="stop2309" />
+<stop style="stop-color:#b1b1c5;stop-opacity:1" offset="1" id="stop2311" />
+</linearGradient>
+<linearGradient x1="23.7017" y1="32.068401" x2="23.7017" y2="1.5501" id="linearGradient2314" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#f7f7f7;stop-opacity:1" offset="0" id="stop2316" />
+<stop style="stop-color:#f3f3f4;stop-opacity:1" offset="0.23459999" id="stop2318" />
+<stop style="stop-color:#e6e6eb;stop-opacity:1" offset="0.47710001" id="stop2320" />
+<stop style="stop-color:#d2d2dc;stop-opacity:1" offset="0.72299999" id="stop2322" />
+<stop style="stop-color:#b5b5c8;stop-opacity:1" offset="0.97009999" id="stop2324" />
+<stop style="stop-color:#b1b1c5;stop-opacity:1" offset="1" id="stop2326" />
+</linearGradient>
+<linearGradient x1="23.7017" y1="31.458" x2="23.7017" y2="2.1292" id="linearGradient2329" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#f7f7f7;stop-opacity:1" offset="0" id="stop2331" />
+<stop style="stop-color:#bdbdcf;stop-opacity:1" offset="0.50559998" id="stop2333" />
+<stop style="stop-color:#b1b1c5;stop-opacity:1" offset="1" id="stop2335" />
+</linearGradient>
+<linearGradient x1="20.9858" y1="39.3223" x2="31.818399" y2="50.1548" id="linearGradient2339" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#9a9ab1;stop-opacity:1" offset="0" id="stop2341" />
+<stop style="stop-color:#585868;stop-opacity:1" offset="1" id="stop2343" />
+</linearGradient>
+<linearGradient x1="23.7017" y1="31.960899" x2="23.7017" y2="37.149399" id="linearGradient2346" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#b2b2b2;stop-opacity:1" offset="0" id="stop2348" />
+<stop style="stop-color:#828282;stop-opacity:1" offset="1" id="stop2350" />
+</linearGradient>
+<linearGradient x1="23.6978" y1="37.0439" x2="23.6978" y2="32.7383" id="linearGradient2353" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#666666;stop-opacity:1" offset="0" id="stop2355" />
+<stop style="stop-color:#333333;stop-opacity:1" offset="1" id="stop2357" />
+</linearGradient>
+<linearGradient x1="23.679199" y1="30.654301" x2="23.679199" y2="15.8262" id="linearGradient2380" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#949494;stop-opacity:1" offset="0" id="stop2382" />
+<stop style="stop-color:#616161;stop-opacity:1" offset="1" id="stop2384" />
+</linearGradient>
+<linearGradient x1="23.700701" y1="4.5127001" x2="23.700701" y2="19.908199" id="linearGradient2387" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#9a9ab1;stop-opacity:1" offset="0" id="stop2389" />
+<stop style="stop-color:#585868;stop-opacity:1" offset="1" id="stop2391" />
+</linearGradient>
+<linearGradient x1="12.6787" y1="2.5386" x2="32.335499" y2="22.195601" id="XMLID_26_" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#ffffff;stop-opacity:1" offset="0.3202" id="stop1164" />
+<stop style="stop-color:#e6eef6;stop-opacity:1" offset="0.62360001" id="stop1165" />
+<stop style="stop-color:#cecedb;stop-opacity:1" offset="0.9382" id="stop1166" />
+</linearGradient>
+<linearGradient x1="14.5005" y1="32.291" x2="35.789902" y2="53.580601" id="XMLID_27_" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#ffffff;stop-opacity:1" offset="0" id="stop1175" />
+<stop style="stop-color:#cecedb;stop-opacity:1" offset="1" id="stop1176" />
+</linearGradient>
+<linearGradient x1="23.679199" y1="19.6987" x2="23.679199" y2="28.9786" id="linearGradient2404" gradientUnits="userSpaceOnUse">
+<stop style="stop-color:#f7f7f7;stop-opacity:1" offset="0" id="stop2406" />
+<stop style="stop-color:#e5f0f8;stop-opacity:1" offset="0.0425" id="stop2408" />
+<stop style="stop-color:#6bc2fc;stop-opacity:1" offset="0.33880001" id="stop2410" />
+<stop style="stop-color:#1ea4fe;stop-opacity:1" offset="0.54189998" id="stop2412" />
+<stop style="stop-color:#0099ff;stop-opacity:1" offset="0.63480002" id="stop2414" />
+<stop style="stop-color:#006dff;stop-opacity:1" offset="1" id="stop2416" />
+</linearGradient>
+<linearGradient x1="23.679199" y1="19.6987" x2="23.679199" y2="28.9786" id="linearGradient2685" xlink:href="#XMLID_20_" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.5715767,0,0,0.5715767,2.4917157,1.7077553)" />
+<linearGradient x1="23.700701" y1="4.5127001" x2="23.700701" y2="19.908199" id="linearGradient2691" xlink:href="#XMLID_25_" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.5715767,0,0,0.5715767,2.4906969,2.0481264)" />
+<linearGradient x1="23.679199" y1="30.654301" x2="23.679199" y2="15.8262" id="linearGradient2694" xlink:href="#XMLID_24_" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.5715767,0,0,0.5715767,2.4906969,2.0481264)" />
+<linearGradient x1="23.6978" y1="37.0439" x2="23.6978" y2="32.7383" id="linearGradient2711" xlink:href="#XMLID_21_" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.5715767,0,0,0.5715767,2.4906969,2.0481264)" />
+<linearGradient x1="23.7017" y1="31.960899" x2="23.7017" y2="37.149399" id="linearGradient2714" xlink:href="#XMLID_20_" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.5715767,0,0,0.5715767,2.4906969,2.0481264)" />
+<linearGradient x1="20.9858" y1="39.3223" x2="31.818399" y2="50.1548" id="linearGradient2717" xlink:href="#XMLID_19_" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.5715767,0,0,0.5715767,2.4906969,2.0481264)" />
+<linearGradient x1="23.7017" y1="31.458" x2="23.7017" y2="2.1292" id="linearGradient2721" xlink:href="#XMLID_18_" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.5715767,0,0,0.5715767,2.4906969,2.0481264)" />
+<linearGradient x1="23.7017" y1="32.068401" x2="23.7017" y2="1.5501" id="linearGradient2724" xlink:href="#XMLID_17_" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.5715767,0,0,0.5715767,2.4906969,2.0481264)" />
+<linearGradient x1="23.700701" y1="40.502899" x2="23.700701" y2="29.894501" id="linearGradient2727" xlink:href="#XMLID_16_" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.5715767,0,0,0.5715767,2.4906969,2.0481264)" />
+<linearGradient x1="23.700701" y1="41.6758" x2="23.700701" y2="14.3296" id="linearGradient2730" xlink:href="#XMLID_15_" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.5715767,0,0,0.5715767,2.4906969,2.0481264)" />
+<linearGradient x1="-6.4966002" y1="-38.180698" x2="-6.3817" y2="-37.491199" id="linearGradient2363" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.7071,-0.7071,0.7071,0.7071,71.522,44.5771)">
+<stop style="stop-color:#72c296;stop-opacity:1" offset="0" id="stop2365" />
+<stop style="stop-color:#009f81;stop-opacity:1" offset="1" id="stop2367" />
+<a:midPointStop id="midPointStop1134" style="stop-color:#72C296" offset="0" />
+<a:midPointStop id="midPointStop1135" style="stop-color:#72C296" offset="0.5" />
+<a:midPointStop id="midPointStop1136" style="stop-color:#009F81" offset="1" />
+</linearGradient>
+<linearGradient x1="-6.3134999" y1="-38.7192" x2="-6.3134999" y2="-38.1609" id="linearGradient2370" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.7071,-0.7071,0.7071,0.7071,71.522,44.5771)">
+<stop style="stop-color:#ffffff;stop-opacity:1" offset="0" id="stop2372" />
+<stop style="stop-color:#33cc66;stop-opacity:1" offset="1" id="stop2374" />
+<a:midPointStop id="midPointStop1141" style="stop-color:#FFFFFF" offset="0" />
+<a:midPointStop id="midPointStop1142" style="stop-color:#FFFFFF" offset="0.5" />
+<a:midPointStop id="midPointStop1143" style="stop-color:#33CC66" offset="1" />
+</linearGradient>
+<linearGradient x1="-6.3134999" y1="-38.7192" x2="-6.3134999" y2="-38.1609" id="linearGradient4679" xlink:href="#XMLID_23_" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.4041619,-0.4041619,0.4041619,0.4041619,43.371006,27.527358)" />
+<linearGradient x1="-6.4966002" y1="-38.180698" x2="-6.3817" y2="-37.491199" id="linearGradient4682" xlink:href="#XMLID_22_" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.4041619,-0.4041619,0.4041619,0.4041619,43.371006,27.527358)" />
+<radialGradient cx="15.784926" cy="11.76775" r="7.2251477" fx="15.784926" fy="11.76775" id="radialGradient3193" xlink:href="#linearGradient3187" gradientUnits="userSpaceOnUse" gradientTransform="matrix(2.1212989,0,0,2.1212989,-17.666242,-13.896121)" />
+<linearGradient x1="4.0578675" y1="19.052357" x2="16.877344" y2="11.927357" id="linearGradient4342" xlink:href="#linearGradient4336" gradientUnits="userSpaceOnUse" />
+<linearGradient x1="2.7473981" y1="14.081594" x2="33.384041" y2="20.708118" id="linearGradient5335" xlink:href="#linearGradient4118" gradientUnits="userSpaceOnUse" gradientTransform="translate(-0.5687476,-1.9462526)" />
+<linearGradient x1="31.103237" y1="14.087626" x2="0.34384245" y2="24" id="linearGradient5343" xlink:href="#linearGradient4118" gradientUnits="userSpaceOnUse" gradientTransform="translate(-6.8747618e-2,-1.9445436)" />
+<linearGradient x1="6.092978" y1="5.2999663" x2="29.600527" y2="10.294057" id="linearGradient10260" xlink:href="#linearGradient4118" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.9996554,0,0,1.0846543,-6.3240762e-2,-3.9459744)" />
+<linearGradient x1="-1.2017846" y1="9.6328125" x2="23.174219" y2="5.453125" id="linearGradient10268" xlink:href="#linearGradient4118" gradientUnits="userSpaceOnUse" />
+<linearGradient x1="12.116117" y1="27.353554" x2="19.441942" y2="26.911612" id="linearGradient10429" xlink:href="#linearGradient4336" gradientUnits="userSpaceOnUse" gradientTransform="translate(-6.8747618e-2,-1.9445436)" />
+<linearGradient x1="-1.2017846" y1="9.6328125" x2="23.174219" y2="5.453125" id="linearGradient11418" xlink:href="#linearGradient4118" gradientUnits="userSpaceOnUse" />
+<linearGradient x1="-1.2017846" y1="9.6328125" x2="23.174219" y2="5.453125" id="linearGradient11420" xlink:href="#linearGradient4118" gradientUnits="userSpaceOnUse" />
+<linearGradient x1="6.092978" y1="5.2999663" x2="29.600527" y2="10.294057" id="linearGradient2186" xlink:href="#linearGradient4118" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.9996554,0,0,1.0846543,-6.3240762e-2,-3.9459744)" />
+<linearGradient x1="12.116117" y1="27.353554" x2="19.441942" y2="26.911612" id="linearGradient2190" xlink:href="#linearGradient4336" gradientUnits="userSpaceOnUse" gradientTransform="translate(-6.8747618e-2,-1.9445436)" />
+<linearGradient x1="2.7473981" y1="14.081594" x2="33.384041" y2="20.708118" id="linearGradient2196" xlink:href="#linearGradient4118" gradientUnits="userSpaceOnUse" gradientTransform="translate(-0.5687476,-1.9462526)" />
+<linearGradient x1="31.103237" y1="14.087626" x2="0.34384245" y2="24" id="linearGradient2199" xlink:href="#linearGradient4118" gradientUnits="userSpaceOnUse" gradientTransform="translate(-6.8747618e-2,-1.9445436)" />
+<g id="ZoomToolIcon" style="shape-rendering:auto">
+<path d="M 19.259813,11.066793 C 19.259813,14.78099 16.248862,17.791941 12.534665,17.791941 C 8.8204686,17.791941 5.8095174,14.78099 5.8095174,11.066793 C 5.8095174,7.3525964 8.8204686,4.3416452 12.534665,4.3416452 C 16.248862,4.3416452 19.259813,7.3525964 19.259813,11.066793 z " style="opacity:1;fill:url(#radialGradient3193);fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" id="path2206" />
+<path d="M 24.7505,24.525549 C 24.7505,24.525549 27,27 27,27" style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-linejoin:miter;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:1;stroke-dasharray:none;stroke-opacity:1" id="path3335" />
+<path d="M 26.063147,25.936853 L 17.083686,16.111708" style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" id="path5509" />
+</g>
+<g id="UndoZoomToolIcon" style="shape-rendering:auto"><path d="M 19.259813,11.066793 C 19.259813,14.78099 16.248862,17.791941 12.534665,17.791941 C 8.8204686,17.791941 5.8095174,14.78099 5.8095174,11.066793 C 5.8095174,7.3525964 8.8204686,4.3416452 12.534665,4.3416452 C 16.248862,4.3416452 19.259813,7.3525964 19.259813,11.066793 z " style="fill:url(#radialGradient3193);fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" id="path2206" /><path d="M 24.7505,24.525549 C 24.7505,24.525549 27,27 27,27" style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-linejoin:miter;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:1;stroke-dasharray:none;stroke-opacity:1" id="path3335" /><path d="M 25.782971,25.703373 L 16.80351,15.878228" style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" id="path5509" /> <path id="path2261" d="M 9.1057211,11.041261 L 16.156818,11.041261" style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" /></g>
+<g id="DeNovoToolIcon" style="shape-rendering:crispEdges"><path d="M 5,11 L 5,21" style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" id="path2170" /> <path d="M 27,11 L 27,21" style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" id="path2172" /> <path d="M 5,16 L 27,16" style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" id="path2174" /></g>
+<g id="FilterToolIcon" style="shape-rendering:auto">
+<path d="M 12.931252,22.055456 L 15.931252,22.055456 L 15.931252,8.0554564 C 15.931252,8.0554564 5.9312524,8.0554564 3.9312524,6.0554564 L 12.931252,22.055456 z " style="opacity:0.72222218;fill:url(#linearGradient2199);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" id="path4356" />
+<path d="M 18.931252,22.055456 L 15.931252,22.055456 L 15.931252,8.0554564 C 15.931252,8.0554564 25.931252,8.0554564 27.931252,6.0554565 L 18.931252,22.055456 z " style="opacity:0.66666667;fill:url(#linearGradient2196);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" id="path4358" />
+<path d="M 12.931252,22.055456 L 12.975446,29.071922 C 15.815136,28.758809 17.770942,28.114239 18.931252,26.055456 L 18.931252,22.055456 L 12.931252,22.055456" style="opacity:0.93888891;fill:url(#linearGradient2190);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:0.375" id="path10421" />
+<path d="M 3.9937524,6.0476439 L 12.931252,22.055456 L 12.931252,29.055456 C 15.439329,28.886854 17.707429,28.325565 18.931252,26.055456 L 18.931252,22.055456 L 27.868752,6.0554564" style="fill:#ffffff;fill-opacity:0;fill-rule:evenodd;stroke:#666666;stroke-width:0.1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" id="path10439" />
+<g transform="translate(-6.8747618e-2,-1.9445436)" style="stroke:#666666" id="g10324">
+<g style="opacity:1;fill:url(#linearGradient11418);fill-opacity:1;fill-rule:evenodd;stroke:#666666;stroke-width:0.20825759;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-opacity:1" id="g10326" />
+<path d="M 15.982465,5.557254 C 9.3693678,5.557254 4.0234379,6.5291042 4.0234379,7.7265626 C 4.0234379,8.9240209 9.3693678,9.8958712 15.982465,9.8958712" style="opacity:1;fill:url(#linearGradient11420);fill-opacity:1;fill-rule:evenodd;stroke:#666666;stroke-width:0.20825759;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-opacity:1" id="path9283" />
+</g>
+<path d="M 15.91172,3.6127102 C 22.524815,3.6127102 27.895871,4.5845605 27.895871,5.7820188 C 27.895871,6.9794772 22.524815,7.9513274 15.91172,7.9513274" style="fill:url(#linearGradient2186);fill-opacity:1;fill-rule:evenodd;stroke:#666666;stroke-width:0.20825759;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-opacity:1" id="path7324" />
+</g>
+<g id="PrintToolIcon" style="shape-rendering:auto">
+<path d="M 10.0538,10.488028 L 10.0538,10.488028 C 9.6731297,10.522323 9.3593341,10.808682 9.2896017,11.18478 C 6.7798085,11.475712 5.2657018,11.903252 4.6758346,12.493691 C 3.4892414,13.680284 3.3120526,16.486154 3.3120526,18.053417 C 3.3120526,20.680384 3.7898907,23.949802 4.6758346,24.836318 C 5.5377723,25.698256 11.336418,25.873158 16.048496,25.869729 C 19.903781,25.866871 26.503777,25.729121 27.396008,24.836318 C 28.337967,23.893788 28.762648,20.275707 28.762648,18.009406 C 28.762648,16.459861 28.584888,13.683142 27.396008,12.494262 C 26.799854,11.898679 25.288034,11.469425 22.790243,11.179636 C 22.720511,10.802967 22.407287,10.516607 22.026045,10.482884 C 18.401106,10.15537 13.702174,10.157657 10.0538,10.488028 z M 9.2896017,11.185352 L 9.2896017,11.185923 C 9.2896017,11.185352 9.2896017,11.185352 9.2896017,11.185352 z " style="fill:url(#linearGradient2730)" id="path1071" />
+<path d="M 5.092514,24.625978 C 6.2568158,25.790279 25.847607,25.757128 26.978757,24.625978 C 28.109908,23.494827 28.974132,15.113227 26.978757,13.117852 C 24.983383,11.121907 7.0553084,11.155058 5.092514,13.117852 C 3.1302912,15.080075 3.9287839,23.462247 5.092514,24.625978 z " style="fill:url(#linearGradient2727)" id="path1084" />
+<path d="M 16.037636,19.961912 C 20.872604,19.961912 25.208584,19.017667 28.159635,17.522422 C 28.092189,15.559628 27.7481,13.771165 26.978757,12.970386 C 24.983383,10.893847 7.0553084,10.928714 5.092514,12.970386 C 4.3328886,13.760876 3.9870847,15.553912 3.9156376,17.522994 C 6.8672597,19.017667 11.203241,19.961912 16.037636,19.961912 z " style="fill:url(#linearGradient2724)" id="path1095" />
+<path d="M 16.037636,19.629254 C 20.872604,19.629254 25.208584,18.72159 28.159635,17.285218 C 28.092189,15.398443 27.7481,13.679712 26.978757,12.91037 C 24.983383,10.914424 7.0553084,10.947576 5.092514,12.91037 C 4.3328886,13.669995 3.9870847,15.392728 3.9156376,17.28579 C 6.8672597,18.722162 11.203241,19.629254 16.037636,19.629254 z " style="fill:url(#linearGradient2721)" id="path1105" />
+<rect width="17.154732" height="0.42753938" x="7.5234299" y="23.126732" style="opacity:0.8;fill:#ffffff" id="rect1106" />
+<path d="M 9.8228828,21.549752 C 9.6113994,21.549752 9.4290665,21.780097 9.406775,21.987008 C 9.4073465,21.979578 9.4079181,21.972147 9.4079181,21.964717 C 9.4079181,21.956714 9.4010592,21.952142 9.399916,21.94414 C 9.3118932,22.233358 8.8574898,23.385085 8.3133487,24.758012 C 7.1924868,27.583887 7.1461891,27.740499 7.1461891,27.892538 C 7.1461891,28.121169 7.3319515,28.307503 7.5611538,28.307503 L 24.576421,28.307503 C 24.80448,28.307503 24.991385,28.121741 24.991385,27.892538 C 24.991385,27.738213 24.943944,27.582172 23.798505,24.770015 C 23.316094,23.58628 22.90513,22.572303 22.738801,22.119614 C 22.701649,22.086462 22.675928,22.040736 22.669641,21.98758 C 22.647349,21.78124 22.464445,21.549752 22.253533,21.549752 L 9.8228828,21.549752 z M 9.0209607,21.890983 C 9.0392512,21.969861 9.0924078,22.037307 9.175858,22.052739 C 9.2707397,22.069887 9.3559046,22.014444 9.3942003,21.929279 C 9.3776246,21.842399 9.3153227,21.768666 9.2221557,21.758377 C 9.1295603,21.748661 9.0558269,21.808676 9.0209607,21.890983 z " style="fill:url(#linearGradient2717)" id="path1113" />
+<path d="M 24.151168,20.316289 L 24.151168,23.281629 C 24.360365,23.281629 24.506688,23.281629 24.574706,23.281629 C 24.575277,22.552297 24.151168,20.316289 24.151168,20.316289 z M 7.5011383,23.281629 C 7.577158,23.281629 7.7211953,23.281629 7.920104,23.281629 L 7.920104,20.316289 C 7.920104,20.316289 7.5011383,22.552297 7.5011383,23.281629 z " style="opacity:0.8;fill:url(#linearGradient2714)" id="path1120" />
+<rect width="16.231064" height="2.4612093" x="7.9201035" y="20.760405" style="fill:url(#linearGradient2711)" id="rect1127" />
+<path d="M 21.961457,13.309331 C 23.895101,13.309331 25.751011,13.431076 27.478887,13.654563 C 27.337136,13.355628 27.171379,13.102991 26.978186,12.91037 C 24.982812,10.914424 7.0547368,10.947576 5.0919425,12.91037 C 4.332317,13.669995 3.9865131,15.392728 3.915066,17.28579 C 4.4614934,17.551573 5.0553616,17.799637 5.6903833,18.026553 C 7.5034246,15.317279 14.099991,13.309331 21.961457,13.309331 z " style="opacity:0.5;fill:#ffffff" id="path1128" />
+<circle cx="39.937" cy="22.176001" r="0.972" transform="matrix(0.5715767,0,0,0.5715767,2.4906969,2.0481264)" style="fill:#4d4d4d" id="circle1130" />
+<path d="M 25.488085,14.278725 C 25.282889,14.296444 24.980525,14.505641 24.881643,14.760564 C 24.783903,15.014915 24.940515,15.185817 25.145711,15.168098 C 25.351479,15.150951 25.654414,14.941182 25.752154,14.68683 C 25.849893,14.432479 25.693281,14.261577 25.488085,14.278725 z " style="fill:url(#linearGradient4682)" id="path1137" />
+<path d="M 25.4898,14.273009 C 25.314898,14.288441 25.053687,14.467345 24.965093,14.683973 C 24.948517,14.724554 24.939372,14.762279 24.937085,14.797145 C 25.059403,14.765136 25.186865,14.719982 25.306324,14.663967 C 25.523523,14.562227 25.662988,14.449054 25.696711,14.36046 C 25.653843,14.298158 25.577823,14.265007 25.4898,14.273009 z " style="fill:url(#linearGradient4679);fill-opacity:1" id="path1144" />
+<path d="M 28.159063,17.262355 C 28.149918,17.036011 28.138487,16.812524 28.121911,16.592467 C 28.138487,16.812524 28.15049,17.036582 28.159063,17.262355 z " style="fill:#ffffff" id="path1145" />
+<path d="M 28.159063,17.262355 C 28.159063,17.269785 28.159063,17.277788 28.159063,17.285218 C 28.159635,17.285218 28.159635,17.285218 28.159635,17.285218 C 28.159635,17.277788 28.159063,17.269785 28.159063,17.262355 z " style="fill:#ffffff" id="path1146" />
+<path d="M 23.373823,18.876488 C 23.061742,16.620474 22.609054,13.49052 22.211808,11.287092 C 22.190088,11.168776 22.09292,11.080181 21.974032,11.069321 C 18.379958,10.745809 13.721607,10.747524 10.107528,11.075609 C 9.9886401,11.086469 9.891472,11.175063 9.8697521,11.292808 C 9.4673621,13.497951 9.0003839,16.621618 8.6774431,18.872487 C 10.883158,19.355469 13.384949,19.629254 16.037636,19.629254 C 18.680035,19.629254 21.173824,19.357184 23.373823,18.876488 z " style="fill:#ffffff" id="path1147" />
+<path d="M 10.131534,11.338534 C 9.7142832,13.609408 9.2238704,16.897117 8.9335095,18.902209 C 11.09064,19.33032 13.498121,19.569239 16.037636,19.569239 C 18.568006,19.569239 20.966342,19.331463 23.116614,18.907353 C 22.837684,16.901119 22.363276,13.605979 21.950026,11.332247 C 18.357095,11.011021 13.725037,11.015022 10.131534,11.338534 z " style="fill:url(#linearGradient2694)" id="path1154" />
+<path d="M 10.735119,2.9180661 C 10.505917,2.9180661 10.320155,3.1038286 10.320155,3.3330308 L 10.320155,16.265525 C 10.320155,16.494156 10.505917,16.68049 10.735119,16.68049 L 21.33901,16.68049 C 21.567641,16.68049 21.754546,16.494727 21.754546,16.265525 L 21.754546,3.3330308 C 21.754546,3.1038286 21.568212,2.9180661 21.33901,2.9180661 L 10.735119,2.9180661 L 10.735119,2.9180661 z " style="fill:url(#linearGradient2691)" id="path1161" />
+<path d="M 10.735119,3.3330308 C 10.735119,3.565091 10.735119,16.034037 10.735119,16.265525 C 10.966036,16.265525 21.108665,16.265525 21.33901,16.265525 C 21.33901,16.034037 21.33901,3.565091 21.33901,3.3330308 C 21.108665,3.3330308 10.966036,3.3330308 10.735119,3.3330308 z " style="fill:#ffffff" id="path1162" />
+<path d="M 9.8228828,21.964717 C 9.8228828,22.191061 7.5611538,27.666766 7.5611538,27.892538 C 8.129301,27.892538 24.008273,27.892538 24.575849,27.892538 C 24.575849,27.666194 22.252961,22.190489 22.252961,21.964717 C 21.685386,21.964717 10.39103,21.964717 9.8228828,21.964717 z " style="fill:#ffffff" id="path1173" />
+<path d="M 10.361308,13.192157 C 9.9600612,14.843442 9.489082,17.233776 9.2101526,18.691868 C 11.28269,19.002806 13.596432,19.177137 16.037636,19.177137 C 18.469124,19.177137 20.774292,19.003949 22.841114,18.695298 C 22.572473,17.236634 22.115783,14.841156 21.719109,13.188156 C 18.265642,12.95381 13.814774,12.957239 10.361308,13.192157 z " style="fill:#b3b3b3" id="path1181" />
+<path d="M 10.362327,13.128429 C 9.9610807,14.797433 9.4901007,17.213488 9.2111717,18.688728 C 11.283709,19.003095 13.597451,19.178569 16.038655,19.178569 C 18.470143,19.178569 20.775311,19.003666 22.842133,18.691585 C 22.573492,17.216918 22.116802,14.795147 21.720128,13.123857 C 18.266661,12.887796 13.815793,12.890654 10.362327,13.128429 z " style="fill:url(#linearGradient2685);fill-opacity:1" id="path1194" />
+<path d="M 21.732256,14.169195 C 21.770552,14.169195 21.809419,14.169767 21.848287,14.170338 C 21.793987,13.923989 21.74083,13.686213 21.688817,13.462726 C 18.23535,13.222092 13.784482,13.22495 10.331016,13.467299 C 9.9486313,15.086004 9.5033731,17.393459 9.2210142,18.90528 C 11.075209,16.142278 15.976479,14.169195 21.732256,14.169195 z " style="opacity:0.4;fill:#f2f2f2" id="path1195" />
+<path d="M 22.527318,23.265625 C 22.359846,22.500284 22.253533,21.979578 22.253533,21.893269 C 21.685957,21.893269 10.391602,21.893269 9.8234544,21.893269 C 9.8234544,21.979578 9.7194274,22.500855 9.5570996,23.265625 L 22.527318,23.265625 L 22.527318,23.265625 z " style="opacity:0.2" id="path1196" />
+<polyline points="0,48 0,0 48,0 48,48 " style="fill:none" id="_x3C_Slice_x3E_" transform="matrix(0.5715767,0,0,0.5715767,2.4906969,2.0481264)" />
+</g>
+<g id="GrabViewToolIcon" style="shape-rendering:auto"><path d="M 13.109612,12.537571 C 6.3438304,-2.6903937 5.951431,9.3271772 9.1579317,14.639031 C 10.578434,17.021675 10.20255,19.702015 8.7829112,17.935596 C 2.367401,9.9529522 2.337874,19.357898 6.4466763,22.294166 C 8.8502929,24.123805 10.82332,26.334141 11.353485,29.083115 L 23.127422,29.147745 C 22.749335,23.763645 25.767764,19.218647 26.876022,14.799657 C 29.704182,6.5034404 26.580905,4.0917396 23.127422,14.282609 C 25.955348,-0.62441464 20.721427,-1.5013276 18.150833,12.602202 C 17.910427,1.2784354 11.102327,-3.1053766 13.109612,12.537571 z " style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.21829498px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" id="path2245" /></g>
+<g id="OptionsToolIcon" style="shape-rendering:auto"><rect width="5" height="5" x="5" y="4.25" style="fill:none;fill-rule:evenodd;stroke:black;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" id="rect2180" /><path d="M 6.0315735,6.2789858 L 7.0315735,8.2158388 L 9,5.3105592" style="fill:none;fill-rule:evenodd;stroke:#808080;stroke-width:0.8;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" id="path4130" /><rect width="10" height="5" x="15" y="4.25" style="fill:none;fill-rule:evenodd;stroke:black;stroke-width:0.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" id="rect5109" /><rect width="3" height="2" x="25.9375" y="4.515625" style="fill:#808080;fill-rule:evenodd;stroke:black;stroke-width:0.1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" id="rect5113" />
+<path d="M 26.782812,5.9361979 L 27.442969,5.0559896 L 28.103125,5.9361979" style="fill:none;fill-rule:evenodd;stroke:black;stroke-width:0.2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3;stroke-dasharray:none;stroke-opacity:1" id="path5144" /><path d="M 23.175324,8.25 L 22.783549,8.25 L 22.783549,5.753524 C 22.689232,5.84349 22.565533,5.933452 22.412451,6.023413 C 22.259368,6.113378 22.121885,6.180851 22,6.22583 L 22,5.847115 C 22.219102,5.744095 22.410637,5.619308 22.574603,5.472752 C 22.738567,5.326202 22.854648,5.184003 22.922847,5.046153 L 23.175324,5.046153 L 23.175324,8.25 z " style="font-family:Arial" id="flowRoot5154" /><path d="M 23.9375,17.581309 L 23.9375,18 L 21.592349,18 C 21.589121,17.895126 21.606063,17.794285 21.643172,17.697478 C 21.70287,17.537747 21.798467,17.380436 21.929963,17.225543 C 22.061459,17.070653 22.251442,16.89156 22.499915,16.688264 C 22.885528,16.37203 23.1461,16.121541 23.281632,15.9368 C 23.41716,15.752062 23.484925,15.577405 23.484927,15.412831 C 23.484925,15.240195 23.42321,15.094581 23.299783,14.975989 C 23.176353,14.857404 23.015411,14.79811 22.816958,14.798106 C 22.607208,14.79811 22.439409,14.861034 22.313561,14.98688 C 22.187712,15.112732 22.12398,15.286985 22.122367,15.509638 L 21.674635,15.463655 C 21.70529,15.129673 21.820652,14.875152 22.02072,14.700089 C 22.220787,14.525033 22.489427,14.437504 22.826639,14.4375 C 23.167075,14.437504 23.436521,14.53189 23.634978,14.720661 C 23.83343,14.909438 23.932657,15.143388 23.93266,15.422512 C 23.932657,15.564498 23.903615,15.704061 23.845533,15.841203 C 23.787447,15.978348 23.691043,16.122752 23.556322,16.274414 C 23.421597,16.42608 23.197731,16.634215 22.884723,16.898819 C 22.623343,17.11825 22.455544,17.267091 22.381326,17.345342 C 22.307107,17.423595 22.245796,17.502251 22.197393,17.581309 L 23.9375,17.581309 z " style="fill:black;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter" id="text5168" /><path d="M 21.709947,26.588238 L 22.139332,26.530986 C 22.188631,26.774305 22.27252,26.949638 22.390999,27.056983 C 22.509477,27.16433 22.653798,27.218003 22.823962,27.218002 C 23.02593,27.218003 23.196492,27.14803 23.335646,27.008081 C 23.474796,26.868134 23.544373,26.69479 23.544375,26.488048 C 23.544373,26.29085 23.479966,26.12824 23.351152,26.000219 C 23.222335,25.8722 23.058532,25.80819 22.859745,25.808189 C 22.778637,25.80819 22.677652,25.824094 22.556789,25.855898 L 22.604498,25.478994 C 22.633123,25.482175 22.656182,25.483766 22.673677,25.483764 C 22.856562,25.483766 23.02116,25.436057 23.16747,25.340636 C 23.313778,25.245219 23.386931,25.098115 23.386933,24.899323 C 23.386931,24.741885 23.333657,24.611479 23.227107,24.508106 C 23.120554,24.404739 22.982992,24.353053 22.81442,24.353051 C 22.647436,24.353053 22.508284,24.405534 22.396963,24.510492 C 22.28564,24.615455 22.214076,24.772896 22.182271,24.982816 L 21.752886,24.90648 C 21.805365,24.618636 21.924639,24.395594 22.110706,24.237355 C 22.296772,24.079122 22.528162,24.000004 22.804878,24 C 22.995715,24.000004 23.171444,24.040954 23.332068,24.122853 C 23.492688,24.204757 23.61554,24.316476 23.700624,24.458011 C 23.785703,24.599552 23.828244,24.749837 23.828246,24.908865 C 23.828244,25.059948 23.787691,25.19751 23.706587,25.321552 C 23.625479,25.445599 23.505411,25.544198 23.346381,25.617351 C 23.55312,25.665062 23.713741,25.764059 23.828246,25.914342 C 23.942747,26.064629 23.999998,26.252683 24,26.478506 C 23.999998,26.783847 23.888676,27.042671 23.666034,27.254977 C 23.443388,27.467284 23.161903,27.573438 22.821577,27.573438 C 22.514645,27.573438 22.259798,27.481995 22.057033,27.299109 C 21.854267,27.116223 21.738572,26.879266 21.709947,26.588238 L 21.709947,26.588238 z " style="fill:black;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter" id="text5172" /><rect width="3" height="2" x="25.9375" y="-8.765625" transform="scale(1,-1)" style="fill:#808080;fill-rule:evenodd;stroke:black;stroke-width:0.1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" id="rect5178" /><path d="M 26.782813,7.3450522 L 27.44297,8.2252605 L 28.103126,7.3450522" style="fill:none;fill-rule:evenodd;stroke:black;stroke-width:0.2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3;stroke-dasharray:none;stroke-opacity:1" id="path5180" /><rect width="5" height="5" x="5" y="13.75" style="fill:none;fill-rule:evenodd;stroke:black;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" id="rect6151" /><path d="M 6.0315735,15.778986 L 7.0315735,17.715839 L 9,14.810559" style="fill:none;fill-rule:evenodd;stroke:#808080;stroke-width:0.8;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" id="path6153" /><rect width="10" height="5" x="15" y="13.75" style="fill:none;fill-rule:evenodd;stroke:black;stroke-width:0.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" id="rect6155" /><rect width="3" height="2" x="25.9375" y="14.015625" style="fill:#808080;fill-rule:evenodd;stroke:black;stroke-width:0.1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" id="rect6157" /><path d="M 26.782812,15.436198 L 27.442969,14.55599 L 28.103125,15.436198" style="fill:none;fill-rule:evenodd;stroke:black;stroke-width:0.2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3;stroke-dasharray:none;stroke-opacity:1" id="path6159" /><rect width="3" height="2" x="25.9375" y="-18.265625" transform="scale(1,-1)" style="fill:#808080;fill-rule:evenodd;stroke:black;stroke-width:0.1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" id="rect6163" /><path d="M 26.782813,16.845052 L 27.44297,17.72526 L 28.103126,16.845052" style="fill:none;fill-rule:evenodd;stroke:black;stroke-width:0.2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3;stroke-dasharray:none;stroke-opacity:1" id="path6165" /><rect width="5" height="5" x="5" y="23.25" style="fill:none;fill-rule:evenodd;stroke:black;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" id="rect6167" /><path d="M 6.0315735,25.278986 L 7.0315735,27.215839 L 9,24.310559" style="fill:none;fill-rule:evenodd;stroke:#808080;stroke-width:0.8;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" id="path6169" /><rect width="10" height="5" x="15" y="23.25" style="fill:none;fill-rule:evenodd;stroke:black;stroke-width:0.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" id="rect6171" /><rect width="3" height="2" x="25.9375" y="23.515625" style="fill:#808080;fill-rule:evenodd;stroke:black;stroke-width:0.1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" id="rect6173" /><path d="M 26.782812,24.936198 L 27.442969,24.05599 L 28.103125,24.936198" style="fill:none;fill-rule:evenodd;stroke:black;stroke-width:0.2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3;stroke-dasharray:none;stroke-opacity:1" id="path6175" /><rect width="3" height="2" x="25.9375" y="-27.765625" transform="scale(1,-1)" style="fill:#808080;fill-rule:evenodd;stroke:black;stroke-width:0.1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" id="rect6179" /><path d="M 26.782813,26.345052 L 27.44297,27.22526 L 28.103126,26.345052" style="fill:none;fill-rule:evenodd;stroke:black;stroke-width:0.2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3;stroke-dasharray:none;stroke-opacity:1" id="path6181" /></g>
+<symbol id="checkBoxRect" overflow="visible" style="shape-rendering:auto"><rect x="-8" y="-8" width="16" height="16" fill="white" stroke="black" stroke-width="2" cursor="pointer"/></symbol>
+<symbol id="checkBoxCross" overflow="visible" style="shape-rendering:auto"><g pointer-events="none" stroke="dimgray" stroke-width="1"><line x1="-6" y1="-6" x2="6" y2="6"/><line x1="6" y1="-6" x2="-6" y2="6"/></g></symbol>
+</defs></svg>

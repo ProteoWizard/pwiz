@@ -1,0 +1,979 @@
+using Clearcore2.Data;
+using Clearcore2.Data.AnalystDataProvider;
+using Clearcore2.Data.DataAccess.SampleData;
+using Clearcore2.RawXYProcessing;
+using Pwiz.Data.Common.Params;
+
+#pragma warning disable CA1707
+
+namespace Pwiz.Vendor.Sciex;
+
+/// <summary>
+/// <see cref="WiffFile"/> implementation backed by the .NET-Framework-era
+/// <see cref="AnalystWiffDataProvider"/> for <c>.wiff</c> files. C# equivalent of pwiz cpp
+/// <c>WiffFileImpl</c>. Lives in the default ALC alongside the signed Clearcore2 dlls.
+/// </summary>
+internal sealed class WiffFile : AbstractWiffFile
+{
+    private readonly AnalystWiffDataProvider _provider;
+    private readonly Sample _sample;
+    private readonly MassSpectrometerSample _msSample;
+    private readonly WiffExperiment[] _experiments;
+    private readonly string _sampleName = string.Empty;
+    private bool _disposed;
+
+    public override string WiffPath { get; }
+    public override int SampleNumber { get; }
+    public override int SampleCount { get; }
+    public override string SampleName => _sampleName;
+    public override string[] AllSampleNames => EnumerateSampleNames(WiffPath);
+    public override int ExperimentCount => _experiments.Length;
+    public override AbstractWiffExperiment GetExperiment(int experimentIndex) => _experiments[experimentIndex];
+
+    public override DateTime StartTimestampRaw
+    {
+        get
+        {
+            // Zone-less as the SDK reports it; Reader_Sciex applies cpp's host-zone shift
+            // (WiffFile.ipp getSampleAcquisitionTime) under the config flag.
+            try { return _sample.Details.AcquisitionDateTime; }
+            catch { return default; }
+        }
+    }
+
+    public override string? InstrumentModelName
+    {
+        get
+        {
+            try { return _msSample.InstrumentName; }
+            catch { return null; }
+        }
+    }
+
+    public override string? InstrumentSerialNumber
+    {
+        get
+        {
+            try { return _sample.Details.InstrumentSerialNumber; }
+            catch { return null; }
+        }
+    }
+
+    public override int AdcChannelCount
+    {
+        get
+        {
+            if (!_sample.HasADCData) return 0;
+            var adc = _sample.ADCSample;
+            return adc is null ? 0 : adc.ChannelCount;
+        }
+    }
+
+    public override string GetAdcChannelName(int channelIndex)
+    {
+        try { return _sample.ADCSample?.GetChannelNameAt(channelIndex) ?? string.Empty; }
+        catch { return string.Empty; }
+    }
+
+    public override (double[] Times, double[] Intensities) GetAdcTrace(int channelIndex)
+    {
+        try
+        {
+            var data = _sample.ADCSample?.GetADCData(channelIndex);
+            if (data is null) return (Array.Empty<double>(), Array.Empty<double>());
+            return (data.GetActualXValues() ?? Array.Empty<double>(),
+                    data.GetActualYValues() ?? Array.Empty<double>());
+        }
+        catch { return (Array.Empty<double>(), Array.Empty<double>()); }
+    }
+
+    public override bool HasDadData => _sample.HasDADData && _sample.DADSample is not null;
+
+    public override (double[] Times, double[] Intensities) GetTotalWavelengthChromatogram()
+    {
+        try
+        {
+            var dad = _sample.DADSample;
+            if (dad is null) return (Array.Empty<double>(), Array.Empty<double>());
+            var twc = dad.GetTotalWavelengthChromatogram();
+            return (twc.GetActualXValues() ?? Array.Empty<double>(),
+                    twc.GetActualYValues() ?? Array.Empty<double>());
+        }
+        catch { return (Array.Empty<double>(), Array.Empty<double>()); }
+    }
+
+    /// <summary>
+    /// Fast sample-name enumeration for a WIFF file - opens the file with a lightweight
+    /// AnalystWiffDataProvider (no per-sample MS open), reads sample metadata, closes.
+    /// Consumed by <see cref="Reader_Sciex.EnumerateSampleNames(string)"/> to answer
+    /// <c>ReaderList.ReadIds</c> on multi-sample WIFF files.
+    /// </summary>
+    public static string[] EnumerateSampleNames(string wiffPath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(wiffPath);
+        if (!File.Exists(wiffPath)) throw new FileNotFoundException("WIFF not found", wiffPath);
+        // AnalystWiffDataProvider holds native SDK resources that keep the .wiff file
+        // locked. It exposes .Close() (not IDisposable) to release those. Also force
+        // a GC + finalizer pass - the Sciex SDK sometimes enqueues finalizers rather
+        // than closing the file synchronously (see WiffFile.Dispose comments).
+        // Sample names are passed through EXACTLY as the SDK reports them, commas and all, as
+        // cpp does - see the note on the ctor's name resolution below.
+        var provider = new AnalystWiffDataProvider();
+        var names = new List<string>();
+        try
+        {
+            foreach (var info in provider.GetBasicSampleInfos(wiffPath))
+                names.Add(info.SampleName ?? string.Empty);
+        }
+        finally
+        {
+            try { provider.Close(); } catch { /* best-effort */ }
+            System.GC.Collect();
+            System.GC.WaitForPendingFinalizers();
+        }
+        // cpp returns the disambiguated list from getSampleNames(), and both the run id and
+        // ReadIds are built from it, so duplicates must be resolved here rather than at either
+        // call site (AbstractWiffFile.DisambiguateSampleNames).
+        return DisambiguateSampleNames(names);
+    }
+
+    public WiffFile(string wiffPath, int sampleIndex0)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(wiffPath);
+        if (!File.Exists(wiffPath)) throw new FileNotFoundException("WIFF not found", wiffPath);
+        WiffPath = wiffPath;
+
+        _provider = new AnalystWiffDataProvider();
+        SampleCount = _provider.GetNumberOfSamples(wiffPath);
+        if (SampleCount == 0) throw new InvalidDataException($"WIFF reports zero samples: {wiffPath}");
+        if (sampleIndex0 < 0 || sampleIndex0 >= SampleCount)
+            throw new ArgumentOutOfRangeException(nameof(sampleIndex0),
+                $"sample index {sampleIndex0} out of [0, {SampleCount})");
+        SampleNumber = sampleIndex0 + 1;
+
+        _sample = AnalystDataProviderFactory.CreateSample(wiffPath, sampleIndex0, _provider)
+            ?? throw new InvalidDataException($"AnalystDataProviderFactory.CreateSample returned null for {wiffPath}");
+        if (!_sample.HasMassSpectrometerData)
+            throw new InvalidDataException($"WIFF sample {sampleIndex0} has no MS data: {wiffPath}");
+        _msSample = _sample.MassSpectrometerSample;
+
+        // cpp emits run id as "<wiff_base>-<sampleName>" for multi-sample wiffs.
+        // Resolve the name from the WHOLE disambiguated list rather than reading the one sample:
+        // cpp indexes getSampleNames()[sampleIndex], and a duplicate's " (2)" suffix can only be
+        // known by looking at the names before it.
+        //
+        // The SDK's name is used verbatim - notably commas are NOT rewritten to '_'. cpp does no
+        // such rewrite either (Reader_ABI.cpp:72 takes the run id straight from
+        // getSampleNames()[sample-1], and WiffFile.cpp:308-336 only de-duplicates), so msconvert
+        // writes "051309_digestion-rfp9,after,h,1.mzML" - the name Skyline's own fixtures use
+        // (SmallWiffTest.cs:183). Rewriting here made msconvert-sharp disagree with msconvert on
+        // every multi-sample WIFF filename. Skyline is unaffected: it escapes every id it gets
+        // from ReadIds itself (SampleHelp.EscapeSampleId via DataSourceUtil.cs:409, which maps
+        // ',' '.' ';' -> '_', a superset of the old rewrite) and then opens the sample BY INDEX,
+        // never by name.
+        try
+        {
+            var allNames = new List<string>();
+            foreach (var info in _provider.GetBasicSampleInfos(wiffPath))
+                allNames.Add(info.SampleName ?? string.Empty);
+            var unique = DisambiguateSampleNames(allNames);
+            if (sampleIndex0 >= 0 && sampleIndex0 < unique.Length)
+                _sampleName = unique[sampleIndex0];
+        }
+        catch { }
+
+        // The `SampleNumber < SampleCount` term reproduces an off-by-one in cpp. See
+        // SoftwareVersionOf for why matching it is deliberate.
+        bool hasHalfSizeRtWindow = SampleNumber < SampleCount
+                                   && HasHalfSizeRtWindow(SoftwareVersionOf(_sample));
+        var sdkExperiments = new MSExperiment[_msSample.ExperimentCount];
+        for (int i = 0; i < sdkExperiments.Length; i++)
+            sdkExperiments[i] = _msSample.GetMSExperiment(i);
+
+        var ztBins = BuildZtScanBins(sdkExperiments);
+        _experiments = new WiffExperiment[sdkExperiments.Length];
+        for (int i = 0; i < _experiments.Length; i++)
+            _experiments[i] = new WiffExperiment(sdkExperiments[i], hasHalfSizeRtWindow, ztBins?[i]);
+    }
+
+    /// <summary>
+    /// Detects a ZT Scan acquisition and maps each Product experiment to its bin within the
+    /// quadrupole sweep. Returns null (leaving the SDK's collision energy alone) for anything
+    /// that is not a ZT Scan; otherwise returns an array parallel to
+    /// <paramref name="sdkExperiments"/> whose Product entries are populated.
+    ///
+    /// A legacy WIFF flags the mode with the sample-level custom field "Is ZT Scan", and carries
+    /// the CE ramp only as the legacy CE / CES pair, which encodes the ramp as
+    /// midpoint -/+ half-range. That is a lossy projection — an 18 -> 43 V ramp round-trips as
+    /// 30 / 12, i.e. 18 -> 42 — so the reconstructed top end is up to 1 V low. The wiff2
+    /// container stores the true endpoints (see Wiff2File) and is preferred where available.
+    /// </summary>
+    private ZtScanBin?[]? BuildZtScanBins(MSExperiment[] sdkExperiments)
+    {
+        try
+        {
+            if (!IsZtScanSample()) return null;
+
+            var productIndices = new List<int>();
+            for (int i = 0; i < sdkExperiments.Length; i++)
+            {
+                var type = WiffExperiment.MapExperimentType(sdkExperiments[i].Details.ExperimentType);
+                if (type == WiffExperimentType.Product) productIndices.Add(i);
+            }
+            // One bin is not a sweep; leave such a file on the SDK's value.
+            if (productIndices.Count < 2) return null;
+
+            if (!TryReadZtCeRamp(sdkExperiments[productIndices[0]], out double rampStart, out double rampEnd))
+                return null;
+
+            var bins = new ZtScanBin?[sdkExperiments.Length];
+            for (int bin = 0; bin < productIndices.Count; bin++)
+                bins[productIndices[bin]] = new ZtScanBin(rampStart, rampEnd, bin, productIndices.Count);
+            return bins;
+        }
+        catch { return null; }
+    }
+
+    /// <summary>
+    /// True when the sample carries SCIEX OS's "Is ZT Scan" custom field set to true. The field
+    /// name is matched loosely because it is a rendered method label, not a programmatic key; a
+    /// localized acquisition that fails to match simply falls back to the SDK's flat value.
+    /// </summary>
+    private bool IsZtScanSample()
+    {
+        var details = _sample.Details;
+        for (int i = 0; i < details.NumCustomFields; i++)
+        {
+            var name = details.GetCustomFieldName(i);
+            if (name is null) continue;
+            if (!name.Replace(" ", string.Empty).Equals("IsZTScan", StringComparison.OrdinalIgnoreCase)) continue;
+            return bool.TryParse(details.GetCustomFieldValue(i), out bool isZt) && isZt;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Recovers the sweep's CE ramp endpoints from an experiment's legacy CE / CES pair.
+    /// Both are taken as magnitudes so a negative-polarity method (which stores CE negative)
+    /// yields the same increasing ramp as positive mode.
+    /// </summary>
+    private static bool TryReadZtCeRamp(MSExperiment exp, out double rampStart, out double rampEnd)
+    {
+        rampStart = rampEnd = 0;
+        var parameters = exp.Details?.MassRangeInfo is { Length: > 0 } ranges
+            ? ranges[0]?.CompoundDepParameters
+            : null;
+        if (parameters is null) return false;
+        if (!parameters.TryGetValue("CE", out var ce) || ce is null) return false;
+        if (!parameters.TryGetValue("CES", out var ces) || ces is null) return false;
+
+        double centre = Math.Abs((double)ce.Start);
+        double halfRange = Math.Abs((double)ces.Start);
+        if (centre <= 0 || halfRange <= 0) return false;   // no ramp to interpolate
+        rampStart = centre - halfRange;
+        rampEnd = centre + halfRange;
+        return true;
+    }
+
+    private static string SoftwareVersionOf(Sample sample)
+    {
+        // cpp reads batch->GetSample(sample)->Details->SoftwareVersion (WiffFile.cpp:449) and
+        // swallows any exception ("no version details? probably acquired with Analyst?").
+        //
+        // cpp passes its 1-BASED sample number to Batch::GetSample, which is 0-based — every
+        // other call site converts (WiffFile.cpp:988 `batch->GetSample(sample-1)`). So cpp reads
+        // the NEXT sample's acquisition software version, and on the LAST sample the index is out
+        // of range, the read throws, and the catch leaves hasHalfSizeRTWindow false.
+        //
+        // We match that, off-by-one included, because it is load-bearing: it decides the
+        // `start=`/`end=` tokens of every scheduled SRM/SIM chromatogram id, and reading this
+        // sample's own version instead renamed every chromatogram in 19 single-sample corpus
+        // files that previously matched cpp byte for byte.
+        //
+        // The caller expresses cpp's out-of-range case as `SampleNumber < SampleCount` rather
+        // than opening the next Sample to read one string: samples in a batch are acquired by one
+        // method with one software version, so the next sample's version is this sample's, and
+        // opening a second Sample per file would risk the native-handle leak documented on the
+        // finalizer below. If a heterogeneous-version batch ever turns up, that assumption is
+        // where it would show.
+        try { return sample.Details?.SoftwareVersion ?? string.Empty; }
+        catch { return string.Empty; }
+    }
+
+    /// <summary>
+    /// Port of cpp <c>ExperimentImpl::ExperimentImpl</c> (WiffFile.cpp:446-464): SCIEX OS below
+    /// v3.1 writes scheduled-MRM/SIM <c>RTWindow</c> values that are half the real window width,
+    /// so those files need the stored window applied at FULL width on each side of
+    /// <c>ExpectedRT</c> instead of half. Anything else — including data acquired with Analyst,
+    /// where the version string doesn't match at all — gets the plain half-width treatment.
+    /// The comparison is cpp's verbatim, quirks included: <c>!(major >= 3 &amp;&amp; minor >= 1)</c>
+    /// is true for e.g. "SCIEX OS 4.0" because that minor is 0.
+    /// </summary>
+    private static bool HasHalfSizeRtWindow(string softwareVersion)
+    {
+        if (string.IsNullOrEmpty(softwareVersion)) return false;
+        var match = System.Text.RegularExpressions.Regex.Match(softwareVersion, @"SCIEX OS (\d+)\.(\d+)");
+        if (!match.Success) return false;
+        if (!int.TryParse(match.Groups[1].Value, out int major) ||
+            !int.TryParse(match.Groups[2].Value, out int minor))
+            return false;
+        return !(major >= 3 && minor >= 1);
+    }
+
+    public override void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Finalizer safety net: <see cref="AnalystWiffDataProvider"/> keeps the <c>.wiff</c> locked
+    /// until <c>Close()</c>. A <see cref="WiffFile"/> dropped without <see cref="Dispose()"/> would
+    /// leave the file locked past the test cleanup's <c>GC.WaitForPendingFinalizers()</c> pass, so
+    /// close the provider (and samples/experiments) here too. NOTE: SIM/SRM-bearing samples still
+    /// leave native readers active past Close on .NET 8 (see <c>IsKnownLeakySdkPath</c> soft-fail);
+    /// non-SIM/SRM samples -- the common case -- release on Close().
+    /// </summary>
+    ~WiffFile()
+    {
+        Dispose(false);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (_disposed) return;
+        _disposed = true;
+        // Cascade disposal in inverse acquisition order. cpp .NET-Framework builds
+        // synchronously release the underlying .wiff handle when each of these
+        // returns; under .NET 8 the experiment + sample disposes still leave
+        // native readers active for SIM/SRM-bearing samples (the SDK enqueues
+        // their finalizers and the file handle survives past return; those paths are
+        // soft-failed in the harness). Non-SIM/SRM samples release on _provider.Close().
+        // Null-guarded because this also runs from the finalizer: if the constructor threw
+        // part-way (e.g. the SDK failed to initialize), the fields it had not reached yet are
+        // still null, and an exception escaping a finalizer terminates the process rather than
+        // surfacing the original failure. The Dispose/Close calls below are individually
+        // try/caught for the same reason; only this loop could throw before reaching them.
+        if (_experiments != null)
+        {
+            foreach (var exp in _experiments)
+            {
+                try { exp.Dispose(); } catch { /* best-effort */ }
+            }
+        }
+        try { _msSample.Dispose(); } catch { /* best-effort */ }
+        try { _sample.Dispose(); } catch { /* best-effort */ }
+        try { _provider.Close(); } catch { /* best-effort */ }
+    }
+}
+
+/// <summary><see cref="AbstractWiffExperiment"/> backed by Clearcore2's <see cref="MSExperiment"/>.</summary>
+internal sealed class WiffExperiment : AbstractWiffExperiment
+{
+    private readonly MSExperiment _exp;
+    private readonly MSExperimentInfo _info;
+    private readonly Lazy<IReadOnlyList<WiffMrmTarget>> _srm;
+    private readonly Lazy<IReadOnlyList<WiffSimTarget>> _sim;
+
+    /// <summary>cpp <c>rtWindowMultiplier</c> (WiffFile.cpp:550 / :589): 1 when the acquisition
+    /// software stored half-size RTWindows, 0.5 otherwise. See
+    /// <see cref="WiffFile.HasHalfSizeRtWindow"/>.</summary>
+    private readonly double _rtWindowMultiplier;
+
+    public WiffExperiment(MSExperiment exp, bool hasHalfSizeRtWindow = false, ZtScanBin? ztScan = null)
+    {
+        _exp = exp;
+        _info = exp.Details;
+        _rtWindowMultiplier = hasHalfSizeRtWindow ? 1.0 : 0.5;
+        _srm = new Lazy<IReadOnlyList<WiffMrmTarget>>(BuildSrmTargets);
+        _sim = new Lazy<IReadOnlyList<WiffSimTarget>>(BuildSimTargets);
+        ZtScan = ztScan;
+    }
+
+    /// <inheritdoc/>
+    public override ZtScanBin? ZtScan { get; }
+
+    public override WiffExperimentType ExperimentType => MapExperimentType(_info.ExperimentType);
+
+    public override WiffPolarity Polarity => _info.Polarity switch
+    {
+        MSExperimentInfo.PolarityEnum.Positive => WiffPolarity.Positive,
+        MSExperimentInfo.PolarityEnum.Negative => WiffPolarity.Negative,
+        _ => WiffPolarity.Unknown,
+    };
+
+    public override double StartMass => _info.StartMass;
+    public override double EndMass => _info.EndMass;
+
+    public override int CycleCount => CycleTimes.Length;
+
+    public override double GetRetentionTime(int cycle1Based)
+    {
+        try { return _exp.GetRTFromExperimentCycle(cycle1Based); }
+        catch { return 0; }
+    }
+
+    public override int GetMsLevelForCycle(int cycle1Based)
+    {
+        // Mirrors cpp ExperimentImpl::getMsLevel: ask the SDK directly so MRM cycles report
+        // msLevel=1 (matching the instrument's actual setting), not the experiment-type default.
+        try
+        {
+            int level = _exp.GetMassSpectrumInfo(cycle1Based - 1).MSLevel;
+            if (level > 0) return level;
+        }
+        catch { }
+        return _info.ExperimentType switch
+        {
+            Clearcore2.Data.DataAccess.SampleData.ExperimentType.MS => 1,
+            Clearcore2.Data.DataAccess.SampleData.ExperimentType.SIM => 1,
+            Clearcore2.Data.DataAccess.SampleData.ExperimentType.Product => 2,
+            Clearcore2.Data.DataAccess.SampleData.ExperimentType.Precursor => 2,
+            Clearcore2.Data.DataAccess.SampleData.ExperimentType.NeutralGainOrLoss => 2,
+            Clearcore2.Data.DataAccess.SampleData.ExperimentType.MRM => 1,
+            _ => 1,
+        };
+    }
+
+    public override AbstractWiffSpectrum? GetSpectrum(int cycle1Based, bool addZeros, bool centroid)
+    {
+        try
+        {
+            var ms = _exp.GetMassSpectrum(cycle1Based - 1);
+            // cpp WiffFile.cpp:738: pointsAreContinuous = !CentroidMode && expType != MRM && expType != SIM.
+            // Only the continuous case has a meaningful peak-array; MRM/SIM are already sticks.
+            bool pointsAreContinuous = !ms.Info.CentroidMode
+                && ExperimentType != WiffExperimentType.MRM
+                && ExperimentType != WiffExperimentType.SIM;
+
+            // cpp WiffFile.cpp:852-864: when doCentroid && pointsAreContinuous, getData uses
+            // GetPeakArray(cycle-1) — peak->xValue and peak->area * PEAK_AREA_SCALE_FACTOR (100).
+            // Without this branch the C# centroid path silently returns the raw profile data,
+            // which is what made vendor peak picking produce no peak-count reduction.
+            if (centroid && pointsAreContinuous)
+            {
+                try
+                {
+                    var peaks = _exp.GetPeakArray(cycle1Based - 1);
+                    int n = peaks?.Length ?? 0;
+                    var xs = new double[n];
+                    var ys = new double[n];
+                    for (int i = 0; i < n; i++)
+                    {
+                        xs[i] = peaks![i].xValue;
+                        ys[i] = peaks[i].area * PEAK_AREA_SCALE_FACTOR;
+                    }
+                    return new WiffSpectrum(ms, _exp, this, ExperimentType, xs, ys);
+                }
+                catch { /* fall through to profile path */ }
+            }
+
+            // cpp WiffFile.cpp:872-873 calls AddZeros(spectrum, 1) for profile (continuous)
+            // data; flanking zero-intensity points give consumers explicit baselines.
+            if (addZeros && !ms.Info.CentroidMode)
+            {
+                try { _exp.AddZeros(ms, 1); }
+                catch { /* AddZeros isn't always applicable */ }
+            }
+            return new WiffSpectrum(ms, _exp, this, ExperimentType);
+        }
+        catch { return null; }
+    }
+
+    // cpp WiffFile.cpp:60: const int PEAK_AREA_SCALE_FACTOR = 100;
+    private const int PEAK_AREA_SCALE_FACTOR = 100;
+
+    // ---- per-experiment TIC / BPC caches ----
+    //
+    // Port of cpp ExperimentImpl's lazily-initialized, flag-guarded caches
+    // (WiffFile.cpp:158-171 / 470-531): cycleTimes_ + cycleIntensities_ from initializeTIC(),
+    // basePeakIntensities_ + basePeakMZs_ from initializeBPC(). Every consumer -- getTIC, getBPC,
+    // the per-cycle sumY and the per-cycle base peak -- reads the caches, so each SDK
+    // chromatogram is computed at most once per experiment.
+    //
+    // Without them the SDK chromatogram was re-fetched per CALL: SpectrumList_Sciex asks for the
+    // cycle TIC once per spectrum (via AbstractWiffExperiment.GetCycleTic -> GetTic), which made
+    // conversion O(N^2) in the cycle count, and the base-peak chromatogram was computed 2-4x per
+    // experiment (once in CreateIndex, twice in FillTicOrBpc, plus the separate GetBasePeak
+    // fetch). Neither TotalIonChromatogram nor BasePeakChromatogram is IDisposable, so there is
+    // nothing to release per fetch; what the fetches keep alive lives on the MSExperiment, which
+    // Dispose already releases. Fewer fetches simply means less of it to hold.
+    //
+    // Unsynchronized on purpose: cpp's caches are plain `mutable` fields with no lock, and
+    // nothing else in this reader (or in Wiff2File's _ticCache) synchronizes either. The MsData
+    // layer reads a given spectrum list from one thread at a time; a race here would at worst
+    // duplicate a fetch, never corrupt an array, since each field is published as a whole array.
+    private double[]? _cycleTimes;
+    private double[]? _cycleIntensities;
+
+    /// <summary>cpp <c>ExperimentImpl::initializeTIC</c> (WiffFile.cpp:470-484).</summary>
+    private void InitializeTic()
+    {
+        if (_cycleTimes is not null) return;
+        try
+        {
+            var tic = _exp.GetTotalIonChromatogram();
+            _cycleIntensities = tic.GetActualYValues() ?? Array.Empty<double>();
+            _cycleTimes = tic.GetActualXValues() ?? Array.Empty<double>();
+        }
+        catch
+        {
+            _cycleIntensities = Array.Empty<double>();
+            _cycleTimes = Array.Empty<double>();
+        }
+    }
+
+    /// <summary>cpp <c>ExperimentImpl::cycleTimes()</c>.</summary>
+    private double[] CycleTimes
+    {
+        get { InitializeTic(); return _cycleTimes!; }
+    }
+
+    /// <summary>cpp <c>ExperimentImpl::cycleIntensities()</c>.</summary>
+    private double[] CycleIntensities
+    {
+        get { InitializeTic(); return _cycleIntensities!; }
+    }
+
+    public override (double[] Times, double[] Intensities) GetBpc()
+    {
+        // The X axis comes from the TIC, NOT from the base-peak chromatogram. cpp's
+        // ExperimentImpl::getBPC (WiffFile.cpp:719-727) returns cycleTimes() paired with
+        // basePeakIntensities(), and cycleTimes_ is filled from tic->GetActualXValues()
+        // (WiffFile.cpp:478) - it never reads the BPC's own X values.
+        //
+        // That distinction is load-bearing on DMS / SelexION acquisitions, where the SDK's
+        // base-peak chromatogram is indexed by COMPENSATION VOLTAGE rather than time: taking
+        // its X gave nESI_Sigma_DMS_1mca a BPC running -5.0, -4.75, -4.5 ... where cpp has
+        // retention times 0.004, 0.014, 0.023. Every value in the array was wrong.
+        double[] times = CycleTimes;
+        double[] intensities = BasePeakIntensities;
+
+        // cpp's caller (ChromatogramList_ABI.cpp:192) bounds its loop by intensities.size()
+        // while indexing times[], and the primary fetch leaves the intensity array at whatever
+        // length the SDK returned (WiffFile.cpp:495-496 does NOT resize it). Match that by
+        // trimming the time axis to the intensity count - never the other way round, which
+        // would index past the end of the intensities. Trimming to zero also matters: an
+        // experiment whose BPC could not be fetched at all must report an EMPTY time axis so
+        // SpectrumList_Sciex.CreateIndex falls back to the TIC.
+        if (intensities.Length < times.Length) times = times[..intensities.Length];
+        else if (intensities.Length > times.Length) intensities = intensities[..times.Length];
+
+        return (times, intensities);
+    }
+
+    public override (double[] Times, double[] Intensities) GetTic() => (CycleTimes, CycleIntensities);
+
+    /// <summary>
+    /// cpp <c>Spectrum::getSumY</c> (WiffFile.cpp:740) reads
+    /// <c>experiment->cycleIntensities()[cycle-1]</c>. Overridden so the per-spectrum lookup is
+    /// an array index rather than the base class's tuple-returning <see cref="GetTic"/> call.
+    /// </summary>
+    public override double GetCycleTic(int cycle1Based)
+    {
+        var intensities = CycleIntensities;
+        int idx = cycle1Based - 1;
+        return idx >= 0 && idx < intensities.Length ? intensities[idx] : 0;
+    }
+
+    public override IReadOnlyList<WiffMrmTarget> SrmTransitions => _srm.Value;
+    public override IReadOnlyList<WiffSimTarget> SimTransitions => _sim.Value;
+
+    private int? _lastCycleForSic;
+
+    // cpp ExperimentImpl::convertRetentionTimeToCycle -> msExperiment->RetentionTimeToExperimentScan(rt).
+    // Cached because it is the same last-cycle value for every transition in the experiment.
+    private int LastCycleForSic()
+    {
+        if (_lastCycleForSic.HasValue)
+            return _lastCycleForSic.Value;
+        int last = 0;
+        try
+        {
+            // cpp WiffFile.cpp:626: option->EndCycle = convertRetentionTimeToCycle(cycleTimes().back()).
+            var ticTimes = CycleTimes;
+            if (ticTimes.Length > 0)
+                last = (int)_exp.RetentionTimeToExperimentScan(ticTimes[ticTimes.Length - 1]);
+        }
+        catch { last = 0; }
+        _lastCycleForSic = last;
+        return last;
+    }
+
+    public override (double[] Times, double[] Intensities) GetSic(int transitionIndex)
+    {
+        try
+        {
+            // Mirror cpp ExperimentImpl::getSIC with ignoreScheduledLimits=true (the value
+            // ChromatogramList_ABI hardcodes for SRM/SIM): request the SIC over the full experiment
+            // cycle range so out-of-scheduled-window zero points are present. Without them, Skyline's
+            // peak finder extends integration boundaries differently, shifting areas and flipping
+            // forced-integration flags (see TestAsymCEOpt: 86 vs 90 transitions).
+            var settings = new ExtractedIonChromatogramSettings(transitionIndex);
+            int lastCycle = LastCycleForSic();
+            if (lastCycle > 0)
+            {
+                settings.StartCycle = 0;
+                settings.EndCycle = lastCycle;
+                settings.UseStartEndCycle = true;
+            }
+            var sic = _exp.GetExtractedIonChromatogram(settings);
+            return (sic.GetActualXValues() ?? Array.Empty<double>(),
+                    sic.GetActualYValues() ?? Array.Empty<double>());
+        }
+        catch { return (Array.Empty<double>(), Array.Empty<double>()); }
+    }
+
+    private double[]? _basePeakIntensities;
+    private double[]? _basePeakMzs;
+    private bool _basePeakInitFailed;
+
+    /// <summary>
+    /// cpp <c>ExperimentImpl::initializeBPC</c> (WiffFile.cpp:486-531): one two-tier BPC fetch
+    /// per experiment, feeding both <see cref="GetBpc"/> and <see cref="GetBasePeak"/>.
+    /// </summary>
+    private void InitializeBpc()
+    {
+        if (_basePeakIntensities is not null || _basePeakInitFailed) return;
+
+        // cpp reads cycleTimes_ directly here; every caller reaches initializeBPC() through a
+        // path that has already run initializeTIC() (getBPC does cycleTimes() first), so make
+        // the dependency explicit rather than relying on call order.
+        double[] times = CycleTimes;
+
+        try
+        {
+            var bpc = _exp.GetBasePeakChromatogram(new BasePeakChromatogramSettings(0, null, null));
+            var bpci = bpc.Info;
+            // Primary path: cpp keeps the SDK's own intensity length (WiffFile.cpp:496, no
+            // resize) but sizes the m/z array to the CYCLE count (WiffFile.cpp:498-500), so a
+            // trailing cycle still has an m/z to report. Reading GetBasePeakMass past the SDK's
+            // range is exactly what makes cpp fall through to the bounded retry below, so the
+            // loop stays inside this try.
+            _basePeakIntensities = bpc.GetActualYValues() ?? Array.Empty<double>();
+            var mzs = new double[times.Length];
+            for (int i = 0; i < mzs.Length; i++) mzs[i] = bpci.GetBasePeakMass(i);
+            _basePeakMzs = mzs;
+        }
+        catch
+        {
+            _basePeakIntensities = null;
+            try
+            {
+                if (times.Length == 0) { _basePeakInitFailed = true; return; }
+                int numCycles = times.Length > 10 ? times.Length - 1 : times.Length;
+                var settings = new BasePeakChromatogramSettings(0, null, null, 0, times[numCycles - 1]);
+                var bpc = _exp.GetBasePeakChromatogram(settings);
+                var bpci = bpc.Info;
+                var fetched = bpc.GetActualYValues() ?? Array.Empty<double>();
+
+                // Retry path: cpp resizes BOTH arrays to the FULL cycle count and zero-fills the
+                // last element when the bounded fetch covered one cycle fewer
+                // (WiffFile.cpp:514-519). So the BPC still has one point per cycle, ending in
+                // (lastCycleTime, 0). Truncating to the fetched length instead would emit a
+                // chromatogram one point shorter than cpp's.
+                var intensities = new double[times.Length];
+                Array.Copy(fetched, intensities, Math.Min(fetched.Length, intensities.Length));
+                var mzs = new double[times.Length];
+                for (int i = 0; i < numCycles && i < mzs.Length; i++) mzs[i] = bpci.GetBasePeakMass(i);
+                _basePeakIntensities = intensities;
+                _basePeakMzs = mzs;
+            }
+            catch { _basePeakInitFailed = true; }
+        }
+    }
+
+    /// <summary>cpp <c>ExperimentImpl::basePeakIntensities()</c>; empty when both fetches failed.</summary>
+    private double[] BasePeakIntensities
+    {
+        get { InitializeBpc(); return _basePeakIntensities ?? Array.Empty<double>(); }
+    }
+
+    /// <summary>cpp <c>ExperimentImpl::basePeakMZs()</c>; empty when both fetches failed.</summary>
+    private double[] BasePeakMzs
+    {
+        get { InitializeBpc(); return _basePeakMzs ?? Array.Empty<double>(); }
+    }
+
+    public override void Dispose()
+    {
+        // Clearcore2's MSExperiment owns native readers (the BPC fetch on MRM
+        // experiments leaks file handles past WiffFile.Dispose without this).
+        try { _exp.Dispose(); } catch { }
+    }
+
+    public override (double Mz, double Intensity)? GetBasePeak(int cycle1Based)
+    {
+        // cpp SpectrumImpl::initializeBasePeak (WiffFile.cpp:229-236):
+        //   bpY = experiment->basePeakIntensities()[cycle-1];
+        //   bpX = bpY > 0 ? experiment->basePeakMZs()[cycle-1] : 0;
+        // and SpectrumList_ABI only emits the params when bpY > 0. The bounds checks are ours -
+        // cpp indexes the vectors unchecked.
+        var intensities = BasePeakIntensities;
+        int idx = cycle1Based - 1;
+        if (idx < 0 || idx >= intensities.Length) return null;
+        double y = intensities[idx];
+        if (y <= 0) return null;
+        var mzs = BasePeakMzs;
+        double x = idx < mzs.Length ? mzs[idx] : 0;
+        return (x, y);
+    }
+
+    private IReadOnlyList<WiffMrmTarget> BuildSrmTargets()
+    {
+        if (_info.ExperimentType != Clearcore2.Data.DataAccess.SampleData.ExperimentType.MRM
+            || _info.MassRangeInfo is not { Length: > 0 } ranges)
+            return Array.Empty<WiffMrmTarget>();
+        var targets = new List<WiffMrmTarget>(ranges.Length);
+        foreach (var range in ranges)
+        {
+            if (range is not MRMMassRange mrm) continue;
+            double ce = ReadCollisionEnergy(mrm.CompoundDepParameters);
+            // cpp WiffFile.cpp:589-595:
+            //   rtWindowMultiplier = hasHalfSizeRTWindow ? 1 : 0.5;
+            //   target.startTime = ExpectedRT - RTWindow * rtWindowMultiplier;
+            //   target.endTime   = ExpectedRT + RTWindow * rtWindowMultiplier;
+            // These feed the scheduled `start=`/`end=` tokens of the SRM chromatogram id, so
+            // getting the multiplier wrong renames every scheduled-MRM chromatogram.
+            double start = mrm.ExpectedRT - mrm.RTWindow * _rtWindowMultiplier;
+            double end = mrm.ExpectedRT + mrm.RTWindow * _rtWindowMultiplier;
+            targets.Add(new WiffMrmTarget
+            {
+                Q1Mass = mrm.Q1Mass,
+                Q3Mass = mrm.Q3Mass,
+                DwellTimeMs = mrm.DwellTime,
+                CollisionEnergy = ce,
+                StartTime = start,
+                EndTime = end,
+                CompoundName = mrm.Name,
+            });
+        }
+        return targets;
+    }
+
+    private IReadOnlyList<WiffSimTarget> BuildSimTargets()
+    {
+        if (_info.ExperimentType != Clearcore2.Data.DataAccess.SampleData.ExperimentType.SIM
+            || _info.MassRangeInfo is not { Length: > 0 } ranges)
+            return Array.Empty<WiffSimTarget>();
+        var targets = new List<WiffSimTarget>(ranges.Length);
+        foreach (var range in ranges)
+        {
+            if (range is not SIMMassRange sim) continue;
+            double ce = ReadCollisionEnergy(sim.CompoundDepParameters);
+            // cpp WiffFile.cpp:550-555 — same rtWindowMultiplier as the SRM path above.
+            double start = sim.ExpectedRT - sim.RTWindow * _rtWindowMultiplier;
+            double end = sim.ExpectedRT + sim.RTWindow * _rtWindowMultiplier;
+            targets.Add(new WiffSimTarget
+            {
+                Mass = sim.Mass,
+                DwellTimeMs = sim.DwellTime,
+                CollisionEnergy = ce,
+                StartTime = start,
+                EndTime = end,
+                CompoundName = sim.Name,
+            });
+        }
+        return targets;
+    }
+
+    private static double ReadCompoundParameter(Dictionary<string, Parameter>? parameters, string name)
+    {
+        if (parameters is null) return 0;
+        return parameters.TryGetValue(name, out var p) && p is not null ? p.Start : 0;
+    }
+
+    /// <summary>cpp <c>ExperimentImpl::getSRM/getSIM</c> (WiffFile.cpp:558-562 / 598-602):
+    /// <c>target.collisionEnergy = fabs((float) parameters["CE"]->Start)</c>. The absolute
+    /// value matters — negative-polarity methods store CE as a negative number, and without
+    /// the <c>fabs</c> every negative-mode SRM/SIM chromatogram loses both its
+    /// <c>collision energy</c> cvParam and the <c>ce=</c> token in its chromatogram id.</summary>
+    private static double ReadCollisionEnergy(Dictionary<string, Parameter>? parameters)
+        => Math.Abs(ReadCompoundParameter(parameters, "CE"));
+
+    internal static WiffExperimentType MapExperimentType(Clearcore2.Data.DataAccess.SampleData.ExperimentType t) => t switch
+    {
+        Clearcore2.Data.DataAccess.SampleData.ExperimentType.MS => WiffExperimentType.MS,
+        Clearcore2.Data.DataAccess.SampleData.ExperimentType.Product => WiffExperimentType.Product,
+        Clearcore2.Data.DataAccess.SampleData.ExperimentType.Precursor => WiffExperimentType.Precursor,
+        Clearcore2.Data.DataAccess.SampleData.ExperimentType.NeutralGainOrLoss => WiffExperimentType.NeutralGainOrLoss,
+        Clearcore2.Data.DataAccess.SampleData.ExperimentType.SIM => WiffExperimentType.SIM,
+        Clearcore2.Data.DataAccess.SampleData.ExperimentType.MRM => WiffExperimentType.MRM,
+        _ => WiffExperimentType.MS,
+    };
+}
+
+/// <summary><see cref="AbstractWiffSpectrum"/> backed by Clearcore2's <see cref="MassSpectrum"/>.</summary>
+internal sealed class WiffSpectrum : AbstractWiffSpectrum
+{
+    private readonly MassSpectrum _ms;
+    private readonly MassSpectrumInfo _info;
+    private readonly MSExperiment _exp;
+    private readonly WiffExperiment _wiffExperiment;
+    private readonly WiffExperimentType _experimentType;
+    // When set, the caller already centroided this spectrum via GetPeakArray; expose those
+    // peaks as XValues/YValues and report CentroidMode=true so downstream code does not
+    // re-pick or re-pad.
+    private readonly double[]? _centroidXs;
+    private readonly double[]? _centroidYs;
+
+    public WiffSpectrum(MassSpectrum ms, MSExperiment exp, WiffExperiment wiffExperiment, WiffExperimentType experimentType,
+        double[]? centroidXs = null, double[]? centroidYs = null)
+    {
+        _ms = ms;
+        _info = ms.Info;
+        _exp = exp;
+        _wiffExperiment = wiffExperiment;
+        _experimentType = experimentType;
+        _centroidXs = centroidXs;
+        _centroidYs = centroidYs;
+    }
+
+    public override bool CentroidMode => _centroidXs is not null || _info.CentroidMode;
+
+    public override double[] XValues
+    {
+        // cpp WiffFile.cpp:877-892: SDK X values for MRM/SIM aren't m/z; rebuild from
+        // MassRangeInfo. MRM cells use Q3Mass (the daughter); SIM cells use Mass.
+        // Fall back to the SDK's X values when MassRangeInfo is missing or shorter
+        // than the SDK's reported NumDataPoints, matching cpp's runtime guard.
+        get
+        {
+            if (_centroidXs is not null) return _centroidXs;
+            if (_experimentType is WiffExperimentType.MRM or WiffExperimentType.SIM)
+            {
+                var ranges = _exp.Details?.MassRangeInfo;
+                if (ranges is { Length: > 0 } && ranges.Length == _ms.NumDataPoints)
+                {
+                    var mz = new double[ranges.Length];
+                    if (_experimentType == WiffExperimentType.MRM)
+                        for (int i = 0; i < mz.Length; i++)
+                            mz[i] = ranges[i] is MRMMassRange mrm ? mrm.Q3Mass : 0;
+                    else
+                        for (int i = 0; i < mz.Length; i++)
+                            mz[i] = ranges[i] is SIMMassRange sim ? sim.Mass : 0;
+                    return mz;
+                }
+            }
+            return _ms.GetActualXValues() ?? Array.Empty<double>();
+        }
+    }
+
+    public override double[] YValues => _centroidYs ?? (_ms.GetActualYValues() ?? Array.Empty<double>());
+    public override bool HasPrecursorInfo => _info.ParentMZ > 0;
+    public override double PrecursorMz => _info.ParentMZ;
+    public override int PrecursorCharge => _info.ParentChargeState;
+
+    // cpp WiffFile.cpp:759-764 (SpectrumImpl::getHasIsolationInfo).
+    public override bool HasIsolationInfo
+    {
+        get
+        {
+            if (_experimentType != WiffExperimentType.Product && _experimentType != WiffExperimentType.Precursor)
+                return false;
+            try { return _exp.Details?.MassRangeInfo is { Length: > 0 }; }
+            catch { return false; }
+        }
+    }
+
+    // cpp WiffFile.cpp:778-791 (inside SpectrumImpl::getIsolationInfo): the collision energy
+    // mzML reports for a legacy WIFF spectrum is the EXPERIMENT's "CE" ramp parameter
+    // (Details->Parameters["CE"], a Start/Stop pair), NOT the per-spectrum
+    // MassSpectrumInfo.CollisionEnergy the SDK also exposes. Those are different numbers: the
+    // ramp is the method's programmed CE (typically a round 10 / 35 eV), while the per-spectrum
+    // value is the instrument's rolling-CE readback (e.g. 35.78343963623). Reading the
+    // per-spectrum one was the source of the largest remaining Sciex parity gap.
+    //
+    // The arithmetic is deliberately done in float, like cpp: Parameter.Start/Stop are Single,
+    // and cpp's `(ceRamp->Stop + ceRamp->Start) / 2` is therefore a float expression widened to
+    // double on assignment. Doing it in double would round differently in the last digits.
+    //
+    // cpp reads MSExperimentInfo.Parameters, which Clearcore2 has since marked [Obsolete] with
+    // "This property only returns the parameters for the first mass range. Compound dependent
+    // parameters can be retrieved through the MassRange object from MassRangeInfo." — so
+    // MassRangeInfo[0].CompoundDepParameters is the same dictionary by the SDK's own definition,
+    // and HasIsolationInfo has already guaranteed MassRangeInfo is non-empty.
+    public override double CollisionEnergy
+    {
+        get
+        {
+            if (!HasIsolationInfo) return 0;
+            // A ZT Scan bin's CE is a point on a hardware ramp that the SDK does not record per
+            // bin — Details.Parameters["CE"] is the ramp MIDPOINT on every bin of the sweep.
+            // Reconstruct it instead. See ZtScanBin.
+            var ztBin = _wiffExperiment.ZtScan;
+            if (ztBin is not null) return ztBin.CollisionEnergy;
+            try
+            {
+                var parameters = _exp.Details?.MassRangeInfo?[0]?.CompoundDepParameters;
+                if (parameters is null || !parameters.TryGetValue("CE", out var ceRamp) || ceRamp is null)
+                    return 0;
+                float ce;
+                if (ceRamp.Start == 0) ce = Math.Abs(ceRamp.Stop);
+                else if (ceRamp.Stop == 0) ce = ceRamp.Start;
+                else ce = (ceRamp.Stop + ceRamp.Start) / 2;
+                return Math.Abs((double)ce);
+            }
+            catch { return 0; }
+        }
+    }
+
+    public override WiffActivation Activation => WiffActivation.CID;
+    public override double IsolationLowerOffset => IsolationHalfWidth;
+    public override double IsolationUpperOffset => IsolationHalfWidth;
+    public override double ElectronKineticEnergy => 0;
+
+    // cpp WiffFile.cpp:759-776 (getHasIsolationInfo + getIsolationInfo): a legacy WIFF exposes the
+    // isolation-window WIDTH (not offsets) via the first MassRangeInfo entry cast to
+    // FragmentBasedScanMassRange. cpp sets centerMz = ParentMZ (= PrecursorMz here) and emits
+    // symmetric offsets of IsolationWindow/2 on each side (SpectrumList_ABI.cpp:200-208). Only
+    // Product/Precursor experiments carry isolation info; return 0 otherwise so the offset CV
+    // params are omitted (matching cpp's getHasIsolationInfo guard). The legacy WiffSpectrum never
+    // implemented these (they returned 0), so Skyline saw no isolation range for SWATH .wiff and
+    // threw "Missing isolation range"; the wiff2 path (Wiff2Spectrum) already computes them.
+    private double IsolationHalfWidth
+    {
+        get
+        {
+            if (_experimentType != WiffExperimentType.Product && _experimentType != WiffExperimentType.Precursor)
+                return 0;
+            try
+            {
+                if (_exp.Details?.MassRangeInfo is { Length: > 0 } ranges
+                    && ranges[0] is FragmentBasedScanMassRange fb
+                    && fb.IsolationWindow > 0)
+                {
+                    return fb.IsolationWindow / 2.0;
+                }
+            }
+            catch
+            {
+                // Not all experiments expose IsolationWindow; fall through to 0.
+            }
+            return 0;
+        }
+    }
+
+    public override double StartTimeMinutes
+    {
+        // cpp uses spectrumInfo->StartRT directly. The Clearcore2 property name varies
+        // across SDK builds — try `StartRT` first and fall back to 0.
+        get
+        {
+            try { return _info.StartRT; } catch { return 0; }
+        }
+    }
+
+    public override (double Mz, double Intensity)? BasePeak
+    {
+        // cpp WiffFile.cpp:233-234 reads the base peak from per-experiment BPC arrays
+        // (basePeakMZs[cycle-1] / basePeakIntensities[cycle-1]). Delegate to the
+        // experiment so the BPC fetches once per experiment-life, not once per spectrum.
+        // The +1 below: _info.StartCycle is 0-based on Clearcore2, while cpp's `cycle`
+        // throughout WiffFile is 1-based; AbstractWiffExperiment.GetBasePeak takes the
+        // 1-based form to stay consistent with GetRetentionTime / GetSpectrum.
+        get => _wiffExperiment.GetBasePeak(_info.StartCycle + 1);
+    }
+
+    public override WiffExperimentType ExperimentType => _experimentType;
+}

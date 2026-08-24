@@ -1,0 +1,80 @@
+digraph pwiz_module_detail {
+  rankdir=TB;
+  labelloc=t;
+  label=<<b>pwiz/data/tradata — file-level port status</b><br/><font point-size="10">one node per .cpp/.hpp pair (test fixtures omitted); each group is its own row, top-to-bottom</font>>;
+  fontname="Segoe UI";
+  node [shape=box, style="filled,rounded", fontname="Segoe UI", fontsize=10];
+  edge [color="#444"];
+  ranksep=0.6; nodesep=0.2;
+  compound=true;
+  newrank=true;
+  splines=false;
+  subgraph cluster_data_tradata_Core_model {
+    label=<<b>Core model</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__tradata__Diff [label="Diff", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="TraData equality with named-reason output. Ported as TraData/TraDataDiff.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/tradata/Diff.cpp", target="_blank"];
+    n_data__tradata__References [label="References", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Two-pass resolver for peptideRef / compoundRef / proteinRef / contactRef / instrumentRef / softwareRef. Ported inline in TraData/TraDataIO.cs via the ReadContext class (first pass populates lists, second pass rebinds references).", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/tradata/References.cpp", target="_blank"];
+    n_data__tradata__TraData [label="TraData", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Top-level TraData document + ParamContainer-derived entities (Contact, Publication, Software, Instrument, Configuration, Protein, Peptide, Compound, Transition, Target, TargetList, RetentionTime, Prediction, Evidence, Validation, Interpretation, Modification, Precursor, Product). Ported as TraData/TraData.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/tradata/TraData.cpp", target="_blank"];
+    n_data__tradata__TraDataFile [label="TraDataFile", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Format-detecting Read + format-selecting Write (TraML XML by extension). Ported as TraData/TraDataFile.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/tradata/TraDataFile.cpp", target="_blank"];
+    n_data__tradata__Diff -> n_data__tradata__References -> n_data__tradata__TraData -> n_data__tradata__TraDataFile [style=invis, constraint=false];
+  }
+  subgraph cluster_data_tradata_IO_Serializers {
+    label=<<b>IO / Serializers</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__tradata__IO [label="IO", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="TraML XmlReader/Writer for the nested-list schema (cvList, ContactList, PublicationList, InstrumentList, SoftwareList, ProteinList, CompoundList, TransitionList, TargetList). Ported as TraData/TraDataIO.cs — folded together with Serializer_traML.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/tradata/IO.cpp", target="_blank"];
+    n_data__tradata__Serializer_traML [label="Serializer_traML", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="TraML XML serializer. Folded into TraData/TraDataIO.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/tradata/Serializer_traML.cpp", target="_blank"];
+    n_data__tradata__IO -> n_data__tradata__Serializer_traML [style=invis, constraint=false];
+  }
+  subgraph cluster_data_tradata_Reader_dispatch {
+    label=<<b>Reader dispatch</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__tradata__DefaultReaderList [label="DefaultReaderList", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="Serializer_traML registration into the IReader dispatcher. NOT PORTED — no dispatcher wired yet.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/tradata/DefaultReaderList.cpp", target="_blank"];
+    n_data__tradata__Reader [label="Reader", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="IReader interface for TraData. NOT PORTED — TraDataFile.Read handles dispatch directly.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/tradata/Reader.cpp", target="_blank"];
+    n_data__tradata__DefaultReaderList -> n_data__tradata__Reader [style=invis, constraint=false];
+  }
+  subgraph cluster_data_tradata_Misc {
+    label=<<b>Misc</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__tradata__TextWriter [label=<<s>TextWriter</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555", tooltip="Pretty-print text dump of TraData. WON'T PORT — Format_Text output isn't wired in pwiz-sharp.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/tradata/TextWriter.hpp", target="_blank"];
+    n_data__tradata__examples [label=<<s>examples</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555", tooltip="Hard-coded TraData fixtures for cpp tests. WON'T PORT — fixtures built inline in tests instead.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/tradata/examples.cpp", target="_blank"];
+    n_data__tradata__TextWriter -> n_data__tradata__examples [style=invis, constraint=false];
+  }
+  n_data__tradata__Diff -> n_data__tradata__IO [style=invis, minlen=1];
+  n_data__tradata__IO -> n_data__tradata__DefaultReaderList [style=invis, minlen=1];
+  n_data__tradata__DefaultReaderList -> n_data__tradata__TextWriter [style=invis, minlen=1];
+  subgraph cluster_legend {
+    label=<<b>Status</b>>;
+    style="rounded";
+    color="#444";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=8;
+    rank=same;
+    legend_full [label="ported", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    legend_partial [label="partial", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
+    legend_none [label="not yet ported", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    legend_skipped [label=<<s>won't port (BCL/legacy)</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555"];
+    legend_full -> legend_partial -> legend_none -> legend_skipped [style=invis, constraint=false];
+  }
+  n_data__tradata__TextWriter -> legend_full [style=invis, minlen=1];
+}

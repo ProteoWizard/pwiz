@@ -1,0 +1,110 @@
+digraph pwiz_module_detail {
+  rankdir=TB;
+  labelloc=t;
+  label=<<b>pwiz/data/identdata — file-level port status</b><br/><font point-size="10">one node per .cpp/.hpp pair (test fixtures omitted); each group is its own row, top-to-bottom</font>>;
+  fontname="Segoe UI";
+  node [shape=box, style="filled,rounded", fontname="Segoe UI", fontsize=10];
+  edge [color="#444"];
+  ranksep=0.6; nodesep=0.2;
+  compound=true;
+  newrank=true;
+  splines=false;
+  subgraph cluster_data_identdata_Core_model {
+    label=<<b>Core model</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__identdata__Diff [label="Diff", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="IdentData-specific diff specialization. Ported as IdentData/Diff.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/Diff.cpp", target="_blank"];
+    n_data__identdata__IdentData [label="IdentData", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Top-level mzIdentML container model. Ported as IdentData/IdentData.cs + per-element classes (Mzid/*).", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/IdentData.cpp", target="_blank"];
+    n_data__identdata__IdentDataFile [label="IdentDataFile", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="File-level helpers (open/save). Ported as IdentData/IdentDataFile.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/IdentDataFile.cpp", target="_blank"];
+    n_data__identdata__References [label="References", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="IDREF resolver for the IdentData graph. Ported as IdentData/References.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/References.cpp", target="_blank"];
+    n_data__identdata__Diff -> n_data__identdata__IdentData -> n_data__identdata__IdentDataFile -> n_data__identdata__References [style=invis, constraint=false];
+  }
+  subgraph cluster_data_identdata_Reader_dispatch {
+    label=<<b>Reader dispatch</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__identdata__DefaultReaderList [label="DefaultReaderList", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Reader dispatcher (mzid / pepXML). Ported as IdentData/DefaultReaderList.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/DefaultReaderList.cpp", target="_blank"];
+    n_data__identdata__MascotReader [label="MascotReader", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="Mascot .dat parser. NOT PORTED — niche; users go via pepXML.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/MascotReader.cpp", target="_blank"];
+    n_data__identdata__Reader [label="Reader", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="IReader interface for IdentData files. Ported as IdentData/Reader.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/Reader.cpp", target="_blank"];
+    n_data__identdata__DefaultReaderList -> n_data__identdata__MascotReader -> n_data__identdata__Reader [style=invis, constraint=false];
+  }
+  subgraph cluster_data_identdata_Serializers {
+    label=<<b>Serializers</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__identdata__DelimReader [label="DelimReader", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="TSV / CSV import (PeptideShaker, MSGF+ outputs). NOT PORTED — re-port when a consumer asks.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/DelimReader.cpp", target="_blank"];
+    n_data__identdata__DelimWriter [label="DelimWriter", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="TSV / CSV export. NOT PORTED.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/DelimWriter.cpp", target="_blank"];
+    n_data__identdata__Serializer_Text [label="Serializer_Text", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="Pretty-print text dump of IdentData. NOT PORTED.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/Serializer_Text.cpp", target="_blank"];
+    n_data__identdata__Serializer_mzid [label="Serializer_mzid", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="mzIdentML reader+writer. Ported as IdentData/Mzid/MzidSerializer.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/Serializer_mzid.cpp", target="_blank"];
+    n_data__identdata__Serializer_pepXML [label="Serializer_pepXML", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="pepXML reader+writer. Ported as IdentData/PepXml/PepXmlSerializer.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/Serializer_pepXML.cpp", target="_blank"];
+    n_data__identdata__Serializer_protXML [label="Serializer_protXML", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="protXML protein-inference format. NOT PORTED — narrow user base.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/Serializer_protXML.cpp", target="_blank"];
+    n_data__identdata__TextWriter [label="TextWriter", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="Pretty-print walker used by Serializer_Text. NOT PORTED.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/TextWriter.hpp", target="_blank"];
+    n_data__identdata__DelimReader -> n_data__identdata__DelimWriter -> n_data__identdata__Serializer_Text -> n_data__identdata__Serializer_mzid -> n_data__identdata__Serializer_pepXML -> n_data__identdata__Serializer_protXML -> n_data__identdata__TextWriter [style=invis, constraint=false];
+  }
+  subgraph cluster_data_identdata_IO {
+    label=<<b>IO</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__identdata__IO [label="IO", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="mzIdentML element-by-element parser. Ported as IdentData/Mzid/MzidReader.cs + MzidWriter.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/IO.cpp", target="_blank"];
+  }
+  subgraph cluster_data_identdata_Predicates_CV {
+    label=<<b>Predicates / CV</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__identdata__KwCVMap [label="KwCVMap", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="Keyword → CVID heuristic table. NOT PORTED.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/KwCVMap.cpp", target="_blank"];
+    n_data__identdata__MzidPredicates [label="MzidPredicates", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="LINQ-style predicates over an IdentData graph. NOT PORTED.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/MzidPredicates.hpp", target="_blank"];
+    n_data__identdata__KwCVMap -> n_data__identdata__MzidPredicates [style=invis, constraint=false];
+  }
+  subgraph cluster_data_identdata_Conversion_examples {
+    label=<<b>Conversion / examples</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__identdata__Pep2MzIdent [label="Pep2MzIdent", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="pepXML → mzIdentML one-shot converter. NOT PORTED.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/Pep2MzIdent.cpp", target="_blank"];
+    n_data__identdata__examples [label=<<s>examples</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555", tooltip="Won't port. No specific replacement recorded.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/identdata/examples.cpp", target="_blank"];
+    n_data__identdata__Pep2MzIdent -> n_data__identdata__examples [style=invis, constraint=false];
+  }
+  n_data__identdata__Diff -> n_data__identdata__DefaultReaderList [style=invis, minlen=1];
+  n_data__identdata__DefaultReaderList -> n_data__identdata__DelimReader [style=invis, minlen=1];
+  n_data__identdata__DelimReader -> n_data__identdata__IO [style=invis, minlen=1];
+  n_data__identdata__IO -> n_data__identdata__KwCVMap [style=invis, minlen=1];
+  n_data__identdata__KwCVMap -> n_data__identdata__Pep2MzIdent [style=invis, minlen=1];
+  subgraph cluster_legend {
+    label=<<b>Status</b>>;
+    style="rounded";
+    color="#444";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=8;
+    rank=same;
+    legend_full [label="ported", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    legend_partial [label="partial", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
+    legend_none [label="not yet ported", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    legend_skipped [label=<<s>won't port (BCL/legacy)</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555"];
+    legend_full -> legend_partial -> legend_none -> legend_skipped [style=invis, constraint=false];
+  }
+  n_data__identdata__Pep2MzIdent -> legend_full [style=invis, minlen=1];
+}

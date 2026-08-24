@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.TestHarness</RootNamespace>
+    <AssemblyName>Pwiz.TestHarness</AssemblyName>
+    <Description>Test harness for vendor readers: parity-checks pwiz-sharp MSData output against reference mzML fixtures shipped with pwiz. Port of pwiz::util::VendorReaderTestHarness.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Util\Util.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+</Project>

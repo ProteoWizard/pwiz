@@ -1,0 +1,45 @@
+<Project>
+
+  <!-- git-commit-date -> version pieces (Jam-free generate-version replacement). -->
+  <Import Project="$(MSBuildThisFileDirectory)build\PwizVersion.targets" />
+
+  <!-- Compose pwiz-sharp's version (major.minor.{YY}{DDD}) from the git date and
+       stamp it before the SDK reads Version for assembly-info generation. -->
+  <Target Name="SetPwizSharpVersion"
+          DependsOnTargets="ComputePwizBuildVersion"
+          BeforeTargets="GetAssemblyVersion">
+    <PropertyGroup>
+      <Version>$(PwizSharpVersionMajor).$(PwizSharpVersionMinor).$(PwizVersionYear2)$(PwizVersionDayOfYear)</Version>
+      <InformationalVersion>$(Version)-$(PwizVersionGitHash) ($(_BuildKindSuffix))</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Test-only PackageReferences, gated on $(IsTestProject). The project's own
+       SDK sets IsTestProject=true via the Microsoft.NET.Test.Sdk reference; by
+       the time Directory.Build.targets is imported (AFTER the project), that
+       property is in scope. (Directory.Build.props is imported BEFORE the
+       project, so IsTestProject isn't set yet there — that's why this lives
+       in .targets, not .props.)
+
+       Previously lived at pwiz-sharp/test/Directory.Build.{props,targets} —
+       moved to the root after the pwiz/+Tools/ restructure pulled all test
+       projects out of the flat test/ dir, leaving the test-specific
+       Directory.Build files out of every project's MSBuild parent walk. -->
+
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <!-- coverlet.collector enables the "XPlat Code Coverage" data collector for
+         `dotnet test` and writes a Cobertura XML under TestResults/<guid>/coverage.cobertura.xml. -->
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+
+    <!-- TeamCity.VSTest.TestAdapter emits ##teamcity[testStarted/testFinished/testFailed]
+         service messages when TEAMCITY_VERSION is in the environment, so per-test results
+         show up in the TeamCity UI when the build runs through a plain Command Line step
+         (tcbuild.bat) instead of TC's bundled .NET runner. No-op locally where
+         TEAMCITY_VERSION is unset. Equivalent to the C++ build's teamcity-test-decoration. -->
+    <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.40" />
+  </ItemGroup>
+
+</Project>
