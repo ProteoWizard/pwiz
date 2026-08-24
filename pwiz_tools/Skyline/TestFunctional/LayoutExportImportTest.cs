@@ -270,7 +270,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void ImportLayout(string layoutPath)
         {
-            RunNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowImportLayoutDlg, dlg =>
+            RunLongNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowImportLayoutDlg, dlg =>
             {
                 dlg.EnterPath(layoutPath);
                 dlg.Accept();

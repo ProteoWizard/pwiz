@@ -163,7 +163,7 @@ namespace TestPerf
             // The Start Page tile sets DialogResult and returns; the "must save" prompt and this Save dialog are then
             // shown by the startup frame (StartupActions), NOT by a counted connector gesture -- so accepting the
             // prompt completes (its window is gone) before the Save dialog appears. Wait for it rather than assume it.
-            var saveDlg = WaitForNativeFileDialog();
+            var saveDlg = WaitForNativeDlg<NativeFileDialog>().FormId;
             McpConnector.SetFormValue(saveDlg, "FileName", GetTestPath("DIA_to_SRM_Tutorial.sky"));
             McpConnector.DismissWithAcceptButton(saveDlg);
 
@@ -188,8 +188,6 @@ namespace TestPerf
             AssertComplete(McpConnector.ClickFormButton(wizard, GetLocalizedText<ImportPeptideSearchDlg>("btnNext")));
 
             // Extract Chromatograms page: nothing to add here (results are imported later), so just capture it.
-            // Clicking Next above loaded the library and swaps this page in; the experiment assumes the click has
-            // fully settled that transition on return (no WaitForControl), which the screenshot then relies on.
             PauseForMcpScreenShot(wizard, "Extract Chromatograms"); // s-03
         }
 
@@ -209,8 +207,7 @@ namespace TestPerf
             McpConnector.ClickFormButton(wizard, WizardNextButton);
             AssertComplete(McpConnector.DismissWithAcceptButton(WaitForMcpConnectorForm<MultiButtonMsgDlg>()));
 
-            // 1.3 Add Modifications: no modifications were used in the search, so just move on. No WaitForControl --
-            // the accept above is assumed to have settled the Add Modifications page.
+            // 1.3 Add Modifications: no modifications were used in the search, so just move on.
             PauseForMcpScreenShot(wizard, "Add Modifications"); // s-04
             AssertComplete(McpConnector.ClickFormButton(wizard, WizardNextButton));
 
@@ -260,7 +257,7 @@ namespace TestPerf
             AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<ImportFastaControl>("label2"), "0"));                  // max missed cleavages
             // Browse opens the native Open dialog (a dialog, so it does not complete); accept it to load the FASTA.
             McpConnector.ClickFormButton(wizard, GetLocalizedText<ImportFastaControl>("browseFastaBtn"));
-            var fastaDlg = WaitForNativeFileDialog();
+            var fastaDlg = WaitForNativeDlg<NativeFileDialog>().FormId;
             McpConnector.SetFormValue(fastaDlg, "FileName", GetTestPath("uniprot_human_25apr2019.fasta"));
             McpConnector.DismissWithAcceptButton(fastaDlg);
             PauseForMcpScreenShot(wizard, "Import FASTA"); // s-07
@@ -317,7 +314,7 @@ namespace TestPerf
         {
             // Import Document opens the native Open dialog (a dialog), so it does not complete; resolve it from the
             // menu action's ActionResult, then accept it to import.
-            var importDlg = ResolveNativeFileDialog(McpConnector.ClickMainMenuItem(MenuPath<SkylineWindow>(
+            var importDlg = ResolveModal(McpConnector.ClickMainMenuItem(MenuPath<SkylineWindow>(
                 "fileToolStripMenuItem", "importToolStripMenuItem", "importDocumentMenuItem")));
             McpConnector.SetFormValue(importDlg, "FileName", GetTestPath("PRTC.sky"));
             McpConnector.DismissWithAcceptButton(importDlg);
@@ -432,7 +429,7 @@ namespace TestPerf
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete -- resolve the
             // dialog from its ActionResult.FormId.
-            var saveDlg = ResolveNativeFileDialog(McpConnector.ClickMainMenuItem(
+            var saveDlg = ResolveModal(McpConnector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem")));
             McpConnector.SetFormValue(saveDlg, "FileName", GetTestPath("DIA_to_SRM_Tutorial-filtered.sky"));
             McpConnector.DismissWithAcceptButton(saveDlg);
@@ -498,7 +495,7 @@ namespace TestPerf
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete -- resolve the
             // dialog from its ActionResult.FormId.
-            var saveDlg = ResolveNativeFileDialog(McpConnector.ClickMainMenuItem(
+            var saveDlg = ResolveModal(McpConnector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem")));
             McpConnector.SetFormValue(saveDlg, "FileName", GetTestPath("SRM_targets.sky"));
             McpConnector.DismissWithAcceptButton(saveDlg);
