@@ -88,7 +88,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public static ActionResult PerformAction(Control control, Action action, CancellationToken cancellationToken)
         {
-            return PerformActionAndWait(control, action, null, cancellationToken);
+            return PerformActionAndWait(control, IntPtr.Zero, action, null, cancellationToken);
         }
 
         /// <summary>Accepts or cancels the dialog at <paramref name="hwndDlg"/>: posts <paramref name="dismissAction"/>
@@ -127,23 +127,8 @@ namespace pwiz.Skyline.ToolsUI
         private static ActionResult PerformActionAndWait(IntPtr hwnd, Action action, Func<bool> waitCondition,
             CancellationToken cancellationToken)
         {
-            var control = Control.FromHandle(hwnd);
-            if (control == null)
-            {
-                var uiThreadWindow = UiThreadWindow;
-                if (hwnd != IntPtr.Zero)
-                {
-                    // If the hwnd is valid, verify that the UiThreadWindow is actually the appropriate thread for the window.
-                    var windowThreadId = User32.GetWindowThreadProcessId(hwnd, out _);
-                    // Thread ID zero means hwnd already destroyed
-                    if (windowThreadId != 0 && windowThreadId != User32.GetWindowThreadProcessId(uiThreadWindow.Handle, out _))
-                    {
-                        throw new InvalidOperationException(new LlmInstruction(string.Format(@"Native window {0} is on the wrong thread", hwnd)));
-                    }
-                }
-                control = uiThreadWindow;
-            }
-            return PerformActionAndWait(control, action, waitCondition, cancellationToken);
+            var control = Control.FromHandle(hwnd) ?? UiThreadWindow;
+            return PerformActionAndWait(control, hwnd, action, waitCondition, cancellationToken);
         }
         /// <summary>
         /// Snapshots -- on the caller thread, FIRST -- the nesting count and open top-level windows (pruning the
@@ -154,7 +139,7 @@ namespace pwiz.Skyline.ToolsUI
         /// holds; and trips the watchdog after <see cref="NO_PROGRESS_LIMIT"/> message-loop pumps with no LongWaitDlg
         /// and no completion. Must be called off the UI thread.
         /// </summary>
-        private static ActionResult PerformActionAndWait(Control control, Action action, Func<bool> waitCondition,
+        private static ActionResult PerformActionAndWait(Control control, IntPtr hwnd, Action action, Func<bool> waitCondition,
             CancellationToken cancellationToken)
         {
             // Called ON the control's own UI thread this cannot work, ever: the action is posted to that thread and
@@ -190,6 +175,17 @@ namespace pwiz.Skyline.ToolsUI
             {
                 control.BeginInvoke((Action) (() =>
                 {
+                    if (hwnd != IntPtr.Zero)
+                    {
+                        // If the hwnd is valid, verify that the UiThreadWindow is actually the appropriate thread for the window.
+                        var windowThreadId = User32.GetWindowThreadProcessId(hwnd, out _);
+                        // Thread ID zero means hwnd already destroyed
+                        if (windowThreadId != 0 && windowThreadId != Kernel32.GetCurrentThreadId())
+                        {
+                            throw new InvalidOperationException(new LlmInstruction(string.Format(@"Native window {0} is on the wrong thread", hwnd)));
+                        }
+                    }
+
                     // Nearly always the one the UI thread's message loop installed. The fallback is for the gap in
                     // between two of them: the StartPage runs its own loop (ShowDialog), and choosing an action there
                     // ENDS that loop -- uninstalling its context -- before Application.Run starts the main window's
