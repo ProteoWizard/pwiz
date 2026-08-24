@@ -41,6 +41,24 @@ public static class MSDataDiff
     }
 
     /// <summary>
+    /// Returns an empty string when <paramref name="a"/> and <paramref name="b"/> are logically
+    /// equal under <paramref name="config"/>; otherwise a report of the differences. Applies the
+    /// same per-spectrum comparison <see cref="Describe(MSData, MSData, DiffConfig?)"/> uses,
+    /// exposed for callers holding two spectra rather than two documents.
+    /// </summary>
+    public static string DescribeSpectrum(Spectrum a, Spectrum b, DiffConfig? config = null)
+    {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
+        config ??= new DiffConfig();
+        var ctx = new Context(config);
+
+        DiffSpectrum(a, b, ctx);
+
+        return ctx.Format();
+    }
+
+    /// <summary>
     /// Tolerance mode for the <c>msLevel</c> comparison in <see cref="DescribeSpectraDataOnly"/>.
     /// Captures the well-known lossy defaults each peak-list format applies on read.
     /// </summary>
