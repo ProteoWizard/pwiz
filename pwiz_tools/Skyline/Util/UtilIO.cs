@@ -608,6 +608,12 @@ namespace pwiz.Skyline.Util
                     return @"Unmodified";
                 try
                 {
+                    // A missing file is the case this check cannot state for itself. GetLastWriteTime
+                    // does not throw for one, it returns the 1601 epoch, so the subtraction below
+                    // yields a nonsense span and the failure reads as "modified" - which sent an
+                    // investigation after a rewrite that never happened.
+                    if (!File.Exists(FilePath))
+                        return @"File no longer exists";
                     return FileEx.GetElapsedTimeExplanation(FileTime, File.GetLastWriteTime(FilePath));
                 }
                 catch (Exception exception)
