@@ -22,6 +22,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.SkylineTestUtil;
@@ -54,6 +55,13 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // This test deliberately leaves a dialog unattended, and only the watchdog closes it.
+            // CommonAlertDlg.ShowWithTimeout disables the watchdog under a debugger and in any run
+            // carrying a pause value, so in those modes the dialog would sit until the hang
+            // detector fired. Skip instead of hanging; the nightly runs neither mode.
+            if (CommonFormEx.PauseMode || Debugger.IsAttached)
+                return;
+
             RunUI(() =>
             {
                 // A dialog nobody dismisses fails with the watchdog timeout, and the message

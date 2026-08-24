@@ -1605,7 +1605,6 @@ namespace pwiz.SkylineTestUtil
             return null;
         }
 
-
         private static SrmDocument ForceDocumentLoad(SrmDocument target, string testDir)
         {
             string xmlSaved = null;
@@ -1855,8 +1854,10 @@ namespace pwiz.SkylineTestUtil
                 return;
             }
             if (!Equals(group.Results, convertedGroup.Results))
+            {
                 EqualityExplainer.AssertEqual(group.Results, convertedGroup.Results,
                     string.Format(@"TransitionGroupChromInfo results differ: {0} vs {1}", group, convertedGroup));
+            }
         }
 
         private static void ConvertedSmallMoleculeIsSimilar(PeptideDocNode convertedMol, PeptideDocNode mol, RefinementSettings.ConvertToSmallMoleculesMode conversionMode)

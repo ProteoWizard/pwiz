@@ -235,13 +235,19 @@ namespace pwiz.Common.SystemUtil
             if (!(x is IOException { HResult: ERROR_SHARING_VIOLATION }) && !(x is UnauthorizedAccessException))
                 return x;
 
-            var match = Regex.Match(x.Message, "'([^']+)'");
-            if (!match.Success)
+            var quoted = Regex.Matches(x.Message, "'([^']+)'")
+                .Cast<Match>().Select(m => m.Groups[1].Value).ToArray();
+            if (quoted.Length == 0)
                 return x;
 
             try
             {
-                string lockedName = match.Groups[1].Value;
+                // Prefer the first quoted run that is actually a rooted path. These messages are
+                // localized, and some languages put an apostrophe ahead of the path - the French
+                // access-denied message opens "L'acces au chemin d'acces '<path>'" - so taking the
+                // first quoted run there captures a fragment of the prose and names a file that
+                // never existed. Fall back to the first run for messages that quote a bare name.
+                string lockedName = quoted.FirstOrDefault(IsRootedPath) ?? quoted[0];
                 string lockedFilePath = ResolveLockedPath(lockedName, dirPath);
                 if (lockedFilePath == null)
                 {
@@ -267,6 +273,18 @@ namespace pwiz.Common.SystemUtil
                 // The restart manager is not always available to name the locker, and losing the
                 // original exception to that would be worse than not knowing
                 return x;
+            }
+        }
+
+        private static bool IsRootedPath(string value)
+        {
+            try
+            {
+                return Path.IsPathRooted(value);
+            }
+            catch (ArgumentException)
+            {
+                return false;   // Invalid path characters, so not the path we are looking for
             }
         }
 

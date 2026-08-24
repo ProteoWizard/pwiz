@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using Ionic.Crc;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Tools;
@@ -326,7 +327,10 @@ namespace pwiz.Skyline.Util
                     {
                         // Still locked after retrying. "Access to the path is denied" on its own cannot
                         // be acted on, so name whatever is holding the file.
-                        throw FileLockingProcessFinder.ToFileLockingException(x, requiredFile.InstallPath);
+                        var described = FileLockingProcessFinder.ToFileLockingException(x, requiredFile.InstallPath);
+                        if (ReferenceEquals(described, x))
+                            throw;  // Nothing to add, so keep the original stack trace
+                        throw described;
                     }
 
                     if (unzipTimer != null)
@@ -392,7 +396,24 @@ namespace pwiz.Skyline.Util
         private static bool IsAlreadyExtracted(ZipEntry entry, string installPath)
         {
             var destination = Path.Combine(installPath, entry.FileName.Replace('/', Path.DirectorySeparatorChar));
-            return File.Exists(destination) && new FileInfo(destination).Length == entry.UncompressedSize;
+            if (!File.Exists(destination) || new FileInfo(destination).Length != entry.UncompressedSize)
+                return false;
+            // Length alone is not enough to call a file already extracted. A rebuilt binary
+            // republished at the same version, or a partially written file from an interrupted
+            // extraction that happened to reach full length, would both be skipped forever, since
+            // nothing here ever repairs the install directory. The archive carries a CRC for
+            // exactly this comparison, and reading the file takes no write lock on it.
+            return GetFileCrc(destination) == entry.Crc;
+        }
+
+        private static int GetFileCrc(string path)
+        {
+            using (var stream = File.OpenRead(path))
+            using (var crcStream = new CrcCalculatorStream(stream))
+            {
+                crcStream.CopyTo(Stream.Null);
+                return crcStream.Crc;
+            }
         }
     }
 

@@ -300,6 +300,10 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<AuditLogForm>("Audit Log form with grid changes");
 
             ShowLastExtraInfo("Extra Info for the analyte data import.");
+            // Read the row count while the form is still open. Close() sets SkylineWindow's
+            // AuditLogForm to null synchronously, so reading it afterwards yields 0 and the wait
+            // further down degrades to "any rows at all", which is already true.
+            var auditRowsBefore = CallUI(() => SkylineWindow.AuditLogForm.DataGridView.Rows.Count);
             RunUI(SkylineWindow.AuditLogForm.Close);
 
             const string unknownReplicate = "FOXN1-GST";
@@ -311,7 +315,38 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("Heavy precursor chromatogram");
 
-            var auditRowsBefore = CallUI(() => SkylineWindow.AuditLogForm?.DataGridView.Rows.Count ?? 0);
+            // Build the change BEFORE opening the document-change scope. WaitDocumentChange waits in
+            // Dispose, so an assertion failing inside the using would unwind through a three-minute
+            // wait for a change that is never coming, and that timeout would replace the real
+            // failure - burying exactly the diagnosis these asserts exist to give.
+            GraphChromatogram graphChromHeavy = null;
+            List<ChangedPeakBoundsEventArgs> listChanges = null;
+            RunUI(() =>
+            {
+                var pathHeavy = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, 1);
+
+                var graphChrom = SkylineWindow.GetGraphChrom(unknownReplicate);
+                Assert.IsNotNull(graphChrom);
+                Assert.AreEqual(unknownReplicate, graphChrom.NameSet);
+
+                var firstGroupInfo = graphChrom.ChromGroupInfos.FirstOrDefault();
+                Assert.IsNotNull(firstGroupInfo, "Missing group info");
+                var firstChromItem = graphChrom.GraphItems.FirstOrDefault(gci => gci.TransitionChromInfo != null);
+                Assert.IsNotNull(firstChromItem, "Missing graph item");
+
+                graphChromHeavy = graphChrom;
+                listChanges = new List<ChangedPeakBoundsEventArgs>
+                {
+                    new ChangedPeakBoundsEventArgs(pathHeavy,
+                        null,
+                        graphChrom.NameSet,
+                        firstGroupInfo.FilePath,
+                        firstChromItem.GetValidPeakBoundaryTime(20.65),
+                        firstChromItem.GetValidPeakBoundaryTime(21.15),
+                        PeakIdentification.FALSE,
+                        PeakBoundsChangeType.both)
+                };
+            });
 
             // Wait for the document this produces before moving on. Without it the peak bounds
             // change and the calibration exclusion further down could be written to the audit log
@@ -319,32 +354,7 @@ namespace pwiz.SkylineTestTutorial
             // roughly one run in five. Every other document change in this test already does this.
             using (new WaitDocumentChange())
             {
-                RunUI(() =>
-                {
-                    var pathHeavy = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, 1);
-
-                    var graphChrom = SkylineWindow.GetGraphChrom(unknownReplicate);
-                    Assert.IsNotNull(graphChrom);
-                    Assert.AreEqual(unknownReplicate, graphChrom.NameSet);
-
-                    var firstGroupInfo = graphChrom.ChromGroupInfos.FirstOrDefault();
-                    Assert.IsNotNull(firstGroupInfo, "Missing group info");
-                    var firstChromItem = graphChrom.GraphItems.FirstOrDefault(gci => gci.TransitionChromInfo != null);
-                    Assert.IsNotNull(firstChromItem, "Missing graph item");
-
-                    var listChanges = new List<ChangedPeakBoundsEventArgs>
-                    {
-                        new ChangedPeakBoundsEventArgs(pathHeavy,
-                            null,
-                            graphChrom.NameSet,
-                            firstGroupInfo.FilePath,
-                            firstChromItem.GetValidPeakBoundaryTime(20.65),
-                            firstChromItem.GetValidPeakBoundaryTime(21.15),
-                            PeakIdentification.FALSE,
-                            PeakBoundsChangeType.both)
-                    };
-                    graphChrom.SimulateChangedPeakBounds(listChanges);
-                });
+                RunUI(() => graphChromHeavy.SimulateChangedPeakBounds(listChanges));
             }
 
             ShowAndPositionAuditLog(true, 50, 200);

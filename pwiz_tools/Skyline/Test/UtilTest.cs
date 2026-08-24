@@ -586,8 +586,15 @@ namespace pwiz.SkylineTest
             using (File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
             {
                 var described = FileLockingProcessFinder.ToFileLockingException(accessDenied, null);
-                AssertEx.Contains(described.Message, filePath,
-                    MessageResources.FileLockingProcessFinder_ToFileLockingException_this_process);
+                if (!ReferenceEquals(described, accessDenied))
+                {
+                    // Only assert the naming when the Restart Manager was actually able to answer.
+                    // Where it is unavailable - a container, or an account without the rights - it
+                    // names no process and the original exception is returned untouched, which the
+                    // locking test above tolerates for the same reason.
+                    AssertEx.Contains(described.Message, filePath,
+                        MessageResources.FileLockingProcessFinder_ToFileLockingException_this_process);
+                }
             }
 
             // Unlocked now, so there is no locking process to name and the original must survive

@@ -2771,14 +2771,18 @@ namespace pwiz.Skyline.Model.DocSettings
                 return string.Format(@"other is {0}, not PeptideLibraries", other?.GetType().Name ?? @"null");
             var differences = new List<string>();
             if (!ArrayUtil.EqualsDeep(_librarySpecs, libraries._librarySpecs))
+            {
                 differences.Add(string.Format(@"LibrarySpecs [{0}] vs [{1}]",
                     string.Join(@", ", _librarySpecs.Select(s => s == null ? @"(null)" : s.Name)),
                     string.Join(@", ", libraries._librarySpecs.Select(s => s == null ? @"(null)" : s.Name))));
+            }
             if (!ArrayUtil.EqualsDeep(_libraries, libraries._libraries))
+            {
                 differences.Add(string.Format(@"Libraries [{0}] vs [{1}] (unloadedSpecs {2} vs {3})",
                     string.Join(@", ", _libraries.Select(ExplainLibrary)),
                     string.Join(@", ", libraries._libraries.Select(ExplainLibrary)),
                     LibrarySpecsUnloaded.Count(), libraries.LibrarySpecsUnloaded.Count()));
+            }
             if (!Equals(_rankIdName, libraries._rankIdName))
                 differences.Add(string.Format(@"RankIdName {0} vs {1}", _rankIdName, libraries._rankIdName));
             if (!Equals(Pick, libraries.Pick))

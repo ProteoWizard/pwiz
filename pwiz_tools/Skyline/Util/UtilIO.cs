@@ -531,18 +531,6 @@ namespace pwiz.Skyline.Util
             FileSize = FileSizeOrMissing(FilePath);
         }
 
-        private static long FileSizeOrMissing(string filePath)
-        {
-            try
-            {
-                return new FileInfo(filePath).Length;
-            }
-            catch (Exception)
-            {
-                return -1;  // Only ever reported alongside a failure, never acted on
-            }
-        }
-
         public IStreamManager StreamManager { get; private set; }
         public string FilePath { get; private set; }
         public bool Buffered { get; private set; }
@@ -635,6 +623,11 @@ namespace pwiz.Skyline.Util
                 try
                 {
                     var sizeNow = new FileInfo(FilePath).Length;
+                    if (FileSize < 0)
+                    {
+                        // The size could not be read when the stream was first opened
+                        return string.Format(@"Size is {0} bytes, and was unknown when first opened", sizeNow);
+                    }
                     return Equals(sizeNow, FileSize)
                         ? string.Format(@"Size unchanged at {0} bytes", sizeNow)
                         : string.Format(@"Size was {0} bytes, now {1}", FileSize, sizeNow);
@@ -649,6 +642,18 @@ namespace pwiz.Skyline.Util
         public bool IsOpen
         {
             get { return ConnectionPool.IsInPool(this); }
+        }
+
+        private static long FileSizeOrMissing(string filePath)
+        {
+            try
+            {
+                return new FileInfo(filePath).Length;
+            }
+            catch (Exception)
+            {
+                return -1;  // Only ever reported alongside a failure, never acted on
+            }
         }
 
         /// <summary>

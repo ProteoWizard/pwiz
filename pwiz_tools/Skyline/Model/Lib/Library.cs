@@ -74,14 +74,18 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (!ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries))
                 return true;
+            if (ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults))
+                return false;
             // MIDAS libraries are built from the results, which makes this the one library manager
-            // that must also watch for results changes. Only a document with MIDAS spectra can have
-            // that work to do, so limit the cost to those documents. Every other document would pay
-            // it on every results change, including the annotation-only changes that
+            // that must also watch for results changes. A document with no MIDAS spectra and nothing
+            // left to load has no work a results change could create, and would otherwise pay for
+            // this on every results change - including the annotation-only changes that
             // MeasuredResults.RequiresCacheUpdate and SrmSettingsDiff.EqualExceptAnnotations both
-            // take care to treat as no-ops.
-            return !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults) &&
-                   HasMidasSpectra(document);
+            // take care to treat as no-ops. Both documents are checked for MIDAS spectra so that
+            // clearing the last flag still counts as a change, and an unloaded library still gets
+            // its retry, since a load that failed on a transient error is retried from here.
+            return HasMidasSpectra(document) || HasMidasSpectra(previous) ||
+                   document.Settings.PeptideSettings.Libraries.LibrarySpecsUnloaded.Any();
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)

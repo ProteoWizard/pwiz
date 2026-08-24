@@ -238,8 +238,6 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        // Returns the unrounded rdotp line value at the given replicate's displayed position.
-        // Must be called on the UI thread.
         /// <summary>
         /// Waits for a peak area pane to catch up to the selected precursor.
         /// <para><see cref="AbstractFunctionalTest.WaitForGraphs"/> is not enough on its own. It reports only that no graph
@@ -254,13 +252,21 @@ namespace pwiz.SkylineTestFunctional
         {
             WaitForConditionUI(() =>
             {
-                var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.MasterPane[paneIndex];
+                // Wait for the pane to exist as part of the condition. A split graph adds its second
+                // pane as the selection is applied, and indexing ahead of that throws out of the
+                // predicate - WaitForConditionUI does not catch, so it hard-fails instead of waiting.
+                var panes = SkylineWindow.GraphPeakArea.GraphControl.MasterPane.PaneList;
+                if (paneIndex >= panes.Count)
+                    return false;
+                var pane = (AreaReplicateGraphPane) panes[paneIndex];
                 var selected = SkylineWindow.SequenceTree.GetNodeOfType<TransitionGroupTreeNode>()?.DocNode;
                 return selected != null && pane.ParentGroupNode != null &&
                        ReferenceEquals(pane.ParentGroupNode.TransitionGroup, selected.TransitionGroup);
             }, () => string.Format("Peak area pane {0} did not catch up to the selected precursor.", paneIndex));
         }
 
+        // Returns the unrounded rdotp line value at the given replicate's displayed position.
+        // Must be called on the UI thread.
         private double GetRdotpLineValue(string replicate, int paneIndex = 0)
         {
             var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.MasterPane[paneIndex];
