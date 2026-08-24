@@ -295,6 +295,7 @@
     <Compile Include="DiannSearchTest.cs" />
     <Compile Include="EncyclopeDiaSearchTest.cs" />
     <Compile Include="UnalignedRetentionTimesTest.cs" />
+    <Compile Include="UnattendedDialogTimeoutTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />
