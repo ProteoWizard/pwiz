@@ -142,6 +142,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void SetStatus(ChromatogramLoadingStatus status)
         {
+            // Ignore a status that would move this file BACKWARDS out of a final state.
+            // Progress statuses are immutable snapshots delivered through the UI message queue,
+            // so an older one can be handed over after a newer one. Accepting it leaves a file
+            // that has already finished showing its last running percent - 99% - for the rest of
+            // the run, and AllChromatogramsGraph.Finished never becomes true because it requires
+            // every file to be complete, cancelled or in error. Id is created once per progress
+            // chain and carried by every clone of it, so a retry starts a new chain and is still
+            // allowed to restart this file from zero.
+            if (Status != null && Status.IsFinal && !status.IsFinal && ReferenceEquals(Status.Id, status.Id))
+                return;
+
             Status = status;
             IsCanceled = false;
             try

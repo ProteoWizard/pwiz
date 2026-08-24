@@ -294,6 +294,7 @@
     <Compile Include="EditSpectrumFilterTest.cs" />
     <Compile Include="DiannSearchTest.cs" />
     <Compile Include="EncyclopeDiaSearchTest.cs" />
+    <Compile Include="FileProgressStaleStatusTest.cs" />
     <Compile Include="UnalignedRetentionTimesTest.cs" />
     <Compile Include="UnattendedDialogTimeoutTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
