@@ -1453,25 +1453,18 @@ namespace TestRunnerLib
                 yield return dockerWorkerName;
         }
 
-        public static void KillParallelWorkers(int hostWorkerPid, string workerNames = null)
+        public static void KillParallelWorkers(Process hostWorker, string workerNames = null)
         {
             // Kill the host worker before asking docker for anything. Listing the containers shells out
             // to docker, which throws if it is absent or wedged, and that must not be what stops the
             // host worker from being killed.
             try
             {
-                if (hostWorkerPid > 0)
-                {
-                    var hostWorker = Process.GetProcessById(hostWorkerPid);
-                    // Check the name before killing. On the normal-exit path the host worker has
-                    // usually exited already, which is exactly when Windows is free to hand its pid
-                    // to something else, and killing a stranger is worse than leaking a process.
-                    if (!hostWorker.HasExited &&
-                        Equals(hostWorker.ProcessName, Process.GetCurrentProcess().ProcessName))
-                    {
-                        hostWorker.Kill();
-                    }
-                }
+                // The caller holds the Process rather than its id, so this cannot reach a stranger
+                // that inherited a recycled pid, and it needs no guess about the process name -
+                // under coverage the host worker runs as dotCover rather than as TestRunner.
+                if (hostWorker != null && !hostWorker.HasExited)
+                    hostWorker.Kill();
             }
             catch (ArgumentException)
             {
@@ -1533,17 +1526,17 @@ namespace TestRunnerLib
         /// </summary>
         public class ParallelWorkerTeardown : IDisposable
         {
-            private readonly Func<int> _getHostWorkerPid;
+            private readonly Func<Process> _getHostWorker;
             private readonly Func<string> _getWorkerNames;
 
-            /// <param name="getHostWorkerPid">Reads the host worker process id at teardown time, or 0
-            /// if there is none. Deferred for the same reason as the names: the host worker has not
-            /// been launched yet when this scope is created, so reading it now captures 0</param>
+            /// <param name="getHostWorker">Reads the host worker process at teardown time, or null if
+            /// there is none. Deferred for the same reason as the names: the host worker has not been
+            /// launched yet when this scope is created, so reading it now yields null</param>
             /// <param name="getWorkerNames">Reads the launched worker names at teardown time, since
             /// workers are still being launched when this scope is created</param>
-            public ParallelWorkerTeardown(Func<int> getHostWorkerPid, Func<string> getWorkerNames)
+            public ParallelWorkerTeardown(Func<Process> getHostWorker, Func<string> getWorkerNames)
             {
-                _getHostWorkerPid = getHostWorkerPid;
+                _getHostWorker = getHostWorker;
                 _getWorkerNames = getWorkerNames;
             }
 
@@ -1553,7 +1546,7 @@ namespace TestRunnerLib
                 {
                     // Never null: null means "every worker container on this machine", which would
                     // kill a concurrent run's workers when this one launched none of its own.
-                    KillParallelWorkers(_getHostWorkerPid(), _getWorkerNames() ?? string.Empty);
+                    KillParallelWorkers(_getHostWorker(), _getWorkerNames() ?? string.Empty);
                 }
                 catch (Exception ex)
                 {

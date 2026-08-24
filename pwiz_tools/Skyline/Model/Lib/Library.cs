@@ -175,8 +175,11 @@ namespace pwiz.Skyline.Model.Lib
                 // Leave the MIDAS work until the results are loaded. Starting earlier gains nothing,
                 // because the spectra come from the raw files, and it is repeated and thrown away for
                 // every partial cache the importer joins.
+                // Read from docCurrent, which is what the readiness check and libraries above both
+                // come from. EqualsId compares identity, not instance, so document can be an older
+                // copy of the same document and its MSDataFileInfos correspondingly stale.
                 var missingMidasFiles = IsReadyForMidasWork(docCurrent)
-                    ? MidasLibrary.GetMissingFiles(document, libraries.Libraries)
+                    ? MidasLibrary.GetMissingFiles(docCurrent, libraries.Libraries)
                     : Array.Empty<string>();
                 var midasLibPath = MidasLibSpec.GetLibraryFileName(container.DocumentFilePath);
                 var midasLibSpec = libraries.MidasLibrarySpecs.FirstOrDefault(libSpec => Equals(libSpec.FilePath, midasLibPath));

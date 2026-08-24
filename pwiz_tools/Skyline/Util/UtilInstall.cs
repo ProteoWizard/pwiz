@@ -366,8 +366,8 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Extracts an archive, leaving alone any file that is already the size the archive says it
-        /// should be.
+        /// Extracts an archive, leaving alone any file that already matches the archive's size and
+        /// CRC.
         /// <para>These archives hold version-pinned tool executables and the MSVC runtime DLLs beside
         /// them, so re-extracting rewrites files that are already byte for byte correct. That is not
         /// merely wasteful: overwriting renames the existing file aside and deletes it, and Windows

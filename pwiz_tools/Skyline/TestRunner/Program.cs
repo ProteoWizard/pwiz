@@ -775,7 +775,7 @@ namespace TestRunner
             }
         }
 
-        private static int LaunchHostWorker(CommandLineArgs commandLineArgs, int workerPort, StreamWriter log, ConcurrentBag<string> coverageSnapshots)
+        private static Process LaunchHostWorker(CommandLineArgs commandLineArgs, int workerPort, StreamWriter log, ConcurrentBag<string> coverageSnapshots)
         {
             var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
             Assume.IsNotNull(pwizRoot);
@@ -810,7 +810,11 @@ namespace TestRunner
             {
                 throw new IOException($"Error launching host worker: {proc?.ExitCode ?? -1}");
             }
-            return proc.Id;
+            // Return the Process, not its id. Holding it keeps a handle open, so Windows cannot
+            // hand this pid to something else once the worker exits, and teardown never has to
+            // guess whether the pid it holds is still the worker. The name would not settle that
+            // either: under coverage this process is dotCover, not TestRunner.
+            return proc;
         }
 
         private static string LaunchDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker,
@@ -1269,7 +1273,7 @@ namespace TestRunner
             public DateTime CurrentTestStarted { get; set; }
         }
 
-        private static int HostWorkerPid { get; set; }
+        private static Process HostWorker { get; set; }
 
         private static bool PushToTestQueue(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log)
         {
@@ -1426,7 +1430,7 @@ namespace TestRunner
             // normally; the console control handler installed below only covers outside termination.
             string workerNames = null;
             using (var receiver = new PullSocket())
-            using (new RunTests.ParallelWorkerTeardown(() => HostWorkerPid, () => workerNames))
+            using (new RunTests.ParallelWorkerTeardown(() => HostWorker, () => workerNames))
             {
                 // get system-assigned port which will passed to workers with "workerport" parameter
                 int workerPort;
@@ -1445,7 +1449,7 @@ namespace TestRunner
                 // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
                 Kernel32Test.SetConsoleCtrlHandler(c =>
                 {
-                    RunTests.KillParallelWorkers(HostWorkerPid, workerNames);
+                    RunTests.KillParallelWorkers(HostWorker, workerNames);
                     cts.Cancel();
                     Process.GetCurrentProcess().Kill();
                     return true;
@@ -1499,7 +1503,7 @@ namespace TestRunner
                 }
 
                 // fix this to get PID of TestRunner, not dotCover
-                HostWorkerPid = LaunchHostWorker(commandLineArgs, workerPort, log, coverageSnapshots);
+                HostWorker = LaunchHostWorker(commandLineArgs, workerPort, log, coverageSnapshots);
                 // A worker still counts while its container is booting. Without that, a replacement is
                 // launched into a pool that is declared empty a second later, and it can never register.
                 bool AnyWorkerAliveOrPending()
@@ -1767,7 +1771,7 @@ namespace TestRunner
                                     if (commandLineArgs.ArgAsBool("coverage"))
                                     {
                                         Console.WriteLine("Aborting coverage run due to failed worker (coverage from that worker is lost).");
-                                        RunTests.KillParallelWorkers(HostWorkerPid);
+                                        RunTests.KillParallelWorkers(HostWorker);
                                         Process.GetCurrentProcess().Kill();
                                     }
 
