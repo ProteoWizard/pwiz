@@ -4,7 +4,26 @@
  <!-- MSB3178: Assembly xxx is incorrectly specified as a file. --> 
  <!-- MSB3187: Referenced assembly xxx targets a different processor than the application. --> 
  <!-- MSB3270: There was a mismatch between the processor architecture of the project being built "MSIL" and the processor architecture of the reference xxx, "AMD64". This mismatch may cause runtime failures. Please consider changing the targeted processor architecture of your project through the Configuration Manager so as to align the processor architectures between your project and references, or take a dependency on references with a processor architecture that matches the targeted processor architecture of your project. --> 
- <MSBuildWarningsAsMessages>MSB3187;MSB3270;MSB3178</MSBuildWarningsAsMessages> 
+ <MSBuildWarningsAsMessages>MSB3187;MSB3270;MSB3178;MSB3825</MSBuildWarningsAsMessages> 
+ <!-- Platform-agnostic net8 migration noise the legacy net472 build never emitted:
+      CS8981     third-party alglib math types are all-lowercase; can't rename vendor code.
+      SYSLIB0003 Code Access Security attributes (ZedGraph fork); CAS no-ops on net8.
+      CA1416 (platform-compat) is handled in Directory.Build.targets - suppressed only on
+      Windows-targeted projects, so multi-platform net8.0 model/command-line code keeps it. -->
+ <NoWarn>$(NoWarn);CS8981;SYSLIB0003</NoWarn>
+ <!-- MSB3825 (demoted above): WinForms ImageList .ImageStream resources serialize via
+      BinaryFormatter (disabled by default on net8, removed in net9). The build-time
+      GenerateResourceUsePreserializedResources switch does NOT clear it - ImageListStreamer
+      has no non-BinaryFormatter converter - so the real fix is to stop inlining the ~8
+      image lists into .resx (load icons programmatically), tracked for later. It runs fine
+      on net8 today (WinForms reads ImageStream intrinsically); demoted until that lands. -->
  <LangVersion>8.0</LangVersion>
- </PropertyGroup> 
+ <!-- Legacy SkylineTool IPC (ToolService/RemoteService) and other trusted, local serialization still
+      use BinaryFormatter, which net8 disables by default (throws NotSupportedException). net472 had it
+      enabled everywhere; re-enable it here so those paths keep working and match the reference behavior.
+      This only affects net8 exes' runtimeconfig (net472 ignores the property) and deserializes trusted,
+      local data only. The tool IPC is migrating to the JSON protocol (JsonToolServer); once that lands
+      this can be removed - BinaryFormatter is gone entirely in net9. -->
+ <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+ </PropertyGroup>
  </Project>
