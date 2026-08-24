@@ -3,7 +3,6 @@ using System;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -30,40 +29,35 @@ namespace SkylineBatch
         public void DownloadAsync(Uri remoteUri, string downloadPath, string username, string password,
             long expectedSize)
         {
-            using (var wc = new WebClient())
+            // Despite the name, this has always blocked until the download finished - the old
+            // implementation started WebClient.DownloadFileAsync and then span on
+            // Thread.Sleep(100) waiting for it. HttpClientWithProgress.DownloadFile does the same
+            // job synchronously, reports progress from the transfer rather than by stat-ing the
+            // partial file, and honours cancellation through the monitor.
+            var progressMonitor = new DownloadProgressMonitor(percent => ProgressHandler(percent, null), CancelToken);
+            using (var httpClient = new HttpClientWithProgress(progressMonitor))
             {
                 if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                 {
-                    wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
+                    httpClient.AddAuthorizationHeader(Server.GetBasicAuthHeader(username, password));
                 }
 
-                var completed = false;
-                Exception error = null;
-                wc.DownloadFileAsync(remoteUri, downloadPath);
-                wc.DownloadFileCompleted += ((sender, e) =>
+                try
                 {
-                    error = e.Error;
-                    completed = true;
-                });
-                var progressChanged = new DownloadProgressChangedEventHandler((sender, e) => {
-                    var percent = expectedSize > 0 ? new FileInfo(downloadPath).Length * 100 / expectedSize : 0;
-                    ProgressHandler((int)percent, null);
-                });
-                wc.DownloadProgressChanged += progressChanged;
-                while (!completed)
-                {
-                    if (CancelToken.IsCancellationRequested)
-                    {
-                        wc.CancelAsync();
-                    }
-
-                    if (error != null)
-                        ProgressHandler(-1, error);
-                    Thread.Sleep(100);
+                    httpClient.DownloadFile(remoteUri, downloadPath, expectedSize > 0 ? expectedSize : (long?)null);
                 }
-                wc.DownloadProgressChanged -= progressChanged;
+                catch (Exception e)
+                {
+                    // Cancellation is what the caller asked for, not a download failure. The old
+                    // loop reported it as one, because CancelAsync surfaced through the same
+                    // error path.
+                    if (!CancelToken.IsCancellationRequested)
+                        ProgressHandler(-1, e);
+                }
             }
         }
+
+        // DownloadProgressMonitor moved to its own file - DownloadDlg needs it too.
 
         public static long GetSize(Uri remoteUri, string username, string password, CancellationToken cancelToken)
         {

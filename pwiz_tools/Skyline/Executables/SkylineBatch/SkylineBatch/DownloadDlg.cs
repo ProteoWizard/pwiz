@@ -1,7 +1,6 @@
 using SharedBatch;
 using System;
 using System.IO;
-using System.Net;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -53,36 +52,33 @@ namespace SkylineBatch
         {
             CommonActionUtil.RunAsync(() =>
             {
-                using (var wc = new WebClient())
+                var realName = Path.Combine(_panoramaFile.DownloadFolder, _panoramaFile.FileName);
+                var panoramaServerUri = new Uri(Uri.UnescapeDataString(_server.URI.GetLeftPart(UriPartial.Authority)));
+                var downloadUri = new Uri(_panoramaFile.DownloadUrl);
+                var size = PanoramaServerConnector.GetSize(downloadUri, panoramaServerUri,
+                    new WebPanoramaClient(panoramaServerUri, _server.FileSource.Username,
+                    _server.FileSource.Password),
+                    new CancellationToken());
+
+                // Cap at 99 as before: the dialog closes on completion, so 100 was never shown
+                // and a full bar next to an open dialog reads as stuck.
+                var progressMonitor = new DownloadProgressMonitor(
+                    percent => _percent = Math.Min(percent, 99), _source.Token);
+
+                using (var httpClient = new HttpClientWithProgress(progressMonitor))
+                using (var fs = new FileSaver(realName))
                 {
-                    var realName = Path.Combine(_panoramaFile.DownloadFolder, _panoramaFile.FileName);
-                    var panoramaServerUri = new Uri(Uri.UnescapeDataString(_server.URI.GetLeftPart(UriPartial.Authority)));
-                    var downloadUri = new Uri(_panoramaFile.DownloadUrl);
-                    var size = PanoramaServerConnector.GetSize(downloadUri, panoramaServerUri,
-                        new WebPanoramaClient(panoramaServerUri, _server.FileSource.Username,
-                        _server.FileSource.Password),
-                        new CancellationToken());
-
-                    _source.Token.Register(wc.CancelAsync);
-
-                    using (var fs = new FileSaver(realName))
+                    try
                     {
-                        try
-                        {
-                            wc.DownloadProgressChanged += (sender, e) =>
-                            {
-                                _percent = Math.Min((int)((double)e.BytesReceived / size * 100), 99);
-                            };
-
-                            // Use synchronous Wait to avoid async void in background thread; ConfigureAwait(false) prevents context capture.
-                            wc.DownloadFileTaskAsync(downloadUri, fs.SafeName).ConfigureAwait(false).GetAwaiter().GetResult();
-                            fs.Commit();
-                            if (Visible) BeginInvoke((MethodInvoker)delegate { Close(); });
-                        }
-                        catch (Exception)
-                        {
-                            // Do nothing, file saver will clean up
-                        }
+                        // Cancellation now travels through the monitor rather than a
+                        // Token.Register(wc.CancelAsync) callback.
+                        httpClient.DownloadFile(downloadUri, fs.SafeName, size > 0 ? size : (long?)null);
+                        fs.Commit();
+                        if (Visible) BeginInvoke((MethodInvoker)delegate { Close(); });
+                    }
+                    catch (Exception)
+                    {
+                        // Do nothing, file saver will clean up
                     }
                 }
             });
