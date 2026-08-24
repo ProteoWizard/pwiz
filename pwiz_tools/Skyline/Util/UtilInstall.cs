@@ -315,9 +315,18 @@ namespace pwiz.Skyline.Util
                     }
 
                     Directory.CreateDirectory(requiredFile.InstallPath);
-                    using (var zipFile = new ZipFile(downloadFilename))
+                    try
                     {
-                        zipFile.ExtractAll(requiredFile.InstallPath, requiredFile.OverwriteExisting ? ExtractExistingFileAction.OverwriteSilently : ExtractExistingFileAction.DoNotOverwrite);
+                        using (var zipFile = new ZipFile(downloadFilename))
+                        {
+                            zipFile.ExtractAll(requiredFile.InstallPath, requiredFile.OverwriteExisting ? ExtractExistingFileAction.OverwriteSilently : ExtractExistingFileAction.DoNotOverwrite);
+                        }
+                    }
+                    catch (Exception x) when (x is UnauthorizedAccessException || x is IOException)
+                    {
+                        // Overwriting a file another process has loaded fails with nothing but
+                        // "access to the path is denied", which cannot be acted on. Name the holder.
+                        throw FileLockingProcessFinder.ToFileLockingException(x, requiredFile.InstallPath);
                     }
 
                     if (unzipTimer != null)

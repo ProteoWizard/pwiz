@@ -227,11 +227,15 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public static Exception ToFileLockingException(Exception x, string dirPath)
         {
-            // If it's a file locking issue, wrap the exception to report the locking process
-            if (!(x is IOException { HResult: ERROR_SHARING_VIOLATION } ioException))
+            // If it's a file locking issue, wrap the exception to report the locking process. A lock
+            // surfaces two ways: a sharing violation when the file is opened, and access-denied when
+            // it is deleted or replaced, which is what an overwriting unzip does. Access-denied has
+            // innocent causes too (a read-only file, an ACL), but those name no locking process and
+            // fall through below with the original exception intact.
+            if (!(x is IOException { HResult: ERROR_SHARING_VIOLATION }) && !(x is UnauthorizedAccessException))
                 return x;
 
-            var match = Regex.Match(ioException.Message, "'([^']+)'");
+            var match = Regex.Match(x.Message, "'([^']+)'");
             if (!match.Success)
                 return x;
 

@@ -549,6 +549,12 @@ namespace pwiz.SkylineTest
                         }
                     }
                 }
+
+                if (!Install.IsRunningOnWine)
+                {
+                    VerifyAccessDeniedNamesTheLockingProcess(filePath);
+                }
+
                 // Now test successful cleanup
                 DesiredCleanupLevel = DesiredCleanupLevel.downloads; // Folders renamed
                 testFilesDir.Cleanup();
@@ -564,6 +570,28 @@ namespace pwiz.SkylineTest
             {
                 DesiredCleanupLevel = cleanupLevel;
             }
+        }
+
+        /// <summary>
+        /// A lock is reported as a sharing violation when the file is opened, but as access-denied
+        /// when it is deleted or replaced - which is what an overwriting unzip does, and how the
+        /// crux tool extraction fails. Both must name the process holding the file.
+        /// </summary>
+        private static void VerifyAccessDeniedNamesTheLockingProcess(string filePath)
+        {
+            // The message shape .NET uses for access-denied, with the path it could not replace
+            var accessDenied = new UnauthorizedAccessException(
+                string.Format(@"Access to the path '{0}' is denied.", filePath));
+
+            using (File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                var described = FileLockingProcessFinder.ToFileLockingException(accessDenied, null);
+                AssertEx.Contains(described.Message, filePath,
+                    MessageResources.FileLockingProcessFinder_ToFileLockingException_this_process);
+            }
+
+            // Unlocked now, so there is no locking process to name and the original must survive
+            Assert.AreSame(accessDenied, FileLockingProcessFinder.ToFileLockingException(accessDenied, null));
         }
 
         private static void VerifyDeleteDirectoryWithFileLockingDetails(string dirPath, string lockedFile)
