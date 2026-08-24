@@ -153,10 +153,8 @@ namespace pwiz.SkylineTestFunctional
         /// terms, because it carried no CV filter at the time. Nothing is stored to discover, so the only
         /// way the editor can know what the data carries is to read the file.
         ///
-        /// Note the accession cache is warm by the time this runs - an earlier check read the same file,
-        /// and the cache is keyed by format and instrument, which match. So this covers the wiring (no
-        /// capture, yet still answered) but not a cold read; that is covered directly against
-        /// MsDataFileImpl in <see cref="VerifyScannerReadsCvTermsFromFile"/>.
+        /// The learned accessions are cleared first, so this exercises the read rather than being served
+        /// an answer an earlier scan already cached.
         /// </summary>
         private void VerifyScannerReadsCvTermsWithoutCapture()
         {
@@ -170,8 +168,14 @@ namespace pwiz.SkylineTestFunctional
             var bpiColumn = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity", true);
             var zoomScanColumn = SpectrumClassColumn.CvParam(@"MS:1000497", @"zoom scan", false);
             var candidates = SpectrumClassColumn.ALL.Concat(new[] { bpiColumn, zoomScanColumn }).ToList();
+            // Cleared so the file is genuinely read rather than answered from an earlier scan - opening
+            // the editor above already scanned this data, and a warm cache would serve the answer without
+            // exercising the read at all. No document path is passed either, which is what an unsaved
+            // document with imported results gives, so this also pins that such a document still gets its
+            // CV terms determined.
+            SpectrumColumnScanner.ResetCacheForTest();
             var availability = SpectrumColumnScanner.GetAvailability(SkylineWindow.Document, candidates,
-                SkylineWindow.DocumentFilePath, null);
+                null, null);
 
             // ...and yet the terms are still known, because the file was read for them.
             Assert.AreEqual(SpectrumColumnScanner.Standing.Answerable,
@@ -326,6 +330,33 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => rowShown = dlg.RowBindingList.Any(row => Equals(row.Property, userParamCaption)));
             OkDialog(dlg, dlg.Close);
             Assert.IsTrue(rowShown, @"the editor dropped the un-offered userParam filter row");
+
+            // A userParam whose name collides with a built-in property's caption. The offered list is keyed
+            // by caption, so the colliding column was dropped from it - and with it the row - meaning simply
+            // opening the editor and confirming wrote the clause back without the criterion it was opened
+            // to edit. Reconstructed from a saved path the term has no friendly name, so its caption is the
+            // bare name, which is what collides.
+            var collidingColumn = SpectrumClassColumn.CvParam(@"Analyzer", null, false);
+            var collidingFilter = new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(collidingColumn.PropertyPath, FilterOperations.OP_IS_NOT_BLANK, (string)null) }));
+            RunUI(() => SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, collidingFilter, true));
+            // Located by its filter rather than by position: a copy is inserted next to the precursor it
+            // was made from, not appended.
+            int collidingIndex = SkylineWindow.Document.MoleculeTransitionGroups.ToList()
+                .FindIndex(tg => Equals(tg.SpectrumClassFilter, collidingFilter));
+            Assert.AreNotEqual(-1, collidingIndex, @"the colliding filter was not applied to any precursor");
+            var collidingPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups,
+                collidingIndex);
+            RunUI(() => SkylineWindow.SelectedPath = collidingPath);
+
+            var collidingDlg = ShowDialog<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter);
+            int criteriaShown = 0;
+            RunUI(() => criteriaShown = collidingDlg.RowBindingList.Count(row => !string.IsNullOrEmpty(row.Property)));
+            OkDialog(collidingDlg, collidingDlg.OkDialog);
+            Assert.AreNotEqual(0, criteriaShown, @"the colliding userParam criterion was not shown for editing");
+            Assert.IsTrue(
+                SkylineWindow.Document.MoleculeTransitionGroups.Any(tg => Equals(tg.SpectrumClassFilter, collidingFilter)),
+                @"confirming the editor dropped the colliding userParam criterion");
         }
 
         /// <summary>

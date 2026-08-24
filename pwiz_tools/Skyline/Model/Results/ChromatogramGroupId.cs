@@ -130,10 +130,17 @@ namespace pwiz.Skyline.Model.Results
                 var filterSpecs = new List<FilterSpec>();
                 foreach (var filterPredicate in filterProto.Predicates)
                 {
+                    var filterOperation = ChromatogramGroupIds.GetFilterOperation(filterPredicate.Operation);
+                    // An operation that takes no operand has a null one, but proto3 has no null string and
+                    // the write side stores it as empty. Restoring the null matters because a filter read
+                    // back from the cache is compared against the document's to find a precursor's
+                    // chromatograms, and FilterPredicate compares the operand text: null and empty are not
+                    // equal, so the filter would match nothing and the chromatograms would be lost.
+                    // Keyed on the operation rather than on the text being empty, because an operand that
+                    // is genuinely the empty string - Equals "" - is a different test from Is Blank.
+                    var operand = filterOperation.HasOperand() ? filterPredicate.Operand : null;
                     filterSpecs.Add(new FilterSpec(PropertyPath.Parse(filterPredicate.PropertyPath),
-                        FilterPredicate.FromInvariantOperandText(
-                            ChromatogramGroupIds.GetFilterOperation(filterPredicate.Operation),
-                            filterPredicate.Operand)));
+                        FilterPredicate.FromInvariantOperandText(filterOperation, operand)));
                 }
                 allFilters.Add(new FilterClause(filterSpecs));
             }

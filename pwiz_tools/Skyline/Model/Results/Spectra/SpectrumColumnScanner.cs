@@ -142,6 +142,19 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         /// <summary>
+        /// Empties the learned accessions. They are deliberately never invalidated in normal use, which
+        /// also means the first scan in a process is the only one that opens a file - so a test covering
+        /// the reading path has to start from empty or it silently exercises the cache instead.
+        /// </summary>
+        public static void ResetCacheForTest()
+        {
+            lock (ACCESSIONS_BY_SIGNATURE)
+            {
+                ACCESSIONS_BY_SIGNATURE.Clear();
+            }
+        }
+
+        /// <summary>
         /// What this document's data can answer among <paramref name="candidates"/>.
         /// <see cref="Availability.UNKNOWN"/> when the document has no results, so a filter authored
         /// before importing anything is not marked up on the strength of no evidence at all.

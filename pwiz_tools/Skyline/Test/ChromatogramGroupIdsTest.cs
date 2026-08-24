@@ -113,6 +113,11 @@ namespace pwiz.SkylineTest
 
                 Assert.AreEqual(op, roundTripped.SpectrumClassFilter.Clauses.Single().FilterSpecs.Single().Operation,
                     "operation {0} did not round-trip through the chromatogram cache proto", op.OpName);
+                // The operand has to survive too, not just the operation: the cached filter is compared
+                // against the document's to find a precursor's chromatograms, so a filter that comes back
+                // unequal loses them even though the data is there.
+                Assert.AreEqual(filter, roundTripped.SpectrumClassFilter,
+                    "filter using operation {0} did not round-trip equal", op.OpName);
             }
         }
     }

@@ -152,8 +152,31 @@ namespace pwiz.SkylineTest
             // not localized text.)
             var error = SpectrumClassFilter.ValidateFilterString("MsLevel foobar 1");
             Assert.IsFalse(string.IsNullOrEmpty(error));
-            StringAssert.Contains(error, "isnotblank");
-            StringAssert.Contains(error, "isblank");
+            AssertEx.Contains(error, "isnotblank");
+            AssertEx.Contains(error, "isblank");
+            // Including the form ToFilterString actually writes, which is otherwise undiscoverable from
+            // the one message a user gets when a filter fails to parse.
+            AssertEx.Contains(error, FilterClauseSerializer.IS_NULL);
+            AssertEx.Contains(error, FilterClauseSerializer.IS_NOT_NULL);
+
+            // Filter text written by an earlier version, which rendered a blank test as "= ''". On a column
+            // that cannot hold an empty value the comparison is unsatisfiable, so it can only have meant the
+            // blank test and is read as one - such a transition list still imports.
+            var legacyNumeric = SpectrumClassFilter.ParseFilterString("CollisionEnergy = ''");
+            Assert.AreEqual(FilterOperations.OP_IS_BLANK,
+                legacyNumeric.Clauses.Single().FilterSpecs.Single().Operation,
+                @"an unsatisfiable equals-empty on a numeric column should read as the blank test");
+            Assert.AreEqual(FilterOperations.OP_IS_NOT_BLANK,
+                SpectrumClassFilter.ParseFilterString("CollisionEnergy <> ''")
+                    .Clauses.Single().FilterSpecs.Single().Operation);
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString("CollisionEnergy = ''"));
+
+            // On a text column an empty value is a real one, so the comparison is taken at face value and
+            // equals-empty stays expressible - which is what the blank tests gained their own syntax for.
+            Assert.AreEqual(FilterOperations.OP_EQUALS,
+                SpectrumClassFilter.ParseFilterString("ScanDescription = ''")
+                    .Clauses.Single().FilterSpecs.Single().Operation,
+                @"equals-empty on a text column is a literal comparison, not a blank test");
         }
 
         [TestMethod]

@@ -275,6 +275,23 @@ namespace pwiz.SkylineTest
                         SpectraResources.SpectrumClassFilter_CompileCvSpec_The_filter_value___0___for_spectrum_property___1___is_not_a_number,
                         @"abc", columnDisplay)));
 
+            // A number typed where the decimal separator is a comma is stored in its invariant form, so
+            // the filter matches the same spectra wherever it was authored. Equality types its operand as
+            // text (so a string operator stays usable on a numeric term), which otherwise stores the text
+            // verbatim and compares it against a file's invariant "1000.5" - matching nothing, silently.
+            var french = CultureInfo.GetCultureInfo(@"fr-FR");
+            Assert.AreEqual(@"1000.5", SpectrumClassFilter.ToInvariantCvOperand(@"1000,5", french));
+            // Already invariant, or not a number at all: left exactly as written.
+            Assert.AreEqual(@"1000.5", SpectrumClassFilter.ToInvariantCvOperand(@"1000.5", french));
+            Assert.AreEqual(@"FTMS + p", SpectrumClassFilter.ToInvariantCvOperand(@"FTMS + p", french));
+
+            var frenchAuthored = new SpectrumClassFilter(new FilterClause(new[]
+            {
+                new FilterSpec(numericColumn.PropertyPath, FilterOperations.OP_EQUALS,
+                    SpectrumClassFilter.ToInvariantCvOperand(@"1000,5", french))
+            })).MakePredicate();
+            Assert.IsTrue(frenchAuthored(CvSpectrum(@"fr", accession, name, @"1000.5", unit)));
+
             // A string term filters with equals/contains. Identity is the accession; the term's unit is
             // not part of it (units are unavailable from the ontology), so matching is unit-independent.
             var stringColumn = SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", false);

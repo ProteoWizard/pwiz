@@ -307,6 +307,31 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// calls this so its operand validation matches how the filter is actually evaluated, rather than
         /// typing by the column's discovered ValueType (which would reject an operand extraction accepts).
         /// </summary>
+        /// <summary>
+        /// The operand text to store for a CV/user-parameter comparison, given the culture it was typed in.
+        ///
+        /// Equality is typed as text (see <see cref="GetCvOperandType"/>) so a string operator stays usable
+        /// on a numeric term, which means the handler stores a number exactly as the user wrote it. Every
+        /// reader of the stored text parses it invariantly - including the numeric-equality path in
+        /// <see cref="CompileCvSpec"/> - so a number written with a comma decimal separator would be read
+        /// as text and match nothing. Converting here writes what the field is named for: one invariant
+        /// form, authored anywhere and evaluated anywhere.
+        ///
+        /// Text that already reads as a number invariantly is left exactly as it is, so a value that is
+        /// not really a number, or is already invariant, is never rewritten.
+        /// </summary>
+        public static string ToInvariantCvOperand(string operandText, CultureInfo cultureInfo)
+        {
+            if (string.IsNullOrEmpty(operandText) ||
+                double.TryParse(operandText, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+            {
+                return operandText;
+            }
+            return double.TryParse(operandText, NumberStyles.Float, cultureInfo, out var number)
+                ? number.ToString(@"R", CultureInfo.InvariantCulture)
+                : operandText;
+        }
+
         public static Type GetCvOperandType(IFilterOperation operation)
         {
             if (Equals(operation, FilterOperations.OP_IS_GREATER_THAN) || Equals(operation, FilterOperations.OP_IS_LESS_THAN) ||
@@ -321,9 +346,9 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         /// <summary>
         /// Coerces a term's raw text value to the comparison type. A missing (or value-less) term yields
-        /// null, which no comparison matches. A numeric comparison against a present, non-numeric value
-        /// throws with spectrum-filter context (user decision: hard-fail rather than silently skip), so
-        /// chromatogram extraction reports a clear error.
+        /// null, which no comparison matches. So does a present value that cannot be read as a number when
+        /// one is wanted, after reporting it through <paramref name="onNotANumber"/> - the spectrum simply
+        /// does not match, rather than the extraction failing over one odd value.
         /// </summary>
         private static object CoerceCvValue(object rawValue, Type type, string columnDisplay,
             Action<string> onNotANumber)
@@ -636,12 +661,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
             // Replace the serializer's terse "invalid filter string" with a message that shows the
             // expected form (column/operator/value with spaces, combined with "and"/"or") and lists the
             // operator vocabulary, since the accepted operator tokens are not otherwise discoverable.
-            throw new FormatException(TextUtil.SpaceSeparate(
+            var message = TextUtil.SpaceSeparate(
                 string.Format(SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format,
                     filterString),
                 string.Format(SpectraResources.SpectrumClassFilter_ParseFilterString_Available_operators__0_,
-                    OPERATOR_VOCABULARY)),
-                firstError);
+                    OPERATOR_VOCABULARY));
+            throw new FormatException(message, firstError);
         }
 
         // A controlled-vocabulary accession: a letter prefix, a colon, then digits (e.g. "MS:1000505").
@@ -652,7 +677,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
         // an arbitrary name with no distinctive pattern - so it cannot be recognized implicitly the way a
         // CV accession can; without the marker an unknown token stays an "unknown property" error, which
         // keeps typos of interpreted columns from silently resolving to a no-match userParam.
-        private const string USER_PARAM_PREFIX = @"userParam:";
+        public const string USER_PARAM_PREFIX = @"userParam:";
 
         // Case-insensitive friendly aliases for the filter-string operator symbols, so an authored spectrum
         // filter can use readable operator words (mirroring the UI names) instead of the terse or cryptic
@@ -678,8 +703,10 @@ namespace pwiz.Skyline.Model.Results.Spectra
         {
             @"=", @"<>", @">", @">=", @"<", @"<=",
             @"contains", @"notcontains", @"startswith", @"notstartswith",
-            @"isblank", @"isnotblank"
+            @"isblank", @"isnotblank",
+            FilterClauseSerializer.IS_NULL, FilterClauseSerializer.IS_NOT_NULL
         });
+
 
         /// <summary>
         /// Rewrites a human-authored filter into the tokens the generic grammar expects, before parsing, so

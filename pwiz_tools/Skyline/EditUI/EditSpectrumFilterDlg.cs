@@ -619,10 +619,23 @@ namespace pwiz.Skyline.EditUI
             // The combobox and its reverse lookup are keyed by the displayed caption, so a caption can be
             // offered only once. Distinct CV terms cannot collide (the caption carries the unique accession);
             // the only possible clash is a vendor userParam named identically to a built-in property caption.
-            // Interpreted properties are added first (see DisplayCurrentPage) and intentionally win that clash.
+            // Interpreted properties are added first (see DisplayCurrentPage) and keep the plain caption.
             if (_propertyColumns.ContainsKey(filterColumn.Caption))
             {
-                return;
+                // The clashing userParam is offered under the marker the filter syntax uses to name one,
+                // rather than dropped. Dropping it left ResolveFilterColumn with nothing to return, so a
+                // saved criterion on such a term was not shown - and confirming the dialog, which rebuilds
+                // the clause from the rows, then wrote it away.
+                if (filterColumn.SpectrumColumn == null)
+                {
+                    return;
+                }
+                filterColumn = new FilterColumn(filterColumn.PropertyPath, filterColumn.PropertyType,
+                    SpectrumClassFilter.USER_PARAM_PREFIX + filterColumn.Caption, filterColumn.SpectrumColumn);
+                if (_propertyColumns.ContainsKey(filterColumn.Caption))
+                {
+                    return;
+                }
             }
             _propertyColumns.Add(filterColumn.Caption, filterColumn);
             propertyColumn.Items.Add(filterColumn.Caption);
@@ -700,10 +713,15 @@ namespace pwiz.Skyline.EditUI
                 FilterPredicate filterPredicate;
                 try
                 {
+                    // A CV operand is stored as the user typed it, so a number is converted to its
+                    // invariant form here - the filter is evaluated invariantly wherever it ends up.
+                    var operandText = propertyColumnDescriptor.SpectrumColumn == null
+                        ? row.Value
+                        : SpectrumClassFilter.ToInvariantCvOperand(row.Value, CultureInfo.CurrentCulture);
                     filterPredicate =
                         FilterPredicate.Parse(_rootColumn.DataSchema,
                             GetOperandType(propertyColumnDescriptor, filterOperation), filterOperation,
-                            row.Value);
+                            operandText);
                 }
                 catch (Exception ex)
                 {

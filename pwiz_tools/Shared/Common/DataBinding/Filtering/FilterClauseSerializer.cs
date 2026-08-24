@@ -47,8 +47,8 @@ namespace pwiz.Common.DataBinding.Filtering
         /// "is null" and "= ''" are famously not the same test, which is exactly the difference these two
         /// forms now carry.
         /// </summary>
-        private const string IS_NULL = @"is null";
-        private const string IS_NOT_NULL = @"is not null";
+        public const string IS_NULL = @"is null";
+        public const string IS_NOT_NULL = @"is not null";
 
         private readonly ColumnDescriptor _rootColumn;
         private readonly Regex _regexNumber;
@@ -163,6 +163,31 @@ namespace pwiz.Common.DataBinding.Filtering
             }
 
             return column.GetFilterHandler().OperandToTokens(spec.Operation, CultureInfo, spec.Predicate.GetOperandValue(column));
+        }
+
+        /// <summary>
+        /// Whether an equality comparison against an empty operand is how an earlier version wrote a blank
+        /// test. It is, when the column could not accept an empty operand anyway: the comparison would be
+        /// unsatisfiable, so it cannot have been meant literally. Decided by asking the column's own filter
+        /// handler rather than by inspecting its type, since what counts as an empty value differs by type
+        /// and only the handler knows.
+        /// </summary>
+        private bool IsLegacyBlankTest(PropertyPath columnId, IFilterOperation operation, IList<string> tokens)
+        {
+            if (tokens.Count != 1 || !string.IsNullOrEmpty(tokens[0]) ||
+                !Equals(operation, FilterOperations.OP_EQUALS) && !Equals(operation, FilterOperations.OP_NOT_EQUALS))
+            {
+                return false;
+            }
+            try
+            {
+                TokensToInvariantText(columnId, operation, tokens);
+                return false;
+            }
+            catch (Exception)
+            {
+                return true;
+            }
         }
 
         /// <summary>
@@ -319,13 +344,28 @@ namespace pwiz.Common.DataBinding.Filtering
                                 return Parse.Return(new FilterSpec(columnId,
                                     new FilterPredicate(op, null)));
                             }
-                            // "= ''" means equality with the empty string, and nothing more. It used to be
-                            // the rendering of is-blank, which made the two indistinguishable on the way
-                            // back in; the blank tests now have their own syntax, so this no longer has to
-                            // stand in for them and a filter round-trips as whatever it was authored as.
+                            // "= ''" means equality with the empty string, which the blank tests no longer
+                            // have to stand in for now that they have a syntax of their own - so a filter
+                            // round-trips as whatever it was authored as.
+                            //
+                            // Except on a column that cannot hold an empty value at all. Nothing can ever
+                            // equal the empty string there, so the only thing such a filter can have meant
+                            // is the blank test this syntax used to write that way, and reading it as one
+                            // keeps filter text written by an earlier version working. Where an empty value
+                            // IS possible - a text column - the comparison is taken at face value.
                             return ws.Then(_ => operandTokens)
-                                .Select(tokens => new FilterSpec(columnId,
-                                    new FilterPredicate(op, TokensToInvariantText(columnId, op, tokens))));
+                                .Select(tokens =>
+                                {
+                                    if (IsLegacyBlankTest(columnId, op, tokens))
+                                    {
+                                        var blankOperation = Equals(op, FilterOperations.OP_EQUALS)
+                                            ? FilterOperations.OP_IS_BLANK
+                                            : FilterOperations.OP_IS_NOT_BLANK;
+                                        return new FilterSpec(columnId, new FilterPredicate(blankOperation, null));
+                                    }
+                                    return new FilterSpec(columnId,
+                                        new FilterPredicate(op, TokensToInvariantText(columnId, op, tokens)));
+                                });
                         });
                     return blankSpec.Or(comparisonSpec);
                 });
