@@ -175,24 +175,27 @@ namespace pwiz.Skyline.ToolsUI
             {
                 control.BeginInvoke((Action) (() =>
                 {
-                    if (hwnd != IntPtr.Zero)
-                    {
-                        // If the hwnd is valid, verify that the UiThreadWindow is actually the appropriate thread for the window.
-                        var windowThreadId = User32.GetWindowThreadProcessId(hwnd, out _);
-                        // Thread ID zero means hwnd already destroyed
-                        if (windowThreadId != 0 && windowThreadId != Kernel32.GetCurrentThreadId())
-                        {
-                            throw new InvalidOperationException(new LlmInstruction(string.Format(@"Native window {0} is on the wrong thread", hwnd)));
-                        }
-                    }
-
                     // Nearly always the one the UI thread's message loop installed. The fallback is for the gap in
                     // between two of them: the StartPage runs its own loop (ShowDialog), and choosing an action there
                     // ENDS that loop -- uninstalling its context -- before Application.Run starts the main window's
                     // and installs the next. A thread pumping in that gap has none.
                     var ctx = SynchronizationContext.Current as WindowsFormsSynchronizationContext ?? new WindowsFormsSynchronizationContext();
                     lock (lockObj) { syncContext = ctx; Monitor.Pulse(lockObj); }
-                    try { action?.Invoke(); }
+
+                    try
+                    {
+                        if (hwnd != IntPtr.Zero)
+                        {
+                            // If the hwnd is valid, verify that the UiThreadWindow is actually the appropriate thread for the window.
+                            var windowThreadId = User32.GetWindowThreadProcessId(hwnd, out _);
+                            // Thread ID zero means hwnd already destroyed
+                            if (windowThreadId != 0 && windowThreadId != Kernel32.GetCurrentThreadId())
+                            {
+                                throw new InvalidOperationException(new LlmInstruction(string.Format(@"Native window {0} is on the wrong thread", hwnd)));
+                            }
+                        }
+                        action?.Invoke();
+                    }
                     catch (Exception ex) { lock (lockObj) { actionError = ex; Monitor.Pulse(lockObj); } }
                     finally
                     {
