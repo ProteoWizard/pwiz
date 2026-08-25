@@ -1,5 +1,6 @@
 /*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
+ * AI assistance: Claude Code (Claude Fable 5) <noreply .at. anthropic.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
  *
@@ -336,7 +337,15 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         public HttpClient GetAuthenticatedHttpClient()
         {
             var tokenResponse = Authenticate();
-            var httpClient = _httpClientFactory.CreateClient(@"customClient");
+            // A registered mock handler must take effect immediately. IHttpClientFactory pools
+            // the primary handler pipeline for its default lifetime (2 minutes), so within that
+            // window CreateClient keeps serving a previously registered mock even after a test
+            // installs a replacement. Building the client directly on the registered handler
+            // avoids the pool; production requests (no registered handler) still use the factory.
+            var mockHandler = CommonApplicationSettings.HttpMessageHandlerFactory.GetRegisteredHandler(HANDLER_NAME);
+            var httpClient = mockHandler != null
+                ? new HttpClient(mockHandler, false)
+                : _httpClientFactory.CreateClient(@"customClient");
             httpClient.SetBearerToken(tokenResponse.AccessToken);
             //httpClient.DefaultRequestHeaders.Remove(@"Accept");
             //httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");
