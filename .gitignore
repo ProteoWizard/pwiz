@@ -211,6 +211,11 @@ publish/
 # Note: Comment the next line if you want to checkin your web deploy settings,
 # but database connection strings (with potential passwords) will be unencrypted
 *.pubxml
+# ...but Skyline's ClickOnce publish profile IS the deployment configuration - install URL,
+# signing certificate thumbprint, framework-dependent vs self-contained - and has to be shared,
+# not per-developer. It carries no connection strings or passwords (the signing key is looked up
+# from the certificate store by thumbprint, never embedded).
+!pwiz_tools/Skyline/Properties/PublishProfiles/*.pubxml
 *.publishproj
 
 # Microsoft Azure Web App publish settings. Comment the next line if you want to

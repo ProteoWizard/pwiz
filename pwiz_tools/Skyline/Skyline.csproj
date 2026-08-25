@@ -19,6 +19,11 @@
     <RootNamespace>pwiz.Skyline</RootNamespace>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
+    <!-- State the app manifest rather than letting the SDK infer it from a globbed app.manifest
+         item - inference is what made it ambiguous once ClickOnce started generating manifests.
+         This is the same file the legacy csproj pointed at; naming it also restores the
+         longPathAware and supportedOS declarations the SDK conversion had silently dropped. -->
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
     <Company>University of Washington</Company>
     <Product>Skyline</Product>
     <AssemblyTitle>Skyline</AssemblyTitle>
@@ -85,6 +90,16 @@
     <None Remove="Documentation\**" />
     <None Remove="Test*\**" />
     <None Remove="SkylineTester*\**" />
+    <!-- The sibling-project removes above stop at None for most directories but did not cover
+         SkylineNightly*, which the Compile removes do cover. That mattered as soon as ClickOnce
+         was turned on: the SDK infers ApplicationManifest from globbed app.manifest items, and
+         SkylineNightly\app.manifest made it ambiguous - GenerateApplicationManifest failed with
+         MSB4094 ("Multiple items cannot be passed into a parameter of type ITaskItem") on
+         "Properties\app.manifest;SkylineNightly\app.manifest". -->
+    <None Remove="SkylineNightly\**" />
+    <None Remove="SkylineNightlyShim\**" />
+    <EmbeddedResource Remove="SkylineNightly\**" />
+    <EmbeddedResource Remove="SkylineNightlyShim\**" />
     <!-- ProtocolBuffers/tmp is intermediate protoc output - the real generated
          code lives in GeneratedCode/. Including both gives duplicate types. -->
     <Compile Remove="ProtocolBuffers\tmp\**" />
@@ -548,6 +563,66 @@
     <Message Importance="normal" Text="Generated $(AppConfig) from App.config" />
   </Target>
 
+
+  <!-- ClickOnce deployment. Settings live in Properties\PublishProfiles\ClickOnceProfile.pubxml
+       (.NET 5+ ClickOnce is profile-driven; the legacy csproj carried them inline). What has to
+       stay in the project file is here.
+
+       ApplicationVersion is what ClickOnce writes into the .application and what an installed
+       client compares against to decide "is there an update". The legacy project hand-edited it
+       per release (see "Update ClickOnce version to 26.0.9.021 for RC release"), which could
+       drift from the assembly version. Stamp it from the same git-date-derived version instead.
+       Runs before _DeploymentComputeClickOnceManifestInfo, which is where ApplicationVersion is
+       read (FormatVersion -> _DeploymentManifestVersion). -->
+  <Target Name="SetClickOnceApplicationVersion"
+          Condition="'$(PublishProtocol)' == 'ClickOnce' And '$(TargetFramework)' == 'net8.0-windows'"
+          DependsOnTargets="ComputeSkylineVersion"
+          BeforeTargets="_DeploymentComputeClickOnceManifestInfo">
+    <PropertyGroup>
+      <ApplicationVersion>$(SkylineNumericVersion)</ApplicationVersion>
+    </PropertyGroup>
+    <Message Importance="high" Text="ClickOnce ApplicationVersion=$(ApplicationVersion) (assembly $(SkylineInformationalVersion))" />
+  </Target>
+
+  <!-- Document file associations, restored from the legacy csproj (lost in the SDK conversion).
+       ClickOnce registers these on install, which is how .sky/.skyd/.skyp get their icons and
+       open in Skyline. Each needs its DefaultIcon deployed alongside the app, so the three .ico
+       files are Content - the SDK's default globs treat a bare .ico as None and never copy it,
+       so without this the manifest would reference icons that are not in the deployment.
+       NOTE: on .NET ClickOnce the associated file arrives as the ClickOnce_ActivationData_0
+       environment variable rather than as ActivationArguments; Program.cs does not read that
+       yet, so double-click-to-open is expected to install but not yet work. -->
+  <ItemGroup>
+    <Content Include="SkylineDoc.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SkylineData.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SkylineDocPointer.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <FileAssociation Include=".sky">
+      <Visible>False</Visible>
+      <Description>Skyline Document</Description>
+      <Progid>Skyline.Document.0</Progid>
+      <DefaultIcon>SkylineDoc.ico</DefaultIcon>
+    </FileAssociation>
+    <FileAssociation Include=".skyd">
+      <Visible>False</Visible>
+      <Description>Skyline Chromatogram Data</Description>
+      <Progid>Skyline.Data.0</Progid>
+      <DefaultIcon>SkylineData.ico</DefaultIcon>
+    </FileAssociation>
+    <FileAssociation Include=".skyp">
+      <Visible>False</Visible>
+      <Description>Skyline Document Pointer</Description>
+      <Progid>Skyline.Pointer.0</Progid>
+      <DefaultIcon>SkylineDocPointer.ico</DefaultIcon>
+    </FileAssociation>
+  </ItemGroup>
 
   <!-- VC++ redistributable beside the vendor DLLs; see the targets file. -->
   <Import Project="..\Shared\Lib\VendorNativeCrt.targets" />
