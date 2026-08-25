@@ -70,6 +70,13 @@ namespace pwiz.SkylineTest
                 string.Format(@"Thread dump took {0}, which is over the {1} bound.",
                     timer.Elapsed, MAX_DUMP_DURATION));
 
+            // Say which path this machine took, whether or not it worked. Passing silently is how
+            // the first green CI run left the question below unanswerable: 0 sec is what BOTH a
+            // working dump and an immediate degrade look like from the outside. Two lines is
+            // enough - a full dump names its first thread, a degraded one names the CLR and the
+            // DAC that decided it.
+            Console.WriteLine(TextUtil.LineSeparate(dump.Split('\n').Take(2).Select(line => line.TrimEnd())));
+
             if (dump.Contains(@"Thread dump unavailable"))
             {
                 // ASPIRATIONAL, and deliberately not a failure: the full dump does not work on the
