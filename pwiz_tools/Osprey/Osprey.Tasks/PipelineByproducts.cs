@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -21,7 +21,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -41,7 +43,9 @@ namespace pwiz.Osprey.Tasks
     // wraps its value, consumers read .Value. They carry no behavior -- the
     // type identity is the whole point. The one mutable shared buffer is
     // modeled as a small state hierarchy (see PerFileEntries below) so that it,
-    // too, resolves through the byproduct->producer registry uniformly.
+    // too, resolves through the byproduct->producer registry uniformly, and it
+    // is the one exception to "no behavior": RescoredEntries may be published
+    // DEFERRED, so that reading it is what brings the buffer to that milestone.
 
     /// <summary>The spectral library (with decoys) produced by Stage 1.</summary>
     internal sealed class FullLibrary
@@ -224,8 +228,30 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal abstract class PerFileEntries
     {
-        public List<KeyValuePair<string, List<FdrEntry>>> Value { get; }
-        protected PerFileEntries(List<KeyValuePair<string, List<FdrEntry>>> value) { Value = value; }
+        private readonly List<KeyValuePair<string, List<FdrEntry>>> _buffer;
+
+        protected PerFileEntries(List<KeyValuePair<string, List<FdrEntry>>> value) { _buffer = value; }
+
+        /// <summary>
+        /// The shared buffer, at this milestone's state. Reading it is the PULL:
+        /// a DEFERRED milestone (see <see cref="RescoredEntries"/>) does the work that
+        /// reaches its state here, on the first read, so a process where nobody reads
+        /// it never pays for it.
+        /// </summary>
+        public virtual List<KeyValuePair<string, List<FdrEntry>>> Value => _buffer;
+
+        /// <summary>
+        /// The backing list as an OPAQUE reference, for identity comparison only - the DEBUG
+        /// milestone-ordering guard in <see cref="PipelineContext"/> keys on which milestone
+        /// was last published over a given buffer, and reading <see cref="Value"/> to get it
+        /// would make the guard itself the thing that pulls.
+        ///
+        /// <para>Typed as <see cref="object"/> on purpose. The same accessor typed as the
+        /// list would sit one keystroke from <c>Value</c> in every task in this assembly, and
+        /// on a deferred milestone it hands back 82 empty per-file lists with no exception and
+        /// no warning - a blib with no precursors. Nothing can read entries through this.</para>
+        /// </summary>
+        internal object BufferIdentity => _buffer;
     }
 
     /// <summary>The buffer as produced by PerFileScoring (per-file scored stubs).</summary>
@@ -254,10 +280,58 @@ namespace pwiz.Osprey.Tasks
         public CompactedEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
     }
 
-    /// <summary>The buffer after PerFileRescore's Stage 6 rescore / reconciliation overlay.</summary>
+    /// <summary>
+    /// The buffer after PerFileRescore's Stage 6 rescore / reconciliation overlay.
+    ///
+    /// <para>May be published DEFERRED. The streamed Stage 6 rescore drops each file's
+    /// entries as it goes (issue #4526), so reaching this milestone means re-reading every
+    /// file's artifacts - 16 minutes and 27 GB at 82 SEA-AD files. That is whole-run join
+    /// work, and PerFileRescoring is a per-file HPC task whose process exits at its end, so
+    /// it must not be the one to pay it: a <c>--task PerFileRescoring</c> worker has no
+    /// SecondPassFDR to serve. Deferring it to the first <see cref="Value"/> read moves the
+    /// cost to the consumer that needs the global pool, and a worker skips the work because
+    /// nothing pulled it rather than because a predicate asked whether its own consumer was
+    /// going to run (issue #4597).</para>
+    ///
+    /// <para>Run-once, and a FAILED build stays failed: the build overlays reconciled
+    /// parquets and appends gap-fill rows, so running it a second time over one buffer
+    /// duplicates them, and resuming from a half-filled buffer reports a plausible wrong
+    /// number rather than an error. <see cref="Lazy{T}"/> in
+    /// <see cref="LazyThreadSafetyMode.ExecutionAndPublication"/> is exactly those two
+    /// semantics - one execution however many readers arrive, and a cached exception
+    /// rethrown to every later reader instead of a silently partial pool.</para>
+    /// </summary>
     internal sealed class RescoredEntries : PerFileEntries
     {
+        private readonly Lazy<bool> _materialize;
+
+        /// <summary>The buffer already at its post-rescore state - nothing deferred.</summary>
         public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
+
+        /// <param name="value">The shared backing buffer, filled in place by
+        /// <paramref name="materialize"/>.</param>
+        /// <param name="materialize">Brings <paramref name="value"/> to its post-rescore
+        /// state on the first <see cref="Value"/> read. Throws on failure - a deferred build
+        /// has no return channel to the driver loop - and the throw is cached, so a second
+        /// reader sees the same failure rather than a partially built pool.</param>
+        public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value, Action materialize)
+            : base(value)
+        {
+            _materialize = new Lazy<bool>(() => { materialize(); return true; },
+                LazyThreadSafetyMode.ExecutionAndPublication);
+        }
+
+        public override List<KeyValuePair<string, List<FdrEntry>>> Value
+        {
+            get
+            {
+                // Reading Lazy.Value IS the build - once however many readers arrive, and a
+                // failure cached and rethrown rather than retried. The bool it yields only
+                // exists because Lazy needs a value type to hand back; discard it.
+                _ = _materialize?.Value;
+                return base.Value;
+            }
+        }
     }
 
     /// <summary>

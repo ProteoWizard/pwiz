@@ -65,8 +65,13 @@ public static class MSDataDiff
     /// <param name="precision">Absolute tolerance for m/z and intensity comparisons.</param>
     /// <param name="msLevelMode">Selects which format-specific msLevel-default lossiness is
     /// tolerated. <see cref="LossyMsLevelMode.None"/> requires strict equality.</param>
+    /// <param name="ignorePeakOrder">Compare the peaks as a set rather than as an ordered list,
+    /// pairing the two sides on their values. Needed when the round-tripped format drops the
+    /// array that gave the peak order its meaning, which is what happens to a combined ion
+    /// mobility spectrum written to MGF or mzMLb - the copy read back is repaired into m/z order
+    /// while the vendor-read original is deliberately left alone.</param>
     public static string DescribeSpectraDataOnly(MSData a, MSData b, double precision = 1e-6,
-        LossyMsLevelMode msLevelMode = LossyMsLevelMode.MzxmlDefault)
+        LossyMsLevelMode msLevelMode = LossyMsLevelMode.MzxmlDefault, bool ignorePeakOrder = false)
     {
         ArgumentNullException.ThrowIfNull(a);
         ArgumentNullException.ThrowIfNull(b);
@@ -90,13 +95,13 @@ public static class MSDataDiff
             using var __ = ctx.Push("spectrum[" + i + "]");
             var sa = listA.GetSpectrum(i, getBinaryData: true);
             var sb = listB.GetSpectrum(i, getBinaryData: true);
-            DiffSpectrumDataOnly(sa, sb, ctx, precision, msLevelMode);
+            DiffSpectrumDataOnly(sa, sb, ctx, precision, msLevelMode, ignorePeakOrder);
         }
         return ctx.Format();
     }
 
     private static void DiffSpectrumDataOnly(Spectrum a, Spectrum b, Context ctx, double precision,
-        LossyMsLevelMode msLevelMode)
+        LossyMsLevelMode msLevelMode, bool ignorePeakOrder)
     {
         int aMs = a.Params.CvParam(CVID.MS_ms_level).ValueAs<int>();
         int bMs = b.Params.CvParam(CVID.MS_ms_level).ValueAs<int>();
@@ -122,16 +127,26 @@ public static class MSDataDiff
         }
         if (aCount == 0 || aMz is null || bMz is null || aInt is null || bInt is null) return;
 
+        // Read each side through its own order so position k names the same peak on both.
+        List<int>? aOrder = null, bOrder = null;
+        if (ignorePeakOrder && TryPairPeaks(aMz, aInt, bMz, bInt, precision, out var paired, out var bPaired))
+        {
+            aOrder = paired;
+            bOrder = bPaired;
+        }
+
         for (int k = 0; k < aCount; k++)
         {
-            if (Math.Abs(aMz[k] - bMz[k]) > precision)
+            int ka = aOrder is null ? k : aOrder[k];
+            int kb = bOrder is null ? k : bOrder[k];
+            if (Math.Abs(aMz[ka] - bMz[kb]) > precision)
             {
-                ctx.Report($"m/z[{k}]: {aMz[k]} vs {bMz[k]}");
+                ctx.Report($"m/z[{k}]: {aMz[ka]} vs {bMz[kb]}");
                 return;
             }
-            if (Math.Abs(aInt[k] - bInt[k]) > precision)
+            if (Math.Abs(aInt[ka] - bInt[kb]) > precision)
             {
-                ctx.Report($"intensity[{k}]: {aInt[k]} vs {bInt[k]}");
+                ctx.Report($"intensity[{k}]: {aInt[ka]} vs {bInt[kb]}");
                 return;
             }
         }
@@ -655,6 +670,103 @@ public static class MSDataDiff
                 return;
             }
         }
+    }
+
+    /// <summary>
+    /// Produces, for each side, the order in which to read its peaks so that position k names the
+    /// same peak on both. Returns false when the two sides are not comparable peak-for-peak, in
+    /// which case the caller should compare them as they are - a length difference is itself the
+    /// finding.
+    /// </summary>
+    private static bool TryPairPeaks(List<double> aMz, List<double> aIntensity,
+                                     List<double> bMz, List<double> bIntensity,
+                                     double precision,
+                                     out List<int> aPaired, out List<int> bPaired)
+    {
+        aPaired = null!;
+        bPaired = null!;
+        int n = aMz.Count;
+        if (aIntensity.Count != n || bMz.Count != n || bIntensity.Count != n)
+            return false;
+
+        int[] aOrder = StableOrderBy(aMz);
+        int[] bOrder = StableOrderBy(bMz);
+
+        // Both sides ascend in m/z and agree within tolerance, so a peak's candidates are a short
+        // contiguous run of the other side rather than the whole spectrum.
+        var bTaken = new bool[n];
+        aPaired = new List<int>(n);
+        bPaired = new List<int>(n);
+
+        int windowStart = 0;
+        for (int ai = 0; ai < n; ai++)
+        {
+            int aIndex = aOrder[ai];
+            while (windowStart < n &&
+                   bMz[bOrder[windowStart]] < aMz[aIndex] &&
+                   !WithinPrecision(bMz[bOrder[windowStart]], aMz[aIndex], precision))
+                windowStart++;
+
+            int best = -1;
+            double bestIntensityDelta = 0;
+            for (int bi = windowStart; bi < n; bi++)
+            {
+                int bIndex = bOrder[bi];
+                if (bMz[bIndex] > aMz[aIndex] && !WithinPrecision(bMz[bIndex], aMz[aIndex], precision))
+                    break; // ascending, so nothing beyond this can match either
+                if (bTaken[bIndex] || !WithinPrecision(bMz[bIndex], aMz[aIndex], precision))
+                    continue;
+                double delta = Math.Abs(bIntensity[bIndex] - aIntensity[aIndex]);
+                if (best < 0 || delta < bestIntensityDelta)
+                {
+                    best = bIndex;
+                    bestIntensityDelta = delta;
+                }
+            }
+
+            if (best >= 0)
+            {
+                bTaken[best] = true;
+                aPaired.Add(aIndex);
+                bPaired.Add(best);
+            }
+        }
+
+        // Whatever went unpaired, in m/z order so the two sides at least line up positionally.
+        var aTaken = new bool[n];
+        foreach (int i in aPaired)
+            aTaken[i] = true;
+        for (int ai = 0; ai < n; ai++)
+            if (!aTaken[aOrder[ai]]) aPaired.Add(aOrder[ai]);
+        for (int bi = 0; bi < n; bi++)
+            if (!bTaken[bOrder[bi]]) bPaired.Add(bOrder[bi]);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Whether two values agree within the diff's tolerance, by the same relative measure the
+    /// comparison applies downstream - so a pair this accepts is a pair that comparison accepts.
+    /// </summary>
+    private static bool WithinPrecision(double x, double y, double precision)
+    {
+        double denominator = Math.Min(x, y);
+        if (denominator == 0) denominator = 1;
+        return Math.Abs(x - y) / denominator <= precision;
+    }
+
+    /// <summary>Indices that would sort <paramref name="values"/> ascending, ties keeping their original order.</summary>
+    private static int[] StableOrderBy(List<double> values)
+    {
+        var order = new int[values.Count];
+        for (int i = 0; i < order.Length; i++)
+            order[i] = i;
+        Array.Sort(order, (x, y) =>
+        {
+            int compared = values[x].CompareTo(values[y]);
+            return compared != 0 ? compared : x.CompareTo(y);
+        });
+        return order;
     }
 
     private static string GetArrayTypeKey(BinaryDataArray arr)

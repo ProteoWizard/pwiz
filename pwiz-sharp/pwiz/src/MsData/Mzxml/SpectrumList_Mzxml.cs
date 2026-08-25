@@ -164,6 +164,7 @@ public sealed class SpectrumList_Mzxml : SpectrumListBase
             // can be non-contiguous (e.g. some Thermo workflows skip numbers).
             spec.Index = index;
             spec.Id = _ids[index];
+            EnsureMzAscending(spec);
             return spec;
         }
     }

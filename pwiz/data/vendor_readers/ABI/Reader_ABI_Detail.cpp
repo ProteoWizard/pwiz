@@ -102,6 +102,7 @@ InstrumentConfigurationPtr translateAsInstrumentConfiguration(InstrumentModel in
         case X500QTOF:
         case NlxTof:
         case ZenoTOF7600:
+        case ZenoTOF8600:
             ic.componentList.push_back(source);
             ic.componentList.push_back(Component(MS_quadrupole, 2));
             ic.componentList.push_back(Component(MS_quadrupole, 3));
@@ -154,6 +155,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel)
         case API5600TripleTOF:  return MS_TripleTOF_5600;
         case API6600TripleTOF:  return MS_TripleTOF_6600;
         case ZenoTOF7600:       return MS_ZenoTOF_7600;
+        case ZenoTOF8600:       return MS_ZenoTOF_8600;
         case QStar:             return MS_QSTAR;
         case QStarPulsarI:      return MS_QSTAR_Pulsar;
         case QStarXL:           return MS_QSTAR_XL;

@@ -406,7 +406,14 @@ public static class VendorReaderTestHarness
                 $"reference mzML not found at {cppPath} or override {overridePath}");
         MSData referenceMsd;
         using (var fs = File.OpenRead(referencePath))
-            referenceMsd = new MzmlReader().Read(fs);
+            // RepairPeakOrder off: a golden file is compared as stored. A reference can hold peaks
+            // in a legitimately non-ascending order - SIM-as-spectra writes them in transition
+            // order, and hasNonMzOrderingAxis exempts SRM/CRM but deliberately not SIM - so
+            // repairing on read would sort the reference while the vendor-read side under test
+            // keeps the vendor's order, and every such fixture would diff. It would also cost the
+            // comparison its teeth in the other direction, silently accepting a vendor reader that
+            // began sorting output the reference says is unsorted.
+            referenceMsd = new MzmlReader { RepairPeakOrder = false }.Read(fs);
 
         // 4. Apply the same "hack in memory" treatment to the reference MSData (strip trailing
         // sourceFile pwiz writes on load; normalize paths/pwiz software).
@@ -435,8 +442,20 @@ public static class VendorReaderTestHarness
             var roundtripped = new MSData();
             Pwiz.Data.MsData.MzXml.MzxmlReader.Read(mem, roundtripped);
 
+            // A combined ion mobility spectrum's peaks ascend in m/z only within each mobility
+            // bin, and mzXML does not carry the mobility array that gives that order its meaning,
+            // so the round-tripped copy comes back repaired into m/z order while the vendor-read
+            // original is deliberately left alone. Only a set-of-peaks comparison can hold.
+            //
+            // SIM-as-spectra is the same situation reached by a different route: the peaks are in
+            // transition order, and hasNonMzOrderingAxis exempts SRM/CRM but deliberately not SIM,
+            // so the reader repairs them on the way back in. (SRM-as-spectra needs no entry here -
+            // being exempt, it is never repaired and stays order-exact.) Matches the mzMLb leg
+            // below. Order is still pinned down: TryPairPeaks pairs by value, so a scrambled
+            // permutation would not be accepted as equal, only a differently-ordered one.
             string mzxmlReport = MSDataDiff.DescribeSpectraDataOnly(
-                msd, roundtripped, config.DiffPrecision ?? 1e-6);
+                msd, roundtripped, config.DiffPrecision ?? 1e-6,
+                ignorePeakOrder: config.CombineIonMobilitySpectra || config.SimAsSpectra);
             if (mzxmlReport.Length > 0)
                 throw new InvalidOperationException("mzXML round-trip diff:\n" + mzxmlReport);
         }
@@ -459,7 +478,8 @@ public static class VendorReaderTestHarness
 
                 string mgfReport = MSDataDiff.DescribeSpectraDataOnly(
                     filtered, roundtripped, config.DiffPrecision ?? 1e-6,
-                    MSDataDiff.LossyMsLevelMode.MgfFlatten);
+                    MSDataDiff.LossyMsLevelMode.MgfFlatten,
+                    ignorePeakOrder: config.CombineIonMobilitySpectra);
                 if (mgfReport.Length > 0)
                     throw new InvalidOperationException("MGF round-trip diff:\n" + mgfReport);
             }
@@ -546,7 +566,16 @@ public static class VendorReaderTestHarness
             new Pwiz.Data.MsData.MzMlb.MzMlbWriter(encoderConfig).Write(msd, tmp);
             var roundtripped = new MSData();
             new Pwiz.Data.MsData.Readers.MzMlbReaderAdapter().Read(tmp, roundtripped);
-            string report = MSDataDiff.DescribeSpectraDataOnly(msd, roundtripped, diffPrecision);
+            // The left side came straight from a vendor reader, which never reorders peaks; the
+            // right side came back through the mzML reader, which does. Where the vendor's peak
+            // order is not ascending m/z the two therefore cannot line up positionally, and only
+            // a set-of-peaks comparison can hold. Two configs produce such an order: a combined
+            // ion mobility scan (m/z ascends only within each mobility bin) and SIM rendered as
+            // spectra (one point per transition, in the order the method defined them - a form
+            // pwiz deliberately does NOT exempt from the repair, see
+            // SpectrumListBase.HasNonMzOrderingAxis).
+            string report = MSDataDiff.DescribeSpectraDataOnly(msd, roundtripped, diffPrecision,
+                ignorePeakOrder: config.CombineIonMobilitySpectra || config.SimAsSpectra);
             if (report.Length > 0)
                 throw new InvalidOperationException("mzMLb round-trip diff:\n" + report);
         }

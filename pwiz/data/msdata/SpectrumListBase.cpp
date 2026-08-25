@@ -28,10 +28,66 @@
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/range/iterator_range.hpp>
+#include "pwiz/utility/misc/sort_together.hpp"
+#include <algorithm>
+#include <numeric>
 
 
 namespace {
     boost::mutex m;
+
+// A spectrum needs more peaks than this before finding it in m/z order is taken as evidence
+// about the writer rather than as coincidence.
+const size_t MIN_PEAK_COUNT_FOR_MZ_SORT_CHECK = 10;
+
+
+} // namespace
+
+/// Whether the peaks run along some axis other than m/z, in which case they must be left exactly
+/// as they are and say nothing about the writer.
+///
+/// Three ways that happens. The mobility axis of a combined ion mobility scan, or a scanning
+/// quadrupole position: m/z then ascends only within each block, and a global sort would destroy
+/// the structure rather than repair it. The x-axis is not m/z at all - Spectrum::getMZArray()
+/// also returns a wavelength array, which the Agilent, Thermo and Bruker readers use for a
+/// diode-array trace, and judging a UV trace as if it were m/z would let it settle the verdict for
+/// every real spectrum in the file. Or each point is a transition rather than a peak - an SRM or
+/// CRM spectrum lists one point per monitored reaction in the order the method defined them, which
+/// is the order that matters, and the x-axis values are just those transitions' target m/z, not a
+/// scan across a continuum; nothing about that order is wrong, so there is nothing to repair.
+///
+/// MS_SIM_spectrum is deliberately NOT in that list, even though a SIM experiment rendered as
+/// spectra is transition-ordered in exactly the same way. The term is overloaded: the readers use it
+/// far more often for an ordinary scan than for a transition list - Thermo tags every ScanType_SIM
+/// scan with it (SpectrumList_Thermo.cpp), and Agilent maps both MSScanType_SelectedIon and
+/// MSScanType_TotalIon to it (Reader_Agilent_Detail.cpp), the latter being a full-range MS1. Those
+/// are continuum scans carrying hundreds of points, so exempting the term would switch the repair
+/// off for the common case in order to protect the rare one. The trade is deliberate: an
+/// SRM-as-spectra file is protected by its own term, while --simAsSpectra output is not.
+///
+/// Asked by name, not by counting arrays: counting cannot tell an ordering axis from an ordinary
+/// per-peak extra like signal-to-noise, and would refuse to repair any spectrum carrying one.
+/// hasCVParamChild covers the whole ion mobility family and, like hasCVParam, looks into
+/// referenceableParamGroups - mzML writers commonly factor the repeated binaryDataArray terms out
+/// into one, where a plain scan of cvParams would miss them.
+///
+/// Exported (not file-local) because the same question - does this spectrum's peak order mean
+/// anything - is asked again outside this file, by tests checking that a round trip preserved
+/// ascending m/z order everywhere it is expected to hold.
+PWIZ_API_DECL bool pwiz::msdata::hasNonMzOrderingAxis(const Spectrum& spectrum)
+{
+    using namespace pwiz::cv;
+
+    // the ion mobility term is asked for with its children, which covers the whole family - mean,
+    // raw, inverse reduced, deconvoluted; getArrayByCVID looks into referenceableParamGroups too,
+    // where mzML writers commonly factor out the repeated binaryDataArray terms
+    return spectrum.getArrayByCVID(MS_ion_mobility_array, true).get() != NULL ||
+           spectrum.getArrayByCVID(MS_scanning_quadrupole_position_lower_bound_m_z_array).get() != NULL ||
+           spectrum.getArrayByCVID(MS_scanning_quadrupole_position_upper_bound_m_z_array).get() != NULL ||
+           spectrum.getArrayByCVID(MS_wavelength_array).get() != NULL ||
+           spectrum.hasCVParam(MS_SRM_spectrum) ||
+           spectrum.hasCVParam(MS_CRM_spectrum);
 }
 
 PWIZ_API_DECL void pwiz::msdata::ListBase::warn_once(const char * msg) const
@@ -39,6 +95,78 @@ PWIZ_API_DECL void pwiz::msdata::ListBase::warn_once(const char * msg) const
     boost::lock_guard<boost::mutex> g(m);
     if (warn_msg_hashes_.insert(hash(msg)).second) // .second is true iff value is new
         cerr << msg << std::endl;
+}
+
+
+PWIZ_API_DECL void pwiz::msdata::SpectrumListBase::ensureMzAscending(const SpectrumPtr& spectrum) const
+{
+    if (!spectrum.get() || // Empty
+        mzOrderVerdict_.load() == MzOrderVerdict::writerSortsByMz) // Already established this file is fine
+        return;
+
+    // Nothing to reorder, and nothing to learn, until the binary data is actually here: a
+    // metadata-only read still carries the array objects with their cvParams, since IO builds those
+    // and skips only the base64 decode. Asking the m/z array settles that, and it is the lookup this
+    // needs anyway, so a metadata pass pays for one array lookup rather than that plus the cvParam
+    // scans below. The size comes off the array rather than from defaultArrayLength, which is only
+    // guaranteed from DetailLevel_FullMetadata up; fewer than two peaks is indeterminate sortedness
+    // and settles nothing either way.
+    BinaryDataArrayPtr mzArray = spectrum->getMZArray();
+    if (!mzArray.get() || mzArray->data.size() < 2)
+        return;
+
+    if (hasNonMzOrderingAxis(*spectrum))
+        return;
+
+    BinaryDataArrayPtr intensityArray = spectrum->getIntensityArray();
+    if (!intensityArray.get())
+        return;
+
+    auto& mzs = mzArray->data;
+    if (mzs.size() != intensityArray->data.size()) // Sanity check, flagged elsewhere if wrong
+        return;
+
+    if (std::is_sorted(mzs.begin(), mzs.end()))
+    {
+        // Seems fine - but a short list can be in order by chance, so it does not settle anything
+        MzOrderVerdict expected = MzOrderVerdict::unsettled;
+        if (mzs.size() > MIN_PEAK_COUNT_FOR_MZ_SORT_CHECK)
+            mzOrderVerdict_.compare_exchange_strong(expected, MzOrderVerdict::writerSortsByMz);
+        return;
+    }
+
+    // One spectrum out of order means any others may also be out of order.
+    // The exchange also tells us whether this is the first such spectrum, which the warning below
+    // is keyed on.
+    bool isFirstFoundSpectrumOutOfOrder =
+        mzOrderVerdict_.exchange(MzOrderVerdict::writerDoesNotSortByMz) != MzOrderVerdict::writerDoesNotSortByMz;
+
+    // A spectrum may carry other values like signal-to-noise, baseline, resolution or charge array
+    // alongside m/z and intensity, and every one of them has to be permuted the same way. The double
+    // arrays and the integer arrays are separate members of Spectrum, hence the two range sets;
+    // sort_together gathers both before writing either back. Stable, so peaks sharing an m/z keep
+    // the order the writer gave them.
+    typedef pwiz::util::BinaryData<double>::iterator DoubleItr;
+    typedef pwiz::util::BinaryData<IntegerDataArray::value_type>::iterator IntegerItr;
+
+    std::vector<boost::iterator_range<DoubleItr>> doubleArrays;
+    for (size_t i = 0; i < spectrum->binaryDataArrayPtrs.size(); ++i)
+        if (spectrum->binaryDataArrayPtrs[i].get() &&
+            spectrum->binaryDataArrayPtrs[i].get() != mzArray.get() &&
+            spectrum->binaryDataArrayPtrs[i]->data.size() == mzs.size())
+            doubleArrays.push_back(boost::make_iterator_range(spectrum->binaryDataArrayPtrs[i]->data));
+
+    std::vector<boost::iterator_range<IntegerItr>> integerArrays;
+    for (size_t i = 0; i < spectrum->integerDataArrayPtrs.size(); ++i)
+        if (spectrum->integerDataArrayPtrs[i].get() &&
+            spectrum->integerDataArrayPtrs[i]->data.size() == mzs.size())
+            integerArrays.push_back(boost::make_iterator_range(spectrum->integerDataArrayPtrs[i]->data));
+
+    pwiz::util::sort_together(mzs, doubleArrays, integerArrays, true);
+
+    if (isFirstFoundSpectrumOutOfOrder)
+        warn_once(("[SpectrumListBase] peaks were not written in ascending m/z order (first seen at \"" +
+                   spectrum->id + "\"). Reordering them in memory before use.").c_str());
 }
 
 

@@ -19,7 +19,7 @@ namespace Pwiz.Vendor.Waters;
 public sealed class Reader_Waters : IReader
 {
     /// <inheritdoc/>
-    public string TypeName => "Waters";
+    public string TypeName => "Waters RAW";
 
     /// <inheritdoc/>
     public CVID CvType => CVID.MS_Waters_raw_format;

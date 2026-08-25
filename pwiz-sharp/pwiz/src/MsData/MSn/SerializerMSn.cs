@@ -381,6 +381,9 @@ public sealed class SerializerMSn
         {
             if (current is null) return;
             FinalizeTextSpectrum(current, mz, intensity, charges, chargeMassPairs, precursorMz, ms1);
+            // cpp repairs the peak order on the way out of SpectrumList_MSn::spectrum; this list
+            // is built once and then only indexed into, so the equivalent point is here.
+            list.EnsureMzAscending(current);
             list.Spectra.Add(current);
             current = null;
             mz.Clear();
@@ -610,6 +613,7 @@ public sealed class SerializerMSn
             if (input.Position >= input.Length) break;
             var spec = NewMSnSpectrum(list.Spectra.Count, ms1);
             if (!TryReadBinarySpectrum(br, spec, version, ms1, compressed)) break;
+            list.EnsureMzAscending(spec);
             list.Spectra.Add(spec);
         }
     }
