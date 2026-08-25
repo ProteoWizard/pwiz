@@ -263,10 +263,13 @@ namespace pwiz.SkylineTestUtil
             string threadDump = null;
             string failureReason = null;
 
-            // Bounded on a background thread, because ClrMD offers no way to cancel an attach that
-            // is going badly. Abandoning the thread leaves the rest of that work running, which is
-            // the cheaper mistake - it is a background thread, so it can never hold up process
-            // exit, and the caller gets an answer in seconds either way.
+            // Reading the call stacks attaches ClrMD to this very process, which can block on
+            // locating the DAC or on walking a live runtime, and ClrMD offers no way to cancel an
+            // attach that is going badly. Left unbounded it could turn a reported failure into a
+            // wedged test run, which costs a whole nightly pass - so it gets its own background
+            // thread and a deadline. Abandoning that thread leaves the rest of the work running,
+            // which is the cheaper mistake: the thread is a background one, so a wedged attach can
+            // never hold the process open.
             var dumpThread = new Thread(() =>
             {
                 try
