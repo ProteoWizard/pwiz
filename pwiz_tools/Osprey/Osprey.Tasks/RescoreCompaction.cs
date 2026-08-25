@@ -206,25 +206,35 @@ namespace pwiz.Osprey.Tasks
 
             // 3. Compact each per-file entry list in place.
             //
-            // Reported: this is the longest silent step on the --task SecondPassFDR path. It
-            // walks every file's whole pre-compaction list - 768 M entries across 257 CHS
-            // files, retaining 137 M - and TrimExcess reallocates each survivor array on the
-            // way out, so at cohort scale it ran 40 s emitting nothing. A memory-bound stage
-            // going quiet for 40 s is indistinguishable from a hung or OOM-killed one, which
-            // is the single thing this stage must never be ambiguous about. Per file rather
-            // than per entry: file count is what the silence scales with.
+            // Reported because this ran 40 s silent at 257 files, and silence is how a hung
+            // run and an OOM-killed one both look.
+            //
+            // What costs the 40 s is the PREDICATE, not the removal. On the streaming-hydrate
+            // path (--task SecondPassFDR) HydrateCompactedStreaming already retained this exact
+            // set, so RemoveAll removes NOTHING - the invariant below throws if it does - and
+            // TrimExcess is a no-op because Count already equals Capacity. The work is one
+            // HashSet<uint> probe per surviving entry, 137 M of them into a ~50 MB set, i.e.
+            // random access over a set far past any cache. Do not read this loop as the place
+            // the 768 M -> 137 M reduction happens; that happened during hydration, and the
+            // line PerFileRescoreTask logs just after this reports it from the tallies hydrate
+            // captured. The reduction IS done here on the batch path, where the caller passes
+            // an uncompacted bundle.
+            //
+            // Reported per file rather than per entry: file count is what the silence scales
+            // with, and Report is cheap enough to sit in the outer loop only.
             int compactIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Compacting {0} file(s) to the retained set",
+                       string.Format(@"Applying the retained set across {0} file(s)",
                                      inputs.PerFileEntries.Count),
                        inputs.PerFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in inputs.PerFileEntries)
                 {
-                    progress.Report(++compactIdx);
+                    progress.Report(compactIdx++);
                     kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & BASE_ID_MASK));
                     kvp.Value.TrimExcess();
                 }
+                progress.Report(inputs.PerFileEntries.Count);
             }
             int entriesAfter = 0;
             foreach (var kvp in inputs.PerFileEntries)

@@ -1460,13 +1460,31 @@ namespace pwiz.Osprey.Tasks
                             }
                         }
                     }
-                    int beforeCount = 0, afterCount = 0;
-                    foreach (var kvp in perFileEntries)
+                    // long, matching the sibling counters at RescoreHydration.cs:173 and
+                    // PerFileScoringTask.cs:553: this branch sums the RESIDENT all-files
+                    // PRE-compaction pool, and at ~4.2 M stubs a file an int total overflows
+                    // past ~505 files - inside the 500-file target these paths are being sized
+                    // for, and silently, since nothing here is in a checked context.
+                    long beforeCount = 0, afterCount = 0;
+                    // Reported for the same reason as RescoreCompaction.Apply, and this is the
+                    // loop that does the heavier work of the two: it runs on the uncompacted
+                    // pool and genuinely removes, where Apply's streaming-hydrate path finds
+                    // the set already retained and removes nothing.
+                    int fpCompactIdx = 0;
+                    using (var progress = new ProgressReporter(
+                               string.Format(@"Compacting {0} file(s) to the first-pass retained set",
+                                             perFileEntries.Count),
+                               perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                     {
-                        beforeCount += kvp.Value.Count;
-                        kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
-                        kvp.Value.TrimExcess();
-                        afterCount += kvp.Value.Count;
+                        foreach (var kvp in perFileEntries)
+                        {
+                            progress.Report(fpCompactIdx++);
+                            beforeCount += kvp.Value.Count;
+                            kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
+                            kvp.Value.TrimExcess();
+                            afterCount += kvp.Value.Count;
+                        }
+                        progress.Report(perFileEntries.Count);
                     }
                     ctx.LogInfo(string.Format(
                         @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids)",

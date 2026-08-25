@@ -712,12 +712,14 @@ namespace pwiz.Osprey.Tasks
             {
                 foreach (var fileKvpExp in perFileEntries)
                 {
-                    progress.Report(++expIdx);
+                    progress.Report(expIdx++);
                     foreach (var e in fileKvpExp.Value)
                     {
-                        if (e.IsDecoy) continue;
+                        if (e.IsDecoy)
+                            continue;
                         var keyExp = (e.ModifiedSequence, e.Charge);
-                        if (!passingPrecursors.Contains(keyExp)) continue;
+                        if (!passingPrecursors.Contains(keyExp))
+                            continue;
                         double existingExp;
                         if (!bestExpPrecursorQ.TryGetValue(keyExp, out existingExp)
                             || e.ExperimentPrecursorQvalue < existingExp)
@@ -748,12 +750,14 @@ namespace pwiz.Osprey.Tasks
             {
                 foreach (var fileKvpBounds in perFileEntries)
                 {
-                    progress.Report(++boundsIdx);
+                    progress.Report(boundsIdx++);
                     string boundsFile = fileKvpBounds.Key;
                     foreach (var e in fileKvpBounds.Value)
                     {
-                        if (e.IsDecoy) continue;
-                        if (!passingPrecursors.Contains((e.ModifiedSequence, e.Charge))) continue;
+                        if (e.IsDecoy)
+                            continue;
+                        if (!passingPrecursors.Contains((e.ModifiedSequence, e.Charge)))
+                            continue;
                         var sk = (e.ModifiedSequence, boundsFile);
                         double rq = e.EffectiveRunQvalue(FdrLevel.Both);
                         double[] existingB;
@@ -793,7 +797,7 @@ namespace pwiz.Osprey.Tasks
             {
                 foreach (var fileKvp in perFileEntries)
                 {
-                    progress.Report(++obsIdx);
+                    progress.Report(obsIdx++);
                     string fn = fileKvp.Key;
                     foreach (var fileEntry in fileKvp.Value)
                     {
@@ -803,14 +807,19 @@ namespace pwiz.Osprey.Tasks
                         List<KeyValuePair<string, FdrEntry>> list;
                         if (!entriesByPrecursor.TryGetValue(key, out list))
                         {
-                            // Default capacity, NOT perFileEntries.Count. Pre-sizing every
-                            // precursor's list to the FILE COUNT reserves 16 B x files per
-                            // precursor whether or not that precursor is seen in more than one
-                            // run - at 257 files that is ~4 KB reserved per distinct precursor,
-                            // and most precursors appear in a small fraction of the cohort. The
-                            // reservation scales with cohort size while the useful contents do
-                            // not, which is the shape this stage cannot afford. Growth doubling
-                            // to a typical few-dozen entries is a handful of gen0 arrays.
+                            // Default capacity, NOT perFileEntries.Count, which reserved
+                            // 16 B x files for every distinct precursor.
+                            //
+                            // Measured over the 257-file CHS cohort: 501,247 distinct non-decoy
+                            // precursor keys, 72.9 M observations, median 155 and mean 145.5
+                            // files per key, and 15.3% of keys present in ALL 257 files. So the
+                            // reservation is NOT mostly waste - coverage is high - and the win
+                            // is modest: ~2.06 GB pre-sized against ~1.72 GB via doubling, about
+                            // 17%. The keys that do appear in every file cost an extra ~4 KB
+                            // each under doubling, ~312 MB, which the 17% already nets out.
+                            // Recorded rather than asserted because the first version of this
+                            // comment claimed "most precursors appear in a small fraction of the
+                            // cohort", which the distribution above shows is false.
                             list = new List<KeyValuePair<string, FdrEntry>>();
                             entriesByPrecursor[key] = list;
                         }

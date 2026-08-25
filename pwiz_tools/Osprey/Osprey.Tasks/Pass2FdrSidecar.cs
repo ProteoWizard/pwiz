@@ -609,8 +609,21 @@ namespace pwiz.Osprey.Tasks
             // global memory peak of the run (65.2 GB managed), dwarfing the pass-2 work it feeds.
             // Clear() keeps the capacity, so the steady state is one file's worth of buffer
             // instead of the whole cohort's, and the loop stops scaling with file count.
-            var byEntryId = new Dictionary<uint, FdrEntry>();
-            var staged = new List<KeyValuePair<FdrEntry, FdrScoreRecord>>();
+            // Sized ONCE from the cohort's largest file, not left to grow. The per-file
+            // versions this replaced passed an exact capacity, and hoisting without one would
+            // have traded the per-file churn for a resize walk on the first file and on every
+            // new high-water file after it - 16 rehashes and ~17 MB of abandoned arrays for a
+            // ~533 K-entry file, most of it over the 85 KB LOH line. Dictionary.EnsureCapacity
+            // is net8.0-only and this builds net472 too, so the capacity goes in the
+            // constructor. The scan is O(files), not O(entries).
+            int maxEntries = 0;
+            foreach (var kvp in perFileEntries)
+            {
+                if (kvp.Value.Count > maxEntries)
+                    maxEntries = kvp.Value.Count;
+            }
+            var byEntryId = new Dictionary<uint, FdrEntry>(maxEntries);
+            var staged = new List<KeyValuePair<FdrEntry, FdrScoreRecord>>(maxEntries);
             using (var progress = new ProgressReporter(
                        string.Format(@"Seeding pass-1 scalars from {0} file(s)", perFileEntries.Count),
                        perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
