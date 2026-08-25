@@ -193,17 +193,26 @@
        time to export methods. They must be copied to the assembly's bin dir so
        Skyline's ProcessRunner can find them. SDK's None glob doesn't include
        non-code files; enumerate the Method tree explicitly. -->
+  <!-- Content, not None, and that distinction is load-bearing for ClickOnce: a ClickOnce publish
+       takes every Content item of this project, but takes a None item only when its extension is
+       .exe/.dll or a PublishFile entry overrides it (Microsoft.Common.CurrentVersion.targets,
+       _ClickOnceNoneItems). As None, the method builders' .exe files shipped and every one of
+       their .exe.config files was silently dropped - the same failure master fixed for
+       SkylineCmd.exe.config in ebc7e0c4f. -->
   <ItemGroup>
-    <None Include="Method\**\*">
+    <Content Include="Method\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Method\%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </None>
+      <Visible>false</Visible>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="SkylineLog4Net.config">
+    <!-- Content for the same reason: as a None item this .config never reached the deployment,
+         so a ClickOnce-installed Skyline had no log4net configuration at all. -->
+    <Content Include="SkylineLog4Net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -583,6 +592,155 @@
     </PropertyGroup>
     <Message Importance="high" Text="ClickOnce ApplicationVersion=$(ApplicationVersion) (assembly $(SkylineInformationalVersion))" />
   </Target>
+
+  <!-- Payload that reaches $(OutDir) but never becomes an item ClickOnce can see, so a publish
+       silently omits it while an ordinary build looks fine. Injected as ContentWithTargetPath
+       just before ClickOnce computes its file list (by then Build has run, so the files exist).
+
+       SkylineCmd.*  - _DeploySkylineCmd copies these with a Copy task rather than an item,
+                       because SkylineCmd builds inline via ProjectReference and its bin is empty
+                       when this project is evaluated. Publish assembles from item lists, not from
+                       whatever ended up in OutDir, so the command-line Skyline was missing
+                       entirely from the deployment.
+       Mascot natives - MascotShim.dll, msparser.dll and msparser-config\ are Content items linked
+                       flat, but they share a source path with BlibBuild's RID-specific
+                       runtimes\win-x64\native\ copies and only the RID-nested placement survived
+                       into the deployment. The comment on those items explains why flat is the
+                       one that matters: DllImport("MascotShim") resolves from the executable's own
+                       directory. Sourcing them from OutDir here gives a distinct identity. -->
+  <Target Name="AddClickOnceOutDirPayload"
+          Condition="'$(PublishProtocol)' == 'ClickOnce' And '$(TargetFramework)' == 'net8.0-windows'"
+          BeforeTargets="_DeploymentComputeClickOnceManifestInfo">
+    <ItemGroup>
+      <_ClickOnceOutDirFile Include="$(OutDir)SkylineCmd.exe" />
+      <_ClickOnceOutDirFile Include="$(OutDir)SkylineCmd.dll" />
+      <_ClickOnceOutDirFile Include="$(OutDir)SkylineCmd.runtimeconfig.json" />
+      <_ClickOnceOutDirFile Include="$(OutDir)SkylineCmd.deps.json" />
+      <!-- SkylineCmd's symbols go here rather than in the PublishFile list below: PublishFile only
+           overrides the publish state of a file ClickOnce already knows about, and SkylineCmd is
+           not an item at all - it arrives in OutDir by Copy task, same as the four files above. -->
+      <_ClickOnceOutDirFile Include="$(OutDir)SkylineCmd.pdb" />
+      <_ClickOnceOutDirFile Include="$(OutDir)MascotShim.dll" />
+      <_ClickOnceOutDirFile Include="$(OutDir)msparser.dll" />
+      <_ClickOnceOutDirConfig Include="$(OutDir)msparser-config\**\*" />
+    </ItemGroup>
+    <ItemGroup>
+      <ContentWithTargetPath Include="@(_ClickOnceOutDirFile)" Condition="Exists('%(Identity)')">
+        <TargetPath>%(Filename)%(Extension)</TargetPath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ContentWithTargetPath>
+      <ContentWithTargetPath Include="@(_ClickOnceOutDirConfig)">
+        <TargetPath>msparser-config\%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ContentWithTargetPath>
+    </ItemGroup>
+  </Target>
+
+  <!-- Debug symbols in the deployment. ClickOnce ships neither the app's own .pdb nor any
+       reference .pdb unless a PublishFile entry says to, which is why the legacy csproj listed
+       exactly these ten (see "Add diagnostic for DockPaneStrip ArgumentOutOfRangeException and
+       ship PDB"). Without them every stack trace in a skyline.ms exception report from a
+       ClickOnce install loses its file and line numbers, which is most of their value.
+       This is the whole load-bearing remainder of the legacy 26-entry PublishFile list: the
+       other Include entries (unimod.xml, modifications.xml, OFX.Core.Contracts,
+       Sciex.Data.SimpleTypes, BaseCommon, ...) all publish on their own now, and enzymes.xml
+       and Instruments.xml are obsolete on net8 - MS Amanda runs from its own install directory
+       and the wrapper no longer parses Instruments.xml. -->
+  <ItemGroup>
+    <PublishFile Include="Skyline-daily.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="pwiz.Common.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="pwiz.CommonUtil.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="ProteowizardWrapper.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="ProteomeDb.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="PanoramaClient.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="MSGraph.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="SkylineTool.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="BiblioSpec.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="DigitalRune.Windows.Docking.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <!-- Same rule, assemblies the legacy list predates: CommonMsData and CommonFileDialogs came
+         out of the net8 port, PrmScheduling is the managed Bruker scheduler, and ZedGraph shows
+         up in graph stack traces as often as MSGraph does. -->
+    <PublishFile Include="pwiz.CommonMsData.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="pwiz.CommonFileDialogs.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="pwiz.PortableUtil.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="pwiz.Vendor.Bruker.PrmScheduling.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="ZedGraph.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+  </ItemGroup>
 
   <!-- Document file associations, restored from the legacy csproj (lost in the SDK conversion).
        ClickOnce registers these on install, which is how .sky/.skyd/.skyp get their icons and

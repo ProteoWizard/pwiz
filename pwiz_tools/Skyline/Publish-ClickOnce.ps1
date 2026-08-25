@@ -34,6 +34,11 @@
     no-vendor-support mode, so the published deployment cannot open instrument files - fine for
     checking the deployment plumbing, not for a preview anyone will actually use.
 
+.PARAMETER SkipHardklor
+    Skip the native Hardklor.exe build. The publish then ships no Hardklor.exe and the
+    Hardklor/Bullseye feature-detection pipeline fails in the installed app, so use this only
+    when Hardklor is already built and current.
+
 .EXAMPLE
     .\Publish-ClickOnce.ps1 -PfxPassword skyline
 
@@ -46,7 +51,8 @@ param(
     [string] $Configuration = 'Release',
     [string] $PfxPassword,
     [switch] $SkipBuild,
-    [switch] $AgreeToVendorLicenses
+    [switch] $AgreeToVendorLicenses,
+    [switch] $SkipHardklor
 )
 
 Set-StrictMode -Version Latest
@@ -105,6 +111,22 @@ if (-not (Test-Path $msbuild)) {
 }
 if (-not (Test-Path $msbuild)) { throw "MSBuild.exe not found under $vsInstall." }
 
+# --- Native Hardklor -----------------------------------------------------------------
+# Hardklor.exe is C++ and cannot be built by the .NET SDK, so build.bat builds it in a separate
+# VS MSBuild step and Skyline.csproj deploys it through an Exists()-conditioned Content include.
+# That condition makes its absence silent: without this step the publish simply ships no
+# Hardklor.exe and the feature-detection pipeline fails at run time in the installed app.
+if (-not $SkipHardklor) {
+    $hardklor = Join-Path $scriptDir 'Executables\Hardklor\Hardklor.vcxproj'
+    if (Test-Path $hardklor) {
+        Write-Host "Building native Hardklor.exe ($Configuration|x64) ..."
+        & $msbuild $hardklor "-p:Configuration=$Configuration" -p:Platform=x64 -m -nologo -v:minimal -nodeReuse:false
+        if ($LASTEXITCODE -ne 0) { throw "MSBuild Hardklor.vcxproj failed (exit $LASTEXITCODE)." }
+    } else {
+        Write-Warning "$hardklor not found; publishing without Hardklor.exe."
+    }
+}
+
 if (Test-Path $publishDir) {
     # ClickOnce keeps one "Application Files\<name>_<version>" folder per published version and
     # never prunes; wipe so what is uploaded is exactly what was just built.
@@ -122,7 +144,8 @@ $msbuildArgs = @(
     '-p:TargetFramework=net8.0-windows',
     "-p:Configuration=$Configuration",
     '-nologo',
-    '-v:minimal'
+    '-v:minimal',
+    '-nodeReuse:false'
 )
 if ($SkipBuild) { $msbuildArgs += '-p:NoBuild=true' }
 if ($AgreeToVendorLicenses) { $msbuildArgs += '-p:IAgreeToVendorLicenses=true' }
@@ -146,7 +169,8 @@ $restoreArgs = @(
     '-p:RuntimeIdentifier=win-x64',
     "-p:Configuration=$Configuration",
     '-nologo',
-    '-v:minimal'
+    '-v:minimal',
+    '-nodeReuse:false'
 )
 if ($AgreeToVendorLicenses) { $restoreArgs += '-p:IAgreeToVendorLicenses=true' }
 Write-Host "$msbuild $($restoreArgs -join ' ')"
