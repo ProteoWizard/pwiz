@@ -235,7 +235,9 @@ namespace pwiz.SkylineTestFunctional
 
             // Shows whether a UI thread is parked in a modal loop (a message box, Form.ShowDialog, a shell common
             // dialog) and what put it there -- which names the dialog even when its own window says nothing.
-            Collect(sb, @"managed call stacks", () => sb.AppendLine(HangDetection.TryGetThreadDump()));
+            // Named for what it can actually return: the full dump where the attach works, and the
+            // calling thread's stack alone where it does not.
+            Collect(sb, @"thread dump", () => sb.AppendLine(HangDetection.TryGetThreadDump()));
             return sb.ToString();
         }
 

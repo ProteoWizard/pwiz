@@ -54,10 +54,9 @@ namespace pwiz.SkylineTest
         {
             // PINNED: reading your own stack needs no attach and no debugging support, so this
             // form works everywhere and a timeout never arrives with nothing on it.
-            var degraded = HangDetection.GetCallingThreadStack(@"pinning the degraded form");
-            AssertEx.Contains(degraded, @"*** Thread dump unavailable", @"*** Calling thread stack:",
-                @"*** End of calling thread stack");
-            AssertEx.Contains(degraded, nameof(TestThreadDumpNamesRunningFrames));
+            var callingStack = HangDetection.GetCallingThreadStack();
+            AssertEx.Contains(callingStack, @"*** Calling thread stack:", @"*** End of calling thread stack");
+            AssertEx.Contains(callingStack, nameof(TestThreadDumpNamesRunningFrames));
 
             // PINNED: how long it takes to find OUT. Nothing measured the cost of an unavailable
             // dump, so the agents' 745-1035 seconds reached CI as a test that appeared merely to
@@ -79,20 +78,17 @@ namespace pwiz.SkylineTest
 
             if (dump.Contains(@"Thread dump unavailable"))
             {
-                // ASPIRATIONAL, and deliberately not a failure: the full dump does not work on the
-                // TeamCity agents, and gating the build on it only reddens PRs that did not break
-                // it. Measured 2026-08-24 - this developer machine resolves its DAC in-box
-                // (CLR v4.8.9337.00 -> Framework64\v4.0.30319\mscordacwks.dll) and dumps in tens
-                // of milliseconds, while three agents (two AWS, MacCoss Agent 1) spend 745-1035
-                // seconds and then fail with "Array dimensions exceeded supported range". Build
-                // configuration, process age and test position were each ruled out by running CI's
-                // exact invocation locally in both configurations.
-                // TODO(chambm): TeamCity agents need a DAC that ClrMD can resolve locally
-                // (mscordacwks.dll matching the agent's own CLR build), or failing that a reachable
-                // symbol server to fetch one from, before this branch can be made to fail rather
-                // than tolerated, and before timeout failures can post full thread dumps. The
-                // degraded report prints the agent's CLR and DAC, so a CI log now says which of
-                // the two is missing.
+                // Tolerated, not expected. Every machine measured takes the full dump: this
+                // developer box, MacCoss TeamCity Agent 1, and an AWS agent all produce one in
+                // 0 seconds. They did NOT before the attach was pointed at the local DAC
+                // explicitly - the same agents spent 745-1035 seconds and then failed with
+                // "Array dimensions exceeded supported range", which is what ClrMD resolving its
+                // own DAC was doing.
+                //
+                // So this branch is for a machine that genuinely cannot attach - no matching DAC,
+                // or a policy that refuses - where a failure is the environment's, not the code's.
+                // Failing here would redden a PR that broke nothing; the degraded report names the
+                // CLR and the DAC, which is what a reader needs to tell those apart.
                 AssertEx.Contains(dump, nameof(TestThreadDumpNamesRunningFrames));
                 return;
             }

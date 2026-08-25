@@ -126,8 +126,8 @@ namespace SkylineTester
                 string.Empty,
                 string.Join(Environment.NewLine, leftovers),
                 string.Empty,
-                "They are left over from an earlier run that was stopped before it could clean up. They hold",
-                "the source directory open and can make a later build fail with a file lock.",
+                "They are probably left over from an earlier run that was stopped before it could clean",
+                "up. They hold the source directory open and can make a later build fail with a file lock.",
                 string.Empty,
                 "Stop them now?");
 

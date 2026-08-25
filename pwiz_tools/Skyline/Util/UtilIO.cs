@@ -528,14 +528,14 @@ namespace pwiz.Skyline.Util
             FilePath = filePath;
             Buffered = buffered;
             FileTime = File.GetLastWriteTime(FilePath);
-            FileSize = FileSizeOrMissing(FilePath);
+            FileSizeAtOpen = FileSize(FilePath);
         }
 
         public IStreamManager StreamManager { get; private set; }
         public string FilePath { get; private set; }
         public bool Buffered { get; private set; }
         public DateTime FileTime { get; private set; }
-        public long FileSize { get; private set; }
+        public long? FileSizeAtOpen { get; private set; }
 
         /// <summary>
         /// Handles actually opening the stream.
@@ -623,14 +623,14 @@ namespace pwiz.Skyline.Util
                 try
                 {
                     var sizeNow = new FileInfo(FilePath).Length;
-                    if (FileSize < 0)
+                    if (!FileSizeAtOpen.HasValue)
                     {
                         // The size could not be read when the stream was first opened
                         return string.Format(@"Size is {0} bytes, and was unknown when first opened", sizeNow);
                     }
-                    return Equals(sizeNow, FileSize)
+                    return Equals(sizeNow, FileSizeAtOpen.Value)
                         ? string.Format(@"Size unchanged at {0} bytes", sizeNow)
-                        : string.Format(@"Size was {0} bytes, now {1}", FileSize, sizeNow);
+                        : string.Format(@"Size was {0} bytes, now {1}", FileSizeAtOpen.Value, sizeNow);
                 }
                 catch (Exception exception)
                 {
@@ -644,7 +644,11 @@ namespace pwiz.Skyline.Util
             get { return ConnectionPool.IsInPool(this); }
         }
 
-        private static long FileSizeOrMissing(string filePath)
+        /// <summary>
+        /// The size of a file, or null where it could not be read. Only ever reported alongside a
+        /// failure, never acted on.
+        /// </summary>
+        private static long? FileSize(string filePath)
         {
             try
             {
@@ -652,7 +656,7 @@ namespace pwiz.Skyline.Util
             }
             catch (Exception)
             {
-                return -1;  // Only ever reported alongside a failure, never acted on
+                return null;
             }
         }
 
