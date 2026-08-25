@@ -550,7 +550,6 @@ namespace pwiz.Osprey.FDR
             public readonly uint ParquetIndex;
             public readonly double CoelutionSum;
             public readonly string Peptide;
-
             public FirstPassDedupRow(int g, string fileName, uint entryId, byte charge, bool isDecoy,
                 uint parquetIndex, double coelutionSum, string peptide)
             {
@@ -632,6 +631,18 @@ namespace pwiz.Osprey.FDR
             // (byte-identical to Features[0] on the 1st pass), so no feature load is needed here.
             var bestTarget = new Dictionary<uint, FirstPassDedupRow>();
             var bestDecoy = new Dictionary<uint, FirstPassDedupRow>();
+            // Run bookkeeping for the reservoir, allocated only when it is on so the default-off
+            // arm keeps exactly the dictionaries, and the memory, it has always had.
+            var runPick = OspreyEnvironment.TrainPickRun ? new Dictionary<uint, PercolatorSampling.RunPickState>() : null;
+            // Which observation represents a precursor. Logged when it is NOT the default,
+            // because nothing else in the output would say which population trained the model.
+            bool pickRun = OspreyEnvironment.TrainPickRun;
+            if (!pickRun)
+            {
+                logInfo(
+                    @"[TRAIN] OSPREY_TRAIN_PICK_RUN=0: each precursor's training row is its BEST " +
+                    @"observation across runs, not a uniform sample of them (pre-26.1 behaviour)");
+            }
             int g = 0;
             int nInputTargets = 0, nInputDecoys = 0;
             // This pass streams every file's parquet rows before the [PATH] line below, so it is a
@@ -655,14 +666,59 @@ namespace pwiz.Osprey.FDR
                     var map = isDecoy ? bestDecoy : bestTarget;
                     if (map.TryGetValue(baseId, out FirstPassDedupRow existing))
                     {
-                        if (coelutionSum > existing.CoelutionSum)
+                        bool replace;
+                        if (pickRun)
+                        {
+                            // Reservoir of size one over RUNS - not over rows. Pass 1 is
+                            // PRE-COMPACTION, so a precursor carries several candidate-peak rows
+                            // within one file; drawing per row would both weight a run by how many
+                            // candidates it produced AND leave a RANDOM candidate as the training
+                            // row instead of that run's best peak.
+                            uint seenKey = baseId | (isDecoy ? 0x80000000u : 0u);
+                            PercolatorSampling.RunPickState state = runPick[seenKey];
+                            if (f == state.LastRun)
+                            {
+                                // Another candidate peak from the run already drawn for: resolve it
+                                // by score, so the surviving row is this run's BEST peak.
+                                replace = state.HolderIsCurrentRun && coelutionSum > existing.CoelutionSum;
+                            }
+                            else
+                            {
+                                uint runs = state.RunsSeen + 1u;
+                                // The DRAW takes the decoy bit too. BASE_ID_MASK clears the high
+                                // bit, so drawing on the masked base_id would make a target and its
+                                // paired decoy decide identically at every k and land on the same
+                                // run for essentially every precursor.
+                                replace = ReservoirTakesSlot(seenKey, runs, percConfig.Seed);
+                                state.RunsSeen = runs;
+                                state.LastRun = f;
+                                state.HolderIsCurrentRun = replace;
+                                runPick[seenKey] = state;
+                            }
+                        }
+                        else
+                        {
+                            replace = coelutionSum > existing.CoelutionSum;
+                        }
+                        if (replace)
+                        {
                             map[baseId] = new FirstPassDedupRow(
-                                g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum, buffer.Peptides[r]);
+                                g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum,
+                                buffer.Peptides[r]);
+                        }
                     }
                     else
                     {
                         map[baseId] = new FirstPassDedupRow(
                             g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum, buffer.Peptides[r]);
+                        if (pickRun)
+                        {
+                            uint seenKey = baseId | (isDecoy ? 0x80000000u : 0u);
+                            runPick[seenKey] = new PercolatorSampling.RunPickState
+                            {
+                                RunsSeen = 1u, LastRun = f, HolderIsCurrentRun = true
+                            };
+                        }
                     }
                     if (isDecoy) nInputDecoys++; else nInputTargets++;
                     g++;
@@ -947,6 +1003,39 @@ namespace pwiz.Osprey.FDR
             }
             sink.Finish(logInfo);
             return false;
+        }
+
+        /// <summary>
+        /// Reservoir decision for the default training selection: does the
+        /// <paramref name="seen"/>-th run this precursor appears in take its training slot? True
+        /// with probability 1/seen, which leaves every run the precursor actually appears in
+        /// equally likely to be the survivor, however few runs contain it.
+        ///
+        /// Deterministic in <paramref name="baseId"/>, <paramref name="seen"/> and the training
+        /// seed rather than drawn from a shared RNG. That makes the decision independent of how
+        /// the ingest is SCHEDULED - thread interleaving cannot move it, as a shared RNG's draw
+        /// order would - and reproducible across re-runs. It does not make the winner independent
+        /// of file ORDER: the surviving ordinal is fixed, so which run holds that ordinal follows
+        /// the arrival sequence. Reproducibility therefore rests on the input file list being
+        /// ordered, which it is.
+        ///
+        /// Mixing is the SplitMix64 finalizer: the low bits of a raw base_id are far from uniform
+        /// and comparing them directly would skew the draw.
+        /// </summary>
+        internal static bool ReservoirTakesSlot(uint baseId, uint seen, ulong seed)
+        {
+            if (seen <= 1)
+                return true;
+            // Wrapping is the point here - this is a hash mixer, not a quantity - so the
+            // multiplications are marked unchecked rather than left to look like an oversight.
+            unchecked
+            {
+                ulong x = baseId + seed * 0x9E3779B97F4A7C15UL + seen * 0xD1B54A32D192ED03UL;
+                x = (x ^ (x >> 30)) * 0xBF58476D1CE4E5B9UL;
+                x = (x ^ (x >> 27)) * 0x94D049BB133111EBUL;
+                x ^= x >> 31;
+                return x % seen == 0;
+            }
         }
 
         /// <summary>

@@ -150,6 +150,11 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
         if ((uint)index >= (uint)_offsets.Length)
             throw new System.ArgumentOutOfRangeException(nameof(index));
 
+        // EnsureMzAscending is applied at each of the three exits below rather than inside
+        // ReadOne, which is where cpp's single equivalent call sits. On the batch path ReadOne
+        // returns a spectrum whose binary arrays are still empty - FillBatch defers every decode
+        // to DecodeInParallel - so a check there would read no peaks, learn nothing, and reorder
+        // nothing. Each spectrum leaves the batch exactly once, so no spectrum is examined twice.
         lock (_streamLock)
         {
             System.ObjectDisposedException.ThrowIf(_disposed, this);
@@ -162,6 +167,7 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
                 if (_batch.Remove(index, out var cached))
                 {
                     _nextSequential = index + 1;
+                    EnsureMzAscending(cached);
                     return cached;
                 }
 
@@ -177,13 +183,16 @@ public sealed class SpectrumList_Mzml : SpectrumListBase
                     if (_batch.Remove(index, out cached))
                     {
                         _nextSequential = index + 1;
+                        EnsureMzAscending(cached);
                         return cached;
                     }
                 }
             }
 
             _nextSequential = index + 1;
-            return ReadOne(index, getBinaryData);
+            var spectrum = ReadOne(index, getBinaryData);
+            EnsureMzAscending(spectrum);
+            return spectrum;
         }
     }
 

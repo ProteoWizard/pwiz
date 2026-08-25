@@ -33,6 +33,20 @@ public sealed class MSnReaderAdapter : IReader
         };
     }
 
+    /// <inheritdoc/>
+    /// <remarks>cpp splits these across Reader_MS1 ("MS1") and Reader_MS2 ("MS2"); this reader
+    /// covers both, so it reports which one the file is rather than the folded name "MSn".</remarks>
+    public string IdentifyType(string filename, string? head)
+    {
+        ArgumentNullException.ThrowIfNull(filename);
+        return Identify(filename, head) switch
+        {
+            CVID.MS_MS1_format => "MS1",
+            CVID.MS_MS2_format => "MS2",
+            _ => string.Empty,
+        };
+    }
+
     /// <summary>Returns the MSn-family file type implied by <paramref name="filename"/>'s extension.</summary>
     public static MSnType IdentifyMSnType(string filename)
     {

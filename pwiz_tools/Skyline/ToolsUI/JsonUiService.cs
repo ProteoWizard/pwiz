@@ -30,7 +30,6 @@ using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Util;
@@ -47,8 +46,8 @@ namespace pwiz.Skyline.ToolsUI
     /// </summary>
     public static class JsonUiService
     {
-        private const string EXT_PNG = @".png";
-        private const string GRAPH_FILE_PREFIX = @"skyline-graph";
+        // Internal so GraphElement, which produces the same graph PNGs, shares them.
+        internal const string EXT_PNG = @".png";
 
         // How much of a window's message GetOpenForms reports. Enough to see WHAT is in the way and why; a form list
         // is a summary, and the whole text is there for the asking (get_form_image, or the message an action throws).
@@ -488,84 +487,12 @@ namespace pwiz.Skyline.ToolsUI
                     dialog.Path = formPath;
                     return dialog;
                 }
-            // The managed form, already built (with its handle) by GetOpenFormElements; recording its path is a
-            // plain field set, so no UI-thread marshal is needed.
-            var formElement = (StandaloneForm) FindFormById(formId, cancellationToken);
+            // Otherwise the window the id names, already built (with its handle) by FindFormById; recording its path
+            // is a plain field set, so no UI-thread marshal is needed. It can still be a native dialog: this walk
+            // enumerates both, and a dialog the shell finishes bringing up between the two walks lands here.
+            var formElement = FindFormById(formId, cancellationToken);
             formElement.Path = formPath;
             return formElement;
-        }
-
-        public static string GetGraphData(string graphId, string filePath, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var form = ((StandaloneForm) FindFormById(graphId, cancellationToken)).Form as DockableFormEx;
-            return InvokeOnUiThread(() =>
-            {
-                var zedGraph = form != null ? TryGetZedGraphControl(form) : null;
-                if (zedGraph == null)
-                {
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.",
-                        graphId));
-                }
-                var graphData = CopyGraphDataToolStripMenuItem.GetGraphData(zedGraph.MasterPane);
-                if (graphData.Panes.Count == 0)
-                    return string.Empty;
-                filePath = filePath ?? GetMcpTmpFilePath(
-                    GRAPH_FILE_PREFIX, form.Text, TextUtil.EXT_TSV);
-                DirectoryEx.CreateForFilePath(filePath);
-                using (var saver = new FileSaver(filePath))
-                {
-                    File.WriteAllText(saver.SafeName, graphData.ToString());
-                    saver.Commit();
-                }
-                return filePath.ToForwardSlashPath();
-            });
-        }
-
-        public static string GetGraphImage(string graphId, string filePath)
-        {
-            string denial = CheckImageToolPreflight(graphId,
-                () => EnsureGraphForm(graphId, out _, out _),
-                requiresScreenCapture: false);
-            if (denial != null)
-                return denial;
-            return InvokeOnUiThread(() =>
-            {
-                using (var bitmap = RenderGraphBitmap(graphId, out var form))
-                {
-                    filePath = filePath ?? GetMcpTmpFilePath(
-                        GRAPH_FILE_PREFIX, form.Text, EXT_PNG);
-                    DirectoryEx.CreateForFilePath(filePath);
-                    using (var saver = new FileSaver(filePath))
-                    {
-                        bitmap.Save(saver.SafeName, ImageFormat.Png);
-                        saver.Commit();
-                    }
-                }
-                return filePath.ToForwardSlashPath();
-            });
-        }
-
-        public static ImageBytesMetadata GetGraphImageBytes(string graphId)
-        {
-            string denial = CheckImageToolPreflight(graphId,
-                () => EnsureGraphForm(graphId, out _, out _),
-                requiresScreenCapture: false);
-            if (denial != null)
-                return new ImageBytesMetadata { Message = denial };
-            return InvokeOnUiThread(() =>
-            {
-                using (var bitmap = RenderGraphBitmap(graphId, out var form))
-                {
-                    return new ImageBytesMetadata
-                    {
-                        Data = BitmapToPngBytes(bitmap),
-                        FilePath = GetMcpTmpFilePath(GRAPH_FILE_PREFIX, form.Text, EXT_PNG)
-                            .ToForwardSlashPath(),
-                        MimeType = MIME_TYPE_PNG
-                    };
-                }
-            });
         }
 
         private const string FORM_FILE_PREFIX = @"skyline-form";
@@ -637,43 +564,6 @@ namespace pwiz.Skyline.ToolsUI
             return ScreenCapture.CaptureScreen(screenRect);
         }
 
-        // Validates that the given id identifies a form bearing a ZedGraph
-        // control. Throws ArgumentException if the form is missing or is not
-        // a graph form. Used both as the existence-check step in
-        // CheckImageToolPreflight and as the first step of actual rendering.
-        private static void EnsureGraphForm(string graphId, out DockableFormEx form, out ZedGraphControl graph, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            form = ((StandaloneForm) FindFormById(graphId, cancellationToken)).Form as DockableFormEx;
-            graph = form != null ? TryGetZedGraphControl(form) : null;
-            if (graph == null)
-            {
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.",
-                    graphId));
-            }
-        }
-
-        // Renders the bitmap for a ZedGraph form, returning the bitmap and the host form.
-        // Caller owns the bitmap and must dispose it.
-        private static System.Drawing.Bitmap RenderGraphBitmap(string graphId, out DockableFormEx form)
-        {
-            EnsureGraphForm(graphId, out form, out var graph);
-            return graph.MasterPane.GetImage(graph.MasterPane.IsAntiAlias);
-        }
-
-        // Shared pre-flight for the image-capture tools. Returns null when the caller may proceed, or an LLM-facing
-        // message it must surface. Bad input (id format, form not found, wrong form type) throws ArgumentException
-        // instead -- a caller-contract violation, which must reach the caller whatever the environment, so the
-        // validation runs BEFORE the screen-capture availability check.
-        private static string CheckImageToolPreflight(string id, Action ensureExistsOnUi, bool requiresScreenCapture)
-        {
-            ValidateFormIdFormat(id);
-            // Passing an Action binds InvokeOnUiThread to the void overload,
-            // which preserves ArgumentException across the thread boundary.
-            InvokeOnUiThread(ensureExistsOnUi);
-            return requiresScreenCapture ? CheckScreenCaptureAvailability() : null;
-        }
-
         // Returns null when screen capture can proceed, or the LLM-facing
         // denial / pending / desktop-unavailable message that the form-image
         // tools should return to the caller without attempting capture.
@@ -711,9 +601,9 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        private const string MIME_TYPE_PNG = @"image/png";
+        internal const string MIME_TYPE_PNG = @"image/png";
 
-        private static byte[] BitmapToPngBytes(System.Drawing.Bitmap bitmap)
+        internal static byte[] BitmapToPngBytes(System.Drawing.Bitmap bitmap)
         {
             using (var memory = new MemoryStream())
             {
@@ -792,9 +682,9 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Finds a managed form by its TypeName:Title identifier -- the main window, a form docked in it, or an
-        /// open dialog -- and returns it as the already-built <see cref="StandaloneForm"/> (its window handle already
-        /// captured). Matches the same set <see cref="GetOpenForms"/> reports, and may be called from any thread.
+        /// Finds a window by its TypeName:Title identifier -- the main window, a form docked in it, an open dialog,
+        /// or a native one -- already built, with its window handle captured. Matches the same set
+        /// <see cref="GetOpenForms"/> reports, and may be called from any thread.
         /// </summary>
         private static StandaloneWindow FindFormById(string formId, CancellationToken cancellationToken)
         {

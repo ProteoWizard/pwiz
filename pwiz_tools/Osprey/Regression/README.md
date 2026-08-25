@@ -120,8 +120,9 @@ so a required token would be visible on every green run - today that table is em
 summary prints `none`.
 
 Zero tokens is not zero O(files) paths, and the summary says only the former. The survivor
-buffer is rebuilt at the end of Stage 6 for `SecondPassFDR` to read, so it is resident from
-there to the end of Stage 7 on every path; no guard covers that because it is Stage 7's
+buffer is rebuilt by `SecondPassFDR`'s own pull for it to read (#4597 moved the build off the
+end of Stage 6, which does not shrink it), so it is resident for the whole of Stage 7 on every
+path; no guard covers that because it is Stage 7's
 input rather than a mode or a resume. That is #4486.
 
 An ambient allowance on a standing gate can only mask the regression the gate exists to

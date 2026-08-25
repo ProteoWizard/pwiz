@@ -43,6 +43,21 @@ public sealed class Reader_Sciex : IReader, IMultiSampleReader
     }
 
     /// <inheritdoc/>
+    /// <remarks>cpp splits these across Reader_ABI ("Sciex WIFF") and Reader_ABI_WIFF2
+    /// ("Sciex WIFF2"); this reader covers both, so it reports which one the file is. Callers
+    /// match the answer by equality - Skyline's DataSourceUtil is one - so the folded name
+    /// "Sciex" would read as an unknown format.</remarks>
+    public string IdentifyType(string filename, string? head)
+    {
+        ArgumentNullException.ThrowIfNull(filename);
+        if (Identify(filename, head) == CVID.CVID_Unknown)
+            return string.Empty;
+        return filename.EndsWith(".wiff2", StringComparison.OrdinalIgnoreCase)
+            ? "Sciex WIFF2"
+            : "Sciex WIFF";
+    }
+
+    /// <inheritdoc/>
     public string[] EnumerateSampleNames(string filename)
     {
         ArgumentNullException.ThrowIfNull(filename);

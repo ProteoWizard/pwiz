@@ -3713,7 +3713,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void TestMouseMove(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
-            HandleMouseMove(new MouseEventArgs(MouseButtons.None, 0, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
+            graphControl.PerformMouseMove(new MouseEventArgs(MouseButtons.None, 0, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
         }
 
         public bool IsOverHighlightPoint(double x, double y, PaneKey? paneKey)
@@ -3725,10 +3725,13 @@ namespace pwiz.Skyline.Controls.Graphs
         public void TestMouseDown(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
-            // Truncate rather than round as TestMouseMove does, so that the point stays inside the
-            // pane it was transformed for. Rounding it up can land on the neighboring pane, where
-            // the click reads a tracking dot that was never positioned and is silently discarded.
-            graphControl_MouseDownEvent(null, new MouseEventArgs(MouseButtons.Left, 1, (int)mouse.X, (int)mouse.Y, 0));
+            graphControl.PerformMouseDown(new MouseEventArgs(MouseButtons.Left, 1, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
+        }
+
+        public void TestMouseUp(double x, double y, PaneKey? paneKey)
+        {
+            var mouse = TransformCoordinates(x, y, paneKey);
+            graphControl.PerformMouseUp(new MouseEventArgs(MouseButtons.Left, 1, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
         }
 
         public string TestFullScanSelection(double x, double y, PaneKey? paneKey)

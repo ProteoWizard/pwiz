@@ -127,8 +127,23 @@ namespace pwiz.Skyline.ToolsUI
         private static ActionResult PerformActionAndWait(IntPtr hwnd, Action action, Func<bool> waitCondition,
             CancellationToken cancellationToken)
         {
-            return PerformActionAndWait(Control.FromHandle(hwnd) ?? UiThreadWindow, action, waitCondition,
-                cancellationToken);
+            var control = Control.FromHandle(hwnd);
+            if (control == null)
+            {
+                var uiThreadWindow = UiThreadWindow;
+                if (hwnd != IntPtr.Zero)
+                {
+                    // If the hwnd is valid, verify that the UiThreadWindow is actually the appropriate thread for the window.
+                    var windowThreadId = User32.GetWindowThreadProcessId(hwnd, out _);
+                    // Thread ID zero means hwnd already destroyed
+                    if (windowThreadId != 0 && windowThreadId != User32.GetWindowThreadProcessId(uiThreadWindow.Handle, out _))
+                    {
+                        throw new InvalidOperationException(new LlmInstruction(string.Format(@"Native window {0} is on the wrong thread", hwnd)));
+                    }
+                }
+                control = uiThreadWindow;
+            }
+            return PerformActionAndWait(control, action, waitCondition, cancellationToken);
         }
         /// <summary>
         /// Snapshots -- on the caller thread, FIRST -- the nesting count and open top-level windows (pruning the

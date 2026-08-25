@@ -82,12 +82,20 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
-    <!-- These tests hit MsDataFileImpl surface that pwiz-sharp doesn't yet
-         expose: ConfigInfo (DataFileMemoryLeakTest) and GetScanDescription
-         (PwizFileInfoTest). Real pwiz-sharp gaps - excluded so the rest of
-         the TestData suite can run and surface stub regressions. -->
-    <Compile Remove="DataFileMemoryLeakTest.cs" />
-    <Compile Remove="PwizFileInfoTest.cs" />
+    <!-- Nothing is excluded from the net8 compile here any more. PwizFileInfoTest and
+         DataFileMemoryLeakTest both used to be, for MsDataFileImpl surface pwiz-sharp
+         had not reached yet (GetScanDescription and ConfigInfo). The sandbox wrapper
+         has since grown both, so by 2026-08-25 each exclusion was outliving its stated
+         reason - and a stale exclusion is not inert. PwizFileInfoTest's was quietly
+         swallowing an upstream test (TestUnsortedMzArrays) plus six real pwiz-sharp
+         gaps, all since fixed: Mobilion was never registered as a vendor reader at all,
+         reader type names did not match cpp's (Agilent/Sciex/Waters/Mobilion/MGF/MSn/
+         mz5), the Bruker global TIC ignored GlobalChromatogramsAreMs1Only, mzXML
+         instrument model was stored where no consumer looks, mzXML instrument
+         categories were left as vendor shorthand instead of CV terms, and
+         GetNonUnicodePath never shortened a Unicode file name.
+         If a test here has to be excluded again, re-check the reason on a schedule
+         rather than trusting it: both of these read as current long after they weren't. -->
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="3.2.0" />
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />

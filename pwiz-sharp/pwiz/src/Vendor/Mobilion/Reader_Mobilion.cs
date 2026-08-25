@@ -27,7 +27,7 @@ public sealed class Reader_Mobilion : IReader
     private static readonly byte[] Hdf5Magic = { 0x89, 0x48, 0x44, 0x46, 0x0D, 0x0A, 0x1A, 0x0A };
 
     /// <inheritdoc/>
-    public string TypeName => "Mobilion";
+    public string TypeName => "Mobilion MBI";
 
     /// <inheritdoc/>
     public CVID CvType => CVID.MS_Mobilion_MBI_format;

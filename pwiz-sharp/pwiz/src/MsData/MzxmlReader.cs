@@ -112,6 +112,13 @@ public sealed class MzxmlReader
         }
 
         FillInMetadata(msd);
+
+        // Repair peak order here rather than in MzxmlReaderAdapter, so every caller of this
+        // reader gets it - the vendor test harness and a dozen unit tests call MzxmlReader.Read
+        // directly. cpp puts its single call inside SpectrumList_mzXML::spectrum, which serves
+        // the indexed and non-indexed cases alike; the port splits those across a lazy list and
+        // this eager parse, so the eager half needs its own call.
+        Spectra.SpectrumListBase.EnsureMzAscendingThroughout(msd.Run.SpectrumList);
     }
 
     // ---------- parentFile ----------
@@ -172,36 +179,92 @@ public sealed class MzxmlReader
             }
         }
 
-        // Mirror cpp Handler_msInstrument::endElement: append source / analyzer / detector
-        // components in canonical order and stamp each with a UserParam carrying the legacy
-        // mzXML category text. cpp uses LegacyAdapter to look up CV terms; we preserve the raw
-        // strings — round-trip diffs should run with IgnoreMetadata = true.
+        // Mirror cpp Handler_msInstrument::endElement (Serializer_mzXML.cpp:1254-1267): append
+        // source / analyzer / detector in canonical order, set the model, apply the Orbitrap
+        // fixup, and only then stamp the three categories. The ORDER matters - the fixup reads
+        // the model back.
         var src = new Component(ComponentType.Source, 1);
-        if (!string.IsNullOrEmpty(ionisation))
-            src.UserParams.Add(new UserParam("msIonisation", ionisation, "xsd:string"));
-        ic.ComponentList.Add(src);
-
         var ana = new Component(ComponentType.Analyzer, 1);
-        if (!string.IsNullOrEmpty(analyzer))
-            ana.UserParams.Add(new UserParam("msMassAnalyzer", analyzer, "xsd:string"));
-        ic.ComponentList.Add(ana);
-
         var det = new Component(ComponentType.Detector, 1);
-        if (!string.IsNullOrEmpty(detector))
-            det.UserParams.Add(new UserParam("msDetector", detector, "xsd:string"));
+        ic.ComponentList.Add(src);
+        ic.ComponentList.Add(ana);
         ic.ComponentList.Add(det);
 
-        if (!string.IsNullOrEmpty(manufacturer) || !string.IsNullOrEmpty(model))
-        {
-            var pg = new ParamGroup("InstrumentParams_" + ic.Id);
-            if (!string.IsNullOrEmpty(manufacturer))
-                pg.UserParams.Add(new UserParam("msManufacturer", manufacturer, "xsd:string"));
-            if (!string.IsNullOrEmpty(model))
-                pg.UserParams.Add(new UserParam("msModel", model, "xsd:string"));
-            msd.ParamGroups.Add(pg);
-            ic.ParamGroups.Add(pg);
-        }
+        SetManufacturerAndModel(ic, manufacturer, model);
+
+        // cpp's LTQ ORBI hack, verbatim: this instrument writes msMassAnalyzer="FTMS", and the
+        // CV lists "FTMS" as an exact synonym of MS_FT_ICR - so translating it faithfully would
+        // stamp FT-ICR on an orbitrap. cpp rewrites the text before translating; without this
+        // the CV translation added above turns "no term" into a WRONG term.
+        if (analyzer == "FTMS" && model == "LTQ Orbitrap XL")
+            analyzer = "orbitrap";
+
+        SetLegacyCategory(src, CVID.MS_ionization_type, "msIonisation", ionisation);
+        SetLegacyCategory(ana, CVID.MS_mass_analyzer_type, "msMassAnalyzer", analyzer);
+        SetLegacyCategory(det, CVID.MS_detector_type, "msDetector", detector);
     }
+
+    /// <summary>
+    /// Records one legacy mzXML instrument category on <paramref name="container"/> - as the CV
+    /// term <paramref name="text"/> names if the CV knows it, and as the legacy user param
+    /// otherwise. Port of <c>LegacyAdapter_Instrument::Impl::set</c>.
+    /// </summary>
+    /// <remarks>
+    /// The translation is not cosmetic. mzXML writes these as vendor shorthand - "ESI", "TOFMS" -
+    /// and a consumer reading an instrument configuration asks for the CV term, so leaving the
+    /// shorthand as a user param means an ionization type of "ESI" where every other format in the
+    /// library reports "electrospray ionization". Terms the CV does not know keep their raw text,
+    /// which is how "TOFMS" survives unchanged.
+    /// </remarks>
+    private static void SetLegacyCategory(ParamContainer container, CVID categoryCvid,
+                                          string userParamName, string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return;
+
+        CVID cvid = s_cvTranslator.Value.Translate(text);
+        if (CvLookup.CvIsA(cvid, categoryCvid))
+            container.Set(cvid);
+        else
+            container.UserParams.Add(new UserParam(userParamName, text, "xsd:string"));
+    }
+
+    /// <summary>
+    /// Records the instrument manufacturer and model on <paramref name="ic"/>, as a CV term when
+    /// the model text names one and as the legacy mzXML user params otherwise. Port of
+    /// <c>LegacyAdapter_Instrument::manufacturerAndModel</c>, which is what cpp's
+    /// <c>Handler_msInstrument</c> calls.
+    /// </summary>
+    /// <remarks>
+    /// Both params go DIRECTLY on the instrument configuration, never on a referenced
+    /// ParamGroup. Neither cpp's <c>userParam(name)</c> nor the port's
+    /// <see cref="ParamContainer.UserParam"/> looks inside param groups, so a consumer asking an
+    /// instrument configuration for "msModel" - Skyline's <c>CreateMsInstrumentConfigInfo</c>
+    /// does exactly that, as its fallback when there is no model CV term - finds nothing at all
+    /// if they are stored one level down. That is how an mzXML written by MzWiff came back with
+    /// an empty instrument model.
+    /// </remarks>
+    private static void SetManufacturerAndModel(InstrumentConfiguration ic, string manufacturer, string model)
+    {
+        // A model the CV knows becomes a term; the raw text is then redundant and cpp drops it.
+        if (!string.IsNullOrEmpty(model))
+        {
+            CVID cvid = s_cvTranslator.Value.Translate(model);
+            if (CvLookup.CvIsA(cvid, CVID.MS_instrument_model))
+            {
+                ic.Set(cvid);
+                return;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(manufacturer))
+            ic.UserParams.Add(new UserParam("msManufacturer", manufacturer, "xsd:string"));
+        if (!string.IsNullOrEmpty(model))
+            ic.UserParams.Add(new UserParam("msModel", model, "xsd:string"));
+    }
+
+    // Built once: the constructor walks every CV term.
+    private static readonly Lazy<CVTranslator> s_cvTranslator = new(() => new CVTranslator());
 
     private static Software ReadSoftwareElement(XmlReader reader, MSData msd)
     {

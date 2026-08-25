@@ -628,6 +628,114 @@ void testSpectrum()
 }
 
 
+SpectrumPtr makePeakSpectrum(const vector<double>& mzs, const vector<double>& intensities)
+{
+    SpectrumPtr s(new Spectrum);
+    s->id = "scan=1";
+    s->setMZIntensityArrays(mzs, intensities, MS_number_of_detector_counts);
+    s->defaultArrayLength = mzs.size();
+    return s;
+}
+
+
+DiffConfig peakSetConfig()
+{
+    DiffConfig config;
+    config.precision = 1e-6;
+    config.ignoreMetadata = true;
+    config.ignoreExtraBinaryDataArrays = true; // ignorePeakOrder is only honoured inside this branch
+    config.ignorePeakOrder = true;
+    return config;
+}
+
+
+// The point of ignorePeakOrder: a format that drops the mobility array hands a combined ion mobility
+// spectrum's peaks back in a different order, and that alone must not read as a difference.
+void testIgnorePeakOrderAcceptsAPermutation()
+{
+    if (os_) *os_ << "testIgnorePeakOrderAcceptsAPermutation()\n";
+
+    vector<double> mzs, intensities, shuffledMzs, shuffledIntensities;
+    mzs.push_back(500.5); intensities.push_back(10);
+    mzs.push_back(300.3); intensities.push_back(20);
+    mzs.push_back(700.7); intensities.push_back(30);
+    mzs.push_back(200.2); intensities.push_back(40);
+
+    shuffledMzs.push_back(700.7); shuffledIntensities.push_back(30);
+    shuffledMzs.push_back(200.2); shuffledIntensities.push_back(40);
+    shuffledMzs.push_back(500.5); shuffledIntensities.push_back(10);
+    shuffledMzs.push_back(300.3); shuffledIntensities.push_back(20);
+
+    Diff<Spectrum, DiffConfig> diff(*makePeakSpectrum(mzs, intensities),
+                                    *makePeakSpectrum(shuffledMzs, shuffledIntensities),
+                                    peakSetConfig());
+    if (os_ && diff) *os_ << diff << endl;
+    unit_assert(!diff);
+}
+
+
+// Peaks are paired by value rather than by sorting each side, so a lossy round trip that shifts
+// every m/z slightly - MGF writes ten significant digits - still pairs each peak with its own
+// partner. Sorting each side and comparing positionally fails this: the shift ties peaks together on
+// one side that are distinct on the other, and the tie-break then orders the two sides differently.
+void testIgnorePeakOrderToleratesRoundTripPrecisionLoss()
+{
+    if (os_) *os_ << "testIgnorePeakOrderToleratesRoundTripPrecisionLoss()\n";
+
+    vector<double> mzs, intensities, roundedMzs, roundedIntensities;
+    // two peaks that differ far below the diff's tolerance, with very different intensities, so a
+    // mispairing shows up loudly; presented in opposite orders to exercise the pairing
+    mzs.push_back(500.50000001); intensities.push_back(10);
+    mzs.push_back(500.50000002); intensities.push_back(9000);
+    mzs.push_back(700.7);        intensities.push_back(30);
+
+    roundedMzs.push_back(700.7);   roundedIntensities.push_back(30);
+    roundedMzs.push_back(500.5);   roundedIntensities.push_back(9000); // both collapsed to one value
+    roundedMzs.push_back(500.5);   roundedIntensities.push_back(10);
+
+    Diff<Spectrum, DiffConfig> diff(*makePeakSpectrum(mzs, intensities),
+                                    *makePeakSpectrum(roundedMzs, roundedIntensities),
+                                    peakSetConfig());
+    if (os_ && diff) *os_ << diff << endl;
+    unit_assert(!diff);
+}
+
+
+// The risk in pairing tolerantly is pairing a real difference away. A changed intensity, and a peak
+// that is simply not there, both still have to report.
+void testIgnorePeakOrderStillReportsRealDifferences()
+{
+    if (os_) *os_ << "testIgnorePeakOrderStillReportsRealDifferences()\n";
+
+    vector<double> mzs, intensities;
+    mzs.push_back(500.5); intensities.push_back(10);
+    mzs.push_back(300.3); intensities.push_back(20);
+    mzs.push_back(700.7); intensities.push_back(30);
+
+    {   // one intensity changed, same m/z set and a different order
+        vector<double> otherMzs, otherIntensities;
+        otherMzs.push_back(700.7); otherIntensities.push_back(30);
+        otherMzs.push_back(300.3); otherIntensities.push_back(20);
+        otherMzs.push_back(500.5); otherIntensities.push_back(11); // was 10
+        Diff<Spectrum, DiffConfig> diff(*makePeakSpectrum(mzs, intensities),
+                                        *makePeakSpectrum(otherMzs, otherIntensities),
+                                        peakSetConfig());
+        unit_assert(diff);
+    }
+
+    {   // one m/z swapped for a peak that is not in the other side at all
+        vector<double> otherMzs, otherIntensities;
+        otherMzs.push_back(700.7); otherIntensities.push_back(30);
+        otherMzs.push_back(300.3); otherIntensities.push_back(20);
+        otherMzs.push_back(650.6); otherIntensities.push_back(10); // was 500.5
+        Diff<Spectrum, DiffConfig> diff(*makePeakSpectrum(mzs, intensities),
+                                        *makePeakSpectrum(otherMzs, otherIntensities),
+                                        peakSetConfig());
+        unit_assert(diff);
+    }
+}
+
+
 void testChromatogram()
 {
     if (os_) *os_ << "testChromatogram()\n";
@@ -1358,6 +1466,9 @@ void test()
     testBinaryDataArray();
     testIntegerDataArray();
     testSpectrum();
+    testIgnorePeakOrderAcceptsAPermutation();
+    testIgnorePeakOrderToleratesRoundTripPrecisionLoss();
+    testIgnorePeakOrderStillReportsRealDifferences();
     testChromatogram();
     testSpectrumList();
     testChromatogramList();

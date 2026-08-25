@@ -51,8 +51,16 @@ public static class Filesystem
                 ? part
                 : Path.Combine(current, part);
 
+            // Files count, not just directories: cpp gates this on bfs::exists (Filesystem.cpp's
+            // get_non_unicode_path), which is true for either, and Skyline's PathEx mirrors that.
+            // Testing only for a directory left the last component alone, so a Unicode FILE name
+            // under an ASCII directory came back unshortened - the one case the whole conversion
+            // exists to handle. Probed once and reused below: these are filesystem round trips,
+            // and a vendor path can be a deep UNC one.
+            bool exists = Directory.Exists(current) || File.Exists(current);
+
             string usePart = part;
-            if (!stopShortening && !IsAllPrintableAscii(part) && Directory.Exists(current))
+            if (!stopShortening && !IsAllPrintableAscii(part) && exists)
             {
                 if (TryGetShortPathName(current, out string? shortPath) && !string.IsNullOrEmpty(shortPath))
                     usePart = Path.GetFileName(shortPath);
@@ -60,7 +68,7 @@ public static class Filesystem
 
             // GetShortPathName requires the path to exist on disk. Once we hit a non-existent
             // component, we stop trying and append the rest verbatim.
-            if (!Directory.Exists(current) && !File.Exists(current))
+            if (!exists)
                 stopShortening = true;
 
             if (result.Length > 0

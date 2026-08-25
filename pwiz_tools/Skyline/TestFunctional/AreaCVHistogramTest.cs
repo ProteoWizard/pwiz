@@ -307,8 +307,9 @@ namespace pwiz.SkylineTestFunctional
             string[][] items = null;
             RunUI(() =>
             {
-                pane.HandleMouseMoveEvent(pane.GraphSummary.GraphControl, mouseEventArgs);
-                pane.HandleMouseClick(pane.GraphSummary.GraphControl, mouseEventArgs);
+                var graphControl = pane.GraphSummary.GraphControl;
+                graphControl.PerformMouseMove(mouseEventArgs);
+                graphControl.PerformMouseClick(mouseEventArgs);
             });
 
             var form = WaitForOpenForm<FindResultsForm>();

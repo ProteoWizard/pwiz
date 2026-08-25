@@ -233,19 +233,44 @@ namespace SkylineTool
             Call(nameof(SetSelectedElement), elementLocator, additionalLocators);
         }
 
-        public string GetGraphData(string graphId, string filePath = null)
+        public string GetGraphData(string formId, string filePath = null)
         {
-            return Call(nameof(GetGraphData), graphId, filePath);
+            return Call(nameof(GetGraphData), formId, filePath);
         }
 
-        public string GetGraphImage(string graphId, string filePath = null)
+        public string GetGraphImage(string formId, string filePath = null)
         {
-            return Call(nameof(GetGraphImage), graphId, filePath);
+            return Call(nameof(GetGraphImage), formId, filePath);
         }
 
-        public ImageBytesMetadata GetGraphImageBytes(string graphId)
+        public ImageBytesMetadata GetGraphImageBytes(string formId)
         {
-            return CallTyped<ImageBytesMetadata>(nameof(GetGraphImageBytes), graphId);
+            return CallTyped<ImageBytesMetadata>(nameof(GetGraphImageBytes), formId);
+        }
+
+        public Rectangle GetGraphZoom(string formId)
+        {
+            return CallTyped<Rectangle>(nameof(GetGraphZoom), formId);
+        }
+
+        public Rectangle ZoomGraphTo(string formId, Rectangle bounds)
+        {
+            return CallTyped<Rectangle>(nameof(ZoomGraphTo), formId, bounds);
+        }
+
+        public ActionResult ClickGraph(string formId, Rectangle bounds)
+        {
+            return CallTyped<ActionResult>(nameof(ClickGraph), formId, bounds);
+        }
+
+        public ActionResult SendText(string formId, string controlId, string text)
+        {
+            return CallTyped<ActionResult>(nameof(SendText), formId, controlId, text);
+        }
+
+        public ActionResult SendKeyStroke(string formId, string controlId, string keyStroke)
+        {
+            return CallTyped<ActionResult>(nameof(SendKeyStroke), formId, controlId, keyStroke);
         }
 
         public string GetFormImage(string formId, string filePath = null)

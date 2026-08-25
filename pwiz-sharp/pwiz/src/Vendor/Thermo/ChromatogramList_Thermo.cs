@@ -18,6 +18,10 @@ namespace Pwiz.Vendor.Thermo;
 public sealed class ChromatogramList_Thermo : ChromatogramListBase
 {
     private readonly ThermoRawFile _raw;
+    private readonly bool _globalChromatogramsAreMs1Only;
+
+    /// <summary>cpp's scan filter for an MS1-only global chromatogram (ChromatogramList_Thermo.cpp:400).</summary>
+    private const string GLOBAL_MS1_FILTER = "Full ms";
     private readonly List<IndexEntry> _index = new();
 
     /// <summary>DataProcessing id emitted as the <c>defaultDataProcessingRef</c>. Set by <see cref="Reader_Thermo"/>.</summary>
@@ -54,10 +58,19 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
     }
 
     /// <summary>Creates a chromatogram list backed by the given Thermo raw file.</summary>
-    public ChromatogramList_Thermo(ThermoRawFile raw, bool simAsSpectra = false, bool srmAsSpectra = false)
+    /// <remarks>
+    /// <paramref name="globalChromatogramsAreMs1Only"/> restricts the file-level TIC to MS1. cpp
+    /// expresses this as a scan filter - it hands addChromatogram the string "Full ms" instead of
+    /// "" (ChromatogramList_Thermo.cpp:400-401) - and the SDK then returns one point per matching
+    /// scan rather than one per scan of any level. Without it a 99-scan file reports 99 TIC points
+    /// where Skyline, which asks for an MS1-only TIC, expects the 30 MS1 scans.
+    /// </remarks>
+    public ChromatogramList_Thermo(ThermoRawFile raw, bool simAsSpectra = false, bool srmAsSpectra = false,
+                                   bool globalChromatogramsAreMs1Only = false)
     {
         ArgumentNullException.ThrowIfNull(raw);
         _raw = raw;
+        _globalChromatogramsAreMs1Only = globalChromatogramsAreMs1Only;
         _index.Add(new IndexEntry { Index = 0, Id = "TIC", Kind = CVID.MS_TIC_chromatogram });
 
         // Build the index under InvariantCulture. The Thermo SDK renders scan filters
@@ -443,7 +456,10 @@ public sealed class ChromatogramList_Thermo : ChromatogramListBase
 
     private Chromatogram FillTicChromatogram(Chromatogram chrom)
     {
+        // cpp's global filter: "Full ms" for an MS1-only TIC, "" (no filter) for all levels.
         var settings = new ChromatogramTraceSettings(TraceType.TIC);
+        if (_globalChromatogramsAreMs1Only)
+            settings.Filter = GLOBAL_MS1_FILTER;
         var data = _raw.Raw.GetChromatogramDataEx(new[] { settings }, -1, -1, new MassOptions());
         if (data?.PositionsArray?.Length > 0 && data.PositionsArray[0] is { } times
             && data.IntensitiesArray?[0] is { } intensities)

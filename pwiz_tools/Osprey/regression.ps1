@@ -227,8 +227,9 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 # invisible in a token audit. #4536 was exactly that until it landed - the rehydrate
 # published no survivor loader, so Stage6ResidentHandoffGuardError no-oped and nothing
 # asked for a token. #4486 was the standing example: the survivor buffer is rebuilt for
-# SecondPassFDR to read, so it is resident from the end of Stage 6 to the end of Stage 7
-# on EVERY path, and no guard covers that because it is not a resume or a mode - it is
+# SecondPassFDR to read, so it is resident for the whole of Stage 7 on EVERY path (#4597
+# moved the rebuild onto SecondPassFDR's own pull, which changes WHO pays for it and not
+# how big it is), and no guard covers that because it is not a resume or a mode - it is
 # what Stage 7 takes as input. It is still uncovered, and now MEASURED: 0.196 GB/file
 # live, post-GC, which is not what fails at scale. What did was the --task SecondPassFDR
 # pre-compaction RELOAD at 2.07 GB/file (~186 GB projected at 82 files), streamed by
@@ -257,7 +258,7 @@ $knownResidentGaps = @(
     @{
         Issue = '#4486'
         Token = 'NONE'
-        Path  = 'Stage 6 rebuilds the whole-run survivor buffer for SecondPassFDR to read; resident from the end of Stage 6 to the end of Stage 7.'
+        Path  = 'SecondPassFDR pulling RescoredEntries rebuilds the whole-run survivor buffer it reads (#4597 moved the build off the end of Stage 6, which does not shrink it); resident for the whole of Stage 7.'
         # One model, stated explicitly: a fixed library term plus a per-file slope, both from
         # the 4/8/16-file A/B. Quoting a straight-through 82-file endpoint next to that rig's
         # marginal slope produced three numbers no single model reproduced (24.43/82 = 0.298,
@@ -317,6 +318,22 @@ $memStampArgs = @('--timestamp', '--memstamp')
 # older branches pinned to the v1 URL working exactly as before.
 $dataUrl = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/osprey-testfiles-mzML-v2.zip'
 
+# The Stellar library-decoy library, published SEPARATELY from the mzML bundle.
+#
+# It has to be separate. The bundle is 24.6 GB and its acquisition is
+# skip-if-present on the extracted root, so folding a new library into a -v3
+# bundle would either never reach a machine that already has the tree, or force
+# every machine to re-download the mzML to get a 258 MB library. Splitting the
+# two lets a library revision cost only the library.
+#
+# v3 vs the v2 copy inside the bundle: v2 carries 21 entrapment peptides whose
+# I/L-normalised sequence collides with a real target, which target-decoy
+# competition then resolves on the target's own signal. An exact-string audit
+# shows 0 collisions for BOTH versions - only the I/L-normalised check separates
+# them - so the version cannot be told from the library contents at a glance,
+# which is exactly why the zip name is the marker.
+$libDecoyV3Url = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/stellar-libdecoy-v3.zip'
+
 # --- Dataset table (standalone; mirrors ai/ Dataset-Config.ps1) --------------
 # Folder = mzML subfolder under the extracted root; Resolution = instrument mode.
 # Input mzML files and the .tsv library are discovered from the folder so
@@ -328,6 +345,12 @@ $dataUrl = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/
 #                    datasets share a Folder, or their goldens collide.
 #   NestedZip        zip inside LibraryFolder holding the library, extracted on
 #                    demand so datasets that are not selected cost nothing.
+#   LibraryUrl       a library published separately from the mzML bundle,
+#                    downloaded into LibraryFolder when its ZIP is absent there
+#                    and extracted into a version-named subfolder BESIDE whatever
+#                    the bundle staged, never over it. Wins over NestedZip. The
+#                    zip file is both the payload and the version marker, so it
+#                    stays on disk after extraction.
 #   Library          explicit library filename; bypasses the exactly-one-.tsv
 #                    discovery rule (the libdecoy folder also holds a manifest).
 #   Manifest         FDRBench pairing manifest -> --decoy-pairing-manifest.
@@ -356,6 +379,7 @@ $datasets = [ordered]@{
         LibraryFolder    = 'stellar-libdecoy'
         GoldenFolder     = 'stellar-libdecoy'
         NestedZip        = 'libdecoy-entrapment.zip'
+        LibraryUrl       = $libDecoyV3Url
         Library          = 'carafe_spectral_library.tsv'
         Manifest         = 'osprey_library_db_pairing.tsv'
         Resolution       = 'unit'
@@ -377,6 +401,7 @@ $datasets = [ordered]@{
         LibraryFolder    = 'stellar-libdecoy'
         GoldenFolder     = 'stellar-gendecoy-entrap'
         NestedZip        = 'libdecoy-entrapment.zip'
+        LibraryUrl       = $libDecoyV3Url
         Library          = 'carafe_spectral_library.tsv'
         StripDecoys      = $true
         Resolution       = 'unit'
@@ -585,12 +610,118 @@ function Resolve-DatasetInputs {
 
     $libDir = if ($Spec.LibraryFolder) { Join-Path $extractedRoot $Spec.LibraryFolder } else { $dir }
     if (-not (Test-Path $libDir)) { throw "Library folder not found in data: $libDir" }
+    # The bundle's own extraction point, captured BEFORE the LibraryUrl branch
+    # below can point $libDir at a version subfolder. The repair step needs it
+    # because what it repairs is the bundle's tree, not this run's library.
+    $bundleLibDir = $libDir
+
+    # LibraryUrl: a library that ships SEPARATELY from the mzML bundle, so a new
+    # library version does not force every machine to re-download 24.6 GB of mzML.
+    #
+    # STRICTLY ADDITIVE. The zip extracts into its OWN version-named subfolder
+    # (<libDir>\stellar-libdecoy-v3\), never over the bundle's extraction point.
+    # That is not tidiness, it is a correctness requirement: an older checkout of
+    # this script knows nothing about LibraryUrl. It resolves
+    # <libDir>\carafe_spectral_library.tsv, and its NestedZip branch is
+    # skip-if-present on exactly that path. Overwriting it in place would leave
+    # that older code silently running the NEW library while believing it had the
+    # bundled one - with no marker it understands and no way to repair the
+    # directory for its own use. Extracting beside it leaves the bundle's tree
+    # untouched, so switching branches keeps working in both directions.
+    #
+    # The zip on disk is the version marker AND the payload; it is what makes a
+    # version change detectable, since every version yields the same three entry
+    # names and the extracted files cannot say which one they are.
+    $libraryFromUrl = $false
+    if ($Spec.LibraryUrl) {
+        $zipName = Split-Path -Leaf $Spec.LibraryUrl
+        $marker = Join-Path $libDir $zipName
+        $versionDir = Join-Path $libDir ([IO.Path]::GetFileNameWithoutExtension($zipName))
+        if (-not (Test-Path $marker)) {
+            Write-Host "  downloading library $zipName (one time, ~258 MB)..."
+            New-Item -ItemType Directory -Path $libDir -Force | Out-Null
+            # Download beside the destination and rename in, so an interrupted
+            # download cannot leave a truncated file whose NAME says the version
+            # is present and suppress every later attempt.
+            $tmp = "$marker.part"
+            Remove-Item $tmp -Force -ErrorAction SilentlyContinue
+            Save-UrlToFile -Url $Spec.LibraryUrl -OutFile $tmp
+            # Prove it is a zip BEFORE promoting it to the marker name. A proxy or
+            # sign-in interstitial served as HTTP 200 would otherwise be renamed
+            # into place, and every later run would skip the download and die in
+            # OpenRead forever, with no -Force path to recover.
+            try {
+                $probe = [System.IO.Compression.ZipFile]::OpenRead($tmp)
+                $probe.Dispose()
+            } catch {
+                Remove-Item $tmp -Force -ErrorAction SilentlyContinue
+                throw "Downloaded library is not a readable zip (server error page?): $($Spec.LibraryUrl)"
+            }
+            Move-Item $tmp $marker -Force
+        }
+        # Extract only when the payload is not already unpacked. A partially
+        # extracted tree still self-heals: the expected library being absent is
+        # what triggers a re-extract, and DoNotOverwrite fills in whatever is
+        # missing. Testing the extracted file is safe HERE - unlike at the
+        # version gate above - because the version dir already pins the version,
+        # so this is only asking "did the unpack finish", not "which library is this".
+        $expectedFromUrl = Join-Path $versionDir $Spec.Library
+        if (-not (Test-Path $expectedFromUrl)) {
+            Write-Host "  extracting $zipName into $(Split-Path -Leaf $versionDir) (one time)..."
+            Expand-ZipNoOverwrite -ZipPath $marker -DestFolder $versionDir
+            if (-not (Test-Path $expectedFromUrl)) {
+                throw "Library zip did not yield $($Spec.Library): $marker"
+            }
+        }
+        # Everything downstream - the library, the pairing manifest, the derived
+        # decoy-free copy - resolves inside the version dir from here on.
+        $libDir = $versionDir
+        $libraryFromUrl = $true
+    }
+
+    # SELF-HEAL a tree that the pre-2026-08-20 LibraryUrl acquisition clobbered.
+    #
+    # That version extracted the separately-published library OVER the bundle's
+    # extraction point with -Overwrite. A machine that ran it holds the NEW
+    # library under the bundled library's names, with nothing on disk recording
+    # the swap. This script is no longer fooled - it resolves its own library
+    # from the version subfolder - but anything else reading the bundle's tree is:
+    # an older checkout, another branch, and the golden comparison, which is how
+    # this surfaced (a session spent hours proving the golden was fine while the
+    # library under it had been replaced).
+    #
+    # Repaired from the bundle's own nested zip, which is already on disk, so the
+    # fix costs no download and no manual cleanup - the affected machines include
+    # a TeamCity agent whose data lives under the agent user's profile.
+    #
+    # Runs regardless of $libraryFromUrl: the whole point is to restore the tree
+    # this run is NOT using, and only a run that takes the URL path can have
+    # damaged it.
+    if ($Spec.NestedZip) {
+        $bundleNested = Join-Path $bundleLibDir $Spec.NestedZip
+        if (Test-Path $bundleNested) {
+            $stale = @(Get-ZipEntryMismatches -ZipPath $bundleNested -DestFolder $bundleLibDir)
+            if ($stale.Count -gt 0) {
+                Write-Host "  repairing $($stale.Count) bundled library file(s) overwritten by a separately-shipped library..."
+                foreach ($f in $stale) {
+                    Write-Host "    restoring $(Split-Path -Leaf $f)"
+                    Remove-Item $f -Force
+                }
+                Expand-ZipNoOverwrite -ZipPath $bundleNested -DestFolder $bundleLibDir
+                $stillStale = @(Get-ZipEntryMismatches -ZipPath $bundleNested -DestFolder $bundleLibDir)
+                if ($stillStale.Count -gt 0) {
+                    throw "Could not restore bundled library from $bundleNested (still mismatched: $($stillStale -join ', '))"
+                }
+            }
+        }
+    }
 
     # Nested zip: the library ships compressed inside the outer zip and is
     # extracted only when its dataset is actually selected, so a run that does
     # not use it never pays the multi-GB extraction. Skip-if-present, like the
-    # outer acquisition.
-    if ($Spec.NestedZip) {
+    # outer acquisition. Kept for backward compatibility with bundles whose
+    # dataset spec carries no LibraryUrl.
+    if ($Spec.NestedZip -and -not $libraryFromUrl) {
         $expected = Join-Path $libDir $Spec.Library
         if (-not (Test-Path $expected)) {
             $nested = Join-Path $libDir $Spec.NestedZip
@@ -629,7 +760,20 @@ function Resolve-DatasetInputs {
     if ($Spec.StripDecoys) {
         $derivedDir = Join-Path $scriptRoot 'TestResults\_derived'
         New-Item -ItemType Directory -Path $derivedDir -Force | Out-Null
-        $stripped = Join-Path $derivedDir ([IO.Path]::GetFileNameWithoutExtension($library) + '.nodecoy.tsv')
+        # The derived name carries the ACQUISITION MARKER, not just the library's own filename.
+        # Both library versions extract to the same carafe_spectral_library.tsv, so a name keyed
+        # only on that would be reused across a version change - and the mtime check below cannot
+        # catch it, because ExtractToFile stamps the extracted file with the ZIP ENTRY's timestamp
+        # rather than the extraction time. A machine that derived from the old library AFTER the
+        # new zip was built therefore has a derived file NEWER than its source, reuses it, and
+        # silently runs the retired library while reporting success. That is the same
+        # "leave the old library in place and report success" failure the -Overwrite switch was
+        # added to prevent, displaced one layer down.
+        $derivedStem = [IO.Path]::GetFileNameWithoutExtension($library)
+        if ($Spec.LibraryUrl) {
+            $derivedStem += '.' + [IO.Path]::GetFileNameWithoutExtension((Split-Path -Leaf $Spec.LibraryUrl))
+        }
+        $stripped = Join-Path $derivedDir ($derivedStem + '.nodecoy.tsv')
         $srcInfo = Get-Item $library
         if ((-not (Test-Path $stripped)) -or ((Get-Item $stripped).LastWriteTimeUtc -lt $srcInfo.LastWriteTimeUtc)) {
             Write-Host "  deriving decoy-free library (one time, ~1 min)..."

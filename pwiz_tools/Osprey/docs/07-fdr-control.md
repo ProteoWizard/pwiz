@@ -144,8 +144,9 @@ default and the parity-gated path.
 Percolator of Käll et al. (2007). Both targets and their paired decoys enter — no
 upstream competition. The C# port is **streaming-only**: the former sub-threshold
 "direct" branch that trained on all entries was removed to match Rust's streaming-only
-change, so C# and Rust fit the standardizer on the identical best-per-precursor subset
-at every scale (`PercolatorEngine.DispatchSvm`, `PercolatorEngine.cs:336`;
+change, so C# and Rust fit the standardizer on subsets built by the same selection code at
+every scale — though **no longer on the same subset by default**, since the training
+selection below is C#-only (`PercolatorEngine.DispatchSvm`, `PercolatorEngine.cs:336`;
 `RunPercolatorStreaming`, `PercolatorEngine.cs:473`).
 
 ### 3a. Standardize features
@@ -160,11 +161,32 @@ variance (`PercolatorFdr.cs:292`). On the streaming path the standardizer is fit
 streaming callers) does two things, keeping target/decoy pairs and all charge states of
 a peptide together:
 
-1. **Best-per-precursor**: `SelectBestPerPrecursor` picks the single best-scoring
-   observation per `(base_id, isDecoy)` across all files, ranked by `CoelutionSum`
-   (byte-identical to `Features[0]` on the first pass). With N files this avoids the SVM
-   seeing the same precursor's pair N times. This dedup applies on *all* multi-file
-   inputs — the comment at `PercolatorFdr.cs:320` notes Rust was patched to match.
+1. **One observation per precursor**: `SelectBestPerPrecursor` reduces each
+   `(base_id, isDecoy)` to a single row. With N files this avoids the SVM seeing the same
+   precursor's pair N times. This dedup applies on *all* multi-file inputs.
+
+   **Which** row is `OSPREY_TRAIN_PICK_RUN`'s decision, and the default changed in 26.1:
+
+   - **Default (on)**: draw one RUN uniformly from the runs the precursor appears in — a
+     size-1 reservoir, the k-th run taking the slot with probability 1/k — and contribute
+     that run's best-scoring candidate peak. The cross-run maximum made every training row
+     an extreme value over however many files were batched, so the training population
+     drifted from the per-run population being scored, and drifted further as the batch
+     grew (mean `coelution_sum` 1.19 at one file vs 5.75 at 82, against 1.18 in the scored
+     population). Worth +24.7% discoveries at matched true FDP on 82 SEA-AD files.
+
+     Both halves matter. Pass 1 is **pre-compaction**, so a precursor carries several
+     candidate-peak rows per run; drawing per ROW rather than per RUN weights a run by how
+     many candidates it produced and leaves a random candidate as the training row, which
+     measured **-17.4%** identifications on 3-file Stellar.
+
+   - **`OSPREY_TRAIN_PICK_RUN=0`**: the pre-26.1 rule — the single best-scoring observation
+     across all files, ranked by `CoelutionSum` (byte-identical to `Features[0]` on the
+     first pass). Retained for A/B work.
+
+   **Cross-implementation note**: this default is C#-only. Rust still takes the cross-run
+   maximum (`crates/osprey/src/pipeline.rs`), so the two agree only under
+   `OSPREY_TRAIN_PICK_RUN=0`.
 2. **Subsample**: if the dedup set still exceeds `MaxTrainSize` (default **300000**,
    `PercolatorConfig` ctor `PercolatorFdr.cs:123`), `SubsampleByPeptideGroup` samples
    whole peptide groups using the same XOR-shift PRNG seed (default **42**) and

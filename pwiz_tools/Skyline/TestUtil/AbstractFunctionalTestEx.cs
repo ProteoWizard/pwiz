@@ -615,6 +615,11 @@ namespace pwiz.SkylineTestUtil
                     if (!graphChromatogram.IsOverHighlightPoint(x, y, paneKey))
                         return;
                     graphChromatogram.TestMouseDown(x, y, paneKey);
+                    // Release at the same point, completing the gesture. A press that no handler claims
+                    // arms a zoom drag which only a mouse-up disarms, and leaving it armed makes every
+                    // later move draw a rubber band instead of tracking. The release itself does nothing:
+                    // ZedGraph ignores a zoom drag shorter than 5 pixels.
+                    graphChromatogram.TestMouseUp(x, y, paneKey);
                     clicked = true;
                 });
                 if (!clicked)

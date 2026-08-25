@@ -268,6 +268,7 @@ SpectrumPtr SpectrumList_mz5Impl::spectrum(size_t index, bool getBinaryData) con
             }
         }
         References::resolve(*ptr, msd_);
+        ensureMzAscending(ptr);
         return ptr;
     }
     throw std::out_of_range("[SpectrumList_mz5Impl::spectrum()] out of range");

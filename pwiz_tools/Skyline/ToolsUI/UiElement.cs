@@ -97,6 +97,15 @@ namespace pwiz.Skyline.ToolsUI
     /// peptide group), as a user does by editing the node label and pressing Enter.</summary>
     public interface IRenameNodeElement { void RenameNodeNow(string value); }
 
+    /// <summary>An element the keyboard can be driven on, without it having the focus. Every control is one.
+    /// <see cref="SendTextNow"/> takes LITERAL text, so nothing in it needs escaping;
+    /// <see cref="SendKeyStrokeNow"/> takes one key named with its modifiers ("Ctrl+V", "Down").</summary>
+    public interface IKeyboardElement
+    {
+        void SendTextNow(string text);
+        void SendKeyStrokeNow(string keyStroke);
+    }
+
     /// <summary>An element that offers a fixed list of choices whose visible text can be read (get_options) --
     /// a combo box, a list box, or a checked list box. Unlike get_value (which reports the current
     /// selection / checked items), this returns EVERY choice regardless of state, so a caller can see the
@@ -261,36 +270,48 @@ namespace pwiz.Skyline.ToolsUI
         /// support the action. An exact (case- and symbol-sensitive) Label match is preferred over a loose
         /// one, and within a tier an interactable (visible + enabled) element wins, so a hidden duplicate --
         /// the same field on an unselected, flattened tab -- never shadows the one the user sees. An empty
-        /// <paramref name="text"/> means "the single element that supports the action". Throws an LLM-facing
-        /// error when nothing (or, for an empty text, more than one thing) matches.</summary>
+        /// <paramref name="text"/> means "the single element that supports the action".
+        ///
+        /// <para>When nothing is labeled <paramref name="text"/>, it is read as the control's TYPE instead
+        /// ("TreeView", "TextBox", "DataGridView") - a caption-less control is one a user still picks out
+        /// by what it plainly is, so the connector can name it the same way. A label always wins over a
+        /// type, and a type must pick exactly one control to count.</para>
+        ///
+        /// <para>Throws an LLM-facing error when nothing matches, and when the match is ambiguous - more
+        /// than one thing for an empty text, or more than one control of a named type.</para></summary>
         public UiElement FindElement(string text, UiAction action)
         {
+            // Walked once, for every path below. Enumerating opens and recloses each menu dropdown so that
+            // items built on demand are present (see EnumerateChildren), which is not worth doing twice.
+            var candidates = SelfAndDescendants().Where(action.AppliesTo).ToList();
             if (!string.IsNullOrEmpty(text))
             {
-                var element = FindElementOrNull(text, action);
-                if (element == null)
-                {
+                var labeled = BestMatch(candidates, text, true) ?? BestMatch(candidates, text, false);
+                if (labeled != null)
+                    return labeled;
+                // Nothing carries that text, so read it as the KIND of control, which a user picks a
+                // caption-less control out by. A label always wins, so a type never shadows a real caption.
+                var ofType = candidates.Where(e => e.MatchesType(text)).ToList();
+                if (ofType.Count == 0)
                     throw new ArgumentException(LlmInstruction.Format(
                         @"No control matching '{0}' supports the action '{1}'. Use skyline_get_controls to list the controls.",
                         text, action.SnakeCaseName));
-                }
-
-                return element;
+                var single = SingleOrEnabled(ofType);
+                if (single != null)
+                    return single;
+                // A kind is only an answer when it picks ONE control: with three text boxes on the form,
+                // "TextBox" says nothing about which.
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"This form has {0} controls of type '{1}'. Name the one you mean by its label, or address it by its path (see skyline_get_controls).",
+                    ofType.Count, text));
             }
             // Empty text means "the single element that supports the action".
-            var candidates = SelfAndDescendants().Where(action.AppliesTo).ToList();
             if (candidates.Count == 0)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Nothing here supports the action '{0}'.", action.SnakeCaseName));
-            if (candidates.Count == 1)
-                return candidates[0];
-            // Several support it: take the single enabled one, so a disabled sibling never makes "the form's
-            // single grid/control" ambiguous (a hidden sibling was already dropped when the elements were
-            // built -- we only build an element for a control that was visible). If more than one is still
-            // enabled, the caller must name one.
-            var enabled = candidates.Where(c => c.IsEnabled).ToList();
-            if (enabled.Count == 1)
-                return enabled[0];
+            var only = SingleOrEnabled(candidates);
+            if (only != null)
+                return only;
             throw new ArgumentException(LlmInstruction.Format(
                 @"More than one control supports the action '{0}'; pass a label or name to choose one (see skyline_get_controls).",
                 action.SnakeCaseName));
@@ -309,6 +330,18 @@ namespace pwiz.Skyline.ToolsUI
         // The best of the candidates whose text matches at the given strictness: prefer an enabled one so a
         // disabled duplicate never shadows the control the user can act on. Returns null when none matches at
         // this strictness (the caller then falls back to a looser match).
+        /// <summary>The one element to act on among several that all match, or null while the choice is still
+        /// ambiguous: the single enabled one, so a disabled sibling never makes "the form's single grid" or
+        /// "the form's one tree" ambiguous. (A hidden sibling was already dropped when the elements were
+        /// built - an element is only built for a control that was visible.)</summary>
+        private static UiElement SingleOrEnabled(IList<UiElement> matches)
+        {
+            if (matches.Count <= 1)
+                return matches.Count == 1 ? matches[0] : null;
+            var enabled = matches.Where(c => c.IsEnabled).ToList();
+            return enabled.Count == 1 ? enabled[0] : null;
+        }
+
         private static UiElement BestMatch(IEnumerable<UiElement> candidates, string text, bool strict)
         {
             UiElement best = null;
@@ -639,7 +672,7 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>Base for an element backed by a WinForms <see cref="Control"/>. Every control is clickable
     /// (see <see cref="UiActions.Click"/>); a subclass adds value/list/grid capabilities by implementing the matching
     /// capability interface.</summary>
-    public abstract class ControlElement : UiComponent, IClickableElement
+    public abstract class ControlElement : UiComponent, IClickableElement, IKeyboardElement
     {
         protected ControlElement(Control control, CancellationToken cancellationToken) : base(cancellationToken)
         {
@@ -647,6 +680,124 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         public Control Control { get; }
+
+
+        /// <summary>TYPES <paramref name="text"/> into the control: each character is delivered to the
+        /// control's own window as the WM_CHAR the message pump would send, which is what inserts text and what
+        /// raises Skyline's auto-completion popup. The text is literal throughout - no key names, no escaping,
+        /// no reserved characters.</summary>
+        public virtual void SendTextNow(string text)
+        {
+            // A window that does nothing with a character says so, rather than taking the text and reporting
+            // that it typed it. A button, a tab or a graph discards WM_CHAR; a text box, a combo box, a grid,
+            // a list and a tree each do something with it.
+            if (!(Control is TextBoxBase || Control is ComboBox || Control is DataGridView ||
+                  Control is ListControl || Control is TreeView))
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"The control '{0}' cannot be typed into: it is a {1}, which does nothing with a character. Use 'set_value' to give a control a value, or 'click' to press it.",
+                    Label ?? NullIfEmpty(Name) ?? ElementType.Name, ElementType.Name));
+            }
+            var handle = Control.Handle;
+            foreach (char c in text)
+                User32.SendMessage(handle, User32.WinMessageType.WM_CHAR, (IntPtr) c, IntPtr.Zero);
+        }
+
+        /// <summary>PRESSES ONE KEY on the control, named with its modifiers - "Ctrl+V", "Down", "Enter",
+        /// "Ctrl+Shift+Home". It raises KeyDown with the composed <see cref="Keys"/> value, which is where a
+        /// WinForms handler reads a keystroke from. Composing the value is what lets a modifier be expressed:
+        /// a delivered key message carries only the virtual key, and WinForms fills the modifiers in from the
+        /// GLOBAL keyboard state, which this does not touch.
+        ///
+        /// <para>KNOWN LIMIT: raising KeyDown does not run the control's default window procedure, so a key
+        /// whose effect comes from that rather than from a handler - Backspace editing a text box, an arrow
+        /// moving a plain list's selection - has no effect.</para></summary>
+        public virtual void SendKeyStrokeNow(string keyStroke)
+        {
+            RaiseProtectedHandler(Control, @"OnKeyDown", new KeyEventArgs(ParseKeyStroke(keyStroke)));
+        }
+
+        // Spellings for keys whose Keys name differs. Everything else is matched against the Keys enum, so
+        // "V", "Down", "F2", "Delete" and "Space" all work as they are.
+        private static readonly Dictionary<string, Keys> KEY_ALIASES =
+            new Dictionary<string, Keys>(StringComparer.OrdinalIgnoreCase)
+            {
+                { @"CTRL", Keys.Control }, { @"CONTROL", Keys.Control },
+                { @"ALT", Keys.Alt }, { @"SHIFT", Keys.Shift },
+                { @"ENTER", Keys.Return }, { @"ESC", Keys.Escape },
+                { @"DEL", Keys.Delete }, { @"INS", Keys.Insert },
+                { @"BACKSPACE", Keys.Back }, { @"BS", Keys.Back },
+                { @"PGUP", Keys.PageUp }, { @"PGDN", Keys.PageDown },
+                // The digit keys have to be aliased, because the only other route is the Keys enum itself and
+                // the number a digit spells is that enum's underlying VALUE rather than the key of that name:
+                // "1" would read as Keys.LButton (a mouse button) and "0" as Keys.None. See TryParseKeyName.
+                { @"0", Keys.D0 }, { @"1", Keys.D1 }, { @"2", Keys.D2 }, { @"3", Keys.D3 }, { @"4", Keys.D4 },
+                { @"5", Keys.D5 }, { @"6", Keys.D6 }, { @"7", Keys.D7 }, { @"8", Keys.D8 }, { @"9", Keys.D9 }
+            };
+
+        private static readonly Keys[] MODIFIER_KEYS = { Keys.Control, Keys.Alt, Keys.Shift };
+
+        /// <summary>The <see cref="Keys"/> value <paramref name="keyStroke"/> names - the key OR-ed with its
+        /// modifiers, '+'-separated and in any order. Throws an LLM-facing error naming the offending segment
+        /// when it cannot be read. It touches no control, so it would move up to <see cref="UiElement"/> if a
+        /// keystroke ever needed to be sent to a native window.</summary>
+        public static Keys ParseKeyStroke(string keyStroke)
+        {
+            if (string.IsNullOrWhiteSpace(keyStroke))
+                throw new ArgumentException(new LlmInstruction(
+                    @"No key given. Name a key, with any modifiers, e.g. 'Down', 'Enter' or 'Ctrl+V'."));
+
+            var keyData = Keys.None;
+            bool hasKey = false;
+            foreach (var segment in keyStroke.Split('+').Select(s => s.Trim()).Where(s => s.Length > 0))
+            {
+                if (!TryParseKeyName(segment, out var key))
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unknown key '{0}' in '{1}'. Use a key name (A-Z, 0-9, Enter, Down, Up, Left, Right, Tab, Esc, Backspace, Delete, Home, End, PgUp, PgDn, F1-F12, Space) with optional Ctrl+, Shift+ and Alt+ modifiers.",
+                        segment, keyStroke));
+                }
+                if (MODIFIER_KEYS.Contains(key))
+                {
+                    keyData |= key;
+                }
+                else if (hasKey)
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"'{0}' names more than one key. A key stroke is a single key with modifiers, e.g. 'Ctrl+V'.",
+                        keyStroke));
+                }
+                else
+                {
+                    keyData |= key;
+                    hasKey = true;
+                }
+            }
+            if (!hasKey)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"'{0}' names only modifiers. Add the key they apply to, e.g. 'Ctrl+V'.", keyStroke));
+            return keyData;
+        }
+
+        /// <summary>The single <see cref="Keys"/> value one '+'-separated segment names, or false when it
+        /// names none. An alias wins, then the Keys enum's own names, but only for a segment that looks like
+        /// a name at all - see the comment below for what
+        /// <see cref="Enum.TryParse{TEnum}(string, bool, out TEnum)"/> would otherwise accept.</summary>
+        private static bool TryParseKeyName(string segment, out Keys key)
+        {
+            if (KEY_ALIASES.TryGetValue(segment, out key))
+                return true;
+            key = Keys.None;
+            // The segment has to look like a key NAME. Enum.TryParse reads a number as the enum's underlying
+            // VALUE, so "1" comes back as Keys.LButton rather than the "1" key, and reads a comma-separated
+            // list as the bitwise OR of its members, so "Down,Enter" comes back as 40|13 = 45 = Keys.Insert.
+            // Both are defined values that would pass every check below and press a key nobody named.
+            if (segment.All(char.IsDigit) || !segment.All(char.IsLetterOrDigit))
+                return false;
+            // Keys.None is a defined value, but "None" names no key: accepting it would send a KeyDown
+            // carrying nothing rather than reporting that the caller named nothing.
+            return Enum.TryParse(segment, true, out key) && key != Keys.None && Enum.IsDefined(typeof(Keys), key);
+        }
 
         // The control's hosting form gates acting on it (a modal blocking the form, or a disabled ancestor). A
         // control hosted in a menu dropdown belongs to the form that owns the menu -- its own FindForm is the
@@ -983,6 +1134,9 @@ namespace pwiz.Skyline.ToolsUI
                 // caller names when it asks for a menu item on a particular strip, and MainToolStrip finds the
                 // form's menu bar among these.
                 case ToolStrip toolStrip: return ToolStripElement.ForToolStrip(toolStrip, token);
+                // A graph is its own element rather than a container walked into for its scrollbars. It
+                // derives from UserControl, so this case must win over the UserControl case below.
+                case ZedGraph.ZedGraphControl zedGraph: return new GraphElement(zedGraph, token);
                 // A UserControl (including a DataboundGridControl) is a boundary that owns its (flattened)
                 // children; everything else that contains controls is transparent. A nested Form (rare as a
                 // child) is treated as a plain container under this form's token.
@@ -1032,6 +1186,18 @@ namespace pwiz.Skyline.ToolsUI
         internal GridElement FindGrid(string controlId)
         {
             return (GridElement) FindElement(controlId ?? string.Empty, UiActions.SetGridText);
+        }
+
+        // The form's single graph, which is why the graph verbs take a formId and no graph id. Found by the
+        // form's graph property rather than by the control walk, so a graph on a background dock tab - whose
+        // controls report not-visible - is still found. Must be called on the form's UI thread.
+        internal GraphElement FindGraph()
+        {
+            var zedGraph = Form is DockableFormEx dockable ? JsonUiService.TryGetZedGraphControl(dockable) : null;
+            if (zedGraph == null)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.", FormId));
+            return (GraphElement) ElementFor(zedGraph);
         }
 
         // Parses a grid-cell locator "name[column,row]" (the name is optional -> the form's single grid).
@@ -1897,9 +2063,18 @@ namespace pwiz.Skyline.ToolsUI
         private readonly DataGridView _dataGridView;
         public GridElement(DataGridView dataGridView, CancellationToken cancellationToken) : base(dataGridView, cancellationToken) { _dataGridView = dataGridView; }
 
-        // Pasting into a grid is the same as set_grid_text: tab-separated text filled from the current cell.
-        // SetGridText owns the gating/marshaling, so this just delegates to it.
-        public void PasteNow(string text) => SetGridTextNow(text);
+        // Pasting into a grid is normally the same as set_grid_text: tab-separated text filled from the current
+        // cell. SetGridText owns the gating/marshaling, so that case just delegates to it.
+        public void PasteNow(string text)
+        {
+            if (Control.FindForm() is EditUI.PasteDlg pasteDlg)
+            {
+                // PasteDlg resolves what is pasted against the background proteome, so it pastes its own way
+                pasteDlg.PasteIntoGrid(text);
+                return;
+            }
+            SetGridTextNow(text);
+        }
 
         public void SelectAllNow() => _dataGridView.SelectAll();
         public DataGridView DataGridView => _dataGridView;
@@ -2095,8 +2270,77 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Converts any bare CR or LF to CRLF -- the line ending a multi-line TextBox uses for Enter.
+
         public static string NormalizeNewlines(string value) =>
             value == null ? null : Regex.Replace(value, @"\r\n?|\n", "\r\n");
+
+        // The graph rectangle a zoom_graph_to / click_graph value carries, in DATA coordinates. A typed
+        // caller passes the SkylineTool.Rectangle itself; over the wire it is the four-element JSON array
+        // [left, top, right, bottom], or that text through a string-valued parameter.
+        public static Rectangle ToRectangle(object value)
+        {
+            if (value is Rectangle rectangle)
+                return rectangle;
+
+            var edges = new List<double>();
+            if (value is string text)
+            {
+                foreach (var part in text.Trim().Trim('[', ']').Split(','))
+                {
+                    if (!TryConvertToDouble(part, out var edge))
+                    {
+                        edges.Clear();
+                        break;
+                    }
+                    edges.Add(edge);
+                }
+            }
+            else if (value is System.Collections.IEnumerable sequence)
+            {
+                foreach (var item in sequence)
+                {
+                    if (!TryConvertToDouble(item, out var edge))
+                    {
+                        edges.Clear();
+                        break;
+                    }
+                    edges.Add(edge);
+                }
+            }
+            if (edges.Count == 4)
+            {
+                return new Rectangle
+                {
+                    Left = edges[0], Top = edges[1], Right = edges[2], Bottom = edges[3]
+                };
+            }
+            throw new ArgumentException(new LlmInstruction(
+                @"This action needs a four-element [left, top, right, bottom] array of graph data coordinates. The gesture goes down at left/top and up at right/bottom, so equal corners are a single click."));
+        }
+
+        // A value as a number, or false when it is not one, so that bad input ends at the instruction above
+        // rather than as a FormatException. Convert.ToDouble alone will not do: it throws for text that is
+        // not a number, and reads a null as 0 without complaint.
+        private static bool TryConvertToDouble(object value, out double result)
+        {
+            result = 0;
+            if (value == null)
+                return false;
+            if (value is string text)
+                return double.TryParse(text.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out result);
+            // A JSON null arrives as a token that converts to 0 quietly, but renders as empty text.
+            if (string.IsNullOrEmpty(value.ToString()))
+                return false;
+            try
+            {
+                result = Convert.ToDouble(value, CultureInfo.InvariantCulture);
+                return true;
+            }
+            catch (Exception e) when (e is FormatException || e is InvalidCastException || e is OverflowException)
+            {
+                return false;
+            }
+        }
 
         // The [column, row] a set_current_cell_address value carries: a two-element integer array. An
         // in-process caller passes new[] { column, row }; over the wire it is the JSON array [column, row]

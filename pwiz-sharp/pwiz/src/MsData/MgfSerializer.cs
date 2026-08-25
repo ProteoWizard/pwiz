@@ -382,9 +382,15 @@ public sealed class MgfSpectrumList : SpectrumListBase
     public IReadOnlyList<Spectrum> Spectra => _spectra;
 
     /// <summary>Append a spectrum and register its TITLE in the lookup map.</summary>
+    /// <remarks>
+    /// cpp repairs the peak order on the way out of SpectrumList_MGF::spectrum, which re-reads
+    /// from the file each time; this list is parsed once and then only indexed into, so the
+    /// equivalent point is here - before any caller can hold the instance.
+    /// </remarks>
     public void Add(Spectrum spec)
     {
         ArgumentNullException.ThrowIfNull(spec);
+        EnsureMzAscending(spec);
         int index = _spectra.Count;
         _spectra.Add(spec);
 
@@ -410,6 +416,11 @@ public sealed class MgfSpectrumList : SpectrumListBase
     public override SpectrumIdentity SpectrumIdentity(int index) => _spectra[index];
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Hands back the cached instance as-is. The peak-order repair happens once, as the list is
+    /// built - doing it here instead would mutate an object earlier callers still hold, and two
+    /// threads could interleave their permutations of the same arrays.
+    /// </remarks>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false) => _spectra[index];
 
     /// <inheritdoc/>

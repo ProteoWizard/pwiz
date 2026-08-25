@@ -17,7 +17,7 @@ namespace Pwiz.Data.MsData.Readers;
 public sealed class Mz5ReaderAdapter : IReader
 {
     /// <inheritdoc/>
-    public string TypeName => "mz5";
+    public string TypeName => "MZ5";
 
     /// <inheritdoc/>
     public CVID CvType => CVID.MS_mz5_format;

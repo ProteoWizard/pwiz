@@ -40,7 +40,13 @@ public static class SpectrumListBtdx
         while (xr.Read())
         {
             if (xr.NodeType == XmlNodeType.Element && xr.LocalName == "cmpd")
-                list.Spectra.Add(ReadCompound(xr, list.Spectra.Count));
+            {
+                // cpp repairs the peak order on the way out of SpectrumList_BTDX::spectrum; this
+                // list is built once and then only indexed into, so the equivalent point is here.
+                var spectrum = ReadCompound(xr, list.Spectra.Count);
+                list.EnsureMzAscending(spectrum);
+                list.Spectra.Add(spectrum);
+            }
         }
     }
 

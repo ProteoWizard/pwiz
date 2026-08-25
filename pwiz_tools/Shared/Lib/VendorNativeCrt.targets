@@ -17,7 +17,16 @@
 
        This file sits next to the DLLs it copies, so it needs no root property - importers just
        point at it. x64 only: the net8 build has no x86 leg.
-       Keep in sync with Jamroot.jam .msvcrt-x64. -->
+       Keep in sync with Jamroot.jam .msvcrt-x64.
+
+       A native DLL that lives in a SUBFOLDER of the output needs its own copy - the one in the
+       output root does not cover it. .NET loads a native library given a full path with
+       LOAD_WITH_ALTERED_SEARCH_PATH, and that flag replaces the application directory in the
+       search order with the directory of the DLL being loaded. So a plugin folder is searched
+       and the root, CRT and all, is not. That is why Sciex's wiff2/SQLite.Interop.dll failed
+       with ERROR_MOD_NOT_FOUND in the container while every native DLL sitting in the root
+       loaded fine; the wiff2 staging targets copy @(VendorNativeCrtFile) in beside it. Any
+       future plugin subfolder holding a native DLL needs the same treatment. -->
 
   <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
     <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC110.CRT\x64\msvcp110.dll" />
@@ -75,6 +84,24 @@
   <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
     <None Include="@(VendorNativeCrtFile)"
           Link="%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false" />
+  </ItemGroup>
+
+  <!-- The subfolder rule above, applied to runtimes\win-x64\native. HDF.PInvoke ships hdf5.dll
+       and hdf5_hl.dll as NuGet native assets, so they land there rather than in the output root,
+       and the .deps.json native probing path means that is where the runtime LoadLibrary's them
+       from - with LOAD_WITH_ALTERED_SEARCH_PATH, so the CRT in the root is not on the search
+       path. hdf5.dll imports VCRUNTIME140.dll and the UCRT apisets directly (dumped from the
+       staged binary, not assumed), so on a container without the redistributable it fails with
+       ERROR_MOD_NOT_FOUND and mzMLb reads die inside H5DLLImporter's static constructor.
+       Observed as TestImportFullScanNarrowScanWindows failing only on the Docker workers.
+
+       Unconditional because every importer of this file transitively references pwiz-sharp's
+       MsData.csproj, which is what brings HDF.PInvoke in - so all of them have the folder. -->
+  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+    <None Include="@(VendorNativeCrtFile)"
+          Link="runtimes\win-x64\native\%(Filename)%(Extension)"
           CopyToOutputDirectory="PreserveNewest"
           Visible="false" />
   </ItemGroup>

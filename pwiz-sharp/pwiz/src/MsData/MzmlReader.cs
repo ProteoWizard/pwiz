@@ -41,6 +41,23 @@ public sealed class MzmlReader
     public IExternalBinarySource? ExternalBinarySource { get; set; }
 
     /// <summary>
+    /// When false, the eager read leaves peak order exactly as the file stores it instead of
+    /// repairing non-ascending m/z (see
+    /// <see cref="Spectra.SpectrumListBase.EnsureMzAscendingThroughout"/>). Defaults to true, which
+    /// is what every consumer wants and what cpp does inside <c>SpectrumList_mzML::spectrum</c>.
+    /// </summary>
+    /// <remarks>
+    /// The one caller that wants it off is the vendor-reader test harness reading a golden
+    /// reference mzML. That comparison asks "does the vendor reader emit this file?", so the
+    /// reference has to be compared as stored - normalizing it both hides a legitimately
+    /// transition-ordered reference (SIM-as-spectra writes peaks in transition order, and
+    /// <c>hasNonMzOrderingAxis</c> deliberately does not exempt SIM) and costs the test the
+    /// ability to notice a vendor reader that started sorting when the reference says it should
+    /// not.
+    /// </remarks>
+    public bool RepairPeakOrder { get; set; } = true;
+
+    /// <summary>
     /// When true, <see cref="ReadSpectrumList"/> skips the spectrum bodies — it
     /// records the spectrumList's <c>count</c> + <c>defaultDataProcessingRef</c>
     /// attributes but leaves <see cref="MSData.Run"/>.<c>SpectrumList</c> unset.
@@ -540,6 +557,11 @@ public sealed class MzmlReader
             else r.Read();
         }
         msd.Run.SpectrumList = list;
+        // Repair peak order here rather than in the adapters, so direct callers of this reader
+        // get it too. See the note in MzxmlReader. In LazyMode this list is empty and the call
+        // is a no-op; the lazy SpectrumList_Mzml repairs per spectrum instead.
+        if (RepairPeakOrder)
+            Spectra.SpectrumListBase.EnsureMzAscendingThroughout(list);
         r.Read();
     }
 
