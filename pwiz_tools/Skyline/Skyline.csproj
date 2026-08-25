@@ -634,7 +634,89 @@
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ContentWithTargetPath>
     </ItemGroup>
+
   </Target>
+
+  <!-- Deduplicate the manifest file list by deployed path, immediately before the manifest is
+       written. This is the only interception point that works: the duplicates do not come from
+       one list but from several that ResolveManifestFiles unions together (the tool trees'
+       Content, reference copy-local assemblies, RID-specific native assets), so deduping any one
+       contributor leaves the rest.
+
+       AfterTargets on the target that COMPUTES the list, not BeforeTargets on the one that
+       consumes it: MSBuild runs a target's BeforeTargets hooks before its DependsOnTargets, so
+       hooking BeforeTargets="GenerateApplicationManifest" deduped the list and then watched
+       _DeploymentComputeClickOnceManifestInfo rebuild it from scratch - the target ran, reported
+       the right count, and changed nothing in the manifest. -->
+  <Target Name="DedupeClickOnceManifestFiles"
+          Condition="'$(PublishProtocol)' == 'ClickOnce' And '$(TargetFramework)' == 'net8.0-windows'"
+          AfterTargets="_DeploymentComputeClickOnceManifestInfo">
+    <!-- Both lists become <file> elements. A launcher-based .NET deployment emits almost nothing
+         as <dependentAssembly> (this manifest has two), so a managed assembly appearing in both
+         Dependencies and Files is written twice and invalidates the manifest. Dedupe Dependencies
+         first, then Files against them, so assemblies stay assemblies and the redundant plain-file
+         entry is the one dropped. -->
+    <DedupeByTargetPath Items="@(_DeploymentManifestDependencies)">
+      <Output TaskParameter="Result" ItemName="_DedupedManifestDeps" />
+    </DedupeByTargetPath>
+    <DedupeByTargetPath Items="@(_DeploymentManifestFiles)" Seed="@(_DedupedManifestDeps)">
+      <Output TaskParameter="Result" ItemName="_DedupedManifestFiles" />
+    </DedupeByTargetPath>
+    <ItemGroup>
+      <_DeploymentManifestDependencies Remove="@(_DeploymentManifestDependencies)" />
+      <_DeploymentManifestDependencies Include="@(_DedupedManifestDeps)" />
+      <_DeploymentManifestFiles Remove="@(_DeploymentManifestFiles)" />
+      <_DeploymentManifestFiles Include="@(_DedupedManifestFiles)" />
+    </ItemGroup>
+    <Message Importance="high"
+             Text="ClickOnce manifest deduped by deployed path: @(_DedupedManifestDeps->Count()) dependencies + @(_DedupedManifestFiles->Count()) files" />
+  </Target>
+
+  <!-- Deduplicate the ClickOnce content list by deployed path.
+
+       Skyline flattens the whole output tree of each bundled tool (msconvert, bullseye-sharp,
+       BlibBuild/BlibFilter) next to itself, and those trees each carry their own copy of the
+       shared vendor payload, so ~100 files are contributed more than once at the same deployed
+       path. A build tolerates it - the copies just overwrite - but ClickOnce writes one <file>
+       element per contribution, and the sxs parser REJECTS a manifest that names the same file
+       twice. The deployment then builds, signs and uploads perfectly and fails at install with
+       "the manifest may not be valid or the file could not be opened" (HRESULT 0x80070C89,
+       reported at line 0 column 0, which makes it look like a transport problem rather than a
+       content one).
+
+       Dropping the extra contributions is safe here because every colliding deployed path was
+       verified byte-identical across its sources; see the note on
+       ErrorOnDuplicatePublishOutputFiles in ClickOnceProfile.pubxml, which suppresses the SDK's
+       parallel complaint about the same collisions. That check is worth re-running if the tool
+       trees change - a genuinely different file at a colliding path would now lose silently. -->
+  <UsingTask TaskName="DedupeByTargetPath" TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Items ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <!-- Keys already claimed by another list. Lets the two manifest lists be deduped against
+           each other, not just within themselves. -->
+      <Seed ParameterType="Microsoft.Build.Framework.ITaskItem[]" />
+      <Result ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        var seen = new System.Collections.Generic.HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+        System.Func<Microsoft.Build.Framework.ITaskItem, string> key = item =>
+        {
+            var k = item.GetMetadata("TargetPath");
+            if (string.IsNullOrEmpty(k)) { k = System.IO.Path.GetFileName(item.ItemSpec); }
+            return k;
+        };
+        if (Seed != null) { foreach (var s in Seed) { seen.Add(key(s)); } }
+        var kept = new System.Collections.Generic.List<Microsoft.Build.Framework.ITaskItem>();
+        foreach (var item in Items)
+        {
+            if (seen.Add(key(item))) { kept.Add(item); }
+        }
+        Result = kept.ToArray();
+      ]]></Code>
+    </Task>
+  </UsingTask>
 
   <!-- Debug symbols in the deployment. ClickOnce ships neither the app's own .pdb nor any
        reference .pdb unless a PublishFile entry says to, which is why the legacy csproj listed
