@@ -403,7 +403,19 @@ namespace pwiz.Skyline.Util
             // extraction that happened to reach full length, would both be skipped forever, since
             // nothing here ever repairs the install directory. The archive carries a CRC for
             // exactly this comparison, and reading the file takes no write lock on it.
-            return GetFileCrc(destination) == entry.Crc;
+            // A file that cannot be read is not a file that can be called already extracted. Reading
+            // takes no write lock, but it still fails when something else holds the file exclusively -
+            // which is the very situation this extraction path exists to survive. Answering "not
+            // extracted" sends it down the normal extraction route, which reports a locked file
+            // properly, instead of aborting the whole install from a check that was only an optimization.
+            try
+            {
+                return GetFileCrc(destination) == entry.Crc;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         private static int GetFileCrc(string path)

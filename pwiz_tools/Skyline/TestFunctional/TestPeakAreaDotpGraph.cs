@@ -255,10 +255,18 @@ namespace pwiz.SkylineTestFunctional
                 // Wait for the pane to exist as part of the condition. A split graph adds its second
                 // pane as the selection is applied, and indexing ahead of that throws out of the
                 // predicate - WaitForConditionUI does not catch, so it hard-fails instead of waiting.
-                var panes = SkylineWindow.GraphPeakArea.GraphControl.MasterPane.PaneList;
+                // Same reasoning for the graph itself and for the cast: the graph may not be shown
+                // yet, and a pane at this index may briefly be some other pane type while the split
+                // is applied. Both throw out of the predicate rather than waiting, so both are
+                // conditions to wait ON, not assumptions to make.
+                var graphPeakArea = SkylineWindow.GraphPeakArea;
+                if (graphPeakArea == null)
+                    return false;
+                var panes = graphPeakArea.GraphControl.MasterPane.PaneList;
                 if (paneIndex >= panes.Count)
                     return false;
-                var pane = (AreaReplicateGraphPane) panes[paneIndex];
+                if (!(panes[paneIndex] is AreaReplicateGraphPane pane))
+                    return false;
                 var selected = SkylineWindow.SequenceTree.GetNodeOfType<TransitionGroupTreeNode>()?.DocNode;
                 return selected != null && pane.ParentGroupNode != null &&
                        ReferenceEquals(pane.ParentGroupNode.TransitionGroup, selected.TransitionGroup);

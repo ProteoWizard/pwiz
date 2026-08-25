@@ -232,7 +232,8 @@ namespace pwiz.Common.SystemUtil
             // it is deleted or replaced, which is what an overwriting unzip does. Access-denied has
             // innocent causes too (a read-only file, an ACL), but those name no locking process and
             // fall through below with the original exception intact.
-            if (!(x is IOException { HResult: ERROR_SHARING_VIOLATION }) && !(x is UnauthorizedAccessException))
+            bool isSharingViolation = x is IOException { HResult: ERROR_SHARING_VIOLATION };
+            if (!isSharingViolation && !(x is UnauthorizedAccessException))
                 return x;
 
             var quoted = Regex.Matches(x.Message, "'([^']+)'")
@@ -251,6 +252,14 @@ namespace pwiz.Common.SystemUtil
                 string lockedFilePath = ResolveLockedPath(lockedName, dirPath);
                 if (lockedFilePath == null)
                 {
+                    // Only a sharing violation is proof that a lock existed. Access-denied says
+                    // nothing of the kind - a read-only file, an ACL, or a path that is a directory
+                    // all arrive here - so reporting one as "locked but since deleted" invents a
+                    // lock that was never held and sends the reader after a process that never
+                    // existed. Nothing resolved and nothing to add, so keep what actually happened.
+                    if (!isSharingViolation)
+                        return x;
+
                     // It was locked at the time of the failure, but is gone now
                     var searchedDir = dirPath ?? Path.GetDirectoryName(lockedName);
                     return new IOException(

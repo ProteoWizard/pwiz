@@ -597,8 +597,19 @@ namespace pwiz.SkylineTest
                 }
             }
 
-            // Unlocked now, so there is no locking process to name and the original must survive
-            Assert.AreSame(accessDenied, FileLockingProcessFinder.ToFileLockingException(accessDenied, null));
+            // Unlocked by us now, so nothing of OURS holds it and the original should survive
+            // untouched. Not asserted as identity though: this asks the Restart Manager about a file
+            // on a shared machine, where a scanner or an indexer may legitimately be holding it for a
+            // moment - and naming that holder would be the finder working correctly, not failing.
+            // Asserting identity here would make the test fail on other software's timing.
+            var whenUnlocked = FileLockingProcessFinder.ToFileLockingException(accessDenied, null);
+            if (!ReferenceEquals(accessDenied, whenUnlocked))
+            {
+                AssertEx.IsFalse(whenUnlocked.Message.Contains(
+                        MessageResources.FileLockingProcessFinder_ToFileLockingException_this_process),
+                    TextUtil.LineSeparate(@"A file this process had already closed was reported as locked by it.",
+                        whenUnlocked.Message));
+            }
         }
 
         private static void VerifyDeleteDirectoryWithFileLockingDetails(string dirPath, string lockedFile)

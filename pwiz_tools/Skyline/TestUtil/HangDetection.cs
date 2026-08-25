@@ -84,7 +84,18 @@ namespace pwiz.SkylineTestUtil
             }
             catch (ThreadInterruptedException)
             {
-                Console.Out.WriteLine(TextUtil.LineSeparate(@"*** Hang detected.", TryGetThreadDump()));
+                try
+                {
+                    Console.Out.WriteLine(TextUtil.LineSeparate(@"*** Hang detected.", TryGetThreadDump()));
+                }
+                catch (Exception ex)
+                {
+                    // TryGetThreadDump swallows its own failures, but it still has to START a thread
+                    // to bound them - and this runs on a process that is already hung, which is
+                    // exactly where that fails. Letting it throw here would replace the hang being
+                    // reported with an unrelated exception.
+                    Console.Out.WriteLine(@"Unable to get thread dump: {0}", ex);
+                }
 
                 try
                 {
@@ -290,10 +301,15 @@ namespace pwiz.SkylineTestUtil
             };
             dumpThread.Start();
 
+            // Deliberately NOT describing the runtime on this path. Doing so needs another attach,
+            // and the attach is what just proved too slow to finish - so asking again would spend
+            // the bound a second time, per timeout, which is the cost this bound exists to stop.
             if (!dumpThread.Join(THREAD_DUMP_TIMEOUT_MILLIS))
-                return GetCallingThreadStack(string.Format(@"gave up after {0} ms", THREAD_DUMP_TIMEOUT_MILLIS));
+                return GetCallingThreadStack(string.Format(@"gave up after {0} ms", THREAD_DUMP_TIMEOUT_MILLIS), false);
 
-            return threadDump ?? GetCallingThreadStack(failureReason);
+            // A dump that failed FAST can afford the metadata read: whatever went wrong, attaching
+            // itself returned, so describing the CLR and DAC is what says why to whoever reads the log.
+            return threadDump ?? GetCallingThreadStack(failureReason, true);
         }
 
         /// <summary>
@@ -303,16 +319,20 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         /// <param name="reason">Why the full dump was unavailable, reported above the stack so a
         /// degraded diagnostic is never mistaken for the real one.</param>
-        public static string GetCallingThreadStack(string reason)
+        /// <param name="describeRuntime">Whether to add what ClrMD can see of this machine's runtime.
+        /// It costs another attach, so the caller decides: worth it when the dump failed quickly,
+        /// never when it failed by running out of time.</param>
+        public static string GetCallingThreadStack(string reason, bool describeRuntime = true)
         {
             var stackLines = new List<string>
             {
-                string.Format(@"*** Thread dump unavailable: {0}", reason),
-                DescribeAttachEnvironment(),
-                @"*** Calling thread stack:",
-                new StackTrace(1, true).ToString().TrimEnd(),
-                @"*** End of calling thread stack"
+                string.Format(@"*** Thread dump unavailable: {0}", reason)
             };
+            if (describeRuntime)
+                stackLines.Add(DescribeAttachEnvironment());
+            stackLines.Add(@"*** Calling thread stack:");
+            stackLines.Add(new StackTrace(1, true).ToString().TrimEnd());
+            stackLines.Add(@"*** End of calling thread stack");
             return TextUtil.LineSeparate(stackLines);
         }
 

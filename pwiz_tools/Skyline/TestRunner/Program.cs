@@ -1132,10 +1132,15 @@ namespace TestRunner
             /// <summary>
             /// The culture name the CLIENT ends up running under, which is what its tools directory
             /// gets named after.
-            /// <para>It is NOT always the string that was queued. .NET silently normalizes deprecated
-            /// names - "zh-CHS" becomes "zh-Hans" - so reserving the queued string locked a directory
-            /// that culture never writes and left the one it does write unprotected. Both spellings
-            /// were found side by side in a staging directory, which is what that looks like on disk.
+            /// <para>It is not always the string that was queued: where a runtime normalizes a
+            /// deprecated culture name, reserving the queued spelling locks a directory that culture
+            /// never writes and leaves the one it does write unprotected. Both spellings were found
+            /// side by side in a staging directory, which is what that looks like on disk.</para>
+            /// <para>NOTE, measured 2026-08-25: .NET Framework 4.8 does NOT do this - "zh-CHS"
+            /// constructs and round-trips as "zh-CHS". So on net472 this resolves to the queued
+            /// string and the call is a no-op. It is kept because it is cheap and because the
+            /// normalization it guards against is real on .NET, which the port moves to; whoever
+            /// works the net8 line should confirm the spelling there rather than trust this note.
             /// </para>
             /// <para>Falls back to the string as queued for a name CultureInfo does not recognize, so
             /// an unusable language still fails the test that asked for it rather than throwing while

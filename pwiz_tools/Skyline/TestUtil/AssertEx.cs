@@ -1605,6 +1605,13 @@ namespace pwiz.SkylineTestUtil
             return null;
         }
 
+        /// <summary>
+        /// How long to let the background loaders finish before comparing two documents. Well above
+        /// what a library load takes when the machine is not busy, because expiring here is silent -
+        /// see the call site.
+        /// </summary>
+        private const int LIBRARY_LOAD_WAIT_MILLIS = 60 * 1000;
+
         private static SrmDocument ForceDocumentLoad(SrmDocument target, string testDir)
         {
             string xmlSaved = null;
@@ -1633,7 +1640,15 @@ namespace pwiz.SkylineTestUtil
                     // PeptideLibraries compared unequal purely on load state, in either direction.
                     // Wait on the background loaders too, as DocLoadLibraryTest does for the same
                     // reason. Was about 6% of RefineConvertToSmallMoleculesTest runs.
-                    docContainer.WaitForProcessing();
+                    //
+                    // Explicitly generous, because ResultsTestDocumentContainer.WAIT_TIME is a flat
+                    // 5 seconds with no Debug multiplier, and every caller of this method sits inside
+                    // a bare "catch { retry++; }". A wait that expires there does not fail the test -
+                    // it is swallowed, and the final attempt compares the documents WITHOUT forcing
+                    // the load, which is the race this call exists to close. So too short a wait here
+                    // does not make the fix slow, it silently removes it on exactly the loaded
+                    // machines where the race shows up.
+                    docContainer.WaitForProcessing(LIBRARY_LOAD_WAIT_MILLIS);
                     docContainer.AssertComplete();
                     return docContainer.Document;
                 }
