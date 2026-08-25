@@ -968,6 +968,14 @@ namespace TestRunner
         private const string NORMAL_WORKER_NAME = "docker_worker";
 
         /// <summary>
+        /// How long to let the host worker exit on its own before generating the coverage report.
+        /// Under coverage that process is dotCover, which writes its snapshot on exit, so this is
+        /// the difference between a report and an empty one. Bounded so a host worker that never
+        /// exits delays the report rather than hanging the run.
+        /// </summary>
+        private const int HOST_WORKER_EXIT_TIMEOUT_MILLIS = 60 * 1000;
+
+        /// <summary>
         /// The name a container worker will be launched under. Worked out separately from launching it
         /// so that its place in the pool can be held before it exists - see ParallelWorkerInfo.Reserved.
         /// The timestamp voids conflicts between this and any previous invocation.
@@ -1454,7 +1462,12 @@ namespace TestRunner
                 // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
                 Kernel32Test.SetConsoleCtrlHandler(c =>
                 {
-                    RunTests.KillParallelWorkers(HostWorker, workerNames);
+                    // The run tag matters most here. workerNames is only committed once a container
+                    // CONNECTS, so one that was launched and has not connected yet is running and
+                    // absent from that list - and this handler kills the process immediately after,
+                    // so neither Dispose nor ProcessExit gets a turn. Matching on the tag reaches
+                    // those containers, where names alone would leave them behind.
+                    RunTests.KillParallelWorkers(HostWorker, workerNames, GetTestRunTimeStamp());
                     cts.Cancel();
                     Process.GetCurrentProcess().Kill();
                     return true;
@@ -1502,6 +1515,7 @@ namespace TestRunner
                         catch (Exception e)
                         {
                             Console.Error.WriteLine("Error launching Docker workers: " + e);
+                            RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                             Environment.Exit(1);
                         }
                     });
@@ -1542,6 +1556,7 @@ namespace TestRunner
                     catch (Exception e)
                     {
                         Console.Error.WriteLine("Error running worker wait thread: " + e);
+                        RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                         Environment.Exit(1);
                     }
                 }, TaskCreationOptions.LongRunning));
@@ -1568,6 +1583,7 @@ namespace TestRunner
                             Console.Error.WriteLine("Be sure to check BOTH public and private options if prompted to \"Allow TestRunner to communicate on these networks\".");
                             Console.Error.WriteLine("See https://skyline.ms/wiki/home/development/page.view?name=Troubleshooting_parallel_mode for troubleshooting tips.\r\n");
 
+                            RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                             Environment.Exit(1);
                         }
                         continue;
@@ -1743,6 +1759,7 @@ namespace TestRunner
                         catch (Exception e)
                         {
                             Console.Error.WriteLine("Error in worker handling thread: " + e);
+                            RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                             Environment.Exit(1);
                         }
                     }, TaskCreationOptions.LongRunning));
@@ -1830,6 +1847,7 @@ namespace TestRunner
                         catch (Exception e)
                         {
                             Console.Error.WriteLine("Error listening for worker heartbeat: " + e);
+                            RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                             Environment.Exit(1);
                         }
                     }, TaskCreationOptions.LongRunning);
@@ -1845,7 +1863,21 @@ namespace TestRunner
                 // teardown kills it - so generating the report after the scope closes reports on a
                 // process that was just killed, and every parallel coverage run fails.
                 if (coverageSnapshots.Any())
+                {
+                    // Being inside the scope is not enough on its own. dotCover writes its snapshot
+                    // when the profiled process EXITS, and the server task returns as soon as it has
+                    // sent the quit message - so the tasks completing does not mean the host worker
+                    // is gone. Without this wait the report is generated before the snapshot exists,
+                    // and teardown then kills the process that was about to write it.
+                    if (HostWorker != null && !HostWorker.HasExited &&
+                        !HostWorker.WaitForExit(HOST_WORKER_EXIT_TIMEOUT_MILLIS))
+                    {
+                        Console.WriteLine(
+                            $"Host worker did not exit within {HOST_WORKER_EXIT_TIMEOUT_MILLIS} ms; coverage may be incomplete.");
+                    }
+
                     GenerateCoverageReport(commandLineArgs, coverageSnapshots);
+                }
             }
 
             // Every worker has finished, so anything still queued is work nobody ever ran - most likely

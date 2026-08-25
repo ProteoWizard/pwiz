@@ -1446,9 +1446,19 @@ namespace TestRunnerLib
         public static string ALWAYS_UP_RUNNER_REPO => Path.Combine(PathEx.GetDownloadsPath(), @"AlwaysUpRunner-master");
         public static string ALWAYS_UP_SERVICE_EXE => Path.Combine(ALWAYS_UP_RUNNER_REPO, @"AlwaysUpService.exe");
 
+        /// <summary>
+        /// How long to wait for "docker ps" when listing workers. Bounded because every caller is
+        /// somewhere a hang is unacceptable: the end of a run, a ProcessExit handler the runtime
+        /// gives about two seconds, and SkylineTester's UI thread at the start of every run. A
+        /// daemon that is starting or wedged makes the CLI block rather than fail, and none of
+        /// those callers can afford to wait for it.
+        /// </summary>
+        private const int DOCKER_LIST_TIMEOUT_MILLIS = 10 * 1000;
+
         public static IEnumerable<string> GetDockerWorkerNames()
         {
-            string dockerPsOutput = RunCommand("docker", "ps --format \"{{.Names}}\" -f \"ancestor=chambm/always_up_runner\"", IS_DOCKER_RUNNING_MESSAGE);
+            string dockerPsOutput = RunCommandBounded("docker", "ps --format \"{{.Names}}\" -f \"ancestor=chambm/always_up_runner\"",
+                IS_DOCKER_RUNNING_MESSAGE, DOCKER_LIST_TIMEOUT_MILLIS);
             foreach(var dockerWorkerName in dockerPsOutput.Split(new [] { Environment.NewLine }, StringSplitOptions.None))
                 yield return dockerWorkerName;
         }
@@ -1501,6 +1511,40 @@ namespace TestRunnerLib
                 return; // No containers to kill
 
             KillWorkers(namesToKill.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
+        }
+
+        /// <summary>
+        /// Runs a command and gives up after <paramref name="timeoutMillis"/> rather than waiting
+        /// forever. For callers on a path where blocking is worse than not knowing the answer.
+        /// </summary>
+        private static string RunCommandBounded(string command, string args, string message, int timeoutMillis)
+        {
+            var psi = new ProcessStartInfo(command, args)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            var p = Process.Start(psi);
+            if (p == null)
+                throw new InvalidOperationException(message);
+
+            var output = p.StandardOutput.ReadToEndAsync();
+            if (!p.WaitForExit(timeoutMillis))
+            {
+                // Leave it running rather than adding another wait to a path that is already over
+                // budget. The caller gets an exception, which every one of them treats as "docker
+                // could not answer" and carries on.
+                throw new InvalidOperationException(
+                    string.Format(@"{0} ('{1} {2}' did not finish within {3} ms)", message, command, args, timeoutMillis));
+            }
+
+            if (p.ExitCode != 0)
+                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'\"{command}\" {args}' returned an error;");
+
+            return output.Result;
         }
 
         /// <summary>
@@ -1569,22 +1613,6 @@ namespace TestRunnerLib
         }
 
         /// <summary>
-        /// Worker containers running that do NOT belong to the run tagged <paramref name="runTag"/> -
-        /// leftovers from a run that was killed outright, which is the one exit no teardown inside the
-        /// process can cover. They hold the mounted checkout open and wedge a later build, so a caller
-        /// with a user to ask should offer to stop them.
-        /// </summary>
-        public static IList<string> GetOrphanedWorkerNames(string runTag)
-        {
-            if (string.IsNullOrEmpty(runTag))
-                return new List<string>();
-
-            return GetRunningWorkerNames()
-                .Where(name => name.IndexOf(runTag, StringComparison.OrdinalIgnoreCase) < 0)
-                .ToList();
-        }
-
-        /// <summary>
         /// Kills the parallel workers when disposed, so they are torn down on every exit from a
         /// parallel run.
         /// <para>A worker is a container, and a container outlives the run that started it unless
@@ -1600,6 +1628,23 @@ namespace TestRunnerLib
             private readonly string _runTag;
             private int _torndown;
 
+            /// <summary>
+            /// The scope currently in force, for <see cref="TearDownNow"/>.
+            /// </summary>
+            private static ParallelWorkerTeardown _current;
+
+            /// <summary>
+            /// Tears down the workers of the run in progress, for code about to call
+            /// <see cref="Environment.Exit"/> - which runs no finally block, and whose ProcessExit
+            /// handlers .NET Framework cuts off after about two seconds. Docker cannot be relied on
+            /// to answer in that budget, so an exit that means to clean up has to say so here first
+            /// rather than leave it to the runtime.
+            /// </summary>
+            public static void TearDownNow()
+            {
+                _current?.TearDown();
+            }
+
             /// <param name="getHostWorker">Reads the host worker process at teardown time, or null if
             /// there is none. Deferred for the same reason as the names: the host worker has not been
             /// launched yet when this scope is created, so reading it now yields null</param>
@@ -1613,6 +1658,7 @@ namespace TestRunnerLib
                 _getHostWorker = getHostWorker;
                 _getWorkerNames = getWorkerNames;
                 _runTag = runTag;
+                _current = this;
 
                 // Environment.Exit does NOT run finally blocks, and this scope surrounds code that
                 // leaves through several of them - so disposing at the end of the block cannot be the
@@ -1632,6 +1678,7 @@ namespace TestRunnerLib
             {
                 AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
                 TearDown();
+                _current = null;
             }
 
             /// <summary>

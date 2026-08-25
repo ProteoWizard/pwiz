@@ -46,6 +46,12 @@ namespace SkylineTester
                 return;
             }
 
+            // Only on the path a person started. Run(TabBase) is also reached unattended -
+            // SkylineNightly launching a .skytr, the run-again timer, and the restart after a
+            // failure - and a modal prompt on any of those hangs the pass with nobody to answer
+            // it. A dialog is not an exception, so no catch around the detection would help.
+            OfferToStopLeftoverWorkers();
+
             Run();
         }
 
@@ -56,8 +62,6 @@ namespace SkylineTester
 
         private void Run(TabBase fromTab)
         {
-            OfferToStopLeftoverWorkers();
-
             commandShell.ClearLog();
 
             // Prepare to start task.
@@ -93,10 +97,14 @@ namespace SkylineTester
         /// <summary>
         /// Tells the user about worker containers left running by an earlier run, and offers to stop
         /// them before this run starts.
-        /// <para>No run of ours has started yet, so anything running now is a leftover. They are
-        /// invisible to a developer - they are containers, so they are not in the task bar and nothing
-        /// reports them - while holding the mounted checkout open, which wedges a later build with a
-        /// file lock that names vmwp.exe rather than anything recognizable.</para>
+        /// <para>No run of THIS window has started yet, so these belong to something else. Usually
+        /// that is an earlier run of ours stopped before it could clean up, but it can also be a run
+        /// in progress from another checkout on the same machine - containers are listed by image,
+        /// which cannot tell those apart. Hence a prompt rather than a silent kill, and wording that
+        /// does not claim more than that.</para>
+        /// <para>They are invisible to a developer - they are containers, so they are not in the task
+        /// bar and nothing reports them - while holding the mounted checkout open, which wedges a
+        /// later build with a file lock that names vmwp.exe rather than anything recognizable.</para>
         /// <para>This exists because one exit cannot be cleaned up from inside the process that
         /// leaked: stopping a run kills TestRunner outright, which runs no teardown of any kind. The
         /// next run is the first moment anything is in a position to notice, and a person is here to
@@ -121,13 +129,16 @@ namespace SkylineTester
                 return;
 
             var message = string.Join(Environment.NewLine,
-                string.Format("There are {0} worker containers still running that are not associated with this run.",
+                string.Format("There are {0} test worker containers running that this run did not start.",
                     leftovers.Count),
                 string.Empty,
                 string.Join(Environment.NewLine, leftovers),
                 string.Empty,
                 "They are probably left over from an earlier run that was stopped before it could clean",
                 "up. They hold the source directory open and can make a later build fail with a file lock.",
+                string.Empty,
+                "Check that no other test run is using them - they are listed by image, so a run from",
+                "another checkout on this machine would appear here too.",
                 string.Empty,
                 "Stop them now?");
 
