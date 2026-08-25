@@ -50,6 +50,7 @@ namespace pwiz.Common.SystemUtil
         private string _progressMessageWithoutSize; // Base message before download size is appended
         private const int ReadTimeoutMilliseconds = 15000; // timeout per chunk to avoid long hangs when network drops
         private TimeSpan? _requestTimeout;
+        private bool _disposed;
 
         // Per-request state (stored in instance, applied to HttpRequestMessage)
         private string _authHeader;
@@ -63,9 +64,10 @@ namespace pwiz.Common.SystemUtil
         public bool ShowTransferSize { get; set; } = true;
 
         /// <summary>
-        /// Optional request timeout. This property is retained for API compatibility but does not
-        /// affect the underlying HttpClient (which uses infinite timeout). Timeouts are handled
-        /// per-chunk via ReadTimeoutMilliseconds to detect stalled transfers.
+        /// Optional request timeout. Enforced for <see cref="SendRequest"/>-based calls (uploads
+        /// and custom verbs) via a linked cancellation token; download paths detect stalls
+        /// per-chunk via ReadTimeoutMilliseconds instead. Null (the default) means no overall
+        /// timeout, matching the shared HttpClient's infinite timeout.
         /// </summary>
         public TimeSpan? RequestTimeout
         {
@@ -301,9 +303,16 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         private HttpRequestMessage CreateRequest(HttpMethod method, Uri uri)
         {
+            ThrowIfDisposed();
             var request = new HttpRequestMessage(method, uri);
             ApplyHeadersToRequest(request);
             return request;
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(HttpClientWithProgress));
         }
 
         /// <summary>
@@ -470,16 +479,49 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public HttpResponseMessage SendRequest(HttpRequestMessage request)
         {
+            ThrowIfDisposed();
             // Apply per-instance headers and cookies to the request
             ApplyHeadersToRequest(request);
-            
-            var response = WithExceptionHandling(request.RequestUri,
-                () => _sharedHttpClient.SendAsync(request, CancellationToken).Result);
-            
+
+            // Consult the request-level test seam so every verb is mockable, not just GET. The
+            // consult sits outside the exception mapping, like the download path's, so an
+            // exception thrown by a behavior's factory - a simulated HTTP failure or a genuine
+            // test assertion - reaches the caller unmapped.
+            if (TestBehavior != null)
+            {
+                var mockStream = TestBehavior.GetMockResponseStreamFromRequest(request);
+                if (mockStream != null)
+                {
+                    return new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StreamContent(mockStream),
+                        RequestMessage = request
+                    };
+                }
+            }
+
+            var response = WithExceptionHandling(request.RequestUri, () => SendWithTimeout(request));
+
             // Process cookies from response
             ProcessResponseCookies(response, request.RequestUri);
-            
+
             return response;
+        }
+
+        /// <summary>
+        /// Sends a request, enforcing <see cref="RequestTimeout"/> when one is set. The shared
+        /// HttpClient itself uses an infinite timeout, so the per-instance timeout is applied
+        /// with a linked cancellation token. A timeout cancellation is distinguished from user
+        /// cancellation by <see cref="MapHttpException"/> (the progress monitor's token is not
+        /// signaled) and maps to a Timeout failure.
+        /// </summary>
+        private HttpResponseMessage SendWithTimeout(HttpRequestMessage request)
+        {
+            if (_requestTimeout == null)
+                return _sharedHttpClient.SendAsync(request, CancellationToken).Result;
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
+            timeoutCts.CancelAfter(_requestTimeout.Value);
+            return _sharedHttpClient.SendAsync(request, timeoutCts.Token).Result;
         }
 
         /// <summary>
@@ -1146,6 +1188,9 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public void Dispose()
         {
+            // Refuse further requests: a request racing past Dispose would otherwise be sent
+            // without the cleared Authorization header, i.e. unauthenticated to a live server.
+            _disposed = true;
             // Clear per-request state
             _authHeader = null;
             _customHeaders.Clear();

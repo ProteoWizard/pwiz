@@ -1,6 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5) <noreply .at. anthropic.com>
  *
  * Copyright 2009 University of Washington - Seattle, WA
  * 
@@ -33,7 +34,6 @@ using Microsoft.Win32;
 using pwiz.Common;
 using pwiz.ProteowizardWrapper;
 using pwiz.Common.Collections;
-using pwiz.Common.Mock;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -89,11 +89,6 @@ namespace pwiz.Skyline
             {
                 CommonApplicationSettings.FunctionalTest = value;
             }
-        }
-
-        public static HttpMessageHandlerFactory HttpMessageHandlerFactory
-        {
-            get { return CommonApplicationSettings.HttpMessageHandlerFactory; }
         }
 
         // TODO(nicksh): Remove this once intermittent failures in these tests are fixed
