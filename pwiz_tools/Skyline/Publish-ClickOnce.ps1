@@ -111,6 +111,32 @@ if (-not (Test-Path $msbuild)) {
 }
 if (-not (Test-Path $msbuild)) { throw "MSBuild.exe not found under $vsInstall." }
 
+# --- Bootstrapper package staging -----------------------------------------------------
+# setup.exe needs the .NET 8 Desktop Runtime prerequisite, and GenerateBootstrapper resolves both
+# its engine and its packages from a SINGLE root ($(GenerateBootstrapperSdkPath)). No such root
+# exists on disk: the engine (Engine\setup.bin) and the .NET Framework-era packages live under
+# "%ProgramFiles(x86)%\Microsoft SDKs\ClickOnce Bootstrapper\", while the .NET 8 package ships
+# with Visual Studio under MSBuild\Microsoft\VisualStudio\BootstrapperPackages. Point the task at
+# either one alone and it fails - MSB3155 (package not found) or MSB3147 (setup.bin not found).
+# So stage a combined root under obj\. Under 1 MB, and it avoids writing into Program Files.
+$bootstrapperRoot = Join-Path $scriptDir 'obj\clickonce-bootstrapper'
+$legacyRoot = Join-Path ${env:ProgramFiles(x86)} 'Microsoft SDKs\ClickOnce Bootstrapper'
+$vsPackages = Join-Path $vsInstall 'MSBuild\Microsoft\VisualStudio\BootstrapperPackages'
+if (-not (Test-Path (Join-Path $legacyRoot 'Engine\setup.bin'))) {
+    throw "ClickOnce bootstrapper engine not found at $legacyRoot\Engine\setup.bin."
+}
+if (-not (Test-Path $vsPackages)) {
+    throw "Visual Studio bootstrapper packages not found at $vsPackages (needed for the .NET 8 Desktop Runtime prerequisite)."
+}
+Write-Host "Staging bootstrapper root at $bootstrapperRoot ..."
+if (Test-Path $bootstrapperRoot) { Remove-Item $bootstrapperRoot -Recurse -Force }
+New-Item -ItemType Directory -Path (Join-Path $bootstrapperRoot 'Packages') -Force | Out-Null
+Copy-Item (Join-Path $legacyRoot 'Engine')  $bootstrapperRoot -Recurse -Force
+Copy-Item (Join-Path $legacyRoot 'Schemas') $bootstrapperRoot -Recurse -Force -ErrorAction SilentlyContinue
+Copy-Item (Join-Path $legacyRoot 'Packages\*') (Join-Path $bootstrapperRoot 'Packages') -Recurse -Force
+# VS packages last so a newer copy of a same-named package wins over the legacy SDK's.
+Copy-Item (Join-Path $vsPackages '*') (Join-Path $bootstrapperRoot 'Packages') -Recurse -Force
+
 # --- Native Hardklor -----------------------------------------------------------------
 # Hardklor.exe is C++ and cannot be built by the .NET SDK, so build.bat builds it in a separate
 # VS MSBuild step and Skyline.csproj deploys it through an Exists()-conditioned Content include.
@@ -130,8 +156,11 @@ if (-not $SkipHardklor) {
 if (Test-Path $publishDir) {
     # ClickOnce keeps one "Application Files\<name>_<version>" folder per published version and
     # never prunes; wipe so what is uploaded is exactly what was just built.
+    # Clear the CONTENTS, not the folder. Removing the folder itself fails with "being used by
+    # another process" whenever anything has it as its working directory - a shell or an Explorer
+    # window left open there is enough - and the publish would then abort for no real reason.
     Write-Host "Clearing $publishDir ..."
-    Remove-Item $publishDir -Recurse -Force
+    Get-ChildItem $publishDir -Force | Remove-Item -Recurse -Force
 }
 
 # TargetFramework has to be on the command line even though the profile also sets it: Skyline
@@ -145,7 +174,9 @@ $msbuildArgs = @(
     "-p:Configuration=$Configuration",
     '-nologo',
     '-v:minimal',
-    '-nodeReuse:false'
+    '-nodeReuse:false',
+    # Trailing separator matters: the task appends "Engine\" and "Packages\" to this.
+    "-p:GenerateBootstrapperSdkPath=$bootstrapperRoot\"
 )
 if ($SkipBuild) { $msbuildArgs += '-p:NoBuild=true' }
 if ($AgreeToVendorLicenses) { $msbuildArgs += '-p:IAgreeToVendorLicenses=true' }
@@ -195,6 +226,48 @@ if ($application) {
     Write-Host "  identity  $($id.name) $($id.version)"
     Write-Host "  token     $($id.publicKeyToken)   arch $($id.processorArchitecture)   culture $($id.language)"
     Write-Host "  provider  $provider"
+    # Install page. Visual Studio generates one of these (publish.htm) as part of ITS publish step;
+    # MSBuild does not, so a command-line publish leaves the folder as a bare directory listing and
+    # there is nothing obvious to click. Written here so the URL behaves the way the existing
+    # previews do. Values come from the manifest just parsed, so the page cannot drift from it.
+    $product = ([xml](Get-Content $profilePath)).Project.PropertyGroup.ProductName
+    $publisher = ([xml](Get-Content $profilePath)).Project.PropertyGroup.PublisherName
+    $setupName = if (Test-Path (Join-Path $publishDir 'setup.exe')) { 'setup.exe' } else { $application.Name }
+    $html = @"
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>$product</title>
+<style>
+ body { font-family: Segoe UI, sans-serif; margin: 3em auto; max-width: 40em; color: #222; }
+ dt { font-weight: 600; float: left; width: 7em; clear: left; }
+ dd { margin: 0 0 .4em 7em; }
+ .install { display: inline-block; margin: 1.5em 0; padding: .6em 2em; background: #0a5; color: #fff;
+            text-decoration: none; border-radius: 4px; font-size: 1.1em; }
+ .note { color: #555; font-size: .9em; }
+</style>
+</head>
+<body>
+<h1>$product</h1>
+<dl>
+  <dt>Name</dt><dd>$product</dd>
+  <dt>Version</dt><dd>$($id.version)</dd>
+  <dt>Publisher</dt><dd>$publisher</dd>
+</dl>
+<p>Requires the <b>.NET Desktop Runtime 8.0 (x64)</b>. Installing through the button below will
+   install it first if it is missing.</p>
+<p><a class="install" href="$setupName">Install</a></p>
+<p class="note">Already have the .NET 8 Desktop Runtime? You can install straight from
+   <a href="$($application.Name)">$($application.Name)</a>.</p>
+<p class="note">Signed with a self-signed certificate, so Windows will show an unknown publisher
+   warning. This is a preview build of Skyline running on .NET 8.</p>
+</body>
+</html>
+"@
+    $indexPath = Join-Path $publishDir 'index.html'
+    Set-Content -Path $indexPath -Value $html -Encoding UTF8
+    Write-Host "  page      $indexPath"
     Write-Host ''
     Write-Host 'Copy the whole publish folder to the install URL above.'
 } else {
