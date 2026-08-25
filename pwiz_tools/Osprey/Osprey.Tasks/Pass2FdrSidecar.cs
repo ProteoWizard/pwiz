@@ -601,6 +601,16 @@ namespace pwiz.Osprey.Tasks
             // filters unless --perf-stats. A heading alone would not cover this anyway - the
             // step is O(records) and the silence is INSIDE it.
             int restoreIdx = 0;
+            // ONE index and ONE staging buffer for the whole loop, cleared per file rather than
+            // reallocated. At cohort scale both back onto arrays far past the 85 KB Large Object
+            // Heap threshold - a 257-file CHS run stages ~533 K records per file - and the LOH is
+            // swept only on a gen2 collection, so a fresh pair per file left roughly 125 MB of
+            // dead buffers standing each time. Over 257 files that accumulated +24 GB and WAS the
+            // global memory peak of the run (65.2 GB managed), dwarfing the pass-2 work it feeds.
+            // Clear() keeps the capacity, so the steady state is one file's worth of buffer
+            // instead of the whole cohort's, and the loop stops scaling with file count.
+            var byEntryId = new Dictionary<uint, FdrEntry>();
+            var staged = new List<KeyValuePair<FdrEntry, FdrScoreRecord>>();
             using (var progress = new ProgressReporter(
                        string.Format(@"Seeding pass-1 scalars from {0} file(s)", perFileEntries.Count),
                        perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
@@ -616,7 +626,7 @@ namespace pwiz.Osprey.Tasks
                         unreadable.Add(kvp.Key);
                         continue;
                     }
-                    var byEntryId = new Dictionary<uint, FdrEntry>(kvp.Value.Count);
+                    byEntryId.Clear();
                     foreach (var e in kvp.Value)
                         byEntryId[e.EntryId] = e;
 
@@ -626,7 +636,9 @@ namespace pwiz.Osprey.Tasks
                     // file order, so mutating in the callback would leave the entries before the
                     // fault carrying pass-1 values and the rest at reset defaults - a half-seeded
                     // pool that no warning could describe and nothing downstream could detect.
-                    var staged = new List<KeyValuePair<FdrEntry, FdrScoreRecord>>();
+                    // Cleared, not reallocated: the discard contract only requires that nothing
+                    // staged before a fault is APPLIED, which Clear() ahead of each file gives.
+                    staged.Clear();
                     bool ok = FdrScoresSidecar.ReadRecords(
                         pass1Path, FdrScoresSidecar.Pass.FirstPass,
                         rec =>
