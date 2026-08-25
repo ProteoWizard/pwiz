@@ -205,10 +205,26 @@ namespace pwiz.Osprey.Tasks
             }
 
             // 3. Compact each per-file entry list in place.
-            foreach (var kvp in inputs.PerFileEntries)
+            //
+            // Reported: this is the longest silent step on the --task SecondPassFDR path. It
+            // walks every file's whole pre-compaction list - 768 M entries across 257 CHS
+            // files, retaining 137 M - and TrimExcess reallocates each survivor array on the
+            // way out, so at cohort scale it ran 40 s emitting nothing. A memory-bound stage
+            // going quiet for 40 s is indistinguishable from a hung or OOM-killed one, which
+            // is the single thing this stage must never be ambiguous about. Per file rather
+            // than per entry: file count is what the silence scales with.
+            int compactIdx = 0;
+            using (var progress = new ProgressReporter(
+                       string.Format(@"Compacting {0} file(s) to the retained set",
+                                     inputs.PerFileEntries.Count),
+                       inputs.PerFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & BASE_ID_MASK));
-                kvp.Value.TrimExcess();
+                foreach (var kvp in inputs.PerFileEntries)
+                {
+                    progress.Report(++compactIdx);
+                    kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & BASE_ID_MASK));
+                    kvp.Value.TrimExcess();
+                }
             }
             int entriesAfter = 0;
             foreach (var kvp in inputs.PerFileEntries)
