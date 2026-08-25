@@ -1430,7 +1430,7 @@ namespace TestRunner
             // normally; the console control handler installed below only covers outside termination.
             string workerNames = null;
             using (var receiver = new PullSocket())
-            using (new RunTests.ParallelWorkerTeardown(() => HostWorker, () => workerNames))
+            using (new RunTests.ParallelWorkerTeardown(() => HostWorker, () => workerNames, GetTestRunTimeStamp()))
             {
                 // get system-assigned port which will passed to workers with "workerport" parameter
                 int workerPort;
@@ -1771,7 +1771,11 @@ namespace TestRunner
                                     if (commandLineArgs.ArgAsBool("coverage"))
                                     {
                                         Console.WriteLine("Aborting coverage run due to failed worker (coverage from that worker is lost).");
-                                        RunTests.KillParallelWorkers(HostWorker);
+                                        // Scoped to this run: without the names and the tag, this kills
+                                        // every worker container on the machine, including a concurrent
+                                        // run's - and this path then kills the process, so it is the
+                                        // last chance to get the scope right.
+                                        RunTests.KillParallelWorkers(HostWorker, workerNames, GetTestRunTimeStamp());
                                         Process.GetCurrentProcess().Kill();
                                     }
 
@@ -1829,10 +1833,15 @@ namespace TestRunner
                 Console.WriteLine("Waiting for worker tasks to finish.");
                 foreach (var task in tasks)
                     task.Wait();
+
+                Console.WriteLine($"Parallel testing finished in {timer.Elapsed} ({timer.Elapsed.TotalSeconds}s)");
+
+                // Inside the teardown scope on purpose. Under coverage the host worker IS dotCover, and
+                // teardown kills it - so generating the report after the scope closes reports on a
+                // process that was just killed, and every parallel coverage run fails.
+                if (coverageSnapshots.Any())
+                    GenerateCoverageReport(commandLineArgs, coverageSnapshots);
             }
-            Console.WriteLine($"Parallel testing finished in {timer.Elapsed} ({timer.Elapsed.TotalSeconds}s)");
-            if (coverageSnapshots.Any())
-                GenerateCoverageReport(commandLineArgs, coverageSnapshots);
 
             // Every worker has finished, so anything still queued is work nobody ever ran - most likely
             // because the only worker that could have run it went away. Report that rather than passing:

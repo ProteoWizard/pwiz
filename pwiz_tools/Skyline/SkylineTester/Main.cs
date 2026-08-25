@@ -55,7 +55,9 @@ namespace SkylineTester
         }
 
         private void Run(TabBase fromTab)
-        { 
+        {
+            OfferToStopLeftoverWorkers();
+
             commandShell.ClearLog();
 
             // Prepare to start task.
@@ -86,6 +88,64 @@ namespace SkylineTester
                 statusRunTime.Text = "{0}:{1:D2}:{2:D2}".With(elapsedTime.Hours, elapsedTime.Minutes, elapsedTime.Seconds);
             };
             _runTimer.Start();
+        }
+
+        /// <summary>
+        /// Tells the user about worker containers left running by an earlier run, and offers to stop
+        /// them before this run starts.
+        /// <para>No run of ours has started yet, so anything running now is a leftover. They are
+        /// invisible to a developer - they are containers, so they are not in the task bar and nothing
+        /// reports them - while holding the mounted checkout open, which wedges a later build with a
+        /// file lock that names vmwp.exe rather than anything recognizable.</para>
+        /// <para>This exists because one exit cannot be cleaned up from inside the process that
+        /// leaked: stopping a run kills TestRunner outright, which runs no teardown of any kind. The
+        /// next run is the first moment anything is in a position to notice, and a person is here to
+        /// ask.</para>
+        /// </summary>
+        private void OfferToStopLeftoverWorkers()
+        {
+            IList<string> leftovers;
+            try
+            {
+                // Fully qualified: "RunTests" alone binds to the Run Tests button on this window.
+                leftovers = TestRunnerLib.RunTests.GetRunningWorkerNames().ToList();
+            }
+            catch (Exception)
+            {
+                // Docker absent, not running, or wedged. Never block a run that may not need it at all
+                // - most runs are not parallel, and this is a convenience, not a gate.
+                return;
+            }
+
+            if (leftovers.Count == 0)
+                return;
+
+            var message = string.Join(Environment.NewLine,
+                string.Format("There are {0} worker containers still running that are not associated with this run.",
+                    leftovers.Count),
+                string.Empty,
+                string.Join(Environment.NewLine, leftovers),
+                string.Empty,
+                "They are left over from an earlier run that was stopped before it could clean up. They hold",
+                "the source directory open and can make a later build fail with a file lock.",
+                string.Empty,
+                "Stop them now?");
+
+            if (MessageBox.Show(this, message, "Leftover test workers",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                TestRunnerLib.RunTests.KillWorkers(leftovers);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Could not stop the leftover workers: " + ex.Message, "Leftover test workers",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>

@@ -1453,7 +1453,14 @@ namespace TestRunnerLib
                 yield return dockerWorkerName;
         }
 
-        public static void KillParallelWorkers(Process hostWorker, string workerNames = null)
+        /// <summary>
+        /// How long to wait for "docker kill" on the way out of a run. Generous for a command that
+        /// normally returns in well under a second, but finite: a wedged daemon must not keep a
+        /// finished run alive.
+        /// </summary>
+        private const int DOCKER_KILL_TIMEOUT_MILLIS = 30 * 1000;
+
+        public static void KillParallelWorkers(Process hostWorker, string workerNames = null, string runTag = null)
         {
             // Kill the host worker before asking docker for anything. Listing the containers shells out
             // to docker, which throws if it is absent or wedged, and that must not be what stops the
@@ -1466,9 +1473,11 @@ namespace TestRunnerLib
                 if (hostWorker != null && !hostWorker.HasExited)
                     hostWorker.Kill();
             }
-            catch (ArgumentException)
+            catch (InvalidOperationException)
             {
-                // No such process, which is the ordinary end of a run that finished on its own
+                // Process.Kill() on a process that has already exited, which is the ordinary end of a
+                // run that finished on its own. (Process.GetProcessById threw ArgumentException for
+                // this; holding the Process instead means the exit race arrives as this type.)
             }
             catch (Exception ex)
             {
@@ -1478,7 +1487,7 @@ namespace TestRunnerLib
             string namesToKill;
             try
             {
-                namesToKill = GetWorkersStillRunning(workerNames);
+                namesToKill = GetWorkersStillRunning(workerNames, runTag);
             }
             catch (Exception ex)
             {
@@ -1491,28 +1500,88 @@ namespace TestRunnerLib
             if (string.IsNullOrEmpty(namesToKill))
                 return; // No containers to kill
 
-            Console.WriteLine(@$"Sending docker kill command to: {namesToKill}");
-            var psi = new ProcessStartInfo("docker", $@"kill {namesToKill}");
-            psi.CreateNoWindow = true;
-            psi.UseShellExecute = false;
-            Process.Start(psi)?.WaitForExit();
+            KillWorkers(namesToKill.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
         }
 
         /// <summary>
-        /// The subset of <paramref name="workerNames"/> whose containers are still running, or every
-        /// running worker container when it is null. Filtering to what is actually up keeps the end of
-        /// a normal run quiet, since docker writes an error for a container that already stopped.
+        /// Stops the named worker containers. Shared by teardown at the end of a run and by
+        /// SkylineTester offering to clear leftovers before one starts.
         /// </summary>
-        private static string GetWorkersStillRunning(string workerNames)
+        public static void KillWorkers(ICollection<string> workerNames)
         {
-            var running = new HashSet<string>(
-                GetDockerWorkerNames().Select(name => name.Trim()).Where(name => !string.IsNullOrEmpty(name)),
-                StringComparer.OrdinalIgnoreCase);
-            if (workerNames == null)
-                return string.Join(@" ", running);
+            if (workerNames == null || workerNames.Count == 0)
+                return;
 
-            var launched = workerNames.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            return string.Join(@" ", launched.Where(running.Contains));
+            var names = string.Join(@" ", workerNames);
+            Console.WriteLine(@$"Sending docker kill command to: {names}");
+            var psi = new ProcessStartInfo(@"docker", $@"kill {names}")
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false
+            };
+            var killProcess = Process.Start(psi);
+
+            // Bounded, because this runs on the way out. A wedged docker daemon makes the CLI hang
+            // rather than fail, and an unbounded wait here holds the whole run open at the moment it
+            // is trying to end - turning a leaked container into a run that never exits.
+            if (killProcess != null && !killProcess.WaitForExit(DOCKER_KILL_TIMEOUT_MILLIS))
+                Console.WriteLine(@$"docker kill did not finish within {DOCKER_KILL_TIMEOUT_MILLIS} ms; containers may still be running: {names}");
+        }
+
+        /// <summary>
+        /// Every worker container currently running, trimmed and without blanks.
+        /// </summary>
+        public static IEnumerable<string> GetRunningWorkerNames()
+        {
+            return GetDockerWorkerNames().Select(name => name.Trim()).Where(name => !string.IsNullOrEmpty(name));
+        }
+
+        /// <summary>
+        /// The worker containers still running that belong to the run tagged <paramref name="runTag"/>,
+        /// whether or not this process still knows the names it launched.
+        /// <para>Scoping by the run tag is what lets teardown be thorough AND safe. Killing exactly the
+        /// remembered names misses a container whose name was never recorded, and killing every worker
+        /// on the machine reaches a concurrent run's containers - neither is acceptable, and the run
+        /// timestamp already embedded in every name answers it precisely.</para>
+        /// </summary>
+        private static string GetWorkersStillRunning(string workerNames, string runTag)
+        {
+            var running = new HashSet<string>(GetRunningWorkerNames(), StringComparer.OrdinalIgnoreCase);
+
+            // Names this run is known to have launched, plus anything else carrying its tag.
+            var mine = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (!string.IsNullOrEmpty(workerNames))
+            {
+                foreach (var launched in workerNames.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                             .Where(running.Contains))
+                {
+                    mine.Add(launched);
+                }
+            }
+            if (!string.IsNullOrEmpty(runTag))
+            {
+                foreach (var tagged in running.Where(name => name.IndexOf(runTag, StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    mine.Add(tagged);
+                }
+            }
+            return string.Join(@" ", mine);
+        }
+
+        /// <summary>
+        /// Worker containers running that do NOT belong to the run tagged <paramref name="runTag"/> -
+        /// leftovers from a run that was killed outright, which is the one exit no teardown inside the
+        /// process can cover. They hold the mounted checkout open and wedge a later build, so a caller
+        /// with a user to ask should offer to stop them.
+        /// </summary>
+        public static IList<string> GetOrphanedWorkerNames(string runTag)
+        {
+            if (string.IsNullOrEmpty(runTag))
+                return new List<string>();
+
+            return GetRunningWorkerNames()
+                .Where(name => name.IndexOf(runTag, StringComparison.OrdinalIgnoreCase) < 0)
+                .ToList();
         }
 
         /// <summary>
@@ -1528,25 +1597,55 @@ namespace TestRunnerLib
         {
             private readonly Func<Process> _getHostWorker;
             private readonly Func<string> _getWorkerNames;
+            private readonly string _runTag;
+            private int _torndown;
 
             /// <param name="getHostWorker">Reads the host worker process at teardown time, or null if
             /// there is none. Deferred for the same reason as the names: the host worker has not been
             /// launched yet when this scope is created, so reading it now yields null</param>
             /// <param name="getWorkerNames">Reads the launched worker names at teardown time, since
             /// workers are still being launched when this scope is created</param>
-            public ParallelWorkerTeardown(Func<Process> getHostWorker, Func<string> getWorkerNames)
+            /// <param name="runTag">The timestamp this run embeds in the names of the containers it
+            /// launches. It is what makes "this run's workers" answerable without a name list, so
+            /// teardown can be thorough without reaching a concurrent run's containers</param>
+            public ParallelWorkerTeardown(Func<Process> getHostWorker, Func<string> getWorkerNames, string runTag)
             {
                 _getHostWorker = getHostWorker;
                 _getWorkerNames = getWorkerNames;
+                _runTag = runTag;
+
+                // Environment.Exit does NOT run finally blocks, and this scope surrounds code that
+                // leaves through several of them - so disposing at the end of the block cannot be the
+                // only way teardown happens, or an early exit leaks every container it launched.
+                // ProcessExit does run on Environment.Exit, which closes that hole. It still does not
+                // run when the process is killed outright (SkylineTester stopping a run), and nothing
+                // inside the process can - that path is covered by reporting orphans on the next run.
+                AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
+            }
+
+            private void OnProcessExit(object sender, EventArgs e)
+            {
+                TearDown();
             }
 
             public void Dispose()
             {
+                AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
+                TearDown();
+            }
+
+            /// <summary>
+            /// Runs once however many times it is called: Dispose and ProcessExit both reach here on a
+            /// normal run, and killing the same host worker twice would report a spurious failure.
+            /// </summary>
+            private void TearDown()
+            {
+                if (Interlocked.Exchange(ref _torndown, 1) != 0)
+                    return;
+
                 try
                 {
-                    // Never null: null means "every worker container on this machine", which would
-                    // kill a concurrent run's workers when this one launched none of its own.
-                    KillParallelWorkers(_getHostWorker(), _getWorkerNames() ?? string.Empty);
+                    KillParallelWorkers(_getHostWorker(), _getWorkerNames(), _runTag);
                 }
                 catch (Exception ex)
                 {
