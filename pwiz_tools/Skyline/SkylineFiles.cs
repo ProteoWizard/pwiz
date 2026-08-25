@@ -1467,6 +1467,9 @@ namespace pwiz.Skyline
                 if (saverUser.CanSave())
                 {
                     dockPanel.SaveAsXml(saverUser.SafeName, new UTF8Encoding(false)); // UTF-8 without BOM
+                    // Store floating-window sizes in 96-DPI logical units so the .view
+                    // file is portable across display scale factors (issue #4599).
+                    DpiUtil.NormalizeDockLayoutFile(this, saverUser.SafeName);
                     saverUser.Commit();
                 }
             }

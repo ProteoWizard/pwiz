@@ -22,7 +22,13 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Windows.Forms;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace pwiz.Skyline.Util
 {
@@ -168,6 +174,110 @@ namespace pwiz.Skyline.Util
             var factor = GetFactor(control);
             return new Size((int)Math.Round(deviceSize.Width / factor),
                 (int)Math.Round(deviceSize.Height / factor));
+        }
+
+        /// <summary>
+        /// Converts a device-pixel measurement to 96-DPI logical units for persisting
+        /// (e.g. a splitter distance).
+        /// </summary>
+        public static int ScaleToLogical(Control control, int devicePixels)
+        {
+            return (int)Math.Round(devicePixels / GetFactor(control));
+        }
+
+        /// <summary>
+        /// Rewrites a freshly saved docking-layout (.view) file so floating-window SIZES
+        /// are stored in 96-DPI logical units, keeping the file portable across machines
+        /// with different display scaling (files saved by DPI-unaware builds are logical
+        /// by definition, so the convention is backward compatible and old Skyline
+        /// versions can read new files unchanged). Positions stay in physical screen
+        /// coordinates - where the user put the window on THEIR screen - and off-screen
+        /// cases are handled by EnsureFloatingWindowsVisible on load. The docked layout
+        /// is stored as fractions by DigitalRune and needs no treatment. No-op at 100%.
+        /// </summary>
+        public static void NormalizeDockLayoutFile(Control control, string path)
+        {
+            var factor = GetFactor(control);
+            if (Math.Abs(factor - 1) < 0.01f)
+                return;
+            try
+            {
+                var doc = XDocument.Load(path);
+                if (!ScaleFloatingWindowSizes(doc, 1 / factor))
+                    return;
+                using (var writer = XmlWriter.Create(path,
+                           new XmlWriterSettings { Encoding = new UTF8Encoding(false), Indent = true }))
+                {
+                    doc.Save(writer);
+                }
+            }
+            catch (Exception)
+            {
+                // A layout that cannot be transformed is saved in device pixels - degraded
+                // but functional, and preferable to failing the document save.
+            }
+        }
+
+        /// <summary>
+        /// Counterpart of <see cref="NormalizeDockLayoutFile"/>: scales floating-window
+        /// sizes in a docking-layout stream from 96-DPI logical units to the current
+        /// display DPI before DigitalRune parses it. Returns the original stream untouched
+        /// at 100% scaling or if the stream cannot be transformed.
+        /// </summary>
+        public static Stream DenormalizeDockLayoutStream(Control control, Stream layoutStream)
+        {
+            var factor = GetFactor(control);
+            if (Math.Abs(factor - 1) < 0.01f)
+                return layoutStream;
+            var startPosition = layoutStream.CanSeek ? layoutStream.Position : 0;
+            try
+            {
+                var doc = XDocument.Load(layoutStream);
+                var transformed = new MemoryStream();
+                using (var writer = XmlWriter.Create(transformed,
+                           new XmlWriterSettings { Encoding = new UTF8Encoding(false), CloseOutput = false }))
+                {
+                    ScaleFloatingWindowSizes(doc, factor);
+                    doc.Save(writer);
+                }
+                transformed.Position = 0;
+                return transformed;
+            }
+            catch (Exception)
+            {
+                if (layoutStream.CanSeek)
+                    layoutStream.Position = startPosition;
+                return layoutStream;
+            }
+        }
+
+        /// <summary>
+        /// Multiplies the width and height components of every FloatingWindow Bounds
+        /// attribute ("x, y, w, h") by the factor. Returns true if anything changed.
+        /// </summary>
+        private static bool ScaleFloatingWindowSizes(XDocument doc, float factor)
+        {
+            var anyChanged = false;
+            foreach (var boundsAttr in doc.Descendants(@"FloatingWindow")
+                         .Select(fw => fw.Attribute(@"Bounds")).Where(attr => attr != null))
+            {
+                var parts = boundsAttr.Value.Split(',');
+                if (parts.Length != 4)
+                    continue;
+                var values = new int[4];
+                var parsed = true;
+                for (var i = 0; i < 4; i++)
+                    parsed = parsed && int.TryParse(parts[i].Trim(), NumberStyles.Integer,
+                        CultureInfo.InvariantCulture, out values[i]);
+                if (!parsed)
+                    continue;
+                values[2] = (int)Math.Round(values[2] * factor);
+                values[3] = (int)Math.Round(values[3] * factor);
+                boundsAttr.Value = string.Join(@", ",
+                    values.Select(v => v.ToString(CultureInfo.InvariantCulture)));
+                anyChanged = true;
+            }
+            return anyChanged;
         }
     }
 }
