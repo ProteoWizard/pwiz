@@ -2,6 +2,7 @@ using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 
 #pragma warning disable CA1707
 
@@ -189,7 +190,7 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
-        => GetSpectrumImpl(index, getBinaryData, centroid: false);
+        => GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid: null);
 
     /// <inheritdoc/>
     // cpp SpectrumList_PeakPicker.cpp:139 — "ABI/Analyst peak picking" for the Sciex
@@ -197,10 +198,10 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
     public string VendorCentroidName => "ABI/Analyst peak picking";
 
     /// <inheritdoc/>
-    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData)
-        => GetSpectrumImpl(index, getBinaryData, centroid: true);
+    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid)
+        => GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid);
 
-    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, bool centroid)
+    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid)
     {
         if (index < 0 || index >= _index.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
@@ -215,6 +216,9 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
         };
 
         spec.Params.Set(CVID.MS_ms_level, msLevel);
+
+        // cpp SpectrumList_ABI.cpp:157 - `doCentroid = msLevelsToCentroid.contains(msLevel)`.
+        bool centroid = msLevelsToCentroid?.Contains(msLevel) ?? false;
         // cpp SpectrumList_ABI.cpp:148 — the spectrum-type term is a pure function of the
         // EXPERIMENT type; the ms level (:146-147) is emitted separately and does not feed into
         // it. The two can legitimately disagree: an MRM3 wiff2 acquisition runs a full-scan

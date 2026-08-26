@@ -151,6 +151,15 @@ public sealed class FixtureRunContext
                 $"{_fixtureName}: reader finalizer did not release the file for " +
                 $"{finalizerResult.FailedTests} of {finalizerResult.TotalTests} fixture(s):\n" +
                 string.Join('\n', finalizerResult.FailureMessages));
+
+        // Centroid MS-level gate: a reader must not vendor-centroid a spectrum whose MS level the
+        // caller did not select. Read-only, so it can run after the finalizer probe.
+        var gateResult = VendorReaderTestHarness.ProbeCentroidMsLevelGate(_reader, _root, _predicate);
+        if (gateResult.FailedTests > 0)
+            throw new InvalidOperationException(
+                $"{_fixtureName}: reader ignored the centroid msLevel set for " +
+                $"{gateResult.FailedTests} of {gateResult.TotalTests} fixture(s):\n" +
+                string.Join('\n', gateResult.FailureMessages));
     }
 }
 
@@ -248,6 +257,99 @@ public static class VendorReaderTestHarness
             }
         }
         return result;
+    }
+
+    /// <summary>
+    /// Verifies that every <see cref="IVendorCentroidingSpectrumList"/> reader honours the MS-level
+    /// set it is given, for each fixture under <paramref name="rootPath"/> matching
+    /// <paramref name="predicate"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>The property checked is deliberately data-agnostic: with an EMPTY set, nothing is
+    /// selected, so <c>GetCentroidSpectrum</c> must return exactly what <c>GetSpectrum</c> returns.
+    /// That holds for any fixture without knowing what is in it, and it is the whole gate in one
+    /// assertion. Every reader failed it before the gate existed - each hard-coded "centroid this"
+    /// and ignored the caller - which is how a UV/DAD trace reached MassLynx's centroider and came
+    /// back empty (834 of 1000 spectra in QCsynapt_#021_040319_A1Dnp_01.raw).</para>
+    /// <para>What this does NOT assert: that an INCLUDED MS level must change the spectrum.
+    /// Declining is legitimate - Thermo only has a centroid stream for FTMS analyzers, Agilent's
+    /// MHDAC will not centroid quadrupole data - so requiring a difference would fail the readers
+    /// that behave correctly.</para>
+    /// <para>Nor does it check that a spectrum never carries both <c>profile spectrum</c> and
+    /// <c>centroid spectrum</c>: readers set both ON PURPOSE (SpectrumList_Shimadzu, mirroring cpp
+    /// :217+:244) to tell the peak picker the source was profile. Stripping the contradiction is
+    /// the picker's job, so that assertion lives in the picker's own test.</para>
+    /// </remarks>
+    public static TestResult ProbeCentroidMsLevelGate(IReader reader, string rootPath, TestPathPredicate predicate)
+    {
+        ArgumentNullException.ThrowIfNull(reader);
+        ArgumentNullException.ThrowIfNull(rootPath);
+        ArgumentNullException.ThrowIfNull(predicate);
+
+        var result = new TestResult();
+        if (!Directory.Exists(rootPath)) return result;
+
+        foreach (var entry in Directory.EnumerateFileSystemEntries(rootPath))
+        {
+            if (!predicate.Matches(entry)) continue;
+            result.TotalTests++;
+            try
+            {
+                AssertCentroidGateIsHonored(reader, entry);
+            }
+            catch (Exception e)
+            {
+                result.FailedTests++;
+                result.FailureMessages.Add(
+                    $"{Path.GetFileName(entry.TrimEnd('/', '\\'))}: {e.GetType().Name}: {e.Message}");
+            }
+        }
+        return result;
+    }
+
+    private static void AssertCentroidGateIsHonored(IReader reader, string rawPath)
+    {
+        using var msd = new MSData();
+        try
+        {
+            reader.Read(rawPath, msd, new ReaderConfig());
+        }
+        catch (VendorSupportNotEnabledException)
+        {
+            return; // vendor SDK not built into this configuration
+        }
+
+        var list = msd.Run.SpectrumList;
+        if (list is not IVendorCentroidingSpectrumList vendor || list.Count == 0)
+            return;
+
+        var selectsNothing = new IntegerSet();
+        foreach (int i in SampleSpectrumIndices(list.Count))
+        {
+            var plain = list.GetSpectrum(i, true);
+            var gated = vendor.GetCentroidSpectrum(i, true, selectsNothing);
+            string diff = MSDataDiff.DescribeSpectrum(plain, gated);
+            if (diff.Length > 0)
+                throw new InvalidOperationException(
+                    $"spectrum {i} ('{plain.Id}') changed under an EMPTY msLevel set, so the reader "
+                    + $"centroided a spectrum the caller did not select:\n{Indent(diff, 2)}");
+        }
+    }
+
+    /// <summary>
+    /// Head and tail of the run. Both ends matter: Waters interleaves its non-MS DAD spectra from
+    /// index 0, while Agilent appends them after the whole MS run, so sampling one end would miss
+    /// the other vendor's non-MS spectra entirely.
+    /// </summary>
+    private static IEnumerable<int> SampleSpectrumIndices(int count, int perEnd = 25)
+    {
+        if (count <= perEnd * 2)
+        {
+            for (int i = 0; i < count; i++) yield return i;
+            yield break;
+        }
+        for (int i = 0; i < perEnd; i++) yield return i;
+        for (int i = count - perEnd; i < count; i++) yield return i;
     }
 
     private static void TestOne(IReader reader, string rawPath, string rootPath, ReaderTestConfig config)

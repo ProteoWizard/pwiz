@@ -6,6 +6,7 @@ using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 using Pwiz.Data.MsData.Processing;
 using AgPolarity = Agilent.MassSpectrometry.DataAnalysis.IonPolarity;
 using AgScanType = Agilent.MassSpectrometry.DataAnalysis.MSScanType;
@@ -297,18 +298,18 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
     /// Ion mobility spectra never reach here - they return from their own branches below,
     /// matching cpp setting canCentroid=false for them.
     /// </remarks>
-    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData)
-        => GetSpectrumImpl(index, getBinaryData, doCentroid: true);
+    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid)
+        => GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid);
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
-        => GetSpectrumImpl(index, getBinaryData, doCentroid: false);
+        => GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid: null);
 
     /// <summary>MHDAC only centroids TOF-family devices; cpp SpectrumList_Agilent.cpp:313-315.</summary>
     private bool CanVendorCentroid =>
         _raw.DeviceType != DeviceType.Quadrupole && _raw.DeviceType != DeviceType.TandemQuadrupole;
 
-    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, bool doCentroid)
+    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid)
     {
         if (index < 0 || index >= _index.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
@@ -420,6 +421,11 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
         spec.Params.Set(CVID.MS_ms_level, msLevel);
         spec.Params.Set(spectrumType);
 
+        // cpp SpectrumList_Agilent.cpp:313 - `canCentroid && msLevelsToCentroid.contains(msLevel)`,
+        // evaluated against the PROMOTED msLevel (cpp promotes at :270, gates at :313), which is
+        // why this sits after the promotion above rather than at the entry point.
+        bool doCentroid = msLevelsToCentroid?.Contains(msLevel) ?? false;
+
         // Pull the full spectrum to get peaks + scan-window range. Cpp prefers profile when
         // available unless centroiding is requested; we follow the same default.
         // A failure here used to be swallowed (`catch { specData = null; }`), which turned an
@@ -483,7 +489,13 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
 
             int n = specData.TotalDataPoints;
             spec.DefaultArrayLength = n;
-            if (getBinaryData && n > 0)
+            // Unconditional, as cpp SpectrumList_Agilent.cpp:416-419 is: inside
+            // DetailLevel_FullData it calls setMZIntensityArrays() with empty vectors and then
+            // fills them, so a spectrum with zero points still carries
+            // <binaryDataArrayList count="2"> holding two empty arrays. Guarding on n > 0
+            // dropped the element entirely. Same defect as the ones fixed in
+            // SpectrumList_Sciex and SpectrumList_Shimadzu.
+            if (getBinaryData)
             {
                 double[] x = specData.XArray ?? Array.Empty<double>();
                 float[] y = specData.YArray ?? Array.Empty<float>();
