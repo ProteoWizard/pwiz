@@ -37,6 +37,59 @@ using namespace pwiz::minimxml;
 ostream* os_ = 0;
 
 
+// SpectrumListBase::ensureMzAscending is only useful if the readers actually call it, and a test
+// that drives the base class directly cannot notice one that stops. This reads a real mzML back
+// through SpectrumList_mzML, so deleting the call from SpectrumList_mzML.cpp fails here.
+void testUnsortedMzArraysAreCorrectedOnRead(bool indexed)
+{
+    MSData msd;
+    msd.id = msd.run.id = "unsorted";
+
+    SpectrumListSimplePtr written(new SpectrumListSimple);
+    SpectrumPtr s(new Spectrum);
+    s->index = 0;
+    s->id = "scan=1";
+    s->set(MS_MS1_spectrum);
+    s->set(MS_ms_level, 1);
+
+    // ascending intensity rather than ascending m/z, the shape this defect takes in practice
+    vector<double> mzs, intensities;
+    mzs.push_back(500.5); intensities.push_back(10);
+    mzs.push_back(300.3); intensities.push_back(20);
+    mzs.push_back(700.7); intensities.push_back(30);
+    mzs.push_back(200.2); intensities.push_back(40);
+    s->setMZIntensityArrays(mzs, intensities, MS_number_of_detector_counts);
+    s->defaultArrayLength = mzs.size();
+    written->spectra.push_back(s);
+    msd.run.spectrumListPtr = written;
+
+    Serializer_mzML::Config config;
+    config.indexed = indexed;
+    Serializer_mzML serializer(config);
+    ostringstream oss;
+    serializer.write(oss, msd);
+
+    // the writer must not have quietly fixed it, or this proves nothing about the reader
+    unit_assert(oss.str().find("scan=1") != string::npos);
+
+    shared_ptr<istream> is(new istringstream(oss.str()));
+    MSData readBack;
+    Index_mzML_Ptr index(new Index_mzML(is, readBack));
+    SpectrumListPtr sl = SpectrumList_mzML::create(is, readBack, index);
+
+    unit_assert_operator_equal(1, sl->size());
+    SpectrumPtr result = sl->spectrum(0, true);
+
+    const BinaryData<double>& outMzs = result->getMZArray()->data;
+    const BinaryData<double>& outIntensities = result->getIntensityArray()->data;
+    unit_assert_operator_equal(4, outMzs.size());
+    unit_assert_equal(200.2, outMzs[0], 1e-9); unit_assert_equal(40, outIntensities[0], 1e-9);
+    unit_assert_equal(300.3, outMzs[1], 1e-9); unit_assert_equal(20, outIntensities[1], 1e-9);
+    unit_assert_equal(500.5, outMzs[2], 1e-9); unit_assert_equal(10, outIntensities[2], 1e-9);
+    unit_assert_equal(700.7, outMzs[3], 1e-9); unit_assert_equal(30, outIntensities[3], 1e-9);
+}
+
+
 void test(bool indexed)
 {
     if (os_) *os_ << "test(): indexed=\"" << boolalpha << indexed << "\"\n";
@@ -175,9 +228,11 @@ void test()
 {
     bool indexed = true;
     test(indexed);
+    testUnsortedMzArraysAreCorrectedOnRead(indexed);
 
     indexed = false;
     test(indexed);
+    testUnsortedMzArraysAreCorrectedOnRead(indexed);
 }
 
 

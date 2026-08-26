@@ -30,6 +30,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -121,12 +122,17 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             var libraryType = docNode.LibInfo?.LibraryTypeName ?? NA;
             var libraryScore = docNode.LibInfo?.Score != null ? docNode.LibInfo.Score.ToString() : NA;
             var unimodSequence = modifiedSequence.ToString();
-            var best_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.RetentionTime;
-            var min_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.StartRetentionTime;
-            var max_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.EndRetentionTime;
-            string ionmob_ms1 = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo?.IonMobilityMS1.HasValue == true ?
-                docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo.IonMobilityMS1.ToString() : NA;
-            var apex_psm = @"unknown"; //docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.Identified
+            // A precursor's chrom infos are rebuilt from the chromatograms rather than stored on it,
+            // so the best replicate's are read once here and asked for the values below.
+            var bestChromInfo = new MoleculeResults(Document.Settings, peptide)
+                .GetTransitionGroupChromInfos(docNode.TransitionGroup, peptide.BestResult).FirstOrDefault();
+            var best_rt = bestChromInfo?.RetentionTime;
+            var min_rt = bestChromInfo?.StartRetentionTime;
+            var max_rt = bestChromInfo?.EndRetentionTime;
+            string ionmob_ms1 = bestChromInfo?.IonMobilityInfo?.IonMobilityMS1.HasValue == true
+                ? bestChromInfo.IonMobilityInfo.IonMobilityMS1.ToString()
+                : NA;
+            var apex_psm = @"unknown"; //bestChromInfo?.Identified
             var filename = Path.GetFileNameWithoutExtension(ExperimentDataFilePath);
             if (training)
             {

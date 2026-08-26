@@ -44,6 +44,9 @@
     <Setting Name="SequenceTreeExpandPeptides" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="SpectrumSequenceRulersEnabled" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="ActiveDirectory" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>

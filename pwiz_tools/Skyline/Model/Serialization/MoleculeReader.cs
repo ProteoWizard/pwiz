@@ -53,12 +53,29 @@ namespace pwiz.Skyline.Model.Serialization
     public class MoleculeReader : DocumentSerializer
     {
         private readonly DocumentReader _documentReader;
+        private readonly PeptideGroup _peptideGroup;
 
-        public MoleculeReader(DocumentReader documentReader)
+        /// <summary>
+        /// The molecule's element. Replaced while reading a document written before 3.72, whose
+        /// molecules are handed back in a modernized form - it is still the same molecule.
+        /// </summary>
+        private XElement _element;
+
+        public MoleculeReader(DocumentReader documentReader, XElement element, PeptideGroup peptideGroup)
         {
             _documentReader = documentReader;
+            _element = element;
+            _peptideGroup = peptideGroup;
             Settings = documentReader.Settings;
             DocumentFormat = documentReader.DocumentFormat;
+        }
+
+        /// <summary>
+        /// Whether this is a small molecule rather than a peptide, which the tag says.
+        /// </summary>
+        private bool IsCustomMolecule
+        {
+            get { return _element.Name == EL.molecule; }
         }
 
         private DocumentFormat FormatVersion
@@ -498,40 +515,36 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         /// <summary>
-        /// Deserializes a single <see cref="PeptideDocNode"/> from a <see cref="XmlReader"/>
-        /// positioned at the start element.
+        /// Deserializes the <see cref="PeptideDocNode"/> of the element this reader was made for.
         /// </summary>
-        /// <param name="reader">The reader positioned at a start element of a peptide or molecule</param>
-        /// <param name="group">A previously read parent <see cref="Identity"/></param>
-        /// <param name="isCustomMolecule">if true, we're reading a custom molecule, not a peptide</param>
         /// <returns>A new <see cref="PeptideDocNode"/></returns>
-        public PeptideDocNode ReadPeptideXml(XElement element, PeptideGroup group, bool isCustomMolecule)
+        public PeptideDocNode ReadPeptideXml()
         {
-            int? start = element.GetNullableIntAttribute(ATTR.start);
-            int? end = element.GetNullableIntAttribute(ATTR.end);
-            string sequence = element.GetAttribute(ATTR.sequence);
-            string lookupSequence = element.GetAttribute(ATTR.lookup_sequence);
+            int? start = _element.GetNullableIntAttribute(ATTR.start);
+            int? end = _element.GetNullableIntAttribute(ATTR.end);
+            string sequence = _element.GetAttribute(ATTR.sequence);
+            string lookupSequence = _element.GetAttribute(ATTR.lookup_sequence);
             // If the group has no sequence, then this is a v0.1 peptide list or a custom ion
-            if (group.Sequence == null)
+            if (_peptideGroup.Sequence == null)
             {
                 // Ignore the start and end values
                 start = null;
                 end = null;
             }
-            int missedCleavages = element.GetIntAttribute(ATTR.num_missed_cleavages);
+            int missedCleavages = _element.GetIntAttribute(ATTR.num_missed_cleavages);
             // CONSIDER: Trusted value
-            int? rank = element.GetNullableIntAttribute(ATTR.rank);
-            double? concentrationMultiplier = element.GetNullableDoubleAttribute(ATTR.concentration_multiplier);
+            int? rank = _element.GetNullableIntAttribute(ATTR.rank);
+            double? concentrationMultiplier = _element.GetNullableDoubleAttribute(ATTR.concentration_multiplier);
             double? internalStandardConcentration =
-                element.GetNullableDoubleAttribute(ATTR.internal_standard_concentration);
-            string normalizationMethod = element.GetAttribute(ATTR.normalization_method);
-            string attributeGroupId = element.GetAttribute(ATTR.attribute_group_id);
-            string surrogateCalibrationCurve = element.GetAttribute(ATTR.surrogate_calibration_curve);
-            bool autoManageChildren = element.GetBoolAttribute(ATTR.auto_manage_children, true);
-            bool isDecoy = element.GetBoolAttribute(ATTR.decoy);
-            var standardType = StandardType.FromName(element.GetAttribute(ATTR.standard_type));
-            double? importedRetentionTimeValue = element.GetNullableDoubleAttribute(ATTR.explicit_retention_time);
-            double? importedRetentionTimeWindow = element.GetNullableDoubleAttribute(ATTR.explicit_retention_time_window);
+                _element.GetNullableDoubleAttribute(ATTR.internal_standard_concentration);
+            string normalizationMethod = _element.GetAttribute(ATTR.normalization_method);
+            string attributeGroupId = _element.GetAttribute(ATTR.attribute_group_id);
+            string surrogateCalibrationCurve = _element.GetAttribute(ATTR.surrogate_calibration_curve);
+            bool autoManageChildren = _element.GetBoolAttribute(ATTR.auto_manage_children, true);
+            bool isDecoy = _element.GetBoolAttribute(ATTR.decoy);
+            var standardType = StandardType.FromName(_element.GetAttribute(ATTR.standard_type));
+            double? importedRetentionTimeValue = _element.GetNullableDoubleAttribute(ATTR.explicit_retention_time);
+            double? importedRetentionTimeWindow = _element.GetNullableDoubleAttribute(ATTR.explicit_retention_time_window);
             var importedRetentionTime = importedRetentionTimeValue.HasValue
                 ? new ExplicitRetentionTimeInfo(importedRetentionTimeValue.Value, importedRetentionTimeWindow)
                 : null;
@@ -542,10 +555,10 @@ namespace pwiz.Skyline.Model.Serialization
             TransitionGroupDocNode[] children = null;
             Adduct adduct = Adduct.EMPTY;
             CustomMolecule customMolecule = null;
-            if (isCustomMolecule)
+            if (IsCustomMolecule)
             {
                 // Reads attributes only, so a reader standing on this element is all it needs.
-                using (var moleculeReader = OpenReader(element))
+                using (var moleculeReader = OpenReader(_element))
                 {
                     customMolecule = CustomMolecule.Deserialize(moleculeReader, out adduct);
                 }
@@ -563,29 +576,29 @@ namespace pwiz.Skyline.Model.Serialization
                         customMolecule.Name);
                 }
                 // If user changed any molecule details (other than formula or mass) after chromatogram extraction, this info continues the target->chromatogram association
-                var encodedChromatogramTarget = element.GetAttribute(ATTR.chromatogram_target);
+                var encodedChromatogramTarget = _element.GetAttribute(ATTR.chromatogram_target);
                 if (!string.IsNullOrEmpty(encodedChromatogramTarget))
                 {
                     chromatogramTarget = Target.FromSerializableString(encodedChromatogramTarget);
                 }
             }
             Assume.IsTrue(DocumentMayContainMoleculesWithEmbeddedIons || adduct.IsEmpty); // Shouldn't be any charge info at the peptide/molecule level
-            var peptide = isCustomMolecule ?
+            var peptide = IsCustomMolecule ?
                 new Peptide(customMolecule) :
-                new Peptide(group as FastaSequence, sequence, start, end, missedCleavages, isDecoy);
-            if (isCustomMolecule && DocumentMayContainMoleculesWithEmbeddedIons)
+                new Peptide(_peptideGroup as FastaSequence, sequence, start, end, missedCleavages, isDecoy);
+            if (IsCustomMolecule && DocumentMayContainMoleculesWithEmbeddedIons)
             {
                 // If this is an older small molecule file, clean up any problems with former data
                 // model. The handler works by reading ahead and handing back a reader over what it
                 // made of the molecule, so what it made is loaded back to go on navigating.
-                using (var pre372Reader = OpenReader(element))
+                using (var pre372Reader = OpenReader(_element))
                 {
                     var handled = new Pre372CustomIonTransitionGroupHandler(pre372Reader,
                         Settings.TransitionSettings.Instrument.MzMatchTolerance).Read(ref peptide);
-                    element = XElement.Load(handled);
+                    _element = XElement.Load(handled);
                     // The handler pretty-prints what it made, and its indentation would otherwise
-                    // arrive as text nodes standing between an element and the children read below.
-                    foreach (var indent in element.DescendantNodes().OfType<XText>()
+                    // arrive as text nodes standing between an _element and the children read below.
+                    foreach (var indent in _element.DescendantNodes().OfType<XText>()
                                  .Where(text => text.Value.Trim().Length == 0).ToArray())
                     {
                         indent.Remove();
@@ -596,12 +609,12 @@ namespace pwiz.Skyline.Model.Serialization
             // The annotations and the modifications read themselves out of a stream, and the
             // modifications are several sibling elements rather than one, so they share a reader
             // over this molecule. Nothing after them depends on where it ends up.
-            using (var modsReader = OpenReader(element))
+            using (var modsReader = OpenReader(_element))
             {
                 modsReader.ReadStartElement();
                 if (modsReader.IsStartElement())
                     annotations = ReadTargetAnnotations(modsReader, AnnotationDef.AnnotationTarget.peptide);
-                if (!isCustomMolecule)
+                if (!IsCustomMolecule)
                 {
                     mods = ReadExplicitMods(modsReader, peptide)?.ConvertFromLegacyCrosslinkStructure();
                     SkipImplicitModsElement(modsReader);
@@ -615,10 +628,10 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
-            results = ReadPeptideResults(element.Element(EL.peptide_results));
+            results = ReadPeptideResults(_element.Element(EL.peptide_results));
 
-            var precursorElements = element.Elements(EL.precursor).ToArray();
-            var selectedTransitions = element.Element(EL.selected_transitions);
+            var precursorElements = _element.Elements(EL.precursor).ToArray();
+            var selectedTransitions = _element.Element(EL.selected_transitions);
             if (precursorElements.Length > 0)
             {
                 children = ReadTransitionGroupListXml(precursorElements, peptide, mods);

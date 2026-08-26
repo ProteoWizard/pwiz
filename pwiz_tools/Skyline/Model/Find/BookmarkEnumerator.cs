@@ -282,7 +282,8 @@ namespace pwiz.Skyline.Model.Find
                 }
                 else if (node is TransitionGroupDocNode transitionGroupDocNode)
                 {
-                    currentChromInfo = transitionGroupDocNode.GetSafeChromInfo(bookmark.ReplicateIndex.Value).FirstOrDefault(chromInfo =>
+                    currentChromInfo = GetTransitionGroupChromInfos(bookmark.IdentityPath,
+                        transitionGroupDocNode, bookmark.ReplicateIndex.Value).FirstOrDefault(chromInfo =>
                         ReferenceEquals(chromInfo.FileId, bookmark.ChromFileInfoId) &&
                         chromInfo.OptimizationStep == bookmark.OptStep);
                 }
@@ -481,7 +482,8 @@ namespace pwiz.Skyline.Model.Find
 
             if (docNode is TransitionGroupDocNode transitionGroupDocNode)
             {
-                return MakeChromInfoPositions(transitionGroupDocNode.GetSafeChromInfo(replicateIndex),
+                return MakeChromInfoPositions(
+                    GetTransitionGroupChromInfos(identityPath, transitionGroupDocNode, replicateIndex),
                     chromInfo => new ResultPosition(chromatogramSet, chromInfo.FileId, chromInfo.OptimizationStep));
             }
 
@@ -505,6 +507,18 @@ namespace pwiz.Skyline.Model.Find
         {
             return GetMoleculeResults(identityPath)
                        ?.GetTransitionChromInfos(nodeTran.Transition.Group, nodeTran.Transition, replicateIndex) ??
+                   default;
+        }
+
+        /// <summary>
+        /// One precursor's chrom infos in one replicate, rebuilt from the chromatograms because a
+        /// precursor no longer keeps them. Empty when the path does not name one.
+        /// </summary>
+        private ChromInfoList<TransitionGroupChromInfo> GetTransitionGroupChromInfos(IdentityPath identityPath,
+            TransitionGroupDocNode nodeGroup, int replicateIndex)
+        {
+            return GetMoleculeResults(identityPath)
+                       ?.GetTransitionGroupChromInfos(nodeGroup.TransitionGroup, replicateIndex) ??
                    default;
         }
 
