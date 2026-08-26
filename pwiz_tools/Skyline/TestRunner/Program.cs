@@ -775,7 +775,7 @@ namespace TestRunner
             }
         }
 
-        private static int LaunchHostWorker(CommandLineArgs commandLineArgs, int workerPort, StreamWriter log, ConcurrentBag<string> coverageSnapshots)
+        private static Process LaunchHostWorker(CommandLineArgs commandLineArgs, int workerPort, StreamWriter log, ConcurrentBag<string> coverageSnapshots)
         {
             var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
             Assume.IsNotNull(pwizRoot);
@@ -810,7 +810,11 @@ namespace TestRunner
             {
                 throw new IOException($"Error launching host worker: {proc?.ExitCode ?? -1}");
             }
-            return proc.Id;
+            // Return the Process, not its id. Holding it keeps a handle open, so Windows cannot
+            // hand this pid to something else once the worker exits, and teardown never has to
+            // guess whether the pid it holds is still the worker. The name would not settle that
+            // either: under coverage this process is dotCover, not TestRunner.
+            return proc;
         }
 
         private static string LaunchDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker,
@@ -962,6 +966,14 @@ namespace TestRunner
         /// Name prefix of an ordinary container worker.
         /// </summary>
         private const string NORMAL_WORKER_NAME = "docker_worker";
+
+        /// <summary>
+        /// How long to let the host worker exit on its own before generating the coverage report.
+        /// Under coverage that process is dotCover, which writes its snapshot on exit, so this is
+        /// the difference between a report and an empty one. Bounded so a host worker that never
+        /// exits delays the report rather than hanging the run.
+        /// </summary>
+        private const int HOST_WORKER_EXIT_TIMEOUT_MILLIS = 60 * 1000;
 
         /// <summary>
         /// The name a container worker will be launched under. Worked out separately from launching it
@@ -1120,13 +1132,37 @@ namespace TestRunner
                     // Every language, not just the first few: pass 1 keeps going while it is still
                     // deciding on a leak, so it can wrap around the list any number of times.
                     var cultures = Pass == 1 ? allLanguages : new[] { Language };
-                    // Deliberately the language as queued rather than a CultureInfo round trip, which
-                    // throws on a name GetCanonicalLanguage did not recognize. These are the same
-                    // strings the client builds its CultureInfo from, so they are what the directory
-                    // ends up named after, and a bad one should fail the test that uses it rather than
-                    // the server handing it out.
                     return cultures.Select(culture =>
-                        PathEx.GetTestDirectoryName(TestInfo.TestMethod.Name, culture));
+                        PathEx.GetTestDirectoryName(TestInfo.TestMethod.Name, ResolvedCultureName(culture)));
+                }
+            }
+
+            /// <summary>
+            /// The culture name the CLIENT ends up running under, which is what its tools directory
+            /// gets named after.
+            /// <para>It is not always the string that was queued: where a runtime normalizes a
+            /// deprecated culture name, reserving the queued spelling locks a directory that culture
+            /// never writes and leaves the one it does write unprotected. Both spellings were found
+            /// side by side in a staging directory, which is what that looks like on disk.</para>
+            /// <para>NOTE, measured 2026-08-25: .NET Framework 4.8 does NOT do this - "zh-CHS"
+            /// constructs and round-trips as "zh-CHS". So on net472 this resolves to the queued
+            /// string and the call is a no-op. It is kept because it is cheap and because the
+            /// normalization it guards against is real on .NET, which the port moves to; whoever
+            /// works the net8 line should confirm the spelling there rather than trust this note.
+            /// </para>
+            /// <para>Falls back to the string as queued for a name CultureInfo does not recognize, so
+            /// an unusable language still fails the test that asked for it rather than throwing while
+            /// the server is handing work out.</para>
+            /// </summary>
+            private static string ResolvedCultureName(string culture)
+            {
+                try
+                {
+                    return new CultureInfo(culture).Name;
+                }
+                catch (CultureNotFoundException)
+                {
+                    return culture;
                 }
             }
 
@@ -1250,7 +1286,7 @@ namespace TestRunner
             public DateTime CurrentTestStarted { get; set; }
         }
 
-        private static int HostWorkerPid { get; set; }
+        private static Process HostWorker { get; set; }
 
         private static bool PushToTestQueue(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log)
         {
@@ -1402,7 +1438,12 @@ namespace TestRunner
                 CheckDocker(commandLineArgs);
 
             // open socket that listens for workers to connect
+            // workerNames is declared out here so the teardown scope can read the names as they
+            // are launched. Disposing that scope is what stops the workers when a run finishes
+            // normally; the console control handler installed below only covers outside termination.
+            string workerNames = null;
             using (var receiver = new PullSocket())
+            using (new RunTests.ParallelWorkerTeardown(() => HostWorker, () => workerNames, GetTestRunTimeStamp()))
             {
                 // get system-assigned port which will passed to workers with "workerport" parameter
                 int workerPort;
@@ -1417,12 +1458,16 @@ namespace TestRunner
                     workerPort = UnusedPortFinder.FindUnusedPort(9810, 65535);
                 }
                 receiver.Bind($"tcp://*:{workerPort}");
-                string workerNames = null;
 
                 // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
                 Kernel32Test.SetConsoleCtrlHandler(c =>
                 {
-                    RunTests.KillParallelWorkers(HostWorkerPid, workerNames);
+                    // The run tag matters most here. workerNames is only committed once a container
+                    // CONNECTS, so one that was launched and has not connected yet is running and
+                    // absent from that list - and this handler kills the process immediately after,
+                    // so neither Dispose nor ProcessExit gets a turn. Matching on the tag reaches
+                    // those containers, where names alone would leave them behind.
+                    RunTests.KillParallelWorkers(HostWorker, workerNames, GetTestRunTimeStamp());
                     cts.Cancel();
                     Process.GetCurrentProcess().Kill();
                     return true;
@@ -1470,13 +1515,14 @@ namespace TestRunner
                         catch (Exception e)
                         {
                             Console.Error.WriteLine("Error launching Docker workers: " + e);
+                            RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                             Environment.Exit(1);
                         }
                     });
                 }
 
                 // fix this to get PID of TestRunner, not dotCover
-                HostWorkerPid = LaunchHostWorker(commandLineArgs, workerPort, log, coverageSnapshots);
+                HostWorker = LaunchHostWorker(commandLineArgs, workerPort, log, coverageSnapshots);
                 // A worker still counts while its container is booting. Without that, a replacement is
                 // launched into a pool that is declared empty a second later, and it can never register.
                 bool AnyWorkerAliveOrPending()
@@ -1510,6 +1556,7 @@ namespace TestRunner
                     catch (Exception e)
                     {
                         Console.Error.WriteLine("Error running worker wait thread: " + e);
+                        RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                         Environment.Exit(1);
                     }
                 }, TaskCreationOptions.LongRunning));
@@ -1536,6 +1583,7 @@ namespace TestRunner
                             Console.Error.WriteLine("Be sure to check BOTH public and private options if prompted to \"Allow TestRunner to communicate on these networks\".");
                             Console.Error.WriteLine("See https://skyline.ms/wiki/home/development/page.view?name=Troubleshooting_parallel_mode for troubleshooting tips.\r\n");
 
+                            RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                             Environment.Exit(1);
                         }
                         continue;
@@ -1711,6 +1759,7 @@ namespace TestRunner
                         catch (Exception e)
                         {
                             Console.Error.WriteLine("Error in worker handling thread: " + e);
+                            RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                             Environment.Exit(1);
                         }
                     }, TaskCreationOptions.LongRunning));
@@ -1744,7 +1793,11 @@ namespace TestRunner
                                     if (commandLineArgs.ArgAsBool("coverage"))
                                     {
                                         Console.WriteLine("Aborting coverage run due to failed worker (coverage from that worker is lost).");
-                                        RunTests.KillParallelWorkers(HostWorkerPid);
+                                        // Scoped to this run: without the names and the tag, this kills
+                                        // every worker container on the machine, including a concurrent
+                                        // run's - and this path then kills the process, so it is the
+                                        // last chance to get the scope right.
+                                        RunTests.KillParallelWorkers(HostWorker, workerNames, GetTestRunTimeStamp());
                                         Process.GetCurrentProcess().Kill();
                                     }
 
@@ -1794,6 +1847,7 @@ namespace TestRunner
                         catch (Exception e)
                         {
                             Console.Error.WriteLine("Error listening for worker heartbeat: " + e);
+                            RunTests.ParallelWorkerTeardown.TearDownNow();   // Exit runs no finally
                             Environment.Exit(1);
                         }
                     }, TaskCreationOptions.LongRunning);
@@ -1802,10 +1856,29 @@ namespace TestRunner
                 Console.WriteLine("Waiting for worker tasks to finish.");
                 foreach (var task in tasks)
                     task.Wait();
+
+                Console.WriteLine($"Parallel testing finished in {timer.Elapsed} ({timer.Elapsed.TotalSeconds}s)");
+
+                // Inside the teardown scope on purpose. Under coverage the host worker IS dotCover, and
+                // teardown kills it - so generating the report after the scope closes reports on a
+                // process that was just killed, and every parallel coverage run fails.
+                if (coverageSnapshots.Any())
+                {
+                    // Being inside the scope is not enough on its own. dotCover writes its snapshot
+                    // when the profiled process EXITS, and the server task returns as soon as it has
+                    // sent the quit message - so the tasks completing does not mean the host worker
+                    // is gone. Without this wait the report is generated before the snapshot exists,
+                    // and teardown then kills the process that was about to write it.
+                    if (HostWorker != null && !HostWorker.HasExited &&
+                        !HostWorker.WaitForExit(HOST_WORKER_EXIT_TIMEOUT_MILLIS))
+                    {
+                        Console.WriteLine(
+                            $"Host worker did not exit within {HOST_WORKER_EXIT_TIMEOUT_MILLIS} ms; coverage may be incomplete.");
+                    }
+
+                    GenerateCoverageReport(commandLineArgs, coverageSnapshots);
+                }
             }
-            Console.WriteLine($"Parallel testing finished in {timer.Elapsed} ({timer.Elapsed.TotalSeconds}s)");
-            if (coverageSnapshots.Any())
-                GenerateCoverageReport(commandLineArgs, coverageSnapshots);
 
             // Every worker has finished, so anything still queued is work nobody ever ran - most likely
             // because the only worker that could have run it went away. Report that rather than passing:
