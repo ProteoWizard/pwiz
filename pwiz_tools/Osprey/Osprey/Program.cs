@@ -213,19 +213,11 @@ namespace pwiz.Osprey
                         // which must work on a build that cannot read the raw itself.
                         if (!File.Exists(inputFile) && !Directory.Exists(inputFile))
                         {
-                            // An ABSENT source is not an error when its spectra cache is
-                            // already built. Stage 1 is the only stage that reads the
-                            // raw/mzML at all, and SpectraCache's staleness check already
-                            // treats a missing source as the documented resume case - it
-                            // returns a (0, 0) fingerprint, which the load path reads as
-                            // "nothing to compare, trust the cache"
-                            // (TryComputeSourceFingerprint). This check was the only thing
-                            // standing between that and a workflow of
-                            // download -> --task SpectraCache -> delete the source, which
-                            // roughly halves the disk a large cohort needs: the 446-file CHS
-                            // set is ~1.8 TB of .raw against ~1.2 TB of caches, and only the
-                            // caches are read once staging is done. The originals stay
-                            // recoverable from PanoramaWeb.
+                            // An absent source is fine once its cache is built: Stage 1 is
+                            // the only stage that reads a source, and SpectraCache already
+                            // treats a missing one as "trust the cache". That makes
+                            // delete-the-sources-after-caching a supported way to halve the
+                            // disk a large cohort needs.
                             if (File.Exists(SpectraCache.GetCachePath(inputFile)))
                             {
                                 cacheOnlyInputs++;
@@ -235,9 +227,8 @@ namespace pwiz.Osprey
                             return 1;
                         }
                     }
-                    // Announced, not silent. A run whose sources are gone cannot rebuild a
-                    // cache that turns out to be wrong, so which files it came from is
-                    // provenance the operator has to be able to read back off the log.
+                    // Announced, not silent: a run whose sources are gone cannot rebuild a
+                    // cache that turns out to be wrong, so the log is the only provenance.
                     if (cacheOnlyInputs > 0)
                     {
                         LogInfo(string.Format(

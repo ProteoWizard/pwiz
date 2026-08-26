@@ -1224,22 +1224,14 @@ function Invoke-HpcChain {
     $ph1 = Join-Path $ChainRoot 'phase1_scoring'
     New-Item -ItemType Directory -Path $ph1 -Force | Out-Null
     # Seeded with the straight-through leg's CACHES, not the mzML. Phase 1 is the only HPC
-    # phase that reads spectra, and it deletes the copied mzML the moment it finishes anyway
-    # ("dead weight once it has run", below) - so staging the cache instead costs nothing, skips
-    # copying multi-GB inputs, and turns this phase into the gate on PerFileScoring reading a
-    # .spectra.bin with NO source present.
+    # phase that reads spectra and it deletes the copied mzML right after running anyway, so
+    # this costs nothing, stops copying multi-GB inputs, and makes the phase the gate on
+    # PerFileScoring reading a .spectra.bin with no source. Mode 2 cannot cover that - it
+    # requires PerFileScoring to be SKIPPED, and a skipped task opens no cache. Mode 3's
+    # chain==straight comparison is what proves the results identical.
     #
-    # That is the half of the delete-your-sources workflow no other leg can cover: mode 2
-    # requires PerFileScoring to be SKIPPED, and a skipped task opens no cache. Here the task
-    # genuinely RUNS, and mode 3's existing chain==straight blib comparison is what proves the
-    # cache-read produced identical results - no new comparator needed.
-    #
-    # It also covers the UNREDIRECTED cache lookup. Phase 1 passes no --work-dir/--cache-dir, so
-    # ResolveCacheDir returns the INPUT directory - the default an operator actually gets, and
-    # the one every other leg here bypasses by always passing --work-dir.
-    #
-    # mzML reading loses no coverage: the straight-through leg parses every one of these files
-    # to build these caches in the first place.
+    # Also the only leg covering the UNREDIRECTED lookup: phase 1 passes no --work-dir, so
+    # ResolveCacheDir returns the input directory, which is what an operator gets by default.
     foreach ($stem in $stemList) {
         $srcCache = Join-Path $CacheSource "$stem.spectra.bin"
         if (-not (Test-Path -LiteralPath $srcCache)) {
@@ -1686,32 +1678,12 @@ foreach ($name in $selected) {
         # blanket OSPREY_ALLOW_UNBOUNDED_MEMORY=1 wrapped a whole leg and let a transfer
         # regression ride along unnoticed for ten days.
         # The inputs this leg names DO NOT EXIST: same file names, but under the work dir,
-        # where an mzML is never placed. Only the .spectra.bin the straight-through leg
-        # left there is real (caches honor --work-dir; the sources stay in the read-only
-        # Perftests tree, untouched).
+        # where an mzML is never placed - only the .spectra.bin is. The sources stay in the
+        # read-only Perftests tree, untouched.
         #
-        # That makes the resume also the gate on a run whose SOURCES ARE GONE. Stage 1 is
-        # the only stage that reads an mzML, so once the caches exist the sources are dead
-        # weight - worth roughly half the disk of a large cohort (the 446-file CHS set is
-        # ~1.8 TB of .raw against ~1.2 TB of caches) - which makes
-        # download -> --task SpectraCache -> delete-the-source a supported way to stage.
-        #
-        # SCOPE, precisely: this leg proves the pipeline ACCEPTS absent inputs and still
-        # produces the identical blib. It does NOT prove spectra can be READ from cache
-        # with no source, because the two tasks that open a .spectra.bin - PerFileScoring
-        # and PerFileRescoring - are the two this leg requires to be SKIPPED. Do not read
-        # a green mode 2 as covering that; it needs a leg where PerFileScoring RUNS.
-        #
-        # The cache is found here because Invoke-OspreyRun always passes --work-dir, which
-        # pins the cache dir. Without any redirection ResolveCacheDir returns the INPUT
-        # directory instead, so the directory in these paths would matter - that variant
-        # is the one an operator uses and no leg covers it.
-        #
-        # Folded into this leg rather than given one of its own because the property costs
-        # nothing to assert here and everything to assert separately: mode 2 already
-        # recomputes FirstPassFDR and SecondPassFDR, already requires PerFileScoring and
-        # PerFileRescoring to hit cache, and already compares the result to $coldBlib. A
-        # dedicated leg would re-run the pipeline to check the one thing this line checks.
+        # SCOPE: this proves the pipeline ACCEPTS absent inputs and still produces the
+        # identical blib. It does NOT prove spectra can be READ from cache - the two tasks
+        # that open one are the two this leg requires to be skipped. HPC phase 1 covers that.
         $resumeInputs = @($inputs.Mzmls | ForEach-Object { Join-Path $straightDir (Split-Path $_ -Leaf) })
         foreach ($p in $resumeInputs) {
             # Guard the premise. If an mzML ever does land in the work dir, the leg would
