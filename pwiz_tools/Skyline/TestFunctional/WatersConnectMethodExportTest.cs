@@ -1,6 +1,7 @@
 /*
  * Original author: Rita Chupalov <ritach .at. uw.edu>
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5) <noreply .at. anthropic.com>
  *
  * Copyright 2025 University of Washington - Seattle, WA
  *
@@ -23,6 +24,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Security.Authentication;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -63,6 +66,8 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
             TestTemplateSelection(exportMethodDlg);
             TestMethodExport(exportMethodDlg);
+
+            VerifyHandlerReplacement();
 
             SetAuthenticationErrorHandler();
             exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
@@ -206,14 +211,7 @@ namespace pwiz.SkylineTestFunctional
             var schedulingDataDlg = ShowDialog<SchedulingOptionsDlg>(() => warningDlg.ClickOk(), 1000);
             var methodFileDlg = ShowDialog<WatersConnectSaveMethodFileDialog>(() => schedulingDataDlg.OkDialog());
             ValidateSkylineFolder(methodFileDlg);
-            RunUI(() =>
-            {
-                var folderToSelect = methodFileDlg.ListViewItems.FirstOrDefault(item => item.Text == @"FolderA");
-                Assert.IsNotNull(folderToSelect, "FolderA not found in the list of folders.");
-                folderToSelect.Selected = true;
-                methodFileDlg.KeyPressHandler(Keys.Enter);
-            });
-            WaitForConditionUI(1000, () => methodFileDlg.ListViewItems.Count == 11, () => "Template selection dialog is not populated within allotted time.");
+            NavigateIntoFolderA(methodFileDlg, 11);
             RunUI(() =>
             {
                 Assert.AreEqual(0, methodFileDlg.ListViewItems.Count(item => item.ImageIndex == (int)BaseFileDialogNE.ImageIndex.ReadOnlyFolder));
@@ -227,6 +225,10 @@ namespace pwiz.SkylineTestFunctional
             var fileExistsDialog = ShowDialog<MessageDlg>(() => methodFileDlg.KeyPressHandler(Keys.Enter), 1000);
             Assert.IsNotNull(fileExistsDialog);
             OkDialog(fileExistsDialog, fileExistsDialog.OkDialog);
+            // FolderA is writable: exercise creating a new folder here (success + permission-denied).
+            // Done after the original-state assertions above so the created folder does not perturb them.
+            VerifyNewFolder(methodFileDlg);
+            VerifyRefresh(methodFileDlg);
             RunUI(() =>
             {
                 methodFileDlg.ListViewItems[0].Selected = false;
@@ -241,6 +243,140 @@ namespace pwiz.SkylineTestFunctional
                 uploadResultDlg.OkDialog();
             });
             WaitForClosedForm<ExportMethodDlg>();
+        }
+
+        /// <summary>
+        /// Selects FolderA in the current listing, enters it, and waits for the expected number of
+        /// items. On timeout the message reports the actual listing so a count mismatch (e.g. stale
+        /// mock data leaking between runs) is diagnosable from the failure alone.
+        /// </summary>
+        private void NavigateIntoFolderA(WatersConnectSaveMethodFileDialog methodFileDlg, int expectedItemCount)
+        {
+            RunUI(() =>
+            {
+                var folderToSelect = methodFileDlg.ListViewItems.FirstOrDefault(item => item.Text == @"FolderA");
+                Assert.IsNotNull(folderToSelect, "FolderA not found in the list of folders.");
+                folderToSelect.Selected = true;
+                methodFileDlg.KeyPressHandler(Keys.Enter);
+            });
+            WaitForConditionUI(1000, () => methodFileDlg.ListViewItems.Count == expectedItemCount,
+                () => string.Format(@"FolderA listing is not populated within allotted time. Expected {0} items, found {1}: {2}",
+                    expectedItemCount, methodFileDlg.ListViewItems.Count,
+                    string.Join(@"; ", methodFileDlg.ListViewItems.Select(i => i.Text))));
+        }
+
+        /// <summary>
+        /// Verifies that a replacement mock handler registered mid-process (CreateReplaceHandler)
+        /// takes effect for the next waters_connect client. Reproduces in a single pass the
+        /// state leak the nightly hit across language passes: the pooled IHttpClientFactory pipeline
+        /// kept serving the previously installed handler (with its stale created-folder state), so the
+        /// next run's fresh handler was silently ignored and FolderA listed 13 items instead of 11.
+        /// See <see cref="WatersConnectAccount.GetAuthenticatedHttpClient"/>.
+        /// Premise: the guard only detects a regression while the pooled pipeline entry is inside
+        /// its default 2-minute lifetime. This method runs well under a minute into the test, so
+        /// the entry created by the earlier phases is still live; a machine slow enough to void
+        /// that margin would be timing out the test's other waits first.
+        /// </summary>
+        private void VerifyHandlerReplacement()
+        {
+            const string extraMethodName = "HandlerSwapMethod";
+            InstallWcHandler(extraMethodName);
+
+            var exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
+                SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
+            var warningDlg = ShowDialog<MultiButtonMsgDlg>(() => exportMethodDlg.OkDialog(), 1000);
+            var schedulingDataDlg = ShowDialog<SchedulingOptionsDlg>(() => warningDlg.ClickOk(), 1000);
+            var methodFileDlg = ShowDialog<WatersConnectSaveMethodFileDialog>(() => schedulingDataDlg.OkDialog());
+            // The dialog opens in the template's folder (ExportMethodDlg.OkDialog sets
+            // InitialDirectory from the template URL). The replacement handler serves the same
+            // methods listing for every folder, so its extra method must appear - unless the
+            // pooled pipeline is still serving the old handler.
+            WaitForConditionUI(5000, () => methodFileDlg.ListViewItems.Any(i => i.Text == extraMethodName),
+                () => string.Format(@"The replacement handler's extra method did not appear; the previously installed handler is still being served. Listing ({0} items): {1}",
+                    methodFileDlg.ListViewItems.Count,
+                    string.Join(@"; ", methodFileDlg.ListViewItems.Select(i => i.Text))));
+            CancelDialog(methodFileDlg);
+            CancelDialog(exportMethodDlg);
+
+            // Restore the standard handler so later phases do not see the extra method.
+            InstallWcHandler();
+        }
+
+        /// <summary>
+        /// Exercises the New Folder feature on the save-method dialog while positioned in a writable
+        /// folder: the button is available, a successful create sends the right name and description,
+        /// and a Forbidden response surfaces a permission message. Leaves the dialog in its original
+        /// state (same folder, success handler restored) so the caller can continue.
+        /// </summary>
+        private void VerifyNewFolder(WatersConnectSaveMethodFileDialog methodFileDlg)
+        {
+            const string newFolderName = "NewTestFolder";
+            RunUI(() =>
+            {
+                Assert.IsTrue(methodFileDlg.NewFolderButtonVisible, "New Folder button should be visible on the save dialog.");
+                Assert.IsTrue(methodFileDlg.NewFolderButtonEnabled, "New Folder button should be enabled in a writable folder.");
+            });
+
+            // Success: the PUT carries the entered name and the generated description.
+            _createdFolderName = _createdFolderDescription = null;
+            RunUI(() => methodFileDlg.CreateNewFolderForTest(newFolderName));
+            var account = (WatersConnectAccount) RemoteUrl.RemoteAccountStorage.GetRemoteAccounts().First();
+            RunUI(() =>
+            {
+                Assert.AreEqual(newFolderName, _createdFolderName);
+                Assert.AreEqual(
+                    string.Format(FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_Created_by__0__using_Skyline, account.Username),
+                    _createdFolderDescription);
+            });
+
+            // The created folder must show up in the refreshed listing so the user can navigate into it.
+            WaitForConditionUI(5000, () => methodFileDlg.ListViewItems.Any(i => i.Text == newFolderName),
+                () => "The new folder did not appear in the list after creation.");
+            RunUI(() => Assert.AreEqual((int) BaseFileDialogNE.ImageIndex.ReadWriteFolder,
+                methodFileDlg.ListViewItems.First(i => i.Text == newFolderName).ImageIndex,
+                "The new folder should be listed as a writable folder."));
+
+            // Permission error: a Forbidden response surfaces an explanatory message.
+            _folderCreateForbidden = true;
+            try
+            {
+                var errorDlg = ShowDialog<MessageDlg>(() => methodFileDlg.CreateNewFolderForTest(newFolderName));
+                AssertEx.Contains(errorDlg.Message,
+                    string.Format(FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_the_folder__0__, newFolderName));
+                OkDialog(errorDlg, errorDlg.OkDialog);
+            }
+            finally
+            {
+                _folderCreateForbidden = false; // restore success behavior for the rest of the test
+            }
+        }
+
+        /// <summary>
+        /// Exercises the Refresh command on the save-method dialog: a folder that appears on the server
+        /// after the current listing was cached shows up only once Refresh re-fetches the directory.
+        /// Guards the cache invalidation - without it, RefreshFromServer would repopulate from the cached
+        /// response and the new folder would never appear. Runs immediately after
+        /// <see cref="VerifyNewFolder"/> so it can reuse the folder just created into as the parent.
+        /// </summary>
+        private void VerifyRefresh(WatersConnectSaveMethodFileDialog methodFileDlg)
+        {
+            const string serverFolderName = "RefreshedFolder";
+            RunUI(() => Assert.IsTrue(methodFileDlg.RefreshButtonVisible, "Refresh button should be visible on the save dialog."));
+
+            // Simulate a folder created on the server outside Skyline after the listing was cached, in the
+            // same parent VerifyNewFolder just used. The cached listing must not show it yet.
+            RunUI(() =>
+            {
+                var parentFolderId = _createdFolders.Last().Key;
+                _createdFolders.Add(new KeyValuePair<string, string>(parentFolderId, serverFolderName));
+                Assert.IsFalse(methodFileDlg.ListViewItems.Any(i => i.Text == serverFolderName),
+                    "The server-side folder should not appear in the cached listing before refreshing.");
+            });
+
+            // Refresh invalidates the cached listing and re-fetches, so the new folder now appears.
+            RunUI(() => methodFileDlg.RefreshForTest());
+            WaitForConditionUI(5000, () => methodFileDlg.ListViewItems.Any(i => i.Text == serverFolderName),
+                () => "The server-side folder did not appear after refresh.");
         }
 
         private void TestAuthenticationError(ExportMethodDlg exportMethodDlg)
@@ -328,21 +464,112 @@ namespace pwiz.SkylineTestFunctional
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 
+        // Captures the most recent folder-creation (PUT) request body so tests can assert the payload.
+        private string _createdFolderName;
+        private string _createdFolderDescription;
+        // When set, the mock makes folder creation (PUT) return Forbidden. Read by the matcher
+        // predicate at request time, so toggling it flips behavior on the live handler instance
+        // (the dialog's session caches its HttpClient, so swapping handlers would not take effect).
+        private bool _folderCreateForbidden;
+        // Folders created via a successful PUT (parent folder GUID -> new folder name). The folders
+        // enumeration response injects these as children so a refreshed list shows the new folder.
+        private readonly List<KeyValuePair<string, string>> _createdFolders = new List<KeyValuePair<string, string>>();
+
         private void SetRequestHandlers()
         {
             // Since we do not need to connect to the actual server a dummy account suffices
             Settings.Default.RemoteAccountList.Add(RemoteAccountType.WATERS_CONNECT.GetEmptyAccount());
 
-            var wcHandler = new MockHttpMessageHandler();  
+            InstallWcHandler();
+
+            var authHandler = new MockHttpMessageHandler();
+            authHandler.AddMatcher(new RequestMatcherFunction(req => true,  // req.RequestUri.ToString().IndexOf(@"/connect/token") >=0, 
+                req =>
+                {
+                    Trace.WriteLine(req.Content.ReadAsStringAsync().Result);
+                    return "{\"access_token\":\"qqq\",\"expires_in\":3,\"token_type\":\"Bearer\",\"scope\":\"webapi\"}";
+                }
+            ));
+            Program.HttpMessageHandlerFactory.CreateReplaceHandler(WatersConnectAccount.AUTH_HANDLER_NAME, authHandler);
+        }
+
+        /// <summary>
+        /// Installs the waters_connect request handler. Folder creation (PUT) returns Forbidden while
+        /// <see cref="_folderCreateForbidden"/> is set, otherwise success; the flag is read per request
+        /// so tests can toggle it on the live handler. When <paramref name="extraMethodName"/> is set,
+        /// the methods listing carries one additional method with that name, so
+        /// <see cref="VerifyHandlerReplacement"/> can tell this handler's responses from a previously
+        /// installed handler's.
+        /// </summary>
+        private void InstallWcHandler(string extraMethodName = null)
+        {
+            var wcHandler = new MockHttpMessageHandler();
             // ReSharper disable StringIndexOfIsCultureSpecific.1
-            // Folders enumeration request
-            wcHandler.AddMatcher(new RequestMatcherFile(
+            // Folder creation (PUT). Both matchers must precede the folders-enumeration matcher below,
+            // which matches any URL containing the folders endpoint (including this PUT URL). The
+            // Forbidden matcher is first and only matches while the flag is set.
+            wcHandler.AddMatcher(new RequestMatcherString(
+                req => req.Method == HttpMethod.Put && _folderCreateForbidden && req.RequestUri.ToString().IndexOf(WatersConnectAccount.GET_FOLDERS) >= 0,
+                "{\"message\" : \"Insufficient permissions\"}", HttpStatusCode.Forbidden));
+            wcHandler.AddMatcher(new RequestMatcherFunction(
+                req => req.Method == HttpMethod.Put && req.RequestUri.ToString().IndexOf(WatersConnectAccount.GET_FOLDERS) >= 0,
+                req =>
+                {
+                    var body = JObject.Parse(req.Content.ReadAsStringAsync().Result);
+                    _createdFolderName = body["Name"]?.ToString();
+                    _createdFolderDescription = body["Description"]?.ToString();
+                    var parentId = req.RequestUri.Segments.Last().TrimEnd('/'); // .../folders/{parentGuid}
+                    _createdFolders.Add(new KeyValuePair<string, string>(parentId, _createdFolderName));
+                    return "{\"id\" : \"00000000-0000-0000-0000-000000000abc\"}";
+                }));
+            // Folders enumeration request: serve the static hierarchy with any created folders injected
+            // as children of their parent, so a refreshed listing reflects a successful create.
+            wcHandler.AddMatcher(new RequestMatcherFunction(
                 req => req.RequestUri.ToString().IndexOf(WatersConnectAccount.GET_FOLDERS) >= 0,
-                TestFilesDir.GetTestPath("MockHttpData\\WCFolders.json")));
+                req =>
+                {
+                    var root = JObject.Parse(File.ReadAllText(TestFilesDir.GetTestPath("MockHttpData\\WCFolders.json")));
+                    foreach (var created in _createdFolders)
+                    {
+                        var parent = FindFolderNode(root, created.Key);
+                        if (!(parent?["children"] is JArray children))
+                            continue;
+                        if (children.Any(c => (string) c["name"] == created.Value))
+                            continue;
+                        children.Add(new JObject
+                        {
+                            ["name"] = created.Value,
+                            ["description"] = string.Empty,
+                            ["path"] = (string) parent["path"] + "/" + created.Value,
+                            ["id"] = "00000000-0000-0000-0000-000000000abc",
+                            ["accessType"] = new JObject { ["read"] = true, ["write"] = true },
+                            ["children"] = new JArray()
+                        });
+                    }
+                    return root.ToString();
+                }));
             // Methods enumeration request
-            wcHandler.AddMatcher(new RequestMatcherFile(
-                req => req.RequestUri.ToString().IndexOf(WatersConnectSessionAcquisitionMethod.GET_METHODS_ENDPOINT) >= 0,
-                TestFilesDir.GetTestPath("MockHttpData\\WCMethods.json")));
+            if (extraMethodName == null)
+            {
+                wcHandler.AddMatcher(new RequestMatcherFile(
+                    req => req.RequestUri.ToString().IndexOf(WatersConnectSessionAcquisitionMethod.GET_METHODS_ENDPOINT) >= 0,
+                    TestFilesDir.GetTestPath("MockHttpData\\WCMethods.json")));
+            }
+            else
+            {
+                // Build the augmented listing once at install time so a bad fixture fails fast
+                // here instead of surfacing as an HTTP 400 and a misleading listing timeout.
+                var methods = JArray.Parse(File.ReadAllText(TestFilesDir.GetTestPath("MockHttpData\\WCMethods.json")));
+                var extraMethod = (JObject) methods[0].DeepClone();
+                extraMethod["name"] = extraMethodName;
+                var readOnlyProperties = (JObject) extraMethod["readOnlyProperties"];
+                Assert.IsNotNull(readOnlyProperties, "WCMethods.json fixture is missing readOnlyProperties.");
+                readOnlyProperties["methodVersionId"] = "00000000-0000-0000-0000-000000000def";
+                methods.Add(extraMethod);
+                wcHandler.AddMatcher(new RequestMatcherString(
+                    req => req.RequestUri.ToString().IndexOf(WatersConnectSessionAcquisitionMethod.GET_METHODS_ENDPOINT) >= 0,
+                    methods.ToString()));
+            }
             // Method upload request
             wcHandler.AddMatcher(new RequestMatcherFunction(
                 req => req.RequestUri.ToString().IndexOf(WatersConnectSessionAcquisitionMethod.UPLOAD_METHOD_ENDPOINT) >= 0,
@@ -357,19 +584,25 @@ namespace pwiz.SkylineTestFunctional
                     var description = jObject["description"]?.ToString() ?? string.Empty;
                     return string.Format(format, id, name, description);
                 }));
+            // ReSharper restore StringIndexOfIsCultureSpecific.1
             Program.HttpMessageHandlerFactory.CreateReplaceHandler(WatersConnectAccount.HANDLER_NAME, wcHandler);
+        }
 
-
-            var authHandler = new MockHttpMessageHandler(); 
-            authHandler.AddMatcher(new RequestMatcherFunction(req => true,  // req.RequestUri.ToString().IndexOf(@"/connect/token") >=0, 
-                req =>
+        // Depth-first search of the folder hierarchy for the node with the given id.
+        private static JObject FindFolderNode(JObject node, string id)
+        {
+            if ((string) node["id"] == id)
+                return node;
+            if (node["children"] is JArray children)
+            {
+                foreach (var child in children.OfType<JObject>())
                 {
-                    Trace.WriteLine(req.Content.ReadAsStringAsync().Result);
-                    return "{\"access_token\":\"qqq\",\"expires_in\":3,\"token_type\":\"Bearer\",\"scope\":\"webapi\"}";
+                    var found = FindFolderNode(child, id);
+                    if (found != null)
+                        return found;
                 }
-            ));
-            Program.HttpMessageHandlerFactory.CreateReplaceHandler(WatersConnectAccount.AUTH_HANDLER_NAME, authHandler);
-            // ReSharper enable StringIndexOfIsCultureSpecific.1
+            }
+            return null;
         }
 
         private void SetAuthenticationErrorHandler()

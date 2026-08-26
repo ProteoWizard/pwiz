@@ -668,6 +668,119 @@ namespace ZedGraph
 			Cursor.Current = Cursors.Default;
 		}
 
+		#region Automated mouse input
+
+		// Produce a mouse gesture without a mouse, in the spirit of IButtonControl.PerformClick.
+		// Each raises the event the operating system raises for a real mouse message, so every
+		// subscriber and the control's own zoom/pan/edit state machine behave as they would for
+		// a genuine press, drag and release. A stationary click is a down and an up with no move
+		// between them; a drag is a down, one or more moves, then an up.
+
+		/// <summary>
+		/// Perform a mouse-down at the client point carried by <paramref name="e" />
+		/// exactly as if the operating system had delivered it.
+		/// </summary>
+		public void PerformMouseDown( MouseEventArgs e )
+		{
+			OnMouseDown( e );
+		}
+
+		/// <summary>
+		/// Perform a mouse-move to the client point carried by <paramref name="e" />
+		/// exactly as if the operating system had delivered it.
+		/// </summary>
+		public void PerformMouseMove( MouseEventArgs e )
+		{
+			OnMouseMove( e );
+		}
+
+		/// <summary>
+		/// Perform a mouse-up at the client point carried by <paramref name="e" />
+		/// exactly as if the operating system had delivered it.
+		/// </summary>
+		public void PerformMouseUp( MouseEventArgs e )
+		{
+			OnMouseUp( e );
+		}
+
+		/// <summary>
+		/// Raise the WinForms MouseClick event, which a stationary press and release at one
+		/// point produces and a drag does not. Windows raises it from within the mouse-up,
+		/// before MouseUp itself, so a caller composing a whole gesture out of these calls
+		/// does not reproduce that order exactly.
+		/// </summary>
+		public void PerformMouseClick( MouseEventArgs e )
+		{
+			OnMouseClick( e );
+		}
+
+		/// <summary>
+		/// Zoom <paramref name="pane" /> so each axis end takes the scale value supplied for
+		/// it, recording the change on the zoom stack and raising <see cref="ZoomEvent" /> as
+		/// the end of an interactive zoom-drag does. Keeping each Min below its Max is the
+		/// caller's business.
+		/// </summary>
+		/// <param name="pane">The pane to zoom.</param>
+		/// <param name="xMin">Low end of the X range, or null to leave that end as it is.</param>
+		/// <param name="xMax">High end of the X range, or null to leave that end as it is.</param>
+		/// <param name="yMin">Low end of the Y range, or null to leave that end as it is.</param>
+		/// <param name="yMax">High end of the Y range, or null to leave that end as it is.</param>
+		public void ZoomPaneToScale( GraphPane pane, double? xMin, double? xMax, double? yMin, double? yMax )
+		{
+			if ( pane == null )
+				return;
+
+			// A viewport that cannot move at all records no state and does not repaint.
+			if ( !_isEnableHZoom && !_isEnableHPan && !_isEnableVZoom && !_isEnableVPan )
+				return;
+
+			ZoomState oldState = ZoomStateSave( pane, ZoomState.StateType.Zoom );
+
+			// Each axis end is independent: a value moves that end and takes it out of auto scaling,
+			// a null leaves both alone. A direction moves only where the user could move it, by
+			// zooming or by panning.
+			if ( _isEnableHZoom || _isEnableHPan )
+			{
+				if ( xMin.HasValue )
+				{
+					pane.XAxis.Scale.Min = xMin.Value;
+					pane.XAxis.Scale.MinAuto = false;
+				}
+				if ( xMax.HasValue )
+				{
+					pane.XAxis.Scale.Max = xMax.Value;
+					pane.XAxis.Scale.MaxAuto = false;
+				}
+			}
+			if ( _isEnableVZoom || _isEnableVPan )
+			{
+				if ( yMin.HasValue )
+				{
+					pane.YAxis.Scale.Min = yMin.Value;
+					pane.YAxis.Scale.MinAuto = false;
+				}
+				if ( yMax.HasValue )
+				{
+					pane.YAxis.Scale.Max = yMax.Value;
+					pane.YAxis.Scale.MaxAuto = false;
+				}
+			}
+
+			ApplyToAllPanes( pane );
+
+			using ( Graphics g = this.CreateGraphics() )
+				pane.AxisChange( g );
+
+			ZoomStatePush( pane );
+
+			if ( this.ZoomEvent != null )
+				this.ZoomEvent( this, oldState, new ZoomState( pane, ZoomState.StateType.Zoom ), pane.CenterPoint );
+
+			this.Refresh();
+		}
+
+		#endregion
+
 		/// <summary>
 		/// Make a string label that corresponds to a user scale value.
 		/// </summary>

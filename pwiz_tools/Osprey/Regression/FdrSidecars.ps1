@@ -6,22 +6,26 @@ Two consumers, one decoder:
   * ai/scripts/Osprey/Compare/Compare-FdrSidecars-Crossimpl.ps1 - C# vs Rust.
 
 The four-task chain leg asserted only Compare-BlibFull, and the blib carries no protein
-q-value, so a route that writes a different RunProteinQvalue into every
+q-value, so a route that writes a different ExperimentProteinQvalue into every
 <stem>.2nd-pass.fdr_scores.bin passed green (issue #4553: 32,450 of 260,419 records differ
 on StellarGenDecoyEntrap, 1.57% at 82 files). Peptide counts, protein-group counts and the
 blib are all identical while it happens, so nothing the gate already reads can see it.
 
 The cross-impl gate had the same blind spot from the other direction: it compares the
 Stage 7 protein FDR dump (per-protein-GROUP columns) and the blib, neither of which carries
-a per-entry SVM score or run protein q. Both implementations dropped the same fields, so
+a per-entry SVM score or protein q. Both implementations dropped the same fields, so
 they agreed on the wrong value and nothing was red.
 
 This compares the sidecars themselves, which is where the distributed tasks' per-file
 output actually lands.
 
-Record layout (Osprey.IO\FdrScoresSidecar.cs): 32-byte header, 60-byte records,
+Test-Pass2ProteinQvalue (below) covers the case a two-route comparison structurally CANNOT:
+a value both routes copy identically from pass 1. See issue #4559.
+
+Record layout (Osprey.IO\FdrScoresSidecar.cs), v4: 32-byte header, 68-byte records,
   entry_id u32 @0, score f64 @4, run_precursor_q @12, run_peptide_q @20,
-  experiment_precursor_q @28, experiment_peptide_q @36, pep @44, run_protein_q @52.
+  experiment_precursor_q @28, experiment_peptide_q @36, pep @44,
+  experiment_protein_q @52, experiment_aggregate_score @60 (issue #4522).
 Header: magic @0..8, version @8, pass @9, record count u64 @16.
 
 The decode + compare runs as compiled C#, not PowerShell. A per-record PowerShell loop
@@ -33,7 +37,22 @@ returns a NAMED problem rather than a silent skip, and the comparison refuses to
 file pair equal on the strength of records it never read.
 #>
 
-if (-not ([System.Management.Automation.PSTypeName]'OspreyFdrSidecarComparer').Type) {
+# A .NET type cannot be replaced once loaded into a PowerShell session, and the guard below
+# keys on the type NAME - so a session that already dot-sourced an older copy of this file keeps
+# that older type. This branch added CheckPass2ProteinQ to it, so such a session would throw
+# "does not contain a method named CheckPass2ProteinQ" from inside Test-Pass2ProteinQvalue,
+# aborting a multi-hour gate mid-dataset with an error that names neither the cause nor the cure.
+# Reloading is impossible, so say so immediately instead. Reachable via a second regression.ps1
+# invocation in one session, or Compare-FdrSidecars-Crossimpl.ps1 dot-sourcing a sibling
+# checkout's copy first.
+$ospreyComparerType = ([System.Management.Automation.PSTypeName]'OspreyFdrSidecarComparer').Type
+if ($ospreyComparerType -and -not $ospreyComparerType.GetMethod('CheckPass2ProteinQ')) {
+    throw ("An older OspreyFdrSidecarComparer is already loaded in this PowerShell session and " +
+           "has no CheckPass2ProteinQ method. A loaded .NET type cannot be replaced, so this " +
+           "session cannot run the 2nd-pass protein q gate (mode 1c). Start a fresh pwsh " +
+           "session and re-run.")
+}
+if (-not $ospreyComparerType) {
     Add-Type -TypeDefinition @'
 using System;
 using System.Collections.Generic;
@@ -64,11 +83,21 @@ public class FdrSidecarDiff
     public string[] FirstExample;
 }
 
+public class Pass2ProteinQLiveness
+{
+    public bool Readable;
+    public string Problem;
+    public long Matched;
+    public long Differing;
+    public long DifferingAtDefault;
+    public long AbsentFromPass1;
+}
+
 public static class OspreyFdrSidecarComparer
 {
     private const int HeaderLen = 32;
-    private const int RecordLen = 60;
-    private const byte ExpectedVersion = 3;
+    private const int RecordLen = 68;
+    private const byte ExpectedVersion = 4;
     private static readonly byte[] Magic = { 0x4F, 0x53, 0x50, 0x52, 0x59, 0x46, 0x44, 0x52 }; // OSPRYFDR
 
     /// Name and byte offset in ONE table. They were parallel arrays whose lengths separately
@@ -84,8 +113,80 @@ public static class OspreyFdrSidecarComparer
         new FdrSidecarField { Name = "experiment_precursor_qvalue", Offset = 28 },
         new FdrSidecarField { Name = "experiment_peptide_qvalue",   Offset = 36 },
         new FdrSidecarField { Name = "pep",                         Offset = 44 },
-        new FdrSidecarField { Name = "run_protein_qvalue",          Offset = 52 },
+        new FdrSidecarField { Name = "experiment_protein_qvalue",   Offset = 52 },
+        new FdrSidecarField { Name = "experiment_aggregate_score",  Offset = 60 },
     };
+
+    /// Byte offset of a field, by name, so a caller cannot hardcode an offset that the next
+    /// layout change silently moves out from under it.
+    public static int OffsetOf(string name)
+    {
+        foreach (var f in Fields)
+        {
+            if (f.Name == name)
+                return f.Offset;
+        }
+        throw new ArgumentException("no such sidecar field: " + name);
+    }
+
+    /// Is the 2nd-pass sidecar's experiment_protein_qvalue a SECOND-PASS value, or a verbatim
+    /// copy of the first pass? Issue #4559: no pass-2 mode wrote the column, so it reached the
+    /// 2nd-pass file carrying whatever pass 1 put there - the one column in that file that was
+    /// unconditionally a pass-1 value. Nothing could see it: the two-route comparison above is
+    /// blind because BOTH routes copied it, and the golden reads the per-GROUP protein dump,
+    /// never this per-entry column.
+    ///
+    /// This is a LIVENESS check, not an equivalence one. It cannot say the pass-2 value is
+    /// correct; it says the pass-2 protein FDR result reached the file at all. That is exactly
+    /// the failure class that hid here, and it is checkable from one run's own output with no
+    /// baseline. Records absent from pass 1 (gap-fill) cannot be compared and are counted
+    /// separately rather than silently skipped.
+    public static Pass2ProteinQLiveness CheckPass2ProteinQ(string pass1Path, string pass2Path)
+    {
+        var result = new Pass2ProteinQLiveness();
+        byte[] a = ReadIfValid(pass1Path, 1, out long na, out string problemA);
+        byte[] b = ReadIfValid(pass2Path, 2, out long nb, out string problemB);
+        if (a == null || b == null)
+        {
+            result.Problem = a == null ? problemA : problemB;
+            return result;
+        }
+        result.Readable = true;
+
+        int off = OffsetOf("experiment_protein_qvalue");
+        var pass1ById = new Dictionary<uint, double>();
+        for (long i = 0; i < na; i++)
+        {
+            int o = HeaderLen + (int)(i * RecordLen);
+            pass1ById[BitConverter.ToUInt32(a, o)] = BitConverter.ToDouble(a, o + off);
+        }
+        for (long i = 0; i < nb; i++)
+        {
+            int o = HeaderLen + (int)(i * RecordLen);
+            uint id = BitConverter.ToUInt32(b, o);
+            double q2 = BitConverter.ToDouble(b, o + off);
+            double q1;
+            if (!pass1ById.TryGetValue(id, out q1))
+            {
+                result.AbsentFromPass1++;
+                continue;
+            }
+            result.Matched++;
+            if (BitConverter.DoubleToInt64Bits(q1) != BitConverter.DoubleToInt64Bits(q2))
+            {
+                result.Differing++;
+                // "Differs from pass 1" alone stopped being sufficient when #4559 also removed
+                // the pass-1 seed from RestorePass1Scalars: an UNPATCHED record now reads 1.0,
+                // the ResetScores default, which also differs from the pass-1 value. So a run
+                // with the patch reverted would still show Differing > 0 and pass. Counting the
+                // defaults separately lets the caller tell a real pass-2 value from the patch
+                // never having run.
+                if (q2 == 1.0)
+                    result.DifferingAtDefault++;
+            }
+        }
+        return result;
+    }
 
     public static FdrSidecarDiff Compare(
         string pathExpected, string pathActual, double tolerance, int expectedPass)
@@ -169,7 +270,12 @@ public static class OspreyFdrSidecarComparer
     /// (FdrScoresSidecar.TryRead returns false on a pass mismatch) while a filename-only
     /// comparison would happily call the two sides equal.
     ///
-    /// The size arithmetic is checked: 60 divides many lengths, so a corrupt count can
+    /// The version check matters for the same reason: a writer whose record width differs from
+    /// ExpectedVersion's must be REFUSED by name rather than decoded at the wrong stride. The
+    /// size check alone rejected the v3 -> v4 growth only because 68 and 60 happen not to divide
+    /// alike, which is luck, not a guard.
+    ///
+    /// The size arithmetic is checked: 68 divides many lengths, so a corrupt count can
     /// satisfy the size test by wrapping mod 2^64 and then walk off the end of the buffer.
     /// The canonical reader wraps the identical expression for the identical reason.
     private static byte[] ReadIfValid(string path, int expectedPass, out long count, out string problem)
@@ -342,4 +448,87 @@ function Compare-FdrSidecars {
     }
 
     return @{ Pass = ($issues.Count -eq 0); Issues = $issues; Compared = $nCompared }
+}
+
+function Test-Pass2ProteinQvalue {
+    <#
+    Assert that each <stem>.2nd-pass.fdr_scores.bin carries a SECOND-PASS
+    experiment_protein_qvalue rather than a verbatim copy of the 1st-pass column.
+
+    Single-run property, so it needs no baseline and no second route - which is the point.
+    Issue #4559: no pass-2 mode wrote that column, so it reached the 2nd-pass file holding
+    whatever pass 1 put there, and nothing could see it. Compare-FdrSidecars is blind because
+    both routes copied the same wrong value (the shared-defect blind spot), and the golden
+    reads the per-GROUP Stage 7 dump, never this per-entry column.
+
+    LIVENESS, not equivalence: this cannot say the pass-2 value is right, only that the
+    second-pass protein FDR reached the file. Records absent from pass 1 (gap-fill) cannot be
+    compared and are reported separately rather than silently skipped.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$RunDir
+    )
+
+    $issues = [System.Collections.Generic.List[string]]::new()
+    $suffix = '.2nd-pass.fdr_scores.bin'
+    $files = @(Get-ChildItem -File -Path $RunDir -Filter "*$suffix" -ErrorAction SilentlyContinue)
+    if ($files.Count -eq 0) {
+        $issues.Add("no $suffix files in $RunDir")
+        return @{ Pass = $false; Issues = $issues; Matched = 0 }
+    }
+
+    $totalMatched = 0
+    $totalDiffering = 0
+    $totalDefault = 0
+    $totalGapFill = 0
+    foreach ($f in ($files | Sort-Object Name)) {
+        $stem = $f.Name.Substring(0, $f.Name.Length - $suffix.Length)
+        $pass1 = Join-Path $RunDir "$stem.1st-pass.fdr_scores.bin"
+        if (-not (Test-Path $pass1)) {
+            $issues.Add("$stem : no 1st-pass sidecar to compare against at $pass1")
+            continue
+        }
+        $r = [OspreyFdrSidecarComparer]::CheckPass2ProteinQ($pass1, $f.FullName)
+        if (-not $r.Readable) {
+            $issues.Add("$stem : $($r.Problem)")
+            continue
+        }
+        if ($r.Matched -eq 0) {
+            $issues.Add("$stem : no entry_id present in both passes - verified nothing")
+            continue
+        }
+        $totalMatched += $r.Matched
+        $totalDiffering += $r.Differing
+        $totalDefault += $r.DifferingAtDefault
+        $totalGapFill += $r.AbsentFromPass1
+    }
+
+    # Asserted at RUN level, not per file. The property - "the second-pass protein FDR reached
+    # the sidecar" - is a property of the run, and PropagateProteinQvalues legitimately assigns
+    # 1.0 to every entry whose ModifiedSequence is absent from PeptideQvalues in BOTH passes
+    # (ProteinFdr.cs), so a file dominated by those produces bit-identical columns without
+    # anything being wrong. Asserting per file reddened the whole dataset for that.
+    if ($files.Count -gt 0 -and $totalMatched -gt 0) {
+        if ($totalDiffering -eq 0) {
+            $issues.Add((("experiment_protein_qvalue is identical to the 1st-pass column on all " +
+                "{0} shared record(s) across {1} file(s) - the second-pass protein FDR result " +
+                "never reached the 2nd-pass sidecar (issue #4559)") -f $totalMatched, $files.Count))
+        }
+        elseif ($totalDiffering -eq $totalDefault) {
+            # Every record that moved, moved to the ResetScores default. That is what a run with
+            # PatchPass2ProteinQvalues reverted or failing looks like, and it is NOT what a
+            # populated pass-2 column looks like - so it must not read as liveness.
+            $issues.Add((("all {0} differing record(s) hold the 1.0 reset default rather than a " +
+                "computed second-pass value - the patch did not run, or wrote nothing (#4559)") `
+                -f $totalDiffering))
+        }
+    }
+
+    return @{
+        Pass = ($issues.Count -eq 0)
+        Issues = $issues
+        Matched = $totalMatched
+        Differing = $totalDiffering
+        GapFill = $totalGapFill
+    }
 }

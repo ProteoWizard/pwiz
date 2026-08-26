@@ -162,6 +162,44 @@ function Get-DiagnosticsMetrics {
     Add-Metric 'winFraction.nullBandReal' $d.winFraction.nullBandReal
     Add-Metric 'winFraction.nullBandEnt'  $(if ($d.winFraction.hasEntrapment) { $d.winFraction.nullBandEnt } else { $null })
 
+    # --- Peak co-assignment (issue #4522) ----------------------------------
+    # Pinned at BOTH passes and BOTH q scopes. Without these the panel ships with no golden
+    # coverage at all: this projection is an explicit metric list, not an enumeration of the
+    # payload, so a new card is invisible to the comparison until it is named here. The counts
+    # are the critical ones (nBetter is the "would go away under best-match-wins" number);
+    # the fractions follow from them and n, so pinning both would only double the failure noise.
+    foreach ($p in 1, 2) {
+        $ca = if ($p -eq 2) { $d.pass2.coAssignment } else { $d.coAssignment }
+        foreach ($scope in 'run', 'experiment') {
+            $s = if ($ca) { $ca.$scope } else { $null }
+            foreach ($cls in 'target', 'entrapment', 'decoy') {
+                $r = if ($s) { $s.$cls } else { $null }
+                Add-Metric "pass$p.coAssign.$scope.$cls.n"       $(if ($r) { $r.n } else { $null })
+                Add-Metric "pass$p.coAssign.$scope.$cls.nBetter" $(if ($r) { $r.nBetter } else { $null })
+            }
+            # NaN when a class is under MIN_N_FOR_ENRICHMENT, which is itself worth pinning: it
+            # says the run had too few of that class to make a ratio, and a change in that is a
+            # change in the pool.
+            Add-Metric "pass$p.coAssign.$scope.enrichment" $(if ($s) { $s.enrichment } else { $null })
+        }
+        # The acceptance boundary in use, and the score this pass's OWN population needs to reach
+        # the target FDR. Pinned because their divergence is the pool-selection signal: they agree
+        # at pass 1 and separate at pass 2 when compaction has stripped the winning decoys, and a
+        # change in that separation is a change in how the second pass is built. The counts are
+        # pinned beside the score so a drift shows whether it moved the IDs, the decoys, or both.
+        Add-Metric "pass$p.coAssign.cutoff"             $(if ($ca) { $ca.experimentCutoff } else { $null })
+        # The two protein-compact boundaries (#4573). Pinned separately from the pooled
+        # cutoff because a regression that collapses them back onto one minimum - or that
+        # loses the stratum and leaves both NaN - is invisible in `cutoff` alone.
+        Add-Metric "pass$p.coAssign.cutoffInStratum"    $(if ($ca) { $ca.experimentCutoffInStratum } else { $null })
+        Add-Metric "pass$p.coAssign.cutoffOffStratum"   $(if ($ca) { $ca.experimentCutoffOffStratum } else { $null })
+        Add-Metric "pass$p.coAssign.acceptedInStratum"  $(if ($ca) { $ca.acceptedInStratum } else { $null })
+        Add-Metric "pass$p.coAssign.acceptedOffStratum" $(if ($ca) { $ca.acceptedOffStratum } else { $null })
+        Add-Metric "pass$p.coAssign.fdrCrossing"        $(if ($ca) { $ca.experimentFdrCrossing } else { $null })
+        Add-Metric "pass$p.coAssign.fdrCrossingDecoys"  $(if ($ca) { $ca.experimentFdrCrossingDecoys } else { $null })
+        Add-Metric "pass$p.coAssign.fdrCrossingNonDecoys" $(if ($ca) { $ca.experimentFdrCrossingNonDecoys } else { $null })
+    }
+
     # --- FDP at the reported-q threshold (entrapment only) -----------------
     foreach ($pass in 1, 2) {
         $fdp = Get-FdpAtThreshold -Payload $d -Pass $pass -Scope 'experiment'
@@ -261,9 +299,22 @@ function Compare-DiagnosticsGolden {
         $bothNumeric = [double]::TryParse($g, $style, $inv, [ref]$gd) -and
                        [double]::TryParse($f, $style, $inv, [ref]$fd)
         if ($bothNumeric) {
-            $diff = [math]::Abs($gd - $fd)
-            if ($diff -gt $Tolerance) {
-                $issues.Add(("diagnostics: {0} golden={1} run={2} diff={3:e3} (tol {4:e0})" -f $name, $g, $f, $diff, $Tolerance))
+            # NaN and +/-Infinity BOTH parse successfully here, and every comparison against
+            # NaN is $false - so a bare Abs(diff) -gt Tolerance passes golden='NaN' against
+            # run='4.37' silently, and the string fallback below is unreachable once TryParse
+            # has succeeded. NaN is a meaningful VALUE for these metrics (a class under
+            # MIN_N_FOR_ENRICHMENT reports it), so a class crossing that threshold in either
+            # direction is exactly the change worth catching. Compare non-finite values for
+            # equality; only finite pairs get the tolerance.
+            if (-not ([double]::IsFinite($gd) -and [double]::IsFinite($fd))) {
+                if ($g -ne $f) {
+                    $issues.Add(("diagnostics: {0} golden='{1}' run='{2}'" -f $name, $g, $f))
+                }
+            } else {
+                $diff = [math]::Abs($gd - $fd)
+                if ($diff -gt $Tolerance) {
+                    $issues.Add(("diagnostics: {0} golden={1} run={2} diff={3:e3} (tol {4:e0})" -f $name, $g, $f, $diff, $Tolerance))
+                }
             }
         } elseif ($g -ne $f) {
             $issues.Add(("diagnostics: {0} golden='{1}' run='{2}'" -f $name, $g, $f))

@@ -1,7 +1,7 @@
 <html><head>
 <meta charset="utf-8">
 <title>Osprey command-line usage</title>
-<meta name="description" content="Command-line usage for Osprey, the C# (.NET 8) implementation of Mike MacCoss's peptide-centric DIA search tool: search and FDR arguments, protein inference, the SpectraCache staging task, and the four distributed HPC --task workers (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR).">
+<meta name="description" content="Command-line usage for Osprey, the C# (.NET 8) implementation of Mike MacCoss's peptide-centric DIA search tool: search and FDR arguments, protein inference, the SpectraCache staging task, the ModelDiagnostics report-only task, and the four distributed HPC --task workers (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR).">
 <style>
 body { font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; max-width: 70em; }
 h1 { font-size: 1.6em; font-weight: 600; color: #000; margin: 0 0 .3em; }
@@ -66,7 +66,7 @@ a { color: #1565c0; }
 <div class="RowType">Distributed / HPC</div>
 <table>
 <tr><th>Argument</th><th>Description</th></tr>
-<tr><td><nobr>--task</nobr> &lt;SpectraCache | PerFileScoring | FirstPassFDR | PerFileRescoring | SecondPassFDR&gt;</td><td>HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline.</td></tr>
+<tr><td><nobr>--task</nobr> &lt;SpectraCache | PerFileScoring | FirstPassFDR | PerFileRescoring | SecondPassFDR | ModelDiagnostics&gt;</td><td>HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. SpectraCache stages the .spectra.bin caches; ModelDiagnostics regenerates only the <nobr>--model-diagnostics</nobr> report for a COMPLETED run, writing no other artifact.</td></tr>
 <tr><td><nobr>--input-scores</nobr> &lt;paths|dir&gt;</td><td>HPC: one or more .scores.parquet files, or a single directory (<nobr>non-recursive</nobr>). Mutex with <nobr>--input</nobr>.</td></tr>
 </table>
 <div class="RowType">Logging</div>
@@ -82,7 +82,7 @@ a { color: #1565c0; }
 <table>
 <tr><th>Argument</th><th>Description</th></tr>
 <tr><td><nobr>-d</nobr>,&nbsp;<nobr>--diagnostics</nobr></td><td>Write <nobr>cross-impl</nobr> bisection dumps (OSPREY_DUMP_* bundle)</td></tr>
-<tr><td><nobr>--model-diagnostics</nobr></td><td>Write a <nobr>self-contained</nobr> interactive HTML report of the trained scoring model and FDR calibration</td></tr>
+<tr><td><nobr>--model-diagnostics</nobr></td><td>Write a <nobr>self-contained</nobr> interactive HTML report of the trained scoring model, FDR calibration, and <nobr>single-peak</nobr> <nobr>multiple-ID</nobr> <nobr>co-assignment</nobr></td></tr>
 <tr><td><nobr>-h</nobr>,&nbsp;<nobr>--help</nobr></td><td>Show this help message ([ascii|unicode|sections|html|&lt;Section&gt;])</td></tr>
 <tr><td><nobr>-v</nobr>,&nbsp;<nobr>--version</nobr></td><td>Show version</td></tr>
 </table>

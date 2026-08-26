@@ -713,6 +713,12 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="SkylineWindow_DocumentUI_The_DocumentUI_property_may_only_be_accessed_on_the_UI_thread" xml:space="preserve">
     <value>The DocumentUI property may only be accessed on the UI thread.</value>
   </data>
+  <data name="SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__" xml:space="preserve">
+    <value>Failure attempting to save the window layout file {0}.</value>
+  </data>
+  <data name="SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files" xml:space="preserve">
+    <value>Window Layout Files</value>
+  </data>
   <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome" xml:space="preserve">
     <value>Background Proteome</value>
   </data>
@@ -1100,6 +1106,9 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
     <value>The document must contain targets for which to export features.</value>
   </data>
+  <data name="SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout" xml:space="preserve">
+    <value>Export Window Layout</value>
+  </data>
   <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library" xml:space="preserve">
     <value>Export Spectral Library</value>
   </data>
@@ -1108,6 +1117,9 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   </data>
   <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__" xml:space="preserve">
     <value>Failed exporting spectral library to {0}.</value>
+  </data>
+  <data name="SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout" xml:space="preserve">
+    <value>Import Window Layout</value>
   </data>
   <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_" xml:space="preserve">
     <value>The document must be fully loaded before importing a peptide search.</value>
@@ -1267,5 +1279,20 @@ Do you want to save the document now?</value>
   </data>
   <data name="CommandLine_ApplySettings_Settings___0___applied_to_document_" xml:space="preserve">
     <value>Settings '{0}' applied to document.</value>
+  </data>
+  <data name="CommandLine_ReorderReplicates_Error__Could_not_read_replicate_order_file__0____1_" xml:space="preserve">
+    <value>The --reorder-replicates option could not read replicate order file '{0}': {1}</value>
+  </data>
+  <data name="CommandLine_ReorderReplicates_Error__The_replicate_order_file_does_not_contain_any_replicate_names_" xml:space="preserve">
+    <value>The --reorder-replicates order file '{0}' does not contain any replicate names.</value>
+  </data>
+  <data name="CommandLine_ReorderReplicates_Error__The_replicate_name__0__appears_more_than_once_in_the_order_file_" xml:space="preserve">
+    <value>The replicate name '{0}' appears more than once in the --reorder-replicates order file '{1}'.</value>
+  </data>
+  <data name="CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replicates_" xml:space="preserve">
+    <value>The --reorder-replicates option cannot be used because the document does not contain results replicates.</value>
+  </data>
+  <data name="CommandLine_ReorderReplicates_Error__The_replicate__0__was_not_found_in_the_document_" xml:space="preserve">
+    <value>The replicate '{0}' from the --reorder-replicates order file '{1}' was not found in the document.</value>
   </data>
 </root>

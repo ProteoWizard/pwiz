@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -112,6 +112,12 @@ namespace pwiz.Osprey.Tasks
         // PerFileScoringTask.
         private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries;
 
+        // What the deferred pool build will do, decided by Run and executed later, when a
+        // consumer pulls the RescoredEntries milestone. Null until Run decides, on every path
+        // that leaves the milestone deferred; BuildRescoredPool throws on a null rather than
+        // guessing, because every wrong guess here is a plausible number rather than an error.
+        private RescoredPoolPlan _poolPlan;
+
         // Admits one survivor refill at a time under the parallel file loop, so the
         // pre-compaction transient each load holds is not multiplied by the file parallelism.
         // See RescoreOneFileStreamed for why that trade is free.
@@ -146,6 +152,9 @@ namespace pwiz.Osprey.Tasks
         // _perFileEntries is the shared buffer this task overlays in place; it is
         // published as the RescoredEntries milestone (in Run and the SecondPassFDR-mode
         // Rehydrate) for SecondPassFDR to pull via ctx.Get<RescoredEntries>().
+        // Run publishes it DEFERRED (BuildRescoredPool runs on the first Value read), so
+        // this task ends where its HPC contract says it does - one file, then exit - and
+        // the whole-run pool is assembled by the pull that needs it (issue #4597).
 
         // Phase B resume surface. The reconciled parquet is written to a
         // SEPARATE <stem>.scores-reconciled.parquet sibling, leaving the
@@ -193,10 +202,17 @@ namespace pwiz.Osprey.Tasks
             // The Stage 6 handoff arm joins them: the streamed and resident arms are supposed
             // to write byte-identical reconciled parquets, and an in-place A/B that silently
             // adopted the other arm's outputs would report that identity without testing it.
+            // The sidecar format version belongs here too, not only in FirstPassFdrTask: this
+            // task WRITES the 2nd-pass sidecar, so a record-layout change (v3 -> v4) invalidates
+            // its output exactly as it invalidates the 1st-pass one. Without it, FirstPassFDR
+            // re-ran and rewrote v4 while this task and SecondPassFDR considered themselves
+            // valid against v3 files.
             return base.ValidityKey(ctx)
+                + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + OspreyEnvironment.Stage6StreamSurvivorsValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx);
         }
@@ -218,12 +234,29 @@ namespace pwiz.Osprey.Tasks
             // available -- one Get expresses the whole dependency.
             _perFileEntries = ctx.Get<CompactedEntries>().Value;
 
+            // The loader for the survivor lists FirstPassFDR released after planning
+            // (issue #4526); null when this run kept the resident buffer, which leaves
+            // nothing to refill and makes the deferred build below a no-op.
+            var survivorLoader = StreamedSurvivorLoader(ctx);
+
             // Publish the RescoredEntries milestone over the shared backing list
-            // now, while we hold its reference. ExecuteRescore (below) overlays
-            // it in place, and the self-gate may leave it unchanged; either way a
-            // consumer reading RescoredEntries.Value later sees the final buffer
-            // (milestone token over a shared store -- see PipelineByproducts.cs).
-            ctx.Publish(new RescoredEntries(_perFileEntries));
+            // now, while we hold its reference. On the streamed default ExecuteRescore
+            // (below) DRAINS that list file by file, and the self-gate may leave it at its
+            // Stage 5 contents; either way a consumer reading RescoredEntries.Value later
+            // sees the finished buffer, because the read is what finishes it
+            // (milestone token over a shared store - see PipelineByproducts.cs).
+            //
+            // DEFERRED, because reaching that state after the streamed rescore means
+            // re-reading every file's artifacts - whole-run join work, at the end of a
+            // per-file task whose HPC contract is one file then process exit. The build
+            // runs on the first Value read instead, so the consumer that needs the global
+            // pool is the one that pays for it and a worker skips it because nothing
+            // pulled it (issue #4597). WHAT it does is decided below, before Run returns,
+            // and parked in _poolPlan; deferring the decision as well as the work would
+            // read state that is no longer true by the time the pull comes (see
+            // RescoredPoolPlan).
+            var rescored = new RescoredEntries(_perFileEntries, () => BuildRescoredPool(ctx));
+            ctx.Publish(rescored);
 
             // Self-gate: rescore + reconciliation only run when there is
             // planning state to act on AND the rescore hasn't already been
@@ -255,31 +288,30 @@ namespace pwiz.Osprey.Tasks
             {
                 foreach (var inputFile in ctx.Config.InputFiles)
                 {
-                    if (File.Exists(FdrScoresSidecar.Pass2Path(inputFile)))
+                    // Presence is not readability. A bare File.Exists cannot see a version, so a
+                    // sidecar left by a build before the v3 -> v4 record change satisfied this
+                    // gate and made the WHOLE Stage 6 rescore a no-op - the run then finished
+                    // green carrying 1st-pass q-values into the picked-protein FDR and the .blib.
+                    if (FdrScoresSidecar.IsCurrentFormat(FdrScoresSidecar.Pass2Path(inputFile),
+                                                         FdrScoresSidecar.Pass.SecondPass))
                     {
                         anyPass2Present = true;
                         break;
                     }
                 }
             }
-            // Non-null only when FirstPassFDR released the survivor contents after planning
-            // (issue #4526). Every exit from here on has to leave the RescoredEntries
-            // milestone holding a full buffer, because that is what SecondPassFDR reads -
-            // so each return below refills it first.
-            var survivorLoader = StreamedSurvivorLoader(ctx);
 
             if (!didPlan && (rescoreBundle == null || anyPass2Present))
             {
                 // No rescore to run. The RESIDENT arm does nothing at all here - it leaves the
                 // buffer exactly as Stage 5 compacted it, and SecondPassFDR reloads the rescored
                 // features from the valid reconciled parquets on disk. So the streamed arm has
-                // to do exactly one thing: put back the contents FirstPassFDR released. Overlaying
-                // the reconciled parquets as well (as this did) applied Stage-6 boundaries the
-                // resident arm never applies, which made OSPREY_STAGE6_STREAM_SURVIVORS=0
-                // something other than a byte-identity oracle on this path - the one property
-                // the whole design rests on.
-                if (survivorLoader != null && !MaterializeAllSurvivors(survivorLoader, ctx))
-                    return false;
+                // to do exactly one thing: put back the contents FirstPassFDR released, which is
+                // the refill-only plan below. Overlaying the reconciled parquets as well (as
+                // this did) applied Stage-6 boundaries the resident arm never applies, which
+                // made OSPREY_STAGE6_STREAM_SURVIVORS=0 something other than a byte-identity
+                // oracle on this path - the one property the whole design rests on.
+                _poolPlan = RescoredPoolPlan.RefillOnly(_perFileEntries, survivorLoader);
                 return true;
             }
 
@@ -312,13 +344,16 @@ namespace pwiz.Osprey.Tasks
                 joinFileStems = rescoreBundle.JoinFileStems;
             }
 
+            var gapFill = ctx.Get<PerFileGapFillForRescore>().Value;
+            var consensusTargets = ctx.Get<PerFileConsensusTargets>().Value;
+            var reconciliationActions = ctx.Get<ReconciliationActions>().Value;
             var rescoreStats = ExecuteRescore(
                 _perFileEntries,
-                ctx.Get<PerFileConsensusTargets>().Value,
-                ctx.Get<ReconciliationActions>().Value,
+                consensusTargets,
+                reconciliationActions,
                 ctx.Get<RefinedCalibrations>().Value,
                 ctx.Get<PerFileCalibrations>().Value,
-                ctx.Get<PerFileGapFillForRescore>().Value,
+                gapFill,
                 ctx.Get<PerFileParquetPaths>().Value,
                 ctx.Get<FullLibrary>().Value,
                 ctx.Config,
@@ -330,38 +365,27 @@ namespace pwiz.Osprey.Tasks
                 @"Reconciliation rescore: {0} entries re-scored ({1} reconciliation actions executed)",
                 rescoreStats.TotalRescored, rescoreStats.TotalReconciliation));
 
-            // The streamed loop emptied every file's list again as it went, so rebuild the
-            // buffer SecondPassFDR reads. Reading it back from the reconciled parquets - rather
-            // than keeping it live through the loop - is the whole point: it is resident
-            // from here to the end of Stage 7 instead of for the entire rescore. Identical
-            // to what the resume path reconstructs, which regression.ps1 mode 2 gates.
-            //
-            // Skipped when SecondPassFDR will not run in THIS process, because it is the only
-            // reader of RescoredEntries and the rebuild exists solely to serve it. That is the
-            // ordinary case for a --task PerFileRescoring worker (NoJoin, so
-            // SecondPassFdrTask.IsIncluded is false), where the block would otherwise re-read
-            // every .scores.parquet and 1st-pass sidecar and then re-read the
-            // .scores-reconciled.parquet this task has just written - a full extra pass per
-            // worker, per file, for a buffer the process exits without touching.
-            if (survivorLoader != null && SecondPassFdrWillRun(ctx))
-            {
-                if (!MaterializeAllSurvivors(survivorLoader, ctx))
-                    return false;
-                // BEFORE the overlay, which appends gap-fill rows and re-sorts: the
-                // planner's indices address the survivor list as loaded, and the sort
-                // moves the appended rows into EntryId order, shifting every position
-                // after them. The overlay preserves Score / q-values, so the reset
-                // survives it.
-                ResetRescoredTargets(_perFileEntries, rescoredFiles, ctx);
-                OverlayReconciledIntoAllFiles(_perFileEntries, ctx, canonicalize: false);
-            }
+            // No rebuild of the whole-run buffer here. The streamed loop emptied every file's
+            // list as it went, and putting it all back is join work that belongs to whoever
+            // needs the global pool - BuildRescoredPool, on the RescoredEntries pull. What is
+            // decided HERE rather than there is which reconciled parquets that build may
+            // overlay: this is the last moment the question has the right answer (see
+            // RescoredPoolPlan), and the answer is cheap - one small sidecar read per file.
+            _poolPlan = new RescoredPoolPlan(_perFileEntries, survivorLoader, rescoredFiles,
+                CurrentReconciledPaths(ctx), gapFill, consensusTargets,
+                GroupReconciliationActionsByFile(reconciliationActions, out _));
 
             // Cross-impl bisection seam: dump per-precursor state
             // immediately after the rescore loop. Mirrors Rust's
-            // dump_stage6_rescored call from pipeline.rs.
+            // dump_stage6_rescored call from pipeline.rs. Reads the milestone rather
+            // than the raw buffer: the dump wants the whole-run state, so asking for it
+            // is a pull like any other (and the only thing that builds the pool in a
+            // process with no SecondPassFDR). Through the token published above, not a
+            // fresh ctx.Get: a Get here would route through the byproduct registry back
+            // to THIS task, one cache miss away from re-entering its own Rehydrate.
             if (ctx.Diagnostics?.DumpRescored ?? false)
             {
-                ctx.Diagnostics?.WriteStage6RescoredDump(_perFileEntries);
+                ctx.Diagnostics?.WriteStage6RescoredDump(rescored.Value);
                 if (ctx.Diagnostics?.RescoredOnly ?? false)
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
             }
@@ -443,10 +467,13 @@ namespace pwiz.Osprey.Tasks
                 // Refill first when Stage 5 released the survivors (issue #4526). A resume
                 // that re-runs Stage 5 lands here with an EMPTY buffer, and overlaying onto
                 // empty lists produces an almost-empty blib instead of failing.
+                // Eager here, unlike Run: Rehydrate itself only ever executes because a
+                // consumer pulled this milestone, so the work is already lazy.
                 var resumeLoader = StreamedSurvivorLoader(ctx);
-                if (resumeLoader != null && !MaterializeAllSurvivors(resumeLoader, ctx))
-                    return false;
-                OverlayReconciledIntoAllFiles(_perFileEntries, ctx);
+                if (resumeLoader != null)
+                    MaterializeAllSurvivors(_perFileEntries, resumeLoader, ctx);
+                OverlayReconciledIntoFiles(_perFileEntries, CurrentReconciledPaths(ctx),
+                    ctx.Get<PerFileGapFillForRescore>().Value);
 
                 ctx.Publish(new RescoredEntries(_perFileEntries));
                 return true;
@@ -467,7 +494,7 @@ namespace pwiz.Osprey.Tasks
             if (bundle != null)
             {
                 // First-pass protein FDR BEFORE compaction. The 1st-pass FDR
-                // sidecar v3 already carries RunProteinQvalue from the original
+                // sidecar v3 already carries ExperimentProteinQvalue from the original
                 // straight-through pipeline, but Rust pipeline.rs:4292 (gated by
                 // `!can_skip_fdr || config.expect_reconciled_input`) recomputes
                 // it inline in the --task SecondPassFDR path. The recompute uses the
@@ -476,8 +503,8 @@ namespace pwiz.Osprey.Tasks
                 // upstream rebuild has nudged peptide q-values or score values
                 // even at the ULP level). RescoreCompaction below now retains the
                 // persisted global first-pass base_id set and does NOT consult
-                // RunProteinQvalue, so this recompute no longer affects the
-                // compacted set; it is kept to hold RunProteinQvalue byte-consistent
+                // ExperimentProteinQvalue, so this recompute no longer affects the
+                // compacted set; it is kept to hold ExperimentProteinQvalue byte-consistent
                 // with the straight-through pipeline for the downstream 2nd-pass
                 // protein FDR and cross-impl parity (before recon-v3 read the
                 // persisted set, omitting it diverged the post-compaction set from
@@ -511,7 +538,7 @@ namespace pwiz.Osprey.Tasks
                 //     decoy side comes from q-gated detected peptides either way), so the skip
                 //     is a conservative choice, not a bug fix. It moves 740 records (0.28%)
                 //     upward and changes no output.
-                //   * That the 1st-pass sidecar's RunProteinQvalue is "what the straight-through
+                //   * That the 1st-pass sidecar's ExperimentProteinQvalue is "what the straight-through
                 //     pipeline computed". It is not: the join node's value differs from
                 //     straight-through for 12.46% of records (1.57% at 82 files), always lower.
                 //     That divergence is PRE-EXISTING - master's routing differs by 12.74% - and
@@ -806,7 +833,7 @@ namespace pwiz.Osprey.Tasks
             {
                 // Drop this file's entries before the next one loads its own - but ONLY when
                 // its reconciled parquet is actually on disk, because that file is what the
-                // end-of-loop rebuild restores them from. RescoreOneFile makes the same call
+                // deferred pool build restores them from. RescoreOneFile makes the same call
                 // about the heavy payload for the same reason (see the wroteReconciled gate
                 // it applies to ReleaseRescoredPayload): when the write no-opped or failed,
                 // these entries are the ONLY copy of the rescore, and dropping them would
@@ -1502,7 +1529,7 @@ namespace pwiz.Osprey.Tasks
         /// <param name="fileEntries">One file's entry list, updated in place.</param>
         /// <param name="reconciledPath">That file's <c>.scores-reconciled.parquet</c>.</param>
         /// <param name="gapFillForFile">The file's gap-fill targets, or null when it had none.</param>
-        private void OverlayReconciledIntoBuffer(List<FdrEntry> fileEntries,
+        private static void OverlayReconciledIntoBuffer(List<FdrEntry> fileEntries,
             string reconciledPath, IReadOnlyList<GapFillTarget> gapFillForFile)
         {
             List<FdrEntry> loaded;
@@ -1661,7 +1688,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// True when this file's <c>.scores-reconciled.parquet</c> is on disk AND current for
-        /// this run's validity key, i.e. the end-of-loop rebuild really can restore its
+        /// this run's validity key, i.e. the deferred pool build really can restore its
         /// rescored state from it. Asks the same question <see cref="TryResumeRescoredFile"/>
         /// asks, so the answer cannot disagree with it: a parquet the rebuild would refuse to
         /// overlay must not be treated as a safe place to drop this file's entries.
@@ -1693,40 +1720,176 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// True when <see cref="SecondPassFdrTask"/> is part of THIS process's pipeline, i.e.
-        /// when the <c>RescoredEntries</c> milestone will actually be read. Asked of the task
-        /// itself rather than re-derived from the config, so the answer cannot drift from
-        /// <see cref="OspreyTask.IsIncluded"/> - a second copy of that truth table is how a
-        /// worker ends up doing whole-run work nothing in the process consumes.
+        /// Everything the deferred pool build will do, DECIDED by <see cref="Run"/> and
+        /// executed later, when a consumer pulls the <see cref="RescoredEntries"/> milestone.
+        ///
+        /// <para>The work is deferred; the decisions are not, because two of these answers
+        /// stop being true the moment Run returns. <see cref="ReconciledPaths"/> is the one
+        /// that bites: once Run returns, the driver stamps a fresh validity sidecar onto
+        /// EVERY declared output that merely exists (<c>AnalysisPipeline.WriteTaskSidecars</c>)
+        /// - including a <c>.scores-reconciled.parquet</c> left by a run under a DIFFERENT
+        /// validity key, which this run rejected as stale (deleting its sidecar, not the
+        /// parquet) and never rewrote. Asking <c>PerFileResumeDriver.IsCurrent</c> after that
+        /// stamp answers yes for exactly that file and overlays another arm's boundaries into
+        /// this run's blib, silently. So the question is asked where the end-of-Run block used
+        /// to ask it, and only the answer travels.</para>
+        ///
+        /// <para>The planner byproducts travel too rather than being re-read from the context,
+        /// so a build in Stage 7 does not hold their last read hostage - see
+        /// <c>PipelineContext.Release</c>, "release only when every consumer has already run".</para>
         /// </summary>
-        private static bool SecondPassFdrWillRun(PipelineContext ctx)
+        private sealed class RescoredPoolPlan
         {
-            foreach (var task in ctx.Tasks)
+            /// <param name="buffer">The shared per-file buffer to bring to its post-rescore
+            /// state.</param>
+            /// <param name="loader">Refills the released survivor lists; null when this run
+            /// kept the resident buffer, which leaves nothing to refill.</param>
+            /// <param name="rescoredFiles">The files that reached the scoring engine in THIS
+            /// process, or null when no rescore ran at all (the self-gated no-op, where the
+            /// plan is a refill and nothing else). EMPTY is not null: a rescore that ran and
+            /// skipped every file still overlays, exactly as a cold run does.</param>
+            /// <param name="reconciledPaths">file name -> the <c>.scores-reconciled.parquet</c>
+            /// judged CURRENT while Run still held the answer. Files absent from this map keep
+            /// their 1st-pass boundaries.</param>
+            /// <param name="gapFill">The planner's per-file gap-fill targets, for the
+            /// overlay.</param>
+            /// <param name="consensusTargets">The planner's per-file multi-charge consensus
+            /// targets, for the score reset.</param>
+            /// <param name="reconciliationTargets">The planner's reconciliation actions grouped
+            /// by file, for the score reset.</param>
+            public RescoredPoolPlan(
+                List<KeyValuePair<string, List<FdrEntry>>> buffer,
+                FirstPassSurvivorLoader loader,
+                HashSet<string> rescoredFiles,
+                IReadOnlyDictionary<string, string> reconciledPaths,
+                IReadOnlyDictionary<string, List<GapFillTarget>> gapFill,
+                IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> consensusTargets,
+                IReadOnlyDictionary<string, List<(int Index, double Apex, double Start, double End)>> reconciliationTargets)
             {
-                if (task is SecondPassFdrTask)
-                    return task.IsIncluded(ctx);
+                Buffer = buffer;
+                Loader = loader;
+                RescoredFiles = rescoredFiles;
+                ReconciledPaths = reconciledPaths;
+                GapFill = gapFill;
+                ConsensusTargets = consensusTargets;
+                ReconciliationTargets = reconciliationTargets;
             }
-            return false;
+
+            /// <summary>The no-rescore plan: put back what FirstPassFDR released, and stop.</summary>
+            public static RescoredPoolPlan RefillOnly(
+                List<KeyValuePair<string, List<FdrEntry>>> buffer, FirstPassSurvivorLoader loader)
+            {
+                return new RescoredPoolPlan(buffer, loader, null, null, null, null, null);
+            }
+
+            public List<KeyValuePair<string, List<FdrEntry>>> Buffer { get; }
+            public FirstPassSurvivorLoader Loader { get; }
+            public HashSet<string> RescoredFiles { get; }
+            public IReadOnlyDictionary<string, string> ReconciledPaths { get; }
+            public IReadOnlyDictionary<string, List<GapFillTarget>> GapFill { get; }
+            public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> ConsensusTargets { get; }
+            public IReadOnlyDictionary<string, List<(int Index, double Apex, double Start, double End)>> ReconciliationTargets { get; }
+        }
+
+        /// <summary>
+        /// Bring the shared buffer to the whole-run post-rescore state the
+        /// <see cref="RescoredEntries"/> milestone promises, on the first read of that
+        /// milestone (see the deferring constructor in <c>PipelineByproducts.cs</c>).
+        ///
+        /// <para>This is the join work that used to end <see cref="Run"/>. It is here
+        /// because the pool is global - the pass-2 protein-compact competition is over a
+        /// global stratum - while <see cref="Run"/> is a per-file HPC task that exits when
+        /// its one file is done. Running it on the pull puts the cost on the consumer that
+        /// needs the pool, and lets a <c>--task PerFileRescoring</c> worker skip it by never
+        /// pulling (issue #4597).</para>
+        ///
+        /// <para>Reports its own <c>[STAGE-WALL]</c> line. The work left Stage 6's stopwatch
+        /// and lands inside no other stage's, so without one a perf comparison reads a 16-minute
+        /// Stage 6 saving with nothing anywhere absorbing it.</para>
+        /// </summary>
+        private void BuildRescoredPool(PipelineContext ctx)
+        {
+            // A pull before Run decided is a programming defect, not a case to guess at: every
+            // guess available here (refill-only, or an overlay against paths not yet judged)
+            // silently produces a wrong reported set rather than an error.
+            var plan = _poolPlan;
+            if (plan == null)
+            {
+                throw new InvalidOperationException(
+                    @"RescoredEntries was pulled before PerFileRescoring decided how to build the survivor pool.");
+            }
+            if (plan.Loader == null)
+                return;
+            var sw = Stopwatch.StartNew();
+            MaterializeAllSurvivors(plan.Buffer, plan.Loader, ctx);
+            if (plan.RescoredFiles != null)
+            {
+                // BEFORE the overlay, which appends gap-fill rows and re-sorts: the
+                // planner's indices address the survivor list as loaded, and the sort
+                // moves the appended rows into EntryId order, shifting every position
+                // after them. The overlay preserves Score / q-values, so the reset
+                // survives it.
+                ResetRescoredTargets(plan);
+                OverlayReconciledIntoFiles(plan.Buffer, plan.ReconciledPaths, plan.GapFill,
+                    canonicalize: false);
+            }
+            sw.Stop();
+            ctx.LogInfo(string.Format(@"[STAGE-WALL] survivor-pool {0:F1}s ({1} files)",
+                sw.Elapsed.TotalSeconds, plan.Buffer.Count));
+        }
+
+        /// <summary>
+        /// Every file whose <c>.scores-reconciled.parquet</c> is on disk and CURRENT for this
+        /// run, as a file name -> path map. Asked while <see cref="Run"/> still holds the
+        /// answer; see <see cref="RescoredPoolPlan"/> for why after it does not.
+        /// </summary>
+        private IReadOnlyDictionary<string, string> CurrentReconciledPaths(PipelineContext ctx)
+        {
+            var current = new Dictionary<string, string>();
+            var parquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+            if (parquetPaths == null)
+                return current;
+            string validityKey = ValidityKey(ctx);
+            foreach (var kv in _perFileEntries)
+            {
+                if (!parquetPaths.TryGetValue(kv.Key, out string scoresPath))
+                    continue;
+                string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
+                if (PerFileResumeDriver.IsCurrent(reconciledPath, Name, validityKey))
+                    current.Add(kv.Key, reconciledPath);
+            }
+            return current;
         }
 
         /// <summary>
         /// Refill every file whose survivor list was released, leaving files that already
-        /// hold entries untouched so a second call is a no-op. Returns false (ExitCode
-        /// set) if any file's parquet or 1st-pass sidecar cannot be read - Stage 5 wrote
-        /// both, so a failure here is a fault rather than an absence.
+        /// hold entries untouched so a second call is a no-op. Throws if any file's parquet
+        /// or 1st-pass sidecar cannot be read - Stage 5 wrote both, so a failure here is a
+        /// fault rather than an absence.
+        ///
+        /// <para>Logs the fault and sets the exit code before throwing. The throw is what the
+        /// deferred <see cref="BuildRescoredPool"/> needs (a pull has no bool channel back to
+        /// the driver loop, the same reason <c>PipelineContext</c> raises
+        /// <c>RehydrateFailedException</c>), while the log line is what an operator needs: it
+        /// names the file and the missing artifact, where the top-level handler prints only
+        /// the message and a stack trace. Returning false and letting Stage 7 build a partial
+        /// pool is the one option not on the table.</para>
         /// </summary>
-        private bool MaterializeAllSurvivors(FirstPassSurvivorLoader loader, PipelineContext ctx)
+        private static void MaterializeAllSurvivors(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            FirstPassSurvivorLoader loader, PipelineContext ctx)
         {
             // Reported, not silent: this is a per-file parquet + sidecar read across every file
-            // in the run, landing immediately after the parallel rescore where nothing else is
-            // printing. An unreported sequential loop of exactly this shape has twice read as a
-            // hung run in this codebase (#4513, Pass2FdrSidecar). Console-only.
+            // in the run, landing in the quiet window where Stage 7 starts (or, on resume, in
+            // the rehydrate) with nothing else printing. An unreported sequential loop of
+            // exactly this shape has twice read as a hung run in this codebase (#4513,
+            // Pass2FdrSidecar). Console-only.
             using (var progress = new ProgressReporter(string.Format(
-                       @"Rebuilding first-pass survivors from {0} file(s)", _perFileEntries.Count),
-                       _perFileEntries.Count))
+                       @"Rebuilding first-pass survivors from {0} file(s)", perFileEntries.Count),
+                       perFileEntries.Count))
             {
                 int done = 0;
-                foreach (var kv in _perFileEntries)
+                foreach (var kv in perFileEntries)
                 {
                     progress.Report(++done);
                     if (kv.Value.Count > 0)
@@ -1736,12 +1899,11 @@ namespace pwiz.Osprey.Tasks
                     {
                         ctx.LogError(error);
                         ctx.ExitCode = 1;
-                        return false;
+                        throw new InvalidDataException(error);
                     }
                     kv.Value.AddRange(stubs);
                 }
             }
-            return true;
         }
 
         /// <summary>
@@ -1767,8 +1929,8 @@ namespace pwiz.Osprey.Tasks
         /// same canonical order the planner indexed, so the positional indices select the
         /// same entries they did during the rescore.</para>
         ///
-        /// <para>Applied ONLY to the files in <paramref name="rescoredFiles"/> - the ones that
-        /// actually reached <see cref="OverlayRescoredEntries"/> in this process. Having
+        /// <para>Applied ONLY to the files in <see cref="RescoredPoolPlan.RescoredFiles"/> -
+        /// the ones that actually reached <see cref="OverlayRescoredEntries"/>. Having
         /// planner targets is not the same as having been rescored: a file that took the
         /// per-file resume skip (<see cref="TryResumeRescoredFile"/>), or whose
         /// <see cref="TryAssembleRescoreTargets"/> returned false because it has no
@@ -1778,16 +1940,13 @@ namespace pwiz.Osprey.Tasks
         /// would drop out of the report. That is the mirror image of the over-reporting this
         /// reset exists to fix.</para>
         /// </summary>
-        private static void ResetRescoredTargets(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            HashSet<string> rescoredFiles, PipelineContext ctx)
+        private static void ResetRescoredTargets(RescoredPoolPlan plan)
         {
-            var consensus = ctx.Get<PerFileConsensusTargets>().Value;
-            var reconTargets = GroupReconciliationActionsByFile(
-                ctx.Get<ReconciliationActions>().Value, out _);
-            foreach (var kv in perFileEntries)
+            var consensus = plan.ConsensusTargets;
+            var reconTargets = plan.ReconciliationTargets;
+            foreach (var kv in plan.Buffer)
             {
-                if (!rescoredFiles.Contains(kv.Key))
+                if (!plan.RescoredFiles.Contains(kv.Key))
                     continue;
                 var indices = new HashSet<int>();
                 if (consensus != null && consensus.TryGetValue(kv.Key, out var consensusTargets))
@@ -1795,7 +1954,7 @@ namespace pwiz.Osprey.Tasks
                     foreach (var t in consensusTargets)
                         indices.Add(t.Index);
                 }
-                if (reconTargets.TryGetValue(kv.Key, out var recon))
+                if (reconTargets != null && reconTargets.TryGetValue(kv.Key, out var recon))
                 {
                     foreach (var t in recon)
                         indices.Add(t.Index);
@@ -1833,10 +1992,18 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="RescoredEntries"/> milestone SecondPassFDR reads has to be rebuilt at
         /// the end (issue #4526). Sharing the body is what makes the streamed buffer
         /// identical to the resumed one.</para>
+        ///
+        /// <para>The two callers differ in WHEN the reconciled parquets were judged current,
+        /// which is why that judgement is a parameter: the resume path asks now, the deferred
+        /// streamed build asks during <see cref="Run"/> and carries the answer (see
+        /// <see cref="RescoredPoolPlan"/>).</para>
         /// </summary>
         /// <param name="perFileEntries">The shared per-file buffer to bring to its
         /// post-rescore state, updated in place.</param>
-        /// <param name="ctx">Pipeline context, for the planner byproducts and parquet paths.</param>
+        /// <param name="reconciledPaths">file name -> the reconciled parquet to overlay.
+        /// Files absent from the map keep their 1st-pass boundaries, matching a fresh run's
+        /// no-work files.</param>
+        /// <param name="gapFill">The planner's per-file gap-fill targets.</param>
         /// <param name="canonicalize">Re-sort each file by the canonical
         /// (EntryId, Charge, ScanNumber, ParquetIndex) key. TRUE on resume, where the
         /// buffer has to be brought to the order a cold run ends in. FALSE on the streamed
@@ -1844,13 +2011,12 @@ namespace pwiz.Osprey.Tasks
         /// END of the list and never re-sorts, so sorting here would move those rows into
         /// EntryId order and change the buffer order Stage 7 writes its 2nd-pass sidecars
         /// in - which changes the protein-compact competition and the reported set.</param>
-        private void OverlayReconciledIntoAllFiles(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries, PipelineContext ctx,
+        private static void OverlayReconciledIntoFiles(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyDictionary<string, string> reconciledPaths,
+            IReadOnlyDictionary<string, List<GapFillTarget>> gapFill,
             bool canonicalize = true)
         {
-            var gapFill = ctx.Get<PerFileGapFillForRescore>().Value;
-            var parquetPaths = ctx.Get<PerFileParquetPaths>().Value;
-            string validityKey = ValidityKey(ctx);
             // Reported for the same reason as the survivor rebuild above: a per-file parquet
             // read across the whole run, in the silent window after the parallel rescore.
             using (var progress = new ProgressReporter(string.Format(
@@ -1861,27 +2027,23 @@ namespace pwiz.Osprey.Tasks
                 foreach (var kv in perFileEntries)
                 {
                     progress.Report(++done);
-                    // Overlay each file's reconciled boundaries when its
-                    // .scores-reconciled.parquet is present AND CURRENT; no-work files (none on
+                    // Overlay each file's reconciled boundaries when the caller judged its
+                    // .scores-reconciled.parquet present AND CURRENT; no-work files (none on
                     // disk) keep their 1st-pass boundaries, matching a fresh run.
                     //
                     // Validity, not mere existence. The rescore's own per-file gate
                     // (TryResumeRescoredFile) asks PerFileResumeDriver.IsCurrent, so testing
-                    // File.Exists here accepted a reconciled parquet this run would have
-                    // REJECTED and re-scored - one left by a run with different reconciliation
+                    // File.Exists accepted a reconciled parquet this run would have REJECTED
+                    // and re-scored - one left by a run with different reconciliation
                     // parameters, say. That overlays stale boundaries onto a cold run's buffer,
                     // which is worse than the no-work fallback of leaving 1st-pass values.
-                    if (parquetPaths != null &&
-                        parquetPaths.TryGetValue(kv.Key, out string scoresPath))
+                    if (reconciledPaths != null &&
+                        reconciledPaths.TryGetValue(kv.Key, out string reconciledPath))
                     {
-                        string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
-                        if (PerFileResumeDriver.IsCurrent(reconciledPath, Name, validityKey))
-                        {
-                            IReadOnlyList<GapFillTarget> gapFillForFile = null;
-                            if (gapFill != null && gapFill.TryGetValue(kv.Key, out var gfList))
-                                gapFillForFile = gfList;
-                            OverlayReconciledIntoBuffer(kv.Value, reconciledPath, gapFillForFile);
-                        }
+                        IReadOnlyList<GapFillTarget> gapFillForFile = null;
+                        if (gapFill != null && gapFill.TryGetValue(kv.Key, out var gfList))
+                            gapFillForFile = gfList;
+                        OverlayReconciledIntoBuffer(kv.Value, reconciledPath, gapFillForFile);
                     }
                     // Canonical sort for EVERY file (incl. no-work files) so the WARM
                     // buffer order matches the order COLD establishes in

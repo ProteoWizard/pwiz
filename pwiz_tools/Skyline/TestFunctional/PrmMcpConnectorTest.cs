@@ -71,12 +71,12 @@ namespace pwiz.SkylineTestFunctional
             var wizard = WaitForOpenForm<ImportPeptideSearchDlg>();
             string wizardId = GetOpenFormId<ImportPeptideSearchDlg>();
 
-            // 2) Click "Add Files" -> the native "Add Input Files" dialog appears.
-            // Wait for it the way the AI Connector would: poll GetOpenForms (the discovery method
-            // IJsonToolService exposes) until the native FileDialog shows up, rather than the
-            // internal NativeDialog helper.
+            // 2) Click "Add Files" -> the native "Add Input Files" dialog appears. Wait for it by TYPE and take
+            // its FormId: everything the test then does to it goes through the connector by that id, which is the
+            // part an AI Connector client actually exercises. Waiting on GetOpenForms instead bought nothing --
+            // the only thing it could match on is IsNative, which a message box and a folder browser wear too.
             McpConnector.ClickFormButton(wizardId, GetLocalizedText<BuildPeptideSearchLibraryControl>(@"btnAddFile"));
-            string addFilesId = WaitForNativeFileDialog();
+            string addFilesId = WaitForNativeDlg<NativeFileDialog>().FormId;
 
             // 3) Select the two files and Open -- the tutorial's "hold Ctrl, click the two files,
             // click Open". A native dialog has no caption-addressable buttons, so it is confirmed with the

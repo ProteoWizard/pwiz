@@ -337,11 +337,29 @@ namespace pwiz.Osprey.FDR
             var expIsDecoy = new bool[w];
             var expBaseId = new uint[w];
             var winnerLoc = new Dictionary<uint, (int fileIdx, uint entryId, double score)>(w);
+            // The experiment aggregate score PER FULL ENTRY_ID (sidecar v4, issue #4522) - the
+            // score this competition ranked each entry on. Keyed by entry_id and not by base_id,
+            // exactly as PercolatorQValues.ComputeExperimentAggregateScoreMap is on the 1st pass:
+            // a target and its decoy are distinct entries with distinct aggregates even though
+            // the competition below pairs them. winnerLoc cannot serve this purpose - it holds
+            // only the WINNER of each pair, so reading it for a decoy would hand back the
+            // target's score whenever the target won.
+            //
+            // bestTarget / bestDecoy already carry exactly what is needed: each is the max over
+            // that entry's observations across every file, which is the same max-over-rows
+            // reduction the 1st-pass producer performs. The mean-best-N branch is deliberately
+            // absent because the experiment aggregation is 1st-pass only (see
+            // ComputeExperimentPrecursorQMap), so effScores == scores here.
+            var aggByEntryId = new Dictionary<uint, double>(w * 2);
             int wi2 = 0;
             foreach (uint bid in baseIds)
             {
                 bool hasT = bestTarget.TryGetValue(bid, out var t);
                 bool hasD = bestDecoy.TryGetValue(bid, out var d);
+                if (hasT)
+                    aggByEntryId[t.entryId] = t.score;
+                if (hasD)
+                    aggByEntryId[d.entryId] = d.score;
                 // CompeteFromIndices: target wins strictly (tScore > dScore); ties go to the decoy.
                 bool decoyWins = hasT && hasD ? !(t.score > d.score) : !hasT;
                 var win = decoyWins ? d : t;
@@ -369,8 +387,19 @@ namespace pwiz.Osprey.FDR
             }
             var qExp = new double[w];
             PercolatorQValues.ComputeConservativeQvalues(sortedScore, sortedDecoy, qExp);
-            var baseIdExpQ = new Dictionary<uint, double>(w);
-            for (int i = 0; i < w; i++) baseIdExpQ[sortedBaseId[i]] = qExp[i];
+            // Keyed by the WINNER's full entry_id, decoy bit intact - never the shared base_id.
+            // sortedDecoy carries which side won, so the winner's entry_id is reconstructible
+            // here without a second array, leaving the competition's sort and tie-break
+            // untouched. See PercolatorQValues.ComputeExperimentPrecursorQMap for the defect
+            // this closes: on base_id, a target whose DECOY won inherited the winner's q.
+            var expQByWinnerId = new Dictionary<uint, double>(w);
+            for (int i = 0; i < w; i++)
+            {
+                uint winnerId = sortedDecoy[i]
+                    ? sortedBaseId[i] | ~PercolatorEntry.BASE_ID_MASK
+                    : sortedBaseId[i];
+                expQByWinnerId[winnerId] = qExp[i];
+            }
 
             var pepEstimator = PepEstimator.FitDefault(expScore, expIsDecoy);
 
@@ -379,7 +408,7 @@ namespace pwiz.Osprey.FDR
             // value it produced is a function of the bounded state below plus the survivor's own
             // run q, so handing that state back costs O(distinct) instead of O(files x entries).
             return new StreamedCompetitionState(
-                baseIdExpQ, minRunQ, winnerLoc, pepEstimator, fileKeys, fileKeys.Count > 1);
+                expQByWinnerId, minRunQ, winnerLoc, aggByEntryId, pepEstimator, fileKeys, fileKeys.Count > 1);
         }
 
         /// <summary>
@@ -391,24 +420,27 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public sealed class StreamedCompetitionState
         {
-            private readonly Dictionary<uint, double> _baseIdExpQ;
+            private readonly Dictionary<uint, double> _expQByWinnerId;
             private readonly Dictionary<uint, double> _minRunQ;
             private readonly Dictionary<uint, (int fileIdx, uint entryId, double score)> _winnerLoc;
+            private readonly Dictionary<uint, double> _aggByEntryId;
             private readonly PepEstimator _pepEstimator;
             private readonly IReadOnlyList<string> _fileKeys;
             private readonly bool _multiFile;
 
             internal StreamedCompetitionState(
-                Dictionary<uint, double> baseIdExpQ,
+                Dictionary<uint, double> expQByWinnerId,
                 Dictionary<uint, double> minRunQ,
                 Dictionary<uint, (int fileIdx, uint entryId, double score)> winnerLoc,
+                Dictionary<uint, double> aggByEntryId,
                 PepEstimator pepEstimator,
                 IReadOnlyList<string> fileKeys,
                 bool multiFile)
             {
-                _baseIdExpQ = baseIdExpQ;
+                _expQByWinnerId = expQByWinnerId;
                 _minRunQ = minRunQ;
                 _winnerLoc = winnerLoc;
+                _aggByEntryId = aggByEntryId;
                 _pepEstimator = pepEstimator;
                 _fileKeys = fileKeys;
                 _multiFile = multiFile;
@@ -425,10 +457,39 @@ namespace pwiz.Osprey.FDR
             {
                 if (!_multiFile)
                     return runQ;
-                uint baseId = entryId & PercolatorEntry.BASE_ID_MASK;
-                double eq = _baseIdExpQ.TryGetValue(baseId, out double bq) ? bq : 1.0;
+                // Full entry_id: an entry takes the experiment q only when it was the side
+                // that WON its own target/decoy competition. The loser keeps 1.0.
+                double eq = _expQByWinnerId.TryGetValue(entryId, out double bq) ? bq : 1.0;
                 double floorQ = _minRunQ.TryGetValue(entryId, out double mrq) ? mrq : 1.0;
                 return eq < floorQ ? floorQ : eq;
+            }
+
+            /// <summary>
+            /// The experiment aggregate score this competition ranked <paramref name="entryId"/>
+            /// on (sidecar v4, issue #4522), or <c>null</c> when the entry took no part in the
+            /// experiment fold - which under protein-compact means an OFF-STRATUM entry, whose
+            /// pass-1 aggregate the caller carries through untouched beside the pass-1
+            /// experiment q it also carries.
+            ///
+            /// <para><b>Nullable, not an in-band sentinel.</b> The score is a signed
+            /// discriminant, so 0.0 is an ordinary mid-distribution value: returning it for "not
+            /// competed" is indistinguishable from a real score, and a consumer building a
+            /// score-space acceptance boundary then takes a minimum over fabricated zeros. That
+            /// is not hypothetical - it is exactly how this panel came to report 542,368 decoys
+            /// against 117,783 targets on astral.</para>
+            ///
+            /// <para>NaN would fix that much, but <c>double?</c> is chosen over it deliberately.
+            /// NaN propagates silently through arithmetic and comparisons, so a caller that
+            /// forgets the check persists NaN into the v4 record - and the sidecar comparators
+            /// test <c>Math.Abs(a - b) &lt;= tolerance</c>, which is FALSE for NaN against NaN,
+            /// turning byte-identical files into a red gate. <c>double?</c> makes that caller
+            /// fail to compile instead. The dictionary behind this stays
+            /// <c>Dictionary&lt;uint,double&gt;</c>, so nothing is boxed and no per-entry
+            /// Nullable overhead is paid; only the return is lifted.</para>
+            /// </summary>
+            public double? ExperimentAggregateScore(uint entryId)
+            {
+                return _aggByEntryId.TryGetValue(entryId, out double v) ? v : null;
             }
 
             /// <summary>
@@ -551,20 +612,71 @@ namespace pwiz.Osprey.FDR
             }
 
             /// <summary>
-            /// Experiment-precursor <c>base_id -&gt; q</c>: compete the global base_id bests,
-            /// conservative-q, keyed by each winner's base_id -- byte-identical to
-            /// <see cref="PercolatorQValues.ComputeExperimentPrecursorQMap"/>.
+            /// Experiment-precursor <c>entry_id -&gt; q</c>: compete the global base_id bests,
+            /// conservative-q, keyed by each WINNER's full entry_id -- byte-identical to
+            /// <see cref="PercolatorQValues.ComputeExperimentPrecursorQMap"/>, which this is the
+            /// streaming oracle for. Keyed on entry_id and not base_id because a target and its
+            /// decoy share a base_id, so a base_id key hands the loser the winner's q; see that
+            /// method for the measurement.
             /// </summary>
             public Dictionary<uint, double> BuildExperimentPrecursorQMap()
             {
-                Dictionary<uint, KeyValuePair<int, double>> targets, decoys;
+                ResolveExperimentBests(out var targets, out var decoys);
+                TargetDecoyCompetition.CompeteFromDicts(targets, decoys,
+                    out _, out double[] ws, out bool[] wd, out uint[] wb);
+                var q = new double[ws.Length];
+                PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
+                var map = new Dictionary<uint, double>(wb.Length);
+                for (int rank = 0; rank < wb.Length; rank++)
+                {
+                    uint winnerId = wd[rank] ? wb[rank] | ~PercolatorEntry.BASE_ID_MASK : wb[rank];
+                    map[winnerId] = q[rank];
+                }
+                return map;
+            }
+
+            /// <summary>
+            /// Streaming counterpart of
+            /// <see cref="PercolatorQValues.ComputeExperimentAggregateScoreMap"/> (sidecar v4,
+            /// issue #4522): <c>entry_id -&gt; the score the experiment competitions ranked that
+            /// entry on</c>. Reads the SAME per-(base_id, side) bests
+            /// <see cref="BuildExperimentPrecursorQMap"/> competes, via the shared
+            /// <see cref="ResolveExperimentBests"/>, so the score reported beside an experiment
+            /// q is by construction the one that q was computed from - on the default max path
+            /// and the mean-best-N path alike.
+            ///
+            /// <para>Keyed by FULL entry_id: the two dictionaries are split by side, and a
+            /// base_id plus its side is exactly the entry_id
+            /// (<c>base_id | <see cref="LibraryEntry.DECOY_ID_BIT"/></c> for a decoy), so
+            /// re-attaching the bit here recovers the per-entry key the sidecar record uses
+            /// without the caller having to mask anything.</para>
+            /// </summary>
+            public Dictionary<uint, double> BuildExperimentAggregateScoreMap()
+            {
+                ResolveExperimentBests(out var targets, out var decoys);
+                var map = new Dictionary<uint, double>(targets.Count + decoys.Count);
+                foreach (var kvp in targets)
+                    map[kvp.Key] = kvp.Value.Value;
+                foreach (var kvp in decoys)
+                    map[kvp.Key | LibraryEntry.DECOY_ID_BIT] = kvp.Value.Value;
+                return map;
+            }
+
+            /// <summary>
+            /// The per-(base_id, side) best scores the experiment-scope competitions run on:
+            /// the raw streamed maxima on the default path, or each top-N accumulator reduced
+            /// to its mean(best-N) score (missing runs at the decoy floor) under
+            /// OSPREY_EXPERIMENT_AGG. The reduced maps are what the resident
+            /// <c>ComputeBaseIdMeanBestN</c> -&gt; <c>CompeteAll</c> path builds; every row of a
+            /// base_id shares that score there, so the resident max-per-base_id reduction is a
+            /// no-op and the two paths agree (modulo the streaming floor).
+            /// </summary>
+            private void ResolveExperimentBests(
+                out Dictionary<uint, KeyValuePair<int, double>> targets,
+                out Dictionary<uint, KeyValuePair<int, double>> decoys)
+            {
                 if (_meanBestN >= 2)
                 {
-                    // Reduce each (base_id, side) top-N accumulator to its mean(best-N) score
-                    // (missing runs use the decoy floor) so the same per-base_id best maps the
-                    // resident ComputeBaseIdMeanBestN -> CompeteAll path builds are competed here.
-                    // Every row of a base_id shares that score, so the resident max-per-base_id
-                    // reduction is a no-op and the two paths agree (modulo the streaming floor).
                     double floor = _floor.ComputeFloor();
                     targets = ReduceMeanBestN(_mb2Targets, floor, _meanBestN);
                     decoys = ReduceMeanBestN(_mb2Decoys, floor, _meanBestN);
@@ -574,14 +686,6 @@ namespace pwiz.Osprey.FDR
                     targets = _precTargets;
                     decoys = _precDecoys;
                 }
-                TargetDecoyCompetition.CompeteFromDicts(targets, decoys,
-                    out _, out double[] ws, out bool[] wd, out uint[] wb);
-                var q = new double[ws.Length];
-                PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
-                var map = new Dictionary<uint, double>(wb.Length);
-                for (int rank = 0; rank < wb.Length; rank++)
-                    map[wb[rank]] = q[rank];
-                return map;
             }
 
             /// <summary>

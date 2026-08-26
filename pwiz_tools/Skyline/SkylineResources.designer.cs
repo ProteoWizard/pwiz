@@ -19,7 +19,7 @@ namespace pwiz.Skyline {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class SkylineResources {
@@ -396,7 +396,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: The following settings names already exist. Use --settings-conflict-resolution to specify overwrite or skip..
+        ///   Looks up a localized string similar to Error: The following settings names already exist. Use --doc-settings-conflict-resolution to specify overwrite or skip..
         /// </summary>
         public static string CommandLine_AddSettings_Error__The_following_settings_names_already_exist__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_ {
             get {
@@ -415,7 +415,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: The settings name &apos;{0}&apos; already exists. Use --settings-conflict-resolution to specify overwrite or skip..
+        ///   Looks up a localized string similar to Error: The settings name &apos;{0}&apos; already exists. Use --doc-settings-conflict-resolution to specify overwrite or skip..
         /// </summary>
         public static string CommandLine_AddSettings_Error__The_settings_name___0___already_exists__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_ {
             get {
@@ -463,7 +463,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: The settings &apos;{0}&apos; could not be found. Use --settings-name with a name from the Settings menu..
+        ///   Looks up a localized string similar to Error: The settings &apos;{0}&apos; could not be found. Use --doc-settings-name with a name from the Settings menu..
         /// </summary>
         public static string CommandLine_ApplySettings_Error__The_settings___0___could_not_be_found__Use___settings_name_with_a_name_from_the_Settings_menu_ {
             get {
@@ -938,67 +938,7 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_", resourceCulture);
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: The following {0} file or replicate names in the peak boundaries file were not recognized and were ignored:.
-        /// </summary>
-        public static string CommandLine_ImportPeakBoundaries_Warning__The_following__0__file_or_replicate_names_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_ {
-            get {
-                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following__0__file_or_replicate_names" +
-                        "_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: The following {0} peptide, file, and charge state combinations were not recognized and were ignored:.
-        /// </summary>
-        public static string CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_and_were_ignored_ {
-            get {
-                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptide__file__and_char" +
-                        "ge_state_combinations_were_not_recognized_and_were_ignored_", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: The following {0} peptides in the peak boundaries file were not recognized and were ignored:.
-        /// </summary>
-        public static string CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_ {
-            get {
-                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptides_in_the_peak_bo" +
-                        "undaries_file_were_not_recognized_and_were_ignored_", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: The following file or replicate name in the peak boundaries file was not recognized and was ignored:.
-        /// </summary>
-        public static string CommandLine_ImportPeakBoundaries_Warning__The_following_file_or_replicate_name_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_ {
-            get {
-                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following_file_or_replicate_name_in_t" +
-                        "he_peak_boundaries_file_was_not_recognized_and_was_ignored_", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: The following peptide, file, and charge state combination was not recognized and was ignored:.
-        /// </summary>
-        public static string CommandLine_ImportPeakBoundaries_Warning__The_following_peptide__file__and_charge_state_combination_was_not_recognized_and_was_ignored_ {
-            get {
-                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following_peptide__file__and_charge_s" +
-                        "tate_combination_was_not_recognized_and_was_ignored_", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: The following peptide in the peak boundaries file was not recognized and was ignored:.
-        /// </summary>
-        public static string CommandLine_ImportPeakBoundaries_Warning__The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_ {
-            get {
-                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following_peptide_in_the_peak_boundar" +
-                        "ies_file_was_not_recognized_and_was_ignored_", resourceCulture);
-            }
-        }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to line {0}: {1}.
         /// </summary>
@@ -1007,7 +947,67 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__line__0____1_", resourceCulture);
             }
         }
-
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The following {0} file or replicate names in the peak boundaries file were not recognized and were ignored:.
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Warning__The_following__0__file_or_replicate_names_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following__0__file_or_replicate_nam" +
+                        "es_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The following {0} peptide, file, and charge state combinations were not recognized and were ignored:.
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_and_were_ignored_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptide__file__and_ch" +
+                        "arge_state_combinations_were_not_recognized_and_were_ignored_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The following {0} peptides in the peak boundaries file were not recognized and were ignored:.
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptides_in_the_peak_" +
+                        "boundaries_file_were_not_recognized_and_were_ignored_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The following file or replicate name in the peak boundaries file was not recognized and was ignored:.
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Warning__The_following_file_or_replicate_name_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following_file_or_replicate_name_in" +
+                        "_the_peak_boundaries_file_was_not_recognized_and_was_ignored_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The following peptide, file, and charge state combination was not recognized and was ignored:.
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Warning__The_following_peptide__file__and_charge_state_combination_was_not_recognized_and_was_ignored_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following_peptide__file__and_charge" +
+                        "_state_combination_was_not_recognized_and_was_ignored_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The following peptide in the peak boundaries file was not recognized and was ignored:.
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Warning__The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Warning__The_following_peptide_in_the_peak_bound" +
+                        "aries_file_was_not_recognized_and_was_ignored_", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to {0} -&gt; {1}  Note: The file has already been imported. Ignoring....
         /// </summary>
@@ -1353,6 +1353,56 @@ namespace pwiz.Skyline {
         public static string CommandLine_RemoveResults_Removing_results_before_ {
             get {
                 return ResourceManager.GetString("CommandLine_RemoveResults_Removing_results_before_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The --reorder-replicates option could not read replicate order file &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string CommandLine_ReorderReplicates_Error__Could_not_read_replicate_order_file__0____1_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ReorderReplicates_Error__Could_not_read_replicate_order_file__0____1_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The --reorder-replicates option cannot be used because the document does not contain results replicates..
+        /// </summary>
+        public static string CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replicates_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replic" +
+                        "ates_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The replicate &apos;{0}&apos; from the --reorder-replicates order file &apos;{1}&apos; was not found in the document..
+        /// </summary>
+        public static string CommandLine_ReorderReplicates_Error__The_replicate__0__was_not_found_in_the_document_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ReorderReplicates_Error__The_replicate__0__was_not_found_in_the_docum" +
+                        "ent_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The replicate name &apos;{0}&apos; appears more than once in the --reorder-replicates order file &apos;{1}&apos;..
+        /// </summary>
+        public static string CommandLine_ReorderReplicates_Error__The_replicate_name__0__appears_more_than_once_in_the_order_file_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ReorderReplicates_Error__The_replicate_name__0__appears_more_than_onc" +
+                        "e_in_the_order_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The --reorder-replicates order file &apos;{0}&apos; does not contain any replicate names..
+        /// </summary>
+        public static string CommandLine_ReorderReplicates_Error__The_replicate_order_file_does_not_contain_any_replicate_names_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ReorderReplicates_Error__The_replicate_order_file_does_not_contain_an" +
+                        "y_replicate_names_", resourceCulture);
             }
         }
         
@@ -1741,14 +1791,18 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skyline failed to load a required native library....
+        ///   Looks up a localized string similar to Skyline failed to load a required native library. This may be caused by a Windows security policy (Application Control) blocking the file, or by a broken installation.
+        ///
+        ///{0}
+        ///
+        ///Try uninstalling and reinstalling Skyline, or contact your IT department if the problem persists..
         /// </summary>
         public static string Program_CheckNativeLibraries_Failed_to_load_required_native_libraries {
             get {
                 return ResourceManager.GetString("Program_CheckNativeLibraries_Failed_to_load_required_native_libraries", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Recovering From a Broken Installation.
         /// </summary>
@@ -1757,7 +1811,7 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("Program_CheckNativeLibraries_Troubleshooting", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Error copying external tools from previous installation.
         /// </summary>
@@ -1766,7 +1820,7 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("Program_CopyOldTools_Error_copying_external_tools_from_previous_installation", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Copying external tools from a previous installation.
         /// </summary>
@@ -1794,7 +1848,7 @@ namespace pwiz.Skyline {
                         "ase_install_the_32_bit_version", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Invalid argument &apos;{0}&apos;. Use --start-page=true or --start-page=false..
         /// </summary>
@@ -1804,7 +1858,7 @@ namespace pwiz.Skyline {
                         "ge_false", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Do you want to save your current settings before switching?.
         /// </summary>
@@ -2053,6 +2107,24 @@ namespace pwiz.Skyline {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Failure attempting to save the window layout file {0}..
+        /// </summary>
+        public static string SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Window Layout Files.
+        /// </summary>
+        public static string SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files {
+            get {
+                return ResourceManager.GetString("SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Background Proteome.
         /// </summary>
@@ -3277,6 +3349,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Export Window Layout.
+        /// </summary>
+        public static string SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Export Spectral Library.
         /// </summary>
         public static string SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library {
@@ -3304,6 +3385,15 @@ namespace pwiz.Skyline {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Import Window Layout.
+        /// </summary>
+        public static string SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The document must be fully loaded before importing a peptide search..
         /// </summary>

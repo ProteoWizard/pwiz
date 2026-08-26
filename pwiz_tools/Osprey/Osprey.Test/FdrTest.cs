@@ -921,7 +921,7 @@ namespace pwiz.Osprey.Test
                 Score = -2.5,
                 RunPrecursorQvalue = 0.011,
                 RunPeptideQvalue = 0.022,
-                RunProteinQvalue = 0.033,
+                ExperimentProteinQvalue = 0.033,
                 ExperimentPrecursorQvalue = 0.044,
                 ExperimentPeptideQvalue = 0.055,
                 Pep = 0.066,
@@ -955,21 +955,25 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Minimal <see cref="IFdrOutputSink"/> for the projection parity tests: records
-        /// each row's Score + <see cref="FdrQValues"/> by (fileIdx, rowIdx) so the test
-        /// can compare the streamed outputs against the FdrEntry oracle now that the lean
-        /// struct no longer stores them (issue #4355 struct-shrink S0).
+        /// each row's Score + experiment aggregate score + <see cref="FdrQValues"/> by
+        /// (fileIdx, rowIdx) so the test can compare the streamed outputs against the
+        /// FdrEntry oracle now that the lean struct no longer stores them (issue #4355
+        /// struct-shrink S0).
         /// </summary>
         private sealed class CapturingSink : IFdrOutputSink
         {
             private readonly Dictionary<(int, int), double> _scores = new Dictionary<(int, int), double>();
+            private readonly Dictionary<(int, int), double> _expAgg = new Dictionary<(int, int), double>();
             private readonly Dictionary<(int, int), FdrQValues> _q = new Dictionary<(int, int), FdrQValues>();
             private readonly Dictionary<(int, int), (uint EntryId, bool IsDecoy, byte Charge, string Peptide)> _ident =
                 new Dictionary<(int, int), (uint, bool, byte, string)>();
 
             public void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
-                byte charge, string peptide, double score, in FdrQValues q)
+                byte charge, string peptide, double score, double experimentAggregateScore,
+                in FdrQValues q)
             {
                 _scores[(fileIdx, rowIdx)] = score;
+                _expAgg[(fileIdx, rowIdx)] = experimentAggregateScore;
                 _q[(fileIdx, rowIdx)] = q;
                 _ident[(fileIdx, rowIdx)] = (entryId, isDecoy, charge, peptide);
             }
@@ -979,6 +983,7 @@ namespace pwiz.Osprey.Test
             }
 
             public double ScoreAt(int fileIdx, int rowIdx) => _scores[(fileIdx, rowIdx)];
+            public double ExperimentAggregateScoreAt(int fileIdx, int rowIdx) => _expAgg[(fileIdx, rowIdx)];
             public FdrQValues QAt(int fileIdx, int rowIdx) => _q[(fileIdx, rowIdx)];
             public (uint EntryId, bool IsDecoy, byte Charge, string Peptide) IdentAt(int fileIdx, int rowIdx)
                 => _ident[(fileIdx, rowIdx)];
@@ -2203,6 +2208,25 @@ namespace pwiz.Osprey.Test
             AssertMapsEqual(
                 PercolatorQValues.ComputePepWinnerMap(scoreArr, labelArr, entryIdArr),
                 streaming.BuildPepWinnerMap(), "pep-winner");
+
+            // The score persisted beside those q-values (sidecar v4, issue #4522). The two
+            // paths derive it independently - the flat one by reducing the score array, the
+            // streaming one off the per-(base_id, side) bests it already keeps - so this is
+            // the check that they cannot disagree about what the experiment scope competed on.
+            var flatAgg = PercolatorQValues.ComputeExperimentAggregateScoreMap(
+                scoreArr, labelArr, entryIdArr, applyExperimentAgg: false);
+            AssertMapsEqual(flatAgg, streaming.BuildExperimentAggregateScoreMap(), "exp-aggregate");
+
+            // Under the default aggregation the aggregate IS the max over the entry's rows.
+            // Computed here straight from the fixture rather than from either implementation,
+            // so both are pinned to the definition instead of to each other.
+            var expectedMax = new Dictionary<uint, double>();
+            for (int i = 0; i < scoreArr.Length; i++)
+            {
+                if (!expectedMax.TryGetValue(entryIdArr[i], out double cur) || scoreArr[i] > cur)
+                    expectedMax[entryIdArr[i]] = scoreArr[i];
+            }
+            AssertMapsEqual(expectedMax, flatAgg, "exp-aggregate-vs-definition");
         }
 
         /// <summary>
@@ -2292,6 +2316,17 @@ namespace pwiz.Osprey.Test
             AssertMapsEqual(
                 ResidentMeanBestNPeptideQMap(scoreArr, labelArr, entryIdArr, peptideArr, n),
                 streaming.BuildExperimentPeptideQMap(), "mbN exp-peptide");
+
+            // The persisted aggregate (sidecar v4, issue #4522) must follow the aggregation
+            // too - under mean(best-N) it is the group's mean-best-N score, NOT the raw max.
+            // This is the case the whole format change exists for: a consumer that rebuilt the
+            // roll-up with max() would be wrong here and right everywhere else.
+            var residentAgg = new Dictionary<uint, double>();
+            var aggPerRow = TargetDecoyCompetition.ComputeBaseIdMeanBestN(
+                scoreArr, labelArr, entryIdArr, n);
+            for (int i = 0; i < aggPerRow.Length; i++)
+                residentAgg[entryIdArr[i]] = aggPerRow[i];
+            AssertMapsEqual(residentAgg, streaming.BuildExperimentAggregateScoreMap(), "mbN exp-aggregate");
 
             // PEP must still be the RAW-max map, untouched by the aggregation. That invariant
             // rests entirely on the mean-best-N block in Add() sitting AFTER the _precTargets /
@@ -2713,7 +2748,12 @@ namespace pwiz.Osprey.Test
             PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
             var map = new Dictionary<uint, double>(wi.Length);
             for (int rank = 0; rank < wi.Length; rank++)
-                map[entryIds[wi[rank]] & 0x7FFFFFFFu] = q[rank];
+            {
+                // Keyed by the WINNER's full entry_id, decoy bit intact - mirroring
+                // PercolatorQValues.ComputeExperimentPrecursorQMap. On base_id the losing side of
+                // each competition inherited the winner's q, which is the defect this pins shut.
+                map[entryIds[wi[rank]]] = q[rank];
+            }
             return map;
         }
 
@@ -3651,6 +3691,205 @@ namespace pwiz.Osprey.Test
             int protExp = ProteinFdrEngine.CountPassingProteinGroups(
                 new List<KeyValuePair<string, List<FdrEntry>>> { fileA, fileB }, library, config, runLevel: false);
             Assert.AreEqual(2, protExp, "experiment scope sees both PROT_A and PROT_B");
+        }
+
+        /// <summary>
+        /// The reservoir behind OSPREY_TRAIN_PICK_RUN, which replaces a cross-run MAXIMUM with one
+        /// run's ordinary observation. The property that matters is UNIFORMITY over the runs a
+        /// precursor actually appears in: an earlier chosen-run rule fell back to the first run
+        /// seen whenever the precursor was missing from its chosen one, and since runs stream in
+        /// injection order that favoured early, higher-yield runs - the same bias family the lever
+        /// exists to remove. Simulating the streaming loop is the only way to test that, because
+        /// the bias lived in the interaction between the rule and the arrival order.
+        /// </summary>
+        [TestMethod]
+        public void TestTrainingRunReservoir()
+        {
+            const ulong seed = 42;
+
+            // The first run a precursor appears in always takes the slot; there is nothing to
+            // compare against yet.
+            for (uint baseId = 0; baseId < 100; baseId++)
+                Assert.IsTrue(PercolatorScorer.ReservoirTakesSlot(baseId, 1, seed));
+
+            // Simulate the dedup loop over runs and record which run each precursor ends on.
+            // Every precursor here appears in EVERY run, so a uniform sampler must spread the
+            // winners evenly - the biased rule this replaced piled them onto run 0.
+            const int nRuns = 82;
+            const int nPrecursors = 200000;
+            var winners = new int[nRuns];
+            for (uint baseId = 0; baseId < nPrecursors; baseId++)
+            {
+                int held = 0;
+                for (int run = 1; run < nRuns; run++)
+                {
+                    if (PercolatorScorer.ReservoirTakesSlot(baseId, (uint)(run + 1), seed))
+                        held = run;
+                }
+                winners[held]++;
+            }
+            int expected = nPrecursors / nRuns;
+            for (int run = 0; run < nRuns; run++)
+            {
+                Assert.IsTrue(Math.Abs(winners[run] - expected) < expected / 4,
+                    string.Format(@"run {0} won {1} slots against an expected {2}", run, winners[run], expected));
+            }
+
+            // The k=1 case above already covers the single-run precursor; asserting it a second
+            // time here (as this test used to) restated the same call and proved nothing further.
+            // What makes the one-file case a genuine no-op is not this primitive but the caller
+            // keeping the run's BEST peak - see TestReservoirKeepsTheBestPeakWithinTheDrawnRun.
+
+            // The seed participates, so the choice is not a fixed property of the base_id.
+            int moved = 0;
+            for (uint baseId = 0; baseId < 2000; baseId++)
+            {
+                if (PercolatorScorer.ReservoirTakesSlot(baseId, 3, seed) !=
+                    PercolatorScorer.ReservoirTakesSlot(baseId, 3, seed + 1))
+                {
+                    moved++;
+                }
+            }
+            Assert.IsTrue(moved > 400, string.Format(@"only {0} of 2000 draws moved with the seed", moved));
+        }
+
+        /// <summary>
+        /// EVERY selection path samples a run - there is no path left that quietly takes the
+        /// cross-run maximum instead.
+        ///
+        /// <para>This is the property the default flip turns on. While the reservoir was opt-in
+        /// it reached only the callers that threaded per-file offsets in, and the callers without
+        /// them threw; the direct and non-projection streaming paths - which is what a 3-file
+        /// Stellar run takes - were both in the second group. A shipped behaviour cannot be
+        /// path-dependent, so the run index the offsets existed to supply was removed (the
+        /// reservoir never read it; it needs only the arrival count) and the abort with it.</para>
+        ///
+        /// <para>The fixture is rigged so the two rules cannot be confused: the score rises
+        /// monotonically with the run, so the maximum rule would hand EVERY precursor to the last
+        /// run. Anything spread across runs is the reservoir.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestEveryPathSamplesARun()
+        {
+            const int nRuns = 3;
+            const int nPrecursors = 300;
+            int n = nRuns * nPrecursors;
+
+            // Flat (file, row) order, exactly as the streaming paths present it. Run identity
+            // comes from PercolatorEntry.FileName here - NOT from per-file offsets - because that
+            // is what the direct (PercolatorTrainer) and RunPercolatorStreaming callers supply.
+            var labels = new bool[n];
+            var entryIds = new uint[n];
+            var entries = new List<PercolatorEntry>(n);
+            for (int run = 0; run < nRuns; run++)
+            {
+                for (int p = 0; p < nPrecursors; p++)
+                {
+                    int i = run * nPrecursors + p;
+                    entryIds[i] = (uint)p;
+                    entries.Add(new PercolatorEntry
+                    {
+                        EntryId = (uint)p,
+                        FileName = string.Format(@"run{0}.mzML", run),
+                        // Later run always scores higher, so the cross-run maximum would hand
+                        // every precursor to the last run.
+                        Features = new[] { (double)run }
+                    });
+                }
+            }
+
+            int[] selected = PercolatorSampling.SelectBestPerPrecursor(
+                labels, entryIds, entries, null, 42);
+
+            Assert.AreEqual(nPrecursors, selected.Length,
+                @"one observation must survive per precursor, whichever rule chose it");
+
+            var winnersPerRun = new int[nRuns];
+            foreach (int i in selected)
+                winnersPerRun[i / nPrecursors]++;
+
+
+            Assert.AreNotEqual(nPrecursors, winnersPerRun[nRuns - 1],
+                @"every winner came from the highest-scoring run, so this path is still taking the cross-run maximum");
+            for (int run = 0; run < nRuns; run++)
+            {
+                Assert.IsTrue(winnersPerRun[run] > nPrecursors / (nRuns * 2),
+                    string.Format(@"run {0} won only {1} of {2} precursors, which is not a uniform draw over {3} runs",
+                        run, winnersPerRun[run], nPrecursors, nRuns));
+            }
+        }
+
+        /// <summary>
+        /// The reservoir draws over RUNS, and within the drawn run it keeps that run's BEST
+        /// candidate peak.
+        ///
+        /// <para>Pass 1 is PRE-COMPACTION: a precursor carries several candidate-peak rows per
+        /// file (PercolatorScorer's own comment, and ModelDiagnosticsData.CoAssignment's -- the
+        /// parquet is (entry_id, charge, scan)-sorted for exactly that reason). The first cut of
+        /// this change drew once per ROW, which did two wrong things at once: it weighted a run by
+        /// how many candidate peaks it happened to produce, and it left a RANDOM candidate as the
+        /// training row rather than that run's best. Both are the bias family the change exists to
+        /// remove, moved onto a different axis.</para>
+        ///
+        /// <para>It cost 17.4% of identifications on the 3-file Stellar regression (29,300 ->
+        /// 24,214 RefSpectra), where there are too few runs for the run-level gain to hide it.
+        /// This fixture reproduces the shape that exposed it: several candidates per precursor per
+        /// run, with the best one NOT first in arrival order, so a row-level draw cannot pass.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestReservoirKeepsTheBestPeakWithinTheDrawnRun()
+        {
+            const int nRuns = 4;
+            const int nPrecursors = 250;
+            const int nPeaks = 3;
+            int perRun = nPrecursors * nPeaks;
+            int n = nRuns * perRun;
+
+            var labels = new bool[n];
+            var entryIds = new uint[n];
+            var bestScores = new double[n];
+            var fileStart = new int[nRuns + 1];
+            for (int run = 0; run < nRuns; run++)
+            {
+                fileStart[run] = run * perRun;
+                for (int p = 0; p < nPrecursors; p++)
+                {
+                    for (int k = 0; k < nPeaks; k++)
+                    {
+                        int i = run * perRun + p * nPeaks + k;
+                        entryIds[i] = (uint)p;
+                        // Middle candidate is the best, so neither "first seen" nor "last seen"
+                        // can masquerade as "best".
+                        bestScores[i] = run + (k == 1 ? 0.9 : 0.1 * k);
+                    }
+                }
+            }
+            fileStart[nRuns] = n;
+
+            int[] selected = PercolatorSampling.SelectBestPerPrecursor(
+                labels, entryIds, Array.Empty<PercolatorEntry>(), bestScores, 42, fileStart);
+
+            Assert.AreEqual(nPrecursors, selected.Length,
+                @"exactly one candidate peak must survive per precursor");
+
+            var winnersPerRun = new int[nRuns];
+            foreach (int i in selected)
+            {
+                int run = i / perRun;
+                int k = (i % perRun) % nPeaks;
+                winnersPerRun[run]++;
+                Assert.AreEqual(1, k, string.Format(
+                    @"row {0} survived from candidate {1} of run {2}; the drawn run must contribute its BEST peak, not a random one",
+                    i, k, run));
+            }
+
+            // ...and the run itself is still drawn uniformly, so fixing the peak choice did not
+            // reintroduce a preference for early runs.
+            for (int run = 0; run < nRuns; run++)
+            {
+                Assert.IsTrue(winnersPerRun[run] > nPrecursors / (nRuns * 2),
+                    string.Format(@"run {0} won only {1} of {2} precursors", run, winnersPerRun[run], nPrecursors));
+            }
         }
     }
 }
