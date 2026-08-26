@@ -36,7 +36,7 @@
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
     <MascotParserPath>..\..\libraries\msparser_3_1_0_x86_win64</MascotParserPath>
     <RuntimeIdentifiers>win</RuntimeIdentifiers>
-    <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
+    <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -46,15 +46,15 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</InstallUrl>
-    <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</UpdateUrl>
+    <InstallUrl>https://proteome.gs.washington.edu/~nicksh/SpecialSkylines/SkylineDailyPreview/</InstallUrl>
+    <UpdateUrl>https://proteome.gs.washington.edu/~nicksh/SpecialSkylines/SkylineDailyPreview/</UpdateUrl>
     <SupportUrl>https://skyline.ms/support.url</SupportUrl>
-    <ProductName>Skyline-daily</ProductName>
+    <ProductName>Skyline-daily Preview</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>209</ApplicationRevision>
-    <ApplicationVersion>26.1.1.209</ApplicationVersion>
+    <ApplicationRevision>231</ApplicationRevision>
+    <ApplicationVersion>26.1.1.231</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -7552,15 +7552,12 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- SkylineCmd.exe needs the same config file as Skyline, so copy the "Skyline.exe.config" to "SkylineCmd.exe.config". -->
-  <Target Name="_CopySkylineCmdConfig"
-          DependsOnTargets="GenerateBindingRedirectsUpdateAppConfig"
-          BeforeTargets="GenerateApplicationManifest;_CopyFilesToOutputDirectory">
-    <Copy SourceFiles="@(AppConfigWithTargetPath)"
-          DestinationFiles="$(IntermediateOutputPath)SkylineCmd.exe.config"
-          SkipUnchangedFiles="true" />
+  <Target Name="_CopySkylineCmdConfig" DependsOnTargets="GenerateBindingRedirectsUpdateAppConfig" BeforeTargets="GenerateApplicationManifest;_CopyFilesToOutputDirectory">
+    <Copy SourceFiles="@(AppConfigWithTargetPath)" DestinationFiles="$(IntermediateOutputPath)SkylineCmd.exe.config" SkipUnchangedFiles="true" />
   </Target>
   <Target Name="AfterPublish">
-    <Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
+    <!--<Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />-->
+    <Exec Command="SignAfterPublishSelfSigned.bat &quot;$(ProjectDir)SkylineDailyPreviewSelfSigned.pfx&quot; skyline &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName) &quot;$(TargetDir)$(TargetFileName).config&quot;" />
   </Target>
   <PropertyGroup>
     <PreBuildEvent>$(ProjectDir)PreBuildEvents.bat</PreBuildEvent>
