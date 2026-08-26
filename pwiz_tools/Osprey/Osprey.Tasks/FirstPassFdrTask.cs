@@ -1484,7 +1484,6 @@ namespace pwiz.Osprey.Tasks
                             kvp.Value.TrimExcess();
                             afterCount += kvp.Value.Count;
                         }
-                        progress.Report(perFileEntries.Count);
                     }
                     ctx.LogInfo(string.Format(
                         @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids)",

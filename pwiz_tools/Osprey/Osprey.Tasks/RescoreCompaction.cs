@@ -234,7 +234,6 @@ namespace pwiz.Osprey.Tasks
                     kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & BASE_ID_MASK));
                     kvp.Value.TrimExcess();
                 }
-                progress.Report(inputs.PerFileEntries.Count);
             }
             int entriesAfter = 0;
             foreach (var kvp in inputs.PerFileEntries)
