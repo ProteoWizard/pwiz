@@ -139,10 +139,11 @@ if %EXIT% NEQ 0 goto error
 REM # ------------------------------------------------------------------------
 REM # Stage step. Merge Skyline + TestRunner + TestPerf + TestTutorial into one
 REM # bin\staging-net8\<Config> (the single-bin layout TestRunner + the Docker
-REM # workers assume). Stage-Net8Tests.ps1 via `-File` binds a COMMA-joined
-REM # -Projects list as a single string (and silently stages nothing), so stage
-REM # ONE project per call. The first call also bundles the portable .NET runtime
-REM # (for the Docker workers under --parallel); the rest pass -NoRuntime.
+REM # workers assume). ONE project per call, because the first call also bundles
+REM # the portable .NET runtime (for the Docker workers under --parallel) and the
+REM # rest pass -NoRuntime to skip re-staging it. A comma-joined -Projects list
+REM # would stage correctly too - `-File` binds it as a single string and the
+REM # stager splits on commas - but it could not make that per-call distinction.
 REM # ------------------------------------------------------------------------
 set STAGE_PROJECTS=Skyline TestRunner TestPerf TestTutorial
 set STAGE_FIRST=1

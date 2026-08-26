@@ -265,6 +265,21 @@ namespace TestRunner
                 var skylineDir = GetSkylineDirectory().FullName;
                 var configuration = commandLineArgs.ArgAsString("configuration");
                 var stager = new TestStager(skylineDir, configuration, Console.WriteLine);
+
+                // stageprojects= narrows staging to the projects named, comma separated.
+                // SkylineTester is not in the default set - it is a dev/CI tool rather than
+                // part of the product - so the only way it reaches the staging directory it
+                // has to RUN from is for the build to ask for it by name. Empty means the
+                // default set, which is what a plain staging pass wants.
+                var projects = commandLineArgs.ArgAsString("stageprojects");
+                if (!string.IsNullOrEmpty(projects))
+                    stager.Projects = projects.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+                // The portable runtime is the same bytes every time and takes about thirty
+                // seconds, so a caller staging one project at a time bundles it on the first
+                // pass and turns it off for the rest.
+                stager.StageRuntime = commandLineArgs.ArgAsBool("stageruntime");
+
                 stager.Stage();
                 return 0;
             }
@@ -283,7 +298,7 @@ namespace TestRunner
             "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
             "demo=off;showformnames=off;status=off;buildcheck=0;" +
-            "stage=off;configuration=Debug;" +
+            "stage=off;configuration=Debug;stageprojects=;stageruntime=on;" +
             "quality=off;qualityonly=off;pass0=off;pass1=off;pass2=on;" +
             "perftests=off;" +
             "retrydatadownloads=off;" +

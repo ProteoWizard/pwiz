@@ -17,9 +17,26 @@
 
 .EXAMPLE
     pwsh -File .\Stage-Net8Tests.ps1 -Configuration Debug
+
+.EXAMPLE
+    pwsh -File .\Stage-Net8Tests.ps1 -Configuration Release -Projects SkylineTester
 #>
+# CmdletBinding so that an argument this script does not declare is an ERROR. A plain param()
+# block makes this a SIMPLE script, and PowerShell routes anything it cannot bind there into
+# $args without a word. That is how -Projects survived the move of staging into TestRunner as
+# an argument nobody read: the build went on staging the default set, SkylineTester never
+# reached the staging directory, and the first sign of it was the zip step failing thirteen
+# minutes into a CI build, pointing at a staging step whose own output said it had succeeded.
+[CmdletBinding()]
 param(
-    [ValidateSet('Debug', 'Release')] [string] $Configuration = 'Debug'
+    [ValidateSet('Debug', 'Release')] [string] $Configuration = 'Debug',
+    # Empty means the stager's default set. Naming projects stages ONLY those, which is how
+    # SkylineTester reaches the staging directory at all - it is a dev/CI tool rather than
+    # part of the product, so it is not in that set - and how the perf build adds one at a time.
+    [string[]] $Projects = @(),
+    # The bundled portable runtime only has to be staged once, so a second staging into the
+    # same directory can leave it alone.
+    [switch] $NoRuntime
 )
 
 $ErrorActionPreference = 'Stop'
@@ -44,7 +61,18 @@ if (-not $stager) {
            "Build TestRunner ($Configuration) first.")
 }
 
-& $stager stage=1 configuration=$Configuration
+$stageArgs = @("stage=1", "configuration=$Configuration")
+if ($Projects.Count -gt 0) {
+    # Joined, because the stager splits on commas: a list that arrived as several elements
+    # and one that arrived as a single comma-joined string - all `pwsh -File` can bind -
+    # then agree.
+    $stageArgs += "stageprojects=$($Projects -join ',')"
+}
+if ($NoRuntime) {
+    $stageArgs += "stageruntime=off"
+}
+
+& $stager @stageArgs
 if ($LASTEXITCODE -ne 0) {
     throw "Staging failed (exit $LASTEXITCODE)."
 }
