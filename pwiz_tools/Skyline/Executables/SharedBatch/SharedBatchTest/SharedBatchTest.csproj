@@ -7,7 +7,7 @@
   <PropertyGroup>
     <ProjectGuid>{69531D2C-BAD8-4E79-9DF3-482A74D6D0BF}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

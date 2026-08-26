@@ -19,7 +19,9 @@
 param(
     [ValidateSet('Debug', 'Release')] [string] $Configuration = 'Debug',
     [string] $StagingDir = '',
-    [string[]] $Projects = @('Skyline', 'CommonTest', 'Test', 'TestData', 'TestFunctional', 'TestConnected', 'TestRunner'),
+    # TestTutorial and TestPerf are in SkylineTester's TEST_DLLS list, so omitting them here left
+    # the Tutorials tab (and the perf tests) empty even after a successful staging run.
+    [string[]] $Projects = @('Skyline', 'CommonTest', 'Test', 'TestData', 'TestFunctional', 'TestConnected', 'TestRunner', 'TestTutorial', 'TestPerf'),
     # Bundle a portable .NET 8 Desktop runtime into <staging>\dotnet so the Docker workers can run
     # the net8 apphost without any runtime installed in the container (pointed at via DOTNET_ROOT).
     [switch] $NoRuntime,
@@ -45,16 +47,72 @@ function Get-ProjectOutput([string] $project) {
     return Join-Path $skylineDir "$project\bin\$Configuration\$tfm"
 }
 
+# Warn when a project is about to be staged from output older than its own sources. Staging
+# happily copies whatever is on disk, so a project that was not rebuilt is staged silently - and
+# build.bat deliberately excludes TestPerf and TestTutorial from the standard build while this
+# script stages them by default, which makes that easy to hit.
+#
+# It no longer has to catch a stale *dependency*. The copies below used to pass /XO ("exclude
+# older"), which skipped any file whose source was older than the staged copy - so a NuGet DLL,
+# carrying the package's original timestamp, lost to whatever assembly was already staged and
+# survived every re-stage. Without /XO a file that differs from its source is replaced whatever
+# the timestamps say.
+function Test-OutputStale([string] $project, [string] $outputDir) {
+    $sourceDir = if ($project -eq 'Skyline') { $skylineDir } else { Join-Path $skylineDir $project }
+    if (-not (Test-Path $sourceDir)) { return $false }
+    # Skyline's directory contains the test projects as subdirectories; their sources are not its.
+    # Only Skyline needs this: its directory physically contains the test projects.
+    $siblings = @()
+    if ($project -eq 'Skyline') {
+        $siblings = $Projects | Where-Object { $_ -ne 'Skyline' } | ForEach-Object { Join-Path $skylineDir $_ }
+    }
+    $newestSource = Get-ChildItem -Path $sourceDir -Recurse -File -Include *.cs, *.resx, *.csproj -ErrorAction SilentlyContinue |
+        Where-Object {
+            $path = $_.FullName
+            if ($path -match '\\(bin|obj)\\') { return $false }
+            # For Skyline, drop anything under a sibling test project - those are not its sources.
+            -not ($siblings | Where-Object { $path.StartsWith($_, [System.StringComparison]::OrdinalIgnoreCase) })
+        } |
+        Sort-Object LastWriteTime | Select-Object -Last 1
+    if (-not $newestSource) { return $false }
+    $newestOutput = Get-ChildItem -Path $outputDir -File -Filter *.dll -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime | Select-Object -Last 1
+    if ($newestOutput -and $newestSource.LastWriteTime -gt $newestOutput.LastWriteTime) {
+        Write-Warning ("$project output looks stale: $($newestSource.Name) changed " +
+            "$($newestSource.LastWriteTime.ToString('MM-dd HH:mm')) but the newest built assembly is " +
+            "$($newestOutput.LastWriteTime.ToString('MM-dd HH:mm')). Staging it first so freshly " +
+            "built projects win any shared file - rebuild $project if that is not intended.")
+        return $true
+    }
+    return $false
+}
+
+# Order matters now that /XO is gone: the projects merge into one directory, so the last copy
+# of a shared file wins. A project whose output predates its own sources cannot be the
+# authority on a shared assembly - build.bat excludes TestPerf and TestTutorial from the
+# standard build, so their output routinely carries dependencies several versions old, and
+# staging them last is how a stale ClrMD overwrote the one the rebuilt projects had just
+# staged. Stale first, freshly built last.
+$toStage = @()
 foreach ($project in $Projects) {
     $src = Get-ProjectOutput $project
     if (-not (Test-Path $src)) {
         Write-Warning "Skipping $project - no output at $src (build it first)."
         continue
     }
+    $toStage += [pscustomobject]@{ Project = $project; Src = $src; Stale = (Test-OutputStale $project $src) }
+}
+
+foreach ($item in (@($toStage | Where-Object { $_.Stale }) + @($toStage | Where-Object { -not $_.Stale }))) {
+    $project = $item.Project
+    $src = $item.Src
     Write-Host "Staging $project  ($src)"
-    # /E recurse (satellite resource dirs), /XO keep newest on identical shared deps,
-    # /NP /NDL /NFL /NJH /NJS quiet. robocopy exit codes 0-7 are success.
-    robocopy $src $StagingDir /E /XO /NP /NDL /NFL /NJH /NJS | Out-Null
+    # /E recurse (satellite resource dirs), /NP /NDL /NFL /NJH /NJS quiet. robocopy exit
+    # codes 0-7 are success. No /XO: several projects merge into one staging directory and it
+    # has to end up matching the build output, so a file that differs is replaced rather than
+    # kept for being newer. Identical copies are still skipped on size and timestamp, so the
+    # shared dependencies /XO was protecting are not recopied anyway.
+    robocopy $src $StagingDir /E /NP /NDL /NFL /NJH /NJS | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed staging $project (exit $LASTEXITCODE)" }
 }
 
@@ -91,7 +149,7 @@ if (-not $NoRuntime) {
         @{ Src = $winDesktop.FullName; Dst = Join-Path $runtimeDest "shared\Microsoft.WindowsDesktop.App\$($winDesktop.Name)" }
     )
     foreach ($p in $pairs) {
-        robocopy $p.Src $p.Dst /E /XO /NP /NDL /NFL /NJH /NJS | Out-Null
+        robocopy $p.Src $p.Dst /E /NP /NDL /NFL /NJH /NJS | Out-Null
         if ($LASTEXITCODE -ge 8) { throw "robocopy failed staging runtime $($p.Src) (exit $LASTEXITCODE)" }
     }
 }

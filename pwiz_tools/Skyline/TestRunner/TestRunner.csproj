@@ -6,7 +6,7 @@
   <PropertyGroup>
     <ProjectGuid>{B92CA24E-0867-4B99-88F8-EF542A4AFE87}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

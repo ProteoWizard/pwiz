@@ -5,7 +5,7 @@
        219 Skyline files import this namespace. -->
   <PropertyGroup>
     <ProjectGuid>{86F8E7F5-A3ED-4519-9AD9-BF9ABD6DD69F}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

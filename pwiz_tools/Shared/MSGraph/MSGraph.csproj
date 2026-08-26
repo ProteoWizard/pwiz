@@ -4,7 +4,7 @@
        library over the ZedGraph fork. -->
   <PropertyGroup>
     <ProjectGuid>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

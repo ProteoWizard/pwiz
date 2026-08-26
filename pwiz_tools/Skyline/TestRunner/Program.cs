@@ -285,6 +285,13 @@ namespace TestRunner
         {
             Console.OutputEncoding = Encoding.UTF8;
 
+            // Pin the WinForms default font exactly as shipping Skyline does, before any control
+            // is created. Skyline sets this in its own Main, but by the time the first functional
+            // test calls that, hundreds of unit tests have run in this process and may already
+            // have created a window - after which the font can no longer be set. Doing it here
+            // guarantees every test sees the same metrics as the shipping app.
+            pwiz.Skyline.Program.SetDefaultFont();
+
             // Opt the test runner into the latest WinForms accessibility level by explicitly setting
             // all four UseLegacyAccessibilityFeatures switches to false BEFORE any control is created.
             // This is test-host only -- it does not change shipping Skyline behavior.

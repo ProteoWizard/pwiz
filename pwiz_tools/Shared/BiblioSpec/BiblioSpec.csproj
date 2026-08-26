@@ -4,7 +4,7 @@
        that shells out to BlibBuild.exe / BlibFilter.exe; depends on Common. -->
   <PropertyGroup>
     <ProjectGuid>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

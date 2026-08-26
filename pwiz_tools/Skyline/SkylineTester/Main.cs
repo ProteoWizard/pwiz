@@ -546,7 +546,12 @@ namespace SkylineTester
             var file = GetSelectedLog(combo);
             if (File.Exists(file))
             {
-                var editLogFile = new Process { StartInfo = { FileName = file } };
+                // UseShellExecute must be explicit: it defaults to true on .NET Framework but
+                // FALSE on net8, where Process.Start then tries to CreateProcess the .log itself
+                // and throws Win32Exception 193 ("not a valid application for this OS platform")
+                // instead of opening it in the associated editor.
+                var editLogFile = new Process
+                    { StartInfo = { FileName = file, UseShellExecute = true } };
                 editLogFile.Start();
             }
         }

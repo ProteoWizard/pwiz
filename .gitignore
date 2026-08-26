@@ -436,9 +436,16 @@ Version.cpp
 # Skyline generated files
 /pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/*.cs
 /pwiz_tools/Skyline/ProtocolBuffers/tmp/*.cs
-/pwiz_tools/Skyline/SkylineTester test list.txt
-/pwiz_tools/Skyline/SkylineTester.log
+# Test-run residue. Unanchored on purpose: on net8 these are written from the
+# staging directory and from the test UI's own output directory, not the Skyline
+# root the old entries were pinned to, so anchoring a path just moves the problem.
+SkylineTester test list.txt
+SkylineTester.log
 SkylineTester Results
+TestRunner.log
+SearchControlLog.txt
+DiannSearchControlLog.txt
+*.mzML.log
 /b.bat
 /b64.bat
 /b32.bat
@@ -476,7 +483,6 @@ SkylineTester Results
 /pwiz_tools/Skyline/Test/ProtocolBuffers/GeneratedCode/*.cs
 /pwiz_tools/Skyline/Test/ProtocolBuffers/tmp/*.cs
 /pwiz_tools/Skyline/Test/ProtocolBuffers/tmp
-/SearchControlLog.txt
 
 # created by WIFF2 SDK in working directory
 /UserSettings.data

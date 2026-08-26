@@ -4,7 +4,7 @@
        CommonUtil. NHibernate + SQLite proteome layer. -->
   <PropertyGroup>
     <ProjectGuid>{09FC3CB3-FCCD-4906-A370-160B28725936}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

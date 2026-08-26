@@ -7,7 +7,7 @@
        Assert / TestContext types referenced by AbstractUnitTest, AssertEx. -->
   <PropertyGroup>
     <ProjectGuid>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -81,9 +81,11 @@
     <PackageReference Include="ExcelDataReader" Version="3.7.0" />
     <PackageReference Include="ExcelDataReader.DataSet" Version="3.7.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
-    <Reference Include="Microsoft.Diagnostics.Runtime">
-      <HintPath>..\..\Shared\Lib\Microsoft.Diagnostics.Runtime\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath>
-    </Reference>
+    <!-- The on-disk ClrMD is the net40 build, assembly version 0.8.31, and it was carried into
+         the net8 group unchanged when the other legacy DLLs here moved to packages. It has no
+         GCRoot type at all, so it cannot answer "what is still rooting this object". 3.1.512801
+         is the version SkylineNightly's net8 group already uses. -->
+    <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="3.1.512801" />
     <Reference Include="DigitalRune.Windows.Docking">
       <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>

@@ -22,6 +22,7 @@ using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -257,13 +258,11 @@ namespace pwiz.SkylineTestUtil
         /// Every managed thread's call stack right now, for a failure that means something never
         /// finished. A wait that times out can say what it was waiting for but not what was - or
         /// was not - working on it, and that is usually the only fact worth having.
-        /// <para>KNOWN BLIND SPOT, measured rather than assumed: this attaches to its own process
-        /// passively, which cannot walk a stack that is in motion. Blocked and sleeping threads
-        /// come out complete, but the thread calling this - and any other thread running at that
-        /// instant - is listed with NO frames at all. An empty stack here therefore means "could
-        /// not read", NOT "idle", and the UI thread is usually one of the empty ones. When the
-        /// question is specifically what a RUNNING thread was doing, this cannot answer it, and
-        /// the fix is to attach from a separate process rather than from this one.</para>
+        /// <para>On this line the dump is taken from a SNAPSHOT of the process, so a thread that
+        /// is running comes out with frames like any other. That was not true of the passive
+        /// attach used where only the older ClrMD is available, which listed every running thread
+        /// - usually including the UI thread - with no frames at all, so an empty stack there
+        /// meant "could not read" rather than "idle". Snapshots removed that blind spot.</para>
         /// <para>Never throws, and never comes back with nothing. Where the process-wide dump
         /// cannot be taken it degrades to the calling thread's own stack, which is one thread
         /// instead of all of them but is the thread that gave up waiting, and always reads. A
@@ -342,26 +341,22 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// What ClrMD can see of this machine's runtime. Whether the attach can work at all is
-        /// decided by the CLR build and the matching DAC, so a failed dump carries both out to the
-        /// log rather than leaving the next reader to guess which machines differ and how. A DAC
-        /// that does not resolve locally is fetched from a symbol server instead, which is slow
-        /// where that server is unreachable and yields misreads where the version does not match.
-        /// <para>Metadata only - deliberately does NOT call CreateRuntime, which is the expensive
+        /// What ClrMD can see of this machine's runtime, so a failed dump says which machine it
+        /// failed on rather than leaving the next reader to guess.
+        /// <para>Metadata only - deliberately does NOT create the runtime, which is the expensive
         /// half and the half that was already failing when this is reached.</para>
         /// </summary>
         private static string DescribeAttachEnvironment()
         {
             try
             {
-                using var dataTarget = DataTarget.AttachToProcess(Process.GetCurrentProcess().Id, 5000, AttachFlag.Passive);
+                using var dataTarget = DataTarget.CreateSnapshotAndAttach(Process.GetCurrentProcess().Id);
+                dataTarget.FileLocator = null;   // No symbol server, and no symbols cache left behind
                 var clrInfo = dataTarget.ClrVersions.FirstOrDefault();
                 if (clrInfo == null)
                     return @"*** No CLR found in this process";
 
-                return string.Format(@"*** CLR {0}, DAC {1}, local matching DAC: {2}",
-                    clrInfo.Version, clrInfo.DacInfo.FileName,
-                    clrInfo.LocalMatchingDac ?? @"none - a symbol server would have to supply it");
+                return string.Format(@"*** CLR {0}", clrInfo.Version);
             }
             catch (Exception ex)
             {
@@ -369,38 +364,81 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        /// <summary>
+        /// Where ClrMD writes its symbols cache. Under the TEMP directory, not the working
+        /// directory - which matters here because AbstractUnitTest redirects TEMP per test, so
+        /// the cache lands in that test's own temp folder and is reported as a file it left
+        /// behind.
+        /// </summary>
+        private static string SymbolsCacheDir
+        {
+            get { return Path.Combine(Path.GetTempPath(), @"symbols"); }
+        }
+
+        /// <summary>
+        /// Removes the symbols cache a snapshot wrote, unless it was already there.
+        /// <para>Retried, because the snapshot can still hold the directory for a moment after the
+        /// DataTarget is disposed, and a first delete then throws. Left behind, it is reported as a
+        /// temp file the test failed to clean up.</para>
+        /// </summary>
+        private static void DeleteSymbolsCache(bool existedBefore)
+        {
+            if (existedBefore)
+                return;   // Somebody else owns it
+
+            for (int i = 0; i < SYMBOLS_DELETE_ATTEMPTS; i++)
+            {
+                try
+                {
+                    if (!Directory.Exists(SymbolsCacheDir))
+                        return;
+                    Directory.Delete(SymbolsCacheDir, true);
+                    return;
+                }
+                catch (Exception)
+                {
+                    // Cleaning up after a diagnostic must never become the failure it reports
+                    Thread.Sleep(SYMBOLS_DELETE_RETRY_MILLIS);
+                }
+            }
+        }
+
+        private const int SYMBOLS_DELETE_ATTEMPTS = 10;
+        private const int SYMBOLS_DELETE_RETRY_MILLIS = 100;
+
         public static IEnumerable<string> GetAllThreadsCallstacks(int processId)
         {
-            using var dataTarget = DataTarget.AttachToProcess(processId, 5000, AttachFlag.Passive);
-            var clrInfo = dataTarget.ClrVersions[0];
-
-            // Refuse before the expensive half rather than after. With no DAC on this machine
-            // matching this CLR, ClrMD fetches one from a symbol server, which is slow where that
-            // server is unreachable and reads garbage where the version does not match - measured
-            // as 745-1035 seconds ending in "Array dimensions exceeded supported range" on the
-            // TeamCity agents. Naming the missing file costs milliseconds and tells whoever
-            // provisions the machine exactly what to install.
-            var localMatchingDac = clrInfo.LocalMatchingDac;
-            if (localMatchingDac == null)
-                throw new InvalidOperationException(string.Format(
-                    @"No local DAC matching CLR {0} - {1} would have to come from a symbol server",
-                    clrInfo.Version, clrInfo.DacInfo.FileName));
-
-            // Explicitly from the local file, so the symbol server can never become the fallback.
-            var runtime = clrInfo.CreateRuntime(localMatchingDac);
-
-            foreach (var thread in runtime.Threads)
+            // A SNAPSHOT, not a passive attach. This line has ClrMD 3.x, where the snapshot both
+            // avoids the DAC resolution that made a passive attach cost 745-1035 seconds on the
+            // TeamCity agents, and can walk a thread that is RUNNING - which the passive attach on
+            // the older ClrMD could not, and which was the known blind spot documented above.
+            // Taking a snapshot writes a symbols cache into the working directory, before there is
+            // any object to configure - so it cannot be prevented, only cleaned up. Left alone it
+            // is reported as a temp file the test failed to remove.
+            var symbolsExisted = Directory.Exists(SymbolsCacheDir);
+            try
             {
-                if (!thread.IsAlive) continue;
+                using var dataTarget = DataTarget.CreateSnapshotAndAttach(processId);
+                dataTarget.FileLocator = null;   // Nothing here needs symbols
+                var runtime = dataTarget.ClrVersions[0].CreateRuntime();
 
-                yield return $"Thread {thread.OSThreadId:X} (Managed ID: {thread.ManagedThreadId})";
-
-                foreach (var frame in thread.EnumerateStackTrace())
+                foreach (var thread in runtime.Threads)
                 {
-                    yield return $"  {frame.Method?.Type?.Name}.{frame.Method?.Name ?? "[Unknown]"}";
-                }
+                    if (!thread.IsAlive) continue;
 
-                yield return string.Empty;
+                    yield return $"Thread {thread.OSThreadId:X} (Managed ID: {thread.ManagedThreadId})";
+
+                    foreach (var frame in thread.EnumerateStackTrace())
+                    {
+                        yield return $"  {frame.Method?.Type?.Name}.{frame.Method?.Name ?? "[Unknown]"}";
+                    }
+
+                    yield return string.Empty;
+                }
+            }
+            finally
+            {
+                DeleteSymbolsCache(symbolsExisted);
             }
         }
     }
