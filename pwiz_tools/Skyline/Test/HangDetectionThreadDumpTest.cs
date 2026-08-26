@@ -154,8 +154,14 @@ namespace pwiz.SkylineTest
 
             // Frames, not just thread headers. A dump listing threads and nothing else is the
             // failure this test exists to catch, and it looks healthy at the call site.
+            // Notes are indented like frames because they belong to the thread above them, so they
+            // have to be excluded explicitly. Counting them would let a dump that walked NOTHING -
+            // every thread noted, no stack read - satisfy the assertion below, which is the exact
+            // silent success this test exists to prevent.
             var frameLines = dump.Split('\n')
-                .Count(line => line.StartsWith(@"  ") && !line.Contains(@"[Unknown]"));
+                .Count(line => line.StartsWith(@"  ")
+                               && !line.StartsWith(HangDetection.THREAD_NOTE_PREFIX)
+                               && !line.Contains(@"[Unknown]"));
             AssertEx.IsTrue(frameLines > 0,
                 TextUtil.LineSeparate(@"Thread dump named no frames on any thread.", dump));
 

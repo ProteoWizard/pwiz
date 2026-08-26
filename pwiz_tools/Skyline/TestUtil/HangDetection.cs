@@ -61,6 +61,14 @@ namespace pwiz.SkylineTestUtil
         private const int MAX_FRAMES_PER_THREAD = 512;
 
         /// <summary>
+        /// Marks a line under a thread that is a note ABOUT the walk rather than a frame from it.
+        /// Indented like a frame because it belongs to the thread above it, but distinguishable,
+        /// because anything counting frames would otherwise count the notes as frames - which is
+        /// how a dump that named no frames at all could still look healthy.
+        /// </summary>
+        public const string THREAD_NOTE_PREFIX = @"  -- ";
+
+        /// <summary>
         /// Serializes everything that touches <see cref="_dataTarget"/> and <see cref="_runtime"/>,
         /// which ClrMD requires because it is not thread-safe. Taken only with
         /// <see cref="ATTACH_LOCK_TIMEOUT_MILLIS"/>, never unconditionally - see that field.
@@ -455,7 +463,7 @@ namespace pwiz.SkylineTestUtil
                     // meaning what the class doc says it means - could not read, not idle.
                     if (thread.ManagedThreadId == Thread.CurrentThread.ManagedThreadId)
                     {
-                        lines.Add(@"  (thread taking this dump - its own stack cannot be read)");
+                        lines.Add(THREAD_NOTE_PREFIX + @"thread taking this dump - its own stack cannot be read");
                         lines.Add(string.Empty);
                         continue;
                     }
@@ -482,15 +490,32 @@ namespace pwiz.SkylineTestUtil
             {
                 if (frames.Count >= MAX_FRAMES_PER_THREAD)
                 {
-                    frames.Add(string.Format(@"  ... stopped after {0} frames - the stack unwind is not terminating",
-                        MAX_FRAMES_PER_THREAD));
+                    frames.Add(string.Format(@"{0}stopped after {1} frames - the stack unwind is not terminating",
+                        THREAD_NOTE_PREFIX, MAX_FRAMES_PER_THREAD));
                     break;
                 }
 
-                frames.Add(string.Format(@"  {0}.{1}",
-                    frame.Method?.Type?.Name, frame.Method?.Name ?? @"[Unknown]"));
+                frames.Add(@"  " + GetFrameName(frame));
             }
             return frames;
+        }
+
+        /// <summary>
+        /// One frame as "Type.Method", degrading to whichever half ClrMD could resolve. Built
+        /// rather than formatted because a null type used to render as nothing at all, leaving a
+        /// bare leading dot - ".[Unknown]" - which reads as a parse error rather than as the
+        /// unresolved frame it is.
+        /// </summary>
+        private static string GetFrameName(ClrStackFrame frame)
+        {
+            var methodName = frame.Method?.Name;
+            if (methodName == null)
+            {
+                return @"[Unknown]";
+            }
+
+            var typeName = frame.Method?.Type?.Name;
+            return typeName == null ? methodName : typeName + @"." + methodName;
         }
 
         /// <summary>
