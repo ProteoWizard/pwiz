@@ -172,6 +172,24 @@ namespace pwiz.Osprey.Tasks
             // parsed list. The "Processing file N/M: <path>" banner already named the file.
             // SpectrumFileReader picks the mzML or vendor-raw reader by extension; both
             // return the same MzmlResult, so nothing below here knows the source format.
+            // Re-parsing needs the source, and a run may legitimately no longer have one: once
+            // the cache is built the source is dead weight, so deleting it is a supported way to
+            // halve the disk a large cohort needs. Every path that reaches here has decided the
+            // cache is unusable - a version bump, a bad header, a truncated body - and the
+            // remedy in every one of those cases is to rebuild from the source. Say exactly that
+            // instead of failing inside the reader on a path that is not there.
+            //
+            // Named separately from "Input file not found" because the two mean opposite things
+            // to an operator: that one says the argument is wrong, this one says the argument is
+            // right and the data behind it has to come back. Getting the sources back (they stay
+            // on PanoramaWeb) is the fix, and a message that only reported a missing file would
+            // send the reader looking for a typo.
+            if (!File.Exists(inputFile) && !Directory.Exists(inputFile))
+            {
+                throw new InvalidDataException(string.Format(
+                    @"Spectra cache '{0}' cannot be used and cannot be rebuilt: the source '{1}' is missing. Restore the source and re-run - a cache is only self-sufficient while it stays readable by this build.",
+                    cachePath, inputFile));
+            }
             MzmlResult mzmlResult;
             if (serializeMzmlRead)
                 s_mzmlReadGate.Wait();
