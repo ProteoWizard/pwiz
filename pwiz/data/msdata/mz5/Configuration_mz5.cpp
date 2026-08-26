@@ -319,6 +319,8 @@ void Configuration_mz5::init(const bool deltamz,
     }
     else
     {
+        // Delta encoding is a compression aid, so it goes with the compression
+        doTranslating_ = false;
         deflateLvl_ = 0;
     }
 

@@ -200,6 +200,52 @@ public sealed class ReaderConfig
     public bool VerifyNonEmptySpectraAtIndex { get; set; }
 
     /// <summary>
+    /// Threads used to decode mzML binary arrays. 1 (the default) decodes inline on the
+    /// read thread, which is the original behaviour; higher values parse a batch of spectra
+    /// with decoding deferred and then decode them in parallel.
+    /// </summary>
+    /// <remarks>
+    /// Off by default because the host, not this library, knows what else is already running.
+    /// The two shapes differ enough that neither default suits both:
+    /// <list type="bullet">
+    ///   <item>
+    ///     Skyline and MsConvertGUI process multiple FILES at once. That is the established
+    ///     answer for vendor formats, which are not purely I/O bound and go faster several at
+    ///     a time - and where per-file threading is the only safe axis, since a vendor reader
+    ///     is thread-safe on its own thread but not necessarily for concurrent spectrum
+    ///     retrieval. A host doing that should leave this at 1 rather than go wide underneath
+    ///     its own parallelism.
+    ///   </item>
+    ///   <item>
+    ///     A host that reads one file at a time should set it, but modestly: measured on a
+    ///     5.99 GB Astral mzML, 1 thread takes 83.4s and 8 takes 54.6s, after which the curve
+    ///     is flat - 16, 24 and 32 all land within a second of 8. The floor is the XML parse,
+    ///     which stays serial, so past the knee extra threads only add memory pressure (each
+    ///     batch holds 64 spectra). 8 is a reasonable default; core count buys nothing.
+    ///     Osprey funnels its reads through a one-permit gate, so its read phase has the
+    ///     machine to itself and nothing competes with the decode.
+    ///   </item>
+    /// </list>
+    /// <para>
+    /// Read-ahead engages only for a caller walking indices FORWARD. Anything else - reading
+    /// backward, by permutation, strided, or metadata-then-peaks for the same index - falls
+    /// back to the original per-spectrum path. Measured on the same 5.99 GB file, a reverse
+    /// walk takes 81.2s and a random walk 82.4s whether this is 1 or 8, so a non-linear
+    /// reader pays nothing for having it on; it simply gains nothing.
+    /// </para>
+    /// <para>
+    /// Note what this does and does not parallelise. The XML parse stays single-threaded on
+    /// the one stream; only the base64/zlib decode of already-extracted payloads goes wide. So
+    /// no reader is ever asked for spectra concurrently, and this composes with a host's
+    /// per-file parallelism rather than contending with it for thread-safety. It is honoured
+    /// by the mzML reader alone, in the same way <see cref="VerifyNonEmptySpectraAtIndex"/> is
+    /// read by one reader. Values below 1 are treated as 1, and the count is clamped to the
+    /// processor count.
+    /// </para>
+    /// </remarks>
+    public int MzmlDecodeThreads { get; set; } = 1;
+
+    /// <summary>
     /// When true, MS2+ spectra without precursor info are kept rather than dropped. The
     /// default (false) drops them, matching pwiz cpp. Port of
     /// <c>pwiz::msdata::Reader::Config::allowMsMsWithoutPrecursor</c>.

@@ -80,84 +80,11 @@ namespace pwiz.SkylineTestUtil
             WaitForMcpConnectorForm(typeof(TForm).Name);
 
         /// <summary>Waits for a form by its connector type name (see <see cref="WaitForMcpConnectorForm{TForm}"/>).</summary>
-        protected string WaitForMcpConnectorForm(string typeName) =>
-            ResolveWhenOpen(form => form.Type == typeName);
-
-        /// <summary>
-        /// Waits for the summary graph whose window title contains <paramref name="titleSubstring"/> -- the way
-        /// an MCP client tells several open graphs apart through GetOpenForms (each GraphSummary reports its
-        /// title, e.g. "...CV Histogram", "...Scheduling") -- and returns its form id. Pass the
-        /// localized graph name (a GraphsResources string) so it matches in any UI language.
-        /// </summary>
-        protected string WaitForMcpConnectorGraph(string titleSubstring) =>
-            ResolveWhenOpen(form => form.Type == @"GraphSummary" && form.HasGraph
-                                    && true == form.Title?.Contains(titleSubstring));
-
-        /// <summary>
-        /// Waits for the native common file dialog (Open / Save As) to appear -- it is enumerated by GetOpenForms
-        /// with IsNative=true -- and returns its form id. A native dialog's reported type is the generic
-        /// "Dialog" (its file-dialog nature is not known the instant it appears), so this matches on IsNative; the
-        /// caller knows it triggered a file dialog rather than a folder dialog.
-        /// </summary>
-        protected string WaitForNativeFileDialog() =>
-            WaitForNativeFileDialogReady(ResolveWhenOpen(form => form.IsNative));
-
-        /// <summary>
-        /// Resolves the native file dialog a connector action just opened -- straight from its
-        /// <see cref="ActionResult"/>, for a verb whose own gesture blocks in the dialog and so names it (a menu
-        /// click that shows Open/Save As) -- and waits until it is ready to be typed into. The
-        /// <see cref="ResolveModal"/> counterpart for a file dialog, and the one to use for it: ResolveModal alone
-        /// returns the instant the window is reported, which is too early (see
-        /// <see cref="WaitForNativeFileDialogReady"/>).
-        /// </summary>
-        protected string ResolveNativeFileDialog(ActionResult actionResult) =>
-            WaitForNativeFileDialogReady(ResolveModal(actionResult));
-
-        /// <summary>
-        /// Waits until the native file dialog with the given id has finished opening -- i.e. the shell has created
-        /// and shown its file-name field -- and returns that id.
-        ///
-        /// <para>A native dialog becomes discoverable (its window exists, GetOpenForms reports it, and it
-        /// classifies as a file dialog) a moment BEFORE the shell has finished showing and populating it. Setting
-        /// the file name in that window fails with "The file dialog is still opening", because
-        /// <see cref="NativeFileDialog.FileNameTextBox"/> deliberately does NOT block polling for the field -- it
-        /// throws a retryable instruction so the wait lives with the DRIVER rather than inside the primitive that
-        /// every caller shares. This is that wait, for the driver that is a test.</para>
-        ///
-        /// <para>Readiness is the file-name box appearing in GetControls under its
-        /// <see cref="NativeFileDialog.FILE_NAME_FIELD"/> label -- the same field EnterPath needs, and listed only
-        /// once it is visible, so this waits for exactly the condition that would otherwise throw.</para>
-        /// </summary>
-        protected string WaitForNativeFileDialogReady(string formId)
-        {
-            WaitForCondition(() =>
-            {
-                try
-                {
-                    return McpConnector.GetControls(formId)
-                        ?.Any(control => Equals(control.Path.Text, NativeFileDialog.FILE_NAME_FIELD)) ?? false;
-                }
-                catch (InvalidOperationException)
-                {
-                    // The dialog can be momentarily unreadable while the shell is still bringing it up.
-                    return false;
-                }
-            }, @"The native file dialog did not finish opening.");
-            return formId;
-        }
-
-        /// <summary>
-        /// Waits for the native Browse-For-Folder dialog (enumerated by GetOpenForms with IsNative=true) and
-        /// returns its form id; SetValue selects a folder by its path. Like the file dialog it reports
-        /// the generic "Dialog" type, so this matches on IsNative.
-        /// </summary>
-        protected string WaitForNativeFolderDialog() =>
-            ResolveWhenOpen(form => form.IsNative);
-
-        private string ResolveWhenOpen(Func<FormInfo, bool> predicate)
+        protected string WaitForMcpConnectorForm(string typeName)
         {
             string id = null;
-            WaitForCondition(() => null != (id = McpConnector.GetOpenForms().FirstOrDefault(predicate)?.Id));
+            WaitForCondition(() => null != (id = McpConnector.GetOpenForms()
+                .FirstOrDefault(form => form.Type == typeName)?.Id));
             return id;
         }
 
@@ -200,61 +127,29 @@ namespace pwiz.SkylineTestUtil
             GetOpenFormId(typeof(TForm).Name);
 
         /// <summary>Resolves a form by its connector type name right now (see <see cref="GetOpenFormId{TForm}"/>).</summary>
-        protected string GetOpenFormId(string typeName) =>
-            ResolveNow(form => form.Type == typeName, "a form of type " + typeName);
-
-        /// <summary>Resolves the summary graph whose title contains <paramref name="titleSubstring"/> right now
-        /// (the immediate counterpart to <see cref="WaitForMcpConnectorGraph"/>).</summary>
-        protected string GetMcpConnectorGraph(string titleSubstring) =>
-            ResolveNow(form => form.Type == @"GraphSummary" && form.HasGraph && true == form.Title?.Contains(titleSubstring),
-                "a graph whose title contains '" + titleSubstring + "'");
-
-        /// <summary>Resolves the native file dialog right now (the immediate counterpart to
-        /// <see cref="WaitForNativeFileDialog"/>).</summary>
-        protected string GetNativeFileDialog() =>
-            ResolveNow(form => form.IsNative, "the native file dialog");
-
-        /// <summary>Resolves the native folder dialog right now (the immediate counterpart to
-        /// <see cref="WaitForNativeFolderDialog"/>).</summary>
-        protected string GetNativeFolderDialog() =>
-            ResolveNow(form => form.IsNative, "the native folder dialog");
-
-        private string ResolveNow(Func<FormInfo, bool> predicate, string description)
+        protected string GetOpenFormId(string typeName)
         {
             var openForms = McpConnector.GetOpenForms();
-            var match = openForms.FirstOrDefault(predicate);
+            var match = openForms.FirstOrDefault(form => form.Type == typeName);
             if (match == null)
-            {
-                Assert.Fail("Expected {0} to be open, but it was not. Open forms: {1}", description, TextUtil.SpaceSeparate(openForms.Select(form=>form.Id)));
-            }
-
+                Assert.Fail("Expected a form of type {0} to be open, but it was not. Open forms: {1}",
+                    typeName, TextUtil.SpaceSeparate(openForms.Select(form => form.Id)));
             return match.Id;
         }
 
-        /// <summary>
-        /// Waits until the form shows a control of the given type -- e.g. a wizard page's UserControl that swaps
-        /// in after a transition (clicking "Next" can advance the page asynchronously). A screenshot taken right
-        /// after then captures the settled page rather than a mid-transition frame. Uses the connector's
-        /// GetControls, which lists only the controls currently shown (a not-yet-displayed page is not listed).
-        /// </summary>
-        protected void WaitForControl(string formId, string controlType)
+        /// <summary>Resolves the summary graph whose title contains <paramref name="titleSubstring"/> right now --
+        /// the way an MCP client tells several open graphs apart through GetOpenForms (each GraphSummary reports
+        /// its title, e.g. "...CV Histogram", "...Scheduling"). Pass the localized graph name (a GraphsResources
+        /// string) so it matches in any UI language.</summary>
+        protected string GetMcpConnectorGraph(string titleSubstring)
         {
-            WaitForCondition(() =>
-            {
-                try
-                {
-                    // GetControls can return null while the form is mid-gesture / re-laying-out; treat that (and a
-                    // no-match) as "not ready yet" and keep polling.
-                    return McpConnector.GetControls(formId)?.Any(control => Equals(control.Path.Type, controlType)) ?? false;
-                }
-                catch (InvalidOperationException)
-                {
-                    // While the page is transitioning, the form can be briefly blocked by a transient dialog
-                    // (e.g. the long-wait progress dialog shown while a spectral library loads), which makes
-                    // GetControls throw. Treat that as "not ready yet" and keep polling until it clears.
-                    return false;
-                }
-            });
+            var openForms = McpConnector.GetOpenForms();
+            var match = openForms.FirstOrDefault(form => form.Type == @"GraphSummary" && form.HasGraph
+                                                         && true == form.Title?.Contains(titleSubstring));
+            if (match == null)
+                Assert.Fail("Expected a graph whose title contains '{0}' to be open, but it was not. Open forms: {1}",
+                    titleSubstring, TextUtil.SpaceSeparate(openForms.Select(form => form.Id)));
+            return match.Id;
         }
 
         /// <summary>

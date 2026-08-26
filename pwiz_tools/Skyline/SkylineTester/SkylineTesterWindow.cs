@@ -714,17 +714,22 @@ namespace SkylineTester
             // per-project bin\...\net8.0-windows dirs). net8 is x64-only, so only the 64-bit "bin"
             // slot is populated with the most recent staging-net8*\Release build in the checkout;
             // the other slots are unused (hidden).
-            var net8Staging = GetNet8StagingDir();
+            // The Build and Nightly slots matter even though net8 is x64-only: TabNightly.Stop
+            // explicitly selects BuildDirs.nightly64 after a successful build, and TabBuild works
+            // against GetBuildRoot(). Leaving those null made GetSelectedBuildDir return null, so
+            // AddTestRunner reported "No Skyline build containing TestRunner.exe was found" and ran
+            // nothing -- even when the build had succeeded. net472 populated the equivalent slots
+            // from GetBuildRoot()/GetNightlyBuildRoot(); these are the staged-directory analogues.
             return new[]
             {
-                null,          // bin (32 bit)      - n/a on net8
-                net8Staging,   // bin (64 bit)      - most recent staged net8 build in the checkout
-                null,          // Build (32 bit)
-                null,          // Build (64 bit)
-                null,          // Nightly (32 bit)
-                null,          // Nightly (64 bit)
-                null,          // zip (32 bit)
-                null,          // zip (64 bit)
+                null,                                                       // bin (32 bit) - n/a on net8
+                GetNet8StagingDir(),                                        // bin (64 bit) - staged build in this checkout
+                null,                                                       // Build (32 bit) - n/a on net8
+                FindNet8StagingDir(SkylineDirUnder(GetBuildRoot())),        // Build (64 bit)
+                null,                                                       // Nightly (32 bit) - n/a on net8
+                FindNet8StagingDir(SkylineDirUnder(NightlyCheckoutDir())),  // Nightly (64 bit)
+                null,                                                       // zip (32 bit)
+                null,                                                       // zip (64 bit)
             };
 #endif
         }
@@ -735,12 +740,48 @@ namespace SkylineTester
         // <checkout>\pwiz_tools\Skyline\bin\staging-net8[/-record/-validate]\Release. Find the
         // checkout's Skyline dir (the ancestor named exactly "Skyline", not "SkylineTester") and
         // pick the newest staging dir that actually contains TestRunner.exe.
+        /// <summary>The Skyline source dir inside a checkout root, or null if the root is unset.</summary>
+        private static string SkylineDirUnder(string checkoutRoot)
+        {
+            return string.IsNullOrEmpty(checkoutRoot)
+                ? null
+                : Path.Combine(checkoutRoot, "pwiz_tools", "Skyline");
+        }
+
+        /// <summary>
+        /// The checkout the nightly builds in. TabNightly clones/updates into "pwiz" beneath the
+        /// nightly build root, so the staged output lives under that, not under the root itself.
+        /// </summary>
+        private string NightlyCheckoutDir()
+        {
+            var nightlyRoot = GetNightlyBuildRoot();
+            return string.IsNullOrEmpty(nightlyRoot) ? null : Path.Combine(nightlyRoot, "pwiz");
+        }
+
+        /// <summary>
+        /// Locates the staged net8 test directory belonging to SkylineTester's OWN checkout, by
+        /// walking up to the ancestor named exactly "Skyline" (not "SkylineTester").
+        ///
+        /// Only works when SkylineTester runs from inside a checkout. Under the nightly it runs from
+        /// a "SkylineTester Files" folder that is a SIBLING of the checkout, so this returns null
+        /// there and the Nightly slot above supplies the directory instead.
+        /// </summary>
         private string GetNet8StagingDir()
         {
             var skylineDir = ExeDir;
             while (skylineDir != null &&
                    !string.Equals(Path.GetFileName(skylineDir), "Skyline", StringComparison.OrdinalIgnoreCase))
                 skylineDir = Path.GetDirectoryName(skylineDir);
+            return FindNet8StagingDir(skylineDir);
+        }
+
+        /// <summary>
+        /// Picks the staged net8 test directory under a given Skyline source dir. Stage-Net8Tests.ps1
+        /// assembles TestRunner.exe + the test DLLs + Skyline-daily under
+        /// &lt;Skyline&gt;\bin\staging-net8[-record/-validate]\Release.
+        /// </summary>
+        private static string FindNet8StagingDir(string skylineDir)
+        {
             if (skylineDir == null)
                 return null;
             var binDir = Path.Combine(skylineDir, "bin");

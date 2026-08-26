@@ -371,8 +371,13 @@ namespace SkylineTester
                 ? @"https://github.com/ProteoWizard/pwiz"
                 : MainWindow.NightlyBranchUrl.Text;
             var buildRoot = Path.Combine(MainWindow.GetNightlyBuildRoot(), "pwiz");
-            // Build Skyline.exe without testing during the build
-            if (!TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList, true, false, false))
+            // Build Skyline.exe without testing during the build.
+            // Honor the Build tab's nuke/update choice rather than always nuking: SkylineNightly's
+            // --reuse-checkout writes updateBuild into the .skytr so an existing tree is synced with
+            // "git pull" instead of deleted and re-cloned. Defaults are unchanged - nukeBuild is the
+            // designer default, and a .skytr that says nothing still nukes.
+            if (!TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList,
+                    MainWindow.NukeBuild.Checked, MainWindow.UpdateBuild.Checked, false))
                 MainWindow.CommandShell.Add("# Nightly cancelled.");
             else
             {

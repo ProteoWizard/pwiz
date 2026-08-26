@@ -8,7 +8,7 @@ namespace Pwiz.Data.MsData.Readers;
 public sealed class MgfReaderAdapter : IReader
 {
     /// <inheritdoc/>
-    public string TypeName => "MGF";
+    public string TypeName => "Mascot Generic";
 
     /// <inheritdoc/>
     public CVID CvType => CVID.MS_Mascot_MGF_format;

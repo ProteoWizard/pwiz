@@ -32,6 +32,15 @@ namespace pwiz.SkylineTestUtil
 {
     public class HangDetection : IDisposable
     {
+        /// <summary>
+        /// How long the full thread dump gets before the caller settles for the degraded form. A
+        /// machine that can take one does it in milliseconds, so this is not a budget - it is a
+        /// bound on what a machine that CANNOT is allowed to cost. Measured 2026-08-24: the
+        /// TeamCity agents spend 745-1035 seconds before failing, which is not a price a timeout
+        /// diagnostic - or the test that covers it - may charge every run.
+        /// </summary>
+        private const int THREAD_DUMP_TIMEOUT_MILLIS = 5 * 1000;
+
         private readonly object _lock = new object();
         private bool _disposed;
         private TimeSpan? _waitDuration;
@@ -78,14 +87,15 @@ namespace pwiz.SkylineTestUtil
             {
                 try
                 {
-                    var threadDumpLines = new List<string> { "*** Hang detected. Thread dump:" };
-                    threadDumpLines.AddRange(GetAllThreadsCallstacks(Process.GetCurrentProcess().Id));
-                    threadDumpLines.Add("*** End of thread dump");
-                    Console.Out.WriteLine(TextUtil.LineSeparate(threadDumpLines));
+                    Console.Out.WriteLine(TextUtil.LineSeparate(@"*** Hang detected.", TryGetThreadDump()));
                 }
                 catch (Exception ex)
                 {
-                    Console.Out.WriteLine("Unable to get thread dump: {0}", ex);
+                    // TryGetThreadDump swallows its own failures, but it still has to START a thread
+                    // to bound them - and this runs on a process that is already hung, which is
+                    // exactly where that fails. Letting it throw here would replace the hang being
+                    // reported with an unrelated exception.
+                    Console.Out.WriteLine(@"Unable to get thread dump: {0}", ex);
                 }
 
                 try
@@ -243,10 +253,141 @@ namespace pwiz.SkylineTestUtil
             _watchdogThread.Join();
         }
 
+        /// <summary>
+        /// Every managed thread's call stack right now, for a failure that means something never
+        /// finished. A wait that times out can say what it was waiting for but not what was - or
+        /// was not - working on it, and that is usually the only fact worth having.
+        /// <para>KNOWN BLIND SPOT, measured rather than assumed: this attaches to its own process
+        /// passively, which cannot walk a stack that is in motion. Blocked and sleeping threads
+        /// come out complete, but the thread calling this - and any other thread running at that
+        /// instant - is listed with NO frames at all. An empty stack here therefore means "could
+        /// not read", NOT "idle", and the UI thread is usually one of the empty ones. When the
+        /// question is specifically what a RUNNING thread was doing, this cannot answer it, and
+        /// the fix is to attach from a separate process rather than from this one.</para>
+        /// <para>Never throws, and never comes back with nothing. Where the process-wide dump
+        /// cannot be taken it degrades to the calling thread's own stack, which is one thread
+        /// instead of all of them but is the thread that gave up waiting, and always reads. A
+        /// diagnostic that replaces the failure it exists to explain is worse than no diagnostic;
+        /// one that reports only that it is unavailable is barely better.</para>
+        /// </summary>
+        /// <param name="timeoutMillis">How long to allow, for a caller whose question is worth more
+        /// than the default bound. JsonToolServerTest asks what is holding a modal dialog on a loaded
+        /// agent, where the walk legitimately takes longer than a wait-timeout diagnostic should.</param>
+        public static string TryGetThreadDump(int timeoutMillis = THREAD_DUMP_TIMEOUT_MILLIS)
+        {
+            string threadDump = null;
+            string failureReason = null;
+
+            // Reading the call stacks attaches ClrMD to this very process, which can block on
+            // locating the DAC or on walking a live runtime, and ClrMD offers no way to cancel an
+            // attach that is going badly. Left unbounded it could turn a reported failure into a
+            // wedged test run, which costs a whole nightly pass - so it gets its own background
+            // thread and a deadline. Abandoning that thread leaves the rest of the work running,
+            // which is the cheaper mistake: the thread is a background one, so a wedged attach can
+            // never hold the process open.
+            var dumpThread = new Thread(() =>
+            {
+                try
+                {
+                    var threadDumpLines = new List<string> { @"*** Thread dump:" };
+                    threadDumpLines.AddRange(GetAllThreadsCallstacks(Process.GetCurrentProcess().Id));
+                    threadDumpLines.Add(@"*** End of thread dump");
+                    threadDump = TextUtil.LineSeparate(threadDumpLines);
+                }
+                catch (Exception ex)
+                {
+                    failureReason = ex.Message;
+                }
+            })
+            {
+                IsBackground = true,
+                Name = nameof(TryGetThreadDump)
+            };
+            dumpThread.Start();
+
+            // Not describing the runtime on this path. Doing so needs another attach, and the
+            // attach is what just proved too slow to finish - so asking again would spend the
+            // bound a second time, per timeout, which is the cost this bound exists to stop.
+            if (!dumpThread.Join(timeoutMillis))
+            {
+                return TextUtil.LineSeparate(
+                    string.Format(@"*** Thread dump unavailable: gave up after {0} ms", timeoutMillis),
+                    GetCallingThreadStack());
+            }
+
+            if (threadDump != null)
+                return threadDump;
+
+            // A dump that failed FAST can afford the metadata read: whatever went wrong, attaching
+            // itself returned, so describing the CLR and DAC is what says why to whoever reads the log.
+            return TextUtil.LineSeparate(
+                string.Format(@"*** Thread dump unavailable: {0}", failureReason),
+                DescribeAttachEnvironment(),
+                GetCallingThreadStack());
+        }
+
+        /// <summary>
+        /// The calling thread's own stack, for a failure whose process-wide dump could not be
+        /// taken. Reading your own stack needs no attach and no debugging support on the machine,
+        /// so this is what survives where <see cref="GetAllThreadsCallstacks"/> does not.
+        /// <para>Only the stack: why the caller wants it, and anything else worth saying about the
+        /// machine, belong to whoever is composing the report.</para>
+        /// </summary>
+        public static string GetCallingThreadStack()
+        {
+            return TextUtil.LineSeparate(
+                @"*** Calling thread stack:",
+                new StackTrace(1, true).ToString().TrimEnd(),
+                @"*** End of calling thread stack");
+        }
+
+        /// <summary>
+        /// What ClrMD can see of this machine's runtime. Whether the attach can work at all is
+        /// decided by the CLR build and the matching DAC, so a failed dump carries both out to the
+        /// log rather than leaving the next reader to guess which machines differ and how. A DAC
+        /// that does not resolve locally is fetched from a symbol server instead, which is slow
+        /// where that server is unreachable and yields misreads where the version does not match.
+        /// <para>Metadata only - deliberately does NOT call CreateRuntime, which is the expensive
+        /// half and the half that was already failing when this is reached.</para>
+        /// </summary>
+        private static string DescribeAttachEnvironment()
+        {
+            try
+            {
+                using var dataTarget = DataTarget.AttachToProcess(Process.GetCurrentProcess().Id, 5000, AttachFlag.Passive);
+                var clrInfo = dataTarget.ClrVersions.FirstOrDefault();
+                if (clrInfo == null)
+                    return @"*** No CLR found in this process";
+
+                return string.Format(@"*** CLR {0}, DAC {1}, local matching DAC: {2}",
+                    clrInfo.Version, clrInfo.DacInfo.FileName,
+                    clrInfo.LocalMatchingDac ?? @"none - a symbol server would have to supply it");
+            }
+            catch (Exception ex)
+            {
+                return string.Format(@"*** Runtime description unavailable: {0}", ex.Message);
+            }
+        }
+
         public static IEnumerable<string> GetAllThreadsCallstacks(int processId)
         {
             using var dataTarget = DataTarget.AttachToProcess(processId, 5000, AttachFlag.Passive);
-            var runtime = dataTarget.ClrVersions[0].CreateRuntime();
+            var clrInfo = dataTarget.ClrVersions[0];
+
+            // Refuse before the expensive half rather than after. With no DAC on this machine
+            // matching this CLR, ClrMD fetches one from a symbol server, which is slow where that
+            // server is unreachable and reads garbage where the version does not match - measured
+            // as 745-1035 seconds ending in "Array dimensions exceeded supported range" on the
+            // TeamCity agents. Naming the missing file costs milliseconds and tells whoever
+            // provisions the machine exactly what to install.
+            var localMatchingDac = clrInfo.LocalMatchingDac;
+            if (localMatchingDac == null)
+                throw new InvalidOperationException(string.Format(
+                    @"No local DAC matching CLR {0} - {1} would have to come from a symbol server",
+                    clrInfo.Version, clrInfo.DacInfo.FileName));
+
+            // Explicitly from the local file, so the symbol server can never become the fallback.
+            var runtime = clrInfo.CreateRuntime(localMatchingDac);
 
             foreach (var thread in runtime.Threads)
             {

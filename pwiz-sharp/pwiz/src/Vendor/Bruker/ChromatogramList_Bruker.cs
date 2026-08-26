@@ -18,6 +18,7 @@ public sealed class ChromatogramList_Bruker : ChromatogramListBase
     private readonly IBrukerData _data;
     private readonly SpectrumList_Bruker? _spectrumList;
     private readonly int _preferOnlyMsLevel;
+    private readonly bool _globalChromatogramsAreMs1Only;
     private readonly bool _passEntireDiaPasefFrame;
     private readonly List<IndexEntry> _index = new();
     private readonly List<LcTrace> _lcTraces;
@@ -54,14 +55,24 @@ public sealed class ChromatogramList_Bruker : ChromatogramListBase
     /// The reader config's whole-frame diaPASEF flag: it selects how many TIC/BPC points a
     /// diaPASEF MS2 frame contributes (one, versus one per isolation window).
     /// </param>
+    /// <param name="globalChromatogramsAreMs1Only">
+    /// Restricts the global TIC and BPC to MS1, leaving the spectrum list alone. cpp keeps this
+    /// separate from <paramref name="preferOnlyMsLevel"/> - it passes only this flag to
+    /// <c>getTIC</c>/<c>getBPC</c> (ChromatogramList_Bruker.cpp:120,124) and never the spectrum
+    /// filter - so the two must not be conflated: Skyline asks for every spectrum AND an MS1-only
+    /// TIC, and folding the spectrum filter in here gave a 6-frame PASEF run 15 TIC points where
+    /// cpp gives 1.
+    /// </param>
     public ChromatogramList_Bruker(IBrukerData data, SpectrumList_Bruker? spectrumList, int preferOnlyMsLevel,
-                                   bool passEntireDiaPasefFrame = false)
+                                   bool passEntireDiaPasefFrame = false,
+                                   bool globalChromatogramsAreMs1Only = false)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
         _spectrumList = spectrumList;
         _preferOnlyMsLevel = preferOnlyMsLevel;
         _passEntireDiaPasefFrame = passEntireDiaPasefFrame;
+        _globalChromatogramsAreMs1Only = globalChromatogramsAreMs1Only;
 
         // cpp only adds these two when the vendor handle actually answers getTIC() / getBPC()
         // with something (ChromatogramList_Bruker.cpp:165-185). The CompassXtract backend that
@@ -116,7 +127,20 @@ public sealed class ChromatogramList_Bruker : ChromatogramListBase
     {
         // Materialize once: for TDF PASEF a point list costs several SQLite queries, and this
         // method is called for both the TIC and the BPC.
-        var points = _data.EnumerateChromatogramPoints(_preferOnlyMsLevel, _passEntireDiaPasefFrame).ToList();
+        // Both filters apply, and they compose. cpp builds its CompassData handle with
+        // preferOnlyMsLevel (Reader_Bruker.cpp:251-252), so getTIC/getBPC already see only those
+        // spectra, and globalChromatogramsAreMs1Only then narrows that further
+        // (ChromatogramList_Bruker.cpp:120,124). Taking either one alone is wrong: the spectrum
+        // filter alone gave a 6-frame PASEF run 15 TIC points where Skyline's MS1-only request
+        // should give 1, and the MS1-only flag alone broke the -ms1-centroid reference tiers,
+        // which set preferOnlyMsLevel and leave the flag off.
+        // The one combination with no representable value is preferOnlyMsLevel=2 (MS2 only) plus
+        // an MS1-only request, which cpp answers with an empty chromatogram; it is a
+        // self-contradictory config that no caller asks for, and it keeps the MS2 filter here.
+        int msLevelFilter = _globalChromatogramsAreMs1Only && _preferOnlyMsLevel != 2
+            ? 1
+            : _preferOnlyMsLevel;
+        var points = _data.EnumerateChromatogramPoints(msLevelFilter, _passEntireDiaPasefFrame).ToList();
         var times = new List<double>(points.Count);
         var intensities = new List<double>(points.Count);
         foreach (var p in points)

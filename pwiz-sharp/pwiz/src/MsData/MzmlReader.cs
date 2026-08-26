@@ -41,6 +41,23 @@ public sealed class MzmlReader
     public IExternalBinarySource? ExternalBinarySource { get; set; }
 
     /// <summary>
+    /// When false, the eager read leaves peak order exactly as the file stores it instead of
+    /// repairing non-ascending m/z (see
+    /// <see cref="Spectra.SpectrumListBase.EnsureMzAscendingThroughout"/>). Defaults to true, which
+    /// is what every consumer wants and what cpp does inside <c>SpectrumList_mzML::spectrum</c>.
+    /// </summary>
+    /// <remarks>
+    /// The one caller that wants it off is the vendor-reader test harness reading a golden
+    /// reference mzML. That comparison asks "does the vendor reader emit this file?", so the
+    /// reference has to be compared as stored - normalizing it both hides a legitimately
+    /// transition-ordered reference (SIM-as-spectra writes peaks in transition order, and
+    /// <c>hasNonMzOrderingAxis</c> deliberately does not exempt SIM) and costs the test the
+    /// ability to notice a vendor reader that started sorting when the reference says it should
+    /// not.
+    /// </remarks>
+    public bool RepairPeakOrder { get; set; } = true;
+
+    /// <summary>
     /// When true, <see cref="ReadSpectrumList"/> skips the spectrum bodies — it
     /// records the spectrumList's <c>count</c> + <c>defaultDataProcessingRef</c>
     /// attributes but leaves <see cref="MSData.Run"/>.<c>SpectrumList</c> unset.
@@ -75,6 +92,45 @@ public sealed class MzmlReader
     /// contract — caller gets all the metadata but no peak values.
     /// </summary>
     private bool _skipBinaryData;
+
+    /// <summary>
+    /// When non-null, <see cref="ReadBinaryDataArray"/> records the base64 payload and its
+    /// encoder config here INSTEAD of decoding it, so the caller can run the decodes
+    /// elsewhere - in practice on a thread pool, across a batch of spectra.
+    ///
+    /// This is sound because decoding is already a pure function of (payload, config):
+    /// <see cref="BinaryDataEncoder"/> holds nothing but a readonly config and its decode
+    /// helpers are static, and a fresh encoder is constructed per array. Nothing in the
+    /// decode path touches the reader's reference maps or <see cref="_skipBinaryData"/>,
+    /// so deferring it changes only WHERE the work happens, never the result.
+    ///
+    /// XML parsing itself stays single-threaded - the collector is filled during a
+    /// sequential parse - so this needs no reentrancy work on the reader and no second
+    /// stream. That is deliberately the cheap half of the problem: on an mzML with 64-bit
+    /// zlib arrays the inflate-plus-convert dominates, and it is the half that parallelises.
+    /// </summary>
+    internal List<PendingDecode>? PendingDecodes { get; set; }
+
+    /// <summary>One deferred binary-array decode: everything needed to produce the values,
+    /// and nothing shared with any other pending decode.</summary>
+    internal sealed class PendingDecode
+    {
+        internal BinaryDataArray? DoubleArray;
+        internal IntegerDataArray? IntegerArray;
+        internal string Base64 = string.Empty;
+        internal BinaryEncoderConfig Config = new();
+
+        /// <summary>Decodes into the target array. Safe to call concurrently with other
+        /// PendingDecode instances: each owns its own target array and encoder.</summary>
+        internal void Run()
+        {
+            var encoder = new BinaryDataEncoder(Config);
+            if (IntegerArray is not null)
+                IntegerArray.Data.AddRange(encoder.DecodeIntegers(Base64));
+            else if (DoubleArray is not null)
+                DoubleArray.Data.AddRange(encoder.DecodeDoubles(Base64));
+        }
+    }
 
     /// <summary>Parses mzML from a string.</summary>
     public MSData Read(string mzml)
@@ -501,6 +557,11 @@ public sealed class MzmlReader
             else r.Read();
         }
         msd.Run.SpectrumList = list;
+        // Repair peak order here rather than in the adapters, so direct callers of this reader
+        // get it too. See the note in MzxmlReader. In LazyMode this list is empty and the call
+        // is a no-op; the lazy SpectrumList_Mzml repairs per spectrum instead.
+        if (RepairPeakOrder)
+            Spectra.SpectrumListBase.EnsureMzAscendingThroughout(list);
         r.Read();
     }
 
@@ -826,7 +887,13 @@ public sealed class MzmlReader
             var arr = new IntegerDataArray { DataProcessing = dp };
             CopyParams(tempParams, arr);
             if (!_skipBinaryData && base64 is not null && base64.Length > 0)
-                arr.Data.AddRange(new BinaryDataEncoder(encoderConfig).DecodeIntegers(base64));
+            {
+                if (PendingDecodes is not null)
+                    PendingDecodes.Add(new PendingDecode
+                        { IntegerArray = arr, Base64 = base64, Config = encoderConfig });
+                else
+                    arr.Data.AddRange(new BinaryDataEncoder(encoderConfig).DecodeIntegers(base64));
+            }
             integerArrays.Add(arr);
         }
         else
@@ -834,7 +901,13 @@ public sealed class MzmlReader
             var arr = new BinaryDataArray { DataProcessing = dp };
             CopyParams(tempParams, arr);
             if (!_skipBinaryData && base64 is not null && base64.Length > 0)
-                arr.Data.AddRange(new BinaryDataEncoder(encoderConfig).DecodeDoubles(base64));
+            {
+                if (PendingDecodes is not null)
+                    PendingDecodes.Add(new PendingDecode
+                        { DoubleArray = arr, Base64 = base64, Config = encoderConfig });
+                else
+                    arr.Data.AddRange(new BinaryDataEncoder(encoderConfig).DecodeDoubles(base64));
+            }
             doubleArrays.Add(arr);
         }
         r.Read();

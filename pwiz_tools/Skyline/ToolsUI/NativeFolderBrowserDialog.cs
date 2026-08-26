@@ -65,12 +65,16 @@ namespace pwiz.Skyline.ToolsUI
                 .FindDescendants(NativeControl.TREE_CLASS).Any();
         }
 
+        /// <summary>Shown, not merely present: BFFM_SETSELECTION on a tree the shell has not displayed yet fails
+        /// silently, and the dialog is then accepted on the default folder.</summary>
+        protected override bool IsOpenComplete =>
+            FindDescendants(NativeControl.TREE_CLASS).Any(User32.IsWindowVisible);
+
         // set_value selects the folder at the given path in the tree. BFFM_SETSELECTION must be SENT (not
         // posted), so the dialog reads the path string while this blocks and the string stays valid until it
         // returns; it merely navigates the tree (no nested modal), so the synchronous send does not wedge.
         protected override void SetValueCore(string value)
         {
-            BringToForeground();
             var pathPtr = Marshal.StringToHGlobalUni(value);
             try
             {
