@@ -7,6 +7,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -49,6 +50,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(SkylineWindow.UpdatePeakAreaGraph);
             FindNode((600.8278).ToString(LocalizationHelper.CurrentCulture) + "++");
             WaitForGraphs();
+            WaitForPaneShowingSelection(0);
             var expectedRDotp1 = new[] {0.62, 1.00, 0.61, 0.53};
             RunUI(() =>
             {
@@ -122,6 +124,7 @@ namespace pwiz.SkylineTestFunctional
 
             FindNode((529.2855).ToString(LocalizationHelper.CurrentCulture) + "++");
             WaitForGraphs();
+            WaitForPaneShowingSelection(0);
             var expectedRDotp2 = new[] {0.72, 0.98, 0.88, 0.92};
             RunUI(() =>
             {
@@ -154,6 +157,8 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(propertyDialog, propertyDialog.OkDialog);
             FindNode((873.9438).ToString(LocalizationHelper.CurrentCulture) + "++");
             WaitForGraphs();
+            WaitForPaneShowingSelection(0);
+            WaitForPaneShowingSelection(1);
             RunUI(() =>
             {
                 VerifyDotpLine(replicates, expectedIDotp, @"idotp");
@@ -231,6 +236,41 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(repIndex >= 0, "Replicate labels of the peak area graph are incorrect.");
                 Assert.AreEqual(dotps[i], Math.Round(dotpLine.Points[repIndex].Y, 2));
             }
+        }
+
+        /// <summary>
+        /// Waits for a peak area pane to catch up to the selected precursor.
+        /// <para><see cref="AbstractFunctionalTest.WaitForGraphs"/> is not enough on its own. It reports only that no graph
+        /// update is queued, and an update can leave that queue without having happened: the timer
+        /// tick in SkylineGraphs pops a pane and removes it unconditionally, while
+        /// GraphSummary.UpdateGraph returns early whenever the document and the selection are
+        /// momentarily out of sync. The pending flag then goes false with the pane still drawing the
+        /// PREVIOUS precursor, which is how this test read one precursor's dotp values against
+        /// another's expectations, roughly once in 460 executions.</para>
+        /// </summary>
+        private void WaitForPaneShowingSelection(int paneIndex)
+        {
+            WaitForConditionUI(() =>
+            {
+                // Wait for the pane to exist as part of the condition. A split graph adds its second
+                // pane as the selection is applied, and indexing ahead of that throws out of the
+                // predicate - WaitForConditionUI does not catch, so it hard-fails instead of waiting.
+                // Same reasoning for the graph itself and for the cast: the graph may not be shown
+                // yet, and a pane at this index may briefly be some other pane type while the split
+                // is applied. Both throw out of the predicate rather than waiting, so both are
+                // conditions to wait ON, not assumptions to make.
+                var graphPeakArea = SkylineWindow.GraphPeakArea;
+                if (graphPeakArea == null)
+                    return false;
+                var panes = graphPeakArea.GraphControl.MasterPane.PaneList;
+                if (paneIndex >= panes.Count)
+                    return false;
+                if (!(panes[paneIndex] is AreaReplicateGraphPane pane))
+                    return false;
+                var selected = SkylineWindow.SequenceTree.GetNodeOfType<TransitionGroupTreeNode>()?.DocNode;
+                return selected != null && pane.ParentGroupNode != null &&
+                       ReferenceEquals(pane.ParentGroupNode.TransitionGroup, selected.TransitionGroup);
+            }, () => string.Format("Peak area pane {0} did not catch up to the selected precursor.", paneIndex));
         }
 
         // Returns the unrounded rdotp line value at the given replicate's displayed position.
