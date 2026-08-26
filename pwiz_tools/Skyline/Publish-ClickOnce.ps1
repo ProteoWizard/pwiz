@@ -220,7 +220,15 @@ $application = Get-ChildItem $publishDir -Filter *.application -ErrorAction Sile
 if ($application) {
     $xml = [xml](Get-Content $application.FullName)
     $id = $xml.assembly.assemblyIdentity
-    $provider = $xml.assembly.deployment.deploymentProvider.codebase
+    # A deployment with blank InstallUrl/UpdateUrl has no <deploymentProvider> element at all -
+    # that absence is what lets it install from any folder it was extracted into. StrictMode
+    # makes reading the missing property a terminating error, so probe for it rather than
+    # dereferencing it, or every ZIP-style publish dies here AFTER doing all the work.
+    $deployment = $xml.assembly.deployment
+    $providerUrl = if ($deployment.PSObject.Properties['deploymentProvider']) {
+        $deployment.deploymentProvider.codebase
+    } else { $null }
+    $provider = if ($providerUrl) { $providerUrl } else { '(none - installs from the folder it is run out of)' }
     Write-Host ''
     Write-Host "Published $($application.FullName)"
     Write-Host "  identity  $($id.name) $($id.version)"
@@ -269,7 +277,11 @@ if ($application) {
     Set-Content -Path $indexPath -Value $html -Encoding UTF8
     Write-Host "  page      $indexPath"
     Write-Host ''
-    Write-Host 'Copy the whole publish folder to the install URL above.'
+    if ($providerUrl) {
+        Write-Host 'Copy the whole publish folder to the install URL above.'
+    } else {
+        Write-Host 'No deploymentProvider: ZIP the publish folder, extract it anywhere, run setup.exe.'
+    }
 } else {
     Write-Warning "No .application found in $publishDir - did the publish actually run?"
 }

@@ -10,7 +10,9 @@
     Depend on ComputeSkylineVersion and read:
       $(SkylineNumericVersion)        e.g. 26.1.1.203  (also the AssemblyVersion)
       $(SkylineInformationalVersion)  e.g. 26.1.1.203-b4bf6df10d (developer build)
-    Override either with -p:SkylineNumericVersion=... / -p:SkylineInformationalVersion=... .
+    Override either with -p:SkylineNumericVersion=... / -p:SkylineInformationalVersion=... ,
+    or move a whole build onto a different release series by setting SkylineVersionOrdinal
+    (the ".2" of 26.2) - the ClickOnce preview publish profile does exactly that.
 
     This file is target-framework-agnostic. A consumer that also builds net472
     should gate its import per-TFM (as Skyline.csproj does) so the git-date
@@ -21,7 +23,7 @@
 
   <PropertyGroup>
     <SkylineVersionYear>26</SkylineVersionYear>
-    <SkylineVersionOrdinal>1</SkylineVersionOrdinal>
+    <SkylineVersionOrdinal Condition="'$(SkylineVersionOrdinal)' == ''">1</SkylineVersionOrdinal>
     <!-- 0 = release, 1 = daily, 9 = feature-complete daily (mirrors SKYLINE_BRANCH
          in Jamfile.jam). This is the .Build component, which TestDocumentFormatCurrent
          keys off (skips the version/format sync check on feature-complete builds). -->
