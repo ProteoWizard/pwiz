@@ -3499,7 +3499,7 @@ namespace pwiz.Osprey.Test
         /// otherwise wrap int when computing
         /// <c>HeaderLength + headerCount * RecordLength</c> and let the
         /// size check pass spuriously, leading to out-of-bounds reads in
-        /// the record loop. Both <see cref="FdrScoresSidecar.TryRead"/>
+        /// the record loop. Both <see cref="FdrScoresSidecar.TryRead(string, IList{FdrEntry}, FdrScoresSidecar.Pass)"/>
         /// and <see cref="FdrScoresSidecar.TryReadOverlay"/> must reject
         /// the load via the checked-arithmetic guard.
         /// </summary>

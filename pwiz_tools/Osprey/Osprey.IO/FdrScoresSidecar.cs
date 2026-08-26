@@ -388,8 +388,8 @@ namespace pwiz.Osprey.IO
         /// only). The 8-byte little-endian f64 encoding matches
         /// <see cref="WriteRecord"/>'s <c>BinaryWriter.Write(double)</c> (the platform is
         /// little-endian, as the <see cref="BitConverter.ToDouble(byte[], int)"/> reads
-        /// in <see cref="TryRead"/> already assume). Same header validation as
-        /// <see cref="TryRead"/> (magic / version / pass / size); returns <c>false</c> on
+        /// in <see cref="TryRead(string, IList{FdrEntry}, Pass)"/> already assume). Same header validation as
+        /// <see cref="TryRead(string, IList{FdrEntry}, Pass)"/> (magic / version / pass / size); returns <c>false</c> on
         /// any mismatch or IO failure, leaving the file unchanged. Streams the source one
         /// <see cref="RecordLength"/>-byte record at a time straight into the
         /// <see cref="FileSaver"/> temp stream (bounded memory -- one record resident, not an
@@ -600,6 +600,30 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static bool TryRead(string path, IList<FdrEntry> entries, Pass expectedPass)
         {
+            return TryRead(path, entries, expectedPass, null);
+        }
+
+        /// <summary>
+        /// As <see cref="TryRead(string, IList{FdrEntry}, Pass)"/>, but for a caller whose
+        /// <paramref name="entries"/> are a deliberately FILTERED subset rather than the
+        /// superset that overload requires.
+        ///
+        /// <para><paramref name="expectedAbsent"/> is the same predicate that did the
+        /// filtering, inverted at the call: a record whose entry_id is missing is tolerated
+        /// only when the predicate agrees it was dropped on purpose. A record the caller
+        /// says it WANTED and did not get still fails the read, so the corruption check the
+        /// superset overload documents keeps its full strength - it is narrowed to the rows
+        /// the caller can account for, not switched off.</para>
+        ///
+        /// <para>Needed because the 1st-pass sidecar is written over the whole stub set
+        /// (3,525,976 records for one 257-file CHS input) while a Stage 7 survivor load
+        /// keeps ~533 K of them, so filtering during the parquet read - which is the point,
+        /// see <c>ParquetScoreCache.LoadFdrStubsFromParquet</c> - leaves the great majority
+        /// of records with no entry to land on (issue #4486).</para>
+        /// </summary>
+        public static bool TryRead(string path, IList<FdrEntry> entries, Pass expectedPass,
+            Func<uint, bool> expectedAbsent)
+        {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (entries == null) throw new ArgumentNullException(nameof(entries));
 
@@ -655,6 +679,11 @@ namespace pwiz.Osprey.IO
                 uint recordEntryId = BitConverter.ToUInt32(data, off + 0);
                 if (!byEntryId.TryGetValue(recordEntryId, out int entryIdx))
                 {
+                    // A caller that filtered its stub list says so by supplying the
+                    // predicate that did the filtering; a record it dropped on purpose
+                    // is expected to have no entry here.
+                    if (expectedAbsent != null && expectedAbsent(recordEntryId))
+                        continue;
                     // Sidecar carries an entry the caller's stub list
                     // doesn't contain. The caller is expected to pass
                     // a SUPERSET of the sidecar's entries (the post-

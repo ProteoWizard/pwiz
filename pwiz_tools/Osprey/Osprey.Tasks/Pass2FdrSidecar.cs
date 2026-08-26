@@ -1610,7 +1610,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Build the reconciled parquet's <c>(entry_id, charge, scan_number) -&gt; row</c>
         /// map from its lean stub identity columns
-        /// (<see cref="ParquetScoreCache.LoadFdrStubsFromParquet"/>, which assigns
+        /// (<see cref="ParquetScoreCache.LoadFdrStubsFromParquet(string)"/>, which assigns
         /// <see cref="FdrEntry.ParquetIndex"/> = row). The mirror of
         /// <see cref="LoadReconciledFeaturesByIdentity"/> that yields the ROW INDEX
         /// instead of the feature vector: that loader keys <c>featRows[i]</c> by identity

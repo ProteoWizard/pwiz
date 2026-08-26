@@ -339,7 +339,7 @@ namespace pwiz.Osprey.IO
         /// <see cref="FdrEntry"/> rows already in their final output order. Each
         /// entry's <see cref="FdrEntry.ParquetIndex"/> is (re)assigned to its global
         /// row position <paramref name="startIndex"/> + j, matching
-        /// <see cref="LoadFdrStubsFromParquet"/>'s read-side "ParquetIndex = row"
+        /// <see cref="LoadFdrStubsFromParquet(string)"/>'s read-side "ParquetIndex = row"
         /// convention. Shared by the chunked <see cref="WriteScoresParquet(string,List{FdrEntry},Dictionary{string,string},Dictionary{uint,LibraryEntry},string)"/>
         /// write and the Stage-6 streaming reconciled transfer
         /// (<see cref="StreamReconciledScoresParquet"/>) so both emit byte-identical
@@ -772,7 +772,33 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static List<FdrEntry> LoadFdrStubsFromParquet(string path)
         {
+            return LoadFdrStubsFromParquet(path, null);
+        }
+
+        /// <summary>
+        /// As <see cref="LoadFdrStubsFromParquet(string)"/>, but keeping only the rows
+        /// <paramref name="keepEntry"/> accepts, tested against each row's <c>entry_id</c>
+        /// as it is decoded.
+        ///
+        /// <para>The gate belongs HERE rather than in a caller's post-load filter because
+        /// the discarded rows are the majority: a Stage 7 survivor load keeps ~533 K of
+        /// ~2.99 M stubs per file at 257 CHS files, so building the full list first
+        /// allocates 5.6x what survives it (issue #4486).</para>
+        ///
+        /// <para><see cref="FdrEntry.ParquetIndex"/> stays the row's index in the FILE, not
+        /// its index in the returned list. It addresses that file's feature rows
+        /// (<c>PercolatorScorer.ResolveFeatureRow</c> indexes them directly) and is the
+        /// terminal tie-break of <see cref="FdrEntry.CANONICAL_ORDER"/>, so renumbering it
+        /// densely would both mis-resolve features and reorder the sort.</para>
+        /// </summary>
+        public static List<FdrEntry> LoadFdrStubsFromParquet(string path, Func<uint, bool> keepEntry)
+        {
             var stubs = new List<FdrEntry>();
+            // Counted separately from stubs.Count, which no longer tracks it once rows are
+            // dropped. Advanced only for rows actually decoded, so a row group skipped below
+            // for missing columns contributes nothing - the same indices the unfiltered load
+            // produced.
+            uint rowIndex = 0;
 
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
@@ -799,10 +825,13 @@ namespace pwiz.Osprey.IO
                         int rowCount = entryIdCol.Length;
                         for (int row = 0; row < rowCount; row++)
                         {
+                            uint parquetIndex = rowIndex++;
+                            if (keepEntry != null && !keepEntry(entryIdCol[row]))
+                                continue;
                             stubs.Add(new FdrEntry
                             {
                                 EntryId = entryIdCol[row],
-                                ParquetIndex = (uint)(stubs.Count),
+                                ParquetIndex = parquetIndex,
                                 IsDecoy = isDecoyCol[row],
                                 Charge = chargeCol != null ? chargeCol[row] : (byte)0,
                                 ScanNumber = scanCol != null ? scanCol[row] : 0u,
@@ -823,7 +852,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Read just <c>entry_id</c> and <c>apex_rt</c> from a <c>.scores.parquet</c>, in the same
-        /// row order as <see cref="LoadFdrStubsFromParquet"/> and under the identical "skip this
+        /// row order as <see cref="LoadFdrStubsFromParquet(string)"/> and under the identical "skip this
         /// row group when entry_id is absent" rule, so the returned index is that method's
         /// <c>ParquetIndex</c>.
         ///
@@ -901,7 +930,7 @@ namespace pwiz.Osprey.IO
         /// single <see cref="FdrEntry"/>. Reads exactly the five columns the first-pass
         /// FdrProjection needs -- entry_id, charge, is_decoy, coelution_sum,
         /// modified_sequence -- and invokes <paramref name="onRow"/> once per row in the
-        /// same order as <see cref="LoadFdrStubsFromParquet"/>, applying the identical
+        /// same order as <see cref="LoadFdrStubsFromParquet(string)"/>, applying the identical
         /// "skip this row group when entry_id/is_decoy are absent" rule. The caller's
         /// running row count therefore equals that method's <c>ParquetIndex</c>.
         ///
@@ -951,7 +980,7 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Load only the <c>cwt_candidates</c> column from a Parquet cache,
         /// returning one <see cref="CwtCandidate"/> list per row in the same
-        /// order as <see cref="LoadFdrStubsFromParquet"/>. Used by Stage 6
+        /// order as <see cref="LoadFdrStubsFromParquet(string)"/>. Used by Stage 6
         /// reconciliation planning, which needs the per-entry CWT peak
         /// candidates without paying the cost of loading features and
         /// fragments. Mirrors the Rust loader at
@@ -1054,7 +1083,7 @@ namespace pwiz.Osprey.IO
         /// and <see cref="FdrEntry.CwtCandidates"/> populated, ready to
         /// feed into the Phase 3 reconciled parquet write-back step.
         ///
-        /// Equivalent to calling <see cref="LoadFdrStubsFromParquet"/>,
+        /// Equivalent to calling <see cref="LoadFdrStubsFromParquet(string)"/>,
         /// <see cref="LoadPinFeaturesFromParquet"/>, and
         /// <see cref="LoadCwtCandidatesFromParquet"/> separately and
         /// zipping them by row index — but does it in a single parquet

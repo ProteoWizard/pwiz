@@ -43,10 +43,18 @@ namespace pwiz.Osprey.Tasks
     ///
     /// <para>The load is byte-order-identical to the legacy in-place compaction:
     /// <see cref="FdrEntry.ParquetIndex"/> comes from the ORIGINAL parquet (row
-    /// ordinal), the sidecar is overlaid onto the FULL stub set before filtering
-    /// (the superset contract <see cref="FdrScoresSidecar.TryRead"/> requires), and
-    /// the result is sorted by the canonical (EntryId, Charge, ScanNumber,
-    /// ParquetIndex) key. Callers must not re-order it.</para>
+    /// ordinal, which the filtering below does not renumber) and the result is sorted
+    /// by the canonical (EntryId, Charge, ScanNumber, ParquetIndex) key. Callers must
+    /// not re-order it.</para>
+    ///
+    /// <para>Survivors are selected DURING the parquet read rather than after it, so the
+    /// rows that do not survive are never built (issue #4486). That inverts the order
+    /// this class used to run in - it overlaid the sidecar onto the FULL stub set first,
+    /// which is the superset
+    /// <see cref="FdrScoresSidecar.TryRead(string, IList{FdrEntry}, FdrScoresSidecar.Pass)"/> requires -
+    /// so the overlay is now told which absences were deliberate. Each survivor ends up
+    /// with the same values either way, because records are matched by entry_id rather
+    /// than by position.</para>
     /// </summary>
     internal sealed class FirstPassSurvivorLoader
     {
@@ -88,10 +96,17 @@ namespace pwiz.Osprey.Tasks
                 return null;
             }
 
+            // Applied AS THE PARQUET IS READ, not after. This kept ~533 K of ~2.99 M stubs
+            // per file at 257 CHS files, so filtering afterwards built 5.6x what survived
+            // it - the whole reason Stage 7's front end allocates before it compacts
+            // (issue #4486). Hoisted out of the two calls below so both use one delegate.
+            Func<uint, bool> isSurvivor = entryId =>
+                _firstPassBaseIds.Contains(entryId & ScoringTaskShared.BASE_ID_MASK);
+
             List<FdrEntry> stubs;
             try
             {
-                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, isSurvivor);
             }
             catch (Exception ex)
             {
@@ -101,12 +116,17 @@ namespace pwiz.Osprey.Tasks
                 return null;
             }
 
-            // Overlay the 1st-pass sidecar onto the FULL stub set (superset contract)
-            // BEFORE filtering to survivors.
+            // Overlay the 1st-pass sidecar. That sidecar covers the whole stub set, so with
+            // the survivors already selected above it carries millions of records with no
+            // entry to land on; the predicate tells the reader which absences it asked for,
+            // leaving any OTHER missing entry_id the corruption it has always been. Records
+            // are matched by entry_id rather than position, so overlaying the filtered list
+            // gives each survivor the same values overlaying the full one did.
             string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(
                 fileName, _perFileParquetPaths, _config);
             string pass1Path = FdrScoresSidecar.Pass1Path(sidecarBase);
-            if (!FdrScoresSidecar.TryRead(pass1Path, stubs, FdrScoresSidecar.Pass.FirstPass))
+            if (!FdrScoresSidecar.TryRead(pass1Path, stubs, FdrScoresSidecar.Pass.FirstPass,
+                    entryId => !isSurvivor(entryId)))
             {
                 error = string.Format(
                     @"First-pass survivor load: failed to overlay .1st-pass.fdr_scores.bin for {0} " +
@@ -114,7 +134,6 @@ namespace pwiz.Osprey.Tasks
                 return null;
             }
 
-            stubs.RemoveAll(e => !_firstPassBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
             stubs.TrimExcess();
             stubs.Sort(FdrEntry.CANONICAL_ORDER); // Array.Sort OK: CANONICAL_ORDER's terminal key ParquetIndex is unique per reloaded stub, so the comparison never ties
             return stubs;
