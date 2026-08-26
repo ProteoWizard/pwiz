@@ -861,9 +861,13 @@ namespace pwiz.Osprey.FDR
             // silent span on an 82-file join; announce it so the console is not blank.
             logInfo(string.Format(@"Selecting training subset from {0} scored entries...", n));
             int[] bestIdx;
+            // fileStart is how this path supplies run identity: it hands an EMPTY entries list to
+            // avoid the full-N PercolatorEntry buffer, so there are no FileName strings to read a
+            // run off. Without it the selection would fall back to treating every row as its own
+            // run and sample candidate PEAKS rather than runs.
             int[] trainSubsetGlobalIdx = PercolatorSampling.BuildTrainingSubset(
                 labels, entryIds, peptides, Array.Empty<PercolatorEntry>(), maxTrain,
-                percConfig.Seed, out bestIdx, bestScores);
+                percConfig.Seed, out bestIdx, bestScores, fileStart);
 
             int dedupTargets = 0, dedupDecoys = 0;
             for (int i = 0; i < bestIdx.Length; i++)

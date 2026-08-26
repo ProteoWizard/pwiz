@@ -169,6 +169,7 @@
     <Compile Include="CheckReportCompatibility.cs" />
     <Compile Include="CompareDocuments.cs" />
     <Compile Include="DllFinderTestUtil.cs" />
+    <Compile Include="EqualityExplainer.cs" />
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="GitFileHelper.cs" />
