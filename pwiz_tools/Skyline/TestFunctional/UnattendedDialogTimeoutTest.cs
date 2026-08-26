@@ -87,11 +87,18 @@ namespace pwiz.SkylineTestFunctional
                 // ThreadExceptionDialog instead of routing to the harness, and the test then reports
                 // a hang rather than the dialog it missed. Reporting makes this the first exception
                 // the harness holds, which is the one it fails the test with.
-                var reported = Program.TestExceptions.ToArray();
-                Program.TestExceptions.Clear();  // Deliberately provoked, so do not fail this test
-                AssertEx.IsTrue(reported.Length > 0, "The unattended dialog was never reported.");
-                Assert.AreSame(firstTimeout, reported[0]);
-                AssertEx.Contains(reported[0].Message, MESSAGE_TEXT);
+                // Under the same lock the writer takes: AddTestException is reached from background
+                // threads, and the loaders route failures through it while this test runs. Remove only
+                // the exception THIS test provoked - clearing the list would throw away an unrelated
+                // failure recorded by something else, and the harness check at teardown would then
+                // pass with the real bug gone.
+                bool reported;
+                lock (Program.TestExceptions)
+                {
+                    reported = Program.TestExceptions.Remove(firstTimeout);
+                }
+                AssertEx.IsTrue(reported, "The unattended dialog was never reported.");
+                AssertEx.Contains(firstTimeout.Message, MESSAGE_TEXT);
             });
         }
 
