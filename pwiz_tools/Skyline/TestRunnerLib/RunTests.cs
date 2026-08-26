@@ -1416,14 +1416,20 @@ namespace TestRunnerLib
             }
         }
 
-        public static IEnumerable<TestInfo> GetTestInfos(string testDll)
+        /// <param name="testDll">The test assembly, by name next to TestRunner or by full path</param>
+        /// <param name="loader">How to load it. Defaults to <see cref="LoadFromAssembly.Try"/>,
+        /// which is what TestRunner needs: it goes on to RUN these tests, so the assemblies have to
+        /// load the way they will at execution time. A caller that only reads names - a test tree -
+        /// passes <see cref="LoadFromAssembly.TryWithoutLocking"/> instead, so that browsing a build
+        /// directory does not take a write lock on everything in it.</param>
+        public static IEnumerable<TestInfo> GetTestInfos(string testDll, Func<string, Assembly> loader = null)
         {
             var dllPath = GetAssemblyPath(testDll);
             // Not every test project is necessarily deployed next to TestRunner (each net8 SDK
             // project builds to its own bin). A test DLL that isn't present simply has no tests.
             if (!File.Exists(dllPath))
                 yield break;
-            var assembly = LoadFromAssembly.Try(dllPath);
+            var assembly = (loader ?? LoadFromAssembly.Try)(dllPath);
             var types = assembly.GetTypes();
 
             foreach (var type in types)

@@ -11,14 +11,37 @@ namespace TestRunnerLib
         // Offer a more detailed error message when we fail to load a DLL
         public static Assembly Try(string dllPath)
         {
+            return Load(dllPath, "Assembly.LoadFrom", Assembly.LoadFrom);
+        }
+
+        /// <summary>
+        /// Loads an assembly from its bytes rather than from the file, so the file is NOT held
+        /// for the life of the process the way <see cref="Assembly.LoadFrom(string)"/> holds it.
+        /// <para>Use this to READ a build directory that something else still has to WRITE.
+        /// SkylineTester fills its test tree from the staged directory and then stages into that
+        /// same directory when a run starts, so the tree it had just shown was what stopped the
+        /// staging the run depends on: "The process cannot access the file ...\CommonTest.dll
+        /// because it is being used by another process. Held by: SkylineTester".</para>
+        /// <para>The trade is that this drops LoadFrom's probing: a dependency found only next to
+        /// the assembly no longer resolves by itself, so a caller reading from a directory that is
+        /// not its own supplies those. Type identity is unaffected for reading names and
+        /// attributes, which is all a test tree needs.</para>
+        /// </summary>
+        public static Assembly TryWithoutLocking(string dllPath)
+        {
+            return Load(dllPath, "Assembly.Load", path => Assembly.Load(File.ReadAllBytes(path)));
+        }
+
+        private static Assembly Load(string dllPath, string description, Func<string, Assembly> load)
+        {
             try
             {
-                return Assembly.LoadFrom(dllPath);
+                return load(dllPath);
             }
             catch (ReflectionTypeLoadException ex)
             {
                 var errMessage = new StringBuilder();
-                errMessage.AppendLine(string.Format("Error in Assembly.LoadFrom({0}) at", dllPath));
+                errMessage.AppendLine(string.Format("Error in {0}({1}) at", description, dllPath));
                 errMessage.AppendLine(ex.StackTrace);
                 errMessage.AppendLine();
                 errMessage.AppendLine(string.Format(ex.Message));

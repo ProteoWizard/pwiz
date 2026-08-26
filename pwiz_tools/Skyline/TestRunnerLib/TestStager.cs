@@ -115,13 +115,17 @@ namespace TestRunnerLib
         }
 
         /// <summary>
-        /// The projects to stage, with those whose output predates their own sources FIRST.
+        /// The projects to stage, oldest build FIRST so the most recently built one wins.
         /// <para>Order decides correctness, not just speed: the projects merge into one directory,
-        /// so the last copy of a shared file wins. A project whose output predates its sources
-        /// cannot be the authority on a shared assembly - the standard build excludes TestPerf and
-        /// TestTutorial, so their output routinely carries dependencies several versions old, and
-        /// staging them last is how a stale ClrMD once overwrote the copy the rebuilt projects had
-        /// just staged. Stale first, freshly built last.</para>
+        /// so the last copy of a SHARED file wins, and every project carries its own copy of
+        /// TestRunnerLib, ClrMD and the rest. Oldest build first, most recent build last, so the
+        /// winner is the copy that was built most recently.</para>
+        /// <para>The key is when the project was BUILT, not whether it is stale against its own
+        /// sources - those answer different questions, and this used to ask the wrong one. The
+        /// standard build excludes TestPerf and TestTutorial, whose sources rarely change, so both
+        /// looked current, sorted last, and overwrote a freshly built TestRunnerLib with the copy
+        /// from whenever they were last compiled. TestRunner then failed with MissingMethodException
+        /// on a method its own source declares.</para>
         /// </summary>
         private IEnumerable<StagedProject> OrderedProjects()
         {
@@ -134,9 +138,23 @@ namespace TestRunnerLib
                     _log($"Skipping {name} - no output at {outputDir} (build it first).");
                     continue;
                 }
-                staged.Add(new StagedProject(name, outputDir, IsOutputStale(name, outputDir)));
+                staged.Add(new StagedProject(name, outputDir, NewestOutput(outputDir)));
+                WarnIfOutputStale(name, outputDir);
             }
-            return staged.Where(p => p.Stale).Concat(staged.Where(p => !p.Stale));
+            // OrderBy is stable, so projects built in the same second keep their declared order.
+            return staged.OrderBy(p => p.Built);
+        }
+
+        /// <summary>
+        /// When a project was last built, taken from the newest assembly it produced.
+        /// <see cref="DateTime.MinValue"/> when it produced none, which sorts it first - a
+        /// directory with no assemblies cannot be the authority on a shared one.
+        /// </summary>
+        private static DateTime NewestOutput(string outputDir)
+        {
+            return Directory.EnumerateFiles(outputDir, "*.dll", SearchOption.TopDirectoryOnly)
+                .Select(File.GetLastWriteTime)
+                .DefaultIfEmpty(DateTime.MinValue).Max();
         }
 
         /// <summary>
@@ -173,16 +191,19 @@ namespace TestRunnerLib
         }
 
         /// <summary>
-        /// True when a project is about to be staged from output older than its own sources.
+        /// Warns when a project is about to be staged from output older than its own sources.
         /// Staging copies whatever is on disk, so a project that was never rebuilt is staged
         /// silently, and the standard build deliberately excludes TestPerf and TestTutorial while
         /// this stages them by default - which makes that easy to hit.
+        /// <para>A warning, not an ordering rule. Which project wins a shared file is decided by
+        /// when each was BUILT - see <see cref="OrderedProjects"/> - and a project can be current
+        /// against its own sources while carrying shared assemblies months out of date.</para>
         /// </summary>
-        private bool IsOutputStale(string project, string outputDir)
+        private void WarnIfOutputStale(string project, string outputDir)
         {
             var sourceDir = Equals(project, "Skyline") ? SkylineDir : Path.Combine(SkylineDir, project);
             if (!Directory.Exists(sourceDir))
-                return false;
+                return;
 
             // The Skyline directory physically contains the test projects, whose sources are not its
             var siblings = Equals(project, "Skyline")
@@ -191,19 +212,22 @@ namespace TestRunnerLib
 
             var newestSource = NewestSourceFile(sourceDir, siblings);
             if (newestSource == null)
-                return false;
+                return;
 
             var newestOutput = Directory.EnumerateFiles(outputDir, "*.dll", SearchOption.TopDirectoryOnly)
                 .Select(f => (DateTime?) File.GetLastWriteTime(f))
                 .DefaultIfEmpty(null).Max();
             if (newestOutput == null || newestSource.Item2 <= newestOutput.Value)
-                return false;
+                return;
 
+            // Seconds, because a build finishes within the minute it started: reported to the
+            // minute this said a file changed at 15:23 and the assembly was built at 15:23, and
+            // then claimed the second was older than the first.
             _log($"WARNING: {project} output looks stale: {newestSource.Item1} changed " +
-                 $"{newestSource.Item2:MM-dd HH:mm} but the newest built assembly is " +
-                 $"{newestOutput.Value:MM-dd HH:mm}. Staging it first so freshly built projects win " +
-                 $"any shared file - rebuild {project} if that is not intended.");
-            return true;
+                 $"{newestSource.Item2:MM-dd HH:mm:ss} but the newest built assembly is " +
+                 $"{newestOutput.Value:MM-dd HH:mm:ss}. Staging it first so freshly built projects " +
+                 $"win any shared file - rebuild {project} if that is not intended.");
+            return;
         }
 
         private static Tuple<string, DateTime> NewestSourceFile(string sourceDir, string[] siblings)
@@ -216,10 +240,40 @@ namespace TestRunnerLib
                 if (siblings.Any(s => file.StartsWith(s, StringComparison.OrdinalIgnoreCase)))
                     continue;
                 var written = File.GetLastWriteTime(file);
-                if (newest == null || written > newest.Item2)
-                    newest = Tuple.Create(Path.GetFileName(file), written);
+                if (newest != null && written <= newest.Item2)
+                    continue;
+                // Checked only for a file that would become the newest, because it reads the file.
+                if (IsGeneratedSource(file))
+                    continue;
+                newest = Tuple.Create(Path.GetFileName(file), written);
             }
             return newest;
+        }
+
+        /// <summary>
+        /// True for a source file the BUILD itself writes into the source tree.
+        /// <para>Protobuf regenerates Test\ProtocolBuffers\GeneratedCode on every build, so the
+        /// newest .cs under Test is routinely one the build had just written - which made this
+        /// report the output stale the moment the build succeeded, and tell the developer to
+        /// rebuild what they had only just rebuilt. A warning that is always wrong is how the
+        /// true ones stop being read.</para>
+        /// </summary>
+        private static bool IsGeneratedSource(string path)
+        {
+            try
+            {
+                using (var reader = new StreamReader(path))
+                {
+                    // The marker is a first-line convention, so this reads one line, not the file.
+                    var firstLine = reader.ReadLine();
+                    return firstLine != null && firstLine.Contains("<auto-generated");
+                }
+            }
+            catch (IOException)
+            {
+                // Unreadable is not evidence either way; leave it a candidate.
+                return false;
+            }
         }
 
         private static bool IsSourceFile(string path)
@@ -361,16 +415,16 @@ namespace TestRunnerLib
 
         private class StagedProject
         {
-            public StagedProject(string name, string outputDir, bool stale)
+            public StagedProject(string name, string outputDir, DateTime built)
             {
                 Name = name;
                 OutputDir = outputDir;
-                Stale = stale;
+                Built = built;
             }
 
             public string Name { get; }
             public string OutputDir { get; }
-            public bool Stale { get; }
+            public DateTime Built { get; }
         }
 
         /// <summary>

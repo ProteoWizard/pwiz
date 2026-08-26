@@ -529,9 +529,60 @@ namespace SkylineTester
             // runs from its own project output while the test DLLs live in the staged build dir, so
             // ExeDir has none of them -- reading from ExeDir there yields an empty tree (no test filter).
             var testDir = GetSelectedBuildDir() ?? ExeDir;
-            return TestRunnerLib.RunTests.GetTestInfos(Path.Combine(testDir, testDll)).Where(info =>
+            return TestRunnerLib.RunTests.GetTestInfos(Path.Combine(testDir, testDll), LoadTestAssembly).Where(info =>
                 (filterAttribute == null || !info.TestMethod.CustomAttributes.Any(attr => Equals(attr.AttributeType.Name, filterAttribute))) &&
                 (filterName == null || info.TestMethod.Name.Contains(filterName)));
+        }
+
+        /// <summary>
+        /// The build directory the test assemblies are currently being read from, for
+        /// <see cref="ResolveFromTestDir"/>. Not necessarily this program's own directory.
+        /// </summary>
+        private static string _testDir;
+        private static bool _resolvingFromTestDir;
+
+        /// <summary>
+        /// The loader the test tree reads with. Reading the tree must not lock the build it is
+        /// reading: the staged directory these come from is the one a run stages INTO, and
+        /// Assembly.LoadFrom holds every file it maps until this program exits - which is how a
+        /// tree that had just listed the tests stopped the staging needed to run them.
+        /// </summary>
+        private static Assembly LoadTestAssembly(string dllPath)
+        {
+            // Only the test DLL itself is named here; its dependencies arrive through the resolver
+            // below, because loading from bytes gets none of LoadFrom's probing of the directory
+            // the file came from. Most of them are also next to this program and resolve normally,
+            // but MSTest's ObjectModel is only in the staged build.
+            _testDir = Path.GetDirectoryName(dllPath);
+            if (!_resolvingFromTestDir)
+            {
+                _resolvingFromTestDir = true;
+                AppDomain.CurrentDomain.AssemblyResolve += ResolveFromTestDir;
+            }
+            return LoadFromAssembly.TryWithoutLocking(dllPath);
+        }
+
+        /// <summary>
+        /// Supplies a dependency that exists only in the build directory being read, from its bytes,
+        /// so that resolving it does not re-lock what <see cref="LoadTestAssembly"/> stopped locking.
+        /// Returning null leaves the normal resolution to report the failure.
+        /// </summary>
+        private static Assembly ResolveFromTestDir(object sender, ResolveEventArgs args)
+        {
+            if (_testDir == null)
+                return null;
+            try
+            {
+                var path = Path.Combine(_testDir, new AssemblyName(args.Name).Name + ".dll");
+                return File.Exists(path) ? LoadFromAssembly.TryWithoutLocking(path) : null;
+            }
+            catch (Exception)
+            {
+                // A dependency this cannot supply is not this program's failure to report. The
+                // tree simply lists no tests from that DLL, which is visible; throwing from a
+                // resolve handler is not.
+                return null;
+            }
         }
 
         // Determine if the given class or method from an assembly has the given attribute.
