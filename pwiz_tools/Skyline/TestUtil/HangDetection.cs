@@ -269,7 +269,10 @@ namespace pwiz.SkylineTestUtil
         /// diagnostic that replaces the failure it exists to explain is worse than no diagnostic;
         /// one that reports only that it is unavailable is barely better.</para>
         /// </summary>
-        public static string TryGetThreadDump()
+        /// <param name="timeoutMillis">How long to allow, for a caller whose question is worth more
+        /// than the default bound. JsonToolServerTest asks what is holding a modal dialog on a loaded
+        /// agent, where the walk legitimately takes longer than a wait-timeout diagnostic should.</param>
+        public static string TryGetThreadDump(int timeoutMillis = THREAD_DUMP_TIMEOUT_MILLIS)
         {
             string threadDump = null;
             string failureReason = null;
@@ -304,10 +307,10 @@ namespace pwiz.SkylineTestUtil
             // Not describing the runtime on this path. Doing so needs another attach, and the
             // attach is what just proved too slow to finish - so asking again would spend the
             // bound a second time, per timeout, which is the cost this bound exists to stop.
-            if (!dumpThread.Join(THREAD_DUMP_TIMEOUT_MILLIS))
+            if (!dumpThread.Join(timeoutMillis))
             {
                 return TextUtil.LineSeparate(
-                    string.Format(@"*** Thread dump unavailable: gave up after {0} ms", THREAD_DUMP_TIMEOUT_MILLIS),
+                    string.Format(@"*** Thread dump unavailable: gave up after {0} ms", timeoutMillis),
                     GetCallingThreadStack());
             }
 

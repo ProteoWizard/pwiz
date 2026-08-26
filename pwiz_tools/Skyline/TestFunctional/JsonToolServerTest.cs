@@ -237,7 +237,12 @@ namespace pwiz.SkylineTestFunctional
             // dialog) and what put it there -- which names the dialog even when its own window says nothing.
             // Named for what it can actually return: the full dump where the attach works, and the
             // calling thread's stack alone where it does not.
-            Collect(sb, @"thread dump", () => sb.AppendLine(HangDetection.TryGetThreadDump()));
+            //
+            // Its own budget, well above the wait-timeout default. This runs on the test thread and
+            // exists to show which UI thread is parked in a modal loop - the one question the calling
+            // thread's own stack cannot answer - so giving up early here returns something that reads
+            // like a thread dump and says nothing.
+            Collect(sb, @"thread dump", () => sb.AppendLine(HangDetection.TryGetThreadDump(CALL_STACK_TIMEOUT_MILLIS)));
             return sb.ToString();
         }
 
@@ -254,6 +259,11 @@ namespace pwiz.SkylineTestFunctional
                 sb.AppendLine(@"Could not collect this section: " + e);
             }
         }
+
+        // The dump here is worth more time than a wait-timeout diagnostic: a loaded agent with a
+        // modal dialog open and many managed threads takes longer to walk, and this is the only
+        // record of what put that dialog up.
+        private const int CALL_STACK_TIMEOUT_MILLIS = 30 * 1000;
 
         private static void AppendTopLevelWindows(StringBuilder sb)
         {

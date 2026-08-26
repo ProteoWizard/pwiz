@@ -1459,7 +1459,10 @@ namespace TestRunnerLib
         {
             string dockerPsOutput = RunCommandBounded("docker", "ps --format \"{{.Names}}\" -f \"ancestor=chambm/always_up_runner\"",
                 IS_DOCKER_RUNNING_MESSAGE, DOCKER_LIST_TIMEOUT_MILLIS);
-            foreach(var dockerWorkerName in dockerPsOutput.Split(new [] { Environment.NewLine }, StringSplitOptions.None))
+            // Split on either ending. The docker CLI writes LF, not CRLF, so splitting on
+            // Environment.NewLine returns ONE string holding every name - which matches no
+            // container, so teardown silently kills nothing.
+            foreach (var dockerWorkerName in dockerPsOutput.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
                 yield return dockerWorkerName;
         }
 
