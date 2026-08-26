@@ -344,7 +344,8 @@ namespace pwiz.Osprey.Tasks
             // Per-file progress. This loop reads a sidecar + a reconciliation envelope for
             // every file and was silent throughout: on a 20-file resume it produced a 35 s
             // gap in the log, the kind that reads as a hang. ProgressReporter also emits a
-            // HEARTBEAT_SECONDS (30 s) tick, so one slow file cannot reopen the gap.
+            // HEARTBEAT_SECONDS tick. That bounds the gap only while Report keeps being
+            // called - it fires from inside Report - so a single slow file still reopens it.
             using (var hydrateProgress = new ProgressReporter(
                        @"Hydrating reconciliation bundle", perFileEntries.Count))
             {

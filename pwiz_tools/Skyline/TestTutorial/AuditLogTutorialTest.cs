@@ -300,6 +300,10 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<AuditLogForm>("Audit Log form with grid changes");
 
             ShowLastExtraInfo("Extra Info for the analyte data import.");
+            // Read the row count while the form is still open. Close() sets SkylineWindow's
+            // AuditLogForm to null synchronously, so reading it afterwards yields 0 and the wait
+            // further down degrades to "any rows at all", which is already true.
+            var auditRowsBefore = CallUI(() => SkylineWindow.AuditLogForm.DataGridView.Rows.Count);
             RunUI(SkylineWindow.AuditLogForm.Close);
 
             const string unknownReplicate = "FOXN1-GST";
@@ -311,7 +315,13 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("Heavy precursor chromatogram");
 
-            RunUI(()=>
+            // Build the change BEFORE opening the document-change scope. WaitDocumentChange waits in
+            // Dispose, so an assertion failing inside the using would unwind through a three-minute
+            // wait for a change that is never coming, and that timeout would replace the real
+            // failure - burying exactly the diagnosis these asserts exist to give.
+            GraphChromatogram graphChromHeavy = null;
+            List<ChangedPeakBoundsEventArgs> listChanges = null;
+            RunUI(() =>
             {
                 var pathHeavy = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, 1);
 
@@ -324,7 +334,8 @@ namespace pwiz.SkylineTestTutorial
                 var firstChromItem = graphChrom.GraphItems.FirstOrDefault(gci => gci.TransitionChromInfo != null);
                 Assert.IsNotNull(firstChromItem, "Missing graph item");
 
-                var listChanges = new List<ChangedPeakBoundsEventArgs>
+                graphChromHeavy = graphChrom;
+                listChanges = new List<ChangedPeakBoundsEventArgs>
                 {
                     new ChangedPeakBoundsEventArgs(pathHeavy,
                         null,
@@ -335,11 +346,21 @@ namespace pwiz.SkylineTestTutorial
                         PeakIdentification.FALSE,
                         PeakBoundsChangeType.both)
                 };
-                graphChrom.SimulateChangedPeakBounds(listChanges);
             });
 
+            // Wait for the document this produces before moving on. Without it the peak bounds
+            // change and the calibration exclusion further down could be written to the audit log
+            // in either order, and the log is compared line by line - the entries swapped places
+            // roughly one run in five. Every other document change in this test already does this.
+            using (new WaitDocumentChange())
+            {
+                RunUI(() => graphChromHeavy.SimulateChangedPeakBounds(listChanges));
+            }
+
             ShowAndPositionAuditLog(true, 50, 200);
-            WaitForConditionUI(500, () => SkylineWindow.AuditLogForm.DataGridView.Rows.Count > 0);
+            // Not "any rows": the audit log form has been shown three times before this and is
+            // already full, so that condition was true before the change above was even made.
+            WaitForConditionUI(() => SkylineWindow.AuditLogForm.DataGridView.Rows.Count > auditRowsBefore);
 
             PauseForScreenShot<AuditLogForm>("Audit Log form with changed integration boundary.");
             int reasonIndex = 2;

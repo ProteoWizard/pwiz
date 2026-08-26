@@ -64,7 +64,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (child is NativeLabel)
                     continue;
                 yield return child is NativeTextBox textBox && textBox.Hwnd == fileNameEdit
-                    ? new NativeTextBox(fileNameEdit, CancellationToken, FILE_NAME_FIELD)
+                    ? new NativeTextBox(fileNameEdit, CancellationToken, @"File name")
                     : child;
             }
             var addressBar = FindDescendant(ADDRESS_BAR_CLASS, ADDRESS_BAR_ID);
@@ -139,11 +139,6 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>What the commit button is called, for the message when it cannot be found.</summary>
         protected abstract string CommitButtonDescription { get; }
-
-        /// <summary>The label the file-name box is presented under, so a caller can read/set it by name (see
-        /// <see cref="EnumerateChildren"/>). Ours, not the shell's, so it is the same in every UI language. It names
-        /// the box only while the shell is SHOWING it, since GetControls lists the shown children.</summary>
-        public const string FILE_NAME_FIELD = @"File name";
 
         /// <summary>The control id of this dialog's file-name Edit -- 1148 for the Open dialog's classic combo,
         /// 1001 for the Save dialog's DirectUI-hosted field.</summary>

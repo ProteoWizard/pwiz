@@ -128,9 +128,12 @@ namespace pwiz.SkylineTest
                 {
                     Assert.Fail("Ranked peak #{0} has no matched ion with m/z {1}", i, expectedIon.PredictedMz);
                 }
-                AssertEx.AreEqual(expectedIon.IonType, matchedIon.IonType);
-                AssertEx.AreEqual(expectedIon.Ordinal, matchedIon.Ordinal);
-                AssertEx.AreEqual(expectedIon.Losses, matchedIon.Losses);
+                else
+                {
+                    AssertEx.AreEqual(expectedIon.IonType, matchedIon.IonType);
+                    AssertEx.AreEqual(expectedIon.Ordinal, matchedIon.Ordinal);
+                    AssertEx.AreEqual(expectedIon.Losses, matchedIon.Losses);
+                }
             }
         }
 
