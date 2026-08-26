@@ -165,6 +165,13 @@ namespace pwiz.Skyline
         [STAThread]
         public static int Main(string[] args = null)
         {
+#if !NET472
+            // .NET 8 dropped ClickOnce awareness from the settings system, so an updated
+            // install reads a user.config that does not exist yet and starts with default
+            // settings. Copy the previous version file into place first. This has to happen
+            // before anything touches Settings.Default, which loads and caches on first use.
+            new UserConfigMigrator().Migrate();
+#endif
             if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID
                 Settings.Default.InstallationId = Guid.NewGuid().ToString();
 
