@@ -142,12 +142,34 @@ namespace TestRunnerLib
         /// <summary>
         /// Skyline.csproj sits at the Skyline root, so its output is directly under it. The test
         /// projects are each in their own subdirectory.
+        /// <para>The platform is part of that path and cannot be assumed. Visual Studio and
+        /// Build-Skyline.ps1 build x64, which lands in bin\x64\&lt;Config&gt;\&lt;TFM&gt;; a plain
+        /// "dotnet build" with no platform writes bin\&lt;Config&gt;\&lt;TFM&gt;. Assuming either one
+        /// stages from whichever build happens to have left output there, so a switch between the
+        /// two silently stages binaries hours older than the source.</para>
         /// </summary>
         private string GetProjectOutput(string project)
         {
-            return Equals(project, "Skyline")
-                ? Path.Combine(SkylineDir, "bin", Configuration, TFM)
-                : Path.Combine(SkylineDir, project, "bin", Configuration, TFM);
+            var projectDir = Equals(project, "Skyline")
+                ? SkylineDir
+                : Path.Combine(SkylineDir, project);
+            var binDir = Path.Combine(projectDir, "bin");
+
+            var candidates = new[]
+            {
+                Path.Combine(binDir, "x64", Configuration, TFM),
+                Path.Combine(binDir, Configuration, TFM)
+            };
+
+            // Newest wins, so a stale layout left over from the other kind of build cannot shadow
+            // the one that was just produced.
+            var existing = candidates.Where(Directory.Exists)
+                .OrderByDescending(Directory.GetLastWriteTimeUtc)
+                .FirstOrDefault();
+
+            // Nothing built yet - hand back the preferred location so the caller's own
+            // "was not found" reporting names where it should have been.
+            return existing ?? candidates[0];
         }
 
         /// <summary>

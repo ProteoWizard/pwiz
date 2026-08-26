@@ -813,21 +813,81 @@ namespace SkylineTester
 
             // Run the stager straight out of the build output, never the staged copy: staging with
             // a stale stager is how staging quietly stops keeping up with its own fixes.
-            var stagerExe = Path.Combine(skylineDir, "TestRunner", "bin", configuration,
-                TestStager.TFM, "TestRunner.exe");
-            if (!File.Exists(stagerExe))
+            var stagerExe = FindStagerExe(skylineDir, configuration);
+            if (stagerExe == null)
             {
                 MessageBox.Show(this, string.Join(Environment.NewLine,
                     "Tests run from a staged directory, assembled by TestRunner.",
                     "It was not found, so the tests would run whatever was staged last rather than",
                     "what you just built.",
                     string.Empty,
-                    "Expected it at: " + stagerExe));
+                    "Looked beside this program, and under: " +
+                    Path.Combine(skylineDir, @"TestRunner", @"bin", @"[platform\]", configuration, TestStager.TFM)));
                 return false;
             }
 
             commandShell.Add("{0} stage=1 configuration={1}", stagerExe.Quote(), configuration);
             return true;
+        }
+
+        /// <summary>
+        /// The TestRunner build output that matches THIS program's own build, or null if there
+        /// is none.
+        /// <para>Derived from where SkylineTester itself is running, because TestRunner is its
+        /// sibling project and shares the output layout. Reconstructing the path instead means
+        /// guessing the platform: dotnet with no platform writes bin\&lt;Config&gt;\&lt;TFM&gt;,
+        /// while Visual Studio building x64 writes bin\x64\&lt;Config&gt;\&lt;TFM&gt;. A guess that
+        /// lands on the wrong one still finds a binary when an older build left one there, which
+        /// is worse than finding none: staging then runs a stager from a different build, and the
+        /// failure surfaces as an unrecognized argument rather than as anything about staging.</para>
+        /// </summary>
+        private static string FindStagerExe(string skylineDir, string configuration)
+        {
+            // Beside this program first - same build, so the platform matches by construction.
+            var ownDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (!string.IsNullOrEmpty(ownDir))
+            {
+                var sibling = Path.Combine(ownDir, "TestRunner.exe");
+                if (File.Exists(sibling))
+                    return sibling;
+
+                var fromOwnPath = ReplaceProjectDir(ownDir, "SkylineTester", "TestRunner");
+                if (fromOwnPath != null)
+                {
+                    var candidate = Path.Combine(fromOwnPath, "TestRunner.exe");
+                    if (File.Exists(candidate))
+                        return candidate;
+                }
+            }
+
+            // Running from outside a checkout (the nightly's "SkylineTester Files" folder), so
+            // fall back to the layouts a build can produce, and prefer the newest.
+            var roots = new[]
+            {
+                Path.Combine(skylineDir, "TestRunner", "bin", "x64", configuration, TestStager.TFM),
+                Path.Combine(skylineDir, "TestRunner", "bin", configuration, TestStager.TFM)
+            };
+            return roots.Select(dir => Path.Combine(dir, "TestRunner.exe"))
+                .Where(File.Exists)
+                .OrderByDescending(File.GetLastWriteTimeUtc)
+                .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Swaps one project directory name for another in a build output path, or null when the
+        /// path does not contain it.
+        /// </summary>
+        private static string ReplaceProjectDir(string path, string fromName, string toName)
+        {
+            var parts = path.Split(Path.DirectorySeparatorChar);
+            for (int i = parts.Length - 1; i >= 0; i--)
+            {
+                if (!Equals(parts[i], fromName))
+                    continue;
+                parts[i] = toName;
+                return string.Join(Path.DirectorySeparatorChar.ToString(), parts);
+            }
+            return null;
         }
 
         /// <summary>

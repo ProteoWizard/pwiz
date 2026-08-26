@@ -27,9 +27,21 @@ $skylineDir = $PSScriptRoot
 
 # Run the stager out of the build output, never the staged copy: staging with a stale stager is
 # how staging quietly stops keeping up with its own fixes.
-$stager = Join-Path $skylineDir "TestRunner\bin\$Configuration\net8.0-windows\TestRunner.exe"
-if (-not (Test-Path $stager)) {
-    throw "$stager was not found. Build TestRunner ($Configuration) first."
+#
+# Platform-aware, and newest wins. Visual Studio (and Build-Skyline.ps1) build x64 into
+# bin\x64\<Config>\<TFM>, while a plain "dotnet build" with no platform writes
+# bin\<Config>\<TFM>. Picking one blindly finds a binary from the OTHER build whenever an
+# older one was left there - which is worse than finding none, because staging then runs a
+# stager that does not match the source and fails on something unrelated to staging.
+$stagerCandidates = @(
+    (Join-Path $skylineDir "TestRunner\bin\x64\$Configuration\net8.0-windows\TestRunner.exe"),
+    (Join-Path $skylineDir "TestRunner\bin\$Configuration\net8.0-windows\TestRunner.exe")
+) | Where-Object { Test-Path $_ }
+
+$stager = $stagerCandidates | Sort-Object { (Get-Item $_).LastWriteTimeUtc } -Descending | Select-Object -First 1
+if (-not $stager) {
+    throw ("TestRunner.exe was not found under TestRunner\bin (x64 or AnyCPU) for $Configuration. " +
+           "Build TestRunner ($Configuration) first.")
 }
 
 & $stager stage=1 configuration=$Configuration
