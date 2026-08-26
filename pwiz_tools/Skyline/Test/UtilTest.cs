@@ -549,6 +549,12 @@ namespace pwiz.SkylineTest
                         }
                     }
                 }
+
+                if (!Install.IsRunningOnWine)
+                {
+                    VerifyAccessDeniedNamesTheLockingProcess(filePath);
+                }
+
                 // Now test successful cleanup
                 DesiredCleanupLevel = DesiredCleanupLevel.downloads; // Folders renamed
                 testFilesDir.Cleanup();
@@ -563,6 +569,46 @@ namespace pwiz.SkylineTest
             finally
             {
                 DesiredCleanupLevel = cleanupLevel;
+            }
+        }
+
+        /// <summary>
+        /// A lock is reported as a sharing violation when the file is opened, but as access-denied
+        /// when it is deleted or replaced - which is what an overwriting unzip does, and how the
+        /// crux tool extraction fails. Both must name the process holding the file.
+        /// </summary>
+        private static void VerifyAccessDeniedNamesTheLockingProcess(string filePath)
+        {
+            // The message shape .NET uses for access-denied, with the path it could not replace
+            var accessDenied = new UnauthorizedAccessException(
+                string.Format(@"Access to the path '{0}' is denied.", filePath));
+
+            using (File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                var described = FileLockingProcessFinder.ToFileLockingException(accessDenied, null);
+                if (!ReferenceEquals(described, accessDenied))
+                {
+                    // Only assert the naming when the Restart Manager was actually able to answer.
+                    // Where it is unavailable - a container, or an account without the rights - it
+                    // names no process and the original exception is returned untouched, which the
+                    // locking test above tolerates for the same reason.
+                    AssertEx.Contains(described.Message, filePath,
+                        MessageResources.FileLockingProcessFinder_ToFileLockingException_this_process);
+                }
+            }
+
+            // Unlocked by us now, so nothing of OURS holds it and the original should survive
+            // untouched. Not asserted as identity though: this asks the Restart Manager about a file
+            // on a shared machine, where a scanner or an indexer may legitimately be holding it for a
+            // moment - and naming that holder would be the finder working correctly, not failing.
+            // Asserting identity here would make the test fail on other software's timing.
+            var whenUnlocked = FileLockingProcessFinder.ToFileLockingException(accessDenied, null);
+            if (!ReferenceEquals(accessDenied, whenUnlocked))
+            {
+                AssertEx.IsFalse(whenUnlocked.Message.Contains(
+                        MessageResources.FileLockingProcessFinder_ToFileLockingException_this_process),
+                    TextUtil.LineSeparate(@"A file this process had already closed was reported as locked by it.",
+                        whenUnlocked.Message));
             }
         }
 
