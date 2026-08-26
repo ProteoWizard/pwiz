@@ -21,6 +21,7 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -48,6 +49,12 @@ namespace pwiz.SkylineTest
         /// allowed to be slow - but far under the minutes this is here to keep out.
         /// </summary>
         private static readonly TimeSpan MAX_DUMP_DURATION = TimeSpan.FromSeconds(30);
+
+        /// <summary>
+        /// Generous, because it only has to rule out "never started" - a loaded agent is allowed
+        /// to take its time getting a thread onto a core.
+        /// </summary>
+        private static readonly TimeSpan THREAD_START_TIMEOUT = TimeSpan.FromSeconds(30);
 
         [TestMethod]
         public void TestThreadDumpNamesRunningFrames()
@@ -94,6 +101,51 @@ namespace pwiz.SkylineTest
             }
 
             AssertDumpNamesFrames(dump);
+            AssertSecondDumpIsNotTheFirstOne();
+        }
+
+        /// <summary>
+        /// PINNED: that a second dump reports the process as it is NOW. The attach is made once
+        /// and reused, so every dump after the first is served by a runtime that ClrMD will answer
+        /// out of its snapshot unless Flush is called - and a snapshot served as current is worse
+        /// than no dump, because it reads as a healthy answer to the wrong question.
+        /// <para>Nothing else covers it. One call exercises only the attach, so deleting the Flush
+        /// leaves every later dump reporting the first dump's threads forever and the rest of this
+        /// test still passes - exactly the silent failure this class exists to catch.</para>
+        /// </summary>
+        private static void AssertSecondDumpIsNotTheFirstOne()
+        {
+            using var blocking = new ManualResetEventSlim(false);
+            using var started = new ManualResetEventSlim(false);
+
+            // A thread that did not exist when the first dump was taken. Blocked, not spinning, so
+            // the DAC can read it - a running thread is the documented blind spot.
+            var thread = new Thread(() =>
+            {
+                started.Set();
+                blocking.Wait();
+            })
+            {
+                IsBackground = true,
+                Name = nameof(AssertSecondDumpIsNotTheFirstOne)
+            };
+            thread.Start();
+            try
+            {
+                // Wait for the thread to signal it is up, then assert once. Waiting instead for
+                // the dump to mention it would pass the moment it happened to and prove nothing.
+                AssertEx.IsTrue(started.Wait(THREAD_START_TIMEOUT),
+                    string.Format(@"Thread did not start within {0}.", THREAD_START_TIMEOUT));
+
+                var dump = HangDetection.TryGetThreadDump();
+                AssertEx.Contains(dump,
+                    string.Format(@"(Managed ID: {0})", thread.ManagedThreadId));
+            }
+            finally
+            {
+                blocking.Set();
+                thread.Join(THREAD_START_TIMEOUT);
+            }
         }
 
         private static void AssertDumpNamesFrames(string dump)
