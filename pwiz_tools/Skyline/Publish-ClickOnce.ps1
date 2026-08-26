@@ -39,6 +39,33 @@
     Hardklor/Bullseye feature-detection pipeline fails in the installed app, so use this only
     when Hardklor is already built and current.
 
+.PARAMETER KeyLocker
+    Sign with the official University of Washington code-signing certificate instead of the
+    self-signed preview one. The private key is not on the machine: it is in the DigiCert
+    KeyLocker cloud HSM, reached through the "DigiCert Signing Manager KSP" and a key container
+    name, so this needs a machine that KeyLocker auth is configured on. Requires dotnet-mage
+    (dotnet tool install --global microsoft.dotnet.mage) and signtool.exe on PATH; both are
+    checked before anything is built.
+
+    What is already verified, so that a failure here means the certificate and not the plumbing:
+    dotnet-mage 10.0.0 signs both net8 manifests (<name>.dll.manifest and <name>.application),
+    preserves the deployment identity, and re-hashes the payload. What is NOT verified, and is
+    the reason to run this: whether the KSP can be driven through signtool /csp + /kc and through
+    dotnet-mage -CryptoProvider + -KeyContainer with this certificate.
+
+    Nothing is uploaded. The signed tree is left in pwiz_tools\Skyline\publish for inspection.
+
+.PARAMETER CertFile
+    Path to the .crt. Defaults to "University of Washington (MacCoss Lab).crt" beside this
+    script, the same path pwiz_tools/Skyline/Jamfile.jam uses for the net472 build (CRT_PATH).
+
+.PARAMETER KeyName
+    KeyLocker key container name. Defaults to key_637015839, matching CRT_KEY in Jamfile.jam.
+
+.EXAMPLE
+    .\Publish-ClickOnce.ps1 -KeyLocker -AgreeToVendorLicenses
+    Official-certificate publish. Drop the .crt beside this script first.
+
 .EXAMPLE
     .\Publish-ClickOnce.ps1 -PfxPassword skyline
 
@@ -52,7 +79,10 @@ param(
     [string] $PfxPassword,
     [switch] $SkipBuild,
     [switch] $AgreeToVendorLicenses,
-    [switch] $SkipHardklor
+    [switch] $SkipHardklor,
+    [switch] $KeyLocker,
+    [string] $CertFile,
+    [string] $KeyName = 'key_637015839'
 )
 
 Set-StrictMode -Version Latest
@@ -73,7 +103,7 @@ if (-not (Test-Path $profilePath)) {
 # Read the thumbprint the profile asks for rather than duplicating it here, so the two cannot
 # disagree.
 $thumbprint = ([xml](Get-Content $profilePath)).Project.PropertyGroup.ManifestCertificateThumbprint
-if ($thumbprint) {
+if ($thumbprint -and -not $KeyLocker) {
     $thumbprint = $thumbprint.Trim()
     $installed = Get-ChildItem Cert:\CurrentUser\My |
         Where-Object { $_.Thumbprint -eq $thumbprint -and $_.HasPrivateKey }
@@ -96,6 +126,44 @@ if ($thumbprint) {
         }
     }
     Write-Host "Signing manifests with $thumbprint ($((Get-ChildItem Cert:\CurrentUser\My | Where-Object Thumbprint -eq $thumbprint).Subject))"
+}
+
+# --- Official certificate (DigiCert KeyLocker) ----------------------------------------
+# The official signing key is NOT a file. Since the last renewal it lives in the DigiCert
+# KeyLocker cloud HSM and is reachable only through the "DigiCert Signing Manager KSP" plus a
+# key container name; only the CERTIFICATE is a file. Both defaults mirror the constants the
+# net472 Jam build signs with (CRT_PATH / CRT_KEY in pwiz_tools/Skyline/Jamfile.jam), so the
+# two builds cannot disagree about which certificate an official build carries.
+$magePath = $null
+$signtoolPath = $null
+if ($KeyLocker) {
+    if (-not $CertFile) {
+        $CertFile = Join-Path $scriptDir 'University of Washington (MacCoss Lab).crt'
+    }
+    if (-not (Test-Path $CertFile)) {
+        throw ("Official signing certificate not found: $CertFile" + [Environment]::NewLine +
+               'Copy it in, or pass -CertFile. Note the Jam build treats an absent certificate as ' +
+               '"do not sign" rather than as an error, so this script fails loudly instead.')
+    }
+    # dotnet-mage, NOT mage.exe. A .NET ClickOnce application manifest is named
+    # <name>.dll.manifest and mage.exe cannot update it. dotnet-mage 10.0.0 was verified against
+    # this publish: it signs both manifests, preserves the deployment identity, and RE-HASHES the
+    # payload it lists - which is why the PEs are signed first below.
+    $magePath = (Get-Command dotnet-mage -ErrorAction SilentlyContinue).Source
+    if (-not $magePath) {
+        throw 'dotnet-mage not found. Install it with: dotnet tool install --global microsoft.dotnet.mage'
+    }
+    $signtoolPath = (Get-Command signtool.exe -ErrorAction SilentlyContinue).Source
+    if (-not $signtoolPath) {
+        throw ('signtool.exe not found on PATH. Run this from a Visual Studio developer prompt, or ' +
+               'add the Windows SDK bin directory to PATH.')
+    }
+    $thumbprint = (New-Object System.Security.Cryptography.X509Certificates.X509Certificate2(
+        (Resolve-Path $CertFile).Path)).Thumbprint
+    Write-Host "Signing officially with $CertFile"
+    Write-Host "  thumbprint  $thumbprint"
+    Write-Host "  key         $KeyName (DigiCert Signing Manager KSP)"
+    Write-Host "  mage        $magePath"
 }
 
 # --- MSBuild -------------------------------------------------------------------------
@@ -180,6 +248,27 @@ $msbuildArgs = @(
 )
 if ($SkipBuild) { $msbuildArgs += '-p:NoBuild=true' }
 if ($AgreeToVendorLicenses) { $msbuildArgs += '-p:IAgreeToVendorLicenses=true' }
+if ($KeyLocker) {
+    # The profile names the self-signed PREVIEW certificate, which is not on an official build
+    # machine, so SignFile would fail before the publish ever finished. Point it at the UW
+    # certificate instead when KeyLocker has synced that certificate into a store
+    # (`smctl windows certsync` does this, installing it with a KSP-backed private key handle).
+    # If it is not there, turn MSBuild manifest signing off and let dotnet-mage do all of it.
+    # Which of those two the KSP actually supports is the open question this run answers - see
+    # ai/todos/backlog/TODO-release_process_unification.md, which records SignManifests=true as
+    # verified load-bearing for a smooth ClickOnce install on net472, NOT redundant with mage.
+    $inStore = @(Get-ChildItem Cert:\CurrentUser\My, Cert:\LocalMachine\My -ErrorAction SilentlyContinue |
+                 Where-Object { $_.Thumbprint -eq $thumbprint })
+    if ($inStore.Count -gt 0) {
+        $msbuildArgs += "-p:ManifestCertificateThumbprint=$thumbprint"
+        Write-Host 'MSBuild will sign the manifests from the certificate store (SignManifests stays on).'
+    } else {
+        $msbuildArgs += '-p:SignManifests=false'
+        Write-Host ("Certificate $thumbprint is in neither CurrentUser\My nor LocalMachine\My, so " +
+                    'MSBuild manifest signing is OFF and dotnet-mage does all signing. If the ' +
+                    'installed app misbehaves, run `smctl windows certsync` and publish again.')
+    }
+}
 
 # RID-specific restore first. ClickOnce publishes RID-specific (win-x64), and an ordinary
 # `dotnet build` restore writes only a RID-agnostic target into project.assets.json, so the
@@ -211,6 +300,63 @@ if ($LASTEXITCODE -ne 0) { throw "Restore for win-x64 failed (exit $LASTEXITCODE
 Write-Host "$msbuild $($msbuildArgs -join ' ')"
 & $msbuild @msbuildArgs
 if ($LASTEXITCODE -ne 0) { throw "ClickOnce publish failed (exit $LASTEXITCODE)." }
+
+# --- Sign with the official certificate ------------------------------------------------
+# Order is load-bearing. dotnet-mage -update RE-HASHES the payload the manifest lists (verified
+# by appending 10 bytes to Launcher.exe: the size recorded in the manifest went 17848 -> 17858),
+# so every PE has to be signed BEFORE the application manifest, and the application manifest
+# before the deployment manifest that hashes it. This is the same order SignAfterPublish.bat
+# uses for net472, which is why that flow works.
+if ($KeyLocker) {
+    $appFilesDir = Get-ChildItem (Join-Path $publishDir 'Application Files') -Directory |
+        Select-Object -First 1
+    if (-not $appFilesDir) { throw "No 'Application Files' folder under $publishDir." }
+    $appManifest = Get-ChildItem $appFilesDir.FullName -Filter '*.dll.manifest' | Select-Object -First 1
+    if (-not $appManifest) { throw "No <name>.dll.manifest under $($appFilesDir.FullName)." }
+    $deployManifest = Get-ChildItem $publishDir -Filter '*.application' | Select-Object -First 1
+    if (-not $deployManifest) { throw "No .application in $publishDir." }
+
+    # Two PEs, not one: on net8 the ClickOnce entry point is the AnyCPU Launcher.exe, and the
+    # apphost <target>.exe is what the user actually runs. net472 had only the latter.
+    $targetName = $appManifest.Name -replace '\.dll\.manifest$', ''
+    $peFiles = @("$targetName.exe", 'Launcher.exe') |
+        ForEach-Object { Join-Path $appFilesDir.FullName $_ } |
+        Where-Object { Test-Path $_ }
+
+    # KeyLocker meters per SIGNING OPERATION and the certificate has a capped allocation, so say
+    # what this run costs before spending it. See "Signing budget and signature accounting" in
+    # ai/todos/backlog/TODO-release_process_unification.md.
+    Write-Host ''
+    Write-Host ("KeyLocker signing operations for this publish: {0} PE + 2 manifest = {1}" -f
+                $peFiles.Count, ($peFiles.Count + 2))
+
+    foreach ($pe in $peFiles) {
+        Write-Host "signtool sign $(Split-Path -Leaf $pe)"
+        & $signtoolPath sign /csp 'DigiCert Signing Manager KSP' /kc $KeyName /f $CertFile `
+            /tr 'http://timestamp.digicert.com' /td SHA256 /fd SHA256 $pe | Out-Host
+        if ($LASTEXITCODE -ne 0) { throw "signtool failed (exit $LASTEXITCODE) for $pe." }
+    }
+
+    Write-Host "dotnet-mage -update $($appManifest.Name)"
+    & $magePath -update $appManifest.FullName -CertFile $CertFile -KeyContainer $KeyName `
+        -CryptoProvider 'DigiCert Signing Manager KSP' -a sha256RSA `
+        -TimeStampUri 'http://timestamp.digicert.com' | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw "dotnet-mage failed (exit $LASTEXITCODE) for $($appManifest.Name)." }
+
+    # -AppManifest re-points the deployment manifest at the application manifest just signed and
+    # recomputes its digest; without it the deployment still hashes the pre-signature bytes and
+    # the install fails with a manifest-not-valid error.
+    Write-Host "dotnet-mage -update $($deployManifest.Name)"
+    & $magePath -update $deployManifest.FullName -AppManifest $appManifest.FullName `
+        -CertFile $CertFile -KeyContainer $KeyName -CryptoProvider 'DigiCert Signing Manager KSP' `
+        -a sha256RSA -TimeStampUri 'http://timestamp.digicert.com' | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw "dotnet-mage failed (exit $LASTEXITCODE) for $($deployManifest.Name)." }
+
+    # Deliberately no `dotnet-mage -Verify` pass: version 10.0.0 fails with "Internal error,
+    # please try again. Object reference not set to an instance of an object." on manifests it
+    # has just signed successfully. Check the identity printed below instead.
+    Write-Host 'Signed with the official certificate.'
+}
 
 # --- Report what was produced ---------------------------------------------------------
 # The deployment identity is the thing most likely to be silently wrong (a changed assembly
