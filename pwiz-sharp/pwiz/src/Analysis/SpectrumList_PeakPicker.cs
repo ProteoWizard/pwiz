@@ -113,7 +113,10 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
         // Vendor-prefer mode: detect inner list type via a delegate the vendor list exposes.
         if (_preferVendor && inner is IVendorCentroidingSpectrumList vendor)
         {
-            _vendorCentroidPath = vendor.GetCentroidSpectrum;
+            // Hand the reader the MS-level set so it can gate internally, as cpp does. The
+            // gate cannot live at our call site below: we only learn a spectrum's MS level by
+            // reading it, and by then a vendor centroid has already been applied.
+            _vendorCentroidPath = (i, b) => vendor.GetCentroidSpectrum(i, b, _msLevels);
             _mode = vendor.VendorCentroidName;
         }
         else

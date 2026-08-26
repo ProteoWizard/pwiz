@@ -249,6 +249,7 @@ namespace pwiz.Osprey.Tasks
                 + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx);
         }
 
@@ -669,15 +670,23 @@ namespace pwiz.Osprey.Tasks
             // worker-supplied RescoreBundle, Stage 6 runs the rescore and refills one file at a
             // time from the source above. Having built the bundle from our OWN sidecars, there
             // is no rescore to run at all: PerFileRescore self-gates to a no-op (didPlan is
-            // false and RescoreBundle is null) and refills the WHOLE buffer immediately, so
-            // releasing here would buy a window no consumer uses and cost a full extra parquet
-            // + sidecar pass over every file to undo.
+            // false and RescoreBundle is null) and its refill is the whole of the deferred
+            // pool build, so releasing here would cost a full extra parquet + sidecar pass
+            // over every file to undo.
+            //
+            // Since #4597 that refill happens on SecondPassFDR's pull rather than at the end
+            // of Stage 6, so releasing here WOULD buy a real window on this arm - the width
+            // of the rescore that does not happen. Left alone deliberately: the arm's own
+            // point is that there is no rescore to bound, and paying a whole-run reload to
+            // free a buffer Stage 7 immediately rebuilds is the trade #4526 was careful not
+            // to make. Reconsider only alongside #4486, which is what makes Stage 7's
+            // whole-run input smaller rather than moving it.
             //
             // The buffer is therefore still resident from here to the end of Stage 7 on that
-            // arm - as it is on EVERY arm, because Stage 6 deliberately rebuilds it for
-            // SecondPassFDR to read (PerFileRescoreTask's end-of-loop rebuild). That residency
-            // is a property of Stage 7's whole-run input, not of resuming, and it is #4486's
-            // to remove. This issue bounds the RESCORE window, which is the part Stage 6 owns.
+            // arm - as it is on EVERY arm, because that whole-run pool is what Stage 7 takes
+            // as input, however it is built. That residency is a property of Stage 7's input,
+            // not of resuming, and it is #4486's to remove. This issue bounds the RESCORE
+            // window, which is the part Stage 6 owns.
             bool rescoreWillStream = !builtOwnBundle && !config.StopAfterStage5;
             // Same call Run makes. streamingAvailable is "this run will stream", not "a loader
             // exists": passing the latter would refuse an OSPREY_STAGE6_STREAM_SURVIVORS=0
@@ -1451,13 +1460,30 @@ namespace pwiz.Osprey.Tasks
                             }
                         }
                     }
-                    int beforeCount = 0, afterCount = 0;
-                    foreach (var kvp in perFileEntries)
+                    // long, matching the sibling counters at RescoreHydration.cs:173 and
+                    // PerFileScoringTask.cs:553: this branch sums the RESIDENT all-files
+                    // PRE-compaction pool, and at ~4.2 M stubs a file an int total overflows
+                    // past ~505 files - inside the 500-file target these paths are being sized
+                    // for, and silently, since nothing here is in a checked context.
+                    long beforeCount = 0, afterCount = 0;
+                    // Reported for the same reason as RescoreCompaction.Apply, and this is the
+                    // loop that does the heavier work of the two: it runs on the uncompacted
+                    // pool and genuinely removes, where Apply's streaming-hydrate path finds
+                    // the set already retained and removes nothing.
+                    int fpCompactIdx = 0;
+                    using (var progress = new ProgressReporter(
+                               string.Format(@"Compacting {0} file(s) to the first-pass retained set",
+                                             perFileEntries.Count),
+                               perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                     {
-                        beforeCount += kvp.Value.Count;
-                        kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
-                        kvp.Value.TrimExcess();
-                        afterCount += kvp.Value.Count;
+                        foreach (var kvp in perFileEntries)
+                        {
+                            progress.Report(fpCompactIdx++);
+                            beforeCount += kvp.Value.Count;
+                            kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
+                            kvp.Value.TrimExcess();
+                            afterCount += kvp.Value.Count;
+                        }
                     }
                     ctx.LogInfo(string.Format(
                         @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids)",

@@ -108,8 +108,24 @@ public sealed class Spectrum : SpectrumIdentity
     public bool HasBinaryData =>
         BinaryDataArrays.Count > 0 || IntegerDataArrays.Count > 0;
 
-    /// <summary>Returns the m/z binary array (<see cref="CVID.MS_m_z_array"/>), or null.</summary>
-    public BinaryDataArray? GetMZArray() => GetArrayByCvid(CVID.MS_m_z_array);
+    /// <summary>Returns the spectrum's x-axis binary array, or null.</summary>
+    /// <remarks>
+    /// Matches <see cref="CVID.MS_wavelength_array"/> as well as <see cref="CVID.MS_m_z_array"/>,
+    /// exactly as cpp's <c>Spectrum::getMZArray()</c> does: a diode-array trace from the Agilent,
+    /// Thermo or Bruker readers carries wavelengths on the axis where a mass spectrum carries m/z,
+    /// and callers that plot or measure that axis want it either way. Callers that must not treat
+    /// a UV trace as a mass spectrum test for it - see
+    /// <see cref="Spectra.SpectrumListBase.HasNonMzOrderingAxis"/>.
+    /// </remarks>
+    public BinaryDataArray? GetMZArray()
+    {
+        foreach (var arr in BinaryDataArrays)
+        {
+            if (arr.HasCVParam(CVID.MS_m_z_array) || arr.HasCVParam(CVID.MS_wavelength_array))
+                return arr;
+        }
+        return null;
+    }
 
     /// <summary>Returns the intensity binary array (<see cref="CVID.MS_intensity_array"/>), or null.</summary>
     public BinaryDataArray? GetIntensityArray() => GetArrayByCvid(CVID.MS_intensity_array);

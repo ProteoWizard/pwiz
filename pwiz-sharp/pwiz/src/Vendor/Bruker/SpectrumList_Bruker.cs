@@ -1,5 +1,6 @@
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 
 #pragma warning disable CA1707
 
@@ -66,8 +67,8 @@ public sealed class SpectrumList_Bruker : SpectrumListBase, IVendorCentroidingSp
     public string VendorCentroidName => "Bruker/Agilent/CompassXtract peak picking";
 
     /// <inheritdoc/>
-    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData) =>
-        BuildSpectrum(index, getBinaryData, preferCentroid: true);
+    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid) =>
+        BuildSpectrum(index, getBinaryData, msLevelsToCentroid);
 
     /// <summary>DataProcessing emitted as the <c>defaultDataProcessingRef</c>.</summary>
     public DataProcessing? Dp { get; set; }
@@ -116,11 +117,13 @@ public sealed class SpectrumList_Bruker : SpectrumListBase, IVendorCentroidingSp
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
-        BuildSpectrum(index, getBinaryData, preferCentroid: false);
+        BuildSpectrum(index, getBinaryData, msLevelsToCentroid: null);
 
-    private Spectrum BuildSpectrum(int index, bool getBinaryData, bool preferCentroid)
+    private Spectrum BuildSpectrum(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid)
     {
         var entry = _index[index];
+        // cpp SpectrumList_Bruker.cpp:426 - `getLineData = msLevelsToCentroid.contains(msLevel)`.
+        bool preferCentroid = msLevelsToCentroid?.Contains(entry.MsLevel) ?? false;
         var spec = new Spectrum { Index = index, Id = entry.Id };
         _data.FillSpectrum(spec, entry, getBinaryData, preferCentroid, _sortAndJitter, _includeIsolationArrays);
         return spec;

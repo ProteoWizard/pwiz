@@ -180,6 +180,7 @@ public sealed class Mz5SpectrumList : SpectrumListBase
                 }
             }
         }
+        EnsureMzAscending(spec);
         return spec;
     }
 

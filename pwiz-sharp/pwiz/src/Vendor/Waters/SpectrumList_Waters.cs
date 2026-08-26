@@ -3,6 +3,7 @@ using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 
 #pragma warning disable CA1707
 
@@ -310,8 +311,8 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
     public bool IsWatersSonar => HasSonarFunctions;
 
     /// <inheritdoc/>
-    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData) =>
-        GetSpectrumImpl(index, getBinaryData, doCentroid: true, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
+    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid) =>
+        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
 
     /// <summary>
     /// Lockmass-aware vendor centroid path — used by <c>SpectrumList_LockmassRefiner</c>
@@ -320,12 +321,13 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
     /// inner reader is a <see cref="SpectrumList_Waters"/>.
     /// </summary>
     public Spectrum GetCentroidSpectrumWithLockmass(int index, bool getBinaryData,
+        IntegerSet msLevelsToCentroid,
         double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance) =>
-        GetSpectrumImpl(index, getBinaryData, doCentroid: true, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
+        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
-        GetSpectrumImpl(index, getBinaryData, doCentroid: false, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
+        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid: null, lockmassMzPos: 0, lockmassMzNeg: 0, lockmassTolerance: 0);
 
     /// <summary>
     /// Lockmass-aware overload — vendor-specific extension surface for the analysis-side
@@ -336,10 +338,11 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
     /// window is corrected via the per-RT gain factor.
     /// </summary>
     public Spectrum GetSpectrumWithLockmass(int index, bool getBinaryData,
-        double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance, bool doCentroid = false) =>
-        GetSpectrumImpl(index, getBinaryData, doCentroid, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
+        double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance,
+        IntegerSet? msLevelsToCentroid = null) =>
+        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid, lockmassMzPos, lockmassMzNeg, lockmassTolerance);
 
-    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, bool doCentroid,
+    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid,
         double lockmassMzPos, double lockmassMzNeg, double lockmassTolerance)
     {
         if (index < 0 || index >= _index.Count) throw new ArgumentOutOfRangeException(nameof(index));
@@ -443,6 +446,12 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
         // can decide whether to re-pick) and then overrides to centroid when doCentroid is on
         // and we actually centroided. Mirror that order.
         spec.Params.Set(isProfile ? CVID.MS_profile_spectrum : CVID.MS_centroid_spectrum);
+        // cpp SpectrumList_Waters.cpp:219. Gated here rather than by the caller, and on the
+        // FINAL msLevel (after the MSe promotion above), because that is where cpp gates.
+        // DiodeArray/EMR functions report msLevel 0, so no caller's set selects them: MassLynx
+        // cannot centroid an absorbance-vs-wavelength trace and returns nothing, which emptied
+        // 834 of 1000 spectra in QCsynapt_#021_040319_A1Dnp_01.raw before this gate existed.
+        bool doCentroid = msLevelsToCentroid?.Contains(msLevel) ?? false;
         bool willCentroid = doCentroid && isProfile;
         // pwiz C++ explicitly forces doCentroid=false for non-combine IMS spectra — vendor
         // centroid doesn't apply to per-bin drift data, so the outer SpectrumList_PeakPicker

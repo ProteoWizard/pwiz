@@ -29,7 +29,7 @@ namespace Pwiz.Vendor.Agilent;
 public sealed class Reader_Agilent : IReader
 {
     /// <inheritdoc/>
-    public string TypeName => "Agilent";
+    public string TypeName => "Agilent MassHunter";
 
     /// <inheritdoc/>
     public CVID CvType => CVID.MS_Agilent_MassHunter_format;
