@@ -728,6 +728,7 @@ namespace pwiz.Osprey.Tasks
                         }
                     }
                 }
+                progress.Report(perFileEntries.Count);
             }
             return bestExpPrecursorQ;
         }
@@ -776,6 +777,7 @@ namespace pwiz.Osprey.Tasks
                         }
                     }
                 }
+                progress.Report(perFileEntries.Count);
             }
             return sharedBounds;
         }
@@ -827,6 +829,7 @@ namespace pwiz.Osprey.Tasks
                         nObservations++;
                     }
                 }
+                progress.Report(perFileEntries.Count);
             }
             return entriesByPrecursor;
         }
