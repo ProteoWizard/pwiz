@@ -707,7 +707,8 @@ namespace pwiz.Osprey.Tasks
             // consumer looks up keys from bestByPrecursor, which are passing by construction.
             var bestExpPrecursorQ = BuildBestExpPrecursorQ(passingEntries);
 
-            var sharedBounds = BuildSharedBoundaries(passingEntries);
+            var sharedBounds = BuildSharedBoundaries(
+                passingEntries, MultiChargePeptides(passingPrecursors));
 
             var entriesByPrecursor = BuildCrossFileObservations(
                 passingEntries, out int nCrossFileObservations);
@@ -899,8 +900,32 @@ namespace pwiz.Osprey.Tasks
         // run_qvalue. Mirrors Rust pipeline.rs build_shared_boundaries_from_plan.
         // Key: (modseq, fileName); value: { apexRt, startRt, endRt, run_q, charge }
         // from the min-run-qvalue entry (charge breaks run_qvalue ties).
+        /// <summary>
+        /// The peptides with more than one passing charge state, taken from
+        /// <paramref name="passingPrecursors"/> - 45,724 keys at 257 CHS files, so this costs
+        /// nothing to build and is the whole reason the boundary map can stay small.
+        /// </summary>
+        private static HashSet<string> MultiChargePeptides(
+            HashSet<(string, byte)> passingPrecursors)
+        {
+            var seenCharge = new Dictionary<string, byte>(StringComparer.Ordinal);
+            var multi = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var key in passingPrecursors)
+            {
+                if (!seenCharge.TryGetValue(key.Item1, out byte first))
+                {
+                    seenCharge[key.Item1] = key.Item2;
+                    continue;
+                }
+                if (first != key.Item2)
+                    multi.Add(key.Item1);
+            }
+            return multi;
+        }
+
         internal static Dictionary<(string, string), double[]> BuildSharedBoundaries(
-            List<KeyValuePair<string, FdrEntry>> passingEntries)
+            List<KeyValuePair<string, FdrEntry>> passingEntries,
+            HashSet<string> multiChargePeptides)
         {
             var sharedBounds = new Dictionary<(string, string), double[]>();
             using (var progress = new ProgressReporter(
@@ -913,6 +938,20 @@ namespace pwiz.Osprey.Tasks
                 {
                     progress.Report(boundsIdx++);
                     var e = kvp.Value;
+                    // A peptide with ONE passing charge is its own winner in every run, so
+                    // the entry it would store equals the entry's own boundaries - and both
+                    // readers (EmitSpectrumRows and WriteRetentionTimes) already initialize
+                    // from the entry and overwrite only on a hit. Storing those keys was
+                    // filling the map with its own fallback. At 257 CHS files the passing set
+                    // is 45,724 precursors over ~40,000 peptides, so this drops roughly six
+                    // keys in seven, and it drops them BEFORE insertion rather than pruning
+                    // afterwards, which is the difference between a smaller map and a smaller
+                    // peak.
+                    if (multiChargePeptides != null &&
+                        !multiChargePeptides.Contains(e.ModifiedSequence))
+                    {
+                        continue;
+                    }
                     var sk = (e.ModifiedSequence, kvp.Key);
                     double rq = e.EffectiveRunQvalue(FdrLevel.Both);
                     double[] existingB;
