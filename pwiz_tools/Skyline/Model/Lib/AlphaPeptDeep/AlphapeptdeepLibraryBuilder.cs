@@ -65,6 +65,31 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private const string CMD_FLOW_COMMAND = @"cmd-flow";
         private const string EXPORT_SETTINGS_COMMAND = @"export-settings";
 
+        // peptdeep imports alpharaw, which loads a .NET runtime into the Python process purely as an import
+        // side effect - the library workflow never uses its Thermo (.raw) or Sciex (.wiff) readers. Since
+        // alpharaw 0.7.0 (2026-08-26) that import kills the process on the way out: it calls
+        // atexit.unregister(pythonnet.unload), dropping Python.NET's orderly shutdown, so the CLR tears itself
+        // down after Py_Finalize and PythonEngine.Shutdown() raises an AccessViolationException. peptdeep has
+        // written all of its output by then, but the process exits with 0xE0434352 and Skyline reports the
+        // library build as failed.
+        //
+        // Setting ALPHARAW_DOTNET_RUNTIME to a name alpharaw does not recognize restores the orderly shutdown.
+        // The name never reaches a runtime: it makes alpharaw's runtime lookup raise, which skips the whole
+        // block that contains the atexit.unregister call, so Python.NET's own shutdown hook survives and runs
+        // while the interpreter is still alive. Note this does not keep the CLR out of the process - a bare
+        // "import clr" in alpharaw.sciex has already loaded it by then - it just lets it shut down cleanly.
+        //
+        // That earlier "import clr" is also why the variable cannot be used to choose a runtime instead.
+        // alpharaw.sciex runs it before alpharaw.thermo pulls in the module that reads the variable, so
+        // Python.NET is already loaded and alpharaw's load() call is a silent no-op. Only PYTHONNET_RUNTIME
+        // reaches that earlier load. Hosting under .NET Core would also avoid the crash, but .NET Core is not
+        // part of Windows, so asking for it would take effect on developer machines and do nothing on most
+        // users' - leaving the nightly testing a path users never run. Revisit when Skyline itself is on .NET.
+        // Releases before 0.7.0 ignore this variable, and do not have the bug either way.
+        // TODO: delete this once alpharaw only unregisters the hook for the Mono runtime it was working around
+        private const string ALPHARAW_DOTNET_RUNTIME = @"ALPHARAW_DOTNET_RUNTIME";
+        private const string ALPHARAW_DOTNET_RUNTIME_NONE = @"none";
+
         // Processing folders
         private const string PREFIX_WORKDIR = "APD";
         private const string OUTPUT_MODELS = @"output_models";
@@ -242,14 +267,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             ImportSpectralLibrary(progress, ref progressStatus);
         }
 
-        private void PrepareSettingsFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        private ProcessStartInfo CreatePeptdeepStartInfo(string arguments)
         {
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file));
-
-            // Generate template settings.yaml file
-            var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo(PeptdeepExecutablePath, $@"{EXPORT_SETTINGS_COMMAND} ""{SettingsFilePath}""")
+            var psi = new ProcessStartInfo(PeptdeepExecutablePath, arguments)
             {
                 CreateNoWindow = true,
                 UseShellExecute = false,
@@ -257,6 +277,18 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 RedirectStandardError = true,
                 RedirectStandardInput = false
             };
+            psi.EnvironmentVariables[ALPHARAW_DOTNET_RUNTIME] = ALPHARAW_DOTNET_RUNTIME_NONE;
+            return psi;
+        }
+
+        private void PrepareSettingsFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        {
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file));
+
+            // Generate template settings.yaml file
+            var pr = new ProcessRunner();
+            var psi = CreatePeptdeepStartInfo($@"{EXPORT_SETTINGS_COMMAND} ""{SettingsFilePath}""");
             try
             {
                 //REMOVE: This runs so quickly that counting lines here is not necessary for only 5% of the total progress bar
@@ -283,14 +315,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
             // Execute command
             var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo(PeptdeepExecutablePath, $@"{CMD_FLOW_COMMAND} {args}")
-            {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                RedirectStandardInput = false
-            };
+            var psi = CreatePeptdeepStartInfo($@"{CMD_FLOW_COMMAND} {args}");
             try
             {
                 var filterStrings = new[]
