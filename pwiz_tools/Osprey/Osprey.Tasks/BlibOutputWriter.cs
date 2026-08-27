@@ -53,12 +53,12 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static void Write(
             OspreyConfig config,
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyList<string> fileNames,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             Dictionary<(string, byte), KeyValuePair<string, FdrEntry>> bestByPrecursor,
             Dictionary<(string, byte), double> bestExpPrecursorQ,
             Dictionary<(string, string), double[]> sharedBounds,
-            List<KeyValuePair<string, FdrEntry>> passingEntries,
+            List<PassingObservation> passingEntries,
             Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)> precursorFacts)
         {
             double fdrThreshold = config.RunFdr; // run-level threshold for ID-line semantics
@@ -78,7 +78,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     writer.BeginBatch();
 
-                    var sourceFileIds = CreateSourceFiles(writer, config, perFileEntries, fdrThreshold);
+                    var sourceFileIds = CreateSourceFiles(writer, config, fileNames, fdrThreshold);
 
                     var blibEntries = bestByPrecursor.Values.ToList();
                     PrecompressSpectra(blibEntries, libraryById, config.NThreads,
@@ -98,7 +98,7 @@ namespace pwiz.Osprey.Tasks
                     var refIdByPrecursor = EmitSpectrumRows(
                         writer, blibEntries, blibMzBlobs, blibIntBlobs, blibNumPeaks,
                         sourceFileIds, libraryById, bestExpPrecursorQ, sharedBounds,
-                        precursorFacts, perFileEntries.Count);
+                        precursorFacts, fileNames.Count);
 
                     WriteRetentionTimesFileMajor(writer, passingEntries, refIdByPrecursor,
                         precursorFacts, bestByPrecursor, sourceFileIds, sharedBounds,
@@ -120,14 +120,14 @@ namespace pwiz.Osprey.Tasks
         // source"; the mzML file is the spectrum source.
         private static Dictionary<string, long> CreateSourceFiles(
             BlibWriter writer, OspreyConfig config,
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries, double fdrThreshold)
+            IReadOnlyList<string> fileNames, double fdrThreshold)
         {
             string libraryIdName = Path.GetFileName(config.LibrarySource.Path);
             var sourceFileIds = new Dictionary<string, long>();
-            foreach (var kvp in perFileEntries)
+            foreach (string fileName in fileNames)
             {
-                sourceFileIds[kvp.Key] = writer.AddSourceFile(
-                    kvp.Key + ".mzML", libraryIdName, fdrThreshold);
+                sourceFileIds[fileName] = writer.AddSourceFile(
+                    fileName + ".mzML", libraryIdName, fdrThreshold);
             }
             return sourceFileIds;
         }
@@ -337,7 +337,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private static void WriteRetentionTimesFileMajor(
             BlibWriter writer,
-            List<KeyValuePair<string, FdrEntry>> passingEntries,
+            List<PassingObservation> passingEntries,
             Dictionary<(string, byte), long> refIdByPrecursor,
             Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)> precursorFacts,
             Dictionary<(string, byte), KeyValuePair<string, FdrEntry>> bestByPrecursor,
@@ -351,11 +351,10 @@ namespace pwiz.Osprey.Tasks
                        passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int done = 0;
-                foreach (var kvp in passingEntries)
+                foreach (var obs in passingEntries)
                 {
                     progress.Report(++done);
-                    var fileEntry = kvp.Value;
-                    var key = (fileEntry.ModifiedSequence, fileEntry.Charge);
+                    var key = obs.PrecursorKey;
                     // A precursor with no RefSpectra row got no id - it did not survive the
                     // best-per-precursor selection - so it has nothing to attach a row to.
                     if (!refIdByPrecursor.TryGetValue(key, out long refId))
@@ -363,23 +362,23 @@ namespace pwiz.Osprey.Tasks
                     if (!precursorFacts.TryGetValue(key, out var facts))
                         continue;
 
-                    long srcId = sourceFileIds[kvp.Key];
-                    double runQ = fileEntry.EffectiveRunQvalue(FdrLevel.Both);
+                    long srcId = sourceFileIds[obs.FileName];
+                    double runQ = obs.RunQvalue;
                     bool passesFdr = runQ <= fdrThreshold;
                     bool showIdLine = passesFdr ||
-                        (!facts.AnyPassesRunFdr && kvp.Key == facts.BestRunFile);
+                        (!facts.AnyPassesRunFdr && obs.FileName == facts.BestRunFile);
                     // bestSpectrum flags the run whose spectrum this RefSpectra row was
                     // built from, so it must come from bestByPrecursor - the same source the
                     // RefSpectra loop used. facts.BestRunFile applies the same min-run-q rule
                     // over the same rows and should never disagree, but reproducing the old
                     // expression is byte-identity by construction rather than by argument.
                     bool isBest = bestByPrecursor.TryGetValue(key, out var bestKvp) &&
-                                  kvp.Key == bestKvp.Key;
+                                  obs.FileName == bestKvp.Key;
 
-                    var runSharedKey = (fileEntry.ModifiedSequence, kvp.Key);
-                    double runApex = fileEntry.ApexRt;
-                    double runStart = fileEntry.StartRt;
-                    double runEnd = fileEntry.EndRt;
+                    var runSharedKey = (obs.ModifiedSequence, obs.FileName);
+                    double runApex = obs.ApexRt;
+                    double runStart = obs.StartRt;
+                    double runEnd = obs.EndRt;
                     double[] runShared;
                     if (sharedBounds.TryGetValue(runSharedKey, out runShared))
                     {

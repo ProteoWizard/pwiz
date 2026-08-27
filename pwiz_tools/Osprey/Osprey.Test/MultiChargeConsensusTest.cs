@@ -110,11 +110,14 @@ namespace pwiz.Osprey.Test
                 var list = swap
                     ? new List<FdrEntry> { z3, z2 }
                     : new List<FdrEntry> { z2, z3 };
-                // The (file, entry) pairs CollectPassingEntries hands the builder, in the
-                // per-file order it produces them - which is the order the tie-break must be
-                // immune to.
+                // The records CollectPassingEntries hands the builder, in the per-file order
+                // it produces them - which is the order the tie-break must be immune to.
                 var passingEntries = list
-                    .Select(e => new KeyValuePair<string, FdrEntry>("file1", e)).ToList();
+                    .Select(e => new PassingObservation(
+                        "file1", e.ModifiedSequence, e.Charge,
+                        e.EffectiveRunQvalue(FdrLevel.Both), e.ExperimentPrecursorQvalue,
+                        e.ApexRt, e.StartRt, e.EndRt))
+                    .ToList();
 
                 // Both charges pass, so the peptide is multi-charge and the map is populated -
                 // which is the only case a shared boundary is needed for at all.

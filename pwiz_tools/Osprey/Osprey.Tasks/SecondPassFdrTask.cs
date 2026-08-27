@@ -298,8 +298,7 @@ namespace pwiz.Osprey.Tasks
             }
             else
             {
-                WriteBlibOutput(rescored, nFiles, perFileEntries, fullLibrary, libraryById,
-                    config, ctx);
+                WriteBlibOutput(rescored, nFiles, fullLibrary, libraryById, config, ctx);
             }
             swBlib.Stop();
             // Only when a blib was actually written. [STAGE-WALL] is machine-read by the perf
@@ -646,10 +645,14 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Write passing entries to a BiblioSpec blib file.
+        ///
+        /// <para>Takes the milestone rather than the pool. Its three gates fold to O(distinct)
+        /// over a per-file walk, the passing set it carries forward is compact records, and the
+        /// writer needs only the run's file NAMES from what used to be the buffer - so nothing
+        /// in this phase holds a file after the gate has walked past it (#4486).</para>
         /// </summary>
         private void WriteBlibOutput(
             RescoredEntries rescored, int nFiles,
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             List<LibraryEntry> fullLibrary,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config,
@@ -683,7 +686,12 @@ namespace pwiz.Osprey.Tasks
                     nFallback));
             }
 
-            var passingEntries = CollectPassingEntries(perFileEntries, passingPrecursors);
+            // Streamed, and the LAST walk of the pool in this phase: what comes back is a
+            // compact record per passing observation plus the best run per precursor, so
+            // everything after this line works on ~14 M values instead of holding 137 M
+            // entries alive to read eight fields off them (#4486).
+            var passingEntries = CollectPassingEntries(
+                rescored.Files(), passingPrecursors, nFiles, out var bestByPrecursor);
 
             ctx.LogInfo(string.Format(
                 "[COUNT] Stage 1 passing peptides: {0}", passingPeptides.Count));
@@ -699,8 +707,6 @@ namespace pwiz.Osprey.Tasks
             string outputDir = Path.GetDirectoryName(config.OutputBlib);
             if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
                 Directory.CreateDirectory(outputDir);
-
-            var bestByPrecursor = BuildBestByPrecursor(passingEntries);
 
             ctx.LogInfo(string.Format(
                 "[COUNT] Best-per-precursor for blib: {0}", bestByPrecursor.Count));
@@ -721,7 +727,7 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(
                 "[COUNT] Cross-file observations to write: {0}", passingEntries.Count));
 
-            BlibOutputWriter.Write(config, perFileEntries, libraryById, bestByPrecursor,
+            BlibOutputWriter.Write(config, rescored.FileNames, libraryById, bestByPrecursor,
                 bestExpPrecursorQ, sharedBounds, passingEntries, precursorFacts);
 
             ctx.LogInfo(string.Format("Wrote {0} library spectra to {1} (from {2} passing entries)",
@@ -812,18 +818,43 @@ namespace pwiz.Osprey.Tasks
             return passingPrecursors;
         }
 
-        // Collect passing entries for downstream best-per-precursor selection.
-        // A precursor is admitted iff (modseq, charge) is in passingPrecursors.
-        // No protein-FDR gate here (mirrors Rust: --protein-fdr is a compute
-        // flag, not a hard blib filter; FdrLevel has no Protein variant).
-        private static List<KeyValuePair<string, FdrEntry>> CollectPassingEntries(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            HashSet<(string, byte)> passingPrecursors)
+        /// <summary>
+        /// Walk the pool ONCE and take from it the two things the blib phase needs: a compact
+        /// record per passing observation, and the best run per precursor.
+        ///
+        /// <para>A precursor is admitted iff (modseq, charge) is in
+        /// <paramref name="passingPrecursors"/>. No protein-FDR gate here (mirrors Rust:
+        /// <c>--protein-fdr</c> is a compute flag, not a hard blib filter; FdrLevel has no
+        /// Protein variant).</para>
+        ///
+        /// <para>The best-per-precursor map used to be a SECOND pass, over the passing list.
+        /// It cannot be, once that list holds values rather than references: the RefSpectra
+        /// rows need the winner's <see cref="FdrEntry"/> itself, for the library lookup and
+        /// the spectrum. It is built here instead, in the same walk, and it is
+        /// O(distinct precursor) - 45,724 entries at 257 CHS files, ~12 MB - so the entries it
+        /// keeps pin themselves and nothing else (#4486).</para>
+        ///
+        /// <para>Deduplicated by (modseq, charge) keeping the best
+        /// <c>EffectiveRunQvalue(Both)</c>, matching Rust pipeline.rs:6133-6138. The blib's
+        /// RefSpectra / OspreyRunScores / OspreyPeakBoundaries all source from this best run,
+        /// so the cross-impl best-file choice must match exactly - which is why the walk order
+        /// is the pool's own and the comparison is strictly less-than, exactly as the second
+        /// pass over the passing list was.</para>
+        /// </summary>
+        private static List<PassingObservation> CollectPassingEntries(
+            IEnumerable<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            HashSet<(string, byte)> passingPrecursors, int nFiles,
+            out Dictionary<(string, byte), KeyValuePair<string, FdrEntry>> bestByPrecursor)
         {
-            var passingEntries = new List<KeyValuePair<string, FdrEntry>>();
+            var passingEntries = new List<PassingObservation>();
+            bestByPrecursor = new Dictionary<(string, byte), KeyValuePair<string, FdrEntry>>();
+            // One canonical string per distinct passing peptide. The parquet reader hands out a
+            // fresh instance per row, so without this the records would retain 11.7 M strings
+            // where there are about 40,000 distinct sequences - more memory than the records.
+            var canonicalSequences = new Dictionary<string, string>(StringComparer.Ordinal);
             using (var progress = new ProgressReporter(string.Format(
-                       @"Collecting passing entries over {0} file(s)", perFileEntries.Count),
-                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                       @"Collecting passing entries over {0} file(s)", nFiles),
+                       nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int done = 0;
                 foreach (var kvp in perFileEntries)
@@ -833,43 +864,35 @@ namespace pwiz.Osprey.Tasks
                     {
                         if (entry.IsDecoy)
                             continue;
-                        if (!passingPrecursors.Contains((entry.ModifiedSequence, entry.Charge)))
+                        var key = (entry.ModifiedSequence, entry.Charge);
+                        if (!passingPrecursors.Contains(key))
                             continue;
-                        passingEntries.Add(
-                            new KeyValuePair<string, FdrEntry>(kvp.Key, entry));
+                        if (!canonicalSequences.TryGetValue(entry.ModifiedSequence, out string modSeq))
+                        {
+                            modSeq = entry.ModifiedSequence;
+                            canonicalSequences[modSeq] = modSeq;
+                        }
+                        double runQ = entry.EffectiveRunQvalue(FdrLevel.Both);
+                        passingEntries.Add(new PassingObservation(
+                            kvp.Key, modSeq, entry.Charge, runQ, entry.ExperimentPrecursorQvalue,
+                            entry.ApexRt, entry.StartRt, entry.EndRt));
+                        if (!bestByPrecursor.TryGetValue(key, out var existing) ||
+                            runQ < existing.Value.EffectiveRunQvalue(FdrLevel.Both))
+                        {
+                            bestByPrecursor[key] =
+                                new KeyValuePair<string, FdrEntry>(kvp.Key, entry);
+                        }
                     }
                 }
             }
             return passingEntries;
         }
 
-        // Deduplicate by (modseq, charge) — keep best by EffectiveRunQvalue(Both).
-        // Matches Rust pipeline.rs:6133-6138. The blib's RefSpectra /
-        // OspreyRunScores / OspreyPeakBoundaries all source from this best run,
-        // so the cross-impl best-file choice must match exactly.
-        private static Dictionary<(string, byte), KeyValuePair<string, FdrEntry>> BuildBestByPrecursor(
-            List<KeyValuePair<string, FdrEntry>> passingEntries)
-        {
-            var bestByPrecursor = new Dictionary<(string, byte), KeyValuePair<string, FdrEntry>>();
-            foreach (var kvp in passingEntries)
-            {
-                var key = (kvp.Value.ModifiedSequence, kvp.Value.Charge);
-                KeyValuePair<string, FdrEntry> existing;
-                if (!bestByPrecursor.TryGetValue(key, out existing) ||
-                    kvp.Value.EffectiveRunQvalue(FdrLevel.Both) <
-                    existing.Value.EffectiveRunQvalue(FdrLevel.Both))
-                {
-                    bestByPrecursor[key] = kvp;
-                }
-            }
-            return bestByPrecursor;
-        }
-
         // Best (min) experiment_precursor_qvalue per (modseq, charge) across all
         // files — the value Rust writes into RefSpectra.score and
         // OspreyExperimentScores.ExperimentQValue (pipeline.rs:4670-4683 + 4795).
         private static Dictionary<(string, byte), double> BuildBestExpPrecursorQ(
-            List<KeyValuePair<string, FdrEntry>> passingEntries)
+            List<PassingObservation> passingEntries)
         {
             var bestExpPrecursorQ = new Dictionary<(string, byte), double>();
             // Reported: this and the two builders below run back to back with nothing between
@@ -883,16 +906,15 @@ namespace pwiz.Osprey.Tasks
                        passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int expIdx = 0;
-                foreach (var kvp in passingEntries)
+                foreach (var obs in passingEntries)
                 {
                     progress.Report(expIdx++);
-                    var e = kvp.Value;
-                    var keyExp = (e.ModifiedSequence, e.Charge);
+                    var keyExp = obs.PrecursorKey;
                     double existingExp;
                     if (!bestExpPrecursorQ.TryGetValue(keyExp, out existingExp)
-                        || e.ExperimentPrecursorQvalue < existingExp)
+                        || obs.ExperimentPrecursorQvalue < existingExp)
                     {
-                        bestExpPrecursorQ[keyExp] = e.ExperimentPrecursorQvalue;
+                        bestExpPrecursorQ[keyExp] = obs.ExperimentPrecursorQvalue;
                     }
                 }
             }
@@ -928,7 +950,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         internal static Dictionary<(string, string), double[]> BuildSharedBoundaries(
-            List<KeyValuePair<string, FdrEntry>> passingEntries,
+            List<PassingObservation> passingEntries,
             HashSet<string> multiChargePeptides)
         {
             var sharedBounds = new Dictionary<(string, string), double[]>();
@@ -938,10 +960,9 @@ namespace pwiz.Osprey.Tasks
                        passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int boundsIdx = 0;
-                foreach (var kvp in passingEntries)
+                foreach (var e in passingEntries)
                 {
                     progress.Report(boundsIdx++);
-                    var e = kvp.Value;
                     // A peptide with ONE passing charge is its own winner in every run, so
                     // the entry it would store equals the entry's own boundaries - and both
                     // readers (EmitSpectrumRows and WriteRetentionTimes) already initialize
@@ -956,8 +977,8 @@ namespace pwiz.Osprey.Tasks
                     {
                         continue;
                     }
-                    var sk = (e.ModifiedSequence, kvp.Key);
-                    double rq = e.EffectiveRunQvalue(FdrLevel.Both);
+                    var sk = (e.ModifiedSequence, e.FileName);
+                    double rq = e.RunQvalue;
                     double[] existingB;
                     // On a run_qvalue TIE (e.g. two charge states both gap-filled at
                     // q=1.0), break deterministically by LOWEST CHARGE so the winner
@@ -995,19 +1016,18 @@ namespace pwiz.Osprey.Tasks
         /// that quietly stops being true, and the fold costs nothing.</para>
         /// </summary>
         internal static Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)>
-            BuildPrecursorFacts(List<KeyValuePair<string, FdrEntry>> passingEntries, double fdrThreshold)
+            BuildPrecursorFacts(List<PassingObservation> passingEntries, double fdrThreshold)
         {
             var facts =
                 new Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)>();
             var bestRunQ = new Dictionary<(string, byte), double>();
-            foreach (var kvp in passingEntries)
+            foreach (var e in passingEntries)
             {
-                var e = kvp.Value;
-                var key = (e.ModifiedSequence, e.Charge);
-                double rq = e.EffectiveRunQvalue(FdrLevel.Both);
+                var key = e.PrecursorKey;
+                double rq = e.RunQvalue;
                 if (!facts.TryGetValue(key, out var cur))
                 {
-                    facts[key] = (rq <= fdrThreshold, kvp.Key, 1);
+                    facts[key] = (rq <= fdrThreshold, e.FileName, 1);
                     bestRunQ[key] = rq;
                     continue;
                 }
@@ -1018,7 +1038,7 @@ namespace pwiz.Osprey.Tasks
                 if (rq < bestRunQ[key])
                 {
                     bestRunQ[key] = rq;
-                    bestFile = kvp.Key;
+                    bestFile = e.FileName;
                 }
                 facts[key] = (anyPasses, bestFile, cur.NRuns + 1);
             }
