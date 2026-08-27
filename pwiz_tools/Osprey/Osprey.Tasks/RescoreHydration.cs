@@ -625,6 +625,35 @@ namespace pwiz.Osprey.Tasks
         /// <c>vec_idx</c>-keyed assignment would), and on which missing <c>entry_id</c>
         /// raises the drift error first.
         /// </summary>
+        /// <summary>
+        /// The Stage 5 retain set for a cohort, read from the planner envelopes alone: the
+        /// join-wide <c>first_pass_base_ids</c> UNION the base_id of every planner action
+        /// target across every file. This is the same union
+        /// <see cref="HydrateCompactedStreaming"/> builds and what
+        /// <c>RescoreCompaction.Apply</c> applies.
+        ///
+        /// <para>Exposed separately so a caller can learn which rows survive WITHOUT building
+        /// the whole-run pool - the envelopes are small and this pass finishes in seconds,
+        /// where materializing the pool to answer the same question costs tens of GB
+        /// (issue #4486). The union must be complete before ANY file is filtered: file A can
+        /// retain a base_id only because file B has an action on it.</para>
+        /// </summary>
+        internal static HashSet<uint> BuildRetainBaseIds(
+            IReadOnlyList<string> parquetPaths, string context)
+        {
+            var retainBaseIds = new HashSet<uint>();
+            foreach (string parquetPath in parquetPaths)
+            {
+                string syntheticInput = SyntheticInputFromParquet(parquetPath);
+                var envelope = LoadEnvelope(ReconciliationFile.PathForInput(syntheticInput), context);
+                if (envelope.FirstPassBaseIds != null)
+                    retainBaseIds.UnionWith(envelope.FirstPassBaseIds);
+                foreach (var action in PlanActions(envelope))
+                    retainBaseIds.Add(action.EntryId & ScoringTaskShared.BASE_ID_MASK);
+            }
+            return retainBaseIds;
+        }
+
         private static List<PlannedAction> PlanActions(ReconciliationFile envelope)
         {
             var planned = new List<PlannedAction>(

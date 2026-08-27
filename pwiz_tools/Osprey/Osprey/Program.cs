@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -394,6 +394,11 @@ namespace pwiz.Osprey
                 task = HpcTask.SpectraCache;
                 return null;
             }
+            if (string.Equals(taskName, "CompactPerFileRescoring", StringComparison.OrdinalIgnoreCase))
+            {
+                task = HpcTask.CompactPerFileRescoring;
+                return null;
+            }
             if (string.Equals(taskName, "ModelDiagnostics", StringComparison.OrdinalIgnoreCase))
             {
                 // The selector IS the request for the report, so it implies the flag rather than
@@ -404,7 +409,7 @@ namespace pwiz.Osprey
             }
             task = default;
             return string.Format(
-                "--task: unknown task '{0}'. Valid tasks: SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR, ModelDiagnostics.",
+                "--task: unknown task '{0}'. Valid tasks: SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR, ModelDiagnostics, CompactPerFileRescoring.",
                 taskName);
         }
 
@@ -428,6 +433,7 @@ namespace pwiz.Osprey
                 case HpcTask.PerFileRescore: return "PerFileRescoring";
                 case HpcTask.SecondPassFdr: return "SecondPassFDR";
                 case HpcTask.SpectraCache: return "SpectraCache";
+                case HpcTask.CompactPerFileRescoring: return "CompactPerFileRescoring";
                 case HpcTask.ModelDiagnostics: return "ModelDiagnostics";
                 default: return task.ToString();
             }

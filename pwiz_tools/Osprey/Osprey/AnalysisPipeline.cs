@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -88,7 +88,9 @@ namespace pwiz.Osprey
                 // canonical pipeline's membership rules about the analysis itself.
                 var pipelineTasks = config.SelectedTask == HpcTask.SpectraCache
                     ? SpectraCachePipeline()
-                    : CanonicalPipeline();
+                    : config.SelectedTask == HpcTask.CompactPerFileRescoring
+                        ? CompactPerFileRescorePipeline()
+                        : CanonicalPipeline();
                 var ctx = new PipelineContext(config, pipelineTasks,
                     LogInfo, LogWarning, LogError, OspreyDiagnostics.Active);
 
@@ -163,6 +165,19 @@ namespace pwiz.Osprey
             return new OspreyTask[]
             {
                 new SpectraCacheTask(),
+            };
+        }
+
+        /// <summary>
+        /// One task, for the same reason SpectraCache has one: it rewrites artifacts rather
+        /// than analyzing them, and the canonical pipeline's rehydrate would materialize the
+        /// survivor pool this conversion exists to avoid (issue #4486).
+        /// </summary>
+        internal static OspreyTask[] CompactPerFileRescorePipeline()
+        {
+            return new OspreyTask[]
+            {
+                new CompactPerFileRescoreTask(),
             };
         }
 
