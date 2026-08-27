@@ -327,6 +327,38 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public Func<string, List<FdrEntry>> LoadFile { get; private set; }
 
+        /// <summary>
+        /// True once the whole-run buffer has actually been built - i.e. someone read
+        /// <see cref="PerFileEntries.Value"/>.
+        ///
+        /// <para>Exists for the transition. While ANY consumer still reads the buffer, a
+        /// streamed consumer should walk what is already resident rather than re-reading each
+        /// file off disk behind it; once no consumer does, the buffer is never built and
+        /// <see cref="Files"/> streams. That lets consumers move over one at a time without
+        /// either doubling the I/O or doubling the memory in between.</para>
+        /// </summary>
+        public bool IsMaterialized => _materialize == null || _materialize.IsValueCreated;
+
+        /// <summary>
+        /// The run's files, one at a time, for a consumer that ITERATES and does not retain.
+        ///
+        /// <para>Yields from the resident buffer when one exists and materializes per file
+        /// otherwise, so the same call site is correct on both sides of the transition. A
+        /// consumer that keeps a reference to the yielded list pins that file - the point is to
+        /// fold to an O(distinct) aggregate and let each go.</para>
+        /// </summary>
+        public IEnumerable<KeyValuePair<string, List<FdrEntry>>> Files()
+        {
+            if (IsMaterialized || LoadFile == null)
+            {
+                foreach (var kv in Value)
+                    yield return kv;
+                yield break;
+            }
+            foreach (string fileName in FileNames)
+                yield return new KeyValuePair<string, List<FdrEntry>>(fileName, LoadFile(fileName));
+        }
+
         /// <summary>Attach the streaming surface; see <see cref="LoadFile"/>.</summary>
         public RescoredEntries WithStreaming(
             IReadOnlyList<string> fileNames, Func<string, List<FdrEntry>> loadFile)

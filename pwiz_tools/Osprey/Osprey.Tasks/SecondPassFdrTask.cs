@@ -221,7 +221,7 @@ namespace pwiz.Osprey.Tasks
             if (UpgradeReconciledParquets(perFileEntries, perFileParquetPaths, libraryById, ctx))
                 return StopAfterUpgrade(ctx);
 
-            ReleaseUnscorableLibraryFragments(perFileEntries, fullLibrary, ctx);
+            ReleaseUnscorableLibraryFragments(rescored, perFileEntries.Count, fullLibrary, ctx);
 
             // The 2nd-pass Percolator model, captured for the model-diagnostics
             // pass-2 model view; null when no reconciliation rescore happened.
@@ -298,7 +298,8 @@ namespace pwiz.Osprey.Tasks
             }
             else
             {
-                WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config, ctx);
+                WriteBlibOutput(rescored, nFiles, perFileEntries, fullLibrary, libraryById,
+                    config, ctx);
             }
             swBlib.Stop();
             // Only when a blib was actually written. [STAGE-WALL] is machine-read by the perf
@@ -398,13 +399,17 @@ namespace pwiz.Osprey.Tasks
         /// gap-fill candidate that did not survive rescoring).</para>
         /// </summary>
         private void ReleaseUnscorableLibraryFragments(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            RescoredEntries rescored, int nFiles,
             List<LibraryEntry> fullLibrary, PipelineContext ctx)
         {
             if (!LibraryFragmentRelease.RunsOnThisLeg(ctx))
                 return;
 
-            var retained = LibraryFragmentRelease.BuildRetainedBaseIds(perFileEntries);
+            // Streamed: this folds to O(distinct base_id) and retains nothing, so it can walk
+            // the files one at a time and drop each. While something else still reads the
+            // whole-run buffer, Files() yields from it and this costs nothing; once nothing
+            // does, it is one file resident at a time (#4486).
+            var retained = LibraryFragmentRelease.BuildRetainedBaseIds(rescored.Files());
             int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
             ctx.LogInfo(string.Format(
                 @"Released library fragments for {0} of {1} entries ({2} base_ids retained for the reported pool)",
@@ -414,7 +419,7 @@ namespace pwiz.Osprey.Tasks
             // than inferred: the pre-GC line above cannot show it, because the dropped
             // fragment arrays are garbage that has not been collected yet (#4486).
             ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-fragments-released",
-                string.Format(@"(files={0}, released={1})", perFileEntries.Count, released));
+                string.Format(@"(files={0}, released={1})", nFiles, released));
         }
 
         /// <summary>
@@ -643,6 +648,7 @@ namespace pwiz.Osprey.Tasks
         /// Write passing entries to a BiblioSpec blib file.
         /// </summary>
         private void WriteBlibOutput(
+            RescoredEntries rescored, int nFiles,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             List<LibraryEntry> fullLibrary,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
@@ -665,10 +671,11 @@ namespace pwiz.Osprey.Tasks
             // peptide-level FDR aggregates across charges), include the best
             // charge state (lowest experiment_precursor_qvalue) as a
             // representative.
-            var passingPeptides = ComputePassingPeptides(perFileEntries, config);
+            // Streamed: both gates fold to O(distinct) and retain nothing.
+            var passingPeptides = ComputePassingPeptides(rescored.Files(), config, nFiles);
 
             var passingPrecursors = ComputePassingPrecursors(
-                perFileEntries, config, passingPeptides, out int nFallback);
+                rescored.Files(), config, passingPeptides, nFiles, out int nFallback);
             if (nFallback > 0)
             {
                 ctx.LogInfo(string.Format(
@@ -724,7 +731,8 @@ namespace pwiz.Osprey.Tasks
         // Stage 1 (peptide gate): the configured FdrLevel determines which
         // peptide identities are eligible for output. EXPERIMENT-level q-value.
         private static HashSet<string> ComputePassingPeptides(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries, OspreyConfig config)
+            IEnumerable<KeyValuePair<string, List<FdrEntry>>> perFileEntries, OspreyConfig config,
+            int nFiles)
         {
             double expThreshold = config.ExperimentFdr;
             var passingPeptides = new HashSet<string>(StringComparer.Ordinal);
@@ -733,9 +741,8 @@ namespace pwiz.Osprey.Tasks
             // before it can start - and at 257 files they ran as ~70 s of silence between the
             // protein-FDR line and the first [COUNT] (#4615 review).
             using (var progress = new ProgressReporter(string.Format(
-                       @"Selecting peptides passing experiment FDR over {0} file(s)",
-                       perFileEntries.Count),
-                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                       @"Selecting peptides passing experiment FDR over {0} file(s)", nFiles),
+                       nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int done = 0;
                 foreach (var kvp in perFileEntries)
@@ -759,17 +766,16 @@ namespace pwiz.Osprey.Tasks
         // (nFallback counts those). Tuple keys (modseq, charge) mirror Rust's
         // HashMap<(Arc<str>, u8), ...> at pipeline.rs:4630.
         private static HashSet<(string, byte)> ComputePassingPrecursors(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries, OspreyConfig config,
-            HashSet<string> passingPeptides, out int nFallback)
+            IEnumerable<KeyValuePair<string, List<FdrEntry>>> perFileEntries, OspreyConfig config,
+            HashSet<string> passingPeptides, int nFiles, out int nFallback)
         {
             double expThreshold = config.ExperimentFdr;
             var passingPrecursors = new HashSet<(string, byte)>();
             var bestChargePerPeptide = new Dictionary<string, KeyValuePair<byte, double>>(
                 StringComparer.Ordinal);
             using (var progress = new ProgressReporter(string.Format(
-                       @"Selecting charge states passing precursor FDR over {0} file(s)",
-                       perFileEntries.Count),
-                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                       @"Selecting charge states passing precursor FDR over {0} file(s)", nFiles),
+                       nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int done = 0;
                 foreach (var kvp in perFileEntries)
