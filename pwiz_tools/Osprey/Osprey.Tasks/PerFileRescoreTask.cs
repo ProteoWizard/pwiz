@@ -125,8 +125,8 @@ namespace pwiz.Osprey.Tasks
         // loads from the reconciled parquet, whose gap-fill rows are interleaved in canonical
         // position and shift every index after them (#4486). An id survives that; a position
         // does not.
-        private readonly Dictionary<string, HashSet<(uint, byte, uint)>> _resetIdentitiesByFile
-            = new Dictionary<string, HashSet<(uint, byte, uint)>>(StringComparer.Ordinal);
+        private readonly Dictionary<string, HashSet<uint>> _resetEntryIdsByFile
+            = new Dictionary<string, HashSet<uint>>(StringComparer.Ordinal);
 
         // Admits one survivor refill at a time under the parallel file loop, so the
         // pre-compaction transient each load holds is not multiplied by the file parallelism.
@@ -382,7 +382,7 @@ namespace pwiz.Osprey.Tasks
             // overlay: this is the last moment the question has the right answer (see
             // RescoredPoolPlan), and the answer is cheap - one small sidecar read per file.
             _poolPlan = new RescoredPoolPlan(_perFileEntries, survivorLoader, rescoredFiles,
-                CurrentReconciledPaths(ctx), gapFill, _resetIdentitiesByFile);
+                CurrentReconciledPaths(ctx), gapFill, _resetEntryIdsByFile);
 
             // Cross-impl bisection seam: dump per-precursor state
             // immediately after the rescore loop. Mirrors Rust's
@@ -1014,13 +1014,13 @@ namespace pwiz.Osprey.Tasks
 
             // Overlay the re-scored subset back onto the per-file stubs,
             // resetting discriminant fields to Rust to_fdr_entry defaults.
-            if (!_resetIdentitiesByFile.TryGetValue(fileName, out var resetIdentities))
+            if (!_resetEntryIdsByFile.TryGetValue(fileName, out var resetEntryIds))
             {
-                resetIdentities = new HashSet<(uint, byte, uint)>(combinedTargets.Count);
-                _resetIdentitiesByFile[fileName] = resetIdentities;
+                resetEntryIds = new HashSet<uint>(combinedTargets.Count);
+                _resetEntryIdsByFile[fileName] = resetEntryIds;
             }
             var (nOverlay, nNoPeak) =
-                OverlayRescoredEntries(fdrEntries, combinedTargets, rescored, resetIdentities);
+                OverlayRescoredEntries(fdrEntries, combinedTargets, rescored, resetEntryIds);
             totalRescored += nOverlay;
             if (nNoPeak > 0)
             {
@@ -1515,7 +1515,7 @@ namespace pwiz.Osprey.Tasks
             List<FdrEntry> fdrEntries,
             Dictionary<int, (double Apex, double Start, double End)> combinedTargets,
             List<FdrEntry> rescored,
-            HashSet<(uint, byte, uint)> resetIdentities)
+            HashSet<uint> resetEntryIds)
         {
             // Pass 1: index the rescored results by entry_id so we
             // can look up successful re-scores in the second pass.
@@ -1532,13 +1532,18 @@ namespace pwiz.Osprey.Tasks
             {
                 int idx = kvp.Key;
                 uint entryId = fdrEntries[idx].EntryId;
-                // Every target is reset on BOTH branches below, so this set is exactly the
-                // reset, recorded while the list that defines it is still here. The FULL
-                // identity, not entry_id alone: compaction removes an entry_id's extra SCANS
-                // rather than the entry_id, so a bare id could select a row the planner did
-                // not target - the same reason MapFeaturesByIdentity keys on all three.
-                var target = fdrEntries[idx];
-                resetIdentities?.Add((target.EntryId, target.Charge, target.ScanNumber));
+                // entry_id ALONE, deliberately, and this is the one place the full
+                // (entry_id, charge, scan_number) identity is the wrong key. That triple is
+                // not invariant across a rescore: re-integrating at the consensus boundary
+                // moves the apex, so the row's scan_number afterwards differs from the one it
+                // had when this target was chosen. The Stage 4 parquet stores the BEFORE scan
+                // and the reconciled parquet the AFTER, so a triple captured here matches
+                // whichever file the rebuild happens to read and not the other - it matched
+                // zero of 37,098 targets on Stellar the first time this ran against the
+                // reconciled parquet. entry_id survives the move, and post-compaction
+                // DeduplicatePairs makes it unique per file, so it selects exactly one row
+                // either way.
+                resetEntryIds?.Add(entryId);
                 if (rescoredByEntryId.TryGetValue(entryId, out FdrEntry rescoredEntry))
                 {
                     rescoredEntry.ResetScores();
@@ -1811,7 +1816,7 @@ namespace pwiz.Osprey.Tasks
             /// their 1st-pass boundaries.</param>
             /// <param name="gapFill">The planner's per-file gap-fill targets, for the
             /// overlay.</param>
-            /// <param name="resetIdentities">Per file, the identities whose scores the rescore
+            /// <param name="resetEntryIds">Per file, the entry_ids whose scores the rescore
             /// reset - captured DURING the rescue rather than re-derived from planner indices,
             /// so the reset survives any reordering of the list it is replayed onto.</param>
             public RescoredPoolPlan(
@@ -1820,14 +1825,14 @@ namespace pwiz.Osprey.Tasks
                 HashSet<string> rescoredFiles,
                 IReadOnlyDictionary<string, string> reconciledPaths,
                 IReadOnlyDictionary<string, List<GapFillTarget>> gapFill,
-                IReadOnlyDictionary<string, HashSet<(uint, byte, uint)>> resetIdentities)
+                IReadOnlyDictionary<string, HashSet<uint>> resetEntryIds)
             {
                 Buffer = buffer;
                 Loader = loader;
                 RescoredFiles = rescoredFiles;
                 ReconciledPaths = reconciledPaths;
                 GapFill = gapFill;
-                ResetIdentities = resetIdentities;
+                ResetEntryIds = resetEntryIds;
             }
 
             /// <summary>The no-rescore plan: put back what FirstPassFDR released, and stop.</summary>
@@ -1842,7 +1847,7 @@ namespace pwiz.Osprey.Tasks
             public HashSet<string> RescoredFiles { get; }
             public IReadOnlyDictionary<string, string> ReconciledPaths { get; }
             public IReadOnlyDictionary<string, List<GapFillTarget>> GapFill { get; }
-            public IReadOnlyDictionary<string, HashSet<(uint, byte, uint)>> ResetIdentities { get; }
+            public IReadOnlyDictionary<string, HashSet<uint>> ResetEntryIds { get; }
         }
 
         /// <summary>
@@ -1890,7 +1895,18 @@ namespace pwiz.Osprey.Tasks
                 foreach (var kv in plan.Buffer)
                 {
                     progress.Report(++done);
-                    MaterializeFileSurvivors(kv.Key, kv.Value, plan.Loader, ctx);
+                    // ONE parquet, not two. When this file's reconciled parquet was judged
+                    // current, it already holds the survivor subset with Stage 6's boundaries
+                    // applied and the gap-fill rows merged - so reading it makes both the
+                    // Stage 4 read and the overlay that put those values back unnecessary
+                    // (#4486). Stage 6 originally OVERWROTE the Stage 4 parquet, which is why
+                    // one read used to give both; splitting the files left Stage 7 reading one
+                    // for the rows and the other for the values.
+                    string reconciledPath = null;
+                    plan.ReconciledPaths?.TryGetValue(kv.Key, out reconciledPath);
+                    bool loadedReconciled = reconciledPath != null && kv.Value.Count == 0;
+                    MaterializeFileSurvivors(kv.Key, kv.Value, plan.Loader, ctx,
+                        loadedReconciled ? reconciledPath : null);
                     if (plan.RescoredFiles == null)
                         continue;
                     // BEFORE the overlay, which appends gap-fill rows: the planner's indices
@@ -1898,8 +1914,14 @@ namespace pwiz.Osprey.Tasks
                     // would be indexed if the reset ran after. The overlay preserves Score /
                     // q-values, so the reset survives it.
                     ResetRescoredTargetsForFile(plan, kv.Key, kv.Value);
-                    OverlayReconciledIntoFile(kv.Key, kv.Value, plan.ReconciledPaths,
-                        plan.GapFill, canonicalize: false);
+                    // Skipped when the rows CAME from the reconciled parquet: the overlay
+                    // would re-apply boundaries the rows already carry and append a second
+                    // copy of the gap-fill rows already merged into them.
+                    if (!loadedReconciled)
+                    {
+                        OverlayReconciledIntoFile(kv.Key, kv.Value, plan.ReconciledPaths,
+                            plan.GapFill, canonicalize: false);
+                    }
                 }
             }
             sw.Stop();
@@ -1973,11 +1995,12 @@ namespace pwiz.Osprey.Tasks
         /// one file at a time and the whole-run loop is only one of its callers.
         /// </summary>
         private static void MaterializeFileSurvivors(string fileName, List<FdrEntry> entries,
-            FirstPassSurvivorLoader loader, PipelineContext ctx)
+            FirstPassSurvivorLoader loader, PipelineContext ctx,
+            string parquetPathOverride = null)
         {
             if (entries.Count > 0)
                 return;
-            var stubs = loader.Load(fileName, out string error);
+            var stubs = loader.Load(fileName, parquetPathOverride, out string error);
             if (stubs == null)
             {
                 ctx.LogError(error);
@@ -2027,8 +2050,8 @@ namespace pwiz.Osprey.Tasks
         private static void ResetRescoredTargetsForFile(RescoredPoolPlan plan, string fileName,
             List<FdrEntry> entries)
         {
-            if (plan.ResetIdentities == null ||
-                !plan.ResetIdentities.TryGetValue(fileName, out var resetIds) ||
+            if (plan.ResetEntryIds == null ||
+                !plan.ResetEntryIds.TryGetValue(fileName, out var resetIds) ||
                 resetIds.Count == 0)
             {
                 return;
@@ -2036,7 +2059,7 @@ namespace pwiz.Osprey.Tasks
             int reset = 0;
             foreach (var entry in entries)
             {
-                if (!resetIds.Contains((entry.EntryId, entry.Charge, entry.ScanNumber)))
+                if (!resetIds.Contains(entry.EntryId))
                     continue;
                 entry.ResetScores();
                 reset++;

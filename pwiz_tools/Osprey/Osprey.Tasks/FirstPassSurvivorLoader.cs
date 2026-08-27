@@ -87,6 +87,30 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal List<FdrEntry> Load(string fileName, out string error)
         {
+            return Load(fileName, null, out error);
+        }
+
+        /// <summary>
+        /// Load one file's survivors from <paramref name="parquetPathOverride"/> instead of
+        /// its Stage 4 <c>.scores.parquet</c>.
+        ///
+        /// <para>The override is that file's <c>.scores-reconciled.parquet</c>, and only when
+        /// the caller has judged it CURRENT for this run - existence is not enough, because a
+        /// parquet left by a run with different reconciliation parameters would inject another
+        /// arm's boundaries (see <c>RescoredPoolPlan.ReconciledPaths</c>). Reading it makes
+        /// the Stage 4 parquet unnecessary: this branch now holds the survivor subset with
+        /// Stage 6's re-scored boundaries already applied and the gap-fill rows already
+        /// merged, which is precisely what the second read used to put back (#4486).</para>
+        ///
+        /// <para>The sidecar overlay is unchanged and is resolved from the ORIGINAL scores
+        /// path, not from this one - the 1st-pass sidecar is a Stage 5 artifact and has no
+        /// reconciled sibling. Gap-fill rows simply find no record in it and keep the
+        /// score-reset defaults a cold run gives them, which is the direction
+        /// <c>TryRead</c> tolerates; the predicate covers the other direction, a record whose
+        /// row was compacted away.</para>
+        /// </summary>
+        internal List<FdrEntry> Load(string fileName, string parquetPathOverride, out string error)
+        {
             error = null;
             if (_perFileParquetPaths == null ||
                 !_perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
@@ -95,6 +119,8 @@ namespace pwiz.Osprey.Tasks
                     @"First-pass survivor load: no scores parquet path for {0}", fileName);
                 return null;
             }
+            if (parquetPathOverride != null)
+                parquetPath = parquetPathOverride;
 
             // Applied AS THE PARQUET IS READ, not after. This kept ~533 K of ~2.99 M stubs
             // per file at 257 CHS files, so filtering afterwards built 5.6x what survived
