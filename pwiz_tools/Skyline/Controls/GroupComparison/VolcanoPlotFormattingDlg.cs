@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             createExpressionBtn.Resizable = DataGridViewTriState.False;
             createExpressionBtn.Text = @"...";
             createExpressionBtn.UseColumnTextForButtonValue = true;
-            createExpressionBtn.Width = createExpressionBtn.MinimumWidth = 20;
+            createExpressionBtn.Width = createExpressionBtn.MinimumWidth = DpiUtil.Scale(this, 20);
             _createExprButtonIndex = 1;
             regexColorRowGrid1.Columns.Insert(_createExprButtonIndex, createExpressionBtn);
 
@@ -180,6 +180,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             layoutLabelsBox.Checked = Settings.Default.GroupComparisonAvoidLabelOverlap;
 
             // Tooltips/accessible names for the delete/reorder toolbar (image-only buttons).
+            DpiUtil.ScaleToolStripImages(toolStripFormatting);
             btnDeleteRule.Text = GroupComparisonStrings.VolcanoPlotFormattingDlg_Delete_rule;
             btnMoveRuleUp.Text = GroupComparisonStrings.VolcanoPlotFormattingDlg_Move_rule_up;
             btnMoveRuleDown.Text = GroupComparisonStrings.VolcanoPlotFormattingDlg_Move_rule_down;
@@ -714,6 +715,22 @@ namespace pwiz.Skyline.Controls.GroupComparison
         BindingList<MatchRgbHexColor> ColorGrid<MatchRgbHexColor>.IColorGridOwner.GetCurrentBindingList()
         {
             return _bindingList;
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            if (DpiUtil.GetFactor(this) > 1)
+            {
+                // The form's autoscale skips the nested ColorGrid container's SIZE on
+                // .NET Framework 4.7.2 (its position does scale), leaving the grid at its
+                // 96-DPI resource size inside the scaled dialog. Setting the size in the
+                // constructor corrupts the anchor snapshot, so scale it here, after all
+                // scaling and layout. Scaling the still-unscaled size directly stays
+                // correct for localized resx geometry (ja sizes the grid 638x235 vs the
+                // English 606x235) (issue #4599).
+                regexColorRowGrid1.Size = DpiUtil.ScaleSize(this, regexColorRowGrid1.Size);
+            }
         }
 
         private void UpdateAdvancedColumns()

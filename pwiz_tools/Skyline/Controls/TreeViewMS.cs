@@ -679,13 +679,13 @@ namespace pwiz.Skyline.Controls
             if (StateImageIndex != -1)
             {
                 Image stateImg = TreeView.StateImageList.Images[StateImageIndex];
-                g.DrawImage(stateImg, new Rectangle(imgLocX, bounds.Top + (bounds.Height - imgHeight) / 2, imgWidth, imgHeight));
+                DpiUtil.DrawImageCentered(g, stateImg, imgLocX, bounds.Top, bounds.Height);
                 imgLocX += imgWidth;
             }
             if (ImageIndex != -1)
             {
                 Image nodeImg = TreeView.ImageList.Images[ImageIndex];
-                g.DrawImage(nodeImg, new Rectangle(imgLocX, bounds.Top + (bounds.Height - imgHeight) / 2, imgWidth, imgHeight));
+                DpiUtil.DrawImageCentered(g, nodeImg, imgLocX, bounds.Top, bounds.Height);
             }
 
             DrawTextMS(g);

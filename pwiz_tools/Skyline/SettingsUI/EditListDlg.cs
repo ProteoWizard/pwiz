@@ -319,14 +319,19 @@ namespace pwiz.Skyline.SettingsUI
                 form.StartPosition = FormStartPosition.CenterParent;
                 form.MaximizeBox = false;
                 form.MinimizeBox = false;
-                form.Width = 350;
-                form.Height = 130;
+                // Runtime-built form: AutoScaleMode.Font never touches it, so the 96-DPI
+                // layout literals must be scaled explicitly (issue #4599).
+                form.Width = DpiUtil.Scale(this, 350);
+                form.Height = DpiUtil.Scale(this, 130);
 
-                var lblName = new Label { Left = 10, Top = 15, Text = SettingsUIResources.EditListDlg_RenameItem_Enter_new_name, AutoSize = true };
-                var textBox = new TextBox { Left = 10, Top = 35, Width = 310, Text = currentName };
+                var lblName = new Label { Left = DpiUtil.Scale(this, 10), Top = DpiUtil.Scale(this, 15), Text = SettingsUIResources.EditListDlg_RenameItem_Enter_new_name, AutoSize = true };
+                var textBox = new TextBox { Left = DpiUtil.Scale(this, 10), Top = DpiUtil.Scale(this, 35), Width = DpiUtil.Scale(this, 310), Text = currentName };
                 textBox.SelectionStart = textBox.Text.Length;
-                var okButton = new Button { Text = CommonAlertDlg.GetDefaultButtonText(DialogResult.OK), Left = 150, Width = 80, Top = 65, DialogResult = DialogResult.OK };
-                var cancelButton = new Button { Text = CommonAlertDlg.GetDefaultButtonText(DialogResult.Cancel), Left = 240, Width = 80, Top = 65, DialogResult = DialogResult.Cancel };
+                var okButton = new Button { Text = CommonAlertDlg.GetDefaultButtonText(DialogResult.OK), Left = DpiUtil.Scale(this, 150), Width = DpiUtil.Scale(this, 80), Top = DpiUtil.Scale(this, 65), DialogResult = DialogResult.OK };
+                var cancelButton = new Button { Text = CommonAlertDlg.GetDefaultButtonText(DialogResult.Cancel), Left = DpiUtil.Scale(this, 240), Width = DpiUtil.Scale(this, 80), Top = DpiUtil.Scale(this, 65), DialogResult = DialogResult.Cancel };
+                // Button height does not follow the inherited font the way TextBox and
+                // AutoSize Label heights do - scale it explicitly (issue #4599).
+                okButton.Height = cancelButton.Height = DpiUtil.Scale(this, okButton.Height);
 
                 form.Controls.AddRange(new Control[] { lblName, textBox, okButton, cancelButton });
                 form.AcceptButton = okButton;

@@ -134,17 +134,19 @@ namespace pwiz.Skyline.Alerts
             }
 
             var activeScreen = parent == null ? Screen.PrimaryScreen : Screen.FromHandle(parent.Handle); 
-            int defaultHeight = Math.Min(3 * activeScreen.Bounds.Height / 4, layout.GetRowHeights().Sum() + 50);
+            int defaultHeight = Math.Min(3 * activeScreen.Bounds.Height / 4,
+                layout.GetRowHeights().Sum() + DpiUtil.Scale(parent as Control, 50));
 
             using (var dlg = new MultiButtonMsgDlg(layout, Resources.OK, ctlTextRepresentation.ToString()))
             {
                 dlg.Text = title;
-                dlg.ClientSize = new Size(400, defaultHeight);
+                // 96-DPI width literal scaled for high DPI; row heights are font-relative (issue #4599).
+                dlg.ClientSize = new Size(DpiUtil.Scale(dlg, 400), defaultHeight);
                 dlg.StartPosition = FormStartPosition.CenterParent;
                 dlg.ShowInTaskbar = false;
                 dlg.MinimumSize = dlg.Size;
                 layout.Size = dlg.ClientSize;
-                layout.Height -= 35;
+                layout.Height -= DpiUtil.Scale(dlg, 35);
 
                 var result = parent == null ? dlg.ShowParentlessDialog() : dlg.ShowWithTimeout(parent, title);
                 if (result == DialogResult.Cancel)

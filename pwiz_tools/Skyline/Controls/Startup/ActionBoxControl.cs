@@ -20,6 +20,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Startup
 {
@@ -67,18 +68,28 @@ namespace pwiz.Skyline.Controls.Startup
         {
             InitializeComponent();
 
+            // The designer geometry and the caller-supplied image sizes are 96-DPI pixel
+            // values; scale everything to the display DPI so the tiles grow with the font
+            // instead of clipping the AutoSize caption (issue #4599). The icon PictureBox
+            // uses StretchImage, so the tutorial bitmaps scale with it.
+            Size = DpiUtil.ScaleSize(this, Size);
+            iconPictureBox.Location = labelDescription.Location =
+                new Point(DpiUtil.Scale(this, 10), DpiUtil.Scale(this, 10));
+            iconPictureBox.Size = labelDescription.Size = DpiUtil.ScaleSize(this, iconPictureBox.Size);
+            labelCaption.Location = new Point(DpiUtil.Scale(this, 5), DpiUtil.Scale(this, 155));
+
             if (imageWidth.HasValue)
             {
-                int deltaWidth = imageWidth.Value - iconPictureBox.Width;
+                int deltaWidth = DpiUtil.Scale(this, imageWidth.Value) - iconPictureBox.Width;
                 Width += deltaWidth;
-                iconPictureBox.Width = labelDescription.Width = imageWidth.Value;
+                iconPictureBox.Width = labelDescription.Width = DpiUtil.Scale(this, imageWidth.Value);
             }
             if (imageHeight.HasValue)
             {
-                int deltaHeight = imageHeight.Value - iconPictureBox.Height;
+                int deltaHeight = DpiUtil.Scale(this, imageHeight.Value) - iconPictureBox.Height;
                 Height += deltaHeight;
                 labelCaption.Top += deltaHeight;
-                iconPictureBox.Height = labelDescription.Height = imageHeight.Value;
+                iconPictureBox.Height = labelDescription.Height = DpiUtil.Scale(this, imageHeight.Value);
             }
         }
 

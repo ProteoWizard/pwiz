@@ -973,7 +973,7 @@ namespace pwiz.Skyline.Controls
         protected Point GetPickerLocation(Rectangle rectDrop)
         {
             var screen = Screen.FromControl(this);
-            Size size = PopupPickList.SizeAll;
+            Size size = DpiUtil.ScaleSize(this, PopupPickList.SizeAll);
             Point pt = PointToScreen(rectDrop.Location);
             int y = pt.Y + rectDrop.Height;
             if (y + size.Height > screen.WorkingArea.Height)

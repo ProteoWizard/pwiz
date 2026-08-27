@@ -602,11 +602,14 @@ namespace pwiz.Skyline.Controls.FilesTree
             var node = ((TreeNodeMS)SelectedNode).BoundsMS;
             _editTextBox.Location = new Point(Location.X + node.Location.X, Location.Y + node.Location.Y);
 
-            const int minWidth = 80;
+            // 96-DPI literals scaled for high DPI (issue #4599).
+            int minWidth = DpiUtil.Scale(this, 80);
             var maxWidth = Bounds.Width - 1 - node.Left;
 
-            var size = TextRenderer.MeasureText(_editTextBox.Text, _editTextBox.Font, new Size(_editTextBox.Height, maxWidth));
-            var dx = size.Width + 8;
+            // MeasureText's proposedSize is (width, height); the arguments were transposed,
+            // a latent bug even at 96 DPI (issue #4599).
+            var size = TextRenderer.MeasureText(_editTextBox.Text, _editTextBox.Font, new Size(maxWidth, _editTextBox.Height));
+            var dx = size.Width + DpiUtil.Scale(this, 8);
             dx = Math.Max(dx, minWidth);
             dx = Math.Min(dx, maxWidth);
 

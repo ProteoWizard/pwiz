@@ -111,8 +111,12 @@ namespace pwiz.Skyline.Util
             if (Math.Abs(factor - 1) < 0.01f)
                 return image;
             var source = new Bitmap(image);
-            var scaled = new Bitmap((int)Math.Round(image.Width * factor),
-                (int)Math.Round(image.Height * factor), PixelFormat.Format32bppArgb);
+            // The caller keeps only the scaled copy (ImageList.Images.Add copies, and
+            // image-property call sites replace the reference), so dispose the input to
+            // avoid orphaning a GDI+ bitmap per scaled icon.
+            image.Dispose();
+            var scaled = new Bitmap((int)Math.Round(source.Width * factor),
+                (int)Math.Round(source.Height * factor), PixelFormat.Format32bppArgb);
             // Tag as 96-DPI so consumers that honor DPI metadata (e.g. DrawImageUnscaled)
             // treat the bitmap as pixel-sized instead of re-inflating it.
             scaled.SetResolution(REFERENCE_DPI, REFERENCE_DPI);
@@ -152,6 +156,18 @@ namespace pwiz.Skyline.Util
                 item.Image = ScaleImageForList(toolStrip, item.Image,
                     key.IsEmpty ? (Color?)null : key);
             }
+        }
+
+        /// <summary>
+        /// Draws an image at its own pixel size, vertically centered in a row, into an
+        /// explicit destination rectangle. DrawImageUnscaled honors the image's DPI
+        /// metadata and would re-inflate bitmaps created in a high-DPI process, so
+        /// owner-drawn lists and trees share this instead (issue #4599).
+        /// </summary>
+        public static void DrawImageCentered(Graphics g, Image image, int x, int rowTop, int rowHeight)
+        {
+            g.DrawImage(image, new Rectangle(x, rowTop + (rowHeight - image.Height) / 2,
+                image.Width, image.Height));
         }
 
         /// <summary>
