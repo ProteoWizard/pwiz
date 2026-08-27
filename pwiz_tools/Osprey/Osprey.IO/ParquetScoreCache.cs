@@ -295,7 +295,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Write FdrEntry results to a Parquet file. Same schema as the
-        /// CoelutionScoredEntry overload — used by --task PerFileScoring HPC mode where
+        /// CoelutionScoredEntry overload - used by --task PerFileScoring HPC mode where
         /// the pipeline keeps full features on the FdrEntry directly
         /// (FdrEntry.Features is the already-extracted 21-feature vector).
         /// Library lookup (by entry_id) supplies the sequence / precursor_mz
@@ -677,7 +677,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Encode an array of f64 values as a little-endian byte blob with
-        /// no length prefix — bytes / 8 recovers the count on read. Mirrors
+        /// no length prefix - bytes / 8 recovers the count on read. Mirrors
         /// Rust pipeline.rs:1620-1623 (`v.to_le_bytes().flat_map(...)`)
         /// byte-for-byte for a non-empty input. A null or empty input encodes
         /// as a NULL cell (the column is declared nullable). A zero-length blob
@@ -708,12 +708,12 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Encode an array of f32 values as a little-endian byte blob with
-        /// no length prefix — bytes / 4 recovers the count on read. Mirrors
+        /// no length prefix - bytes / 4 recovers the count on read. Mirrors
         /// Rust pipeline.rs:1626-1631 byte-for-byte. Used for
         /// `fragment_intensities` (f32 in both impls). Uses a single
         /// <see cref="Buffer.BlockCopy"/> over the underlying float[] storage
         /// (allocation-free per element); the IEEE-754 little-endian byte
-        /// layout matches the Rust blob exactly on LE hosts (x64/x86 — both
+        /// layout matches the Rust blob exactly on LE hosts (x64/x86 - both
         /// pwiz target archs are LE), avoiding net472's missing
         /// <c>BitConverter.SingleToInt32Bits</c>. A null or empty input encodes
         /// as a NULL cell (not a zero-length blob) for the same reason as
@@ -779,7 +779,7 @@ namespace pwiz.Osprey.IO
         /// fragment_coelution_sum, bounds_area, modified_sequence.
         /// Sets parquet_index = row index. <c>bounds_area</c> feeds the
         /// .blib's <c>OspreyPeakBoundaries.IntegratedArea</c> column at
-        /// Stage 7 — without it, the stage-7 .blib write emits zero for
+        /// Stage 7 - without it, the stage-7 .blib write emits zero for
         /// every IntegratedArea row and silently diverges from Rust.
         /// </summary>
         public static List<FdrEntry> LoadFdrStubsFromParquet(string path)
@@ -1098,7 +1098,7 @@ namespace pwiz.Osprey.IO
         /// Equivalent to calling <see cref="LoadFdrStubsFromParquet(string)"/>,
         /// <see cref="LoadPinFeaturesFromParquet"/>, and
         /// <see cref="LoadCwtCandidatesFromParquet"/> separately and
-        /// zipping them by row index — but does it in a single parquet
+        /// zipping them by row index - but does it in a single parquet
         /// open. Mirrors the columns Rust's <c>load_scores_parquet</c>
         /// loads. Decodes the four binary blob columns (<c>fragment_mzs</c>,
         /// <c>fragment_intensities</c>, <c>reference_xic_rts</c>,
@@ -1794,8 +1794,8 @@ namespace pwiz.Osprey.IO
                         return string.Format(
                             "--task SecondPassFDR requires a reconciled (post-Stage-6) parquet, " +
                             "but {0} has osprey.reconciled = '{1}'. Either it is a Stage 4 " +
-                            "(raw) parquet — run --task PerFileRescoring to produce reconciled " +
-                            "parquets first — or it was written by a NEWER Osprey whose " +
+                            "(raw) parquet - run --task PerFileRescoring to produce reconciled " +
+                            "parquets first - or it was written by a NEWER Osprey whose " +
                             "reconciled parquet this build cannot read.",
                             path, cachedReconciled ?? "<unset>");
                     }

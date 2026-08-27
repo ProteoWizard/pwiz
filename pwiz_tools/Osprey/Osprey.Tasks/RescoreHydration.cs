@@ -524,14 +524,22 @@ namespace pwiz.Osprey.Tasks
                     // The 1st-pass sidecar is written over the WHOLE pre-compaction row set,
                     // but these stubs come from the reconciled parquet, which now holds only
                     // the Stage 5 survivors (issue #4486) - so most of its records have no
-                    // entry to land on, and this list is what says which rows we kept. Any
-                    // OTHER missing entry_id is still the parquet drift the reader rejects.
-                    // Same order as the batch twin: overlay, then compact.
-                    var loadedIds = new HashSet<uint>(stubs.Count);
-                    foreach (var stub in stubs)
-                        loadedIds.Add(stub.EntryId);
+                    // entry to land on. Any OTHER missing entry_id is still the parquet drift
+                    // the reader rejects. Same order as the batch twin: overlay, then compact.
+                    //
+                    // The predicate states the FILTER, not what happened to load. Asking
+                    // "is this id absent from the stubs I loaded?" is tautological here -
+                    // FdrScoresSidecar.TryRead only consults it after its own stub lookup has
+                    // already missed - so it answered yes to every record and disabled the
+                    // drift check outright rather than narrowing it. A sidecar written from a
+                    // different parquet, a different library build (different entry_id
+                    // assignment) or a different binary would then be accepted record for
+                    // record, every survivor would keep Score = 0.0, and the un-q-gated decoy
+                    // zeros would compete in the picked-protein null. Same shape as
+                    // FirstPassSurvivorLoader's predicate, which asks the survivor test.
                     OverlayFirstPassSidecar(syntheticInputs[i], fileName, stubs,
-                        nameof(HydrateCompactedStreaming), id => !loadedIds.Contains(id));
+                        nameof(HydrateCompactedStreaming),
+                        id => !retainBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
 
                     // The caller's one look at this file's full pre-compaction pool: it fills
                     // in whatever it used to reduce off the resident all-files pool.
@@ -617,15 +625,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The planner's non-Keep actions for one file, flattened out of the envelope's two
-        /// homogeneous arrays in the order the hydrators consume them (<c>use_cwt_peak</c>
-        /// first, then <c>forced_integration</c>, each in envelope order). Both hydrate paths
-        /// go through this so they agree on action content, on which action wins when the
-        /// planner emitted two for one <c>entry_id</c> (the later one, as a
-        /// <c>vec_idx</c>-keyed assignment would), and on which missing <c>entry_id</c>
-        /// raises the drift error first.
-        /// </summary>
-        /// <summary>
         /// The Stage 5 retain set for a cohort, read from the planner envelopes alone: the
         /// join-wide <c>first_pass_base_ids</c> UNION the base_id of every planner action
         /// target across every file. This is the same union
@@ -654,6 +653,15 @@ namespace pwiz.Osprey.Tasks
             return retainBaseIds;
         }
 
+        /// <summary>
+        /// The planner's non-Keep actions for one file, flattened out of the envelope's two
+        /// homogeneous arrays in the order the hydrators consume them (<c>use_cwt_peak</c>
+        /// first, then <c>forced_integration</c>, each in envelope order). Both hydrate paths
+        /// go through this so they agree on action content, on which action wins when the
+        /// planner emitted two for one <c>entry_id</c> (the later one, as a
+        /// <c>vec_idx</c>-keyed assignment would), and on which missing <c>entry_id</c>
+        /// raises the drift error first.
+        /// </summary>
         private static List<PlannedAction> PlanActions(ReconciliationFile envelope)
         {
             var planned = new List<PlannedAction>(

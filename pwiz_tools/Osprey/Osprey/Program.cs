@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -92,7 +92,9 @@ namespace pwiz.Osprey
                     {
                         if (i + 1 >= args.Length || args[i + 1].StartsWith("-", StringComparison.Ordinal))
                         {
-                            LogError("--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, or SecondPassFDR).");
+                            LogError("--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, " +
+                                     "PerFileRescoring, SecondPassFDR, ModelDiagnostics, or " +
+                                     "CompactPerFileRescoring).");
                             return 1;
                         }
                         taskName = args[i + 1];
@@ -242,6 +244,15 @@ namespace pwiz.Osprey
                 // writes --output.)
                 if (config.SelectedTask == HpcTask.SpectraCache)
                     LogInfo("Output: per-file .spectra.bin (no scoring; --output and --library are not used)");
+                else if (config.SelectedTask == HpcTask.CompactPerFileRescoring)
+                {
+                    // Rewrites its inputs in place and writes no blib. Naming one here reads
+                    // as "the blib is being rebuilt", and an unchanged timestamp afterwards
+                    // then reads as failure - the same reason SpectraCache and ModelDiagnostics
+                    // have their own branches.
+                    LogInfo("Output: the input .scores-reconciled.parquet files, rewritten in " +
+                            "place (no other artifact is written)");
+                }
                 else if (config.NoJoin && !fromInputScores)
                     LogInfo("Output: per-file .scores.parquet (next to each input file)");
                 else if (config.DiagnosticsOnly)
@@ -503,6 +514,25 @@ namespace pwiz.Osprey
                             return "--task PerFileRescoring requires --library and --output.";
                         return null;
 
+                    case HpcTask.CompactPerFileRescoring:
+                        // Recovery mode, not a pipeline stage: it rewrites each input's
+                        // .scores-reconciled.parquet in place and writes nothing else.
+                        // Deliberately does NOT require --output - there is no blib, and
+                        // demanding one made the operator invent a path the task never
+                        // touches, whose unchanged timestamp afterwards then reads as failure.
+                        if (hasInputFiles)
+                        {
+                            return "--task CompactPerFileRescoring takes --input-scores, not " +
+                                   "-i <mzML> (it rewrites artifacts of a completed run).";
+                        }
+                        if (!hasInputScores)
+                            return "--task CompactPerFileRescoring requires --input-scores <path...>.";
+                        // --library IS required: the rewrite re-derives every row's sequence,
+                        // precursor m/z and protein_ids from it.
+                        if (config.LibrarySource == null)
+                            return "--task CompactPerFileRescoring requires --library.";
+                        return null;
+
                     case HpcTask.FirstPassFdr:
                         if (hasInputFiles)
                             return "--task FirstPassFDR cannot be combined with --input. Use --input-scores instead.";
@@ -570,6 +600,9 @@ namespace pwiz.Osprey
                 case HpcTask.SpectraCache:
                 case HpcTask.PerFileScoring:
                 case HpcTask.PerFileRescore:
+                // A pure format conversion computes no experiment-wide score either, so an
+                // OSPREY_EXPERIMENT_AGG left set in the shell must not refuse it.
+                case HpcTask.CompactPerFileRescoring:
                     return 0;
             }
             if (hasInputScores)

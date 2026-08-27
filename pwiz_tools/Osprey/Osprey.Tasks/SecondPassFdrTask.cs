@@ -219,7 +219,7 @@ namespace pwiz.Osprey.Tasks
             // Before the fragment release, which mutates the library entries this write
             // reads its sequence / precursor m/z / protein-id columns from.
             if (UpgradeReconciledParquets(perFileEntries, perFileParquetPaths, libraryById, ctx))
-                return true;
+                return StopAfterUpgrade(ctx);
 
             ReleaseUnscorableLibraryFragments(perFileEntries, fullLibrary, ctx);
 
@@ -504,7 +504,23 @@ namespace pwiz.Osprey.Tasks
                 return false;
             foreach (var input in config.InputFiles)
             {
-                if (File.Exists(ParquetScoreCache.GetReconciledScoresPath(input)))
+                string reconciledPath = ParquetScoreCache.GetReconciledScoresPath(input);
+                if (!File.Exists(reconciledPath))
+                    continue;
+                // Existence alone is no longer the answer. Stage 6 now writes a reconciled
+                // parquet for EVERY file, including one that had no rescore work at all
+                // (a faithful copy), so File.Exists would report total_rescored > 0 on a
+                // cohort Rust skips the second pass for entirely - the anti-conservative
+                // direction, since the pass-2 recalibration is what measured 1.57% FDP
+                // against 0.92%. The footer says which it is.
+                //
+                // A parquet written before the key existed is treated as WORK, because back
+                // then it was only written when there was some: the two statements meant the
+                // same thing, which is why existence was ever a sound test.
+                var footer = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
+                if (!footer.TryGetValue(@"osprey.rescored", out string rescored))
+                    return true;
+                if (!string.Equals(rescored, @"0", StringComparison.Ordinal))
                     return true;
             }
             return false;
@@ -554,19 +570,37 @@ namespace pwiz.Osprey.Tasks
                 {
                     continue;
                 }
+                // Same refusal the dedicated task makes, for the same reason: this rewrite
+                // re-derives every row's sequence and protein_ids from the library BY ENTRY
+                // ID, so a foreign library silently renames every peptide. The run-level
+                // parquet-group check does not cover it - that validates the paths in
+                // --input-scores, while this rewrites their reconciled SIBLINGS, and on a
+                // full-pipeline run it never runs at all.
+                if (!CompactPerFileRescoreTask.VerifyLibraryMatches(
+                        reconciledPath, metadata, ctx.Config.Identity.LibraryIdentityHash(),
+                        ctx.Config, ctx))
+                {
+                    return false;
+                }
                 var keepIdentities = new HashSet<(uint, byte, uint)>(kv.Value.Count);
                 foreach (var entry in kv.Value)
                     keepIdentities.Add((entry.EntryId, entry.Charge, entry.ScanNumber));
                 metadata[@"osprey.reconciled"] = ParquetScoreCache.RECONCILED_SURVIVORS;
 
                 // Written beside the target and swapped in, because the stream reads the very
-                // file it replaces.
+                // file it replaces. Move -> Move -> Delete, not Delete -> Move: a crash
+                // between the steps then leaves BOTH copies rather than neither. This runs
+                // inside an ordinary Stage 7, which is exactly where this cohort has been
+                // OOM-killed before, and a Delete -> Move window destroys the file outright -
+                // after which the re-run's File.Exists check above skips it in silence.
                 string upgradedPath = reconciledPath + @".upgraded";
                 var result = ParquetScoreCache.StreamReconciledScoresParquet(
                     reconciledPath, upgradedPath, null, null, metadata, libraryById,
                     kv.Key, keepIdentities, null, ctx.LogWarning);
-                File.Delete(reconciledPath);
+                string retiredPath = reconciledPath + @".retired";
+                File.Move(reconciledPath, retiredPath);
                 File.Move(upgradedPath, reconciledPath);
+                File.Delete(retiredPath);
                 upgraded++;
                 ctx.LogInfo(string.Format(
                     @"  Upgraded reconciled parquet for {0}: {1} rows kept of {2}",
@@ -582,6 +616,28 @@ namespace pwiz.Osprey.Tasks
                 @"OSPREY_UPGRADE_RECONCILED_ONLY is set - stopping after the upgrade so a " +
                 @"following run profiles the new format alone.");
             return true;
+        }
+
+        /// <summary>
+        /// True when <see cref="UpgradeReconciledParquets"/> asked the run to stop, which is
+        /// NOT a successful Stage 7.
+        ///
+        /// <para>Run must return FALSE there. <c>AnalysisPipeline.RunTask</c> stamps a fresh
+        /// validity sidecar onto every declared output that merely EXISTS whenever the exit
+        /// code is zero, and Run deleted those sidecars on entry without rewriting the
+        /// artifacts - so reporting success would certify a previous run's <c>out.blib</c> and
+        /// <c>.2nd-pass.fdr_scores.bin</c> under this run's validity key, and the next
+        /// invocation would skip Stage 7 and ship them as its own answer. Every other
+        /// success-but-stop boundary in the pipeline returns false for this reason
+        /// (PerFileScoringTask under --task PerFileScoring, FirstPassFdrTask under
+        /// StopAfterStage5).</para>
+        /// </summary>
+        private static bool StopAfterUpgrade(PipelineContext ctx)
+        {
+            ctx.LogInfo(
+                @"--task SecondPassFDR: stopping after the reconciled-parquet upgrade; no " +
+                @"blib or 2nd-pass sidecar was written by this run.");
+            return false;
         }
 
         /// <summary>

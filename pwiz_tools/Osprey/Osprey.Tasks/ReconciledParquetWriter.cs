@@ -76,7 +76,14 @@ namespace pwiz.Osprey.Tasks
                 libraryById[libEntry.Id] = libEntry;
 
             // 3. Reconciliation metadata (mirrors Rust build_reconciled_metadata).
-            var metadata = BuildReconciliationMetadata(config, joinFileStems);
+            //    Whether this file had rescore work at all is recorded here, because the
+            //    artifact's mere existence stopped answering that question once every file
+            //    started getting one. SecondPassFdrTask gates the 2nd Percolator pass on it
+            //    as the C# analog of Rust's total_rescored > 0, and a faithful copy must not
+            //    read as work. The condition is exactly BuildOverlay's two outputs being
+            //    empty - no re-scored row to overlay and no gap-fill row to append.
+            var metadata = BuildReconciliationMetadata(config, joinFileStems,
+                rescored: overlayByIndex.Count > 0 || gapFill.Count > 0);
 
             // 4. The survivors this file is allowed to carry forward, which is exactly the
             //    entries Stage 5's compaction left in the buffer (per-run q under the
@@ -179,7 +186,7 @@ namespace pwiz.Osprey.Tasks
         /// v1 backward compat).
         /// </summary>
         internal static Dictionary<string, string> BuildReconciliationMetadata(
-            OspreyConfig config, IReadOnlyList<string> joinFileStems)
+            OspreyConfig config, IReadOnlyList<string> joinFileStems, bool rescored = true)
         {
             string reconciliationHash = (joinFileStems != null && joinFileStems.Count > 0)
                 ? config.Identity.ReconciliationParameterHashForStems(joinFileStems)
@@ -199,6 +206,11 @@ namespace pwiz.Osprey.Tasks
                 // guard an operator turns off. (issue #4486)
                 { @"osprey.reconciled", ParquetScoreCache.RECONCILED_SURVIVORS },
                 { @"osprey.reconciliation_hash", reconciliationHash },
+                // "1" iff Stage 6 actually re-scored or gap-filled something in this file.
+                // Absent on a parquet written before this key existed, which is why the
+                // reader treats a MISSING value as "1": back then the file was only written
+                // when there was work, so its existence meant the same thing.
+                { @"osprey.rescored", rescored ? @"1" : @"0" },
             };
         }
     }
