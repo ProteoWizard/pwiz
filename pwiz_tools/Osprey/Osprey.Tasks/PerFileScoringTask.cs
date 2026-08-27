@@ -1365,7 +1365,7 @@ namespace pwiz.Osprey.Tasks
                 // ".scores" strip would leave the bogus key "<stem>.reconciled").
                 string fileName = Path.GetFileNameWithoutExtension(
                     RescoreHydration.SyntheticInputFromParquet(parquetPath)) ?? string.Empty;
-                ctx.LogInfo(string.Format(@"===== Loading file {0}/{1}: {2} (from {3}) =====",
+                ctx.LogInfo(string.Format(@"Loading file {0}/{1}: {2} (from {3})",
                     fileIdx + 1, config.InputScores.Count, fileName, parquetPath));
                 if (builder != null)
                 {
@@ -1587,7 +1587,13 @@ namespace pwiz.Osprey.Tasks
             ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             PipelineContext ctx)
         {
-            ctx.LogInfo(string.Format(@"===== Loading file {0}/{1}: {2} (from {3}) =====",
+            // Indented two levels: this runs inside RescoreHydration.HydrateCompactedStreaming's
+            // "Hydrating reconciliation bundle" reporter, whose heading is at column 0 and whose
+            // percent lines are at 2. Printed flush left, these per-file lines read as siblings
+            // of that heading and its percentages read as theirs - the parent printed as a child
+            // of its own child. The counter here is this file within the bundle; the percentage
+            // above it is the bundle's own.
+            ctx.LogInfo(string.Format(@"    Loading file {0}/{1}: {2} (from {3})",
                 fileIdx + 1, config.InputScores.Count, fileName, parquetPath));
             var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
             // Keep the fail-fast the feature load used to provide: a foreign or truncated
@@ -1600,7 +1606,7 @@ namespace pwiz.Osprey.Tasks
                     parquetPath));
             }
             ctx.LogInfo(string.Format(
-                @"  Loaded {0} FDR stubs (features not loaded - not read on this path)", stubs.Count));
+                @"      Loaded {0} FDR stubs (features not loaded - not read on this path)", stubs.Count));
             perFileParquetPaths[fileName] = parquetPath;
             LoadJoinOnlyCalibration(fileName, parquetPath, perFileCalibrations,
                 perFileIsolationMz, ctx);

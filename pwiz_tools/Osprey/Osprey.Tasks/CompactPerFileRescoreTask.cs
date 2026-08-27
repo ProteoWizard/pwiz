@@ -94,6 +94,17 @@ namespace pwiz.Osprey.Tasks
 
             // Which files still carry the old shape. A footer read is cheap, so the ordinary
             // case - everything already compacted - costs one metadata read per file.
+            //
+            // The footer's library hash is checked in the same pass, BEFORE the library is
+            // loaded and before any file is rewritten. The rewrite re-derives each row's
+            // sequence, precursor m/z and protein_ids from the library BY ENTRY ID, and entry
+            // ids are assigned at load, so pointing this task at a different build of "the
+            // same" library silently rewrites every row with another peptide's identity. It
+            // is not a hypothetical: two SEA-AD entrapment libraries of the same file name
+            // differ by 149,311 entries, and the wrong one converted 72 CHS files before the
+            // entry counts in two run logs gave it away. The hash is file name + size + mtime,
+            // so this costs a stat, not a read.
+            string expectedLibraryHash = config.Identity.LibraryIdentityHash();
             var stale = new List<KeyValuePair<string, string>>();
             foreach (string scoresPath in scoresPaths)
             {
@@ -104,6 +115,8 @@ namespace pwiz.Osprey.Tasks
                 footer.TryGetValue(@"osprey.reconciled", out string marker);
                 if (string.Equals(marker, ParquetScoreCache.RECONCILED_SURVIVORS, StringComparison.Ordinal))
                     continue;
+                if (!VerifyLibraryMatches(reconciledPath, footer, expectedLibraryHash, config, ctx))
+                    return false;
                 string fileName = Path.GetFileNameWithoutExtension(
                     RescoreHydration.SyntheticInputFromParquet(scoresPath));
                 stale.Add(new KeyValuePair<string, string>(fileName, reconciledPath));
@@ -136,9 +149,9 @@ namespace pwiz.Osprey.Tasks
                 @"Compacting {0} of {1} reconciled parquet(s) to the survivor subset ({2} retained base_ids)...",
                 stale.Count, scoresPaths.Count, retainBaseIds.Count));
 
-            // ONE line per file, emitted after it completes, carrying counter, percentage and
+            // ONE line per file, emitted after it completes, carrying the counter and the
             // result together - and no ProgressReporter at any level, which is why the writer
-            // is called with a null progress indent.
+            // is called with a null progress indent. No percentage: N/M already says it.
             //
             // Two reporters at one indent was the defect: the writer announces itself on its
             // first Report, so its heading printed BELOW the outer banner's first percent, and
@@ -155,14 +168,50 @@ namespace pwiz.Osprey.Tasks
                 rowsAfter += result.NWritten;
                 done++;
                 ctx.LogInfo(string.Format(
-                    @"Compacted file {0}/{1} ({2:F1}%): {3} - kept {4:N0} of {5:N0} rows",
-                    done, stale.Count, 100.0 * done / stale.Count, kv.Key,
-                    result.NWritten, result.OrigRowCount));
+                    @"Compacted file {0}/{1}: {2} - kept {3:N0} of {4:N0} rows",
+                    done, stale.Count, kv.Key, result.NWritten, result.OrigRowCount));
             }
             ctx.LogInfo(string.Format(
                 @"Compacted {0} reconciled parquet(s): {1:N0} rows kept of {2:N0}.",
                 done, rowsAfter, rowsBefore));
             return true;
+        }
+
+        /// <summary>
+        /// Refuse to rewrite a reconciled parquet with a library other than the one that
+        /// produced it.
+        ///
+        /// <para>Hard failure rather than a warning, and before the first write rather than
+        /// per file: the damage is silent. The rewrite re-derives sequence / precursor m/z /
+        /// protein_ids from the library by entry id, so a mismatched library produces a
+        /// well-formed parquet in which every row names the wrong peptide, and the run that
+        /// consumes it exits 0 with a confidently wrong answer. A footer with no library hash
+        /// is refused for the same reason - "cannot verify" and "verified" are not the same
+        /// answer when the operation is destructive and in place.</para>
+        /// </summary>
+        private static bool VerifyLibraryMatches(string reconciledPath,
+            IReadOnlyDictionary<string, string> footer, string expectedLibraryHash,
+            OspreyConfig config, PipelineContext ctx)
+        {
+            footer.TryGetValue(@"osprey.library_hash", out string actual);
+            if (string.Equals(actual, expectedLibraryHash, StringComparison.Ordinal))
+                return true;
+            string libraryPath = config.LibrarySource?.Path ?? string.Empty;
+            ctx.LogError(string.Format(
+                string.IsNullOrEmpty(actual)
+                    ? @"--task CompactPerFileRescoring: {0} carries no osprey.library_hash, so " +
+                      @"the library it was produced with cannot be verified. Refusing to rewrite " +
+                      @"it: the compaction re-derives every row's sequence and protein_ids from " +
+                      @"the library by entry id, and entry ids are assigned at library load."
+                    : @"--task CompactPerFileRescoring: {0} was produced with a DIFFERENT " +
+                      @"library (footer osprey.library_hash={1}) than the one passed with -l " +
+                      @"({2}, hash {3}). Refusing to rewrite it: the compaction re-derives every " +
+                      @"row's sequence and protein_ids from the library by entry id, and entry " +
+                      @"ids are assigned at library load, so this would rewrite every row with " +
+                      @"another peptide's identity. Pass the library the run was searched with.",
+                reconciledPath, actual, libraryPath, expectedLibraryHash));
+            ctx.ExitCode = 1;
+            return false;
         }
 
         /// <summary>
