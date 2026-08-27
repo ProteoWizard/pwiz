@@ -123,8 +123,14 @@ namespace pwiz.Osprey.Tasks
                 }
                 var footer = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
                 footer.TryGetValue(@"osprey.reconciled", out string marker);
-                if (string.Equals(marker, ParquetScoreCache.RECONCILED_SURVIVORS, StringComparison.Ordinal))
+                // Already-compacted is not enough: an early build of #4486 wrote the subset
+                // WITHOUT the score_index column, and those rows can no longer be matched back
+                // to .scores.parquet by position. Re-convert them rather than skip them.
+                if (string.Equals(marker, ParquetScoreCache.RECONCILED_SURVIVORS, StringComparison.Ordinal) &&
+                    ParquetScoreCache.HasColumn(reconciledPath, @"score_index"))
+                {
                     continue;
+                }
                 if (!VerifyLibraryMatches(reconciledPath, footer, expectedLibraryHash, config, ctx))
                     return false;
                 string fileName = Path.GetFileNameWithoutExtension(

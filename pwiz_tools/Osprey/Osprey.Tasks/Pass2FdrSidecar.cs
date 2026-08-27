@@ -1084,10 +1084,10 @@ namespace pwiz.Osprey.Tasks
                     // would also be missing from changedBaseIds, so those peaks would never be
                     // admitted and would be stamped run q 1.0 - all under a warning blaming a
                     // load that succeeded. Failure here is all-or-nothing per file.
-                    Dictionary<(uint, byte, uint), double[]> featByIdentity;
+                    Dictionary<uint, double[]> featByScoreIndex;
                     try
                     {
-                        featByIdentity = LoadReconciledFeaturesByIdentity(effectiveParquetPath);
+                        featByScoreIndex = LoadReconciledFeaturesByScoreIndex(effectiveParquetPath);
                     }
                     catch (Exception ex)
                     {
@@ -1096,16 +1096,15 @@ namespace pwiz.Osprey.Tasks
                         ctx.LogWarning(string.Format(
                             "{0}: failed to reload PIN features from {1}: {2}",
                             mode, effectiveParquetPath, ex.Message));
-                        featByIdentity = null;
+                        featByScoreIndex = null;
                     }
 
                     var fileScores = new Dictionary<uint, double>();
-                    if (featByIdentity != null)
+                    if (featByScoreIndex != null)
                     {
                         foreach (var e in fileEntries)
                         {
-                            if (featByIdentity.TryGetValue(
-                                    (e.EntryId, e.Charge, e.ScanNumber), out double[] feats) &&
+                            if (featByScoreIndex.TryGetValue(e.ParquetIndex, out double[] feats) &&
                                 feats != null && feats.Length == nFeatures)
                             {
                                 double frozenScore = scorer.Score(feats);
@@ -1117,7 +1116,7 @@ namespace pwiz.Osprey.Tasks
                                 e.Score = frozenScore;
                             }
                         }
-                        // featByIdentity released here (one file resident at a time).
+                        // featByScoreIndex released here (one file resident at a time).
                     }
                     nScored += fileScores.Count;
 
@@ -1360,10 +1359,10 @@ namespace pwiz.Osprey.Tasks
                 // perFileParquetPaths map holds original paths.
                 string effectiveParquetPath =
                     ParquetScoreCache.EffectiveScoresPathFromScoresPath(parquetPath);
-                Dictionary<(uint, byte, uint), double[]> featByIdentity;
+                Dictionary<uint, double[]> featByScoreIndex;
                 try
                 {
-                    featByIdentity = LoadReconciledFeaturesByIdentity(effectiveParquetPath);
+                    featByScoreIndex = LoadReconciledFeaturesByScoreIndex(effectiveParquetPath);
                 }
                 catch (Exception ex)
                 {
@@ -1372,7 +1371,7 @@ namespace pwiz.Osprey.Tasks
                         effectiveParquetPath, ex.Message));
                     continue;
                 }
-                int nMapped = MapFeaturesByIdentity(kvp.Value, featByIdentity);
+                int nMapped = MapFeaturesByScoreIndex(kvp.Value, featByScoreIndex);
                 // An entry whose identity is absent from the reconciled
                 // parquet is a stub/parquet mismatch (e.g., the FirstPassFDR
                 // parquet was regenerated with fewer rows than the in-memory
@@ -1386,7 +1385,7 @@ namespace pwiz.Osprey.Tasks
                         "but {2} FDR entries reference it; {3} entries will run with " +
                         "stale/null features. Stub/parquet mismatch - check reconciled-parquet " +
                         "output integrity.",
-                        kvp.Key, featByIdentity.Count, kvp.Value.Count, kvp.Value.Count - nMapped));
+                        kvp.Key, featByScoreIndex.Count, kvp.Value.Count, kvp.Value.Count - nMapped));
                 }
                 nReloaded += nMapped;
             }
@@ -1616,7 +1615,7 @@ namespace pwiz.Osprey.Tasks
         /// instead of the feature vector: that loader keys <c>featRows[i]</c> by identity
         /// and the streaming score pass reads <c>rows[row]</c> by the baked
         /// <see cref="FdrProjection.ParquetIndex"/>, so
-        /// <c>rows[map[identity]] == featByIdentity[identity]</c> -- the streamed feature
+        /// <c>rows[map[identity]] == featByScoreIndex[identity]</c> -- the streamed feature
         /// lookup is byte-identical to the resident identity binding (issue #4374 risk
         /// #2). Because the reconciled parquet is written
         /// <c>(entry_id, charge, scan_number)</c>-sorted, the row is scan-monotonic within
@@ -1662,22 +1661,22 @@ namespace pwiz.Osprey.Tasks
         /// heavy fragment/XIC/CWT blobs), one file at a time, so the reload stays
         /// within the issue #4355 memory bound. (issue #4355)
         /// </summary>
-        internal static Dictionary<(uint, byte, uint), double[]> LoadReconciledFeaturesByIdentity(
+        internal static Dictionary<uint, double[]> LoadReconciledFeaturesByScoreIndex(
             string reconciledPath)
         {
             var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(reconciledPath);
             var featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(reconciledPath);
             int n = Math.Min(stubs.Count, featRows.Count);
-            var map = new Dictionary<(uint, byte, uint), double[]>(n);
+            var map = new Dictionary<uint, double[]>(n);
             for (int i = 0; i < n; i++)
-                map[(stubs[i].EntryId, stubs[i].Charge, stubs[i].ScanNumber)] = featRows[i];
+                map[stubs[i].ParquetIndex] = featRows[i];
             return map;
         }
 
         /// <summary>
         /// Overlay re-scored PIN features onto <paramref name="entries"/> by each
         /// entry's stable identity (entry_id, charge, scan_number), skipping any
-        /// entry whose identity is absent from <paramref name="featByIdentity"/> (a
+        /// entry whose identity is absent from <paramref name="featByScoreIndex"/> (a
         /// stub/parquet mismatch). Returns the number of entries whose
         /// <see cref="FdrEntry.Features"/> were assigned; the caller compares it
         /// against the entry count to detect and report a mismatch. Identity (not
@@ -1685,15 +1684,14 @@ namespace pwiz.Osprey.Tasks
         /// parquet is re-indexed relative to the compacted stubs -- see
         /// <see cref="LoadReconciledFeaturesByIdentity"/>. Pure: no I/O, no logging.
         /// </summary>
-        internal static int MapFeaturesByIdentity(
+        internal static int MapFeaturesByScoreIndex(
             IReadOnlyList<FdrEntry> entries,
-            IReadOnlyDictionary<(uint, byte, uint), double[]> featByIdentity)
+            IReadOnlyDictionary<uint, double[]> featByScoreIndex)
         {
             int nMapped = 0;
             foreach (var entry in entries)
             {
-                if (featByIdentity.TryGetValue(
-                        (entry.EntryId, entry.Charge, entry.ScanNumber), out double[] features))
+                if (featByScoreIndex.TryGetValue(entry.ParquetIndex, out double[] features))
                 {
                     entry.Features = features;
                     nMapped++;

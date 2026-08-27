@@ -120,7 +120,22 @@ namespace pwiz.Osprey.Tasks
                 return null;
             }
             if (parquetPathOverride != null)
+            {
+                // Refused, not fallen back on. A subsetted reconciled parquet with no
+                // score_index column records nowhere which .scores.parquet row each row came
+                // from, so reading it by position maps every row to the wrong Stage 4
+                // features - and produces a well-formed answer while doing it.
+                if (ParquetScoreCache.IsSubsetWithoutScoreIndex(parquetPathOverride))
+                {
+                    error = string.Format(
+                        @"First-pass survivor load: {0} holds the survivor subset but carries no " +
+                        @"score_index column, so its rows cannot be matched back to " +
+                        @".scores.parquet. Re-run --task CompactPerFileRescoring over this " +
+                        @"directory to rewrite them with it.", parquetPathOverride);
+                    return null;
+                }
                 parquetPath = parquetPathOverride;
+            }
 
             // Applied AS THE PARQUET IS READ, not after. This kept ~533 K of ~2.99 M stubs
             // per file at 257 CHS files, so filtering afterwards built 5.6x what survived

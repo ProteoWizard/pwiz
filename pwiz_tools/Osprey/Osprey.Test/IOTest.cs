@@ -2164,7 +2164,7 @@ namespace pwiz.Osprey.Test
         /// <see cref="Pass2FdrSidecar.BuildReconciledIdentityToRow"/>, then the streaming
         /// score pass reads the feature row at that index. This must resolve the EXACT
         /// vector the resident 2nd pass binds via
-        /// <see cref="Pass2FdrSidecar.LoadReconciledFeaturesByIdentity"/> +
+        /// <see cref="Pass2FdrSidecar.LoadReconciledFeaturesByScoreIndex"/> +
         /// <c>MapFeaturesByIdentity</c>. Writes a reconciled-parquet fixture whose rows
         /// arrive in NON-sorted identity order plus a gap-fill-style row that interleaves
         /// into the <c>(entry_id, charge, scan_number)</c> sort, each carrying a DISTINCT
@@ -2239,22 +2239,23 @@ namespace pwiz.Osprey.Test
                 ParquetScoreCache.WriteScoresParquet(path, entries, null);
 
                 var rowMap = Pass2FdrSidecar.BuildReconciledIdentityToRow(path);
-                var featByIdentity = Pass2FdrSidecar.LoadReconciledFeaturesByIdentity(path);
+                var featByScoreIndex = Pass2FdrSidecar.LoadReconciledFeaturesByScoreIndex(path);
                 var featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(path);
 
                 Assert.AreEqual(entryIds.Length, rowMap.Count);
-                Assert.AreEqual(entryIds.Length, featByIdentity.Count);
+                Assert.AreEqual(entryIds.Length, featByScoreIndex.Count);
                 Assert.AreEqual(entryIds.Length, featRows.Count);
 
-                // Risk #2: the baked row addresses the identity's own feature vector, so
-                // the streamed lookup equals the resident identity binding byte-for-byte.
-                foreach (var kvp in featByIdentity)
+                // Risk #2: the score index addresses that row's own feature vector, so the
+                // streamed lookup equals the resident binding byte-for-byte. This file was
+                // written by WriteScoresParquet, which has no score_index column, so each
+                // row's index IS its position - which is exactly the property that lets a
+                // pre-#4486 reconciled parquet be read without one.
+                foreach (var kvp in featByScoreIndex)
                 {
-                    Assert.IsTrue(rowMap.TryGetValue(kvp.Key, out uint row),
-                        "every bound identity must resolve to a reconciled row");
-                    Assert.IsTrue((int)row < featRows.Count, "baked row in range");
-                    CollectionAssert.AreEqual(kvp.Value, featRows[(int)row],
-                        "the baked row must address the identity's own feature vector");
+                    Assert.IsTrue((int)kvp.Key < featRows.Count, "score index in range");
+                    CollectionAssert.AreEqual(kvp.Value, featRows[(int)kvp.Key],
+                        "the score index must address that row's own feature vector");
                 }
 
                 // Risk #3: within each (entry_id, charge) group the reconciled row is

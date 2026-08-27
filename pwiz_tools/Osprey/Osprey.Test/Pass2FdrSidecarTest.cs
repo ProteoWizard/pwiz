@@ -47,52 +47,51 @@ namespace pwiz.Osprey.Test
     public class Pass2FdrSidecarTest
     {
         /// <summary>
-        /// MapFeaturesByIdentity must: assign each entry's Features from the
-        /// feature row whose stable identity (entry_id, charge, scan_number)
-        /// matches -- NOT its ParquetIndex, which is stale relative to the
-        /// re-indexed reconciled parquet (issue #4355) -- skip any entry whose
-        /// identity is absent from the map (leaving its Features untouched so the
-        /// caller's nMapped &lt; count check fires), and return the count mapped.
+        /// MapFeaturesByScoreIndex must assign each entry's Features from the feature row
+        /// whose <c>score_index</c> matches the entry's <see cref="FdrEntry.ParquetIndex"/>,
+        /// skip any entry whose index is absent from the map (leaving its Features untouched
+        /// so the caller's nMapped &lt; count check fires), and return the count mapped.
+        ///
+        /// <para>This replaces a compound (entry_id, charge, scan_number) key, which existed
+        /// only because the reconciled parquet used to be re-indexed relative to the stubs and
+        /// the row ordinal therefore addressed the wrong row. Now that the reconciled parquet
+        /// PERSISTS the Stage 4 ordinal as <c>score_index</c>, the index is the identity and
+        /// the compound key is unnecessary. The compound key was also subtly wrong for
+        /// anything spanning a rescore: re-integrating at the consensus boundary moves the
+        /// apex, so <c>scan_number</c> differs before and after (#4486).</para>
         /// </summary>
         [TestMethod]
-        public void TestMapFeaturesByIdentity()
+        public void TestMapFeaturesByScoreIndex()
         {
             var rowA = new[] { 0.0, 0.1 };
             var rowB = new[] { 1.0, 1.1 };
-            var featByIdentity = new Dictionary<(uint, byte, uint), double[]>
+            var featByScoreIndex = new Dictionary<uint, double[]>
             {
-                { (10u, 2, 100u), rowA },
-                { (20u, 3, 200u), rowB },
+                { 999u, rowA },
+                { 0u, rowB },
             };
 
-            // matchA carries a deliberately WRONG ParquetIndex (999): identity, not
-            // the index, must select its features -- the exact reconciled-parquet
-            // reindex case that regressed 2nd-pass FDR. matchB matches too; noMatch
-            // has an identity absent from the map and must keep its stale features.
+            // matchA's scan_number deliberately differs from anything in the map: the score
+            // index alone must select its features, which is what makes the mapping survive a
+            // rescore that moved the apex. noMatch's index is absent and must keep its stale
+            // features.
             var stale = new[] { 9.0 };
             var matchA = new FdrEntry { EntryId = 10, Charge = 2, ScanNumber = 100, ParquetIndex = 999, Features = null };
             var matchB = new FdrEntry { EntryId = 20, Charge = 3, ScanNumber = 200, ParquetIndex = 0, Features = null };
             var noMatch = new FdrEntry { EntryId = 30, Charge = 2, ScanNumber = 300, ParquetIndex = 1, Features = stale };
             var entries = new List<FdrEntry> { matchA, matchB, noMatch };
 
-            int nMapped = Pass2FdrSidecar.MapFeaturesByIdentity(entries, featByIdentity);
+            int nMapped = Pass2FdrSidecar.MapFeaturesByScoreIndex(entries, featByScoreIndex);
 
-            // Only the two identity-matched entries are mapped; the caller detects
-            // the mismatch via nMapped (2) < entries.Count (3).
             Assert.AreEqual(2, nMapped);
-
-            // Features are assigned by identity, by reference (same array instance),
-            // ignoring the stale ParquetIndex.
             Assert.AreSame(rowA, matchA.Features);
             Assert.AreSame(rowB, matchB.Features);
-
-            // The unmatched entry keeps its original (stale) features untouched.
             Assert.AreSame(stale, noMatch.Features);
 
             // Empty map maps nothing and never throws.
-            var loneEntry = new FdrEntry { EntryId = 40, Charge = 1, ScanNumber = 400, Features = stale };
-            int nMappedEmpty = Pass2FdrSidecar.MapFeaturesByIdentity(
-                new List<FdrEntry> { loneEntry }, new Dictionary<(uint, byte, uint), double[]>());
+            var loneEntry = new FdrEntry { EntryId = 40, Charge = 1, ScanNumber = 400, ParquetIndex = 7, Features = stale };
+            int nMappedEmpty = Pass2FdrSidecar.MapFeaturesByScoreIndex(
+                new List<FdrEntry> { loneEntry }, new Dictionary<uint, double[]>());
             Assert.AreEqual(0, nMappedEmpty);
             Assert.AreSame(stale, loneEntry.Features);
         }

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -111,6 +112,33 @@ namespace pwiz.Osprey.IO
         private static readonly DataField FIELD_BOUNDS_AREA = new DataField<double>("bounds_area");
         private static readonly DataField FIELD_BOUNDS_SNR = new DataField<double>("bounds_snr");
         private static readonly DataField FIELD_FILE_NAME = new DataField<string>("file_name");
+        /// <summary>
+        /// The row's ordinal in this file's <c>.scores.parquet</c> - the row identity the
+        /// format never wrote down, and a foreign key into that file.
+        ///
+        /// <para>Written ONLY into <c>.scores-reconciled.parquet</c>. In
+        /// <c>.scores.parquet</c> the row's own position IS this value, so a column there
+        /// would be redundant - and not writing it means no existing Stage 4 parquet has to
+        /// be converted, which is the whole point of persisting the ordinal rather than
+        /// minting a new surrogate id.</para>
+        ///
+        /// <para>Its absence used to be the reason the reconciled parquet had to stay
+        /// row-for-row identical to its Stage 4 sibling: features are addressed by ordinal
+        /// (<c>rows[idx]</c>), so with the correspondence merely IMPLIED by position the two
+        /// files had to be parallel arrays for a lookup to land on the right row. Writing it
+        /// down frees the reconciled file to be the survivor subset it is (#4486).</para>
+        ///
+        /// <para><see cref="GAP_FILL_SCORE_INDEX"/> for a gap-fill row, which has no Stage 4
+        /// row to point at - so this column is also the gap-fill discriminator.</para>
+        /// </summary>
+        private static readonly DataField FIELD_SCORE_INDEX = new DataField<uint>("score_index");
+
+        /// <summary>
+        /// <c>score_index</c> of a gap-fill row: it was synthesized during reconciliation and
+        /// has no <c>.scores.parquet</c> row. Same sentinel <c>FdrEntry.ParquetIndex</c>
+        /// already carries in memory for these rows.
+        /// </summary>
+        public const uint GAP_FILL_SCORE_INDEX = uint.MaxValue;
         // Binary blobs that Rust's reconciliation/gap-fill code paths read.
         // C# writes them as nullable placeholders so the schema bit-matches
         // Rust's; populating them with the actual fragment/XIC/CWT byte
@@ -139,7 +167,8 @@ namespace pwiz.Osprey.IO
         // to be the same instance attached to the schema. The caller builds
         // featureFields once and passes the array here so the same instances
         // can be reused for the WriteColumnAsync calls.
-        private static ParquetSchema BuildWriteSchema(DataField[] featureFields)
+        private static ParquetSchema BuildWriteSchema(DataField[] featureFields,
+            bool includeScoreIndex = false)
         {
             // Order matches Rust's pipeline.rs build of `write_scores_parquet_with_metadata`.
             // Field order is informational only -- Parquet is name-indexed.
@@ -165,6 +194,11 @@ namespace pwiz.Osprey.IO
                 FIELD_REFERENCE_XIC_RTS,
                 FIELD_REFERENCE_XIC_INTENSITIES,
             };
+            // Appended, not inserted: the fixed fields above are ordered to match Rust's
+            // writer for easy diffing, and Parquet is name-indexed so position is
+            // informational. Only the reconciled write asks for it.
+            if (includeScoreIndex)
+                fields.Add(FIELD_SCORE_INDEX);
             fields.AddRange(featureFields);
             return new ParquetSchema(fields.ToArray());
         }
@@ -195,6 +229,49 @@ namespace pwiz.Osprey.IO
         /// to consume another build's artifacts and therefore no protection here.
         /// </summary>
         public const string RECONCILED_SURVIVORS = @"survivors";
+
+        /// <summary>
+        /// True when <paramref name="path"/> is a reconciled parquet holding the survivor
+        /// SUBSET but carrying no <c>score_index</c> column - the one shape whose rows cannot
+        /// be traced back to <c>.scores.parquet</c> at all.
+        ///
+        /// <para>Three generations exist. A pre-#4486 reconciled parquet is full-shape and
+        /// row-parallel with its sibling, so its row POSITION is the Stage 4 ordinal and the
+        /// absence of the column is a correct fallback. One written by this build is a subset
+        /// AND carries the column. The combination below is the interim shape written by an
+        /// early build of #4486: subset rows with the correspondence recorded nowhere. Reading
+        /// it by position silently maps every row to the wrong Stage 4 features, which is why
+        /// this is a refusal rather than a fallback - it is well-formed, so nothing else would
+        /// catch it.</para>
+        ///
+        /// <para>Re-run <c>--task CompactPerFileRescoring</c> over such a directory to rewrite
+        /// them with the column.</para>
+        /// </summary>
+        public static bool IsSubsetWithoutScoreIndex(string path)
+        {
+            if (!File.Exists(path))
+                return false;
+            var footer = LoadFooterMetadata(path);
+            footer.TryGetValue(@"osprey.reconciled", out string marker);
+            if (!string.Equals(marker, RECONCILED_SURVIVORS, StringComparison.Ordinal))
+                return false;
+            return !HasColumn(path, FIELD_SCORE_INDEX.Name);
+        }
+
+        /// <summary>Whether a parquet's schema carries a column by this name.</summary>
+        public static bool HasColumn(string path, string columnName)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                foreach (var f in reader.Schema.GetDataFields())
+                {
+                    if (string.Equals(f.Name, columnName, StringComparison.Ordinal))
+                        return true;
+                }
+            }
+            return false;
+        }
 
         // Test seam: when non-null, overrides MAX_ROWS_PER_ROW_GROUP so a unit test can
         // force several row groups from a handful of rows and assert the multi-group
@@ -359,8 +436,13 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static List<DataColumn> BuildFdrEntryColumns(IReadOnlyList<FdrEntry> entries,
             int startIndex, IReadOnlyDictionary<uint, LibraryEntry> libraryById, string fileName,
-            DataField[] featureFields)
+            DataField[] featureFields, bool writeScoreIndex = false)
         {
+            // When the score_index column is written, each row carries the Stage 4 ordinal it
+            // ALREADY has and is not renumbered - the whole point is that the reconciled file
+            // stops being positionally tied to its sibling. The renumber below is for the
+            // Stage 4 write, where the output position is what the row's index means.
+            uint[] scoreIndices = writeScoreIndex ? new uint[entries.Count] : null;
             int count = entries.Count;
             var entryIds = new uint[count];
             var isDecoys = new bool[count];
@@ -414,7 +496,10 @@ namespace pwiz.Osprey.IO
                 // byte-identical but reconciliation.json action shape
                 // diverged -- 35K use_cwt actions on HPC side, 814 on
                 // in-memory side, total identical).
-                entry.ParquetIndex = (uint)(startIndex + j);
+                if (writeScoreIndex)
+                    scoreIndices[j] = entry.ParquetIndex;
+                else
+                    entry.ParquetIndex = (uint)(startIndex + j);
                 entryIds[j] = entry.EntryId;
                 isDecoys[j] = entry.IsDecoy;
                 charges[j] = entry.Charge;
@@ -488,7 +573,7 @@ namespace pwiz.Osprey.IO
                 precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
                 boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
                 fragmentIntensities, refXicRts, refXicIntensities,
-                featureFields, featureArrays);
+                featureFields, featureArrays, scoreIndices);
         }
 
         /// <summary>
@@ -505,7 +590,7 @@ namespace pwiz.Osprey.IO
             double[] apexRts, double[] startRts, double[] endRts, double[] boundsAreas,
             double[] boundsSnrs, string[] fileNames, byte[][] cwtCandidates, byte[][] fragmentMzs,
             byte[][] fragmentIntensities, byte[][] refXicRts, byte[][] refXicIntensities,
-            DataField[] featureFields, double[][] featureArrays)
+            DataField[] featureFields, double[][] featureArrays, uint[] scoreIndices = null)
         {
             var columns = new List<DataColumn>(19 + NUM_PIN_FEATURES)
             {
@@ -529,6 +614,9 @@ namespace pwiz.Osprey.IO
                 new DataColumn(FIELD_REFERENCE_XIC_RTS, refXicRts),
                 new DataColumn(FIELD_REFERENCE_XIC_INTENSITIES, refXicIntensities),
             };
+            // Appended before the feature columns, matching BuildWriteSchema's field order.
+            if (scoreIndices != null)
+                columns.Add(new DataColumn(FIELD_SCORE_INDEX, scoreIndices));
             for (int f = 0; f < NUM_PIN_FEATURES; f++)
                 columns.Add(new DataColumn(featureFields[f], featureArrays[f]));
             return columns;
@@ -830,6 +918,12 @@ namespace pwiz.Osprey.IO
                         var endCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_END_RT.Name);
                         var coelutionCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name);
                         var boundsAreaCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_BOUNDS_AREA.Name);
+                        // Null on a .scores.parquet and on any pre-#4486 reconciled parquet,
+                        // where the row's own position IS its Stage 4 ordinal because the file
+                        // is row-parallel with its sibling by construction. Non-null on a
+                        // subsetted reconciled parquet, where position means nothing and only
+                        // this column can say which Stage 4 row each row came from.
+                        var scoreIndexCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_SCORE_INDEX.Name);
 
                         if (entryIdCol == null || isDecoyCol == null)
                             continue;
@@ -837,7 +931,8 @@ namespace pwiz.Osprey.IO
                         int rowCount = entryIdCol.Length;
                         for (int row = 0; row < rowCount; row++)
                         {
-                            uint parquetIndex = rowIndex++;
+                            uint parquetIndex = scoreIndexCol != null ? scoreIndexCol[row] : rowIndex;
+                            rowIndex++;
                             if (keepEntry != null && !keepEntry(entryIdCol[row]))
                                 continue;
                             stubs.Add(new FdrEntry
@@ -1209,7 +1304,7 @@ namespace pwiz.Osprey.IO
             int gapFillCount = sortedGapFill.Count;
 
             var featureFields = BuildFeatureFields();
-            var schema = BuildWriteSchema(featureFields);
+            var schema = BuildWriteSchema(featureFields, includeScoreIndex: true);
             int rowsPerGroup = Math.Max(1, RowGroupRowCapForTest ?? MAX_ROWS_PER_ROW_GROUP);
 
             int nReplaced = 0;
@@ -1221,7 +1316,21 @@ namespace pwiz.Osprey.IO
             using (var saver = new FileSaver(reconciledPath))
             {
                 var fieldsByName = BuildFieldLookup(reader);
-                int totalRows = checked((int)(reader.Metadata?.NumRows ?? 0L)) + gapFillCount;
+                int sourceRowCount = checked((int)(reader.Metadata?.NumRows ?? 0L));
+                int totalRows = sourceRowCount + gapFillCount;
+                // Gap-fill rows have no .scores.parquet row, so their score_index cannot BE a
+                // Stage 4 ordinal - and it cannot be a shared sentinel either, because then it
+                // stops identifying the row. Numbering them past the source row count keeps
+                // score_index a genuine per-file row identity for every row, equal to the
+                // Stage 4 ordinal where one exists. The count goes in the footer so a reader
+                // can still answer "is this gap-fill?" (score_index >= it) without opening the
+                // other file.
+                uint nextGapFillScoreIndex = (uint)sourceRowCount;
+                if (metadata != null)
+                {
+                    metadata[@"osprey.scores_row_count"] =
+                        sourceRowCount.ToString(CultureInfo.InvariantCulture);
+                }
 
                 using (var writeStream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 using (var writer = RunSync(ParquetWriter.CreateAsync(schema, writeStream)))
@@ -1247,7 +1356,8 @@ namespace pwiz.Osprey.IO
                             return;
                         using (var group = writer.CreateRowGroup())
                             WriteRowGroupColumns(group, BuildFdrEntryColumns(
-                                buffer, written, libraryById, fileName, featureFields));
+                                buffer, written, libraryById, fileName, featureFields,
+                                writeScoreIndex: true));
                         written += buffer.Count;
                         // Report rows CONSUMED, not written. With the compacted-away rows
                         // dropped the two differ by ~5.6x, and a bar driven by the written
@@ -1320,7 +1430,10 @@ namespace pwiz.Osprey.IO
                             // or equal, so the gap-fill row still precedes everything it
                             // sorts before.
                             while (gapIdx < gapFillCount && KeyLess(sortedGapFill[gapIdx], row))
+                            {
+                                sortedGapFill[gapIdx].ParquetIndex = nextGapFillScoreIndex++;
                                 Emit(sortedGapFill[gapIdx++]);
+                            }
                             Emit(row);
                         }
                         origRead += groupEntries.Count;
@@ -1329,7 +1442,10 @@ namespace pwiz.Osprey.IO
 
                     // Trailing gap-fill (keys at or beyond the last original row).
                     while (gapIdx < gapFillCount)
+                    {
+                        sortedGapFill[gapIdx].ParquetIndex = nextGapFillScoreIndex++;
                         Emit(sortedGapFill[gapIdx++]);
+                    }
                     FlushGroup();
                     nWritten = written;
                 }
