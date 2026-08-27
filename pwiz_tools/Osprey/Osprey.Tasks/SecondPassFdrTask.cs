@@ -709,14 +709,13 @@ namespace pwiz.Osprey.Tasks
             var sharedBounds = BuildSharedBoundaries(
                 passingEntries, MultiChargePeptides(passingPrecursors));
 
-            var entriesByPrecursor = BuildCrossFileObservations(
-                passingEntries, out int nCrossFileObservations);
+            var precursorFacts = BuildPrecursorFacts(passingEntries, config.RunFdr);
 
             ctx.LogInfo(string.Format(
-                "[COUNT] Cross-file observations to write: {0}", nCrossFileObservations));
+                "[COUNT] Cross-file observations to write: {0}", passingEntries.Count));
 
             BlibOutputWriter.Write(config, perFileEntries, libraryById, bestByPrecursor,
-                bestExpPrecursorQ, sharedBounds, entriesByPrecursor);
+                bestExpPrecursorQ, sharedBounds, passingEntries, precursorFacts);
 
             ctx.LogInfo(string.Format("Wrote {0} library spectra to {1} (from {2} passing entries)",
                 bestByPrecursor.Count, config.OutputBlib, passingEntries.Count));
@@ -972,52 +971,52 @@ namespace pwiz.Osprey.Tasks
             return sharedBounds;
         }
 
-        // Pre-index the PASSING entries by (ModifiedSequence, Charge) for O(1) lookup of
-        // cross-file observations (otherwise the write loop is O(N_passing * N_total)).
-        // nObservations = rows indexed.
-        //
-        // Passing only. This walked every non-decoy row in the pool, but the sole consumer -
-        // EmitSpectrumRows - looks up (ModifiedSequence, Charge) taken from bestByPrecursor,
-        // whose keys are passing precursors by construction, so every list built for a
-        // non-passing key was allocated and never read. On the 257-file CHS cohort that was
-        // 501,247 distinct keys and 72.9 M observations indexed against roughly a fifth as
-        // many actually reachable, i.e. about 1.4 GB of lists nothing looked at.
-        private static Dictionary<(string, byte), List<KeyValuePair<string, FdrEntry>>> BuildCrossFileObservations(
-            List<KeyValuePair<string, FdrEntry>> passingEntries, out int nObservations)
+        /// <summary>
+        /// The three facts <c>WriteRetentionTimes</c> needs about a precursor that are not
+        /// properties of the row it is writing: whether ANY run passed run-level FDR, which
+        /// run has the lowest run q, and how many runs detected it.
+        ///
+        /// <para>This replaces the map of per-precursor observation LISTS the writer used to
+        /// index. That map existed only to let a precursor-major writer find a precursor's
+        /// rows across every file - it was O(observations), it held a reference to every
+        /// passing entry, and it was the reason the blib phase could not emit file-major.
+        /// These three folds are O(distinct precursor) instead: 45,724 keys at 257 CHS files
+        /// against 11,745,026 references.</para>
+        ///
+        /// <para><c>BestRunFile</c> is folded here rather than taken from
+        /// <c>bestByPrecursor</c>. The two apply the same rule over the same rows in the same
+        /// order and should always agree, but "should always agree" is the kind of assumption
+        /// that quietly stops being true, and the fold costs nothing.</para>
+        /// </summary>
+        internal static Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)>
+            BuildPrecursorFacts(List<KeyValuePair<string, FdrEntry>> passingEntries, double fdrThreshold)
         {
-            var entriesByPrecursor =
-                new Dictionary<(string, byte), List<KeyValuePair<string, FdrEntry>>>();
-            nObservations = 0;
-            using (var progress = new ProgressReporter(
-                       string.Format(@"Indexing cross-file observations over {0} entries",
-                                     passingEntries.Count),
-                       passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            var facts =
+                new Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)>();
+            var bestRunQ = new Dictionary<(string, byte), double>();
+            foreach (var kvp in passingEntries)
             {
-                int obsIdx = 0;
-                foreach (var kvp in passingEntries)
+                var e = kvp.Value;
+                var key = (e.ModifiedSequence, e.Charge);
+                double rq = e.EffectiveRunQvalue(FdrLevel.Both);
+                if (!facts.TryGetValue(key, out var cur))
                 {
-                    progress.Report(obsIdx++);
-                    var fileEntry = kvp.Value;
-                    var key = (fileEntry.ModifiedSequence, fileEntry.Charge);
-                    List<KeyValuePair<string, FdrEntry>> list;
-                    if (!entriesByPrecursor.TryGetValue(key, out list))
-                    {
-                        // Default capacity, NOT the file count, which reserved 16 B x files
-                        // for every distinct precursor. Measured over the 257-file CHS cohort
-                        // before the passing gate above: median 155 and mean 145.5 files per
-                        // key, 15.3% of keys present in ALL 257 files - so the reservation was
-                        // NOT mostly waste, and the win was only ~17%. Recorded rather than
-                        // asserted because the first version of this comment claimed "most
-                        // precursors appear in a small fraction of the cohort", which that
-                        // distribution shows is false.
-                        list = new List<KeyValuePair<string, FdrEntry>>();
-                        entriesByPrecursor[key] = list;
-                    }
-                    list.Add(kvp);
-                    nObservations++;
+                    facts[key] = (rq <= fdrThreshold, kvp.Key, 1);
+                    bestRunQ[key] = rq;
+                    continue;
                 }
+                bool anyPasses = cur.AnyPassesRunFdr || rq <= fdrThreshold;
+                string bestFile = cur.BestRunFile;
+                // Strictly less, so the FIRST row wins a tie - the rule the precursor-major
+                // writer applied over this same file-major order.
+                if (rq < bestRunQ[key])
+                {
+                    bestRunQ[key] = rq;
+                    bestFile = kvp.Key;
+                }
+                facts[key] = (anyPasses, bestFile, cur.NRuns + 1);
             }
-            return entriesByPrecursor;
+            return facts;
         }
     }
 }

@@ -58,7 +58,8 @@ namespace pwiz.Osprey.Tasks
             Dictionary<(string, byte), KeyValuePair<string, FdrEntry>> bestByPrecursor,
             Dictionary<(string, byte), double> bestExpPrecursorQ,
             Dictionary<(string, string), double[]> sharedBounds,
-            Dictionary<(string, byte), List<KeyValuePair<string, FdrEntry>>> entriesByPrecursor)
+            List<KeyValuePair<string, FdrEntry>> passingEntries,
+            Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)> precursorFacts)
         {
             double fdrThreshold = config.RunFdr; // run-level threshold for ID-line semantics
             // Write the blib to a FileSaver sibling temp, then atomically rename it into
@@ -83,9 +84,25 @@ namespace pwiz.Osprey.Tasks
                     PrecompressSpectra(blibEntries, libraryById, config.NThreads,
                         out byte[][] blibMzBlobs, out byte[][] blibIntBlobs, out int[] blibNumPeaks);
 
-                    EmitSpectrumRows(writer, blibEntries, blibMzBlobs, blibIntBlobs, blibNumPeaks,
+                    // TWO passes, and the split is the point. The first writes one row per
+                    // precursor and hands back the RefSpectra ids; the second walks the
+                    // passing entries in their own file-major order and writes each one's
+                    // RetentionTimes row against those ids.
+                    //
+                    // It used to be one precursor-major pass, which had to reach every file's
+                    // row for a precursor at once - the O(observations) index that made the
+                    // blib phase the last consumer needing a whole-run view (#4486). Row
+                    // ORDER in the table changes; nothing reads it. Compare-BlibGolden keys
+                    // RetentionTimes on (peptideModSeq, precursorCharge, fileName), and the
+                    // self-consistency legs go through Compare-BlibFull, table-based too.
+                    var refIdByPrecursor = EmitSpectrumRows(
+                        writer, blibEntries, blibMzBlobs, blibIntBlobs, blibNumPeaks,
                         sourceFileIds, libraryById, bestExpPrecursorQ, sharedBounds,
-                        entriesByPrecursor, perFileEntries.Count, fdrThreshold);
+                        precursorFacts, perFileEntries.Count);
+
+                    WriteRetentionTimesFileMajor(writer, passingEntries, refIdByPrecursor,
+                        precursorFacts, bestByPrecursor, sourceFileIds, sharedBounds,
+                        fdrThreshold);
 
                     writer.Commit();
 
@@ -174,7 +191,7 @@ namespace pwiz.Osprey.Tasks
         // modifications / protein mappings / RetentionTimes / Osprey extension
         // rows) for each pre-compressed entry, in iteration order so row IDs stay
         // deterministic.
-        private static void EmitSpectrumRows(
+        private static Dictionary<(string, byte), long> EmitSpectrumRows(
             BlibWriter writer,
             List<KeyValuePair<string, FdrEntry>> blibEntries,
             byte[][] blibMzBlobs, byte[][] blibIntBlobs, int[] blibNumPeaks,
@@ -182,9 +199,10 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             Dictionary<(string, byte), double> bestExpPrecursorQ,
             Dictionary<(string, string), double[]> sharedBounds,
-            Dictionary<(string, byte), List<KeyValuePair<string, FdrEntry>>> entriesByPrecursor,
-            int perFileEntriesCount, double fdrThreshold)
+            Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)> precursorFacts,
+            int perFileEntriesCount)
         {
+            var refIdByPrecursor = new Dictionary<(string, byte), long>(blibEntries.Count);
             // Reported for the same reason as the pre-compress pass above: this emits five row
             // families per spectrum into SQLite and ran silent inside the same 47 s gap.
             using (var progress = new ProgressReporter(
@@ -220,13 +238,9 @@ namespace pwiz.Osprey.Tasks
                     // nRunsDetected -> RefSpectra.copies (Rust pipeline.rs:6179
                     // passes n_runs_detected = group.len()). Reused by
                     // OspreyExperimentScores below.
-                    List<KeyValuePair<string, FdrEntry>> observations;
                     int nRunsDetected = 1;
-                    if (entriesByPrecursor.TryGetValue(lookupKey, out observations) &&
-                        observations.Count > 0)
-                    {
-                        nRunsDetected = observations.Count;
-                    }
+                    if (precursorFacts.TryGetValue(lookupKey, out var facts) && facts.NRuns > 0)
+                        nRunsDetected = facts.NRuns;
 
                     // Shared peak boundaries when the peptide is detected at
                     // multiple charges in this file (Rust pipeline.rs:6160-6164).
@@ -261,8 +275,7 @@ namespace pwiz.Osprey.Tasks
                     if (libEntry.ProteinIds != null && libEntry.ProteinIds.Count > 0)
                         writer.AddProteinMapping(refId, libEntry.ProteinIds);
 
-                    WriteRetentionTimes(writer, refId, fileName, observations,
-                        sourceFileIds, sharedBounds, fdrThreshold);
+                    refIdByPrecursor[lookupKey] = refId;
 
                     // Osprey extension tables - one row per RefSpectra each,
                     // mirroring Rust pipeline.rs:6255-6272. Best-run-only for
@@ -283,6 +296,7 @@ namespace pwiz.Osprey.Tasks
                         perFileEntriesCount);
                 }
             }
+            return refIdByPrecursor;
         }
 
         // Add metadata. OspreyMetadata key set must match Rust's
@@ -297,70 +311,94 @@ namespace pwiz.Osprey.Tasks
                 config.ExperimentFdr.ToString(CultureInfo.InvariantCulture));
         }
 
-        // Per-observation RetentionTimes rows — one row for EVERY run where this
-        // precursor was detected. retentionTime (drives Skyline ID-line display)
-        // is populated iff the run passes run-level FDR, OR (fallback) no run
-        // passes and this is the best run by lowest run_qvalue. Cross-charge
-        // shared boundaries applied. Mirrors Rust pipeline.rs:6191-6243.
-        private static void WriteRetentionTimes(
-            BlibWriter writer, long refId, string fileName,
-            List<KeyValuePair<string, FdrEntry>> observations,
+        /// <summary>
+        /// The RetentionTimes rows - one per passing observation, and the only table in the
+        /// blib that is O(files x precursors). Written FILE-MAJOR, in the order
+        /// <c>CollectPassingEntries</c> produced, against the RefSpectra ids
+        /// <see cref="EmitSpectrumRows"/> assigned.
+        ///
+        /// <para>It used to be written precursor-major, nested inside the RefSpectra loop,
+        /// which required an index of every observation of a precursor across every file.
+        /// That index was O(observations) and held a reference to each one, which is what
+        /// made the blib the last consumer needing a whole-run view of the survivor pool
+        /// (#4486). Everything a row needs is now either per-observation (apex, boundaries,
+        /// run q) or an O(distinct precursor) fact looked up by key.</para>
+        ///
+        /// <para>Row order in the table changes and nothing reads it: the golden comparison
+        /// keys RetentionTimes on (peptideModSeq, precursorCharge, fileName), and the
+        /// resume / HPC-chain legs compare tables rather than bytes. The blib's own consumers
+        /// query by RefSpectraID.</para>
+        ///
+        /// <para>The ID-line rule is unchanged and is why the per-precursor facts exist:
+        /// <c>retentionTime</c> is populated iff this run passes run-level FDR, OR no run of
+        /// this precursor does and this is its lowest-q run - so that every RefSpectra keeps
+        /// at least one ID line. Both halves of that are properties of the precursor, not of
+        /// the row, and neither survives a per-row view without being folded first.</para>
+        /// </summary>
+        private static void WriteRetentionTimesFileMajor(
+            BlibWriter writer,
+            List<KeyValuePair<string, FdrEntry>> passingEntries,
+            Dictionary<(string, byte), long> refIdByPrecursor,
+            Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)> precursorFacts,
+            Dictionary<(string, byte), KeyValuePair<string, FdrEntry>> bestByPrecursor,
             Dictionary<string, long> sourceFileIds,
             Dictionary<(string, string), double[]> sharedBounds,
             double fdrThreshold)
         {
-            if (observations == null)
-                return;
-            // Compute the fallback ID-line file: if NO run passes run-level FDR,
-            // the run with the lowest run_qvalue gets the ID line so every blib
-            // RefSpectra has at least one ID line.
-            bool anyPassesRunFdr = false;
-            string bestRunFile = null;
-            double bestRunQ = double.MaxValue;
-            foreach (var obs in observations)
+            using (var progress = new ProgressReporter(
+                       string.Format(@"Writing {0} retention-time rows to the blib",
+                                     passingEntries.Count),
+                       passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                double rq = obs.Value.EffectiveRunQvalue(FdrLevel.Both);
-                if (rq <= fdrThreshold)
-                    anyPassesRunFdr = true;
-                if (rq < bestRunQ)
+                int done = 0;
+                foreach (var kvp in passingEntries)
                 {
-                    bestRunQ = rq;
-                    bestRunFile = obs.Key;
+                    progress.Report(++done);
+                    var fileEntry = kvp.Value;
+                    var key = (fileEntry.ModifiedSequence, fileEntry.Charge);
+                    // A precursor with no RefSpectra row got no id - it did not survive the
+                    // best-per-precursor selection - so it has nothing to attach a row to.
+                    if (!refIdByPrecursor.TryGetValue(key, out long refId))
+                        continue;
+                    if (!precursorFacts.TryGetValue(key, out var facts))
+                        continue;
+
+                    long srcId = sourceFileIds[kvp.Key];
+                    double runQ = fileEntry.EffectiveRunQvalue(FdrLevel.Both);
+                    bool passesFdr = runQ <= fdrThreshold;
+                    bool showIdLine = passesFdr ||
+                        (!facts.AnyPassesRunFdr && kvp.Key == facts.BestRunFile);
+                    // bestSpectrum flags the run whose spectrum this RefSpectra row was
+                    // built from, so it must come from bestByPrecursor - the same source the
+                    // RefSpectra loop used. facts.BestRunFile applies the same min-run-q rule
+                    // over the same rows and should never disagree, but reproducing the old
+                    // expression is byte-identity by construction rather than by argument.
+                    bool isBest = bestByPrecursor.TryGetValue(key, out var bestKvp) &&
+                                  kvp.Key == bestKvp.Key;
+
+                    var runSharedKey = (fileEntry.ModifiedSequence, kvp.Key);
+                    double runApex = fileEntry.ApexRt;
+                    double runStart = fileEntry.StartRt;
+                    double runEnd = fileEntry.EndRt;
+                    double[] runShared;
+                    if (sharedBounds.TryGetValue(runSharedKey, out runShared))
+                    {
+                        runApex = runShared[0];
+                        runStart = runShared[1];
+                        runEnd = runShared[2];
+                    }
+
+                    double? rtForIdLine = null;
+                    if (showIdLine)
+                        rtForIdLine = runApex;
+                    writer.AddRetentionTime(
+                        refId, srcId,
+                        rtForIdLine,
+                        runStart,
+                        runEnd,
+                        runQ,
+                        isBest);
                 }
-            }
-
-            foreach (var obs in observations)
-            {
-                long srcId = sourceFileIds[obs.Key];
-                var fileEntry = obs.Value;
-                double runQ = fileEntry.EffectiveRunQvalue(FdrLevel.Both);
-                bool passesFdr = runQ <= fdrThreshold;
-                bool showIdLine = passesFdr ||
-                    (!anyPassesRunFdr && obs.Key == bestRunFile);
-                bool isBest = obs.Key == fileName;
-
-                var runSharedKey = (fileEntry.ModifiedSequence, obs.Key);
-                double runApex = fileEntry.ApexRt;
-                double runStart = fileEntry.StartRt;
-                double runEnd = fileEntry.EndRt;
-                double[] runShared;
-                if (sharedBounds.TryGetValue(runSharedKey, out runShared))
-                {
-                    runApex = runShared[0];
-                    runStart = runShared[1];
-                    runEnd = runShared[2];
-                }
-
-                double? rtForIdLine = null;
-                if (showIdLine)
-                    rtForIdLine = runApex;
-                writer.AddRetentionTime(
-                    refId, srcId,
-                    rtForIdLine,
-                    runStart,
-                    runEnd,
-                    runQ,
-                    isBest);
             }
         }
     }
