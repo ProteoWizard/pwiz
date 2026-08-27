@@ -22,6 +22,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR.Reconciliation;
@@ -94,7 +95,6 @@ namespace pwiz.Osprey.Test
         public void TestSharedBoundariesTieBrokenByLowestCharge()
         {
             const string seq = "SVDEVFDEVVQIFDK";
-            var passing = new HashSet<(string, byte)> { (seq, 2), (seq, 3) };
 
             FdrEntry Mk(byte charge, double start, double end) => new FdrEntry
             {
@@ -110,12 +110,13 @@ namespace pwiz.Osprey.Test
                 var list = swap
                     ? new List<FdrEntry> { z3, z2 }
                     : new List<FdrEntry> { z2, z3 };
-                var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
-                {
-                    new KeyValuePair<string, List<FdrEntry>>("file1", list)
-                };
+                // The (file, entry) pairs CollectPassingEntries hands the builder, in the
+                // per-file order it produces them - which is the order the tie-break must be
+                // immune to.
+                var passingEntries = list
+                    .Select(e => new KeyValuePair<string, FdrEntry>("file1", e)).ToList();
 
-                var shared = SecondPassFdrTask.BuildSharedBoundaries(perFile, passing);
+                var shared = SecondPassFdrTask.BuildSharedBoundaries(passingEntries);
 
                 Assert.IsTrue(shared.TryGetValue((seq, "file1"), out var b),
                     "shared boundary must exist for the peptide/file");

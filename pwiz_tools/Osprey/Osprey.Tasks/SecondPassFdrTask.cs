@@ -643,12 +643,18 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(
                 "[COUNT] Best-per-precursor for blib: {0}", bestByPrecursor.Count));
 
-            var bestExpPrecursorQ = BuildBestExpPrecursorQ(perFileEntries, passingPrecursors);
+            // All three take the ALREADY-FILTERED passing entries, not the pool. Each applied
+            // exactly the filter CollectPassingEntries applied 20 lines earlier - non-decoy
+            // AND in passingPrecursors - so re-walking the pool was three passes over 137 M
+            // rows at 257 files to reach the same ~14 M. BuildCrossFileObservations had no
+            // passing gate at all and indexed every non-decoy precursor, though its only
+            // consumer looks up keys from bestByPrecursor, which are passing by construction.
+            var bestExpPrecursorQ = BuildBestExpPrecursorQ(passingEntries);
 
-            var sharedBounds = BuildSharedBoundaries(perFileEntries, passingPrecursors);
+            var sharedBounds = BuildSharedBoundaries(passingEntries);
 
             var entriesByPrecursor = BuildCrossFileObservations(
-                perFileEntries, out int nCrossFileObservations);
+                passingEntries, out int nCrossFileObservations);
 
             ctx.LogInfo(string.Format(
                 "[COUNT] Cross-file observations to write: {0}", nCrossFileObservations));
@@ -667,14 +673,26 @@ namespace pwiz.Osprey.Tasks
         {
             double expThreshold = config.ExperimentFdr;
             var passingPeptides = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var kvp in perFileEntries)
+            // Reported. This and the two gates after it are the last whole-pool walks in the
+            // blib phase - unavoidable, because each needs the previous one's set complete
+            // before it can start - and at 257 files they ran as ~70 s of silence between the
+            // protein-FDR line and the first [COUNT] (#4615 review).
+            using (var progress = new ProgressReporter(string.Format(
+                       @"Selecting peptides passing experiment FDR over {0} file(s)",
+                       perFileEntries.Count),
+                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                foreach (var e in kvp.Value)
+                int done = 0;
+                foreach (var kvp in perFileEntries)
                 {
-                    if (e.IsDecoy)
-                        continue;
-                    if (e.EffectiveExperimentQvalue(config.FdrLevel) <= expThreshold)
-                        passingPeptides.Add(e.ModifiedSequence);
+                    progress.Report(++done);
+                    foreach (var e in kvp.Value)
+                    {
+                        if (e.IsDecoy)
+                            continue;
+                        if (e.EffectiveExperimentQvalue(config.FdrLevel) <= expThreshold)
+                            passingPeptides.Add(e.ModifiedSequence);
+                    }
                 }
             }
             return passingPeptides;
@@ -693,20 +711,28 @@ namespace pwiz.Osprey.Tasks
             var passingPrecursors = new HashSet<(string, byte)>();
             var bestChargePerPeptide = new Dictionary<string, KeyValuePair<byte, double>>(
                 StringComparer.Ordinal);
-            foreach (var kvp in perFileEntries)
+            using (var progress = new ProgressReporter(string.Format(
+                       @"Selecting charge states passing precursor FDR over {0} file(s)",
+                       perFileEntries.Count),
+                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                foreach (var e in kvp.Value)
+                int done = 0;
+                foreach (var kvp in perFileEntries)
                 {
-                    if (e.IsDecoy || !passingPeptides.Contains(e.ModifiedSequence))
-                        continue;
-                    if (e.ExperimentPrecursorQvalue <= expThreshold)
-                        passingPrecursors.Add((e.ModifiedSequence, e.Charge));
-                    KeyValuePair<byte, double> existing;
-                    if (!bestChargePerPeptide.TryGetValue(e.ModifiedSequence, out existing)
-                        || e.ExperimentPrecursorQvalue < existing.Value)
+                    progress.Report(++done);
+                    foreach (var e in kvp.Value)
                     {
-                        bestChargePerPeptide[e.ModifiedSequence] =
-                            new KeyValuePair<byte, double>(e.Charge, e.ExperimentPrecursorQvalue);
+                        if (e.IsDecoy || !passingPeptides.Contains(e.ModifiedSequence))
+                            continue;
+                        if (e.ExperimentPrecursorQvalue <= expThreshold)
+                            passingPrecursors.Add((e.ModifiedSequence, e.Charge));
+                        KeyValuePair<byte, double> existing;
+                        if (!bestChargePerPeptide.TryGetValue(e.ModifiedSequence, out existing)
+                            || e.ExperimentPrecursorQvalue < existing.Value)
+                        {
+                            bestChargePerPeptide[e.ModifiedSequence] =
+                                new KeyValuePair<byte, double>(e.Charge, e.ExperimentPrecursorQvalue);
+                        }
                     }
                 }
             }
@@ -734,16 +760,23 @@ namespace pwiz.Osprey.Tasks
             HashSet<(string, byte)> passingPrecursors)
         {
             var passingEntries = new List<KeyValuePair<string, FdrEntry>>();
-            foreach (var kvp in perFileEntries)
+            using (var progress = new ProgressReporter(string.Format(
+                       @"Collecting passing entries over {0} file(s)", perFileEntries.Count),
+                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                foreach (var entry in kvp.Value)
+                int done = 0;
+                foreach (var kvp in perFileEntries)
                 {
-                    if (entry.IsDecoy)
-                        continue;
-                    if (!passingPrecursors.Contains((entry.ModifiedSequence, entry.Charge)))
-                        continue;
-                    passingEntries.Add(
-                        new KeyValuePair<string, FdrEntry>(kvp.Key, entry));
+                    progress.Report(++done);
+                    foreach (var entry in kvp.Value)
+                    {
+                        if (entry.IsDecoy)
+                            continue;
+                        if (!passingPrecursors.Contains((entry.ModifiedSequence, entry.Charge)))
+                            continue;
+                        passingEntries.Add(
+                            new KeyValuePair<string, FdrEntry>(kvp.Key, entry));
+                    }
                 }
             }
             return passingEntries;
@@ -775,36 +808,30 @@ namespace pwiz.Osprey.Tasks
         // files — the value Rust writes into RefSpectra.score and
         // OspreyExperimentScores.ExperimentQValue (pipeline.rs:4670-4683 + 4795).
         private static Dictionary<(string, byte), double> BuildBestExpPrecursorQ(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            HashSet<(string, byte)> passingPrecursors)
+            List<KeyValuePair<string, FdrEntry>> passingEntries)
         {
             var bestExpPrecursorQ = new Dictionary<(string, byte), double>();
-            // Reported: this and the two builders below each walk the WHOLE survivor pool
-            // (137 M rows at 257 files) back to back with nothing between them but [COUNT]
-            // lines, which OspreyOutput.IsStatLine filters out of normal output - so at cohort
-            // scale the three ran as one 70 s silence broken only by a blank line.
-            int expIdx = 0;
+            // Reported: this and the two builders below run back to back with nothing between
+            // them but [COUNT] lines, which OspreyOutput.IsStatLine filters out of normal
+            // output - so at cohort scale the three ran as one 70 s silence broken only by a
+            // blank line. Now over passingEntries, an order of magnitude smaller than the pool
+            // they used to walk, but the silence would still be theirs to break.
             using (var progress = new ProgressReporter(
-                       string.Format(@"Collecting best experiment q per precursor over {0} file(s)",
-                                     perFileEntries.Count),
-                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                       string.Format(@"Collecting best experiment q per precursor over {0} entries",
+                                     passingEntries.Count),
+                       passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                foreach (var fileKvpExp in perFileEntries)
+                int expIdx = 0;
+                foreach (var kvp in passingEntries)
                 {
                     progress.Report(expIdx++);
-                    foreach (var e in fileKvpExp.Value)
+                    var e = kvp.Value;
+                    var keyExp = (e.ModifiedSequence, e.Charge);
+                    double existingExp;
+                    if (!bestExpPrecursorQ.TryGetValue(keyExp, out existingExp)
+                        || e.ExperimentPrecursorQvalue < existingExp)
                     {
-                        if (e.IsDecoy)
-                            continue;
-                        var keyExp = (e.ModifiedSequence, e.Charge);
-                        if (!passingPrecursors.Contains(keyExp))
-                            continue;
-                        double existingExp;
-                        if (!bestExpPrecursorQ.TryGetValue(keyExp, out existingExp)
-                            || e.ExperimentPrecursorQvalue < existingExp)
-                        {
-                            bestExpPrecursorQ[keyExp] = e.ExperimentPrecursorQvalue;
-                        }
+                        bestExpPrecursorQ[keyExp] = e.ExperimentPrecursorQvalue;
                     }
                 }
             }
@@ -817,94 +844,83 @@ namespace pwiz.Osprey.Tasks
         // Key: (modseq, fileName); value: { apexRt, startRt, endRt, run_q, charge }
         // from the min-run-qvalue entry (charge breaks run_qvalue ties).
         internal static Dictionary<(string, string), double[]> BuildSharedBoundaries(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            HashSet<(string, byte)> passingPrecursors)
+            List<KeyValuePair<string, FdrEntry>> passingEntries)
         {
             var sharedBounds = new Dictionary<(string, string), double[]>();
-            int boundsIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Resolving shared peak boundaries over {0} file(s)",
-                                     perFileEntries.Count),
-                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                       string.Format(@"Resolving shared peak boundaries over {0} entries",
+                                     passingEntries.Count),
+                       passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                foreach (var fileKvpBounds in perFileEntries)
+                int boundsIdx = 0;
+                foreach (var kvp in passingEntries)
                 {
                     progress.Report(boundsIdx++);
-                    string boundsFile = fileKvpBounds.Key;
-                    foreach (var e in fileKvpBounds.Value)
+                    var e = kvp.Value;
+                    var sk = (e.ModifiedSequence, kvp.Key);
+                    double rq = e.EffectiveRunQvalue(FdrLevel.Both);
+                    double[] existingB;
+                    // On a run_qvalue TIE (e.g. two charge states both gap-filled at
+                    // q=1.0), break deterministically by LOWEST CHARGE so the winner
+                    // does not depend on the per-file entry iteration order. Rust
+                    // build_shared_boundaries_from_plan applies the identical
+                    // (lower run_qvalue, then lower charge) rule, so both impls keep
+                    // the same charge's window and the blib RetentionTimes start/end
+                    // stay byte-identical cross-impl.
+                    if (!sharedBounds.TryGetValue(sk, out existingB)
+                        || rq < existingB[3]
+                        || (rq == existingB[3] && e.Charge < existingB[4]))
                     {
-                        if (e.IsDecoy)
-                            continue;
-                        if (!passingPrecursors.Contains((e.ModifiedSequence, e.Charge)))
-                            continue;
-                        var sk = (e.ModifiedSequence, boundsFile);
-                        double rq = e.EffectiveRunQvalue(FdrLevel.Both);
-                        double[] existingB;
-                        // On a run_qvalue TIE (e.g. two charge states both gap-filled at
-                        // q=1.0), break deterministically by LOWEST CHARGE so the winner
-                        // does not depend on the per-file entry iteration order. Rust
-                        // build_shared_boundaries_from_plan applies the identical
-                        // (lower run_qvalue, then lower charge) rule, so both impls keep
-                        // the same charge's window and the blib RetentionTimes start/end
-                        // stay byte-identical cross-impl.
-                        if (!sharedBounds.TryGetValue(sk, out existingB)
-                            || rq < existingB[3]
-                            || (rq == existingB[3] && e.Charge < existingB[4]))
-                        {
-                            sharedBounds[sk] = new[] { e.ApexRt, e.StartRt, e.EndRt, rq, e.Charge };
-                        }
+                        sharedBounds[sk] = new[] { e.ApexRt, e.StartRt, e.EndRt, rq, e.Charge };
                     }
                 }
             }
             return sharedBounds;
         }
 
-        // Pre-index all per-file target entries by (ModifiedSequence, Charge) for
-        // O(1) lookup of cross-file observations (otherwise the write loop is
-        // O(N_passing * N_total)). nObservations = total non-decoy rows indexed.
+        // Pre-index the PASSING entries by (ModifiedSequence, Charge) for O(1) lookup of
+        // cross-file observations (otherwise the write loop is O(N_passing * N_total)).
+        // nObservations = rows indexed.
+        //
+        // Passing only. This walked every non-decoy row in the pool, but the sole consumer -
+        // EmitSpectrumRows - looks up (ModifiedSequence, Charge) taken from bestByPrecursor,
+        // whose keys are passing precursors by construction, so every list built for a
+        // non-passing key was allocated and never read. On the 257-file CHS cohort that was
+        // 501,247 distinct keys and 72.9 M observations indexed against roughly a fifth as
+        // many actually reachable, i.e. about 1.4 GB of lists nothing looked at.
         private static Dictionary<(string, byte), List<KeyValuePair<string, FdrEntry>>> BuildCrossFileObservations(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries, out int nObservations)
+            List<KeyValuePair<string, FdrEntry>> passingEntries, out int nObservations)
         {
             var entriesByPrecursor =
                 new Dictionary<(string, byte), List<KeyValuePair<string, FdrEntry>>>();
             nObservations = 0;
-            int obsIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Indexing cross-file observations over {0} file(s)",
-                                     perFileEntries.Count),
-                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                       string.Format(@"Indexing cross-file observations over {0} entries",
+                                     passingEntries.Count),
+                       passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                foreach (var fileKvp in perFileEntries)
+                int obsIdx = 0;
+                foreach (var kvp in passingEntries)
                 {
                     progress.Report(obsIdx++);
-                    string fn = fileKvp.Key;
-                    foreach (var fileEntry in fileKvp.Value)
+                    var fileEntry = kvp.Value;
+                    var key = (fileEntry.ModifiedSequence, fileEntry.Charge);
+                    List<KeyValuePair<string, FdrEntry>> list;
+                    if (!entriesByPrecursor.TryGetValue(key, out list))
                     {
-                        if (fileEntry.IsDecoy)
-                            continue;
-                        var key = (fileEntry.ModifiedSequence, fileEntry.Charge);
-                        List<KeyValuePair<string, FdrEntry>> list;
-                        if (!entriesByPrecursor.TryGetValue(key, out list))
-                        {
-                            // Default capacity, NOT perFileEntries.Count, which reserved
-                            // 16 B x files for every distinct precursor.
-                            //
-                            // Measured over the 257-file CHS cohort: 501,247 distinct non-decoy
-                            // precursor keys, 72.9 M observations, median 155 and mean 145.5
-                            // files per key, and 15.3% of keys present in ALL 257 files. So the
-                            // reservation is NOT mostly waste - coverage is high - and the win
-                            // is modest: ~2.06 GB pre-sized against ~1.72 GB via doubling, about
-                            // 17%. The keys that do appear in every file cost an extra ~4 KB
-                            // each under doubling, ~312 MB, which the 17% already nets out.
-                            // Recorded rather than asserted because the first version of this
-                            // comment claimed "most precursors appear in a small fraction of the
-                            // cohort", which the distribution above shows is false.
-                            list = new List<KeyValuePair<string, FdrEntry>>();
-                            entriesByPrecursor[key] = list;
-                        }
-                        list.Add(new KeyValuePair<string, FdrEntry>(fn, fileEntry));
-                        nObservations++;
+                        // Default capacity, NOT the file count, which reserved 16 B x files
+                        // for every distinct precursor. Measured over the 257-file CHS cohort
+                        // before the passing gate above: median 155 and mean 145.5 files per
+                        // key, 15.3% of keys present in ALL 257 files - so the reservation was
+                        // NOT mostly waste, and the win was only ~17%. Recorded rather than
+                        // asserted because the first version of this comment claimed "most
+                        // precursors appear in a small fraction of the cohort", which that
+                        // distribution shows is false.
+                        list = new List<KeyValuePair<string, FdrEntry>>();
+                        entriesByPrecursor[key] = list;
                     }
+                    list.Add(kvp);
+                    nObservations++;
                 }
             }
             return entriesByPrecursor;
