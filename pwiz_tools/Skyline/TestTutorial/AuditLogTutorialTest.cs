@@ -430,11 +430,22 @@ namespace pwiz.SkylineTestTutorial
 //                    SkylineWindow.AuditLogForm.DataGridView.Rows[i].Cells[reasonIndex].Selected = true;
 //            });
 //            RunUI(() => SkylineWindow.AuditLogForm.DataboundGridControl.FillDown());
-            RunUI(() =>
+            // One document change per row, each waited for. Setting a Reason modifies the document,
+            // which re-sorts the grid, so writing all four inside a single RunUI read row i+1 from a
+            // grid that could already have moved under it - and a reason then landed on the wrong
+            // entry. The failure was two "Reason Changed" entries swapped, an identical diff every
+            // time, at roughly one run in five.
+            // The single-row SetCellValue further up is already wrapped this way; this loop, added
+            // as the manual stand-in for the fill-down the TODO above describes, was not.
+            for (int i = 0; i < 4; i++)
             {
-                for (int i = 0; i < 4; i++)
-                    SetCellValue(SkylineWindow.AuditLogForm.DataGridView, i, reasonIndex, "Excluded standard below LOD");
-            });
+                int row = i;
+                using (new WaitDocumentChange())
+                {
+                    RunUI(() => SetCellValue(SkylineWindow.AuditLogForm.DataGridView, row, reasonIndex,
+                        "Excluded standard below LOD"));
+                }
+            }
             RunUI(() =>
             {
                 SkylineWindow.AuditLogForm.ChooseView(AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo);
