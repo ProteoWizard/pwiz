@@ -133,21 +133,25 @@ namespace pwiz.Osprey.Tasks
             // reason this task exists. Small and quick: the envelopes are read, not the parquets.
             var retainBaseIds = RescoreHydration.BuildRetainBaseIds(scoresPaths, Name);
             ctx.LogInfo(string.Format(
-                @"Compacting {0} reconciled parquet(s) to the survivor subset ({1} retained base_ids)...",
-                stale.Count, retainBaseIds.Count));
+                @"Compacting {0} of {1} reconciled parquet(s) to the survivor subset ({2} retained base_ids)...",
+                stale.Count, scoresPaths.Count, retainBaseIds.Count));
 
+            // A per-file HEADER rather than an outer ProgressReporter. The writer this loop
+            // calls runs a reporter of its own ("Writing N entries..." + percentages), and two
+            // nested reporters emit bare "  N%" lines that cannot be told apart - the outer
+            // banner even printed AFTER the first file, because a reporter announces itself on
+            // its first Report. The "file N/M" form is what the rest of Osprey uses and what an
+            // operator reads progress from; percentages inside it are then unambiguously the
+            // current file's.
             long rowsBefore = 0, rowsAfter = 0;
             int done = 0;
-            using (var progress = new ProgressReporter(
-                       string.Format(@"Compacting {0} reconciled parquet(s)", stale.Count), stale.Count))
+            foreach (var kv in stale)
             {
-                foreach (var kv in stale)
-                {
-                    progress.Report(done);
-                    CompactOneFile(kv.Key, kv.Value, retainBaseIds, libraryById, ctx,
-                        ref rowsBefore, ref rowsAfter);
-                    done++;
-                }
+                done++;
+                ctx.LogInfo(string.Format(@"===== Compacting file {0}/{1}: {2} =====",
+                    done, stale.Count, kv.Key));
+                CompactOneFile(kv.Key, kv.Value, retainBaseIds, libraryById, ctx,
+                    ref rowsBefore, ref rowsAfter);
             }
             ctx.LogInfo(string.Format(
                 @"Compacted {0} reconciled parquet(s): {1:N0} rows kept of {2:N0}.",
@@ -213,8 +217,8 @@ namespace pwiz.Osprey.Tasks
 
             rowsBefore += result.OrigRowCount;
             rowsAfter += result.NWritten;
-            ctx.LogInfo(string.Format(@"  {0}: {1:N0} rows kept of {2:N0}",
-                fileName, result.NWritten, result.OrigRowCount));
+            ctx.LogInfo(string.Format(@"  Kept {0:N0} of {1:N0} rows",
+                result.NWritten, result.OrigRowCount));
         }
     }
 }
