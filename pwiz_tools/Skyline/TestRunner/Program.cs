@@ -1785,27 +1785,42 @@ namespace TestRunner
                                         return;
                                     // Reported as a FAILURE of the TEST, in the shape Report() and
                                     // SkylineNightly parse, and written to the LOG rather than only to
-                                    // the console. Taking the process down is the most serious way a
-                                    // test can fail, not an excuse for it: the only thing missing is
-                                    // the stack trace, because nothing survived to write one.
+                                    // the console. Deliberately says nothing about WHY the worker went
+                                    // quiet: all this detection knows is that heartbeats stopped, and a
+                                    // container starved of CPU can miss its window while its test runs
+                                    // on - see MISSED_HEARTBEATS_BEFORE_DEAD. The exit code would settle
+                                    // it, but `docker run --rm` deletes the container before anything
+                                    // can ask. What IS known is that no result ever came back, which is
+                                    // a failure of the test whatever caused it.
                                     // A lost worker used to be one plain line among thousands of
                                     // results: it named the test but counted for nothing, so a run
                                     // that shed half its workers still ended saying "No failures" and
                                     // read as a 40% performance regression instead of five crashes.
                                     // CurrentTest is "Name/Language/Pass"; the bare name goes on the
                                     // !!! line because that is what the parsers key on.
-                                    var lostTest = workerInfo.CurrentTest ?? "(no test)";
-                                    var lostTestName = lostTest.Split('/')[0];
+                                    // Only a worker that was HOLDING a test failed one. Between tests it
+                                    // takes nothing down with it, and naming a test there is worse than
+                                    // saying nothing: the !!! shape makes Report() and SkylineNightly
+                                    // record whatever word follows as a failing test, so a placeholder
+                                    // becomes a test called "(no test)" in the failure list.
+                                    var lostTest = workerInfo.CurrentTest;
+                                    var report = lostTest == null
+                                        ? new[]
+                                        {
+                                            $"Worker {workerName} stopped responding between tests and was " +
+                                            @"given up on. No test result was lost, but the pool is smaller."
+                                        }
+                                        : new[]
+                                        {
+                                            $"!!! {lostTest.Split('/')[0]} FAILED",
+                                            $"Worker {workerName} stopped responding while running {lostTest} and " +
+                                            @"was given up on. No result was ever produced for it, and no stack " +
+                                            @"trace: nothing came back from the worker to write one.",
+                                            @"!!!"
+                                        };
                                     lock (workerInfoByName)   // Every worker's heartbeat runs its own thread
                                     {
-                                        foreach (var line in new[]
-                                        {
-                                            $"!!! {lostTestName} FAILED",
-                                            $"Worker {workerName} exited unexpectedly while running {lostTest}. " +
-                                            @"No stack trace to report: the test took the process down with it, so " +
-                                            @"nothing was left to write one.",
-                                            @"!!!"
-                                        })
+                                        foreach (var line in report)
                                         {
                                             Console.WriteLine(line);
                                             log?.WriteLine(line);
