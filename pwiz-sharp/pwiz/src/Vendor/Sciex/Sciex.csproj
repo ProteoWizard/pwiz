@@ -160,7 +160,7 @@
            (e.g. BlibBuild) trying to `dotnet publish -p:PublishSingleFile=true` hits
            NETSDK1152 / Bundler "duplicate BundleRelativePath" because the SAME dll
            appears with two source paths: this Content entry's vendor-assemblies/Sciex/
-           AND the dll in Sciex/bin/Release/net8.0/ that the local build copied. Both
+           AND the dll in Sciex/bin/Release/net10.0/ that the local build copied. Both
            target the same publish-relative filename. -->
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
       <Link>%(Filename)%(Extension)</Link>

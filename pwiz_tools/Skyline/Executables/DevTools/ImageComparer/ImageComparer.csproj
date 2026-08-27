@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- ImageComparer - WinForms screenshot-diff GUI (was classic v4.7.2). Multi-target
-       net472;net8.0-windows; references ImageComparer.Core. Vestigial System.Deployment dropped;
+       net472;net10.0-windows; references ImageComparer.Core. Vestigial System.Deployment dropped;
        System.Net.Http is kept (HttpClient is used) - framework reference on net472, built into
        net8. System.Drawing.Common is the Windows-only GDI+ NuGet on net8. -->
   <PropertyGroup>
     <ProjectGuid>{1B2C0F7C-DE86-42A9-B265-69026ECF2376}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -25,7 +25,7 @@
     <ProjectReference Include="..\ImageComparer.Core\ImageComparer.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="System.Drawing.Common" Version="8.0.10" />
   </ItemGroup>
 

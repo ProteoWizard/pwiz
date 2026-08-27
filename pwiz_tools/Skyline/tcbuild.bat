@@ -22,7 +22,7 @@ REM #      what it did before. Every mode runs even if an earlier one has failin
 REM #      tests (only a compile failure short-circuits); the build still ends red
 REM #      if any mode failed. Args forwarded verbatim, plus the distro zip
 REM #      names below - one invocation, not a separate step. build.bat writes
-REM #      the zips to bin\staging-net8\<Config> (gitignored, so the hygiene
+REM #      the zips to bin\staging\<Config> (gitignored, so the hygiene
 REM #      checks below stay clean) after staging but BEFORE the test run, so
 REM #      TC still gets its artifacts from a build whose tests failed.
 REM #   4. git ls-files --deleted: catches builds that delete tracked files.

@@ -18,7 +18,7 @@
     Debug or Release.  Default Release (CI canonical).
 
 .PARAMETER Framework
-    Which target framework to test.  net8.0 (default), net472, or
+    Which target framework to test.  net10.0 (default), net472, or
     both.  The MSBuild step always builds every framework declared
     in the per-project files; this flag controls which framework's
     test DLLs get run.
@@ -52,11 +52,11 @@
 
 .EXAMPLE
     # TeamCity (what tcbuild.bat invokes)
-    .\build.ps1 -TeamCity -Coverage -Configuration Release -Framework net8.0
+    .\build.ps1 -TeamCity -Coverage -Configuration Release -Framework net10.0
 #>
 param(
     [ValidateSet('Debug','Release')] [string]$Configuration = 'Release',
-    [ValidateSet('net8.0','net472','both')] [string]$Framework = 'net8.0',
+    [ValidateSet('net10.0','net472','both')] [string]$Framework = 'net10.0',
     [switch]$NoTests,
     [switch]$Coverage,
     [switch]$TeamCity,
@@ -187,7 +187,7 @@ if ($NoTests) {
 }
 
 # --- Test ---------------------------------------------------------------
-$testFrameworks = if ($Framework -eq 'both') { @('net472','net8.0') } else { @($Framework) }
+$testFrameworks = if ($Framework -eq 'both') { @('net472','net10.0') } else { @($Framework) }
 $trxDir = Join-Path $scriptRoot 'TestResults'
 New-Item -ItemType Directory -Force -Path $trxDir | Out-Null
 

@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- BuildAnalystFullScanMethod - vendor method builder. Ported to multi-target net472;net8.0-windows so it still
+  <!-- BuildAnalystFullScanMethod - vendor method builder. Ported to multi-target net472;net10.0-windows so it still
        builds/runs on future Windows without .NET Framework 4.7.2. Vendor DLLs are managed and
        referenced for both TFMs; framework + vestigial (UnitTestFramework/Deployment/Net.Http)
        references dropped. Compile-verified; net8 vendor-software runtime is untested. -->
   <PropertyGroup>
     <ProjectGuid>{45E88416-AC6C-4572-BBA3-1B9B78323F01}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

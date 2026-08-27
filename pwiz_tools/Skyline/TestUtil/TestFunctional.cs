@@ -3010,18 +3010,45 @@ namespace pwiz.SkylineTestUtil
         // and the UI message pump ends with the test before the timer could fire on its own. The handle
         // is never released and SkylineWindow is reported as a GC leak (TestDiaFragPipeTutorial hit this
         // whenever the document was slow enough for the tool tip to appear at all - 10 timers were still
-        // armed at the end of that test). So stop them, the way ToolTip.StopTimer() would. Field names
-        // verified against Microsoft.WindowsDesktop.App 8.0; the ToolStrip list is thread-static, so
-        // this must run on the UI thread.
+        // armed at the end of that test). So stop them, the way ToolTip.StopTimer() would. The ToolStrip
+        // list is thread-static, so this must run on the UI thread.
+        // Field names verified against Microsoft.WindowsDesktop.App 8.0 AND 10.0. WinForms renamed the
+        // static in .NET 10 (t_toolStripWeakArrayList -> t_activeToolStrips) AND changed its type from an
+        // ArrayList-derived list to WeakRefCollection<ToolStrip>, which implements IEnumerable but NOT
+        // non-generic IList - so both the lookup and the cast have to tolerate either shape, and a miss
+        // has to be reported rather than silently skipped.
         private static void ReleaseToolStripToolTips()
         {
             const System.Reflection.BindingFlags nonPublicInstance =
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
-            var toolStrips = typeof(System.Windows.Forms.ToolStripManager).GetField(@"t_toolStripWeakArrayList",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                ?.GetValue(null) as System.Collections.IList;
-            if (toolStrips == null)
+            const System.Reflection.BindingFlags nonPublicStatic =
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
+            // net10 name first, then the net8 name.
+            var toolStripsField =
+                typeof(System.Windows.Forms.ToolStripManager).GetField(@"t_activeToolStrips", nonPublicStatic) ??
+                typeof(System.Windows.Forms.ToolStripManager).GetField(@"t_toolStripWeakArrayList", nonPublicStatic);
+            if (toolStripsField == null)
+            {
+                // Same reasoning as the ToolStrip.ToolTip / ToolTip._timer check below: a silent return
+                // here is indistinguishable from "no ToolStrip on this thread", and the leak comes back.
+                Program.AddTestException(new MissingMemberException(
+                    @"WinForms no longer has ToolStripManager.t_activeToolStrips (or the older " +
+                    @"t_toolStripWeakArrayList), so tool tip timers left armed by a test can no longer " +
+                    @"be found. See ReleaseToolStripToolTips."));
+                return;
+            }
+            var toolStripsValue = toolStripsField.GetValue(null);
+            if (toolStripsValue == null)
                 return; // No ToolStrip was ever created on this thread
+            // net8: ArrayList-derived (IList). net10: WeakRefCollection<ToolStrip>, IEnumerable only.
+            if (toolStripsValue is not System.Collections.IEnumerable toolStrips)
+            {
+                Program.AddTestException(new MissingMemberException(
+                    @"ToolStripManager's ToolStrip list is no longer enumerable (" +
+                    toolStripsValue.GetType().FullName + @"), so tool tip timers left armed by a test " +
+                    @"can no longer be stopped. See ReleaseToolStripToolTips."));
+                return;
+            }
             var toolTipProperty = typeof(ToolStrip).GetProperty(@"ToolTip", nonPublicInstance);
             var timerField = typeof(System.Windows.Forms.ToolTip).GetField(@"_timer", nonPublicInstance);
             if (toolTipProperty == null || timerField == null)
@@ -3034,10 +3061,10 @@ namespace pwiz.SkylineTestUtil
                     @"left armed by a test can no longer be stopped. See ReleaseToolStripToolTips."));
                 return;
             }
-            for (int i = 0; i < toolStrips.Count; i++)
+            foreach (var entry in toolStrips)
             {
                 // The collection holds weak references, so a collected ToolStrip reads as null here
-                if (toolStrips[i] is not ToolStrip toolStrip || toolStrip.IsDisposed)
+                if (entry is not ToolStrip toolStrip || toolStrip.IsDisposed)
                     continue;
                 var toolTip = toolTipProperty.GetValue(toolStrip);
                 if (toolTip == null || timerField.GetValue(toolTip) is not System.Windows.Forms.Timer timer)

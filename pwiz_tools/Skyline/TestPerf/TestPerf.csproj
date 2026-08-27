@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- TestPerf - Skyline performance / large-data MSTest assembly (vendor import, tutorials,
-       IMS, FAIMS timing). Multi-target net472 + net8.0-windows. No .resx/designer; test
+       IMS, FAIMS timing). Multi-target net472 + net10.0-windows. No .resx/designer; test
        fixtures are *.zip / *.data read from the source tree (TestFilesZipPaths), not copied to
        output. Compile items are auto-globbed. -->
   <PropertyGroup>
     <ProjectGuid>{D0481E9D-BCBF-4DD7-977E-791801871B5B}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -61,7 +61,7 @@
 
   <!-- net8: managed test + support packages; DigitalRune docking, DotNetZip, Grpc, ServiceModel
        etc. flow transitively through the Skyline/Shared ProjectReferences. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="3.2.0" />
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />

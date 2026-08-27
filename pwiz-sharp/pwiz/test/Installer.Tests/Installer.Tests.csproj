@@ -4,9 +4,9 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <!-- net8.0-windows so we can use Microsoft.Win32.Registry and
+    <!-- net10.0-windows so we can use Microsoft.Win32.Registry and
          System.Security.Principal.WindowsPrincipal to detect elevation. -->
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <!-- CA1416 (platform-specific API) fires on every Registry / WindowsPrincipal
          call; we already constrain to Windows via the TFM. -->
     <NoWarn>$(NoWarn);CA1416</NoWarn>

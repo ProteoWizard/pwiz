@@ -708,11 +708,11 @@ namespace SkylineTester
                 dirs = dirs.Select(dir => dir.Replace(@"\Release", @"\Debug")).ToArray();
             return dirs;
 #else
-            // net8 tests run from a *staged* directory assembled by Stage-Net8Tests.ps1 that
+            // net8 tests run from a *staged* directory assembled by Stage-Tests.ps1 that
             // co-locates TestRunner.exe, the test DLLs, and Skyline-daily (the net8 analogue of the
             // net472 single bin\x64\Release, which no longer exists because projects build to
             // per-project bin\...\net8.0-windows dirs). net8 is x64-only, so only the 64-bit "bin"
-            // slot is populated with the most recent staging-net8*\Release build in the checkout;
+            // slot is populated with the most recent staging*\Release build in the checkout;
             // the other slots are unused (hidden).
             // The Build and Nightly slots matter even though net8 is x64-only: TabNightly.Stop
             // explicitly selects BuildDirs.nightly64 after a successful build, and TabBuild works
@@ -723,7 +723,7 @@ namespace SkylineTester
             return new[]
             {
                 null,                                                       // bin (32 bit) - n/a on net8
-                GetNet8StagingDir(),                                        // bin (64 bit) - staged build in this checkout
+                GetStagingDir(),                                        // bin (64 bit) - staged build in this checkout
                 null,                                                       // Build (32 bit) - n/a on net8
                 FindNet8StagingDir(SkylineDirUnder(GetBuildRoot())),        // Build (64 bit)
                 null,                                                       // Nightly (32 bit) - n/a on net8
@@ -735,9 +735,9 @@ namespace SkylineTester
         }
 
 #if !NET472
-        // Locate the most recently staged net8 test directory in this checkout. Stage-Net8Tests.ps1
+        // Locate the most recently staged net8 test directory in this checkout. Stage-Tests.ps1
         // assembles TestRunner.exe + the test DLLs + Skyline-daily under
-        // <checkout>\pwiz_tools\Skyline\bin\staging-net8[/-record/-validate]\Release. Find the
+        // <checkout>\pwiz_tools\Skyline\bin\staging[/-record/-validate]\Release. Find the
         // checkout's Skyline dir (the ancestor named exactly "Skyline", not "SkylineTester") and
         // pick the newest staging dir that actually contains TestRunner.exe.
         /// <summary>The Skyline source dir inside a checkout root, or null if the root is unset.</summary>
@@ -766,7 +766,7 @@ namespace SkylineTester
         /// a "SkylineTester Files" folder that is a SIBLING of the checkout, so this returns null
         /// there and the Nightly slot above supplies the directory instead.
         /// </summary>
-        private string GetNet8StagingDir()
+        private string GetStagingDir()
         {
             var skylineDir = ExeDir;
             while (skylineDir != null &&
@@ -776,9 +776,9 @@ namespace SkylineTester
         }
 
         /// <summary>
-        /// Picks the staged net8 test directory under a given Skyline source dir. Stage-Net8Tests.ps1
+        /// Picks the staged net8 test directory under a given Skyline source dir. Stage-Tests.ps1
         /// assembles TestRunner.exe + the test DLLs + Skyline-daily under
-        /// &lt;Skyline&gt;\bin\staging-net8[-record/-validate]\Release.
+        /// &lt;Skyline&gt;\bin\staging[-record/-validate]\Release.
         /// </summary>
         private static string FindNet8StagingDir(string skylineDir)
         {
@@ -789,14 +789,20 @@ namespace SkylineTester
                 return null;
             try
             {
-                var candidates = Directory.GetDirectories(binDir, "staging-net8*")
+                var candidates = Directory.GetDirectories(binDir, "staging*")
+                    // Skip pre-rename leftovers: the staging dir used to be named after the target
+                    // framework ("staging-net8"). bin/ is gitignored and nothing prunes it, so a dev
+                    // who upgraded still has one - and its binaries target a runtime that is no longer
+                    // staged. Any "staging-net<tfm>" is stale by construction; "staging",
+                    // "staging-record" and "staging-validate" are current.
+                    .Where(d => !Path.GetFileName(d).StartsWith(@"staging-net", StringComparison.OrdinalIgnoreCase))
                     .Select(d => Path.Combine(d, "Release"))
                     .Where(d => File.Exists(Path.Combine(d, "TestRunner.exe")))
                     .ToList();
-                // Prefer the canonical "staging-net8" (the full default staging) over workflow-specific
+                // Prefer the canonical "staging" (the full default staging) over workflow-specific
                 // subsets like "-record"/"-validate"; otherwise fall back to the most recent.
                 return candidates.FirstOrDefault(d =>
-                           string.Equals(Path.GetFileName(Path.GetDirectoryName(d)), "staging-net8",
+                           string.Equals(Path.GetFileName(Path.GetDirectoryName(d)), "staging",
                                StringComparison.OrdinalIgnoreCase))
                        ?? candidates.OrderByDescending(Directory.GetLastWriteTimeUtc).FirstOrDefault();
             }

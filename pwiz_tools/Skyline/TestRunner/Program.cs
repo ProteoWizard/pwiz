@@ -954,7 +954,7 @@ namespace TestRunner
 #if NET472
             return GetContainerTestRunnerExe();
 #else
-            // Container paths under c:\pwiz\...\staging-net8\ contain no spaces, so no quoting needed.
+            // Container paths under c:\pwiz\...\staging\ contain no spaces, so no quoting needed.
             return Path.GetDirectoryName(GetContainerTestRunnerExe()) + @"\dotnet\dotnet.exe";
 #endif
         }

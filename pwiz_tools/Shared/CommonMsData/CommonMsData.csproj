@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- CommonMsData — multi-target net472 + net8.0-windows. Pure-managed wrapper
+  <!-- CommonMsData — multi-target net472 + net10.0-windows. Pure-managed wrapper
        (no direct pwiz.CLI dependencies); sits on top of ProteowizardWrapper.
        219 Skyline files import this namespace. -->
   <PropertyGroup>
     <ProjectGuid>{86F8E7F5-A3ED-4519-9AD9-BF9ABD6DD69F}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -43,7 +43,7 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="IdentityModel" Version="7.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <!-- WatersConnectAccount.cs uses IHttpClientFactory — Microsoft.Extensions.Http

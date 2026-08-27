@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- BuildThermoMethod - Thermo vendor method builder (Exe). FEASIBILITY port to multi-target
-       net472;net8.0-windows. The Thermo.TNG.MethodXML* interface DLLs are net40 MSIL (net8-loadable)
+       net472;net10.0-windows. The Thermo.TNG.MethodXML* interface DLLs are net40 MSIL (net8-loadable)
        and are referenced for both TFMs. NOTE: this only proves the tool COMPILES on net8; at runtime
        it calls into the installed Thermo TNG method software, whose net8 compatibility is untested
        (needs a machine with the Thermo instrument software). -->
   <PropertyGroup>
     <ProjectGuid>{664912C6-00DC-4499-B1C8-EEF4E85E8351}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

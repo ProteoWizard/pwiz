@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- PeakViewConvert - dev/build console utility. Multi-target net472;net8.0 (was classic). Pure console
-       (no WinForms/Drawing), so the net8 target is plain net8.0. Only framework references. -->
+  <!-- PeakViewConvert - dev/build console utility. Multi-target net472;net10.0 (was classic). Pure console
+       (no WinForms/Drawing), so the net8 target is plain net10.0. Only framework references. -->
   <PropertyGroup>
     <ProjectGuid>{630E33A2-818B-45ED-AA90-A5F0AAA0851A}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net8.0</TargetFrameworks>
+    <TargetFrameworks>net472;net10.0</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

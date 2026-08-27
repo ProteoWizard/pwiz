@@ -21,7 +21,7 @@
       SDK infers a RuntimeIdentifier and unwraps runtimes/win-x64/native/*;
       library/test projects don't, so we add IronCompress explicitly with
       GeneratePathProperty so the Content copy below can pull the native
-      binary into the test bin for net472. net8.0 resolves the native dep
+      binary into the test bin for net472. net10.0 resolves the native dep
       via deps.json automatically and needs no extra wiring.
     -->
     <PackageReference Include="IronCompress" Version="1.5.2" GeneratePathProperty="true" />

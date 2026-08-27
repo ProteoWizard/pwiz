@@ -23,6 +23,18 @@
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
   </ItemGroup>
 
+  <!-- .NET 9 REMOVED BinaryFormatter from the runtime; the in-box type now always throws
+       PlatformNotSupportedException. Shimadzu's SDK deep-copies its parameter objects through
+       it (Shimadzu.LabSolutions.IO.Generic.Tool.DeepCopy<T> -> LSSDetChInfo.Clone()), so Read()
+       dies without this out-of-band compatibility package.
+       STOPGAP: the package is itself deprecated. The durable fix is Shimadzu shipping an SDK
+       that does not use BinaryFormatter - worth raising with the vendor.
+       The runtimeconfig switch this package needs CANNOT be set here (a library emits no
+       runtimeconfig); it is set for every executable in pwiz-sharp/Directory.Build.targets. -->
+  <ItemGroup>
+    <PackageReference Include="System.Runtime.Serialization.Formatters" Version="9.0.0" />
+  </ItemGroup>
+
   <!-- Without $(NativeVendorsAvailable) (-p:IAgreeToVendorLicenses=true AND Windows; this SDK
        is Windows-only), the encrypted vendor archive is not extracted
        and the SDK <Reference> entries below are dropped. NO_VENDOR_SUPPORT lets Reader_Shimadzu

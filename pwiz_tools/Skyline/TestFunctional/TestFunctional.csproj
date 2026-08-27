@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- TestFunctional - Skyline functional (UI-driving) MSTest assembly. Multi-target
-       net472 + net8.0-windows. No .resx/designer and no real UIAutomation usage; test
+       net472 + net10.0-windows. No .resx/designer and no real UIAutomation usage; test
        fixtures are flat *.zip files copied to output. Compile items are auto-globbed. -->
   <PropertyGroup>
     <ProjectGuid>{1B7E62FF-463B-4B3E-8E37-72F1A7C2BFD9}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -49,7 +49,7 @@
 
   <!-- net8: managed test + support packages; DigitalRune docking, Grpc, Parquet, DotNetZip,
        ServiceModel etc. flow transitively through the Skyline/Shared ProjectReferences. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="3.2.0" />
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />

@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <TargetFrameworks>net472;net8.0</TargetFrameworks>
+    <TargetFrameworks>net472;net10.0</TargetFrameworks>
     <!-- SDK-style csproj defaults to AnyCPU, but Osprey.sln uses x64
          configurations, which VS 2026 flags as "unknown project
          configuration mappings" unless the projects advertise x64.

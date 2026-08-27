@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- TestData - Skyline "test data" MSTest assembly. Multi-target
-       net472 + net8.0-windows. The net8 run is what surfaces pwiz-sharp
+       net472 + net10.0-windows. The net8 run is what surfaces pwiz-sharp
        data-parity regressions vs. the legacy pwiz C++/CLI path. -->
   <PropertyGroup>
     <ProjectGuid>{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -17,7 +17,7 @@
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <IsPackable>false</IsPackable>
     <!-- Set explicitly (not just via Microsoft.NET.Test.Sdk, which we reference only under
-         the net8.0-windows condition) so IsTestProject is in scope for restore and for
+         the net10.0-windows condition) so IsTestProject is in scope for restore and for
          Directory.Build.targets' test-only TeamCity logger reference. -->
     <IsTestProject>true</IsTestProject>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -81,7 +81,7 @@
     <Reference Include="System.ServiceModel" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <!-- Nothing is excluded from the net8 compile here any more. PwizFileInfoTest and
          DataFileMemoryLeakTest both used to be, for MsDataFileImpl surface pwiz-sharp
          had not reached yet (GetScanDescription and ConfigInfo). The sandbox wrapper

@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- CommonUtil — multi-target net472 + net8.0-windows.
+  <!-- CommonUtil — multi-target net472 + net10.0-windows.
        net472: legacy Skyline build path (Skyline.sln) — keeps building exactly as today.
-       net8.0-windows: Skyline net8 port path. Same .cs source compiles under both,
+       net10.0-windows: Skyline net8 port path. Same .cs source compiles under both,
        with #if NET472 / NET8_0_OR_GREATER conditional compilation where needed
        (currently just ConcurrencyVisualizer.cs which references a VS-tooling-only
        Microsoft.ConcurrencyVisualizer.Markers DLL not available on net8).
        Pattern mirrors PortableUtil.csproj alongside this one. -->
   <PropertyGroup>
     <ProjectGuid>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -56,7 +56,7 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <!-- net8 replacements via NuGet. Versions pinned to track the legacy
          bundled DLLs so behavior doesn't drift. -->
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />

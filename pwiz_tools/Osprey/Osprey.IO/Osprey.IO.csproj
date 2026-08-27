@@ -41,7 +41,7 @@
   <PropertyGroup>
     <OspreyVendorReader Condition="'$(OspreyVendorReader)' == ''">false</OspreyVendorReader>
     <!-- pwiz_data_cli is net472-only, so the capability can never be on for
-         net8.0 no matter what the property says. -->
+         net10.0 no matter what the property says. -->
     <OspreyVendorReaderEnabled>false</OspreyVendorReaderEnabled>
     <OspreyVendorReaderEnabled
         Condition="'$(TargetFramework)' == 'net472' And '$(OspreyVendorReader)' == 'true'">true</OspreyVendorReaderEnabled>

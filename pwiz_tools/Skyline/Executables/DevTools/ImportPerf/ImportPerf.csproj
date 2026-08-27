@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- ImportPerf - dev/build console utility. Multi-target net472;net8.0 (was classic). Pure console
-       (no WinForms/Drawing), so the net8 target is plain net8.0. Only framework references. -->
+  <!-- ImportPerf - dev/build console utility. Multi-target net472;net10.0 (was classic). Pure console
+       (no WinForms/Drawing), so the net8 target is plain net10.0. Only framework references. -->
   <PropertyGroup>
     <ProjectGuid>{B2B7F9A3-AC3D-40B3-A2F6-173292F580E4}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net8.0</TargetFrameworks>
+    <TargetFrameworks>net472;net10.0</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

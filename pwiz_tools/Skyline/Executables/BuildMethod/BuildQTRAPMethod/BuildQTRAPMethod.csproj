@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- BuildQTRAPMethod - vendor method builder. Ported to multi-target net472;net8.0-windows so it still
+  <!-- BuildQTRAPMethod - vendor method builder. Ported to multi-target net472;net10.0-windows so it still
        builds/runs on future Windows without .NET Framework 4.7.2. Vendor DLLs are managed and
        referenced for both TFMs; framework + vestigial (UnitTestFramework/Deployment/Net.Http)
        references dropped. Compile-verified; net8 vendor-software runtime is untested. -->
   <PropertyGroup>
     <ProjectGuid>{93130EBE-6FEF-456C-BCDB-B12E9780C051}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -27,7 +27,7 @@
 
   <!-- Properties/Settings.Designer.cs uses System.Configuration.ApplicationSettingsBase, which is a
        NuGet package on net8 (framework assembly on net472). -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
   </ItemGroup>
 

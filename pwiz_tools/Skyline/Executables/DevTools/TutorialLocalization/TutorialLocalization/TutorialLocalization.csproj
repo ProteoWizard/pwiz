@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- TutorialLocalization - dev tool that localizes tutorial HTML/screenshots. Multi-target
-       net472;net8.0 (pure console, no WinForms). The real dependencies (CommandLine, CsvHelper,
+       net472;net10.0 (pure console, no WinForms). The real dependencies (CommandLine, CsvHelper,
        DotNetZip, F23.StringSimilarity, HtmlAgilityPack) are pure-managed on-disk libraries
        referenced for both TFMs (net8-loadable; their old APIs predate/differ from current NuGets).
        The BCL polyfill shims (System.Memory, System.Numerics.Vectors,
@@ -10,7 +10,7 @@
   <PropertyGroup>
     <ProjectGuid>{B61C5AAE-F385-41D6-B2D1-6FAA8818FB43}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net8.0</TargetFrameworks>
+    <TargetFrameworks>net472;net10.0</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
