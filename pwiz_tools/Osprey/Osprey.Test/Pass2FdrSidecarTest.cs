@@ -172,7 +172,7 @@ namespace pwiz.Osprey.Test
                 ParquetScoreCache.WriteScoresParquet(originalPath, reconEntries, null, null, fileName);
                 var streamResult = ParquetScoreCache.StreamReconciledScoresParquet(
                     originalPath, reconciledPath, new Dictionary<uint, FdrEntry>(),
-                    new List<FdrEntry> { reconGapFill }, null, null, fileName, null, s => { });
+                    new List<FdrEntry> { reconGapFill }, null, null, fileName, null, null, s => { });
                 Assert.AreEqual(1, streamResult.NAppended, @"gap-fill row must append through the real Stage-6 path");
 
                 // REAL identity -> reconciled-row map (last-write-wins collapses a scan-tie).

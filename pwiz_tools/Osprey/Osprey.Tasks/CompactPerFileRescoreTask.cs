@@ -136,22 +136,28 @@ namespace pwiz.Osprey.Tasks
                 @"Compacting {0} of {1} reconciled parquet(s) to the survivor subset ({2} retained base_ids)...",
                 stale.Count, scoresPaths.Count, retainBaseIds.Count));
 
-            // A per-file HEADER rather than an outer ProgressReporter. The writer this loop
-            // calls runs a reporter of its own ("Writing N entries..." + percentages), and two
-            // nested reporters emit bare "  N%" lines that cannot be told apart - the outer
-            // banner even printed AFTER the first file, because a reporter announces itself on
-            // its first Report. The "file N/M" form is what the rest of Osprey uses and what an
-            // operator reads progress from; percentages inside it are then unambiguously the
-            // current file's.
+            // ONE line per file, emitted after it completes, carrying counter, percentage and
+            // result together - and no ProgressReporter at any level, which is why the writer
+            // is called with a null progress indent.
+            //
+            // Two reporters at one indent was the defect: the writer announces itself on its
+            // first Report, so its heading printed BELOW the outer banner's first percent, and
+            // both then emitted bare "N%" lines that no reader could attribute to a level. A
+            // file takes seconds, so intra-file progress buys nothing that the completion line
+            // does not say better. The general rule: never emit an OUTER counter inside an
+            // inner block.
             long rowsBefore = 0, rowsAfter = 0;
             int done = 0;
             foreach (var kv in stale)
             {
+                var result = CompactOneFile(kv.Key, kv.Value, retainBaseIds, libraryById, ctx);
+                rowsBefore += result.OrigRowCount;
+                rowsAfter += result.NWritten;
                 done++;
-                ctx.LogInfo(string.Format(@"Compacting file {0}/{1}: {2}",
-                    done, stale.Count, kv.Key));
-                CompactOneFile(kv.Key, kv.Value, retainBaseIds, libraryById, ctx,
-                    ref rowsBefore, ref rowsAfter);
+                ctx.LogInfo(string.Format(
+                    @"Compacted file {0}/{1} ({2:F1}%): {3} - kept {4:N0} of {5:N0} rows",
+                    done, stale.Count, 100.0 * done / stale.Count, kv.Key,
+                    result.NWritten, result.OrigRowCount));
             }
             ctx.LogInfo(string.Format(
                 @"Compacted {0} reconciled parquet(s): {1:N0} rows kept of {2:N0}.",
@@ -189,9 +195,9 @@ namespace pwiz.Osprey.Tasks
         /// key for key except <c>osprey.reconciled</c>, so the version stamp and the search /
         /// library / reconciliation hashes still describe the run that produced the rows.</para>
         /// </summary>
-        private static void CompactOneFile(string fileName, string reconciledPath,
-            ICollection<uint> retainBaseIds, IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            PipelineContext ctx, ref long rowsBefore, ref long rowsAfter)
+        private static (int NWritten, int OrigRowCount) CompactOneFile(string fileName,
+            string reconciledPath, ICollection<uint> retainBaseIds,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById, PipelineContext ctx)
         {
             var metadata = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
             metadata[@"osprey.reconciled"] = ParquetScoreCache.RECONCILED_SURVIVORS;
@@ -208,17 +214,14 @@ namespace pwiz.Osprey.Tasks
             string compactedPath = reconciledPath + @".compacted";
             var result = ParquetScoreCache.StreamReconciledScoresParquet(
                 reconciledPath, compactedPath, null, null, metadata, libraryById,
-                fileName, keepIdentities, ctx.LogWarning);
+                fileName, keepIdentities, null, ctx.LogWarning);
 
             string retiredPath = reconciledPath + @".retired";
             File.Move(reconciledPath, retiredPath);
             File.Move(compactedPath, reconciledPath);
             File.Delete(retiredPath);
 
-            rowsBefore += result.OrigRowCount;
-            rowsAfter += result.NWritten;
-            ctx.LogInfo(string.Format(@"  Kept {0:N0} of {1:N0} rows",
-                result.NWritten, result.OrigRowCount));
+            return (result.NWritten, result.OrigRowCount);
         }
     }
 }

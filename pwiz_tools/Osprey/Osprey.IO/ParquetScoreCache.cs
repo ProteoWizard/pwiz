@@ -1169,6 +1169,14 @@ namespace pwiz.Osprey.IO
         /// Stage 4 parquet, which is how Stage 4 became a required Stage 7 input (#4486).
         /// Gap-fill rows are always emitted; they are survivors by construction.
         ///
+        /// <paramref name="progressIndent"/> is the leading whitespace for the write's own
+        /// progress heading, or null to run the write SILENTLY. Silence is what a caller that
+        /// already reports per file wants: two reporters at one indent emit bare "N%" lines
+        /// that cannot be attributed to the level that produced them, and the inner one's
+        /// heading lands above the outer's first line because a reporter announces itself on
+        /// its first Report. A caller that owns the surrounding block passes its own indent,
+        /// so the percent lines sit one level under it.
+        ///
         /// Returns the replaced-row, appended-row (gap-fill), and original-row counts. The
         /// original-row count is rows READ, not emitted, so it still describes the input.
         /// Overlay indices that fall past the original's rows are dropped with a warning
@@ -1180,7 +1188,7 @@ namespace pwiz.Osprey.IO
             IReadOnlyList<FdrEntry> gapFill,
             Dictionary<string, string> metadata,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById, string fileName,
-            ISet<(uint, byte, uint)> keepIdentities,
+            ISet<(uint, byte, uint)> keepIdentities, string progressIndent,
             Action<string> logWarning)
         {
             if (originalPath == null)
@@ -1217,8 +1225,8 @@ namespace pwiz.Osprey.IO
 
                 using (var writeStream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 using (var writer = RunSync(ParquetWriter.CreateAsync(schema, writeStream)))
-                using (var progress = new ProgressReporter(
-                    string.Format("Writing {0} entries", totalRows), totalRows, string.Empty,
+                using (var progress = progressIndent == null ? null : new ProgressReporter(
+                    string.Format("Writing {0} entries", totalRows), totalRows, progressIndent,
                     ProgressReporter.IO_INTERVAL_SECONDS))
                 {
                     writer.CompressionMethod = CompressionMethod.Zstd;
@@ -1244,7 +1252,7 @@ namespace pwiz.Osprey.IO
                         // Report rows CONSUMED, not written. With the compacted-away rows
                         // dropped the two differ by ~5.6x, and a bar driven by the written
                         // count would stall short of its total for the whole write.
-                        progress.Report(origRead + gapIdx);
+                        progress?.Report(origRead + gapIdx);
                         buffer.Clear();
                     }
 

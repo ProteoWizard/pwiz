@@ -564,7 +564,7 @@ namespace pwiz.Osprey.Tasks
                 string upgradedPath = reconciledPath + @".upgraded";
                 var result = ParquetScoreCache.StreamReconciledScoresParquet(
                     reconciledPath, upgradedPath, null, null, metadata, libraryById,
-                    kv.Key, keepIdentities, ctx.LogWarning);
+                    kv.Key, keepIdentities, null, ctx.LogWarning);
                 File.Delete(reconciledPath);
                 File.Move(upgradedPath, reconciledPath);
                 upgraded++;

@@ -3009,7 +3009,8 @@ namespace pwiz.Osprey.Test
                 // New behavior: stream the transfer.
                 var warnings = new List<string>();
                 var result = ParquetScoreCache.StreamReconciledScoresParquet(
-                    originalPath, streamPath, overlayByIndex, gapFill, null, null, "f.mzML", null, warnings.Add);
+                    originalPath, streamPath, overlayByIndex, gapFill, null, null, "f.mzML", null,
+                    null, warnings.Add);
                 ParquetScoreCache.RowGroupRowCapForTest = null;
 
                 // Counts: two in-range overlays replaced, two gap-fill appended, 7 originals.
@@ -3098,7 +3099,7 @@ namespace pwiz.Osprey.Test
 
                 var result = ParquetScoreCache.StreamReconciledScoresParquet(
                     originalPath, subsetPath, new Dictionary<uint, FdrEntry>(), gapFill,
-                    null, null, "f.mzML", keep, s => { });
+                    null, null, "f.mzML", keep, null, s => { });
 
                 Assert.AreEqual(1, result.NAppended);
                 // Rows READ, not emitted - the count still describes the input.

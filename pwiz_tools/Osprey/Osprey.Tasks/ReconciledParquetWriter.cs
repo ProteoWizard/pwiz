@@ -100,7 +100,7 @@ namespace pwiz.Osprey.Tasks
             {
                 var result = ParquetScoreCache.StreamReconciledScoresParquet(
                     originalPath, reconciledPath, overlayByIndex, gapFill,
-                    metadata, libraryById, fileName, keepIdentities, logWarning);
+                    metadata, libraryById, fileName, keepIdentities, @"  ", logWarning);
                 nReplaced = result.NReplaced;
                 nAppended = result.NAppended;
                 origRowCount = result.OrigRowCount;
