@@ -1017,8 +1017,23 @@ namespace pwiz.Osprey.FDR
             var minRunBothByEntryId = new Dictionary<uint, double>();
             var minRunBothByPeptide = new Dictionary<(string ModifiedSequence, bool IsDecoy), double>();
             foreach (var kvp in perFileEntries)
+                AccumulateExperimentQFloors(kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
+            foreach (var kvp in perFileEntries)
+                ApplyExperimentQFloors(kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
+        }
+
+        /// <summary>
+        /// Fold ONE file's entries into the experiment-q floors - the min run q per entry_id and
+        /// per (peptide, isDecoy). Both maps are O(distinct), so a caller can walk the run one
+        /// file at a time and drop each as it goes; nothing here needs a whole-run view.
+        /// </summary>
+        public static void AccumulateExperimentQFloors(
+            IReadOnlyList<FdrEntry> entries,
+            Dictionary<uint, double> minRunBothByEntryId,
+            Dictionary<(string ModifiedSequence, bool IsDecoy), double> minRunBothByPeptide)
+        {
             {
-                foreach (var e in kvp.Value)
+                foreach (var e in entries)
                 {
                     double runBoth = e.EffectiveRunQvalue(FdrLevel.Both);
                     double curPrec;
@@ -1039,10 +1054,21 @@ namespace pwiz.Osprey.FDR
                         minRunBothByPeptide[pkey] = runBoth;
                 }
             }
+        }
 
-            foreach (var kvp in perFileEntries)
+        /// <summary>
+        /// Raise ONE file's experiment q-values to the floors folded by
+        /// <see cref="AccumulateExperimentQFloors"/>. The apply half of the same operation,
+        /// separated so a streamed consumer can fold over every file first and then apply as it
+        /// revisits them - the floors are whole-run, the application is per row.
+        /// </summary>
+        public static void ApplyExperimentQFloors(
+            IReadOnlyList<FdrEntry> entries,
+            IReadOnlyDictionary<uint, double> minRunBothByEntryId,
+            IReadOnlyDictionary<(string ModifiedSequence, bool IsDecoy), double> minRunBothByPeptide)
+        {
             {
-                foreach (var e in kvp.Value)
+                foreach (var e in entries)
                 {
                     double floorPrec;
                     if (minRunBothByEntryId.TryGetValue(e.EntryId, out floorPrec) &&
