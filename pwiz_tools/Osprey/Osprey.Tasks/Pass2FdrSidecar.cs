@@ -730,7 +730,9 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static void PatchPass2ProteinQvalues(
             PipelineContext ctx,
-            IList<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
+            IReadOnlyList<string> fileNames,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            IReadOnlyDictionary<string, double> peptideQvalues)
         {
             var inputByName = new Dictionary<string, string>();
             foreach (var inputFile in ctx.Config.InputFiles)
@@ -745,13 +747,13 @@ namespace pwiz.Osprey.Tasks
             // it is per-file work and reports as such.
             int patchIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Patching pass-2 protein q into {0} sidecar(s)", perFileEntries.Count),
-                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                       string.Format(@"Patching pass-2 protein q into {0} sidecar(s)", fileNames.Count),
+                       fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                foreach (var kvp in perFileEntries)
+                foreach (string fileName in fileNames)
                 {
                     progress.Report(++patchIdx);
-                    if (!inputByName.TryGetValue(kvp.Key, out string inputFile))
+                    if (!inputByName.TryGetValue(fileName, out string inputFile))
                         continue;
                     string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
                     // Two gates, deliberately, because ABSENT and UNUSABLE are different outcomes
@@ -766,13 +768,41 @@ namespace pwiz.Osprey.Tasks
                         continue;
                     if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
                     {
-                        failed.Add(kvp.Key);
+                        failed.Add(fileName);
                         continue;
                     }
 
-                    var byEntryId = new Dictionary<uint, double>(kvp.Value.Count);
-                    foreach (var e in kvp.Value)
-                        byEntryId[e.EntryId] = e.ExperimentProteinQvalue;
+                    // entry_id -> protein q, built from the RECONCILED parquet's own
+                    // modified_sequence column rather than from the survivor entries. That
+                    // column is where an entry's ModifiedSequence came from in the first place,
+                    // so the peptide -> q lookup matches by construction - and it is what lets
+                    // the write-back happen without the pool (#4486). The map is a SUPERSET of
+                    // the sidecar's records, which the patch tolerates: it rewrites only the
+                    // records the file holds. A peptide absent from the parsimony result takes
+                    // 1.0, exactly as the resident PropagateProteinQvalues did.
+                    var byEntryId = new Dictionary<uint, double>();
+                    try
+                    {
+                        string parquetPath =
+                            ParquetScoreCache.EffectiveScoresPathFromScoresPath(
+                                perFileParquetPaths[fileName]);
+                        ParquetScoreCache.ReadFdrStubScalars(parquetPath,
+                            (entryId, charge, isDecoy, coelutionSum, modseq) =>
+                            {
+                                double q;
+                                if (!peptideQvalues.TryGetValue(modseq ?? string.Empty, out q))
+                                    q = 1.0;
+                                byEntryId[entryId] = q;
+                            });
+                    }
+                    catch (Exception ex)
+                    {
+                        ctx.LogWarning(string.Format(
+                            @"Could not read the reconciled parquet scalars for {0}: {1}",
+                            fileName, ex.Message));
+                        failed.Add(fileName);
+                        continue;
+                    }
 
                     if (FdrScoresSidecar.PatchProteinQvalues(
                             pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass, out int patchedHere))
@@ -782,7 +812,7 @@ namespace pwiz.Osprey.Tasks
                     }
                     else
                     {
-                        failed.Add(kvp.Key);
+                        failed.Add(fileName);
                     }
                 }
             }

@@ -264,7 +264,7 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(@"Running protein-level FDR at {0:P1}...",
                 config.EffectiveProteinFdr));
             var swProtein = Stopwatch.StartNew();
-            RunProteinFdr(perFileEntries, fullLibrary, config, ctx);
+            RunProteinFdr(rescored, perFileParquetPaths, fullLibrary, config, ctx);
             swProtein.Stop();
             ctx.LogInfo(string.Format(@"[STAGE-WALL] stage7: {0:F1}s",
                 swProtein.Elapsed.TotalSeconds));
@@ -434,13 +434,14 @@ namespace pwiz.Osprey.Tasks
         /// cannot move into the engine.
         /// </summary>
         private void RunProteinFdr(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            RescoredEntries rescored,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
             List<LibraryEntry> fullLibrary,
             OspreyConfig config,
             PipelineContext ctx)
         {
             var result = ProteinFdrEngine.RunSecondPass(
-                perFileEntries, fullLibrary, config, ctx.LogInfo);
+                rescored.Files(), fullLibrary, config, ctx.LogInfo);
 
             // The 2nd-pass sidecar was written BEFORE this protein FDR ran - it is one of its
             // inputs - so the protein column it carries is still the pass-1 value at this point.
@@ -464,7 +465,10 @@ namespace pwiz.Osprey.Tasks
             // 2nd-pass sidecar's mtime, which is exactly the signal used to tell when a run's
             // inputs were produced. Caught by the mode 7 regeneration leg.
             if (AnyReconciledParquet(config) && !config.DiagnosticsOnly)
-                Pass2FdrSidecar.PatchPass2ProteinQvalues(ctx, perFileEntries);
+            {
+                Pass2FdrSidecar.PatchPass2ProteinQvalues(
+                    ctx, rescored.FileNames, perFileParquetPaths, result.ProteinFdr.PeptideQvalues);
+            }
 
             // Cross-impl bisection dump (env-var-gated, no-op in production).
             if (ctx.Diagnostics?.DumpDetectedPeptides ?? false)
@@ -489,7 +493,7 @@ namespace pwiz.Osprey.Tasks
             // full per-file pool + library in hand.
             if ((config.WriteProteinReport || config.WriteSummaryReport) && !config.DiagnosticsOnly)
             {
-                OspreyReportWriter.WriteReports(result, perFileEntries, fullLibrary, config, ctx.LogInfo);
+                OspreyReportWriter.WriteReports(result, rescored, fullLibrary, config, ctx.LogInfo);
             }
         }
 

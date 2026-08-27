@@ -114,15 +114,28 @@ namespace pwiz.Osprey.FDR
         /// early-exit WITHOUT recomputing them. Moved here from
         /// <c>SecondPassFdrTask.RunProteinFdr</c> (the dump / early-exit blocks stay in
         /// the Tasks facade -- see the type remarks for why).
+        ///
+        /// <para>The entries are enumerated ONCE. Both reductions - the per-peptide bests and
+        /// the detected set - are folded in a single walk, so a streamed caller materializes
+        /// each file once and drops it; they used to be two passes over a resident list
+        /// (#4486). Neither retains an entry, and both are O(distinct peptide). The write-back
+        /// that used to follow them is gone: it is now the caller's per-file sidecar patch, the
+        /// same shape the first pass already uses.</para>
         /// </summary>
         public static SecondPassProteinFdrResult RunSecondPass(
-            IList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IEnumerable<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IList<LibraryEntry> fullLibrary,
             OspreyConfig config,
             Action<string> logInfo)
         {
-            // Collect best peptide scores
-            var bestScores = ProteinFdr.CollectBestPeptideScores(perFileEntries);
+            var accumulator = new ProteinFdr.SecondPassProteinFdrAccumulator(
+                config.FdrLevel, config.ExperimentFdr);
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var entry in kvp.Value)
+                    accumulator.Add(entry);
+            }
+            var bestScores = accumulator.FinishBestScores();
             logInfo?.Invoke(string.Format("Collected scores for {0} unique peptides", bestScores.Count));
 
             // Get detected peptide set: targets passing experiment-level
@@ -142,18 +155,7 @@ namespace pwiz.Osprey.FDR
             // important property is that the gate level matches Rust's
             // default `FdrLevel::Precursor`, NOT a hardcoded Peptide.
             var peptideGateLevel = config.FdrLevel;
-            var detectedPeptides = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var kvp in perFileEntries)
-            {
-                foreach (var entry in kvp.Value)
-                {
-                    if (!entry.IsDecoy &&
-                        entry.EffectiveExperimentQvalue(peptideGateLevel) <= config.ExperimentFdr)
-                    {
-                        detectedPeptides.Add(entry.ModifiedSequence);
-                    }
-                }
-            }
+            var detectedPeptides = accumulator.DetectedPeptides;
 
             logInfo?.Invoke(string.Format("Detected {0} unique peptides at {1:P1} experiment FDR ({2})",
                 detectedPeptides.Count, config.ExperimentFdr, peptideGateLevel));
@@ -189,16 +191,14 @@ namespace pwiz.Osprey.FDR
                 "[COUNT] Protein groups passing FDR: {0} at {1:P0}",
                 passingProteins, config.EffectiveProteinFdr));
 
-            // Propagate protein q-values to FdrEntry stubs. The Stage-7
-            // diagnostic dumps + Stage7ProteinFdrOnly early-exit are owned by
-            // the Tasks facade (they need IOspreyDiagnostics, which this FDR
-            // project cannot reference); the facade fires them from the
-            // returned artifacts. Propagation only mutates the stubs, which
-            // the dumps do not read, so emitting the dump after propagation is
-            // output-invariant -- and matches the first-pass ordering, where
-            // RunFirstPassProteinFdr likewise propagates before the facade dump.
-            ProteinFdr.PropagateProteinQvalues(perFileEntries, proteinFdr);
-
+            // No propagation onto the stubs. The protein q-value's only consumer past this
+            // point is the 2nd-pass sidecar, and its producer is now the caller's per-file
+            // patch off ProteinFdr.PeptideQvalues - one streamed pass in place of a whole-pool
+            // write followed by a whole-pool read (#4486), and the same shape the first pass
+            // has used since it moved onto projections. The Stage-7 diagnostic dumps and the
+            // Stage7ProteinFdrOnly early-exit stay in the Tasks facade (they need
+            // IOspreyDiagnostics, which this FDR project cannot reference) and read the
+            // returned artifacts rather than the stubs, so they are unaffected.
             return new SecondPassProteinFdrResult(detectedPeptides, parsimony, proteinFdr);
         }
 
