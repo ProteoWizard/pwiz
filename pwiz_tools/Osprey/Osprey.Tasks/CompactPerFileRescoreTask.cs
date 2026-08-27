@@ -110,7 +110,17 @@ namespace pwiz.Osprey.Tasks
             {
                 string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
                 if (!File.Exists(reconciledPath))
+                {
+                    // Reported, not skipped in silence. A cohort file with no reconciled
+                    // parquet is either a directory that was never rescored or the hole a
+                    // crashed conversion left, and "nothing to do" must not be able to mean
+                    // "one file has no artifact at all".
+                    ctx.LogWarning(string.Format(
+                        @"--task CompactPerFileRescoring: no reconciled parquet for {0}; skipping.",
+                        Path.GetFileNameWithoutExtension(
+                            RescoreHydration.SyntheticInputFromParquet(scoresPath))));
                     continue;
+                }
                 var footer = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
                 footer.TryGetValue(@"osprey.reconciled", out string marker);
                 if (string.Equals(marker, ParquetScoreCache.RECONCILED_SURVIVORS, StringComparison.Ordinal))
@@ -239,10 +249,11 @@ namespace pwiz.Osprey.Tasks
         /// Compact one file: select its survivors, stream the parquet through the same writer
         /// Stage 6 uses, and swap the result in.
         ///
-        /// <para>The swap is Move -> Move -> Delete rather than Delete -> Move so that a crash
-        /// between the steps leaves BOTH copies rather than neither. The footer is preserved
-        /// key for key except <c>osprey.reconciled</c>, so the version stamp and the search /
-        /// library / reconciliation hashes still describe the run that produced the rows.</para>
+        /// <para>The swap is <see cref="File.Replace(string,string,string)"/>, so the reconciled
+        /// path is never absent: a crash cannot leave a cohort file with no artifact, which the
+        /// rerun would skip in silence. The footer is preserved key for key except
+        /// <c>osprey.reconciled</c>, so the version stamp and the search / library /
+        /// reconciliation hashes still describe the run that produced the rows.</para>
         /// </summary>
         private static (int NWritten, int OrigRowCount) CompactOneFile(string fileName,
             string reconciledPath, ICollection<uint> retainBaseIds,
@@ -265,9 +276,15 @@ namespace pwiz.Osprey.Tasks
                 reconciledPath, compactedPath, null, null, metadata, libraryById,
                 fileName, keepIdentities, null, ctx.LogWarning);
 
+            // File.Replace, not a Move dance: the reconciled path is never absent at any
+            // point, so a crash cannot leave a cohort file with no artifact - which the
+            // rerun's File.Exists check would then skip in silence. It also OVERWRITES a
+            // stale backup left by an earlier crash, where a Move onto an existing .retired
+            // throws and aborts the rest of the cohort. Verified against a hard-linked
+            // destination, which is what a -LinkFrom run directory holds: the link being
+            // replaced takes the new data and the source run's own link keeps the old.
             string retiredPath = reconciledPath + @".retired";
-            File.Move(reconciledPath, retiredPath);
-            File.Move(compactedPath, reconciledPath);
+            File.Replace(compactedPath, reconciledPath, retiredPath);
             File.Delete(retiredPath);
 
             return (result.NWritten, result.OrigRowCount);
