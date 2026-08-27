@@ -598,8 +598,7 @@ namespace pwiz.Osprey.Tasks
                     reconciledPath, upgradedPath, null, null, metadata, libraryById,
                     kv.Key, keepIdentities, null, ctx.LogWarning);
                 string retiredPath = reconciledPath + @".retired";
-                File.Move(reconciledPath, retiredPath);
-                File.Move(upgradedPath, reconciledPath);
+                File.Replace(upgradedPath, reconciledPath, retiredPath);
                 File.Delete(retiredPath);
                 upgraded++;
                 ctx.LogInfo(string.Format(
