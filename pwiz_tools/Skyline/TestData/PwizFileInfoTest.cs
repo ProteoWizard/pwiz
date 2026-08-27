@@ -321,7 +321,15 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        [TestMethod]
+        // Reads swath.api.wiff2 out of the shared vendor data directory, the same file
+        // TestInstrumentInfo above is excluded for. On net8 that goes through the Sciex SDK
+        // shimmed into a side-by-side load context, and a second process opening the file while
+        // another holds it does not fail - it takes the process down, with no managed exception
+        // and a container exit code of -1. Five workers were lost to this test in two nightly
+        // runs, on four different languages, while the run reported no failures.
+        // Only across the Docker volume mount: four processes on local NTFS share the file
+        // 40 times each without trouble, so nothing a Skyline user does is affected.
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)]
         public void TestInstrumentSerialNumbers()
         {
             if (SkipWiff2TestInTestExplorer(nameof(TestInstrumentSerialNumbers)))

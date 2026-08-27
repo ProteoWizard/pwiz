@@ -1940,7 +1940,31 @@ namespace TestRunner
                                     // pair it usually is, which would mean never noticing a worker died
                                     if (workerInfo.Retired || cts.IsCancellationRequested)
                                         return;
-                                    Console.WriteLine($"Worker {workerName} stopped responding while working on test {workerInfo.CurrentTest}.");
+                                    // Reported as a FAILURE, in the shape Report() and SkylineNightly
+                                    // parse, and written to the LOG rather than only to the console.
+                                    // A lost worker used to be one plain line among thousands of
+                                    // results: it named the test but counted for nothing, so a run
+                                    // that shed half its workers still ended saying "No failures" and
+                                    // read as a 40% performance regression instead of five crashes.
+                                    // CurrentTest is "Name/Language/Pass"; the bare name goes on the
+                                    // !!! line because that is what the parsers key on.
+                                    var lostTest = workerInfo.CurrentTest ?? "(no test)";
+                                    var lostTestName = lostTest.Split('/')[0];
+                                    lock (workerInfoByName)   // Every worker's heartbeat runs its own thread
+                                    {
+                                        foreach (var line in new[]
+                                        {
+                                            $"!!! {lostTestName} FAILED",
+                                            $"Worker {workerName} stopped responding while running {lostTest} " +
+                                            @"and was lost. The test did not fail - the process running it went away.",
+                                            @"!!!"
+                                        })
+                                        {
+                                            Console.WriteLine(line);
+                                            log?.WriteLine(line);
+                                        }
+                                        log?.Flush();
+                                    }
                                     if (commandLineArgs.ArgAsBool("coverage"))
                                     {
                                         Console.WriteLine("Aborting coverage run due to failed worker (coverage from that worker is lost).");
@@ -2034,13 +2058,19 @@ namespace TestRunner
             // Every worker has finished, so anything still queued is work nobody ever ran - most likely
             // because the only worker that could have run it went away. Report that rather than passing:
             // a run that quietly skipped tests must not look like a run that passed them.
-            var neverRun = testQueue.Concat(nonParallelTestQueue).Concat(abandonedEntries).ToList();
-
             // A run that loops until something stops it always has work outstanding at the moment it
-            // stops, so leftover entries prove nothing by themselves. The ones that never ran at all
-            // still do.
+            // stops, so leftover QUEUE entries prove nothing by themselves. The ones that never ran
+            // at all still do.
+            var leftInQueue = testQueue.Concat(nonParallelTestQueue).ToList();
             if (LoopsForever(loop))
-                neverRun = neverRun.Where(entry => !entry.HasRun).ToList();
+                leftInQueue = leftInQueue.Where(entry => !entry.HasRun).ToList();
+
+            // Abandoned entries are NOT subject to that: they were taken from the queue by a worker
+            // that then went away or wedged, which is a failure whatever the loop mode. Filtering
+            // them by HasRun is what hid this all along - a test that dies on its fifth pass has run
+            // four times, so every one of them was dropped, and four nights of runs that each lost
+            // half their workers ended reporting no failures at all.
+            var neverRun = leftInQueue.Concat(abandonedEntries).ToList();
 
             if (neverRun.Count > 0)
             {
