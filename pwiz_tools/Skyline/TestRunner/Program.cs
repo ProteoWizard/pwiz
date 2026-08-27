@@ -1940,8 +1940,11 @@ namespace TestRunner
                                     // pair it usually is, which would mean never noticing a worker died
                                     if (workerInfo.Retired || cts.IsCancellationRequested)
                                         return;
-                                    // Reported as a FAILURE, in the shape Report() and SkylineNightly
-                                    // parse, and written to the LOG rather than only to the console.
+                                    // Reported as a FAILURE of the TEST, in the shape Report() and
+                                    // SkylineNightly parse, and written to the LOG rather than only to
+                                    // the console. Taking the process down is the most serious way a
+                                    // test can fail, not an excuse for it: the only thing missing is
+                                    // the stack trace, because nothing survived to write one.
                                     // A lost worker used to be one plain line among thousands of
                                     // results: it named the test but counted for nothing, so a run
                                     // that shed half its workers still ended saying "No failures" and
@@ -1955,8 +1958,9 @@ namespace TestRunner
                                         foreach (var line in new[]
                                         {
                                             $"!!! {lostTestName} FAILED",
-                                            $"Worker {workerName} stopped responding while running {lostTest} " +
-                                            @"and was lost. The test did not fail - the process running it went away.",
+                                            $"Worker {workerName} exited unexpectedly while running {lostTest}. " +
+                                            @"No stack trace to report: the test took the process down with it, so " +
+                                            @"nothing was left to write one.",
                                             @"!!!"
                                         })
                                         {
