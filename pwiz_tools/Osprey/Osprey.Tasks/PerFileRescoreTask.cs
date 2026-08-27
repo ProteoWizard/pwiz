@@ -1857,17 +1857,32 @@ namespace pwiz.Osprey.Tasks
             if (plan.Loader == null)
                 return;
             var sw = Stopwatch.StartNew();
-            MaterializeAllSurvivors(plan.Buffer, plan.Loader, ctx);
-            if (plan.RescoredFiles != null)
+            // ONE per-file pass, not three whole-run ones. Load, reset, overlay and release
+            // are each already per-file inside their own loop body - none of them reads
+            // another file's entries - so running them together per file is the same work in
+            // the same order for every file, and it is the seam a streamed Stage 7 needs: a
+            // consumer that folds and drops has to be able to ask for ONE file's post-rescore
+            // state (#4486). Until Stage 7 does that this is also one progress line where
+            // there were two.
+            using (var progress = new ProgressReporter(string.Format(
+                       @"Rebuilding first-pass survivors from {0} file(s)", plan.Buffer.Count),
+                       plan.Buffer.Count))
             {
-                // BEFORE the overlay, which appends gap-fill rows and re-sorts: the
-                // planner's indices address the survivor list as loaded, and the sort
-                // moves the appended rows into EntryId order, shifting every position
-                // after them. The overlay preserves Score / q-values, so the reset
-                // survives it.
-                ResetRescoredTargets(plan);
-                OverlayReconciledIntoFiles(plan.Buffer, plan.ReconciledPaths, plan.GapFill,
-                    canonicalize: false);
+                int done = 0;
+                foreach (var kv in plan.Buffer)
+                {
+                    progress.Report(++done);
+                    MaterializeFileSurvivors(kv.Key, kv.Value, plan.Loader, ctx);
+                    if (plan.RescoredFiles == null)
+                        continue;
+                    // BEFORE the overlay, which appends gap-fill rows: the planner's indices
+                    // address the survivor list as loaded, and appending shifts nothing but
+                    // would be indexed if the reset ran after. The overlay preserves Score /
+                    // q-values, so the reset survives it.
+                    ResetRescoredTargetsForFile(plan, kv.Key, kv.Value);
+                    OverlayReconciledIntoFile(kv.Key, kv.Value, plan.ReconciledPaths,
+                        plan.GapFill, canonicalize: false);
+                }
             }
             sw.Stop();
             ctx.LogInfo(string.Format(@"[STAGE-WALL] survivor-pool {0:F1}s ({1} files)",
@@ -1928,18 +1943,30 @@ namespace pwiz.Osprey.Tasks
                 foreach (var kv in perFileEntries)
                 {
                     progress.Report(++done);
-                    if (kv.Value.Count > 0)
-                        continue;
-                    var stubs = loader.Load(kv.Key, out string error);
-                    if (stubs == null)
-                    {
-                        ctx.LogError(error);
-                        ctx.ExitCode = 1;
-                        throw new InvalidDataException(error);
-                    }
-                    kv.Value.AddRange(stubs);
+                    MaterializeFileSurvivors(kv.Key, kv.Value, loader, ctx);
                 }
             }
+        }
+
+        /// <summary>
+        /// Refill ONE file's survivor list, or leave it alone when it already holds entries
+        /// so a second call is a no-op. The per-file half of
+        /// <see cref="MaterializeAllSurvivors"/>, separate because a streamed consumer needs
+        /// one file at a time and the whole-run loop is only one of its callers.
+        /// </summary>
+        private static void MaterializeFileSurvivors(string fileName, List<FdrEntry> entries,
+            FirstPassSurvivorLoader loader, PipelineContext ctx)
+        {
+            if (entries.Count > 0)
+                return;
+            var stubs = loader.Load(fileName, out string error);
+            if (stubs == null)
+            {
+                ctx.LogError(error);
+                ctx.ExitCode = 1;
+                throw new InvalidDataException(error);
+            }
+            entries.AddRange(stubs);
         }
 
         /// <summary>
@@ -1965,7 +1992,7 @@ namespace pwiz.Osprey.Tasks
         /// same canonical order the planner indexed, so the positional indices select the
         /// same entries they did during the rescore.</para>
         ///
-        /// <para>Applied ONLY to the files in <see cref="RescoredPoolPlan.RescoredFiles"/> -
+        /// <para>A no-op for a file outside <see cref="RescoredPoolPlan.RescoredFiles"/> -
         /// the ones that actually reached <see cref="OverlayRescoredEntries"/>. Having
         /// planner targets is not the same as having been rescored: a file that took the
         /// per-file resume skip (<see cref="TryResumeRescoredFile"/>), or whose
@@ -1976,42 +2003,39 @@ namespace pwiz.Osprey.Tasks
         /// would drop out of the report. That is the mirror image of the over-reporting this
         /// reset exists to fix.</para>
         /// </summary>
-        private static void ResetRescoredTargets(RescoredPoolPlan plan)
+        private static void ResetRescoredTargetsForFile(RescoredPoolPlan plan, string fileName,
+            List<FdrEntry> entries)
         {
+            if (!plan.RescoredFiles.Contains(fileName))
+                return;
             var consensus = plan.ConsensusTargets;
             var reconTargets = plan.ReconciliationTargets;
-            foreach (var kv in plan.Buffer)
+            var indices = new HashSet<int>();
+            if (consensus != null && consensus.TryGetValue(fileName, out var consensusTargets))
             {
-                if (!plan.RescoredFiles.Contains(kv.Key))
-                    continue;
-                var indices = new HashSet<int>();
-                if (consensus != null && consensus.TryGetValue(kv.Key, out var consensusTargets))
+                foreach (var t in consensusTargets)
+                    indices.Add(t.Index);
+            }
+            if (reconTargets != null && reconTargets.TryGetValue(fileName, out var recon))
+            {
+                foreach (var t in recon)
+                    indices.Add(t.Index);
+            }
+            foreach (int idx in indices)
+            {
+                // A planner index outside the rebuilt list means the rebuild did not
+                // reproduce the list the planner indexed - which would silently reset the
+                // WRONG rows for every index that IS in range. Skipping it (as this did)
+                // swallowed the one cheap symptom of a misaligned rebuild; the fresh
+                // rescore would have thrown IndexOutOfRange on the same index.
+                if (idx < 0 || idx >= entries.Count)
                 {
-                    foreach (var t in consensusTargets)
-                        indices.Add(t.Index);
+                    throw new InvalidDataException(string.Format(
+                        @"Stage 6 rebuild: planner index {0} for {1} is outside the rebuilt " +
+                        @"survivor list ({2} entries). The rebuilt buffer does not match the " +
+                        @"one the planner indexed.", idx, fileName, entries.Count));
                 }
-                if (reconTargets != null && reconTargets.TryGetValue(kv.Key, out var recon))
-                {
-                    foreach (var t in recon)
-                        indices.Add(t.Index);
-                }
-                var entries = kv.Value;
-                foreach (int idx in indices)
-                {
-                    // A planner index outside the rebuilt list means the rebuild did not
-                    // reproduce the list the planner indexed - which would silently reset the
-                    // WRONG rows for every index that IS in range. Skipping it (as this did)
-                    // swallowed the one cheap symptom of a misaligned rebuild; the fresh
-                    // rescore would have thrown IndexOutOfRange on the same index.
-                    if (idx < 0 || idx >= entries.Count)
-                    {
-                        throw new InvalidDataException(string.Format(
-                            @"Stage 6 rebuild: planner index {0} for {1} is outside the rebuilt " +
-                            @"survivor list ({2} entries). The rebuilt buffer does not match the " +
-                            @"one the planner indexed.", idx, kv.Key, entries.Count));
-                    }
-                    entries[idx].ResetScores();
-                }
+                entries[idx].ResetScores();
             }
         }
 
@@ -2063,39 +2087,54 @@ namespace pwiz.Osprey.Tasks
                 foreach (var kv in perFileEntries)
                 {
                     progress.Report(++done);
-                    // Overlay each file's reconciled boundaries when the caller judged its
-                    // .scores-reconciled.parquet present AND CURRENT; no-work files (none on
-                    // disk) keep their 1st-pass boundaries, matching a fresh run.
-                    //
-                    // Validity, not mere existence. The rescore's own per-file gate
-                    // (TryResumeRescoredFile) asks PerFileResumeDriver.IsCurrent, so testing
-                    // File.Exists accepted a reconciled parquet this run would have REJECTED
-                    // and re-scored - one left by a run with different reconciliation
-                    // parameters, say. That overlays stale boundaries onto a cold run's buffer,
-                    // which is worse than the no-work fallback of leaving 1st-pass values.
-                    if (reconciledPaths != null &&
-                        reconciledPaths.TryGetValue(kv.Key, out string reconciledPath))
-                    {
-                        IReadOnlyList<GapFillTarget> gapFillForFile = null;
-                        if (gapFill != null && gapFill.TryGetValue(kv.Key, out var gfList))
-                            gapFillForFile = gfList;
-                        OverlayReconciledIntoBuffer(kv.Value, reconciledPath, gapFillForFile);
-                    }
-                    // Canonical sort for EVERY file (incl. no-work files) so the WARM
-                    // buffer order matches the order COLD establishes in
-                    // RunPercolatorFdr, independent of whether the file was rescored.
-                    if (canonicalize)
-                        SortFileEntriesCanonical(kv.Value);
-                    // Same release the rescore path does once a file's reconciled parquet is
-                    // on disk: the overlay above re-fattened this file's entries straight
-                    // from that parquet, and holding those arrays for every file is the
-                    // O(files) Stage-6 growth term. A no-work file was never fattened, so
-                    // this is a no-op there. Nothing downstream reads them off the buffer -
-                    // SecondPassFDR's 2nd pass reloads PIN features from the reconciled parquet
-                    // by identity - and this leaves the same buffer shape COLD leaves.
-                    ReleaseRescoredPayload(kv.Value);
+                    OverlayReconciledIntoFile(kv.Key, kv.Value, reconciledPaths, gapFill,
+                        canonicalize);
                 }
             }
+        }
+
+        /// <summary>
+        /// The per-file half of <see cref="OverlayReconciledIntoFiles"/> - overlay one file's
+        /// reconciled parquet, optionally canonicalize, and release the re-fattened payload.
+        /// Separate because a streamed Stage 7 consumes one file at a time and the whole-run
+        /// loop is only one of its callers.
+        /// </summary>
+        private static void OverlayReconciledIntoFile(string fileName, List<FdrEntry> entries,
+            IReadOnlyDictionary<string, string> reconciledPaths,
+            IReadOnlyDictionary<string, List<GapFillTarget>> gapFill,
+            bool canonicalize)
+        {
+            // Overlay this file's reconciled boundaries when the caller judged its
+            // .scores-reconciled.parquet present AND CURRENT; no-work files (none on
+            // disk) keep their 1st-pass boundaries, matching a fresh run.
+            //
+            // Validity, not mere existence. The rescore's own per-file gate
+            // (TryResumeRescoredFile) asks PerFileResumeDriver.IsCurrent, so testing
+            // File.Exists accepted a reconciled parquet this run would have REJECTED
+            // and re-scored - one left by a run with different reconciliation
+            // parameters, say. That overlays stale boundaries onto a cold run's buffer,
+            // which is worse than the no-work fallback of leaving 1st-pass values.
+            if (reconciledPaths != null &&
+                reconciledPaths.TryGetValue(fileName, out string reconciledPath))
+            {
+                IReadOnlyList<GapFillTarget> gapFillForFile = null;
+                if (gapFill != null && gapFill.TryGetValue(fileName, out var gfList))
+                    gapFillForFile = gfList;
+                OverlayReconciledIntoBuffer(entries, reconciledPath, gapFillForFile);
+            }
+            // Canonical sort for EVERY file (incl. no-work files) so the WARM
+            // buffer order matches the order COLD establishes in
+            // RunPercolatorFdr, independent of whether the file was rescored.
+            if (canonicalize)
+                SortFileEntriesCanonical(entries);
+            // Same release the rescore path does once a file's reconciled parquet is
+            // on disk: the overlay above re-fattened this file's entries straight
+            // from that parquet, and holding those arrays for every file is the
+            // O(files) Stage-6 growth term. A no-work file was never fattened, so
+            // this is a no-op there. Nothing downstream reads them off the buffer -
+            // SecondPassFDR's 2nd pass reloads PIN features from the reconciled parquet
+            // by identity - and this leaves the same buffer shape COLD leaves.
+            ReleaseRescoredPayload(entries);
         }
 
         /// <summary>
