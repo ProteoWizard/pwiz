@@ -92,7 +92,13 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        [TestMethod]
+        // PressureTrace1.wiff, below, is read out of the shared vendor data directory through the
+        // SAME Sciex reader the two tests above are excluded for - the legacy .wiff path rather than
+        // .wiff2, which is why a sweep looking for "wiff2" missed it and why this test killed a
+        // worker within the hour of that sweep reporting nothing else exposed.
+        // The other vendors here are not the problem: Thermo shared data survives six concurrent
+        // containers at 100 runs each.
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)]
         public void TestTicChromatogram()
         {
             if (Skyline.Program.NoVendorReaders)
