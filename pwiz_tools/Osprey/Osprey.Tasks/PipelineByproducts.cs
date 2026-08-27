@@ -308,6 +308,34 @@ namespace pwiz.Osprey.Tasks
         /// <summary>The buffer already at its post-rescore state - nothing deferred.</summary>
         public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
 
+        /// <summary>
+        /// The run's file names, available WITHOUT materializing anything. A streamed consumer
+        /// walks these and asks for one file at a time through <see cref="LoadFile"/>; reading
+        /// <see cref="PerFileEntries.Value"/> instead is what builds the whole-run pool.
+        /// </summary>
+        public IReadOnlyList<string> FileNames { get; private set; }
+
+        /// <summary>
+        /// Bring ONE file to its post-rescore state, into a fresh list the caller owns and can
+        /// drop. Null when this milestone carries an already-built buffer and there is nothing
+        /// to stream from (the resident and no-rescore paths).
+        ///
+        /// <para>This is the seam #4486 turns on. Every consumer that folds to an O(distinct)
+        /// aggregate can walk <see cref="FileNames"/> and drop each file as it goes, where
+        /// <see cref="PerFileEntries.Value"/> forces all 257 files resident at once - 40.23 GB
+        /// post-GC on the CHS cohort, against a library of 4.19 GB.</para>
+        /// </summary>
+        public Func<string, List<FdrEntry>> LoadFile { get; private set; }
+
+        /// <summary>Attach the streaming surface; see <see cref="LoadFile"/>.</summary>
+        public RescoredEntries WithStreaming(
+            IReadOnlyList<string> fileNames, Func<string, List<FdrEntry>> loadFile)
+        {
+            FileNames = fileNames;
+            LoadFile = loadFile;
+            return this;
+        }
+
         /// <param name="value">The shared backing buffer, filled in place by
         /// <paramref name="materialize"/>.</param>
         /// <param name="materialize">Brings <paramref name="value"/> to its post-rescore

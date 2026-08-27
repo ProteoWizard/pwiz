@@ -265,7 +265,9 @@ namespace pwiz.Osprey.Tasks
             // and parked in _poolPlan; deferring the decision as well as the work would
             // read state that is no longer true by the time the pull comes (see
             // RescoredPoolPlan).
-            var rescored = new RescoredEntries(_perFileEntries, () => BuildRescoredPool(ctx));
+            var rescored = new RescoredEntries(_perFileEntries, () => BuildRescoredPool(ctx))
+                .WithStreaming(_perFileEntries.ConvertAll(kv => kv.Key),
+                               fileName => MaterializeOneFile(fileName, ctx));
             ctx.Publish(rescored);
 
             // Self-gate: rescore + reconciliation only run when there is
@@ -1986,6 +1988,35 @@ namespace pwiz.Osprey.Tasks
                     MaterializeFileSurvivors(kv.Key, kv.Value, loader, ctx);
                 }
             }
+        }
+
+        /// <summary>
+        /// Bring ONE file to its post-rescore state in a FRESH list, so a streamed consumer can
+        /// fold it and drop it. Exactly the sequence <see cref="BuildRescoredPool"/> runs per
+        /// file, minus the shared buffer: nothing here touches <c>_perFileEntries</c>, which is
+        /// what lets the whole-run pool never exist (#4486).
+        ///
+        /// <para>Returns an empty list for a file with no plan - the caller sees a file with no
+        /// survivors, which is what the resident path would have shown it too.</para>
+        /// </summary>
+        private List<FdrEntry> MaterializeOneFile(string fileName, PipelineContext ctx)
+        {
+            var plan = _poolPlan;
+            var entries = new List<FdrEntry>();
+            if (plan?.Loader == null)
+                return entries;
+            string reconciledPath = null;
+            plan.ReconciledPaths?.TryGetValue(fileName, out reconciledPath);
+            MaterializeFileSurvivors(fileName, entries, plan.Loader, ctx, reconciledPath);
+            if (plan.RescoredFiles == null)
+                return entries;
+            ResetRescoredTargetsForFile(plan, fileName, entries);
+            if (reconciledPath == null)
+            {
+                OverlayReconciledIntoFile(fileName, entries, plan.ReconciledPaths,
+                    plan.GapFill, canonicalize: false);
+            }
+            return entries;
         }
 
         /// <summary>
