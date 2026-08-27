@@ -109,5 +109,53 @@ namespace pwiz.Osprey.Test
             Assert.AreNotEqual(withNull["osprey.reconciliation_hash"],
                 withStems["osprey.reconciliation_hash"]);
         }
+
+        /// <summary>
+        /// --task CompactPerFileRescoring must REFUSE a reconciled parquet whose footer
+        /// names a library other than the one it was passed, and refuse one that names no
+        /// library at all.
+        ///
+        /// <para>This is a silent-corruption guard, which is why it is a unit test rather
+        /// than something the regression would catch. The compaction re-derives every row's
+        /// sequence, precursor m/z and protein_ids from the library BY ENTRY ID, and entry
+        /// ids are assigned at library load - so a different build of a same-named library
+        /// produces a well-formed parquet in which every row names the wrong peptide, and
+        /// the run that consumes it exits 0. Two SEA-AD entrapment libraries with identical
+        /// file names differ by 149,311 entries, and the wrong one rewrote 72 CHS files
+        /// before a run-log entry count gave it away.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestCompactRefusesForeignLibrary()
+        {
+            var config = new OspreyConfig
+            {
+                LibrarySource = new LibrarySource(LibraryFormat.DiannTsv,
+                    @"C:\lib\carafe_spectral_library.tsv")
+            };
+            var ctx = new PipelineContext(config, new OspreyTask[0], null, null, null);
+            string expected = config.Identity.LibraryIdentityHash();
+
+            // Matching hash: proceed, and nothing is reported.
+            var match = new Dictionary<string, string> { { "osprey.library_hash", expected } };
+            Assert.IsTrue(CompactPerFileRescoreTask.VerifyLibraryMatches(
+                @"f.scores-reconciled.parquet", match, expected, config, ctx));
+            Assert.AreEqual(0, ctx.ExitCode);
+
+            // A DIFFERENT library: refuse, and fail the run rather than warn. Warning and
+            // proceeding would rewrite the file with another peptide's identity on every row.
+            var foreign = new Dictionary<string, string>
+                { { "osprey.library_hash", new string('a', 64) } };
+            Assert.IsFalse(CompactPerFileRescoreTask.VerifyLibraryMatches(
+                @"f.scores-reconciled.parquet", foreign, expected, config, ctx));
+            Assert.AreEqual(1, ctx.ExitCode);
+
+            // No hash at all: also refused. "Cannot verify" is not "verified" when the
+            // rewrite is destructive and in place.
+            ctx.ExitCode = 0;
+            Assert.IsFalse(CompactPerFileRescoreTask.VerifyLibraryMatches(
+                @"f.scores-reconciled.parquet", new Dictionary<string, string>(),
+                expected, config, ctx));
+            Assert.AreEqual(1, ctx.ExitCode);
+        }
     }
 }

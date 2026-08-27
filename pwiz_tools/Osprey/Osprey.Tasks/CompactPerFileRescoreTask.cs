@@ -189,7 +189,7 @@ namespace pwiz.Osprey.Tasks
         /// is refused for the same reason - "cannot verify" and "verified" are not the same
         /// answer when the operation is destructive and in place.</para>
         /// </summary>
-        private static bool VerifyLibraryMatches(string reconciledPath,
+        internal static bool VerifyLibraryMatches(string reconciledPath,
             IReadOnlyDictionary<string, string> footer, string expectedLibraryHash,
             OspreyConfig config, PipelineContext ctx)
         {
