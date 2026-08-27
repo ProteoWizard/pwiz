@@ -124,6 +124,55 @@ namespace pwiz.Osprey.Test
         /// file names differ by 149,311 entries, and the wrong one rewrote 72 CHS files
         /// before a run-log entry count gave it away.</para>
         /// </summary>
+        /// <summary>
+        /// BuildScoreIndicesByPairing must recover every reconciled row's Stage 4 ordinal from
+        /// the source file's (entry_id, charge) group counts alone, and number rows with no
+        /// counterpart past the source row count.
+        ///
+        /// <para>This is how a reconciled parquet written before the <c>score_index</c> column
+        /// gets one without re-running Stage 6. Row POSITION cannot supply it: gap-fill rows
+        /// merged into canonical position shift every later row. Matching on the full
+        /// (entry_id, charge, scan_number) key cannot either - a rescored row's scan moved when
+        /// it was re-integrated at the consensus boundary, so it does not equal its Stage 4
+        /// counterpart's. The GROUP key is invariant under both, which is what makes this
+        /// exact rather than a heuristic.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestScoreIndexPairingRecoversSourceOrdinals()
+        {
+            // Source: 3 rows for (100,2), 2 for (200,3) - five rows, ordinals 0..4.
+            var sourceGroups = new List<(uint, byte, int)>
+            {
+                (100u, (byte)2, 3),
+                (200u, (byte)3, 2),
+            };
+
+            // Same groups, same counts: every row pairs, ordinals in order. A rescored row
+            // whose scan moved is still in its own group, so it pairs on position within it.
+            var same = ParquetScoreCache.BuildScoreIndicesByPairing(
+                sourceGroups, new List<(uint, byte, int)> { (100u, (byte)2, 3), (200u, (byte)3, 2) },
+                out int srcRows);
+            Assert.AreEqual(5, srcRows);
+            CollectionAssert.AreEqual(new uint[] { 0, 1, 2, 3, 4 }, same);
+
+            // A gap-fill GROUP the source does not have at all - the only shape gap-fill takes,
+            // since it exists for precursors the run did not detect. Its row numbers past the
+            // source row count, and the groups after it keep their own ordinals.
+            var withGapGroup = ParquetScoreCache.BuildScoreIndicesByPairing(
+                sourceGroups,
+                new List<(uint, byte, int)> { (100u, (byte)2, 3), (150u, (byte)2, 1), (200u, (byte)3, 2) },
+                out _);
+            CollectionAssert.AreEqual(new uint[] { 0, 1, 2, 5, 3, 4 }, withGapGroup);
+
+            // Extra rows WITHIN a paired group also number past the source count, so a row can
+            // never be handed an ordinal that belongs to a different Stage 4 row.
+            var withExtraRow = ParquetScoreCache.BuildScoreIndicesByPairing(
+                sourceGroups,
+                new List<(uint, byte, int)> { (100u, (byte)2, 4), (200u, (byte)3, 2) },
+                out _);
+            CollectionAssert.AreEqual(new uint[] { 0, 1, 2, 5, 3, 4 }, withExtraRow);
+        }
+
         [TestMethod]
         public void TestCompactRefusesForeignLibrary()
         {

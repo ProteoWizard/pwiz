@@ -2161,11 +2161,11 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Issue #4374 risk #2 (the highest-value new test): the 2nd-pass projection
         /// bakes each survivor's <c>ParquetIndex</c> from
-        /// <see cref="Pass2FdrSidecar.BuildReconciledIdentityToRow"/>, then the streaming
+        /// <see cref="Pass2FdrSidecar.BuildReconciledScoreIndexToRow"/>, then the streaming
         /// score pass reads the feature row at that index. This must resolve the EXACT
         /// vector the resident 2nd pass binds via
         /// <see cref="Pass2FdrSidecar.LoadReconciledFeaturesByScoreIndex"/> +
-        /// <c>MapFeaturesByIdentity</c>. Writes a reconciled-parquet fixture whose rows
+        /// <c>MapFeaturesByScoreIndex</c>. Writes a reconciled-parquet fixture whose rows
         /// arrive in NON-sorted identity order plus a gap-fill-style row that interleaves
         /// into the <c>(entry_id, charge, scan_number)</c> sort, each carrying a DISTINCT
         /// 21-feature vector, then asserts:
@@ -2180,7 +2180,7 @@ namespace pwiz.Osprey.Test
         /// </list>
         /// </summary>
         [TestMethod]
-        public void TestBuildReconciledIdentityToRowMatchesFeatureBinding()
+        public void TestBuildReconciledScoreIndexToRowMatchesFeatureBinding()
         {
             string path = Path.GetTempFileName() + ".parquet";
             try
@@ -2238,7 +2238,7 @@ namespace pwiz.Osprey.Test
                 // ParquetIndex = row -- exactly the reconciled write path.
                 ParquetScoreCache.WriteScoresParquet(path, entries, null);
 
-                var rowMap = Pass2FdrSidecar.BuildReconciledIdentityToRow(path);
+                var rowMap = Pass2FdrSidecar.BuildReconciledScoreIndexToRow(path);
                 var featByScoreIndex = Pass2FdrSidecar.LoadReconciledFeaturesByScoreIndex(path);
                 var featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(path);
 
@@ -2260,10 +2260,22 @@ namespace pwiz.Osprey.Test
 
                 // Risk #3: within each (entry_id, charge) group the reconciled row is
                 // scan-monotonic -- what validates the scan-omitted projection sort.
+                // The identity -> row lookup is built here rather than taken from a
+                // production map: score_index is a row IDENTITY now, not a row position, and
+                // conflating the two is exactly what this change removed.
+                var stubsForRows = ParquetScoreCache.LoadFdrStubsFromParquet(path);
+                var rowByIdentity = new Dictionary<(uint, byte, uint), uint>();
+                for (int r = 0; r < stubsForRows.Count; r++)
+                {
+                    rowByIdentity[(stubsForRows[r].EntryId, stubsForRows[r].Charge,
+                                   stubsForRows[r].ScanNumber)] = (uint)r;
+                }
                 var groups = new Dictionary<(uint, byte), List<(uint scan, uint row)>>();
                 for (int i = 0; i < entryIds.Length; i++)
                 {
-                    uint row = rowMap[(entryIds[i], charges[i], scans[i])];
+                    // Resolved from the written rows, not from the loop counter: the write
+                    // re-sorts into canonical order, so input position is not row position.
+                    uint row = rowByIdentity[(entryIds[i], charges[i], scans[i])];
                     var key = (entryIds[i], charges[i]);
                     if (!groups.TryGetValue(key, out var list))
                     {

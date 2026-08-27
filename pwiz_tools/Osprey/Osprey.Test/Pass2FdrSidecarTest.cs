@@ -36,7 +36,7 @@ namespace pwiz.Osprey.Test
     /// <summary>
     /// Unit tests for <see cref="Pass2FdrSidecar"/>, the SecondPassFDR 2nd-pass FDR
     /// sidecar step extracted from SecondPassFdrTask.Run. Covers the pure
-    /// <see cref="Pass2FdrSidecar.MapFeaturesByIdentity"/> seam (the
+    /// <see cref="Pass2FdrSidecar.MapFeaturesByScoreIndex"/> seam (the
     /// reconciled-feature overlay) that previously rode only the nightly
     /// regression, plus the increment (A) scan-omitted 2nd-pass projection sort
     /// equivalence (<see cref="TestScanOmittedProjectionSortMatchesLegacyOrder"/>).
@@ -100,7 +100,7 @@ namespace pwiz.Osprey.Test
         /// Guards the byte-identity invariant behind increment (A): the scan-omitted
         /// 2nd-pass projection sort key <c>(EntryId, Charge, ParquetIndex)</c> -- where
         /// <c>ParquetIndex</c> is the RECONCILED-parquet row baked by
-        /// <see cref="Pass2FdrSidecar.BuildReconciledIdentityToRow"/> -- must produce
+        /// <see cref="Pass2FdrSidecar.BuildReconciledScoreIndexToRow"/> -- must produce
         /// the SAME row order as the legacy/oracle resident sort key
         /// <c>(EntryId, Charge, ScanNumber, original-ParquetIndex)</c> (the FdrEntry
         /// overload of <c>PercolatorEngine.RunPercolatorFdr</c>). The two provably
@@ -121,7 +121,7 @@ namespace pwiz.Osprey.Test
         /// reconciled parquet is produced by the REAL Stage-6 path -- the gap-fill is
         /// merged into canonical scan position by
         /// <c>ParquetScoreCache.StreamReconciledScoresParquet</c> and read back through
-        /// <c>BuildReconciledIdentityToRow</c> -- so the tie/gap-fill placement is
+        /// <c>BuildReconciledScoreIndexToRow</c> -- so the tie/gap-fill placement is
         /// production's, not a mock. The projection itself is baked by the real
         /// <see cref="FdrProjectionSet.BuildFromEntries"/> resolver path.
         /// </summary>
@@ -138,14 +138,19 @@ namespace pwiz.Osprey.Test
             // P(scan10), G(gap-fill scan15), Q(scan20), R(scan20 == scan-tie with Q),
             // S(scan30). Group B = (EntryId 200, Charge 3, decoys): T(scan5), U(scan25).
             // Original ParquetIndex is (entry,charge,scan)-monotonic across the real rows
-            // (0..5); the gap-fill carries the uint.MaxValue sentinel.
+            // (0..5). The gap-fill row carries 6 - the score_index the Stage 6 write assigns
+            // it, one past the source row count - not the uint.MaxValue sentinel it holds
+            // before the write. That is the state the survivor buffer is in afterwards: the
+            // writer numbers gap-fill rows as it emits them and mutates the entries it was
+            // handed, and a buffer rebuilt from the reconciled parquet reads the same value
+            // out of the score_index column.
             var rowP = MakeSurvivor(100, 2, 10, 0, 10.0, false);
             var rowQ = MakeSurvivor(100, 2, 20, 1, 20.0, false);
             var rowR = MakeSurvivor(100, 2, 20, 2, 30.0, false); // scan-tie with Q
             var rowS = MakeSurvivor(100, 2, 30, 3, 40.0, false);
             var rowT = MakeSurvivor(200, 3, 5, 4, 50.0, true);
             var rowU = MakeSurvivor(200, 3, 25, 5, 60.0, true);
-            var rowG = MakeSurvivor(100, 2, 15, uint.MaxValue, 70.0, false); // gap-fill sentinel
+            var rowG = MakeSurvivor(100, 2, 15, 6, 70.0, false); // gap-fill: 6 == source row count
             var survivors = new List<FdrEntry> { rowS, rowR, rowT, rowG, rowP, rowU, rowQ };
 
             // Build the reconciled parquet through the REAL Stage-6 streaming path: write
@@ -174,8 +179,9 @@ namespace pwiz.Osprey.Test
                     new List<FdrEntry> { reconGapFill }, null, null, fileName, null, null, s => { });
                 Assert.AreEqual(1, streamResult.NAppended, @"gap-fill row must append through the real Stage-6 path");
 
-                // REAL identity -> reconciled-row map (last-write-wins collapses a scan-tie).
-                var reconMap = Pass2FdrSidecar.BuildReconciledIdentityToRow(reconciledPath);
+                // REAL score_index -> reconciled-row map. No last-write-wins caveat any
+                // more: score_index is unique per row, gap-fill included.
+                var reconMap = Pass2FdrSidecar.BuildReconciledScoreIndexToRow(reconciledPath);
 
                 // Legacy/oracle order: sort a fresh copy by the resident FdrEntry key.
                 var legacyList = new List<FdrEntry>(survivors);
@@ -210,8 +216,14 @@ namespace pwiz.Osprey.Test
                     reconRowByMarker[10.0] < reconRowByMarker[70.0] &&
                     reconRowByMarker[70.0] < reconRowByMarker[20.0],
                     @"gap-fill row must interleave by scan in the reconciled parquet");
-                Assert.AreEqual(reconRowByMarker[20.0], reconRowByMarker[30.0],
-                    @"scan-tied rows must bake the same reconciled row (last-write-wins collapse)");
+                // Scan-tied rows now bake DISTINCT reconciled rows. They used to collapse onto
+                // one, because the map keyed on (entry_id, charge, scan_number) and a tie made
+                // two rows indistinguishable; keyed on score_index they are two rows, which is
+                // what they always were. The projection comparer still ties on them - it omits
+                // scan - so this test's invariant below is unaffected, and it is exercised by a
+                // genuine comparer tie rather than by two entries sharing a baked row.
+                Assert.AreNotEqual(reconRowByMarker[20.0], reconRowByMarker[30.0],
+                    @"scan-tied rows are distinct rows and must bake distinct score indices");
 
                 projRows.Sort(ProjectionComparison);
                 var projectionOrder = projRows.Select(p => p.CoelutionSum).ToList();

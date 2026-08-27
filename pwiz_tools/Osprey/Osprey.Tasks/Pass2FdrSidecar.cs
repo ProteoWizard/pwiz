@@ -875,7 +875,7 @@ namespace pwiz.Osprey.Tasks
             //    reconciled PIN features and stashed all of their frozen-model scores in one
             //    Dictionary<(file, entry_id), double> (~3.8 GB at 82 files, #4486). The scoring
             //    is per file by nature, so it now happens one file at a time inside ReadFile
-            //    below: same loader and identity key (LoadReconciledFeaturesByIdentity keyed by
+            //    below: same loader and identity key (LoadReconciledFeaturesByScoreIndex keyed by
             //    (EntryId,Charge,ScanNumber)), same scores, one file's worth resident, and one
             //    fewer pass over the reconciled parquets.
             //
@@ -1249,8 +1249,8 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Resident 2nd-pass compute (flag off): the byte-identity oracle. Reload every
         /// survivor's 21-PIN feature vector RESIDENT from each file's reconciled parquet
-        /// (keyed by identity via <see cref="LoadReconciledFeaturesByIdentity"/> +
-        /// <see cref="MapFeaturesByIdentity"/>), then run the resident FdrEntry
+        /// (keyed by identity via <see cref="LoadReconciledFeaturesByScoreIndex"/> +
+        /// <see cref="MapFeaturesByScoreIndex"/>), then run the resident FdrEntry
         /// <c>FirstPassFdrTask.RunPercolatorFdr</c> over the full survivor buffer, which
         /// scores it in place. Pure code motion out of <see cref="ComputeAndPersist"/>
         /// -- behavior (and therefore the 2nd-pass sidecars) is unchanged.
@@ -1467,7 +1467,7 @@ namespace pwiz.Osprey.Tasks
         /// Projection 2nd-pass compute (flag on, issue #4374 + #4355 struct-shrink S0):
         /// build the thin <see cref="FdrProjectionSet"/> from the survivor buffer with
         /// each row's <see cref="FdrProjection.ParquetIndex"/> baked to that survivor's
-        /// RECONCILED parquet row (via <see cref="BuildReconciledIdentityToRow"/>), then
+        /// RECONCILED parquet row (via <see cref="BuildReconciledScoreIndexToRow"/>), then
         /// run the projection <c>FirstPassFdrTask.RunPercolatorFdr</c> through an
         /// <see cref="FdrStreamingSink"/>, which ALWAYS streams the reconciled features
         /// per file and streams the q-value outputs straight to the per-file
@@ -1525,7 +1525,7 @@ namespace pwiz.Osprey.Tasks
             // empty map -> every entry resolves to uint.MaxValue -> basic-feature
             // fallback, byte-identical to the resident path (null Features ->
             // BuildBasicFeatures).
-            IReadOnlyDictionary<(uint, byte, uint), uint> RowMap(string fileName)
+            IReadOnlyDictionary<uint, uint> RowMap(string fileName)
             {
                 string recon = Recon(fileName);
                 if (recon == null)
@@ -1534,18 +1534,18 @@ namespace pwiz.Osprey.Tasks
                         "Second-pass FDR: no parquet path mapped for file '{0}' " +
                         "(entries will run with basic-feature fallback). " +
                         "Check that each file's reconciled parquet is present.", fileName));
-                    return new Dictionary<(uint, byte, uint), uint>();
+                    return new Dictionary<uint, uint>();
                 }
                 try
                 {
-                    return BuildReconciledIdentityToRow(recon);
+                    return BuildReconciledScoreIndexToRow(recon);
                 }
                 catch (Exception ex)
                 {
                     ctx.LogWarning(string.Format(
                         "Second-pass FDR: failed to read identity columns from {0}: {1}",
                         recon, ex.Message));
-                    return new Dictionary<(uint, byte, uint), uint>();
+                    return new Dictionary<uint, uint>();
                 }
             }
 
@@ -1611,7 +1611,7 @@ namespace pwiz.Osprey.Tasks
         /// map from its lean stub identity columns
         /// (<see cref="ParquetScoreCache.LoadFdrStubsFromParquet(string)"/>, which assigns
         /// <see cref="FdrEntry.ParquetIndex"/> = row). The mirror of
-        /// <see cref="LoadReconciledFeaturesByIdentity"/> that yields the ROW INDEX
+        /// <see cref="LoadReconciledFeaturesByScoreIndex"/> that yields the ROW INDEX
         /// instead of the feature vector: that loader keys <c>featRows[i]</c> by identity
         /// and the streaming score pass reads <c>rows[row]</c> by the baked
         /// <see cref="FdrProjection.ParquetIndex"/>, so
@@ -1624,26 +1624,23 @@ namespace pwiz.Osprey.Tasks
         /// matching the loader. Reads only the identity columns (no PIN feature / heavy
         /// blob load), one file at a time.
         /// </summary>
-        internal static Dictionary<(uint, byte, uint), uint> BuildReconciledIdentityToRow(
+        internal static Dictionary<uint, uint> BuildReconciledScoreIndexToRow(
             string reconciledPath)
         {
             var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(reconciledPath);
-            var map = new Dictionary<(uint, byte, uint), uint>(stubs.Count);
+            var map = new Dictionary<uint, uint>(stubs.Count);
             for (int i = 0; i < stubs.Count; i++)
             {
-                // (uint)i == stubs[i].ParquetIndex (LoadFdrStubsFromParquet sets
-                // ParquetIndex = row); use the row so it addresses LoadPinFeaturesFrom
-                // Parquet's positional feature rows.
-                map[(stubs[i].EntryId, stubs[i].Charge, stubs[i].ScanNumber)] = (uint)i;
+                // KEY is the row's score_index - its identity. VALUE is its position in THIS
+                // file, because that is what addresses LoadPinFeaturesFromParquet's positional
+                // feature array. The two were the same number before the reconciled parquet
+                // became a subset, which is why this used to be able to conflate them.
+                map[stubs[i].ParquetIndex] = (uint)i;
             }
-            // A duplicate (entry_id, charge, scan_number) identity would collapse two
-            // reconciled stubs onto ONE map slot -- but such a collapsed pair is IDENTICAL
-            // in the projection (same reconciled row => same features, Score, entry_id, and
-            // sidecar record), so the scan-omitted 2nd-pass sort's tie on them is
-            // order-irrelevant to the output (nothing downstream reads position, only value).
-            // In practice DeduplicatePairs makes entry_id unique per file, so the collision
-            // does not arise; either way byte-identity holds (see the "// Array.Sort OK" note
-            // on the projection sort in PercolatorEngine.RunPercolatorFdr).
+            // No collision to reason about any more. This keyed on
+            // (entry_id, charge, scan_number) and needed a paragraph explaining why a
+            // duplicate identity was harmless; score_index is unique per row by construction,
+            // including for gap-fill rows, which are numbered past the source row count.
             return map;
         }
 
@@ -1656,7 +1653,7 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="FdrEntry.ParquetIndex"/> (assigned against the ORIGINAL Stage
         /// 4 parquet, or carried on the in-memory buffer through rescore) no longer
         /// addresses that stub's own row in the reconciled parquet. Identity is
-        /// invariant across the reindex, so <see cref="MapFeaturesByIdentity"/>
+        /// invariant across the reindex, so <see cref="MapFeaturesByScoreIndex"/>
         /// keys on it. Reads the lean stub columns + the PIN feature columns (no
         /// heavy fragment/XIC/CWT blobs), one file at a time, so the reload stays
         /// within the issue #4355 memory bound. (issue #4355)
@@ -1682,7 +1679,7 @@ namespace pwiz.Osprey.Tasks
         /// against the entry count to detect and report a mismatch. Identity (not
         /// <see cref="FdrEntry.ParquetIndex"/>) is used because the reconciled
         /// parquet is re-indexed relative to the compacted stubs -- see
-        /// <see cref="LoadReconciledFeaturesByIdentity"/>. Pure: no I/O, no logging.
+        /// <see cref="LoadReconciledFeaturesByScoreIndex"/>. Pure: no I/O, no logging.
         /// </summary>
         internal static int MapFeaturesByScoreIndex(
             IReadOnlyList<FdrEntry> entries,

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -105,7 +106,7 @@ namespace pwiz.Osprey.Tasks
             // entry counts in two run logs gave it away. The hash is file name + size + mtime,
             // so this costs a stat, not a read.
             string expectedLibraryHash = config.Identity.LibraryIdentityHash();
-            var stale = new List<KeyValuePair<string, string>>();
+            var stale = new List<KeyValuePair<string, (string ScoresPath, string ReconciledPath)>>();
             foreach (string scoresPath in scoresPaths)
             {
                 string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
@@ -135,7 +136,8 @@ namespace pwiz.Osprey.Tasks
                     return false;
                 string fileName = Path.GetFileNameWithoutExtension(
                     RescoreHydration.SyntheticInputFromParquet(scoresPath));
-                stale.Add(new KeyValuePair<string, string>(fileName, reconciledPath));
+                stale.Add(new KeyValuePair<string, (string, string)>(
+                    fileName, (scoresPath, reconciledPath)));
             }
             if (stale.Count == 0)
             {
@@ -179,7 +181,8 @@ namespace pwiz.Osprey.Tasks
             int done = 0;
             foreach (var kv in stale)
             {
-                var result = CompactOneFile(kv.Key, kv.Value, retainBaseIds, libraryById, ctx);
+                var result = CompactOneFile(kv.Key, kv.Value.ScoresPath, kv.Value.ReconciledPath,
+                    retainBaseIds, libraryById, ctx);
                 rowsBefore += result.OrigRowCount;
                 rowsAfter += result.NWritten;
                 done++;
@@ -262,11 +265,22 @@ namespace pwiz.Osprey.Tasks
         /// reconciliation hashes still describe the run that produced the rows.</para>
         /// </summary>
         private static (int NWritten, int OrigRowCount) CompactOneFile(string fileName,
-            string reconciledPath, ICollection<uint> retainBaseIds,
+            string scoresPath, string reconciledPath, ICollection<uint> retainBaseIds,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById, PipelineContext ctx)
         {
             var metadata = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
             metadata[@"osprey.reconciled"] = ParquetScoreCache.RECONCILED_SURVIVORS;
+
+            // Pair this file's reconciled parquet with its Stage 4 sibling to recover each
+            // row's score_index. The source file predates the column, so the rows carry no
+            // identity of their own and their POSITION is not the Stage 4 ordinal - gap-fill
+            // rows merged into canonical position shift everything after them. Two streams and
+            // two group lists, one file at a time; nothing here is O(cohort).
+            var sourceGroups = ParquetScoreCache.ReadPrecursorGroupCounts(scoresPath);
+            var scoreIndexByRow = ParquetScoreCache.BuildScoreIndicesByPairing(
+                reconciledPath, sourceGroups, out int sourceRowCount);
+            metadata[@"osprey.scores_row_count"] =
+                sourceRowCount.ToString(CultureInfo.InvariantCulture);
 
             // ONE file's survivors resident at a time, selected by the same base_id predicate
             // Stage 5's compaction applied.
@@ -280,7 +294,7 @@ namespace pwiz.Osprey.Tasks
             string compactedPath = reconciledPath + @".compacted";
             var result = ParquetScoreCache.StreamReconciledScoresParquet(
                 reconciledPath, compactedPath, null, null, metadata, libraryById,
-                fileName, keepIdentities, null, ctx.LogWarning);
+                fileName, keepIdentities, null, ctx.LogWarning, scoreIndexByRow);
 
             // File.Replace, not a Move dance: the reconciled path is never absent at any
             // point, so a crash cannot leave a cohort file with no artifact - which the

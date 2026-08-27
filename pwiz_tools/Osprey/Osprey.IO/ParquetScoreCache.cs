@@ -1046,6 +1046,152 @@ namespace pwiz.Osprey.IO
         /// not depend on Osprey.FDR, so the projection row is assembled by the caller from
         /// these scalars rather than returned from here.
         /// </summary>
+        /// <summary>
+        /// The (entry_id, charge) groups of a scores parquet, in file order, with how many
+        /// rows each contains - everything needed to recover a row's ordinal without holding
+        /// the rows. O(distinct precursor), a few MB per file against ~600 MB of stubs.
+        ///
+        /// <para>Used to pair a reconciled parquet back to its Stage 4 sibling when the
+        /// reconciled file predates the <c>score_index</c> column. Both files are written in
+        /// canonical (entry_id, charge, scan_number) order and the reconciled one is a row
+        /// SUPERSET, so walking the two group lists together says which reconciled rows
+        /// correspond to original rows - and which belong to a group the original does not
+        /// have at all, i.e. gap-fill.</para>
+        /// </summary>
+        public static List<(uint EntryId, byte Charge, int Count)> ReadPrecursorGroupCounts(string path)
+        {
+            var groups = new List<(uint EntryId, byte Charge, int Count)>();
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                bool have = false;
+                uint curEntry = 0;
+                byte curCharge = 0;
+                int curCount = 0;
+                for (int g = 0; g < reader.RowGroupCount; g++)
+                {
+                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    {
+                        var entryIdCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
+                        var chargeCol = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name);
+                        if (entryIdCol == null)
+                            continue;
+                        for (int row = 0; row < entryIdCol.Length; row++)
+                        {
+                            uint e = entryIdCol[row];
+                            byte ch = chargeCol != null ? chargeCol[row] : (byte)0;
+                            if (have && e == curEntry && ch == curCharge)
+                            {
+                                curCount++;
+                                continue;
+                            }
+                            if (have)
+                                groups.Add((curEntry, curCharge, curCount));
+                            curEntry = e;
+                            curCharge = ch;
+                            curCount = 1;
+                            have = true;
+                        }
+                    }
+                }
+                if (have)
+                    groups.Add((curEntry, curCharge, curCount));
+            }
+            return groups;
+        }
+
+        /// <summary>
+        /// Recover each row's <c>score_index</c> for a reconciled parquet written before that
+        /// column existed, by pairing it with its Stage 4 sibling's
+        /// <paramref name="sourceGroups"/>.
+        ///
+        /// <para>Returns one value per reconciled row: the Stage 4 ordinal for a row that has
+        /// a counterpart there, and a number past the source row count for one that does not.
+        /// Both files are canonically ordered and the reconciled file is a row superset, so a
+        /// single walk of the two group lists resolves every row - no reconciliation envelope,
+        /// no whole-run state, one file at a time.</para>
+        ///
+        /// <para>Groups, not rows, because a RESCORED row's <c>scan_number</c> differs from the
+        /// one its Stage 4 counterpart carries - re-integrating at the consensus boundary moves
+        /// the apex - so rows cannot be matched on the full key across the two files. The group
+        /// key (entry_id, charge) is invariant, and gap-fill exists only for precursors the run
+        /// did not detect, so a gap-fill group has NO rows on the Stage 4 side. That is what
+        /// makes the pairing exact rather than heuristic.</para>
+        /// </summary>
+        public static uint[] BuildScoreIndicesByPairing(string reconciledPath,
+            IReadOnlyList<(uint EntryId, byte Charge, int Count)> sourceGroups, out int sourceRowCount)
+        {
+            return BuildScoreIndicesByPairing(
+                sourceGroups, ReadPrecursorGroupCounts(reconciledPath), out sourceRowCount);
+        }
+
+        /// <summary>
+        /// The pairing itself, over two group lists - no I/O, so it can be exercised directly.
+        /// See the overload above for why groups rather than rows are the unit.
+        /// </summary>
+        public static uint[] BuildScoreIndicesByPairing(
+            IReadOnlyList<(uint EntryId, byte Charge, int Count)> sourceGroups,
+            IReadOnlyList<(uint EntryId, byte Charge, int Count)> reconGroups,
+            out int sourceRowCount)
+        {
+            sourceRowCount = 0;
+            foreach (var g in sourceGroups)
+                sourceRowCount += g.Count;
+
+            int reconRows = 0;
+            foreach (var g in reconGroups)
+                reconRows += g.Count;
+
+            var indices = new uint[reconRows];
+            int srcGroup = 0;
+            uint nextSourceOrdinal = 0;
+            uint nextGapFill = (uint)sourceRowCount;
+            int outRow = 0;
+            foreach (var rg in reconGroups)
+            {
+                // Both lists are in canonical (entry_id, charge) order, so a key COMPARISON
+                // says which case this is - the source cursor must not be advanced merely to
+                // look for a match, or a gap-fill group would consume the ordinals belonging
+                // to the next real group.
+                while (srcGroup < sourceGroups.Count &&
+                       CompareGroupKey(sourceGroups[srcGroup], rg) < 0)
+                {
+                    // Source group absent from the reconciled file: its rows were dropped, so
+                    // its ordinals are spent without being handed out.
+                    nextSourceOrdinal += (uint)sourceGroups[srcGroup].Count;
+                    srcGroup++;
+                }
+                bool paired0 = srcGroup < sourceGroups.Count &&
+                               CompareGroupKey(sourceGroups[srcGroup], rg) == 0;
+                if (!paired0)
+                {
+                    // No counterpart group: gap-fill, which exists only for precursors the run
+                    // did not detect. The source cursor stays put - the group it points at is
+                    // still ahead of us and still owns its ordinals.
+                    for (int i = 0; i < rg.Count; i++)
+                        indices[outRow++] = nextGapFill++;
+                    continue;
+                }
+                int paired = Math.Min(rg.Count, sourceGroups[srcGroup].Count);
+                for (int i = 0; i < paired; i++)
+                    indices[outRow++] = nextSourceOrdinal + (uint)i;
+                for (int i = paired; i < rg.Count; i++)
+                    indices[outRow++] = nextGapFill++;
+                nextSourceOrdinal += (uint)sourceGroups[srcGroup].Count;
+                srcGroup++;
+            }
+            return indices;
+        }
+
+        /// <summary>Canonical (entry_id, charge) ordering between two group entries.</summary>
+        private static int CompareGroupKey(
+            (uint EntryId, byte Charge, int Count) a, (uint EntryId, byte Charge, int Count) b)
+        {
+            int cmp = a.EntryId.CompareTo(b.EntryId);
+            return cmp != 0 ? cmp : a.Charge.CompareTo(b.Charge);
+        }
+
         public static void ReadFdrStubScalars(string path,
             Action<uint, byte, bool, double, string> onRow)
         {
@@ -1255,7 +1401,7 @@ namespace pwiz.Osprey.IO
         ///
         /// <paramref name="keepIdentities"/> subsets the output to the Stage 5 survivors: an
         /// original row whose (entry_id, charge, scan_number) is absent is not emitted - the
-        /// same identity <c>Pass2FdrSidecar.MapFeaturesByIdentity</c> keys on, and NOT
+        /// same identity <c>Pass2FdrSidecar.MapFeaturesByScoreIndex</c> keys on, and NOT
         /// entry_id alone, because compaction drops an entry_id's extra SCANS rather than the
         /// entry_id itself. Null keeps every row,
         /// which is the old whole-file shape and what the unit tests exercise. Subsetting is
@@ -1284,7 +1430,7 @@ namespace pwiz.Osprey.IO
             Dictionary<string, string> metadata,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById, string fileName,
             ISet<(uint, byte, uint)> keepIdentities, string progressIndent,
-            Action<string> logWarning)
+            Action<string> logWarning, uint[] scoreIndexByRow = null)
         {
             if (originalPath == null)
                 throw new ArgumentNullException(nameof(originalPath));
@@ -1397,6 +1543,12 @@ namespace pwiz.Osprey.IO
                         for (int j = 0; j < groupEntries.Count; j++)
                         {
                             var row = groupEntries[j];
+                            // Recovered score_index for a source file that predates the
+                            // column: ReadFdrEntryGroup assigned this row's POSITION, which is
+                            // the Stage 4 ordinal only while the two files are row-parallel.
+                            // The caller pairs them and hands the real ordinals in.
+                            if (scoreIndexByRow != null && origRead + j < scoreIndexByRow.Length)
+                                row.ParquetIndex = scoreIndexByRow[origRead + j];
                             bool replaced = false;
                             if (overlayByIndex.Count > 0 &&
                                 overlayByIndex.TryGetValue((uint)(origRead + j), out FdrEntry rescored))

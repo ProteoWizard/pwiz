@@ -272,7 +272,7 @@ namespace pwiz.Osprey.FDR
         /// stub's own position in its ORIGINAL <c>.scores.parquet</c> -- unchanged.</item>
         /// <item>non-<c>null</c> (2nd pass): the resolver maps each file name to that
         /// file's RECONCILED-parquet <c>(entry_id, charge, scan) -&gt; row</c> table
-        /// (built by <c>Pass2FdrSidecar.BuildReconciledIdentityToRow</c>), and
+        /// (built by <c>Pass2FdrSidecar.BuildReconciledScoreIndexToRow</c>), and
         /// <c>ParquetIndex</c> is set to <c>row</c> for the entry's identity, or
         /// <see cref="uint.MaxValue"/> when the identity is absent (-&gt; basic-feature
         /// fallback in the streaming score pass). Baking the reconciled row makes the
@@ -292,7 +292,7 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public static FdrProjectionSet BuildFromEntries(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            Func<string, IReadOnlyDictionary<(uint, byte, uint), uint>> parquetRowResolver = null,
+            Func<string, IReadOnlyDictionary<uint, uint>> parquetRowResolver = null,
             bool releaseStubs = false)
         {
             if (perFileEntries == null) throw new ArgumentNullException(nameof(perFileEntries));
@@ -329,7 +329,7 @@ namespace pwiz.Osprey.FDR
                 // file at a time so no more than one file's map is resident. 1st pass
                 // (resolver null): the map stays null and the stub's own ParquetIndex
                 // (its original-parquet position) is carried through unchanged.
-                IReadOnlyDictionary<(uint, byte, uint), uint> rowByIdentity =
+                IReadOnlyDictionary<uint, uint> rowByScoreIndex =
                     parquetRowResolver?.Invoke(kvp.Key);
 
                 var rows = new List<FdrProjection>(kvp.Value.Count);
@@ -337,10 +337,9 @@ namespace pwiz.Osprey.FDR
                 {
                     int peptideId = idByPeptide[e.ModifiedSequence ?? string.Empty];
                     uint parquetIndex;
-                    if (rowByIdentity == null)
+                    if (rowByScoreIndex == null)
                         parquetIndex = e.ParquetIndex;
-                    else if (!rowByIdentity.TryGetValue(
-                                 (e.EntryId, e.Charge, e.ScanNumber), out parquetIndex))
+                    else if (!rowByScoreIndex.TryGetValue(e.ParquetIndex, out parquetIndex))
                         parquetIndex = uint.MaxValue;
                     rows.Add(new FdrProjection(
                         e.EntryId, parquetIndex, peptideId, fileIdx, e.Charge, e.IsDecoy,

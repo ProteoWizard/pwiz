@@ -1126,7 +1126,7 @@ namespace pwiz.Osprey.Tasks
         /// the write above, the Stage-6 planner loads CWT candidates through its own
         /// per-file loader rather than off these entries, and the resident 2nd pass
         /// reloads features from the reconciled parquet
-        /// (<c>Pass2FdrSidecar.LoadReconciledFeaturesByIdentity</c>) rather than reading
+        /// (<c>Pass2FdrSidecar.LoadReconciledFeaturesByScoreIndex</c>) rather than reading
         /// them here. Keeping them rooted is what made Stage-6 memory O(files) - the
         /// entries themselves are lean stubs until a rescore fattens them.
         ///
