@@ -3009,7 +3009,7 @@ namespace pwiz.Osprey.Test
                 // New behavior: stream the transfer.
                 var warnings = new List<string>();
                 var result = ParquetScoreCache.StreamReconciledScoresParquet(
-                    originalPath, streamPath, overlayByIndex, gapFill, null, null, "f.mzML", warnings.Add);
+                    originalPath, streamPath, overlayByIndex, gapFill, null, null, "f.mzML", null, warnings.Add);
                 ParquetScoreCache.RowGroupRowCapForTest = null;
 
                 // Counts: two in-range overlays replaced, two gap-fill appended, 7 originals.
@@ -3055,6 +3055,66 @@ namespace pwiz.Osprey.Test
             finally
             {
                 ParquetScoreCache.RowGroupRowCapForTest = null;
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// The Stage-6 reconciled parquet carries only the Stage 5 SURVIVORS, not a
+        /// row-for-row twin of the Stage 4 parquet: an original row whose entry_id is
+        /// outside the keep set is not emitted, gap-fill rows are emitted regardless
+        /// (survivors by construction), canonical order still holds across the drops, and
+        /// the reported original-row count still describes the INPUT rather than the
+        /// output. Emitting the compacted-away rows is what made the Stage 4 parquet a
+        /// required Stage 7 input (issue #4486).
+        /// </summary>
+        [TestMethod]
+        public void TestReconciledTransferKeepsOnlySurvivors()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_recon_subset_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var original = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
+                    original.Add(MakeStreamEntry(id, id * 100.0));
+
+                string originalPath = Path.Combine(dir, "orig.scores.parquet");
+                string subsetPath = Path.Combine(dir, "subset.scores-reconciled.parquet");
+                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML");
+
+                // Survivors: 2, 3, 8. Dropped: 1, 5, 7, 9. Gap-fill id 4 sorts between a
+                // kept row (3) and a DROPPED one (5), so an interleave that only advanced
+                // on emitted rows would misplace it.
+                // Keyed on the full identity MakeStreamEntry assigns (charge 2, scan id*10),
+                // not on entry_id: compaction drops an entry_id's extra scans, so an
+                // entry_id-keyed set would match every row and drop nothing.
+                var keep = new HashSet<(uint, byte, uint)>
+                {
+                    (2u, 2, 20u), (3u, 2, 30u), (8u, 2, 80u),
+                };
+                var gapFill = new List<FdrEntry> { MakeStreamEntry(4, 40040.0) };
+
+                var result = ParquetScoreCache.StreamReconciledScoresParquet(
+                    originalPath, subsetPath, new Dictionary<uint, FdrEntry>(), gapFill,
+                    null, null, "f.mzML", keep, s => { });
+
+                Assert.AreEqual(1, result.NAppended);
+                // Rows READ, not emitted - the count still describes the input.
+                Assert.AreEqual(7, result.OrigRowCount);
+                // Four emitted: three survivors plus the gap-fill row.
+                Assert.AreEqual(4, result.NWritten);
+
+                var rows = ParquetScoreCache.LoadFullFdrEntries(subsetPath);
+                var ids = new List<uint>();
+                foreach (var row in rows)
+                    ids.Add(row.EntryId);
+                CollectionAssert.AreEqual(new uint[] { 2, 3, 4, 8 }, ids,
+                    "reconciled parquet must hold the survivors plus gap-fill, in canonical order");
+            }
+            finally
+            {
                 try { Directory.Delete(dir, true); } catch (IOException) { }
             }
         }

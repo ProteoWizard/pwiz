@@ -69,13 +69,14 @@ namespace pwiz.Osprey.IO
     /// default 1.0. Mirrors the post-protein-FDR
     /// <c>persist_fdr_scores</c> call site in Rust's
     /// <c>pipeline.rs</c>. Each record carries the entry's
-    /// <c>entry_id</c> for identity verification (the per-position
-    /// <c>entries[i].EntryId == record.entry_id</c> check during load
-    /// doubles as a corruption detector); the loader matches records
-    /// to stubs by position + count rather than by joining on
-    /// <c>entry_id</c>. A Stage 6 worker therefore consumes the
-    /// sidecar by reloading the same FdrEntry sequence from the
-    /// per-file parquet cache and applying records in order. The
+    /// <c>entry_id</c>, and the loader JOINS on it rather than walking
+    /// by position - see <see cref="TryRead(string, IList{FdrEntry}, Pass)"/>, which
+    /// spells out the two multi-file cases position could not survive.
+    /// (This paragraph described positional matching long after that
+    /// stopped being true; it now matters more, because the subset
+    /// overload below relies on the join.) A Stage 6 worker therefore
+    /// consumes the sidecar by reloading the FdrEntry list from the
+    /// per-file parquet cache and letting entry_id place each record. The
     /// loader also rejects mismatches on the header <c>pass</c> byte
     /// so a 2nd-pass sidecar can never silently scramble 1st-pass
     /// stubs (or vice versa).

@@ -521,11 +521,17 @@ namespace pwiz.Osprey.Tasks
                         throw new InvalidDataException(string.Format(
                             "HydrateCompactedStreaming: no stubs loaded for {0}", fileName));
                     }
-                    // The sidecar overlay needs the FULL pre-compaction list: it was written
-                    // pre-compaction and its reader requires the stub list to be a superset of
-                    // its records. Same order as the batch twin - overlay, then compact.
+                    // The 1st-pass sidecar is written over the WHOLE pre-compaction row set,
+                    // but these stubs come from the reconciled parquet, which now holds only
+                    // the Stage 5 survivors (issue #4486) - so most of its records have no
+                    // entry to land on, and this list is what says which rows we kept. Any
+                    // OTHER missing entry_id is still the parquet drift the reader rejects.
+                    // Same order as the batch twin: overlay, then compact.
+                    var loadedIds = new HashSet<uint>(stubs.Count);
+                    foreach (var stub in stubs)
+                        loadedIds.Add(stub.EntryId);
                     OverlayFirstPassSidecar(syntheticInputs[i], fileName, stubs,
-                        nameof(HydrateCompactedStreaming));
+                        nameof(HydrateCompactedStreaming), id => !loadedIds.Contains(id));
 
                     // The caller's one look at this file's full pre-compaction pool: it fills
                     // in whatever it used to reduce off the resident all-files pool.
@@ -570,12 +576,22 @@ namespace pwiz.Osprey.Tasks
         /// first-pass FDR, and the compaction predicate uses first-pass q-values. The stub
         /// list must be the FULL pre-compaction set - the sidecar was written before
         /// compaction and its reader requires a superset of its records.
+        ///
+        /// <para><c>expectedAbsent</c> is non-null ONLY for a caller whose list is
+        /// legitimately a subset of that: today just <see cref="HydrateCompactedStreaming"/>,
+        /// which loads from the reconciled parquet, and that parquet now carries only the
+        /// Stage 5 survivors (issue #4486). The batch path stays strict, because a lean list
+        /// THERE means the caller was handed the wrong pool - which is exactly what
+        /// <c>AssertBatchOverlayRejectsLeanStubs</c> pins, and what caught this when the
+        /// tolerance was first applied to both paths at once.</para>
         /// </summary>
         private static void OverlayFirstPassSidecar(
-            string syntheticInput, string fileName, List<FdrEntry> stubs, string context)
+            string syntheticInput, string fileName, List<FdrEntry> stubs, string context,
+            Func<uint, bool> expectedAbsent = null)
         {
             string sidecarPath = FdrScoresSidecar.Pass1Path(syntheticInput);
-            if (!FdrScoresSidecar.TryRead(sidecarPath, stubs, FdrScoresSidecar.Pass.FirstPass))
+            if (!FdrScoresSidecar.TryRead(sidecarPath, stubs, FdrScoresSidecar.Pass.FirstPass,
+                    expectedAbsent))
             {
                 throw new InvalidDataException(string.Format(
                     "{0}: failed to overlay .1st-pass.fdr_scores.bin for {1} (expected at {2})",

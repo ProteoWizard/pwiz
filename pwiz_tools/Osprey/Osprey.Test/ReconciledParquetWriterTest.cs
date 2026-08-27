@@ -24,6 +24,7 @@
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -92,7 +93,7 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(OspreyVersion.Current, metadata["osprey.version"]);
                 Assert.AreEqual(config.Identity.SearchParameterHash(), metadata["osprey.search_hash"]);
                 Assert.AreEqual(config.Identity.LibraryIdentityHash(), metadata["osprey.library_hash"]);
-                Assert.AreEqual("true", metadata["osprey.reconciled"]);
+                Assert.AreEqual(ParquetScoreCache.RECONCILED_SURVIVORS, metadata["osprey.reconciled"]);
             }
 
             // Stems supplied -> join-wide hash; absent/empty -> config-derived hash.

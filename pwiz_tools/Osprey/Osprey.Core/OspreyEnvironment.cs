@@ -191,6 +191,19 @@ namespace pwiz.Osprey.Core
             IsNotZero(@"OSPREY_STAGE6_STREAM_SURVIVORS");
 
         /// <summary>
+        /// Exit Stage 7 as soon as it has upgraded any pre-#4486 full-row reconciled
+        /// parquets to the survivor subset, instead of going on to score.
+        ///
+        /// <para>For measurement, not production. A run that both converts and scores
+        /// reports a memory and wall profile blended with the conversion that produced it,
+        /// so an A/B of the new format wants the conversion in a separate pass: one run to
+        /// upgrade, a second to profile. Unset, this costs nothing - the upgrade is
+        /// already a no-op once every parquet carries the survivors marker.</para>
+        /// </summary>
+        public static bool UpgradeReconciledOnly { get; set; } =
+            IsSetAndNotZero(@"OSPREY_UPGRADE_RECONCILED_ONLY");
+
+        /// <summary>
         /// At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library
         /// entry that can no longer be scored or written - i.e. everything outside the
         /// compaction survivors and the gap-fill candidates. The identity fields

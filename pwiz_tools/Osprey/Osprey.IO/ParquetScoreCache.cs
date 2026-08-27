@@ -184,6 +184,18 @@ namespace pwiz.Osprey.IO
         // to one. See ai/todos/active/TODO-20260716_osprey_parquet_bounded_rowgroup_write.md.
         private const int MAX_ROWS_PER_ROW_GROUP = 100_000;
 
+        /// <summary>
+        /// The <c>osprey.reconciled</c> footer value written by a build whose Stage 6 parquet
+        /// holds only the Stage 5 SURVIVOR rows, rather than the row-for-row twin of the
+        /// Stage 4 parquet every build before it wrote. It is a format marker, not a boolean:
+        /// the reader compares this key for exact equality, so an older Osprey handed one of
+        /// these refuses it instead of reading a subset as though it were the whole file
+        /// (issue #4486). Kept distinct from the <c>osprey.version</c> stamp deliberately -
+        /// that one is overridable with OSPREY_VERSION_OVERRIDE, which is the sanctioned way
+        /// to consume another build's artifacts and therefore no protection here.
+        /// </summary>
+        public const string RECONCILED_SURVIVORS = @"survivors";
+
         // Test seam: when non-null, overrides MAX_ROWS_PER_ROW_GROUP so a unit test can
         // force several row groups from a handful of rows and assert the multi-group
         // round-trip is logically identical. Always null in production.
@@ -291,7 +303,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static void WriteScoresParquet(string path, List<FdrEntry> entries,
             Dictionary<string, string> metadata,
-            Dictionary<uint, LibraryEntry> libraryById,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             string fileName)
         {
             if (path == null)
@@ -340,13 +352,13 @@ namespace pwiz.Osprey.IO
         /// entry's <see cref="FdrEntry.ParquetIndex"/> is (re)assigned to its global
         /// row position <paramref name="startIndex"/> + j, matching
         /// <see cref="LoadFdrStubsFromParquet(string)"/>'s read-side "ParquetIndex = row"
-        /// convention. Shared by the chunked <see cref="WriteScoresParquet(string,List{FdrEntry},Dictionary{string,string},Dictionary{uint,LibraryEntry},string)"/>
+        /// convention. Shared by the chunked <see cref="WriteScoresParquet(string,List{FdrEntry},Dictionary{string,string},IReadOnlyDictionary{uint,LibraryEntry},string)"/>
         /// write and the Stage-6 streaming reconciled transfer
         /// (<see cref="StreamReconciledScoresParquet"/>) so both emit byte-identical
         /// row groups.
         /// </summary>
         private static List<DataColumn> BuildFdrEntryColumns(IReadOnlyList<FdrEntry> entries,
-            int startIndex, Dictionary<uint, LibraryEntry> libraryById, string fileName,
+            int startIndex, IReadOnlyDictionary<uint, LibraryEntry> libraryById, string fileName,
             DataField[] featureFields)
         {
             int count = entries.Count;
@@ -1131,7 +1143,7 @@ namespace pwiz.Osprey.IO
         /// residency is one original row group being read + one output group being filled +
         /// the small resident overlay map / gap-fill list -- it never materializes the whole
         /// file's <see cref="FdrEntry"/> list the way LoadFullFdrEntries +
-        /// <see cref="WriteScoresParquet(string,List{FdrEntry},Dictionary{string,string},Dictionary{uint,LibraryEntry},string)"/>
+        /// <see cref="WriteScoresParquet(string,List{FdrEntry},Dictionary{string,string},IReadOnlyDictionary{uint,LibraryEntry},string)"/>
         /// did (the ~4.4 GB reload this replaces).
         ///
         /// The reconciled physical row order must equal the former load-all + re-sort write:
@@ -1146,16 +1158,29 @@ namespace pwiz.Osprey.IO
         /// protein-FDR at 1e-9); this physical equivalence is what keeps them green.
         /// See ai/todos/active/TODO-20260717_osprey_stage6_chunked_reconciled_transfer.md.
         ///
-        /// Returns the replaced-row, appended-row (gap-fill), and original-row counts.
+        /// <paramref name="keepIdentities"/> subsets the output to the Stage 5 survivors: an
+        /// original row whose (entry_id, charge, scan_number) is absent is not emitted - the
+        /// same identity <c>Pass2FdrSidecar.MapFeaturesByIdentity</c> keys on, and NOT
+        /// entry_id alone, because compaction drops an entry_id's extra SCANS rather than the
+        /// entry_id itself. Null keeps every row,
+        /// which is the old whole-file shape and what the unit tests exercise. Subsetting is
+        /// the point of the artifact - Stage 6 exists to hand Stage 7 the rows it will
+        /// actually use, and emitting the rest made this file a row-for-row twin of the
+        /// Stage 4 parquet, which is how Stage 4 became a required Stage 7 input (#4486).
+        /// Gap-fill rows are always emitted; they are survivors by construction.
+        ///
+        /// Returns the replaced-row, appended-row (gap-fill), and original-row counts. The
+        /// original-row count is rows READ, not emitted, so it still describes the input.
         /// Overlay indices that fall past the original's rows are dropped with a warning
         /// (never written), matching the whole-file overlay's out-of-range handling.
         /// </summary>
-        public static (int NReplaced, int NAppended, int OrigRowCount) StreamReconciledScoresParquet(
+        public static (int NReplaced, int NAppended, int OrigRowCount, int NWritten) StreamReconciledScoresParquet(
             string originalPath, string reconciledPath,
             IReadOnlyDictionary<uint, FdrEntry> overlayByIndex,
             IReadOnlyList<FdrEntry> gapFill,
             Dictionary<string, string> metadata,
-            Dictionary<uint, LibraryEntry> libraryById, string fileName,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById, string fileName,
+            ISet<(uint, byte, uint)> keepIdentities,
             Action<string> logWarning)
         {
             if (originalPath == null)
@@ -1181,6 +1206,7 @@ namespace pwiz.Osprey.IO
 
             int nReplaced = 0;
             int origRowCount = 0;
+            int nWritten = 0;
 
             using (var readStream = new FileStream(originalPath, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var reader = RunSync(ParquetReader.CreateAsync(readStream)))
@@ -1215,7 +1241,10 @@ namespace pwiz.Osprey.IO
                             WriteRowGroupColumns(group, BuildFdrEntryColumns(
                                 buffer, written, libraryById, fileName, featureFields));
                         written += buffer.Count;
-                        progress.Report(written);
+                        // Report rows CONSUMED, not written. With the compacted-away rows
+                        // dropped the two differ by ~5.6x, and a bar driven by the written
+                        // count would stall short of its total for the whole write.
+                        progress.Report(origRead + gapIdx);
                         buffer.Clear();
                     }
 
@@ -1250,15 +1279,38 @@ namespace pwiz.Osprey.IO
                         for (int j = 0; j < groupEntries.Count; j++)
                         {
                             var row = groupEntries[j];
-                            FdrEntry rescored;
+                            bool replaced = false;
                             if (overlayByIndex.Count > 0 &&
-                                overlayByIndex.TryGetValue((uint)(origRead + j), out rescored))
+                                overlayByIndex.TryGetValue((uint)(origRead + j), out FdrEntry rescored))
                             {
                                 row = rescored;
-                                nReplaced++;
+                                replaced = true;
                             }
+                            // Drop the rows Stage 5 already compacted away. Emitting them made
+                            // this file a row-for-row twin of the Stage 4 parquet, which is
+                            // what forced Stage 7 to read far more rows than it uses (#4486).
+                            //
+                            // Keyed on the FULL canonical identity, not entry_id alone.
+                            // Compaction removes duplicate rows OF an entry_id (its other
+                            // scans), not whole entry_ids - measured on Stellar, 482,891 rows
+                            // compact to 332,138, which is ~166,724 passing base_ids x 2 for
+                            // target and decoy, i.e. about one surviving row per entry_id. So
+                            // an entry_id-keyed set matches every row and drops nothing.
+                            // Tested AFTER the overlay because a rescore can move a row's apex
+                            // scan, and the buffer entry carries the post-rescore identity.
+                            if (keepIdentities != null &&
+                                !keepIdentities.Contains((row.EntryId, row.Charge, row.ScanNumber)))
+                            {
+                                continue;
+                            }
+                            if (replaced)
+                                nReplaced++;
                             // Emit gap-fill rows that sort strictly before this original
                             // row; a key tie keeps the original first (stable-sort order).
+                            // Still correct when rows are skipped above: a skipped row only
+                            // defers this test to the next emitted row, whose key is greater
+                            // or equal, so the gap-fill row still precedes everything it
+                            // sorts before.
                             while (gapIdx < gapFillCount && KeyLess(sortedGapFill[gapIdx], row))
                                 Emit(sortedGapFill[gapIdx++]);
                             Emit(row);
@@ -1271,6 +1323,7 @@ namespace pwiz.Osprey.IO
                     while (gapIdx < gapFillCount)
                         Emit(sortedGapFill[gapIdx++]);
                     FlushGroup();
+                    nWritten = written;
                 }
                 saver.Commit();
             }
@@ -1289,7 +1342,7 @@ namespace pwiz.Osprey.IO
                 }
             }
 
-            return (nReplaced, gapFillCount, origRowCount);
+            return (nReplaced, gapFillCount, origRowCount, nWritten);
         }
 
         // Strict (entry_id, charge, scan_number) less-than, the canonical scores-parquet
@@ -1723,13 +1776,19 @@ namespace pwiz.Osprey.IO
                 {
                     string cachedReconciled;
                     kv.TryGetValue("osprey.reconciled", out cachedReconciled);
-                    if (!string.Equals(cachedReconciled, "true", StringComparison.Ordinal))
+                    // Two accepted values, one meaning: this is a post-Stage-6 parquet.
+                    // "survivors" additionally says it holds ONLY the Stage 5 survivor rows,
+                    // which is what this build writes; "true" is the older row-for-row shape,
+                    // still readable because the loader filters to survivors either way.
+                    if (!string.Equals(cachedReconciled, "true", StringComparison.Ordinal) &&
+                        !string.Equals(cachedReconciled, RECONCILED_SURVIVORS, StringComparison.Ordinal))
                     {
                         return string.Format(
                             "--task SecondPassFDR requires a reconciled (post-Stage-6) parquet, " +
                             "but {0} has osprey.reconciled = '{1}'. Either it is a Stage 4 " +
                             "(raw) parquet — run --task PerFileRescoring to produce reconciled " +
-                            "parquets first — or run the full pipeline.",
+                            "parquets first — or it was written by a NEWER Osprey whose " +
+                            "reconciled parquet this build cannot read.",
                             path, cachedReconciled ?? "<unset>");
                     }
                 }

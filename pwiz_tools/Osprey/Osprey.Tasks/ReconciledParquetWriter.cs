@@ -78,18 +78,33 @@ namespace pwiz.Osprey.Tasks
             // 3. Reconciliation metadata (mirrors Rust build_reconciled_metadata).
             var metadata = BuildReconciliationMetadata(config, joinFileStems);
 
-            // 4. Stream the reconciled transfer group-by-group: read the original,
-            //    overlay re-scored rows, merge gap-fill into canonical position, write
-            //    the sibling. Peak residency is one original row group, not the whole file.
-            int nReplaced, nAppended, origRowCount;
+            // 4. The survivors this file is allowed to carry forward, which is exactly the
+            //    entries Stage 5's compaction left in the buffer (per-run q under the
+            //    threshold, plus every peptide of a protein with 2+ peptides detected) with
+            //    the gap-fill rows the rescore appended. Taken from the buffer rather than
+            //    re-derived so the artifact cannot disagree with what the run computed.
+            //    Keyed on the full canonical identity: compaction removes an entry_id's extra
+            //    SCANS, not whole entry_ids, so an entry_id-keyed set matches every original
+            //    row and would drop nothing (measured on Stellar: 482,891 rows compact to
+            //    332,138, about one surviving row per entry_id).
+            var keepIdentities = new HashSet<(uint, byte, uint)>(fdrEntries.Count);
+            foreach (var entry in fdrEntries)
+                keepIdentities.Add((entry.EntryId, entry.Charge, entry.ScanNumber));
+
+            // 5. Stream the reconciled transfer group-by-group: read the original,
+            //    overlay re-scored rows, drop the compacted-away rows, merge gap-fill into
+            //    canonical position, write the sibling. Peak residency is one original row
+            //    group, not the whole file.
+            int nReplaced, nAppended, origRowCount, nWritten;
             try
             {
                 var result = ParquetScoreCache.StreamReconciledScoresParquet(
                     originalPath, reconciledPath, overlayByIndex, gapFill,
-                    metadata, libraryById, fileName, logWarning);
+                    metadata, libraryById, fileName, keepIdentities, logWarning);
                 nReplaced = result.NReplaced;
                 nAppended = result.NAppended;
                 origRowCount = result.OrigRowCount;
+                nWritten = result.NWritten;
             }
             // A read/write IO failure is a recoverable per-file skip (clears the sidecar,
             // re-rescored next run). But an InvalidOperationException from the streaming
@@ -103,9 +118,12 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
+            // Reports what was WRITTEN against what was read. The two differ now that the
+            // compacted-away rows are dropped, and the ratio is the whole point of the
+            // artifact - a log that still printed original+appended would hide it.
             logInfo(string.Format(
                 "  Wrote reconciled parquet for {0}: {1} rows ({2} replaced + {3} appended; original {4} rows)",
-                fileName, origRowCount + nAppended, nReplaced, nAppended, origRowCount));
+                fileName, nWritten, nReplaced, nAppended, origRowCount));
             return true;
         }
 
@@ -171,7 +189,15 @@ namespace pwiz.Osprey.Tasks
                 { @"osprey.version", OspreyVersion.Current },
                 { @"osprey.search_hash", config.Identity.SearchParameterHash() },
                 { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
-                { @"osprey.reconciled", @"true" },
+                // "survivors", not "true": this parquet holds only the Stage 5 survivor rows,
+                // where every build before this one wrote a row-for-row twin of the Stage 4
+                // parquet. The shape changed, so the marker changes with it - an older Osprey
+                // compares this value against "true" exactly and REFUSES, instead of reading
+                // a subset as though it were the whole file and reporting a confidently wrong
+                // answer. The version stamp cannot carry this: OSPREY_VERSION_OVERRIDE is the
+                // sanctioned way to consume another build's artifacts, so it is exactly the
+                // guard an operator turns off. (issue #4486)
+                { @"osprey.reconciled", ParquetScoreCache.RECONCILED_SURVIVORS },
                 { @"osprey.reconciliation_hash", reconciliationHash },
             };
         }

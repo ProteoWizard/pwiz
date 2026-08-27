@@ -216,6 +216,11 @@ namespace pwiz.Osprey.Tasks
             var libraryById = ctx.Get<LibraryById>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
 
+            // Before the fragment release, which mutates the library entries this write
+            // reads its sequence / precursor m/z / protein-id columns from.
+            if (UpgradeReconciledParquets(perFileEntries, perFileParquetPaths, libraryById, ctx))
+                return true;
+
             ReleaseUnscorableLibraryFragments(perFileEntries, fullLibrary, ctx);
 
             // The 2nd-pass Percolator model, captured for the model-diagnostics
@@ -503,6 +508,80 @@ namespace pwiz.Osprey.Tasks
                     return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Rewrite any <c>.scores-reconciled.parquet</c> still in the pre-#4486 full-row
+        /// shape into the survivor subset this build writes, in place. Returns true when the
+        /// run should stop here.
+        ///
+        /// <para>Recovery rather than migration tooling: a cohort staged by an older build
+        /// would otherwise have to re-run Stage 6 - hours at cohort scale - for a format that
+        /// is one sequential read and a much smaller write away. Any workflow holding old
+        /// artifacts therefore self-heals on its next run.</para>
+        ///
+        /// <para>The rows to keep are the identities of the post-compaction list this stage
+        /// already holds, which is by definition what Stage 7 consumes, so nothing about the
+        /// survivor decision is re-derived here. The footer is preserved key for key except
+        /// <c>osprey.reconciled</c>, so the version stamp and the search / library /
+        /// reconciliation hashes still describe the run that produced the rows and every
+        /// validity check that passed before passes after.</para>
+        ///
+        /// <para>Runs BEFORE <see cref="ReleaseUnscorableLibraryFragments"/>, which mutates
+        /// the library entries the write reads its sequence / precursor m/z / protein-id
+        /// columns from - with a null or stripped library those columns write empty.</para>
+        /// </summary>
+        private static bool UpgradeReconciledParquets(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            PipelineContext ctx)
+        {
+            if (perFileParquetPaths == null)
+                return false;
+            int upgraded = 0;
+            foreach (var kv in perFileEntries)
+            {
+                if (!perFileParquetPaths.TryGetValue(kv.Key, out string scoresPath))
+                    continue;
+                string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
+                if (!File.Exists(reconciledPath))
+                    continue;
+                var metadata = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
+                metadata.TryGetValue(@"osprey.reconciled", out string marker);
+                if (string.Equals(marker, ParquetScoreCache.RECONCILED_SURVIVORS,
+                        StringComparison.Ordinal))
+                {
+                    continue;
+                }
+                var keepIdentities = new HashSet<(uint, byte, uint)>(kv.Value.Count);
+                foreach (var entry in kv.Value)
+                    keepIdentities.Add((entry.EntryId, entry.Charge, entry.ScanNumber));
+                metadata[@"osprey.reconciled"] = ParquetScoreCache.RECONCILED_SURVIVORS;
+
+                // Written beside the target and swapped in, because the stream reads the very
+                // file it replaces.
+                string upgradedPath = reconciledPath + @".upgraded";
+                var result = ParquetScoreCache.StreamReconciledScoresParquet(
+                    reconciledPath, upgradedPath, null, null, metadata, libraryById,
+                    kv.Key, keepIdentities, ctx.LogWarning);
+                File.Delete(reconciledPath);
+                File.Move(upgradedPath, reconciledPath);
+                upgraded++;
+                ctx.LogInfo(string.Format(
+                    @"  Upgraded reconciled parquet for {0}: {1} rows kept of {2}",
+                    kv.Key, result.NWritten, result.OrigRowCount));
+            }
+            if (upgraded == 0)
+                return false;
+            ctx.LogInfo(string.Format(
+                @"Upgraded {0} reconciled parquet(s) to the survivor subset format.", upgraded));
+            if (!OspreyEnvironment.UpgradeReconciledOnly)
+                return false;
+            ctx.LogInfo(
+                @"OSPREY_UPGRADE_RECONCILED_ONLY is set - stopping after the upgrade so a " +
+                @"following run profiles the new format alone.");
+            return true;
         }
 
         /// <summary>

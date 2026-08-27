@@ -178,15 +178,15 @@ namespace pwiz.Osprey.Tasks
         public override IEnumerable<string> Outputs(PipelineContext ctx)
         {
             if (ctx.Config.InputFiles == null) yield break;
-            // Declares a reconciled path per input, but ExecuteRescore skips
-            // files with no consensus/reconciliation/gap-fill work, so those get
-            // no reconciled output. When any no-work file is present the driver's
-            // task-level IsTaskAlreadyDone (which requires EVERY declared output
-            // to exist) therefore can't short-circuit the whole task on resume --
-            // it re-enters Run, which fast per-file-skips already-rescored files
-            // via their reconciled sidecars. Correctness is unaffected; this is a
-            // deliberate, inert coarse-skip. (We don't filter to work-files here
-            // because that set isn't known until the Stage 6 planner has run.)
+            // A reconciled path per input, and every one of them is now written -
+            // a file with no consensus/reconciliation/gap-fill work gets a faithful
+            // copy (WriteUnchangedReconciled) rather than nothing. That is what lets
+            // Stage 7 read ONE artifact per file instead of falling back to the Stage 4
+            // parquet for whichever files had no work (issue #4486), and it also lets the
+            // driver's task-level IsTaskAlreadyDone - which requires EVERY declared output
+            // to exist - short-circuit the whole task on resume. Previously a single
+            // no-work file blocked that short-circuit, and Run was re-entered to
+            // fast per-file-skip its way back to the same answer.
             foreach (var input in ctx.Config.InputFiles)
                 yield return ParquetScoreCache.GetReconciledScoresPath(input);
         }
@@ -874,7 +874,12 @@ namespace pwiz.Osprey.Tasks
             // Bails when there is no work or the file has no input_files entry.
             if (!TryAssembleRescoreTargets(fileNum, nTotalFiles, fileName, inputs, ctx,
                     out var combinedTargets, out var gapFillTargets, out string inputFile))
+            {
+                // Still write this file's reconciled parquet. Leaving it out is what made the
+                // Stage 4 parquet a required Stage 7 input (issue #4486).
+                WriteUnchangedReconciled(fileName, fdrEntries, inputs, ctx);
                 return (totalRescored, totalGapCwt, totalGapForced, false);
+            }
 
             var config = inputs.Config;
             var fullLibrary = inputs.FullLibrary;
@@ -1329,6 +1334,37 @@ namespace pwiz.Osprey.Tasks
                     reconciledOutPath, ex.Message));
             }
             return false;
+        }
+
+        /// <summary>
+        /// Write the reconciled parquet for a file that had no rescore work, so that EVERY
+        /// input has one on disk.
+        ///
+        /// <para>The output is a faithful copy: <c>ReconciledParquetWriter.BuildOverlay</c>
+        /// selects gap-fill by <c>ParquetIndex == uint.MaxValue</c> and re-scored rows by a
+        /// non-null <c>Features</c>, and a no-work file has neither, so the stream replaces
+        /// nothing and appends nothing. Only the reconciliation metadata is added.</para>
+        ///
+        /// <para>Written because the alternative is worse than the duplication. Skipping it
+        /// made the Stage 4 parquet a REQUIRED Stage 7 input for whichever files happened to
+        /// have no work, which is how Stage 7 came to read both parquets - one to get the
+        /// rows and one to get the reconciled values back (issue #4486). Every file having
+        /// this artifact is what lets Stage 7 read a single source per file.</para>
+        ///
+        /// <para>Silent when the file has no <c>input_files</c> entry: that is the other
+        /// reason <see cref="TryAssembleRescoreTargets"/> bails, it already warned, and
+        /// there is no input path to stamp the resume record against.</para>
+        /// </summary>
+        private void WriteUnchangedReconciled(
+            string fileName, List<FdrEntry> fdrEntries, RescorePassInputs inputs, PipelineContext ctx)
+        {
+            if (inputs.FileNameToIdx == null ||
+                !inputs.FileNameToIdx.TryGetValue(fileName, out int inputIdx))
+            {
+                return;
+            }
+            WriteReconciledAndStamp(
+                fileName, inputs.Config.InputFiles[inputIdx], fdrEntries, inputs, ctx);
         }
 
         /// <summary>
