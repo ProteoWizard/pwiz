@@ -118,6 +118,16 @@ namespace pwiz.Osprey.Tasks
         // guessing, because every wrong guess here is a plausible number rather than an error.
         private RescoredPoolPlan _poolPlan;
 
+        // The entry_ids whose scores the rescore reset, per file, captured as it happened.
+        // The deferred pool build has to reproduce that reset on a list it reloads from disk,
+        // and the planner's indices address the list as the rescore saw it - an ordering the
+        // rebuild is only accidentally guaranteed to reproduce, and will NOT once Stage 7
+        // loads from the reconciled parquet, whose gap-fill rows are interleaved in canonical
+        // position and shift every index after them (#4486). An id survives that; a position
+        // does not.
+        private readonly Dictionary<string, HashSet<(uint, byte, uint)>> _resetIdentitiesByFile
+            = new Dictionary<string, HashSet<(uint, byte, uint)>>(StringComparer.Ordinal);
+
         // Admits one survivor refill at a time under the parallel file loop, so the
         // pre-compaction transient each load holds is not multiplied by the file parallelism.
         // See RescoreOneFileStreamed for why that trade is free.
@@ -372,8 +382,7 @@ namespace pwiz.Osprey.Tasks
             // overlay: this is the last moment the question has the right answer (see
             // RescoredPoolPlan), and the answer is cheap - one small sidecar read per file.
             _poolPlan = new RescoredPoolPlan(_perFileEntries, survivorLoader, rescoredFiles,
-                CurrentReconciledPaths(ctx), gapFill, consensusTargets,
-                GroupReconciliationActionsByFile(reconciliationActions, out _));
+                CurrentReconciledPaths(ctx), gapFill, _resetIdentitiesByFile);
 
             // Cross-impl bisection seam: dump per-precursor state
             // immediately after the rescore loop. Mirrors Rust's
@@ -1005,8 +1014,13 @@ namespace pwiz.Osprey.Tasks
 
             // Overlay the re-scored subset back onto the per-file stubs,
             // resetting discriminant fields to Rust to_fdr_entry defaults.
+            if (!_resetIdentitiesByFile.TryGetValue(fileName, out var resetIdentities))
+            {
+                resetIdentities = new HashSet<(uint, byte, uint)>(combinedTargets.Count);
+                _resetIdentitiesByFile[fileName] = resetIdentities;
+            }
             var (nOverlay, nNoPeak) =
-                OverlayRescoredEntries(fdrEntries, combinedTargets, rescored);
+                OverlayRescoredEntries(fdrEntries, combinedTargets, rescored, resetIdentities);
             totalRescored += nOverlay;
             if (nNoPeak > 0)
             {
@@ -1500,7 +1514,8 @@ namespace pwiz.Osprey.Tasks
         private static (int NOverlay, int NNoPeak) OverlayRescoredEntries(
             List<FdrEntry> fdrEntries,
             Dictionary<int, (double Apex, double Start, double End)> combinedTargets,
-            List<FdrEntry> rescored)
+            List<FdrEntry> rescored,
+            HashSet<(uint, byte, uint)> resetIdentities)
         {
             // Pass 1: index the rescored results by entry_id so we
             // can look up successful re-scores in the second pass.
@@ -1517,6 +1532,13 @@ namespace pwiz.Osprey.Tasks
             {
                 int idx = kvp.Key;
                 uint entryId = fdrEntries[idx].EntryId;
+                // Every target is reset on BOTH branches below, so this set is exactly the
+                // reset, recorded while the list that defines it is still here. The FULL
+                // identity, not entry_id alone: compaction removes an entry_id's extra SCANS
+                // rather than the entry_id, so a bare id could select a row the planner did
+                // not target - the same reason MapFeaturesByIdentity keys on all three.
+                var target = fdrEntries[idx];
+                resetIdentities?.Add((target.EntryId, target.Charge, target.ScanNumber));
                 if (rescoredByEntryId.TryGetValue(entryId, out FdrEntry rescoredEntry))
                 {
                     rescoredEntry.ResetScores();
@@ -1789,33 +1811,30 @@ namespace pwiz.Osprey.Tasks
             /// their 1st-pass boundaries.</param>
             /// <param name="gapFill">The planner's per-file gap-fill targets, for the
             /// overlay.</param>
-            /// <param name="consensusTargets">The planner's per-file multi-charge consensus
-            /// targets, for the score reset.</param>
-            /// <param name="reconciliationTargets">The planner's reconciliation actions grouped
-            /// by file, for the score reset.</param>
+            /// <param name="resetIdentities">Per file, the identities whose scores the rescore
+            /// reset - captured DURING the rescue rather than re-derived from planner indices,
+            /// so the reset survives any reordering of the list it is replayed onto.</param>
             public RescoredPoolPlan(
                 List<KeyValuePair<string, List<FdrEntry>>> buffer,
                 FirstPassSurvivorLoader loader,
                 HashSet<string> rescoredFiles,
                 IReadOnlyDictionary<string, string> reconciledPaths,
                 IReadOnlyDictionary<string, List<GapFillTarget>> gapFill,
-                IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> consensusTargets,
-                IReadOnlyDictionary<string, List<(int Index, double Apex, double Start, double End)>> reconciliationTargets)
+                IReadOnlyDictionary<string, HashSet<(uint, byte, uint)>> resetIdentities)
             {
                 Buffer = buffer;
                 Loader = loader;
                 RescoredFiles = rescoredFiles;
                 ReconciledPaths = reconciledPaths;
                 GapFill = gapFill;
-                ConsensusTargets = consensusTargets;
-                ReconciliationTargets = reconciliationTargets;
+                ResetIdentities = resetIdentities;
             }
 
             /// <summary>The no-rescore plan: put back what FirstPassFDR released, and stop.</summary>
             public static RescoredPoolPlan RefillOnly(
                 List<KeyValuePair<string, List<FdrEntry>>> buffer, FirstPassSurvivorLoader loader)
             {
-                return new RescoredPoolPlan(buffer, loader, null, null, null, null, null);
+                return new RescoredPoolPlan(buffer, loader, null, null, null, null);
             }
 
             public List<KeyValuePair<string, List<FdrEntry>>> Buffer { get; }
@@ -1823,8 +1842,7 @@ namespace pwiz.Osprey.Tasks
             public HashSet<string> RescoredFiles { get; }
             public IReadOnlyDictionary<string, string> ReconciledPaths { get; }
             public IReadOnlyDictionary<string, List<GapFillTarget>> GapFill { get; }
-            public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> ConsensusTargets { get; }
-            public IReadOnlyDictionary<string, List<(int Index, double Apex, double Start, double End)>> ReconciliationTargets { get; }
+            public IReadOnlyDictionary<string, HashSet<(uint, byte, uint)>> ResetIdentities { get; }
         }
 
         /// <summary>
@@ -1987,15 +2005,18 @@ namespace pwiz.Osprey.Tasks
         /// so the difference reaches the report: without this reset the Stellar straight-
         /// through run reported 31,583 precursors against the golden 29,364.</para>
         ///
-        /// <para>The target set is rebuilt from the same bounded planner byproducts
-        /// <see cref="TryAssembleRescoreTargets"/> reads, and the rebuilt list is in the
-        /// same canonical order the planner indexed, so the positional indices select the
-        /// same entries they did during the rescore.</para>
+        /// <para>The target set is the entry_ids <see cref="OverlayRescoredEntries"/> actually
+        /// reset, captured while it ran. It used to be re-derived from the planner's indices,
+        /// which address the list as the rescore saw it - correct only for as long as the
+        /// rebuild reproduces that order exactly, and NOT once Stage 7 loads from the
+        /// reconciled parquet, where the gap-fill rows are already interleaved in canonical
+        /// position and shift every index after them (#4486). Identity survives a reordering;
+        /// a position does not. It is also the narrower statement: the ids are what was reset,
+        /// where planner targets are only what was proposed.</para>
         ///
-        /// <para>A no-op for a file outside <see cref="RescoredPoolPlan.RescoredFiles"/> -
-        /// the ones that actually reached <see cref="OverlayRescoredEntries"/>. Having
-        /// planner targets is not the same as having been rescored: a file that took the
-        /// per-file resume skip (<see cref="TryResumeRescoredFile"/>), or whose
+        /// <para>A no-op for a file that never reached <see cref="OverlayRescoredEntries"/> -
+        /// having planner targets is not the same as having been rescored: a file that took
+        /// the per-file resume skip (<see cref="TryResumeRescoredFile"/>), or whose
         /// <see cref="TryAssembleRescoreTargets"/> returned false because it has no
         /// <c>input_files</c> entry, returns before the reset and keeps its real 1st-pass
         /// q-values. Resetting those too would zero q-values the resident path leaves alone,
@@ -2006,36 +2027,33 @@ namespace pwiz.Osprey.Tasks
         private static void ResetRescoredTargetsForFile(RescoredPoolPlan plan, string fileName,
             List<FdrEntry> entries)
         {
-            if (!plan.RescoredFiles.Contains(fileName))
+            if (plan.ResetIdentities == null ||
+                !plan.ResetIdentities.TryGetValue(fileName, out var resetIds) ||
+                resetIds.Count == 0)
+            {
                 return;
-            var consensus = plan.ConsensusTargets;
-            var reconTargets = plan.ReconciliationTargets;
-            var indices = new HashSet<int>();
-            if (consensus != null && consensus.TryGetValue(fileName, out var consensusTargets))
-            {
-                foreach (var t in consensusTargets)
-                    indices.Add(t.Index);
             }
-            if (reconTargets != null && reconTargets.TryGetValue(fileName, out var recon))
+            int reset = 0;
+            foreach (var entry in entries)
             {
-                foreach (var t in recon)
-                    indices.Add(t.Index);
+                if (!resetIds.Contains((entry.EntryId, entry.Charge, entry.ScanNumber)))
+                    continue;
+                entry.ResetScores();
+                reset++;
             }
-            foreach (int idx in indices)
+            // Every captured id must match exactly one row. Fewer means the rebuild did not
+            // reproduce the list the rescore reset, and the survivors it missed would carry
+            // 1st-pass q-values a fresh run sets to 1.0 - which under the frozen-model modes
+            // reaches the report (the Stellar straight-through run once counted 31,583
+            // precursors against the golden 29,364 for exactly this). More means an entry_id
+            // is duplicated in the file, which the post-compaction dedup is supposed to make
+            // impossible. Neither is a case to guess at.
+            if (reset != resetIds.Count)
             {
-                // A planner index outside the rebuilt list means the rebuild did not
-                // reproduce the list the planner indexed - which would silently reset the
-                // WRONG rows for every index that IS in range. Skipping it (as this did)
-                // swallowed the one cheap symptom of a misaligned rebuild; the fresh
-                // rescore would have thrown IndexOutOfRange on the same index.
-                if (idx < 0 || idx >= entries.Count)
-                {
-                    throw new InvalidDataException(string.Format(
-                        @"Stage 6 rebuild: planner index {0} for {1} is outside the rebuilt " +
-                        @"survivor list ({2} entries). The rebuilt buffer does not match the " +
-                        @"one the planner indexed.", idx, fileName, entries.Count));
-                }
-                entries[idx].ResetScores();
+                throw new InvalidDataException(string.Format(
+                    @"Stage 6 rebuild: reset {0} entries for {1} but the rescore reset {2}. " +
+                    @"The rebuilt survivor list does not match the one the rescore produced.",
+                    reset, fileName, resetIds.Count));
             }
         }
 
