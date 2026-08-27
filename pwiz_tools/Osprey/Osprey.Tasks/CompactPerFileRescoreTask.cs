@@ -148,7 +148,7 @@ namespace pwiz.Osprey.Tasks
             foreach (var kv in stale)
             {
                 done++;
-                ctx.LogInfo(string.Format(@"===== Compacting file {0}/{1}: {2} =====",
+                ctx.LogInfo(string.Format(@"Compacting file {0}/{1}: {2}",
                     done, stale.Count, kv.Key));
                 CompactOneFile(kv.Key, kv.Value, retainBaseIds, libraryById, ctx,
                     ref rowsBefore, ref rowsAfter);
