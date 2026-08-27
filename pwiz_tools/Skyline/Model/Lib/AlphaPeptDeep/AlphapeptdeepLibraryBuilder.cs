@@ -1,6 +1,7 @@
 /*
  * Author: David Shteynberg <dshteyn .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2025 University of Washington - Seattle, WA
  *
@@ -66,8 +67,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private const string EXPORT_SETTINGS_COMMAND = @"export-settings";
 
         // peptdeep imports alpharaw, which loads a .NET runtime into the Python process purely as an import
-        // side effect - the library workflow never uses its Thermo (.raw) or Sciex (.wiff) readers. Since
-        // alpharaw 0.7.0 (2026-08-26) that import kills the process on the way out: it calls
+        // side effect - building a library reads no Thermo (.raw) or Sciex (.wiff) files. Since alpharaw
+        // 0.7.0 (2026-08-26) that import kills the process on the way out: it calls
         // atexit.unregister(pythonnet.unload), dropping Python.NET's orderly shutdown, so the CLR tears itself
         // down after Py_Finalize and PythonEngine.Shutdown() raises an AccessViolationException. peptdeep has
         // written all of its output by then, but the process exits with 0xE0434352 and Skyline reports the
@@ -78,17 +79,22 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         // block that contains the atexit.unregister call, so Python.NET's own shutdown hook survives and runs
         // while the interpreter is still alive. Note this does not keep the CLR out of the process - a bare
         // "import clr" in alpharaw.sciex has already loaded it by then - it just lets it shut down cleanly.
+        // It does leave alpharaw's readers in a poor state, so do not reuse this for a peptdeep command that
+        // reads raw files: Thermo reports cleanly that it is unavailable, but Sciex still advertises itself
+        // and then fails partway through a read.
         //
         // That earlier "import clr" is also why the variable cannot be used to choose a runtime instead.
-        // alpharaw.sciex runs it before alpharaw.thermo pulls in the module that reads the variable, so
-        // Python.NET is already loaded and alpharaw's load() call is a silent no-op. Only PYTHONNET_RUNTIME
-        // reaches that earlier load. Hosting under .NET Core would also avoid the crash, but .NET Core is not
-        // part of Windows, so asking for it would take effect on developer machines and do nothing on most
-        // users' - leaving the nightly testing a path users never run. Revisit when Skyline itself is on .NET.
+        // alpharaw.sciex runs it before anything imports the module that reads the variable, so Python.NET is
+        // already loaded by then and alpharaw's load() call is a silent no-op. Only PYTHONNET_RUNTIME reaches
+        // that earlier load. Hosting under .NET Core would also avoid the crash, but .NET Core is not part of
+        // Windows, so asking for it would take effect on developer machines and do nothing on most users' -
+        // leaving the nightly testing a path users never run. Revisit when Skyline itself is on .NET.
         // Releases before 0.7.0 ignore this variable, and do not have the bug either way.
-        // TODO: delete this once alpharaw only unregisters the hook for the Mono runtime it was working around
+        // TODO: delete this once alpharaw only unregisters the hook for the Mono runtime it was working
+        // around. No upstream issue to link to - as of 2026-08-27 this had not been reported to MannLabs.
         private const string ALPHARAW_DOTNET_RUNTIME = @"ALPHARAW_DOTNET_RUNTIME";
-        private const string ALPHARAW_DOTNET_RUNTIME_NONE = @"none";
+        // Deliberately not "none", which upstream could one day make meaningful. This can never name a runtime.
+        private const string ALPHARAW_DOTNET_RUNTIME_NONE = @"skyline-no-dotnet";
 
         // Processing folders
         private const string PREFIX_WORKDIR = "APD";
@@ -267,20 +273,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             ImportSpectralLibrary(progress, ref progressStatus);
         }
 
-        private ProcessStartInfo CreatePeptdeepStartInfo(string arguments)
-        {
-            var psi = new ProcessStartInfo(PeptdeepExecutablePath, arguments)
-            {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                RedirectStandardInput = false
-            };
-            psi.EnvironmentVariables[ALPHARAW_DOTNET_RUNTIME] = ALPHARAW_DOTNET_RUNTIME_NONE;
-            return psi;
-        }
-
         private void PrepareSettingsFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
@@ -326,7 +318,13 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     @"  / ____/  __/ /_/ / /_/ /_/ /  __/  __/ /_/ /",
                     @" /_/    \___/ .___/\__/_____/\___/\___/ .___/",
                     @"           /_/                       /_/",
-                    @"s/DiaNN\/Spectronaut/Skyline/"    // Replace DiaNN/Spectronaut with Skyline
+                    @"s/DiaNN\/Spectronaut/Skyline/",    // Replace DiaNN/Spectronaut with Skyline
+
+                    // alpharaw complains that it could not load a .NET runtime, which is precisely what
+                    // ALPHARAW_DOTNET_RUNTIME tells it to do (see above). Building a library reads no Thermo
+                    // or Sciex files, so the warning and the RuntimeError beside it would only alarm the user.
+                    @"UserWarning: .NET dependencies could not be loaded",
+                    @"No .NET runtime available"
                 };
 
                 pr.SilenceStatusMessageUpdates = true;  // Use FilteredUserMessageWriter to write process output instead of ProgressStatus.ChangeMessage()
@@ -344,6 +342,21 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 throw new IOException(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_, ex);
             }
 
+        }
+
+        private ProcessStartInfo CreatePeptdeepStartInfo(string arguments)
+        {
+            var psi = new ProcessStartInfo(PeptdeepExecutablePath, arguments)
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                RedirectStandardInput = false
+            };
+            // Keeps alpharaw from crashing the process at exit - see ALPHARAW_DOTNET_RUNTIME above
+            psi.EnvironmentVariables[ALPHARAW_DOTNET_RUNTIME] = ALPHARAW_DOTNET_RUNTIME_NONE;
+            return psi;
         }
 
         public void TransformPeptdeepOutput(IProgressMonitor progress, ref IProgressStatus progressStatus)
