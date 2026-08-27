@@ -3462,6 +3462,80 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The 2nd-pass sidecar's four EXPERIMENT-scope columns are patched the same two-phase
+        /// way its protein column is (#4486): the frozen second-pass competition writes each
+        /// file as it finishes with it, but experiment q, PEP and the experiment aggregate come
+        /// out of a competition that is not complete until every file has been read.
+        ///
+        /// <para>Asserts the contract that makes the two phases safe to substitute for one: the
+        /// patched file is BYTE-IDENTICAL to a single-phase write whose records already carried
+        /// the final values. A stride error, a column swap or a re-encoded double would all
+        /// leave the two files differing while every individual field still read back
+        /// plausibly.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarExperimentValuesPatched()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_expq_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Phase 1: what the per-file write emits - run-scope columns final, the four
+                // experiment-scope columns still carrying whatever the entry held.
+                var phase1 = new List<FdrScoreRecord>
+                {
+                    new FdrScoreRecord(10, -3.5, 0.001, 0.0011, 0.90, 0.91, 0.92, 0.40, 0.0),
+                    new FdrScoreRecord(7,  -3.4, 0.002, 0.0021, 0.93, 0.94, 0.95, 0.50, 0.0),
+                };
+                // What the finished competition says those records should carry.
+                var final = new Dictionary<uint, (double prec, double pep, double pepScore, double agg)>
+                {
+                    { 10, (0.0012, 0.0013, 0.02, -1.25) },
+                    { 7, (0.0022, 0.0023, 0.05, -0.75) },
+                };
+
+                string patched = Path.Combine(dir, "patched.2nd-pass.fdr_scores.bin");
+                FdrScoresSidecar.Write(patched, phase1, FdrScoresSidecar.Pass.SecondPass);
+                Assert.IsTrue(FdrScoresSidecar.PatchExperimentValues(
+                    patched, FdrScoresSidecar.Pass.SecondPass,
+                    rec =>
+                    {
+                        var f = final[rec.EntryId];
+                        return new FdrScoreRecord(
+                            rec.EntryId, rec.Score, rec.RunPrecursorQvalue, rec.RunPeptideQvalue,
+                            f.prec, f.pep, f.pepScore, rec.ExperimentProteinQvalue, f.agg);
+                    },
+                    out int nPatched));
+                Assert.AreEqual(phase1.Count, nPatched);
+
+                // The single-phase file the two phases have to reproduce exactly.
+                var singlePhase = new List<FdrScoreRecord>();
+                foreach (var rec in phase1)
+                {
+                    var f = final[rec.EntryId];
+                    singlePhase.Add(new FdrScoreRecord(
+                        rec.EntryId, rec.Score, rec.RunPrecursorQvalue, rec.RunPeptideQvalue,
+                        f.prec, f.pep, f.pepScore, rec.ExperimentProteinQvalue, f.agg));
+                }
+                string direct = Path.Combine(dir, "direct.2nd-pass.fdr_scores.bin");
+                FdrScoresSidecar.Write(direct, singlePhase, FdrScoresSidecar.Pass.SecondPass);
+                CollectionAssert.AreEqual(File.ReadAllBytes(direct), File.ReadAllBytes(patched));
+
+                // A patch declared against the wrong pass must be refused, and refused BEFORE
+                // anything is written: the file it would have rewritten is the run's output.
+                byte[] before = File.ReadAllBytes(patched);
+                Assert.IsFalse(FdrScoresSidecar.PatchExperimentValues(
+                    patched, FdrScoresSidecar.Pass.FirstPass, rec => rec, out int nRejected));
+                Assert.AreEqual(0, nRejected);
+                CollectionAssert.AreEqual(before, File.ReadAllBytes(patched));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
         /// Pre-v2 sidecar files (no magic header, just raw f64 scores)
         /// must be rejected by the v2 reader.
         /// </summary>

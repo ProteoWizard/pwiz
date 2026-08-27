@@ -496,6 +496,125 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// Rewrite the four EXPERIMENT-scope columns of every record in an existing sidecar -
+        /// <c>experiment_precursor_qvalue</c> [28..36], <c>experiment_peptide_qvalue</c> [36..44],
+        /// <c>pep</c> [44..52] and <c>experiment_aggregate_score</c> [60..68] - from
+        /// <paramref name="patch"/>, leaving every other byte untouched.
+        ///
+        /// <para>The second-pass twin of <see cref="PatchProteinQvalues"/>, and it exists for the
+        /// same reason: a value that is not knowable when the record is written. The frozen
+        /// second-pass competition assigns run q while it holds one file, but experiment q, PEP
+        /// and the experiment aggregate come out of a competition that is only complete once
+        /// EVERY file has been folded in - so the per-file write emits the run-scope columns and
+        /// this pass finishes the experiment-scope ones. That is what lets the second pass write
+        /// each file as it goes instead of holding every file's survivors to the end (#4486).</para>
+        ///
+        /// <para><paramref name="patch"/> receives each record as written and returns the record
+        /// to keep; only the four columns above are taken from its result, so a callback that
+        /// alters <c>entry_id</c>, the SVM score, the run q-values or the protein q-value cannot
+        /// change the file. Records stream one at a time into the <see cref="FileSaver"/> temp
+        /// (one record resident, never an O(file-size) buffer) and the result is promoted
+        /// atomically on Commit, matching <see cref="PatchProteinQvalues"/> and the
+        /// <c>Write</c> path.</para>
+        ///
+        /// <para>Same header validation (magic / version / pass / size); returns <c>false</c> on
+        /// any mismatch or IO failure, leaving the file unchanged.
+        /// <paramref name="recordsPatched"/> is the number of records rewritten, which is every
+        /// record the file holds - unlike the protein patch there is no lookup to miss.</para>
+        /// </summary>
+        public static bool PatchExperimentValues(
+            string path,
+            Pass expectedPass,
+            Func<FdrScoreRecord, FdrScoreRecord> patch,
+            out int recordsPatched)
+        {
+            recordsPatched = 0;
+            // Accumulated locally and published only after Commit, so a failed patch reports
+            // zero rather than a count for records the caller's file never actually kept.
+            int nPatchedHere = 0;
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (patch == null) throw new ArgumentNullException(nameof(patch));
+
+            try
+            {
+                using (var saver = new FileSaver(path))
+                {
+                    // Source stays open only while streaming; the FileSaver Commit that
+                    // deletes+replaces the source runs AFTER this block closes src, so the
+                    // source is never locked at rename time.
+                    using (var src = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (var dst = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        long fileLen = src.Length;
+                        if (fileLen < HeaderLength)
+                            return false;
+
+                        var header = new byte[HeaderLength];
+                        if (!ReadFully(src, header, HeaderLength))
+                            return false;
+                        for (int i = 0; i < Magic.Length; i++)
+                        {
+                            if (header[i] != Magic[i])
+                                return false;
+                        }
+                        if (header[8] != FormatVersion)
+                            return false;
+                        // Reject a mismatched pass byte for the same reason TryRead does: a
+                        // 1st-pass sidecar must never be patched as if it were 2nd-pass.
+                        if (header[9] != (byte)expectedPass)
+                            return false;
+                        ulong headerCount = BitConverter.ToUInt64(header, 16);
+                        if (!TryComputeExpectedLen(headerCount, out int expectedLen))
+                            return false;
+                        if (fileLen != expectedLen)
+                            return false;
+
+                        dst.Write(header, 0, HeaderLength);
+
+                        var record = new byte[RecordLength];
+                        for (int rec = 0; rec < (int)headerCount; rec++)
+                        {
+                            if (!ReadFully(src, record, RecordLength))
+                                return false;
+                            var patched = patch(DecodeRecord(record));
+                            // Only the experiment-scope columns, in the identical little-endian
+                            // f64 encoding BinaryWriter.Write(double) produced for the rest of
+                            // the record, so the result is byte-identical to a single-phase
+                            // Write whose records already carried these values.
+                            WriteDouble(record, 28, patched.ExperimentPrecursorQvalue);
+                            WriteDouble(record, 36, patched.ExperimentPeptideQvalue);
+                            WriteDouble(record, 44, patched.Pep);
+                            WriteDouble(record, 60, patched.ExperimentAggregateScore);
+                            nPatchedHere++;
+                            dst.Write(record, 0, RecordLength);
+                        }
+                    }
+                    saver.Commit();
+                }
+            }
+            // NOT a bare catch, for the reason PatchProteinQvalues gives: an
+            // OutOfMemoryException reported as a failed patch would leave the run going with
+            // half-finished q-values rather than killing it (#4615 review).
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                return false;
+            }
+            recordsPatched = nPatchedHere;
+            return true;
+        }
+
+        /// <summary>
+        /// Overwrite the 8 bytes at <paramref name="offset"/> with the little-endian f64
+        /// encoding of <paramref name="value"/> - the same bytes
+        /// <see cref="BinaryWriter.Write(double)"/> emits in <see cref="WriteRecord"/>.
+        /// </summary>
+        private static void WriteDouble(byte[] record, int offset, double value)
+        {
+            byte[] bytes = BitConverter.GetBytes(value);
+            Buffer.BlockCopy(bytes, 0, record, offset, 8);
+        }
+
+        /// <summary>
         /// Fill <paramref name="buffer"/> with exactly <paramref name="count"/> bytes from
         /// <paramref name="stream"/>, looping because a single
         /// <see cref="Stream.Read(byte[],int,int)"/> may return fewer bytes than

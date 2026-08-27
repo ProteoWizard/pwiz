@@ -304,16 +304,30 @@ namespace pwiz.Osprey.Tasks
     internal sealed class RescoredEntries : PerFileEntries
     {
         private readonly Lazy<bool> _materialize;
+        private IReadOnlyList<string> _fileNames;
 
         /// <summary>The buffer already at its post-rescore state - nothing deferred.</summary>
         public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
 
         /// <summary>
-        /// The run's file names, available WITHOUT materializing anything. A streamed consumer
-        /// walks these and asks for one file at a time through <see cref="LoadFile"/>; reading
+        /// The run's file names, in buffer order. A streamed consumer walks these and asks for
+        /// one file at a time through <see cref="LoadFile"/>; reading
         /// <see cref="PerFileEntries.Value"/> instead is what builds the whole-run pool.
+        ///
+        /// <para>Available without materializing anything WHEN STREAMING IS ATTACHED. On the
+        /// paths that publish an already-built buffer - the resident rescore and the
+        /// <c>--task SecondPassFDR</c> rehydrate, neither of which calls
+        /// <see cref="WithStreaming"/> - it comes off that buffer instead, which is free
+        /// because those milestones defer nothing. Same fallback <see cref="Files"/> makes, so
+        /// a consumer can pair the two without asking which side of the transition it is on;
+        /// returning null there instead made a streamed consumer work on the straight-through
+        /// path and fail on the distributed one.</para>
         /// </summary>
-        public IReadOnlyList<string> FileNames { get; private set; }
+        public IReadOnlyList<string> FileNames
+        {
+            get { return _fileNames ?? Value.ConvertAll(kv => kv.Key); }
+            private set { _fileNames = value; }
+        }
 
         /// <summary>
         /// Bring ONE file to its post-rescore state, into a fresh list the caller owns and can

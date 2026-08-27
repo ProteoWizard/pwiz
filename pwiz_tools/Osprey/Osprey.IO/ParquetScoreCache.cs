@@ -1033,20 +1033,6 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Streams the scalar stub columns of a <c>.scores.parquet</c> without allocating a
-        /// single <see cref="FdrEntry"/>. Reads exactly the five columns the first-pass
-        /// FdrProjection needs -- entry_id, charge, is_decoy, coelution_sum,
-        /// modified_sequence -- and invokes <paramref name="onRow"/> once per row in the
-        /// same order as <see cref="LoadFdrStubsFromParquet(string)"/>, applying the identical
-        /// "skip this row group when entry_id/is_decoy are absent" rule. The caller's
-        /// running row count therefore equals that method's <c>ParquetIndex</c>.
-        ///
-        /// Exists because rematerializing the whole 191M-row stub buffer just to convert it
-        /// into 32 B projection rows cost ~53 GB on an 82-file Astral run. Osprey.IO must
-        /// not depend on Osprey.FDR, so the projection row is assembled by the caller from
-        /// these scalars rather than returned from here.
-        /// </summary>
-        /// <summary>
         /// The (entry_id, charge) groups of a scores parquet, in file order, with how many
         /// rows each contains - everything needed to recover a row's ordinal without holding
         /// the rows. O(distinct precursor), a few MB per file against ~600 MB of stubs.
@@ -1192,6 +1178,20 @@ namespace pwiz.Osprey.IO
             return cmp != 0 ? cmp : a.Charge.CompareTo(b.Charge);
         }
 
+        /// <summary>
+        /// Streams the scalar stub columns of a <c>.scores.parquet</c> without allocating a
+        /// single <see cref="FdrEntry"/>. Reads exactly the five columns the first-pass
+        /// FdrProjection needs -- entry_id, charge, is_decoy, coelution_sum,
+        /// modified_sequence -- and invokes <paramref name="onRow"/> once per row in the
+        /// same order as <see cref="LoadFdrStubsFromParquet(string)"/>, applying the identical
+        /// "skip this row group when entry_id/is_decoy are absent" rule. The caller's
+        /// running row count therefore equals that method's <c>ParquetIndex</c>.
+        ///
+        /// Exists because rematerializing the whole 191M-row stub buffer just to convert it
+        /// into 32 B projection rows cost ~53 GB on an 82-file Astral run. Osprey.IO must
+        /// not depend on Osprey.FDR, so the projection row is assembled by the caller from
+        /// these scalars rather than returned from here.
+        /// </summary>
         public static void ReadFdrStubScalars(string path,
             Action<uint, byte, bool, double, string> onRow)
         {

@@ -243,7 +243,7 @@ namespace pwiz.Osprey.Tasks
             if (AnyReconciledParquet(config))
             {
                 pass2Contributions = Pass2FdrSidecar.ComputeAndPersist(
-                    ctx, perFileEntries, perFileParquetPaths,
+                    ctx, rescored, perFileEntries, perFileParquetPaths,
                     Name, ValidityKey(ctx));
                 // The substep the 2026-07-31 characterization on #4486 located the churn in:
                 // it reloads every file's reconciled features, so the pre-GC line carries the

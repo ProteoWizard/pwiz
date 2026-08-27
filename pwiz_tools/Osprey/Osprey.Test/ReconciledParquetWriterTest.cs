@@ -143,14 +143,14 @@ namespace pwiz.Osprey.Test
             // Source: 3 rows for (100,2), 2 for (200,3) - five rows, ordinals 0..4.
             var sourceGroups = new List<(uint, byte, int)>
             {
-                (100u, (byte)2, 3),
-                (200u, (byte)3, 2),
+                (100u, 2, 3),
+                (200u, 3, 2),
             };
 
             // Same groups, same counts: every row pairs, ordinals in order. A rescored row
             // whose scan moved is still in its own group, so it pairs on position within it.
             var same = ParquetScoreCache.BuildScoreIndicesByPairing(
-                sourceGroups, new List<(uint, byte, int)> { (100u, (byte)2, 3), (200u, (byte)3, 2) },
+                sourceGroups, new List<(uint, byte, int)> { (100u, 2, 3), (200u, 3, 2) },
                 out int srcRows);
             Assert.AreEqual(5, srcRows);
             CollectionAssert.AreEqual(new uint[] { 0, 1, 2, 3, 4 }, same);
@@ -160,7 +160,7 @@ namespace pwiz.Osprey.Test
             // source row count, and the groups after it keep their own ordinals.
             var withGapGroup = ParquetScoreCache.BuildScoreIndicesByPairing(
                 sourceGroups,
-                new List<(uint, byte, int)> { (100u, (byte)2, 3), (150u, (byte)2, 1), (200u, (byte)3, 2) },
+                new List<(uint, byte, int)> { (100u, 2, 3), (150u, 2, 1), (200u, 3, 2) },
                 out _);
             CollectionAssert.AreEqual(new uint[] { 0, 1, 2, 5, 3, 4 }, withGapGroup);
 
@@ -168,7 +168,7 @@ namespace pwiz.Osprey.Test
             // never be handed an ordinal that belongs to a different Stage 4 row.
             var withExtraRow = ParquetScoreCache.BuildScoreIndicesByPairing(
                 sourceGroups,
-                new List<(uint, byte, int)> { (100u, (byte)2, 4), (200u, (byte)3, 2) },
+                new List<(uint, byte, int)> { (100u, 2, 4), (200u, 3, 2) },
                 out _);
             CollectionAssert.AreEqual(new uint[] { 0, 1, 2, 5, 3, 4 }, withExtraRow);
         }
