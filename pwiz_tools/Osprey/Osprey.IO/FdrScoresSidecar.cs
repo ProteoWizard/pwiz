@@ -482,7 +482,12 @@ namespace pwiz.Osprey.IO
                     saver.Commit();
                 }
             }
-            catch
+            // NOT a bare catch: an OutOfMemoryException here is reported as a MISSING
+            // sidecar, and a missing 1st-pass sidecar leaves those entries at Score 0.0.
+            // The decoy side is not q-gated, so the zeros then compete in the picked-
+            // protein null and the run exits 0 with corrupted protein numbers. Let it
+            // propagate and kill the run instead (#4615 review).
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
             {
                 return false;
             }
@@ -633,7 +638,12 @@ namespace pwiz.Osprey.IO
             {
                 data = File.ReadAllBytes(path);
             }
-            catch
+            // NOT a bare catch: an OutOfMemoryException here is reported as a MISSING
+            // sidecar, and a missing 1st-pass sidecar leaves those entries at Score 0.0.
+            // The decoy side is not q-gated, so the zeros then compete in the picked-
+            // protein null and the run exits 0 with corrupted protein numbers. Let it
+            // propagate and kill the run instead (#4615 review).
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
             {
                 return false;
             }
@@ -730,7 +740,12 @@ namespace pwiz.Osprey.IO
             {
                 data = File.ReadAllBytes(path);
             }
-            catch
+            // NOT a bare catch: an OutOfMemoryException here is reported as a MISSING
+            // sidecar, and a missing 1st-pass sidecar leaves those entries at Score 0.0.
+            // The decoy side is not q-gated, so the zeros then compete in the picked-
+            // protein null and the run exits 0 with corrupted protein numbers. Let it
+            // propagate and kill the run instead (#4615 review).
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
             {
                 return false;
             }
@@ -832,7 +847,12 @@ namespace pwiz.Osprey.IO
                     }
                 }
             }
-            catch
+            // NOT a bare catch: an OutOfMemoryException here is reported as a MISSING
+            // sidecar, and a missing 1st-pass sidecar leaves those entries at Score 0.0.
+            // The decoy side is not q-gated, so the zeros then compete in the picked-
+            // protein null and the run exits 0 with corrupted protein numbers. Let it
+            // propagate and kill the run instead (#4615 review).
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
             {
                 return false;
             }
