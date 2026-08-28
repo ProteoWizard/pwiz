@@ -30,7 +30,7 @@ namespace pwiz.Osprey.Core
     /// An entry in the FDR results table with q-values at multiple levels.
     /// Maps to osprey-core/src/types.rs FdrEntry.
     /// </summary>
-    public class FdrEntry
+    public class FdrEntry : IFdrRow
     {
         /// <summary>
         /// The canonical survivor order - (EntryId, Charge, ScanNumber, ParquetIndex) - that
@@ -202,42 +202,6 @@ namespace pwiz.Osprey.Core
             ExperimentPeptideQvalue = 1.0;
             ExperimentProteinQvalue = 1.0;
             Pep = 1.0;
-        }
-
-        /// <summary>
-        /// Returns the effective run-level q-value based on the FDR control level.
-        /// </summary>
-        public double EffectiveRunQvalue(FdrLevel level)
-        {
-            switch (level)
-            {
-                case FdrLevel.Precursor:
-                    return RunPrecursorQvalue;
-                case FdrLevel.Peptide:
-                    return RunPeptideQvalue;
-                case FdrLevel.Both:
-                    return Math.Max(RunPrecursorQvalue, RunPeptideQvalue);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(level));
-            }
-        }
-
-        /// <summary>
-        /// Returns the effective experiment-level q-value based on the FDR control level.
-        /// </summary>
-        public double EffectiveExperimentQvalue(FdrLevel level)
-        {
-            switch (level)
-            {
-                case FdrLevel.Precursor:
-                    return ExperimentPrecursorQvalue;
-                case FdrLevel.Peptide:
-                    return ExperimentPeptideQvalue;
-                case FdrLevel.Both:
-                    return Math.Max(ExperimentPrecursorQvalue, ExperimentPeptideQvalue);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(level));
-            }
         }
     }
 }

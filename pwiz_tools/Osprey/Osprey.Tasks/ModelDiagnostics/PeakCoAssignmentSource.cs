@@ -411,8 +411,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         /// <summary>
         /// The q-value for the configured FDR control level at one scope, off a sidecar record.
-        /// Mirrors <see cref="FdrEntry.EffectiveRunQvalue"/> /
-        /// <see cref="FdrEntry.EffectiveExperimentQvalue"/>, which cannot be used here because
+        /// Mirrors <see cref="FdrRowExtensions.EffectiveRunQvalue{T}"/> /
+        /// <see cref="FdrRowExtensions.EffectiveExperimentQvalue{T}"/>, which cannot be used here because
         /// this path never materializes an <see cref="FdrEntry"/>.
         /// </summary>
         /// <param name="rec">One 60-byte sidecar record's decoded payload.</param>
