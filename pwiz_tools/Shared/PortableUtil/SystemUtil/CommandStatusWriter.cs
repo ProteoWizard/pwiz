@@ -146,13 +146,8 @@ namespace pwiz.Common.SystemUtil
                 }
             }
             message.Append(value);
-            // Written through the field rather than the local snapshot above: CodeQL analyses
-            // this repository with build-mode none, where a local of concrete type resolves a
-            // data flow into this sink that the field access does not, and it reported the
-            // pre-existing flow here as new. "?." evaluates the field once, so this is still
-            // safe against Dispose nulling it on another thread.
-            _writer?.WriteLine(message);
-            _writer?.Flush();
+            writer.WriteLine(message);
+            writer.Flush();
 
             if (!IsErrorReported && IsErrorMessage(value))
             {
