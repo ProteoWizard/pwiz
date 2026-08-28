@@ -396,7 +396,7 @@
          Grpc.Core.Api types (ClientBase, ChannelBase, CallInvoker, Marshallers)
          which Grpc.Net.Client supplies transitively via Grpc.Core.Api 2.66. -->
     <PackageReference Include="Grpc.Net.Client" Version="2.66.0" />
-    <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
     <PackageReference Include="log4net" Version="2.0.17" />
     <PackageReference Include="MathNet.Numerics" Version="4.15.0" />

@@ -238,7 +238,7 @@ foreach ($fw in $testFrameworks) {
         # --exclude-processes; assumed to be the same parser for assemblies.
         $excludeAssemblies = @(
             'Osprey.Test',
-            'Apache.Arrow', 'DotNetZip', 'IronCompress',
+            'Apache.Arrow', 'ProDotNetZip', 'IronCompress',
             'JetBrains.*', 'MathNet.*', 'Microsoft.*', 'Newtonsoft.*',
             'Parquet', 'Snappier', 'System.*', 'ZstdSharp',
             'MSTest.*', 'testhost*', 'vstest.*'

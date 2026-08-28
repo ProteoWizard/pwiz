@@ -34,7 +34,7 @@
 
   <!-- net8: managed NuGet equivalents of the legacy on-disk DLLs + the WCF client. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
     <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="3.1.512801" />
     <PackageReference Include="TaskScheduler" Version="2.11.0" />
     <PackageReference Include="System.ServiceModel.NetNamedPipe" Version="8.0.0" />

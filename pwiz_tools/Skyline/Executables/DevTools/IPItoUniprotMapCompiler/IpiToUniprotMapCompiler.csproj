@@ -19,7 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
-    <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
   </ItemGroup>
 
   <!-- IpiToUniprotMapTemplate.cs is an embedded code-generation template, not compiled. -->

@@ -55,7 +55,7 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="Google.Protobuf" Version="3.27.3" />
     <PackageReference Include="Grpc.Net.Client" Version="2.66.0" />
-    <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
     <PackageReference Include="log4net" Version="2.0.17" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />

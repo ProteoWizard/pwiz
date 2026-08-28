@@ -74,16 +74,16 @@
     <Compile Remove="VendorRawReader.cs" />
   </ItemGroup>
 
-  <!-- DotNetZip (Ionic.Zlib) for stock-zlib-compatible deflate output.
+  <!-- PROdotnetzip (Ionic.Zlib) for stock-zlib-compatible deflate output.
+       Maintained fork of the deprecated DotNetZip; same Ionic namespaces and
+       verified byte-identical deflate, so the parity below is unaffected.
        Matches Skyline's BlibData writer (Util/Extensions/UtilDB.Compress)
        so Osprey .blib peak blobs are byte-identical to Skyline's
        and to Rust osprey's flate2 output. .NET's built-in DeflateStream
        produces a 4-byte-shorter non-stock-zlib variant which would split
        cross-impl byte parity. -->
   <ItemGroup>
-    <Reference Include="DotNetZip">
-      <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
-    </Reference>
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
   </ItemGroup>
 
 </Project>

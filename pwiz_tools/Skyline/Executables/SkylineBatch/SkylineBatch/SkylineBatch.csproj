@@ -60,7 +60,7 @@
   <!-- net8: managed NuGet equivalents of the legacy on-disk DLLs + the settings config provider -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="FluentFTP" Version="33.1.6" />
-    <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="log4net" Version="2.0.17" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
