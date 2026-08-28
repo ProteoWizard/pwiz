@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -404,6 +405,7 @@ namespace pwiz.Skyline.SettingsUI
             SetNameAndFormulaBoxText();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ExplicitTransitionGroupValues ResultExplicitTransitionGroupValues
         {
             get
@@ -424,6 +426,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ExplicitTransitionValues ResultExplicitTransitionValues
         {
             get
@@ -442,6 +445,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ExplicitRetentionTimeInfo ResultRetentionTimeInfo
         {
             get
@@ -465,6 +469,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Adduct Adduct
         {
             get
@@ -512,6 +517,7 @@ namespace pwiz.Skyline.SettingsUI
             return (dval == 0) ? string.Empty : dval.ToString(LocalizationHelper.CurrentCulture);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? CollisionEnergy
         {
             get { return NullForEmpty(textCollisionEnergy.Text); }
@@ -522,6 +528,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? DeclusteringPotential
         {
             get { return NullForEmpty(textDeclusteringPotential.Text); }
@@ -532,6 +539,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? SLens
         {
             get { return NullForEmpty(textSLens.Text); }
@@ -542,6 +550,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? ConeVoltage
         {
             get { return NullForEmpty(textConeVoltage.Text); }
@@ -552,12 +561,14 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? RetentionTime
         {
             get { return NullForEmpty(textRetentionTime.Text); }
             set { textRetentionTime.Text = EmptyForNullOrNonPositive(value); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? RetentionTimeWindow
         {
             get { return NullForEmpty(textRetentionTimeWindow.Text); }
@@ -574,6 +585,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? IonMobility
         {
             get { return NullForEmpty(textIonMobility.Text); }
@@ -597,6 +609,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? IonMobilityHighEnergyOffset
         {
             get { return NullForEmpty(textIonMobilityHighEnergyOffset.Text); }
@@ -609,6 +622,7 @@ namespace pwiz.Skyline.SettingsUI
             } // Negative values are normal here
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public eIonMobilityUnits IonMobilityUnits
         {
             get
@@ -627,6 +641,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? PrecursorCollisionEnergy
         {
             get { return NullForEmpty(textBoxPrecursorCollisionEnergy.Text); }
@@ -638,12 +653,14 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? CollisionalCrossSectionSqA
         {
             get { return NullForEmpty(textBoxCCS.Text); }
             set { textBoxCCS.Text = EmptyForNullOrNonPositive(value); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IsotopeLabelType IsotopeLabelType
         {
             get { return (_driverLabelType == null) ? null : _driverLabelType.SelectedMods.LabelType; }
@@ -949,6 +966,7 @@ namespace pwiz.Skyline.SettingsUI
 
         #region For Testing
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public String NameText
         {
             get { return textName.Text; }

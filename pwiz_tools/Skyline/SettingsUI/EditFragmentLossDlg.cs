@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -60,6 +61,7 @@ namespace pwiz.Skyline.SettingsUI
             tbxCharge.Text = 0.ToString();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FragmentLoss Loss
         {
             get { return _loss; }
@@ -169,6 +171,7 @@ namespace pwiz.Skyline.SettingsUI
             OkDialog();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public LossInclusion Inclusion
         {
             get

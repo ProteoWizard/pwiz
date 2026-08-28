@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using Microsoft.Web.WebView2.Core;
 using pwiz.Common.GUI;
@@ -46,6 +47,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public bool IsWebView2Initialized { get; private set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string DocumentationHtml
         {
             get => _documentationHtml;

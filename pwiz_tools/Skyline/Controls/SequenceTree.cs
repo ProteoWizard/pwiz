@@ -981,6 +981,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IgnoreFocus { get; set; }
 
         protected override void OnGotFocus(EventArgs e)
@@ -1641,6 +1642,7 @@ namespace pwiz.Skyline.Controls
                 TopNode = topNode;
             }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool LockDefaultExpansion { get; set; }
         public void ExpandRecursive(TreeNodeMS node, int level, bool select)
         {

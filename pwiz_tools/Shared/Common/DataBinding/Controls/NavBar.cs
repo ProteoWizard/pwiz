@@ -58,6 +58,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
             base.Dispose(disposing);
         }
+        [DefaultValue(null)]
         [TypeConverter(typeof(ReferenceConverter))]
         public BindingListSource BindingListSource
         {
@@ -393,6 +394,7 @@ namespace pwiz.Common.DataBinding.Controls
             ViewContext.Delete();
         }
 
+        [DefaultValue(true)]
         public bool ShowViewsButton
         {
             get

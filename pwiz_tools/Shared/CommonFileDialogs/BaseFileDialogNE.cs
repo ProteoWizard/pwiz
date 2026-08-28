@@ -17,6 +17,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -305,6 +306,7 @@ namespace pwiz.CommonFileDialogs
         {
             return account.GetRootUrl();
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public RemoteSession RemoteSession
         {
             get { return _remoteSession; }
@@ -338,6 +340,7 @@ namespace pwiz.CommonFileDialogs
             };
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MsDataFileUri InitialDirectory { get; set; }
 
         public MsDataFileUri FileName
@@ -345,6 +348,7 @@ namespace pwiz.CommonFileDialogs
             get { return FileNames[0]; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MsDataFileUri[] FileNames { get; protected set; }
 
         public void SelectAllFileType(string extension, Func<string, bool> accept = null)
@@ -389,6 +393,7 @@ namespace pwiz.CommonFileDialogs
             listView.EnsureVisible(item);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public View ListView
         {
             get { return listView.View; }
@@ -407,6 +412,7 @@ namespace pwiz.CommonFileDialogs
 
 
         private string _sourceTypeName;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SourceTypeName
         {
             get { return _sourceTypeName; }

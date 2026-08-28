@@ -288,7 +288,6 @@ namespace pwiz.Skyline.Controls.Databinding
             // 
             // bindingListSource
             // 
-            this.bindingListSource.NewRowHandler = null;
             this.bindingListSource.BindingComplete += new System.Windows.Forms.BindingCompleteEventHandler(this.bindingListSource_BindingComplete);
             this.bindingListSource.DataError += new System.Windows.Forms.BindingManagerDataErrorEventHandler(this.bindingListSource_DataError);
             this.bindingListSource.ListChanged += new System.ComponentModel.ListChangedEventHandler(this.bindingListSource_ListChanged);

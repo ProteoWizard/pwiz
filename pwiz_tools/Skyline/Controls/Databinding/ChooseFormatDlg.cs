@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding;
@@ -33,6 +34,7 @@ namespace pwiz.Skyline.Controls.Databinding
             comboFormat.Items.AddRange(FormatSuggestion.ListFormatSuggestions(dataSchemaLocalizer.FormatProvider).ToArray());
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FormatText
         {
             get { return tbxCustomFormat.Text; }

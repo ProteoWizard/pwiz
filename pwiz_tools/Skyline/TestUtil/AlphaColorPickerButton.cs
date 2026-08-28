@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
@@ -35,6 +36,7 @@ namespace pwiz.SkylineTestUtil
 
         public event EventHandler ColorChanged;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Color SelectedColor
         {
             get => Color.FromArgb(_alpha, _selectedColor);

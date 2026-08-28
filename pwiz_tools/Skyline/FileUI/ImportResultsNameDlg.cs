@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -75,6 +76,7 @@ namespace pwiz.Skyline.FileUI
             listReplicateNames.Anchor = listReplicateNames.Anchor | AnchorStyles.Bottom;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsRemove
         {
             get { return radioRemove.Checked; }
@@ -87,12 +89,14 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Prefix
         {
             get { return textPrefix.Text; }
             set { textPrefix.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Suffix
         {
             get { return textSuffix.Text; }

@@ -99,6 +99,7 @@ namespace pwiz.Skyline.FileUI
 
 
         private bool _changingOptimizeSettings;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ChromCacheMinimizer.Settings Settings
         {
             get

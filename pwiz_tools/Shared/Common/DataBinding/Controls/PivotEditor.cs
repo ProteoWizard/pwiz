@@ -70,6 +70,7 @@ namespace pwiz.Common.DataBinding.Controls
             PivotSpec = PivotSpec.ChangeRowHeaders(ints.Select(i => PivotSpec.RowHeaders[i]));
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public PivotSpec PivotSpec
         {
             get { return _pivotSpec; }
@@ -80,6 +81,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList<DataPropertyDescriptor> AllProperties
         {
             get { return _allProperties; }
@@ -182,6 +184,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public BindingListSource BindingListSource
         {
             get { return _bindingListSource; }

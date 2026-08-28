@@ -215,18 +215,21 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
+        [DefaultValue(false)]
         public bool AllowEditing
         {
             get { return listView1.LabelEdit; }
             set { listView1.LabelEdit = value; }
         }
 
+        [DefaultValue(true)]
         public bool MultiSelect
         {
             get { return listView1.MultiSelect; }
             set { listView1.MultiSelect = value; }
         }
 
+        [DefaultValue(false)]
         public bool FilterRowSources
         {
             get { return _filterRowSources; }
@@ -241,6 +244,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
+        [DefaultValue(false)]
         public bool GrayDisabledRowSources
         {
             get { return _grayDisabledRowSources; }
@@ -255,12 +259,14 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
+        [DefaultValue(true)]
         public bool ShowGroupChooser
         {
             get { return toolStrip1.Visible; }
             set { toolStrip1.Visible = value; }
         }
 
+        [DefaultValue(false)]
         public bool ShowCheckboxes
         {
             get { return listView1.CheckBoxes; }

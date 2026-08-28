@@ -116,6 +116,7 @@ namespace pwiz.Skyline.Controls.Databinding
             base.OnHandleDestroyed(e);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ViewInfo ViewInfo
         {
             get
@@ -136,6 +137,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowViewsMenu
         {
             get

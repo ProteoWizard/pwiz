@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -118,6 +119,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public IonMobility.IonMobilityFilteringUserControl IonMobilityFiltering { get { return usercontrolIonMobilityFiltering; } }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FullScanPrecursorIsotopes PrecursorIsotopesCurrent
         {
             get
@@ -129,6 +131,7 @@ namespace pwiz.Skyline.SettingsUI
             set { comboPrecursorIsotopes.SelectedItem = value.GetLocalizedString(); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FullScanMassAnalyzerType PrecursorMassAnalyzer
         {
             get
@@ -139,6 +142,7 @@ namespace pwiz.Skyline.SettingsUI
             set { comboPrecursorAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(value); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FullScanAcquisitionMethod AcquisitionMethod
         {
             get
@@ -152,6 +156,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public ComboBox ComboAcquisitionMethod => comboAcquisitionMethod;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FullScanMassAnalyzerType ProductMassAnalyzer
         {
             get
@@ -178,6 +183,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int Peaks
         {
             get { return int.Parse(textPrecursorIsotopeFilter.Text); }
@@ -186,6 +192,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public CheckBox CbIncludeMinusOnePrecursor => cbIncludeMinusOnePrecursor;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? PrecursorRes
         {
             get
@@ -196,6 +203,7 @@ namespace pwiz.Skyline.SettingsUI
             set { textPrecursorRes.Text = FormatRes(value, PrecursorMassAnalyzer); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? PrecursorResMz
         {
             get
@@ -206,6 +214,7 @@ namespace pwiz.Skyline.SettingsUI
             set { textPrecursorAt.Text = value.ToString(); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? ProductRes
         {
             get
@@ -216,6 +225,7 @@ namespace pwiz.Skyline.SettingsUI
             set { textProductRes.Text = FormatRes(value, ProductMassAnalyzer); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? ProductResMz
         {
             get
@@ -226,12 +236,14 @@ namespace pwiz.Skyline.SettingsUI
             set { textProductAt.Text = value.ToString(); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseSelectiveExtraction
         {
             get { return cbHighSelectivity.Checked; }
             set { cbHighSelectivity.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public RetentionTimeFilterType RetentionTimeFilterType
         {
             get
@@ -269,6 +281,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string PrecursorChargesString { get; set; }
 
         public TextBox PrecursorChargesTextBox
@@ -276,6 +289,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return textPrecursorCharges; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int[] PrecursorCharges
         {
             set { textPrecursorCharges.Text = value.ToArray().ToString(@", "); }
@@ -655,6 +669,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Callback event handler that will get called if the Acquisition method gets changed
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public EventHandler IsolationSchemeChangedEvent { get; set; }
 
         public event Action AcquisitionMethodChanged;
@@ -762,6 +777,7 @@ namespace pwiz.Skyline.SettingsUI
             comboIsolationScheme.Focus();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string IsolationSchemeName
         {
             get { return _driverIsolationScheme.Combo.SelectedItem.ToString(); }
@@ -909,6 +925,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool KeepAllTimes
         {
             get { return radioKeepAllTime.Checked; }

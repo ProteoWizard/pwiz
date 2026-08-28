@@ -18,6 +18,7 @@
  */
 
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
@@ -31,6 +32,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         public bool UseCurrent => radioUseCurrent.Checked;
 
         public string StandardName { get; private set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string StandardNameText
         {
             get => textName.Text;

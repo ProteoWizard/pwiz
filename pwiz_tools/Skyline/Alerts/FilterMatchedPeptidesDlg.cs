@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
@@ -143,6 +144,7 @@ namespace pwiz.Skyline.Alerts
         }
 
         // For testing.
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public BackgroundProteome.DuplicateProteinsFilter DuplicateProteinsFilter
         {
             get
@@ -164,6 +166,7 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AddUnmatched
         {
             get
@@ -177,6 +180,7 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AddFiltered
         {
             get { return radioKeepFiltered.Checked = true; }
@@ -187,12 +191,16 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int DuplicateMatchesCount { get; set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int UnmatchedCount { get; set; }
         
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int FilteredCount { get; set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool HasSmallMolecules { get; set; }
 
         public class FilterMatchedPeptidesSettings : AuditLogOperationSettings<FilterMatchedPeptidesSettings>, IAuditLogComparable

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -51,6 +52,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             btnGraph.Visible = graphData != null;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int StandardCount
         {
             get => int.TryParse(textPeptideCount.Text, out var count) ? count : 0;

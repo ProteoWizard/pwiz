@@ -600,6 +600,7 @@ namespace pwiz.Skyline.Controls.Graphs
             PlotType = PlotTypeRT.residuals;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public PlotTypeRT PlotType
         {
             get { return _plotType; }

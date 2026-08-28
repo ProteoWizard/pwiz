@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -47,10 +48,12 @@ namespace pwiz.Skyline.FileUI
             LoadList();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Filter { get; set; }
 
         public TList List { get; private set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Label
         {
             get { return _label; }
@@ -64,6 +67,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<string> ChosenNames
         {
             get

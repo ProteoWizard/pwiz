@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -73,6 +74,7 @@ namespace pwiz.Skyline.Alerts
             get { return labelMessage.Text; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Path
         {
             get { return textPath.Text; }

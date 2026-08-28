@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -48,6 +49,7 @@ namespace pwiz.Common.DataBinding.Controls
             imageList1.Images.Add(Resources.PivotAndFilter);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ViewLayoutList ViewLayoutList
         {
             get { return _viewLayoutList; }

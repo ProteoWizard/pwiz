@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -34,6 +35,7 @@ namespace pwiz.Skyline.SettingsUI
     {
         public IList<EditIsolationWindow> IsolationWindows { get { return CreateIsolationWindows(); } }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public object Deconvolution
         {
             get { return comboDeconv.SelectedItem; }
@@ -49,6 +51,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int WindowsPerScan 
         { 
             get
@@ -386,18 +389,21 @@ namespace pwiz.Skyline.SettingsUI
 
         #region Functional Test Support
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? Start
         {
             get { return Helpers.ParseNullableDouble(textStart.Text); }
             set { textStart.Text = Helpers.NullableDoubleToString(value); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? End
         {
             get { return Helpers.ParseNullableDouble(textEnd.Text); }
             set { textEnd.Text = Helpers.NullableDoubleToString(value); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? WindowWidth
         {
             get { return Helpers.ParseNullableDouble(textWidth.Text); }
@@ -417,12 +423,14 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? MarginLeft
         {
             get { return Helpers.ParseNullableDouble(textMargin.Text); }
             set { textMargin.Text = Helpers.NullableDoubleToString(value); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool OptimizeWindowPlacement
         {
             get { return cbOptimizeWindowPlacement.Checked; }
@@ -434,12 +442,14 @@ namespace pwiz.Skyline.SettingsUI
             get { return Equals(comboWindowType.SelectedItem, EditIsolationSchemeDlg.WindowType.MEASUREMENT); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public object WindowType
         {
             get { return comboWindowType.SelectedItem; }
             set { comboWindowType.SelectedItem = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? CERange
         {
             get { return Helpers.ParseNullableDouble(textCERange.Text); }

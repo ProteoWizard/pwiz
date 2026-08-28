@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Util;
 
@@ -31,6 +32,7 @@ namespace pwiz.Skyline.Alerts
             InitializeComponent();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool DoNotAskAgain
         {
             get { return cbDoNotAskAgain.Checked; }

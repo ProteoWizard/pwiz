@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows.Forms;
 using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
@@ -57,6 +58,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             dia_umpire
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Protocol CurrentProtocol
         {
             get
@@ -74,6 +76,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IDictionary<string, AbstractDdaSearchEngine.Setting> AdditionalSettings
         {
             get
@@ -299,24 +302,28 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseDiaUmpire
         {
             get => cbDiaUmpire.Checked;
             set => cbDiaUmpire.Checked = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DiaUmpire.Config.InstrumentPreset InstrumentPreset
         {
             get { return (DiaUmpire.Config.InstrumentPreset) cbInstrumentPreset.SelectedIndex; }
             set { cbInstrumentPreset.SelectedIndex = (int) value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool EstimateBackground
         {
             get { return cbEstimateBg.Checked; }
             set { cbEstimateBg.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseMzMlSpillFile { get; set; }
 
         public DiaUmpireDdaConverter GetDiaUmpireConverter()

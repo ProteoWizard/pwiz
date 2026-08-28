@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -365,6 +366,7 @@ namespace pwiz.Skyline.Alerts
 
         #region Functional testing support
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool? IsSelectAll
         {
             get

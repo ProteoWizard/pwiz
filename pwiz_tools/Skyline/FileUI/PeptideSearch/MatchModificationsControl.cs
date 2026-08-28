@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -116,6 +117,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private SrmDocument Document { get; set; }
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<string> CheckedModifications
         {
             get

@@ -321,6 +321,7 @@ namespace pwiz.Skyline.FileUI
             base.OnClosing(e);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string InstrumentType
         {
             get
@@ -550,6 +551,7 @@ namespace pwiz.Skyline.FileUI
             get { return ExportInstrumentType.IsFullScanInstrumentType(InstrumentType);  }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ExportStrategy ExportStrategy
         {
             get { return _exportProperties.ExportStrategy; }
@@ -575,6 +577,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string OptimizeType
         {
             get { return _exportProperties.OptimizeType; }
@@ -594,6 +597,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double OptimizeStepSize
         {
             get { return _exportProperties.OptimizeStepSize; }
@@ -603,6 +607,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int OptimizeStepCount
         {
             get { return _exportProperties.OptimizeStepCount; }
@@ -612,12 +617,14 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool SortByMz
         {
             get { return _exportProperties.SortByMz; }
             set { _exportProperties.SortByMz = cbSortByMz.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IgnoreProteins
         {
             get { return _exportProperties.IgnoreProteins; }
@@ -628,6 +635,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AddEnergyRamp
         {
             get { return _exportProperties.AddEnergyRamp; }
@@ -637,6 +645,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseSlens
         {
             get { return _exportProperties.UseSlens; }
@@ -646,12 +655,14 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool WriteCompensationVoltages
         {
             get { return _exportProperties.WriteCompensationVoltages; }
             set { _exportProperties.WriteCompensationVoltages = cbWriteCoV.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ExportPolarity PolarityFilter
         {
             get { return _exportProperties.PolarityFilter; }
@@ -662,6 +673,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AddTriggerReference
         {
             get { return _exportProperties.AddTriggerReference; }
@@ -671,36 +683,42 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ExportMultiQuant
         {
             get { return _exportProperties.ExportMultiQuant; }
             set { _exportProperties.ExportMultiQuant = cbExportMultiQuant.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ExportSureQuant
         {
             get { return _exportProperties.ExportSureQuant; }
             set { _exportProperties.ExportSureQuant = cbSureQuant.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? IntensityThresholdPercent
         {
             get { return _exportProperties.IntensityThresholdPercent; }
             set { _exportProperties.IntensityThresholdPercent = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? IntensityThresholdValue
         {
             get { return _exportProperties.IntensityThresholdValue; }
             set { _exportProperties.IntensityThresholdValue = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? IntensityThresholdMin
         {
             get { return _exportProperties.IntensityThresholdMin; }
             set { _exportProperties.IntensityThresholdMin = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ExportEdcMass
         {
             get { return _exportProperties.ExportEdcMass; }
@@ -875,6 +893,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ExportMethodType MethodType
         {
             get { return _exportProperties.MethodType; }
@@ -885,6 +904,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int PrimaryCount
         {
             get { return _exportProperties.PrimaryTransitionCount; }
@@ -898,6 +918,7 @@ namespace pwiz.Skyline.FileUI
         /// <summary>
         /// Specific dwell time in milliseconds for non-scheduled runs
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int DwellTime
         {
             get { return _exportProperties.DwellTime; }
@@ -908,6 +929,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double AccumulationTime
         {
             get { return _exportProperties.AccumulationTime; }
@@ -918,6 +940,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double XICWidth
         {
             get { return _exportProperties.XICWidth; }
@@ -931,6 +954,7 @@ namespace pwiz.Skyline.FileUI
         /// <summary>
         /// Length of run in minutes for non-scheduled runs
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double RunLength
         {
             get { return _exportProperties.RunLength; }
@@ -944,6 +968,7 @@ namespace pwiz.Skyline.FileUI
         /// <summary>
         /// Used for maximum transitions/precursors, maximum concurrent transitions/precursors for SRM/full-scan
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int? MaxTransitions
         {
             get { return _exportProperties.MaxTransitions; }
@@ -2760,18 +2785,21 @@ namespace pwiz.Skyline.FileUI
             get => helpTip.GetToolTip(textTemplateFile);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int CalculationTime
         {
             get { return _exportProperties.MultiplexIsolationListCalculationTime; }
             set { _exportProperties.MultiplexIsolationListCalculationTime = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool DebugCycles
         {
             get { return _exportProperties.DebugCycles; }
             set { _exportProperties.DebugCycles = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsThermoStartAndEndTime
         {
             get { return cbUseStartAndEndRts.Checked; }

@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.Threading;
 using System.Windows.Forms;
 using JetBrains.Annotations;
@@ -79,12 +80,14 @@ namespace pwiz.Skyline.Controls
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Message
         {
             get { return _message; }
             set { _message = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int ProgressValue
         {
             get { return _progressValue; }

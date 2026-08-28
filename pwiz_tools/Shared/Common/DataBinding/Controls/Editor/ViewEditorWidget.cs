@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -137,6 +138,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             return null;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ViewSpec ViewSpec
         {
             get

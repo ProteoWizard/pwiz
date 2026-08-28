@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
@@ -33,6 +34,7 @@ namespace pwiz.Skyline.SettingsUI
             InitializeComponent();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<IsotopeLabelType> LabelTypes
         {
             get
@@ -60,6 +62,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LabelTypeText
         {
             get { return textLabelTypes.Text; }

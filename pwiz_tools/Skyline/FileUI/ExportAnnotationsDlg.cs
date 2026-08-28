@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -55,6 +56,7 @@ namespace pwiz.Skyline.FileUI
         public SkylineDataSchema DataSchema { get; private set; }
         public ImmutableList<ElementHandler> Handlers { get; private set; }
         public SrmDocument Document { get { return DataSchema.Document; } }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<ElementHandler> SelectedHandlers
         {
             get
@@ -71,6 +73,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<string> SelectedAnnotationNames
         {
             get { return listBoxAnnotations.SelectedItems.OfType<string>(); }
@@ -84,6 +87,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<string> SelectedProperties
         {
             get { return listBoxProperties.SelectedItems.OfType<string>(); }
@@ -97,6 +101,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool RemoveBlankRows
         {
             get { return cbxRemoveBlankRows.Checked; }

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
@@ -36,16 +37,21 @@ namespace pwiz.Skyline.Alerts
             TEXT = labelMessage.Text;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FileDlgInitialPath { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FileHint { get; set; }
         //File extension filter
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Filter { get; set; }
         //Title bar text
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Title { get; set; }
 
         private string TEXT { get; set; }
 
         //Text to put in the initial dialog: something like 'My Background Proteome'
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ItemName
         {
             get { return _itemName; }
@@ -56,6 +62,7 @@ namespace pwiz.Skyline.Alerts
             }
         }
         //The name of the type of thing that is missing: something like 'background proteome' or 'calculator database'
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ItemType
         {
             get { return _itemType; }

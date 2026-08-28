@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
@@ -30,6 +31,7 @@ namespace pwiz.PanoramaClient
     public partial class PanoramaDirectoryPicker : CommonFormEx
     {
         // The OkButtonText setter will be used in SkylineBatch
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string OkButtonText { get; set; }
         public PanoramaFolderBrowser FolderBrowser { get; private set; }
         public string SelectedPath { get; private set; }

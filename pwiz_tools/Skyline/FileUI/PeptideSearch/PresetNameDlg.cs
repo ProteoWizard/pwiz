@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Util;
 
@@ -32,6 +33,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             textName.SelectionStart = textName.Text.Length;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string PresetName
         {
             get => textName.Text;

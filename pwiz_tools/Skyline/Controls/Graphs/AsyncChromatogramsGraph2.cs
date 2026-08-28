@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using pwiz.Common.SystemUtil;
@@ -309,6 +310,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Key 
         {
             get { return _key; }
@@ -322,6 +324,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsCanceled { get; set; }
 
         /// <summary>
@@ -336,6 +339,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ScaleIsLocked
         {
             get { return _scaleIsLocked; }

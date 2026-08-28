@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -157,6 +158,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<PeptideGroupTreeNode> PeptideGroupTreeNodes { get; set;}
         public IEnumerable<PeptideGroupDocNode> PeptideGroupDocNodes
         {
@@ -708,6 +710,7 @@ namespace pwiz.Skyline.EditUI
             return dataGridView1;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SplitHeight
         {
             get { return splitContainer1.SplitterDistance; }

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -51,6 +52,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             _existing = existing;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SpectralLibrarySource Source
         {
             get { return radioSettings.Checked ? SpectralLibrarySource.settings : SpectralLibrarySource.file; }
@@ -74,6 +76,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FilePath
         {
             get { return textFilePath.Text; }

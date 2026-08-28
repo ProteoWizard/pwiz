@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -73,6 +74,7 @@ namespace pwiz.Skyline.SettingsUI
             return string.Empty;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string[] FileNames
         {
             get

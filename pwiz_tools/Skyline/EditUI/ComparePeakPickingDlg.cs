@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -790,12 +791,14 @@ namespace pwiz.Skyline.EditUI
 
         public int CountCompareGridEntries { get { return _compareGridViewDriver.Items.Count; } }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool CheckBoxConflicts
         {
             get { return checkBoxConflicts.Checked; }
             set { checkBoxConflicts.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ComboCompare1Selected
         {
             get { return comboBoxCompare1.SelectedItem.ToString(); }
@@ -813,6 +816,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ComboCompare2Selected
         {
             get { return comboBoxCompare2.SelectedItem.ToString(); }
@@ -830,6 +834,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ComboYAxis
         {
             get { return comboBoxYAxis.SelectedItem.ToString(); }

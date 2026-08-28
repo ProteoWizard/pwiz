@@ -29,6 +29,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Globalization;
@@ -42,6 +43,7 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class ImportTransitionListColumnSelectDlg : ModeUIInvariantFormEx, ITipDisplayer
     {
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MassListImporter Importer { get; set; }
         public List<LiteDropDownList> ComboBoxes { get; private set; }
 

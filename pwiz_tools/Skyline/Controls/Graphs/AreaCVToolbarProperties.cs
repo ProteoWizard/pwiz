@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
@@ -173,18 +174,21 @@ namespace pwiz.Skyline.Controls.Graphs
             btnOk.PerformClick();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowCVCutoff
         {
             get { return checkShowCvCutoff.Checked; }
             set { checkShowCvCutoff.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowMedianCV
         {
             get { return checkShowMedian.Checked; }
             set { checkShowMedian.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? QValueCutoff
         {
             get

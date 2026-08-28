@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -104,6 +105,7 @@ namespace pwiz.Skyline.EditUI
         }
 
         private IdentityPath _selectedPath;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IdentityPath SelectedPath
         {
             get { return _selectedPath; }
@@ -638,6 +640,7 @@ namespace pwiz.Skyline.EditUI
             
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public PasteFormat PasteFormat
         {
             get

@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -42,6 +43,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     public partial class EncyclopeDiaSearchDlg : FormEx, IModifyDocumentContainer, IAuditLogModifier<EncyclopeDiaSearchDlg.EncyclopeDiaSettings>, IMultipleViewProvider
     {
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineWindow SkylineWindow { get; set; }
         public EncyclopeDiaSearchControl SearchControl { get; private set; }
 
@@ -112,8 +114,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     : MzTolerance.Units.mz);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ImportFastaControl ImportFastaControl { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ImportResultsDIAControl NarrowWindowResults { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ImportResultsDIAControl WideWindowResults { get; set; }
 
         public EncyclopeDiaHelpers.FastaToKoinaInputCsvConfig KoinaSettings =>
@@ -128,42 +133,49 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 MaxMissedCleavage = ImportFastaControl.MaxMissedCleavages
             };
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int DefaultCharge
         {
             get => Convert.ToInt32(defaultChargeUpDown.Value);
             set => defaultChargeUpDown.Value = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int DefaultNCE
         {
             get => Convert.ToInt32(ceCombo.SelectedItem);
             set => ceCombo.SelectedItem = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MinCharge
         {
             get => Convert.ToInt32(minChargeUpDown.Value);
             set => minChargeUpDown.Value = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MaxCharge
         {
             get => Convert.ToInt32(maxChargeUpDown.Value);
             set => maxChargeUpDown.Value = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MaxMissedCleavage
         {
             get => Convert.ToInt32(defaultChargeUpDown.Value);
             set => ImportFastaControl.MaxMissedCleavages = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? MinMz
         {
             get => minMzCombo.Text.IsNullOrEmpty() ? null : (double?) Convert.ToDouble(minMzCombo.Text);
             set => minMzCombo.Text = value?.ToString(LocalizationHelper.CurrentCulture) ?? string.Empty;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? MaxMz
         {
             get => maxMzCombo.Text.IsNullOrEmpty() ? null : (double?) Convert.ToDouble(maxMzCombo.Text);
@@ -189,6 +201,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MzTolerance EncyclopeDiaPrecursorTolerance
         {
             get { return new MzTolerance(double.Parse(txtMS1Tolerance.Text), (MzTolerance.Units) cbMS1TolUnit.SelectedIndex); }
@@ -200,6 +213,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MzTolerance EncyclopeDiaFragmentTolerance
         {
             get { return new MzTolerance(double.Parse(txtMS2Tolerance.Text), (MzTolerance.Units) cbMS2TolUnit.SelectedIndex); }
@@ -249,6 +263,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string DocumentFilePath
         {
             get => SkylineWindow.DocumentFilePath;
@@ -608,6 +623,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Parent = HostDialog = hostControl;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public EncyclopeDiaSearchDlg.EncyclopeDiaSettings Settings { get; set; }
         public string EncyclopeDiaChromLibraryPath { get; private set; }
         public string EncyclopeDiaQuantLibraryPath { get; private set; }

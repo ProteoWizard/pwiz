@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -191,6 +192,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public ILibraryBuilder Builder { get; private set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<string> InputFileNames
         {
             get => Grid.FilePaths;
@@ -841,12 +843,14 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LibraryName
         {
             get { return textName.Text; }
             set { textName.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LibraryPath
         {
             get { return textPath.Text; }
@@ -858,48 +862,56 @@ namespace pwiz.Skyline.SettingsUI
             textPath.Select(textPath.Text.Length, 0);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Koina
         {
             get { return radioKoinaSource.Checked; }
             set { radioKoinaSource.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AlphaPeptDeep
         {
             get { return radioAlphaSource.Checked; }
             set { radioAlphaSource.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Carafe
         {
             get { return radioCarafeSource.Checked; }
             set { radioCarafeSource.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int NCE
         {
             get { return (int)ceCombo.SelectedItem; }
             set { ceCombo.SelectedItem = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool LibraryKeepRedundant
         {
             get { return cbKeepRedundant.Checked; }
             set { cbKeepRedundant.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IncludeAmbiguousMatches
         {
             get { return cbIncludeAmbiguousMatches.Checked; }
             set { cbIncludeAmbiguousMatches.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool LibraryFilterPeptides
         {
             get { return cbFilter.Checked; }
             set { cbFilter.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public LibraryBuildAction LibraryBuildAction
         {
             get
@@ -915,6 +927,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IrtStandard IrtStandard
         {
             get { return _driverStandards.SelectedItem; }
@@ -937,6 +950,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool? PreferEmbeddedSpectra { get; set; }
 
         private void comboStandards_SelectedIndexChanged(object sender, EventArgs e)

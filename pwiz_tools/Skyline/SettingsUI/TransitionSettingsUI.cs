@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -278,8 +279,10 @@ namespace pwiz.Skyline.SettingsUI
         public TransitionInstrument Instrument { get { return _transitionSettings.Instrument; } }
         public TransitionFullScan FullScan { get { return _transitionSettings.FullScan; } }
         public TransitionIonMobilityFiltering IonMobility { get { return _transitionSettings.IonMobilityFiltering; } }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public TABS? TabControlSel { get; set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FullScanAcquisitionMethod AcquisitionMethod
         {
             get { return FullScanSettingsControl.AcquisitionMethod; }
@@ -291,54 +294,63 @@ namespace pwiz.Skyline.SettingsUI
             get { return FullScanSettingsControl.ComboAcquisitionMethod; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FullScanMassAnalyzerType ProductMassAnalyzer
         {
             get { return FullScanSettingsControl.ProductMassAnalyzer; }
             set { FullScanSettingsControl.ProductMassAnalyzer = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FullScanPrecursorIsotopes PrecursorIsotopesCurrent
         {
             get { return FullScanSettingsControl.PrecursorIsotopesCurrent; }
             set { FullScanSettingsControl.PrecursorIsotopesCurrent = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FullScanMassAnalyzerType PrecursorMassAnalyzer
         {
             get { return FullScanSettingsControl.PrecursorMassAnalyzer; }
             set { FullScanSettingsControl.PrecursorMassAnalyzer = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public RetentionTimeFilterType RetentionTimeFilterType
         {
             get { return FullScanSettingsControl.RetentionTimeFilterType; }
             set { FullScanSettingsControl.RetentionTimeFilterType = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? ProductRes
         {
             get { return FullScanSettingsControl.ProductRes; }
             set { FullScanSettingsControl.ProductRes = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? ProductResMz
         {
             get { return FullScanSettingsControl.ProductResMz; }
             set { FullScanSettingsControl.ProductResMz = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? PrecursorRes
         {
             get { return FullScanSettingsControl.PrecursorRes; }
             set { FullScanSettingsControl.PrecursorRes = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? PrecursorResMz
         {
             get { return FullScanSettingsControl.PrecursorResMz; }
             set { FullScanSettingsControl.PrecursorResMz = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseSelectiveExtraction
         {
             get { return FullScanSettingsControl.UseSelectiveExtraction; }
@@ -756,6 +768,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public TABS SelectedTab
         {
             get { return (TABS)tabControl1.SelectedIndex; }
@@ -763,12 +776,14 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         // Chooses between "Peptides" and "Small Molecules" filter sub-tab
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SelectedPeptidesSmallMolsSubTab
         {
             get { return tabControlPeptidesSmallMols.SelectedIndex; }
             set { tabControlPeptidesSmallMols.SelectedIndex = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MassType PrecursorMassType
         {
             get
@@ -781,6 +796,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MassType FragmentMassType
         {
             get
@@ -793,6 +809,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? ExclusionWindow
         {
             get
@@ -804,60 +821,70 @@ namespace pwiz.Skyline.SettingsUI
             set { textExclusionWindow.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string PrecursorCharges
         {
             get { return textPeptidePrecursorCharges.Text; }
             set { textPeptidePrecursorCharges.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ProductCharges
         {
             get { return textPeptideIonCharges.Text; }
             set { textPeptideIonCharges.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FragmentTypes
         {
             get { return textPeptideIonTypes.Text; }
             set { textPeptideIonTypes.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SmallMoleculePrecursorAdducts
         {
             get { return textSmallMoleculePrecursorAdducts.Text; }
             set { textSmallMoleculePrecursorAdducts.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SmallMoleculeFragmentAdducts
         {
             get { return textSmallMoleculeFragmentAdducts.Text; }
             set { textSmallMoleculeFragmentAdducts.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SmallMoleculeFragmentTypes
         {
             get { return textSmallMoleculeIonTypes.Text; }
             set { textSmallMoleculeIonTypes.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string RangeFrom
         {
             get { return comboRangeFrom.SelectedItem.ToString(); }
             set { comboRangeFrom.SelectedItem = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string RangeTo
         {
             get { return comboRangeTo.SelectedItem.ToString(); }
             set { comboRangeTo.SelectedItem = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string[] SpecialIons
         {
             get { return _driverIons.CheckedNames; }
             set { _driverIons.CheckedNames = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int InstrumentMaxMz
         {
             get { return Int32.Parse(textMaxMz.Text); }
@@ -869,48 +896,56 @@ namespace pwiz.Skyline.SettingsUI
             FullScanSettingsControl.SetRetentionTimeFilter(retentionTimeFilterType, length);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double MZMatchTolerance
         {
             get { return Double.Parse(textMzMatchTolerance.Text); }
             set { textMzMatchTolerance.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public CollisionEnergyRegression RegressionCE
         {
             get { return _driverCE.SelectedItem; }
             set { comboCollisionEnergy.SelectedItem = value.Name; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string RegressionCEName
         {
             get { return comboCollisionEnergy.SelectedItem.ToString(); }
             set { comboCollisionEnergy.SelectedItem = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DeclusteringPotentialRegression RegressionDP
         {
             get { return _driverDP.SelectedItem; }
             set { comboDeclusterPotential.SelectedItem = value.Name; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string RegressionDPName
         {
             get { return comboDeclusterPotential.SelectedItem.ToString(); }
             set { comboDeclusterPotential.SelectedItem = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string OptimizationLibraryName
         {
             get { return comboOptimizationLibrary.SelectedItem.ToString(); }
             set { comboOptimizationLibrary.SelectedItem = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public CompensationVoltageParameters RegressionCOV
         {
             get { return _driverCoV.SelectedItem; }
             set { comboCompensationVoltage.SelectedItem = value.Name; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string RegressionCOVName
         {
             get { return comboCompensationVoltage.SelectedItem.ToString(); }
@@ -974,12 +1009,14 @@ namespace pwiz.Skyline.SettingsUI
             FullScanSettingsControl.AddToEnrichmentsList();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseOptimized
         {
             get { return cbUseOptimized.Checked; }
             set { cbUseOptimized.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string OptimizeType
         {
             get
@@ -993,30 +1030,35 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MinIonCount
         {
             get { return Convert.ToInt32(textMinIonCount.Text); }
             set { textMinIonCount.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int IonCount
         {
             get { return Convert.ToInt32(textIonCount.Text); }
             set { textIonCount.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseLibraryPick
         {
             get { return cbLibraryPick.Checked; }
             set { cbLibraryPick.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool SetAutoSelect
         {
             get { return cbAutoSelect.Checked; }
             set { cbAutoSelect.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool SetDIAExclusionWindow
         {
             get { return cbExclusionUseDIAWindow.Checked; }
@@ -1028,6 +1070,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double IonMatchTolerance
         {
             get { return double.Parse(textTolerance.Text); }
@@ -1039,12 +1082,14 @@ namespace pwiz.Skyline.SettingsUI
             textTolerance.Focus();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MzTolerance.Units IonMatchToleranceUnits
         {
             get { return (MzTolerance.Units)comboToleranceUnits.SelectedIndex; }
             set { comboToleranceUnits.SelectedIndex = (int) value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int Peaks
         {
             get { return FullScanSettingsControl.Peaks; }
@@ -1053,36 +1098,42 @@ namespace pwiz.Skyline.SettingsUI
 
         public CheckBox CbIncludeMinusOnePrecursor => FullScanSettingsControl.CbIncludeMinusOnePrecursor;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? MinTime
         {
             get { return string.IsNullOrEmpty(textMinTime.Text) ? (double?)null : double.Parse(textMinTime.Text); }
             set { textMinTime.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? MaxTime
         {
             get { return string.IsNullOrEmpty(textMaxTime.Text) ? (double?)null : double.Parse(textMaxTime.Text); }
             set { textMaxTime.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MaxInclusions
         {
             get { return int.Parse(textMaxInclusions.Text); }
             set { textMaxInclusions.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Filtered
         {
             get { return radioFiltered.Checked;  }
             set { radioFiltered.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double MinMz
         {
             get { return double.Parse(textMinMz.Text); }
             set { textMinMz.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double MaxMz
         {
             get { return double.Parse(textMaxMz.Text); }
@@ -1109,6 +1160,7 @@ namespace pwiz.Skyline.SettingsUI
             listAlwaysAdd.SetItemChecked(index, check);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string IsolationSchemeName
         {
             get { return FullScanSettingsControl.IsolationSchemeName; }
@@ -1308,6 +1360,7 @@ namespace pwiz.Skyline.SettingsUI
             UpdateSpectrumFilterText();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool TriggeredAcquisition
         {
             get { return cbxTriggeredAcquisition.Checked; }
@@ -1357,6 +1410,7 @@ namespace pwiz.Skyline.SettingsUI
             EditSpectrumFilter();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SpectrumClassFilter SpectrumFilter
         {
             get

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -22,6 +23,7 @@ namespace pwiz.Skyline.SettingsUI
             Parameters = covParams;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public CompensationVoltageParameters Parameters
         {
             get { return _parameters; }
@@ -32,6 +34,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? Min
         {
             get
@@ -42,6 +45,7 @@ namespace pwiz.Skyline.SettingsUI
             set { textMin.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? Max
         {
             get
@@ -52,6 +56,7 @@ namespace pwiz.Skyline.SettingsUI
             set { textMax.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int? StepsRough
         {
             get
@@ -62,6 +67,7 @@ namespace pwiz.Skyline.SettingsUI
             set { textStepsRough.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int? StepsMedium
         {
             get
@@ -72,6 +78,7 @@ namespace pwiz.Skyline.SettingsUI
             set { textStepsMedium.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int? StepsFine
         {
             get

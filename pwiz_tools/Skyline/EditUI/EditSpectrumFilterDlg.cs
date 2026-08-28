@@ -60,6 +60,7 @@ namespace pwiz.Skyline.EditUI
             }
             DisplayCurrentPage();
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FilterPages FilterPages
         {
             get
@@ -144,8 +145,10 @@ namespace pwiz.Skyline.EditUI
             get { return FilterPages.Pages.ElementAtOrDefault(CurrentPageIndex) ?? SpectrumClassFilter.GenericFilterPage; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IFilterAutoComplete AutoComplete { get; set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Description
         {
             get
@@ -233,12 +236,14 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool CreateCopy
         {
             get { return cbCreateCopy.Checked; }
             set { cbCreateCopy.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool CreateCopyEnabled
         {
             get
@@ -251,6 +256,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool CreateCopyVisible
         {
             get

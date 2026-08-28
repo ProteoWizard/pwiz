@@ -457,6 +457,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             return null;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [Browsable(false)]
         public IEnumerable<PropertyPath> CheckedColumns
         {
@@ -477,6 +478,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public PropertyPath SublistId 
         { 
             get { return _sublistId; }

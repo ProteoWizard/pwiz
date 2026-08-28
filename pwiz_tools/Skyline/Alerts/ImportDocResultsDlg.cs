@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
@@ -91,6 +92,7 @@ namespace pwiz.Skyline.Alerts
 
         public bool CanImportResults { get; private set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MeasuredResults.MergeAction Action
         {
             get
@@ -127,6 +129,7 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsMergePeptides
         {
             get { return cbMergePeptides.Checked; }

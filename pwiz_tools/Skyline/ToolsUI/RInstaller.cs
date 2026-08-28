@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -314,6 +315,7 @@ namespace pwiz.Skyline.ToolsUI
             string FindRProgramPath(string rVersion);
         } 
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IPackageInstallHelpers PackageInstallHelpers
         {
             get { return _packageInstallHelpers ??= new PackageInstallHelpers(); }
@@ -321,7 +323,9 @@ namespace pwiz.Skyline.ToolsUI
         }
         private IPackageInstallHelpers _packageInstallHelpers { get; set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IRunProcess TestRunProcess { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ISkylineProcessRunnerWrapper TestSkylineProcessRunnerWrapper { get; set; }   
 
         public string Message

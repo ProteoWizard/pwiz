@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Text;
@@ -59,6 +60,7 @@ namespace pwiz.Skyline.SettingsUI
            
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MeasuredIon MeasuredIon
         {
             get { return _measuredIon; }
@@ -331,12 +333,14 @@ namespace pwiz.Skyline.SettingsUI
 
         #region test functional support
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string TextName
         {
             get { return textName.Text; }
             set { textName.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int Charge
         {
             get
@@ -349,18 +353,21 @@ namespace pwiz.Skyline.SettingsUI
             set { textCharge.Text = value.ToString(CultureInfo.InvariantCulture); } 
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double MonoIsotopicMass
         {
             get { return _formulaBox.MonoMass ?? 0; }
             set { _formulaBox.MonoMass = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double AverageMass
         {
             get { return _formulaBox.AverageMass ?? 0; }
             set { _formulaBox.AverageMass = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Formula
         {
             get { return _formulaBox.Formula; }

@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -113,6 +114,7 @@ namespace pwiz.Skyline.SettingsUI
             Modification = _originalModification = modEditing;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public StaticMod Modification
         {
             get { return _modification;  }
@@ -201,18 +203,21 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsCrosslinker
         {
             get { return cbCrosslinker.Checked; }
             set { cbCrosslinker.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Formula
         {
             get { return _formulaBox.Formula; }
             set { _formulaBox.Formula = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<FragmentLoss> Losses
         {
             get
@@ -250,6 +255,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowLoss
         {
             get { return _showLoss; }
@@ -725,6 +731,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int LossSelectedIndex
         {
             get { return listLosses.SelectedIndex; }

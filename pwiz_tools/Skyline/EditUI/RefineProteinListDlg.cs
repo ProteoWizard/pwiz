@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -45,16 +46,19 @@ namespace pwiz.Skyline.EditUI
         public HashSet<string> AcceptedProteins { get; private set; }
         public RefinementSettings.ProteinSpecType ProteinSpecType { get; private set; }        
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ProteinsText
         {
             get { return textProteins.Text; }
             set { textProteins.Text = value; }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Accession
         {
             get { return proteinAccessions.Checked; }
             set { proteinAccessions.Checked = value; }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Preferred
         {
             get { return proteinPreferredNames.Checked; }

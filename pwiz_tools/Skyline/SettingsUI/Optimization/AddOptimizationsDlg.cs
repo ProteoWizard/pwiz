@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Optimization;
@@ -59,6 +60,7 @@ namespace pwiz.Skyline.SettingsUI.Optimization
         public int OptimizationsCount { get; private set; }
         public int ExistingOptimizationsCount { get { return listExisting.Items.Count; } }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AddOptimizationsAction Action
         {
             get

@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -1150,24 +1151,28 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string PeakScoringModelName
         {
             get { return textName.Text; }
             set { textName.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UsesDecoys
         {
             get { return decoyCheckBox.Checked; }
             set { decoyCheckBox.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UsesSecondBest
         {
             get { return secondBestCheckBox.Checked; }
             set { secondBestCheckBox.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SelectedModelItem
         {
             get { return comboModel.SelectedItem.ToString(); }
@@ -1185,6 +1190,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SelectedGraphTab
         {
             get { return tabControl1.SelectedIndex; }
@@ -1225,6 +1231,7 @@ namespace pwiz.Skyline.SettingsUI
             _gridViewDriver.Items[row].IsEnabled = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsFindButtonVisible
         {
             get { return toolStripFind.Visible; }

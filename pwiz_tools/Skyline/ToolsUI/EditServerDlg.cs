@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Net.Mail;
 using System.Windows.Forms;
 using pwiz.PanoramaClient;
@@ -33,6 +34,7 @@ namespace pwiz.Skyline.ToolsUI
         private Server _server;
         private readonly IEnumerable<Server> _existing;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IPanoramaClient PanoramaClient { get; set; }
 
         public EditServerDlg(IEnumerable<Server> existing)
@@ -47,6 +49,7 @@ namespace pwiz.Skyline.ToolsUI
             InstructionPanel.Visible = true;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Server Server
         {
             get { return _server; }
@@ -78,10 +81,14 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string URL { get { return textServerURL.Text; } set { textServerURL.Text = value; } }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Username { get { return textUsername.Text; } set { textUsername.Text = value; } }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Password { get { return textPassword.Text; } set { textPassword.Text = value; } }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AnonymousServer { get { return cbAnonymous.Checked; } set { cbAnonymous.Checked = value; } }
 
         public void OkDialog()

@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -480,12 +481,19 @@ namespace pwiz.Skyline.ToolsUI
 
         #region Functional testing support
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IRunProcess TestRunProcess { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ISkylineProcessRunnerWrapper TestSkylineProcessRunner { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IAsynchronousDownloadClient TestPipDownloadClient { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ISkylineProcessRunnerWrapper TestPipeSkylineProcessRunner { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IRunProcess TestPipRunProcess { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool TestingPip { get; set; }
         
         public string Message

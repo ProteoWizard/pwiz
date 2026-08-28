@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -132,6 +133,7 @@ namespace pwiz.Skyline.FileUI
             DialogResult = DialogResult.OK;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? LockmassPositive
         {
             get
@@ -148,6 +150,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? LockmassNegative
         {
             get
@@ -164,6 +167,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? LockmassTolerance
         {
             get

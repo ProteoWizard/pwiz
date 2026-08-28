@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -58,6 +59,7 @@ namespace pwiz.Skyline.SettingsUI
             FormatCultureInfo = CultureInfo.InvariantCulture;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MetadataRule MetadataRule
         {
             get
@@ -113,6 +115,7 @@ namespace pwiz.Skyline.SettingsUI
             combo.SelectedIndex = -1;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public CultureInfo FormatCultureInfo { get; set; }
 
         public void UpdateRows()

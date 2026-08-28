@@ -326,6 +326,7 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// The item's text
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [Localizable(true)]
         public string Text
         {

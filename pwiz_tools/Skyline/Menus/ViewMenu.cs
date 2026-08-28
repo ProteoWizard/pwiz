@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
@@ -73,6 +74,7 @@ namespace pwiz.Skyline.Menus
         public ToolStripMenuItem PreviousReplicateMenuItem => previousReplicateMenuItem;
 
         #region Text Size
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double TargetsTextFactor
         {
             get { return Settings.Default.TextZoom; }

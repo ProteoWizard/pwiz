@@ -24,6 +24,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -44,6 +45,7 @@ namespace pwiz.Skyline.ToolsUI
             comboToolName.Items.AddRange(Enum.GetNames(typeof(SearchToolType)));
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SearchTool SearchTool
         {
             get { return _searchTool; }
@@ -65,18 +67,21 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SearchToolType ToolName
         {
             get => (SearchToolType) Enum.Parse(typeof(SearchToolType), comboToolName.SelectedItem.ToString());
             set => comboToolName.SelectedItem = value.ToString();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ToolPath
         {
             get => tbPath.Text;
             set { tbPath.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ExtraCommandlineArgs
         {
             get => tbExtraArgs.Text;

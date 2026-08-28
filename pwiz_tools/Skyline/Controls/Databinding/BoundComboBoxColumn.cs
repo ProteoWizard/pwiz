@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
@@ -66,6 +67,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         protected abstract object[] GetDropdownItems();
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ColumnPropertyDescriptor ColumnPropertyDescriptor
         {
             get { return _columnPropertyDescriptor; }

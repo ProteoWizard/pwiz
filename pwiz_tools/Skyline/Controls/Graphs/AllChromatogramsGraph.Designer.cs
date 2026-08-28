@@ -185,10 +185,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // graphChromatograms
             // 
             resources.ApplyResources(this.graphChromatograms, "graphChromatograms");
-            this.graphChromatograms.IsCanceled = false;
-            this.graphChromatograms.Key = null;
             this.graphChromatograms.Name = "graphChromatograms";
-            this.graphChromatograms.ScaleIsLocked = false;
             // 
             // elapsedTimer
             // 

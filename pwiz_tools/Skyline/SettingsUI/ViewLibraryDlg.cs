@@ -89,7 +89,9 @@ namespace pwiz.Skyline.SettingsUI
         private bool _comboBoxUpdated;
         public SpectrumProperties _currentProperties { get; private set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int LineWidth { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public float FontSize { get; set; }
 
         // Sequence-ruler state: pinned series persist across scan navigation, cleared on
@@ -396,6 +398,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverLibraries.LoadList(_selectedLibName);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AssociateMatchingProteins
         {
             get { return cbAssociateProteins.Checked; }
@@ -2557,18 +2560,21 @@ namespace pwiz.Skyline.SettingsUI
 
         #region Test helpers
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FilterString
         {
             get { return textPeptide.Text; }
             set { textPeptide.Text = value; }            
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SelectedIndex
         {
             get { return listPeptide.SelectedIndex; }
             set { listPeptide.SelectedIndex = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SelectedLibIndex
         {
             get { return comboLibrary.SelectedIndex; }
@@ -2635,12 +2641,14 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Set to false and wait for set to true to track updates
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsUpdateComplete { get; set; }
 
         /// <summary>
         /// Set to avoid waiting on extremely long update. Since it executes on the
         /// UI thread, it is very difficult to cancel otherwise during a test.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsUpdateCanceled { get; set; }
 
         public bool IsVisibleRedundantSpectraBox

@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -53,6 +54,7 @@ namespace pwiz.Skyline.SettingsUI
             comboDirection.SelectedIndex = 0;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Enzyme Enzyme
         {
             get { return _enzyme; }
@@ -187,36 +189,42 @@ namespace pwiz.Skyline.SettingsUI
 
         #region Functional test support
         
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string EnzymeName
         {
             get { return textName.Text; }
             set { textName.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Cleavage
         {
             get { return textCleavage.Text; }
             set { textCleavage.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Restrict
         {
             get { return textRestrict.Text; }
             set { textRestrict.Text = value;}
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string CleavageN
         {
             get { return textCleavageN.Text; }
             set { textCleavageN.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string RestrictN
         {
             get { return textRestrictN.Text; }
             set { textRestrictN.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SequenceTerminus? Type
         {
             get

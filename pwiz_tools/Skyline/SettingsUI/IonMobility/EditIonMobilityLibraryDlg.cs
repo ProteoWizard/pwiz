@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -146,6 +147,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         }
 
         // Flat (multiple conformers occupy multiple lines) representation
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList<ValidatingIonMobilityPrecursor> LibraryMobilitiesFlat 
         {
             get { return _gridViewLibraryDriver.Items; }
@@ -541,6 +543,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         #region Functional Test Support
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LibraryName
         {
             get { return (textLibraryName.Text ?? string.Empty).Trim(); }

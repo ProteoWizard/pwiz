@@ -710,6 +710,7 @@ namespace ZedGraph
 		/// axis ranges from 0 to 100, then a 0.05 value for ScrollGrace would set the scroll range
 		/// to -5 to 105.
 		/// </remarks>
+		[DefaultValue(0.0)]
 		public double ScrollGrace
 		{
 			get { return _scrollGrace; }

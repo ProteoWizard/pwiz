@@ -198,6 +198,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return tbxName.Text; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public NormalizeOption NormalizeOption
         {
             get
@@ -211,11 +212,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ControlAnnotation { 
             get { return comboControlAnnotation.SelectedItem?.ToString(); }
             set { SelectComboItem(comboControlAnnotation, value); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ControlValue
         {
             get { return comboControlValue.SelectedItem?.ToString(); }
@@ -227,11 +230,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return ListComboOptions(comboControlValue); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string CaseValue
         {
             get { return comboCaseValue.SelectedItem?.ToString(); }
             set { SelectComboItem(comboCaseValue, value); }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string IdentityAnnotation
         {
             get { return comboIdentityAnnotation.SelectedItem?.ToString(); }

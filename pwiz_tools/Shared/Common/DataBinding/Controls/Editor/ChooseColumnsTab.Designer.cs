@@ -53,7 +53,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             resources.ApplyResources(this.availableFieldsTreeColumns, "availableFieldsTreeColumns");
             this.availableFieldsTreeColumns.CheckBoxes = true;
-            this.availableFieldsTreeColumns.CheckedColumns = new pwiz.Common.DataBinding.PropertyPath[0];
             this.availableFieldsTreeColumns.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
             this.availableFieldsTreeColumns.HideSelection = false;
             this.availableFieldsTreeColumns.Name = "availableFieldsTreeColumns";

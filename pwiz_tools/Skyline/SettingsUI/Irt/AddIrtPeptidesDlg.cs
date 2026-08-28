@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -215,6 +216,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         public int OverwritePeptidesCount { get { return listOverwrite.Items.Count; } }
         public int ExistingPeptidesCount { get { return listExisting.Items.Count; } }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AddIrtPeptidesAction Action
         {
             get

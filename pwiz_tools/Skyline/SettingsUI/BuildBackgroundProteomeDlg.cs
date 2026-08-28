@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -62,6 +63,7 @@ namespace pwiz.Skyline.SettingsUI
         /// BackgroundProteomeSpec that this dialog is editing.  The property
         /// value will be null if this is for a new BackgroundProteomeSpec.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public BackgroundProteomeSpec BackgroundProteomeSpec
         { 
             get { return _backgroundProteomeSpec; } 
@@ -429,12 +431,14 @@ namespace pwiz.Skyline.SettingsUI
 
         #region Functional test support
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public String BackgroundProteomeName
         {
             get { return textName.Text; }
             set { textName.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public String BackgroundProteomePath
         {
             get { return textPath.Text; }

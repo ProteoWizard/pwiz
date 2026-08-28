@@ -68,7 +68,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             // availableFieldsTreeFilter
             // 
-            this.availableFieldsTreeFilter.CheckedColumns = new pwiz.Common.DataBinding.PropertyPath[0];
             resources.ApplyResources(this.availableFieldsTreeFilter, "availableFieldsTreeFilter");
             this.availableFieldsTreeFilter.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
             this.availableFieldsTreeFilter.HideSelection = false;

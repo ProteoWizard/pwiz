@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Layout;
@@ -36,6 +37,7 @@ namespace pwiz.Common.DataBinding.Controls
         {
             get { return PropertyDescriptor.DataSchema; }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IViewContext ViewContext { get; set; }
         public DataPropertyDescriptor PropertyDescriptor { get; private set; }
         public RowFilter RowFilter { get; private set; }

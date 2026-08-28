@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -53,10 +54,12 @@ namespace pwiz.Skyline.FileUI
             ServerTreeStateRestorer = new TreeViewStateRestorer(treeViewFolders);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsLoaded { get; set; }
         public string FileName => tbFilePath.Text;
         public bool AnonymousServersCheckboxVisible => cbAnonymousServers.Visible;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         internal TreeViewStateRestorer ServerTreeStateRestorer { get; set; }
         internal IDocumentUIContainer DocumentUIContainer { get; }
         internal DocumentFormat? DocumentFormat { get; }

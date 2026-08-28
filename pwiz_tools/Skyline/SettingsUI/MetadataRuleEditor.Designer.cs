@@ -121,7 +121,6 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // bindingListSource1
             // 
-            this.bindingListSource1.NewRowHandler = null;
             // 
             // boundDataGridView1
             // 

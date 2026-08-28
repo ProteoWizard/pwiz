@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Net;
@@ -18,6 +19,7 @@ namespace pwiz.Skyline.FileUI
         /// <summary>
         /// This property is used to trigger file name check for multiple method uploads
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<string> MethodNameSuffixes { get; set; }
 
         public WatersConnectSaveMethodFileDialog(IList<RemoteAccount> remoteAccounts,  IList<string> specificDataSourceFilter = null)

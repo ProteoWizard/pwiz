@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.Properties;
 
@@ -18,6 +19,7 @@ namespace pwiz.Common.Controls
             FillWeight = 1;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int ColumnsNotShownCount 
         { 
             get { return _columnsNotShownCount; }

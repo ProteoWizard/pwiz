@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Irt;
@@ -9,6 +10,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 {
     public partial class SelectIrtStandardDlg : FormEx
     {
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IrtStandard Selected
         {
             get => comboStandards.SelectedItem as IrtStandard;

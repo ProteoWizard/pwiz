@@ -23,6 +23,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using System.Collections.Generic;
 using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Serialization;
@@ -122,8 +123,10 @@ namespace pwiz.Skyline.FileUI
             return dialog;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IPanoramaPublishClient PanoramaPublishClient { get; set; }
         public ShareType ShareType { get; private set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowAnonymousServers { get { return cbAnonymousServers.Checked; } set { cbAnonymousServers.Checked = value; } }
 
         internal override string LoadExpansionAndSelection()

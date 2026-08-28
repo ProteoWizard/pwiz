@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using pwiz.Common.SystemUtil;
 using System.Windows.Forms;
@@ -58,12 +59,14 @@ namespace pwiz.Skyline.EditUI
 
         #region Functional test support
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int LineWidth
         {
             get { return int.Parse(textLineWidth.Text); }
             set { textLineWidth.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public GraphFontSize FontSize
         {
             get { return textSizeComboBox.SelectedItem as GraphFontSize; }

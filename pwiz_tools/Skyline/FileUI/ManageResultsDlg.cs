@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -223,6 +224,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<ChromatogramSet> SelectedChromatograms
         {
             get
@@ -247,6 +249,7 @@ namespace pwiz.Skyline.FileUI
             get { return listLibraries.Items.Cast<string>(); }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<string> SelectedLibraryRuns
         {
             get
@@ -788,12 +791,14 @@ namespace pwiz.Skyline.FileUI
             manageResultsTabControl.SelectTab(replicatesTab);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsRemoveCorrespondingReplicates
         {
             get { return checkBoxRemoveReplicates.Checked; }
             set { checkBoxRemoveReplicates.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsRemoveCorrespondingLibraries
         {
             get { return checkBoxRemoveLibraryRuns.Checked; }

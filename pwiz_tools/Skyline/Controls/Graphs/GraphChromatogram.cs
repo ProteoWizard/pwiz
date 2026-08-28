@@ -248,6 +248,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string NameSet
         {
             get { return _nameChromatogramSet; }
@@ -293,6 +294,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int? SelectedFileIndex
         {
             get
@@ -612,6 +614,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsCacheInvalidated { get; set; }
 
         public bool IsCurrent(SrmSettings settingsOld, SrmSettings settingsNew)

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
@@ -33,6 +34,7 @@ namespace pwiz.Skyline.Alerts
                 radioProtein.Checked = true;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool PeptideList { get; set; }
 
         private void btnOk_Click(object sender, EventArgs e)

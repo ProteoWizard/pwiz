@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -51,6 +52,7 @@ namespace pwiz.Skyline.Controls.Clustering
             Localizer = SkylineDataSchema.GetLocalizedSchemaLocalizer();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ClusterInput ClusterInput
         {
             get
@@ -344,6 +346,7 @@ namespace pwiz.Skyline.Controls.Clustering
             return pointLists;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public PcaChoice PcaChoiceValue
         {
             get

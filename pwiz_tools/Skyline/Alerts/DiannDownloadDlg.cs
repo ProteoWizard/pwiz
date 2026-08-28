@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -64,6 +65,7 @@ namespace pwiz.Skyline.Alerts
 
         public void ClickAccept() { btnAccept.PerformClick(); }
         public void ClickSpecifyManually() { btnSpecifyManually.PerformClick(); }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AgreeToLicense { get => cbAgreeToLicense.Checked; set => cbAgreeToLicense.Checked = value; }
 
         /// <summary>Test hook: select the open-license 1.9.1 radio.</summary>

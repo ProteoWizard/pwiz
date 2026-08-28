@@ -13,11 +13,13 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class MsGraphExtension : UserControl
     {
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool PropertiesVisible
         {
             get { return !splitContainer1.Panel2Collapsed; }
             set { splitContainer1.Panel2Collapsed = !value; }
         }
+        [DefaultValue(null)]
         public string PropertySheetVisibilityPropName { get; set; }
 
         public MSGraphControl Graph => graphControl;

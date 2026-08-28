@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -223,6 +224,7 @@ namespace pwiz.Skyline.EditUI
 
         #region Functional test support
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsModel
         {
             get { return radioButtonModel.Checked; }
@@ -234,18 +236,21 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FileName
         {
             get { return textName.Text; }
             set { textName.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FilePath
         {
             get { return textFilePath.Text; }
             set { textFilePath.Text = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string PeakScoringModelSelected
         {
             get { return comboBoxModel.SelectedItem.ToString(); }

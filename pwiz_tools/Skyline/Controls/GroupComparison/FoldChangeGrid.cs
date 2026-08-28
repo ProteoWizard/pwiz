@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.DataBinding;
@@ -41,6 +42,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return base.GetTitle(groupComparisonName) + ':' + GroupComparisonStrings.FoldChangeGrid_GetTitle_Grid;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ViewName? ViewToRestore { get; set; }
 
         protected override string GetPersistentString()

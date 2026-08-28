@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -131,6 +132,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private int _originalResultsIndex;
 
         private GraphSummaryToolbar _toolbar;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public GraphSummaryToolbar Toolbar
         {
             get { return _toolbar; }
@@ -145,8 +147,10 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LabelLayoutString { get; set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public GraphTypeSummary Type { get; set; }
 
         public GraphSummary(GraphTypeSummary type, IDocumentUIContainer documentUIContainer, IController controller, int targetResultsIndex, int originalIndex = -1)
@@ -178,6 +182,7 @@ namespace pwiz.Skyline.Controls.Graphs
             UpdateUI();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ActiveLibrary
         {
             get { return _activeLibrary;  }
@@ -217,6 +222,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _controller.OnResultsIndexChanged();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public NormalizeOption NormalizeOption
         {
             get { return StateProvider.AreaNormalizeOption; }
@@ -276,6 +282,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return GraphPanes.Sum(pane => pane.CurveList.Count(isCounted));
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         internal IEnumerable<SummaryGraphPane> GraphPanes
         {
             get { return graphControl.MasterPane.PaneList.OfType<SummaryGraphPane>(); }

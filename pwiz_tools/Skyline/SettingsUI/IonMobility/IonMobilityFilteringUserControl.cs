@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -139,6 +140,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         #region for testing
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SelectedIonMobilityLibrary
         {
             get { return _driverIonMobilityLib.Combo.SelectedItem.ToString(); }
@@ -222,6 +224,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             UpdateIonMobilityFilterWindowWidthControls();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType WindowWidthType
         {
             get { return (IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType)comboBoxWindowType.SelectedIndex; }
@@ -232,12 +235,14 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsUseSpectralLibraryIonMobilities
         {
             get { return cbUseSpectralLibraryIonMobilities.Checked; }
             set { cbUseSpectralLibraryIonMobilities.Checked = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? IonMobilityFilterResolvingPower
         {
             get

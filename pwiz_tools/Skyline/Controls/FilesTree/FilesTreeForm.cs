@@ -556,6 +556,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// <summary>
         /// Test helper property to control focus behavior during tooltip testing
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IgnoreFocus { get; set; }
 
         /// <summary>
@@ -600,6 +601,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// <summary>
         /// Test helper flag to signal when the context menu Opening event has completed
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool? ContextMenuShown { get; set; }
 
         /// <summary>
@@ -626,6 +628,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         #region Test helpers for drag-drop simulation
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IDragDropHandler DragDropHandler
         {
             get => _dragDropHandler;

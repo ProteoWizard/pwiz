@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -43,6 +44,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             ComboHelper.AutoSizeDropDown(comboLibrary);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SpectralLibrarySource Source
         {
             get { return radioSettings.Checked ? SpectralLibrarySource.settings : SpectralLibrarySource.file; }
@@ -73,6 +75,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FilePath
         {
             get { return textFilePath.Text; }

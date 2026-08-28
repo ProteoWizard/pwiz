@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -34,6 +35,7 @@ namespace pwiz.Common.Controls.Clustering
 
         private DockStyle _dendrogramLocation;
         private bool _rectilinearLines;
+        [DefaultValue(DockStyle.None)]
         public DockStyle DendrogramLocation {
             get
             {
@@ -50,6 +52,7 @@ namespace pwiz.Common.Controls.Clustering
             }
         }
 
+        [DefaultValue(false)]
         public bool RectilinearLines
         {
             get { return _rectilinearLines; }

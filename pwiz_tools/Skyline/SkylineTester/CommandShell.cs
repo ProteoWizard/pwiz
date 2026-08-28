@@ -36,14 +36,23 @@ namespace SkylineTester
         public const int MAX_PROCESS_OUTPUT_DELAY = 700; // milliseconds 
         public const int RETRY_WAIT_SECONDS = 60; // Wait this long between retries
         private enum EXIT_TYPE {error_stop, error_restart, success};
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string DefaultDirectory { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Button StopButton { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Func<string, bool> FilterFunc { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Action<string> ColorLine { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Action FinishedOneCommand { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int RestartCount { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int NextCommand { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DateTime RunStartTime { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsUnattended { get; set; }
         public readonly object LogLock = new object();
 
@@ -472,6 +481,7 @@ namespace SkylineTester
 
         public bool IsKilled => _processKilled || _process == null;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsWaiting { get; set; }
 
         public bool IsDebuggerAttached 
@@ -548,10 +558,12 @@ namespace SkylineTester
         #region Display/scroll log
 
         // VisibleLogFile is the file selected to view, LogFile is the file being currently written to
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string VisibleLogFile { get; set; }
 
         private string _logFile;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LogFile
         {
             get { return _logFile; }
@@ -813,6 +825,7 @@ namespace SkylineTester
         private const int SB_ENDSCROLL = 8;
 
         // ReSharper disable once ConvertToConstant.Global
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int IgnorePaint { get; set; }
 
         private bool _scrolling;

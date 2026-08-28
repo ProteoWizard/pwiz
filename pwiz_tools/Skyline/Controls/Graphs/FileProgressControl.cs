@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Text;
@@ -84,6 +85,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ControlOnMouseDown(this, e);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int Number
         {
             get { return _number; }
@@ -107,6 +109,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         public ProgressBar ProgressBar => progressBar;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MsDataFileUri FilePath
         {
             get { return _filePath; }
@@ -122,6 +125,7 @@ namespace pwiz.Skyline.Controls.Graphs
             toolTip.SetToolTip(labelFileName, text);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsCanceled { get; set; }
 
         public bool IsComplete
@@ -292,6 +296,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return sb.ToString();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Selected
         {
             get { return _selected; }
