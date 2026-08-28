@@ -226,40 +226,27 @@ namespace pwiz.Osprey.Tasks
             var libraryById = ctx.Get<LibraryById>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
 
-            // Before the fragment release, which mutates the library entries this write
-            // reads its sequence / precursor m/z / protein-id columns from.
-            //
-            // --task ModelDiagnostics REFUSES instead. That mode is read-only for every
-            // processing artifact - it writes the report and nothing else - and this is a
-            // rewrite-in-place of every reconciled parquet. It was the one writer in this
-            // method with no such guard, so a regeneration over a pre-survivors-format
-            // directory converted the whole cohort AND then returned true, stopping the run at
-            // StopAfterUpgrade so no report was produced either. The mode wrote what it
-            // promised not to and skipped what it promised to. Introduced on this branch by
-            // 1e282f8a29, so the bug never shipped.
-            //
-            // BLOCKED, not worked around. Generating a report from a pre-survivor-subset
-            // parquet is deliberately NOT part of this mode's contract: supporting it would be
-            // a second read path to keep working and to test on an artifact generation the
-            // branch exists to retire. Refusing costs one re-analysis and keeps the supported
-            // set to one shape.
-            if (config.DiagnosticsOnly)
+            // REFUSED for every mode, not converted for any. Osprey once rewrote these in
+            // place, which was worth its surface area while the reconciled parquet was the
+            // ONLY artifact whose shape had changed: converting one file type bought a fast
+            // Stage 7 turn-around without re-running Stage 5. This branch also changed what
+            // the FDR sidecars carry, so an old directory now holds two inconsistent
+            // artifact generations and converting one of them buys nothing - the run has to
+            // start from Stage 5 regardless. The conversion was an internal convenience that
+            // did not survive to be a feature the shipped Osprey needs, and keeping it meant
+            // maintaining and testing a second read path onto a generation this branch
+            // exists to retire.
+            var stale = StaleReconciledParquets(perFileEntries, perFileParquetPaths);
+            if (stale.Count > 0)
             {
-                var stale = StaleReconciledParquets(perFileEntries, perFileParquetPaths);
-                if (stale.Count > 0)
-                {
-                    throw new InvalidOperationException(string.Format(
-                        "--task ModelDiagnostics cannot run over this directory: {0} of {1} " +
-                        "reconciled parquet(s) predate the survivor-subset format and would have " +
-                        "to be rewritten, which this mode does not do - it writes the report and " +
-                        "nothing else. Stale: [{2}]. Re-run the analysis without " +
-                        "--task ModelDiagnostics to rewrite them, then regenerate the report.",
-                        stale.Count, perFileEntries.Count, string.Join(", ", stale)));
-                }
-            }
-            else if (UpgradeReconciledParquets(perFileEntries, perFileParquetPaths, libraryById, ctx))
-            {
-                return StopAfterUpgrade(ctx);
+                throw new InvalidOperationException(string.Format(
+                    "{0} of {1} reconciled parquet(s) predate the survivor-subset format, so " +
+                    "Stage 7 cannot read them. There is nothing to convert them to: the FDR " +
+                    "sidecars beside them are from the same older build and are equally " +
+                    "unusable, so a parquet-only rewrite would leave the directory " +
+                    "inconsistent. Re-run the analysis from Stage 5 over this directory. " +
+                    "Stale: [{2}].",
+                    stale.Count, perFileEntries.Count, string.Join(", ", stale)));
             }
 
             ReleaseUnscorableLibraryFragments(rescored, perFileEntries.Count, fullLibrary, ctx);
@@ -579,35 +566,12 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Rewrite any <c>.scores-reconciled.parquet</c> still in the pre-#4486 full-row
-        /// shape into the survivor subset this build writes, in place. Returns true when the
-        /// run should stop here.
-        ///
-        /// <para>Recovery rather than migration tooling: a cohort staged by an older build
-        /// would otherwise have to re-run Stage 6 - hours at cohort scale - for a format that
-        /// is one sequential read and a much smaller write away. Any workflow holding old
-        /// artifacts therefore self-heals on its next run.</para>
-        ///
-        /// <para>The rows to keep are the identities of the post-compaction list this stage
-        /// already holds, which is by definition what Stage 7 consumes, so nothing about the
-        /// survivor decision is re-derived here. The footer is preserved key for key except
-        /// <c>osprey.reconciled</c>, so the version stamp and the search / library /
-        /// reconciliation hashes still describe the run that produced the rows and every
-        /// validity check that passed before passes after.</para>
-        ///
-        /// <para>Runs BEFORE <see cref="ReleaseUnscorableLibraryFragments"/>, which mutates
-        /// the library entries the write reads its sequence / precursor m/z / protein-id
-        /// columns from - with a null or stripped library those columns write empty.</para>
-        /// </summary>
-        /// <summary>
         /// The per-file keys whose <c>.scores-reconciled.parquet</c> is on disk but predates
-        /// the survivor-subset format, i.e. the ones <see cref="UpgradeReconciledParquets"/>
-        /// would rewrite.
+        /// the survivor-subset format, so Stage 7 cannot read it.
         ///
-        /// <para>Split out so the read-only <c>--task ModelDiagnostics</c> refusal and the
-        /// upgrade itself decide "is this stale" the same way. Two copies of that test would
-        /// drift into a mode that refuses files it would not have rewritten, or worse, one that
-        /// rewrites files it said were fine.</para>
+        /// <para>The run refuses rather than converting: this branch changed the FDR
+        /// sidecars too, so an old directory has no self-consistent artifact set to
+        /// convert toward and has to be re-run from Stage 5 (issue #4486).</para>
         /// </summary>
         private static List<string> StaleReconciledParquets(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
@@ -633,94 +597,6 @@ namespace pwiz.Osprey.Tasks
             }
             return stale;
         }
-
-        private static bool UpgradeReconciledParquets(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
-            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            PipelineContext ctx)
-        {
-            if (perFileParquetPaths == null)
-                return false;
-            var staleKeys = new HashSet<string>(
-                StaleReconciledParquets(perFileEntries, perFileParquetPaths), StringComparer.Ordinal);
-            int upgraded = 0;
-            foreach (var kv in perFileEntries)
-            {
-                if (!staleKeys.Contains(kv.Key))
-                    continue;
-                string scoresPath = perFileParquetPaths[kv.Key];
-                string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
-                var metadata = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
-                // Same refusal the dedicated task makes, for the same reason: this rewrite
-                // re-derives every row's sequence and protein_ids from the library BY ENTRY
-                // ID, so a foreign library silently renames every peptide. The run-level
-                // parquet-group check does not cover it - that validates the paths in
-                // --input-scores, while this rewrites their reconciled SIBLINGS, and on a
-                // full-pipeline run it never runs at all.
-                if (!CompactPerFileRescoreTask.VerifyLibraryMatches(
-                        reconciledPath, metadata, ctx.Config.Identity.LibraryIdentityHash(),
-                        ctx.Config, ctx))
-                {
-                    return false;
-                }
-                var keepIdentities = new HashSet<(uint, byte, uint)>(kv.Value.Count);
-                foreach (var entry in kv.Value)
-                    keepIdentities.Add((entry.EntryId, entry.Charge, entry.ScanNumber));
-                metadata[@"osprey.reconciled"] = ParquetScoreCache.RECONCILED_SURVIVORS;
-
-                // Written beside the target and swapped in, because the stream reads the very
-                // file it replaces. Move -> Move -> Delete, not Delete -> Move: a crash
-                // between the steps then leaves BOTH copies rather than neither. This runs
-                // inside an ordinary Stage 7, which is exactly where this cohort has been
-                // OOM-killed before, and a Delete -> Move window destroys the file outright -
-                // after which the re-run's File.Exists check above skips it in silence.
-                string upgradedPath = reconciledPath + @".upgraded";
-                var result = ParquetScoreCache.StreamReconciledScoresParquet(
-                    reconciledPath, upgradedPath, null, null, metadata, libraryById,
-                    kv.Key, keepIdentities, null, ctx.LogWarning);
-                string retiredPath = reconciledPath + @".retired";
-                File.Replace(upgradedPath, reconciledPath, retiredPath);
-                File.Delete(retiredPath);
-                upgraded++;
-                ctx.LogInfo(string.Format(
-                    @"  Upgraded reconciled parquet for {0}: {1} rows kept of {2}",
-                    kv.Key, result.NWritten, result.OrigRowCount));
-            }
-            if (upgraded == 0)
-                return false;
-            ctx.LogInfo(string.Format(
-                @"Upgraded {0} reconciled parquet(s) to the survivor subset format.", upgraded));
-            if (!OspreyEnvironment.UpgradeReconciledOnly)
-                return false;
-            ctx.LogInfo(
-                @"OSPREY_UPGRADE_RECONCILED_ONLY is set - stopping after the upgrade so a " +
-                @"following run profiles the new format alone.");
-            return true;
-        }
-
-        /// <summary>
-        /// True when <see cref="UpgradeReconciledParquets"/> asked the run to stop, which is
-        /// NOT a successful Stage 7.
-        ///
-        /// <para>Run must return FALSE there. <c>AnalysisPipeline.RunTask</c> stamps a fresh
-        /// validity sidecar onto every declared output that merely EXISTS whenever the exit
-        /// code is zero, and Run deleted those sidecars on entry without rewriting the
-        /// artifacts - so reporting success would certify a previous run's <c>out.blib</c> and
-        /// <c>.2nd-pass.fdr_scores.bin</c> under this run's validity key, and the next
-        /// invocation would skip Stage 7 and ship them as its own answer. Every other
-        /// success-but-stop boundary in the pipeline returns false for this reason
-        /// (PerFileScoringTask under --task PerFileScoring, FirstPassFdrTask under
-        /// StopAfterStage5).</para>
-        /// </summary>
-        private static bool StopAfterUpgrade(PipelineContext ctx)
-        {
-            ctx.LogInfo(
-                @"Stopping after the reconciled-parquet upgrade; no blib, 2nd-pass sidecar or " +
-                @"model-diagnostics report was written by this run. Re-run to analyze.");
-            return false;
-        }
-
         /// <summary>
         /// Write passing entries to a BiblioSpec blib file.
         ///

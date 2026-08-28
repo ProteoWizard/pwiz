@@ -389,13 +389,6 @@ namespace pwiz.Osprey.Core
         public bool DiagnosticsOnly => SelectedTask == HpcTask.ModelDiagnostics;
 
         /// <summary>
-        /// <c>--task CompactPerFileRescoring</c>: compact the reconciled parquets and write
-        /// nothing else. No library-free shortcut - the write re-derives the sequence /
-        /// precursor m/z / protein-id columns from the library, so the task loads it itself.
-        /// </summary>
-        public bool CompactReconciledOnly => SelectedTask == HpcTask.CompactPerFileRescoring;
-
-        /// <summary>
         /// Shallow clone for per-file ProcessFile() calls. The pipeline
         /// mutates a few fields (notably <see cref="FragmentTolerance"/>
         /// after MS2 calibration); cloning at the top of ProcessFile
@@ -453,14 +446,7 @@ namespace pwiz.Osprey.Core
         // except the report. Exists because judging a diagnostics change on a large cohort
         // otherwise means re-running the whole search - 7 hours on the 82-file SEA-AD set -
         // or accepting a stale page written by an older build.
-        ModelDiagnostics,
-        // Rewrite each input's .scores-reconciled.parquet from the pre-#4486 full-row
-        // shape to the survivor subset, then stop. Like SpectraCache this stands OUTSIDE
-        // the canonical pipeline and runs a one-task pipeline of its own - deliberately,
-        // because the pool it must avoid is built by PerFileScoringTask.Rehydrate, so any
-        // task that demands a byproduct materializes tens of GB before the conversion
-        // starts. Named for the task whose results it compacts (issue #4486).
-        CompactPerFileRescoring
+        ModelDiagnostics
     }
 
     /// <summary>

@@ -88,9 +88,7 @@ namespace pwiz.Osprey
                 // canonical pipeline's membership rules about the analysis itself.
                 var pipelineTasks = config.SelectedTask == HpcTask.SpectraCache
                     ? SpectraCachePipeline()
-                    : config.SelectedTask == HpcTask.CompactPerFileRescoring
-                        ? CompactPerFileRescorePipeline()
-                        : CanonicalPipeline();
+                    : CanonicalPipeline();
                 var ctx = new PipelineContext(config, pipelineTasks,
                     LogInfo, LogWarning, LogError, OspreyDiagnostics.Active);
 
@@ -165,19 +163,6 @@ namespace pwiz.Osprey
             return new OspreyTask[]
             {
                 new SpectraCacheTask(),
-            };
-        }
-
-        /// <summary>
-        /// One task, for the same reason SpectraCache has one: it rewrites artifacts rather
-        /// than analyzing them, and the canonical pipeline's rehydrate would materialize the
-        /// survivor pool this conversion exists to avoid (issue #4486).
-        /// </summary>
-        internal static OspreyTask[] CompactPerFileRescorePipeline()
-        {
-            return new OspreyTask[]
-            {
-                new CompactPerFileRescoreTask(),
             };
         }
 
