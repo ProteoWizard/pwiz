@@ -4005,6 +4005,77 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The STRATIFIED branch, which the other cases do not reach and which is the half that
+        /// carries the real logic: only stratum members compete and fold, EXCEPT that a peak
+        /// Stage 6 changed - a frozen-model score that differs bit-exactly from the stored
+        /// 1st-pass score - is admitted to the RUN competition by base_id so a target and its
+        /// decoy enter together, while still being kept OUT of the experiment reduction.
+        ///
+        /// <para>That asymmetry is what a process boundary could silently break. If a changed
+        /// off-stratum peak leaked into the experiment fold, its maximum would be taken over
+        /// only the files that changed it, which UNDERSTATES the precursor rather than merely
+        /// perturbing it.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestStratifiedCompetitionAdmitsChangedPeaksToRunOnly()
+        {
+            // base_id 1 is in the stratum; base_id 2 is NOT, and the override CHANGES its score
+            // (0.40 stored -> 0.75 frozen), so it earns a run q but must not reach the
+            // experiment bests.
+            var stratum = new HashSet<uint> { 1u };
+            var survivors = new HashSet<uint> { 1u, DecoyOf(1u), 2u, DecoyOf(2u) };
+            var overrides = new Dictionary<uint, double> { { 2u, 0.75 }, { DecoyOf(2u), 0.70 } };
+
+            var c = StreamingFdr.CompeteOneFile(
+                new[] { 1u, DecoyOf(1u), 2u, DecoyOf(2u) },
+                new[] { 0.90, 0.20, 0.40, 0.30 },
+                overrides, survivors, stratum);
+
+            Assert.IsTrue(c.BestTarget.ContainsKey(1u),
+                @"the stratum member must be reduced into the experiment bests");
+            Assert.IsFalse(c.BestTarget.ContainsKey(2u),
+                @"a changed OFF-stratum peak must not enter the experiment reduction");
+            Assert.IsFalse(c.BestDecoy.ContainsKey(2u),
+                @"nor may its paired decoy");
+            Assert.IsTrue(c.RunQ.ContainsKey(2u) || c.RunQ.ContainsKey(DecoyOf(2u)),
+                @"a changed off-stratum peak must earn a fresh run q");
+        }
+
+        /// <summary>
+        /// The other half of the admission rule: an UNCHANGED off-stratum peak - frozen score
+        /// bit-equal to the stored one - stays out of BOTH competitions. This is the case that
+        /// silently widens the stratum if the discriminator is ever loosened from bit-exact
+        /// inequality to mere presence in the override map, which is a mistake this code has
+        /// already made once.
+        /// </summary>
+        [TestMethod]
+        public void TestStratifiedCompetitionExcludesUnchangedOffStratumPeaks()
+        {
+            var stratum = new HashSet<uint> { 1u };
+            var survivors = new HashSet<uint> { 1u, 2u };
+            // 2u IS in the override map, but its value equals the stored score, so it is
+            // unchanged and must not be admitted.
+            var overrides = new Dictionary<uint, double> { { 2u, 0.40 } };
+
+            var c = StreamingFdr.CompeteOneFile(
+                new[] { 1u, DecoyOf(1u), 2u },
+                new[] { 0.90, 0.20, 0.40 },
+                overrides, survivors, stratum);
+
+            Assert.IsFalse(c.RunQ.ContainsKey(2u),
+                @"presence in the override map is not admission - only a CHANGED score is");
+            Assert.IsFalse(c.BestTarget.ContainsKey(2u),
+                @"and an unadmitted peak stays out of the experiment fold");
+        }
+
+        /// <summary>The decoy entry id paired with a base_id: the high bit set.</summary>
+        private static uint DecoyOf(uint baseId)
+        {
+            return baseId | ~PercolatorEntry.BASE_ID_MASK;
+        }
+
+
+        /// <summary>
         /// Three files, each with a mix of target and decoy observations of overlapping
         /// base_ids, plus a survivor-score override on some entries so the swap-in path is
         /// exercised rather than only the stored scores.
@@ -4012,20 +4083,20 @@ namespace pwiz.Osprey.Test
         private static List<CompetitionFile> BuildCompetitionFiles()
         {
             var files = new List<CompetitionFile>();
-            // base_ids 1..6; decoys carry the high bit.
-            uint Decoy(uint baseId) { return baseId | ~PercolatorEntry.BASE_ID_MASK; }
+            // base_ids 1..6; decoys carry the high bit (see DecoyOf).
+
 
             files.Add(new CompetitionFile(
-                new[] { 1u, Decoy(1u), 2u, Decoy(2u), 3u },
+                new[] { 1u, DecoyOf(1u), 2u, DecoyOf(2u), 3u },
                 new[] { 0.90, 0.20, 0.50, 0.55, 0.10 },
                 new Dictionary<uint, double>()));
             // File 2 ties file 1 on base_id 1 and beats it on 2; the tie must stay with file 1.
             files.Add(new CompetitionFile(
-                new[] { 1u, Decoy(1u), 2u, 3u, Decoy(3u) },
+                new[] { 1u, DecoyOf(1u), 2u, 3u, DecoyOf(3u) },
                 new[] { 0.90, 0.30, 0.80, 0.40, 0.35 },
                 new Dictionary<uint, double> { { 2u, 0.85 } }));
             files.Add(new CompetitionFile(
-                new[] { 4u, Decoy(4u), 5u, 6u, Decoy(6u) },
+                new[] { 4u, DecoyOf(4u), 5u, 6u, DecoyOf(6u) },
                 new[] { 0.70, 0.60, 0.05, 0.95, 0.15 },
                 new Dictionary<uint, double> { { 6u, 0.99 } }));
             return files;

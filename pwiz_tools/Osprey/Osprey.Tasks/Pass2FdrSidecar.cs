@@ -688,6 +688,12 @@ namespace pwiz.Osprey.Tasks
                 // pool that no warning could describe and nothing downstream could detect.
                 // Cleared, not reallocated: the discard contract only requires that nothing
                 // staged before a fault is APPLIED, which Clear() ahead of each file gives.
+                // Allocated on first use, not in Resize: the streamed frozen path constructs
+                // this seeder purely to call Apply, which never stages, so sizing the buffer
+                // alongside the entry map handed it a dead ~40 MB LOH list per high-water file
+                // - a self-inflicted allocation in a change whose purpose is the Stage 7 peak.
+                if (_staged == null)
+                    _staged = new List<KeyValuePair<FdrEntry, FdrScoreRecord>>(_capacity);
                 _staged.Clear();
                 bool ok = FdrScoresSidecar.ReadRecords(
                     pass1Path, FdrScoresSidecar.Pass.FirstPass,
@@ -793,7 +799,8 @@ namespace pwiz.Osprey.Tasks
             {
                 _capacity = capacity;
                 _byEntryId = new Dictionary<uint, FdrEntry>(capacity);
-                _staged = new List<KeyValuePair<FdrEntry, FdrScoreRecord>>(capacity);
+                // _staged is deliberately NOT sized here - see Seed.
+                _staged = null;
             }
         }
 

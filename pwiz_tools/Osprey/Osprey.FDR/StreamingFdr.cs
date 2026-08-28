@@ -332,6 +332,20 @@ namespace pwiz.Osprey.FDR
         /// place - byte-identically - is what makes moving it a relocation instead of a
         /// rewrite.</para>
         /// </summary>
+        /// <param name="entryIds">This file's pre-compaction entry ids, in sidecar order.</param>
+        /// <param name="scores">This file's stored 1st-pass scores, MODIFIED IN PLACE: each
+        /// survivor's entry is overwritten with its frozen-model score, because that is what the
+        /// competition ranks on. A caller that needs the stored values afterwards - or that
+        /// reuses the buffer across files - must pass a copy. Harmless while the only caller was
+        /// the private loop that dropped the array immediately; it stops being harmless now that
+        /// a per-file worker can call this.</param>
+        /// <param name="survivorScores">Frozen-model score per survivor entry id, for the
+        /// swap-in. An entry absent here keeps its stored 1st-pass score.</param>
+        /// <param name="survivorIds">The GLOBAL survivor set, not this file's. A file can win a
+        /// competition for an entry_id that is not one of its own survivors but is a survivor
+        /// elsewhere, and that win still has to reach the cross-file minimum.</param>
+        /// <param name="stratumBaseIds">Null for the full-population competition; otherwise the
+        /// protein stratum, which constrains both competitions - see the remarks.</param>
         public static FileCompetition CompeteOneFile(
             uint[] entryIds, double[] scores,
             IReadOnlyDictionary<uint, double> survivorScores,

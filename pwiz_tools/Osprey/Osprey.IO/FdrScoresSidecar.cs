@@ -239,28 +239,16 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Read every record's (entry_id, raw SVM score) from a scores sidecar into flat
-        /// arrays, in file (write) order. entry_id is unique per file (one FdrEntry per
-        /// precursor per file), so callers can key by (file, entry_id). Used by
-        /// OSPREY_PASS2_QVALUE=transfer-compete to recompete over the FULL 1st-pass population
-        /// from the persisted scalars without re-reading features -- only the entry_id [0..4]
-        /// and score [4..12] fields are read; the trailing q-values are skipped.
+        /// arrays, in file (write) order, and additionally decode the FULL record for the
+        /// subset <paramref name="selectRecord"/> accepts into <paramref name="selected"/>.
         ///
-        /// Validates magic, version, the <paramref name="expectedPass"/> byte, and that the
-        /// payload is a whole number of records - the same checks every other reader here makes.
-        /// The version check was cosmetic while the record width was fixed, but
-        /// <see cref="RecordLength"/> changed at v4, so a stale v3 sidecar left in an output
-        /// directory would otherwise be re-cut at the new width and yield plausible-looking
-        /// garbage instead of a rejection.
-        /// </summary>
-        public static void ReadScalars(string path, Pass expectedPass, out uint[] entryIds, out double[] scores)
-        {
-            ReadScalars(path, expectedPass, out entryIds, out scores, null, null);
-        }
-
-        /// <summary>
-        /// <see cref="ReadScalars(string,Pass,out uint[],out double[])"/>, additionally decoding
-        /// the FULL record for the subset <paramref name="selectRecord"/> accepts into
-        /// <paramref name="selected"/>, in file order.
+        /// <para>entry_id is unique per file (one FdrEntry per precursor per file), so callers
+        /// can key by (file, entry_id). Validates magic, version, the
+        /// <paramref name="expectedPass"/> byte, and that the payload is a whole number of
+        /// records - the same checks every other reader here makes. The version check was
+        /// cosmetic while the record width was fixed, but <see cref="RecordLength"/> changed at
+        /// v4, so a stale v3 sidecar left in an output directory would otherwise be re-cut at
+        /// the new width and yield plausible-looking garbage instead of a rejection.</para>
         ///
         /// <para>One traversal serving both. The frozen second pass wants three things off each
         /// file's 1st-pass sidecar - the whole-population (entry_id, score) arrays its
