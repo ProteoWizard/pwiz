@@ -305,7 +305,7 @@ namespace pwiz.Osprey.FDR
         /// (#4486). The locator's file index is deliberately absent - the fold assigns it, so
         /// nothing here has to know its own position in the run.</para>
         /// </summary>
-        private sealed class FileCompetition
+        public sealed class FileCompetition
         {
             public FileCompetition(
                 Dictionary<uint, double> runQ,
@@ -332,7 +332,7 @@ namespace pwiz.Osprey.FDR
         /// place - byte-identically - is what makes moving it a relocation instead of a
         /// rewrite.</para>
         /// </summary>
-        private static FileCompetition CompeteOneFile(
+        public static FileCompetition CompeteOneFile(
             uint[] entryIds, double[] scores,
             IReadOnlyDictionary<uint, double> survivorScores,
             HashSet<uint> survivorIds, HashSet<uint> stratumBaseIds)
@@ -487,7 +487,7 @@ namespace pwiz.Osprey.FDR
         /// earliest file at a given maximum keeps the locator - the same disposition the single
         /// global pass gave when it walked files in this order.</para>
         /// </summary>
-        private static void FoldFileContribution(
+        public static void FoldFileContribution(
             FileCompetition contribution, int fileIdx,
             Dictionary<uint, (double score, int fileIdx, uint entryId)> bestTarget,
             Dictionary<uint, (double score, int fileIdx, uint entryId)> bestDecoy,

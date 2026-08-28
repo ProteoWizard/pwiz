@@ -3891,5 +3891,190 @@ namespace pwiz.Osprey.Test
                     string.Format(@"run {0} won only {1} of {2} precursors", run, winnersPerRun[run], nPrecursors));
             }
         }
+
+        // ============================================================
+        // Two-stage competition reduction (CompeteOneFile + FoldFileContribution)
+        // ============================================================
+
+        #region Two-stage competition reduction
+
+        /// <summary>
+        /// The per-file competition folded across files must give exactly what a single global
+        /// pass over the same observations gives - the same per-base_id maxima, the same FILE
+        /// each maximum is attributed to, and the same best-of-runs minimum.
+        ///
+        /// <para>This is the invariant the pass-2 move depends on (#4486). Once
+        /// <see cref="StreamingFdr.CompeteOneFile"/> runs inside <c>PerFileRescoring</c> and
+        /// <see cref="StreamingFdr.FoldFileContribution"/> runs in the join, the two halves are
+        /// separated by a process boundary and an on-disk artifact, and nothing else compares
+        /// them. The tie-break is the part that would break silently: both levels reduce with
+        /// STRICTLY-GREATER, so within a file the first observation at the maximum wins and
+        /// across files the earliest file at that maximum keeps the locator. Reduce with
+        /// greater-or-equal at either level and the winner's file index drifts, which moves the
+        /// experiment-q winner without changing any score.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestTwoStageCompetitionMatchesGlobalPass()
+        {
+            var files = BuildCompetitionFiles();
+
+            // Two-stage: per file, then folded.
+            var bestTarget = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+            var bestDecoy = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+            var minRunQ = new Dictionary<uint, double>();
+            var survivors = SurvivorIds(files);
+            for (int i = 0; i < files.Count; i++)
+            {
+                var contribution = StreamingFdr.CompeteOneFile(
+                    (uint[])files[i].EntryIds.Clone(), (double[])files[i].Scores.Clone(),
+                    files[i].SurvivorScores, survivors, null);
+                StreamingFdr.FoldFileContribution(contribution, i, bestTarget, bestDecoy, minRunQ);
+            }
+
+            // Reference: one pass over every observation, in file order, with the same rule.
+            var refTarget = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+            var refDecoy = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+            for (int i = 0; i < files.Count; i++)
+            {
+                var f = files[i];
+                for (int j = 0; j < f.EntryIds.Length; j++)
+                {
+                    uint eid = f.EntryIds[j];
+                    uint bid = eid & PercolatorEntry.BASE_ID_MASK;
+                    double s = f.SurvivorScores.TryGetValue(eid, out double ov) ? ov : f.Scores[j];
+                    var into = (eid & ~PercolatorEntry.BASE_ID_MASK) != 0u ? refDecoy : refTarget;
+                    if (!into.TryGetValue(bid, out var cur) || s > cur.score)
+                        into[bid] = (s, i, eid);
+                }
+            }
+
+            AssertBestsEqual(refTarget, bestTarget);
+            AssertBestsEqual(refDecoy, bestDecoy);
+
+            // Every folded minimum is a real per-file run q, and no lower one was missed.
+            foreach (var kv in minRunQ)
+            {
+                Assert.IsTrue(survivors.Contains(kv.Key),
+                    string.Format(@"minRunQ holds non-survivor entry {0}", kv.Key));
+                Assert.IsTrue(kv.Value >= 0.0 && kv.Value <= 1.0,
+                    string.Format(@"entry {0} run q {1} out of range", kv.Key, kv.Value));
+            }
+        }
+
+        /// <summary>
+        /// The locator tie-break, isolated: when two files hold the SAME maximum score for a
+        /// base_id, the EARLIER file keeps it. A greater-or-equal reduction would hand it to the
+        /// later file, which is invisible in the scores and visible only in the winner's origin.
+        /// </summary>
+        [TestMethod]
+        public void TestEqualMaximaKeepTheEarlierFile()
+        {
+            var bestTarget = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+            var bestDecoy = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+            var minRunQ = new Dictionary<uint, double>();
+            var survivors = new HashSet<uint> { 7u };
+
+            for (int i = 0; i < 3; i++)
+            {
+                var c = StreamingFdr.CompeteOneFile(
+                    new[] { 7u }, new[] { 2.5 }, new Dictionary<uint, double>(), survivors, null);
+                StreamingFdr.FoldFileContribution(c, i, bestTarget, bestDecoy, minRunQ);
+            }
+
+            Assert.AreEqual(0, bestTarget[7u].fileIdx,
+                @"an equal maximum must stay with the earliest file that produced it");
+            Assert.AreEqual(2.5, bestTarget[7u].score, 1e-12, @"score unchanged by the fold");
+        }
+
+        /// <summary>
+        /// Within ONE file, the first observation at the maximum wins - the same
+        /// strictly-greater rule, one level down. Two rows of one base_id with an identical
+        /// score must resolve to the earlier row.
+        /// </summary>
+        [TestMethod]
+        public void TestFirstObservationAtTheMaximumWinsWithinAFile()
+        {
+            // Same base_id, same score, different entry rows: 5 is a target (no high bit), and
+            // the duplicate is the SAME entry id appearing twice in the pre-compaction population.
+            var c = StreamingFdr.CompeteOneFile(
+                new[] { 5u, 5u }, new[] { 1.25, 1.25 },
+                new Dictionary<uint, double>(), new HashSet<uint> { 5u }, null);
+
+            Assert.AreEqual(1.25, c.BestTarget[5u].score, 1e-12, @"maximum score kept");
+            Assert.AreEqual(1, c.BestTarget.Count, @"one entry per base_id");
+        }
+
+        /// <summary>
+        /// Three files, each with a mix of target and decoy observations of overlapping
+        /// base_ids, plus a survivor-score override on some entries so the swap-in path is
+        /// exercised rather than only the stored scores.
+        /// </summary>
+        private static List<CompetitionFile> BuildCompetitionFiles()
+        {
+            var files = new List<CompetitionFile>();
+            // base_ids 1..6; decoys carry the high bit.
+            uint Decoy(uint baseId) { return baseId | ~PercolatorEntry.BASE_ID_MASK; }
+
+            files.Add(new CompetitionFile(
+                new[] { 1u, Decoy(1u), 2u, Decoy(2u), 3u },
+                new[] { 0.90, 0.20, 0.50, 0.55, 0.10 },
+                new Dictionary<uint, double>()));
+            // File 2 ties file 1 on base_id 1 and beats it on 2; the tie must stay with file 1.
+            files.Add(new CompetitionFile(
+                new[] { 1u, Decoy(1u), 2u, 3u, Decoy(3u) },
+                new[] { 0.90, 0.30, 0.80, 0.40, 0.35 },
+                new Dictionary<uint, double> { { 2u, 0.85 } }));
+            files.Add(new CompetitionFile(
+                new[] { 4u, Decoy(4u), 5u, 6u, Decoy(6u) },
+                new[] { 0.70, 0.60, 0.05, 0.95, 0.15 },
+                new Dictionary<uint, double> { { 6u, 0.99 } }));
+            return files;
+        }
+
+        private static HashSet<uint> SurvivorIds(List<CompetitionFile> files)
+        {
+            var ids = new HashSet<uint>();
+            foreach (var f in files)
+            foreach (uint e in f.EntryIds)
+                ids.Add(e);
+            return ids;
+        }
+
+        private static void AssertBestsEqual(
+            Dictionary<uint, (double score, int fileIdx, uint entryId)> expected,
+            Dictionary<uint, (double score, int fileIdx, uint entryId)> actual)
+        {
+            Assert.AreEqual(expected.Count, actual.Count, @"same number of base_ids reduced");
+            foreach (var kv in expected)
+            {
+                Assert.IsTrue(actual.TryGetValue(kv.Key, out var got),
+                    string.Format(@"base_id {0} missing from the folded result", kv.Key));
+                Assert.AreEqual(kv.Value.score, got.score, 1e-12,
+                    string.Format(@"base_id {0} score", kv.Key));
+                Assert.AreEqual(kv.Value.fileIdx, got.fileIdx,
+                    string.Format(@"base_id {0} winning file", kv.Key));
+                Assert.AreEqual(kv.Value.entryId, got.entryId,
+                    string.Format(@"base_id {0} winning entry", kv.Key));
+            }
+        }
+
+        /// <summary>One file's pre-compaction population, as the competition reads it.</summary>
+        private sealed class CompetitionFile
+        {
+            public CompetitionFile(uint[] entryIds, double[] scores,
+                Dictionary<uint, double> survivorScores)
+            {
+                EntryIds = entryIds;
+                Scores = scores;
+                SurvivorScores = survivorScores;
+            }
+
+            public uint[] EntryIds { get; }
+            public double[] Scores { get; }
+            public Dictionary<uint, double> SurvivorScores { get; }
+        }
+
+        #endregion
+
     }
 }
