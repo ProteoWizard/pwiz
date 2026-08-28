@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- IpiToUniprotMapCompiler - dev tool generating an IPI->UniProt map (was classic v3.5).
-       Multi-target net472;net8.0. IpiToUniprotMapTemplate.cs is an embedded code-gen template,
+       Multi-target net472;net10.0. IpiToUniprotMapTemplate.cs is an embedded code-gen template,
        not compiled. DotNetZip: net472 keeps the on-disk Ionic library; net8 uses the NuGet
        (same Ionic.Zip API). -->
   <PropertyGroup>
     <ProjectGuid>{B507CA19-F083-4C0D-B321-49F6E6F6D004}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net8.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -18,13 +18,8 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
-    <PackageReference Include="DotNetZip" Version="1.16.0" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="DotNetZip">
-      <HintPath>..\..\..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
-    </Reference>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
   </ItemGroup>
 
   <!-- IpiToUniprotMapTemplate.cs is an embedded code-generation template, not compiled. -->

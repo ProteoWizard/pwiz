@@ -50,7 +50,7 @@ REM #       build.bat Release BiblioSpec.zip SkylineNightly.zip
 REM #   The names are collected and handed to the DistroZips target in
 REM #   SkylineTester.csproj, which is where the work lives (a target cannot be
 REM #   NAMED for the artifact: MSBuild rejects '.' in target names, MSB5016).
-REM #   Zips land in bin\staging-net8\<Config> and are produced after staging but
+REM #   Zips land in bin\staging\<Config> and are produced after staging but
 REM #   BEFORE the test run, so obtaining one does not require a full test pass.
 REM #   SkylineTester.zip / SkylineNightly.zip feed the in-house nightly scheme;
 REM #   BiblioSpec.zip is the public download linked from the BiblioSpec support
@@ -171,18 +171,18 @@ if %EXIT% NEQ 0 goto error
 REM # ------------------------------------------------------------------------
 REM # Test step
 REM #
-REM # Stage every project's net8 output into one bin\staging-net8\<Config> (the
+REM # Stage every project's net8 output into one bin\staging\<Config> (the
 REM # single-bin layout TestRunner + the Docker workers assume) plus a bundled
 REM # portable .NET 8 runtime for the workers, then run the staged TestRunner
 REM # (the harness the functional UI tests are written for; `dotnet test` can't
 REM # run them). The test commands themselves follow below.
 REM # ------------------------------------------------------------------------
-echo ##teamcity[progressMessage 'Stage-Net8Tests.ps1 (%CONFIG%)']
-pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Net8Tests.ps1" -Configuration %CONFIG%
+echo ##teamcity[progressMessage 'Stage-Tests.ps1 (%CONFIG%)']
+pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Tests.ps1" -Configuration %CONFIG%
 set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 (set ERROR_TEXT=Stage-Net8Tests.ps1 failed & goto error)
+if %EXIT% NEQ 0 (set ERROR_TEXT=Stage-Tests.ps1 failed & goto error)
 
-set STAGE_DIR=%SCRIPT_DIR%\bin\staging-net8\%CONFIG%
+set STAGE_DIR=%SCRIPT_DIR%\bin\staging\%CONFIG%
 
 REM # ------------------------------------------------------------------------
 REM # Distro zips (--SkylineTester.zip / --SkylineNightly.zip / --BiblioSpec.zip /
@@ -196,7 +196,7 @@ REM # SkylineTester is NOT in BUILD_TARGET (it is a dev/CI tool, not part of the
 REM # product or the test suites), so build and stage it on demand here. It has to
 REM # RUN from the staging dir: CreateZipFile takes its own assembly location as the
 REM # working directory, adds member files by bare name from there, and walks parent
-REM # directories looking for Skyline.sln - all three hold for bin\staging-net8\<cfg>.
+REM # directories looking for Skyline.sln - all three hold for bin\staging\<cfg>.
 REM # ------------------------------------------------------------------------
 if not defined ZIPS goto skipzips
 
@@ -208,12 +208,12 @@ if %EXIT% NEQ 0 (set "ERROR_TEXT=dotnet restore SkylineTester.csproj failed" & g
 call :build_one "%SCRIPT_DIR%\SkylineTester\SkylineTester.csproj"
 if %EXIT% NEQ 0 (set "ERROR_TEXT=dotnet build SkylineTester.csproj failed" & goto error)
 
-echo ##teamcity[progressMessage 'Stage-Net8Tests.ps1 SkylineTester (%CONFIG%)']
-pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Net8Tests.ps1" -Configuration %CONFIG% -Projects SkylineTester
+echo ##teamcity[progressMessage 'Stage-Tests.ps1 SkylineTester (%CONFIG%)']
+pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Tests.ps1" -Configuration %CONFIG% -Projects SkylineTester
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=staging SkylineTester failed" & goto error)
 
 echo ##teamcity[progressMessage 'DistroZips: %ZIPS:~3%']
-dotnet build "%SCRIPT_DIR%\SkylineTester\SkylineTester.csproj" -f net8.0-windows --no-restore -nologo %MSBUILD_PROPS% -t:DistroZips -p:DistroZips=%ZIPS:~3%
+dotnet build "%SCRIPT_DIR%\SkylineTester\SkylineTester.csproj" -f net10.0-windows --no-restore -nologo %MSBUILD_PROPS% -t:DistroZips -p:DistroZips=%ZIPS:~3%
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=zip target(s) %ZIPS:~3% failed" & goto error)
 
 :skipzips
@@ -310,7 +310,7 @@ goto :eof
 
 :build_one
 echo ##teamcity[progressMessage 'dotnet build %~1 (%CONFIG%)']
-dotnet build "%~1" -f net8.0-windows --no-restore -nologo %MSBUILD_PROPS%
+dotnet build "%~1" -f net10.0-windows --no-restore -nologo %MSBUILD_PROPS%
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet build %~1 failed")
 goto :eof
 

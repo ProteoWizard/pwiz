@@ -19,11 +19,7 @@
 
 using System;
 using System.Windows.Forms;
-#if NET472
-using pwiz.CLI.Bruker.PrmScheduling;
-#else
 using Pwiz.Vendor.Bruker.PrmScheduling;
-#endif
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;

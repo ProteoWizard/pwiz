@@ -46,15 +46,10 @@ namespace pwiz.SkylineTestConnected
         // WebException wrapper vs net8's raw socket message. Derive the net8 expectation from the OS socket
         // layer (the same source HttpClient's message comes from) so it follows the machine locale rather
         // than being a hardcoded English literal.
-#if NET472
-        private static readonly string ConnectionRefusedMessage = "Unable to connect to the remote server";
-        private static readonly string DnsResolutionFailedMessage = "The remote name could not be resolved";
-#else
         private static readonly string ConnectionRefusedMessage =
             new System.Net.Sockets.SocketException((int)System.Net.Sockets.SocketError.ConnectionRefused).Message;
         private static readonly string DnsResolutionFailedMessage =
             new System.Net.Sockets.SocketException((int)System.Net.Sockets.SocketError.HostNotFound).Message;
-#endif
 
         [TestMethod]
         public void TestUnifi()

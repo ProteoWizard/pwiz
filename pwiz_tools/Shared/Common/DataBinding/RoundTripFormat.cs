@@ -45,9 +45,6 @@ namespace pwiz.Common.DataBinding
         /// </summary>
         public static string FormatOrNull(object value, string formatString, IFormatProvider provider)
         {
-#if NET472
-            return null;
-#else
             if (formatString != @"R" && formatString != @"r")
             {
                 return null;
@@ -61,10 +58,8 @@ namespace pwiz.Common.DataBinding
                 return FrameworkRoundTrip(f, provider);
             }
             return null;
-#endif
         }
 
-#if !NET472
         private static string FrameworkRoundTrip(double value, IFormatProvider provider)
         {
             var g15 = value.ToString(@"G15", provider);
@@ -116,6 +111,5 @@ namespace pwiz.Common.DataBinding
             }
             return value.ToString(@"G9", provider);
         }
-#endif
     }
 }

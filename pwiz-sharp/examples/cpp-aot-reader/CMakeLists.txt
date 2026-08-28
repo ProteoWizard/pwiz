@@ -29,7 +29,7 @@ if(NOT DEFINED PWIZ_MSDATA_NATIVE_DIR)
         set(PWIZ_MSDATA_RID "linux-x64")
     endif()
     set(PWIZ_MSDATA_NATIVE_DIR
-        "${PWIZ_SHARP_ROOT}/pwiz/src/MsData.NativeAot/bin/Release/net8.0/${PWIZ_MSDATA_RID}/native"
+        "${PWIZ_SHARP_ROOT}/pwiz/src/MsData.NativeAot/bin/Release/net10.0/${PWIZ_MSDATA_RID}/native"
         CACHE PATH "AOT-published pwiz_msdata native artifacts (.dll + .lib on Windows, .so on POSIX)")
 endif()
 

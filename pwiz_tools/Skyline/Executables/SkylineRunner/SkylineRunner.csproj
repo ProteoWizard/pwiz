@@ -3,12 +3,12 @@
   <!-- SkylineRunner - command-line launcher that starts Skyline-daily (via cmd.exe) and relays
        the command args in / console output back over named pipes. Its AssemblyName is
        SkylineDailyRunner (the daily-channel runner; the code targets the "Skyline-daily" app name).
-       Multi-target net472 + net8.0-windows; the classic project was a v4.7.2 AnyCPU exe. Dropped the
+       Multi-target net472 + net10.0-windows; the classic project was a v4.7.2 AnyCPU exe. Dropped the
        ClickOnce/Bootstrapper + manifest-signing cruft (handled centrally by the build/installer). -->
   <PropertyGroup>
     <ProjectGuid>{3BFA1F22-68DF-4CC2-84D6-C646321F1D4D}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

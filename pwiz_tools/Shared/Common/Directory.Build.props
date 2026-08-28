@@ -9,7 +9,7 @@
       CS8981     third-party alglib math types are all-lowercase; can't rename vendor code.
       SYSLIB0003 Code Access Security attributes (ZedGraph fork); CAS no-ops on net8.
       CA1416 (platform-compat) is handled in Directory.Build.targets - suppressed only on
-      Windows-targeted projects, so multi-platform net8.0 model/command-line code keeps it. -->
+      Windows-targeted projects, so multi-platform net10.0 model/command-line code keeps it. -->
  <NoWarn>$(NoWarn);CS8981;SYSLIB0003</NoWarn>
  <LangVersion>8.0</LangVersion>
  </PropertyGroup> 

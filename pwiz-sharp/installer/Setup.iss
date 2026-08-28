@@ -4,13 +4,13 @@
 ; build.ps1 invokes ISCC twice from this one script to produce two variants:
 ;
 ;   ProteoWizard-Sharp-Setup.exe (~62 MB)
-;     Bundles the .NET 8 Desktop Runtime installer. On install, checks for
-;     .NET 8; if missing, silently invokes the bundled runtime installer
+;     Bundles the .NET 10 Desktop Runtime installer. On install, checks for
+;     .NET 10; if missing, silently invokes the bundled runtime installer
 ;     (which triggers UAC for its per-machine install).
 ;
 ;   ProteoWizard-Sharp-NoNetRuntime-Setup.exe (~5 MB)
 ;     Same payload minus the bundled runtime. On install, aborts with a
-;     dialog + download link if .NET 8 isn't already present. For users
+;     dialog + download link if .NET 10 isn't already present. For users
 ;     who manage their own runtime install (corp deployments, dev boxes
 ;     that already have it, etc.).
 ;
@@ -131,11 +131,11 @@ Name: "desktopicon_seems";        Description: "Create a Desktop shortcut for Se
 Source: "{#StagingDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 #ifndef NoNetRuntime
-; .NET 8 desktop runtime installer EXE. Bundled into the setup; deleted after
+; .NET 10 desktop runtime installer EXE. Bundled into the setup; deleted after
 ; install via [InstallDelete]. Skip download (DownloadTemporaryFile would work
 ; but offline-install support is the main reason we bundle Burn-style).
-Source: "cache\windowsdesktop-runtime-win-x64.exe"; DestDir: "{tmp}"; \
-    Flags: deleteafterinstall; Check: not IsDotNet8DesktopInstalled
+Source: "cache\windowsdesktop-runtime-10.0-win-x64.exe"; DestDir: "{tmp}"; \
+    Flags: deleteafterinstall; Check: not IsDotNetDesktopInstalled
 #endif
 
 [Icons]
@@ -223,18 +223,18 @@ Root: HKA; Subkey: "Software\Classes\Directory\shell\{#ViewVerb}\command"; \
 
 [Run]
 #ifndef NoNetRuntime
-; .NET 8 desktop runtime install. Runs only if not already present. /install
+; .NET 10 desktop runtime install. Runs only if not already present. /install
 ; /quiet /norestart matches Microsoft's documented silent-install flags. The
 ; runtime always installs per-machine (it goes to %ProgramFiles%\dotnet\),
 ; which means the .NET install step triggers UAC even if the pwiz-sharp
 ; install itself is per-user — Inno surfaces this cleanly via the
 ; "shellexec" flag + Verb=runas, which raises the UAC prompt at the right
 ; moment rather than at process start.
-Filename: "{tmp}\windowsdesktop-runtime-win-x64.exe"; \
+Filename: "{tmp}\windowsdesktop-runtime-10.0-win-x64.exe"; \
     Parameters: "/install /quiet /norestart"; \
-    StatusMsg: "Installing .NET 8 desktop runtime..."; \
+    StatusMsg: "Installing .NET 10 desktop runtime..."; \
     Flags: waituntilterminated shellexec; \
-    Check: not IsDotNet8DesktopInstalled
+    Check: not IsDotNetDesktopInstalled
 #endif
 
 ; Optional "launch at end of install" buttons. Both unchecked by default so
@@ -245,7 +245,7 @@ Filename: "{app}\seems-sharp.exe"; Description: "Launch See&MS"; \
     Flags: nowait postinstall skipifsilent unchecked
 
 [Code]
-{ ----- .NET 8 desktop runtime detection -----
+{ ----- .NET 10 desktop runtime detection -----
   The .NET runtime is "installed" iff its files live under
   C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\<version>\ — that
   directory is what the dotnet host walks at startup, so its presence/absence
@@ -258,7 +258,7 @@ Filename: "{app}\seems-sharp.exe"; Description: "Launch See&MS"; \
   default depends on its install mode. The filesystem layout is the same on
   every install. }
 
-function IsDotNet8DesktopInstalled(): Boolean;
+function IsDotNetDesktopInstalled(): Boolean;
 var
   baseDir: String;
   rec: TFindRec;
@@ -273,7 +273,7 @@ begin
     while found do
     begin
       if ((rec.Attributes and FILE_ATTRIBUTE_DIRECTORY) <> 0) and
-         (Copy(rec.Name, 1, 2) = '8.') then
+         (Copy(rec.Name, 1, 3) = '10.') then
       begin
         Result := True;
         Exit;
@@ -288,7 +288,7 @@ end;
 { ----- Pre-flight check (NoNetRuntime variant only) -----
   When this installer was built without the bundled .NET runtime
   (build.ps1's second ISCC pass), we can't install .NET ourselves. Abort
-  with a clear message + download link if .NET 8 is missing. With the
+  with a clear message + download link if .NET 10 is missing. With the
   bundled-runtime variant this function returns True unconditionally
   (the [Run] section above installs the runtime if needed). }
 function InitializeSetup(): Boolean;
@@ -299,15 +299,15 @@ var
 begin
   Result := True;
 #ifdef NoNetRuntime
-  if not IsDotNet8DesktopInstalled() then
+  if not IsDotNetDesktopInstalled() then
   begin
     rc := MsgBox(
-      'ProteoWizard-Sharp requires the .NET 8 Desktop Runtime (x64), which is not installed on this machine.' + #13#10#13#10 +
+      'ProteoWizard-Sharp requires the .NET 10 Desktop Runtime (x64), which is not installed on this machine.' + #13#10#13#10 +
       'Click OK to open the Microsoft download page in your browser, then re-run this installer after installing the runtime.' + #13#10#13#10 +
       'If you prefer an installer that bundles the runtime, use ProteoWizard-Sharp-Setup.exe instead.',
       mbError, MB_OKCANCEL);
     if rc = IDOK then
-      ShellExec('', 'https://dotnet.microsoft.com/download/dotnet/8.0/runtime',
+      ShellExec('', 'https://dotnet.microsoft.com/download/dotnet/10.0/runtime',
                 '', '', SW_SHOW, ewNoWait, rc);
     Result := False;
   end;

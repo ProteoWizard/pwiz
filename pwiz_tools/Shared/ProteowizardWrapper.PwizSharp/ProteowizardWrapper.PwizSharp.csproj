@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <RootNamespace>pwiz.ProteowizardWrapper</RootNamespace>
     <AssemblyName>ProteowizardWrapper.PwizSharp</AssemblyName>
     <Description>Phase 2 net8 sandbox: refactored MsDataFileImpl + siblings backed by pwiz-sharp instead of pwiz.CLI. Demonstrates the data-layer swap before the wider Skyline csproj cascade lands.</Description>

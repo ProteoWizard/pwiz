@@ -482,25 +482,6 @@ namespace TestRunnerLib
                 // The per-type handle enumeration comes from the C++/CLI TestDiagnostics.dll
                 // (HandleEnumeratorWrapper), which is net472-only. On net8 a pure-C# P/Invoke
                 // reimplementation would be needed; skip per-type handle reporting for now.
-#if NET472
-                if (ReportHandles)
-                {
-                    var handleInfos = HandleEnumeratorWrapper.GetHandleInfos();
-                    // Build list of (Type, Count) including User and GDI handles
-                    // (User/GDI are not returned by HandleEnumeratorWrapper)
-                    var allHandleCounts = handleInfos
-                        .GroupBy(h => h.Type)
-                        .Select(g => (Type: g.Key, Count: g.Count()))
-                        .Where(hc => hc.Count > 10)
-                        .Concat(new[] { (Type: "User", Count: LastUserHandleCount), (Type: "GDI", Count: LastGdiHandleCount) });
-                    // Sort by count descending (leaking types rise to top) or alphabetically
-                    var sortedHandleCounts = SortHandlesByCount
-                        ? allHandleCounts.OrderByDescending(c => c.Count)
-                        : allHandleCounts.OrderBy(c => c.Type);
-
-                    Log("# Handles " + string.Join("\t", sortedHandleCounts.Select(c => c.Type + ": " + c.Count)) + Environment.NewLine);
-                }
-#endif
                 // CRT leak checking removed - was disabled (required special debug pwiz_cli_data.dll build)
 
                 if (heapOutput && ReportSystemHeaps)
@@ -1072,61 +1053,6 @@ namespace TestRunnerLib
                 GetProcessHeaps(count, buffer);
                 var sizes = new HeapAllocationSizes[count];
 
-#if NET472
-                // net472: walk every heap for the full committed/reserved breakdown (and the optional
-                // per-block HeapDiagnostics histogram). This has been safe on the net472 CI agents for
-                // years -- their process heaps are all classic, lockable NT heaps.
-                for (int i = 0; i < count; i++)
-                {
-                    var committedSizes = HeapDiagnostics ? new Dictionary<long, int>() : null;
-                    var stringCounts = HeapDiagnostics ? new Dictionary<string, int>() : null;
-
-                    var h = buffer[i];
-                    HeapLock(h);
-                    var e = new PROCESS_HEAP_ENTRY();
-                    while (HeapWalk(h, ref e))
-                    {
-                        if ((e.wFlags & PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_ENTRY_BUSY) != 0)
-                        {
-                            sizes[i].Committed += e.cbData + e.cbOverhead;
-
-                            if (committedSizes != null)
-                            {
-                                // Update count
-                                if (!committedSizes.ContainsKey(e.cbData))
-                                    committedSizes[e.cbData] = 0;
-                                committedSizes[e.cbData]++;
-                            }
-
-                            if (stringCounts != null)
-                            {
-                                // Find string(s)
-                                var byteData = new byte[e.cbData];
-                                IntPtr pData = e.lpData;
-                                Marshal.Copy(pData, byteData, 0, byteData.Length);
-                                TRACK_SIZES.ForEach(t => t.DumpUnseenSize(pData, byteData));
-                                foreach (var byteString in FindStrings(byteData))
-                                {
-                                    if (!stringCounts.ContainsKey(byteString))
-                                        stringCounts[byteString] = 0;
-                                    stringCounts[byteString]++;
-                                }
-                            }
-                        }
-                        else if ((e.wFlags & PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_UNCOMMITTED_RANGE) != 0)
-                            sizes[i].Reserved += e.cbData + e.cbOverhead;
-                        else
-                            sizes[i].Unknown += e.cbData + e.cbOverhead;
-
-                    }
-                    HeapUnlock(h);
-
-                    if (committedSizes != null)
-                        sizes[i].CommittedSizes = committedSizes.OrderByDescending(p => p.Value).ToList();
-                    if (stringCounts != null)
-                        sizes[i].StringCounts = stringCounts.OrderByDescending(p => p.Value).ToList();
-                }
-#else
                 // net8: never walk. HeapLock/HeapWalk fault with a fatal, non-catchable AccessViolation on
                 // a Windows Segment Heap (the default on Windows Server + Windows containers) AND on some
                 // classic-signature heaps -- e.g. HEAP_NO_SERIALIZE ones with a null lock -- and no cheap
@@ -1152,7 +1078,6 @@ namespace TestRunnerLib
                         // HeapSummary unavailable on this OS; leave this heap's totals at zero.
                     }
                 }
-#endif
                 if (HeapDiagnostics)
                     TRACK_SIZES.ForEach(t => t.CloseDumpFile());
                 return sizes;

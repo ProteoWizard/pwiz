@@ -41,6 +41,24 @@ public static class MSDataDiff
     }
 
     /// <summary>
+    /// Returns an empty string when <paramref name="a"/> and <paramref name="b"/> are logically
+    /// equal under <paramref name="config"/>; otherwise a report of the differences. Applies the
+    /// same per-spectrum comparison <see cref="Describe(MSData, MSData, DiffConfig?)"/> uses,
+    /// exposed for callers holding two spectra rather than two documents.
+    /// </summary>
+    public static string DescribeSpectrum(Spectrum a, Spectrum b, DiffConfig? config = null)
+    {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
+        config ??= new DiffConfig();
+        var ctx = new Context(config);
+
+        DiffSpectrum(a, b, ctx);
+
+        return ctx.Format();
+    }
+
+    /// <summary>
     /// Tolerance mode for the <c>msLevel</c> comparison in <see cref="DescribeSpectraDataOnly"/>.
     /// Captures the well-known lossy defaults each peak-list format applies on read.
     /// </summary>
@@ -689,57 +707,27 @@ public static class MSDataDiff
         if (aIntensity.Count != n || bMz.Count != n || bIntensity.Count != n)
             return false;
 
-        int[] aOrder = StableOrderBy(aMz);
-        int[] bOrder = StableOrderBy(bMz);
+        // Both sides are meant to hold the same peaks in a different order, so canonicalize each
+        // by (m/z, intensity) and read them in lockstep: position k then names the same peak on
+        // both sides. Where the multisets genuinely differ the values will not line up, and the
+        // comparison downstream reports exactly that.
+        //
+        // This replaces a greedy nearest-intensity match over a sliding m/z window, which was
+        // quadratic on the data that most needs this path. A combined ion mobility spectrum
+        // repeats the same m/z once per mobility bin, so the window could not advance past a long
+        // within-precision run and the inner loop rescanned it - already-matched entries included -
+        // for every peak. One Waters HDMSe fixture spent 4.5 minutes here, and the TeamCity
+        // coverage run, where every statement is instrumented, hit its 60 minute limit.
+        int[] aOrder = StableOrderBy(aMz, aIntensity);
+        int[] bOrder = StableOrderBy(bMz, bIntensity);
 
-        // Both sides ascend in m/z and agree within tolerance, so a peak's candidates are a short
-        // contiguous run of the other side rather than the whole spectrum.
-        var bTaken = new bool[n];
         aPaired = new List<int>(n);
         bPaired = new List<int>(n);
-
-        int windowStart = 0;
-        for (int ai = 0; ai < n; ai++)
+        for (int k = 0; k < n; k++)
         {
-            int aIndex = aOrder[ai];
-            while (windowStart < n &&
-                   bMz[bOrder[windowStart]] < aMz[aIndex] &&
-                   !WithinPrecision(bMz[bOrder[windowStart]], aMz[aIndex], precision))
-                windowStart++;
-
-            int best = -1;
-            double bestIntensityDelta = 0;
-            for (int bi = windowStart; bi < n; bi++)
-            {
-                int bIndex = bOrder[bi];
-                if (bMz[bIndex] > aMz[aIndex] && !WithinPrecision(bMz[bIndex], aMz[aIndex], precision))
-                    break; // ascending, so nothing beyond this can match either
-                if (bTaken[bIndex] || !WithinPrecision(bMz[bIndex], aMz[aIndex], precision))
-                    continue;
-                double delta = Math.Abs(bIntensity[bIndex] - aIntensity[aIndex]);
-                if (best < 0 || delta < bestIntensityDelta)
-                {
-                    best = bIndex;
-                    bestIntensityDelta = delta;
-                }
-            }
-
-            if (best >= 0)
-            {
-                bTaken[best] = true;
-                aPaired.Add(aIndex);
-                bPaired.Add(best);
-            }
+            aPaired.Add(aOrder[k]);
+            bPaired.Add(bOrder[k]);
         }
-
-        // Whatever went unpaired, in m/z order so the two sides at least line up positionally.
-        var aTaken = new bool[n];
-        foreach (int i in aPaired)
-            aTaken[i] = true;
-        for (int ai = 0; ai < n; ai++)
-            if (!aTaken[aOrder[ai]]) aPaired.Add(aOrder[ai]);
-        for (int bi = 0; bi < n; bi++)
-            if (!bTaken[bOrder[bi]]) bPaired.Add(bOrder[bi]);
 
         return true;
     }
@@ -755,8 +743,13 @@ public static class MSDataDiff
         return Math.Abs(x - y) / denominator <= precision;
     }
 
-    /// <summary>Indices that would sort <paramref name="values"/> ascending, ties keeping their original order.</summary>
-    private static int[] StableOrderBy(List<double> values)
+    /// <summary>
+    /// Indices that would sort <paramref name="values"/> ascending, breaking ties on
+    /// <paramref name="tieBreak"/> and then on the original position so the result is total and
+    /// deterministic. The tie-break matters: a combined ion mobility spectrum holds the same m/z
+    /// once per mobility bin, and pairing those by intensity is what lines the two sides up.
+    /// </summary>
+    private static int[] StableOrderBy(List<double> values, List<double>? tieBreak = null)
     {
         var order = new int[values.Count];
         for (int i = 0; i < order.Length; i++)
@@ -764,7 +757,13 @@ public static class MSDataDiff
         Array.Sort(order, (x, y) =>
         {
             int compared = values[x].CompareTo(values[y]);
-            return compared != 0 ? compared : x.CompareTo(y);
+            if (compared != 0) return compared;
+            if (tieBreak is not null)
+            {
+                compared = tieBreak[x].CompareTo(tieBreak[y]);
+                if (compared != 0) return compared;
+            }
+            return x.CompareTo(y);
         });
         return order;
     }

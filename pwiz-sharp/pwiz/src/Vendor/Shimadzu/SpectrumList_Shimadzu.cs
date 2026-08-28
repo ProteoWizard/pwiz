@@ -4,6 +4,7 @@ using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 
 #pragma warning disable CA1707
 
@@ -73,16 +74,16 @@ public sealed class SpectrumList_Shimadzu : SpectrumListBase, IVendorCentroiding
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
-        => BuildSpectrum(index, getBinaryData, vendorCentroid: false);
+        => BuildSpectrum(index, getBinaryData, msLevelsToCentroid: null);
 
     /// <inheritdoc/>
     public string VendorCentroidName => "Shimadzu peak picking";
 
     /// <inheritdoc/>
-    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData)
-        => BuildSpectrum(index, getBinaryData, vendorCentroid: true);
+    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid)
+        => BuildSpectrum(index, getBinaryData, msLevelsToCentroid);
 
-    private Spectrum BuildSpectrum(int index, bool getBinaryData, bool vendorCentroid)
+    private Spectrum BuildSpectrum(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid)
     {
         if (index < 0 || index >= _index.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
@@ -95,6 +96,13 @@ public sealed class SpectrumList_Shimadzu : SpectrumListBase, IVendorCentroiding
 
         var info = _raw.GetSpectrumInfo(ie.ScanNumber);
         spec.Params.Set(CVID.MS_ms_level, info.MsLevel);
+
+        // cpp SpectrumList_Shimadzu.cpp:123 - `doCentroid = msLevelsToCentroid.contains(msLevel)`.
+        // Gated here, not by the caller: these files report msLevel 0, so no caller's set
+        // selects them and cpp leaves them alone. Centroiding them anyway produced a spectrum
+        // tagged BOTH `centroid spectrum` and `profile spectrum`, because the picker's cleanup
+        // that strips the profile term runs only for spectra its own msLevel gate admits.
+        bool vendorCentroid = msLevelsToCentroid?.Contains(info.MsLevel) ?? false;
 
         // Centroid path (caller is SpectrumList_PeakPicker via IVendorCentroidingSpectrumList):
         // ask the SDK with profileDesired=false so we receive CentroidList. Otherwise the

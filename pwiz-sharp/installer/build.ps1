@@ -10,13 +10,13 @@ End-to-end packaging pipeline:
      (transitively builds MsConvert, vendor projects, etc.)
   3. Stage a filtered copy of the build output (strips vendor SDK DLLs +
      debug symbols + cross-platform runtimes + BCL localization satellites)
-  4. Download the .NET 8 desktop runtime installer EXE (cached under
+  4. Download the .NET 10 desktop runtime installer EXE (cached under
      installer/cache/) so we can embed it in the Setup.exe
   5. Compile installer/Setup.iss with Inno Setup's ISCC → installer/build/
      ProteoWizard-Sharp-Setup.exe (~58 MB, single self-contained installer)
 
 The Inno installer asks the user "Install for me / Install for everyone" at
-runtime — drops the dual-MSI complexity of the prior WiX build. .NET 8 prereq
+runtime — drops the dual-MSI complexity of the prior WiX build. .NET 10 prereq
 is detected via registry and the bundled runtime EXE installs (with UAC) if
 missing.
 
@@ -31,11 +31,11 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 
-# .NET 8 desktop runtime download. Cached locally to avoid re-fetching on every
-# build. The aka.ms URL redirects to the latest stable 8.0.x; pinned-by-content
+# .NET 10 desktop runtime download. Cached locally to avoid re-fetching on every
+# build. The aka.ms URL redirects to the latest stable 10.0.x; pinned-by-content
 # is not strictly required since we bundle it into the Setup.exe (the user
 # downloads our installer, not the runtime separately).
-$dotnetRuntimeUrl = "https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe"
+$dotnetRuntimeUrl = "https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe"
 
 $installerDir = $PSScriptRoot
 # Anchor every path off the pwiz-sharp/ root. Get-PwizSharpRoot uses sentinel
@@ -45,8 +45,8 @@ $installerDir = $PSScriptRoot
 $pwizSharp       = $PwizSharpRoot
 $msconvertGui    = Join-Path $pwizSharp "Tools/MsConvertGUI/src/MsConvertGUI.csproj"
 $seems           = Join-Path $pwizSharp "Tools/SeeMS/src/SeeMS.csproj"
-$msconvertGuiOut = Join-Path $pwizSharp "Tools/MsConvertGUI/src/bin/Release/net8.0-windows"
-$seemsOut        = Join-Path $pwizSharp "Tools/SeeMS/src/bin/Release/net8.0-windows"
+$msconvertGuiOut = Join-Path $pwizSharp "Tools/MsConvertGUI/src/bin/Release/net10.0-windows"
+$seemsOut        = Join-Path $pwizSharp "Tools/SeeMS/src/bin/Release/net10.0-windows"
 $outDir         = Join-Path $installerDir "build"
 $stagingDir     = Join-Path $outDir "stage"
 $cacheDir       = Join-Path $installerDir "cache"
@@ -140,9 +140,11 @@ function Stage-From([string] $source) {
 Stage-From $msconvertGuiOut
 Stage-From $seemsOut
 
-# 4. Cache the .NET 8 desktop runtime EXE (bundled into Setup.exe).
-$dotnetExe = Join-Path $cacheDir "windowsdesktop-runtime-win-x64.exe"
-Write-Host "`n==> .NET 8 desktop runtime (cached)" -ForegroundColor Cyan
+# 4. Cache the .NET 10 desktop runtime EXE (bundled into Setup.exe). The filename carries
+#    the major version on purpose: the old version-agnostic name meant a machine holding a
+#    cached .NET 10 exe would silently skip the download and bundle the wrong runtime.
+$dotnetExe = Join-Path $cacheDir "windowsdesktop-runtime-10.0-win-x64.exe"
+Write-Host "`n==> .NET 10 desktop runtime (cached)" -ForegroundColor Cyan
 if (-not (Test-Path $dotnetExe)) {
     Write-Host "    downloading $dotnetRuntimeUrl"
     Invoke-WebRequest -Uri $dotnetRuntimeUrl -OutFile $dotnetExe
@@ -193,9 +195,9 @@ if ([string]::IsNullOrWhiteSpace($gitSha)) {
 Write-Host "`n==> Stamping version: $appVersion" -ForegroundColor Cyan
 
 # 6. ISCC compile — produce both installer variants from one Setup.iss source.
-#    Pass 1: default (bundles the .NET 8 desktop runtime; ~62 MB).
+#    Pass 1: default (bundles the .NET 10 desktop runtime; ~62 MB).
 #    Pass 2: /DNoNetRuntime (skips the bundle; ~5 MB; aborts at install time if
-#            .NET 8 isn't already present).
+#            .NET 10 isn't already present).
 $iss = Join-Path $installerDir "Setup.iss"
 
 function Invoke-Iscc {

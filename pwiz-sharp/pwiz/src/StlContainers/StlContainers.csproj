@@ -7,13 +7,13 @@
     iteration + nearest-key lookup that Dictionary<K,V> doesn't offer.
 
     Same wrapper pattern as src/ZedGraph and src/MSGraph: an SDK-style csproj that
-    compiles the legacy source for net8.0 with analyzers turned off, so the strict
+    compiles the legacy source for net10.0 with analyzers turned off, so the strict
     pwiz-sharp Directory.Build.props rules don't generate hundreds of "errors" against
     code we don't own.
   -->
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>System.Collections.Generic</RootNamespace>
     <AssemblyName>StlContainers</AssemblyName>
 

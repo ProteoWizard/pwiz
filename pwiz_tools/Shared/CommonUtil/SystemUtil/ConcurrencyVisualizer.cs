@@ -20,9 +20,6 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
-#if NET472
-using Microsoft.ConcurrencyVisualizer.Instrumentation;
-#endif
 
 namespace pwiz.Common.SystemUtil
 {
@@ -33,9 +30,6 @@ namespace pwiz.Common.SystemUtil
     /// </summary>
     public static class ConcurrencyVisualizer
     {
-#if NET472
-        private static readonly MarkerSeries _series = Markers.DefaultWriter.CreateMarkerSeries(@"events");
-#endif
         private static Control _control;
 
         /// <summary>
@@ -45,10 +39,6 @@ namespace pwiz.Common.SystemUtil
         {
             if (string.IsNullOrEmpty(Thread.CurrentThread.Name))
                 return;
-#if NET472
-            MarkerSeries flagSeries = Markers.DefaultWriter.CreateMarkerSeries(Thread.CurrentThread.Name);
-            flagSeries.WriteFlag(Thread.CurrentThread.Name);
-#endif
         }
 
         /// <summary>
@@ -64,11 +54,7 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public static void CreateEvent(string name)
         {
-#if NET472
-            _control.Invoke(new Action(() => _series.WriteFlag(name)));
-#else
             _ = name; // no-op on net8 — ConcurrencyVisualizer is VS-tooling-only
-#endif
         }
     }
 }

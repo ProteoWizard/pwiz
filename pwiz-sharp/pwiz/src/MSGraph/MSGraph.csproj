@@ -4,11 +4,11 @@
     Multi-target wrapper around the existing pwiz.MSGraph sources at pwiz_tools/Shared/MSGraph/.
     Same pattern as the sibling pwiz-sharp/src/ZedGraph project: legacy csproj is shared with
     Skyline's net4.7.2 build and stays untouched; this SDK-style wrapper compiles the same .cs
-    files for net8.0-windows so SeeMS-sharp can use it.
+    files for net10.0-windows so SeeMS-sharp can use it.
   -->
 
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <RootNamespace>pwiz.MSGraph</RootNamespace>
     <AssemblyName>MSGraph</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>

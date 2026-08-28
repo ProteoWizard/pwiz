@@ -12,13 +12,13 @@
   <ItemGroup>
     <!-- ReSharper disable once VulnerablePackage -->
     <PackageReference Include="Parquet.Net" Version="4.25.0" />
+    <!-- Snappier arrives transitively (Parquet.Net -> IronCompress -> Snappier).
+         Pinned to 1.3.1 because the range resolves to 1.1.6, which carries
+         GHSA-pggp-6c3x-2xmx; 1.3.1 is the first clean release. Remove once
+         Parquet.Net is on 6.x, which depends on [1.3.1,) itself. -->
+    <PackageReference Include="Snappier" Version="1.3.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
-
-  <!-- net472 needs System.Memory explicitly; net8 has it built in. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <PackageReference Include="System.Memory" Version="4.5.5" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,11 +40,9 @@
        test that validates the feature. -->
   <PropertyGroup>
     <OspreyVendorReader Condition="'$(OspreyVendorReader)' == ''">false</OspreyVendorReader>
-    <!-- pwiz_data_cli is net472-only, so the capability can never be on for
-         net8.0 no matter what the property says. -->
+    <!-- Hard off: the reader needs pwiz_data_cli, which only ever existed for
+         net472. The property is kept so the plumbing below stays readable. -->
     <OspreyVendorReaderEnabled>false</OspreyVendorReaderEnabled>
-    <OspreyVendorReaderEnabled
-        Condition="'$(TargetFramework)' == 'net472' And '$(OspreyVendorReader)' == 'true'">true</OspreyVendorReaderEnabled>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(OspreyVendorReaderEnabled)' == 'true'">
@@ -81,16 +79,16 @@
     <Compile Remove="VendorRawReader.cs" />
   </ItemGroup>
 
-  <!-- DotNetZip (Ionic.Zlib) for stock-zlib-compatible deflate output.
+  <!-- PROdotnetzip (Ionic.Zlib) for stock-zlib-compatible deflate output.
+       Maintained fork of the deprecated DotNetZip; same Ionic namespaces and
+       verified byte-identical deflate, so the parity below is unaffected.
        Matches Skyline's BlibData writer (Util/Extensions/UtilDB.Compress)
        so Osprey .blib peak blobs are byte-identical to Skyline's
        and to Rust osprey's flate2 output. .NET's built-in DeflateStream
        produces a 4-byte-shorter non-stock-zlib variant which would split
        cross-impl byte parity. -->
   <ItemGroup>
-    <Reference Include="DotNetZip">
-      <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
-    </Reference>
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
   </ItemGroup>
 
 </Project>

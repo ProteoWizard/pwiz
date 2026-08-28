@@ -21,9 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-#if !NET472
 using System.Runtime.Loader;
-#endif
 using System.Text;
 
 namespace pwiz.SkylineCmd
@@ -89,13 +87,8 @@ namespace pwiz.SkylineCmd
             // On .NET Framework the managed entry point is Skyline(.exe). On .NET (net8+)
             // the .exe is a native apphost that Assembly.LoadFrom can't load, so load the
             // managed assembly (Skyline-daily.dll) instead.
-#if NET472
-            const string SKYLINE = @"Skyline.exe";
-            const string SKYLINE_DAILY = @"Skyline-daily.exe"; // Keep -daily;
-#else
             const string SKYLINE = @"Skyline.dll";
             const string SKYLINE_DAILY = @"Skyline-daily.dll"; // Keep -daily;
-#endif
             foreach (var exeName in new []{SKYLINE, SKYLINE_DAILY})
             {
                 string exePath = Path.Combine(dirPath, exeName);
@@ -103,13 +96,6 @@ namespace pwiz.SkylineCmd
                 {
                     continue;
                 }
-#if NET472
-                // Assembly.Load, not LoadFrom: probing finds the .exe next to this one and puts
-                // Skyline in the default load context. LoadFrom is also refused for files marked
-                // as downloaded from the internet, which Windows applies to everything a user
-                // extracts from a .zip.
-                var assembly = Assembly.Load(new AssemblyName(Path.GetFileNameWithoutExtension(exeName)));
-#else
                 // .NET resolves assemblies through the RUNNING app's deps.json rather than by
                 // probing its directory, and Skyline is deliberately NOT a dependency of
                 // SkylineCmd - it is discovered at run time. Two things follow, and only fixing
@@ -129,7 +115,6 @@ namespace pwiz.SkylineCmd
                     return dependencyPath == null ? null : context.LoadFromAssemblyPath(dependencyPath);
                 };
                 var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(exePath);
-#endif
                 var programClass = assembly.GetType(@"pwiz.Skyline.Program");
                 var mainFunction = programClass.GetMethod(@"Main");
                 return mainFunction;

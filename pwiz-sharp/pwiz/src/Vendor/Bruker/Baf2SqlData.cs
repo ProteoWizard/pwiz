@@ -324,7 +324,11 @@ internal sealed class Baf2SqlData : IBrukerData
         spec.Params.Set(isCentroid ? CVID.MS_centroid_spectrum : CVID.MS_profile_spectrum);
         spec.DefaultArrayLength = mz.Length;
 
-        if (mz.Length > 0 && getBinaryData)
+        // Unconditional, as cpp SpectrumList_Bruker.cpp:424-428 is: inside DetailLevel_FullData
+        // it calls setMZIntensityArrays() with empty vectors and then fills them, so a spectrum
+        // with zero points still carries <binaryDataArrayList count="2"> holding two empty
+        // arrays. Same defect as the ones fixed in SpectrumList_Sciex and SpectrumList_Shimadzu.
+        if (getBinaryData)
             spec.SetMZIntensityArrays(mz, intensity, CVID.MS_number_of_detector_counts);
     }
 

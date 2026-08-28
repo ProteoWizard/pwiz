@@ -187,7 +187,7 @@ public class MzxmlRoundTripTests
 
             var rt = new MSData();
             new Pwiz.Data.MsData.Readers.MzxmlReaderAdapter().Read(path, rt);
-            Assert.IsInstanceOfType(rt.Run.SpectrumList, typeof(SpectrumList_Mzxml),
+            Assert.IsInstanceOfType<SpectrumList_Mzxml>(rt.Run.SpectrumList,
                 "Adapter didn't take the lazy path on an indexed mzXML");
             Assert.AreEqual(2, rt.Run.SpectrumList!.Count);
 
@@ -237,7 +237,7 @@ public class MzxmlRoundTripTests
 
             var rt = new MSData();
             new Pwiz.Data.MsData.Readers.MzxmlReaderAdapter().Read(path, rt);
-            Assert.IsInstanceOfType(rt.Run.SpectrumList, typeof(SpectrumList_Mzxml),
+            Assert.IsInstanceOfType<SpectrumList_Mzxml>(rt.Run.SpectrumList,
                 "Adapter didn't take the lazy path on the indexed no-</scan> mzXML");
             var sl = rt.Run.SpectrumList!;
             Assert.AreEqual(n, sl.Count);

@@ -705,9 +705,6 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static bool TryParseXmlDouble(string s, out double result)
         {
-#if NET472
-            return NativeStrtod.TryParse(s, out result);
-#else
             try
             {
                 result = XmlConvert.ToDouble(s);
@@ -718,7 +715,6 @@ namespace pwiz.Osprey.IO
                 result = 0.0;
                 return false;
             }
-#endif
         }
     }
 

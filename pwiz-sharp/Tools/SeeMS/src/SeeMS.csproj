@@ -9,8 +9,8 @@
     <!-- WinForms is required to reference DigitalRune.Windows.Docking, which derives from
          WinForms types (Form, Panel, etc.). Setting UseWindowsForms=true + the `-windows`
          TFM suffix pulls in the WinForms reference assemblies during compile. Override the
-         root Directory.Build.props's net8.0 TFM for this project specifically. -->
-    <TargetFramework>net8.0-windows</TargetFramework>
+         root Directory.Build.props's net10.0 TFM for this project specifically. -->
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
 
     <!-- Vendor SDKs (specifically Thermo) need en-US culture; matching MsConvert.csproj. -->

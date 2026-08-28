@@ -5,7 +5,7 @@
 .DESCRIPTION
     The legacy Jam build dropped Skyline-daily.exe, TestRunner.exe and every test DLL into
     one shared bin (pwiz_tools\Skyline\bin\x64\<Config>). The net8 SDK build gives each project
-    its own bin\<Config>\net8.0-windows, so nothing sees the others. TestRunner (and its
+    its own bin\<Config>\net10.0-windows, so nothing sees the others. TestRunner (and its
     container workers) load Skyline + the test DLLs from one directory, so assemble them here.
 
     Each source project's output is merged (robocopy) into the staging dir; the shared
@@ -14,25 +14,25 @@
     container and point at the staged path).
 
 .EXAMPLE
-    pwsh -File .\Stage-Net8Tests.ps1 -Configuration Debug
+    pwsh -File .\Stage-Tests.ps1 -Configuration Debug
 #>
 param(
     [ValidateSet('Debug', 'Release')] [string] $Configuration = 'Debug',
     [string] $StagingDir = '',
     [string[]] $Projects = @('Skyline', 'CommonTest', 'Test', 'TestData', 'TestFunctional', 'TestConnected', 'TestRunner'),
-    # Bundle a portable .NET 8 Desktop runtime into <staging>\dotnet so the Docker workers can run
-    # the net8 apphost without any runtime installed in the container (pointed at via DOTNET_ROOT).
+    # Bundle a portable .NET 10 Desktop runtime into <staging>\dotnet so the Docker workers can run
+    # the net10 apphost without any runtime installed in the container (pointed at via DOTNET_ROOT).
     [switch] $NoRuntime,
     [string] $DotnetSource = (Join-Path $env:ProgramFiles 'dotnet'),
-    [string] $RuntimeMajorMinor = '8.0'
+    [string] $RuntimeMajorMinor = '10.0'
 )
 
 $ErrorActionPreference = 'Stop'
 $skylineDir = $PSScriptRoot
-$tfm = 'net8.0-windows'
+$tfm = 'net10.0-windows'
 
 if ([string]::IsNullOrEmpty($StagingDir)) {
-    $StagingDir = Join-Path $skylineDir "bin\staging-net8\$Configuration"
+    $StagingDir = Join-Path $skylineDir "bin\staging\$Configuration"
 }
 New-Item -ItemType Directory -Force -Path $StagingDir | Out-Null
 
@@ -58,8 +58,8 @@ foreach ($project in $Projects) {
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed staging $project (exit $LASTEXITCODE)" }
 }
 
-# Stage a portable .NET 8 Desktop runtime so the Docker workers (which have no .NET installed)
-# can run the net8 apphost. The apphost is pointed here via DOTNET_ROOT (set on `docker run`).
+# Stage a portable .NET 10 Desktop runtime so the Docker workers (which have no .NET installed)
+# can run the net10 apphost. The apphost is pointed here via DOTNET_ROOT (set on `docker run`).
 # Minimal set the apphost needs: host\fxr\<ver>\hostfxr.dll + the two shared frameworks. dotnet.exe
 # is included so `dotnet TestRunner.dll` also works as a fallback.
 function Get-HighestVersionDir([string] $parent, [string] $prefix) {

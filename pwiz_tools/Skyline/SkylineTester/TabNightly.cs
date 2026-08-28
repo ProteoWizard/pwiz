@@ -25,9 +25,6 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-#if NET472
-using System.ServiceModel;
-#endif
 using System.Windows.Forms;
 using Microsoft.Win32.TaskScheduler;
 using pwiz.Common.SystemUtil;
@@ -814,55 +811,6 @@ namespace SkylineTester
 
         BackgroundWorker SkylineTesterWindow.IMemoryGraphContainer.UpdateWorker { get; set; }
 
-#if NET472
-        // Facilitates IPC so that we can receive signals from SkylineNightly
-        [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
-        public class NightlyListener: IEndTimeSetter
-        {
-            private readonly ServiceHost _host;
-            private readonly Timer _stopTimer;
-
-            public NightlyListener(Timer stopTimer)
-            {
-                _host = new ServiceHost(this, new Uri("net.pipe://localhost/Nightly"));
-                _host.AddServiceEndpoint(typeof(IEndTimeSetter), new NetNamedPipeBinding(), "SetEndTime");
-                _host.Open();
-
-                _stopTimer = stopTimer;
-            }
-
-            public void Stop()
-            {
-                _host.Close();
-            }
-
-            public void SetEndTime(DateTime endTime)
-            {
-                if (_stopTimer == null)
-                    return;
-
-                _stopTimer.Stop();
-
-                var now = DateTime.Now;
-                if (endTime <= now)
-                {
-                    MainWindow.StopByTimer();
-                    return;
-                }
-
-                _stopTimer.Interval = (int) endTime.Subtract(now).TotalMilliseconds;
-                _stopTimer.Start();
-            }
-        }
-
-        // Allows SkylineNightly to change the stop time of a nightly run via IPC
-        [ServiceContract]
-        public interface IEndTimeSetter
-        {
-            [OperationContract]
-            void SetEndTime(DateTime endTime);
-        }
-#else
         // net8 has no self-hosted WCF: ServiceHost / NetNamedPipeBinding require CoreWCF, a different
         // (ASP.NET-Core-based) hosting model than the net472 System.ServiceModel self-host above. The
         // nightly end-time IPC callback from SkylineNightly (itself still net472) is net472-only for
@@ -900,6 +848,5 @@ namespace SkylineTester
                 _stopTimer.Start();
             }
         }
-#endif
     }
 }

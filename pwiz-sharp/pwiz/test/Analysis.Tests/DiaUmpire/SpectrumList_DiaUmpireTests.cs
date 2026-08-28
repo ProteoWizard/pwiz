@@ -53,7 +53,7 @@ public class SpectrumList_DiaUmpireTests
         {
             var (msd, inner) = DiaUmpireTests.BuildTinySwathMsd();
             var wrapped = SpectrumListFactory.Wrap(inner, new[] { $"diaUmpire params={tmp}" }, msd);
-            Assert.IsInstanceOfType(wrapped, typeof(SpectrumList_DiaUmpire));
+            Assert.IsInstanceOfType<SpectrumList_DiaUmpire>(wrapped);
             (wrapped as System.IDisposable)?.Dispose();
         }
         finally { File.Delete(tmp); }

@@ -12,7 +12,7 @@
 
     Skyline already references Lib/Parquet/ParquetNet.dll directly via <Reference>
     (see pwiz_tools/Skyline/Skyline.csproj). Osprey uses the upstream NuGet
-    PackageReference for transitive dependency resolution (deps.json on net8.0,
+    PackageReference for transitive dependency resolution (deps.json on net10.0,
     auto-deploy on net472), and this target swaps in the patched binary on top.
     The patched dll has the same AssemblyVersion=4.0.0 as the stock 4.25.0
     NuGet release, so binding redirects and reflection-based lookups continue

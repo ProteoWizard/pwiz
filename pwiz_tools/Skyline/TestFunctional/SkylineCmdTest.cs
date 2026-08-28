@@ -116,7 +116,6 @@ namespace pwiz.SkylineTestFunctional
             var destFileName = Path.Combine(tempPath, "SkylineCmd.exe");
             var skylineCmdExe = FindSkylineCmdExe();
             File.Copy(skylineCmdExe, destFileName);
-#if !NET472
             // On net8 SkylineCmd.exe is a native apphost that needs its managed companions beside it
             // to bootstrap; copy them (but NOT Skyline*.dll, which the test expects to be missing) so
             // the managed entry point runs and reports the missing Skyline.dll from tempPath.
@@ -126,7 +125,6 @@ namespace pwiz.SkylineTestFunctional
                 if (File.Exists(companionSrc))
                     File.Copy(companionSrc, Path.Combine(tempPath, companion), true);
             }
-#endif
             var processStartInfo = GetProcessStartInfo(string.Empty);
             processStartInfo.FileName = destFileName;
             var processRunner = new ProcessRunner { OutputEncoding = Encoding.UTF8 };
@@ -144,13 +142,8 @@ namespace pwiz.SkylineTestFunctional
             // Make sure the error message says it tries loading the Skyline managed assembly from
             // the same directory as SkylineCmd.exe. On net8 that is the .dll (the .exe is a native
             // apphost that Assembly.LoadFrom can't load); on net472 it is the .exe.
-#if NET472
-            StringAssert.Contains(output, "Skyline.exe");
-            StringAssert.Contains(output, "Skyline-daily.exe"); // Keep -daily
-#else
             StringAssert.Contains(output, "Skyline.dll");
             StringAssert.Contains(output, "Skyline-daily.dll"); // Keep -daily
-#endif
             StringAssert.Contains(output, tempPath);
         }
 

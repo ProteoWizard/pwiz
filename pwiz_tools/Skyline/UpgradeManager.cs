@@ -39,11 +39,7 @@ namespace pwiz.Skyline
     {
         private static bool _checkedAtStartup;
 
-#if NET472
-        public static IDeployment _appDeployment = new AppDeploymentWrapper();
-#else
         public static IDeployment _appDeployment = new NullDeployment();
-#endif
 
         public static IDeployment AppDeployment
         {
@@ -325,7 +321,6 @@ namespace pwiz.Skyline
             public Exception Error { get; private set; }
         }
 
-#if !NET472
         private sealed class NullDeployment : IDeployment
         {
             public bool IsNetworkDeployed => false;
@@ -337,102 +332,6 @@ namespace pwiz.Skyline
             public Version GetVersionFromUpdateLocation() => null;
             public void OpenInstallLink(Control parentWindow) { }
         }
-#endif
 
-#if NET472
-        private sealed class AppDeploymentWrapper : IDeployment
-        {
-            private readonly ApplicationDeployment _applicationDeployment;
-
-            public AppDeploymentWrapper()
-            {
-                if (ApplicationDeployment.IsNetworkDeployed)
-                    _applicationDeployment = ApplicationDeployment.CurrentDeployment;
-            }
-
-            public bool IsNetworkDeployed
-            {
-                get { return _applicationDeployment != null; }
-            }
-
-            public Version CurrentVersion { get { return _applicationDeployment.CurrentVersion; } }
-
-            public UpdateCheckDetails CheckForDetailedUpdate()
-            {
-                // CONSIDER: Some way to set trust to get this working? Below did not work
-                // https://stackoverflow.com/questions/14688282/clickonce-full-trust-app-update-failing-with-trustnotgrantedexception-on-windows
-//                var appId = new ApplicationIdentity(_applicationDeployment.UpdatedApplicationFullName);
-//                var unrestrictedPerms = new PermissionSet(PermissionState.Unrestricted);
-//                var appTrust = new ApplicationTrust(appId)
-//                {
-//                    DefaultGrantSet = new PolicyStatement(unrestrictedPerms),
-//                    IsApplicationTrustedToRun = true,
-//                    Persist = true
-//                };
-//                ApplicationSecurityManager.UserApplicationTrusts.Add(appTrust);
-                var info = _applicationDeployment.CheckForDetailedUpdate(false);
-
-                // Accessing version and size properties throw if no update is available
-                if (!info.UpdateAvailable)
-                    return new UpdateCheckDetails(false, null, null);
-
-                return new UpdateCheckDetails(info.UpdateAvailable, info.AvailableVersion, info.UpdateSizeBytes);
-            }
-
-            public void UpdateAsync(Action<UpdateProgress> updateProgress,
-                                    Action<UpdateCompletedDetails> updateComplete)
-            {
-                _applicationDeployment.UpdateProgressChanged += (s, e) =>
-                {
-                    updateProgress(new UpdateProgress(e.BytesCompleted, e.BytesTotal));
-                };
-                _applicationDeployment.UpdateCompleted += (s, e) =>
-                {
-                    updateComplete(new UpdateCompletedDetails(e.Cancelled, e.Error));
-                };
-                _applicationDeployment.UpdateAsync();
-            }
-
-            public void UpdateAsyncCancel()
-            {
-                _applicationDeployment.UpdateAsyncCancel();
-            }
-
-            public void Restart()
-            {
-                Application.Restart();
-            }
-
-            public Version GetVersionFromUpdateLocation()
-            {
-                try
-                {
-                    using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
-                    string applicationPage = httpClient.DownloadString(_applicationDeployment.UpdateLocation);
-                    // ReSharper disable once LocalizableElement
-                    Match match = Regex.Match(applicationPage, "<assemblyIdentity .*version=\"([^\"]*)\"");
-                    if (match.Success)
-                        return new Version(match.Groups[1].Value);
-                }
-                catch (Exception ex)
-                {
-                    // Ignore but log to debug console in debug builds
-                    // Detailed error from HttpClientWithProgress preserved for diagnostics
-                    Debug.WriteLine($@"Failed to check for updates: {ex.Message}");
-                }
-                return null;
-            }
-
-            public void OpenInstallLink(Control parentWindow)
-            {
-                bool is64 = Environment.Is64BitOperatingSystem;
-                string shorNameInstall = Install.Type == Install.InstallType.release
-                    ? (is64 ? @"skyline64" : @"skyline32")
-                    : (is64 ? @"skyline-daily64" : @"skyline-daily32"); // Keep -daily
-
-                WebHelpers.OpenSkylineShortLink(parentWindow, shorNameInstall);
-            }
-        }
-#endif
     }
 }

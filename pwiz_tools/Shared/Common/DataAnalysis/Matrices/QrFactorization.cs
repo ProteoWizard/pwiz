@@ -23,9 +23,6 @@ using System.Linq;
 using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
-#if NET472
-using MathNet.Numerics.Properties; // bundled net472 DLL exposes Resources; NuGet 4.15+ doesn't
-#endif
 
 namespace pwiz.Common.DataAnalysis.Matrices
 {
@@ -90,11 +87,7 @@ namespace pwiz.Common.DataAnalysis.Matrices
             // Old MathNet.Numerics.Control.LinearAlgebraProvider was moved to
             // Providers.LinearAlgebra.LinearAlgebraControl.Provider in 4.x+. The
             // legacy bundled DLL (net472 path) still exposes the old name.
-#if NET472
-            Control.LinearAlgebraProvider.QRSolveFactored(_qFlat,
-#else
             MathNet.Numerics.Providers.LinearAlgebra.LinearAlgebraControl.Provider.QRSolveFactored(_qFlat,
-#endif
                 _independentRFlat, _q.GetLength(0), NumberIndependentColumns, 
                 _tau.Take(NumberIndependentColumns).ToArray(),
                 values, 1, originalResult);
@@ -152,20 +145,12 @@ namespace pwiz.Common.DataAnalysis.Matrices
                 var minmn = Math.Min(rowsR, columnsR);
                 if (tau.Length < minmn)
                 {
-#if NET472
-                    throw new ArgumentException(string.Format(Resources.ArrayTooSmall, "min(m,n)"), nameof(tau));
-#else
                     throw new ArgumentException("The array argument must have a length of at least min(m,n).", nameof(tau));
-#endif
                 }
 
                 if (q.GetLength(0) != r.GetLength(0) || q.GetLength(1) != r.GetLength(0))
                 {
-#if NET472
-                    throw new ArgumentException(string.Format(Resources.ArgumentArrayWrongLength, "rowsR * rowsR"), nameof(q));
-#else
                     throw new ArgumentException("The array argument must have a length of rowsR * rowsR.", nameof(q));
-#endif
                 }
                 for (int i = 0; i < r.GetLength(0); i++)
                 {

@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- MSStatArgCollectors external-tool arg collector (WinForms library). Multi-target net472;net8.0-windows
+  <!-- MSStatArgCollectors external-tool arg collector (WinForms library). Multi-target net472;net10.0-windows
        (was classic). Standalone: only framework references. Vestigial System.Deployment dropped;
        any Chinese satellite resx renamed zh-CHS -> zh-Hans to match the branch-wide culture rename. -->
   <PropertyGroup>
     <ProjectGuid>{528D001D-95B5-482F-96C3-0EEA0EB81D26}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -25,7 +25,4 @@
 
   <!-- Microsoft.VisualBasic.FileIO.TextFieldParser: framework assembly on net472; on net8 it ships
        in the WindowsDesktop shared framework (UseWindowsForms), so no explicit reference needed. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="Microsoft.VisualBasic" />
-  </ItemGroup>
 </Project>

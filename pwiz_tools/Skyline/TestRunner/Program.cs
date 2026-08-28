@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -951,23 +951,15 @@ namespace TestRunner
         // (<staged>\dotnet) with no environment variable at all. net472 launches the apphost directly.
         private static string GetTestRunnerExe()
         {
-#if NET472
-            return GetContainerTestRunnerExe();
-#else
-            // Container paths under c:\pwiz\...\staging-net8\ contain no spaces, so no quoting needed.
+            // Container paths under c:\pwiz\...\staging\ contain no spaces, so no quoting needed.
             return Path.GetDirectoryName(GetContainerTestRunnerExe()) + @"\dotnet\dotnet.exe";
-#endif
         }
 
         // The managed target that must follow GetTestRunnerExe() on net8 (the DLL the muxer runs),
         // with a trailing space; empty on net472 where the apphost itself is the program.
         private static string GetTestRunnerTargetArg()
         {
-#if NET472
-            return string.Empty;
-#else
             return Path.ChangeExtension(GetContainerTestRunnerExe(), ".dll") + " ";
-#endif
         }
 
         // Environment fragment spliced into `docker run` for the Docker workers. Currently empty:
@@ -2346,6 +2338,21 @@ namespace TestRunner
                         SystemInformation.TerminalServerSession,
                         Environment.GetEnvironmentVariable("SESSIONNAME") ?? "(unset)",
                         SystemInformation.MonitorCount);
+                    // Display layout, for the net10 GDI+ failures that appear ONLY on the MacCoss
+                    // console agent. Every one of them is the same stack: a form being shown ->
+                    // SplitContainer.OnLayout -> RepaintSplitterRect -> Graphics.FillRectangle
+                    // throwing "A generic error occurred in GDI+". Offscreen mode parks every form
+                    // at CommonFormEx.GetOffscreenPoint(), which is min(all screen origins) minus
+                    // the PRIMARY screen size -- so the coordinate, and whether the window keeps any
+                    // owning monitor at all, depends entirely on the agent's display layout. The
+                    // same tests pass on the AWS agents and on a 2-monitor dev box, so log the
+                    // layout that does produce it. Calls the real method rather than restating the
+                    // formula, so this cannot drift from what SetOffscreen actually does.
+                    foreach (var screen in Screen.AllScreens)
+                        runTests.Log("# Screen: {0} bounds={1} working={2}{3}\r\n",
+                            screen.DeviceName, screen.Bounds, screen.WorkingArea,
+                            screen.Primary ? " PRIMARY" : "");
+                    runTests.Log("# Offscreen point: {0}\r\n", CommonFormEx.GetOffscreenPoint());
                 }
 
                 // Get list of languages

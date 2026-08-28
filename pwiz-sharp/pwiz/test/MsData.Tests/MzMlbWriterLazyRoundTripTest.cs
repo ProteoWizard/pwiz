@@ -55,7 +55,7 @@ public class MzMlbWriterLazyRoundTripTest
             // spectra round-trip.
             using var rt = new MSData();
             new MzMlbReaderAdapter().Read(path, rt);
-            Assert.IsInstanceOfType(rt.Run.SpectrumList, typeof(Pwiz.Data.MsData.Mzml.SpectrumList_Mzml),
+            Assert.IsInstanceOfType<Pwiz.Data.MsData.Mzml.SpectrumList_Mzml>(rt.Run.SpectrumList,
                 "lazy path didn't fire — sharp-written mzMLb should use SpectrumList_Mzml on re-open");
             Assert.AreEqual(5, rt.Run.SpectrumList.Count);
 

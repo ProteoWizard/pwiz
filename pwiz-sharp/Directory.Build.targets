@@ -42,4 +42,22 @@
     <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.40" />
   </ItemGroup>
 
+  <!-- BinaryFormatter opt-in for EXECUTABLES.
+       .NET 9 REMOVED the BinaryFormatter implementation from the shared framework. The
+       out-of-band System.Runtime.Serialization.Formatters package (referenced by
+       Shimadzu.csproj) restores it, but only if the HOST also opts in via this switch.
+       Setting it on Shimadzu.csproj does nothing: it is a RuntimeHostConfigurationOption,
+       which lands only in the current project's runtimeconfig.json, and a library emits
+       none. Transitive collection through ProjectReference proved unreliable - msconvert,
+       bullseye-sharp and MsData.Hosted picked it up while BlibBuild and msbenchmark-sharp
+       did not, despite BlibBuild having a direct ProjectReference - so set it here, once,
+       for every executable. Any exe using DefaultReaderList can open a Shimadzu .lcd and
+       reach Tool.DeepCopy<T> -> LSSDetChInfo.Clone(), which throws without this.
+       OutputType is only in scope in .targets (imported after the project body), not in
+       .props - the same timing reason IsTestProject is handled here.
+       STOPGAP: drop when Shimadzu ships an SDK that does not use BinaryFormatter. -->
+  <PropertyGroup Condition="'$(OutputType)' == 'Exe' Or '$(OutputType)' == 'WinExe'">
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+  </PropertyGroup>
+
 </Project>

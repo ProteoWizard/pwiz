@@ -15,4 +15,24 @@
     <FallbackCulture>en-US</FallbackCulture>
     <VerifyUploadedFiles>false</VerifyUploadedFiles>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Update="ZedGraph\ZedGraphControl.ContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="ZedGraph\ZedGraphControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="ZedGraph\ZedGraphControl.Events.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="ZedGraph\ZedGraphControl.Printing.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="ZedGraph\ZedGraphControl.Properties.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="ZedGraph\ZedGraphControl.ScrollBars.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+  </ItemGroup>
 </Project>

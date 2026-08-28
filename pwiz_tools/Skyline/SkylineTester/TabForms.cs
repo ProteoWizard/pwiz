@@ -154,11 +154,7 @@ namespace SkylineTester
 
             // On net8 the managed entry point is Skyline(-daily).dll; the .exe is a native apphost
             // that Assembly.LoadFrom can't load ("Bad IL format"). net472 loads the .exe.
-#if NET472
-            const string skylineModule = "Skyline.exe", skylineDailyModule = "Skyline-daily.exe"; // Keep -daily
-#else
             const string skylineModule = "Skyline.dll", skylineDailyModule = "Skyline-daily.dll"; // Keep -daily
-#endif
             var skylinePath = Path.Combine(MainWindow.ExeDir, skylineModule);
             var skylineDailyPath = Path.Combine(MainWindow.ExeDir, skylineDailyModule);
             skylinePath = File.Exists(skylinePath) ? skylinePath : skylineDailyPath;

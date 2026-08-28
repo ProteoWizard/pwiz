@@ -1,4 +1,4 @@
-$sharp = "C:\dev\pwiz-msconvert-pr\pwiz-sharp\Tools\MsBenchmark\Tools\MsBenchmark\Tools\MsBenchmark\Tools\Commandline\MsBenchmark\Tools\Commandline\MsBenchmark\src\bin\Release\net8.0\msbenchmark-sharp.exe"
+$sharp = "C:\dev\pwiz-msconvert-pr\pwiz-sharp\Tools\MsBenchmark\Tools\MsBenchmark\Tools\MsBenchmark\Tools\Commandline\MsBenchmark\Tools\Commandline\MsBenchmark\src\bin\Release\net10.0\msbenchmark-sharp.exe"
 $cpp = "C:\dev\pwiz\build-nt-x86\msvc-release-x86_64\msbenchmark.exe"
 $file = "D:\test\diaumpire-real\MRC5-input.mzML"
 

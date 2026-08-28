@@ -21,7 +21,7 @@ endif()
 # path is only baked in as a runtime default so the exe can be run without arguments.
 if(NOT DEFINED PWIZ_MSDATA_HOSTED_DIR)
     set(PWIZ_MSDATA_HOSTED_DIR
-        "${PWIZ_SHARP_ROOT}/pwiz/src/MsData.Hosted/bin/Release/net8.0"
+        "${PWIZ_SHARP_ROOT}/pwiz/src/MsData.Hosted/bin/Release/net10.0"
         CACHE PATH "Build output of MsData.Hosted (managed assembly + runtimeconfig.json)")
 endif()
 if(NOT EXISTS "${PWIZ_MSDATA_HOSTED_DIR}/Pwiz.MsData.Hosted.runtimeconfig.json")
@@ -47,12 +47,12 @@ if(NOT DEFINED PWIZ_NETHOST_DIR)
         set(_host_pack_root "/usr/share/dotnet/packs/Microsoft.NETCore.App.Host.linux-x64")
         set(_rid_native "runtimes/linux-x64/native")
     endif()
-    # Prefer the newest 8.x pack: the shim targets net8.0, and the hosting ABI is stable
+    # Prefer the newest 10.x pack: the shim targets net10.0, and the hosting ABI is stable
     # across patch versions.
-    file(GLOB _host_packs "${_host_pack_root}/8.*")
+    file(GLOB _host_packs "${_host_pack_root}/10.*")
     if(NOT _host_packs)
         # Fall back to any version present — hostfxr's C API is versioned by contract, not
-        # by pack version, so a newer pack still hosts a net8.0 assembly correctly.
+        # by pack version, so a newer pack still hosts a net10.0 assembly correctly.
         file(GLOB _host_packs "${_host_pack_root}/*")
     endif()
     if(NOT _host_packs)

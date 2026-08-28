@@ -6,7 +6,7 @@
     <AssemblyName>MSConvertGUI-sharp</AssemblyName>
     <Description>Port of pwiz_tools/MSConvertGUI to pwiz-sharp. WinForms front-end on top of pwiz-sharp's MsConvert pipeline.</Description>
 
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Resources\SpectrumConverter.ico</ApplicationIcon>
 

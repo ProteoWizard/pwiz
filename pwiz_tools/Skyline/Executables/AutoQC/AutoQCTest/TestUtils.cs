@@ -95,18 +95,16 @@ namespace AutoQCTest
                                     ?? throw new InvalidOperationException("Unable to find Skyline project directory");
 
             // net472 builds to bin\x64\<config>; net8 to bin\<config>\net8.0-windows (or a
-            // Stage-Net8Tests staging dir). Return whichever candidate holds SkylineCmd.exe, preferring
+            // Stage-Tests staging dir). Return whichever candidate holds SkylineCmd.exe, preferring
             // the most recently built. The net8 candidates are only considered on net8 so a net472 test
             // run never picks up a newer net8 build that happens to be present on the same machine.
             var candidates = new[]
             {
-#if !NET472
-                Path.Combine(skylineProjectDir, "bin", "Release", "net8.0-windows"),
-                Path.Combine(skylineProjectDir, "bin", "Debug", "net8.0-windows"),
-                Path.Combine(skylineProjectDir, "bin", "x64", "Release", "net8.0-windows"),
-                Path.Combine(skylineProjectDir, "bin", "x64", "Debug", "net8.0-windows"),
-                Path.Combine(skylineProjectDir, "bin", "staging-net8", "Release"),
-#endif
+                Path.Combine(skylineProjectDir, "bin", "Release", "net10.0-windows"),
+                Path.Combine(skylineProjectDir, "bin", "Debug", "net10.0-windows"),
+                Path.Combine(skylineProjectDir, "bin", "x64", "Release", "net10.0-windows"),
+                Path.Combine(skylineProjectDir, "bin", "x64", "Debug", "net10.0-windows"),
+                Path.Combine(skylineProjectDir, "bin", "staging", "Release"),
                 Path.Combine(skylineProjectDir, "bin", "x64", "Release"),
                 Path.Combine(skylineProjectDir, "bin", "x64", "Debug"),
             };

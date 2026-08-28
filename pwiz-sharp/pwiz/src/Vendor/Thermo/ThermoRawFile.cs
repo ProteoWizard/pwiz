@@ -200,7 +200,7 @@ public sealed class ThermoRawFile : IDisposable
                 // GetLabelData. ToCentroid returns a Scan whose SegmentedScan holds the
                 // centroided peaks (CentroidScan stays null — it's reserved for FTMS).
                 var profile = Scan.FromFile(Raw, scanNumber, System.Globalization.CultureInfo.InvariantCulture);
-                if (profile is not null)
+                if (profile is not null && CanFragmentEverySegment(profile))
                 {
                     var centroid = Scan.ToCentroid(profile);
                     if (centroid?.SegmentedScan is { Positions: { Length: > 0 } p2, Intensities: var intensities })
@@ -211,6 +211,33 @@ public sealed class ThermoRawFile : IDisposable
 
         var seg = Raw.GetSegmentedScanFromScanNumber(scanNumber, null);
         return (seg.Positions ?? Array.Empty<double>(), seg.Intensities ?? Array.Empty<double>());
+    }
+
+    /// <summary>
+    /// True when every segment of <paramref name="scan"/> has enough points for the SDK's
+    /// centroider to accept it.
+    /// </summary>
+    /// <remarks>
+    /// <c>Scan.ToCentroid</c> cannot survive its own helper: it builds one
+    /// <c>Fragment(i)</c> per segment, and <c>Fragment</c> returns NULL for any segment with
+    /// fewer than two points, which <c>MergeSegments</c> then dereferences unguarded
+    /// (<c>ThermoFisher.CommonCore.Data.Business.Scan</c>). So an empty profile scan crashes the
+    /// centroider with a NullReferenceException rather than yielding no peaks: scan 2 of
+    /// 20May24_P3_LHS_line_003.raw is an ITMS MS3 with <c>SegmentSizes [0]</c>, and it aborted
+    /// the whole conversion.
+    /// <para>cpp never meets this because XRawfile's <c>GetMassListFromScanNum</c> does its own
+    /// centroiding and simply returns zero peaks; cpp emits that spectrum with
+    /// <c>defaultArrayLength=0</c>. Declining here falls through to the segmented stream, which
+    /// yields the same empty arrays.</para>
+    /// </remarks>
+    private static bool CanFragmentEverySegment(Scan scan)
+    {
+        var segmented = scan.SegmentedScan;
+        var sizes = segmented?.SegmentSizes;
+        if (segmented is null || sizes is null || segmented.SegmentCount == 0) return false;
+        for (int i = 0; i < segmented.SegmentCount && i < sizes.Length; i++)
+            if (sizes[i] < 2) return false;
+        return true;
     }
 
     /// <summary>Native id string in pwiz's Thermo format (MS controller).</summary>

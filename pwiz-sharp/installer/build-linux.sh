@@ -14,7 +14,7 @@
 # platforms. Version, output directory, installer-version.txt and the closing size/SHA-256
 # report all follow build.ps1 so release tooling can treat the two identically.
 #
-# Only msconvert ships: MSConvertGUI and SeeMS are net8.0-windows + WinForms.
+# Only msconvert ships: MSConvertGUI and SeeMS are net10.0-windows + WinForms.
 #
 # MUST run on Linux. The vendor csprojs condition their native staging on $(OS), which is the
 # BUILD HOST rather than the target RID, so a linux-x64 publish from Windows would stage Windows

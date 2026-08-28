@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- TestHarness - standalone WinExe test harness for the MSStats arg collectors. Multi-target
-       net472;net8.0-windows (was classic v4.7.2). Vestigial System.Deployment + System.Net.Http
+       net472;net10.0-windows (was classic v4.7.2). Vestigial System.Deployment + System.Net.Http
        references (unused in source) dropped; Chinese satellite resx renamed zh-CHS -> zh-Hans. -->
   <PropertyGroup>
     <ProjectGuid>{D3574062-97FD-49CE-B89E-E3CA1F0AE44B}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

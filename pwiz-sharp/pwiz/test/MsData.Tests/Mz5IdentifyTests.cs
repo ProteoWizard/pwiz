@@ -32,7 +32,7 @@ public class Mz5IdentifyTests
         // Identify path: HDF5 magic + FileInformation dataset present + version match.
         byte[] head = new byte[32];
         using (var fs = File.OpenRead(mz5Path))
-            fs.Read(head, 0, head.Length);
+            fs.ReadExactly(head, 0, head.Length);
         string headStr = new(Array.ConvertAll(head, b => (char)b));
         var reader = new Mz5ReaderAdapter();
         Assert.AreEqual(CVID.MS_mz5_format, reader.Identify(mz5Path, headStr));
@@ -132,7 +132,7 @@ public class Mz5IdentifyTests
         {
             byte[] head = new byte[32];
             using (var fs = File.OpenRead(path))
-                fs.Read(head, 0, head.Length);
+                fs.ReadExactly(head, 0, head.Length);
             string headStr = new(Array.ConvertAll(head, b => (char)b));
             var reader = new Mz5ReaderAdapter();
             Assert.AreEqual(CVID.CVID_Unknown, reader.Identify(path, headStr));

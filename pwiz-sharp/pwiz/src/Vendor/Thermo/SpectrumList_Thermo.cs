@@ -4,6 +4,7 @@ using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 using ThermoFisher.CommonCore.Data.Business;
 using ThermoFisher.CommonCore.Data.FilterEnums;
 using ThermoFisher.CommonCore.Data.Interfaces;
@@ -382,12 +383,12 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
     public string VendorCentroidName => "Thermo/Xcalibur peak picking";
 
     /// <inheritdoc/>
-    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData) =>
-        GetSpectrumImpl(index, getBinaryData, preferCentroid: true);
+    public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid) =>
+        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid);
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
-        GetSpectrumImpl(index, getBinaryData, preferCentroid: false);
+        GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid: null);
 
     /// <summary>
     /// Populates a PDA "scan" as an electromagnetic-radiation spectrum (wavelength vs intensity),
@@ -486,7 +487,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         }
     }
 
-    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, bool preferCentroid)
+    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid)
     {
         var ie = _index[index];
 
@@ -526,6 +527,11 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
                 break;
         }
         spec.Params.Set(CVID.MS_ms_level, msLevel);
+
+        // cpp SpectrumList_Thermo.cpp:365 - `doCentroid = msLevelsToCentroid.contains(msLevel)`,
+        // evaluated after the Nl/Ng/Par promotions above, as cpp does. The profile-scan
+        // interaction cpp applies at :370-374 is mirrored by `emitCentroid` further down.
+        bool preferCentroid = msLevelsToCentroid?.Contains(msLevel) ?? false;
 
         // The scan filter is this method's equivalent of cpp's ScanInfo (SpectrumList_Thermo.cpp:269-275):
         // fetched ONCE per spectrum and reused by every site below (enhanced-resolution flag,

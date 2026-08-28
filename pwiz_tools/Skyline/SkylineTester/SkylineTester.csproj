@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- SkylineTester - WinForms test-harness GUI (run tests / nightly / quality, build Skyline, zip
-       installers, chart memory). Multi-target net472 + net8.0-windows; the classic project was a
+       installers, chart memory). Multi-target net472 + net10.0-windows; the classic project was a
        v4.7.2 WinExe. net8 notes: DotNetZip + Microsoft.Win32.TaskScheduler come from NuGet (net472
        keeps the legacy on-disk HintPath DLLs); the EnvDTE "open the clicked source line in a running
        Visual Studio" feature is net472-only VS COM automation (see TabOutput.cs #if NET472 - net8
@@ -10,7 +10,7 @@
   <PropertyGroup>
     <ProjectGuid>{65E16E9D-71FC-40D1-B3FF-AD16BEFF9AF4}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -45,25 +45,13 @@
   </ItemGroup>
 
   <!-- net8: managed NuGet equivalents of the legacy HintPath DLLs + the settings config provider -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
-    <PackageReference Include="DotNetZip" Version="1.16.0" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
     <PackageReference Include="TaskScheduler" Version="2.11.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
   </ItemGroup>
 
   <!-- net472: the legacy on-disk DLLs + EnvDTE VS COM automation the net8 path drops -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="DotNetZip">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Win32.TaskScheduler">
-      <HintPath>.\Microsoft.Win32.TaskScheduler.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 
   <ItemGroup>
     <None Include="Properties\Settings.settings">
@@ -88,7 +76,7 @@
        contains an invalid character ."). So the names are passed as a
        semicolon-separated list and this one target batches over them:
 
-         dotnet build SkylineTester.csproj -f net8.0-windows -t:DistroZips ^
+         dotnet build SkylineTester.csproj -f net10.0-windows -t:DistroZips ^
              -p:DistroZips="BiblioSpec.zip;SkylineNightly.zip"
 
        build.bat collects any bare *.zip arguments and forwards them verbatim as
@@ -98,13 +86,13 @@
        CreateZipInstallerWindow.CreateZipFile takes its own assembly location as
        the working directory and adds member files by bare name from there
        (SkylineTester\Program.cs:81 to CreateZipFile), so it needs the merged
-       single-bin staging layout that Stage-Net8Tests.ps1 produces, the net8
+       single-bin staging layout that Stage-Tests.ps1 produces, the net8
        stand-in for the Jamfile's $(OUTPUT_PATH). Hence no DependsOnTargets on
        Build: staging, not compilation, is the real prerequisite, and the check
        below says so rather than failing deep inside the zip writer.
        ====================================================================== -->
   <PropertyGroup>
-    <SkylineStageDir>$(MSBuildThisFileDirectory)..\bin\staging-net8\$(Configuration)</SkylineStageDir>
+    <SkylineStageDir>$(MSBuildThisFileDirectory)..\bin\staging\$(Configuration)</SkylineStageDir>
   </PropertyGroup>
 
   <!-- Per-zip prerequisites. CreateZipFile adds member files by BARE NAME from the
@@ -114,17 +102,17 @@
        Declaring them here makes `-t:DistroZips -p:DistroZips=SkylineNightly.zip`
        self-contained: the target builds and stages exactly what that zip needs.
 
-       Tfm is per project, not global: SkylineNightly is net8.0-windows (WinExe)
-       while SkylineNightlyShim is plain net8.0, and both also multi-target net472,
+       Tfm is per project, not global: SkylineNightly is net10.0-windows (WinExe)
+       while SkylineNightlyShim is plain net10.0, and both also multi-target net472,
        so the framework has to be pinned or MSBuild builds the net472 leg too. -->
   <ItemGroup>
     <DistroZipPrereq Include="$(MSBuildThisFileDirectory)..\SkylineNightly\SkylineNightly.csproj">
       <Zip>SkylineNightly.zip</Zip>
-      <Tfm>net8.0-windows</Tfm>
+      <Tfm>net10.0-windows</Tfm>
     </DistroZipPrereq>
     <DistroZipPrereq Include="$(MSBuildThisFileDirectory)..\SkylineNightlyShim\SkylineNightlyShim.csproj">
       <Zip>SkylineNightly.zip</Zip>
-      <Tfm>net8.0</Tfm>
+      <Tfm>net10.0</Tfm>
     </DistroZipPrereq>
     <!-- BlibBuild and BlibFilter already reach the staging dir through Skyline's own
          ProjectReference graph; BlibToMs2 does not, because nothing in Skyline uses it.
@@ -132,7 +120,7 @@
          BlibToMs2, which the Skyline installer does not). -->
     <DistroZipPrereq Include="$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibToMs2\BlibToMs2.csproj">
       <Zip>BiblioSpec.zip</Zip>
-      <Tfm>net8.0</Tfm>
+      <Tfm>net10.0</Tfm>
     </DistroZipPrereq>
   </ItemGroup>
 
@@ -214,7 +202,7 @@
          BUILD_TARGET list, so nothing has restored them on a clean agent and Targets="Build"
          alone fails with NETSDK1004 (missing project.assets.json). NuGet wants the restore
          done for the whole project, not one TFM, hence the separate call. The
-         RemoveProperties matters too: build.bat drives this with -f net8.0-windows, and
+         RemoveProperties matters too: build.bat drives this with -f net10.0-windows, and
          that global TargetFramework would otherwise flow down and restore the wrong TFM. -->
     <MSBuild Condition="'$(_Wanted)' == 'true'"
              Projects="%(DistroZipPrereq.Identity)" Targets="Restore"
@@ -224,7 +212,7 @@
              Projects="%(DistroZipPrereq.Identity)" Targets="Build"
              Properties="Configuration=$(Configuration);TargetFramework=%(DistroZipPrereq.Tfm)" />
 
-    <!-- Same merge-into-one-bin that Stage-Net8Tests.ps1 does. robocopy returns
+    <!-- Same merge-into-one-bin that Stage-Tests.ps1 does. robocopy returns
          0-7 for success, so the exit code is ignored and the real check is the
          staged-file assertion in DistroZips below. -->
     <Exec Condition="'$(_Wanted)' == 'true'" IgnoreExitCode="true"
@@ -235,7 +223,7 @@
     <Error Condition="'$(DistroZips)' == ''"
            Text="No zips requested. Pass -p:DistroZips=&quot;SkylineTester.zip;BiblioSpec.zip&quot; (build.bat does this from bare *.zip arguments)." />
     <Error Condition="!Exists('$(SkylineStageDir)\SkylineTester.exe')"
-           Text="No staged SkylineTester.exe under $(SkylineStageDir). Stage first (build.bat does this): pwsh Stage-Net8Tests.ps1 -Configuration $(Configuration) -Projects SkylineTester" />
+           Text="No staged SkylineTester.exe under $(SkylineStageDir). Stage first (build.bat does this): pwsh Stage-Tests.ps1 -Configuration $(Configuration) -Projects SkylineTester" />
     <ItemGroup>
       <!-- Unescape before splitting. The caller has to pass the separator ESCAPED
            as %3B, because MSBuild's -p: switch treats a raw ';' (and a raw ',') as

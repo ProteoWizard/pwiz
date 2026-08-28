@@ -66,7 +66,6 @@ namespace SkylineBatchTest
             string TransformBcfgFile(string line)
             {
                 var pathReplaced = line.Replace("REPLACE_TEXT", pwizToolsDirectory);
-#if !NET472
                 // The test bcfgs hardcode the net472 Skyline build path (pwiz_tools\Skyline\bin\x64\Release\
                 // SkylineCmd.exe). On net8 the build lives elsewhere, so a Custom SkylineSettings pointing there
                 // fails validation and the imported config is auto-disabled - flipping enabled="true" to absent
@@ -76,7 +75,6 @@ namespace SkylineBatchTest
                 var skylineDir = TestUtils.GetSkylineDir();
                 if (skylineDir != null)
                     pathReplaced = pathReplaced.Replace(net472Cmd, Path.Combine(skylineDir, "SkylineCmd.exe"));
-#endif
                 return TestUtils.ReplaceRVersionWithCurrent(pathReplaced);
             }
             
