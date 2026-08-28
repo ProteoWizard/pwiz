@@ -21,24 +21,12 @@
       SDK infers a RuntimeIdentifier and unwraps runtimes/win-x64/native/*;
       library/test projects don't, so we add IronCompress explicitly with
       GeneratePathProperty so the Content copy below can pull the native
-      binary into the test bin for net472. net10.0 resolves the native dep
-      via deps.json automatically and needs no extra wiring.
+      binary into the test bin. net10.0 resolves the native dep via
+      deps.json automatically and needs no extra wiring.
     -->
     <PackageReference Include="IronCompress" Version="1.5.2" GeneratePathProperty="true" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Content Include="$(PkgIronCompress)\runtimes\win-x64\native\nironcompress.dll">
-      <Link>nironcompress.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>false</Visible>
-    </Content>
-  </ItemGroup>
-
-  <!-- net472 needs System.Memory explicitly; net8 has it built in. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <PackageReference Include="System.Memory" Version="4.5.5" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />

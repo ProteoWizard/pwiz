@@ -10,7 +10,7 @@
   <PropertyGroup>
     <ProjectGuid>{65E16E9D-71FC-40D1-B3FF-AD16BEFF9AF4}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -52,18 +52,6 @@
   </ItemGroup>
 
   <!-- net472: the legacy on-disk DLLs + EnvDTE VS COM automation the net8 path drops -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="DotNetZip">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Win32.TaskScheduler">
-      <HintPath>.\Microsoft.Win32.TaskScheduler.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 
   <ItemGroup>
     <None Include="Properties\Settings.settings">

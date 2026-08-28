@@ -11,7 +11,7 @@
   <PropertyGroup>
     <ProjectGuid>{87D6B185-C2D3-48A9-95B3-A0F528F3F446}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -49,17 +49,6 @@
   </ItemGroup>
 
   <!-- net472: the exact on-disk DLLs + the framework assemblies the SDK doesn't auto-add. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="log4net"><HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath></Reference>
-    <Reference Include="Newtonsoft.Json"><HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
-    <Reference Include="System.Collections.Immutable"><HintPath>..\..\..\..\Shared\Lib\System.Collections.Immutable.dll</HintPath></Reference>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Management" />
-    <Reference Include="System.Security" />
-  </ItemGroup>
 
   <!-- Config-file icon + report loaded at runtime -->
   <ItemGroup>

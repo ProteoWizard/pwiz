@@ -31,11 +31,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-#if NET472
-using Excel;
-#else
 using ExcelDataReader;
-#endif
 using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -707,7 +703,6 @@ namespace pwiz.SkylineTestUtil
             SetClipboardText(GetExcelFileText(filePath, page, columns, hasHeader));
         }
 
-#if !NET472
         private static bool _excelCodePagesRegistered;
 
         // Modern ExcelDataReader throws NotSupportedException ("No data is available for
@@ -720,13 +715,10 @@ namespace pwiz.SkylineTestUtil
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             _excelCodePagesRegistered = true;
         }
-#endif
 
         protected static string GetExcelFileText(string filePath, string page, int columns, bool hasHeader)
         {
-#if !NET472
             EnsureExcelCodePagesRegistered();
-#endif
             bool[] legacyFileValues = new[] {false};
             if (filePath.EndsWith(".xls"))
             {
@@ -2819,9 +2811,6 @@ namespace pwiz.SkylineTestUtil
             EndTest();
 
             Settings.Default.Reset();
-#if NET472
-            MsDataFileImpl.PerfUtilFactory.Reset();
-#endif
         }
 
         private void RunTest()
@@ -2951,7 +2940,6 @@ namespace pwiz.SkylineTestUtil
             {
                 // Clear the clipboard to avoid the appearance of a memory leak.
                 ClipboardEx.Release();
-#if !NET472
                 // Release the two net8 WinForms holds on this window (see ReleaseModalMenuFilterWindow
                 // and ReleaseToolStripToolTips) before closing, so SkylineWindow and its document can be
                 // collected and are not reported as a cross-test GC leak.
@@ -2960,7 +2948,6 @@ namespace pwiz.SkylineTestUtil
                     ReleaseModalMenuFilterWindow();
                     ReleaseToolStripToolTips();
                 });
-#endif
                 // Occasionally this causes an InvalidOperationException during stress testing.
                 RunUI(SkylineWindow.Close);
             }
@@ -2975,7 +2962,6 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-#if !NET472
         // net8 WinForms tracks the last active top-level window during menu mode via
         // ToolStripManager.ModalMenuFilter._lastActiveWindow, a HandleRef<HWND> whose Wrapper keeps
         // the Form managed-alive. Unlike net472 (which tracked a bare HWND), this survives menu-mode
@@ -3076,7 +3062,6 @@ namespace pwiz.SkylineTestUtil
                 timerField.SetValue(toolTip, null);
             }
         }
-#endif
 
         private void CloseOpenForms(Type exceptType)
         {

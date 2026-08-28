@@ -5,7 +5,7 @@
        copied to output. Compile items are auto-globbed. -->
   <PropertyGroup>
     <ProjectGuid>{6FCD5F27-637B-499A-BB66-F74D5FBBD500}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -58,13 +58,5 @@
   </ItemGroup>
 
   <!-- net472: legacy assembly references, kept verbatim so the existing build path is unchanged. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="DigitalRune.Windows.Docking"><HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath></Reference>
-    <Reference Include="DotNetZip"><HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath></Reference>
-    <Reference Include="JetBrains.Annotations"><HintPath>..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath></Reference>
-    <Reference Include="log4net"><HintPath>..\..\Shared\Lib\log4net.dll</HintPath></Reference>
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
-    <Reference Include="Newtonsoft.Json"><HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
-  </ItemGroup>
 
 </Project>

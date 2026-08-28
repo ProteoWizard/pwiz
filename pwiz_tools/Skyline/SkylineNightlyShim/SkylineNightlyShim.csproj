@@ -7,7 +7,7 @@
   <PropertyGroup>
     <ProjectGuid>{3C7F5209-6507-42C5-80CE-472AE6A51CD1}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net10.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -29,10 +29,5 @@
     <PackageReference Include="DotNetZip" Version="1.16.0" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="DotNetZip"><HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath></Reference>
-    <Reference Include="System.Net.Http" />
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
 
 </Project>

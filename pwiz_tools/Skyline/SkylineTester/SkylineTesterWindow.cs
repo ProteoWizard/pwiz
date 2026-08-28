@@ -692,22 +692,6 @@ namespace SkylineTester
 
         private string[] GetPossibleBuildDirs()
         {
-#if NET472
-            var dirs = new[]
-            {
-                Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x86\Release")),
-                Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x64\Release")),
-                Path.Combine(GetBuildRoot(), @"pwiz_tools\Skyline\bin\x86\Release"),
-                Path.Combine(GetBuildRoot(), @"pwiz_tools\Skyline\bin\x64\Release"),
-                Path.Combine(GetNightlyBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x86\Release"),
-                Path.Combine(GetNightlyBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x64\Release"),
-                GetZipPath(32),
-                GetZipPath(64),
-            };
-            if (_buildDebug)
-                dirs = dirs.Select(dir => dir.Replace(@"\Release", @"\Debug")).ToArray();
-            return dirs;
-#else
             // net8 tests run from a *staged* directory assembled by Stage-Tests.ps1 that
             // co-locates TestRunner.exe, the test DLLs, and Skyline-daily (the net8 analogue of the
             // net472 single bin\x64\Release, which no longer exists because projects build to
@@ -731,10 +715,8 @@ namespace SkylineTester
                 null,                                                       // zip (32 bit)
                 null,                                                       // zip (64 bit)
             };
-#endif
         }
 
-#if !NET472
         // Locate the most recently staged net8 test directory in this checkout. Stage-Tests.ps1
         // assembles TestRunner.exe + the test DLLs + Skyline-daily under
         // <checkout>\pwiz_tools\Skyline\bin\staging[/-record/-validate]\Release. Find the
@@ -811,7 +793,6 @@ namespace SkylineTester
                 return null;
             }
         }
-#endif
 
         public void FindBuilds()
         {

@@ -7,7 +7,7 @@
   <PropertyGroup>
     <ProjectGuid>{69531D2C-BAD8-4E79-9DF3-482A74D6D0BF}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -33,11 +33,5 @@
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
-    <Reference Include="DotNetZip"><HintPath>..\..\..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath></Reference>
-    <Reference Include="log4net"><HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath></Reference>
-    <Reference Include="JetBrains.Annotations"><HintPath>..\..\..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath></Reference>
-  </ItemGroup>
 
 </Project>

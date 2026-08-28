@@ -7,7 +7,7 @@
   <PropertyGroup>
     <ProjectGuid>{F29A4961-5437-40B8-A38E-FFB4584BC409}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -24,9 +24,5 @@
     <Reference Include="SCIEX.Apis.Control.v1"><HintPath>.\SCIEX.Apis.Control.v1.dll</HintPath></Reference>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
 
 </Project>

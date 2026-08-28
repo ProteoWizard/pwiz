@@ -5,7 +5,7 @@
   <PropertyGroup>
     <ProjectGuid>{B2B7F9A3-AC3D-40B3-A2F6-173292F580E4}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net10.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

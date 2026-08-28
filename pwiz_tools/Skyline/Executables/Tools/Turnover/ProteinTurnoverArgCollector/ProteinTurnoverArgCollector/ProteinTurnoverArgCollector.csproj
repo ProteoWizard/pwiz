@@ -6,7 +6,7 @@
   <PropertyGroup>
     <ProjectGuid>{D1691800-2683-42B8-8C5A-3BEC8FA6DBED}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -25,7 +25,4 @@
 
   <!-- Microsoft.VisualBasic.FileIO.TextFieldParser: framework assembly on net472; on net8 it ships
        in the WindowsDesktop shared framework (UseWindowsForms), so no explicit reference needed. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="Microsoft.VisualBasic" />
-  </ItemGroup>
 </Project>

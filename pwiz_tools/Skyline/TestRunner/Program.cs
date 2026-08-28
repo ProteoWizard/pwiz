@@ -951,23 +951,15 @@ namespace TestRunner
         // (<staged>\dotnet) with no environment variable at all. net472 launches the apphost directly.
         private static string GetTestRunnerExe()
         {
-#if NET472
-            return GetContainerTestRunnerExe();
-#else
             // Container paths under c:\pwiz\...\staging\ contain no spaces, so no quoting needed.
             return Path.GetDirectoryName(GetContainerTestRunnerExe()) + @"\dotnet\dotnet.exe";
-#endif
         }
 
         // The managed target that must follow GetTestRunnerExe() on net8 (the DLL the muxer runs),
         // with a trailing space; empty on net472 where the apphost itself is the program.
         private static string GetTestRunnerTargetArg()
         {
-#if NET472
-            return string.Empty;
-#else
             return Path.ChangeExtension(GetContainerTestRunnerExe(), ".dll") + " ";
-#endif
         }
 
         // Environment fragment spliced into `docker run` for the Docker workers. Currently empty:

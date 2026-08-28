@@ -6,7 +6,7 @@
   <PropertyGroup>
     <ProjectGuid>{B92CA24E-0867-4B99-88F8-EF542A4AFE87}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -41,10 +41,5 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="DotNetZip"><HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath></Reference>
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
-    <Reference Include="Newtonsoft.Json"><HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
-  </ItemGroup>
 
 </Project>

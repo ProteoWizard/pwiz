@@ -7,7 +7,7 @@
   <PropertyGroup>
     <ProjectGuid>{2E719034-6095-4CA5-A1E1-E1CBE3D74E4A}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

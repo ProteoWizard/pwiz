@@ -11,7 +11,7 @@
   <PropertyGroup>
     <ProjectGuid>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -385,50 +385,6 @@
           Condition="'@(_SkylineCmdOutput)' != ''" />
   </Target>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <!-- Legacy bundled DLLs, kept verbatim for net472 build parity. -->
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Security" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.IO.Compression.FileSystem" />
-    <Reference Include="Accessibility" />
-    <Reference Include="EnvDTE">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Excel.4.5">
-      <HintPath>..\Shared\Lib\Excel.4.5.dll</HintPath>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Dapper"><HintPath>..\Shared\Lib\Dapper.dll</HintPath></Reference>
-    <Reference Include="DigitalRune.Windows.Docking"><HintPath>..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath></Reference>
-    <Reference Include="Google.Protobuf"><HintPath>..\Shared\Lib\Google.Protobuf.dll</HintPath></Reference>
-    <Reference Include="DotNetZip"><HintPath>..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath></Reference>
-    <Reference Include="Grpc.Core"><HintPath>..\Shared\Lib\Grpc.Core.dll</HintPath></Reference>
-    <Reference Include="Grpc.Core.Api"><HintPath>..\Shared\Lib\Grpc.Core.Api.dll</HintPath></Reference>
-    <Reference Include="IdentityModel"><HintPath>..\Shared\Lib\IdentityModel.dll</HintPath></Reference>
-    <Reference Include="JetBrains.Annotations"><HintPath>..\Shared\Lib\JetBrains.Annotations.dll</HintPath></Reference>
-    <Reference Include="Kajabity Tools"><HintPath>..\Shared\Lib\Kajabity Tools.dll</HintPath></Reference>
-    <Reference Include="log4net"><HintPath>..\Shared\Lib\log4net.dll</HintPath></Reference>
-    <Reference Include="MathNet.Numerics"><HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath></Reference>
-    <Reference Include="Newtonsoft.Json"><HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
-    <Reference Include="ParquetNet"><HintPath>..\Shared\Lib\Parquet\ParquetNet.dll</HintPath></Reference>
-    <Reference Include="IronCompress"><HintPath>..\Shared\Lib\Parquet\IronCompress.dll</HintPath></Reference>
-    <Reference Include="System.Reflection.Emit.Lightweight"><HintPath>..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath></Reference>
-    <Reference Include="Microsoft.IO.RecyclableMemoryStream"><HintPath>..\Shared\Lib\Parquet\Microsoft.IO.RecyclableMemoryStream.dll</HintPath></Reference>
-    <Reference Include="Snappier"><HintPath>..\Shared\Lib\Parquet\Snappier.dll</HintPath></Reference>
-    <Reference Include="System.Text.Encodings.Web"><HintPath>..\Shared\Lib\Parquet\System.Text.Encodings.Web.dll</HintPath></Reference>
-    <Reference Include="System.Text.Json"><HintPath>..\Shared\Lib\Parquet\System.Text.Json.dll</HintPath></Reference>
-    <Reference Include="ZstdSharp"><HintPath>..\Shared\Lib\Parquet\ZstdSharp.dll</HintPath></Reference>
-    <Reference Include="Microsoft.Diagnostics.Runtime"><HintPath>..\Shared\Lib\Microsoft.Diagnostics.Runtime.dll</HintPath></Reference>
-    <Reference Include="Iesi.Collections"><HintPath>..\Shared\Lib\NHibernate\Iesi.Collections.dll</HintPath></Reference>
-    <Reference Include="NHibernate"><HintPath>..\Shared\Lib\NHibernate\NHibernate.dll</HintPath></Reference>
-    <Reference Include="Sprache"><HintPath>..\Shared\Lib\Sprache.dll</HintPath></Reference>
-    <Reference Include="System.Data.SQLite">
-      <HintPath>..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <!-- Net8 NuGet equivalents. Some legacy references have no direct net8

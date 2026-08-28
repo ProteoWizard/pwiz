@@ -7,7 +7,7 @@
        extra package needed there. -->
   <PropertyGroup>
     <ProjectGuid>{3FD4E167-8F9C-4116-8122-67C7AD143490}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -24,9 +24,6 @@
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="System.Web" />
-  </ItemGroup>
 
   <!-- RemoteBase's legacy tool IPC serializes through BinaryFormatter. .NET 9 REMOVED the
        implementation from the shared framework: the type still compiles but every
@@ -37,7 +34,7 @@
        STOPGAP: the package is deprecated. The durable fix is finishing the migration to the
        JSON protocol (JsonToolServer / SkylineJsonToolClient), after which this can be dropped
        along with RemoteBase. -->
-  <ItemGroup Condition="'$(TargetFramework)' != 'net472'">
+  <ItemGroup>
     <PackageReference Include="System.Runtime.Serialization.Formatters" Version="9.0.0" />
   </ItemGroup>
 

@@ -109,15 +109,10 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 // Get mock handler for testing purposes.
                 CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(
                     HANDLER_NAME,
-#if NET472
-                    () => new WebRequestHandler()
-                        { UnsafeAuthenticatedConnectionSharing = true, PreAuthenticate = true }
-#else
                     // WebRequestHandler is not available on net8. HttpClientHandler.PreAuthenticate
                     // is enough for the standard OAuth flow; the connection-sharing option is a
                     // System.Net legacy toggle unnecessary for our .NET 8 usage.
                     () => new HttpClientHandler { PreAuthenticate = true }
-#endif
                 )
             );
             var provider = services.BuildServiceProvider();

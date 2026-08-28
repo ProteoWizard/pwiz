@@ -16,11 +16,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
-  <!-- net472 needs System.Memory explicitly; net8 has it built in. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <PackageReference Include="System.Memory" Version="4.5.5" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
   </ItemGroup>
@@ -40,11 +35,9 @@
        test that validates the feature. -->
   <PropertyGroup>
     <OspreyVendorReader Condition="'$(OspreyVendorReader)' == ''">false</OspreyVendorReader>
-    <!-- pwiz_data_cli is net472-only, so the capability can never be on for
-         net10.0 no matter what the property says. -->
+    <!-- Hard off: the reader needs pwiz_data_cli, which only ever existed for
+         net472. The property is kept so the plumbing below stays readable. -->
     <OspreyVendorReaderEnabled>false</OspreyVendorReaderEnabled>
-    <OspreyVendorReaderEnabled
-        Condition="'$(TargetFramework)' == 'net472' And '$(OspreyVendorReader)' == 'true'">true</OspreyVendorReaderEnabled>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(OspreyVendorReaderEnabled)' == 'true'">

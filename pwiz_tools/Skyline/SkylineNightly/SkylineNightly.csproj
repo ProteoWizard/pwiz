@@ -11,7 +11,7 @@
   <PropertyGroup>
     <ProjectGuid>{32A40878-3053-4FFA-96C1-23FC27D46B65}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -41,14 +41,5 @@
   </ItemGroup>
 
   <!-- net472: the exact on-disk DLLs + the framework assemblies the SDK doesn't auto-add. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="DotNetZip"><HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath></Reference>
-    <Reference Include="Microsoft.Diagnostics.Runtime"><HintPath>..\..\Shared\Lib\Microsoft.Diagnostics.Runtime\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath></Reference>
-    <Reference Include="Microsoft.Win32.TaskScheduler"><HintPath>..\SkylineTester\Microsoft.Win32.TaskScheduler.dll</HintPath></Reference>
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
 
 </Project>

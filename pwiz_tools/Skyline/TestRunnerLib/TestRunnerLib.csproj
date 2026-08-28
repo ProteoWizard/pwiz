@@ -5,7 +5,7 @@
        it under net10.0-windows too. -->
   <PropertyGroup>
     <ProjectGuid>{E3F0E34F-F9E6-4360-996F-E2054E4FA1AE}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -25,19 +25,6 @@
     <EmbeddedResource Include="TestRunnerFormLookup.csv" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="JetBrains.Annotations"><HintPath>..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath></Reference>
-    <Reference Include="JetBrains.Profiler.Api"><HintPath>..\..\Shared\Lib\Test\JetBrains.Profiler.Api.dll</HintPath></Reference>
-    <Reference Include="log4net"><HintPath>..\..\Shared\Lib\log4net.dll</HintPath></Reference>
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
-    <Reference Include="System.Configuration" />
-    <Reference Condition="'$(Platform)' == 'x86'" Include="TestDiagnostics">
-      <HintPath>..\..\Shared\ProteowizardWrapper\obj\x86\TestDiagnostics.dll</HintPath>
-    </Reference>
-    <Reference Condition="'$(Platform)' == 'x64'" Include="TestDiagnostics">
-      <HintPath>..\..\Shared\ProteowizardWrapper\obj\x64\TestDiagnostics.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <!-- RunTests.cs / MemoryProfiler.cs / MiniDump.cs / InvokeSkyline.cs

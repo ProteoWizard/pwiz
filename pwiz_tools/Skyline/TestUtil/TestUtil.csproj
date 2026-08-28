@@ -7,7 +7,7 @@
        Assert / TestContext types referenced by AbstractUnitTest, AssertEx. -->
   <PropertyGroup>
     <ProjectGuid>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -51,21 +51,6 @@
     <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="Accessibility" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="DigitalRune.Windows.Docking"><HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath></Reference>
-    <Reference Include="Excel.4.5"><HintPath>..\..\Shared\Lib\ExcelDataReader\Excel.4.5.dll</HintPath></Reference>
-    <Reference Include="DotNetZip"><HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath></Reference>
-    <Reference Include="Google.Protobuf"><HintPath>..\..\Shared\Lib\Google.Protobuf.dll</HintPath></Reference>
-    <Reference Include="Grpc.Core"><HintPath>..\..\Shared\Lib\Grpc.Core.dll</HintPath></Reference>
-    <Reference Include="Grpc.Core.Api"><HintPath>..\..\Shared\Lib\Grpc.Core.Api.dll</HintPath></Reference>
-    <Reference Include="JetBrains.Annotations"><HintPath>..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath></Reference>
-    <Reference Include="log4net"><HintPath>..\..\Shared\Lib\log4net.dll</HintPath></Reference>
-    <Reference Include="Microsoft.Diagnostics.Runtime"><HintPath>..\..\Shared\Lib\Microsoft.Diagnostics.Runtime\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath></Reference>
-    <Reference Include="Newtonsoft.Json"><HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
-    <Reference Include="System.Data.SQLite"><HintPath>..\..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath></Reference>
-  </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="Google.Protobuf" Version="3.27.3" />

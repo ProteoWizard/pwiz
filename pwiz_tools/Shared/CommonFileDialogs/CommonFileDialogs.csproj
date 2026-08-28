@@ -4,7 +4,7 @@
        file-picker dialogs, depends on CommonUtil + CommonMsData + ProteowizardWrapper. -->
   <PropertyGroup>
     <ProjectGuid>{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

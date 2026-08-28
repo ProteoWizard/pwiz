@@ -10,7 +10,7 @@
   <PropertyGroup>
     <ProjectGuid>{B61C5AAE-F385-41D6-B2D1-6FAA8818FB43}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net10.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -32,13 +32,5 @@
   </ItemGroup>
 
   <!-- BCL polyfill shims: net472 only (built into net8). -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="Microsoft.Bcl.AsyncInterfaces"><HintPath>..\lib\Microsoft.Bcl.AsyncInterfaces.dll</HintPath></Reference>
-    <Reference Include="System.Memory"><HintPath>..\..\..\..\..\Shared\Lib\System.Memory.dll</HintPath></Reference>
-    <Reference Include="System.Numerics.Vectors"><HintPath>..\lib\System.Numerics.Vectors.dll</HintPath></Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe"><HintPath>..\..\..\..\..\Shared\Lib\System.Runtime.CompilerServices.Unsafe.dll</HintPath></Reference>
-    <Reference Include="System.Threading.Tasks.Extensions"><HintPath>..\lib\System.Threading.Tasks.Extensions.dll</HintPath></Reference>
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
 
 </Project>

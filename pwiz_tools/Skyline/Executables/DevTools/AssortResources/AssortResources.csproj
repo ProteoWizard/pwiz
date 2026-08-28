@@ -9,7 +9,7 @@
   <PropertyGroup>
     <ProjectGuid>{9E3C78C2-A749-4E6F-809C-ECA0D16CFFD0}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -30,9 +30,6 @@
 
   <!-- System.Resources.Tools.StronglyTypedResourceBuilder lives in System.Design.dll on net472;
        on net8 it resolves through the WindowsDesktop reference set (UseWindowsForms). -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="System.Design" />
-  </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="BlankResourcesFile.txt" />

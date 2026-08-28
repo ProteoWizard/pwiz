@@ -100,13 +100,11 @@ namespace AutoQCTest
             // run never picks up a newer net8 build that happens to be present on the same machine.
             var candidates = new[]
             {
-#if !NET472
                 Path.Combine(skylineProjectDir, "bin", "Release", "net10.0-windows"),
                 Path.Combine(skylineProjectDir, "bin", "Debug", "net10.0-windows"),
                 Path.Combine(skylineProjectDir, "bin", "x64", "Release", "net10.0-windows"),
                 Path.Combine(skylineProjectDir, "bin", "x64", "Debug", "net10.0-windows"),
                 Path.Combine(skylineProjectDir, "bin", "staging", "Release"),
-#endif
                 Path.Combine(skylineProjectDir, "bin", "x64", "Release"),
                 Path.Combine(skylineProjectDir, "bin", "x64", "Debug"),
             };

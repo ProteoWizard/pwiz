@@ -6,7 +6,7 @@
        equivalents on net8. -->
   <PropertyGroup>
     <ProjectGuid>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -49,36 +49,6 @@
     <EmbeddedResource Include="DataBinding\Documentation\DocumentationGenerator.css" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <!-- Legacy bundled DLLs — kept for the net472 path so behavior matches today. -->
-    <Reference Include="Iesi.Collections">
-      <HintPath>..\Lib\NHibernate\Iesi.Collections.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="log4net">
-      <HintPath>..\Lib\log4net.dll</HintPath>
-      <Private>True</Private>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
-    <Reference Include="MathNet.Numerics">
-      <HintPath>..\Lib\MathNet.Numerics.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NHibernate">
-      <HintPath>..\Lib\NHibernate\NHibernate.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Sprache">
-      <HintPath>..\Lib\Sprache.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <!-- Legacy used a $(PLATFORM)-substituted HintPath; SDK doesn't evaluate
-         $(PLATFORM) the same way. Use the NuGet package for both targets;
-         the package's bundled native handles the platform routing. -->
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" Condition="'$(TargetFramework)' == 'net472'" />
-    <Reference Include="System.Web" />
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <!-- net8 replacements. NHibernate 5.5+ supports net6+. log4net 2.x is net6+

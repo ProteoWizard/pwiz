@@ -365,9 +365,6 @@ namespace SkylineBatchTest
 
         public static string GetSkylineDir()
         {
-#if NET472
-            return GetProjectDirectory("bin\\x64\\Release");
-#else
             // net8 Skyline builds to bin\Release\net8.0-windows (or a Stage-Tests staging dir)
             // rather than the net472 bin\x64\Release. Return whichever holds SkylineCmd.exe.
             foreach (var rel in new[]
@@ -382,7 +379,6 @@ namespace SkylineBatchTest
                     return dir;
             }
             return GetProjectDirectory("bin\\Release\\net10.0-windows");
-#endif
         }
 
         public static string GetProjectDirectory(string relativePath)

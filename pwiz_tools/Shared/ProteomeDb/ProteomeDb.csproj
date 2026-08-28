@@ -4,7 +4,7 @@
        CommonUtil. NHibernate + SQLite proteome layer. -->
   <PropertyGroup>
     <ProjectGuid>{09FC3CB3-FCCD-4906-A370-160B28725936}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -47,27 +47,6 @@
     <ProjectReference Include="..\CommonUtil\CommonUtil.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Web" />
-    <Reference Include="Google.Protobuf">
-      <HintPath>..\Lib\Google.Protobuf.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Iesi.Collections">
-      <HintPath>..\Lib\NHibernate\Iesi.Collections.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="DotNetZip">
-      <HintPath>..\Lib\DotNetZip\DotNetZip.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NHibernate">
-      <HintPath>..\Lib\NHibernate\NHibernate.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
-  </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="Google.Protobuf" Version="3.27.3" />
