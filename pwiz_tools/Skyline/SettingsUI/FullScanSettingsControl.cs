@@ -119,6 +119,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public IonMobility.IonMobilityFilteringUserControl IonMobilityFiltering { get { return usercontrolIonMobilityFiltering; } }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FullScanPrecursorIsotopes PrecursorIsotopesCurrent
         {
@@ -131,6 +132,7 @@ namespace pwiz.Skyline.SettingsUI
             set { comboPrecursorIsotopes.SelectedItem = value.GetLocalizedString(); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FullScanMassAnalyzerType PrecursorMassAnalyzer
         {
@@ -142,6 +144,7 @@ namespace pwiz.Skyline.SettingsUI
             set { comboPrecursorAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(value); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FullScanAcquisitionMethod AcquisitionMethod
         {
@@ -156,6 +159,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public ComboBox ComboAcquisitionMethod => comboAcquisitionMethod;
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FullScanMassAnalyzerType ProductMassAnalyzer
         {
@@ -183,6 +187,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int Peaks
         {
@@ -192,6 +197,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public CheckBox CbIncludeMinusOnePrecursor => cbIncludeMinusOnePrecursor;
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? PrecursorRes
         {
@@ -203,6 +209,7 @@ namespace pwiz.Skyline.SettingsUI
             set { textPrecursorRes.Text = FormatRes(value, PrecursorMassAnalyzer); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? PrecursorResMz
         {
@@ -214,6 +221,7 @@ namespace pwiz.Skyline.SettingsUI
             set { textPrecursorAt.Text = value.ToString(); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? ProductRes
         {
@@ -225,6 +233,7 @@ namespace pwiz.Skyline.SettingsUI
             set { textProductRes.Text = FormatRes(value, ProductMassAnalyzer); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? ProductResMz
         {
@@ -236,6 +245,7 @@ namespace pwiz.Skyline.SettingsUI
             set { textProductAt.Text = value.ToString(); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseSelectiveExtraction
         {
@@ -243,6 +253,7 @@ namespace pwiz.Skyline.SettingsUI
             set { cbHighSelectivity.Checked = value; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public RetentionTimeFilterType RetentionTimeFilterType
         {
@@ -281,6 +292,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string PrecursorChargesString { get; set; }
 
@@ -289,6 +301,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return textPrecursorCharges; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int[] PrecursorCharges
         {
@@ -669,6 +682,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Callback event handler that will get called if the Acquisition method gets changed
         /// </summary>
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public EventHandler IsolationSchemeChangedEvent { get; set; }
 
@@ -777,6 +791,7 @@ namespace pwiz.Skyline.SettingsUI
             comboIsolationScheme.Focus();
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string IsolationSchemeName
         {
@@ -925,6 +940,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool KeepAllTimes
         {

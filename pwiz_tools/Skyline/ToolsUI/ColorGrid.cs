@@ -83,6 +83,7 @@ namespace pwiz.Skyline.ToolsUI
             remove { dataGridViewColors.CellClick -= value; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IColorGridOwner Owner
         {
@@ -103,6 +104,7 @@ namespace pwiz.Skyline.ToolsUI
             get { return bindingSource1; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AllowUserToOrderColumns
         {
@@ -110,6 +112,7 @@ namespace pwiz.Skyline.ToolsUI
             set { dataGridViewColors.AllowUserToOrderColumns = value; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AllowUserToAddRows
         {

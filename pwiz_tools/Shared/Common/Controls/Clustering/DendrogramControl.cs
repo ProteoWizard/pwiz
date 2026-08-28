@@ -35,7 +35,7 @@ namespace pwiz.Common.Controls.Clustering
 
         private DockStyle _dendrogramLocation;
         private bool _rectilinearLines;
-        [DefaultValue(DockStyle.None)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public DockStyle DendrogramLocation {
             get
             {
@@ -52,7 +52,7 @@ namespace pwiz.Common.Controls.Clustering
             }
         }
 
-        [DefaultValue(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool RectilinearLines
         {
             get { return _rectilinearLines; }

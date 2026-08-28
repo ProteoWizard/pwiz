@@ -743,14 +743,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Parent = HostDialog = hostControl;
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DiannConfig DiannConfig { get; set; }
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FastaFilePath { get; set; }
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<string> DataFiles { get; set; }
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<StaticMod> FixedMods { get; set; }
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<StaticMod> VariableMods { get; set; }
         public string OutputSpecLibPath { get; private set; }

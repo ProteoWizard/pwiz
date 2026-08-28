@@ -623,6 +623,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Parent = HostDialog = hostControl;
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public EncyclopeDiaSearchDlg.EncyclopeDiaSettings Settings { get; set; }
         public string EncyclopeDiaChromLibraryPath { get; private set; }

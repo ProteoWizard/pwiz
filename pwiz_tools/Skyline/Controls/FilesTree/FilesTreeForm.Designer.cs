@@ -57,6 +57,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             // 
             this.filesTree.AllowDrop = true;
             resources.ApplyResources(this.filesTree, "filesTree");
+            this.filesTree.AutoExpandSingleNodes = true;
             this.filesTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.filesTree.HideSelection = false;
             this.filesTree.ItemHeight = 16;

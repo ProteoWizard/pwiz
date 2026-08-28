@@ -310,6 +310,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Key 
         {
@@ -324,6 +325,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsCanceled { get; set; }
 
@@ -339,6 +341,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ScaleIsLocked
         {

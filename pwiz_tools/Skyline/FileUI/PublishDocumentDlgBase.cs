@@ -54,11 +54,13 @@ namespace pwiz.Skyline.FileUI
             ServerTreeStateRestorer = new TreeViewStateRestorer(treeViewFolders);
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsLoaded { get; set; }
         public string FileName => tbFilePath.Text;
         public bool AnonymousServersCheckboxVisible => cbAnonymousServers.Visible;
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         internal TreeViewStateRestorer ServerTreeStateRestorer { get; set; }
         internal IDocumentUIContainer DocumentUIContainer { get; }

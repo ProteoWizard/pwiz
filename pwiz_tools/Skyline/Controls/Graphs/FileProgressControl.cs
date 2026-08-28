@@ -85,6 +85,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ControlOnMouseDown(this, e);
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int Number
         {
@@ -109,6 +110,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         public ProgressBar ProgressBar => progressBar;
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MsDataFileUri FilePath
         {
@@ -125,6 +127,7 @@ namespace pwiz.Skyline.Controls.Graphs
             toolTip.SetToolTip(labelFileName, text);
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsCanceled { get; set; }
 
@@ -296,6 +299,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return sb.ToString();
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Selected
         {

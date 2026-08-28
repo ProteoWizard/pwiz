@@ -133,6 +133,7 @@ namespace pwiz.SkylineTestFunctional
         /// thread (MultithreadSafeCallScope) and so will not complain when it is not.</summary>
         private class ThreadRecordingTextBox : TextBox
         {
+            [Browsable(false)]
             [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
             public int ReadOnThreadId { get; set; }
 

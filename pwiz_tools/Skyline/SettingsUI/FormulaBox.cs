@@ -107,6 +107,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public event EventHandler ChargeChange;
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FormulaText // For test support
         {
@@ -133,6 +134,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Formula
         {
@@ -190,6 +192,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         // Isotopes for mass calc - any isotopic description in adduct overrides
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Dictionary<string, string> IsotopeLabelsForMassCalc
         {
@@ -201,6 +204,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string NeutralFormula
         {
@@ -229,6 +233,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Adduct Adduct
         {
@@ -263,6 +268,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? MonoMass
         {
@@ -281,6 +287,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return textMono.Text; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? AverageMass
         {
@@ -299,6 +306,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return textAverage.Text; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool FormulaVisible
         {
@@ -324,6 +332,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public string FormulaError { get; private set; }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool MassEnabled
         {

@@ -478,6 +478,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public PropertyPath SublistId 
         { 

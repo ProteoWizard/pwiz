@@ -138,6 +138,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             return null;
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ViewSpec ViewSpec
         {

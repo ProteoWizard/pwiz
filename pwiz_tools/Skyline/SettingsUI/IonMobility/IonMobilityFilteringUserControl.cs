@@ -140,6 +140,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         #region for testing
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SelectedIonMobilityLibrary
         {
@@ -224,6 +225,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             UpdateIonMobilityFilterWindowWidthControls();
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType WindowWidthType
         {
@@ -235,6 +237,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsUseSpectralLibraryIonMobilities
         {
@@ -242,6 +245,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             set { cbUseSpectralLibraryIonMobilities.Checked = value; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? IonMobilityFilterResolvingPower
         {

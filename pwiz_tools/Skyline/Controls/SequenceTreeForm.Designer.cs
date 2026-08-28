@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Controls
             // 
             this.sequenceTree.AllowDrop = true;
             resources.ApplyResources(this.sequenceTree, "sequenceTree");
+            this.sequenceTree.AutoExpandSingleNodes = true;
             this.sequenceTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.sequenceTree.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.sequenceTree.HideSelection = false;

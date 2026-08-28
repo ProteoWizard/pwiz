@@ -19,6 +19,7 @@ namespace pwiz.Common.Controls
             FillWeight = 1;
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int ColumnsNotShownCount 
         { 

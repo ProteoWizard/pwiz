@@ -149,6 +149,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SearchEngine SelectedSearchEngine
         {
@@ -605,6 +606,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool HardklorInstrumentSettingsAreEditable => _hardklorInstrumentSettingsControl.Enabled;
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FullScanMassAnalyzerType HardklorInstrument
         {
@@ -612,6 +614,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { _hardklorInstrumentSettingsControl.PrecursorMassAnalyzer = value; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double HardklorResolution
         {
@@ -625,6 +628,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double HardklorMinIdotP
         {
@@ -632,6 +636,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { textHardklorMinIdotP.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double HardklorMinIntensityPPM
         {
@@ -639,6 +644,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { textHardklorMinIntensityPPM.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double HardklorSignalToNoise
         {
@@ -646,6 +652,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { textHardklorSignalToNoise.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MzTolerance PrecursorTolerance
         {
@@ -667,6 +674,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MzTolerance FragmentTolerance
         {
@@ -690,6 +698,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MaxVariableMods
         {
@@ -700,6 +709,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public string CutoffLabel => ImportPeptideSearch.SearchEngine.CutoffScoreLabel;
         public string CutoffScoreName => ImportPeptideSearch.SearchEngine.CutoffScoreName;
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double CutoffScore
         {
@@ -707,6 +717,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { textCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FragmentIons
         {
@@ -721,6 +732,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Ms2Analyzer
         {
@@ -735,6 +747,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IDictionary<string, AbstractDdaSearchEngine.Setting> AdditionalSettings
         {

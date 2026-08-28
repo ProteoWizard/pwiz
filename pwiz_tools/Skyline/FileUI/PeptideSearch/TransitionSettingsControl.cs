@@ -154,6 +154,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SpectrumFilter = settings.FullScan.SpectrumClassFilter;
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IonFilter
         {
@@ -161,12 +162,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { panelIonFilter.Visible = value; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Adduct[] PeptidePrecursorCharges
         {
             set { txtPeptidePrecursorCharges.Text = value.ToString(@", "); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Adduct[] PeptideIonCharges
         {
@@ -178,6 +181,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get;
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IonType[] PeptideIonTypes
         {
@@ -185,6 +189,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { txtIonTypes.Text = TransitionFilter.ToStringIonTypes(value, true); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ExclusionUseDIAWindow
         {
@@ -192,6 +197,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { cbExclusionUseDIAWindow.Checked = value; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MzTolerance IonMatchMzTolerance
         {
@@ -206,6 +212,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double IonMatchTolerance
         {
@@ -213,6 +220,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { txtTolerance.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MzTolerance.Units IonMatchToleranceUnits
         {
@@ -220,6 +228,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { comboMatchToleranceUnit.SelectedIndex = (int)value; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MinIonCount
         {
@@ -227,6 +236,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { txtMinIonCount.Text = value != 0 ? value.ToString(LocalizationHelper.CurrentCulture) : string.Empty; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int IonCount
         {
@@ -234,6 +244,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { txtIonCount.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string IonRangeFrom
         {
@@ -247,6 +258,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string IonRangeTo
         {
@@ -260,6 +272,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MinIonMz
         {
@@ -267,6 +280,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { txtMinMz.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MaxIonMz
         {
@@ -274,6 +288,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { txtMaxMz.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SpectrumClassFilter SpectrumFilter
         {

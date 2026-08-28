@@ -67,6 +67,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         protected abstract object[] GetDropdownItems();
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ColumnPropertyDescriptor ColumnPropertyDescriptor
         {

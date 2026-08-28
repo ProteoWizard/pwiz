@@ -54,11 +54,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public event EventHandler<ResultsFilesEventArgs> ResultsFilesChanged;
         private Form WizardForm { get { return FormEx.GetParentForm(this); } }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Prefix { get; set; }
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Suffix { get; set; }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SimultaneousFiles
         {
@@ -66,6 +69,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { comboSimultaneousFiles.SelectedIndex = value; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool DoAutoRetry
         {
@@ -73,6 +77,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { cbAutoRetry.Checked = value; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles
         {
@@ -95,6 +100,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private string DocumentDirectory => Path.GetDirectoryName(DocumentPath);
         private string DocumentPath { get; set; }
         public bool ExcludeSpectrumSourceFilesVisible { get { return cbExcludeSourceFiles.Visible; } }
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ExcludeSpectrumSourceFiles
         {

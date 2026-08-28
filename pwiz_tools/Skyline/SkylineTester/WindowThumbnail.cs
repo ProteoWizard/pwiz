@@ -40,6 +40,7 @@ namespace SkylineTester
 
         private int _processId;
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int ProcessId
         {

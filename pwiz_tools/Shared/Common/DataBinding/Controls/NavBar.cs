@@ -394,7 +394,7 @@ namespace pwiz.Common.DataBinding.Controls
             ViewContext.Delete();
         }
 
-        [DefaultValue(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowViewsButton
         {
             get

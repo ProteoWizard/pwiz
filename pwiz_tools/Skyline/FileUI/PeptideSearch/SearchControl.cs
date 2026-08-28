@@ -107,6 +107,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private IProgressLock _progressLock;
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IProgressLock ProgressLock
         {

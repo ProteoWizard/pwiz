@@ -74,6 +74,7 @@ namespace pwiz.Skyline.Menus
         public ToolStripMenuItem PreviousReplicateMenuItem => previousReplicateMenuItem;
 
         #region Text Size
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double TargetsTextFactor
         {

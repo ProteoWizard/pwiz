@@ -58,6 +58,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             dia_umpire
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Protocol CurrentProtocol
         {
@@ -76,6 +77,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IDictionary<string, AbstractDdaSearchEngine.Setting> AdditionalSettings
         {
@@ -302,6 +304,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseDiaUmpire
         {
@@ -309,6 +312,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set => cbDiaUmpire.Checked = value;
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DiaUmpire.Config.InstrumentPreset InstrumentPreset
         {
@@ -316,6 +320,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { cbInstrumentPreset.SelectedIndex = (int) value; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool EstimateBackground
         {
@@ -323,6 +328,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { cbEstimateBg.Checked = value; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseMzMlSpillFile { get; set; }
 

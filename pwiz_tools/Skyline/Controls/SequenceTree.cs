@@ -981,6 +981,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IgnoreFocus { get; set; }
 
@@ -1642,6 +1643,7 @@ namespace pwiz.Skyline.Controls
                 TopNode = topNode;
             }
         }
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool LockDefaultExpansion { get; set; }
         public void ExpandRecursive(TreeNodeMS node, int level, bool select)

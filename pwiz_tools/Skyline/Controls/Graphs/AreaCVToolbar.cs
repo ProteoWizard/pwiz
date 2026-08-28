@@ -238,6 +238,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool GroupsVisible { get { return toolStripLabel1.Visible && toolStripComboGroup.Visible; } }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<object> Annotations
         {
@@ -250,6 +251,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<string> NormalizationMethods
         {

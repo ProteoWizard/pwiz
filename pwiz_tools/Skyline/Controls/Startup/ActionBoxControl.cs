@@ -34,14 +34,19 @@ namespace pwiz.Skyline.Controls.Startup
     public partial class ActionBoxControl : UserControl, IButtonControl
     {
         private static readonly Color LIGHT_HOVER_COLOR = Color.FromArgb(217, 228, 243); // Hover color for action box items
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Caption { get { return labelCaption.Text; } set { labelCaption.Text = value; } }
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Description { get { return labelDescription.Text; } set { labelDescription.Text = value; } }
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Image Icon { get { return iconPictureBox.Image; } set { iconPictureBox.Image = value; } }
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Action EventAction { get; set; }
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsProteomicOnly { get; set; } // If true, don't show in small molecule mode
 

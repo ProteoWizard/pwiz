@@ -80,6 +80,7 @@ namespace pwiz.Skyline.Controls
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Message
         {
@@ -87,6 +88,7 @@ namespace pwiz.Skyline.Controls
             set { _message = value; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int ProgressValue
         {

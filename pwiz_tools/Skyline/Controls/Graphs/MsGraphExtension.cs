@@ -13,6 +13,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class MsGraphExtension : UserControl
     {
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool PropertiesVisible
         {

@@ -34,7 +34,7 @@ namespace pwiz.Common.Controls
         /// <summary>
         /// Set whether to print a % or Text
         /// </summary>
-        [DefaultValue(ProgressBarDisplayText.Percentage)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public ProgressBarDisplayText DisplayStyle { get; set; }
 
         private string m_CustomText;

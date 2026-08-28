@@ -117,6 +117,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private SrmDocument Document { get; set; }
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<string> CheckedModifications
         {

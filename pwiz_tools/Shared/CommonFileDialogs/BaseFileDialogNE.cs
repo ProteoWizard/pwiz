@@ -306,6 +306,7 @@ namespace pwiz.CommonFileDialogs
         {
             return account.GetRootUrl();
         }
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public RemoteSession RemoteSession
         {
@@ -340,6 +341,7 @@ namespace pwiz.CommonFileDialogs
             };
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MsDataFileUri InitialDirectory { get; set; }
 
@@ -348,6 +350,7 @@ namespace pwiz.CommonFileDialogs
             get { return FileNames[0]; }
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MsDataFileUri[] FileNames { get; protected set; }
 
@@ -393,6 +396,7 @@ namespace pwiz.CommonFileDialogs
             listView.EnsureVisible(item);
         }
 
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public View ListView
         {
@@ -412,6 +416,7 @@ namespace pwiz.CommonFileDialogs
 
 
         private string _sourceTypeName;
+        [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SourceTypeName
         {
