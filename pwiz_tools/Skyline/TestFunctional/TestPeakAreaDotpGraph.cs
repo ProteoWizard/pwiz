@@ -142,7 +142,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => SkylineWindow.OpenFile(
                 TestFilesDir.GetTestPath("DIA-QE-tutorial.sky")));
-            SkylineWindow.ShowSplitChromatogramGraph(true);
+            RunUI(() => SkylineWindow.ShowSplitChromatogramGraph(true));
             replicates = new[]{"1-A", "2-B", "3-A","4-B", "5-A", "6-B"};
             var expectedIDotp = new[] {0.93, 0.82, 0.95, 0.92, 0.95, 0.74};
             var expectedDotp = new[] {0.87, 0.74, 0.89, 0.88, 1.00, 0.83};
