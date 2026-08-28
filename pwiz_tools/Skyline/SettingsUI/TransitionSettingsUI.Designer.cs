@@ -811,11 +811,8 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // ionMobilityFilteringControl
             // 
-            this.ionMobilityFilteringControl.IonMobilityFilterResolvingPower = null;
-            this.ionMobilityFilteringControl.IsUseSpectralLibraryIonMobilities = false;
             resources.ApplyResources(this.ionMobilityFilteringControl, "ionMobilityFilteringControl");
             this.ionMobilityFilteringControl.Name = "ionMobilityFilteringControl";
-            this.ionMobilityFilteringControl.WindowWidthType = pwiz.Skyline.Model.DocSettings.IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none;
             // 
             // helpTip
             // 

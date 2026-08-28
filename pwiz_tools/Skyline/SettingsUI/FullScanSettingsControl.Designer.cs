@@ -392,11 +392,8 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // usercontrolIonMobilityFiltering
             // 
-            this.usercontrolIonMobilityFiltering.IonMobilityFilterResolvingPower = null;
-            this.usercontrolIonMobilityFiltering.IsUseSpectralLibraryIonMobilities = false;
             resources.ApplyResources(this.usercontrolIonMobilityFiltering, "usercontrolIonMobilityFiltering");
             this.usercontrolIonMobilityFiltering.Name = "usercontrolIonMobilityFiltering";
-            this.usercontrolIonMobilityFiltering.WindowWidthType = pwiz.Skyline.Model.DocSettings.IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none;
             // 
             // FullScanSettingsControl
             // 

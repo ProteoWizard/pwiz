@@ -57,14 +57,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             // 
             this.filesTree.AllowDrop = true;
             resources.ApplyResources(this.filesTree, "filesTree");
-            this.filesTree.AutoExpandSingleNodes = true;
             this.filesTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.filesTree.HideSelection = false;
             this.filesTree.ItemHeight = 16;
             this.filesTree.LabelEdit = true;
             this.filesTree.Name = "filesTree";
-            this.filesTree.RestoredFromPersistentString = false;
-            this.filesTree.UseKeysOverride = false;
             this.filesTree.BeforeLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.FilesTree_BeforeLabelEdit);
             this.filesTree.AfterLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.FilesTree_AfterLabelEdit);
             this.filesTree.BeforeCollapse += new System.Windows.Forms.TreeViewCancelEventHandler(this.FilesTree_BeforeCollapse);

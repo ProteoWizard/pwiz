@@ -58,8 +58,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             // 
             // regexColorRowGrid1
             // 
-            this.regexColorRowGrid1.AllowUserToAddRows = true;
-            this.regexColorRowGrid1.AllowUserToOrderColumns = false;
             resources.ApplyResources(this.regexColorRowGrid1, "regexColorRowGrid1");
             this.regexColorRowGrid1.Name = "regexColorRowGrid1";
             this.regexColorRowGrid1.OnCellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.regexColorRowGrid1_OnCellValueChanged);

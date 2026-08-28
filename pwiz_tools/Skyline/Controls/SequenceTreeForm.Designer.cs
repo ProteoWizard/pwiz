@@ -42,15 +42,12 @@ namespace pwiz.Skyline.Controls
             // 
             this.sequenceTree.AllowDrop = true;
             resources.ApplyResources(this.sequenceTree, "sequenceTree");
-            this.sequenceTree.AutoExpandSingleNodes = true;
             this.sequenceTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.sequenceTree.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.sequenceTree.HideSelection = false;
             this.sequenceTree.ItemHeight = 16;
             this.sequenceTree.LabelEdit = true;
             this.sequenceTree.Name = "sequenceTree";
-            this.sequenceTree.RestoredFromPersistentString = false;
-            this.sequenceTree.UseKeysOverride = false;
             // 
             // toolBarResults
             // 

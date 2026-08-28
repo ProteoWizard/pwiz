@@ -84,8 +84,6 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // colorGrid1
             // 
-            this.colorGrid1.AllowUserToAddRows = true;
-            this.colorGrid1.AllowUserToOrderColumns = false;
             resources.ApplyResources(this.colorGrid1, "colorGrid1");
             this.colorGrid1.Name = "colorGrid1";
             this.colorGrid1.OnListChanged += new System.ComponentModel.ListChangedEventHandler(this.OnListChanged);
