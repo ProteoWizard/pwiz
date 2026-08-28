@@ -269,12 +269,11 @@ namespace pwiz.Osprey.Tasks
                 throw new InvalidDataException("HydrateForRescore: parquetPaths is empty");
 
             var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>(parquetPaths.Count);
-            // One shared string per distinct ModifiedSequence across every file hydrated here.
-            // The parquet reader returns a fresh instance per row, so without this the whole-run
-            // buffer holds one string object per survivor observation - ~72 B of its measured
-            // 274 B/entry (issue #4486). Spans files deliberately: the same peptide appears in
-            // many runs. Released with this method, unlike string.Intern.
-            var sequencePool = new Dictionary<string, string>(StringComparer.Ordinal);
+            // No sequence pool here, deliberately. Canonicalizing the stubs needs the pool
+            // seeded from the LIBRARY (issue #4486), and this overload takes only paths - a
+            // pool built here would elect the first parquet instance as canonical and leave
+            // the run holding a second set of sequences beside the library's. The pooled
+            // loads all run where the library is reachable; see SequencePool.
             foreach (var parquetPath in parquetPaths)
             {
                 string syntheticInput = SyntheticInputFromParquet(parquetPath);
@@ -291,7 +290,7 @@ namespace pwiz.Osprey.Tasks
                 List<FdrEntry> stubs;
                 try
                 {
-                    stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, null, sequencePool);
+                    stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
                 }
                 catch (Exception ex)
                 {
@@ -329,7 +328,8 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public static RescoreInputs HydrateReconciliationOverlay(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IList<string> parquetPaths)
+            IList<string> parquetPaths,
+            LibraryStringInterner sequencePool = null)
         {
             if (perFileEntries == null) throw new ArgumentNullException(nameof(perFileEntries));
             if (parquetPaths == null) throw new ArgumentNullException(nameof(parquetPaths));
@@ -379,7 +379,8 @@ namespace pwiz.Osprey.Tasks
 
                     MapPlannedActions(PlanActions(envelope), fileName, reconPath, idToIdx,
                         reconciliationActions, nameof(HydrateReconciliationOverlay));
-                    CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill);
+                    CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
+                        sequencePool);
                 }
                 hydrateProgress.Report(perFileEntries.Count);
             }
@@ -440,7 +441,8 @@ namespace pwiz.Osprey.Tasks
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IList<string> parquetPaths,
             Func<int, string, string, List<FdrEntry>> loadStubs,
-            Action<int, string, List<FdrEntry>, PreCompactionTally> onStubsHydrated)
+            Action<int, string, List<FdrEntry>, PreCompactionTally> onStubsHydrated,
+            LibraryStringInterner sequencePool = null)
         {
             if (perFileEntries == null)
                 throw new ArgumentNullException(nameof(perFileEntries));
@@ -507,7 +509,8 @@ namespace pwiz.Osprey.Tasks
                     var planned = PlanActions(envelope);
                     foreach (var action in planned)
                         retainBaseIds.Add(action.EntryId & ScoringTaskShared.BASE_ID_MASK);
-                    CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill);
+                    CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
+                        sequencePool);
 
                     fileNames.Add(fileName);
                     syntheticInputs.Add(syntheticInput);
@@ -725,12 +728,18 @@ namespace pwiz.Osprey.Tasks
         /// per-file dictionaries. A null <c>refined_rt_calibration</c> (Stage 5 refit failed)
         /// and an empty gap-fill list both leave the file absent, which is how the rescore
         /// engine reads "nothing to do here".
+        ///
+        /// <para>The gap-fill sequences go through <paramref name="sequencePool"/> for the same
+        /// reason the stubs do: Json.NET hands out a fresh string per property, and these
+        /// targets are retained for EVERY file at once (5.5 K - 12.3 K per file, ~2 M at 257
+        /// CHS files). Null pool leaves them as read.</para>
         /// </summary>
         private static void CaptureCalibrationAndGapFill(
             ReconciliationFile envelope,
             string fileName,
             Dictionary<string, RTCalibration> refinedCalibrations,
-            Dictionary<string, List<GapFillTarget>> perFileGapFill)
+            Dictionary<string, List<GapFillTarget>> perFileGapFill,
+            LibraryStringInterner sequencePool)
         {
             if (envelope.RefinedRtCalibration != null)
             {
@@ -752,7 +761,9 @@ namespace pwiz.Osprey.Tasks
                         DecoyEntryId = g.DecoyEntryId,
                         ExpectedRt = g.ExpectedRt,
                         HalfWidth = g.HalfWidth,
-                        ModifiedSequence = g.ModifiedSequence,
+                        ModifiedSequence = sequencePool != null
+                            ? sequencePool.Intern(g.ModifiedSequence)
+                            : g.ModifiedSequence,
                         Charge = g.Charge,
                     });
                 }

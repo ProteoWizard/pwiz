@@ -783,7 +783,8 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
             loader = new FirstPassSurvivorLoader(
-                perFileParquetPaths, ctx.Config, bundle.RetainedBaseIds);
+                perFileParquetPaths, ctx.Config, bundle.RetainedBaseIds,
+                ctx.Get<SequencePool>().Value);
             return true;
         }
 
@@ -869,7 +870,8 @@ namespace pwiz.Osprey.Tasks
             {
                 bundle = leanStubs
                     ? StreamOwnReconciliationBundle(ctx, perFileEntries, parquetPaths)
-                    : RescoreHydration.HydrateReconciliationOverlay(perFileEntries, parquetPaths);
+                    : RescoreHydration.HydrateReconciliationOverlay(perFileEntries, parquetPaths,
+                        ctx.Get<SequencePool>().Value);
             }
             catch (InvalidDataException ex)
             {
@@ -987,13 +989,15 @@ namespace pwiz.Osprey.Tasks
             var hydrated = new List<KeyValuePair<string, List<FdrEntry>>>(fileNames.Count);
             var bundle = RescoreHydration.HydrateCompactedStreaming(
                 hydrated, parquetPaths,
-                (fileIdx, fileName, parquetPath) => LoadResumeStubs(fileName, parquetPath),
+                (fileIdx, fileName, parquetPath) => LoadResumeStubs(fileName, parquetPath,
+                    ctx.Get<SequencePool>().Value),
                 (fileIdx, fileName, stubs, tally) =>
                 {
                     ScoringTaskShared.TallyPreCompaction(config, stubs, tally);
                     if (mdiagAccumulator != null)
                         ScoringTaskShared.FeedModelDiagnostics(mdiagAccumulator, fileIdx, stubs);
-                });
+                },
+                ctx.Get<SequencePool>().Value);
 
             // The hydrate re-derived every key from its parquet stem, while the accumulator
             // above and the published PerFileParquetPaths map are keyed by the ORIGINAL
@@ -1034,11 +1038,12 @@ namespace pwiz.Osprey.Tasks
         /// <c>RescoreHydration.HydrateForRescore</c> and both upstream resume loaders, which
         /// all wrap for the same reason.</para>
         /// </summary>
-        private static List<FdrEntry> LoadResumeStubs(string fileName, string parquetPath)
+        private static List<FdrEntry> LoadResumeStubs(string fileName, string parquetPath,
+            LibraryStringInterner sequencePool)
         {
             try
             {
-                return ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+                return ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, null, sequencePool);
             }
             catch (Exception ex)
             {
@@ -2843,7 +2848,8 @@ namespace pwiz.Osprey.Tasks
             // file's survivors on demand rather than reading them off a buffer somebody
             // had to hold for the whole run.
             var loader = _survivorLoader =
-                new FirstPassSurvivorLoader(perFileParquetPaths, config, firstPassBaseIds);
+                new FirstPassSurvivorLoader(perFileParquetPaths, config, firstPassBaseIds,
+                    ctx.Get<SequencePool>().Value);
             var survivors = new List<KeyValuePair<string, List<FdrEntry>>>(projections.PerFile.Count);
             // Per-file progress: reloading each file's survivor stubs from parquet + the 1st-pass
             // sidecar was the ~70 s silent "First-pass compaction" gap at 82 files. Console-only.

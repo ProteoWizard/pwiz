@@ -898,19 +898,27 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// <see cref="LoadFdrStubsFromParquet(string,Func{uint,bool})"/>, canonicalizing each
-        /// stub's <c>ModifiedSequence</c> through a caller-owned pool.
+        /// stub's <c>ModifiedSequence</c> through <paramref name="sequencePool"/>.
         ///
         /// <para>The parquet reader hands out a FRESH string per row, so a buffer spanning many
         /// files holds one string object per observation where there are orders of magnitude
         /// fewer distinct sequences. At 137 M survivors that is ~72 B each - about 9.9 GB of the
         /// Stage 7 pool's 274 B/entry, for values that are already shared (#4486).</para>
         ///
-        /// <para>The pool is the CALLER's so its lifetime matches the buffer being filled and it
-        /// is released with it - unlike <see cref="string.Intern"/>, which never releases. It is
-        /// not synchronized: pass one only from a single-threaded load.</para>
+        /// <para>The pool must be the one SEEDED FROM THE LIBRARY, not a fresh one. Every
+        /// value in this column was written from a <c>LibraryEntry.ModifiedSequence</c>
+        /// (<c>CoelutionScorer</c> copies it onto the entry it scores), so a seeded pool
+        /// returns the library's own instance and the rows cost no strings at all. A pool of
+        /// its own would instead elect the first parquet instance as canonical and leave the
+        /// run holding TWO sets - the library's and the sidecars' - which is more memory than
+        /// interning saves, not less.</para>
+        ///
+        /// <para>Null pool leaves the values exactly as read. A pool passed here must be
+        /// FROZEN (<see cref="LibraryStringInterner.Freeze"/>) if any caller loads files
+        /// concurrently, which Stage 6 does.</para>
         /// </summary>
         public static List<FdrEntry> LoadFdrStubsFromParquet(string path, Func<uint, bool> keepEntry,
-            IDictionary<string, string> sequencePool)
+            LibraryStringInterner sequencePool)
         {
             var stubs = new List<FdrEntry>();
             // Counted separately from stubs.Count, which no longer tracks it once rows are
@@ -966,7 +974,8 @@ namespace pwiz.Osprey.IO
                                 EndRt = endCol != null ? endCol[row] : 0.0,
                                 CoelutionSum = coelutionCol != null ? coelutionCol[row] : 0.0,
                                 BoundsArea = boundsAreaCol != null ? boundsAreaCol[row] : 0.0,
-                                ModifiedSequence = Canonicalize(modseqCol != null ? modseqCol[row] : string.Empty, sequencePool),
+                                ModifiedSequence = Canonicalize(modseqCol != null ? modseqCol[row] : string.Empty,
+                                    sequencePool),
                             });
                         }
                     }
@@ -974,6 +983,18 @@ namespace pwiz.Osprey.IO
             }
 
             return stubs;
+        }
+
+        /// <summary>
+        /// The pool's shared instance for <paramref name="value"/>, or the value unchanged when
+        /// no pool was supplied. Empty is returned as-is: it carries no peptide identity, so
+        /// pooling it would only add a lookup and skew the pool's collapse summary.
+        /// </summary>
+        private static string Canonicalize(string value, LibraryStringInterner pool)
+        {
+            if (pool == null || string.IsNullOrEmpty(value))
+                return value;
+            return pool.Intern(value);
         }
 
         /// <summary>
@@ -998,20 +1019,6 @@ namespace pwiz.Osprey.IO
         /// <para>Returns false when the file carries no <c>apex_rt</c> column, leaving the outputs
         /// null - the panel then degrades with a log line rather than reporting zeros.</para>
         /// </summary>
-        /// <summary>
-        /// One shared instance per distinct sequence, or the value unchanged when no pool is
-        /// supplied. Null and empty are returned as-is: they carry no peptide identity, so
-        /// pooling them would only add a lookup.
-        /// </summary>
-        private static string Canonicalize(string value, IDictionary<string, string> pool)
-        {
-            if (pool == null || string.IsNullOrEmpty(value))
-                return value;
-            if (pool.TryGetValue(value, out string canonical))
-                return canonical;
-            pool[value] = value;
-            return value;
-        }
         public static bool TryReadEntryIdsAndApexRts(string path,
             out uint[] entryIds, out double[] apexRts)
         {

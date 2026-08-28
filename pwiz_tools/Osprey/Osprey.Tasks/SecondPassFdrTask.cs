@@ -218,6 +218,10 @@ namespace pwiz.Osprey.Tasks
             var perFileEntries = rescored.Value;
             ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-pool",
                 string.Format(@"(post-GC, survivor pool built, files={0})", perFileEntries.Count));
+            // Beside the probe that measures the pool, because it explains part of it: a
+            // distinct count still equal to the seed means the survivors' sequences are the
+            // library's own instances rather than one string per observation (#4486).
+            ctx.Get<SequencePool>().LogSummary(ctx.LogInfo);
             var fullLibrary = ctx.Get<FullLibrary>().Value;
             var libraryById = ctx.Get<LibraryById>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
@@ -765,7 +769,8 @@ namespace pwiz.Osprey.Tasks
             // everything after this line works on ~14 M values instead of holding 137 M
             // entries alive to read eight fields off them (#4486).
             var passingEntries = CollectPassingEntries(
-                rescored.Files(), passingPrecursors, nFiles, out var bestByPrecursor);
+                rescored.Files(), passingPrecursors, nFiles, ctx.Get<SequencePool>().Value,
+                out var bestByPrecursor);
 
             ctx.LogInfo(string.Format(
                 "[COUNT] Stage 1 passing peptides: {0}", passingPeptides.Count));
@@ -918,14 +923,11 @@ namespace pwiz.Osprey.Tasks
         private static List<PassingObservation> CollectPassingEntries(
             IEnumerable<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             HashSet<(string, byte)> passingPrecursors, int nFiles,
+            LibraryStringInterner sequencePool,
             out Dictionary<(string, byte), KeyValuePair<string, FdrEntry>> bestByPrecursor)
         {
             var passingEntries = new List<PassingObservation>();
             bestByPrecursor = new Dictionary<(string, byte), KeyValuePair<string, FdrEntry>>();
-            // One canonical string per distinct passing peptide. The parquet reader hands out a
-            // fresh instance per row, so without this the records would retain 11.7 M strings
-            // where there are about 40,000 distinct sequences - more memory than the records.
-            var canonicalSequences = new Dictionary<string, string>(StringComparer.Ordinal);
             using (var progress = new ProgressReporter(string.Format(
                        @"Collecting passing entries over {0} file(s)", nFiles),
                        nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
@@ -941,11 +943,12 @@ namespace pwiz.Osprey.Tasks
                         var key = (entry.ModifiedSequence, entry.Charge);
                         if (!passingPrecursors.Contains(key))
                             continue;
-                        if (!canonicalSequences.TryGetValue(entry.ModifiedSequence, out string modSeq))
-                        {
-                            modSeq = entry.ModifiedSequence;
-                            canonicalSequences[modSeq] = modSeq;
-                        }
+                        // Canonical through the run's library-seeded pool, not a local one: the
+                        // stub loads already resolved these to the library's instances, and a
+                        // second table here would only re-elect whichever instance it saw first.
+                        string modSeq = sequencePool != null
+                            ? sequencePool.Intern(entry.ModifiedSequence)
+                            : entry.ModifiedSequence;
                         double runQ = entry.EffectiveRunQvalue(FdrLevel.Both);
                         passingEntries.Add(new PassingObservation(
                             kvp.Key, modSeq, entry.Charge, runQ, entry.ExperimentPrecursorQvalue,
