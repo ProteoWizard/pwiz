@@ -3930,10 +3930,8 @@ namespace pwiz.Osprey.Test
         /// End-to-end round-trip: write a synthetic Stage 5 → Stage 6
         /// boundary file pair (.scores.parquet + .1st-pass.fdr_scores.bin
         /// + .reconciliation.json) for a single file, hydrate it via
-        /// <see cref="RescoreHydration.HydrateForRescore"/>, and assert
-        /// every piece of the in-memory state matches what was written.
-        /// Mirrors what the worker does at startup before driving the
-        /// rescore engine.
+        /// <see cref="RescoreHydration.HydrateReconciliationOverlay"/>, and
+        /// assert every piece of the in-memory state matches what was written.
         /// </summary>
         [TestMethod]
         public void TestRescoreHydrationRoundTrip()
@@ -4061,7 +4059,13 @@ namespace pwiz.Osprey.Test
                 ReconciliationFile.Save(reconPath, reconFile);
 
                 // 4. Hydrate.
-                var inputs = RescoreHydration.HydrateForRescore(new[] { parquetPath });
+                var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
+                {
+                    new KeyValuePair<string, List<FdrEntry>>(
+                        stem, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)),
+                };
+                var inputs = RescoreHydration.HydrateReconciliationOverlay(
+                    perFile, new[] { parquetPath });
 
                 // 5. Assert per-file entries: same fileName, same count,
                 //    Score / ExperimentProteinQvalue overlaid bit-exactly.
@@ -4177,7 +4181,12 @@ namespace pwiz.Osprey.Test
 
                 try
                 {
-                    RescoreHydration.HydrateForRescore(new[] { parquetPath });
+                    var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
+                    {
+                        new KeyValuePair<string, List<FdrEntry>>(
+                            stem, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)),
+                    };
+                    RescoreHydration.HydrateReconciliationOverlay(perFile, new[] { parquetPath });
                     Assert.Fail("expected InvalidDataException for entry_id drift");
                 }
                 catch (InvalidDataException ex)

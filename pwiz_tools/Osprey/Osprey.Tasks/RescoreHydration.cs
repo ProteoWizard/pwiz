@@ -48,7 +48,7 @@ namespace pwiz.Osprey.Tasks
         /// + PEP + <c>ExperimentProteinQvalue</c> overlaid from the
         /// <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c> sidecar. File order
         /// matches the order of <c>parquetPaths</c> passed to
-        /// <see cref="RescoreHydration.HydrateForRescore"/>.
+        /// <see cref="RescoreHydration.HydrateReconciliationOverlay"/>.
         /// </summary>
         public List<KeyValuePair<string, List<FdrEntry>>> PerFileEntries { get; set; }
 
@@ -244,67 +244,6 @@ namespace pwiz.Osprey.Tasks
     public static class RescoreHydration
     {
         /// <summary>
-        /// Read each <c>&lt;stem&gt;.scores.parquet</c> in
-        /// <paramref name="parquetPaths"/>, overlay the matching
-        /// <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c> sidecar (v3 format,
-        /// pass = FirstPass), and parse the matching
-        /// <c>&lt;stem&gt;.reconciliation.json</c> envelope into the
-        /// per-file action map + refined calibration + gap-fill list.
-        ///
-        /// File names are extracted from the parquet stem with the
-        /// <c>.scores</c> suffix stripped, mirroring Rust's
-        /// <c>synthetic_input_from_parquet</c>. The output preserves the
-        /// input ordering.
-        ///
-        /// Throws <see cref="InvalidDataException"/> on any per-file boundary
-        /// file that is missing, unreadable, or fails its format-version /
-        /// count checks. Does not silently fall back to partial state — a
-        /// Stage 6 worker that proceeded with one file's planner output
-        /// missing would scramble gap-fill results across files.
-        /// </summary>
-        public static RescoreInputs HydrateForRescore(IList<string> parquetPaths)
-        {
-            if (parquetPaths == null) throw new ArgumentNullException(nameof(parquetPaths));
-            if (parquetPaths.Count == 0)
-                throw new InvalidDataException("HydrateForRescore: parquetPaths is empty");
-
-            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>(parquetPaths.Count);
-            // No sequence pool here, deliberately. Canonicalizing the stubs needs the pool
-            // seeded from the LIBRARY (issue #4486), and this overload takes only paths - a
-            // pool built here would elect the first parquet instance as canonical and leave
-            // the run holding a second set of sequences beside the library's. The pooled
-            // loads all run where the library is reachable; see SequencePool.
-            foreach (var parquetPath in parquetPaths)
-            {
-                string syntheticInput = SyntheticInputFromParquet(parquetPath);
-                string fileName = Path.GetFileNameWithoutExtension(syntheticInput);
-                if (string.IsNullOrEmpty(fileName))
-                {
-                    throw new InvalidDataException(string.Format(
-                        "HydrateForRescore: could not derive file_name from parquet path {0}",
-                        parquetPath));
-                }
-
-                // Stubs from parquet (entry_id, charge, modseq, RTs,
-                // parquet_index assigned by LoadFdrStubsFromParquet).
-                List<FdrEntry> stubs;
-                try
-                {
-                    stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidDataException(string.Format(
-                        "HydrateForRescore: failed to load stubs from {0}: {1}",
-                        parquetPath, ex.Message), ex);
-                }
-                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
-            }
-
-            return HydrateReconciliationOverlay(perFileEntries, parquetPaths);
-        }
-
-        /// <summary>
         /// Overlay the per-file 1st-pass FDR sidecars and parse the per-file
         /// <c>reconciliation.json</c> envelopes onto an already-loaded
         /// <paramref name="perFileEntries"/> list. The per-file element at
@@ -313,11 +252,10 @@ namespace pwiz.Osprey.Tasks
         /// fileName key is rederived from the parquet path for the sidecar
         /// path computation.
         ///
-        /// Used by both the worker-mode <see cref="HydrateForRescore"/>
-        /// wrapper (which loads stubs first) and the in-pipeline joinOnly
-        /// dispatch (which already has stubs loaded with PIN features +
-        /// calibration siblings, and just needs the rescore overlay added
-        /// to share state with FirstPassFDR / PerFileRescore).
+        /// Used by the in-pipeline joinOnly dispatch, which already has stubs
+        /// loaded with PIN features + calibration siblings and just needs the
+        /// rescore overlay added to share state with FirstPassFDR /
+        /// PerFileRescore.
         ///
         /// The returned <see cref="RescoreInputs"/> references the SAME
         /// <see cref="FdrEntry"/> list objects passed in

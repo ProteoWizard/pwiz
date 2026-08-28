@@ -1034,9 +1034,8 @@ namespace pwiz.Osprey.Tasks
         /// sidecars" line plus <c>ExitCode = 1</c>. That was free for the batch arm, which
         /// never opened a parquet; this arm does, so a truncated or locked
         /// <c>.scores.parquet</c> would otherwise throw <c>IOException</c> straight out of
-        /// <c>Rehydrate</c> with no exit code and none of that text. Mirrors
-        /// <c>RescoreHydration.HydrateForRescore</c> and both upstream resume loaders, which
-        /// all wrap for the same reason.</para>
+        /// <c>Rehydrate</c> with no exit code and none of that text. Mirrors both upstream
+        /// resume loaders, which wrap for the same reason.</para>
         /// </summary>
         private static List<FdrEntry> LoadResumeStubs(string fileName, string parquetPath,
             LibraryStringInterner sequencePool)

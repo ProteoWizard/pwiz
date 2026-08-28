@@ -139,10 +139,9 @@ namespace pwiz.Osprey.Tasks
         // Probe-the-disk hydration bundle: populated when the joinOnly
         // dispatch finds every parquet's sibling .1st-pass.fdr_scores.bin
         // sidecar already on disk. Null otherwise. Carries the reconciliation
-        // state that the worker-mode RescoreHydration.HydrateForRescore
-        // produces, sharing it with FirstPassFdrTask's reconciliation accessors
-        // so the worker entry-path collapse (next commit) does not need
-        // a separate code path.
+        // state RescoreHydration.HydrateReconciliationOverlay produces, sharing
+        // it with FirstPassFdrTask's reconciliation accessors so the two entry
+        // paths do not need separate code.
         private RescoreInputs _rescoreInputs;
 
         // The backing fields above are built and mutated ONLY inside this task
@@ -588,8 +587,7 @@ namespace pwiz.Osprey.Tasks
             // the rescore bundle (1st-pass q-values overlay + reconciliation
             // actions + refined RT calibration + gap-fill targets) so the
             // worker hydration path and the in-pipeline path produce
-            // identical post-Stage-5 state. Mirrors the worker's
-            // RescoreHydration.HydrateForRescore but reuses the stubs +
+            // identical post-Stage-5 state. Reuses the stubs +
             // PIN features already loaded above (so PIN features survive
             // for stage7's Percolator skip path). Stage 5 entry (no
             // sidecars present yet) skips this block and _rescoreInputs
