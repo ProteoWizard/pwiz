@@ -66,6 +66,7 @@ namespace pwiz.Osprey.Tasks
         /// </returns>
         internal static FeatureContributions ComputeAndPersist(
             PipelineContext ctx,
+            bool anyRescoreWork,
             RescoredEntries rescored,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
@@ -148,6 +149,11 @@ namespace pwiz.Osprey.Tasks
             // is what the resident write block below tests before repeating the work.
             bool pass2SidecarsWritten = false;
 
+            // True when THIS run computed the second-pass values, rather than carrying the
+            // standing ones. It decides whether the entries or the on-disk sidecars are
+            // authoritative going into the write below - not whether a file gets written.
+            bool recomputed = false;
+
             // The one per-file .2nd-pass.fdr_scores.bin writer, shared by every path that
             // emits one - the projection score pass's flush callback, the frozen streamed
             // competition, and the resident write block below - so the resume skip, the
@@ -199,7 +205,16 @@ namespace pwiz.Osprey.Tasks
                     if (!pass2Writer.IsCurrent(kvp.Key))
                         missingPass2++;
                 }
-                if (missingPass2 > 0)
+                // The RECOMPUTE gate, and only that. Every file gets a sidecar written below
+                // whichever way this goes: what is conditional is whether the values in it were
+                // computed by this run or carried from the standing ones.
+                //
+                // anyRescoreWork is Rust's `total_rescored > 0` (pipeline.rs:5209): with no
+                // reconciliation, multi-charge consensus or gap-fill anywhere in the cohort
+                // there is nothing for a second Percolator pass to re-score, and the standing
+                // first-pass values ARE the second-pass answer.
+                recomputed = anyRescoreWork && missingPass2 > 0;
+                if (recomputed)
                 {
                     // LogInfo, not LogVerbose: this is the heading for the longest stretch of
                     // work left in Stage 7, and a --verbose-only heading is invisible on the runs
@@ -334,15 +349,25 @@ namespace pwiz.Osprey.Tasks
                 }
             }
 
+            // Not recomputed, so the entries still carry the standing first-pass values while
+            // any sidecar already on disk carries a previous run's SECOND-pass ones. Load those
+            // back onto the entries before the write below, so the write puts the same bytes
+            // back instead of quietly downgrading a resumed run's file to pass-1 values. A file
+            // with no sidecar yet - a first run with no rescore work - simply has nothing to
+            // load, and the write gives it the standing values, which are its answer.
+            if (!recomputed)
+                ReloadPass2Sidecars(ctx, pass2Writer, perFileEntries, @"pre-write");
+
             // Persist post-Stage-6 per-file 2nd-pass FDR scores
             // BEFORE RunProteinFdr. The sidecar holds Score +
             // run/experiment precursor/peptide q-values + Pep +
             // ExperimentAggregateScore + ExperimentProteinQvalue
             // (the last set by RunFirstPassProteinFdr earlier).
-            // RunProteinFdr mutates exactly one of them --
-            // ExperimentProteinQvalue, via PropagateProteinQvalues --
-            // which is why that column is patched back into this file
-            // there rather than written here (#4559). Writing here lets the
+            // Exactly one of them is not final yet --
+            // ExperimentProteinQvalue, which the second-pass protein FDR
+            // has not run to produce -- which is why that column is
+            // patched back into this file from RunProteinFdr rather than
+            // written here (#4559). Writing here lets the
             // OSPREY_STAGE7_PROTEIN_FDR_ONLY early exit (used
             // by stage6 isolation in Test-Regression) leave the
             // sidecar on disk for downstream rehydration.
@@ -410,11 +435,16 @@ namespace pwiz.Osprey.Tasks
                 if (pass2Tally.Failures == 0 && pass2Tally.Written > 0)
                 {
                     ctx.LogVerbose(string.Format(
-                        @"Wrote 2nd-pass FDR scores for {0} file(s){1}",
-                        pass2Tally.Written,
-                        pass2Tally.AlreadyOnDisk > 0
-                            ? string.Format(@" ({0} already on disk; skipped)", pass2Tally.AlreadyOnDisk)
-                            : string.Empty));
+                        @"Wrote 2nd-pass FDR scores for {0} file(s)", pass2Tally.Written));
+                }
+                // Said out loud rather than inferred from a smaller count: this is the one
+                // path that leaves a file untouched, and an unexplained gap between the file
+                // count and the write count is exactly the ambiguity always-writing removes.
+                if (pass2Tally.Skipped > 0)
+                {
+                    ctx.LogVerbose(string.Format(
+                        @"Left {0} 2nd-pass FDR sidecar(s) untouched (--task ModelDiagnostics writes no artifact but the report)",
+                        pass2Tally.Skipped));
                 }
             }
 
@@ -432,57 +462,85 @@ namespace pwiz.Osprey.Tasks
             // <=1% but 2nd-pass q-value does not, producing a 1-protein delta
             // in the Stage 7 picked-protein output cross-impl.
             if (perFileParquetPaths.Count > 0 && config.InputFiles != null)
-            {
-                int filesReloaded = 0;
-                int filesMissing = 0;
-                // Per-file progress: reads back every file's just-written sidecar and rebuilds
-                // an entry_id map over that file's survivors. Silent, and the second half of
-                // the 38s gap between the competition's [STAGE-WALL] line and the next probe
-                // (#4486); the write loop above is the first half.
-                using (var reloadProgress = new ProgressReporter(
-                    string.Format(@"Reloading 2nd-pass FDR scores for {0} file(s)", perFileEntries.Count),
-                    perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
-                {
-                    long nReloadReported = 0;
-                    foreach (var kvp in perFileEntries)
-                    {
-                        reloadProgress.Report(++nReloadReported);
-                        string inputFile4 = pass2Writer.InputFor(kvp.Key);
-                        if (inputFile4 == null)
-                            continue;
-                        string pass2Path = FdrScoresSidecar.Pass2Path(inputFile4);
-                        if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
-                        {
-                            filesMissing++;
-                            continue;
-                        }
-                        var byEntryId = new Dictionary<uint, FdrEntry>(kvp.Value.Count);
-                        foreach (var e in kvp.Value)
-                            byEntryId[e.EntryId] = e;
-                        if (FdrScoresSidecar.TryReadOverlay(
-                                pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass))
-                        {
-                            filesReloaded++;
-                        }
-                        else
-                        {
-                            filesMissing++;
-                            ctx.LogWarning(string.Format(
-                                "Failed to reload 2nd-pass FDR sidecar for {0} ({1}); " +
-                                "protein FDR will use stale 1st-pass q-values",
-                                kvp.Key, pass2Path));
-                        }
-                    }
-                }
-                if (filesReloaded > 0)
-                {
-                    ctx.LogVerbose(string.Format(
-                        "Reloaded 2nd-pass FDR scores for {0}/{1} file(s) post-compaction",
-                        filesReloaded, filesReloaded + filesMissing));
-                }
-            }
+                ReloadPass2Sidecars(ctx, pass2Writer, perFileEntries, @"post-write");
 
             return pass2Contributions;
+        }
+
+        /// <summary>
+        /// Overlay every file's <c>.2nd-pass.fdr_scores.bin</c> back onto its survivors.
+        ///
+        /// <para>Called twice, for two different reasons. BEFORE the write when this run did
+        /// not recompute, so the unconditional write puts a resumed run's own second-pass
+        /// values back rather than downgrading the file to the standing first-pass ones; and
+        /// AFTER it, because the paths that write their own sidecars during the score pass (the
+        /// projection sink) leave the survivors untouched, and RunProteinFdr's detected-peptide
+        /// gate filters on <c>ExperimentPrecursorQvalue</c>, which has to be the second-pass
+        /// value to match Rust pipeline.rs:4480-4494's reload-then-second-pass-FDR sequence.
+        /// Without the second one, single-file <c>--task SecondPassFDR</c> runs include ~19
+        /// borderline peptides whose 1st-pass q passes 1% and whose 2nd-pass q does not,
+        /// producing a 1-protein delta in the Stage 7 picked-protein output cross-impl.</para>
+        ///
+        /// <para>A file with no readable sidecar is reported, not skipped silently: every input
+        /// file has one declared as an output of this task, so on the post-write pass an absent
+        /// file means the write failed. On the pre-write pass a first run that has never
+        /// written one is the one legitimate absence, and it is not a fault - the entries
+        /// already hold the values that run is about to write.</para>
+        /// </summary>
+        private static void ReloadPass2Sidecars(
+            PipelineContext ctx,
+            Pass2SidecarWriter writer,
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            string phase)
+        {
+            int filesReloaded = 0;
+            int filesMissing = 0;
+            // Per-file progress: reads back every file's sidecar and rebuilds an entry_id map
+            // over that file's survivors. Silent, and the second half of the 38s gap between
+            // the competition's [STAGE-WALL] line and the next probe (#4486); the write loop is
+            // the first half.
+            using (var reloadProgress = new ProgressReporter(
+                string.Format(@"Reloading 2nd-pass FDR scores ({0}) for {1} file(s)",
+                              phase, perFileEntries.Count),
+                perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            {
+                long nReloadReported = 0;
+                foreach (var kvp in perFileEntries)
+                {
+                    reloadProgress.Report(++nReloadReported);
+                    string inputFile = writer.InputFor(kvp.Key);
+                    if (inputFile == null)
+                        continue;
+                    string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
+                    if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
+                    {
+                        filesMissing++;
+                        continue;
+                    }
+                    var byEntryId = new Dictionary<uint, FdrEntry>(kvp.Value.Count);
+                    foreach (var e in kvp.Value)
+                        byEntryId[e.EntryId] = e;
+                    if (FdrScoresSidecar.TryReadOverlay(
+                            pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass))
+                    {
+                        filesReloaded++;
+                    }
+                    else
+                    {
+                        filesMissing++;
+                        ctx.LogWarning(string.Format(
+                            "Failed to reload 2nd-pass FDR sidecar for {0} ({1}); " +
+                            "protein FDR will use stale 1st-pass q-values",
+                            kvp.Key, pass2Path));
+                    }
+                }
+            }
+            if (filesReloaded > 0)
+            {
+                ctx.LogVerbose(string.Format(
+                    "Reloaded 2nd-pass FDR scores ({0}) for {1}/{2} file(s) post-compaction",
+                    phase, filesReloaded, filesReloaded + filesMissing));
+            }
         }
 
         /// <summary>
@@ -756,16 +814,12 @@ namespace pwiz.Osprey.Tasks
                     if (!inputByName.TryGetValue(fileName, out string inputFile))
                         continue;
                     string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
-                    // Two gates, deliberately, because ABSENT and UNUSABLE are different outcomes
-                    // here and IsCurrentFormat alone cannot tell them apart (it is false for both).
-                    // A file with no reconciled parquet legitimately has no 2nd-pass sidecar, so
-                    // absent is a silent skip; a sidecar that IS present but carries a foreign magic,
-                    // a different FormatVersion, the wrong pass byte or a length its own header
-                    // contradicts is a real problem, and it is exactly what the warning below exists
-                    // to name. Collapsing these into one IsCurrentFormat call would either report
-                    // every legitimately-absent file or silently swallow the stale one.
-                    if (!File.Exists(pass2Path))
-                        continue;
+                    // ONE gate now. There is no longer a file that legitimately has no 2nd-pass
+                    // sidecar - every input file gets one written - so absent and unusable are
+                    // the same outcome here and both are reported. The two-gate form this
+                    // replaces treated absence as a silent skip, which is precisely the
+                    // ambiguity always-writing removes: an absent file could not be told apart
+                    // from a write that failed and never committed.
                     if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
                     {
                         failed.Add(fileName);
@@ -1149,11 +1203,12 @@ namespace pwiz.Osprey.Tasks
             // pair is set by ReadFile and released by ApplyFileRunQ once the sidecar is written.
             string currentKey = null;
             List<FdrEntry> currentEntries = null;
-            // Files this pass wrote a sidecar for, i.e. the ones step 4 may patch. A file whose
-            // sidecar was already current on disk is skipped by the writer and must be left
-            // alone here too - the resident path leaves such a file untouched, and the reload
-            // loop then carries ITS values onto the pool, not this run's.
+            // Files whose sidecar this pass wrote, i.e. every file it was given. Kept as a
+            // list rather than re-deriving it, because step 4 must patch exactly what step 3
+            // wrote: a file that failed its write has no finished sidecar to patch, and that is
+            // a failure to report, not a file to skip.
             var sidecarsWritten = new List<string>(fileKeys.Count);
+            var writeFailures = new List<string>();
             // Seeds each file's 1st-pass Score/Pep/ExperimentAggregateScore as it is
             // materialized, in place of the whole-pool pass ComputeAndPersist skips for this
             // mode. Capacity grows to the largest file seen rather than being scanned for,
@@ -1288,6 +1343,8 @@ namespace pwiz.Osprey.Tasks
                     }
                     if (writer.Write(fileKey, currentEntries))
                         sidecarsWritten.Add(fileKey);
+                    else
+                        writeFailures.Add(fileKey);
                     currentKey = null;
                     currentEntries = null;
                 }
@@ -1351,7 +1408,7 @@ namespace pwiz.Osprey.Tasks
             //    not complete until every file has been read, which is after each file's own
             //    sidecar has already been written.
             int nMapped = 0;
-            var unpatched = new List<string>();
+            var unpatched = new List<string>(writeFailures);
             using (var patchProgress = new ProgressReporter(
                 string.Format("{0}: writing experiment q to {1} file(s)", mode, sidecarsWritten.Count),
                 sidecarsWritten.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
@@ -2368,7 +2425,13 @@ namespace pwiz.Osprey.Tasks
         private sealed class Pass2WriteTallies
         {
             public int Written;
-            public int AlreadyOnDisk;
+
+            /// <summary>Files the ONE remaining skip declined to write - <c>--task
+            /// ModelDiagnostics</c>, whose contract is that it touches no artifact but the
+            /// report. It creates no absence: that mode runs over a completed run whose files
+            /// are already on disk.</summary>
+            public int Skipped;
+
             public int Failures;
         }
 
@@ -2475,14 +2538,14 @@ namespace pwiz.Osprey.Tasks
                 // write changes nothing except leaving the completed run's files untouched.
                 if (_config.DiagnosticsOnly)
                 {
-                    Tallies.AlreadyOnDisk++;
+                    Tallies.Skipped++;
                     return false;
                 }
-                if (FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
-                {
-                    Tallies.AlreadyOnDisk++;
-                    return false;
-                }
+                // No "already on disk, skip" here, deliberately. A conditionally-written file
+                // makes its own absence ambiguous - unnecessary, or a write that failed and
+                // never committed - and the second pass is deterministic, so rewriting is
+                // writing the same bytes again. The caller reloads before this when it did not
+                // recompute, so "the same bytes" is what a resumed run actually puts back.
                 try
                 {
                     write(pass2Path);

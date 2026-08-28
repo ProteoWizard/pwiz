@@ -118,10 +118,16 @@ namespace pwiz.Osprey.Tasks
             if (ctx.Config.ModelDiagnostics && FirstPassFdrTask.IsIncludedFor(ctx.Config))
                 yield return ModelDiagnosticsReport.ReportPath(ctx.Config);
 
-            // 2nd-pass FDR sidecars are written whenever Stage 6 rescored entries
-            // (independent of protein FDR -- the second Percolator pass runs on the
-            // reconciled features), so declare them on that same condition.
-            if (ctx.Config.InputFiles != null && AnyReconciledParquet(ctx.Config))
+            // EVERY input file gets a 2nd-pass FDR sidecar, and they are declared here
+            // unconditionally. This used to be gated on AnyReconciledParquet, so a run where
+            // Stage 6 rescored nothing produced no 2nd-pass files at all - and a MISSING file
+            // is an ambiguous signal: a reader cannot tell "this run had no rescore work" from
+            // "the write failed and the FileSaver never committed". The reconciled parquet had
+            // the same gate and lost it for the same reason (WriteUnchangedReconciled); the
+            // 1st-pass sidecar never had it, writing a 0-record file for a file with no scored
+            // rows. A run with no rescore work writes the standing values, which ARE its
+            // second-pass answer.
+            if (ctx.Config.InputFiles != null)
             {
                 foreach (var input in ctx.Config.InputFiles)
                     yield return FdrScoresSidecar.Pass2Path(input);
@@ -218,8 +224,39 @@ namespace pwiz.Osprey.Tasks
 
             // Before the fragment release, which mutates the library entries this write
             // reads its sequence / precursor m/z / protein-id columns from.
-            if (UpgradeReconciledParquets(perFileEntries, perFileParquetPaths, libraryById, ctx))
+            //
+            // --task ModelDiagnostics REFUSES instead. That mode is read-only for every
+            // processing artifact - it writes the report and nothing else - and this is a
+            // rewrite-in-place of every reconciled parquet. It was the one writer in this
+            // method with no such guard, so a regeneration over a pre-survivors-format
+            // directory converted the whole cohort AND then returned true, stopping the run at
+            // StopAfterUpgrade so no report was produced either. The mode wrote what it
+            // promised not to and skipped what it promised to. Introduced on this branch by
+            // 1e282f8a29, so the bug never shipped.
+            //
+            // BLOCKED, not worked around. Generating a report from a pre-survivor-subset
+            // parquet is deliberately NOT part of this mode's contract: supporting it would be
+            // a second read path to keep working and to test on an artifact generation the
+            // branch exists to retire. Refusing costs one re-analysis and keeps the supported
+            // set to one shape.
+            if (config.DiagnosticsOnly)
+            {
+                var stale = StaleReconciledParquets(perFileEntries, perFileParquetPaths);
+                if (stale.Count > 0)
+                {
+                    throw new InvalidOperationException(string.Format(
+                        "--task ModelDiagnostics cannot run over this directory: {0} of {1} " +
+                        "reconciled parquet(s) predate the survivor-subset format and would have " +
+                        "to be rewritten, which this mode does not do - it writes the report and " +
+                        "nothing else. Stale: [{2}]. Re-run the analysis without " +
+                        "--task ModelDiagnostics to rewrite them, then regenerate the report.",
+                        stale.Count, perFileEntries.Count, string.Join(", ", stale)));
+                }
+            }
+            else if (UpgradeReconciledParquets(perFileEntries, perFileParquetPaths, libraryById, ctx))
+            {
                 return StopAfterUpgrade(ctx);
+            }
 
             ReleaseUnscorableLibraryFragments(rescored, perFileEntries.Count, fullLibrary, ctx);
 
@@ -227,31 +264,32 @@ namespace pwiz.Osprey.Tasks
             // pass-2 model view; null when no reconciliation rescore happened.
             FeatureContributions pass2Contributions = null;
 
-            // Second-pass Percolator FDR. Runs whenever Stage 6 reconciliation /
-            // multi-charge consensus / gap-fill rescored entries -- the C# analog of
-            // Rust's `total_rescored > 0` gate (pipeline.rs:5209) -- INDEPENDENT of
-            // protein FDR. A reconciled parquet exists for a file iff that file had
-            // rescore work, so "any reconciled parquet on disk" == total_rescored > 0,
-            // and the test holds in both the straight-through pipeline (Stage 6 just
-            // wrote them) and the --task SecondPassFDR run (the Stage 6 worker wrote
-            // them). Previously this was wrongly nested inside the ProteinFdr.HasValue
-            // block, so a run without --protein-fdr wrote the blib from stale
-            // first-pass (pre-reconciliation) scores. ComputeAndPersist reloads the
-            // reconciled features, reruns Percolator, writes the .2nd-pass sidecars,
-            // and reloads them onto the stubs so downstream protein FDR + blib see the
-            // 2nd-pass q-values.
-            if (AnyReconciledParquet(config))
-            {
-                pass2Contributions = Pass2FdrSidecar.ComputeAndPersist(
-                    ctx, rescored, perFileEntries, perFileParquetPaths,
-                    Name, ValidityKey(ctx));
-                // The substep the 2026-07-31 characterization on #4486 located the churn in:
-                // it reloads every file's reconciled features, so the pre-GC line carries the
-                // transient reload peak and the post-GC line what survives it.
-                ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"stage7 pass-2 scored (pre-GC)");
-                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-pass2-scored",
-                    memDetail);
-            }
+            // Second-pass FDR. ALWAYS runs, because it always has a file to write.
+            //
+            // What is conditional is the RECOMPUTE, not the artifact: the second Percolator
+            // pass fires only when Stage 6 reconciliation / multi-charge consensus / gap-fill
+            // actually rescored entries - the C# analog of Rust's `total_rescored > 0` gate
+            // (pipeline.rs:5209), and INDEPENDENT of protein FDR. That test lives inside
+            // ComputeAndPersist now. A run with no rescore work still writes every file's
+            // .2nd-pass.fdr_scores.bin, carrying the standing values, because those ARE its
+            // second-pass answer - and because a missing file cannot be told apart from a
+            // failed write (see Outputs).
+            //
+            // This gate used to wrap the whole call. Before that it was wrongly nested inside
+            // the ProteinFdr.HasValue block, so a run without --protein-fdr wrote the blib from
+            // stale first-pass (pre-reconciliation) scores. ComputeAndPersist reloads the
+            // reconciled features, reruns Percolator, writes the .2nd-pass sidecars, and
+            // reloads them onto the stubs so downstream protein FDR + blib see the 2nd-pass
+            // q-values.
+            pass2Contributions = Pass2FdrSidecar.ComputeAndPersist(
+                ctx, AnyReconciledParquet(config), rescored, perFileEntries, perFileParquetPaths,
+                Name, ValidityKey(ctx));
+            // The substep the 2026-07-31 characterization on #4486 located the churn in:
+            // it reloads every file's reconciled features, so the pre-GC line carries the
+            // transient reload peak and the post-GC line what survives it.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"stage7 pass-2 scored (pre-GC)");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-pass2-scored",
+                memDetail);
 
             // Protein-level FDR. Always runs (parsimony + picked-protein at the
             // config.RunFdr Savitski gate), matching Rust's unconditional second-pass
@@ -464,7 +502,9 @@ namespace pwiz.Osprey.Tasks
             // the same bytes back - invisible to a content comparison, but it reset every
             // 2nd-pass sidecar's mtime, which is exactly the signal used to tell when a run's
             // inputs were produced. Caught by the mode 7 regeneration leg.
-            if (AnyReconciledParquet(config) && !config.DiagnosticsOnly)
+            // Every file has a 2nd-pass sidecar to patch now, so this is gated only on the
+            // mode that promises to touch no artifact but the report.
+            if (!config.DiagnosticsOnly)
             {
                 Pass2FdrSidecar.PatchPass2ProteinQvalues(
                     ctx, rescored.FileNames, perFileParquetPaths, result.ProteinFdr.PeptideQvalues);
@@ -555,15 +595,23 @@ namespace pwiz.Osprey.Tasks
         /// the library entries the write reads its sequence / precursor m/z / protein-id
         /// columns from - with a null or stripped library those columns write empty.</para>
         /// </summary>
-        private static bool UpgradeReconciledParquets(
+        /// <summary>
+        /// The per-file keys whose <c>.scores-reconciled.parquet</c> is on disk but predates
+        /// the survivor-subset format, i.e. the ones <see cref="UpgradeReconciledParquets"/>
+        /// would rewrite.
+        ///
+        /// <para>Split out so the read-only <c>--task ModelDiagnostics</c> refusal and the
+        /// upgrade itself decide "is this stale" the same way. Two copies of that test would
+        /// drift into a mode that refuses files it would not have rewritten, or worse, one that
+        /// rewrites files it said were fine.</para>
+        /// </summary>
+        private static List<string> StaleReconciledParquets(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
-            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            PipelineContext ctx)
+            IReadOnlyDictionary<string, string> perFileParquetPaths)
         {
+            var stale = new List<string>();
             if (perFileParquetPaths == null)
-                return false;
-            int upgraded = 0;
+                return stale;
             foreach (var kv in perFileEntries)
             {
                 if (!perFileParquetPaths.TryGetValue(kv.Key, out string scoresPath))
@@ -573,11 +621,33 @@ namespace pwiz.Osprey.Tasks
                     continue;
                 var metadata = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
                 metadata.TryGetValue(@"osprey.reconciled", out string marker);
-                if (string.Equals(marker, ParquetScoreCache.RECONCILED_SURVIVORS,
+                if (!string.Equals(marker, ParquetScoreCache.RECONCILED_SURVIVORS,
                         StringComparison.Ordinal))
                 {
-                    continue;
+                    stale.Add(kv.Key);
                 }
+            }
+            return stale;
+        }
+
+        private static bool UpgradeReconciledParquets(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            PipelineContext ctx)
+        {
+            if (perFileParquetPaths == null)
+                return false;
+            var staleKeys = new HashSet<string>(
+                StaleReconciledParquets(perFileEntries, perFileParquetPaths), StringComparer.Ordinal);
+            int upgraded = 0;
+            foreach (var kv in perFileEntries)
+            {
+                if (!staleKeys.Contains(kv.Key))
+                    continue;
+                string scoresPath = perFileParquetPaths[kv.Key];
+                string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
+                var metadata = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
                 // Same refusal the dedicated task makes, for the same reason: this rewrite
                 // re-derives every row's sequence and protein_ids from the library BY ENTRY
                 // ID, so a foreign library silently renames every peptide. The run-level
@@ -642,8 +712,8 @@ namespace pwiz.Osprey.Tasks
         private static bool StopAfterUpgrade(PipelineContext ctx)
         {
             ctx.LogInfo(
-                @"--task SecondPassFDR: stopping after the reconciled-parquet upgrade; no " +
-                @"blib or 2nd-pass sidecar was written by this run.");
+                @"Stopping after the reconciled-parquet upgrade; no blib, 2nd-pass sidecar or " +
+                @"model-diagnostics report was written by this run. Re-run to analyze.");
             return false;
         }
 

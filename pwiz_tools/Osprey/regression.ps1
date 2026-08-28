@@ -1282,7 +1282,9 @@ function Invoke-HpcChain {
     # <stem>.mzML (the cache fingerprint check is skipped for a 0-byte source, so the
     # stub is enough for path derivation and forces a cache hit -- the real 6 GB mzML is
     # never shipped to a rescore worker). Plus the Stage 4 parquet/calibration + the
-    # Stage 5 sidecar pair; writes <stem>.scores-reconciled.parquet + the 2nd-pass bin.
+    # Stage 5 sidecar pair; writes <stem>.scores-reconciled.parquet. NOT the 2nd-pass bin:
+    # --task PerFileRescoring sets NoJoin, which excludes SecondPassFdrTask entirely, so
+    # phase 4 is the only node that writes one.
     $ph3Dirs = @{}
     foreach ($s in $stemList) {
         $ph3 = Join-Path $ChainRoot "phase3_rescore_$s"
@@ -1309,8 +1311,8 @@ function Invoke-HpcChain {
         $a3 += $memStampArgs
         Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
         Copy-Item (Join-Path $ph3 'phase3.log') (Join-Path $chainLogDir "phase3_$s.log") -Force
-        # This worker has written its reconciled parquet + 2nd-pass bin; phase 4
-        # consumes only those plus the calibration / reconciliation / 1st-pass
+        # This worker has written its reconciled parquet; phase 4
+        # consumes it plus the calibration / reconciliation / 1st-pass
         # sidecars copied above -- never this worker's spectra cache, input
         # scores.parquet, or library. Drop those big inputs now so at most one
         # worker's 6 GB spectra.bin + library copy is on disk at a time (the
@@ -1348,8 +1350,12 @@ function Invoke-HpcChain {
         # protein-compact's stratum rides inside this same sidecar, so it needs no second hop.
         $modelSide = Join-Path $ph3 "$s.1st-pass.model.json"
         if (Test-Path $modelSide) { Copy-Item $modelSide (Join-Path $ph4 "$s.1st-pass.model.json") }
-        $pass2 = Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"
-        if (Test-Path $pass2) { Copy-Item $pass2 (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin") }
+        # No 2nd-pass bin relay. There was a `if (Test-Path ...) { Copy-Item ... }` here, and
+        # it could never fire: --task PerFileRescoring sets NoJoin, so SecondPassFdrTask is not
+        # in a phase-3 worker's pipeline and no such file exists to copy. Worse than dead - had
+        # it fired it would have handed phase 4 a CURRENT 2nd-pass sidecar, and phase 4 would
+        # then have skipped computing its own, quietly turning mode 3 into a test of a copy.
+        # Phase 4 is the only node that writes these.
         New-Item -ItemType File -Path (Join-Path $ph4 "$s.mzML") -Force | Out-Null
     }
     # SecondPassFDR now has every worker's reconciled output copied in; the phase-3
@@ -1474,15 +1480,22 @@ foreach ($name in $selected) {
     # TeamCity exercises - no baseline, no second route. It covers the one failure a two-route
     # comparison structurally cannot see: a column both routes copy identically out of pass 1.
     # That is what issue #4559 was, and mode 3 was green on the default arm throughout.
-    # Guarded like its siblings (mode 1b on ModelDiagnostics, mode 3 on SkipHpcChain). The
-    # 2nd-pass sidecars only exist when Stage 6 rescored something -- SecondPassFdrTask writes
-    # them on AnyReconciledParquet -- so an arm that legitimately does no reconciliation work has
-    # nothing for this gate to assert on. Without the guard, "no .2nd-pass.fdr_scores.bin files"
-    # is reported as a hard failure and reds a run that is entirely correct.
+    # ASSERTED, not guarded. This used to skip when no 2nd-pass sidecars existed, because
+    # SecondPassFdrTask wrote them only on AnyReconciledParquet and "an arm that legitimately
+    # does no reconciliation work has nothing to assert on". That gate is gone: every input
+    # file now gets a 2nd-pass sidecar whatever Stage 6 did, because a missing file cannot be
+    # told apart from a write that failed and never committed. So the count IS the invariant,
+    # and the skip that tolerated absence was the harness half of the same ambiguity - it would
+    # have reported a run that silently wrote nothing as SKIPPED rather than red.
     $pass2Sidecars = @(Get-ChildItem -File -Path $straightDir -Filter '*.2nd-pass.fdr_scores.bin' `
         -ErrorAction SilentlyContinue)
-    if ($pass2Sidecars.Count -eq 0) {
-        $summaryLines.Add("$name mode1c (2nd-pass protein q is pass-2): SKIPPED (no 2nd-pass sidecars - Stage 6 rescored nothing)")
+    if ($pass2Sidecars.Count -ne $inputs.Mzmls.Count) {
+        $overallFail = $true
+        Write-Problem-Tc ("$name mode1c (2nd-pass protein q is pass-2): FAIL -- " +
+            "$($pass2Sidecars.Count) 2nd-pass sidecar(s) for $($inputs.Mzmls.Count) input file(s); " +
+            "every input file must have one")
+        $summaryLines.Add(("$name mode1c (2nd-pass protein q is pass-2): FAIL " +
+            "($($pass2Sidecars.Count) sidecars for $($inputs.Mzmls.Count) inputs)"))
     }
     else {
     Write-Progress-Tc "${name}: 2nd-pass protein q liveness (mode 1c)"

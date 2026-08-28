@@ -193,13 +193,21 @@ namespace pwiz.Osprey.Tasks
                 @"Reconciliation consensus: {0} target peptides, {1} decoy peptides",
                 nTargets, nDecoys));
 
-            // Skip the dump on empty consensus to match Rust's
-            // dump_stage6_consensus, which silently elides the file when there
-            // is nothing to write (gated on Some(file) in Rust, derived from
-            // !consensus.is_empty()). Without this gate, C# emits a header-only
-            // cs_stage6_consensus.tsv and Test-Regression sees an
-            // asymmetric-absence FAIL even though both sides agree on empty.
-            if ((_ctx.Diagnostics?.DumpConsensus ?? false) && consensus.Count > 0)
+            // Fires UNCONDITIONALLY when OSPREY_DUMP_CONSENSUS=1, so an empty consensus
+            // still produces a header-only cs_stage6_consensus.tsv - the same rule the
+            // reconciliation dump below follows.
+            //
+            // This was gated on consensus.Count > 0 to match Rust's dump_stage6_consensus,
+            // which elides the file when there is nothing to write, because the cross-impl
+            // Test-Regression then saw an asymmetric-absence FAIL. That fixed the comparator's
+            // complaint by deleting the FILE, which is backwards: a reader of the directory
+            // then cannot tell "empty consensus" from "the dump crashed before writing", and
+            // the comparator was subsequently taught to treat symmetric absence as agreement,
+            // entrenching it. No live cross-impl gate compares this dump any more
+            // (Compare-EndToEnd-Crossimpl.ps1 does not), and its one consumer, Test-Snapshot,
+            // is same-impl. See "Never conditionally write an output artifact" in
+            // ai/docs/osprey-development-guide.md.
+            if (_ctx.Diagnostics?.DumpConsensus ?? false)
             {
                 _ctx.Diagnostics?.WriteStage6ConsensusDump(consensus);
                 if (_ctx.Diagnostics?.ConsensusOnly ?? false)

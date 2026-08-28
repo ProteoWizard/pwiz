@@ -276,11 +276,16 @@ namespace pwiz.Osprey.Tasks
             // planning block (in-process pipeline, DidPlan=true) or
             // PerFileScoringTask's probe-the-disk bundle (collapsed worker
             // path, DidPlan=false but bundle != null). A 2nd-pass FDR
-            // sidecar already on disk for any file is the signal that the
-            // rescore engine has already produced the reconciled output;
-            // re-running it would re-apply reconciliation actions on top
-            // of already-reconciled values, so this branch falls back to
-            // the no-op alongside the no-state case. Probe-the-disk on
+            // sidecar already on disk for any file is the signal that a
+            // previous run COMPLETED Stage 7 here, so the rescore engine
+            // has already produced the reconciled output; re-running it
+            // would re-apply reconciliation actions on top of
+            // already-reconciled values, so this branch falls back to
+            // the no-op alongside the no-state case. The signal got
+            // stronger when the 2nd-pass sidecars stopped being written
+            // conditionally: it used to be absent after a completed run
+            // that happened to have no rescore work, which is the same
+            // ambiguity that made a missing file unreadable as evidence. Probe-the-disk on
             // 2nd-pass sidecar presence replaces the prior
             // ExpectReconciledInput gate (Phase C: mechanism-driven, not
             // flag-driven) for the worker self-gate cases below;
