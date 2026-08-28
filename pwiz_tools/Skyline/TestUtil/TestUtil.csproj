@@ -57,7 +57,7 @@
     <PackageReference Include="Grpc.Net.Client" Version="2.66.0" />
     <PackageReference Include="PROdotnetzip" Version="1.20.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
-    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="log4net" Version="3.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
     <!-- Modern ExcelDataReader (namespace ExcelDataReader) replaces the Framework-only

@@ -59,7 +59,7 @@
          drops the Antlr3.Runtime dep, OR upgrade Antlr to a net-compatible version. -->
     <PackageReference Include="NHibernate" Version="5.5.2" />
     <PackageReference Include="Iesi.Collections" Version="4.0.5" />
-    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="log4net" Version="3.4.0" />
     <!-- MathNet 5.0 removed Control.LinearAlgebraProvider and the internal
          Resources class. 4.15.x preserves the legacy API surface Skyline uses
          while still targeting net6+. -->

@@ -160,7 +160,7 @@
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
     <PackageReference Include="Google.Protobuf" Version="3.27.3" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.66" />
-    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="log4net" Version="3.4.0" />
     <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NHibernate" Version="5.5.2" />

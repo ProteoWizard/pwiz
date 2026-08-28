@@ -13,6 +13,11 @@
     <PackageReference Include="MSTest.TestFramework" Version="3.6.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Parquet.Net" Version="4.25.0" />
+    <!-- Snappier arrives transitively (Parquet.Net -> IronCompress -> Snappier).
+         Pinned to 1.3.1 because the range resolves to 1.1.6, which carries
+         GHSA-pggp-6c3x-2xmx; 1.3.1 is the first clean release. Remove once
+         Parquet.Net is on 6.x, which depends on [1.3.1,) itself. -->
+    <PackageReference Include="Snappier" Version="1.3.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
     <!--
       Parquet.Net writes use IronCompress + ZstdSharp for Zstd compression,

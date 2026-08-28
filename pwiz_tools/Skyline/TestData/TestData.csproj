@@ -86,12 +86,17 @@
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
-    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="log4net" Version="3.4.0" />
     <PackageReference Include="NHibernate" Version="5.5.2" />
     <PackageReference Include="Iesi.Collections" Version="4.0.5" />
     <PackageReference Include="IdentityModel" Version="7.0.0" />
     <PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
-    <PackageReference Include="System.ServiceModel.Primitives" Version="8.0.0" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="8.1.2" />
+    <!-- Pinned: System.ServiceModel.Primitives pulls Cryptography.Xml, whose
+         8.0.0-8.0.3 carry GHSA-37gx-xxp4-5rgx and whose 6.0.x line pulls a
+         Pkcs with GHSA-555c-2p6r-68mm. 8.0.4 is clean and brings Pkcs [8.0.1,),
+         also clean. Drop when ServiceModel depends on a clean Xml itself. -->
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.4" />
     <Reference Include="DigitalRune.Windows.Docking">
       <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
