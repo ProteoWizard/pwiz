@@ -59,6 +59,20 @@ namespace pwiz.Osprey.Tasks
     internal sealed class FirstPassSurvivorLoader
     {
         private readonly IReadOnlyDictionary<string, string> _perFileParquetPaths;
+
+        /// <summary>
+        /// One shared string per distinct ModifiedSequence across every file this loader fills.
+        /// The parquet reader returns a fresh instance per row, so without this the Stage 7 pool
+        /// holds one string object per survivor observation - ~72 B of its measured 274 B/entry,
+        /// about 9.9 GB at 137 M survivors, for values that are already shared (#4486).
+        ///
+        /// <para>Spans FILES deliberately: the same peptide is observed in many runs, so a
+        /// per-file pool would recover only a fraction. It lives and dies with this loader, so
+        /// the table is released along with the buffer it populated. Not synchronized - the
+        /// survivor rebuild walks files sequentially.</para>
+        /// </summary>
+        private readonly Dictionary<string, string> _sequencePool =
+            new Dictionary<string, string>(StringComparer.Ordinal);
         private readonly OspreyConfig _config;
         private readonly HashSet<uint> _firstPassBaseIds;
 
@@ -147,7 +161,7 @@ namespace pwiz.Osprey.Tasks
             List<FdrEntry> stubs;
             try
             {
-                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, isSurvivor);
+                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, isSurvivor, _sequencePool);
             }
             catch (Exception ex)
             {

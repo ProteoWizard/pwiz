@@ -269,6 +269,12 @@ namespace pwiz.Osprey.Tasks
                 throw new InvalidDataException("HydrateForRescore: parquetPaths is empty");
 
             var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>(parquetPaths.Count);
+            // One shared string per distinct ModifiedSequence across every file hydrated here.
+            // The parquet reader returns a fresh instance per row, so without this the whole-run
+            // buffer holds one string object per survivor observation - ~72 B of its measured
+            // 274 B/entry (issue #4486). Spans files deliberately: the same peptide appears in
+            // many runs. Released with this method, unlike string.Intern.
+            var sequencePool = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (var parquetPath in parquetPaths)
             {
                 string syntheticInput = SyntheticInputFromParquet(parquetPath);
@@ -285,7 +291,7 @@ namespace pwiz.Osprey.Tasks
                 List<FdrEntry> stubs;
                 try
                 {
-                    stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+                    stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, null, sequencePool);
                 }
                 catch (Exception ex)
                 {
