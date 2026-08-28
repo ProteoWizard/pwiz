@@ -270,7 +270,7 @@ namespace pwiz.Osprey.Test
             if (c != 0) return c;
             c = a.ScanNumber.CompareTo(b.ScanNumber);
             if (c != 0) return c;
-            return a.ParquetIndex.CompareTo(b.ParquetIndex);
+            return FdrEntry.CompareParquetIndex(a.ParquetIndex, b.ParquetIndex);
         }
 
         /// <summary>
@@ -428,7 +428,7 @@ namespace pwiz.Osprey.Test
             if (c != 0) return c;
             c = a.Charge.CompareTo(b.Charge);
             if (c != 0) return c;
-            return a.ParquetIndex.CompareTo(b.ParquetIndex);
+            return FdrEntry.CompareParquetIndex(a.ParquetIndex, b.ParquetIndex);
         }
     }
 }

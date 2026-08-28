@@ -336,10 +336,17 @@ namespace pwiz.Osprey.FDR
                 foreach (var e in kvp.Value)
                 {
                     int peptideId = idByPeptide[e.ModifiedSequence ?? string.Empty];
+                    // The projection row keeps a plain uint with uint.MaxValue for "no Stage 4
+                    // row": it is a 32-byte readonly struct held 768 M at a time, where a
+                    // nullable would cost bytes each for a value this stage only uses to address
+                    // a feature row. The unresolved case is now mapped EXPLICITLY rather than
+                    // arriving pre-encoded, which is what the shared sentinel could not express.
                     uint parquetIndex;
-                    if (rowByScoreIndex == null)
-                        parquetIndex = e.ParquetIndex;
-                    else if (!rowByScoreIndex.TryGetValue(e.ParquetIndex, out parquetIndex))
+                    if (!e.ParquetIndex.HasValue)
+                        parquetIndex = uint.MaxValue;
+                    else if (rowByScoreIndex == null)
+                        parquetIndex = e.ParquetIndex.Value;
+                    else if (!rowByScoreIndex.TryGetValue(e.ParquetIndex.Value, out parquetIndex))
                         parquetIndex = uint.MaxValue;
                     rows.Add(new FdrProjection(
                         e.EntryId, parquetIndex, peptideId, fileIdx, e.Charge, e.IsDecoy,

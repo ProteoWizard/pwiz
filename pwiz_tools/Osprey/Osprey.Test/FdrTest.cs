@@ -1054,7 +1054,7 @@ namespace pwiz.Osprey.Test
             for (int f = 0; f < fdrStubs.Count; f++)
             {
                 foreach (var e in fdrStubs[f].Value)
-                    refByKey[(f, e.ParquetIndex)] = e;
+                    refByKey[(f, e.ParquetIndex.Value)] = e;
             }
             int compared = 0;
             for (int f = 0; f < projSet.PerFile.Count; f++)

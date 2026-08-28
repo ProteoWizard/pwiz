@@ -1356,7 +1356,8 @@ namespace pwiz.Osprey.Tasks
                     {
                         foreach (var e in fileEntries)
                         {
-                            if (featByScoreIndex.TryGetValue(e.ParquetIndex, out double[] feats) &&
+                            if (e.ParquetIndex.HasValue &&
+                                featByScoreIndex.TryGetValue(e.ParquetIndex.Value, out double[] feats) &&
                                 feats != null && feats.Length == nFeatures)
                             {
                                 double frozenScore = scorer.Score(feats);
@@ -1787,7 +1788,7 @@ namespace pwiz.Osprey.Tasks
                     if (c != 0) return c;
                     c = a.ScanNumber.CompareTo(b.ScanNumber);
                     if (c != 0) return c;
-                    return a.ParquetIndex.CompareTo(b.ParquetIndex);
+                    return FdrEntry.CompareParquetIndex(a.ParquetIndex, b.ParquetIndex);
                 });
             }
 
@@ -1914,7 +1915,8 @@ namespace pwiz.Osprey.Tasks
                 // file, because that is what addresses LoadPinFeaturesFromParquet's positional
                 // feature array. The two were the same number before the reconciled parquet
                 // became a subset, which is why this used to be able to conflate them.
-                map[stubs[i].ParquetIndex] = (uint)i;
+                if (stubs[i].ParquetIndex.HasValue)
+                    map[stubs[i].ParquetIndex.Value] = (uint)i;
             }
             // No collision to reason about any more. This keyed on
             // (entry_id, charge, scan_number) and needed a paragraph explaining why a
@@ -1945,7 +1947,10 @@ namespace pwiz.Osprey.Tasks
             int n = Math.Min(stubs.Count, featRows.Count);
             var map = new Dictionary<uint, double[]>(n);
             for (int i = 0; i < n; i++)
-                map[stubs[i].ParquetIndex] = featRows[i];
+            {
+                if (stubs[i].ParquetIndex.HasValue)
+                    map[stubs[i].ParquetIndex.Value] = featRows[i];
+            }
             return map;
         }
 
@@ -1967,7 +1972,8 @@ namespace pwiz.Osprey.Tasks
             int nMapped = 0;
             foreach (var entry in entries)
             {
-                if (featByScoreIndex.TryGetValue(entry.ParquetIndex, out double[] features))
+                if (entry.ParquetIndex.HasValue &&
+                    featByScoreIndex.TryGetValue(entry.ParquetIndex.Value, out double[] features))
                 {
                     entry.Features = features;
                     nMapped++;

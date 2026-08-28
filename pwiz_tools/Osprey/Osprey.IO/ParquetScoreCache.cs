@@ -494,7 +494,20 @@ namespace pwiz.Osprey.IO
                 // diverged -- 35K use_cwt actions on HPC side, 814 on
                 // in-memory side, total identical).
                 if (writeScoreIndex)
-                    scoreIndices[j] = entry.ParquetIndex;
+                {
+                    // Loud, not absorbed. Every row reaching the writer has been numbered -
+                    // originals carry their Stage 4 ordinal, gap-fill is assigned past the
+                    // source row count as it is emitted. A null here means that numbering was
+                    // skipped, and writing any stand-in would persist a score_index pointing at
+                    // another row's features: well-formed, undetectable, and wrong.
+                    if (!entry.ParquetIndex.HasValue)
+                    {
+                        throw new InvalidOperationException(string.Format(
+                            "Reconciled parquet write for {0}: row {1} (entry_id {2}) reached the " +
+                            "writer with no score_index assigned.", fileName, j, entry.EntryId));
+                    }
+                    scoreIndices[j] = entry.ParquetIndex.Value;
+                }
                 else
                     entry.ParquetIndex = (uint)(startIndex + j);
                 entryIds[j] = entry.EntryId;
@@ -1543,6 +1556,12 @@ namespace pwiz.Osprey.IO
             using (var groupReader = reader.OpenRowGroupReader(g))
             {
                 var entryIdCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
+                // Same source of truth as LoadFdrStubsFromParquet: the STORED ordinal when the
+                // file carries the column, the row's position only when it does not. Reading it
+                // here is what stops two readers of one file disagreeing about what ParquetIndex
+                // means - position is the Stage 4 ordinal only while the two files are
+                // row-parallel, which a survivor subset is not (#4486).
+                var scoreIndexCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_SCORE_INDEX.Name);
                 var isDecoyCol = ReadColumnByName<bool[]>(groupReader, fieldsByName, FIELD_IS_DECOY.Name);
                 var chargeCol = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name);
                 var scanCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_SCAN_NUMBER.Name);
@@ -1601,7 +1620,9 @@ namespace pwiz.Osprey.IO
                     entries.Add(new FdrEntry
                     {
                         EntryId = entryIdCol[row],
-                        ParquetIndex = (uint)(startParquetIndex + entries.Count),
+                        ParquetIndex = scoreIndexCol != null
+                            ? scoreIndexCol[row]
+                            : (uint)(startParquetIndex + entries.Count),
                         IsDecoy = isDecoyCol[row],
                         Charge = chargeCol != null ? chargeCol[row] : (byte)0,
                         ScanNumber = scanCol != null ? scanCol[row] : 0u,

@@ -128,6 +128,15 @@ namespace pwiz.Osprey.Tasks
         private readonly Dictionary<string, HashSet<uint>> _resetEntryIdsByFile
             = new Dictionary<string, HashSet<uint>>(StringComparer.Ordinal);
 
+        // Guards the dictionary ABOVE, not the sets inside it. RescoreOneFile reaches it from
+        // inside ExecuteRescore's Parallel.For over files, and its TryGetValue-then-insert is a
+        // read-modify-write: two workers inserting across a resize can drop an entry or walk a
+        // torn bucket chain. A dropped key makes ResetRescoredTargetsForFile return early, so
+        // that file's rescored survivors keep first-pass q-values in the rebuilt Stage 7 pool -
+        // the over-reporting the reset exists to prevent, with no error. Each file's own
+        // HashSet needs no lock: exactly one worker owns a file.
+        private readonly object _resetEntryIdsLock = new object();
+
         // Admits one survivor refill at a time under the parallel file loop, so the
         // pre-compaction transient each load holds is not multiplied by the file parallelism.
         // See RescoreOneFileStreamed for why that trade is free.
@@ -388,8 +397,16 @@ namespace pwiz.Osprey.Tasks
             // decided HERE rather than there is which reconciled parquets that build may
             // overlay: this is the last moment the question has the right answer (see
             // RescoredPoolPlan), and the answer is cheap - one small sidecar read per file.
+            // Snapshot under the lock rather than handing the live dictionary on. The
+            // parallel loop above has joined, so its contents are final - but passing the
+            // mutable instance lets shared state outlive the region that guarded it, and
+            // the next caller cannot see that the guarantee is positional.
+            Dictionary<string, HashSet<uint>> resetEntryIds;
+            lock (_resetEntryIdsLock)
+                resetEntryIds = new Dictionary<string, HashSet<uint>>(
+                    _resetEntryIdsByFile, StringComparer.Ordinal);
             _poolPlan = new RescoredPoolPlan(_perFileEntries, survivorLoader, rescoredFiles,
-                CurrentReconciledPaths(ctx), gapFill, _resetEntryIdsByFile);
+                CurrentReconciledPaths(ctx), gapFill, resetEntryIds);
 
             // Cross-impl bisection seam: dump per-precursor state
             // immediately after the rescore loop. Mirrors Rust's
@@ -1021,10 +1038,14 @@ namespace pwiz.Osprey.Tasks
 
             // Overlay the re-scored subset back onto the per-file stubs,
             // resetting discriminant fields to Rust to_fdr_entry defaults.
-            if (!_resetEntryIdsByFile.TryGetValue(fileName, out var resetEntryIds))
+            HashSet<uint> resetEntryIds;
+            lock (_resetEntryIdsLock)
             {
-                resetEntryIds = new HashSet<uint>(combinedTargets.Count);
-                _resetEntryIdsByFile[fileName] = resetEntryIds;
+                if (!_resetEntryIdsByFile.TryGetValue(fileName, out resetEntryIds))
+                {
+                    resetEntryIds = new HashSet<uint>(combinedTargets.Count);
+                    _resetEntryIdsByFile[fileName] = resetEntryIds;
+                }
             }
             var (nOverlay, nNoPeak) =
                 OverlayRescoredEntries(fdrEntries, combinedTargets, rescored, resetEntryIds);
@@ -1741,11 +1762,13 @@ namespace pwiz.Osprey.Tasks
                     // Parquet order within an EntryId is canonical (entry_id, charge, scan),
                     // which is the order the cold path's sorted block puts them in too, so the
                     // two agree row for row.
+                    // No re-stamp. These rows came from the reconciled parquet, which numbers
+                    // gap-fill past its source row count, and ReadFdrEntryGroup now carries that
+                    // number through. Overwriting it with one shared value made every gap-fill
+                    // row compare equal on CANONICAL_ORDER's terminal key - breaking the
+                    // uniqueness the sort below documents as its reason for being safe.
                     foreach (var g in gapRows)
-                    {
-                        g.ParquetIndex = uint.MaxValue;
                         fileEntries.Add(g);
-                    }
                     existingIds.Add(gid);
                 }
             }
@@ -2406,7 +2429,13 @@ namespace pwiz.Osprey.Tasks
             // agree on all four keys, which are indistinguishable anyway. The rebuild-from-disk
             // reproduces this by appending EVERY reconciled row for a target, in the parquet's
             // canonical (entry_id, charge, scan) order, which is the order this sort produces.
-            gapFillAppended.Sort(FdrEntry.CANONICAL_ORDER); // Array.Sort OK: a tie needs equal (EntryId, Charge, ScanNumber), and such rows are indistinguishable
+            // OrderBy, not Sort: ties ARE expected here - these rows are appended before the
+            // writer numbers them, so CANONICAL_ORDER's terminal key is unresolved for all of
+            // them and equal-key rows are common. List.Sort is unstable, and these are FdrEntry
+            // OBJECTS carrying distinct features and blobs, so "indistinguishable" is true of
+            // the comparator key but not of the rows. A stable sort makes the emitted order a
+            // function of the input order rather than of the sort's internal partitioning.
+            gapFillAppended = gapFillAppended.OrderBy(e => e, FdrEntry.CANONICAL_COMPARER).ToList();
             fdrEntries.AddRange(gapFillAppended);
 
             return (nGapCwt, nGapForced);

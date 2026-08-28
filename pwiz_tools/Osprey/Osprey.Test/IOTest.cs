@@ -2987,7 +2987,7 @@ namespace pwiz.Osprey.Test
                 // so the overlay indices below hit the right rows.
                 var posById = new Dictionary<uint, uint>();
                 foreach (var e in ParquetScoreCache.LoadFullFdrEntries(originalPath))
-                    posById[e.EntryId] = e.ParquetIndex;
+                    posById[e.EntryId] = e.ParquetIndex.Value;
 
                 // Overlay two existing rows (id 3, id 8) with distinctly re-scored
                 // features/blobs; leave id 2 un-overlaid (its original row must stream

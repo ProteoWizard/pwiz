@@ -118,7 +118,11 @@ namespace pwiz.Osprey.FDR
                         Charge = fdrEntry.Charge,
                         IsDecoy = fdrEntry.IsDecoy,
                         EntryId = fdrEntry.EntryId,
-                        ParquetIndex = fdrEntry.ParquetIndex,
+                        // The ONE place FdrEntry's nullable becomes this row's sentinel.
+                        // PercolatorEntry is a per-observation scoring row held at first-pass
+                        // scale, so it keeps a plain uint; confining the conversion here means
+                        // the ambiguity no longer travels between subsystems on shared state.
+                        ParquetIndex = fdrEntry.ParquetIndex ?? uint.MaxValue,
                         CoelutionSum = fdrEntry.CoelutionSum,
                         Features = features
                     });

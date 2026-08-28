@@ -166,7 +166,10 @@ namespace pwiz.Osprey.Tasks
                 }
                 if (entry.Features == null)
                     continue;  // hydrated stub, never re-scored
-                overlayByIndex[entry.ParquetIndex] = entry;
+                // An overlay row addresses an ORIGINAL parquet row, so it must have an index.
+                // A gap-fill row (no Stage 4 row) is routed to the gapFill list above, not here.
+                if (entry.ParquetIndex.HasValue)
+                    overlayByIndex[entry.ParquetIndex.Value] = entry;
             }
         }
 
