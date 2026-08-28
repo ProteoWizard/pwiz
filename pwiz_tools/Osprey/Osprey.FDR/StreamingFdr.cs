@@ -192,138 +192,23 @@ namespace pwiz.Osprey.FDR
             {
                 string fileKey = fileKeys[fileIdx];
                 var (entryIds, scores, survivorScores) = readFile(fileKey);
-                int m = entryIds.Length;
-                var labels = new bool[m];
-                // Non-null only when stratified: the base_ids whose observations Stage 6 actually
-                // CHANGED. Filled in the scoring pass below rather than recorded positionally in a
-                // parallel bool[m] and re-read afterwards. Two reasons beyond the saved pass: the
-                // bool[] and this set used to be live at the same time, so dropping it lowers the
-                // peak; and a base_id-keyed set needs no materialized per-entry array, which is
-                // the shape that survives if this ever streams entries instead of reading them
-                // into arrays. See the admission rationale below for what "changed" means here.
-                var changedBaseIds = stratumBaseIds != null ? new HashSet<uint>() : null;
-                for (int i = 0; i < m; i++)
-                {
-                    uint eid = entryIds[i];
-                    labels[i] = (eid & ~PercolatorEntry.BASE_ID_MASK) != 0u; // decoy high bit set
-                    if (survivorScores.TryGetValue(eid, out double ov))
-                    {
-                        // BIT-EXACT inequality is the "changed" discriminator, the same one
-                        // Pass2FdrSidecar.AssignPerRunQ uses to separate Moved from Unchanged: an
-                        // unchanged survivor's reconciled features ARE its original Stage-4
-                        // features (ReconciledParquetWriter streams unchanged rows through
-                        // untouched) and the sidecar score came from those same features under
-                        // this same averaged model, so the recomputation reproduces it exactly.
-                        // A moved peak carries rescored features, so its score differs.
-                        if (changedBaseIds != null && ov != scores[i])
-                            changedBaseIds.Add(eid & PercolatorEntry.BASE_ID_MASK);
-                        scores[i] = ov; // swap in the reconciled survivor's frozen-model score
-                    }
-                }
 
-                // protein-compact: a peak Stage 6 CHANGED (reconciliation moved it, or gap-fill
-                // created it) carries a NEW composite score and no longer has a valid pass-1
-                // run q -- the old q described a peak that no longer exists, and
-                // PerFileRescoreTask's post-rescore overlay zeroes it precisely to say so. Such
-                // a peak must EARN a fresh run q here, exactly the way on-stratum members do;
-                // neither inheriting the prior q nor keeping the q=1 sentinel is a calibrated
-                // answer for it. The "changed" signal is a frozen-model score that DIFFERS from
-                // the entry's 1st-pass sidecar score, computed above - NOT mere presence in
-                // survivorScoreOverride. That map holds every post-reconciliation survivor whose
-                // identity resolves in the effective parquet, including files Stage 6 never
-                // touched (the effective path falls back to the ORIGINAL parquet), so keying on
-                // presence admitted most of the survivor pool and quietly widened the very
-                // stratum this mode exists to enforce.
-                //
-                // The score comparison is keyed by entry_id, so it means the same thing
-                // in-process and on a distributed SecondPassFDR node (an index-keyed source does NOT -
-                // see #4484), and it needs no extra plumbing: both scores are already in hand.
-                //
-                // Admitted BY BASE_ID so a target and its paired decoy always enter together.
-                // Admitting a lone target would let it auto-win its competition and inflate the
-                // null, the cross-validation grouping invariant this file depends on. The set is
-                // complete before this point: it is filled by the scoring pass above, and every
-                // entry of this file has been through that pass. That ordering matters, because a
-                // base_id changed at a LATER entry still admits an earlier one.
+                // The PER-FILE half, isolated so it can move to PerFileRescoring (#4486).
+                // Beyond this file's own arrays its only inputs are the frozen-model survivor
+                // scores, the global survivor id set and the protein stratum - and a per-file
+                // worker can be handed all three: the model and the stratum already ride the
+                // phase2 -> phase3 -> phase4 relay, and the survivor id set is ~50 MB.
+                var contribution = CompeteOneFile(
+                    entryIds, scores, survivorScores, survivorIds, stratumBaseIds);
 
-                // Called only from the stratified branch below, where both sets are non-null -
-                // the unstratified path builds allIdx directly and never asks. The null guards
-                // this started with were therefore dead, and ReSharper reported them as such.
-                bool Admit(uint baseId)
-                {
-                    return stratumBaseIds.Contains(baseId) || changedBaseIds.Contains(baseId);
-                }
-
-                // Run-level: compete within this file (stratum members plus changed peaks when
-                // stratified), conservative q on the winners.
-                int[] allIdx;
-                if (stratumBaseIds == null)
-                {
-                    allIdx = new int[m];
-                    for (int i = 0; i < m; i++) allIdx[i] = i;
-                }
-                else
-                {
-                    var idxList = new List<int>(m);
-                    for (int i = 0; i < m; i++)
-                        if (Admit(entryIds[i] & PercolatorEntry.BASE_ID_MASK)) idxList.Add(i);
-                    allIdx = idxList.ToArray();
-                }
-                TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, allIdx,
-                    out int[] wi, out double[] ws, out bool[] wd);
-                var q = new double[wi.Length];
-                PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
-                // This file's run q, handed to the caller at the end of the iteration and then
-                // dropped. Sized by the survivors that won a competition HERE, not by the survivor
-                // set across all files, which is what makes the phase flat in file count. The
-                // caller filters to the survivors it actually holds for this file, so the old
-                // (fileKey, entryId) membership test is now the caller's own per-file list.
-                var fileRunQ = new Dictionary<uint, double>();
-                for (int rank = 0; rank < wi.Length; rank++)
-                {
-                    uint eid = entryIds[wi[rank]];
-                    if (!survivorIds.Contains(eid)) continue;
-                    double qv = q[rank];
-                    fileRunQ[eid] = qv;
-                    if (!minRunQ.TryGetValue(eid, out double cur) || qv < cur) minRunQ[eid] = qv;
-                }
-
-                // Experiment-level: fold every observation into the per-base_id bests. When
-                // stratified this is the STRATUM ONLY - deliberately NOT the run-level admitted
-                // set, which also carries the changed off-stratum peaks.
-                //
-                // Two reasons an off-stratum peak must not enter a cross-file maximum here.
-                // First, it would be admitted only in the files that CHANGED it, so its best
-                // would be a max over that subset while every stratum member maxes over all
-                // files - and because reconciliation anchors on the best-scoring peak and
-                // corrects the others toward it, a changed peak is never the one that supplied
-                // the maximum. Maxing over changed observations alone is therefore GUARANTEED to
-                // understate the precursor's experiment-wide score, not merely to skew it.
-                // Second, the correct value is already known: the pass-1 experiment q, which by
-                // that same anchor argument reconciliation cannot have invalidated. The caller
-                // carries it through rather than recomputing it, which is what keeps the
-                // re-scoping additive - see Pass2FdrSidecar's map-back.
-                for (int i = 0; i < m; i++)
-                {
-                    uint eid = entryIds[i];
-                    uint bid = eid & PercolatorEntry.BASE_ID_MASK;
-                    if (stratumBaseIds != null && !stratumBaseIds.Contains(bid)) continue;
-                    double s = scores[i];
-                    if (labels[i])
-                    {
-                        if (!bestDecoy.TryGetValue(bid, out var cur) || s > cur.score)
-                            bestDecoy[bid] = (s, fileIdx, eid);
-                    }
-                    else
-                    {
-                        if (!bestTarget.TryGetValue(bid, out var cur) || s > cur.score)
-                            bestTarget[bid] = (s, fileIdx, eid);
-                    }
-                }
+                // The JOIN half. Everything here is O(distinct base_id) / O(distinct survivor),
+                // never O(observations), which is what makes it the part that has to stay in a
+                // whole-run stage.
+                FoldFileContribution(contribution, fileIdx, bestTarget, bestDecoy, minRunQ);
 
                 // Hand this file's run q over and let it go. Called after the experiment fold so
                 // the caller cannot observe a partially-folded file.
-                onFileRunQ(fileKey, fileRunQ);
+                onFileRunQ(fileKey, contribution.RunQ);
                 // entryIds/scores/labels/allIdx/fileRunQ and the caller's per-file survivor scores
                 // are all released here, before the next file is read.
             }
@@ -410,6 +295,223 @@ namespace pwiz.Osprey.FDR
             return new StreamedCompetitionState(
                 expQByWinnerId, minRunQ, winnerLoc, aggByEntryId, pepEstimator, fileKeys, fileKeys.Count > 1);
         }
+
+        /// <summary>
+        /// One file's whole contribution to the second-pass competition: the run q it awards its
+        /// own survivors, and the per-base_id best target / best decoy observation it saw.
+        ///
+        /// <para>Both are O(distinct base_id in this file), not O(observations), which is the
+        /// property that lets a per-file worker produce this and a join stage consume it
+        /// (#4486). The locator's file index is deliberately absent - the fold assigns it, so
+        /// nothing here has to know its own position in the run.</para>
+        /// </summary>
+        private sealed class FileCompetition
+        {
+            public FileCompetition(
+                Dictionary<uint, double> runQ,
+                Dictionary<uint, (double score, uint entryId)> bestTarget,
+                Dictionary<uint, (double score, uint entryId)> bestDecoy)
+            {
+                RunQ = runQ;
+                BestTarget = bestTarget;
+                BestDecoy = bestDecoy;
+            }
+
+            public Dictionary<uint, double> RunQ { get; }
+            public Dictionary<uint, (double score, uint entryId)> BestTarget { get; }
+            public Dictionary<uint, (double score, uint entryId)> BestDecoy { get; }
+        }
+
+        /// <summary>
+        /// The PER-FILE half of the second-pass competition: swap in the frozen-model scores,
+        /// compete within this file, and reduce to the per-base_id bests the experiment
+        /// competition needs.
+        ///
+        /// <para>Nothing here reads any other file. That is the point: this is the work that
+        /// belongs in <c>PerFileRescoring</c> rather than in the join, and separating it in
+        /// place - byte-identically - is what makes moving it a relocation instead of a
+        /// rewrite.</para>
+        /// </summary>
+        private static FileCompetition CompeteOneFile(
+            uint[] entryIds, double[] scores,
+            IReadOnlyDictionary<uint, double> survivorScores,
+            HashSet<uint> survivorIds, HashSet<uint> stratumBaseIds)
+        {
+            int m = entryIds.Length;
+            var labels = new bool[m];
+            // Non-null only when stratified: the base_ids whose observations Stage 6 actually
+            // CHANGED. Filled in the scoring pass below rather than recorded positionally in a
+            // parallel bool[m] and re-read afterwards. Two reasons beyond the saved pass: the
+            // bool[] and this set used to be live at the same time, so dropping it lowers the
+            // peak; and a base_id-keyed set needs no materialized per-entry array, which is
+            // the shape that survives if this ever streams entries instead of reading them
+            // into arrays. See the admission rationale below for what "changed" means here.
+            var changedBaseIds = stratumBaseIds != null ? new HashSet<uint>() : null;
+            for (int i = 0; i < m; i++)
+            {
+                uint eid = entryIds[i];
+                labels[i] = (eid & ~PercolatorEntry.BASE_ID_MASK) != 0u; // decoy high bit set
+                if (survivorScores.TryGetValue(eid, out double ov))
+                {
+                    // BIT-EXACT inequality is the "changed" discriminator, the same one
+                    // Pass2FdrSidecar.AssignPerRunQ uses to separate Moved from Unchanged: an
+                    // unchanged survivor's reconciled features ARE its original Stage-4
+                    // features (ReconciledParquetWriter streams unchanged rows through
+                    // untouched) and the sidecar score came from those same features under
+                    // this same averaged model, so the recomputation reproduces it exactly.
+                    // A moved peak carries rescored features, so its score differs.
+                    if (changedBaseIds != null && ov != scores[i])
+                        changedBaseIds.Add(eid & PercolatorEntry.BASE_ID_MASK);
+                    scores[i] = ov; // swap in the reconciled survivor's frozen-model score
+                }
+            }
+
+            // protein-compact: a peak Stage 6 CHANGED (reconciliation moved it, or gap-fill
+            // created it) carries a NEW composite score and no longer has a valid pass-1
+            // run q -- the old q described a peak that no longer exists, and
+            // PerFileRescoreTask's post-rescore overlay zeroes it precisely to say so. Such
+            // a peak must EARN a fresh run q here, exactly the way on-stratum members do;
+            // neither inheriting the prior q nor keeping the q=1 sentinel is a calibrated
+            // answer for it. The "changed" signal is a frozen-model score that DIFFERS from
+            // the entry's 1st-pass sidecar score, computed above - NOT mere presence in
+            // survivorScoreOverride. That map holds every post-reconciliation survivor whose
+            // identity resolves in the effective parquet, including files Stage 6 never
+            // touched (the effective path falls back to the ORIGINAL parquet), so keying on
+            // presence admitted most of the survivor pool and quietly widened the very
+            // stratum this mode exists to enforce.
+            //
+            // The score comparison is keyed by entry_id, so it means the same thing
+            // in-process and on a distributed SecondPassFDR node (an index-keyed source does NOT -
+            // see #4484), and it needs no extra plumbing: both scores are already in hand.
+            //
+            // Admitted BY BASE_ID so a target and its paired decoy always enter together.
+            // Admitting a lone target would let it auto-win its competition and inflate the
+            // null, the cross-validation grouping invariant this file depends on. The set is
+            // complete before this point: it is filled by the scoring pass above, and every
+            // entry of this file has been through that pass. That ordering matters, because a
+            // base_id changed at a LATER entry still admits an earlier one.
+
+            // Called only from the stratified branch below, where both sets are non-null -
+            // the unstratified path builds allIdx directly and never asks. The null guards
+            // this started with were therefore dead, and ReSharper reported them as such.
+            bool Admit(uint baseId)
+            {
+                return stratumBaseIds.Contains(baseId) || changedBaseIds.Contains(baseId);
+            }
+
+            // Run-level: compete within this file (stratum members plus changed peaks when
+            // stratified), conservative q on the winners.
+            int[] allIdx;
+            if (stratumBaseIds == null)
+            {
+                allIdx = new int[m];
+                for (int i = 0; i < m; i++) allIdx[i] = i;
+            }
+            else
+            {
+                var idxList = new List<int>(m);
+                for (int i = 0; i < m; i++)
+                    if (Admit(entryIds[i] & PercolatorEntry.BASE_ID_MASK)) idxList.Add(i);
+                allIdx = idxList.ToArray();
+            }
+            TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, allIdx,
+                out int[] wi, out double[] ws, out bool[] wd);
+            var q = new double[wi.Length];
+            PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
+            // This file's run q, handed to the caller at the end of the iteration and then
+            // dropped. Sized by the survivors that won a competition HERE, not by the survivor
+            // set across all files, which is what makes the phase flat in file count. The
+            // caller filters to the survivors it actually holds for this file, so the old
+            // (fileKey, entryId) membership test is now the caller's own per-file list.
+            //
+            // Filtered on the GLOBAL survivor set, not this file's own. A file can win a
+            // competition for an entry_id that is not one of ITS survivors but is a survivor
+            // in another file, and that win still has to reach the cross-file minimum the
+            // experiment q floors on. Substituting the local list would silently drop those
+            // contributions and lower experiment q for exactly the precursors seen in many runs.
+            var fileRunQ = new Dictionary<uint, double>();
+            for (int rank = 0; rank < wi.Length; rank++)
+            {
+                uint eid = entryIds[wi[rank]];
+                if (!survivorIds.Contains(eid)) continue;
+                fileRunQ[eid] = q[rank];
+            }
+
+            // Experiment-level: reduce every observation to the per-base_id bests. When
+            // stratified this is the STRATUM ONLY - deliberately NOT the run-level admitted
+            // set, which also carries the changed off-stratum peaks.
+            //
+            // Two reasons an off-stratum peak must not enter a cross-file maximum here.
+            // First, it would be admitted only in the files that CHANGED it, so its best
+            // would be a max over that subset while every stratum member maxes over all
+            // files - and because reconciliation anchors on the best-scoring peak and
+            // corrects the others toward it, a changed peak is never the one that supplied
+            // the maximum. Maxing over changed observations alone is therefore GUARANTEED to
+            // understate the precursor's experiment-wide score, not merely to skew it.
+            // Second, the correct value is already known: the pass-1 experiment q, which by
+            // that same anchor argument reconciliation cannot have invalidated. The caller
+            // carries it through rather than recomputing it, which is what keeps the
+            // re-scoping additive - see Pass2FdrSidecar's map-back.
+            //
+            // Strictly-greater, so the FIRST observation at the maximum wins. The fold across
+            // files applies the same rule, which is what makes the two-stage reduction give
+            // the same answer as the single global pass it replaced: within a file the first
+            // max wins, and across files the earliest file at the max wins.
+            var bestTarget = new Dictionary<uint, (double score, uint entryId)>();
+            var bestDecoy = new Dictionary<uint, (double score, uint entryId)>();
+            for (int i = 0; i < m; i++)
+            {
+                uint eid = entryIds[i];
+                uint bid = eid & PercolatorEntry.BASE_ID_MASK;
+                if (stratumBaseIds != null && !stratumBaseIds.Contains(bid)) continue;
+                double s = scores[i];
+                if (labels[i])
+                {
+                    if (!bestDecoy.TryGetValue(bid, out var cur) || s > cur.score)
+                        bestDecoy[bid] = (s, eid);
+                }
+                else
+                {
+                    if (!bestTarget.TryGetValue(bid, out var cur) || s > cur.score)
+                        bestTarget[bid] = (s, eid);
+                }
+            }
+
+            return new FileCompetition(fileRunQ, bestTarget, bestDecoy);
+        }
+
+        /// <summary>
+        /// The JOIN half: fold one file's contribution into the cross-file state.
+        ///
+        /// <para>Strictly-greater on both maxima, matching <see cref="CompeteOneFile"/>, so the
+        /// earliest file at a given maximum keeps the locator - the same disposition the single
+        /// global pass gave when it walked files in this order.</para>
+        /// </summary>
+        private static void FoldFileContribution(
+            FileCompetition contribution, int fileIdx,
+            Dictionary<uint, (double score, int fileIdx, uint entryId)> bestTarget,
+            Dictionary<uint, (double score, int fileIdx, uint entryId)> bestDecoy,
+            Dictionary<uint, double> minRunQ)
+        {
+            foreach (var kv in contribution.BestTarget)
+            {
+                if (!bestTarget.TryGetValue(kv.Key, out var cur) || kv.Value.score > cur.score)
+                    bestTarget[kv.Key] = (kv.Value.score, fileIdx, kv.Value.entryId);
+            }
+            foreach (var kv in contribution.BestDecoy)
+            {
+                if (!bestDecoy.TryGetValue(kv.Key, out var cur) || kv.Value.score > cur.score)
+                    bestDecoy[kv.Key] = (kv.Value.score, fileIdx, kv.Value.entryId);
+            }
+            // The best-of-runs monotonicity floor for the experiment q. Only survivors are in
+            // RunQ, so this is O(distinct survivor) however many files there are.
+            foreach (var kv in contribution.RunQ)
+            {
+                if (!minRunQ.TryGetValue(kv.Key, out double cur) || kv.Value < cur)
+                    minRunQ[kv.Key] = kv.Value;
+            }
+        }
+
 
         /// <summary>
         /// The bounded cross-file result of <see cref="ComputeFullPopulationPrecursorFdrStreaming"/>:
