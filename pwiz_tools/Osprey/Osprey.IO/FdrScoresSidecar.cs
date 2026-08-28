@@ -254,7 +254,34 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static void ReadScalars(string path, Pass expectedPass, out uint[] entryIds, out double[] scores)
         {
+            ReadScalars(path, expectedPass, out entryIds, out scores, null, null);
+        }
+
+        /// <summary>
+        /// <see cref="ReadScalars(string,Pass,out uint[],out double[])"/>, additionally decoding
+        /// the FULL record for the subset <paramref name="selectRecord"/> accepts into
+        /// <paramref name="selected"/>, in file order.
+        ///
+        /// <para>One traversal serving both. The frozen second pass wants three things off each
+        /// file's 1st-pass sidecar - the whole-population (entry_id, score) arrays its
+        /// competition streams, the Score / Pep / ExperimentAggregateScore its survivors are
+        /// seeded from, and the experiment q-values its off-stratum peaks carry forward - and
+        /// read them in three separate passes over the same 68-byte records. That is ~204 MB
+        /// per file re-read twice, on the largest artifact class in the run (52.3 GB of 1st-pass
+        /// sidecars at 257 files, #4486).</para>
+        ///
+        /// <para>The subset is the caller's survivor set, not the whole file: a selector that
+        /// accepts everything makes <paramref name="selected"/> O(pre-compaction population)
+        /// and defeats the point. <paramref name="selected"/> is CLEARED first, so a caller can
+        /// reuse one list across files.</para>
+        /// </summary>
+        public static void ReadScalars(string path, Pass expectedPass, out uint[] entryIds,
+            out double[] scores, Func<uint, bool> selectRecord, List<FdrScoreRecord> selected)
+        {
             if (path == null) throw new ArgumentNullException(nameof(path));
+            if (selectRecord != null && selected == null)
+                throw new ArgumentNullException(nameof(selected));
+            selected?.Clear();
             using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 long len = fs.Length;
@@ -307,6 +334,11 @@ namespace pwiz.Osprey.IO
                             "FdrScoresSidecar truncated at record {0}: {1}", i, path));
                     entryIds[i] = BitConverter.ToUInt32(rec, 0);
                     scores[i] = BitConverter.ToDouble(rec, 4);
+                    // Decoded only for the selected subset. The other ~82% of a file's records
+                    // belong to precursors compaction dropped, and decoding their seven trailing
+                    // doubles to discard them is what the separate passes used to pay for.
+                    if (selectRecord != null && selectRecord(entryIds[i]))
+                        selected.Add(DecodeRecord(rec));
                 }
             }
         }

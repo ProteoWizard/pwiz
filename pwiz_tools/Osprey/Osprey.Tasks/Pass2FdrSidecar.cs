@@ -702,22 +702,38 @@ namespace pwiz.Osprey.Tasks
                     return;
                 }
                 foreach (var pair in _staged)
-                {
-                    pair.Key.Score = pair.Value.Score;
-                    pair.Key.Pep = pair.Value.Pep;
-                    // ExperimentProteinQvalue is deliberately NOT seeded here - see the
-                    // remarks. PatchPass2ProteinQvalues writes the second-pass value into
-                    // the 2nd-pass sidecar after the second-pass protein FDR (#4559).
-                    // The THIRD field of the same five-of-eight gap (sidecar v4, issue
-                    // #4522). ResetScores clears it with Score, and no frozen 2nd-pass mode
-                    // writes it back, so it lands in the 2nd-pass sidecar at 0.0 for every
-                    // peak Stage 6 touched. That is the whole population this exists to
-                    // repair, and it is why the seed should follow the record rather than
-                    // an enumerated list: the list has now grown twice.
-                    pair.Key.ExperimentAggregateScore = pair.Value.ExperimentAggregateScore;
-                }
+                    ApplyRecord(pair.Key, pair.Value);
                 _filesRead++;
                 _nRestored += _staged.Count;
+            }
+
+            /// <summary>
+            /// Seed from records the caller has ALREADY read, rather than reading the sidecar
+            /// again. The frozen competition reads each file's 1st-pass sidecar for its own
+            /// reasons and hands the survivor records here, so one traversal serves both
+            /// (#4486); <see cref="Seed"/> stays the form for callers that only want the seed.
+            ///
+            /// <para>No <c>_unreadable</c> case: a caller holding decoded records has already
+            /// had a clean read, which is also why this needs none of <see cref="Seed"/>'s
+            /// staging - there is no partial-callback state to discard.</para>
+            /// </summary>
+            public void Apply(IReadOnlyList<FdrEntry> entries, IReadOnlyList<FdrScoreRecord> records)
+            {
+                if (entries.Count > _capacity)
+                    Resize(entries.Count);
+                _byEntryId.Clear();
+                foreach (var e in entries)
+                    _byEntryId[e.EntryId] = e;
+                int restored = 0;
+                foreach (var rec in records)
+                {
+                    if (!_byEntryId.TryGetValue(rec.EntryId, out FdrEntry entry))
+                        continue;
+                    ApplyRecord(entry, rec);
+                    restored++;
+                }
+                _filesRead++;
+                _nRestored += restored;
             }
 
             /// <summary>
@@ -752,6 +768,25 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogVerbose(string.Format(
                     "Restored 1st-pass Score/Pep/ExperimentAggregateScore onto {0} survivor(s) across {1} file(s).",
                     _nRestored, _filesRead));
+            }
+
+            /// <summary>
+            /// Copy the three scalars <c>ResetScores</c> clears that no frozen 2nd-pass mode
+            /// writes back, from one 1st-pass record onto its entry.
+            ///
+            /// <para>ExperimentProteinQvalue is deliberately NOT seeded - see the remarks on
+            /// <see cref="Seed"/>. PatchPass2ProteinQvalues writes the second-pass value into
+            /// the 2nd-pass sidecar after the second-pass protein FDR (#4559). It is the FOURTH
+            /// field of the same gap (sidecar v4, issue #4522); the other three land in the
+            /// 2nd-pass sidecar at their reset defaults for every peak Stage 6 touched, which is
+            /// the population this repairs. Following the record rather than an enumerated list
+            /// is deliberate: that list has now grown twice.</para>
+            /// </summary>
+            private static void ApplyRecord(FdrEntry entry, FdrScoreRecord rec)
+            {
+                entry.Score = rec.Score;
+                entry.Pep = rec.Pep;
+                entry.ExperimentAggregateScore = rec.ExperimentAggregateScore;
             }
 
             private void Resize(int capacity)
@@ -1224,6 +1259,12 @@ namespace pwiz.Osprey.Tasks
                 fileKeys.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 long nRead = 0;
+                // One file's 1st-pass records and survivor ids, reused across files rather than
+                // reallocated per file. Both are O(one file's survivors) - about 533 K of the
+                // ~2.99 M records a CHS file's sidecar holds - because the selector below keeps
+                // only the survivor subset.
+                var pass1Records = new List<FdrScoreRecord>();
+                var survivorIds = new HashSet<uint>();
 
                 // ONE file's post-rescore survivors, from the resident buffer while something
                 // else in this run still builds it and materialized from that file's artifacts
@@ -1254,11 +1295,31 @@ namespace pwiz.Osprey.Tasks
                         perFileParquetPaths[fileKey]);
                     currentKey = fileKey;
                     currentEntries = LoadOneFile(fileKey);
+
+                    // ONE traversal of this file's 1st-pass sidecar, for the three things this
+                    // method takes off it: the whole-population (entry_id, score) arrays the
+                    // competition streams, the survivor records the seed below applies, and the
+                    // experiment q-values StashOffStratumPass1ExperimentQ carries forward. Those
+                    // were three separate passes over the same ~204 MB file, i.e. two of every
+                    // three reads of the largest artifact class in the run - 52.3 GB of 1st-pass
+                    // sidecars at 257 files (#4486).
+                    //
+                    // Read from the path the validation loop above checked with IsCurrentFormat,
+                    // not from writer.InputFor's. Both resolve through
+                    // ArtifactPaths.ResolveOutputDir, so they name the same file in every
+                    // configuration this method accepts; this is the one whose header was
+                    // verified BEFORE any survivor was mutated, which is where the contract
+                    // above puts the refusal.
+                    survivorIds.Clear();
+                    foreach (var e in currentEntries)
+                        survivorIds.Add(e.EntryId);
+                    FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], FdrScoresSidecar.Pass.FirstPass,
+                        out uint[] eids, out double[] scs, survivorIds.Contains, pass1Records);
                     // The whole-pool seed is skipped for this mode, so each file is seeded as it
                     // arrives - before the scoring below, which overwrites Score for every
                     // survivor whose features resolve and leaves the seeded 1st-pass value on
                     // the rest.
-                    seeder.Seed(fileKey, currentEntries, writer.InputFor(fileKey));
+                    seeder.Apply(currentEntries, pass1Records);
                     var fileEntries = currentEntries;
 
                     // ONLY the load is guarded, as it was before this method took over the
@@ -1304,10 +1365,12 @@ namespace pwiz.Osprey.Tasks
                     }
                     nScored += fileScores.Count;
 
-                    FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], FdrScoresSidecar.Pass.FirstPass,
-                        out uint[] eids, out double[] scs);
+                    // Off the records read at the top of this method, not a third pass over the
+                    // file. The apparent ordering dependency is not one: the stash tests each
+                    // record's stored score against fileScores, and fileScores is built above
+                    // from the parquet features, not from the sidecar.
                     if (stratumBaseIds != null)
-                        StashOffStratumPass1ExperimentQ(fileKey, sidecarByKey[fileKey], eids, scs, fileScores);
+                        StashOffStratumPass1ExperimentQ(fileKey, pass1Records, fileScores);
                     progress.Report(++nRead);
                     return (eids, scs, fileScores);
                 }
@@ -1351,39 +1414,28 @@ namespace pwiz.Osprey.Tasks
 
                 // Capture the pass-1 experiment q of the off-stratum peaks Stage 6 changed, so
                 // the map-back can carry it. "Changed" is the same bit-exact test the admission
-                // uses: the recomputed frozen-model score differs from the sidecar score. The
-                // set is small, and the second sidecar pass is skipped entirely when it is empty.
-                void StashOffStratumPass1ExperimentQ(string fileKey, string sidecarPath,
-                    uint[] eids, double[] scs, IReadOnlyDictionary<uint, double> fileScores)
+                // uses: the recomputed frozen-model score differs from the sidecar score.
+                //
+                // Over the survivor records already read for this file, which is the whole set
+                // this can select from: the test requires a fileScores entry, and fileScores is
+                // keyed by survivor entry id. Scanning the full-population arrays for a set that
+                // can only contain survivors, and then re-reading the file to fetch their two
+                // q-values, was the second and third traversal this method made of it (#4486).
+                // Nothing is skipped when the set is empty any more, because there is no
+                // remaining read to skip - the loop simply adds nothing.
+                void StashOffStratumPass1ExperimentQ(string fileKey,
+                    IReadOnlyList<FdrScoreRecord> records, IReadOnlyDictionary<uint, double> fileScores)
                 {
-                    var wanted = new HashSet<uint>();
-                    for (int i = 0; i < eids.Length; i++)
+                    foreach (var rec in records)
                     {
-                        if (!stratumBaseIds.Contains(eids[i] & 0x7FFFFFFFu) &&
-                            fileScores.TryGetValue(eids[i], out double ov) &&
-                            ov != scs[i])
-                            wanted.Add(eids[i]);
-                    }
-                    if (wanted.Count == 0)
-                        return;
-                    // The result matters here as much as at the other read sites: ReadRecords
-                    // returns false AFTER invoking the callback, so a partial read leaves
-                    // pass1ExpQByKey holding SOME of this file's off-stratum q-values. Those are
-                    // carried forward verbatim by the off-stratum branch, so a silent partial
-                    // fill gives a subset of survivors their pass-1 q and the rest a default -
-                    // a per-entry mix no downstream check can see.
-                    if (!FdrScoresSidecar.ReadRecords(sidecarPath, FdrScoresSidecar.Pass.FirstPass, rec =>
-                    {
-                        if (wanted.Contains(rec.EntryId))
+                        if (stratumBaseIds.Contains(rec.EntryId & 0x7FFFFFFFu) ||
+                            !fileScores.TryGetValue(rec.EntryId, out double ov) ||
+                            ov == rec.Score)
                         {
-                            pass1ExpQByKey[(fileKey, rec.EntryId)] =
-                                (rec.ExperimentPrecursorQvalue, rec.ExperimentPeptideQvalue);
+                            continue;
                         }
-                    }))
-                    {
-                        throw new IOException(
-                            @"1st-pass sidecar could not be read in full while stashing off-stratum experiment q-values: " +
-                            sidecarPath);
+                        pass1ExpQByKey[(fileKey, rec.EntryId)] =
+                            (rec.ExperimentPrecursorQvalue, rec.ExperimentPeptideQvalue);
                     }
                 }
 
