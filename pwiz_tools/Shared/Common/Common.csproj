@@ -6,7 +6,7 @@
        equivalents on net8. -->
   <PropertyGroup>
     <ProjectGuid>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

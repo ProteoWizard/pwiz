@@ -5,7 +5,7 @@
        data-parity regressions vs. the legacy pwiz C++/CLI path. -->
   <PropertyGroup>
     <ProjectGuid>{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

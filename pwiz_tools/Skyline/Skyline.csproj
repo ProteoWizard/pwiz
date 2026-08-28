@@ -11,7 +11,7 @@
   <PropertyGroup>
     <ProjectGuid>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

@@ -5,7 +5,7 @@
        it under net10.0-windows too. -->
   <PropertyGroup>
     <ProjectGuid>{E3F0E34F-F9E6-4360-996F-E2054E4FA1AE}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

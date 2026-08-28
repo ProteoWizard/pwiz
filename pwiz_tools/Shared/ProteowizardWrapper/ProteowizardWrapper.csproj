@@ -12,7 +12,7 @@
        on net8 with zero call-site changes. -->
   <PropertyGroup>
     <ProjectGuid>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

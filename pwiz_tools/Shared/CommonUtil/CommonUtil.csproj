@@ -9,7 +9,7 @@
        Pattern mirrors PortableUtil.csproj alongside this one. -->
   <PropertyGroup>
     <ProjectGuid>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

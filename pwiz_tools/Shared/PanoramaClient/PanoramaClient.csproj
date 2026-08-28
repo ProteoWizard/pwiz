@@ -4,7 +4,7 @@
        client wrapping the Panorama / LabKey REST API. -->
   <PropertyGroup>
     <ProjectGuid>{BF849CF8-25D7-4619-B001-9ED8E3771C44}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

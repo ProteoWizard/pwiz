@@ -7,7 +7,7 @@
        .csv / .zip / .tsv / .blib. Compile items ARE auto-globbed. -->
   <PropertyGroup>
     <ProjectGuid>{E0FA262A-744E-4D98-A43F-4723A4D95827}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

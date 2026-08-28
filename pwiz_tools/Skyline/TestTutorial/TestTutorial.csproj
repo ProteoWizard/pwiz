@@ -5,7 +5,7 @@
        copied to output. Compile items are auto-globbed. -->
   <PropertyGroup>
     <ProjectGuid>{6FCD5F27-637B-499A-BB66-F74D5FBBD500}</ProjectGuid>
-    <TargetFrameworks>net472;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
