@@ -107,11 +107,18 @@ namespace pwiz.Osprey.IO
                 // AllowMsMsWithoutPrecursor (false) and IgnoreCalibrationScans (true) are
                 // the wrapper's own and not overridable, and right for a search either way -
                 // a Waters lockmass scan is not a place to look for peptides.
+                // mzmlDecodeThreads: the library defaults this to 1 (decode inline) because a
+                // host reading several FILES at once must not go wide underneath its own
+                // parallelism. Osprey is the other shape - one file at a time behind a
+                // one-permit gate - so it is the caller the option was written for. Only the
+                // mzML reader honours it, and only on a forward index walk, which is what the
+                // loop below does. See OspreyEnvironment.MzmlDecodeThreads for the measurements.
                 using (var msData = new MsDataFileImpl(path,
                            simAsSpectra: true,
                            requireVendorCentroidedMS1: vendorFormat,
                            requireVendorCentroidedMS2: vendorFormat,
-                           combineIonMobilitySpectra: false))
+                           combineIonMobilitySpectra: false,
+                           mzmlDecodeThreads: OspreyEnvironment.MzmlDecodeThreads))
                 {
                     // A chromatogram-only file has no spectrum list, so SpectrumCount is 0
                     // and this reads nothing. Osprey has no use for such a file, but an

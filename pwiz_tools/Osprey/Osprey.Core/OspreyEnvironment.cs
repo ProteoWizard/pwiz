@@ -366,6 +366,18 @@ namespace pwiz.Osprey.Core
         /// in-sample-vs-held-out A/B runs without a code revert. Tree-only.</summary>
         public static readonly int GbtInnerFolds = ParseIntOrNull(@"OSPREY_GBT_INNER_FOLDS") ?? 5;
 
+        /// <summary>Threads pwiz-sharp uses to decode mzML binary arrays
+        /// (OSPREY_MZML_DECODE_THREADS, default 8). The library ships this OFF (1, decode
+        /// inline on the read thread) because a host processing several FILES at once should
+        /// not also go wide underneath its own parallelism. Osprey is the other shape: it
+        /// funnels reads through a one-permit gate, so the read phase has the machine to
+        /// itself. Measured on a 5.99 GB Astral mzML, 1 thread takes 83.4s and 8 takes 54.6s,
+        /// after which the curve is flat -- 16, 24 and 32 all land within a second of 8,
+        /// because the floor is the XML parse, which stays serial. Past the knee extra threads
+        /// only add memory pressure, so this does NOT scale off core count or --threads.
+        /// Set to 1 to A/B against the serial decode without a rebuild.</summary>
+        public static readonly int MzmlDecodeThreads = ParseIntOrNull(@"OSPREY_MZML_DECODE_THREADS") ?? 8;
+
         /// <summary>The <see cref="Pass2QValue"/> confidence-transfer mode: do NOT retrain
         /// or re-estimate a null; score each reconciled peak with the frozen 1st-pass model
         /// and map it to a q via the full pre-compaction 1st-pass score-&gt;q table.</summary>
