@@ -17,6 +17,14 @@
            * the .NET 8.0 target can still be built AnyCPU on other hosts
              (e.g. Arm64 macOS/Linux) without touching any csproj. -->
     <Platforms>AnyCPU;x64</Platforms>
+    <!-- Carry Configuration/Platform across a ProjectReference to a project that is NOT
+         in Osprey.sln. MSBuild unsets both by default for such a reference, so
+         ProteowizardWrapper, CommonUtil and pwiz-sharp fell back to their own defaults
+         and a RELEASE Osprey deployed the DEBUG build of every one of them - only the
+         Debug output existed on disk. The reader is correct either way, so this never
+         produced a wrong answer, just an unoptimized ProteoWizard doing the spectrum
+         reading, which reads as a performance problem in Osprey. -->
+    <ShouldUnsetParentConfigurationAndPlatform>false</ShouldUnsetParentConfigurationAndPlatform>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>

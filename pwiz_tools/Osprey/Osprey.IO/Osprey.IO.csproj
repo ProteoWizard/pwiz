@@ -45,22 +45,21 @@
        Identify() works and Read() throws. So this reference costs a default developer
        clone nothing.
 
-       KNOWN ISSUE, unchanged by this swap and deliberately not papered over: a Release
-       Osprey builds and deploys the DEBUG build of the referenced assemblies. Building a
-       .sln unsets Configuration and Platform across a ProjectReference to a project that
-       is not in that solution (MSBuild's ShouldUnsetParentConfigurationAndPlatform, on by
-       default), and neither ProteowizardWrapper nor pwiz-sharp is in Osprey.sln. The code
-       is correct either way - every gate and every byte comparison for #4497 was run in
-       this state - so the cost is an unoptimized ProteoWizard doing the spectrum reading,
-       not a wrong answer.
+       FIXED (was: a Release Osprey deployed the DEBUG build of everything reached through
+       here). Building a .sln unsets Configuration and Platform across a ProjectReference
+       to a project that is not in that solution - MSBuild's
+       ShouldUnsetParentConfigurationAndPlatform, on by default - and neither
+       ProteowizardWrapper nor pwiz-sharp is in Osprey.sln, so both fell back to their own
+       Debug default. Osprey's Directory.Build.props now sets that property false.
 
-       SetConfiguration/SetPlatform metadata and clearing the property were both tried and
-       BOTH MADE IT WORSE: Osprey.exe and Osprey.Test re-resolve these references
-       transitively, each hop negotiating its own property set, so a clean Release build
-       then produced pwiz-sharp under bin/Release, bin/Debug AND bin/x64 and deployed an
-       assembly matching none of them. The fix is to give these projects ONE owner - put
-       them in Osprey.sln, the way Skyline carries its shared projects - which is a
-       structural change worth its own commit rather than a rider on the reader swap. -->
+       Clearing the property was tried BEFORE and made it worse, producing pwiz-sharp under
+       bin/Release, bin/Debug AND bin/x64 with the deployed assembly matching none of them.
+       What changed is the tree, not the property: that attempt was made while these
+       projects still multi-targeted net472, so each transitive hop negotiated its own
+       TFM/platform set and MSBuild built several instances. Single-TFM net10.0 leaves one
+       instance per configuration, and a Release build now deploys x64/Release throughout -
+       verified by hashing all 109 in-tree assemblies in Osprey's output against their
+       build directories, with the Debug build still correctly deploying x64/Debug. -->
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
   </ItemGroup>
