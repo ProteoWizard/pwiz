@@ -52,7 +52,7 @@ namespace SkylineTester
         /// <remarks>
         /// On net472 the zip was assembled from Skyline's build output, which contained
         /// nothing but build products. The net8 build assembles a single merged
-        /// bin\staging-net8\&lt;Config&gt; and TestRunner executes there, so the same directory
+        /// bin\staging\&lt;Config&gt; and TestRunner executes there, so the same directory
         /// accumulates per-test tool installs, per-test data archives and scratch files. The
         /// "add every subdirectory" pass below swept all of it in, taking the archive past
         /// 20 GB and over the 4 GB zip limit. Excluding it restores the ~100 MB of build
@@ -237,7 +237,7 @@ namespace SkylineTester
                         "SkylineNightly.pdb",
                         "Microsoft.Diagnostics.Runtime.dll",
                         "Microsoft.Win32.TaskScheduler.dll",
-                        "DotNetZip.dll"
+                        "ProDotNetZip.dll"
                     };
                     foreach (var file in files)
                     {

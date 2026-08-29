@@ -824,27 +824,11 @@ namespace SkylineTester
 
         private string[] GetPossibleBuildDirs()
         {
-#if NET472
-            var dirs = new[]
-            {
-                Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x86\Release")),
-                Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x64\Release")),
-                Path.Combine(GetBuildRoot(), @"pwiz_tools\Skyline\bin\x86\Release"),
-                Path.Combine(GetBuildRoot(), @"pwiz_tools\Skyline\bin\x64\Release"),
-                Path.Combine(GetNightlyBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x86\Release"),
-                Path.Combine(GetNightlyBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x64\Release"),
-                GetZipPath(32),
-                GetZipPath(64),
-            };
-            if (_buildDebug)
-                dirs = dirs.Select(dir => dir.Replace(@"\Release", @"\Debug")).ToArray();
-            return dirs;
-#else
-            // net8 tests run from a *staged* directory assembled by Stage-Net8Tests.ps1 that
+            // net8 tests run from a *staged* directory assembled by Stage-Tests.ps1 that
             // co-locates TestRunner.exe, the test DLLs, and Skyline-daily (the net8 analogue of the
             // net472 single bin\x64\Release, which no longer exists because projects build to
             // per-project bin\...\net8.0-windows dirs). net8 is x64-only, so only the 64-bit "bin"
-            // slot is populated with the most recent staging-net8*\Release build in the checkout;
+            // slot is populated with the most recent staging*\Release build in the checkout;
             // the other slots are unused (hidden).
             // Offer BOTH staged configurations. Only one used to be listed, so a developer could
             // not run the other without rebuilding this program - and while Release was picked
@@ -862,7 +846,6 @@ namespace SkylineTester
                 null,          // zip (32 bit)
                 null,          // zip (64 bit)
             };
-#endif
         }
 
 #if !NET472

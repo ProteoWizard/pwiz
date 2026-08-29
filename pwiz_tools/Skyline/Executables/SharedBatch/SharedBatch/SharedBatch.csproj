@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- SharedBatch - WinForms library shared by SkylineBatch / AutoQC / LaunchBatch. Multi-target
-       net472;net8.0-windows (classic v4.7.2). net472 keeps the exact on-disk HintPath DLLs it always
+       net472;net10.0-windows (classic v4.7.2). net472 keeps the exact on-disk HintPath DLLs it always
        used; net8 pulls the managed equivalents from NuGet. System.Collections.Immutable is built into
        net8; the vestigial System.Management reference (no code uses it) is dropped. -->
   <PropertyGroup>
     <ProjectGuid>{9660E7B1-A0AD-4C2B-A395-350D4055640A}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -28,9 +28,9 @@
   </ItemGroup>
 
   <!-- net8: managed NuGet equivalents of the legacy on-disk DLLs + the settings config provider -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
-    <PackageReference Include="DotNetZip" Version="1.16.0" />
-    <PackageReference Include="log4net" Version="2.0.17" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
+    <PackageReference Include="log4net" Version="3.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
     <PackageReference Include="System.Management" Version="8.0.0" />
@@ -40,14 +40,6 @@
   <!-- net472: the exact on-disk DLLs this project always compiled against + framework assemblies
        the SDK doesn't auto-reference (System.Management for ProcessRunner, System.Security for
        ProtectedData/DPAPI in TextUtil). -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="DotNetZip"><HintPath>..\..\..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath></Reference>
-    <Reference Include="log4net"><HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath></Reference>
-    <Reference Include="Newtonsoft.Json"><HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
-    <Reference Include="System.Collections.Immutable"><HintPath>..\..\..\..\Shared\Lib\System.Collections.Immutable.dll</HintPath></Reference>
-    <Reference Include="System.Management" />
-    <Reference Include="System.Security" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Include="Properties\Settings.settings">

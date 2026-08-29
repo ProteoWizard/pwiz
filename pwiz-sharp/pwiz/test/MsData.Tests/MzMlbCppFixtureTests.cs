@@ -29,7 +29,7 @@ public class MzMlbCppFixtureTests
 
         byte[] head = new byte[32];
         using (var fs = File.OpenRead(mzmlbPath))
-            fs.Read(head, 0, head.Length);
+            fs.ReadExactly(head, 0, head.Length);
         string headStr = new(Array.ConvertAll(head, b => (char)b));
         var reader = new MzMlbReaderAdapter();
         Assert.AreEqual(CVID.MS_mzMLb_format, reader.Identify(mzmlbPath, headStr));

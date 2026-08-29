@@ -6,7 +6,7 @@
     <AssemblyName>CustomDataSourceDialog</AssemblyName>
     <Description>Custom file-browse dialog used by MSConvertGUI. Lifted verbatim from pwiz_tools/MSConvertGUI/CustomDataSourceDialog/ — same separate-project shape the cpp solution uses, so embedded-resource names resolve as "CustomDataSourceDialog.X.resources" without an MSConvertGUI prefix.</Description>
 
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
 
     <Nullable>disable</Nullable>

@@ -210,14 +210,6 @@ namespace TestRunnerLib
 
             WriteLeakDumpIfRequested(testName, log);
             PinSurvivors();
-#if NET472
-            if (MemoryProfiler.IsReady)
-            {
-                var snapshotName = testName + @"_GC_LEAK";
-                log("\n# GC leak detected - taking dotMemory snapshot: {0}\n", new object[] { snapshotName });
-                MemoryProfiler.Snapshot(snapshotName);
-            }
-#endif
             return leakMessage;
         }
 

@@ -5,7 +5,8 @@
 // side can surface a clean InvalidOperationException without crossing the
 // ABI with C++ exceptions.
 
-#define MOBILION_SHIM_EXPORTS
+// MOBILION_SHIM_EXPORTS comes from the vcxproj PreprocessorDefinitions;
+// defining it here too was a C4005 macro redefinition.
 #include "MobilionShim.h"
 
 #include "MBIFile.h"

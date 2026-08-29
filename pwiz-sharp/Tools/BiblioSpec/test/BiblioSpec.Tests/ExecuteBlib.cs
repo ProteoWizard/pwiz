@@ -57,7 +57,7 @@ public static class ExecuteBlib
             Assert.Inconclusive(
                 $"BiblioSpec tool exe '{ToolExeName(tool)}' not found. " +
                 $"The {tool} tool has not been ported yet, or the matching " +
-                $"Tools/BiblioSpec/src/{tool}/bin/<Config>/net8.0/ output is stale.");
+                $"Tools/BiblioSpec/src/{tool}/bin/<Config>/net10.0/ output is stale.");
             return -1; // unreachable; Assert.Inconclusive throws
         }
 
@@ -127,14 +127,14 @@ public static class ExecuteBlib
         while (!string.IsNullOrEmpty(dir))
         {
             string candidate = Path.Combine(
-                dir, "src", projectName, "bin", config, "net8.0", exeName);
+                dir, "src", projectName, "bin", config, "net10.0", exeName);
             if (File.Exists(candidate))
                 return candidate;
 
             // Also try the opposite config in case the user only built one of them.
             string otherConfig = config == "Debug" ? "Release" : "Debug";
             string altCandidate = Path.Combine(
-                dir, "src", projectName, "bin", otherConfig, "net8.0", exeName);
+                dir, "src", projectName, "bin", otherConfig, "net10.0", exeName);
             if (File.Exists(altCandidate))
                 return altCandidate;
 

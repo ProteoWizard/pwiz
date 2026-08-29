@@ -206,7 +206,16 @@ public sealed class Mz5SpectrumList : SpectrumListBase
 
     /// <summary>Walk an Hvl pointing at a typed array of POD structs.
     /// Marshals each row to a managed struct via <see cref="System.Runtime.InteropServices.Marshal.PtrToStructure{T}(IntPtr)"/>.</summary>
-    private static T[] ReadHvlArray<T>(Hvl hvl) where T : struct
+    // The T annotation mirrors Marshal.PtrToStructure<T>, which .NET 10 annotates with
+    // DynamicallyAccessedMemberTypes.PublicConstructors | NonPublicConstructors. Without it
+    // the Native AOT publish of MsData.NativeAot fails ILC with trim error IL2091 (the
+    // managed build is unaffected, which is why only the AOT leg caught it). Every call site
+    // passes a concrete POD struct, so this costs nothing.
+    private static T[] ReadHvlArray<
+        [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(
+            System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors |
+            System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+        T>(Hvl hvl) where T : struct
     {
         ulong n = (ulong)hvl.Length;
         if (n == 0 || hvl.Data == IntPtr.Zero) return Array.Empty<T>();

@@ -81,11 +81,19 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- .NET 9+ defaults NuGetAuditMode to "all" (transitive). Under
+         TreatWarningsAsErrors that fails RESTORE, not build. "direct" restores the
+         net8 default. This does NOT make the transitive advisories go away - they
+         are real and tracked separately; see the net10 TODO. -->
+    <NuGetAuditMode>direct</NuGetAuditMode>
+    <!-- NU1510: new in .NET 10 (package pruning). Flags PackageReferences that the
+         shared framework now provides. -->
+    <NoWarn>$(NoWarn);NU1510</NoWarn>
     <!-- CS1591: missing-xml-comment is informational only.
          CA1859: "change parameter from IList<T>/IReadOnlyList<T> to List<T>" is a perf
                  micro-optimization suggestion. The list-vs-interface preference is a

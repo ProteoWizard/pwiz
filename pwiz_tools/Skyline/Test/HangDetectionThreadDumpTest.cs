@@ -65,6 +65,12 @@ namespace pwiz.SkylineTest
             var timer = Stopwatch.StartNew();
             var dump = HangDetection.TryGetThreadDump();
             timer.Stop();
+            // Deliberately silent on the passing path. Writing which path this machine took was
+            // how the agents were shown to produce full dumps, but a test that prints lands its
+            // output BETWEEN the harness's test-name line and its memory line, and SkylineTester
+            // parses those as one line - so a Quality run could not read memory for this test at
+            // all. Where a machine genuinely cannot dump, the assertion below fails with the CLR
+            // and the DAC in its message, which is where that question gets answered now.
             AssertEx.IsTrue(timer.Elapsed < MAX_DUMP_DURATION,
                 string.Format(@"Thread dump took {0}, which is over the {1} bound.",
                     timer.Elapsed, MAX_DUMP_DURATION));

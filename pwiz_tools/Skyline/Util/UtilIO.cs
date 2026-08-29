@@ -772,11 +772,13 @@ namespace pwiz.Skyline.Util
         public void StartTrackingHistory()
         {
             _connectionPool.StartTrackingHistory();
+            FileSaver.StartTrackingHistory();
         }
 
         public void EndTrackingHistory()
         {
             _connectionPool.EndTrackingHistory();
+            FileSaver.EndTrackingHistory();
         }
 
         public void CloseAllStreams()
@@ -1339,6 +1341,60 @@ namespace pwiz.Skyline.Util
     {
         public const string TEMP_PREFIX = "~SK";
 
+        /// <summary>
+        /// When true, undisposed <see cref="FileSaver"/> instances are recorded with the
+        /// stack that created them. Default false - even capturing frames is more than a
+        /// temporary file should pay for outside a test. Driven by
+        /// <see cref="FileStreamManager.StartTrackingHistory"/> along with the pooled streams,
+        /// so a test turns on one switch and gets both.
+        /// </summary>
+        private static bool _trackHistory;
+
+        private static readonly Dictionary<string, StackTrace> UNDISPOSED_HISTORY =
+            new Dictionary<string, StackTrace>();
+
+        public static void StartTrackingHistory()
+        {
+            lock (UNDISPOSED_HISTORY)
+            {
+                UNDISPOSED_HISTORY.Clear();
+                _trackHistory = true;
+            }
+        }
+
+        public static void EndTrackingHistory()
+        {
+            lock (UNDISPOSED_HISTORY)
+            {
+                _trackHistory = false;
+                UNDISPOSED_HISTORY.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Reports every temporary file still held by an undisposed <see cref="FileSaver"/>,
+        /// with the stack that created it, or null when there are none. These do not reach
+        /// <see cref="ConnectionPool.ReportPooledConnections"/>, because a FileSaver stream is
+        /// a plain <see cref="FileStream"/> that never enters the pool - which is what made a
+        /// leaked one show up only as a locked file with no explanation.
+        /// </summary>
+        public static string ReportUndisposed()
+        {
+            lock (UNDISPOSED_HISTORY)
+            {
+                if (UNDISPOSED_HISTORY.Count == 0)
+                    return null;
+
+                var sb = new StringBuilder();
+                foreach (var entry in UNDISPOSED_HISTORY)
+                {
+                    sb.AppendLine(string.Format(@"Undisposed FileSaver: {0}", entry.Key));
+                    sb.AppendLine(entry.Value.ToString()); // Resolves the frames to text, here and only here
+                }
+                return sb.ToString();
+            }
+        }
+
         private readonly IStreamManager _streamManager;
         private Stream _stream;
 
@@ -1373,6 +1429,13 @@ namespace pwiz.Skyline.Util
             // If the directory name is returned, then starting path was bogus.
             if (!Equals(dirName, tempName))
                 SafeName = tempName;
+            if (_trackHistory && SafeName != null)
+            {
+                // A StackTrace only captures the frames. Resolving them to text is what costs,
+                // and that is deferred to ReportUndisposed(), which runs once per failure
+                // rather than on every temporary file created.
+                lock (UNDISPOSED_HISTORY) { UNDISPOSED_HISTORY[SafeName] = new StackTrace(true); }
+            }
             if (createStream)
                 CreateStream();
         }
@@ -1479,6 +1542,10 @@ namespace pwiz.Skyline.Util
 
         public void Dispose()
         {
+            if (_trackHistory && SafeName != null)
+            {
+                lock (UNDISPOSED_HISTORY) { UNDISPOSED_HISTORY.Remove(SafeName); }
+            }
             if (_stream != null)
             {
                 try

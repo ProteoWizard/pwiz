@@ -42,7 +42,7 @@ namespace TestRunnerLib
     /// </summary>
     public class TestStager
     {
-        public const string TFM = "net8.0-windows";
+        public const string TFM = "net10.0-windows";
         public const string STAGING_ROOT = "staging-net8";
 
         /// <summary>

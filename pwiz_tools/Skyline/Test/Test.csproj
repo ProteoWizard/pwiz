@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Test - Skyline main unit-test MSTest assembly. Multi-target
-       net472 + net8.0-windows to match Skyline / TestData porting cadence.
+       net472 + net10.0-windows to match Skyline / TestData porting cadence.
        Enumerates EmbeddedResource + None items explicitly (mirroring the
        legacy csproj) because SDK default globs don't pick up .sky / .skyr /
        .csv / .zip / .tsv / .blib. Compile items ARE auto-globbed. -->
   <PropertyGroup>
     <ProjectGuid>{E0FA262A-744E-4D98-A43F-4723A4D95827}</ProjectGuid>
-    <TargetFrameworks>net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -19,7 +19,7 @@
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <IsPackable>false</IsPackable>
     <!-- Set explicitly (not just via Microsoft.NET.Test.Sdk, which we reference only under
-         the net8.0-windows condition) so IsTestProject is in scope for restore and for
+         the net10.0-windows condition) so IsTestProject is in scope for restore and for
          Directory.Build.targets' test-only TeamCity logger reference. -->
     <IsTestProject>true</IsTestProject>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -152,26 +152,14 @@
     <ProjectReference Include="..\TestUtil\TestUtil.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="Google.Protobuf"><HintPath>..\..\Shared\Lib\Google.Protobuf.dll</HintPath></Reference>
-    <Reference Include="HtmlAgilityPack"><HintPath>..\..\Shared\Lib\HtmlAgilityPack.dll</HintPath></Reference>
-    <Reference Include="log4net"><HintPath>..\..\Shared\Lib\log4net.dll</HintPath></Reference>
-    <Reference Include="MathNet.Numerics"><HintPath>..\..\Shared\Lib\MathNet.Numerics.dll</HintPath></Reference>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
-    <Reference Include="Newtonsoft.Json"><HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
-    <Reference Include="NHibernate"><HintPath>..\..\Shared\Lib\NHibernate\NHibernate.dll</HintPath></Reference>
-    <Reference Include="System.Data.SQLite"><HintPath>..\..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath></Reference>
-    <Reference Include="System.Design" />
-  </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="3.2.0" />
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
     <PackageReference Include="Google.Protobuf" Version="3.27.3" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.66" />
-    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="log4net" Version="3.4.0" />
     <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NHibernate" Version="5.5.2" />
@@ -185,10 +173,10 @@
        Build. A static Content glob would miss it on a clean build (its bin is produced during
        this build). -->
   <Target Name="_DeploySkylineCmd"
-          Condition="'$(TargetFramework)' == 'net8.0-windows'"
+          Condition="'$(TargetFramework)' == 'net10.0-windows'"
           AfterTargets="Build">
     <ItemGroup>
-      <_SkylineCmdOutput Include="..\SkylineCmd\bin\$(Configuration)\net8.0-windows\SkylineCmd.*" />
+      <_SkylineCmdOutput Include="..\SkylineCmd\bin\$(Configuration)\net10.0-windows\SkylineCmd.*" />
     </ItemGroup>
     <Copy SourceFiles="@(_SkylineCmdOutput)"
           DestinationFolder="$(OutDir)"

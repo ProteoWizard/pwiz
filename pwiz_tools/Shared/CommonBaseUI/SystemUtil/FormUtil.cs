@@ -220,9 +220,7 @@ namespace pwiz.Common.SystemUtil
         public static FolderBrowserDialog CreateFolderBrowserDialog()
         {
             var dlg = new FolderBrowserDialog();
-#if !NET472
             dlg.AutoUpgradeEnabled = false;
-#endif
             return dlg;
         }
     }

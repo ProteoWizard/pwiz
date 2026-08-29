@@ -1,14 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <!-- net8.0 only. Osprey on net472 is being retired: it releases this fall with no
-         net472 option, and the net472 leg was only ever useful for vendor raw reading
-         via the net472-only pwiz_data_cli (see OspreyVendorReaderEnabled in
-         Osprey.IO.csproj). The #4497 branch replaces that with pwiz-sharp managed
-         readers, so nothing needs net472 any more.
-         The per-project net472 ItemGroups and the two #if NET472 blocks (MzmlReader.cs,
-         NativeStrtod.cs) are now dead and can be swept in the full removal. -->
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <!-- SDK-style csproj defaults to AnyCPU, but Osprey.sln uses x64
          configurations, which VS 2026 flags as "unknown project
          configuration mappings" unless the projects advertise x64.

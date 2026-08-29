@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- MSGraph — multi-target net472 + net8.0-windows. Tiny WinForms helper
+  <!-- MSGraph — multi-target net472 + net10.0-windows. Tiny WinForms helper
        library over the ZedGraph fork. -->
   <PropertyGroup>
     <ProjectGuid>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</ProjectGuid>
-    <TargetFrameworks>net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

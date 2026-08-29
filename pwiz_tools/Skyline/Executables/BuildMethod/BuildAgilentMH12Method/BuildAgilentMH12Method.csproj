@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- BuildAgilentMH12Method - vendor method builder. Ported to multi-target net472;net8.0-windows so it still
+  <!-- BuildAgilentMH12Method - vendor method builder. Ported to multi-target net472;net10.0-windows so it still
        builds/runs on future Windows without .NET Framework 4.7.2. Vendor DLLs are managed and
        referenced for both TFMs; framework + vestigial (UnitTestFramework/Deployment/Net.Http)
        references dropped. Compile-verified; net8 vendor-software runtime is untested. -->
@@ -9,7 +9,7 @@
     <OutputType>Exe</OutputType>
     <!-- net48 (not net472): the Agilent MH12 driver DLLs (Agilent.MSDrivers.LCQuadrupole.*) target
          .NET Framework 4.8, which 4.7.2 cannot reference. 4.8 is an in-place update to 4.7.2. -->
-    <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

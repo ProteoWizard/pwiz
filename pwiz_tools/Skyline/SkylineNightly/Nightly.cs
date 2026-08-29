@@ -564,10 +564,16 @@ namespace SkylineNightly
 
                 // Prefer the canonical staging dir, then any workflow-specific one, newest first -
                 // the same preference order SkylineTester itself uses to pick a build directory.
-                var candidates = Directory.GetDirectories(binDir, "staging-net8*")
+                var candidates = Directory.GetDirectories(binDir, "staging*")
+                    // Skip pre-rename leftovers: the staging dir used to be named after the target
+                    // framework ("staging-net8"). bin/ is gitignored and nothing prunes it, so a dev
+                    // who upgraded still has one - and its binaries target a runtime that is no longer
+                    // staged. Any "staging-net<tfm>" is stale by construction; "staging",
+                    // "staging-record" and "staging-validate" are current.
+                    .Where(d => !Path.GetFileName(d).StartsWith(@"staging-net", StringComparison.OrdinalIgnoreCase))
                     .Select(d => Path.Combine(d, "Release", SKYLINETESTER_ZIP_NAME))
                     .Where(File.Exists)
-                    .OrderByDescending(z => Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(z))) == "staging-net8")
+                    .OrderByDescending(z => Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(z))) == "staging")
                     .ThenByDescending(File.GetLastWriteTimeUtc)
                     .ToList();
                 if (candidates.Count > 0)

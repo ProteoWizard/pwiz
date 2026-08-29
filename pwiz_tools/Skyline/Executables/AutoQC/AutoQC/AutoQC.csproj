@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- AutoQC - WinForms app that watches instrument folders and imports/uploads QC results.
-       Multi-target net472;net8.0-windows. net472 keeps the exact on-disk HintPath DLLs + the
+       Multi-target net472;net10.0-windows. net472 keeps the exact on-disk HintPath DLLs + the
        framework assemblies; net8 pulls the managed NuGet equivalents (log4net, Newtonsoft.Json,
        ConfigurationManager, System.Management, ProtectedData). The ClickOnce (System.Deployment)
        auto-update path is #if NET472-guarded in Program.cs (net8 is never network-deployed), and the
@@ -11,7 +11,7 @@
   <PropertyGroup>
     <ProjectGuid>{87D6B185-C2D3-48A9-95B3-A0F528F3F446}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -41,8 +41,8 @@
   </ItemGroup>
 
   <!-- net8: managed NuGet equivalents of the legacy on-disk DLLs + the settings/DPAPI providers. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
-    <PackageReference Include="log4net" Version="2.0.17" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <PackageReference Include="log4net" Version="3.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
     <PackageReference Include="System.Management" Version="8.0.0" />
@@ -50,17 +50,6 @@
   </ItemGroup>
 
   <!-- net472: the exact on-disk DLLs + the framework assemblies the SDK doesn't auto-add. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="log4net"><HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath></Reference>
-    <Reference Include="Newtonsoft.Json"><HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
-    <Reference Include="System.Collections.Immutable"><HintPath>..\..\..\..\Shared\Lib\System.Collections.Immutable.dll</HintPath></Reference>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Management" />
-    <Reference Include="System.Security" />
-  </ItemGroup>
 
   <!-- Config-file icon + report loaded at runtime -->
   <ItemGroup>

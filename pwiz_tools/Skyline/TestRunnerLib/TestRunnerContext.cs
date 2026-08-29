@@ -26,56 +26,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestRunnerLib
 {
-#if NET472
-    public class TestRunnerContext : TestContext
-    {
-        private readonly Dictionary<string, string> _dictionary;
-
-        public TestRunnerContext()
-        {
-            _dictionary = new Dictionary<string, string>();
-        }
-
-        public bool HasPassed { get; set; }
-
-        public override UnitTestOutcome CurrentTestOutcome => HasPassed ? UnitTestOutcome.Passed : base.CurrentTestOutcome;
-
-        public override void WriteLine(string format, params object[] args)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void AddResultFile(string fileName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void BeginTimer(string timerName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void EndTimer(string timerName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IDictionary Properties
-        {
-            get { return _dictionary; }
-        }
-
-        public override DataRow DataRow
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public override DbConnection DataConnection
-        {
-            get { throw new NotImplementedException(); }
-        }
-    }
-#else
     // MSTest 3.x reshaped the abstract TestContext: Write/WriteLine replace the old
     // timer/data members, and Properties is the only data bag. TestRunner only needs the
     // outcome + a property dictionary; the rest are no-ops.
@@ -99,7 +49,6 @@ namespace TestRunnerLib
 
         public override void WriteLine(string format, params object[] args) { }
     }
-#endif
 
     /// <summary>
     /// Test method attribute which specifies a test will be skipped until the given date.

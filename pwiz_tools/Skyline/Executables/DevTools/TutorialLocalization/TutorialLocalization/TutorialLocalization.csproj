@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- TutorialLocalization - dev tool that localizes tutorial HTML/screenshots. Multi-target
-       net472;net8.0 (pure console, no WinForms). The real dependencies (CommandLine, CsvHelper,
+       net472;net10.0 (pure console, no WinForms). The real dependencies (CommandLine, CsvHelper,
        DotNetZip, F23.StringSimilarity, HtmlAgilityPack) are pure-managed on-disk libraries
        referenced for both TFMs (net8-loadable; their old APIs predate/differ from current NuGets).
        The BCL polyfill shims (System.Memory, System.Numerics.Vectors,
@@ -10,7 +10,7 @@
   <PropertyGroup>
     <ProjectGuid>{B61C5AAE-F385-41D6-B2D1-6FAA8818FB43}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net8.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -26,19 +26,11 @@
   <ItemGroup>
     <Reference Include="CommandLine"><HintPath>..\lib\CommandLine.dll</HintPath></Reference>
     <Reference Include="CsvHelper"><HintPath>..\lib\CsvHelper.dll</HintPath></Reference>
-    <Reference Include="DotNetZip"><HintPath>..\..\..\..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath></Reference>
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
     <Reference Include="F23.StringSimilarity"><HintPath>..\lib\F23.StringSimilarity.dll</HintPath></Reference>
     <Reference Include="HtmlAgilityPack"><HintPath>..\..\..\..\..\Shared\Lib\HtmlAgilityPack.dll</HintPath></Reference>
   </ItemGroup>
 
   <!-- BCL polyfill shims: net472 only (built into net8). -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="Microsoft.Bcl.AsyncInterfaces"><HintPath>..\lib\Microsoft.Bcl.AsyncInterfaces.dll</HintPath></Reference>
-    <Reference Include="System.Memory"><HintPath>..\..\..\..\..\Shared\Lib\System.Memory.dll</HintPath></Reference>
-    <Reference Include="System.Numerics.Vectors"><HintPath>..\lib\System.Numerics.Vectors.dll</HintPath></Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe"><HintPath>..\..\..\..\..\Shared\Lib\System.Runtime.CompilerServices.Unsafe.dll</HintPath></Reference>
-    <Reference Include="System.Threading.Tasks.Extensions"><HintPath>..\lib\System.Threading.Tasks.Extensions.dll</HintPath></Reference>
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
 
 </Project>

@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Skyline - the main desktop app. Multi-target net472 + net8.0-windows.
+  <!-- Skyline - the main desktop app. Multi-target net472 + net10.0-windows.
        net472: legacy build, Skyline-daily.exe parity with today.
-       net8.0-windows: net8 port, data layer through pwiz-sharp via the
+       net10.0-windows: net8 port, data layer through pwiz-sharp via the
        converted ProteowizardWrapper chokepoint.
        Original csproj was 7,526 lines of enumerated Compile/None/Reference entries;
        the SDK globs everything by default and pairs designer Form/.Designer.cs
@@ -11,7 +11,7 @@
   <PropertyGroup>
     <ProjectGuid>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net10.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -116,7 +116,7 @@
        Unifi/WatersConnect/Ardia remote, IdentityModel) has been restored - see
        commit history for each. What's left: three UI/graph tie-ins that still
        depend on cut infrastructure. Tracked separately for follow-up. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
 
     <!-- Controls/Graphs/ReplicateValue.cs is a stale duplicate of
          Model/Results/ReplicateValue.cs (Move ReplicateValue into Model/Results,
@@ -198,7 +198,7 @@
 
   <ItemGroup>
     <!-- Shared dep tree - all multi-targeted in the same session as this csproj.
-         Each follows the same net472/net8.0-windows split internally. -->
+         Each follows the same net472/net10.0-windows split internally. -->
     <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpec.csproj" />
     <ProjectReference Include="..\Shared\CommonFileDialogs\CommonFileDialogs.csproj" />
     <ProjectReference Include="..\Shared\CommonMsData\CommonMsData.csproj" />
@@ -227,14 +227,14 @@
        Skyline's bin dir AND to any project that references Skyline via ProjectReference
        (test assemblies). Content items propagate through ProjectReference by default. -->
   <ItemGroup>
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net8.0\**\*"
-             Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net8.0')">
+    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\**\*"
+             Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
     </Content>
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\bin\$(Configuration)\net8.0\**\*"
-             Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\bin\$(Configuration)\net8.0')">
+    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\bin\$(Configuration)\net10.0\**\*"
+             Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\bin\$(Configuration)\net10.0')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -248,8 +248,8 @@
        run time. Deploy the mascot natives flat next to BlibBuild.exe - as legacy Skyline shipped
        msparser.dll - so DllImport("MascotShim") and its msparser dependency resolve from the
        executable's own directory. -->
-  <ItemGroup Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net8.0\runtimes\win-x64\native')">
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net8.0\runtimes\win-x64\native\MascotShim.dll">
+  <ItemGroup Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native')">
+    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\MascotShim.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>MascotShim.dll</Link>
       <Visible>false</Visible>
@@ -259,17 +259,17 @@
          too. Copying the Release name unconditionally made every Debug build after
          the first one fail MSB3030 - the first build passes only because the native
          directory does not exist yet when this ItemGroup condition is evaluated. -->
-    <Content Condition="'$(Configuration)' == 'Debug'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net8.0\runtimes\win-x64\native\msparserD.dll">
+    <Content Condition="'$(Configuration)' == 'Debug'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparserD.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>msparserD.dll</Link>
       <Visible>false</Visible>
     </Content>
-    <Content Condition="'$(Configuration)' != 'Debug'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net8.0\runtimes\win-x64\native\msparser.dll">
+    <Content Condition="'$(Configuration)' != 'Debug'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparser.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>msparser.dll</Link>
       <Visible>false</Visible>
     </Content>
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net8.0\runtimes\win-x64\native\msparser-config\**\*">
+    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparser-config\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>msparser-config\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -281,13 +281,13 @@
        dir (resolved via PathEx.ResolveBundledExe). Reference the project so it builds first; the
        Content include below deploys its output. net8-only: the net472 build gets the native
        msconvert from the Jam toolchain. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <ProjectReference Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\MsConvert.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows' And Exists('..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net8.0')">
-    <Content Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net8.0\**\*">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0')">
+    <Content Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -300,13 +300,13 @@
        (resolved via PathEx.ResolveBundledExe). Reference the project so it builds first; the Content
        include below deploys its output. net8-only: the net472 build gets the legacy BullseyeSharp.exe
        from pwiz_tools\Skyline\BullseyeSharp\BullseyeSharp.csproj via the Jam toolchain. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <ProjectReference Include="..\..\pwiz-sharp\Tools\BullseyeSharp\src\BullseyeSharp.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows' And Exists('..\..\pwiz-sharp\Tools\BullseyeSharp\src\bin\$(Configuration)\net8.0')">
-    <Content Include="..\..\pwiz-sharp\Tools\BullseyeSharp\src\bin\$(Configuration)\net8.0\**\*">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('..\..\pwiz-sharp\Tools\BullseyeSharp\src\bin\$(Configuration)\net10.0')">
+    <Content Include="..\..\pwiz-sharp\Tools\BullseyeSharp\src\bin\$(Configuration)\net10.0\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -320,7 +320,7 @@
        Executables\Hardklor\Hardklor.vcxproj before this project (see pwiz_tools\Skyline\build.bat).
        This Content include deploys the pre-built exe when present. net8-only: the net472 build
        gets Hardklor.exe from the Jam toolchain. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows' And Exists('Executables\Hardklor\bin\x64\$(Configuration)\Hardklor.exe')">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('Executables\Hardklor\bin\x64\$(Configuration)\Hardklor.exe')">
     <Content Include="Executables\Hardklor\bin\x64\$(Configuration)\Hardklor.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Hardklor.exe</Link>
@@ -357,13 +357,13 @@
        (UtilIO.GetSkylineProcessRunnerExePath). Reference the project so it builds first; the Content
        include deploys its net8 apphost bundle (.exe + .dll + .runtimeconfig.json + .deps.json) next
        to Skyline. net8-only: the net472 build gets SkylineProcessRunner.exe from the Jam toolchain. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <ProjectReference Include="Executables\SkylineProcessRunner\SkylineProcessRunner\SkylineProcessRunner.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows' And Exists('Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(Configuration)\net8.0-windows')">
-    <Content Include="Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(Configuration)\net8.0-windows\**\*">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(Configuration)\net10.0-windows')">
+    <Content Include="Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(Configuration)\net10.0-windows\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -373,7 +373,7 @@
   <!-- SkylineCmd.exe launcher - command-line tests (e.g. CmdLineAssociateProteinsTest)
        shell out to it expecting it next to Skyline in the bin dir. Reference it so it
        builds first. net8-only: the net472 build gets SkylineCmd from the Jam toolchain. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <ProjectReference Include="SkylineCmd\SkylineCmd.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false" />
@@ -384,10 +384,10 @@
        Copy its output next to Skyline after Build (bin exists by then). Test projects that run
        SkylineCmd do the same copy into their own output (see Test.csproj). -->
   <Target Name="_DeploySkylineCmd"
-          Condition="'$(TargetFramework)' == 'net8.0-windows'"
+          Condition="'$(TargetFramework)' == 'net10.0-windows'"
           AfterTargets="Build">
     <ItemGroup>
-      <_SkylineCmdOutput Include="SkylineCmd\bin\$(Configuration)\net8.0-windows\SkylineCmd.*" />
+      <_SkylineCmdOutput Include="SkylineCmd\bin\$(Configuration)\net10.0-windows\SkylineCmd.*" />
     </ItemGroup>
     <Copy SourceFiles="@(_SkylineCmdOutput)"
           DestinationFolder="$(OutDir)"
@@ -395,52 +395,8 @@
           Condition="'@(_SkylineCmdOutput)' != ''" />
   </Target>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <!-- Legacy bundled DLLs, kept verbatim for net472 build parity. -->
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Security" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.IO.Compression.FileSystem" />
-    <Reference Include="Accessibility" />
-    <Reference Include="EnvDTE">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Excel.4.5">
-      <HintPath>..\Shared\Lib\Excel.4.5.dll</HintPath>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Dapper"><HintPath>..\Shared\Lib\Dapper.dll</HintPath></Reference>
-    <Reference Include="DigitalRune.Windows.Docking"><HintPath>..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath></Reference>
-    <Reference Include="Google.Protobuf"><HintPath>..\Shared\Lib\Google.Protobuf.dll</HintPath></Reference>
-    <Reference Include="DotNetZip"><HintPath>..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath></Reference>
-    <Reference Include="Grpc.Core"><HintPath>..\Shared\Lib\Grpc.Core.dll</HintPath></Reference>
-    <Reference Include="Grpc.Core.Api"><HintPath>..\Shared\Lib\Grpc.Core.Api.dll</HintPath></Reference>
-    <Reference Include="IdentityModel"><HintPath>..\Shared\Lib\IdentityModel.dll</HintPath></Reference>
-    <Reference Include="JetBrains.Annotations"><HintPath>..\Shared\Lib\JetBrains.Annotations.dll</HintPath></Reference>
-    <Reference Include="Kajabity Tools"><HintPath>..\Shared\Lib\Kajabity Tools.dll</HintPath></Reference>
-    <Reference Include="log4net"><HintPath>..\Shared\Lib\log4net.dll</HintPath></Reference>
-    <Reference Include="MathNet.Numerics"><HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath></Reference>
-    <Reference Include="Newtonsoft.Json"><HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
-    <Reference Include="ParquetNet"><HintPath>..\Shared\Lib\Parquet\ParquetNet.dll</HintPath></Reference>
-    <Reference Include="IronCompress"><HintPath>..\Shared\Lib\Parquet\IronCompress.dll</HintPath></Reference>
-    <Reference Include="System.Reflection.Emit.Lightweight"><HintPath>..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath></Reference>
-    <Reference Include="Microsoft.IO.RecyclableMemoryStream"><HintPath>..\Shared\Lib\Parquet\Microsoft.IO.RecyclableMemoryStream.dll</HintPath></Reference>
-    <Reference Include="Snappier"><HintPath>..\Shared\Lib\Parquet\Snappier.dll</HintPath></Reference>
-    <Reference Include="System.Text.Encodings.Web"><HintPath>..\Shared\Lib\Parquet\System.Text.Encodings.Web.dll</HintPath></Reference>
-    <Reference Include="System.Text.Json"><HintPath>..\Shared\Lib\Parquet\System.Text.Json.dll</HintPath></Reference>
-    <Reference Include="ZstdSharp"><HintPath>..\Shared\Lib\Parquet\ZstdSharp.dll</HintPath></Reference>
-    <Reference Include="Microsoft.Diagnostics.Runtime"><HintPath>..\Shared\Lib\Microsoft.Diagnostics.Runtime.dll</HintPath></Reference>
-    <Reference Include="Iesi.Collections"><HintPath>..\Shared\Lib\NHibernate\Iesi.Collections.dll</HintPath></Reference>
-    <Reference Include="NHibernate"><HintPath>..\Shared\Lib\NHibernate\NHibernate.dll</HintPath></Reference>
-    <Reference Include="Sprache"><HintPath>..\Shared\Lib\Sprache.dll</HintPath></Reference>
-    <Reference Include="System.Data.SQLite">
-      <HintPath>..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <!-- Net8 NuGet equivalents. Some legacy references have no direct net8
          replacement (DigitalRune.Windows.Docking, FHOOE MSAmanda, Excel interop);
          the source touching those is wrapped in #if NET472 as it surfaces. -->
@@ -450,9 +406,9 @@
          Grpc.Core.Api types (ClientBase, ChannelBase, CallInvoker, Marshallers)
          which Grpc.Net.Client supplies transitively via Grpc.Core.Api 2.66. -->
     <PackageReference Include="Grpc.Net.Client" Version="2.66.0" />
-    <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
-    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="log4net" Version="3.4.0" />
     <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NHibernate" Version="5.5.2" />
@@ -461,6 +417,11 @@
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
     <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="Parquet.Net" Version="4.25.0" />
+    <!-- Snappier arrives transitively (Parquet.Net -> IronCompress -> Snappier).
+         Pinned to 1.3.1 because the range resolves to 1.1.6, which carries
+         GHSA-pggp-6c3x-2xmx; 1.3.1 is the first clean release. Remove once
+         Parquet.Net is on 6.x, which depends on [1.3.1,) itself. -->
+    <PackageReference Include="Snappier" Version="1.3.1" />
     <PackageReference Include="IdentityModel" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
@@ -479,7 +440,7 @@
   <!-- Bruker timsTOF PRM scheduler: managed replacement for the legacy C++/CLI
        pwiz.CLI.Bruker.PrmScheduling assembly. P/Invokes prmscheduler.dll shipped
        inside pwiz. Only wired for net8; net472 keeps the old C++/CLI reference. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <ProjectReference Include="..\..\pwiz-sharp\pwiz\src\Vendor\Bruker.PrmScheduling\Bruker.PrmScheduling.csproj" />
   </ItemGroup>
 
@@ -505,16 +466,16 @@
        attribute (Install reads it, stripping the "(developer build)"/"(automated
        build)" suffix). Override with -p:SkylineInformationalVersion=... . -->
   <Import Project="SkylineVersion.targets"
-          Condition="'$(TargetFramework)' == 'net8.0-windows'" />
+          Condition="'$(TargetFramework)' == 'net10.0-windows'" />
   <!-- ...and don't compile Jam's AssemblyInfo.cs on the net8 pass, or its attributes and the ones
        stamped below are both present and every build of this project fails with CS0579
        (duplicate AssemblyVersionAttribute). The file is gitignored, so it exists only where the
        net472/Jam build has run - which is why this bites a shared CI agent and no clean one. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <Compile Remove="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Target Name="StampNet8InformationalVersion"
-          Condition="'$(TargetFramework)' == 'net8.0-windows'"
+          Condition="'$(TargetFramework)' == 'net10.0-windows'"
           DependsOnTargets="ComputeSkylineVersion"
           BeforeTargets="CoreCompile">
     <ItemGroup>
@@ -544,7 +505,7 @@
        time rather than checking in a second config keeps the 46 KB of user settings
        in one place. -->
   <Target Name="_GenerateNet8AppConfig" BeforeTargets="PrepareForBuild"
-          Condition="'$(TargetFramework)' == 'net8.0-windows'">
+          Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <!-- AppConfig is set HERE, not in a plain PropertyGroup: $(IntermediateOutputPath) is
          defined by the SDK targets, which for an Sdk-attribute project are imported after
          the project body, so a property group referencing it evaluates to a bare

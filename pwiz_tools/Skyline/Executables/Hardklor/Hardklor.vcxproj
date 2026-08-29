@@ -89,7 +89,11 @@
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;XML_STATIC;_PROTEOWIZARD;_CRT_SECURE_NO_WARNINGS;_NO_THERMORAW;_NOSQLITE;_LARGEFILE_SOURCE;_FILE_OFFSET_BITS=64;HAVE_MEMMOVE;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>MSToolkit\include;..\..\..\..\libraries\expat-2.0.1\lib;..\..\..\..\libraries\zlib-1.2.3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>4131;4244;4127;4100;4189;4389;4101;4706;4505;5286;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <!-- 4267 (size_t -> smaller int) fires 16 times in the vendored MSToolkit
+           sources (RAMPface.cpp, saxmz*handler.cpp, Czran.cpp). Suppressed for
+           Release only: the Debug list above deliberately omits it so the
+           narrowing stays visible while developing. -->
+      <DisableSpecificWarnings>4131;4244;4127;4100;4189;4389;4101;4706;4505;5286;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

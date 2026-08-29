@@ -2,12 +2,21 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <RootNamespace>SkylineAiConnector</RootNamespace>
     <AssemblyName>SkylineAiConnector</AssemblyName>
     <LangVersion>latest</LangVersion>
     <UseWindowsForms>true</UseWindowsForms>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <!-- Version attributes only. There is no Properties/AssemblyInfo.cs (the net472-era one is
+         long gone), so leaving GenerateAssemblyInfo=false stamped the shipped exe 0.0.0.0 while
+         the ZIP manifest claimed the real version. The remaining attributes stay off to keep the
+         previous behaviour. Values come from SetConnectorVersion below. -->
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <ApplicationIcon>SkylineAiConnector.ico</ApplicationIcon>
   </PropertyGroup>
@@ -25,14 +34,30 @@
        so the tool ZIP's info.properties tracks the Skyline version automatically. -->
   <Import Project="..\..\..\..\SkylineVersion.targets" />
 
+  <!-- Stamp THIS assembly. BuildMcpServer below forwards the same values to the nested server
+       build; without this target the connector exe users actually launch reports no version at
+       all in Explorer, Task Manager or crash telemetry. GetAssemblyVersion is when the SDK reads
+       $(Version), so the computation has to land before it. -->
+  <Target Name="SetConnectorVersion"
+          DependsOnTargets="ComputeSkylineVersion"
+          BeforeTargets="GetAssemblyVersion">
+    <PropertyGroup>
+      <Version>$(SkylineNumericVersion)</Version>
+      <FileVersion>$(SkylineNumericVersion)</FileVersion>
+      <InformationalVersion>$(SkylineInformationalVersion)</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+
   <!-- Build the MCP server before packaging. The server builds with a win-x64
        RuntimeIdentifier and its full output is copied into the tool ZIP's
        mcp-server\ folder by PackageToolZip below, so it stays a separate build
        (restored + built via the SkylineMcp solution) rather than a ProjectReference. -->
-  <Target Name="BuildMcpServer" BeforeTargets="PackageToolZip">
+  <Target Name="BuildMcpServer" BeforeTargets="PackageToolZip" DependsOnTargets="ComputeSkylineVersion">
+    <!-- Forward the computed version: the child MSBuild does not inherit it, and
+         SkylineMcpTest asserts the bundled exe FileVersion == the tool ZIP version. -->
     <MSBuild Projects="$(MSBuildProjectDirectory)\..\SkylineMcpServer\SkylineMcpServer.csproj"
              Targets="Build"
-             Properties="Configuration=$(Configuration)" />
+             Properties="Configuration=$(Configuration);Version=$(SkylineNumericVersion);FileVersion=$(SkylineNumericVersion);InformationalVersion=$(SkylineInformationalVersion)" />
   </Target>
 
   <!-- Package the Skyline External Tool ZIP after build -->
@@ -41,7 +66,7 @@
       <_ToolZipDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\SkylineMcp\</_ToolZipDir>
       <_ToolZipPath>$(MSBuildProjectDirectory)\SkylineAiConnector.zip</_ToolZipPath>
       <_ConnectorBinDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\</_ConnectorBinDir>
-      <_McpServerBinDir>$(MSBuildProjectDirectory)\..\SkylineMcpServer\bin\$(Configuration)\net8.0-windows\win-x64\</_McpServerBinDir>
+      <_McpServerBinDir>$(MSBuildProjectDirectory)\..\SkylineMcpServer\bin\$(Configuration)\net10.0-windows\win-x64\</_McpServerBinDir>
     </PropertyGroup>
 
     <!-- Clean staging directory -->

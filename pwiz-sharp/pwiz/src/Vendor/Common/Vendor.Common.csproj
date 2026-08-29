@@ -4,7 +4,7 @@
     <RootNamespace>Pwiz.Vendor.Common</RootNamespace>
     <AssemblyName>Pwiz.Vendor.Common</AssemblyName>
     <Description>Runtime loader for vendor SDK assemblies. Resolves ThermoFisher.* / Clearcore2.* / MIDAC.* / etc. on demand by downloading the matching vendor_api_&lt;Vendor&gt;.7z from the manifest, extracting into a per-user cache, and Assembly.LoadFrom-ing the DLLs. Lets the installer MSI ship only pwiz-sharp's own DLLs; vendor SDKs come down on first use.</Description>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,18 +42,18 @@
   </ItemGroup>
 
   <!-- Runs on every build, including Linux CI agents that have no pwsh, so the generator is a
-       plain net8.0 console tool rather than a PowerShell script.
+       plain net10.0 console tool rather than a PowerShell script.
 
-       WorkingDirectory / EnvironmentVariables mirror Agilent.csproj's AgilentPatcher call: the
-       child `dotnet run` must resolve its SDK from pwiz-sharp/global.json rather than inherit
-       the outer build's MSBuild, which may be a newer major version. -->
+       WorkingDirectory mirrors Agilent.csproj's AgilentPatcher call - see the long note there.
+       Short version: the child inherits the outer build's SDK, which is correct now that a single
+       repo-root global.json governs both, and scrubbing the MSBuild env vars either broke the
+       child (MSB4236) or scrubbed variables that were never set. -->
   <PropertyGroup>
     <VendorPinsGeneratorProj>$(PwizSharpRoot)build\VendorPinsGenerator\VendorPinsGenerator.csproj</VendorPinsGeneratorProj>
   </PropertyGroup>
   <Target Name="RegenerateVendorSdkPins" BeforeTargets="CoreCompile">
     <Exec Command="dotnet run --project &quot;$(VendorPinsGeneratorProj)&quot; -c Release -- &quot;$(PwizRepoRoot)&quot;"
           WorkingDirectory="$(PwizSharpRoot)"
-          EnvironmentVariables="MSBUILD_EXE_PATH=;MSBuildSDKsPath=;MSBuildToolsPath=;MSBuildExtensionsPath=;DOTNET_HOST_PATH="
           StandardOutputImportance="low" />
   </Target>
 

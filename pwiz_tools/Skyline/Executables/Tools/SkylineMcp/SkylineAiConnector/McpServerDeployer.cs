@@ -67,23 +67,23 @@ namespace SkylineAiConnector
             }
         }
 
-        private const string DOTNET_DOWNLOAD_URL = "https://dotnet.microsoft.com/download/dotnet/8.0";
+        private const string DOTNET_DOWNLOAD_URL = "https://dotnet.microsoft.com/download/dotnet/10.0";
 
         /// <summary>
-        /// Check whether the .NET 8.0 Desktop Runtime is installed.
-        /// The MCP server targets net8.0-windows and requires Microsoft.WindowsDesktop.App 8.x.
+        /// Check whether the .NET 10.0 Desktop Runtime is installed.
+        /// The MCP server targets net10.0-windows and requires Microsoft.WindowsDesktop.App 10.x.
         /// </summary>
-        public static bool IsDotNet8Installed()
+        public static bool IsDotNetDesktopRuntimeInstalled()
         {
             string dotnetBase = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
                 "dotnet", "shared", "Microsoft.WindowsDesktop.App");
             return Directory.Exists(dotnetBase) &&
-                   Directory.GetDirectories(dotnetBase, "8.*").Length > 0;
+                   Directory.GetDirectories(dotnetBase, "10.*").Length > 0;
         }
 
         /// <summary>
-        /// URL for downloading the .NET 8.0 Desktop Runtime.
+        /// URL for downloading the .NET 10.0 Desktop Runtime.
         /// </summary>
         public static string DotNetDownloadUrl => DOTNET_DOWNLOAD_URL;
 

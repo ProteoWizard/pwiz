@@ -114,18 +114,12 @@ namespace TestRunner
             // with no potential for infinite looping on a detected leak.
             {"TestLibraryExplorer", new ExpandedLeakCheck()},
             {"TestLibraryExplorerAsSmallMolecules", new ExpandedLeakCheck()},
-            // These show the native common file dialog, and what grows is Windows' shell cache, not
-            // Skyline: a heap block-size diff finds Explorer's cached DirectUI view for the modern
-            // IFileDialog, one set per dialog, held on a UI thread that lives for the whole process.
-            // It saturates (~2 KB/dialog by the 40th), so these tests do settle -- they just need
-            // more than the default 24 runs. x4 because the nightly machines sit further up the
-            // curve than the box this was measured on; the extra iterations are only consumed when a
-            // test has not settled, so they cost nothing where it converges early. Muting instead
-            // would give up heap-leak detection here entirely.
-            // See ai/todos/active/TODO-20260723_native_dialog_leak_iterations.md for the evidence.
+            // Tests which show the native common file dialog need more iterations to stabilize
+            // because the Windows shell cache grows
             {"TestNativeFileDialog", new ExpandedLeakCheck(LeakCheckIterations * 4)},
             {"TestNativeMessageBox", new ExpandedLeakCheck(LeakCheckIterations * 4)},
             {"TestPrmMcpConnector", new ExpandedLeakCheck(LeakCheckIterations * 4)},
+            {"TestLayoutExportImport", new ExpandedLeakCheck(LeakCheckIterations * 4)}
         };
 
         //  These tests only need to be run once, regardless of language, so they get turned off in pass 0 after a single invocation
@@ -1000,23 +994,15 @@ namespace TestRunner
         // (<staged>\dotnet) with no environment variable at all. net472 launches the apphost directly.
         private static string GetTestRunnerExe()
         {
-#if NET472
-            return GetContainerTestRunnerExe();
-#else
-            // Container paths under c:\pwiz\...\staging-net8\ contain no spaces, so no quoting needed.
+            // Container paths under c:\pwiz\...\staging\ contain no spaces, so no quoting needed.
             return Path.GetDirectoryName(GetContainerTestRunnerExe()) + @"\dotnet\dotnet.exe";
-#endif
         }
 
         // The managed target that must follow GetTestRunnerExe() on net8 (the DLL the muxer runs),
         // with a trailing space; empty on net472 where the apphost itself is the program.
         private static string GetTestRunnerTargetArg()
         {
-#if NET472
-            return string.Empty;
-#else
             return Path.ChangeExtension(GetContainerTestRunnerExe(), ".dll") + " ";
-#endif
         }
 
         // Environment fragment spliced into `docker run` for the Docker workers. Currently empty:
@@ -1942,27 +1928,42 @@ namespace TestRunner
                                         return;
                                     // Reported as a FAILURE of the TEST, in the shape Report() and
                                     // SkylineNightly parse, and written to the LOG rather than only to
-                                    // the console. Taking the process down is the most serious way a
-                                    // test can fail, not an excuse for it: the only thing missing is
-                                    // the stack trace, because nothing survived to write one.
+                                    // the console. Deliberately says nothing about WHY the worker went
+                                    // quiet: all this detection knows is that heartbeats stopped, and a
+                                    // container starved of CPU can miss its window while its test runs
+                                    // on - see MISSED_HEARTBEATS_BEFORE_DEAD. The exit code would settle
+                                    // it, but `docker run --rm` deletes the container before anything
+                                    // can ask. What IS known is that no result ever came back, which is
+                                    // a failure of the test whatever caused it.
                                     // A lost worker used to be one plain line among thousands of
                                     // results: it named the test but counted for nothing, so a run
                                     // that shed half its workers still ended saying "No failures" and
                                     // read as a 40% performance regression instead of five crashes.
                                     // CurrentTest is "Name/Language/Pass"; the bare name goes on the
                                     // !!! line because that is what the parsers key on.
-                                    var lostTest = workerInfo.CurrentTest ?? "(no test)";
-                                    var lostTestName = lostTest.Split('/')[0];
+                                    // Only a worker that was HOLDING a test failed one. Between tests it
+                                    // takes nothing down with it, and naming a test there is worse than
+                                    // saying nothing: the !!! shape makes Report() and SkylineNightly
+                                    // record whatever word follows as a failing test, so a placeholder
+                                    // becomes a test called "(no test)" in the failure list.
+                                    var lostTest = workerInfo.CurrentTest;
+                                    var report = lostTest == null
+                                        ? new[]
+                                        {
+                                            $"Worker {workerName} stopped responding between tests and was " +
+                                            @"given up on. No test result was lost, but the pool is smaller."
+                                        }
+                                        : new[]
+                                        {
+                                            $"!!! {lostTest.Split('/')[0]} FAILED",
+                                            $"Worker {workerName} stopped responding while running {lostTest} and " +
+                                            @"was given up on. No result was ever produced for it, and no stack " +
+                                            @"trace: nothing came back from the worker to write one.",
+                                            @"!!!"
+                                        };
                                     lock (workerInfoByName)   // Every worker's heartbeat runs its own thread
                                     {
-                                        foreach (var line in new[]
-                                        {
-                                            $"!!! {lostTestName} FAILED",
-                                            $"Worker {workerName} exited unexpectedly while running {lostTest}. " +
-                                            @"No stack trace to report: the test took the process down with it, so " +
-                                            @"nothing was left to write one.",
-                                            @"!!!"
-                                        })
+                                        foreach (var line in report)
                                         {
                                             Console.WriteLine(line);
                                             log?.WriteLine(line);
@@ -2429,6 +2430,21 @@ namespace TestRunner
                         SystemInformation.TerminalServerSession,
                         Environment.GetEnvironmentVariable("SESSIONNAME") ?? "(unset)",
                         SystemInformation.MonitorCount);
+                    // Display layout, for the net10 GDI+ failures that appear ONLY on the MacCoss
+                    // console agent. Every one of them is the same stack: a form being shown ->
+                    // SplitContainer.OnLayout -> RepaintSplitterRect -> Graphics.FillRectangle
+                    // throwing "A generic error occurred in GDI+". Offscreen mode parks every form
+                    // at CommonFormEx.GetOffscreenPoint(), which is min(all screen origins) minus
+                    // the PRIMARY screen size -- so the coordinate, and whether the window keeps any
+                    // owning monitor at all, depends entirely on the agent's display layout. The
+                    // same tests pass on the AWS agents and on a 2-monitor dev box, so log the
+                    // layout that does produce it. Calls the real method rather than restating the
+                    // formula, so this cannot drift from what SetOffscreen actually does.
+                    foreach (var screen in Screen.AllScreens)
+                        runTests.Log("# Screen: {0} bounds={1} working={2}{3}\r\n",
+                            screen.DeviceName, screen.Bounds, screen.WorkingArea,
+                            screen.Primary ? " PRIMARY" : "");
+                    runTests.Log("# Offscreen point: {0}\r\n", CommonFormEx.GetOffscreenPoint());
                 }
 
                 // Get list of languages

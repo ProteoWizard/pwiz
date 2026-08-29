@@ -276,21 +276,6 @@ namespace pwiz.Skyline
 
                 return EXIT_CODE_SUCCESS;
             }
-#if NET472
-            // The way Skyline command-line interface is run for an installation
-            else if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
-                AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData != null &&
-                AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.Length > 0 &&
-                CommandLineRunner.HasCommandPrefix(AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0]))
-            {
-                CommandLineRunner clr = new CommandLineRunner();
-                clr.Start(AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0]);
-
-                // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit
-                Process.GetCurrentProcess().Kill();
-                return EXIT_CODE_SUCCESS;
-            }
-#endif
 
             try
             {
@@ -392,15 +377,8 @@ namespace pwiz.Skyline
                 // some difficult debugging.
                 try
                 {
-#if NET472
-                    var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
-                    bool activationDataPresent = activationArgs != null &&
-                                                 activationArgs.ActivationData != null &&
-                                                 activationArgs.ActivationData.Length != 0;
-#else
                     // ClickOnce activation data does not exist on .NET 8; see the ClickOnce replacement TODO.
                     bool activationDataPresent = false;
-#endif
                     // Activation data and --opendoc always go straight to MainWindow.
                     // Otherwise, --start-page=true|false overrides the user preference,
                     // and without the flag the existing ShowStartupForm setting wins.

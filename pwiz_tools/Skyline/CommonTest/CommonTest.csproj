@@ -2,10 +2,10 @@
 
   <!-- CommonTest - Skyline shared test library (DataBinding, FastaImporter,
        PrecisionNumber, SqliteOperations, ViewSpec). Multi-target
-       net472 + net8.0-windows to match Test/TestData porting cadence. -->
+       net472 + net10.0-windows to match Test/TestData porting cadence. -->
   <PropertyGroup>
     <ProjectGuid>{3F077244-13E5-4815-BA55-31F030042E06}</ProjectGuid>
-    <TargetFrameworks>net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -34,15 +34,8 @@
     <ProjectReference Include="..\TestUtil\TestUtil.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="JetBrains.Annotations"><HintPath>..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath></Reference>
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
-    <Reference Include="Newtonsoft.Json"><HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
-    <Reference Include="System.Data.SQLite"><HintPath>..\..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath></Reference>
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="3.2.0" />
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />

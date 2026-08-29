@@ -2,12 +2,12 @@
 
   <!-- SkylineProcessRunner - tiny console helper that Skyline shells out to (often elevated)
        to run a command via cmd.exe and stream its output back over a named pipe. Multi-target
-       net472 + net8.0-windows so the net8 Skyline build can deploy a net8 SkylineProcessRunner.exe
+       net472 + net10.0-windows so the net8 Skyline build can deploy a net8 SkylineProcessRunner.exe
        (the classic project was a v4.0 Client-Profile x86 exe). No WinForms - pure console. -->
   <PropertyGroup>
     <ProjectGuid>{591C1CC4-2821-4CB3-B666-EFE9AF879CAD}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
