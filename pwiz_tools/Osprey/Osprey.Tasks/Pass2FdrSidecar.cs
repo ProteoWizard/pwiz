@@ -646,7 +646,7 @@ namespace pwiz.Osprey.Tasks
         /// capacity, so the steady state is one file's worth of buffer instead of the whole
         /// cohort's.</para>
         /// </summary>
-        private sealed class Pass1ScalarSeeder
+        internal sealed class Pass1ScalarSeeder
         {
             private readonly List<string> _unreadable = new List<string>();
             private Dictionary<uint, FdrEntry> _byEntryId;
@@ -1290,87 +1290,24 @@ namespace pwiz.Osprey.Tasks
                 (uint[] entryIds, double[] scores, IReadOnlyDictionary<uint, double> survivorScores)
                     ReadFile(string fileKey)
                 {
-                    // Frozen-model score for THIS file's reconciled survivors: bring the file to
-                    // its post-rescore state, seed its 1st-pass scalars, load its PIN features,
-                    // score with the frozen 1st-pass weights, keep only the scalar score, and
-                    // release the features on the way out. Same loader and identity key the
-                    // resident reload used, so each survivor's score is byte-identical.
                     // The parquet lookup is established by the validation loop above (every file
                     // has a parquet path or this method already returned false), and resolved
-                    // OUTSIDE the try so a key miss cannot be reported as a parquet failure.
+                    // HERE so a key miss cannot be reported as a parquet failure by the reader.
                     string effectiveParquetPath = ParquetScoreCache.EffectiveScoresPathFromScoresPath(
                         perFileParquetPaths[fileKey]);
                     currentKey = fileKey;
                     currentEntries = LoadOneFile(fileKey);
-
-                    // ONE traversal of this file's 1st-pass sidecar, for the three things this
-                    // method takes off it: the whole-population (entry_id, score) arrays the
-                    // competition streams, the survivor records the seed below applies, and the
-                    // experiment q-values StashOffStratumPass1ExperimentQ carries forward. Those
-                    // were three separate passes over the same ~204 MB file, i.e. two of every
-                    // three reads of the largest artifact class in the run - 52.3 GB of 1st-pass
-                    // sidecars at 257 files (#4486).
-                    //
                     // Read from the path the validation loop above checked with IsCurrentFormat,
                     // not from writer.InputFor's. Both resolve through
                     // ArtifactPaths.ResolveOutputDir, so they name the same file in every
                     // configuration this method accepts; this is the one whose header was
                     // verified BEFORE any survivor was mutated, which is where the contract
                     // above puts the refusal.
-                    survivorIds.Clear();
-                    foreach (var e in currentEntries)
-                        survivorIds.Add(e.EntryId);
-                    FdrScoresSidecar.ReadScalars(sidecarByKey[fileKey], FdrScoresSidecar.Pass.FirstPass,
-                        out uint[] eids, out double[] scs, survivorIds.Contains, pass1Records);
-                    // The whole-pool seed is skipped for this mode, so each file is seeded as it
-                    // arrives - before the scoring below, which overwrites Score for every
-                    // survivor whose features resolve and leaves the seeded 1st-pass value on
-                    // the rest.
-                    seeder.Apply(currentEntries, pass1Records);
-                    var fileEntries = currentEntries;
-
-                    // ONLY the load is guarded, as it was before this method took over the
-                    // scoring. Widening the try over the scoring loop would let a mid-loop
-                    // throw leave a PARTIALLY swapped-in map: the competition would then run
-                    // on a mixed population, and under protein-compact the unscored remainder
-                    // would also be missing from changedBaseIds, so those peaks would never be
-                    // admitted and would be stamped run q 1.0 - all under a warning blaming a
-                    // load that succeeded. Failure here is all-or-nothing per file.
-                    Dictionary<uint, double[]> featByScoreIndex;
-                    try
-                    {
-                        featByScoreIndex = LoadReconciledFeaturesByScoreIndex(effectiveParquetPath);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Same disposition as the old whole-run pass: this file contributes no
-                        // swapped-in scores and competes on its stored 1st-pass ones.
-                        ctx.LogWarning(string.Format(
-                            "{0}: failed to reload PIN features from {1}: {2}",
-                            mode, effectiveParquetPath, ex.Message));
-                        featByScoreIndex = null;
-                    }
-
-                    var fileScores = new Dictionary<uint, double>();
-                    if (featByScoreIndex != null)
-                    {
-                        foreach (var e in fileEntries)
-                        {
-                            if (e.ParquetIndex.HasValue &&
-                                featByScoreIndex.TryGetValue(e.ParquetIndex.Value, out double[] feats) &&
-                                feats != null && feats.Length == nFeatures)
-                            {
-                                double frozenScore = scorer.Score(feats);
-                                fileScores[e.EntryId] = frozenScore;
-                                // This is the score the entry COMPETES on below, so it is the one
-                                // the 2nd-pass sidecar must carry. RestorePass1Scalars seeded the
-                                // 1st-pass value, which is what a survivor whose features did not
-                                // resolve keeps - and which is what it competes on too.
-                                e.Score = frozenScore;
-                            }
-                        }
-                        // featByScoreIndex released here (one file resident at a time).
-                    }
+                    ReadOneFilePass2Inputs(
+                        sidecarByKey[fileKey], effectiveParquetPath, currentEntries,
+                        scorer, nFeatures, seeder, ctx.LogWarning, mode,
+                        survivorIds, pass1Records,
+                        out uint[] eids, out double[] scs, out var fileScores);
                     nScored += fileScores.Count;
 
                     // Off the records read at the top of this method, not a third pass over the
@@ -1935,6 +1872,89 @@ namespace pwiz.Osprey.Tasks
         /// heavy fragment/XIC/CWT blobs), one file at a time, so the reload stays
         /// within the issue #4355 memory bound. (issue #4355)
         /// </summary>
+        /// <summary>
+        /// Everything one file's pass-2 competition needs, taken from that file's OWN artifacts:
+        /// the whole-population <c>(entry_id, score)</c> arrays it competes over, the survivor
+        /// records it seeds from, and the frozen-model score for each survivor whose reconciled
+        /// features resolve.
+        ///
+        /// <para>Explicitly parameterized rather than reading enclosing state, because this is
+        /// per-FILE work that belongs to the rescore worker: the run-level competition is
+        /// computable from one file alone, and every input here is either that file's own
+        /// sidecar / parquet or a whole-run constant that already rides the per-file
+        /// <c>.1st-pass.model.json</c> relay (the frozen model and the protein stratum). Stage 7
+        /// calls it today; moving the call to <c>PerFileRescoreTask</c> is then a call-site
+        /// change rather than a rewrite, which is what stops Stage 7 having to open a 1st-pass
+        /// sidecar at all (issue #4486).</para>
+        ///
+        /// <para>ONE traversal of the 1st-pass sidecar yields all three outputs. They were three
+        /// separate passes over the same ~204 MB file, i.e. two of every three reads of the
+        /// largest artifact class in the run - 52.3 GB of 1st-pass sidecars at 257 files.</para>
+        ///
+        /// <para>Only the feature LOAD is guarded. Widening the try over the scoring loop would
+        /// let a mid-loop throw leave a PARTIALLY swapped-in map: the competition would then run
+        /// on a mixed population, and under protein-compact the unscored remainder would also be
+        /// missing from the changed set, so those peaks would never be admitted and would be
+        /// stamped run q 1.0 - all under a warning blaming a load that succeeded. Failure here is
+        /// all-or-nothing per file: the file contributes no swapped-in scores and competes on its
+        /// stored 1st-pass ones.</para>
+        ///
+        /// <para><c>effectiveParquetPath</c> is the file's reconciled parquet, or its Stage 4
+        /// parquet when no reconciled sibling exists. <c>survivors</c> is seeded and scored IN
+        /// PLACE. <c>survivorIds</c> and <c>pass1Records</c> are caller-owned scratch, cleared and
+        /// refilled here so a per-file loop does not reallocate them; the caller reads
+        /// <c>pass1Records</c> again for the off-stratum experiment-q carry-forward.</para>
+        /// </summary>
+        internal static void ReadOneFilePass2Inputs(
+            string pass1SidecarPath, string effectiveParquetPath, List<FdrEntry> survivors,
+            FrozenModelScorer scorer, int nFeatures, Pass1ScalarSeeder seeder,
+            Action<string> logWarning, string mode,
+            HashSet<uint> survivorIds, List<FdrScoreRecord> pass1Records,
+            out uint[] entryIds, out double[] scores, out Dictionary<uint, double> survivorScores)
+        {
+            survivorIds.Clear();
+            foreach (var e in survivors)
+                survivorIds.Add(e.EntryId);
+            FdrScoresSidecar.ReadScalars(pass1SidecarPath, FdrScoresSidecar.Pass.FirstPass,
+                out entryIds, out scores, survivorIds.Contains, pass1Records);
+            // The whole-pool seed is skipped for this mode, so each file is seeded as it
+            // arrives - before the scoring below, which overwrites Score for every survivor
+            // whose features resolve and leaves the seeded 1st-pass value on the rest.
+            seeder.Apply(survivors, pass1Records);
+
+            Dictionary<uint, double[]> featByScoreIndex;
+            try
+            {
+                featByScoreIndex = LoadReconciledFeaturesByScoreIndex(effectiveParquetPath);
+            }
+            catch (Exception ex)
+            {
+                logWarning(string.Format(
+                    "{0}: failed to reload PIN features from {1}: {2}",
+                    mode, effectiveParquetPath, ex.Message));
+                featByScoreIndex = null;
+            }
+
+            survivorScores = new Dictionary<uint, double>();
+            if (featByScoreIndex == null)
+                return;
+            foreach (var e in survivors)
+            {
+                if (e.ParquetIndex.HasValue &&
+                    featByScoreIndex.TryGetValue(e.ParquetIndex.Value, out double[] feats) &&
+                    feats != null && feats.Length == nFeatures)
+                {
+                    double frozenScore = scorer.Score(feats);
+                    survivorScores[e.EntryId] = frozenScore;
+                    // This is the score the entry COMPETES on, so it is the one the 2nd-pass
+                    // sidecar must carry. The seed above supplied the 1st-pass value, which is
+                    // what a survivor whose features did not resolve keeps - and competes on.
+                    e.Score = frozenScore;
+                }
+            }
+            // featByScoreIndex released here (one file resident at a time).
+        }
+
         internal static Dictionary<uint, double[]> LoadReconciledFeaturesByScoreIndex(
             string reconciledPath)
         {
