@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -366,17 +366,19 @@ namespace pwiz.Osprey.Test
             // two would show up here.
             var rec = new FdrScoreRecord(
                 entryId: 1, score: 10.0,
-                runPrecursorQvalue: 0.001, runPeptideQvalue: 0.002,
-                experimentPrecursorQvalue: 0.0005, experimentPeptideQvalue: 0.0006,
-                pep: 0.03, experimentProteinQvalue: 0.004, experimentAggregateScore: 12.5);
+                runPrecursorQvalue: 0.001, runPeptideQvalue: 0.002, pep: 0.03);
+            // The EXPERIMENT-scope half is one analysis-wide record per entry_id (format v5,
+            // issue #4486), so it arrives beside the run-scope record rather than inside it.
+            var exp = new FdrExperimentRecord(
+                entryId: 1, experimentPrecursorQvalue: 0.0005,
+                experimentPeptideQvalue: 0.0006, experimentProteinQvalue: 0.004,
+                experimentAggregateScore: 12.5);
 
             // (a) UNCHANGED: recomputed score == the record's score -> carry the whole record.
             var unchanged = new FdrEntry { EntryId = 1 };
-            var clsU = Pass2FdrSidecar.AssignPerRunQ(unchanged, 10.0, rec,
-                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc, 1.0, 1.0, 0.0);
+            var clsU = Pass2FdrSidecar.AssignPerRunQ(unchanged, 10.0, rec, exp,
+                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc);
             Assert.AreEqual(Pass2FdrSidecar.PerRunClass.Unchanged, clsU);
-            // From the RECORD, not the gap-fill argument: an Unchanged peak has a record, so the
-            // 0.0 passed above must be ignored.
             Assert.AreEqual(12.5, unchanged.ExperimentAggregateScore, 1e-12);
             Assert.AreEqual(10.0, unchanged.Score, 1e-12);
             Assert.AreEqual(0.001, unchanged.RunPrecursorQvalue, 1e-12);
@@ -389,8 +391,8 @@ namespace pwiz.Osprey.Test
             // the experiment q is CARRIED from the 1st-pass record unchanged. This is the whole
             // invariant: only per-run q moves, and only toward higher (less confident) values.
             var moved = new FdrEntry { EntryId = 1 };
-            var clsM = Pass2FdrSidecar.AssignPerRunQ(moved, 5.0, rec,
-                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc, 1.0, 1.0, 0.0);
+            var clsM = Pass2FdrSidecar.AssignPerRunQ(moved, 5.0, rec, exp,
+                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc);
             Assert.AreEqual(Pass2FdrSidecar.PerRunClass.Moved, clsM);
             Assert.AreEqual(5.0, moved.Score, 1e-12);
             Assert.AreEqual(0.01, moved.RunPrecursorQvalue, 1e-12);   // table lookup at score 5
@@ -400,16 +402,20 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(moved.RunPrecursorQvalue > rec.RunPrecursorQvalue,
                 "a moved peak's per-run q can only worsen");
 
-            // (c) GAP-FILL: no 1st-pass record -> run q from the table; experiment q takes the
-            // precursor's supplied cross-file pass-1 value (the clamp later floors it correctly).
-            // The experiment aggregate score comes from that SAME cross-file source: a gap-fill
-            // that took the q without the score would persist a real q beside ResetScores' 0.0,
-            // and a score-space acceptance boundary read back from the 2nd-pass sidecar would
-            // then collapse onto that zero.
+            // (c) GAP-FILL: no 1st-pass RUN-scope record -> run q from the table; the
+            // experiment values still come from the precursor's analysis-wide record, which is
+            // the point of the v5 split - a gap-fill peak is no longer a special case needing a
+            // separately reduced cross-file value. A gap-fill that took the q without the
+            // aggregate would persist a real q beside ResetScores' 0.0, and a score-space
+            // acceptance boundary read back from the 2nd-pass artifacts would collapse onto it.
             var gap = new FdrEntry { EntryId = 2 };
             gap.ResetScores();
-            var clsG = Pass2FdrSidecar.AssignPerRunQ(gap, 5.0, null,
-                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc, 0.004, 0.006, 7.25);
+            var gapExp = new FdrExperimentRecord(
+                entryId: 2, experimentPrecursorQvalue: 0.004,
+                experimentPeptideQvalue: 0.006, experimentProteinQvalue: 0.5,
+                experimentAggregateScore: 7.25);
+            var clsG = Pass2FdrSidecar.AssignPerRunQ(gap, 5.0, null, gapExp,
+                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc);
             Assert.AreEqual(Pass2FdrSidecar.PerRunClass.GapFill, clsG);
             Assert.AreEqual(5.0, gap.Score, 1e-12);
             Assert.AreEqual(0.01, gap.RunPrecursorQvalue, 1e-12);
@@ -417,6 +423,16 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.004, gap.ExperimentPrecursorQvalue, 1e-12);
             Assert.AreEqual(0.006, gap.ExperimentPeptideQvalue, 1e-12);
             Assert.AreEqual(7.25, gap.ExperimentAggregateScore, 1e-12);
+
+            // (d) NO experiment record at all: an entry that competed in nothing takes the
+            // defaults rather than inheriting whatever the last lookup left behind.
+            var orphan = new FdrEntry { EntryId = 3 };
+            orphan.ResetScores();
+            Pass2FdrSidecar.AssignPerRunQ(orphan, 5.0, null, null,
+                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc);
+            Assert.AreEqual(1.0, orphan.ExperimentPrecursorQvalue, 1e-12);
+            Assert.AreEqual(1.0, orphan.ExperimentPeptideQvalue, 1e-12);
+            Assert.AreEqual(0.0, orphan.ExperimentAggregateScore, 1e-12);
         }
 
         // Verbatim copy of the FdrProjectionSet-overload comparer in

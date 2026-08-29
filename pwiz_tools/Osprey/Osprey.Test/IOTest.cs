@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -3234,11 +3234,12 @@ namespace pwiz.Osprey.Test
             try
             {
                 string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
-                // Distinct experiment_protein_qvalue per entry catches a writer that
-                // drops the v3 field. Values match Rust's
-                // fdr_scores_sidecar_v3_round_trip exactly so the
-                // OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT byte-parity gate compares
-                // identical inputs on both sides.
+                // The RUN-scope columns are all this file carries at v5; the experiment-scope
+                // half is covered by TestFdrScopeSplitV5. Values still match Rust's
+                // fdr_scores_sidecar round-trip inputs, but the records themselves no longer
+                // do - Rust fuses both scopes into one 68-byte record, so the
+                // OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT byte-parity hook below cannot compare
+                // equal until that side splits too (issue #4486).
                 var entries = new List<FdrEntry>
                 {
                     MakeFdrEntry(0, -3.5, 0.001, 0.02, proteinQvalue: 0.0042),
@@ -3270,6 +3271,19 @@ namespace pwiz.Osprey.Test
                     MakeFdrEntry(1, 0.0, 0.0, 0.0),
                     MakeFdrEntry(2, 0.0, 0.0, 0.0),
                 };
+                // Snapshot the EXPERIMENT-scope columns before the read: at v5 they are not in
+                // this file, so TryRead must leave them exactly as it found them. A reader that
+                // still wrote them would be decoding whatever field now sits at the offset it
+                // remembers, which is the failure mode the split was designed to make loud.
+                var expBefore = new List<double[]>();
+                foreach (var e in loaded)
+                {
+                    expBefore.Add(new[]
+                    {
+                        e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue,
+                        e.ExperimentProteinQvalue, e.ExperimentAggregateScore,
+                    });
+                }
                 Assert.IsTrue(FdrScoresSidecar.TryRead(path, loaded, FdrScoresSidecar.Pass.FirstPass));
 
                 for (int i = 0; i < entries.Count; i++)
@@ -3280,14 +3294,12 @@ namespace pwiz.Osprey.Test
                                     BitConverter.DoubleToInt64Bits(loaded[i].RunPrecursorQvalue));
                     Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].RunPeptideQvalue),
                                     BitConverter.DoubleToInt64Bits(loaded[i].RunPeptideQvalue));
-                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].ExperimentPrecursorQvalue),
-                                    BitConverter.DoubleToInt64Bits(loaded[i].ExperimentPrecursorQvalue));
-                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].ExperimentPeptideQvalue),
-                                    BitConverter.DoubleToInt64Bits(loaded[i].ExperimentPeptideQvalue));
                     Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].Pep),
                                     BitConverter.DoubleToInt64Bits(loaded[i].Pep));
-                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].ExperimentProteinQvalue),
-                                    BitConverter.DoubleToInt64Bits(loaded[i].ExperimentProteinQvalue));
+                    Assert.AreEqual(expBefore[i][0], loaded[i].ExperimentPrecursorQvalue);
+                    Assert.AreEqual(expBefore[i][1], loaded[i].ExperimentPeptideQvalue);
+                    Assert.AreEqual(expBefore[i][2], loaded[i].ExperimentProteinQvalue);
+                    Assert.AreEqual(expBefore[i][3], loaded[i].ExperimentAggregateScore);
                 }
             }
             finally
@@ -3297,163 +3309,39 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Two-phase 1st-pass sidecar write (issue #4355 struct-shrink S1, risk R2):
-        /// a phase-1 partial write (every record's experiment_protein_qvalue held at the 1.0
-        /// placeholder) followed by <see cref="FdrScoresSidecar.PatchProteinQvalues"/>
-        /// must produce a file that is BYTE-IDENTICAL to a single-phase reference write
-        /// whose records already carried the finalized experiment_protein_qvalue. The map is
-        /// entry_id-keyed and deliberately built out of record order (and the records
-        /// carry non-sequential entry_ids) to prove the patch locates each record's
-        /// [52..60] by entry_id, not by position.
-        /// </summary>
-        [TestMethod]
-        public void TestFdrScoresSidecarTwoPhasePatchMatchesSinglePhase()
-        {
-            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_2ph_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
-            {
-                // Finalized records with a distinct real experiment_protein_qvalue each (the
-                // second-to-last arg). entry_ids are non-sequential so a positional patch
-                // would land the wrong value. Each record also carries a DISTINCT
-                // experiment_aggregate_score in the trailing [60..68] field, which the patch
-                // must leave untouched -- a patch that miscomputed the record stride would
-                // corrupt it and break the byte comparison below.
-                var real = new List<FdrScoreRecord>
-                {
-                    new FdrScoreRecord(10, -3.5, 0.001, 0.0011, 0.0012, 0.0013, 0.02, 0.0042, -1.25),
-                    new FdrScoreRecord(7,  -3.4, 0.002, 0.0021, 0.0022, 0.0023, 0.05, 0.0123, -0.75),
-                    new FdrScoreRecord(42, -3.3, 0.003, 0.0031, 0.0032, 0.0033, 0.08, 0.95,    0.5),
-                    new FdrScoreRecord(3,  -3.2, 0.004, 0.0041, 0.0042, 0.0043, 0.11, 1.0,     2.125),
-                };
-
-                // Phase-1 partial records: identical EXCEPT experiment_protein_qvalue = 1.0. The
-                // aggregate score is already final at phase 1 (it comes from the score pass,
-                // not from protein FDR), so it is carried through unchanged.
-                var partial = new List<FdrScoreRecord>(real.Count);
-                foreach (var r in real)
-                {
-                    partial.Add(new FdrScoreRecord(
-                        r.EntryId, r.Score, r.RunPrecursorQvalue, r.RunPeptideQvalue,
-                        r.ExperimentPrecursorQvalue, r.ExperimentPeptideQvalue, r.Pep, 1.0,
-                        r.ExperimentAggregateScore));
-                }
-
-                // Map entry_id -> finalized experiment_protein_qvalue, inserted out of record
-                // order to prove entry_id-keyed (order-independent) patching.
-                var proteinQByEntryId = new Dictionary<uint, double>
-                {
-                    { 42, 0.95 },
-                    { 3, 1.0 },
-                    { 10, 0.0042 },
-                    { 7, 0.0123 },
-                };
-
-                string refPath = Path.Combine(dir, "ref.1st-pass.fdr_scores.bin");
-                string twoPhasePath = Path.Combine(dir, "twophase.1st-pass.fdr_scores.bin");
-
-                // Single-phase reference (the pre-S1 write): records carry the real value.
-                FdrScoresSidecar.Write(refPath, real, FdrScoresSidecar.Pass.FirstPass);
-
-                // Two-phase: phase-1 partial + phase-2 [52..60] patch.
-                FdrScoresSidecar.Write(twoPhasePath, partial, FdrScoresSidecar.Pass.FirstPass);
-                Assert.IsTrue(FdrScoresSidecar.PatchProteinQvalues(
-                    twoPhasePath, proteinQByEntryId, FdrScoresSidecar.Pass.FirstPass,
-                    out int nPatchedTwoPhase));
-                Assert.AreEqual(proteinQByEntryId.Count, nPatchedTwoPhase);
-
-                // The finalized two-phase file must be byte-for-byte identical to the
-                // single-phase reference (risk R2 -- what mode3 compares cross-process).
-                byte[] refBytes = File.ReadAllBytes(refPath);
-                byte[] twoPhaseBytes = File.ReadAllBytes(twoPhasePath);
-                CollectionAssert.AreEqual(refBytes, twoPhaseBytes,
-                    "Two-phase (partial + [52..60] patch) sidecar diverged from the single-phase write");
-
-                // Sanity: the patch actually finalized experiment_protein_qvalue (a pre-patch
-                // read would have seen the 1.0 placeholder for entries 10/7/42).
-                var loaded = new List<FdrEntry>
-                {
-                    MakeFdrEntry(10, 0.0, 0.0, 0.0),
-                    MakeFdrEntry(7, 0.0, 0.0, 0.0),
-                    MakeFdrEntry(42, 0.0, 0.0, 0.0),
-                    MakeFdrEntry(3, 0.0, 0.0, 0.0),
-                };
-                Assert.IsTrue(FdrScoresSidecar.TryRead(twoPhasePath, loaded, FdrScoresSidecar.Pass.FirstPass));
-                var byId = new Dictionary<uint, FdrEntry>();
-                foreach (var e in loaded)
-                    byId[e.EntryId] = e;
-                Assert.AreEqual(BitConverter.DoubleToInt64Bits(0.0042),
-                                BitConverter.DoubleToInt64Bits(byId[10].ExperimentProteinQvalue));
-                Assert.AreEqual(BitConverter.DoubleToInt64Bits(0.95),
-                                BitConverter.DoubleToInt64Bits(byId[42].ExperimentProteinQvalue));
-
-                // A patch with the wrong pass byte must be rejected and leave bytes intact.
-                Assert.IsFalse(FdrScoresSidecar.PatchProteinQvalues(
-                    twoPhasePath, proteinQByEntryId, FdrScoresSidecar.Pass.SecondPass,
-                    out int nPatchedRejected));
-                Assert.AreEqual(0, nPatchedRejected);
-                CollectionAssert.AreEqual(refBytes, File.ReadAllBytes(twoPhasePath),
-                    "A rejected patch must not modify the sidecar");
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
-            }
-        }
-
-        /// <summary>
-        /// The SECOND-pass sidecar's experiment_protein_qvalue is patched the same two-phase
-        /// way the first-pass one is (issue #4559): the sidecar is written before the
-        /// second-pass protein FDR runs - it is one of that FDR's inputs - so the pass-2
-        /// protein q can only be filled in afterwards.
+        /// The v5 scope split (issue #4486), covered end to end in one test because the three
+        /// behaviours are one design: what the per-file sidecar keeps, what the analysis-wide
+        /// experiment sidecar takes over, and the single patch that survived the split.
         ///
-        /// <para>The test above proves the patch mechanism on a 1st-pass file and proves a
-        /// MISMATCHED pass byte is rejected. This proves the other half: a Pass.SecondPass
-        /// patch of a genuine 2nd-pass file is accepted and lands the pass-2 value. Without
-        /// it, "the pass byte is validated" is only ever exercised in the rejecting
-        /// direction, and a validator that rejected everything would look correct.</para>
+        /// <list type="bullet">
+        /// <item><b>Experiment round trip.</b> One record per distinct entry_id, written in
+        /// ascending entry_id order whatever order the producer accumulated them in - the
+        /// straight-through and distributed routes do not agree on that order and the gate
+        /// compares their files byte for byte.</item>
+        /// <item><b>The collapse is checked, not trusted.</b> Two observations of one entry_id
+        /// carrying different experiment values must THROW rather than let one silently win.
+        /// The whole split rests on those values being a property of the precursor; a first-wins
+        /// collapse over values that had diverged would report q-values no run computed, and
+        /// both routes would collapse identically so no self-consistency gate could see it.</item>
+        /// <item><b>The two files cannot be read as each other.</b> Different magic, so a
+        /// mix-up is a rejection rather than plausible garbage.</item>
+        /// <item><b>PatchPep matches a single-phase write byte for byte.</b> The map is
+        /// entry_id-keyed and built out of record order, over records with non-sequential
+        /// entry_ids, to prove the patch locates each record's pep by entry_id and not by
+        /// position.</item>
+        /// </list>
         /// </summary>
         [TestMethod]
-        public void TestFdrScoresSidecarPass2ProteinQvaluePatched()
+        public void TestFdrScopeSplitV5()
         {
-            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_p2q_" + Guid.NewGuid().ToString("N"));
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_scope_split_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             try
             {
-                // What SecondPassFdrTask writes before the second-pass protein FDR runs: the
-                // protein column still holds pass-1 values (0.40 / 0.50 here).
-                var written = new List<FdrScoreRecord>
-                {
-                    new FdrScoreRecord(10, -3.5, 0.001, 0.0011, 0.0012, 0.0013, 0.02, 0.40, -1.25),
-                    new FdrScoreRecord(7,  -3.4, 0.002, 0.0021, 0.0022, 0.0023, 0.05, 0.50, -0.75),
-                };
-                string path = Path.Combine(dir, "s.2nd-pass.fdr_scores.bin");
-                FdrScoresSidecar.Write(path, written, FdrScoresSidecar.Pass.SecondPass);
-
-                // What the second-pass protein FDR then produces for those same entries.
-                var pass2 = new Dictionary<uint, double> { { 10, 0.0031 }, { 7, 0.77 } };
-                Assert.IsTrue(FdrScoresSidecar.PatchProteinQvalues(
-                    path, pass2, FdrScoresSidecar.Pass.SecondPass, out int nPatchedPass2));
-                Assert.AreEqual(pass2.Count, nPatchedPass2);
-
-                var loaded = new List<FdrEntry> { MakeFdrEntry(10, 0.0, 0.0, 0.0), MakeFdrEntry(7, 0.0, 0.0, 0.0) };
-                Assert.IsTrue(FdrScoresSidecar.TryRead(path, loaded, FdrScoresSidecar.Pass.SecondPass));
-                var byId = new Dictionary<uint, FdrEntry>();
-                foreach (var e in loaded)
-                    byId[e.EntryId] = e;
-                Assert.AreEqual(BitConverter.DoubleToInt64Bits(0.0031),
-                                BitConverter.DoubleToInt64Bits(byId[10].ExperimentProteinQvalue));
-                Assert.AreEqual(BitConverter.DoubleToInt64Bits(0.77),
-                                BitConverter.DoubleToInt64Bits(byId[7].ExperimentProteinQvalue));
-
-                // Every other column must survive the patch untouched - a miscomputed stride
-                // would corrupt the neighbouring pep [44..52] or aggregate score [60..68].
-                Assert.AreEqual(BitConverter.DoubleToInt64Bits(0.02),
-                                BitConverter.DoubleToInt64Bits(byId[10].Pep));
-                Assert.AreEqual(BitConverter.DoubleToInt64Bits(-1.25),
-                                BitConverter.DoubleToInt64Bits(byId[10].ExperimentAggregateScore));
-                Assert.AreEqual(BitConverter.DoubleToInt64Bits(-3.4),
-                                BitConverter.DoubleToInt64Bits(byId[7].Score));
+                AssertExperimentSidecarRoundTrips(dir);
+                AssertExperimentCollapseRejectsDisagreement();
+                AssertSidecarsRejectEachOther(dir);
+                AssertPepPatchMatchesSinglePhaseWrite(dir);
             }
             finally
             {
@@ -3462,78 +3350,135 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The 2nd-pass sidecar's four EXPERIMENT-scope columns are patched the same two-phase
-        /// way its protein column is (#4486): the frozen second-pass competition writes each
-        /// file as it finishes with it, but experiment q, PEP and the experiment aggregate come
-        /// out of a competition that is not complete until every file has been read.
-        ///
-        /// <para>Asserts the contract that makes the two phases safe to substitute for one: the
-        /// patched file is BYTE-IDENTICAL to a single-phase write whose records already carried
-        /// the final values. A stride error, a column swap or a re-encoded double would all
-        /// leave the two files differing while every individual field still read back
-        /// plausibly.</para>
+        /// Accumulate out of entry_id order, then assert the file comes back in ascending
+        /// entry_id order with every column intact.
         /// </summary>
-        [TestMethod]
-        public void TestFdrScoresSidecarExperimentValuesPatched()
+        private static void AssertExperimentSidecarRoundTrips(string dir)
         {
-            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_expq_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
+            string path = Path.Combine(dir, "analysis.1st-pass.fdr_experiment.bin");
+            var accumulator = new FdrExperimentAccumulator();
+            accumulator.Add(7, 0.011, 0.012, 0.013, -1.5);
+            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5);
+            accumulator.Add(9, 0.031, 0.032, 0.033, -3.5);
+            // A repeat sighting of an entry_id already held, with identical values: the ordinary
+            // case, since every observation of a precursor carries the same experiment values.
+            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5);
+            Assert.AreEqual(3, accumulator.Count);
+
+            FdrExperimentSidecar.Write(path, accumulator.Records, FdrScoresSidecar.Pass.FirstPass);
+            Assert.AreEqual(
+                FdrExperimentSidecar.HeaderLength + 3 * FdrExperimentSidecar.RecordLength,
+                new FileInfo(path).Length);
+            Assert.IsTrue(FdrExperimentSidecar.IsCurrentFormat(path, FdrScoresSidecar.Pass.FirstPass));
+
+            var order = new List<uint>();
+            Assert.IsTrue(FdrExperimentSidecar.ReadRecords(
+                path, FdrScoresSidecar.Pass.FirstPass, rec => order.Add(rec.EntryId)));
+            CollectionAssert.AreEqual(new List<uint> { 2, 7, 9 }, order);
+
+            var map = FdrExperimentSidecar.ReadMap(path, FdrScoresSidecar.Pass.FirstPass);
+            Assert.IsNotNull(map);
+            AssertBitEqual(0.031, map[9].ExperimentPrecursorQvalue);
+            AssertBitEqual(0.032, map[9].ExperimentPeptideQvalue);
+            AssertBitEqual(0.033, map[9].ExperimentProteinQvalue);
+            AssertBitEqual(-3.5, map[9].ExperimentAggregateScore);
+
+            // SetProteinQvalue replaces only the column protein FDR owns, and ignores an
+            // entry_id the accumulator never saw rather than inventing a record for it.
+            accumulator.SetProteinQvalue(9, 0.5);
+            accumulator.SetProteinQvalue(12345, 0.5);
+            Assert.AreEqual(3, accumulator.Count);
+            AssertBitEqual(0.5, accumulator.Records[9].ExperimentProteinQvalue);
+            AssertBitEqual(0.031, accumulator.Records[9].ExperimentPrecursorQvalue);
+        }
+
+        /// <summary>
+        /// A second observation of one entry_id carrying a DIFFERENT experiment value must
+        /// throw. See the class remarks on <see cref="FdrExperimentAccumulator"/>: this is the
+        /// assertion that keeps the per-entry_id collapse honest.
+        /// </summary>
+        private static void AssertExperimentCollapseRejectsDisagreement()
+        {
+            var accumulator = new FdrExperimentAccumulator();
+            accumulator.Add(4, 0.01, 0.02, 0.03, -1.0);
             try
             {
-                // Phase 1: what the per-file write emits - run-scope columns final, the four
-                // experiment-scope columns still carrying whatever the entry held.
-                var phase1 = new List<FdrScoreRecord>
-                {
-                    new FdrScoreRecord(10, -3.5, 0.001, 0.0011, 0.90, 0.91, 0.92, 0.40, 0.0),
-                    new FdrScoreRecord(7,  -3.4, 0.002, 0.0021, 0.93, 0.94, 0.95, 0.50, 0.0),
-                };
-                // What the finished competition says those records should carry.
-                var final = new Dictionary<uint, (double prec, double pep, double pepScore, double agg)>
-                {
-                    { 10, (0.0012, 0.0013, 0.02, -1.25) },
-                    { 7, (0.0022, 0.0023, 0.05, -0.75) },
-                };
-
-                string patched = Path.Combine(dir, "patched.2nd-pass.fdr_scores.bin");
-                FdrScoresSidecar.Write(patched, phase1, FdrScoresSidecar.Pass.SecondPass);
-                Assert.IsTrue(FdrScoresSidecar.PatchExperimentValues(
-                    patched, FdrScoresSidecar.Pass.SecondPass,
-                    rec =>
-                    {
-                        var f = final[rec.EntryId];
-                        return new FdrScoreRecord(
-                            rec.EntryId, rec.Score, rec.RunPrecursorQvalue, rec.RunPeptideQvalue,
-                            f.prec, f.pep, f.pepScore, rec.ExperimentProteinQvalue, f.agg);
-                    },
-                    out int nPatched));
-                Assert.AreEqual(phase1.Count, nPatched);
-
-                // The single-phase file the two phases have to reproduce exactly.
-                var singlePhase = new List<FdrScoreRecord>();
-                foreach (var rec in phase1)
-                {
-                    var f = final[rec.EntryId];
-                    singlePhase.Add(new FdrScoreRecord(
-                        rec.EntryId, rec.Score, rec.RunPrecursorQvalue, rec.RunPeptideQvalue,
-                        f.prec, f.pep, f.pepScore, rec.ExperimentProteinQvalue, f.agg));
-                }
-                string direct = Path.Combine(dir, "direct.2nd-pass.fdr_scores.bin");
-                FdrScoresSidecar.Write(direct, singlePhase, FdrScoresSidecar.Pass.SecondPass);
-                CollectionAssert.AreEqual(File.ReadAllBytes(direct), File.ReadAllBytes(patched));
-
-                // A patch declared against the wrong pass must be refused, and refused BEFORE
-                // anything is written: the file it would have rewritten is the run's output.
-                byte[] before = File.ReadAllBytes(patched);
-                Assert.IsFalse(FdrScoresSidecar.PatchExperimentValues(
-                    patched, FdrScoresSidecar.Pass.FirstPass, rec => rec, out int nRejected));
-                Assert.AreEqual(0, nRejected);
-                CollectionAssert.AreEqual(before, File.ReadAllBytes(patched));
+                accumulator.Add(4, 0.01, 0.02, 0.03, -1.25);
+                Assert.Fail("Disagreeing experiment values for one entry_id must throw.");
             }
-            finally
+            catch (InvalidOperationException)
             {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
+                // Expected: the collapse refuses to pick a winner.
             }
         }
+
+        /// <summary>
+        /// The per-file and experiment sidecars share a header shape and a pass byte, so each
+        /// reader must refuse the other's file on magic alone.
+        /// </summary>
+        private static void AssertSidecarsRejectEachOther(string dir)
+        {
+            string perFile = Path.Combine(dir, "run.1st-pass.fdr_scores.bin");
+            string experiment = Path.Combine(dir, "mix.1st-pass.fdr_experiment.bin");
+            FdrScoresSidecar.Write(perFile,
+                new List<FdrEntry> { MakeFdrEntry(1, -1.0, 0.01, 0.02) },
+                FdrScoresSidecar.Pass.FirstPass);
+            var accumulator = new FdrExperimentAccumulator();
+            accumulator.Add(1, 0.01, 0.02, 0.03, -1.0);
+            FdrExperimentSidecar.Write(experiment, accumulator.Records, FdrScoresSidecar.Pass.FirstPass);
+
+            Assert.IsFalse(FdrExperimentSidecar.IsCurrentFormat(perFile, FdrScoresSidecar.Pass.FirstPass));
+            Assert.IsNull(FdrExperimentSidecar.ReadMap(perFile, FdrScoresSidecar.Pass.FirstPass));
+            Assert.IsFalse(FdrScoresSidecar.IsCurrentFormat(experiment, FdrScoresSidecar.Pass.FirstPass));
+            Assert.IsFalse(FdrScoresSidecar.ReadRecords(
+                experiment, FdrScoresSidecar.Pass.FirstPass, rec => { }));
+        }
+
+        /// <summary>
+        /// A write carrying placeholder PEP followed by <see cref="FdrScoresSidecar.PatchPep"/>
+        /// must produce a file BYTE-IDENTICAL to a single-phase write whose records already
+        /// carried the finalized PEP, and must refuse a mismatched pass byte without touching
+        /// the file.
+        /// </summary>
+        private static void AssertPepPatchMatchesSinglePhaseWrite(string dir)
+        {
+            string patched = Path.Combine(dir, "a.2nd-pass.fdr_scores.bin");
+            string direct = Path.Combine(dir, "b.2nd-pass.fdr_scores.bin");
+            // Non-sequential entry_ids, and a map built in a different order, so a positional
+            // patch cannot pass.
+            var finalPep = new Dictionary<uint, double> { { 77, 0.25 }, { 3, 0.75 } };
+            var placeholder = new List<FdrScoreRecord>
+            {
+                new FdrScoreRecord(3, -2.0, 0.01, 0.02, 1.0),
+                new FdrScoreRecord(77, -1.0, 0.03, 0.04, 1.0),
+            };
+            var single = new List<FdrScoreRecord>
+            {
+                new FdrScoreRecord(3, -2.0, 0.01, 0.02, 0.75),
+                new FdrScoreRecord(77, -1.0, 0.03, 0.04, 0.25),
+            };
+            FdrScoresSidecar.Write(patched, placeholder, FdrScoresSidecar.Pass.SecondPass);
+            FdrScoresSidecar.Write(direct, single, FdrScoresSidecar.Pass.SecondPass);
+            Assert.IsTrue(FdrScoresSidecar.PatchPep(
+                patched, finalPep, FdrScoresSidecar.Pass.SecondPass, out int nPatched));
+            Assert.AreEqual(2, nPatched);
+            CollectionAssert.AreEqual(File.ReadAllBytes(direct), File.ReadAllBytes(patched));
+
+            // A first-pass patch of a second-pass file must fail and leave the bytes alone.
+            byte[] before = File.ReadAllBytes(patched);
+            Assert.IsFalse(FdrScoresSidecar.PatchPep(
+                patched, finalPep, FdrScoresSidecar.Pass.FirstPass, out int nRejected));
+            Assert.AreEqual(0, nRejected);
+            CollectionAssert.AreEqual(before, File.ReadAllBytes(patched));
+        }
+
+        /// <summary>Bit-exact double comparison, so a rounded value cannot pass.</summary>
+        private static void AssertBitEqual(double expected, double actual)
+        {
+            Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected),
+                            BitConverter.DoubleToInt64Bits(actual));
+        }
+
 
         /// <summary>
         /// Pre-v2 sidecar files (no magic header, just raw f64 scores)
@@ -4065,7 +4010,7 @@ namespace pwiz.Osprey.Test
                         stem, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)),
                 };
                 var inputs = RescoreHydration.HydrateReconciliationOverlay(
-                    perFile, new[] { parquetPath });
+                    perFile, new[] { parquetPath }, new Dictionary<uint, FdrExperimentRecord>());
 
                 // 5. Assert per-file entries: same fileName, same count,
                 //    Score / ExperimentProteinQvalue overlaid bit-exactly.
@@ -4078,9 +4023,10 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(sidecarEntries[i].EntryId, got[i].EntryId);
                     Assert.AreEqual(BitConverter.DoubleToInt64Bits(sidecarEntries[i].Score),
                                     BitConverter.DoubleToInt64Bits(got[i].Score));
-                    Assert.AreEqual(
-                        BitConverter.DoubleToInt64Bits(sidecarEntries[i].ExperimentProteinQvalue),
-                        BitConverter.DoubleToInt64Bits(got[i].ExperimentProteinQvalue));
+                    // The protein q rides in the analysis-wide experiment sidecar at v5, and this
+                    // fixture writes none, so a hydrated stub is entitled to the 1.0 default. The
+                    // overlay's experiment half is covered by TestFdrScopeSplitV5.
+                    Assert.AreEqual(1.0, got[i].ExperimentProteinQvalue);
                 }
 
                 // 6. Assert reconciliation actions: keyed by
@@ -4186,7 +4132,8 @@ namespace pwiz.Osprey.Test
                         new KeyValuePair<string, List<FdrEntry>>(
                             stem, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)),
                     };
-                    RescoreHydration.HydrateReconciliationOverlay(perFile, new[] { parquetPath });
+                    RescoreHydration.HydrateReconciliationOverlay(
+                        perFile, new[] { parquetPath }, new Dictionary<uint, FdrExperimentRecord>());
                     Assert.Fail("expected InvalidDataException for entry_id drift");
                 }
                 catch (InvalidDataException ex)
@@ -4245,7 +4192,7 @@ namespace pwiz.Osprey.Test
                         ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)));
                 }
                 var resident = RescoreHydration.HydrateReconciliationOverlay(
-                    residentEntries, parquetPaths);
+                    residentEntries, parquetPaths, new Dictionary<uint, FdrExperimentRecord>());
                 var residentStats = RescoreCompaction.Apply(resident);
 
                 // Streaming: one file's pre-compaction pool resident at a time. Apply still
@@ -4263,7 +4210,8 @@ namespace pwiz.Osprey.Test
                         seenFileIndexes.Add(fileIdx);
                         seenPreCompactionCounts.Add(stubs.Count);
                         tally.PassingTargets = stubs.Count;
-                    });
+                    },
+                    new Dictionary<uint, FdrExperimentRecord>());
                 var streamedStats = RescoreCompaction.Apply(streamed);
 
                 // The streaming hook saw the FULL pre-compaction pool for each file, and the
@@ -4350,7 +4298,8 @@ namespace pwiz.Osprey.Test
                 leanEntries.Add(new KeyValuePair<string, List<FdrEntry>>(stem, new List<FdrEntry>()));
             try
             {
-                RescoreHydration.HydrateReconciliationOverlay(leanEntries, parquetPaths);
+                RescoreHydration.HydrateReconciliationOverlay(
+                    leanEntries, parquetPaths, new Dictionary<uint, FdrExperimentRecord>());
                 Assert.Fail("expected InvalidDataException overlaying a sidecar onto empty stubs");
             }
             catch (InvalidDataException ex)

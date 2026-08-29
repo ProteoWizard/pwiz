@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
@@ -1355,7 +1355,12 @@ namespace pwiz.Osprey.Tasks
                             ScoringTaskShared.TallyPreCompaction(config, stubs, tally);
                             if (mdiagAccumulator != null)
                                 ScoringTaskShared.FeedModelDiagnostics(mdiagAccumulator, fileIdx, stubs);
-                        }, _sequencePool.Value), ctx);
+                        },
+                        FdrExperimentSidecar.ReadMap(
+                            FdrExperimentSidecar.PathFor(config.OutputBlib,
+                                ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
+                            FdrScoresSidecar.Pass.FirstPass),
+                        _sequencePool.Value), ctx);
                 if (_rescoreInputs == null)
                 {
                     hydrationFailed = true;
@@ -1758,7 +1763,12 @@ namespace pwiz.Osprey.Tasks
                 {
                     _rescoreInputs = HydrateRescoreBundleOrNull(
                         () => RescoreHydration.HydrateReconciliationOverlay(
-                            perFileEntries, config.InputScores, _sequencePool.Value), ctx);
+                            perFileEntries, config.InputScores,
+                            FdrExperimentSidecar.ReadMap(
+                                FdrExperimentSidecar.PathFor(config.OutputBlib,
+                                ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
+                                FdrScoresSidecar.Pass.FirstPass),
+                            _sequencePool.Value), ctx);
                 }
                 if (_rescoreInputs == null)
                     return false;

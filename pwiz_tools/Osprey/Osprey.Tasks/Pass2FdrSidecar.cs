@@ -240,7 +240,7 @@ namespace pwiz.Osprey.Tasks
                     //                              Stage 6 touched.
                     // ExperimentProteinQvalue is the fourth field ResetScores clears that no
                     // 2nd-pass mode writes back, and it is deliberately NOT seeded here: its
-                    // pass-2 producer is PatchPass2ProteinQvalues, which writes the second-pass
+                    // pass-2 producer is WritePass2ExperimentSidecar, which writes the second-pass
                     // value into the 2nd-pass sidecar after the second-pass protein FDR (#4559).
                     // Seeding those three from the 1st-pass sidecar reproduces exactly what the
                     // distributed route has in hand at this point, which is why that route never
@@ -469,6 +469,7 @@ namespace pwiz.Osprey.Tasks
             if (recomputed && perFileParquetPaths.Count > 0 && config.InputFiles != null)
                 ReloadPass2Sidecars(ctx, pass2Writer, perFileEntries, @"post-write");
 
+
             return pass2Contributions;
         }
 
@@ -493,6 +494,28 @@ namespace pwiz.Osprey.Tasks
         /// written one is the one legitimate absence, and it is not a fault - the entries
         /// already hold the values that run is about to write.</para>
         /// </summary>
+        /// <summary>
+        /// The second pass's EXPERIMENT-scope records for this run, from whichever source holds
+        /// them. Handed to the per-file overlay so each entry gets them only where that file's
+        /// own 2nd-pass sidecar carries a record for it.
+        ///
+        /// <para>TWO sources, because there are two ways to arrive here. When a pass-2 path
+        /// actually computed, it published a <see cref="Pass2ExperimentScope"/> and the values
+        /// are in memory. When nothing was recomputed - a resume that adopted standing 2nd-pass
+        /// sidecars - there is no accumulator, and they come off the 2nd-pass experiment sidecar
+        /// the earlier run left on disk. Before the v5 split both cases were served by the same
+        /// mechanism, because the values rode in the per-file sidecar this overlays; they no
+        /// longer do, so the resume case needs its own read or the entries silently keep
+        /// pre-competition values.</para>
+        /// </summary>
+        private static IReadOnlyDictionary<uint, FdrExperimentRecord> ResolvePass2ExperimentRecords(
+            PipelineContext ctx)
+        {
+            return ctx.TryGet<Pass2ExperimentScope>(out var scope)
+                ? scope.Accumulator.Records
+                : LoadExperimentRecords(ctx.Config, FdrScoresSidecar.Pass.SecondPass);
+        }
+
         private static void ReloadPass2Sidecars(
             PipelineContext ctx,
             Pass2SidecarWriter writer,
@@ -501,6 +524,9 @@ namespace pwiz.Osprey.Tasks
         {
             int filesReloaded = 0;
             int filesMissing = 0;
+            // Resolved once for the whole reload; the overlay applies them per file, to the
+            // records that file's own sidecar carries (format v5, issue #4486).
+            var experimentRecords = ResolvePass2ExperimentRecords(ctx);
             // Per-file progress: reads back every file's sidecar and rebuilds an entry_id map
             // over that file's survivors. Silent, and the second half of the 38s gap between
             // the competition's [STAGE-WALL] line and the next probe (#4486); the write loop is
@@ -527,7 +553,8 @@ namespace pwiz.Osprey.Tasks
                     foreach (var e in kvp.Value)
                         byEntryId[e.EntryId] = e;
                     if (FdrScoresSidecar.TryReadOverlay(
-                            pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass))
+                            pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass,
+                            experimentRecords))
                     {
                         filesReloaded++;
                     }
@@ -568,7 +595,7 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para><see cref="FdrEntry.ExperimentProteinQvalue"/> was seeded here too until
         /// issue #4559. It should not be: the 2nd-pass sidecar's protein column is a
-        /// SECOND-pass value, written by <see cref="PatchPass2ProteinQvalues"/> after the
+        /// SECOND-pass value, written by <see cref="WritePass2ExperimentSidecar"/> after the
         /// second-pass protein FDR has run. Seeding it here made a pass-1 value the one it
         /// carried on every route - and because both routes copied the same wrong value, no
         /// two-route comparison could see it. One producer, not two.</para>
@@ -614,7 +641,8 @@ namespace pwiz.Osprey.Tasks
                 if (kvp.Value.Count > maxEntries)
                     maxEntries = kvp.Value.Count;
             }
-            var seeder = new Pass1ScalarSeeder(maxEntries);
+            var seeder = new Pass1ScalarSeeder(maxEntries,
+                LoadExperimentRecords(ctx.Config, FdrScoresSidecar.Pass.FirstPass));
             using (var progress = new ProgressReporter(
                        string.Format(@"Seeding pass-1 scalars from {0} file(s)", perFileEntries.Count),
                        perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
@@ -646,9 +674,34 @@ namespace pwiz.Osprey.Tasks
         /// capacity, so the steady state is one file's worth of buffer instead of the whole
         /// cohort's.</para>
         /// </summary>
+        /// <summary>
+        /// Read one pass's analysis-wide EXPERIMENT-scope records, keyed by entry_id (format v5,
+        /// issue #4486). Returns an EMPTY map rather than null when the analysis has no such
+        /// sidecar, so callers look up unconditionally and an absent entry takes the same
+        /// defaults an entry that competed in nothing would carry.
+        /// </summary>
+        private static IReadOnlyDictionary<uint, FdrExperimentRecord> LoadExperimentRecords(
+            OspreyConfig config, FdrScoresSidecar.Pass pass)
+        {
+            return FdrExperimentSidecar.ReadMap(
+                       FdrExperimentSidecar.PathFor(config?.OutputBlib,
+                           ScoringTaskShared.ArtifactSiblingPath(config), pass), pass)
+                   ?? new Dictionary<uint, FdrExperimentRecord>();
+        }
+
         internal sealed class Pass1ScalarSeeder
         {
             private readonly List<string> _unreadable = new List<string>();
+
+            /// <summary>
+            /// The analysis-wide 1st-pass EXPERIMENT-scope records (format v5, issue #4486).
+            /// <c>ExperimentAggregateScore</c> is one of the three scalars this seeder restores,
+            /// and it no longer travels in the per-file record, so the seeder has to hold the
+            /// one file that does. Null when the analysis has no experiment sidecar, which
+            /// leaves the aggregate at its reset default.
+            /// </summary>
+            private readonly IReadOnlyDictionary<uint, FdrExperimentRecord> _experimentRecords;
+
             private Dictionary<uint, FdrEntry> _byEntryId;
             private List<KeyValuePair<FdrEntry, FdrScoreRecord>> _staged;
             private int _capacity;
@@ -660,8 +713,12 @@ namespace pwiz.Osprey.Tasks
             /// high-water file, which is a handful of reallocations over a run rather than one
             /// per file. (<c>Dictionary.EnsureCapacity</c> is net8.0-only and this builds net472
             /// too, so growth means a fresh pair rather than a resize in place.)</param>
-            public Pass1ScalarSeeder(int capacity)
+            /// <param name="experimentRecords">The analysis-wide 1st-pass experiment-scope
+            /// records, keyed by entry_id; null when the analysis has none.</param>
+            public Pass1ScalarSeeder(int capacity,
+                IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords)
             {
+                _experimentRecords = experimentRecords;
                 Resize(capacity);
             }
 
@@ -787,18 +844,25 @@ namespace pwiz.Osprey.Tasks
             /// writes back, from one 1st-pass record onto its entry.
             ///
             /// <para>ExperimentProteinQvalue is deliberately NOT seeded - see the remarks on
-            /// <see cref="Seed"/>. PatchPass2ProteinQvalues writes the second-pass value into
-            /// the 2nd-pass sidecar after the second-pass protein FDR (#4559). It is the FOURTH
-            /// field of the same gap (sidecar v4, issue #4522); the other three land in the
-            /// 2nd-pass sidecar at their reset defaults for every peak Stage 6 touched, which is
-            /// the population this repairs. Following the record rather than an enumerated list
-            /// is deliberate: that list has now grown twice.</para>
+            /// <see cref="Seed"/>. The second-pass protein FDR writes the second-pass value onto
+            /// the entry, and the second-pass experiment sidecar records it (#4559). The other
+            /// three land in the 2nd-pass artifacts at their reset defaults for every peak
+            /// Stage 6 touched, which is the population this repairs.</para>
+            ///
+            /// <para>Two sources, because the three scalars no longer share one record: Score
+            /// and Pep are RUN-scope and come from the file's own sidecar record, while the
+            /// experiment aggregate is a property of the entry for the whole analysis and comes
+            /// from the experiment sidecar (format v5, issue #4486).</para>
             /// </summary>
-            private static void ApplyRecord(FdrEntry entry, FdrScoreRecord rec)
+            private void ApplyRecord(FdrEntry entry, FdrScoreRecord rec)
             {
                 entry.Score = rec.Score;
                 entry.Pep = rec.Pep;
-                entry.ExperimentAggregateScore = rec.ExperimentAggregateScore;
+                if (_experimentRecords != null &&
+                    _experimentRecords.TryGetValue(rec.EntryId, out var exp))
+                {
+                    entry.ExperimentAggregateScore = exp.ExperimentAggregateScore;
+                }
             }
 
             private void Resize(int capacity)
@@ -834,7 +898,7 @@ namespace pwiz.Osprey.Tasks
         /// 2nd-pass sidecar is skipped silently: the sidecar exists only where Stage 6 produced
         /// a reconciled parquet, and the caller runs on the same condition.</para>
         /// </summary>
-        internal static void PatchPass2ProteinQvalues(
+        internal static void WritePass2ExperimentSidecar(
             PipelineContext ctx,
             IReadOnlyList<string> fileNames,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
@@ -843,6 +907,18 @@ namespace pwiz.Osprey.Tasks
             var inputByName = new Dictionary<string, string>();
             foreach (var inputFile in ctx.Config.InputFiles)
                 inputByName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+
+            // The three EXPERIMENT-scope columns the second pass already computed, handed over
+            // by the pass that computed them. Absent only when no pass-2 path ran, in which case
+            // there is nothing to write.
+            if (!ctx.TryGet<Pass2ExperimentScope>(out var scope))
+            {
+                ctx.LogVerbose(
+                    "No second-pass experiment-scope records were published, so no 2nd-pass " +
+                    "experiment FDR sidecar is written.");
+                return;
+            }
+            var experiment = scope.Accumulator;
 
             int filesPatched = 0;
             long nPatched = 0;
@@ -861,14 +937,14 @@ namespace pwiz.Osprey.Tasks
                     progress.Report(++patchIdx);
                     if (!inputByName.TryGetValue(fileName, out string inputFile))
                         continue;
-                    string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
                     // ONE gate now. There is no longer a file that legitimately has no 2nd-pass
                     // sidecar - every input file gets one written - so absent and unusable are
                     // the same outcome here and both are reported. The two-gate form this
                     // replaces treated absence as a silent skip, which is precisely the
                     // ambiguity always-writing removes: an absent file could not be told apart
                     // from a write that failed and never committed.
-                    if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
+                    if (!FdrScoresSidecar.IsCurrentFormat(
+                            FdrScoresSidecar.Pass2Path(inputFile), FdrScoresSidecar.Pass.SecondPass))
                     {
                         failed.Add(fileName);
                         continue;
@@ -906,16 +982,10 @@ namespace pwiz.Osprey.Tasks
                         continue;
                     }
 
-                    if (FdrScoresSidecar.PatchProteinQvalues(
-                            pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass, out int patchedHere))
-                    {
-                        filesPatched++;
-                        nPatched += patchedHere;
-                    }
-                    else
-                    {
-                        failed.Add(fileName);
-                    }
+                    foreach (var kvp in byEntryId)
+                        experiment.SetProteinQvalue(kvp.Key, kvp.Value);
+                    filesPatched++;
+                    nPatched += byEntryId.Count;
                 }
             }
 
@@ -936,8 +1006,53 @@ namespace pwiz.Osprey.Tasks
                     failed.Count, string.Join(", ", failed)));
             }
             ctx.LogVerbose(string.Format(
-                "Patched the second-pass protein q-value onto {0} record(s) across {1} file(s).",
+                "Resolved the second-pass protein q-value for {0} record(s) across {1} file(s).",
                 nPatched, filesPatched));
+
+            // The experiment-scope record set is complete now that protein FDR has filled the
+            // one column it owns, so write it once beside the blib.
+            string experimentPath = FdrExperimentSidecar.PathFor(ctx.Config?.OutputBlib,
+                ScoringTaskShared.ArtifactSiblingPath(ctx.Config), FdrScoresSidecar.Pass.SecondPass);
+            if (string.IsNullOrEmpty(experimentPath))
+            {
+                ctx.LogWarning(
+                    "No output blib to name the 2nd-pass experiment-scope FDR sidecar after, so " +
+                    "this run's experiment q-values are not persisted.");
+                return;
+            }
+            try
+            {
+                FdrExperimentSidecar.Write(experimentPath, experiment.Records,
+                    FdrScoresSidecar.Pass.SecondPass);
+                ctx.LogInfo(string.Format(
+                    @"Wrote experiment-scope FDR sidecar: {0} ({1} distinct entry ids)",
+                    experimentPath, experiment.Count));
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(string.Format(
+                    "Failed to write {0}: {1}", experimentPath, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// The second pass's EXPERIMENT-scope records, published by whichever pass-2 path
+        /// computed them and consumed by <see cref="WritePass2ExperimentSidecar"/> after the
+        /// second-pass protein FDR has filled in the one column it owns.
+        ///
+        /// <para>A context byproduct rather than a return value because the two halves run in
+        /// different places: the q-values come out of the second pass, the protein q out of the
+        /// protein FDR the owning task runs afterwards, and the file cannot be written until
+        /// both are in.</para>
+        /// </summary>
+        internal sealed class Pass2ExperimentScope
+        {
+            public Pass2ExperimentScope(FdrExperimentAccumulator accumulator)
+            {
+                Accumulator = accumulator;
+            }
+
+            public FdrExperimentAccumulator Accumulator { get; }
         }
 
         /// <summary>
@@ -1116,10 +1231,15 @@ namespace pwiz.Osprey.Tasks
             // 2. Per-file scalar sidecar paths. Validate every sidecar up front so we fail fast
             //    (and fall back to the retrain) before streaming any file.
             var fileKeys = new List<string>(fileNames.Count);
-            // Pass-1 experiment q for the OFF-STRATUM peaks Stage 6 changed, read from the
-            // sidecar because the post-rescore overlay already zeroed the in-memory value. Only
-            // that set is stashed, so this stays small however many files there are.
-            var pass1ExpQByKey = new Dictionary<(string, uint), (double prec, double pep)>();
+            // The analysis-wide pass-1 EXPERIMENT-scope records (format v5, issue #4486). This
+            // replaces a per-(file, entry_id) stash of the off-stratum peaks Stage 6 changed:
+            // that stash existed because the post-rescore overlay zeroes an in-memory experiment
+            // q, so the pass-1 value had to be recovered from somewhere, and the only place it
+            // lived was the file's own record. An off-stratum peak keeps its pass-1 experiment q
+            // whether Stage 6 changed it or not, so with one analysis-wide record per entry_id
+            // there is nothing left to stash or to condition on.
+            var pass1Experiment = LoadExperimentRecords(config, FdrScoresSidecar.Pass.FirstPass);
+
             var sidecarByKey = new Dictionary<string, string>(fileNames.Count, StringComparer.Ordinal);
             foreach (string fileName in fileNames)
             {
@@ -1258,7 +1378,8 @@ namespace pwiz.Osprey.Tasks
             // materialized, in place of the whole-pool pass ComputeAndPersist skips for this
             // mode. Capacity grows to the largest file seen rather than being scanned for,
             // because there is no pool to scan.
-            var seeder = new Pass1ScalarSeeder(0);
+            var seeder = new Pass1ScalarSeeder(0,
+                LoadExperimentRecords(config, FdrScoresSidecar.Pass.FirstPass));
             // The streamed phase is otherwise silent; at 163 files that was a 9.6 min gap
             // immediately after the line above announced it. ReadFile is invoked exactly once per
             // file, so counting calls here is an honest per-file progress signal without threading
@@ -1310,12 +1431,6 @@ namespace pwiz.Osprey.Tasks
                         out uint[] eids, out double[] scs, out var fileScores);
                     nScored += fileScores.Count;
 
-                    // Off the records read at the top of this method, not a third pass over the
-                    // file. The apparent ordering dependency is not one: the stash tests each
-                    // record's stored score against fileScores, and fileScores is built above
-                    // from the parquet features, not from the sidecar.
-                    if (stratumBaseIds != null)
-                        StashOffStratumPass1ExperimentQ(fileKey, pass1Records, fileScores);
                     progress.Report(++nRead);
                     return (eids, scs, fileScores);
                 }
@@ -1362,33 +1477,6 @@ namespace pwiz.Osprey.Tasks
                     currentEntries = null;
                 }
 
-                // Capture the pass-1 experiment q of the off-stratum peaks Stage 6 changed, so
-                // the map-back can carry it. "Changed" is the same bit-exact test the admission
-                // uses: the recomputed frozen-model score differs from the sidecar score.
-                //
-                // Over the survivor records already read for this file, which is the whole set
-                // this can select from: the test requires a fileScores entry, and fileScores is
-                // keyed by survivor entry id. Scanning the full-population arrays for a set that
-                // can only contain survivors, and then re-reading the file to fetch their two
-                // q-values, was the second and third traversal this method made of it (#4486).
-                // Nothing is skipped when the set is empty any more, because there is no
-                // remaining read to skip - the loop simply adds nothing.
-                void StashOffStratumPass1ExperimentQ(string fileKey,
-                    IReadOnlyList<FdrScoreRecord> records, IReadOnlyDictionary<uint, double> fileScores)
-                {
-                    foreach (var rec in records)
-                    {
-                        if (stratumBaseIds.Contains(rec.EntryId & 0x7FFFFFFFu) ||
-                            !fileScores.TryGetValue(rec.EntryId, out double ov) ||
-                            ov == rec.Score)
-                        {
-                            continue;
-                        }
-                        pass1ExpQByKey[(fileKey, rec.EntryId)] =
-                            (rec.ExperimentPrecursorQvalue, rec.ExperimentPeptideQvalue);
-                    }
-                }
-
                 competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
                     fileKeys, ReadFile, survivorEntryIds, ApplyFileRunQ, stratumBaseIds);
             }
@@ -1405,33 +1493,65 @@ namespace pwiz.Osprey.Tasks
             //    Over the SIDECARS, not the entries: each file's records carry the entry_id and
             //    run q this needs, and the file's entries have been dropped by now. That is the
             //    point - a pass over the pool here would put every file back in memory at once
-            //    and undo the whole per-file cycle above (#4486). It is also why these four
-            //    columns are patched rather than written: the competition that produces them is
-            //    not complete until every file has been read, which is after each file's own
-            //    sidecar has already been written.
+            //    and undo the whole per-file cycle above (#4486).
+            //
+            //    Three of the four columns are EXPERIMENT-scope and now collapse into the one
+            //    analysis-wide record per entry_id that ctx carries to the protein-FDR step,
+            //    which writes the 2nd-pass experiment sidecar once. Only PEP is written back
+            //    into the per-file file, because it is real on a single observation per base_id
+            //    and an entry_id-keyed record cannot say which - see FdrScoresSidecar.PatchPep.
             int nMapped = 0;
             var unpatched = new List<string>(writeFailures);
+            var experiment = new FdrExperimentAccumulator();
             using (var patchProgress = new ProgressReporter(
                 string.Format("{0}: writing experiment q to {1} file(s)", mode, sidecarsWritten.Count),
                 sidecarsWritten.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int patchIdx = 0;
+                var pepByEntryId = new Dictionary<uint, double>();
                 foreach (string fileKey in sidecarsWritten)
                 {
                     patchProgress.Report(++patchIdx);
                     string inputFile = writer.InputFor(fileKey);
                     if (inputFile == null)
                         continue;
-                    if (!FdrScoresSidecar.PatchExperimentValues(
-                            FdrScoresSidecar.Pass2Path(inputFile), FdrScoresSidecar.Pass.SecondPass,
-                            rec => FinishRecord(fileKey, rec), out int patchedHere))
+                    string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
+                    // Staged, then applied: ReadRecords can return false AFTER invoking the
+                    // callback, so accumulating experiment values as they arrive would leave the
+                    // analysis-wide record half-built from a file that then failed.
+                    pepByEntryId.Clear();
+                    var staged = new List<FdrExperimentRecord>();
+                    if (!FdrScoresSidecar.ReadRecords(pass2Path, FdrScoresSidecar.Pass.SecondPass,
+                            rec =>
+                            {
+                                var finished = FinishRecord(fileKey, rec);
+                                staged.Add(finished.exp);
+                                pepByEntryId[rec.EntryId] = finished.pep;
+                            }))
                     {
                         unpatched.Add(fileKey);
                         continue;
                     }
+                    if (!FdrScoresSidecar.PatchPep(
+                            pass2Path, pepByEntryId, FdrScoresSidecar.Pass.SecondPass,
+                            out int patchedHere))
+                    {
+                        unpatched.Add(fileKey);
+                        continue;
+                    }
+                    foreach (var exp in staged)
+                    {
+                        experiment.Add(exp.EntryId, exp.ExperimentPrecursorQvalue,
+                            exp.ExperimentPeptideQvalue, exp.ExperimentProteinQvalue,
+                            exp.ExperimentAggregateScore);
+                    }
                     nMapped += patchedHere;
                 }
             }
+            // Handed to the protein-FDR step, which fills the one column it owns and writes the
+            // 2nd-pass experiment sidecar. Published rather than returned because the protein
+            // FDR runs in the owning task after this method returns.
+            ctx.Publish(new Pass2ExperimentScope(experiment));
             if (unpatched.Count > 0)
             {
                 // Hard, not a warning. Every column but these four is already final in those
@@ -1452,10 +1572,10 @@ namespace pwiz.Osprey.Tasks
                 mode, nMapped, nScored, sw.Elapsed.TotalSeconds));
             return true;
 
-            // The experiment-scope half of one record, from the bounded competition state. Split
-            // out of the loop above only so the two dispositions - on-stratum recompute and
-            // off-stratum carry-through - read side by side.
-            FdrScoreRecord FinishRecord(string fileKey, FdrScoreRecord rec)
+            // The experiment-scope record for one observation plus its PEP, from the bounded
+            // competition state. Split out of the loop above only so the two dispositions -
+            // on-stratum recompute and off-stratum carry-through - read side by side.
+            (FdrExperimentRecord exp, double pep) FinishRecord(string fileKey, FdrScoreRecord rec)
             {
                 // stratumBaseIds != null IS proteinCompact - written as the null test the branch
                 // actually depends on, so the guard is local to the dereference it protects.
@@ -1472,10 +1592,10 @@ namespace pwiz.Osprey.Tasks
                     // competed above on its recalculated score, and one that did not compete
                     // takes the 1.0 that says so, rather than a stale q describing a peak that
                     // no longer exists (the post-rescore overlay zeroes it for that reason).
-                    if (!pass1ExpQByKey.TryGetValue((fileKey, rec.EntryId), out var q1))
-                        return rec;
-                    return WithExperimentValues(rec, q1.prec, q1.pep, rec.Pep,
-                        rec.ExperimentAggregateScore);
+                    pass1Experiment.TryGetValue(rec.EntryId, out var q1);
+                    return (new FdrExperimentRecord(rec.EntryId,
+                        q1.ExperimentPrecursorQvalue, q1.ExperimentPeptideQvalue,
+                        1.0, q1.ExperimentAggregateScore), rec.Pep);
                 }
                 double eq = competition.ExperimentQ(rec.EntryId, rec.RunPrecursorQvalue);
                 // The aggregate MUST move with the q. This mode recomputes experiment q from a
@@ -1491,26 +1611,15 @@ namespace pwiz.Osprey.Tasks
                 // protein-compact); those keep the pass-1 value, which is correct because they
                 // keep the pass-1 experiment q too - the branch above.
                 double? agg = competition.ExperimentAggregateScore(rec.EntryId);
+                // The protein q goes in at 1.0: the second-pass protein FDR has not run yet, and
+                // it is the one column of this record that the step after it owns.
                 // Precursor-level path: peptide q stays in step with precursor q for the
                 // reported set (peptide-level FDR is not the target here).
-                return WithExperimentValues(rec, eq, eq, competition.Pep(fileKey, rec.EntryId),
-                    agg ?? rec.ExperimentAggregateScore);
+                pass1Experiment.TryGetValue(rec.EntryId, out var prior);
+                return (new FdrExperimentRecord(rec.EntryId, eq, eq, 1.0,
+                        agg ?? prior.ExperimentAggregateScore),
+                    competition.Pep(fileKey, rec.EntryId));
             }
-        }
-
-        /// <summary>
-        /// A copy of <paramref name="rec"/> carrying the four EXPERIMENT-scope values, with
-        /// entry_id, the SVM score, the run q-values and the protein q-value unchanged - the
-        /// exact columns <see cref="FdrScoresSidecar.PatchExperimentValues"/> takes from it.
-        /// </summary>
-        private static FdrScoreRecord WithExperimentValues(
-            FdrScoreRecord rec, double experimentPrecursorQvalue, double experimentPeptideQvalue,
-            double pep, double experimentAggregateScore)
-        {
-            return new FdrScoreRecord(
-                rec.EntryId, rec.Score, rec.RunPrecursorQvalue, rec.RunPeptideQvalue,
-                experimentPrecursorQvalue, experimentPeptideQvalue, pep,
-                rec.ExperimentProteinQvalue, experimentAggregateScore);
         }
 
         /// <summary>
@@ -1812,10 +1921,15 @@ namespace pwiz.Osprey.Tasks
             // StreamingSink assembles + writes each file's .2nd-pass.fdr_scores.bin from
             // the streamed q-values + the survivor's ExperimentProteinQvalue during the score
             // pass, so the q-values are never stored on the projection (issue #4355 / C1).
+            // The EXPERIMENT-scope columns collapse into one record per entry_id, published for
+            // WritePass2ExperimentSidecar to finish and write after the protein FDR runs
+            // (format v5, issue #4486).
+            var experiment = new FdrExperimentAccumulator();
             var sink = new FdrStreamingSink(
-                projections, config, "Second-pass", resolveProteinQ, flushFile);
+                projections, config, "Second-pass", resolveProteinQ, flushFile, experiment);
             FirstPassFdrTask.RunPercolatorFdr(
                 projections, config, ctx, "Second-pass", load2, sink);
+            ctx.Publish(new Pass2ExperimentScope(experiment));
             return projections;
         }
 
@@ -2065,60 +2179,26 @@ namespace pwiz.Osprey.Tasks
             // at Stage-6's q=1.0 (dropped from the output). Rather than degrade one file, fail the
             // transfer here (BEFORE any entry is mutated) so the caller falls back to the 2nd-pass
             // retrain -- hard-fail over warn-and-proceed on silently-invalid output.
-            var globalExpPrecQ = new Dictionary<uint, double>();
-            var globalExpPepQ = new Dictionary<uint, double>();
-            // The experiment aggregate score belongs with the experiment q above: it is the score
-            // that q's competition ranked on, and a gap-fill that takes one without the other
-            // persists a q paired with a score it was never computed from - the exact pairing this
-            // field exists to guarantee. Reduced by MAX rather than the q-values' MIN because
-            // higher is better here, and because 0.0 is FdrEntry.ResetScores' default and sits mid
-            // distribution for a signed discriminant, so max also keeps a reset stub from
-            // displacing a real negative score.
-            var globalExpAgg = new Dictionary<uint, double>();
-            // Per-file progress: reading every file's 1st-pass sidecar ran silently for minutes on
-            // an 82-file join. Console-only; disposed on every exit (including the fallback return).
-            using (var scanProgress = new ProgressReporter(
-                string.Format(@"Reading 1st-pass sidecars for cross-file experiment q from {0} file(s)",
-                    perFileEntries.Count), perFileEntries.Count))
+            // One read of the analysis-wide 1st-pass experiment sidecar, in place of the
+            // per-file scan that used to reduce these three maps by MIN / MAX across every
+            // file's sidecar (format v5, issue #4486). The reduction was collapsing copies:
+            // every file carried the same experiment value for a given entry_id, so a MIN over
+            // them returned that value. Now there is one record to read.
+            var globalExperiment =
+                FdrExperimentSidecar.ReadMap(
+                    FdrExperimentSidecar.PathFor(ctx.Config?.OutputBlib,
+                    ScoringTaskShared.ArtifactSiblingPath(ctx.Config), FdrScoresSidecar.Pass.FirstPass),
+                    FdrScoresSidecar.Pass.FirstPass);
+            if (globalExperiment == null)
             {
-                int scanIdx = 0;
-                foreach (var kvp in perFileEntries)
-                {
-                    scanProgress.Report(++scanIdx);
-                    if (!inputByFileName.TryGetValue(kvp.Key, out string inputFile))
-                        continue;
-                    string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
-                    bool readOk = FdrScoresSidecar.ReadRecords(
-                        pass1Path, FdrScoresSidecar.Pass.FirstPass, rec =>
-                    {
-                        if (!globalExpPrecQ.TryGetValue(rec.EntryId, out double curPrec) ||
-                            rec.ExperimentPrecursorQvalue < curPrec)
-                            globalExpPrecQ[rec.EntryId] = rec.ExperimentPrecursorQvalue;
-                        if (!globalExpPepQ.TryGetValue(rec.EntryId, out double curPep) ||
-                            rec.ExperimentPeptideQvalue < curPep)
-                            globalExpPepQ[rec.EntryId] = rec.ExperimentPeptideQvalue;
-                        // Prefer a REAL aggregate over the 0.0 ResetScores default, rather than
-                        // taking the max - 0.0 sits above 93-99% of measured aggregates, so a max
-                        // would let a single default row outrank every real (negative) one for
-                        // this entry. Same rule, and the same reasoning, as
-                        // CoAssignmentAccumulator.ObserveCutoff; see the comment there for the
-                        // measurement. No 1st-pass sidecar record carries a 0.0 today (0 of 24.7M
-                        // over six SEA-AD files), so this is prophylactic here and essential
-                        // there, where the pass-2 pool does carry stubs.
-                        if (!globalExpAgg.TryGetValue(rec.EntryId, out double curAgg) || curAgg == 0.0 ||
-                            (rec.ExperimentAggregateScore != 0.0 && rec.ExperimentAggregateScore > curAgg))
-                            globalExpAgg[rec.EntryId] = rec.ExperimentAggregateScore;
-                    });
-                    if (!readOk)
-                    {
-                        ctx.LogWarning(string.Format(
-                            "OSPREY_PASS2_QVALUE=transfer: 1st-pass sidecar for '{0}' is missing or " +
-                            "unreadable ({1}); falling back to the 2nd-pass Percolator retrain rather " +
-                            "than silently dropping this file's reconciliation-moved peaks.",
-                            kvp.Key, pass1Path));
-                        return false;
-                    }
-                }
+                // Same disposition the unreadable per-file sidecar had: fall back to the
+                // 2nd-pass retrain rather than silently leaving moved peaks at q = 1.0, which
+                // drops them from the output. Hard-fail over warn-and-proceed.
+                ctx.LogWarning(
+                    "OSPREY_PASS2_QVALUE=transfer: the 1st-pass experiment-scope FDR sidecar is " +
+                    "missing or unreadable; falling back to the 2nd-pass Percolator retrain " +
+                    "rather than silently dropping reconciliation-moved peaks.");
+                return false;
             }
 
             var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
@@ -2180,17 +2260,18 @@ namespace pwiz.Osprey.Tasks
                     FdrScoreRecord? rec1 = null;
                     if (firstPassByEntryId.TryGetValue(entry.EntryId, out FdrScoreRecord recFound))
                         rec1 = recFound;
-                    // Gap-fill peaks (no 1st-pass record) take the precursor's cross-file pass-1
-                    // experiment q, so ClampExperimentQToBestRun (a floor that only raises) lands
-                    // them at the precursor's best-run q; a precursor with no record anywhere -> 1.
-                    double gapExpPrecQ = globalExpPrecQ.TryGetValue(entry.EntryId, out double gPrec) ? gPrec : 1.0;
-                    double gapExpPepQ = globalExpPepQ.TryGetValue(entry.EntryId, out double gPep) ? gPep : 1.0;
-                    // 0.0 when the precursor has no record anywhere, which pairs with the q = 1.0
-                    // above: never competed, never accepted, so nothing reads it.
-                    double gapExpAgg = globalExpAgg.TryGetValue(entry.EntryId, out double gAgg) ? gAgg : 0.0;
-                    switch (AssignPerRunQ(entry, newScore, rec1,
-                        precScoresDesc, precQDesc, pepScoresDesc, pepQDesc,
-                        gapExpPrecQ, gapExpPepQ, gapExpAgg))
+                    // The precursor's analysis-wide pass-1 experiment record, which supplies
+                    // every disposition: an UNCHANGED or MOVED peak carries these values through,
+                    // and a gap-fill peak (no 1st-pass run-scope record) takes them so
+                    // ClampExperimentQToBestRun - a floor that only raises - lands it at the
+                    // precursor's best-run q. A precursor with no record anywhere gets the
+                    // default 1.0 q-values and a 0.0 aggregate, which pair correctly: never
+                    // competed, never accepted, so nothing reads it.
+                    FdrExperimentRecord? exp1 = null;
+                    if (globalExperiment.TryGetValue(entry.EntryId, out var expFound))
+                        exp1 = expFound;
+                    switch (AssignPerRunQ(entry, newScore, rec1, exp1,
+                        precScoresDesc, precQDesc, pepScoresDesc, pepQDesc))
                     {
                         case PerRunClass.Unchanged: nUnchanged++; break;
                         case PerRunClass.Moved: nMoved++; break;
@@ -2231,31 +2312,35 @@ namespace pwiz.Osprey.Tasks
         /// classification. Pure (no I/O): the caller supplies the recomputed frozen-model score
         /// (<paramref name="newScore"/>), the entry's 1st-pass sidecar record
         /// (<paramref name="firstPass"/>, null for a gap-fill), that file's per-run lookup tables,
-        /// and the precursor's cross-file pass-1 experiment q (used ONLY for a gap-fill). The
-        /// experiment q is NEVER derived from a table -- it is the pass-1 carry, frozen by the
-        /// best-peak anchor:
+        /// and the precursor's analysis-wide pass-1 experiment record
+        /// (<paramref name="firstPassExperiment"/>). The experiment values are NEVER derived from
+        /// a table -- they are the pass-1 carry, frozen by the best-peak anchor, and every
+        /// disposition takes them from the same place:
         /// <list type="bullet">
         /// <item>UNCHANGED (<paramref name="newScore"/> == the record's Score, bit-exact): carry the
-        /// full 1st-pass record verbatim.</item>
-        /// <item>MOVED: run q re-mapped from the tables; experiment q + PEP carried from the record.</item>
-        /// <item>GAP-FILL (no record): run q from the tables; experiment q =
-        /// <paramref name="gapFillExpPrecQ"/> / <paramref name="gapFillExpPepQ"/>, and the
-        /// experiment aggregate score = <paramref name="gapFillExpAgg"/> from the same cross-file
-        /// source, so the persisted score and the q it ranked for stay paired.</item>
+        /// 1st-pass run-scope record verbatim.</item>
+        /// <item>MOVED: run q re-mapped from the tables; PEP carried from the record.</item>
+        /// <item>GAP-FILL (no run-scope record): run q from the tables.</item>
         /// </list>
         /// </summary>
         internal static PerRunClass AssignPerRunQ(
             FdrEntry entry,
             double newScore,
             FdrScoreRecord? firstPass,
+            FdrExperimentRecord? firstPassExperiment,
             double[] precScoresDesc,
             double[] precQDesc,
             double[] pepScoresDesc,
-            double[] pepQDesc,
-            double gapFillExpPrecQ,
-            double gapFillExpPepQ,
-            double gapFillExpAgg)
+            double[] pepQDesc)
         {
+            // The EXPERIMENT-scope half is one record per entry_id for the whole analysis
+            // (format v5, issue #4486), so every disposition below reads the same three values -
+            // there is no longer a per-run copy for an unchanged peak to prefer over the
+            // cross-file one a gap-fill peak fell back to. An entry with no record never
+            // competed: q = 1.0, aggregate = 0.0.
+            double expPrecQ = firstPassExperiment?.ExperimentPrecursorQvalue ?? 1.0;
+            double expPepQ = firstPassExperiment?.ExperimentPeptideQvalue ?? 1.0;
+            double expAgg = firstPassExperiment?.ExperimentAggregateScore ?? 0.0;
             if (firstPass.HasValue)
             {
                 FdrScoreRecord rec1 = firstPass.Value;
@@ -2269,38 +2354,38 @@ namespace pwiz.Osprey.Tasks
                     entry.Score = rec1.Score;
                     entry.RunPrecursorQvalue = rec1.RunPrecursorQvalue;
                     entry.RunPeptideQvalue = rec1.RunPeptideQvalue;
-                    entry.ExperimentPrecursorQvalue = rec1.ExperimentPrecursorQvalue;
-                    entry.ExperimentPeptideQvalue = rec1.ExperimentPeptideQvalue;
+                    entry.ExperimentPrecursorQvalue = expPrecQ;
+                    entry.ExperimentPeptideQvalue = expPepQ;
                     entry.Pep = rec1.Pep;
-                    entry.ExperimentAggregateScore = rec1.ExperimentAggregateScore;
+                    entry.ExperimentAggregateScore = expAgg;
                     return PerRunClass.Unchanged;
                 }
                 entry.Score = newScore;
                 entry.RunPrecursorQvalue = LookupQForScore(newScore, precScoresDesc, precQDesc);
                 entry.RunPeptideQvalue = LookupQForScore(newScore, pepScoresDesc, pepQDesc);
                 // Experiment q is a pass-1 property (best-peak anchor) -- carry it, never re-map.
-                entry.ExperimentPrecursorQvalue = rec1.ExperimentPrecursorQvalue;
-                entry.ExperimentPeptideQvalue = rec1.ExperimentPeptideQvalue;
+                entry.ExperimentPrecursorQvalue = expPrecQ;
+                entry.ExperimentPeptideQvalue = expPepQ;
                 entry.Pep = rec1.Pep;
                 // Carried with the experiment q for the same reason, and NOT re-derived from
                 // newScore: it is the score that pass-1 experiment q was computed from, so
                 // re-mapping it to the rescored value would break the pairing that is the
                 // whole point of persisting it.
-                entry.ExperimentAggregateScore = rec1.ExperimentAggregateScore;
+                entry.ExperimentAggregateScore = expAgg;
                 return PerRunClass.Moved;
             }
             entry.Score = newScore;
             entry.RunPrecursorQvalue = LookupQForScore(newScore, precScoresDesc, precQDesc);
             entry.RunPeptideQvalue = LookupQForScore(newScore, pepScoresDesc, pepQDesc);
-            entry.ExperimentPrecursorQvalue = gapFillExpPrecQ;
-            entry.ExperimentPeptideQvalue = gapFillExpPepQ;
+            entry.ExperimentPrecursorQvalue = expPrecQ;
+            entry.ExperimentPeptideQvalue = expPepQ;
             // Carried for the same reason as the experiment q beside it, and from the same
-            // cross-file source: the aggregate is a per-entry roll-up, identical in every file's
-            // record for that entry, so a gap-fill is entitled to it even with no record of its
-            // own. Leaving it at ResetScores' 0.0 would persist a real experiment q next to a
-            // score that q was not computed from, and a score-space acceptance boundary built
-            // from the 2nd-pass sidecar would then be drawn from the wrong ranking.
-            entry.ExperimentAggregateScore = gapFillExpAgg;
+            // record: the aggregate is a per-entry roll-up, so a gap-fill is entitled to it even
+            // with no run-scope record of its own. Leaving it at ResetScores' 0.0 would persist
+            // a real experiment q next to a score that q was not computed from, and a
+            // score-space acceptance boundary built from the 2nd-pass artifacts would then be
+            // drawn from the wrong ranking.
+            entry.ExperimentAggregateScore = expAgg;
             return PerRunClass.GapFill;
         }
 

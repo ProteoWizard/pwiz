@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
@@ -871,6 +871,7 @@ namespace pwiz.Osprey.Tasks
                 bundle = leanStubs
                     ? StreamOwnReconciliationBundle(ctx, perFileEntries, parquetPaths)
                     : RescoreHydration.HydrateReconciliationOverlay(perFileEntries, parquetPaths,
+                        LoadFirstPassExperimentRecords(ctx.Config, ctx),
                         ctx.Get<SequencePool>().Value);
             }
             catch (InvalidDataException ex)
@@ -997,6 +998,7 @@ namespace pwiz.Osprey.Tasks
                     if (mdiagAccumulator != null)
                         ScoringTaskShared.FeedModelDiagnostics(mdiagAccumulator, fileIdx, stubs);
                 },
+                LoadFirstPassExperimentRecords(config, ctx),
                 ctx.Get<SequencePool>().Value);
 
             // The hydrate re-derived every key from its parquet stem, while the accumulator
@@ -1170,7 +1172,8 @@ namespace pwiz.Osprey.Tasks
                     var coAssignment = PeakCoAssignmentSource.Build(
                         perFileEntries.ConvertAll(kv => kv.Key),
                         ctx.Get<PerFileParquetPaths>().Value, config,
-                        mdiagAccumulator.ClassByBaseId, libraryById, ctx.LogInfo);
+                        mdiagAccumulator.ClassByBaseId, libraryById,
+                        LoadFirstPassExperimentRecords(config, ctx), ctx.LogInfo);
                     ModelDiagnosticsReport.WriteFromAccumulator(
                         mdiagAccumulator, contributions, cal, config, ctx.LogInfo, coAssignment);
                 }
@@ -1622,11 +1625,16 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Write the per-file <c>.1st-pass.fdr_scores.bin</c> sidecars at
         /// the pre-compaction Stage 5 boundary (every stub, passing or
-        /// not, gets persisted with its q-values + SVM score). Mirrors
+        /// not, gets persisted with its RUN-scope q-values + SVM score),
+        /// and the one analysis-wide <c>.1st-pass.fdr_experiment.bin</c>
+        /// beside the blib carrying the EXPERIMENT-scope columns. Mirrors
         /// the persist_fdr_scores call in osprey/src/pipeline.rs at line
         /// ~3180 (immediately after first-pass FDR, before compaction or
         /// protein FDR). Stage 6 workers re-apply the q-value threshold
-        /// themselves to derive the post-compaction passing set.
+        /// themselves to derive the post-compaction passing set; the
+        /// protein-rescue half of that predicate reads the experiment
+        /// file, which is why both are written here rather than only the
+        /// per-file half (issue #4486).
         /// </summary>
         /// <returns>
         /// Number of files for which the sidecar write failed (0 means
@@ -1643,6 +1651,7 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             int failures = 0;
+            var experiment = new FdrExperimentAccumulator();
             foreach (var kvp in perFileEntries)
             {
                 string fileName = kvp.Key;
@@ -1653,6 +1662,12 @@ namespace pwiz.Osprey.Tasks
                         "No sidecar base path for `{0}` — skipping fdr_scores.bin write", fileName));
                     failures++;
                     continue;
+                }
+                foreach (var e in kvp.Value)
+                {
+                    experiment.Add(e.EntryId, e.ExperimentPrecursorQvalue,
+                        e.ExperimentPeptideQvalue, e.ExperimentProteinQvalue,
+                        e.ExperimentAggregateScore);
                 }
                 string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
                 try
@@ -1666,7 +1681,47 @@ namespace pwiz.Osprey.Tasks
                     failures++;
                 }
             }
+            failures += WriteExperimentSidecar(
+                experiment, FdrScoresSidecar.Pass.FirstPass, config, ctx);
             return failures;
+        }
+
+        /// <summary>
+        /// Write the one analysis-wide experiment-scope sidecar beside the output blib.
+        /// Counted into the same failure total as the per-file writes, because the Stage 5 →
+        /// Stage 6 boundary is incomplete without it: the compaction predicate's protein-rescue
+        /// half reads this file, so a Stage 6 worker that cannot find it cannot reproduce the
+        /// in-process passing set.
+        /// </summary>
+        /// <returns>1 if the write failed or the analysis has no output blib to name it
+        /// after, 0 on success.</returns>
+        private static int WriteExperimentSidecar(FdrExperimentAccumulator experiment,
+            FdrScoresSidecar.Pass pass, OspreyConfig config, PipelineContext ctx)
+        {
+            string path = FdrExperimentSidecar.PathFor(
+                config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(config), pass);
+            if (string.IsNullOrEmpty(path))
+            {
+                ctx.LogWarning(
+                    "No output blib to name the experiment-scope FDR sidecar after — skipping " +
+                    "fdr_experiment.bin write. Stage 6 compaction will not find the protein " +
+                    "q-values it rescues on.");
+                return 1;
+            }
+            try
+            {
+                FdrExperimentSidecar.Write(path, experiment.Records, pass);
+                ctx.LogInfo(string.Format(
+                    @"Wrote experiment-scope FDR sidecar: {0} ({1} distinct entry ids)",
+                    path, experiment.Count));
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(string.Format(
+                    "Failed to write {0}: {1}", path, ex.Message));
+                return 1;
+            }
         }
 
         /// <summary>
@@ -2140,7 +2195,7 @@ namespace pwiz.Osprey.Tasks
         /// First-pass protein FDR run BEFORE Stage 6 reconciliation, on the
         /// full pre-compaction peptide pool. Sets the one experiment-wide
         /// ExperimentProteinQvalue; the second-pass protein FDR overwrites it
-        /// later, and PatchPass2ProteinQvalues writes that pass-2 value into
+        /// later, and WritePass2ExperimentSidecar writes that pass-2 value into
         /// the 2nd-pass sidecar (#4559). Detected-peptide filter uses
         /// run_peptide_qvalue, the strict peptide-level gate, matching Rust
         /// pipeline.rs:3045-3049 exactly. Protein-FDR gate is config.RunFdr
@@ -2400,8 +2455,12 @@ namespace pwiz.Osprey.Tasks
                 };
             }
 
+            // Collapses the score pass's EXPERIMENT-scope columns to one record per distinct
+            // entry_id (format v5, issue #4486). Protein FDR fills its protein q below, then
+            // the whole thing is written once beside the blib.
+            var experiment = new FdrExperimentAccumulator();
             var sink = new FdrStoringSink(projections, config, @"First-pass", FlushPartialSidecar,
-                mdiagAccumulator);
+                experiment, mdiagAccumulator);
             var featureInfos = OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES);
             var swFdr = Stopwatch.StartNew();
             bool aborted;
@@ -2459,9 +2518,14 @@ namespace pwiz.Osprey.Tasks
                 // from the per-file sidecars just flushed by the score pass, joined to their
                 // parquet apex_rt. Reusing the accumulator's classification avoids re-running the
                 // multi-minute library classification for the same answer.
+                // From the in-memory accumulator, NOT the sidecar: this runs before protein FDR,
+                // and the experiment sidecar is not written until after it. The three columns the
+                // panel reads - experiment precursor q, peptide q and the aggregate - are all
+                // final here; only the protein q, which the panel does not use, is still pending.
                 var coAssignment = PeakCoAssignmentSource.Build(
                     projections.PerFile.ConvertAll(kv => kv.Key), perFileParquetPaths, config,
-                    mdiagAccumulator.ClassByBaseId, ctx.Get<LibraryById>().Value, ctx.LogInfo);
+                    mdiagAccumulator.ClassByBaseId, ctx.Get<LibraryById>().Value,
+                    experiment.Records, ctx.LogInfo);
                 ModelDiagnosticsReport.WriteFromAccumulator(
                     mdiagAccumulator, mdiagContributions, cal, config, ctx.LogInfo, coAssignment);
             }
@@ -2482,7 +2546,8 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogInfo(string.Empty);
                 var swProt = Stopwatch.StartNew();
                 var proteinResult = RunFirstPassProteinFdrStreaming(
-                    projections, perFileParquetPaths, fullLibrary, config, ctx, out patchFailures);
+                    projections, perFileParquetPaths, fullLibrary, config, ctx, experiment,
+                    out patchFailures);
                 if (proteinResult == null)
                     return null;  // streaming sidecar / parquet read fault; ExitCode already set
                 if (ctx.Diagnostics?.DumpProteinFdr ?? false)
@@ -2503,12 +2568,17 @@ namespace pwiz.Osprey.Tasks
                     BuildAndPublishProteinCompactStratum(proteinResult, fullLibrary, ctx);
             }
 
-            // The streaming protein FDR above already patched experiment_protein_qvalue [52..60]
-            // onto each file's sidecar (folding the pre-S2 resident-outputs propagate + the
-            // separate phase-2 patch into one streaming pass). Combine the phase-1
-            // partial-write failures the sink accumulated during the score pass with those
-            // streaming-patch failures for the StopAfterStage5 boundary gate.
-            int sidecarFailures = sink.PartialWriteFailures + patchFailures;
+            // The experiment-scope columns are complete now that protein FDR has resolved its
+            // half, so write the one analysis-wide sidecar. It must land BEFORE
+            // ComputeFirstPassBaseIds below, which reads its protein q for the compaction
+            // predicate's protein-rescue clause.
+            int experimentFailures = WriteExperimentSidecar(
+                experiment, FdrScoresSidecar.Pass.FirstPass, config, ctx);
+
+            // Combine the per-file write failures the sink accumulated during the score pass
+            // with the protein-q resolve failures and the experiment write for the
+            // StopAfterStage5 boundary gate.
+            int sidecarFailures = sink.PartialWriteFailures + patchFailures + experimentFailures;
             if (sidecarFailures > 0 && config.StopAfterStage5)
             {
                 ctx.LogError(string.Format(
@@ -2601,6 +2671,7 @@ namespace pwiz.Osprey.Tasks
             List<LibraryEntry> fullLibrary,
             OspreyConfig config,
             PipelineContext ctx,
+            FdrExperimentAccumulator experiment,
             out int patchFailures)
         {
             patchFailures = 0;
@@ -2625,27 +2696,26 @@ namespace pwiz.Osprey.Tasks
             var result = accumulator.Finish(fullLibrary, config);
             ProteinFdrEngine.LogFirstPassSummary(result, config, ctx.LogInfo);
 
-            // Pass 2: patch each file's experiment_protein_qvalue from peptide -> q. entry_id is
-            // unique within a file, so a per-file entry_id -> q map (one file resident at a
-            // time; bounded) reproduces the resident PropagateProteinQvalues + the phase-2
-            // patch byte-for-byte. The modseq MUST come from the parquet scalars (the same
-            // value the pass-1 PeptideQvalues keys were built from), not re-derived from the
-            // library, so the peptide -> q lookup matches.
+            // Pass 2: resolve each entry's experiment_protein_qvalue from peptide -> q into the
+            // experiment-scope map, which is written once beside the blib after this returns.
+            // The modseq MUST come from the parquet scalars (the same value the pass-1
+            // PeptideQvalues keys were built from), not re-derived from the library, so the
+            // peptide -> q lookup matches.
+            //
+            // Before the v5 scope split this loop REWROTE every file's sidecar to push the
+            // value back in - 52.3 GB of serial, un-parallelizable rewrite at 257 files, in the
+            // stage that is already the bottleneck, to store one number per run of a value that
+            // is the same in every run. It now finishes an in-memory map instead, and the
+            // per-file sidecars written by the score pass are never reopened (issue #4486).
             var peptideQvalues = result.ProteinFdr.PeptideQvalues;
-            int proteinPatchFiles = 0;
-            using (var patchProgress = new ProgressReporter(string.Format(
-                       @"Patching first-pass protein q-values ({0} files)", projections.PerFile.Count), projections.PerFile.Count))
+            int proteinResolveFiles = 0;
+            using (var resolveProgress = new ProgressReporter(string.Format(
+                       @"Resolving first-pass protein q-values ({0} files)", projections.PerFile.Count), projections.PerFile.Count))
             foreach (var kvp in projections.PerFile)
             {
-                patchProgress.Report(++proteinPatchFiles);
+                resolveProgress.Report(++proteinResolveFiles);
                 string fileName = kvp.Key;
-                string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
-                if (string.IsNullOrEmpty(sidecarBase))
-                    continue;  // no on-disk sidecar to patch (phase 1 already counted it)
                 string parquetPath = perFileParquetPaths[fileName];  // present: pass 1 read it
-                string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
-
-                var proteinQByEntryId = new Dictionary<uint, double>();
                 try
                 {
                     ParquetScoreCache.ReadFdrStubScalars(parquetPath,
@@ -2657,21 +2727,13 @@ namespace pwiz.Osprey.Tasks
                             // a null Dictionary key would otherwise throw. See StreamFirstPassFileScores.
                             if (!peptideQvalues.TryGetValue(modseq ?? string.Empty, out q))
                                 q = 1.0;
-                            proteinQByEntryId[entryId] = q;
+                            experiment.SetProteinQvalue(entryId, q);
                         });
-                    if (!FdrScoresSidecar.PatchProteinQvalues(
-                            fdrPath, proteinQByEntryId, FdrScoresSidecar.Pass.FirstPass, out _))
-                    {
-                        ctx.LogWarning(string.Format(
-                            "Failed to patch experiment_protein_qvalue in 1st-pass fdr_scores.bin for {0} " +
-                            "(expected at {1})", fileName, fdrPath));
-                        patchFailures++;
-                    }
                 }
                 catch (Exception ex)
                 {
                     ctx.LogWarning(string.Format(
-                        "Failed to patch 1st-pass fdr_scores.bin for {0}: {1}", fileName, ex.Message));
+                        "Failed to resolve 1st-pass protein q-values for {0}: {1}", fileName, ex.Message));
                     patchFailures++;
                 }
             }
@@ -2775,8 +2837,20 @@ namespace pwiz.Osprey.Tasks
             // Protein-rescue gate is always active (default 0.01), matching Rust
             // pipeline.rs:4651/4658 (protein_compaction_gate = config.protein_fdr, a
             // plain f64, never a null switch). First-pass protein FDR runs unconditionally
-            // on this path too, so experiment_protein_qvalue is populated in the finalized sidecar.
+            // on this path too, so experiment_protein_qvalue is populated.
             double proteinGate = config.EffectiveProteinFdr;
+
+            // The protein-rescue half of the predicate reads an EXPERIMENT-scope value, so it
+            // comes from the analysis-wide sidecar rather than the per-file one (format v5,
+            // issue #4486). Both are Stage 5 outputs and this is Stage 5's own compaction, so
+            // the read is ordinary producer-to-consumer adjacency - and the experiment file was
+            // written above, before this call, precisely so it is available here. An entry with
+            // no experiment record cannot be rescued (its q defaults to 1.0), which is the same
+            // answer the pre-split sidecar's 1.0 placeholder gave.
+            var experimentByEntryId = LoadFirstPassExperimentRecords(config, ctx);
+            if (experimentByEntryId == null)
+                return null;  // ExitCode set in the helper
+
             int compactFiles = 0;
             using (var compactProgress = new ProgressReporter(string.Format(
                        @"Compacting first-pass results ({0} files)", projections.PerFile.Count), projections.PerFile.Count))
@@ -2801,11 +2875,15 @@ namespace pwiz.Osprey.Tasks
                             if ((record.EntryId & LibraryEntry.DECOY_ID_BIT) != 0)
                                 return;
                             uint baseId = record.EntryId & ScoringTaskShared.BASE_ID_MASK;
+                            double proteinQ =
+                                experimentByEntryId.TryGetValue(record.EntryId, out var exp)
+                                    ? exp.ExperimentProteinQvalue
+                                    : 1.0;
                             // The stratum clause (protein-compact) admits present-protein peptides
                             // (>=2 first-pass-detected-peptide proteins) that failed 1st-pass FDR --
                             // identical to the legacy CompactFirstPass twin.
                             if (record.RunPeptideQvalue <= peptideGate ||
-                                record.ExperimentProteinQvalue <= proteinGate ||
+                                proteinQ <= proteinGate ||
                                 (stratum != null && stratum.Contains(baseId)))
                             {
                                 firstPassBaseIds.Add(baseId);
@@ -2820,6 +2898,43 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             return firstPassBaseIds;
+        }
+
+        /// <summary>
+        /// Load the analysis-wide 1st-pass experiment-scope records, for the consumers that
+        /// need an EXPERIMENT-scope column beside the per-file run-scope ones (format v5,
+        /// issue #4486). One file for the whole analysis - ~12.3 M records / 0.44 GB at 257
+        /// files - so it is read whole rather than streamed per input.
+        ///
+        /// <para>Returns <c>null</c> with <c>ExitCode</c> set when the file is missing or
+        /// unreadable. That is deliberately fatal rather than a fallback to 1.0: a silently
+        /// absent protein q turns the compaction predicate's protein-rescue clause off, which
+        /// drops rescued precursors from the reconciliation pool and reports a smaller result
+        /// that still looks like a successful run.</para>
+        /// </summary>
+        private static Dictionary<uint, FdrExperimentRecord> LoadFirstPassExperimentRecords(
+            OspreyConfig config, PipelineContext ctx)
+        {
+            string path = FdrExperimentSidecar.PathFor(
+                config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(config),
+                FdrScoresSidecar.Pass.FirstPass);
+            if (string.IsNullOrEmpty(path))
+            {
+                ctx.LogError(
+                    @"First-pass compaction: no output blib, so no experiment-scope FDR " +
+                    @"sidecar to read the protein-rescue q-values from.");
+                ctx.ExitCode = 1;
+                return null;
+            }
+            var map = FdrExperimentSidecar.ReadMap(path, FdrScoresSidecar.Pass.FirstPass);
+            if (map == null)
+            {
+                ctx.LogError(string.Format(
+                    @"First-pass compaction: failed to read the experiment-scope FDR sidecar " +
+                    @"(expected at {0})", path));
+                ctx.ExitCode = 1;
+            }
+            return map;
         }
 
         /// <summary>

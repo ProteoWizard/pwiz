@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -267,6 +267,7 @@ namespace pwiz.Osprey.Tasks
         public static RescoreInputs HydrateReconciliationOverlay(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IList<string> parquetPaths,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             LibraryStringInterner sequencePool = null)
         {
             if (perFileEntries == null) throw new ArgumentNullException(nameof(perFileEntries));
@@ -302,7 +303,7 @@ namespace pwiz.Osprey.Tasks
                     var stubs = perFileEntries[i].Value;
 
                     OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
-                        nameof(HydrateReconciliationOverlay));
+                        nameof(HydrateReconciliationOverlay), experimentRecords);
 
                     string reconPath = ReconciliationFile.PathForInput(syntheticInput);
                     var envelope = LoadEnvelope(reconPath, nameof(HydrateReconciliationOverlay));
@@ -380,6 +381,7 @@ namespace pwiz.Osprey.Tasks
             IList<string> parquetPaths,
             Func<int, string, string, List<FdrEntry>> loadStubs,
             Action<int, string, List<FdrEntry>, PreCompactionTally> onStubsHydrated,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             LibraryStringInterner sequencePool = null)
         {
             if (perFileEntries == null)
@@ -485,7 +487,7 @@ namespace pwiz.Osprey.Tasks
                     // zeros would compete in the picked-protein null. Same shape as
                     // FirstPassSurvivorLoader's predicate, which asks the survivor test.
                     OverlayFirstPassSidecar(syntheticInputs[i], fileName, stubs,
-                        nameof(HydrateCompactedStreaming),
+                        nameof(HydrateCompactedStreaming), experimentRecords,
                         id => !retainBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
 
                     // The caller's one look at this file's full pre-compaction pool: it fills
@@ -525,12 +527,22 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Overlay SVM scores + 4 q-values + PEP + ExperimentProteinQvalue from
-        /// <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c> v3 onto <paramref name="stubs"/>.
+        /// Overlay the first-pass FDR statistics onto <paramref name="stubs"/>: the RUN-scope
+        /// SVM score, run q-values and PEP from <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c>,
+        /// and the EXPERIMENT-scope q-values from <paramref name="experimentRecords"/>, which
+        /// the caller read once from the analysis-wide
+        /// <c>&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</c> (format v5, issue #4486).
         /// <c>expected_pass = FirstPass</c>: the planner's actions were computed against
         /// first-pass FDR, and the compaction predicate uses first-pass q-values. The stub
         /// list must be the FULL pre-compaction set - the sidecar was written before
         /// compaction and its reader requires a superset of its records.
+        ///
+        /// <para>Both halves are restored because a hydrated stub has to be indistinguishable
+        /// from the resident one it stands in for. The experiment q-values in particular reach
+        /// the <c>--model-diagnostics</c> report through
+        /// <c>ScoringTaskShared.FeedModelDiagnostics</c>, and that report is compared against a
+        /// committed golden - so a stub rehydrated without them would not fail here, it would
+        /// fail as a wrong number in a report two stages later.</para>
         ///
         /// <para><c>expectedAbsent</c> is non-null ONLY for a caller whose list is
         /// legitimately a subset of that: today just <see cref="HydrateCompactedStreaming"/>,
@@ -542,11 +554,15 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private static void OverlayFirstPassSidecar(
             string syntheticInput, string fileName, List<FdrEntry> stubs, string context,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             Func<uint, bool> expectedAbsent = null)
         {
             string sidecarPath = FdrScoresSidecar.Pass1Path(syntheticInput);
+            // The experiment records go THROUGH the reader, not over the stub list afterwards:
+            // the reader applies them to the entries it binds a record to, which is the set a
+            // by-entry_id loop would wrongly widen to include gap-fill stubs.
             if (!FdrScoresSidecar.TryRead(sidecarPath, stubs, FdrScoresSidecar.Pass.FirstPass,
-                    expectedAbsent))
+                    expectedAbsent, experimentRecords))
             {
                 throw new InvalidDataException(string.Format(
                     "{0}: failed to overlay .1st-pass.fdr_scores.bin for {1} (expected at {2})",

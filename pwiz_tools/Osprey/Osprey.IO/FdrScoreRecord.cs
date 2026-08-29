@@ -1,7 +1,7 @@
 /*
  * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -24,16 +24,29 @@
 namespace pwiz.Osprey.IO
 {
     /// <summary>
-    /// One <c>.fdr_scores.bin</c> record's payload (entry_id + SVM score + 4 q-values +
-    /// PEP + experiment_protein_qvalue + experiment_aggregate_score), decoupled from any resident
-    /// buffer (issue #4355 struct-shrink S0). Since the lean <c>FdrProjection</c> no longer
-    /// carries the q-value outputs, the projection sidecar writers assemble records of this
-    /// shape -- the 1st pass from the lean row's <c>EntryId</c>/<c>Score</c> plus the parallel
-    /// outputs array, the 2nd pass from the streamed q-values plus the survivor's
-    /// <c>ExperimentProteinQvalue</c> lookup -- and hand them to
+    /// One per-file <c>.fdr_scores.bin</c> record's payload: the RUN-scope statistics for one
+    /// OBSERVATION - entry_id + SVM score + the two run q-values + PEP. Decoupled from any
+    /// resident buffer (issue #4355 struct-shrink S0), because the lean <c>FdrProjection</c>
+    /// does not carry the q-value outputs, so the projection sidecar writers assemble records
+    /// of this shape and hand them to
     /// <see cref="FdrScoresSidecar.Write(string, System.Collections.Generic.IReadOnlyList{FdrScoreRecord}, FdrScoresSidecar.Pass)"/>.
-    /// The 68-byte byte layout stays single-sourced through
-    /// <c>FdrScoresSidecar.WriteRecord</c>.
+    /// The 36-byte byte layout stays single-sourced through <c>FdrScoresSidecar.WriteRecord</c>.
+    ///
+    /// <para>The four EXPERIMENT-scope columns this struct used to carry -
+    /// <c>experiment_precursor_qvalue</c>, <c>experiment_peptide_qvalue</c>,
+    /// <c>experiment_protein_qvalue</c> and <c>experiment_aggregate_score</c> - moved to
+    /// <see cref="FdrExperimentRecord"/> at format v5 (issue #4486). They are one value per
+    /// DISTINCT entry_id for the whole analysis, so persisting them per observation wrote the
+    /// same number once per run the precursor appears in: 52.3 GB of 1st-pass sidecars at 257
+    /// files against 0.44 GB for the experiment-wide file that replaces the duplication. The
+    /// split is by SCOPE, and it is what makes a per-file sidecar immutable - the experiment
+    /// columns were the only ones that could not be known when the record was written, and
+    /// they are the reason the file used to be rewritten twice after it was created.</para>
+    ///
+    /// <para>Splitting the struct rather than only the byte layout is deliberate: a reader that
+    /// still wants an experiment column now fails to COMPILE. A byte-offset reader left behind
+    /// by a layout-only change compiles, runs, and silently decodes whatever field now occupies
+    /// the offset it remembers.</para>
     /// </summary>
     public readonly struct FdrScoreRecord
     {
@@ -41,51 +54,31 @@ namespace pwiz.Osprey.IO
         public readonly double Score;
         public readonly double RunPrecursorQvalue;
         public readonly double RunPeptideQvalue;
-        public readonly double ExperimentPrecursorQvalue;
-        public readonly double ExperimentPeptideQvalue;
-        public readonly double Pep;
-        public readonly double ExperimentProteinQvalue;
 
         /// <summary>
-        /// The per-entry score the EXPERIMENT-scope competitions ranked this entry on, beside
-        /// the experiment q-values it produced (v4). <see cref="Score"/> is the per-ROW SVM
-        /// discriminant, which is the quantity the RUN-scope q-values compete on; the
-        /// experiment scope instead competes on a per-entry roll-up across runs, and without
-        /// it persisted no consumer can re-gate at experiment scope -- it has to rebuild the
-        /// roll-up itself and branch on <c>OSPREY_EXPERIMENT_AGG</c>, which silently gives the
-        /// wrong answer on exactly the arms where the aggregation is under study.
+        /// Posterior error probability for this observation. Real only on the single
+        /// experiment-winner observation of each base_id - the winner set the estimator was fit
+        /// over (<c>PercolatorQValues.ComputePepWinnerMap</c>) - so every other observation of
+        /// that precursor carries 1.0.
         ///
-        /// <para>Under the default aggregation this is the max over the entry's rows across
-        /// all runs; under mean-best-N it is
-        /// <c>TargetDecoyCompetition.ComputeBaseIdMeanBestN</c>'s value for the entry. Every
-        /// row of an entry carries the same value in both modes, so a consumer reads it and
-        /// compares -- no reduction, no branch. See
-        /// <c>PercolatorQValues.ComputeExperimentAggregateScoreMap</c>.</para>
-        ///
-        /// <para>Not a general q-to-score inverse: the best-of-runs clamp
-        /// (<c>ClampExperimentQToBestRunFlat</c>, issue #4390) floors an experiment q up to a
-        /// RUN q, so after clamping the experiment q is not a monotone function of this score.
-        /// This field is the score its competition ranked on, which is what a score-space
-        /// acceptance boundary needs; it is not a way to turn any q threshold back into a
-        /// score threshold.</para>
+        /// <para>Kept in the per-OBSERVATION record even though the competition that produces it
+        /// is experiment-wide, because which observation won is exactly the information an
+        /// entry_id-keyed experiment record cannot express. Consequence for the 2nd pass: the
+        /// value is not knowable when a file's records are written mid-stream, which is why
+        /// <see cref="FdrScoresSidecar.PatchPep"/> exists and is the one patch the v5 scope
+        /// split did not delete.</para>
         /// </summary>
-        public readonly double ExperimentAggregateScore;
+        public readonly double Pep;
 
         public FdrScoreRecord(
             uint entryId, double score,
-            double runPrecursorQvalue, double runPeptideQvalue,
-            double experimentPrecursorQvalue, double experimentPeptideQvalue,
-            double pep, double experimentProteinQvalue, double experimentAggregateScore)
+            double runPrecursorQvalue, double runPeptideQvalue, double pep)
         {
             EntryId = entryId;
             Score = score;
             RunPrecursorQvalue = runPrecursorQvalue;
             RunPeptideQvalue = runPeptideQvalue;
-            ExperimentPrecursorQvalue = experimentPrecursorQvalue;
-            ExperimentPeptideQvalue = experimentPeptideQvalue;
             Pep = pep;
-            ExperimentProteinQvalue = experimentProteinQvalue;
-            ExperimentAggregateScore = experimentAggregateScore;
         }
     }
 }

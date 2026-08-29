@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -80,6 +80,17 @@ namespace pwiz.Osprey.Tasks
         private readonly OspreyConfig _config;
         private readonly HashSet<uint> _firstPassBaseIds;
 
+        /// <summary>
+        /// The analysis-wide 1st-pass EXPERIMENT-scope records, keyed by entry_id (format v5,
+        /// issue #4486). Read ONCE here rather than per file for the same reason
+        /// <see cref="_sequencePool"/> is frozen: <c>PerFileRescoreTask</c> drives
+        /// <see cref="Load(string,out string)"/> from inside a <c>Parallel.For</c>, so anything
+        /// this type touches per file has to be read-only by then. Null when the analysis has
+        /// no experiment sidecar, which leaves every survivor at its default experiment
+        /// q-values - the same state a run with no experiment competition would produce.
+        /// </summary>
+        private readonly IReadOnlyDictionary<uint, FdrExperimentRecord> _experimentRecords;
+
         /// <param name="perFileParquetPaths">file name -> its original
         /// <c>.scores.parquet</c>, the same map Stage 5 resolves sidecar paths from.</param>
         /// <param name="config">Run config, for the sidecar base-path resolution.</param>
@@ -97,6 +108,10 @@ namespace pwiz.Osprey.Tasks
             _config = config;
             _firstPassBaseIds = firstPassBaseIds;
             _sequencePool = sequencePool;
+            _experimentRecords = FdrExperimentSidecar.ReadMap(
+                FdrExperimentSidecar.PathFor(config?.OutputBlib,
+                    ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
+                FdrScoresSidecar.Pass.FirstPass);
         }
 
         /// <summary>
@@ -189,7 +204,7 @@ namespace pwiz.Osprey.Tasks
                 fileName, _perFileParquetPaths, _config);
             string pass1Path = FdrScoresSidecar.Pass1Path(sidecarBase);
             if (!FdrScoresSidecar.TryRead(pass1Path, stubs, FdrScoresSidecar.Pass.FirstPass,
-                    entryId => !isSurvivor(entryId)))
+                    entryId => !isSurvivor(entryId), _experimentRecords))
             {
                 error = string.Format(
                     @"First-pass survivor load: failed to overlay .1st-pass.fdr_scores.bin for {0} " +

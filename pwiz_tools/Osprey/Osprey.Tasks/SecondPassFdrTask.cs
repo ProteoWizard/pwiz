@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -497,7 +497,7 @@ namespace pwiz.Osprey.Tasks
             // mode that promises to touch no artifact but the report.
             if (!config.DiagnosticsOnly)
             {
-                Pass2FdrSidecar.PatchPass2ProteinQvalues(
+                Pass2FdrSidecar.WritePass2ExperimentSidecar(
                     ctx, rescored.FileNames, perFileParquetPaths, result.ProteinFdr.PeptideQvalues);
             }
 

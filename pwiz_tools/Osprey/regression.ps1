@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Osprey overnight end-to-end regression. Self-contained entry point for
     the scheduled TeamCity "Osprey Windows .NET Regression" config (via
@@ -1303,6 +1303,14 @@ function Invoke-HpcChain {
         # the GBDT golden, so guard with Test-Path.
         $ph2model = Join-Path $ph2 "$s.1st-pass.model.json"
         if (Test-Path $ph2model) { Copy-Item $ph2model (Join-Path $ph3 "$s.1st-pass.model.json") }
+        # The analysis-wide EXPERIMENT-scope sidecar (format v5, issue #4486) rides the same
+        # relay. It is a RUN-level file, not per-stem - one record per distinct entry_id for the
+        # whole analysis - but it is copied inside this per-stem loop because each stem gets its
+        # own phase-3 directory and a PerFileRescoring worker reads it from its own working
+        # directory. Stage 6's compaction reads the protein-rescue q out of this file, so a
+        # worker that cannot see it computes a different survivor set than straight-through.
+        $ph2exp = Join-Path $ph2 'output.1st-pass.fdr_experiment.bin'
+        if (Test-Path $ph2exp) { Copy-Item $ph2exp (Join-Path $ph3 'output.1st-pass.fdr_experiment.bin') }
         Copy-LibraryInto -Library $Library -Dir $ph3 -Manifest $Manifest
         $a3 = @('--task', 'PerFileRescoring', '--input-scores', "$s.scores.parquet",
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
@@ -1350,6 +1358,10 @@ function Invoke-HpcChain {
         # protein-compact's stratum rides inside this same sidecar, so it needs no second hop.
         $modelSide = Join-Path $ph3 "$s.1st-pass.model.json"
         if (Test-Path $modelSide) { Copy-Item $modelSide (Join-Path $ph4 "$s.1st-pass.model.json") }
+        # Same relay for the analysis-wide experiment sidecar: SecondPassFDR seeds pass-1
+        # scalars from it, and $ph2 is gone by now, so phase 3 is its only route here.
+        $ph3exp = Join-Path $ph3 'output.1st-pass.fdr_experiment.bin'
+        if (Test-Path $ph3exp) { Copy-Item $ph3exp (Join-Path $ph4 'output.1st-pass.fdr_experiment.bin') -Force }
         # No 2nd-pass bin relay. There was a `if (Test-Path ...) { Copy-Item ... }` here, and
         # it could never fire: --task PerFileRescoring sets NoJoin, so SecondPassFdrTask is not
         # in a phase-3 worker's pipeline and no such file exists to copy. Worse than dead - had
@@ -1585,6 +1597,39 @@ foreach ($name in $selected) {
             $cmp.Issues | ForEach-Object { $m3sIssues.Add("pass${sidecarPass}: $_") }
             $m3sCompared += $cmp.Compared
         }
+        # And the analysis-wide EXPERIMENT-scope sidecars (format v5, issue #4486). A byte
+        # comparison is exact here and needs no field decoder: both routes write one record per
+        # distinct entry_id in ascending entry_id order, so the file is a function of its
+        # contents rather than of the order the route walked its inputs. Absence is a FAILURE,
+        # not a skip - these files carry the experiment q-values the per-file sidecars used to,
+        # so a route that stopped writing one would otherwise pass this leg by having nothing to
+        # compare.
+        foreach ($expPass in '1st-pass', '2nd-pass') {
+            $expName = "*.$expPass.fdr_experiment.bin"
+            $expStraight = @(Get-ChildItem -File -Path $straightDir -Filter $expName -ErrorAction SilentlyContinue)
+            $expChain = @(Get-ChildItem -File -Path $chainDir -Filter $expName -ErrorAction SilentlyContinue)
+            if ($expStraight.Count -eq 0 -or $expChain.Count -eq 0) {
+                $m3sIssues.Add("$expName : straight-through has $($expStraight.Count), chain has $($expChain.Count) - expected one each")
+                continue
+            }
+            # OspreyFdrSidecarComparer.CompareBytes, NOT Compare-Object: this is a memcmp, and
+            # Compare-Object boxes every byte into a PSObject and hashes it. On Astral (85.8 MB,
+            # 2,498,773 records) that took the harness process to a 53 GB working set and stalled
+            # this leg for many minutes; the span compare is under a second.
+            $expDiff = [OspreyFdrSidecarComparer]::CompareBytes(
+                $expStraight[0].FullName, $expChain[0].FullName, 1000)
+            if (-not $expDiff.Readable) {
+                $m3sIssues.Add("$expName : $($expDiff.Problem)")
+            } elseif (-not $expDiff.Equal) {
+                $m3sIssues.Add(("{0} : {1} differs between routes - lengths {2} vs {3}, first " +
+                    "difference at byte {4}, {5}+ differing byte(s)") -f $expName,
+                    $expStraight[0].Name, $expDiff.LengthExpected, $expDiff.LengthActual,
+                    $expDiff.FirstDiffOffset, $expDiff.DiffCount)
+            } else {
+                $m3sCompared += [int](([System.IO.FileInfo]$expStraight[0].FullName).Length - 32) / 36
+            }
+        }
+
         # Liveness: a comparison that verified nothing is not a passing comparison. Empty or
         # absent sidecars satisfy every field check trivially while breaking every resume,
         # and the rest of this harness fails closed on the same shape (Invoke-ResumeInvalidation
