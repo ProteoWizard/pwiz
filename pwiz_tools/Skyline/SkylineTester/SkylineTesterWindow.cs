@@ -852,8 +852,8 @@ namespace SkylineTester
         /// <summary>
         /// The staged test directory for one configuration, or null when nothing is staged there.
         /// <para>The staging script assembles TestRunner.exe, the test DLLs and Skyline under
-        /// &lt;checkout&gt;\pwiz_tools\Skyline\bin\staging-net8[-record/-validate]\&lt;Config&gt;. The
-        /// canonical "staging-net8" wins over the workflow-specific subsets when both are present.</para>
+        /// &lt;checkout&gt;\pwiz_tools\Skyline\bin\staging[-record/-validate]\&lt;Config&gt;. The
+        /// canonical "staging" wins over the workflow-specific subsets when both are present.</para>
         /// </summary>
         /// <summary>
         /// The Skyline project directory this program was built into, or null when the layout is
@@ -1005,7 +1005,7 @@ namespace SkylineTester
             if (!IsStagingDir(buildDir))
                 return true;
 
-            // <Skyline>\bin\staging-net8\<Config> - the configuration is the leaf
+            // <Skyline>\bin\staging\<Config> - the configuration is the leaf
             var configuration = Path.GetFileName(buildDir);
             var skylineDir = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(buildDir)));
             if (skylineDir == null)
@@ -1092,7 +1092,7 @@ namespace SkylineTester
 
         /// <summary>
         /// True for the staged directories the staging script assembles
-        /// (&lt;Skyline&gt;\bin\staging-net8*\&lt;Config&gt;), which is where net8 tests run from. Keying
+        /// (&lt;Skyline&gt;\bin\staging*\&lt;Config&gt;), which is where the staged tests run from. Keying
         /// off the directory shape rather than the compiled framework keeps this correct wherever the
         /// staged layout is used, and needs no conditional compilation.
         /// </summary>

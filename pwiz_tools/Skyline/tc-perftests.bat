@@ -138,7 +138,7 @@ if %EXIT% NEQ 0 goto error
 
 REM # ------------------------------------------------------------------------
 REM # Stage step. Merge Skyline + TestRunner + TestPerf + TestTutorial into one
-REM # bin\staging-net8\<Config> (the single-bin layout TestRunner + the Docker
+REM # bin\staging\<Config> (the single-bin layout TestRunner + the Docker
 REM # workers assume). ONE project per call, because the first call also bundles
 REM # the portable .NET runtime (for the Docker workers under --parallel) and the
 REM # rest pass -NoRuntime to skip re-staging it. A comma-joined -Projects list

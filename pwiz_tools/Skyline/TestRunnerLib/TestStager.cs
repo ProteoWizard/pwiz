@@ -43,7 +43,11 @@ namespace TestRunnerLib
     public class TestStager
     {
         public const string TFM = "net10.0-windows";
-        public const string STAGING_ROOT = "staging-net8";
+        // NOT named after the target framework. It was "staging-net8" until the net10 retarget,
+        // and build.bat, tc-perftests.bat, SkylineTester.csproj and SkylineNightly all key off
+        // "staging" - SkylineNightly actively SKIPS any "staging-net<tfm>" as a pre-rename
+        // leftover, so a framework-named root here is silently ignored by the nightly.
+        public const string STAGING_ROOT = "staging";
 
         /// <summary>
         /// TestTutorial and TestPerf are in SkylineTester's test DLL list, so leaving them out
@@ -111,7 +115,7 @@ namespace TestRunnerLib
                     StagePortableRuntime();
             }
 
-            _log($"Staged net8 tests to: {StagingDir}");
+            _log($"Staged tests to: {StagingDir}");
         }
 
         /// <summary>
