@@ -102,11 +102,11 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// Second-pass / run-wide protein FDR (SecondPassFDR, post Stage-6): collects
         /// best peptide scores, gates the detected-peptide set on experiment-level
-        /// q-value, builds parsimony, runs picked-protein FDR at
-        /// <see cref="OspreyConfig.RunFdr"/>, and propagates
-        /// <see cref="FdrEntry.ExperimentProteinQvalue"/> onto every stub, OVERWRITING the
-        /// first-pass value the Stage-5 run left there (the pass-1 value has already been
-        /// captured into the 1st-pass sidecar by then). Logs
+        /// q-value, builds parsimony, and runs picked-protein FDR at
+        /// <see cref="OspreyConfig.RunFdr"/>. The second-pass protein q reaches
+        /// consumers through the caller's per-file sidecar patch, NOT the pool:
+        /// <see cref="FdrEntry.ExperimentProteinQvalue"/> on the stubs keeps its
+        /// first-pass value after this runs. Logs
         /// summary counts via <paramref name="logInfo"/> (which may be null for a
         /// silent run, like <c>RunFirstPass</c>) and returns the parsimony /
         /// FDR artifacts so the Tasks facade can emit the Stage-7 detected-peptides

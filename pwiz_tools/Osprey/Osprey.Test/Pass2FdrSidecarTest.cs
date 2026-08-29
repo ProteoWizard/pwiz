@@ -100,7 +100,7 @@ namespace pwiz.Osprey.Test
         /// Guards the byte-identity invariant behind increment (A): the scan-omitted
         /// 2nd-pass projection sort key <c>(EntryId, Charge, ParquetIndex)</c> -- where
         /// <c>ParquetIndex</c> is the RECONCILED-parquet row baked by
-        /// <see cref="Pass2FdrSidecar.BuildReconciledScoreIndexToRow"/> -- must produce
+        /// <see cref="Pass2FdrSidecar.BuildReconciledScoreIndexToRow"/> - must produce
         /// the SAME row order as the legacy/oracle resident sort key
         /// <c>(EntryId, Charge, ScanNumber, original-ParquetIndex)</c> (the FdrEntry
         /// overload of <c>PercolatorEngine.RunPercolatorFdr</c>). The two provably
@@ -121,7 +121,7 @@ namespace pwiz.Osprey.Test
         /// reconciled parquet is produced by the REAL Stage-6 path -- the gap-fill is
         /// merged into canonical scan position by
         /// <c>ParquetScoreCache.StreamReconciledScoresParquet</c> and read back through
-        /// <c>BuildReconciledScoreIndexToRow</c> -- so the tie/gap-fill placement is
+        /// <c>BuildReconciledScoreIndexToRow</c> - so the tie/gap-fill placement is
         /// production's, not a mock. The projection itself is baked by the real
         /// <see cref="FdrProjectionSet.BuildFromEntries"/> resolver path.
         /// </summary>

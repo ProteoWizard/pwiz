@@ -32,7 +32,8 @@ namespace pwiz.Osprey.Core
     /// (issue #4486). Two copies of a gate would leave the byte-identity oracle comparing two
     /// different pieces of code rather than two representations of the same data.</para>
     ///
-    /// <para>Implemented by a struct as well as by <see cref="FdrEntry"/>, so consumers must be
+    /// <para>Today <see cref="FdrEntry"/> is the only implementer; the planned sidecar-derived
+    /// lean row is the struct second implementer this seam exists for. Consumers must be
     /// generic - <c>where T : IFdrRow</c> - rather than taking the interface. A generic
     /// constraint compiles to a constrained call that neither boxes the struct nor allocates;
     /// taking <c>IFdrRow</c> directly would box every one of 137 M rows.</para>

@@ -273,7 +273,7 @@ namespace pwiz.Osprey.Tasks
             // reloads them onto the stubs so downstream protein FDR + blib see the 2nd-pass
             // q-values.
             pass2Contributions = Pass2FdrSidecar.ComputeAndPersist(
-                ctx, AnyReconciledParquet(config), rescored, perFileEntries, perFileParquetPaths,
+                ctx, AnyReconciledParquet(config), rescored, perFileParquetPaths,
                 Name, ValidityKey(ctx));
             // The substep the 2026-07-31 characterization on #4486 located the churn in:
             // it reloads every file's reconciled features, so the pre-GC line carries the
@@ -589,8 +589,16 @@ namespace pwiz.Osprey.Tasks
                     continue;
                 var metadata = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
                 metadata.TryGetValue(@"osprey.reconciled", out string marker);
+                // Stale is EITHER an older generation (marker mismatch) OR the interim
+                // #4486 shape - survivor subset with no score_index column - which the
+                // per-file loaders would otherwise read by POSITION, silently binding
+                // every survivor to another row's features (the refusal
+                // IsSubsetWithoutScoreIndex documents). Only FirstPassSurvivorLoader
+                // carried that refusal; the pass-2 feature loaders reach the same file
+                // through this gate, so it has to ask the same question.
                 if (!string.Equals(marker, ParquetScoreCache.RECONCILED_SURVIVORS,
-                        StringComparison.Ordinal))
+                        StringComparison.Ordinal) ||
+                    ParquetScoreCache.IsSubsetWithoutScoreIndex(reconciledPath))
                 {
                     stale.Add(kv.Key);
                 }
@@ -674,8 +682,7 @@ namespace pwiz.Osprey.Tasks
             // consumer looks up keys from bestByPrecursor, which are passing by construction.
             var bestExpPrecursorQ = BuildBestExpPrecursorQ(passingEntries);
 
-            var sharedBounds = BuildSharedBoundaries(
-                passingEntries, MultiChargePeptides(passingPrecursors));
+            var sharedBounds = BuildSharedBoundaries(passingEntries);
 
             var precursorFacts = BuildPrecursorFacts(passingEntries, config.RunFdr);
 
@@ -879,32 +886,16 @@ namespace pwiz.Osprey.Tasks
         // run_qvalue. Mirrors Rust pipeline.rs build_shared_boundaries_from_plan.
         // Key: (modseq, fileName); value: { apexRt, startRt, endRt, run_q, charge }
         // from the min-run-qvalue entry (charge breaks run_qvalue ties).
-        /// <summary>
-        /// The peptides with more than one passing charge state, taken from
-        /// <paramref name="passingPrecursors"/> - 45,724 keys at 257 CHS files, so this costs
-        /// nothing to build and is the whole reason the boundary map can stay small.
-        /// </summary>
-        private static HashSet<string> MultiChargePeptides(
-            HashSet<(string, byte)> passingPrecursors)
-        {
-            var seenCharge = new Dictionary<string, byte>(StringComparer.Ordinal);
-            var multi = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var key in passingPrecursors)
-            {
-                if (!seenCharge.TryGetValue(key.Item1, out byte first))
-                {
-                    seenCharge[key.Item1] = key.Item2;
-                    continue;
-                }
-                if (first != key.Item2)
-                    multi.Add(key.Item1);
-            }
-            return multi;
-        }
-
+        //
+        // EVERY (peptide, file) key is stored, exactly as Rust stores it. A
+        // multi-charge pre-filter was tried here (a single-charge peptide "is its
+        // own winner"), but that claim fails when one (peptide, charge, file) has
+        // multiple passing rows - overlapping-window gap-fill emits one row per
+        // window - where the winner coalesces the duplicates' boundaries and each
+        // row's own values do not. The filter saved a ~40K-key map and risked a
+        // silent cross-impl divergence for it.
         internal static Dictionary<(string, string), double[]> BuildSharedBoundaries(
-            List<PassingObservation> passingEntries,
-            HashSet<string> multiChargePeptides)
+            List<PassingObservation> passingEntries)
         {
             var sharedBounds = new Dictionary<(string, string), double[]>();
             using (var progress = new ProgressReporter(
@@ -916,20 +907,6 @@ namespace pwiz.Osprey.Tasks
                 foreach (var e in passingEntries)
                 {
                     progress.Report(boundsIdx++);
-                    // A peptide with ONE passing charge is its own winner in every run, so
-                    // the entry it would store equals the entry's own boundaries - and both
-                    // readers (EmitSpectrumRows and WriteRetentionTimes) already initialize
-                    // from the entry and overwrite only on a hit. Storing those keys was
-                    // filling the map with its own fallback. At 257 CHS files the passing set
-                    // is 45,724 precursors over ~40,000 peptides, so this drops roughly six
-                    // keys in seven, and it drops them BEFORE insertion rather than pruning
-                    // afterwards, which is the difference between a smaller map and a smaller
-                    // peak.
-                    if (multiChargePeptides != null &&
-                        !multiChargePeptides.Contains(e.ModifiedSequence))
-                    {
-                        continue;
-                    }
                     var sk = (e.ModifiedSequence, e.FileName);
                     double rq = e.RunQvalue;
                     double[] existingB;

@@ -677,6 +677,10 @@ namespace pwiz.Osprey.Tasks
                 GapFill = perFileGapFill,
                 ParquetPaths = perFileParquetPaths,
                 FullLibrary = fullLibrary,
+                // The run's shared entry_id index. The reconciled-parquet writer
+                // used to build its own ~6.3M-entry copy of this map per FILE,
+                // under Parallel.For - loop-invariant work at O(files x library).
+                LibraryById = ctx.Get<LibraryById>().Value,
                 Config = config,
                 FileNameToIdx = fileNameToIdx,
                 TaskValidityKey = ValidityKey(ctx),
@@ -799,6 +803,7 @@ namespace pwiz.Osprey.Tasks
             public IReadOnlyDictionary<string, List<GapFillTarget>> GapFill;
             public IReadOnlyDictionary<string, string> ParquetPaths;
             public List<LibraryEntry> FullLibrary;
+            public IReadOnlyDictionary<uint, LibraryEntry> LibraryById;
             public OspreyConfig Config;
             public Dictionary<string, int> FileNameToIdx;
             public string TaskValidityKey;
@@ -1343,7 +1348,7 @@ namespace pwiz.Osprey.Tasks
 
             string reconciledOutPath = ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
             bool wrote = ReconciledParquetWriter.Write(parquetPath, reconciledOutPath, fdrEntries, fileName,
-                inputs.FullLibrary, config, inputs.JoinFileStems, ctx.LogInfo, ctx.LogWarning);
+                inputs.LibraryById, config, inputs.JoinFileStems, ctx.LogInfo, ctx.LogWarning);
 
             if (wrote)
             {
@@ -1381,7 +1386,7 @@ namespace pwiz.Osprey.Tasks
         /// input has one on disk.
         ///
         /// <para>The output is a faithful copy: <c>ReconciledParquetWriter.BuildOverlay</c>
-        /// selects gap-fill by <c>ParquetIndex == uint.MaxValue</c> and re-scored rows by a
+        /// selects gap-fill by a null <c>ParquetIndex</c> and re-scored rows by a
         /// non-null <c>Features</c>, and a no-work file has neither, so the stream replaces
         /// nothing and appends nothing. Only the reconciliation metadata is added.</para>
         ///
@@ -1611,7 +1616,8 @@ namespace pwiz.Osprey.Tasks
         /// reconciled boundary fields are copied in place, the original
         /// ParquetIndex + 1st-pass Score / q-values are PRESERVED (matching what
         /// CompactedEntries + the PR-D worker-strict gate established), and
-        /// gap-fill rows are appended with <c>ParquetIndex = uint.MaxValue</c>.
+        /// gap-fill rows are appended carrying the <c>score_index</c> numbering
+        /// the reconciled-parquet writer gave them.
         /// Non-passing reconciled rows (compacted out of the buffer) are skipped,
         /// matching the buffer a fresh run produces.
         /// </summary>
@@ -1716,8 +1722,8 @@ namespace pwiz.Osprey.Tasks
             }
 
             // Append gap-fill rows. A fresh run appends one stub per gap-fill
-            // target (decoys already excluded by the planner) with ParquetIndex =
-            // uint.MaxValue. Pull the reconciled row for each target EntryId that
+            // target (decoys already excluded by the planner) with no
+            // ParquetIndex. Pull the reconciled row for each target EntryId that
             // is not already in the buffer; append in ascending TargetEntryId order
             // for determinism. Targets whose reconciled row is missing (no peak)
             // are skipped -- a fresh run would not have appended a stub either.
@@ -2315,12 +2321,12 @@ namespace pwiz.Osprey.Tasks
                     cwtHitIds.Add(entry.EntryId);
                 nGapCwt = cwtResults.Count;
 
-                // Collect the CWT results as new FdrEntry stubs with the
-                // gap-fill sentinel + score-reset (mirroring Rust
+                // Collect the CWT results as new FdrEntry stubs with no Stage 4
+                // row (null ParquetIndex) + score-reset (mirroring Rust
                 // to_fdr_entry semantics for new stubs).
                 foreach (var entry in cwtResults)
                 {
-                    entry.ParquetIndex = uint.MaxValue;
+                    entry.ParquetIndex = null;
                     entry.ResetScores();
                     gapFillAppended.Add(entry);
                 }
@@ -2374,7 +2380,7 @@ namespace pwiz.Osprey.Tasks
 
                 foreach (var entry in forcedResults)
                 {
-                    entry.ParquetIndex = uint.MaxValue;
+                    entry.ParquetIndex = null;
                     entry.ResetScores();
                     gapFillAppended.Add(entry);
                 }
@@ -2396,7 +2402,7 @@ namespace pwiz.Osprey.Tasks
             // DeduplicatePairs or DeduplicateDoubleCounting, and ScoreWindow admits a candidate
             // per isolation window, so one target scored in two overlapping windows emits two
             // rows. Charge and ScanNumber separate them, and every row carries the same
-            // uint.MaxValue ParquetIndex sentinel - so the comparison can only tie on rows that
+            // null ParquetIndex (no Stage 4 row) - so the comparison can only tie on rows that
             // agree on all four keys, which are indistinguishable anyway. The rebuild-from-disk
             // reproduces this by appending EVERY reconciled row for a target, in the parquet's
             // canonical (entry_id, charge, scan) order, which is the order this sort produces.

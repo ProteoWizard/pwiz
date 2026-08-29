@@ -552,8 +552,10 @@ namespace pwiz.Osprey.IO
             // Accumulated locally and published only after Commit, so a failed patch reports
             // zero rather than a count for records the caller's file never actually kept.
             int nPatchedHere = 0;
-            if (path == null) throw new ArgumentNullException(nameof(path));
-            if (patch == null) throw new ArgumentNullException(nameof(patch));
+            if (path == null)
+                throw new ArgumentNullException(nameof(path));
+            if (patch == null)
+                throw new ArgumentNullException(nameof(patch));
 
             try
             {

@@ -59,7 +59,8 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static bool Write(string originalPath, string reconciledPath,
             List<FdrEntry> fdrEntries,
-            string fileName, List<LibraryEntry> fullLibrary, OspreyConfig config,
+            string fileName, IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            OspreyConfig config,
             IReadOnlyList<string> joinFileStems,
             Action<string> logInfo, Action<string> logWarning)
         {
@@ -70,10 +71,9 @@ namespace pwiz.Osprey.Tasks
             var gapFill = new List<FdrEntry>();
             BuildOverlay(fdrEntries, overlayByIndex, gapFill);
 
-            // 2. libraryById for the sequence / precursor_mz / protein_ids columns.
-            var libraryById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
-            foreach (var libEntry in fullLibrary)
-                libraryById[libEntry.Id] = libEntry;
+            // 2. libraryById (the run's shared entry_id index, passed in rather than
+            //    rebuilt per file) serves the sequence / precursor_mz / protein_ids
+            //    columns.
 
             // 3. Reconciliation metadata (mirrors Rust build_reconciled_metadata).
             //    Whether this file had rescore work at all is recorded here, because the
@@ -148,8 +148,8 @@ namespace pwiz.Osprey.Tasks
         /// hydration's LoadFdrStubsFromParquet does NOT populate Features, so an unchanged
         /// post-compaction stub (Features == null) is skipped, leaving its original parquet
         /// row (Features + CwtCandidates + the binary blob columns) to stream through
-        /// untouched. A row with <see cref="FdrEntry.ParquetIndex"/> == uint.MaxValue is a
-        /// gap-fill stub (absent from the original parquet) and is appended; every other
+        /// untouched. A row with no <see cref="FdrEntry.ParquetIndex"/> is a gap-fill
+        /// stub (absent from the original parquet) and is appended; every other
         /// re-scored row overlays the original row at its ParquetIndex (last write wins,
         /// matching the former fullEntries[pqIdx] = entry). Out-of-range indices are
         /// reported by the streaming write, not here.
@@ -159,17 +159,16 @@ namespace pwiz.Osprey.Tasks
         {
             foreach (var entry in fdrEntries)
             {
-                if (entry.ParquetIndex == uint.MaxValue)
+                if (!entry.ParquetIndex.HasValue)
                 {
                     gapFill.Add(entry);
                     continue;
                 }
                 if (entry.Features == null)
                     continue;  // hydrated stub, never re-scored
-                // An overlay row addresses an ORIGINAL parquet row, so it must have an index.
-                // A gap-fill row (no Stage 4 row) is routed to the gapFill list above, not here.
-                if (entry.ParquetIndex.HasValue)
-                    overlayByIndex[entry.ParquetIndex.Value] = entry;
+                // Every row past the gap-fill route above has an index: an overlay row
+                // addresses an ORIGINAL parquet row.
+                overlayByIndex[entry.ParquetIndex.Value] = entry;
             }
         }
 

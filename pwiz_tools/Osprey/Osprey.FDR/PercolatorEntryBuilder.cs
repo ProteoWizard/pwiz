@@ -78,9 +78,9 @@ namespace pwiz.Osprey.FDR
                     if (streamFeatures)
                     {
                         features = null;
-                        // uint.MaxValue marks an appended entry with no original
+                        // A null ParquetIndex marks an appended entry with no original
                         // parquet row (its features will fall back to basic).
-                        if (fdrEntry.ParquetIndex != uint.MaxValue)
+                        if (fdrEntry.ParquetIndex.HasValue)
                             nWithFeatures++;
                         else
                             nWithoutFeatures++;

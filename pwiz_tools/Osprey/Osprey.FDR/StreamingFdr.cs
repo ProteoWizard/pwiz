@@ -382,7 +382,7 @@ namespace pwiz.Osprey.FDR
 
             // protein-compact: a peak Stage 6 CHANGED (reconciliation moved it, or gap-fill
             // created it) carries a NEW composite score and no longer has a valid pass-1
-            // run q -- the old q described a peak that no longer exists, and
+            // run q - the old q described a peak that no longer exists, and
             // PerFileRescoreTask's post-rescore overlay zeroes it precisely to say so. Such
             // a peak must EARN a fresh run q here, exactly the way on-stratum members do;
             // neither inheriting the prior q nor keeping the q=1 sentinel is a calibrated
@@ -425,7 +425,10 @@ namespace pwiz.Osprey.FDR
             {
                 var idxList = new List<int>(m);
                 for (int i = 0; i < m; i++)
-                    if (Admit(entryIds[i] & PercolatorEntry.BASE_ID_MASK)) idxList.Add(i);
+                {
+                    if (Admit(entryIds[i] & PercolatorEntry.BASE_ID_MASK))
+                        idxList.Add(i);
+                }
                 allIdx = idxList.ToArray();
             }
             TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, allIdx,
@@ -447,7 +450,8 @@ namespace pwiz.Osprey.FDR
             for (int rank = 0; rank < wi.Length; rank++)
             {
                 uint eid = entryIds[wi[rank]];
-                if (!survivorIds.Contains(eid)) continue;
+                if (!survivorIds.Contains(eid))
+                    continue;
                 fileRunQ[eid] = q[rank];
             }
 
@@ -477,7 +481,8 @@ namespace pwiz.Osprey.FDR
             {
                 uint eid = entryIds[i];
                 uint bid = eid & PercolatorEntry.BASE_ID_MASK;
-                if (stratumBaseIds != null && !stratumBaseIds.Contains(bid)) continue;
+                if (stratumBaseIds != null && !stratumBaseIds.Contains(bid))
+                    continue;
                 double s = scores[i];
                 if (labels[i])
                 {

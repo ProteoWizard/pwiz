@@ -1081,12 +1081,6 @@ namespace pwiz.Osprey.IO
             }
             return true;
         }
-        private static int CompareGroupKey(
-            (uint EntryId, byte Charge, int Count) a, (uint EntryId, byte Charge, int Count) b)
-        {
-            int cmp = a.EntryId.CompareTo(b.EntryId);
-            return cmp != 0 ? cmp : a.Charge.CompareTo(b.Charge);
-        }
 
         /// <summary>
         /// Streams the scalar stub columns of a <c>.scores.parquet</c> without allocating a
@@ -1227,12 +1221,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static bool HasPinFeatureColumns(string path)
         {
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
-            {
-                var fieldsByName = BuildFieldLookup(reader);
-                return fieldsByName.ContainsKey(PIN_FEATURE_NAMES[0]);
-            }
+            return HasColumn(path, PIN_FEATURE_NAMES[0]);
         }
 
         #endregion

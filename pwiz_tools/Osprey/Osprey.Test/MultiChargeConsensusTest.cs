@@ -119,10 +119,7 @@ namespace pwiz.Osprey.Test
                         e.ApexRt, e.StartRt, e.EndRt))
                     .ToList();
 
-                // Both charges pass, so the peptide is multi-charge and the map is populated -
-                // which is the only case a shared boundary is needed for at all.
-                var shared = SecondPassFdrTask.BuildSharedBoundaries(passingEntries,
-                    new HashSet<string> { seq });
+                var shared = SecondPassFdrTask.BuildSharedBoundaries(passingEntries);
 
                 Assert.IsTrue(shared.TryGetValue((seq, "file1"), out var b),
                     "shared boundary must exist for the peptide/file");

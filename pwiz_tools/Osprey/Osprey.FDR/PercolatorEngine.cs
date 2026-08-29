@@ -90,18 +90,7 @@ namespace pwiz.Osprey.FDR
             // bit-equal. Mirrors Rust pipeline.rs::run_percolator_fdr.
             foreach (var kvp in perFileEntries)
             {
-                // Array.Sort OK: the terminal key is ParquetIndex, which is unique per row,
-                // so the comparator never returns 0 and the unstable-sort tie path is unreachable.
-                kvp.Value.Sort((a, b) => // Array.Sort OK: (see above) terminal key ParquetIndex is unique per row, comparator never ties
-                {
-                    int c = a.EntryId.CompareTo(b.EntryId);
-                    if (c != 0) return c;
-                    c = a.Charge.CompareTo(b.Charge);
-                    if (c != 0) return c;
-                    c = a.ScanNumber.CompareTo(b.ScanNumber);
-                    if (c != 0) return c;
-                    return FdrEntry.CompareParquetIndex(a.ParquetIndex, b.ParquetIndex);
-                });
+                kvp.Value.Sort(FdrEntry.CANONICAL_ORDER); // Array.Sort OK: CANONICAL_ORDER's terminal key ParquetIndex is unique per row here (reconciled-write numbering), so the comparison never ties
             }
 
             // Build the flat PercolatorEntry list (one per observation), preferring
