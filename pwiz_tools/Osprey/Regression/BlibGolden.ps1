@@ -238,6 +238,17 @@ function Invoke-BlibQuery {
         $n = $reader.FieldCount
         $cols = [string[]]::new($n)
         for ($i = 0; $i -lt $n; $i++) { $cols[$i] = $reader.GetName($i) }
+        # SpectrumSourceFiles.fileName carries the ABSOLUTE acquisition path
+        # (BiblioSpec's BlibBuild convention), which is machine- and
+        # run-dir-specific. Normalize every *ileName projection column to its
+        # basename so the committed goldens stay machine-independent and the
+        # resume/HPC legs - which stage inputs under their run dirs - compare
+        # equal to the straight-through run. The Osprey per-run FileName
+        # columns hold bare stems, so the split is a no-op there.
+        $nameCols = [System.Collections.Generic.List[int]]::new()
+        for ($i = 0; $i -lt $n; $i++) {
+            if ($cols[$i] -match 'ileName$') { $nameCols.Add($i) }
+        }
         $rows = [System.Collections.Generic.List[object[]]]::new()
         while ($reader.Read()) {
             $vals = [object[]]::new($n)
@@ -245,6 +256,9 @@ function Invoke-BlibQuery {
                 $v = $reader.GetValue($i)
                 if ($v -is [System.DBNull]) { $v = $null }
                 $vals[$i] = $v
+            }
+            foreach ($ci in $nameCols) {
+                if ($vals[$ci] -is [string]) { $vals[$ci] = ($vals[$ci] -split '[\\/]')[-1] }
             }
             $rows.Add($vals)
         }

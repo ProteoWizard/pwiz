@@ -114,8 +114,15 @@ namespace pwiz.Osprey.Tasks
             }
         }
 
-        // Pre-create source file IDs once. SpectrumSourceFiles.idFileName
-        // carries the library filename (Skyline expects this — Rust
+        // Pre-create source file IDs once. SpectrumSourceFiles.fileName carries
+        // the ABSOLUTE path of each spectrum source file, matching BiblioSpec's
+        // BlibBuild (BuildParser.insertSpectrumFilename resolves every name it
+        // is given to a full path). On a from-scores run the acquisition itself
+        // is not among the inputs, so the path is synthesized beside the parquet
+        // - the same rule the rescore hydrate uses. The golden and cross-impl
+        // comparators key these strings by BASENAME, which is what keeps the
+        // committed goldens machine-independent. SpectrumSourceFiles.idFileName
+        // carries the library filename (Skyline expects this - Rust
         // pipeline.rs:6110 + blib.rs:435). The library file is the "ID
         // source"; the mzML file is the spectrum source.
         private static Dictionary<string, long> CreateSourceFiles(
@@ -123,11 +130,25 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyList<string> fileNames, double fdrThreshold)
         {
             string libraryIdName = Path.GetFileName(config.LibrarySource.Path);
+            var inputs = config.InputScores != null && config.InputScores.Count > 0
+                ? config.InputScores.ConvertAll(RescoreHydration.SyntheticInputFromParquet)
+                : config.InputFiles;
+            var sourcePathByName = new Dictionary<string, string>();
+            if (inputs != null)
+            {
+                foreach (string input in inputs)
+                    sourcePathByName[Path.GetFileNameWithoutExtension(input)] = Path.GetFullPath(input);
+            }
             var sourceFileIds = new Dictionary<string, long>();
             foreach (string fileName in fileNames)
             {
+                // A key with no matching input is Stage 5/7 name drift; record
+                // the bare name the writer always used to record rather than
+                // fail the whole blib over it.
+                if (!sourcePathByName.TryGetValue(fileName, out string sourcePath))
+                    sourcePath = fileName + ".mzML";
                 sourceFileIds[fileName] = writer.AddSourceFile(
-                    fileName + ".mzML", libraryIdName, fdrThreshold);
+                    sourcePath, libraryIdName, fdrThreshold);
             }
             return sourceFileIds;
         }
