@@ -159,31 +159,20 @@ namespace pwiz.SkylineTestUtil
         {
             if (!_systemResources.TryGetValue(CultureInfo.CurrentUICulture, out var resourceSet))
             {
-#if NET472
-                var assembly = Assembly.GetAssembly(typeof(object));
-                var manager = new ResourceManager(assembly.GetName().Name, assembly);
-                resourceSet = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
-#else
                 resourceSet = GetCoreLibStringResourceSet();
-#endif
                 _systemResources[CultureInfo.CurrentUICulture] = resourceSet;
                 _systemResourceString[resourceSet] = new Dictionary<string, string>();
             }
 
-#if NET472
-            var lookupId = resourceId;
-#else
             // net8 renamed these ids from mscorlib's dotted form to System.Private.CoreLib's underscored
             // form, e.g. "IO.FileNotFound_FileName" -> "IO_FileNotFound_FileName".
             var lookupId = resourceId.Replace('.', '_');
-#endif
             if (!_systemResourceString[resourceSet!].TryGetValue(resourceId, out var formatString))
                 formatString = _systemResourceString[resourceSet][resourceId] = resourceSet.GetString(lookupId) ??
                     throw new ArgumentException(nameof(resourceId));
             return string.Format(formatString, args);
         }
 
-#if !NET472
         /// <summary>
         /// Reads the .NET runtime's built-in message strings on net8. They live in
         /// System.Private.CoreLib's embedded "System.Private.CoreLib.Strings" resource, NOT in a
@@ -207,7 +196,6 @@ namespace pwiz.SkylineTestUtil
                 ?? throw new NotSupportedException($"Could not find the .NET runtime string resource stream '{streamName}'.");
             return new ResourceSet(stream);
         }
-#endif
 
         private static Dictionary<CultureInfo, ResourceSet> _systemResources = new Dictionary<CultureInfo, ResourceSet>();
         private static Dictionary<ResourceSet, Dictionary<string, string>> _systemResourceString =

@@ -2,12 +2,12 @@
 
   <!-- SkylineTool - small IPC surface (Remote*, JsonTool*, DocumentLocation)
        consumed by external Skyline tools + the Skyline test suite. Multi-target
-       net472 + net8.0-windows. System.Web.HttpUtility (used by DocumentLocation
+       net472 + net10.0-windows. System.Web.HttpUtility (used by DocumentLocation
        for query-string parsing) is part of the .NET runtime on net8+, so no
        extra package needed there. -->
   <PropertyGroup>
     <ProjectGuid>{3FD4E167-8F9C-4116-8122-67C7AD143490}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -24,8 +24,18 @@
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="System.Web" />
+
+  <!-- RemoteBase's legacy tool IPC serializes through BinaryFormatter. .NET 9 REMOVED the
+       implementation from the shared framework: the type still compiles but every
+       Serialize/Deserialize call throws PlatformNotSupportedException, and the
+       EnableUnsafeBinaryFormatterSerialization switch set in pwiz_tools/Directory.Build.props
+       no longer has any effect. This out-of-band package restores a working implementation.
+       net472 has BinaryFormatter in-box and must not reference it.
+       STOPGAP: the package is deprecated. The durable fix is finishing the migration to the
+       JSON protocol (JsonToolServer / SkylineJsonToolClient), after which this can be dropped
+       along with RemoteBase. -->
+  <ItemGroup>
+    <PackageReference Include="System.Runtime.Serialization.Formatters" Version="9.0.0" />
   </ItemGroup>
 
 </Project>

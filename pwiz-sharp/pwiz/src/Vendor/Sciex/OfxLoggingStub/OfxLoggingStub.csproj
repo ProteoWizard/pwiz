@@ -13,7 +13,7 @@
        Sciex.csproj. -->
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <!-- Critical: assembly name must be exactly "OFX.Logging" for OFX's
          Type.GetType("...,OFX.Logging") lookup to find it. -->
     <AssemblyName>OFX.Logging</AssemblyName>

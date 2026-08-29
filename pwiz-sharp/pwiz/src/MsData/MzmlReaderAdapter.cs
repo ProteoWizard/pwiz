@@ -70,7 +70,8 @@ public sealed class MzmlReaderAdapter : IReader
             // at the same spot (DefaultReaderList.cpp:168).
             var dpPwiz = MSDataFile.FillInCommonMetadata(filename, result);
             result.Run.SpectrumList = new SpectrumList_Mzml(filename, lazyReader,
-                idx.SpectrumIds, idx.SpectrumOffsets, dpPwiz);
+                idx.SpectrumIds, idx.SpectrumOffsets, dpPwiz,
+                config?.MzmlDecodeThreads ?? 1);
             return;
         }
 

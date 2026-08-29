@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- ParseIsotopeAbundancesFromNIST - dev/build console utility. Multi-target net472;net8.0 (was classic). Pure console
-       (no WinForms/Drawing), so the net8 target is plain net8.0. Only framework references. -->
+  <!-- ParseIsotopeAbundancesFromNIST - dev/build console utility. Multi-target net472;net10.0 (was classic). Pure console
+       (no WinForms/Drawing), so the net8 target is plain net10.0. Only framework references. -->
   <PropertyGroup>
     <ProjectGuid>{F5FAC53D-4B6C-4027-869D-A4FA12AB15E3}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net8.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

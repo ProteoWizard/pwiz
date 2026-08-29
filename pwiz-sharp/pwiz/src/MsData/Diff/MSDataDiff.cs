@@ -41,6 +41,24 @@ public static class MSDataDiff
     }
 
     /// <summary>
+    /// Returns an empty string when <paramref name="a"/> and <paramref name="b"/> are logically
+    /// equal under <paramref name="config"/>; otherwise a report of the differences. Applies the
+    /// same per-spectrum comparison <see cref="Describe(MSData, MSData, DiffConfig?)"/> uses,
+    /// exposed for callers holding two spectra rather than two documents.
+    /// </summary>
+    public static string DescribeSpectrum(Spectrum a, Spectrum b, DiffConfig? config = null)
+    {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
+        config ??= new DiffConfig();
+        var ctx = new Context(config);
+
+        DiffSpectrum(a, b, ctx);
+
+        return ctx.Format();
+    }
+
+    /// <summary>
     /// Tolerance mode for the <c>msLevel</c> comparison in <see cref="DescribeSpectraDataOnly"/>.
     /// Captures the well-known lossy defaults each peak-list format applies on read.
     /// </summary>
@@ -65,8 +83,13 @@ public static class MSDataDiff
     /// <param name="precision">Absolute tolerance for m/z and intensity comparisons.</param>
     /// <param name="msLevelMode">Selects which format-specific msLevel-default lossiness is
     /// tolerated. <see cref="LossyMsLevelMode.None"/> requires strict equality.</param>
+    /// <param name="ignorePeakOrder">Compare the peaks as a set rather than as an ordered list,
+    /// pairing the two sides on their values. Needed when the round-tripped format drops the
+    /// array that gave the peak order its meaning, which is what happens to a combined ion
+    /// mobility spectrum written to MGF or mzMLb - the copy read back is repaired into m/z order
+    /// while the vendor-read original is deliberately left alone.</param>
     public static string DescribeSpectraDataOnly(MSData a, MSData b, double precision = 1e-6,
-        LossyMsLevelMode msLevelMode = LossyMsLevelMode.MzxmlDefault)
+        LossyMsLevelMode msLevelMode = LossyMsLevelMode.MzxmlDefault, bool ignorePeakOrder = false)
     {
         ArgumentNullException.ThrowIfNull(a);
         ArgumentNullException.ThrowIfNull(b);
@@ -90,13 +113,13 @@ public static class MSDataDiff
             using var __ = ctx.Push("spectrum[" + i + "]");
             var sa = listA.GetSpectrum(i, getBinaryData: true);
             var sb = listB.GetSpectrum(i, getBinaryData: true);
-            DiffSpectrumDataOnly(sa, sb, ctx, precision, msLevelMode);
+            DiffSpectrumDataOnly(sa, sb, ctx, precision, msLevelMode, ignorePeakOrder);
         }
         return ctx.Format();
     }
 
     private static void DiffSpectrumDataOnly(Spectrum a, Spectrum b, Context ctx, double precision,
-        LossyMsLevelMode msLevelMode)
+        LossyMsLevelMode msLevelMode, bool ignorePeakOrder)
     {
         int aMs = a.Params.CvParam(CVID.MS_ms_level).ValueAs<int>();
         int bMs = b.Params.CvParam(CVID.MS_ms_level).ValueAs<int>();
@@ -122,16 +145,26 @@ public static class MSDataDiff
         }
         if (aCount == 0 || aMz is null || bMz is null || aInt is null || bInt is null) return;
 
+        // Read each side through its own order so position k names the same peak on both.
+        List<int>? aOrder = null, bOrder = null;
+        if (ignorePeakOrder && TryPairPeaks(aMz, aInt, bMz, bInt, precision, out var paired, out var bPaired))
+        {
+            aOrder = paired;
+            bOrder = bPaired;
+        }
+
         for (int k = 0; k < aCount; k++)
         {
-            if (Math.Abs(aMz[k] - bMz[k]) > precision)
+            int ka = aOrder is null ? k : aOrder[k];
+            int kb = bOrder is null ? k : bOrder[k];
+            if (Math.Abs(aMz[ka] - bMz[kb]) > precision)
             {
-                ctx.Report($"m/z[{k}]: {aMz[k]} vs {bMz[k]}");
+                ctx.Report($"m/z[{k}]: {aMz[ka]} vs {bMz[kb]}");
                 return;
             }
-            if (Math.Abs(aInt[k] - bInt[k]) > precision)
+            if (Math.Abs(aInt[ka] - bInt[kb]) > precision)
             {
-                ctx.Report($"intensity[{k}]: {aInt[k]} vs {bInt[k]}");
+                ctx.Report($"intensity[{k}]: {aInt[ka]} vs {bInt[kb]}");
                 return;
             }
         }
@@ -655,6 +688,84 @@ public static class MSDataDiff
                 return;
             }
         }
+    }
+
+    /// <summary>
+    /// Produces, for each side, the order in which to read its peaks so that position k names the
+    /// same peak on both. Returns false when the two sides are not comparable peak-for-peak, in
+    /// which case the caller should compare them as they are - a length difference is itself the
+    /// finding.
+    /// </summary>
+    private static bool TryPairPeaks(List<double> aMz, List<double> aIntensity,
+                                     List<double> bMz, List<double> bIntensity,
+                                     double precision,
+                                     out List<int> aPaired, out List<int> bPaired)
+    {
+        aPaired = null!;
+        bPaired = null!;
+        int n = aMz.Count;
+        if (aIntensity.Count != n || bMz.Count != n || bIntensity.Count != n)
+            return false;
+
+        // Both sides are meant to hold the same peaks in a different order, so canonicalize each
+        // by (m/z, intensity) and read them in lockstep: position k then names the same peak on
+        // both sides. Where the multisets genuinely differ the values will not line up, and the
+        // comparison downstream reports exactly that.
+        //
+        // This replaces a greedy nearest-intensity match over a sliding m/z window, which was
+        // quadratic on the data that most needs this path. A combined ion mobility spectrum
+        // repeats the same m/z once per mobility bin, so the window could not advance past a long
+        // within-precision run and the inner loop rescanned it - already-matched entries included -
+        // for every peak. One Waters HDMSe fixture spent 4.5 minutes here, and the TeamCity
+        // coverage run, where every statement is instrumented, hit its 60 minute limit.
+        int[] aOrder = StableOrderBy(aMz, aIntensity);
+        int[] bOrder = StableOrderBy(bMz, bIntensity);
+
+        aPaired = new List<int>(n);
+        bPaired = new List<int>(n);
+        for (int k = 0; k < n; k++)
+        {
+            aPaired.Add(aOrder[k]);
+            bPaired.Add(bOrder[k]);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Whether two values agree within the diff's tolerance, by the same relative measure the
+    /// comparison applies downstream - so a pair this accepts is a pair that comparison accepts.
+    /// </summary>
+    private static bool WithinPrecision(double x, double y, double precision)
+    {
+        double denominator = Math.Min(x, y);
+        if (denominator == 0) denominator = 1;
+        return Math.Abs(x - y) / denominator <= precision;
+    }
+
+    /// <summary>
+    /// Indices that would sort <paramref name="values"/> ascending, breaking ties on
+    /// <paramref name="tieBreak"/> and then on the original position so the result is total and
+    /// deterministic. The tie-break matters: a combined ion mobility spectrum holds the same m/z
+    /// once per mobility bin, and pairing those by intensity is what lines the two sides up.
+    /// </summary>
+    private static int[] StableOrderBy(List<double> values, List<double>? tieBreak = null)
+    {
+        var order = new int[values.Count];
+        for (int i = 0; i < order.Length; i++)
+            order[i] = i;
+        Array.Sort(order, (x, y) =>
+        {
+            int compared = values[x].CompareTo(values[y]);
+            if (compared != 0) return compared;
+            if (tieBreak is not null)
+            {
+                compared = tieBreak[x].CompareTo(tieBreak[y]);
+                if (compared != 0) return compared;
+            }
+            return x.CompareTo(y);
+        });
+        return order;
     }
 
     private static string GetArrayTypeKey(BinaryDataArray arr)

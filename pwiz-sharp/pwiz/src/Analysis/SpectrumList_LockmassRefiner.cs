@@ -99,7 +99,7 @@ public sealed class SpectrumList_LockmassRefiner : SpectrumListBase
             // Outer peak picker: the Waters list emits centroided data via its lockmass-aware
             // GetCentroidSpectrum overload, then the picker no-ops because the spectrum is
             // already marked centroid. Strip any leftover MS_profile_spectrum term.
-            spec = waters.GetCentroidSpectrumWithLockmass(index, getBinaryData,
+            spec = waters.GetCentroidSpectrumWithLockmass(index, getBinaryData, picker.MsLevels,
                 _mzPositiveScans, _mzNegativeScans, _tolerance);
             if (spec.Params.HasCVParam(CVID.MS_centroid_spectrum))
             {

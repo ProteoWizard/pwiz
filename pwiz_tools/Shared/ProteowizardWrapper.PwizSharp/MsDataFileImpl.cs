@@ -190,7 +190,8 @@ namespace pwiz.ProteowizardWrapper
             int preferOnlyMsLevel = 0,
             bool combineIonMobilitySpectra = true, // Ask for IMS data in 3-array format by default (not guaranteed)
             bool trimNativeId = true,
-            bool passEntireDiaPasefFrame = false // Ask for Bruker DiaPASEF frames as a single chunk
+            bool passEntireDiaPasefFrame = false, // Ask for Bruker DiaPASEF frames as a single chunk
+            int mzmlDecodeThreads = 1 // >1 decodes mzML binary arrays on a thread pool
             )
         {
 
@@ -218,7 +219,14 @@ namespace pwiz.ProteowizardWrapper
                     ReportSonarBins = true, // For Waters SONAR data, report bin number instead of false drift time
                     IncludeIsolationArrays = false, // For Bruker TIMS data, don't pass the isolation arrays (we infer from WindowGroup and IM)
                     PassEntireDiaPasefFrame = passEntireDiaPasefFrame && combineIonMobilitySpectra && path.EndsWith(@".d"), // For Bruker TIMS data, pass the entire frame at once if we have window group table (ie not mzML)
-                    GlobalChromatogramsAreMs1Only = true
+                    GlobalChromatogramsAreMs1Only = true,
+                    // Only the mzML reader honours this. 1 keeps the original inline decode;
+                    // above that, a batch of spectra is parsed with decoding deferred and the
+                    // decodes run on the thread pool. Left to the caller because the right
+                    // value depends on what ELSE the host is already parallelising: a caller
+                    // reading several files at once should leave it at 1, while one that reads
+                    // a file at a time wants it near the core count.
+                    MzmlDecodeThreads = mzmlDecodeThreads
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.Read(path, _msDataFile, sampleIndex, _config);

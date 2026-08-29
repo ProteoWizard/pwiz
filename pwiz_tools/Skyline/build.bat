@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 REM # enabledelayedexpansion so the zip-target accumulator (!ZIPS!) and the in-block
 REM # !EXIT! checks read current values rather than parse-time ones. Matches
 REM # tcbuild.bat, which already sets it. No other '!' usage in this file.
@@ -17,7 +17,7 @@ REM # below for the exact commands and the SKYLINE_TEST_ARGS escape hatch.
 REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
-REM #             [--require-vendor-support] [--automated] [--parallel]
+REM #             [--require-vendor-support] [--automated] [--parallel] [--no-tests]
 REM #
 REM # Flags:
 REM #   --i-agree-to-the-vendor-licenses
@@ -40,6 +40,11 @@ REM #       parallelmode=server) instead of the default host-only sequential run
 REM #       Needs Docker Desktop in Windows-container mode + the always_up_runner
 REM #       image. Much faster for the full functional suite. Also settable via
 REM #       SKYLINE_TEST_PARALLEL=1.
+REM #   --no-tests
+REM #       Build and stage (and produce any requested distro zips) but do not run
+REM #       the test suite. For callers that drive their own testing afterwards --
+REM #       SkylineTester's build step does this, because it then runs the tests
+REM #       itself under its own duration budget and per-test requeue logic.
 REM #
 REM # Distro zips:
 REM #   Pass the artifact name as a bare argument -- SkylineTester.zip,
@@ -49,7 +54,7 @@ REM #       build.bat Release BiblioSpec.zip SkylineNightly.zip
 REM #   The names are collected and handed to the DistroZips target in
 REM #   SkylineTester.csproj, which is where the work lives (a target cannot be
 REM #   NAMED for the artifact: MSBuild rejects '.' in target names, MSB5016).
-REM #   Zips land in bin\staging-net8\<Config> and are produced after staging but
+REM #   Zips land in bin\staging\<Config> and are produced after staging but
 REM #   BEFORE the test run, so obtaining one does not require a full test pass.
 REM #   SkylineTester.zip / SkylineNightly.zip feed the in-house nightly scheme;
 REM #   BiblioSpec.zip is the public download linked from the BiblioSpec support
@@ -83,6 +88,7 @@ set REQUIRE_VENDOR=0
 set AUTOMATED=0
 set NOTESTS=0
 set SEQUENTIAL=1
+set NOTESTS=0
 set ERROR_TEXT=
 set ZIPS=
 
@@ -110,6 +116,7 @@ if /i "%~1"=="--require-vendor-support" (set REQUIRE_VENDOR=1) else ^
 if /i "%~1"=="--automated" (set AUTOMATED=1) else ^
 if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
 if /i "%~1"=="--parallel" (set SEQUENTIAL=0) else ^
+if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
 if /i "%~1"=="--coverage" (echo ##teamcity[message text='--coverage is temporarily disabled in build.bat; ignoring' status='WARNING']) else ^
 if /i "%~x1"==".zip" (set ZIPS=!ZIPS!%%3B%~1) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
@@ -177,18 +184,18 @@ if %NOTESTS%==1 (
 REM # ------------------------------------------------------------------------
 REM # Test step
 REM #
-REM # Stage every project's net8 output into one bin\staging-net8\<Config> (the
+REM # Stage every project's net8 output into one bin\staging\<Config> (the
 REM # single-bin layout TestRunner + the Docker workers assume) plus a bundled
 REM # portable .NET 8 runtime for the workers, then run the staged TestRunner
 REM # (the harness the functional UI tests are written for; `dotnet test` can't
 REM # run them). The test commands themselves follow below.
 REM # ------------------------------------------------------------------------
-echo ##teamcity[progressMessage 'Stage-Net8Tests.ps1 (%CONFIG%)']
-pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Net8Tests.ps1" -Configuration %CONFIG%
+echo ##teamcity[progressMessage 'Stage-Tests.ps1 (%CONFIG%)']
+pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Tests.ps1" -Configuration %CONFIG%
 set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 (set ERROR_TEXT=Stage-Net8Tests.ps1 failed & goto error)
+if %EXIT% NEQ 0 (set ERROR_TEXT=Stage-Tests.ps1 failed & goto error)
 
-set STAGE_DIR=%SCRIPT_DIR%\bin\staging-net8\%CONFIG%
+set STAGE_DIR=%SCRIPT_DIR%\bin\staging\%CONFIG%
 
 REM # ------------------------------------------------------------------------
 REM # Distro zips (--SkylineTester.zip / --SkylineNightly.zip / --BiblioSpec.zip /
@@ -202,7 +209,7 @@ REM # SkylineTester is NOT in BUILD_TARGET (it is a dev/CI tool, not part of the
 REM # product or the test suites), so build and stage it on demand here. It has to
 REM # RUN from the staging dir: CreateZipFile takes its own assembly location as the
 REM # working directory, adds member files by bare name from there, and walks parent
-REM # directories looking for Skyline.sln - all three hold for bin\staging-net8\<cfg>.
+REM # directories looking for Skyline.sln - all three hold for bin\staging\<cfg>.
 REM # ------------------------------------------------------------------------
 if not defined ZIPS goto skipzips
 
@@ -214,15 +221,20 @@ if %EXIT% NEQ 0 (set "ERROR_TEXT=dotnet restore SkylineTester.csproj failed" & g
 call :build_one "%SCRIPT_DIR%\SkylineTester\SkylineTester.csproj"
 if %EXIT% NEQ 0 (set "ERROR_TEXT=dotnet build SkylineTester.csproj failed" & goto error)
 
-echo ##teamcity[progressMessage 'Stage-Net8Tests.ps1 SkylineTester (%CONFIG%)']
-pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Net8Tests.ps1" -Configuration %CONFIG% -Projects SkylineTester
+echo ##teamcity[progressMessage 'Stage-Tests.ps1 SkylineTester (%CONFIG%)']
+pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Tests.ps1" -Configuration %CONFIG% -Projects SkylineTester
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=staging SkylineTester failed" & goto error)
 
 echo ##teamcity[progressMessage 'DistroZips: %ZIPS:~3%']
-dotnet build "%SCRIPT_DIR%\SkylineTester\SkylineTester.csproj" -f net8.0-windows --no-restore -nologo %MSBUILD_PROPS% -t:DistroZips -p:DistroZips=%ZIPS:~3%
+dotnet build "%SCRIPT_DIR%\SkylineTester\SkylineTester.csproj" -f net10.0-windows --no-restore -nologo %MSBUILD_PROPS% -t:DistroZips -p:DistroZips=%ZIPS:~3%
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=zip target(s) %ZIPS:~3% failed" & goto error)
 
 :skipzips
+
+REM # --no-tests: build + stage (+ zips) only. Jumps before the STAGE_DIR pushd below so
+REM # the single popd at :tests_done still balances the pushd at the top of the script.
+REM # Also leaves any existing TestResults alone, since we are not producing new ones.
+if %NOTESTS%==1 goto tests_done
 
 set TC_TEST_RESULTS=%SCRIPT_DIR%\TestResults
 if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
@@ -315,7 +327,7 @@ goto :eof
 
 :build_one
 echo ##teamcity[progressMessage 'dotnet build %~1 (%CONFIG%)']
-dotnet build "%~1" -f net8.0-windows --no-restore -nologo %MSBUILD_PROPS%
+dotnet build "%~1" -f net10.0-windows --no-restore -nologo %MSBUILD_PROPS%
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet build %~1 failed")
 goto :eof
 

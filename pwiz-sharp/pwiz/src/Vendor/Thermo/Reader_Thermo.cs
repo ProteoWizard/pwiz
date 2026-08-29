@@ -143,7 +143,8 @@ public sealed class Reader_Thermo : IReader
             Dp = dpThermo,
         };
         result.Run.SpectrumList = spectrumList;
-        var chromList = new ChromatogramList_Thermo(raw, simAsSpectra, srmAsSpectra) { Dp = dpThermo };
+        var chromList = new ChromatogramList_Thermo(raw, simAsSpectra, srmAsSpectra,
+            config?.GlobalChromatogramsAreMs1Only ?? false) { Dp = dpThermo };
         result.Run.ChromatogramList = chromList;
 
         FillFileContent(result, spectrumList);

@@ -134,11 +134,85 @@ public abstract class AbstractWiffFile : IDisposable
     }
 }
 
+/// <summary>
+/// One "encoded bin" of a Sciex ZT Scan quadrupole sweep.
+///
+/// ZT Scan (ZenoTOF 8600) scans Q1 continuously across the precursor range instead of stepping
+/// it. The whole sweep is a single acquisition — the method stores one MS/MS experiment whose
+/// accumulation time is the entire sweep (e.g. 0.86 s) — and the instrument ramps the collision
+/// energy in hardware from one end of the precursor range to the other as the quadrupole moves.
+/// The sweep is then digitized into hundreds of narrow bins, and both SDKs surface each bin as
+/// its own experiment.
+///
+/// Neither SDK stores a per-bin collision energy: both report the ramp MIDPOINT on every bin
+/// (30 V for an 18 -> 43 V ramp), which is off by roughly half the ramp at either end. This
+/// carries the endpoints so the per-bin value can be reconstructed.
+///
+/// Interpolation is on the bin ORDINAL rather than the bin's quadrupole m/z. The quadrupole
+/// scans at a constant Da/s, so the two axes are equivalent, but the ordinal needs no extra
+/// method parameters — the precursor start/stop masses are exposed by only one of the two APIs.
+/// The ordinal also lands exactly on the stated endpoints at the first and last bin.
+///
+/// NOTE: that the hardware ramp is LINEAR is an assumption. The files state only the endpoints,
+/// never the shape. If Sciex confirms a different profile, <see cref="CollisionEnergy"/> is the
+/// only place that needs to change.
+/// </summary>
+public sealed class ZtScanBin
+{
+    /// <summary>Builds one bin of a sweep of <paramref name="binCount"/> bins.</summary>
+    /// <param name="ceRampStart">Collision energy at the low-m/z end of the sweep (eV).</param>
+    /// <param name="ceRampEnd">Collision energy at the high-m/z end of the sweep (eV).</param>
+    /// <param name="binIndex">0-based ordinal of this bin within the sweep.</param>
+    /// <param name="binCount">Total bins in the sweep.</param>
+    public ZtScanBin(double ceRampStart, double ceRampEnd, int binIndex, int binCount)
+    {
+        CeRampStart = ceRampStart;
+        CeRampEnd = ceRampEnd;
+        BinIndex = binIndex;
+        BinCount = binCount;
+    }
+
+    /// <summary>Collision energy at the low-m/z end of the sweep (eV).</summary>
+    public double CeRampStart { get; }
+
+    /// <summary>Collision energy at the high-m/z end of the sweep (eV).</summary>
+    public double CeRampEnd { get; }
+
+    /// <summary>0-based ordinal of this bin within the sweep.</summary>
+    public int BinIndex { get; }
+
+    /// <summary>Total bins in the sweep.</summary>
+    public int BinCount { get; }
+
+    /// <summary>
+    /// This bin's collision energy, linearly interpolated between the ramp endpoints. A sweep of
+    /// fewer than two bins has no ramp to interpolate, so it falls back to the midpoint — the
+    /// same value the SDKs report.
+    /// </summary>
+    public double CollisionEnergy
+    {
+        get
+        {
+            if (BinCount < 2) return (CeRampStart + CeRampEnd) / 2;
+            if (BinIndex <= 0) return CeRampStart;
+            if (BinIndex >= BinCount - 1) return CeRampEnd;
+            return CeRampStart + (CeRampEnd - CeRampStart) * BinIndex / (BinCount - 1);
+        }
+    }
+}
+
 /// <summary>One experiment within a sample. Mirrors cpp <c>Experiment</c>.</summary>
 public abstract class AbstractWiffExperiment
 {
     /// <summary>Experiment kind (full-scan MS, product, MRM, SIM, ...).</summary>
     public abstract WiffExperimentType ExperimentType { get; }
+
+    /// <summary>
+    /// Non-null when this experiment is one encoded bin of a ZT Scan quadrupole sweep, in which
+    /// case its collision energy must be interpolated rather than read from the SDK. See
+    /// <see cref="ZtScanBin"/>.
+    /// </summary>
+    public virtual ZtScanBin? ZtScan => null;
 
     /// <summary>Acquisition polarity.</summary>
     public abstract WiffPolarity Polarity { get; }

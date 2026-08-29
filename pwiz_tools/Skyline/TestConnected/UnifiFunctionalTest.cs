@@ -46,15 +46,10 @@ namespace pwiz.SkylineTestConnected
         // WebException wrapper vs net8's raw socket message. Derive the net8 expectation from the OS socket
         // layer (the same source HttpClient's message comes from) so it follows the machine locale rather
         // than being a hardcoded English literal.
-#if NET472
-        private static readonly string ConnectionRefusedMessage = "Unable to connect to the remote server";
-        private static readonly string DnsResolutionFailedMessage = "The remote name could not be resolved";
-#else
         private static readonly string ConnectionRefusedMessage =
             new System.Net.Sockets.SocketException((int)System.Net.Sockets.SocketError.ConnectionRefused).Message;
         private static readonly string DnsResolutionFailedMessage =
             new System.Net.Sockets.SocketException((int)System.Net.Sockets.SocketError.HostNotFound).Message;
-#endif
 
         [TestMethod]
         public void TestUnifi()
@@ -123,13 +118,17 @@ namespace pwiz.SkylineTestConnected
             RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangeServerUrl("https://asdfdsafads.local"))); // non-resolving hostname
             AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), DnsResolutionFailedMessage);
 
-            // Test invalid client id, scope, and secret
-            RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientId("foobar")));
-            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret);
-            RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientSecret("foobar")));
-            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret);
-            RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientScope("foobar")));
-            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "invalid_scope"); // not L10N
+            // Test invalid client id, scope, and secret. Only waters_connect authenticates with these --
+            // TestUnifi shares this DoTest with a UnifiAccount, where the cast below yields null.
+            if (_testAccount is WatersConnectAccount watersConnectAccount)
+            {
+                RunUI(() => editAccountDlg.SetRemoteAccount(watersConnectAccount.ChangeClientId("foobar")));
+                AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret);
+                RunUI(() => editAccountDlg.SetRemoteAccount(watersConnectAccount.ChangeClientSecret("foobar")));
+                AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret);
+                RunUI(() => editAccountDlg.SetRemoteAccount(watersConnectAccount.ChangeClientScope("foobar")));
+                AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "invalid_scope"); // not L10N
+            }
 
             // Test invalid password, the error message tested is a non-L10N string from Waters server
             RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangePassword("wrongpassword")));

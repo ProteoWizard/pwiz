@@ -19,9 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
-#if NET472
-using System.Deployment.Application;
-#endif
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -307,25 +304,14 @@ namespace AutoQC
 
         // ClickOnce (System.Deployment) is net472-only; on net8 the app is never network-deployed.
         private static bool IsNetworkDeployed =>
-#if NET472
-            ApplicationDeployment.IsNetworkDeployed;
-#else
             false;
-#endif
 
         private static string GetFirstArg(string[] args)
         {
             string arg;
             if (IsNetworkDeployed)
             {
-#if NET472
-                var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
-                arg = activationData != null && activationData.Length > 0
-                    ? activationData[0]
-                    : string.Empty;
-#else
                 arg = string.Empty;
-#endif
             }
             else
             {
@@ -493,13 +479,6 @@ namespace AutoQC
         public static Install FromAssembly()
         {
             string productVersion = null;
-#if NET472
-            if (ApplicationDeployment.IsNetworkDeployed)
-            {
-                productVersion = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
-            }
-            else
-#endif
             {
                 try
                 {

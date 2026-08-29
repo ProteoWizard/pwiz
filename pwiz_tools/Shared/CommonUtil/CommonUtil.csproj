@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- CommonUtil - multi-target net472 + plain net8.0.
+  <!-- CommonUtil - multi-target net472 + plain net10.0.
        net472: legacy Skyline build path (Skyline.sln) - keeps building exactly as today.
-       net8.0 (PLAIN - no -windows, no UseWindowsForms): Skyline net8 port path. This is
-       what lets ProteowizardWrapper be plain net8.0, which is what lets Osprey use the
+       net10.0 (PLAIN - no -windows, no UseWindowsForms): Skyline net8 port path. This is
+       what lets ProteowizardWrapper be plain net10.0, which is what lets Osprey use the
        wrapper on Linux. Same .cs source compiles under both,
        with #if NET472 / NET8_0_OR_GREATER conditional compilation where needed.
        The WinForms types that used to live here moved to CommonBaseUI alongside this
@@ -16,7 +16,7 @@
        Osprey share through CommonUtil directly now. -->
   <PropertyGroup>
     <ProjectGuid>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0</TargetFrameworks>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -57,9 +57,9 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <!-- DPAPI (CommonTextUtil.EncryptString/DecryptString). It used to arrive free with
-         the WindowsDesktop framework when this project was net8.0-windows; plain net8.0
+         the WindowsDesktop framework when this project was net10.0-windows; plain net10.0
          needs the package. NOTE: DPAPI is Windows-only and throws
          PlatformNotSupportedException elsewhere, so a Linux consumer of CommonUtil must
          not call those two methods. -->

@@ -448,10 +448,7 @@ namespace pwiz.Skyline
             } // layoutLock.Dispose()
 
             // Do this after layout is unlocked, because it messes up the selected graph otherwise
-            if (_sequenceTreeForm == null)
-            {
-                ShowSequenceTreeForm(true);
-            }
+            EnsureApplicableForms();
 
             // Just about any change could potentially change these panes.
             if (settingsNew.HasResults)
@@ -462,6 +459,27 @@ namespace pwiz.Skyline
             }
 
             UpdateGraphPanes(listUpdateGraphs);
+        }
+
+        /// <summary>
+        /// Shows required and closes inapplicable forms.
+        /// </summary>
+        private void EnsureApplicableForms()
+        {
+            if (_sequenceTreeForm == null)
+            {
+                ShowSequenceTreeForm(true);
+            }
+            if (!DocumentUI.Settings.HasResults)
+            {
+                UpdateUIGraphRetentionTime(IsRetentionTimeGraphTypeEnabled);
+                UpdateUIGraphPeakArea(false);
+                UpdateUIGraphMassError(false);
+                UpdateUIGraphDetection(false);
+                ShowResultsGrid(false);
+                DestroyCandidatePeakForm();
+                DestroyGraphFullScan();
+            }
             FoldChangeForm.CloseInapplicableForms(this);
             ListGridForm.CloseInapplicableForms(this);
         }
@@ -905,6 +923,39 @@ namespace pwiz.Skyline
                         SkylineResources.SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread);
                 }
                 return _timerGraphs.Enabled || (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending) || ProductionFacility.DEFAULT.IsWaiting();
+            }
+        }
+
+        /// <summary>
+        /// Names which of the things <see cref="IsGraphUpdatePending"/> looks at is still pending,
+        /// and what the graph update timer still has queued. Used for testing: a wait that expires
+        /// on that property otherwise reports only that it expired, which does not say where to
+        /// look. Must be called on the event thread.
+        /// </summary>
+        public string GraphUpdatePendingDescription
+        {
+            get
+            {
+                if (InvokeRequired)
+                {
+                    throw new InvalidOperationException(
+                        SkylineResources.SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread);
+                }
+                var pending = new List<string>();
+                if (_timerGraphs.Enabled)
+                {
+                    var queued = _timerGraphs.Tag as ICollection<IUpdatable>;
+                    var names = queued == null
+                        ? @"<null>"
+                        : string.Join(@", ", queued.Select(u => u == null ? @"<null>" : u.GetType().Name));
+                    pending.Add(string.Format(@"graph update timer still enabled (interval {0} ms, {1} queued: {2})",
+                        _timerGraphs.Interval, queued?.Count ?? 0, names));
+                }
+                if (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending)
+                    pending.Add(@"spectrum graph still updating");
+                if (ProductionFacility.DEFAULT.IsWaiting())
+                    pending.Add(@"production facility still waiting");
+                return pending.Count == 0 ? @"nothing pending" : string.Join(@", ", pending);
             }
         }
 

@@ -30,11 +30,7 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-#if NET472
-using pwiz.CLI.Bruker.PrmScheduling;
-#else
 using Pwiz.Vendor.Bruker.PrmScheduling;
-#endif
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;

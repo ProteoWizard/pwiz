@@ -40,7 +40,7 @@ REM # Scope:
 REM #   Builds Skyline.csproj + TestPerf.csproj + TestTutorial.csproj +
 REM #   TestRunner.csproj (plus best-effort native Hardklor.exe, needed by the
 REM #   feature-detection perf tests), stages Skyline + TestRunner + TestPerf +
-REM #   TestTutorial into bin\staging-net8\<Config>, and runs:
+REM #   TestTutorial into bin\staging\<Config>, and runs:
 REM #     (a) TestPerf.dll     perftests=on   (all perf tests)
 REM #     (b) TestTutorial.dll perftests=on   (all tutorial tests)
 REM #   Both suites always run so one red suite doesn't hide the other; the build
@@ -138,18 +138,19 @@ if %EXIT% NEQ 0 goto error
 
 REM # ------------------------------------------------------------------------
 REM # Stage step. Merge Skyline + TestRunner + TestPerf + TestTutorial into one
-REM # bin\staging-net8\<Config> (the single-bin layout TestRunner + the Docker
-REM # workers assume). Stage-Net8Tests.ps1 via `-File` binds a COMMA-joined
-REM # -Projects list as a single string (and silently stages nothing), so stage
-REM # ONE project per call. The first call also bundles the portable .NET runtime
-REM # (for the Docker workers under --parallel); the rest pass -NoRuntime.
+REM # bin\staging\<Config> (the single-bin layout TestRunner + the Docker
+REM # workers assume). ONE project per call, because the first call also bundles
+REM # the portable .NET runtime (for the Docker workers under --parallel) and the
+REM # rest pass -NoRuntime to skip re-staging it. A comma-joined -Projects list
+REM # would stage correctly too - `-File` binds it as a single string and the
+REM # stager splits on commas - but it could not make that per-call distinction.
 REM # ------------------------------------------------------------------------
 set STAGE_PROJECTS=Skyline TestRunner TestPerf TestTutorial
 set STAGE_FIRST=1
 for %%P in (%STAGE_PROJECTS%) do call :stage_one "%%P"
 if %EXIT% NEQ 0 goto error
 
-set STAGE_DIR=%SCRIPT_DIR%\bin\staging-net8\%CONFIG%
+set STAGE_DIR=%SCRIPT_DIR%\bin\staging\%CONFIG%
 set TC_TEST_RESULTS=%SCRIPT_DIR%\TestResults
 if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
 mkdir "%TC_TEST_RESULTS%"
@@ -207,7 +208,7 @@ goto :eof
 
 :build_one
 echo ##teamcity[progressMessage 'dotnet build %~1 (%CONFIG%)']
-dotnet build "%~1" -f net8.0-windows --no-restore -nologo %MSBUILD_PROPS%
+dotnet build "%~1" -f net10.0-windows --no-restore -nologo %MSBUILD_PROPS%
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet build %~1 failed")
 goto :eof
 
@@ -215,14 +216,14 @@ REM # Stage one project into %STAGE_DIR%. The first call (STAGE_FIRST=1) bundles
 REM # portable .NET runtime; the rest pass -NoRuntime to skip re-staging it.
 :stage_one
 if "%STAGE_FIRST%"=="1" (
-    echo ##teamcity[progressMessage 'Stage-Net8Tests.ps1 %~1 ^(+runtime^)']
-    pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Net8Tests.ps1" -Configuration %CONFIG% -Projects "%~1"
+    echo ##teamcity[progressMessage 'Stage-Tests.ps1 %~1 ^(+runtime^)']
+    pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Tests.ps1" -Configuration %CONFIG% -Projects "%~1"
     set STAGE_FIRST=0
 ) else (
-    echo ##teamcity[progressMessage 'Stage-Net8Tests.ps1 %~1']
-    pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Net8Tests.ps1" -Configuration %CONFIG% -Projects "%~1" -NoRuntime
+    echo ##teamcity[progressMessage 'Stage-Tests.ps1 %~1']
+    pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Tests.ps1" -Configuration %CONFIG% -Projects "%~1" -NoRuntime
 )
-if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=Stage-Net8Tests.ps1 %~1 failed")
+if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=Stage-Tests.ps1 %~1 failed")
 goto :eof
 
 REM # Run one TestRunner pass from the staging dir (cwd is already %STAGE_DIR%).

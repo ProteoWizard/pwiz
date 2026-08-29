@@ -30,7 +30,7 @@ internal static class Reader_Sciex_Detail
         // QqTOF
         QStar, QStarPulsarI, QStarXL, QStarElite,
         API4600TripleTOF, API5600TripleTOF, API6600TripleTOF,
-        X500QTOF, NlxTof, ZenoTOF7600,
+        X500QTOF, NlxTof, ZenoTOF7600, ZenoTOF8600,
     }
 
     /// <summary>
@@ -98,6 +98,7 @@ internal static class Reader_Sciex_Detail
         if (n.Contains("365", System.StringComparison.Ordinal)) return SciexInstrumentModel.API365;
         if (n.Contains("X500QTOF", System.StringComparison.Ordinal)) return SciexInstrumentModel.X500QTOF;
         if (n.Contains("ZENOTOF7600", System.StringComparison.Ordinal)) return SciexInstrumentModel.ZenoTOF7600;
+        if (n.Contains("ZENOTOF8600", System.StringComparison.Ordinal)) return SciexInstrumentModel.ZenoTOF8600;
         return SciexInstrumentModel.Unknown;
     }
 
@@ -134,6 +135,7 @@ internal static class Reader_Sciex_Detail
         SciexInstrumentModel.API5600TripleTOF => CVID.MS_TripleTOF_5600,
         SciexInstrumentModel.API6600TripleTOF => CVID.MS_TripleTOF_6600,
         SciexInstrumentModel.ZenoTOF7600 => CVID.MS_ZenoTOF_7600,
+        SciexInstrumentModel.ZenoTOF8600 => CVID.MS_ZenoTOF_8600,
         SciexInstrumentModel.QStar => CVID.MS_QSTAR,
         SciexInstrumentModel.QStarPulsarI => CVID.MS_QSTAR_Pulsar,
         SciexInstrumentModel.QStarXL => CVID.MS_QSTAR_XL,
@@ -212,6 +214,7 @@ internal static class Reader_Sciex_Detail
             case SciexInstrumentModel.X500QTOF:
             case SciexInstrumentModel.NlxTof:
             case SciexInstrumentModel.ZenoTOF7600:
+            case SciexInstrumentModel.ZenoTOF8600:
                 ic.ComponentList.Add(source);
                 ic.ComponentList.Add(new Component(CVID.MS_quadrupole, 2));
                 ic.ComponentList.Add(new Component(CVID.MS_quadrupole, 3));

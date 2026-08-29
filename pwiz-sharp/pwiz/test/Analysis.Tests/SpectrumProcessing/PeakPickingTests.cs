@@ -112,6 +112,84 @@ public class PeakPickingTests
     }
 
     [TestMethod]
+    public void ZeroSampleFiller_FillsInteriorGapsAndTermini()
+    {
+        // ZeroSampleFiller_PadsOpenFlanks covers one data run at zeroSampleCount 1. These add
+        // wider windows and, from case 3 on, TWO data runs per spectrum - the case where the
+        // insertions made for the trailing run change the array length seen while the leading
+        // run is still being processed. Expected outputs are the reference implementation's.
+
+        // raw data are preserved when nothing is missing
+        CheckFill(1,
+            new double[] { 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 },
+            new double[] { 0, 10, 20, 30, 40, 50, 40, 30, 20, 10, 0 },
+            new double[] { 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 },
+            new double[] { 0, 10, 20, 30, 40, 50, 40, 30, 20, 10, 0 });
+
+        // array termini are filled out to the full window
+        CheckFill(5,
+            new double[] { 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 },
+            new double[] { 0, 10, 20, 30, 40, 50, 40, 30, 20, 10, 0 },
+            new double[] { 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34 },
+            new double[] { 0, 0, 0, 0, 0, 10, 20, 30, 40, 50, 40, 30, 20, 10, 0, 0, 0, 0, 0 });
+
+        // two runs, interior gap wider than the window
+        CheckFill(2,
+            new double[] { 20, 21, 22, 23, 24, 27, 28, 29, 30 },
+            new double[] { 0, 10, 20, 10, 0, 0, 10, 10, 0 },
+            new double[] { 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 },
+            new double[] { 0, 0, 10, 20, 10, 0, 0, 0, 0, 10, 10, 0, 0 });
+
+        // two runs, interior gap exactly the window
+        CheckFill(2,
+            new double[] { 20, 21, 22, 23, 24, 26, 27, 28, 29 },
+            new double[] { 0, 10, 20, 10, 0, 0, 10, 10, 0 },
+            new double[] { 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 },
+            new double[] { 0, 0, 10, 20, 10, 0, 0, 0, 10, 10, 0, 0 });
+
+        // two runs, no interior gap to fill
+        CheckFill(2,
+            new double[] { 20, 21, 22, 23, 24, 25, 26, 27 },
+            new double[] { 0, 10, 20, 10, 0, 10, 10, 0 },
+            new double[] { 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 },
+            new double[] { 0, 0, 10, 20, 10, 0, 10, 10, 0, 0 });
+
+        // two runs far apart, so the sample rate rather than the gap decides the fill
+        CheckFill(2,
+            new double[] { 1.000001, 1.000002, 1.000003, 1000.001, 1000.002, 1000.003 },
+            new double[] { 0, 1, 0, 0, 1, 0 },
+            new double[] { 1.000000, 1.000001, 1.000002, 1.000003, 1.000004, 1000.000, 1000.001, 1000.002, 1000.003, 1000.004 },
+            new double[] { 0, 0, 1, 0, 0, 0, 0, 1, 0, 0 });
+
+        // same, with a second-order delta in the sample spacing
+        CheckFill(2,
+            new double[] { 1.000001, 1.000002, 1.0000035, 1000.00001, 1000.00002, 1000.000035 },
+            new double[] { 0, 1, 0, 0, 1, 0 },
+            new double[] { 1.000000, 1.000001, 1.000002, 1.0000035, 1.0000050, 1000.000, 1000.00001, 1000.00002, 1000.000035, 1000.000050 },
+            new double[] { 0, 0, 1, 0, 0, 0, 0, 1, 0, 0 });
+    }
+
+    private static void CheckFill(int zeroSampleCount, double[] xRaw, double[] yRaw,
+                                  double[] xExpected, double[] yExpected)
+    {
+        Assert.AreEqual(xRaw.Length, yRaw.Length, "x and y raw lengths must match");
+        Assert.AreEqual(xExpected.Length, yExpected.Length, "x and y expected lengths must match");
+
+        var xFilled = new List<double>();
+        var yFilled = new List<double>();
+        ZeroSampleFiller.Fill(xRaw, yRaw, xFilled, yFilled, zeroSampleCount);
+
+        string what = "zeroSampleCount=" + zeroSampleCount + ", raw length " + xRaw.Length;
+        Assert.AreEqual(xExpected.Length, xFilled.Count, "filled length: " + what);
+        Assert.AreEqual(xFilled.Count, yFilled.Count, "filled x/y length mismatch: " + what);
+        for (int i = 0; i < xFilled.Count; i++)
+        {
+            Assert.AreEqual(xExpected[i], xFilled[i], 1e-5, "x[" + i + "]: " + what);
+            Assert.AreEqual(yExpected[i], yFilled[i], 1e-5, "y[" + i + "]: " + what);
+        }
+    }
+
+    [TestMethod]
     public void LocalMaximumPeakDetector_SinglePeakAndTwoPeaks()
     {
         // Single triangular peak → one detected peak at the apex.

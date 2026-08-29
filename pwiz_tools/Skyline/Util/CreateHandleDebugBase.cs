@@ -226,11 +226,7 @@ namespace pwiz.Skyline.Util
                     ReflectInvoke<Form>(this, "ApplyClientSize");
                 if (formState[GetFormStateSection("FormStateShowWindowOnCreate")] == 1)
                     Visible = true;
-#if NET472
-                if (Menu != null || !TopLevel || IsMdiContainer)
-#else
                 if (!TopLevel || IsMdiContainer)
-#endif
                     ReflectInvoke<Form>(this, "UpdateMenuHandles");
                 if (!ShowInTaskbar)
                 {

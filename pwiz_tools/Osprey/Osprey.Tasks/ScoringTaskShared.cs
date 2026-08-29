@@ -171,6 +171,20 @@ namespace pwiz.Osprey.Tasks
             // parsed list. The "Processing file N/M: <path>" banner already named the file.
             // SpectrumFileReader reads every format through ProteoWizard and returns the
             // same SpectrumFileResult, so nothing below here knows the source format.
+            // Deleting the sources once the caches exist is supported, so reaching a re-parse
+            // with no source is a real state, not a bad argument. Say which of the two is
+            // wrong - the cache, and why - rather than failing inside the reader on a path
+            // that is not there.
+            // TODO: name WHY the cache was rejected - a version bump reads very differently
+            // from a truncated body. The reader returns a bare bool from every rejection path,
+            // so the reason has to be captured by the validity check itself and carried out;
+            // re-deriving it here would duplicate that logic and drift from it.
+            if (!File.Exists(inputFile) && !Directory.Exists(inputFile))
+            {
+                throw new InvalidDataException(string.Format(
+                    @"Spectra cache '{0}' is not usable and cannot be rebuilt because the source '{1}' is missing. Restore the source and re-run.",
+                    cachePath, inputFile));
+            }
             SpectrumFileResult mzmlResult;
             if (serializeMzmlRead)
                 s_mzmlReadGate.Wait();

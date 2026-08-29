@@ -1,18 +1,13 @@
 <Project>
 
   <PropertyGroup>
-    <!-- net8.0 only. The net472 target existed so Osprey could reach
-         pwiz_data_cli, which has no .NET 8 build (issue #4496); pwiz-sharp
-         supplies a managed net8.0 data layer instead, so there is nothing left
-         for a .NET Framework target to offer. Plain net8.0, not
-         net8.0-windows: Osprey must run on Linux/WSL with no Wine container.
-
-         NOTE: this branch now sits on the CommonUtil/CommonBaseUI split, which
-         made ProteowizardWrapper plain net8.0. Reading pwiz-sharp DIRECTLY was
-         forced by the wrapper being net8.0-windows; that constraint is gone, so
-         going back through the wrapper - and inheriting the six MsDataFileImpl
-         semantics this branch reproduces by hand - is now the open question. -->
-    <TargetFramework>net8.0</TargetFramework>
+    <!-- The net472 target existed so Osprey could reach pwiz_data_cli, which has no
+         .NET Core build (issue #4496); pwiz-sharp supplies a managed data layer
+         instead, so there is nothing left for a .NET Framework target to offer.
+         Plain net10.0, not net10.0-windows: Osprey must run on Linux/WSL with no
+         Wine container, which is also why ProteowizardWrapper had to become plain
+         (the CommonUtil/CommonBaseUI split this branch sits on). -->
+    <TargetFramework>net10.0</TargetFramework>
     <!-- SDK-style csproj defaults to AnyCPU, but Osprey.sln uses x64
          configurations, which VS 2026 flags as "unknown project
          configuration mappings" unless the projects advertise x64.

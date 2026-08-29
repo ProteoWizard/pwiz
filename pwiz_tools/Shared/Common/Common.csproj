@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Common — multi-target net472 + net8.0-windows. The biggest mid-tier
+  <!-- Common — multi-target net472 + net10.0-windows. The biggest mid-tier
        Shared library. Depends on CommonUtil + MSGraph + ZedGraph (all already
        multi-targeted) and a handful of HintPath legacy DLLs that have NuGet
        equivalents on net8. -->
   <PropertyGroup>
     <ProjectGuid>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</ProjectGuid>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -50,38 +50,8 @@
     <EmbeddedResource Include="DataBinding\Documentation\DocumentationGenerator.css" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <!-- Legacy bundled DLLs — kept for the net472 path so behavior matches today. -->
-    <Reference Include="Iesi.Collections">
-      <HintPath>..\Lib\NHibernate\Iesi.Collections.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="log4net">
-      <HintPath>..\Lib\log4net.dll</HintPath>
-      <Private>True</Private>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
-    <Reference Include="MathNet.Numerics">
-      <HintPath>..\Lib\MathNet.Numerics.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NHibernate">
-      <HintPath>..\Lib\NHibernate\NHibernate.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Sprache">
-      <HintPath>..\Lib\Sprache.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <!-- Legacy used a $(PLATFORM)-substituted HintPath; SDK doesn't evaluate
-         $(PLATFORM) the same way. Use the NuGet package for both targets;
-         the package's bundled native handles the platform routing. -->
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" Condition="'$(TargetFramework)' == 'net472'" />
-    <Reference Include="System.Web" />
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <!-- net8 replacements. NHibernate 5.5+ supports net6+. log4net 2.x is net6+
          compatible. MathNet, Sprache, System.Data.SQLite.Core all multi-target
          to net6+. -->
@@ -90,7 +60,7 @@
          drops the Antlr3.Runtime dep, OR upgrade Antlr to a net-compatible version. -->
     <PackageReference Include="NHibernate" Version="5.5.2" />
     <PackageReference Include="Iesi.Collections" Version="4.0.5" />
-    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="log4net" Version="3.4.0" />
     <!-- MathNet 5.0 removed Control.LinearAlgebraProvider and the internal
          Resources class. 4.15.x preserves the legacy API surface Skyline uses
          while still targeting net6+. -->

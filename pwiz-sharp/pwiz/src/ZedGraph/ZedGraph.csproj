@@ -4,13 +4,13 @@
     Multi-target wrapper around the existing ZedGraph sources at pwiz_tools/Shared/zedgraph/.
     The legacy ZedGraph.csproj there targets net4.7.2 with an old non-SDK project format and
     is shared with Skyline's build; we don't modify it. This SDK-style project compiles the
-    same .cs files for net8.0-windows so SeeMS-sharp can take a project reference.
+    same .cs files for net10.0-windows so SeeMS-sharp can take a project reference.
 
     The source tree itself is untouched — every file is included via relative <Compile Include>.
   -->
 
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <RootNamespace>ZedGraph</RootNamespace>
     <AssemblyName>ZedGraph</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>

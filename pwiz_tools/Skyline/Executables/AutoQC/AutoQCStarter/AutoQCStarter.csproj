@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- AutoQCStarter - small WinForms tray app that keeps AutoQC running. Multi-target
-       net472;net8.0-windows. No ClickOnce/vendor code; the net472 System.Deployment reference was
+       net472;net10.0-windows. No ClickOnce/vendor code; the net472 System.Deployment reference was
        vestigial and is dropped. -->
   <PropertyGroup>
     <ProjectGuid>{296123D9-C4D5-4BD7-818E-02283762A636}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
@@ -24,9 +24,5 @@
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="System.Net.Http" />
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
 
 </Project>

@@ -128,8 +128,11 @@ public sealed class Converter
 
         if (runIndexSet is null || runIndexSet.IsEmpty)
         {
+            // Only the convert-every-run path tolerates a read failure, matching where cpp's
+            // per-sample catch sits. An explicit --runIndexSet names a run the caller wants, so
+            // failing to open THAT run is reported rather than silently skipped.
             for (int i = 0; i < runCount; i++)
-                ConvertOne(input, runIndex: i);
+                ConvertOne(input, runIndex: i, tolerateReadFailure: runCount > 1);
             return;
         }
 
@@ -173,14 +176,39 @@ public sealed class Converter
         return 1;
     }
 
-    private void ConvertOne(string input, int runIndex)
+    private void ConvertOne(string input, int runIndex, bool tolerateReadFailure = false)
     {
         if (_config.Verbose) _log.WriteLine($"reading {input} (runIndex={runIndex})");
 
+        MSData msd;
+        try
+        {
+            msd = ReadAndProcess(input, runIndex);
+        }
+        catch (Exception ex) when (tolerateReadFailure)
+        {
+            // cpp Reader_ABI::read (Reader_ABI.cpp:244-269) wraps EACH sample of a multi-sample
+            // file in its own try/catch: a sample that will not open is logged to cerr and left
+            // out of the results, and every other run is still converted.
+            //
+            // "2020-06-09 BAK 270 optimization.wiff" is why this matters. The SDK reports 11
+            // samples, but index 4 ("isocratic wash", first of a duplicate pair) has no "Idx"
+            // storage stream and throws InjectionInWiffFileCorruptedException. cpp logs it and
+            // writes the other 10; we aborted the whole file having written 4.
+            //
+            // Only the READ is covered. A write failure still aborts the file, as it does in
+            // cpp - the Thermo NRE in Scan.ToCentroid surfaces while the writer pulls spectra,
+            // and swallowing that would turn a loud failure into a silently truncated file.
+            _log.WriteLine($"[Reader] Error opening run {runIndex} in {System.IO.Path.GetFileName(input)}:");
+            _log.WriteLine($"  {ex.Message}");
+            if (_config.Verbose) _log.WriteLine(ex.ToString());
+            return;
+        }
+
         // `using` releases native vendor handles (Thermo IRawFileThreadManager, Bruker timsdata,
         // etc.) once the output is written.
-        using var msd = ReadAndProcess(input, runIndex);
-        WriteOutput(msd, BuildOutputPath(input, msd));
+        using (msd)
+            WriteOutput(msd, BuildOutputPath(input, msd));
     }
 
     private void ConvertMerged(Pwiz.Util.Misc.IntegerSet? runIndexSet)

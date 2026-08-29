@@ -26,6 +26,7 @@ using System.IO.Pipes;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -157,14 +158,54 @@ namespace pwiz.Skyline
         public static bool MultiProcImport { get; set; }
  
         private static bool _initialized;                           // Flag to do some initialization just once per process.
+        [ThreadStatic] private static bool _uiExceptionHandlingInitialized;   // Per-THREAD, see InitUiThreadExceptionHandling
         private static string _name;                                // Program name.
 
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
+        private static bool _defaultFontSet;
+
+        /// <summary>
+        /// Pins the WinForms default font to the one .NET Framework used.
+        ///
+        /// .NET Core 3.0 changed <see cref="Control.DefaultFont"/> from Microsoft Sans Serif
+        /// 8.25pt to Segoe UI 9pt. Nearly every Skyline form uses AutoScaleMode.Font, so that
+        /// one change silently resizes all of them - which moves graph chart areas, changes how
+        /// many labels a plot can fit (see LabelLayoutTest), and would alter essentially every
+        /// recorded tutorial screenshot. Pinning the font keeps the UI identical across the
+        /// net472 -> net8 port, so the port is not entangled with a UI redesign.
+        ///
+        /// Adopting a modern font is a deliberate UI change to make on its own terms, alongside
+        /// DPI awareness and a re-recording of the tutorial screenshots.
+        ///
+        /// Must run before the first window is created. The flag is because a functional test
+        /// process re-enters Main once per test, and SetDefaultFont throws after the first
+        /// window exists.
+        /// </summary>
+        public static void SetDefaultFont()
+        {
+            if (_defaultFontSet)
+                return;
+            _defaultFontSet = true;
+            try
+            {
+                Application.SetDefaultFont(new Font(@"Microsoft Sans Serif", 8.25f));
+            }
+            catch (InvalidOperationException)
+            {
+                // Reachable only when something in this process already created a window - a test
+                // host that ran other tests first, for example. The font cannot be changed at that
+                // point, and throwing would fail an unrelated test with a baffling message. The
+                // test runner calls this at process start so the harness never lands here.
+            }
+        }
+
         [STAThread]
         public static int Main(string[] args = null)
         {
+            SetDefaultFont();
+
             if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID
                 Settings.Default.InstallationId = Guid.NewGuid().ToString();
 
@@ -236,21 +277,6 @@ namespace pwiz.Skyline
 
                 return EXIT_CODE_SUCCESS;
             }
-#if NET472
-            // The way Skyline command-line interface is run for an installation
-            else if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
-                AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData != null &&
-                AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.Length > 0 &&
-                CommandLineRunner.HasCommandPrefix(AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0]))
-            {
-                CommandLineRunner clr = new CommandLineRunner();
-                clr.Start(AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0]);
-
-                // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit
-                Process.GetCurrentProcess().Kill();
-                return EXIT_CODE_SUCCESS;
-            }
-#endif
 
             try
             {
@@ -352,15 +378,8 @@ namespace pwiz.Skyline
                 // some difficult debugging.
                 try
                 {
-#if NET472
-                    var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
-                    bool activationDataPresent = activationArgs != null &&
-                                                 activationArgs.ActivationData != null &&
-                                                 activationArgs.ActivationData.Length != 0;
-#else
                     // ClickOnce activation data does not exist on .NET 8; see the ClickOnce replacement TODO.
                     bool activationDataPresent = false;
-#endif
                     // Activation data and --opendoc always go straight to MainWindow.
                     // Otherwise, --start-page=true|false overrides the user preference,
                     // and without the flag the existing ShowStartupForm setting wins.
@@ -716,16 +735,47 @@ namespace pwiz.Skyline
             Settings.Default.SearchToolList = SearchToolList.CopyTools(toolList);
         }
 
+        /// <summary>
+        /// Routes unhandled UI-thread exceptions to Skyline's handler, which hands them to the
+        /// test harness when one is running and reports them otherwise.
+        /// <para>Both the exception mode and the ThreadException subscription are PER-THREAD in
+        /// WinForms. A message loop started on a thread that has not called this shows the
+        /// framework's own modal ThreadExceptionDialog instead, which under a test harness is an
+        /// indefinite hang rather than a reported failure. <see cref="Init"/> covers the first
+        /// thread; anything starting a message loop on a NEW thread must call this there too.</para>
+        /// <para>Idempotent per thread, so a caller need not know whether Init already ran on it.</para>
+        /// </summary>
+        public static void InitUiThreadExceptionHandling()
+        {
+            if (_uiExceptionHandlingInitialized)
+                return;
+            _uiExceptionHandlingInitialized = true;
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            // Remove before adding: Init() re-attaches on every call, so on the first thread the
+            // handler is already subscribed by the time this runs. A bare += would leave it
+            // subscribed twice and report every UI-thread exception twice.
+            Application.ThreadException -= ThreadExceptionEventHandler;
+            Application.ThreadException += ThreadExceptionEventHandler;
+        }
+
         public static void Init()
         {
+            // WinForms drops the ThreadException subscription when a message loop ends, and a
+            // functional test run calls Application.Run once per test. Re-attach on every Init()
+            // so every test routes UI-thread exceptions here, instead of only the first test and
+            // the rest getting the default ThreadExceptionDialog. The remove makes this
+            // idempotent, which matters because Main() calls Init() a second time.
+            // SetUnhandledExceptionMode stays below: calling it again once a window exists throws.
+            Application.ThreadException -= ThreadExceptionEventHandler;
+            Application.ThreadException += ThreadExceptionEventHandler;
+
             if (!_initialized)
             {
                 _initialized = true;
                 CommonActionUtil.ExceptionReporter = ReportException;
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-                Application.ThreadException += ThreadExceptionEventHandler;
+                InitUiThreadExceptionHandling();
 
                 // Add handler for non-UI thread exceptions. 
                 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
@@ -850,6 +900,13 @@ namespace pwiz.Skyline
 
         private static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
         {
+            if (IsBenignSplitterRepaintFailure(e.Exception))
+            {
+                Messages.WriteAsyncDebugMessage(@"Ignored benign GDI+ failure repainting a splitter: {0}",
+                    e.Exception.Message);
+                return;
+            }
+
             if (TestExceptions != null)
             {
                 AddTestException(e.Exception);
@@ -859,6 +916,24 @@ namespace pwiz.Skyline
             Messages.WriteAsyncDebugMessage(@"Unhandled exception on UI thread: {0}", e.Exception);
             var stackTrace = new StackTrace(1, true);
             ReportExceptionUI(e.Exception, stackTrace);
+        }
+
+        /// <summary>
+        /// True for the benign GDI+ failure WinForms raises from
+        /// SplitContainer.RepaintSplitterRect during Form.Show(). The splitter repaint runs from
+        /// OnLayout while the window is still handling WM_SHOWWINDOW, where the window DC clip
+        /// region is empty, so the fill genuinely fails at the GDI level. .NET 8 ignored that
+        /// status; .NET 9 began throwing it. Fixed upstream by dotnet/winforms#14565 (.NET 11),
+        /// with no backport - remove this, and the matching catch in
+        /// AvailableFieldsTree.OnDrawNode, once Skyline targets a runtime carrying that fix.
+        /// Matched narrowly on the WinForms method name, so a rename fails loudly instead of
+        /// silently widening what gets swallowed.
+        /// </summary>
+        private static bool IsBenignSplitterRepaintFailure(Exception exception)
+        {
+            return exception is ExternalException &&
+                   exception.StackTrace != null &&
+                   exception.StackTrace.Contains(@"RepaintSplitterRect");
         }
 
         private static void ReportExceptionUI(Exception exception, StackTrace stackTrace)

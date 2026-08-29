@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- MS1ProbeArgsCollector external-tool arg collector (WinForms library). Multi-target net472;net8.0-windows
+  <!-- MS1ProbeArgsCollector external-tool arg collector (WinForms library). Multi-target net472;net10.0-windows
        (was classic). Standalone: only framework references. Vestigial System.Deployment dropped;
        any Chinese satellite resx renamed zh-CHS -> zh-Hans to match the branch-wide culture rename. -->
   <PropertyGroup>
     <ProjectGuid>{943D3248-417C-4436-B474-CFA0023D9ECE}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

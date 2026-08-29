@@ -1,6 +1,6 @@
 @echo off
 REM Local dev wrapper: build + test Osprey.  Pass-through args:
-REM   build.bat                  -- Release, net8.0, with tests
+REM   build.bat                  -- Release, net10.0, with tests
 REM   build.bat -NoTests         -- build only
 REM   build.bat --no-tests       -- build only (normalized spelling, same thing)
 REM   build.bat -Configuration Debug

@@ -85,6 +85,17 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <!-- 4251 ("needs to have dll-interface to be used by clients") fires 43
+           times from the Mobilion SDK headers themselves (MBIFile.h,
+           MBICalibration.h, MBIFrame.h, MBIFileHDF5Adapter.h) exporting STL
+           members. That is vendor code we cannot annotate, and it is benign
+           here because the shim exposes a pure C ABI: no C++ class crosses
+           the DLL boundary. Release only, so a Debug build still shows it. -->
+      <DisableSpecificWarnings>4251;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+  </ItemDefinitionGroup>
 
   <ItemGroup>
     <ClCompile Include="MobilionShim.cpp" />

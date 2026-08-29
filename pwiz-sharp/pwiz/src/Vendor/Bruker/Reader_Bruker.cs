@@ -94,6 +94,7 @@ public sealed class Reader_Bruker : IReader
         // `?? true` matches a default-constructed cpp Reader::Config (Reader.cpp:56), so a null
         // config behaves like the default one rather than opting out.
         bool includeIsolationArrays = config?.IncludeIsolationArrays ?? true;
+        bool globalChromatogramsAreMs1Only = config?.GlobalChromatogramsAreMs1Only ?? false;
         // NB: this flag is only the CALLER's request. pwiz C++ auto-enables it for
         // DiagonalPASEF/MiDIA when (maxNumScans - maxWindowsPerGroup) < 10 and does so with `|=`
         // in the TimsData ctor (TimsData.cpp:311), so an explicit `false` from the caller is
@@ -111,7 +112,7 @@ public sealed class Reader_Bruker : IReader
         try
         {
             ReadImpl(result, data, analysisDir, preferOnlyMsLevel, combineIms, sortAndJitter, peakPicking,
-                passEntireDiaPasefFrame, includeIsolationArrays);
+                passEntireDiaPasefFrame, includeIsolationArrays, globalChromatogramsAreMs1Only);
         }
         catch
         {
@@ -121,7 +122,7 @@ public sealed class Reader_Bruker : IReader
 #endif
     }
 
-    private static void ReadImpl(MSData result, IBrukerData data, string analysisDir, int preferOnlyMsLevel, bool combineIonMobilitySpectra, bool sortAndJitter, bool peakPicking, bool passEntireDiaPasefFrame, bool includeIsolationArrays)
+    private static void ReadImpl(MSData result, IBrukerData data, string analysisDir, int preferOnlyMsLevel, bool combineIonMobilitySpectra, bool sortAndJitter, bool peakPicking, bool passEntireDiaPasefFrame, bool includeIsolationArrays, bool globalChromatogramsAreMs1Only)
     {
         result.CVs.AddRange(MSData.DefaultCVList);
         result.Id = Path.GetFileNameWithoutExtension(analysisDir);
@@ -176,7 +177,8 @@ public sealed class Reader_Bruker : IReader
         // regenerates or checks the others. Live msconvert emits 22 chromatograms for exactly the
         // config the suppression covered, so the suppression made ordinary
         // `--combineIonMobilitySpectra` conversions differ from msconvert.
-        result.Run.ChromatogramList = new ChromatogramList_Bruker(data, spectrumList, preferOnlyMsLevel, passEntireDiaPasefFrame) { Dp = dpReader };
+        result.Run.ChromatogramList = new ChromatogramList_Bruker(data, spectrumList, preferOnlyMsLevel, passEntireDiaPasefFrame,
+            globalChromatogramsAreMs1Only) { Dp = dpReader };
     }
 
     private static void AddSourceFiles(MSData result, string analysisDir, BrukerFormat format)

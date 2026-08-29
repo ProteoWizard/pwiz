@@ -25,17 +25,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-#if NET472
-using Excel;
-#else
 using ExcelDataReader;
-#endif
 using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -438,8 +435,7 @@ namespace pwiz.SkylineTestUtil
 
         /// <summary>
         /// Waits for a native dialog (a Win32 "#32770") of the given type to appear in this process and returns its
-        /// automation wrapper -- the native-dialog analog of <see cref="WaitForOpenForm{TDlg}(int)"/>. A test is the
-        /// driver of a native dialog, so the wait lives here in the test rather than baked into the dialog itself.
+        /// automation wrapper -- the native-dialog analog of <see cref="WaitForOpenForm{TDlg}(int)"/>.
         /// </summary>
         protected static TDlg WaitForNativeDlg<TDlg>() where TDlg : NativeDialog
         {
@@ -450,35 +446,11 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Shows a native dialog and drives it with an action that runs on the UI (event) thread -- for a simple,
-        /// single fire-and-forget gesture (e.g. <see cref="NativeFileDialog.EnterPath"/> then
-        /// <see cref="NativeOpenFileDialog.Accept"/>). A gesture that has to interleave with the dialog's own modal
-        /// loop -- a multi-step navigation, or one that waits on the dialog (a DismissWith... verb) -- must run on
-        /// the test thread instead; use <see cref="RunLongNativeDlg{TDlg}"/> for that (the analog of
-        /// <see cref="RunLongDlg{TDlg}"/>).
-        /// </summary>
-        protected static void RunNativeDlg<TDlg>([InstantHandle] Action showDlgAction,
-            [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction) where TDlg : NativeDialog
-        {
-            bool showDlgActionCompleted = false;
-            SkylineBeginInvoke(() =>
-            {
-                showDlgAction();
-                showDlgActionCompleted = true;
-            });
-            var dlg = WaitForNativeDlg<TDlg>();
-            SkylineBeginInvoke(() => exerciseDlgAction(dlg));
-            WaitForConditionUI(() => showDlgActionCompleted);
-        }
-
-        /// <summary>
-        /// Shows a native dialog and drives it with an action that runs on the TEST thread -- the native-dialog
-        /// analog of <see cref="RunLongDlg{TDlg}"/>. Use this when the action does more than a single gesture: a
-        /// native dialog is driven by thread-agnostic Win32 messages that its modal loop (running on the UI thread)
-        /// pumps, so a multi-step interaction -- navigate a multiselect Open dialog to a folder and then select
-        /// files in it, or read the dialog's state (GetControls) between steps, or wait on it (a DismissWith...
-        /// verb) -- has to run off the UI thread, leaving that loop free to pump each step. (An action marshaled
-        /// onto the UI thread would block the loop and could never pump between steps.)
+        /// Shows a native dialog and drives it with an action that runs on the TEST thread, the way the connector
+        /// drives one from the pipe thread. A native dialog is driven by thread-agnostic Win32 messages that its
+        /// modal loop (running on the UI thread) pumps, so the action has to run off the UI thread, leaving that
+        /// loop free to pump each step -- an action marshaled onto the UI thread would block the loop instead, and
+        /// the gestures that go through the dialog-watch refuse to run there.
         /// </summary>
         protected static void RunLongNativeDlg<TDlg>([InstantHandle] Action showDlgAction,
             [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction) where TDlg : NativeDialog
@@ -490,7 +462,9 @@ namespace pwiz.SkylineTestUtil
                 showDlgActionCompleted = true;
             });
             var dlg = WaitForNativeDlg<TDlg>();
-            exerciseDlgAction(dlg);
+            // The gestures wait on the dialog with no deadline of their own (see NativeFileDialog.EnterPath), so a
+            // dialog that never reaches the state one is waiting for would hang the run without a thread dump.
+            HangDetection.InterruptWhenHung(() => exerciseDlgAction(dlg));
             WaitForConditionUI(() => showDlgActionCompleted);
         }
 
@@ -550,7 +524,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public static void FileOpen(string path)
         {
-            RunNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowOpenFileDialog, dlg =>
+            RunLongNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowOpenFileDialog, dlg =>
             {
                 dlg.EnterPath(path);
                 dlg.Accept();
@@ -730,7 +704,6 @@ namespace pwiz.SkylineTestUtil
             SetClipboardText(GetExcelFileText(filePath, page, columns, hasHeader));
         }
 
-#if !NET472
         private static bool _excelCodePagesRegistered;
 
         // Modern ExcelDataReader throws NotSupportedException ("No data is available for
@@ -743,13 +716,10 @@ namespace pwiz.SkylineTestUtil
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             _excelCodePagesRegistered = true;
         }
-#endif
 
         protected static string GetExcelFileText(string filePath, string page, int columns, bool hasHeader)
         {
-#if !NET472
             EnsureExcelCodePagesRegistered();
-#endif
             bool[] legacyFileValues = new[] {false};
             if (filePath.EndsWith(".xls"))
             {
@@ -1279,7 +1249,9 @@ namespace pwiz.SkylineTestUtil
                 var msg = (timeoutMessage == null)
                     ? string.Empty
                     : " (" + timeoutMessage + ")";
-                AssertEx.Fail(@"Timeout {0} seconds exceeded in WaitForCondition{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString());
+                AssertEx.Fail(@"Timeout {0} seconds exceeded in WaitForCondition{1}. Open forms: {2}{3}{4}",
+                    waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString(),
+                    Environment.NewLine, HangDetection.TryGetThreadDump());
             }
             return false;
         }
@@ -1343,7 +1315,9 @@ namespace pwiz.SkylineTestUtil
                 if (timeoutMessage != null)
                     RunUI(() => msg = " (" + timeoutMessage() + ")");
 
-                AssertEx.Fail(@"Timeout {0} seconds exceeded in WaitForConditionUI{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString());
+                AssertEx.Fail(@"Timeout {0} seconds exceeded in WaitForConditionUI{1}. Open forms: {2}{3}{4}",
+                    waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString(),
+                    Environment.NewLine, HangDetection.TryGetThreadDump());
             }
             return false;
         }
@@ -1361,7 +1335,9 @@ namespace pwiz.SkylineTestUtil
 
         public static void WaitForGraphs(bool throwOnProgramException = true)
         {
-            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, throwOnProgramException);
+            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending,
+                () => string.Format("Graph update still pending: {0}", SkylineWindow.GraphUpdatePendingDescription),
+                true, throwOnProgramException);
         }
 
         public static void WaitForRegression()
@@ -2349,6 +2325,20 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected void RunFunctionalTest(string defaultUiMode = UiModes.PROTEOMIC)
         {
+            // WinForms requires an STA thread: creating a TreeView calls SetAcceptDrops, which
+            // makes OLE calls and throws "DragDrop registration did not succeed" from MTA.
+            // The console harness and Skyline both mark Main [STAThread], so harness runs never
+            // hit this. Visual Studio / ReSharper used to match, because VSTest defaults
+            // ExecutionThreadApartmentState to STA on .NET Framework - but that setting is not
+            // supported on net8, so the test host thread is MTA and every functional test failed
+            // there with the DragDrop error. Marshal onto an STA thread instead of requiring
+            // every test class to be attributed (MSTest 3.2 has no [STATestClass] for net8).
+            if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+            {
+                RunOnStaThread(() => RunFunctionalTest(defaultUiMode));
+                return;
+            }
+
             if (IsPerfTest && !RunPerfTests)
             {
                 return; // Don't want to run this lengthy test right now
@@ -2395,6 +2385,39 @@ namespace pwiz.SkylineTestUtil
                 //Log<AbstractFunctionalTest>.Fail(@"Functional test did not complete");
                 Assert.Fail("Functional test did not complete");
             }
+        }
+
+        /// <summary>
+        /// Runs <paramref name="action"/> on a dedicated STA thread and blocks until it finishes,
+        /// rethrowing any exception with its original stack trace intact so the test framework
+        /// still reports the real failure rather than a wrapper.
+        /// </summary>
+        private static void RunOnStaThread(Action action)
+        {
+            Exception pending = null;
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    // This thread is about to run Skyline's message loop, and WinForms keeps the
+                    // exception mode and the ThreadException subscription PER THREAD. Program.Init
+                    // only establishes them once per process, so without this the second and later
+                    // functional tests in a test-host process route no UI exceptions: WinForms shows
+                    // its own modal dialog and Join below waits on it forever.
+                    Program.InitUiThreadExceptionHandling();
+                    action();
+                }
+                catch (Exception x)
+                {
+                    pending = x;
+                }
+            });
+            thread.Name = @"Functional test STA thread";   // named so hang dumps identify it
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+            if (pending != null)
+                ExceptionDispatchInfo.Capture(pending).Throw();
         }
 
         private void RunFunctionalTestAttempt(string defaultUiMode)
@@ -2838,9 +2861,63 @@ namespace pwiz.SkylineTestUtil
             EndTest();
 
             Settings.Default.Reset();
-#if NET472
-            MsDataFileImpl.PerfUtilFactory.Reset();
-#endif
+        }
+
+        /// <summary>
+        /// TEMPORARY diagnostic. Dumps Microsoft.Win32.SystemEvents' static handler table, naming
+        /// each subscriber and its delegate target, to identify what subscribes
+        /// UserPreferenceChanged with SkylineWindow as the target. Reflection rather than a
+        /// reference, so TestUtil takes no new dependency. Remove once the leak is understood.
+        /// </summary>
+        /// <summary>
+        /// TEMPORARY verifier. Set SKYLINE_FORCE_SYSEVENTS_LEAK=1 to reproduce, on demand, the
+        /// framework condition that otherwise appears about once per 30,000 test executions:
+        /// a SystemEvents.UserPreferenceChanged hook on SkylineWindow that outlives its disposal.
+        ///
+        /// <para>Adds a second, identical subscription of WinForms' own private
+        /// Control.UserPreferenceChanged handler for the main window. WinForms removes one matching
+        /// entry when the window is disposed, so exactly one is left behind - which is precisely
+        /// the leak that has been observed in the wild.</para>
+        /// </summary>
+        // TEMPORARY. Roots SkylineWindow the way a real Skyline regression would - a static
+        // reference that has nothing to do with SystemEvents - so the counter-case can be checked:
+        // the framework-hook classification must NOT excuse this one.
+        // ReSharper disable once CollectionNeverQueried.Local
+        private static readonly List<object> _forcedRealLeak = new List<object>();
+
+        private static void ForceSystemEventsLeak()
+        {
+            var mode = Environment.GetEnvironmentVariable(@"SKYLINE_FORCE_SYSEVENTS_LEAK");
+            if (mode == null || SkylineWindow == null)
+                return;
+            if (mode.Contains(@"real"))
+            {
+                _forcedRealLeak.Add(SkylineWindow);
+                Console.WriteLine(@"FORCELEAK added static reference to SkylineWindow (genuine leak)");
+            }
+            if (!mode.Contains(@"hook") && mode != @"1")
+                return;
+            try
+            {
+                var seType = Type.GetType(@"Microsoft.Win32.SystemEvents, Microsoft.Win32.SystemEvents");
+                var controlType = typeof(Control);
+                var handlerType = seType?.GetEvent(@"UserPreferenceChanged")?.EventHandlerType;
+                var method = controlType.GetMethod(@"UserPreferenceChanged",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (handlerType == null || method == null)
+                {
+                    Console.WriteLine(@"FORCELEAK could not find Control.UserPreferenceChanged");
+                    return;
+                }
+                var del = Delegate.CreateDelegate(handlerType, SkylineWindow, method);
+                seType.GetEvent(@"UserPreferenceChanged").AddEventHandler(null, del);
+                Console.WriteLine(@"FORCELEAK added duplicate {0}.{1} hook for SkylineWindow",
+                    method.DeclaringType?.Name, method.Name);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(@"FORCELEAK FAILED {0}: {1}", e.GetType().Name, e.Message);
+            }
         }
 
         private void RunTest()
@@ -2883,6 +2960,8 @@ namespace pwiz.SkylineTestUtil
             {
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
             }
+
+            ForceSystemEventsLeak();
 
             DoTest();
 
@@ -2970,7 +3049,6 @@ namespace pwiz.SkylineTestUtil
             {
                 // Clear the clipboard to avoid the appearance of a memory leak.
                 ClipboardEx.Release();
-#if !NET472
                 // Release the two net8 WinForms holds on this window (see ReleaseModalMenuFilterWindow
                 // and ReleaseToolStripToolTips) before closing, so SkylineWindow and its document can be
                 // collected and are not reported as a cross-test GC leak.
@@ -2979,7 +3057,6 @@ namespace pwiz.SkylineTestUtil
                     ReleaseModalMenuFilterWindow();
                     ReleaseToolStripToolTips();
                 });
-#endif
                 // Occasionally this causes an InvalidOperationException during stress testing.
                 RunUI(SkylineWindow.Close);
             }
@@ -2994,7 +3071,6 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-#if !NET472
         // net8 WinForms tracks the last active top-level window during menu mode via
         // ToolStripManager.ModalMenuFilter._lastActiveWindow, a HandleRef<HWND> whose Wrapper keeps
         // the Form managed-alive. Unlike net472 (which tracked a bare HWND), this survives menu-mode
@@ -3029,18 +3105,45 @@ namespace pwiz.SkylineTestUtil
         // and the UI message pump ends with the test before the timer could fire on its own. The handle
         // is never released and SkylineWindow is reported as a GC leak (TestDiaFragPipeTutorial hit this
         // whenever the document was slow enough for the tool tip to appear at all - 10 timers were still
-        // armed at the end of that test). So stop them, the way ToolTip.StopTimer() would. Field names
-        // verified against Microsoft.WindowsDesktop.App 8.0; the ToolStrip list is thread-static, so
-        // this must run on the UI thread.
+        // armed at the end of that test). So stop them, the way ToolTip.StopTimer() would. The ToolStrip
+        // list is thread-static, so this must run on the UI thread.
+        // Field names verified against Microsoft.WindowsDesktop.App 8.0 AND 10.0. WinForms renamed the
+        // static in .NET 10 (t_toolStripWeakArrayList -> t_activeToolStrips) AND changed its type from an
+        // ArrayList-derived list to WeakRefCollection<ToolStrip>, which implements IEnumerable but NOT
+        // non-generic IList - so both the lookup and the cast have to tolerate either shape, and a miss
+        // has to be reported rather than silently skipped.
         private static void ReleaseToolStripToolTips()
         {
             const System.Reflection.BindingFlags nonPublicInstance =
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
-            var toolStrips = typeof(System.Windows.Forms.ToolStripManager).GetField(@"t_toolStripWeakArrayList",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                ?.GetValue(null) as System.Collections.IList;
-            if (toolStrips == null)
+            const System.Reflection.BindingFlags nonPublicStatic =
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
+            // net10 name first, then the net8 name.
+            var toolStripsField =
+                typeof(System.Windows.Forms.ToolStripManager).GetField(@"t_activeToolStrips", nonPublicStatic) ??
+                typeof(System.Windows.Forms.ToolStripManager).GetField(@"t_toolStripWeakArrayList", nonPublicStatic);
+            if (toolStripsField == null)
+            {
+                // Same reasoning as the ToolStrip.ToolTip / ToolTip._timer check below: a silent return
+                // here is indistinguishable from "no ToolStrip on this thread", and the leak comes back.
+                Program.AddTestException(new MissingMemberException(
+                    @"WinForms no longer has ToolStripManager.t_activeToolStrips (or the older " +
+                    @"t_toolStripWeakArrayList), so tool tip timers left armed by a test can no longer " +
+                    @"be found. See ReleaseToolStripToolTips."));
+                return;
+            }
+            var toolStripsValue = toolStripsField.GetValue(null);
+            if (toolStripsValue == null)
                 return; // No ToolStrip was ever created on this thread
+            // net8: ArrayList-derived (IList). net10: WeakRefCollection<ToolStrip>, IEnumerable only.
+            if (toolStripsValue is not System.Collections.IEnumerable toolStrips)
+            {
+                Program.AddTestException(new MissingMemberException(
+                    @"ToolStripManager's ToolStrip list is no longer enumerable (" +
+                    toolStripsValue.GetType().FullName + @"), so tool tip timers left armed by a test " +
+                    @"can no longer be stopped. See ReleaseToolStripToolTips."));
+                return;
+            }
             var toolTipProperty = typeof(ToolStrip).GetProperty(@"ToolTip", nonPublicInstance);
             var timerField = typeof(System.Windows.Forms.ToolTip).GetField(@"_timer", nonPublicInstance);
             if (toolTipProperty == null || timerField == null)
@@ -3053,10 +3156,10 @@ namespace pwiz.SkylineTestUtil
                     @"left armed by a test can no longer be stopped. See ReleaseToolStripToolTips."));
                 return;
             }
-            for (int i = 0; i < toolStrips.Count; i++)
+            foreach (var entry in toolStrips)
             {
                 // The collection holds weak references, so a collected ToolStrip reads as null here
-                if (toolStrips[i] is not ToolStrip toolStrip || toolStrip.IsDisposed)
+                if (entry is not ToolStrip toolStrip || toolStrip.IsDisposed)
                     continue;
                 var toolTip = toolTipProperty.GetValue(toolStrip);
                 if (toolTip == null || timerField.GetValue(toolTip) is not System.Windows.Forms.Timer timer)
@@ -3068,7 +3171,6 @@ namespace pwiz.SkylineTestUtil
                 timerField.SetValue(toolTip, null);
             }
         }
-#endif
 
         private void CloseOpenForms(Type exceptType)
         {

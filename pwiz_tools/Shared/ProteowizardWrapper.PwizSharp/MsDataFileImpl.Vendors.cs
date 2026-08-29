@@ -60,6 +60,7 @@ namespace pwiz.ProteowizardWrapper
             TryAdd(() => new Pwiz.Vendor.Bruker.Reader_Bruker(), "Bruker");
             TryAdd(() => new Pwiz.Vendor.UIMF.Reader_UIMF(), "UIMF");
             TryAdd(() => new Pwiz.Vendor.UNIFI.Reader_UNIFI(), "UNIFI");
+            TryAdd(() => new Pwiz.Vendor.Mobilion.Reader_Mobilion(), "Mobilion");
         }
     }
 }

@@ -163,9 +163,85 @@ internal sealed class Wiff2File : AbstractWiffFile
         var sdkExperiments = new List<IExperiment>();
         var experimentReader = _api.GetExperiments(experimentRequest);
         while (experimentReader.MoveNext()) sdkExperiments.Add(experimentReader.GetCurrent());
+        var ztBins = BuildZtScanBins(sdkExperiments);
         _experiments = new Wiff2Experiment[sdkExperiments.Count];
         for (int i = 0; i < _experiments.Length; i++)
-            _experiments[i] = new Wiff2Experiment(_api, _msSample, sdkExperiments[i]);
+            _experiments[i] = new Wiff2Experiment(_api, _msSample, sdkExperiments[i], ztBins?[i]);
+    }
+
+    /// <summary>
+    /// Detects a ZT Scan acquisition and maps each TOFMSMS experiment to its bin within the
+    /// quadrupole sweep; null for anything that is not a ZT Scan. See <see cref="ZtScanBin"/>.
+    ///
+    /// Unlike the legacy container, wiff2 stores the CE ramp endpoints verbatim
+    /// (CERampStart / CERampStop) alongside a "ZTScan" group name, so no reconstruction from the
+    /// lossy CE / CES pair is needed here. Both are programmatic method keys rather than rendered
+    /// labels, so this detection is not sensitive to the acquisition software's language.
+    /// </summary>
+    private ZtScanBin?[]? BuildZtScanBins(List<IExperiment> sdkExperiments)
+    {
+        try
+        {
+            var method = _api.GetMsMethodParameters(_api.RequestFactory.CreateMethodParametersReadRequest(_msSample.Id));
+            if (method?.Experiments is null) return null;
+
+            double rampStart = 0, rampEnd = 0;
+            bool isZtScan = false, haveRamp = false;
+            foreach (var methodExperiment in method.Experiments)
+            {
+                if (!string.Equals(methodExperiment.GroupName, "ZTScan", StringComparison.OrdinalIgnoreCase)) continue;
+                isZtScan = true;
+                if (TryReadParameter(methodExperiment, "CERampStart", out rampStart)
+                    && TryReadParameter(methodExperiment, "CERampStop", out rampEnd))
+                {
+                    haveRamp = true;
+                    break;
+                }
+            }
+            if (!isZtScan || !haveRamp || rampStart == rampEnd) return null;
+
+            var productIndices = new List<int>();
+            for (int i = 0; i < sdkExperiments.Count; i++)
+                if (sdkExperiments[i].ScanType == "TOFMSMS") productIndices.Add(i);
+            // One bin is not a sweep; leave such a file on the SDK's value.
+            if (productIndices.Count < 2) return null;
+
+            var bins = new ZtScanBin?[sdkExperiments.Count];
+            for (int bin = 0; bin < productIndices.Count; bin++)
+                bins[productIndices[bin]] = new ZtScanBin(rampStart, rampEnd, bin, productIndices.Count);
+            return bins;
+        }
+        catch { return null; }
+    }
+
+    /// <summary>Reads a named MS-method parameter as a double; false when absent or unparsable.</summary>
+    private static bool TryReadParameter(
+        SCIEX.Apis.Data.v1.Contracts.MethodParameters.IExperiment methodExperiment, string key, out double value)
+    {
+        value = 0;
+        if (methodExperiment.Parameters is null) return false;
+        foreach (var parameter in methodExperiment.Parameters)
+        {
+            if (!string.Equals(parameter.Key, key, StringComparison.OrdinalIgnoreCase)) continue;
+            if (parameter.Values is null) continue;
+            foreach (var raw in parameter.Values)
+            {
+                if (raw is null) continue;
+                if (raw is IConvertible)
+                {
+                    try
+                    {
+                        value = Convert.ToDouble(raw, System.Globalization.CultureInfo.InvariantCulture);
+                        return true;
+                    }
+                    catch { }
+                }
+                if (double.TryParse(raw.ToString(), System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out value))
+                    return true;
+            }
+        }
+        return false;
     }
 
     public override void Dispose()
@@ -204,12 +280,16 @@ internal sealed class Wiff2Experiment : AbstractWiffExperiment
     private static bool s_framingZerosThrowsError;
     private static bool s_doCentroidThrowsError;
 
-    public Wiff2Experiment(ISampleDataApi api, ISample sample, IExperiment exp)
+    public Wiff2Experiment(ISampleDataApi api, ISample sample, IExperiment exp, ZtScanBin? ztScan = null)
     {
         _api = api;
         _sample = sample;
         _exp = exp;
+        ZtScan = ztScan;
     }
+
+    /// <inheritdoc/>
+    public override ZtScanBin? ZtScan { get; }
 
     public override WiffExperimentType ExperimentType => _exp.ScanType switch
     {
@@ -265,7 +345,7 @@ internal sealed class Wiff2Experiment : AbstractWiffExperiment
     {
         double scanTime = GetRetentionTime(cycle1Based);
         var sdkSpec = FetchSpectrumWithRetry(scanTime, addZeros, centroid);
-        return sdkSpec is null ? null : new Wiff2Spectrum(sdkSpec, _exp, scanTime);
+        return sdkSpec is null ? null : new Wiff2Spectrum(sdkSpec, _exp, scanTime, ZtScan);
     }
 
     public override (double[] Times, double[] Intensities) GetBpc()
@@ -367,13 +447,16 @@ internal sealed class Wiff2Spectrum : AbstractWiffSpectrum
     private readonly IIsolationWindow? _iso;
     private readonly double _scanTime;
 
-    public Wiff2Spectrum(ISpectrum sdk, IExperiment exp, double scanTime)
+    private readonly ZtScanBin? _ztScan;
+
+    public Wiff2Spectrum(ISpectrum sdk, IExperiment exp, double scanTime, ZtScanBin? ztScan = null)
     {
         _sdk = sdk;
         _exp = exp;
         _scanTime = scanTime;
         _precursor = sdk.Precursor;
         _iso = _precursor?.IsolationWindow;
+        _ztScan = ztScan;
     }
 
     // wiff2 always reports profile data in our pipeline; SDK-side centroiding is opt-in via
@@ -403,6 +486,10 @@ internal sealed class Wiff2Spectrum : AbstractWiffSpectrum
         get
         {
             if (!HasIsolationInfo || _precursor is null || _iso is null) return 0;
+            // A ZT Scan bin's CE is a point on a hardware ramp the SDK does not record per bin —
+            // ISpectrum.Precursor.CollisionEnergy reports the ramp MIDPOINT on every bin of the
+            // sweep. Reconstruct it from the method's endpoints instead. See ZtScanBin.
+            if (_ztScan is not null) return _ztScan.CollisionEnergy;
             var ce = _precursor.CollisionEnergy;
             if (ce is null) return 0;
             double rampStart = ce.CollisionEnergyRampStart;

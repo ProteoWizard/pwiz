@@ -186,9 +186,93 @@ internal sealed class WiffFile : AbstractWiffFile
         // SoftwareVersionOf for why matching it is deliberate.
         bool hasHalfSizeRtWindow = SampleNumber < SampleCount
                                    && HasHalfSizeRtWindow(SoftwareVersionOf(_sample));
-        _experiments = new WiffExperiment[_msSample.ExperimentCount];
+        var sdkExperiments = new MSExperiment[_msSample.ExperimentCount];
+        for (int i = 0; i < sdkExperiments.Length; i++)
+            sdkExperiments[i] = _msSample.GetMSExperiment(i);
+
+        var ztBins = BuildZtScanBins(sdkExperiments);
+        _experiments = new WiffExperiment[sdkExperiments.Length];
         for (int i = 0; i < _experiments.Length; i++)
-            _experiments[i] = new WiffExperiment(_msSample.GetMSExperiment(i), hasHalfSizeRtWindow);
+            _experiments[i] = new WiffExperiment(sdkExperiments[i], hasHalfSizeRtWindow, ztBins?[i]);
+    }
+
+    /// <summary>
+    /// Detects a ZT Scan acquisition and maps each Product experiment to its bin within the
+    /// quadrupole sweep. Returns null (leaving the SDK's collision energy alone) for anything
+    /// that is not a ZT Scan; otherwise returns an array parallel to
+    /// <paramref name="sdkExperiments"/> whose Product entries are populated.
+    ///
+    /// A legacy WIFF flags the mode with the sample-level custom field "Is ZT Scan", and carries
+    /// the CE ramp only as the legacy CE / CES pair, which encodes the ramp as
+    /// midpoint -/+ half-range. That is a lossy projection — an 18 -> 43 V ramp round-trips as
+    /// 30 / 12, i.e. 18 -> 42 — so the reconstructed top end is up to 1 V low. The wiff2
+    /// container stores the true endpoints (see Wiff2File) and is preferred where available.
+    /// </summary>
+    private ZtScanBin?[]? BuildZtScanBins(MSExperiment[] sdkExperiments)
+    {
+        try
+        {
+            if (!IsZtScanSample()) return null;
+
+            var productIndices = new List<int>();
+            for (int i = 0; i < sdkExperiments.Length; i++)
+            {
+                var type = WiffExperiment.MapExperimentType(sdkExperiments[i].Details.ExperimentType);
+                if (type == WiffExperimentType.Product) productIndices.Add(i);
+            }
+            // One bin is not a sweep; leave such a file on the SDK's value.
+            if (productIndices.Count < 2) return null;
+
+            if (!TryReadZtCeRamp(sdkExperiments[productIndices[0]], out double rampStart, out double rampEnd))
+                return null;
+
+            var bins = new ZtScanBin?[sdkExperiments.Length];
+            for (int bin = 0; bin < productIndices.Count; bin++)
+                bins[productIndices[bin]] = new ZtScanBin(rampStart, rampEnd, bin, productIndices.Count);
+            return bins;
+        }
+        catch { return null; }
+    }
+
+    /// <summary>
+    /// True when the sample carries SCIEX OS's "Is ZT Scan" custom field set to true. The field
+    /// name is matched loosely because it is a rendered method label, not a programmatic key; a
+    /// localized acquisition that fails to match simply falls back to the SDK's flat value.
+    /// </summary>
+    private bool IsZtScanSample()
+    {
+        var details = _sample.Details;
+        for (int i = 0; i < details.NumCustomFields; i++)
+        {
+            var name = details.GetCustomFieldName(i);
+            if (name is null) continue;
+            if (!name.Replace(" ", string.Empty).Equals("IsZTScan", StringComparison.OrdinalIgnoreCase)) continue;
+            return bool.TryParse(details.GetCustomFieldValue(i), out bool isZt) && isZt;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Recovers the sweep's CE ramp endpoints from an experiment's legacy CE / CES pair.
+    /// Both are taken as magnitudes so a negative-polarity method (which stores CE negative)
+    /// yields the same increasing ramp as positive mode.
+    /// </summary>
+    private static bool TryReadZtCeRamp(MSExperiment exp, out double rampStart, out double rampEnd)
+    {
+        rampStart = rampEnd = 0;
+        var parameters = exp.Details?.MassRangeInfo is { Length: > 0 } ranges
+            ? ranges[0]?.CompoundDepParameters
+            : null;
+        if (parameters is null) return false;
+        if (!parameters.TryGetValue("CE", out var ce) || ce is null) return false;
+        if (!parameters.TryGetValue("CES", out var ces) || ces is null) return false;
+
+        double centre = Math.Abs((double)ce.Start);
+        double halfRange = Math.Abs((double)ces.Start);
+        if (centre <= 0 || halfRange <= 0) return false;   // no ramp to interpolate
+        rampStart = centre - halfRange;
+        rampEnd = centre + halfRange;
+        return true;
     }
 
     private static string SoftwareVersionOf(Sample sample)
@@ -296,14 +380,18 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
     /// <see cref="WiffFile.HasHalfSizeRtWindow"/>.</summary>
     private readonly double _rtWindowMultiplier;
 
-    public WiffExperiment(MSExperiment exp, bool hasHalfSizeRtWindow = false)
+    public WiffExperiment(MSExperiment exp, bool hasHalfSizeRtWindow = false, ZtScanBin? ztScan = null)
     {
         _exp = exp;
         _info = exp.Details;
         _rtWindowMultiplier = hasHalfSizeRtWindow ? 1.0 : 0.5;
         _srm = new Lazy<IReadOnlyList<WiffMrmTarget>>(BuildSrmTargets);
         _sim = new Lazy<IReadOnlyList<WiffSimTarget>>(BuildSimTargets);
+        ZtScan = ztScan;
     }
+
+    /// <inheritdoc/>
+    public override ZtScanBin? ZtScan { get; }
 
     public override WiffExperimentType ExperimentType => MapExperimentType(_info.ExperimentType);
 
@@ -703,7 +791,7 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
     private static double ReadCollisionEnergy(Dictionary<string, Parameter>? parameters)
         => Math.Abs(ReadCompoundParameter(parameters, "CE"));
 
-    private static WiffExperimentType MapExperimentType(Clearcore2.Data.DataAccess.SampleData.ExperimentType t) => t switch
+    internal static WiffExperimentType MapExperimentType(Clearcore2.Data.DataAccess.SampleData.ExperimentType t) => t switch
     {
         Clearcore2.Data.DataAccess.SampleData.ExperimentType.MS => WiffExperimentType.MS,
         Clearcore2.Data.DataAccess.SampleData.ExperimentType.Product => WiffExperimentType.Product,
@@ -810,6 +898,11 @@ internal sealed class WiffSpectrum : AbstractWiffSpectrum
         get
         {
             if (!HasIsolationInfo) return 0;
+            // A ZT Scan bin's CE is a point on a hardware ramp that the SDK does not record per
+            // bin — Details.Parameters["CE"] is the ramp MIDPOINT on every bin of the sweep.
+            // Reconstruct it instead. See ZtScanBin.
+            var ztBin = _wiffExperiment.ZtScan;
+            if (ztBin is not null) return ztBin.CollisionEnergy;
             try
             {
                 var parameters = _exp.Details?.MassRangeInfo?[0]?.CompoundDepParameters;

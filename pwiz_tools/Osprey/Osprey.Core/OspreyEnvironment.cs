@@ -330,6 +330,34 @@ namespace pwiz.Osprey.Core
         /// time. Null when unset -- keeps the 300k default.</summary>
         public static readonly int? MaxTrainSizeOverride = ParseIntOrNull(@"OSPREY_MAX_TRAIN_SIZE");
 
+        /// <summary>OSPREY_TRAIN_PICK_RUN: represent each precursor in the first-pass training
+        /// subset by ONE uniformly sampled RUN -- contributing that run's best candidate peak --
+        /// instead of by its best observation across all runs. ON by default; setting the variable
+        /// to 0 restores the historical cross-run maximum for A/B work.
+        ///
+        /// The two halves are both load-carrying. Pass 1 is PRE-COMPACTION, so a precursor has
+        /// several candidate-peak rows per run; drawing per ROW rather than per RUN would weight a
+        /// run by how many candidates it produced AND leave a random candidate as the training row,
+        /// which measured -17.4% identifications on 3-file Stellar.
+        ///
+        /// Why the default moved: the cross-run maximum makes every training row an extreme value
+        /// over however many files were batched together, so the training population drifts away
+        /// from the per-run population the model is then applied to, and it drifts further as the
+        /// batch grows (mean coelution_sum 1.19 at one file vs 5.75 at 82, against 1.18 in the
+        /// scored population). Sampling one run trains on ordinary per-run observations at the
+        /// same row count and the same memory, and at 82 SEA-AD files it is worth +24.7%
+        /// discoveries at matched true FDP -- enough that it removed a library deficit previously
+        /// read as a property of the library.
+        ///
+        /// The escape hatch is INVERTED deliberately. Every script written while this was an
+        /// experiment sets the variable to 1, and <see cref="IsNotZero"/> reads that as the
+        /// shipped behaviour rather than silently reverting those scripts to the old sampling.
+        ///
+        /// Honored by EVERY selection path. That is a requirement of being the default rather
+        /// than a lever: while it was opt-in the paths that could not honor it aborted, which is
+        /// a defensible experiment guard and an indefensible shipped behaviour.</summary>
+        public static readonly bool TrainPickRun = IsNotZero(@"OSPREY_TRAIN_PICK_RUN");
+
         /// <summary>Inner-fold count for the GBDT's held-out iteration selection
         /// (OSPREY_GBT_INNER_FOLDS, default 5 -> hold out 20% of each training fold to pick
         /// the boosting iteration honestly). A value &lt;= 1 turns held-out selection OFF and
@@ -782,6 +810,50 @@ namespace pwiz.Osprey.Core
         public static string Pass2QValueValidityKeySuffix(string normalizedPass2QValue)
         {
             return @";pass2=" + normalizedPass2QValue;
+        }
+
+        /// <summary>
+        /// Validity-key suffix for the first-pass TRAINING-SAMPLE levers
+        /// (<see cref="TrainPickRun"/>, <see cref="MaxTrainSizeOverride"/>). Both change which
+        /// rows train the model and therefore every score, q and count downstream, so a directory
+        /// written under one setting must not be adopted under another.
+        ///
+        /// Without this a re-run under a changed setting reports "FirstPassFDR:skipping (outputs
+        /// valid)" in seconds and hands back the PREVIOUS setting's numbers - which reads exactly
+        /// like a change that had no effect, the most expensive possible failure for an A/B.
+        ///
+        /// The two halves are keyed differently ON PURPOSE, and the difference is the same one
+        /// <see cref="PickValidityKeySuffix()"/> draws. <see cref="TrainPickRun"/> is a FLIPPED
+        /// DEFAULT, so it is emitted for every arm including the new default: "emits nothing"
+        /// already describes every directory written before the flip, and an empty new default
+        /// would make a post-flip key EQUAL a pre-flip one, letting a resume or a
+        /// <c>-LinkFrom</c> adopt maximum-trained scores as though the reservoir had produced
+        /// them. <see cref="MaxTrainSizeOverride"/> is a plain knob whose default never moved,
+        /// so it stays silent for the default and keys only when set.
+        ///
+        /// The one-time cost of the unconditional half is real and is the correct outcome: every
+        /// FirstPassFDR-and-later directory written before this shipped is invalidated. Stages
+        /// 1-5 carry no training suffix, so a <c>-LinkFrom</c> still adopts the expensive
+        /// extraction artifacts and only the FDR tail re-runs.
+        /// </summary>
+        public static string TrainSampleValidityKeySuffix()
+        {
+            return TrainSampleValidityKeySuffix(TrainPickRun, MaxTrainSizeOverride);
+        }
+
+        /// <summary>
+        /// <see cref="TrainSampleValidityKeySuffix()"/> for explicitly supplied settings, so the
+        /// arms can be compared without mutating process-wide state the environment reads once.
+        /// </summary>
+        public static string TrainSampleValidityKeySuffix(bool trainPickRun, int? maxTrainSizeOverride)
+        {
+            string suffix = @";trainpick=" + (trainPickRun ? @"run" : @"max");
+            if (maxTrainSizeOverride.HasValue)
+            {
+                suffix += @";maxtrain=" +
+                          maxTrainSizeOverride.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            }
+            return suffix;
         }
 
         /// <summary>

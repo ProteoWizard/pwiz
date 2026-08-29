@@ -186,10 +186,10 @@ if ($NoTests) {
 }
 
 # --- Test ---------------------------------------------------------------
-# Osprey is net8.0 only (issue #4497), so there is one test assembly. Kept as a
+# Osprey is net10.0 only (issue #4497), so there is one test assembly. Kept as a
 # list rather than collapsed inline: the loop below is the same shape either way,
 # and a future second TFM would be one entry rather than a restructure.
-$testFrameworks = @('net8.0')
+$testFrameworks = @('net10.0')
 $trxDir = Join-Path $scriptRoot 'TestResults'
 New-Item -ItemType Directory -Force -Path $trxDir | Out-Null
 
@@ -240,7 +240,7 @@ foreach ($fw in $testFrameworks) {
         # --exclude-processes; assumed to be the same parser for assemblies.
         $excludeAssemblies = @(
             'Osprey.Test',
-            'Apache.Arrow', 'DotNetZip', 'IronCompress',
+            'Apache.Arrow', 'ProDotNetZip', 'IronCompress',
             'JetBrains.*', 'MathNet.*', 'Microsoft.*', 'Newtonsoft.*',
             'Parquet', 'Snappier', 'System.*', 'ZstdSharp',
             'MSTest.*', 'testhost*', 'vstest.*'
