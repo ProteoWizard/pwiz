@@ -70,7 +70,7 @@ namespace TestRunnerLib
             StagingDir = Path.Combine(skylineDir, "bin", STAGING_ROOT, configuration);
             DotnetSource = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "dotnet");
-            RuntimeMajorMinor = "8.0";
+            RuntimeMajorMinor = "10.0";
             StageRuntime = true;
         }
 
