@@ -198,7 +198,9 @@ namespace pwiz.Osprey.Tasks
             }
 
             stubs.TrimExcess();
-            stubs.Sort(FdrEntry.CANONICAL_ORDER); // Array.Sort OK: CANONICAL_ORDER's terminal key ParquetIndex is unique per reloaded stub, so the comparison never ties
+            // Array.Sort OK: SortCanonicalResolved verifies every stub's ParquetIndex is
+            // resolved, so the terminal key is unique per file and the comparison never ties.
+            FdrEntry.SortCanonicalResolved(stubs, fileName);
             return stubs;
         }
     }

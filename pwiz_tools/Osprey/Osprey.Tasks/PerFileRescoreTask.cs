@@ -274,9 +274,7 @@ namespace pwiz.Osprey.Tasks
             // and parked in _poolPlan; deferring the decision as well as the work would
             // read state that is no longer true by the time the pull comes (see
             // RescoredPoolPlan).
-            var rescored = new RescoredEntries(_perFileEntries, () => BuildRescoredPool(ctx))
-                .WithStreaming(_perFileEntries.ConvertAll(kv => kv.Key),
-                               fileName => MaterializeOneFile(fileName, ctx));
+            var rescored = new RescoredEntries(_perFileEntries, () => BuildRescoredPool(ctx));
             ctx.Publish(rescored);
 
             // Self-gate: rescore + reconciliation only run when there is
@@ -1228,7 +1226,7 @@ namespace pwiz.Osprey.Tasks
                     inputs.GapFill.TryGetValue(fileName, out var gfList))
                     gapFillForFile = gfList;
                 OverlayReconciledIntoBuffer(fdrEntries, reconciledPath, gapFillForFile);
-                SortFileEntriesCanonical(fdrEntries);
+                SortFileEntriesCanonical(fileName, fdrEntries);
                 // The overlay above re-fattened every entry from the reconciled parquet
                 // (Features / CwtCandidates / Fragment* / ReferenceXic*), so this skip arm
                 // rooted the same ~1-3 KB per entry the rescore arm does - across every
@@ -2019,39 +2017,10 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Bring ONE file to its post-rescore state in a FRESH list, so a streamed consumer can
-        /// fold it and drop it. Exactly the sequence <see cref="BuildRescoredPool"/> runs per
-        /// file, minus the shared buffer: nothing here touches <c>_perFileEntries</c>, which is
-        /// what lets the whole-run pool never exist (#4486).
-        ///
-        /// <para>Returns an empty list for a file with no plan - the caller sees a file with no
-        /// survivors, which is what the resident path would have shown it too.</para>
-        /// </summary>
-        private List<FdrEntry> MaterializeOneFile(string fileName, PipelineContext ctx)
-        {
-            var plan = _poolPlan;
-            var entries = new List<FdrEntry>();
-            if (plan?.Loader == null)
-                return entries;
-            string reconciledPath = null;
-            plan.ReconciledPaths?.TryGetValue(fileName, out reconciledPath);
-            MaterializeFileSurvivors(fileName, entries, plan.Loader, ctx, reconciledPath);
-            if (plan.RescoredFiles == null)
-                return entries;
-            ResetRescoredTargetsForFile(plan, fileName, entries);
-            if (reconciledPath == null)
-            {
-                OverlayReconciledIntoFile(fileName, entries, plan.ReconciledPaths,
-                    plan.GapFill, canonicalize: false);
-            }
-            return entries;
-        }
-
-        /// <summary>
         /// Refill ONE file's survivor list, or leave it alone when it already holds entries
         /// so a second call is a no-op. The per-file half of
-        /// <see cref="MaterializeAllSurvivors"/>, separate because a streamed consumer needs
-        /// one file at a time and the whole-run loop is only one of its callers.
+        /// <see cref="MaterializeAllSurvivors"/>, separate because the resume overlay loop
+        /// needs it per file with a reconciled-parquet override.
         /// </summary>
         private static void MaterializeFileSurvivors(string fileName, List<FdrEntry> entries,
             FirstPassSurvivorLoader loader, PipelineContext ctx,
@@ -2196,8 +2165,8 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// The per-file half of <see cref="OverlayReconciledIntoFiles"/> - overlay one file's
         /// reconciled parquet, optionally canonicalize, and release the re-fattened payload.
-        /// Separate because a streamed Stage 7 consumes one file at a time and the whole-run
-        /// loop is only one of its callers.
+        /// Separate because the resume overlay loop also applies it per file, and the
+        /// whole-run loop is only one of its callers.
         /// </summary>
         private static void OverlayReconciledIntoFile(string fileName, List<FdrEntry> entries,
             IReadOnlyDictionary<string, string> reconciledPaths,
@@ -2226,7 +2195,7 @@ namespace pwiz.Osprey.Tasks
             // buffer order matches the order COLD establishes in
             // RunPercolatorFdr, independent of whether the file was rescored.
             if (canonicalize)
-                SortFileEntriesCanonical(entries);
+                SortFileEntriesCanonical(fileName, entries);
             // Same release the rescore path does once a file's reconciled parquet is
             // on disk: the overlay above re-fattened this file's entries straight
             // from that parquet, and holding those arrays for every file is the
@@ -2252,9 +2221,11 @@ namespace pwiz.Osprey.Tasks
         /// sorting unconditionally future-proofs the tie-break against any later change
         /// that retains multiple rows per EntryId.
         /// </summary>
-        private static void SortFileEntriesCanonical(List<FdrEntry> fileEntries)
+        private static void SortFileEntriesCanonical(string fileName, List<FdrEntry> fileEntries)
         {
-            fileEntries.Sort(FdrEntry.CANONICAL_ORDER); // Array.Sort OK: CANONICAL_ORDER's terminal key ParquetIndex is unique per row, so the comparison never ties
+            // Array.Sort OK: SortCanonicalResolved verifies every row's ParquetIndex is
+            // resolved, so the terminal key is unique per file and the comparison never ties.
+            FdrEntry.SortCanonicalResolved(fileEntries, fileName);
         }
 
         /// <summary>

@@ -1080,14 +1080,12 @@ namespace pwiz.Osprey.Tasks
             var fileNames = rescored.FileNames;
             var survivorEntryIds = new HashSet<uint>();
             long survivorObservations = 0;
-            // The resident survivor lists by file, when something else in this run has already
-            // built the whole-run buffer. It holds one REFERENCE per file, not a copy, so it
-            // costs nothing while the buffer exists and is not built at all once nothing builds
-            // it - which is the state this pass is being converted for. Deciding once, here,
-            // rather than per file keeps the two sides of the transition from interleaving.
-            var residentByFile = rescored.IsMaterialized || rescored.LoadFile == null
-                ? new Dictionary<string, List<FdrEntry>>(fileNames.Count, StringComparer.Ordinal)
-                : null;
+            // The resident survivor lists by file. It holds one REFERENCE per file, not a
+            // copy, so it costs nothing beyond the whole-run buffer Stage 7 has already
+            // built by the time this pass runs; the lean-row work is what retires that
+            // buffer and hands this pass a per-file source instead.
+            var residentByFile =
+                new Dictionary<string, List<FdrEntry>>(fileNames.Count, StringComparer.Ordinal);
             // Reported because this walks EVERY survivor observation - 89,068,375 of them on the
             // 82-file SEA-AD run - into a HashSet before anything downstream logs a word. It sat
             // inside a 195 s silence between "Released library fragments" and the
@@ -1102,8 +1100,7 @@ namespace pwiz.Osprey.Tasks
                 foreach (var kvp in rescored.Files())
                 {
                     mergeProgress.Report(++mergeIdx);
-                    if (residentByFile != null)
-                        residentByFile[kvp.Key] = kvp.Value;
+                    residentByFile[kvp.Key] = kvp.Value;
                     survivorObservations += kvp.Value.Count;
                     foreach (var e in kvp.Value)
                         survivorEntryIds.Add(e.EntryId);
@@ -1273,15 +1270,12 @@ namespace pwiz.Osprey.Tasks
                 var pass1Records = new List<FdrScoreRecord>();
                 var survivorIds = new HashSet<uint>();
 
-                // ONE file's post-rescore survivors, from the resident buffer while something
-                // else in this run still builds it and materialized from that file's artifacts
-                // once nothing does. Both sides return a list this pass may stamp and then drop;
-                // only in the resident case are those stamps also visible on the pool, which is
-                // why the sidecar - not the entry - is what carries this pass's results forward.
+                // ONE file's post-rescore survivors, off the resident buffer. The list may be
+                // stamped and then dropped, and those stamps are also visible on the pool -
+                // which is why the sidecar, not the entry, is what carries this pass's
+                // results forward.
                 List<FdrEntry> LoadOneFile(string fileKey)
                 {
-                    if (residentByFile == null)
-                        return rescored.LoadFile(fileKey);
                     return residentByFile.TryGetValue(fileKey, out var resident)
                         ? resident
                         : new List<FdrEntry>();

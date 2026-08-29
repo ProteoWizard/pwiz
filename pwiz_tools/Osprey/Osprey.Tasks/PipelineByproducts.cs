@@ -394,82 +394,38 @@ namespace pwiz.Osprey.Tasks
     internal sealed class RescoredEntries : PerFileEntries
     {
         private readonly Lazy<bool> _materialize;
-        private IReadOnlyList<string> _fileNames;
 
         /// <summary>The buffer already at its post-rescore state - nothing deferred.</summary>
         public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
 
         /// <summary>
-        /// The run's file names, in buffer order. A streamed consumer walks these and asks for
-        /// one file at a time through <see cref="LoadFile"/>; reading
-        /// <see cref="PerFileEntries.Value"/> instead is what builds the whole-run pool.
-        ///
-        /// <para>Available without materializing anything WHEN STREAMING IS ATTACHED. On the
-        /// paths that publish an already-built buffer - the resident rescore and the
-        /// <c>--task SecondPassFDR</c> rehydrate, neither of which calls
-        /// <see cref="WithStreaming"/> - it comes off that buffer instead, which is free
-        /// because those milestones defer nothing. Same fallback <see cref="Files"/> makes, so
-        /// a consumer can pair the two without asking which side of the transition it is on;
-        /// returning null there instead made a streamed consumer work on the straight-through
-        /// path and fail on the distributed one.</para>
+        /// The run's file names, in buffer order. Reading them builds the buffer when the
+        /// build is still deferred, exactly as <see cref="PerFileEntries.Value"/> does -
+        /// every consumer of this milestone runs after Stage 7's own pool build, so by the
+        /// time anyone asks there is nothing left to defer.
         /// </summary>
         public IReadOnlyList<string> FileNames
         {
-            get { return _fileNames ?? Value.ConvertAll(kv => kv.Key); }
-            private set { _fileNames = value; }
+            get { return Value.ConvertAll(kv => kv.Key); }
         }
-
-        /// <summary>
-        /// Bring ONE file to its post-rescore state, into a fresh list the caller owns and can
-        /// drop. Null when this milestone carries an already-built buffer and there is nothing
-        /// to stream from (the resident and no-rescore paths).
-        ///
-        /// <para>This is the seam #4486 turns on. Every consumer that folds to an O(distinct)
-        /// aggregate can walk <see cref="FileNames"/> and drop each file as it goes, where
-        /// <see cref="PerFileEntries.Value"/> forces all 257 files resident at once - 40.23 GB
-        /// post-GC on the CHS cohort, against a library of 4.19 GB.</para>
-        /// </summary>
-        public Func<string, List<FdrEntry>> LoadFile { get; private set; }
-
-        /// <summary>
-        /// True once the whole-run buffer has actually been built - i.e. someone read
-        /// <see cref="PerFileEntries.Value"/>.
-        ///
-        /// <para>Exists for the transition. While ANY consumer still reads the buffer, a
-        /// streamed consumer should walk what is already resident rather than re-reading each
-        /// file off disk behind it; once no consumer does, the buffer is never built and
-        /// <see cref="Files"/> streams. That lets consumers move over one at a time without
-        /// either doubling the I/O or doubling the memory in between.</para>
-        /// </summary>
-        public bool IsMaterialized => _materialize == null || _materialize.IsValueCreated;
 
         /// <summary>
         /// The run's files, one at a time, for a consumer that ITERATES and does not retain.
         ///
-        /// <para>Yields from the resident buffer when one exists and materializes per file
-        /// otherwise, so the same call site is correct on both sides of the transition. A
-        /// consumer that keeps a reference to the yielded list pins that file - the point is to
-        /// fold to an O(distinct) aggregate and let each go.</para>
+        /// <para>Yields from the resident buffer. The enumeration shape is the point: every
+        /// Stage 7 consumer folds to an O(distinct) aggregate through this seam rather than
+        /// indexing into the pool, which is what lets a per-file source replace the buffer
+        /// behind it (#4486) without those consumers changing. A per-file streamed source
+        /// stood here once and was removed as unreachable: Stage 7 builds the pool before
+        /// any consumer runs, and the source's rebuild-from-disk overlaid only the 1st-pass
+        /// sidecar, so the second-pass gates would have read 1st-pass q-values had it ever
+        /// run. The lean-row work is what retires the pool build and puts a streamed source
+        /// here for real.</para>
         /// </summary>
         public IEnumerable<KeyValuePair<string, List<FdrEntry>>> Files()
         {
-            if (IsMaterialized || LoadFile == null)
-            {
-                foreach (var kv in Value)
-                    yield return kv;
-                yield break;
-            }
-            foreach (string fileName in FileNames)
-                yield return new KeyValuePair<string, List<FdrEntry>>(fileName, LoadFile(fileName));
-        }
-
-        /// <summary>Attach the streaming surface; see <see cref="LoadFile"/>.</summary>
-        public RescoredEntries WithStreaming(
-            IReadOnlyList<string> fileNames, Func<string, List<FdrEntry>> loadFile)
-        {
-            FileNames = fileNames;
-            LoadFile = loadFile;
-            return this;
+            foreach (var kv in Value)
+                yield return kv;
         }
 
         /// <param name="value">The shared backing buffer, filled in place by

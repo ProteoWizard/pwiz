@@ -89,6 +89,30 @@ namespace pwiz.Osprey.Core
             return a.Value.CompareTo(b.Value);
         }
 
+        /// <summary>
+        /// Sort one file's list by <see cref="CANONICAL_ORDER"/>, first verifying that every
+        /// row's <see cref="ParquetIndex"/> is resolved. The unstable <c>List.Sort</c> is only
+        /// safe here because the terminal key is unique per file, and an unresolved row is
+        /// exactly the state that silently broke that claim while the field was a sentinel
+        /// (#4486) - so after the readers were fixed to resolve every row, a null here is a
+        /// coding defect and fails loudly rather than sorting into an order that depends on
+        /// tie handling.
+        /// </summary>
+        public static void SortCanonicalResolved(List<FdrEntry> entries, string fileName)
+        {
+            foreach (var entry in entries)
+            {
+                if (!entry.ParquetIndex.HasValue)
+                {
+                    throw new InvalidOperationException(string.Format(
+                        @"Canonical sort for '{0}': entry_id {1} has no resolved ParquetIndex, " +
+                        @"so the sort's per-file uniqueness invariant does not hold.",
+                        fileName, entry.EntryId));
+                }
+            }
+            entries.Sort(CANONICAL_ORDER); // Array.Sort OK: the loop above verified every ParquetIndex resolved, so the terminal key is unique per file and the comparison never ties
+        }
+
         public uint EntryId { get; set; }
         /// <summary>
         /// Row ordinal in the file's Stage 4 <c>.scores.parquet</c>, or <c>null</c> for a row
