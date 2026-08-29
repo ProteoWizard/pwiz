@@ -26,6 +26,7 @@ using System.IO.Pipes;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -696,6 +697,15 @@ namespace pwiz.Skyline
 
         public static void Init()
         {
+            // WinForms drops the ThreadException subscription when a message loop ends, and a
+            // functional test run calls Application.Run once per test. Re-attach on every Init()
+            // so every test routes UI-thread exceptions here, instead of only the first test and
+            // the rest getting the default ThreadExceptionDialog. The remove makes this
+            // idempotent, which matters because Main() calls Init() a second time.
+            // SetUnhandledExceptionMode stays below: calling it again once a window exists throws.
+            Application.ThreadException -= ThreadExceptionEventHandler;
+            Application.ThreadException += ThreadExceptionEventHandler;
+
             if (!_initialized)
             {
                 _initialized = true;
@@ -703,7 +713,6 @@ namespace pwiz.Skyline
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-                Application.ThreadException += ThreadExceptionEventHandler;
 
                 // Add handler for non-UI thread exceptions. 
                 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
@@ -828,6 +837,13 @@ namespace pwiz.Skyline
 
         private static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
         {
+            if (IsBenignSplitterRepaintFailure(e.Exception))
+            {
+                Messages.WriteAsyncDebugMessage(@"Ignored benign GDI+ failure repainting a splitter: {0}",
+                    e.Exception.Message);
+                return;
+            }
+
             if (TestExceptions != null)
             {
                 AddTestException(e.Exception);
@@ -837,6 +853,24 @@ namespace pwiz.Skyline
             Messages.WriteAsyncDebugMessage(@"Unhandled exception on UI thread: {0}", e.Exception);
             var stackTrace = new StackTrace(1, true);
             ReportExceptionUI(e.Exception, stackTrace);
+        }
+
+        /// <summary>
+        /// True for the benign GDI+ failure WinForms raises from
+        /// SplitContainer.RepaintSplitterRect during Form.Show(). The splitter repaint runs from
+        /// OnLayout while the window is still handling WM_SHOWWINDOW, where the window DC clip
+        /// region is empty, so the fill genuinely fails at the GDI level. .NET 8 ignored that
+        /// status; .NET 9 began throwing it. Fixed upstream by dotnet/winforms#14565 (.NET 11),
+        /// with no backport - remove this, and the matching catch in
+        /// AvailableFieldsTree.OnDrawNode, once Skyline targets a runtime carrying that fix.
+        /// Matched narrowly on the WinForms method name, so a rename fails loudly instead of
+        /// silently widening what gets swallowed.
+        /// </summary>
+        private static bool IsBenignSplitterRepaintFailure(Exception exception)
+        {
+            return exception is ExternalException &&
+                   exception.StackTrace != null &&
+                   exception.StackTrace.Contains(@"RepaintSplitterRect");
         }
 
         private static void ReportExceptionUI(Exception exception, StackTrace stackTrace)
