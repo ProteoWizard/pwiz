@@ -420,7 +420,11 @@ namespace pwiz.SkylineTestUtil
             {
                 using var dataTarget = DataTarget.CreateSnapshotAndAttach(processId);
                 dataTarget.FileLocator = null;   // Nothing here needs symbols
-                var runtime = dataTarget.ClrVersions[0].CreateRuntime();
+                // Disposed, not just left to the data target. ClrMD 3.x makes ClrRuntime
+                // IDisposable and it owns the DAC library loaded to answer these questions;
+                // dropping it on the floor holds that per call, which is a leak the pass-1
+                // check reports against whatever test happened to ask for a dump.
+                using var runtime = dataTarget.ClrVersions[0].CreateRuntime();
 
                 foreach (var thread in runtime.Threads)
                 {
