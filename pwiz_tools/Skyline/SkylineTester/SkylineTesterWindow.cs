@@ -377,12 +377,17 @@ namespace SkylineTester
             {
                 var skylineNode = new TreeNode("Skyline tests");
 
+                lock (_testAssemblySearchPaths)
+                    _testAssemblySearchPaths.Clear();
+                var anyTestsFound = false;
+
                 // Load all tests from each dll.
                 var testSetValue = e.Argument;
                 var arrayDllNames = Equals(testSetValue, "All tests") ? TEST_DLLS : TUTORIAL_DLLS;
                 foreach (var testDll in arrayDllNames)
                 {
                     var tests = GetTestInfos(testDll).OrderBy(test => test.TestMethod.Name).ToArray();
+                    anyTestsFound |= tests.Length > 0;
 
                     // Add tests to test tree view.
                     var dllName = testDll.Replace(".dll", "");
@@ -418,6 +423,12 @@ namespace SkylineTester
                     testsTree.Nodes.Clear();
                     testsTree.Nodes.Add(skylineNode);
                     skylineNode.Expand();
+
+                    // An empty tree used to look like a build with no tests in it. Say which
+                    // directories were looked in, because the answer is nearly always that the
+                    // solution has not been built into the configuration this program expects.
+                    if (!anyTestsFound)
+                        ReportNoTestAssembliesFound();
 
                     // Restore checked tests from file after tree is populated
                     RestoreCheckedTestsFromFile();
@@ -522,14 +533,84 @@ namespace SkylineTester
             return type.GetInterfaces().Any(t => t.Name == interfaceName);
         }
 
+        /// <summary>
+        /// Every directory <see cref="FindTestAssembly"/> looked in without finding a test
+        /// assembly, so an empty tree can say where it looked instead of just coming up empty.
+        /// </summary>
+        private readonly List<string> _testAssemblySearchPaths = new List<string>();
+
+        /// <summary>
+        /// Locates a test assembly to list tests from, preferring the per-project BUILD OUTPUT.
+        /// <para>That is the directory the stager copies FROM, so it is what a run will actually
+        /// execute, and listing from it means a test just added and built appears immediately.
+        /// Listing from the staged directory instead can only ever be as fresh as the last run: a
+        /// developer adding a test would not see it until some unrelated test was run to trigger
+        /// staging, and after a clean build nothing is staged at all, which is what shows the
+        /// project names with no tests under them.</para>
+        /// </summary>
+        private string FindTestAssembly(string testDll)
+        {
+#if NET472
+            // One bin holds this program and the tests alike, so there is nothing to choose between
+            var testDir = GetSelectedBuildDir() ?? ExeDir;
+            var net472Path = Path.Combine(testDir, testDll);
+            if (File.Exists(net472Path))
+                return net472Path;
+            lock (_testAssemblySearchPaths)
+                _testAssemblySearchPaths.Add(testDir);
+            return null;
+#else
+            var searched = new List<string>();
+            var buildOutput = GetBuildOutputTestDll(testDll, searched);
+            if (buildOutput != null)
+                return buildOutput;
+            // Fall back to whatever is staged. Older than the build by definition, but better than
+            // nothing when the build output was cleaned away and a staged copy survives.
+            var stagedDir = GetSelectedBuildDir();
+            if (stagedDir != null)
+            {
+                var stagedPath = Path.Combine(stagedDir, testDll);
+                if (File.Exists(stagedPath))
+                    return stagedPath;
+                searched.Add(stagedDir);
+            }
+            lock (_testAssemblySearchPaths)
+                _testAssemblySearchPaths.AddRange(searched);
+            return null;
+#endif
+        }
+
+        /// <summary>
+        /// Explains an empty test tree, naming every directory searched. Without this the window
+        /// shows the project names with nothing under them and no indication why.
+        /// </summary>
+        private void ReportNoTestAssembliesFound()
+        {
+            string[] searched;
+            lock (_testAssemblySearchPaths)
+                searched = _testAssemblySearchPaths.Distinct().ToArray();
+            var message = new StringBuilder();
+            message.AppendLine("No test assemblies were found, so no tests can be listed.");
+            message.AppendLine();
+            message.AppendLine("Build the solution in " + PreferredConfiguration() +
+                               ", the configuration this program was built as.");
+            if (searched.Length > 0)
+            {
+                message.AppendLine();
+                message.AppendLine("Looked in:");
+                foreach (var dir in searched)
+                    message.AppendLine("    " + dir);
+            }
+            MessageBox.Show(this, message.ToString(), "SkylineTester",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
         public IEnumerable<TestInfo> GetTestInfos(string testDll, string filterAttribute = null, string filterName = null)
         {
-            // Load the tests from the selected build dir (where TestRunner will run them). On net472
-            // SkylineTester is deployed into that same bin, so ExeDir == the build; on net8 SkylineTester
-            // runs from its own project output while the test DLLs live in the staged build dir, so
-            // ExeDir has none of them -- reading from ExeDir there yields an empty tree (no test filter).
-            var testDir = GetSelectedBuildDir() ?? ExeDir;
-            return TestRunnerLib.RunTests.GetTestInfos(Path.Combine(testDir, testDll), LoadTestAssembly).Where(info =>
+            var dllPath = FindTestAssembly(testDll);
+            if (dllPath == null)
+                return new TestInfo[0];   // Reported once for the whole tree, with the paths searched
+            return TestRunnerLib.RunTests.GetTestInfos(dllPath, LoadTestAssembly).Where(info =>
                 (filterAttribute == null || !info.TestMethod.CustomAttributes.Any(attr => Equals(attr.AttributeType.Name, filterAttribute))) &&
                 (filterName == null || info.TestMethod.Name.Contains(filterName)));
         }
@@ -791,12 +872,56 @@ namespace SkylineTester
         /// &lt;checkout&gt;\pwiz_tools\Skyline\bin\staging-net8[-record/-validate]\&lt;Config&gt;. The
         /// canonical "staging-net8" wins over the workflow-specific subsets when both are present.</para>
         /// </summary>
-        private string GetNet8StagingDir(string configuration)
+        /// <summary>
+        /// The Skyline project directory this program was built into, or null when the layout is
+        /// not recognized. Both the staged directory and the per-project build outputs hang off it.
+        /// </summary>
+        private string SkylineDirectory()
         {
             var skylineDir = ExeDir;
             while (skylineDir != null &&
                    !string.Equals(Path.GetFileName(skylineDir), "Skyline", StringComparison.OrdinalIgnoreCase))
                 skylineDir = Path.GetDirectoryName(skylineDir);
+            return skylineDir;
+        }
+
+        /// <summary>
+        /// A test assembly in its own project's build output, which is where the stager copies from.
+        /// <para>The target-framework folder is discovered rather than named, so this keeps working
+        /// across the port as the moniker moves (net8.0-windows, net10.0-windows, whatever is
+        /// next).</para>
+        /// </summary>
+        /// <param name="testDll">File name of the assembly, e.g. "TestFunctional.dll"</param>
+        /// <param name="searched">Collects the directories looked in, for reporting an empty tree</param>
+        private string GetBuildOutputTestDll(string testDll, List<string> searched)
+        {
+            var skylineDir = SkylineDirectory();
+            if (skylineDir == null)
+                return null;
+            // The project directory is the assembly name, e.g. TestFunctional.dll -> TestFunctional
+            var projectBin = Path.Combine(skylineDir, Path.GetFileNameWithoutExtension(testDll) ?? string.Empty,
+                "bin", "x64", PreferredConfiguration());
+            searched.Add(projectBin);
+            if (!Directory.Exists(projectBin))
+                return null;
+            try
+            {
+                // Newest first, so a stale moniker left behind by an earlier port cannot win
+                return Directory.GetDirectories(projectBin)
+                    .Select(d => Path.Combine(d, testDll))
+                    .Where(File.Exists)
+                    .OrderByDescending(File.GetLastWriteTimeUtc)
+                    .FirstOrDefault();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private string GetNet8StagingDir(string configuration)
+        {
+            var skylineDir = SkylineDirectory();
             if (skylineDir == null)
                 return null;
             var binDir = Path.Combine(skylineDir, "bin");
@@ -849,6 +974,47 @@ namespace SkylineTester
         /// </summary>
         /// <param name="buildDir">The directory tests will run from</param>
         /// <returns>False if tests run from a staged directory that cannot be staged</returns>
+        /// <summary>
+        /// Where tests should be staged to when nothing is staged yet, or null when this build
+        /// cannot stage at all.
+        /// <para>Requiring an already-staged directory before running the step that creates one is
+        /// a deadlock: after a clean build nothing is staged, so a developer could not run tests
+        /// until some earlier staged copy happened to survive. The stager lives in the build
+        /// output, so if it is there the directory can simply be created.</para>
+        /// </summary>
+        /// <summary>
+        /// The build directory a RUN uses: the selected one when it actually holds TestRunner.exe,
+        /// otherwise the directory staging will create.
+        /// <para>Callers during a run must use this rather than re-reading the UI selection.
+        /// <see cref="FindBuilds"/> records an out-of-range sentinel when it finds no build, and it
+        /// runs at startup - before the staging that a run performs. So a selection made when
+        /// nothing was staged still reads as "nothing" for the rest of the session, and
+        /// <see cref="GetSelectedBuildDir"/> keeps returning null even once the directory exists.</para>
+        /// </summary>
+        public string GetRunBuildDir()
+        {
+            var selected = GetSelectedBuildDir();
+            if (!string.IsNullOrEmpty(selected) && File.Exists(Path.Combine(selected, "TestRunner.exe")))
+                return selected;
+            return GetStagingTargetDir() ?? selected;
+        }
+
+        private string GetStagingTargetDir()
+        {
+#if NET472
+            return null;   // net472 runs straight out of its single bin; nothing is ever staged
+#else
+            var skylineDir = SkylineDirectory();
+            if (skylineDir == null)
+                return null;
+            var configuration = PreferredConfiguration();
+            // Only propose a target that something can actually fill
+            if (FindStagerExe(skylineDir, configuration) == null)
+                return null;
+            return Path.Combine(skylineDir, "bin", TestStager.STAGING_ROOT, configuration);
+#endif
+        }
+
         public bool AddStagingCommand(string buildDir)
         {
             // Only a staged directory can drift from the build. Where tests run straight out of the
