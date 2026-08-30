@@ -570,6 +570,10 @@ precursor.</td><td class="ColumnType">Double</td></tr>
 particular precursor</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Total Background MS1</td><td class="ColumnDescription">Total Background MS1</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Total Background Fragment</td><td class="ColumnDescription">Total Background Fragment</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Observed Ion Mobility</td><td class="ColumnDescription">Intensity-weighted ion mobility centroid across the peak, in the same units as the IM extraction filter.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Observed CCS</td><td class="ColumnDescription">Collision cross section in square Angstroms, computed from the observed ion mobility using the source instrument&#39;s vendor-supplied conversion. Available only for vendor formats that expose this conversion; open formats such as mzML and mz5 will leave this blank.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Ion Mobility Error Percent</td><td class="ColumnDescription">The difference between the expected and measured ion mobility values expressed as a percent of the expected value (intensity-weighted across the peak)</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">CCS Error Percent</td><td class="ColumnDescription">The difference between the expected and measured collisional cross section (CCS) values expressed as a percent of the expected value</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">Total Area Ratio</td><td class="ColumnDescription">The ratio of the TotalArea of this precursor to the first internal
 standard label type, before version 0.7 this was always light/heavy, and appeared on the
 heavy precursor.</td><td class="ColumnType">Double</td></tr>

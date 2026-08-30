@@ -60,6 +60,19 @@ namespace pwiz.Skyline.Model.Results
         // Accessed only on the write thread
         private readonly RetentionTimePredictor _retentionTimePredictor;
 
+        // Captured from the chromatogram provider while the data file is open;
+        // used inside _writeLock to compute per-peak % CCS error from the
+        // observed IM centroid stored on each ChromPeak.
+        private IIonMobilityFunctionsProvider _ionMobilityConverter;
+
+        // The data reader's native ion mobility units, captured from the provider.
+        // Always available when IM data is present, independent of whether a CCS
+        // converter rode in on the file. Drives the scale used to encode per-time-point
+        // observed IM (see WriteChromDataSet) - sourcing it from _ionMobilityConverter
+        // instead would yield a zero scale (and destroy the data) for IM files with no
+        // vendor CCS calibration, e.g. drift time or 1/K0 imported as mzML/mz5.
+        private eIonMobilityUnits _ionMobilityUnits;
+
         private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
 
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
@@ -256,6 +269,8 @@ namespace pwiz.Skyline.Model.Results
                     _currentFileInfo.IsSingleMatchMz = provider.IsSingleMzMatch;
                     _currentFileInfo.HasMidasSpectra = provider.HasMidasSpectra;
                     _currentFileInfo.IsSrm = provider.IsSrm;
+                    _ionMobilityConverter = provider.IonMobilityFunctionsProvider;
+                    _ionMobilityUnits = provider.IonMobilityUnits;
 
                     // Start multiple threads to perform peak scoring.
                     _chromDataSets = new QueueWorker<PeptideChromDataSets>(null, ScoreWriteChromDataSets);
@@ -1318,7 +1333,8 @@ namespace pwiz.Skyline.Model.Results
         private void WriteChromDataSet(int indexInFile, ChromDataSet chromDataSet, Dictionary<IList<float>, int> dictScoresToIndex, bool saveRawTimes, bool isProcessedScans)
         {
             long location = _fs.Stream.Position;
-            var groupOfTimeIntensities = chromDataSet.ToGroupOfTimeIntensities(saveRawTimes);
+            int observedIonMobilityScale = RawTimeIntensities.GetObservedIonMobilityScaleOrZero(_ionMobilityUnits);
+            var groupOfTimeIntensities = chromDataSet.ToGroupOfTimeIntensities(saveRawTimes, observedIonMobilityScale);
             // Write the raw chromatogram points
             MemoryStream pointsMemoryStream = new MemoryStream();
             groupOfTimeIntensities.WriteToStream(pointsMemoryStream);
@@ -1369,6 +1385,10 @@ namespace pwiz.Skyline.Model.Results
                 {
                     chromTran.MissingMassErrors = true;
                 }
+                if (groupOfTimeIntensities.HasObservedIonMobilities && chromData.TimeIntensities.ObservedIonMobilities == null)
+                {
+                    chromTran.MissingObservedIonMobility = true;
+                }
                 _listTransitions.Add(chromTran);
 
                 // Make sure all transitions have the same number of peaks, as this is a cache requirement
@@ -1392,10 +1412,46 @@ namespace pwiz.Skyline.Model.Results
                     for (int i = 0; i < chromData.Peaks.Count; i++)
                         chromData.Peaks[i] = chromData.Peaks[i].RemoveMassError();
                 }
+                ApplyObservedCcs(chromDataSet, chromData);
                 CacheFormat.ChromPeakSerializer().WriteItems(_fsPeaks.FileStream, chromData.Peaks);
             }
 
             AddChromGroup(new ChromGroupHeaderEntry(indexInFile, header));
+        }
+
+        // Convert each peak's observed IM to observed CCS using the source file's
+        // vendor-supplied IM-CCS conversion (a vendor black box). Open formats like
+        // mzML and mz5 don't expose this conversion, in which case ProvidesCollisionalCrossSectionConverter
+        // is false and we leave ObservedCcs null. Done here while the file is still
+        // open; the converted value is persisted on the peak so reports can show CCS
+        // without the file later.
+        private void ApplyObservedCcs(ChromDataSet chromDataSet, ChromData chromData)
+        {
+            if (_ionMobilityConverter == null || !_ionMobilityConverter.ProvidesCollisionalCrossSectionConverter)
+                return;
+            var nodeGroup = chromDataSet.NodeGroup;
+            if (nodeGroup == null)
+                return;
+            int charge = nodeGroup.PrecursorCharge;
+            if (charge == 0)
+                return;
+            var imFilter = chromData.Key.IonMobilityFilter;
+            if (IonMobilityFilter.IsNullOrEmpty(imFilter) || !imFilter.HasIonMobilityValue)
+                return;
+            var imUnits = imFilter.IonMobility.Units;
+            double mz = chromDataSet.PrecursorMz;
+            for (int i = 0; i < chromData.Peaks.Count; i++)
+            {
+                var peak = chromData.Peaks[i];
+                var observedIm = peak.ObservedIonMobility;
+                if (!observedIm.HasValue)
+                    continue;
+                var imValue = IonMobilityValue.GetIonMobilityValue(observedIm.Value, imUnits);
+                double observedCcs = _ionMobilityConverter.CCSFromIonMobility(imValue, mz, charge, nodeGroup);
+                if (observedCcs == 0 || double.IsNaN(observedCcs))
+                    continue;
+                chromData.Peaks[i] = peak.WithObservedCcs(observedCcs);
+            }
         }
     }
 
