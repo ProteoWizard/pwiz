@@ -1408,7 +1408,20 @@ namespace pwiz.Osprey.Tasks
                         : new List<FdrEntry>();
                 }
 
-                (uint[] entryIds, double[] scores, IReadOnlyDictionary<uint, double> survivorScores)
+                // ownSurvivorIds is this file's own survivor entry_ids, which is what
+                // CompeteOneFile now filters its run q on - the set a per-file worker will have
+                // once that half moves (#4486). ReadOneFilePass2Inputs refills the scratch set
+                // from the entries it is handed, so it is exactly this file's survivors, and
+                // the caller enforces its equivalence with the global union.
+                //
+                // Returned BY REFERENCE, not copied: it is the reused per-file scratch, so it
+                // stays valid only until the next ReadFile call clears it. The streaming loop
+                // consumes it within the same iteration, which is the contract that makes the
+                // scratch safe to share; copying 1.16 M entry_ids per file to avoid the
+                // aliasing would reintroduce the allocation the scratch exists to remove. The
+                // aliasing disappears with the move, where the worker owns the only set.
+                (uint[] entryIds, double[] scores, IReadOnlyDictionary<uint, double> survivorScores,
+                    HashSet<uint> ownSurvivorIds)
                     ReadFile(string fileKey)
                 {
                     // The parquet lookup is established by the validation loop above (every file
@@ -1432,7 +1445,7 @@ namespace pwiz.Osprey.Tasks
                     nScored += fileScores.Count;
 
                     progress.Report(++nRead);
-                    return (eids, scs, fileScores);
+                    return (eids, scs, fileScores, survivorIds);
                 }
 
                 // Finish this file while its run q map is still in hand: stamp the run q onto its

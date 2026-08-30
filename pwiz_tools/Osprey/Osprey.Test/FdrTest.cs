@@ -3517,8 +3517,12 @@ namespace pwiz.Osprey.Test
             const string F = "f";
             var survivorIds = new HashSet<uint>();
             for (uint b = 1; b <= 20; b++) survivorIds.Add(b);   // target entryId == base_id
-            (uint[] eids, double[] scs, IReadOnlyDictionary<uint, double> ov) Read(string _)
-                => ((uint[])ids.Clone(), (double[])sc.Clone(), new Dictionary<uint, double>());
+            // The fourth element is this file's OWN survivor set, which is what the run-q
+            // filter uses (#4486). Single file here, so own == global.
+            (uint[] eids, double[] scs, IReadOnlyDictionary<uint, double> ov,
+                HashSet<uint> own) Read(string _)
+                => ((uint[])ids.Clone(), (double[])sc.Clone(), new Dictionary<uint, double>(),
+                    survivorIds);
             var runQ = new Dictionary<uint, double>();
             void OnFileRunQ(string _, IReadOnlyDictionary<uint, double> fileRunQ)
             {
@@ -3592,10 +3596,15 @@ namespace pwiz.Osprey.Test
             var survivorIds = new HashSet<uint>();
             for (uint b = 1; b <= 12; b++) survivorIds.Add(b);
 
-            (uint[] e, double[] s, IReadOnlyDictionary<uint, double> ov) Read(string key)
+            // Both files hold rows for the same entry_ids and the same survivors, so each
+            // file's OWN survivor set is the global one - the equivalence the caller enforces
+            // (#4486). A file whose own set were smaller here would trip that guard.
+            (uint[] e, double[] s, IReadOnlyDictionary<uint, double> ov,
+                HashSet<uint> own) Read(string key)
                 => ((uint[])idArr.Clone(),
                     (key == FA ? scoresA : scoresB).ToArray(),
-                    new Dictionary<uint, double>());
+                    new Dictionary<uint, double>(),
+                    survivorIds);
 
             var runQByFile = new Dictionary<string, Dictionary<uint, double>>();
             void OnFileRunQ(string key, IReadOnlyDictionary<uint, double> fileRunQ)

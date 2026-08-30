@@ -166,7 +166,9 @@ namespace pwiz.Osprey.FDR
         ///   the competition to these base_ids (protein-compact).</param>
         public static StreamedCompetitionState ComputeFullPopulationPrecursorFdrStreaming(
             IReadOnlyList<string> fileKeys,
-            Func<string, (uint[] entryIds, double[] scores, IReadOnlyDictionary<uint, double> survivorScores)> readFile,
+            Func<string, (uint[] entryIds, double[] scores,
+                IReadOnlyDictionary<uint, double> survivorScores,
+                HashSet<uint> ownSurvivorIds)> readFile,
             IReadOnlyCollection<uint> survivorEntryIds,
             Action<string, IReadOnlyDictionary<uint, double>> onFileRunQ,
             HashSet<uint> stratumBaseIds = null)
@@ -191,7 +193,36 @@ namespace pwiz.Osprey.FDR
             for (int fileIdx = 0; fileIdx < fileKeys.Count; fileIdx++)
             {
                 string fileKey = fileKeys[fileIdx];
-                var (entryIds, scores, survivorScores) = readFile(fileKey);
+                var (entryIds, scores, survivorScores, ownSurvivorIds) = readFile(fileKey);
+
+                // The run-q filter below uses this file's OWN survivor set, not the global
+                // union, because that is all a per-file worker will have once this half moves
+                // (#4486). The two are equivalent - measured globalOnly=0 over 8.2 M
+                // observations on Stellar and Astral, and structurally because
+                // RescoreCompaction retains by base_id against a global set, so a base_id
+                // surviving anywhere survives everywhere it holds a row.
+                //
+                // "Equivalent" is ENFORCED here rather than trusted, while both sets are still
+                // in one place to compare. It is not a tolerable drift: an entry_id this file
+                // holds a row for, that survives elsewhere but not here, would contribute a run
+                // q to the cross-file minimum under the global filter and nothing under the
+                // local one - lowering experiment q for precursors seen in many runs, with no
+                // exception and no failing gate. The observation is also unrepresentable in the
+                // per-file sidecar, which only ever carries this file's own survivors, so the
+                // sidecar-fold architecture depends on this holding, not merely the worker's
+                // choice of set. Loud failure is the only honest option.
+                foreach (uint eid in entryIds)
+                {
+                    if (survivorIds.Contains(eid) && !ownSurvivorIds.Contains(eid))
+                    {
+                        throw new InvalidOperationException(string.Format(
+                            @"Survivor scope violation in '{0}': entry_id {1} is in this file's " +
+                            @"1st-pass population and survives in another file, but not here. " +
+                            @"The per-file run-q filter would drop its contribution to the " +
+                            @"cross-file minimum, which silently lowers experiment q. See " +
+                            @"issue #4486.", fileKey, eid));
+                    }
+                }
 
                 // The PER-FILE half, isolated so it can move to PerFileRescoring (#4486).
                 // Beyond this file's own arrays its only inputs are the frozen-model survivor
@@ -199,7 +230,7 @@ namespace pwiz.Osprey.FDR
                 // worker can be handed all three: the model and the stratum already ride the
                 // phase2 -> phase3 -> phase4 relay, and the survivor id set is ~50 MB.
                 var contribution = CompeteOneFile(
-                    entryIds, scores, survivorScores, survivorIds, stratumBaseIds);
+                    entryIds, scores, survivorScores, ownSurvivorIds, stratumBaseIds);
 
                 // The JOIN half. Everything here is O(distinct base_id) / O(distinct survivor),
                 // never O(observations), which is what makes it the part that has to stay in a
@@ -341,9 +372,13 @@ namespace pwiz.Osprey.FDR
         /// a per-file worker can call this.</param>
         /// <param name="survivorScores">Frozen-model score per survivor entry id, for the
         /// swap-in. An entry absent here keeps its stored 1st-pass score.</param>
-        /// <param name="survivorIds">The GLOBAL survivor set, not this file's. A file can win a
-        /// competition for an entry_id that is not one of its own survivors but is a survivor
-        /// elsewhere, and that win still has to reach the cross-file minimum.</param>
+        /// <param name="survivorIds">This FILE's own survivor set. It used to be the global
+        /// union, on the reasoning that a file could win a competition for an entry_id that is a
+        /// survivor only elsewhere, and that such a win still had to reach the cross-file
+        /// minimum. That case does not occur: compaction retains by base_id against a global
+        /// set, so a base_id surviving anywhere survives everywhere it holds a row, and the
+        /// caller now enforces the equivalence with a throw rather than relying on it. Taking
+        /// the local set is what lets this run in a per-file worker (#4486).</param>
         /// <param name="stratumBaseIds">Null for the full-population competition; otherwise the
         /// protein stratum, which constrains both competitions - see the remarks.</param>
         public static FileCompetition CompeteOneFile(
