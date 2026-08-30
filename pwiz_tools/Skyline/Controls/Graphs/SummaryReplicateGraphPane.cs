@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _replicateGroups = graphData.ReplicateGroups;
         }
 
-        protected override int SelectedIndex
+        public override int SelectedIndex
         {
             get
             {
@@ -178,6 +178,10 @@ namespace pwiz.Skyline.Controls.Graphs
             var document = GraphSummary.DocumentUIContainer.DocumentUI;
             if (!document.Settings.HasResults || iResult >= document.Settings.MeasuredResults.Chromatograms.Count)
                 return;
+
+
+            // This propagates the change to synchronized zooming panels,
+            // and therefore must happen after the axis shift
             GraphSummary.StateProvider.SelectedResultsIndex = iResult;
             GraphSummary.Focus();
         }
@@ -206,7 +210,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < resultNames.Length; i++)
                 pointPairList.Add(PointPairMissing(i));
             AxisChange();
-        }
+        } 
 
         protected Brush GetBrushForNode(SrmSettings settings, DocNode docNode, Color color)
         {
