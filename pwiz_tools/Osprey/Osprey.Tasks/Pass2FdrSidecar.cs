@@ -676,17 +676,53 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         /// <summary>
         /// Read one pass's analysis-wide EXPERIMENT-scope records, keyed by entry_id (format v5,
-        /// issue #4486). Returns an EMPTY map rather than null when the analysis has no such
-        /// sidecar, so callers look up unconditionally and an absent entry takes the same
+        /// issue #4486). Returns an EMPTY map when the analysis names no such sidecar or never
+        /// wrote one, so callers look up unconditionally and an absent entry takes the same
         /// defaults an entry that competed in nothing would carry.
+        ///
+        /// <para>A sidecar that EXISTS but cannot be read is a STOP, not an empty map. The two
+        /// used to be the same answer, and that tolerance is how an HPC chain once ran to
+        /// completion on wrong inputs: every consumer applies these values through a
+        /// <c>TryGetValue</c>, so an empty map is indistinguishable from one that simply holds
+        /// no matching entry, and every entry then keeps its <c>ResetScores</c> defaults - an
+        /// <c>ExperimentAggregateScore</c> of 0.0 that <c>BuildCoAssignment</c> takes a MINIMUM
+        /// over, collapsing a run-wide acceptance boundary. No return value makes a truncated,
+        /// wrong-version or wrong-pass file safe, so the run fails instead.</para>
         /// </summary>
         private static IReadOnlyDictionary<uint, FdrExperimentRecord> LoadExperimentRecords(
             OspreyConfig config, FdrScoresSidecar.Pass pass)
         {
-            return FdrExperimentSidecar.ReadMap(
-                       FdrExperimentSidecar.PathFor(config?.OutputBlib,
-                           ScoringTaskShared.ArtifactSiblingPath(config), pass), pass)
-                   ?? new Dictionary<uint, FdrExperimentRecord>();
+            return LoadExperimentRecordsFrom(
+                FdrExperimentSidecar.PathFor(config?.OutputBlib,
+                    ScoringTaskShared.ArtifactSiblingPath(config), pass), pass);
+        }
+
+        /// <summary>
+        /// The path-taking half of <see cref="LoadExperimentRecords"/>, split out so the
+        /// absent-versus-unreadable distinction is testable without standing up an
+        /// <see cref="OspreyConfig"/> and an artifact tree around it.
+        /// </summary>
+        internal static IReadOnlyDictionary<uint, FdrExperimentRecord> LoadExperimentRecordsFrom(
+            string path, FdrScoresSidecar.Pass pass)
+        {
+            // No path names no artifact, and no file on disk means this analysis never wrote
+            // one. Both are "the analysis has none", which the callers' defaults cover. Testing
+            // existence SEPARATELY is what makes them distinguishable from a file that is there
+            // and unreadable: ReadMap answers null to all three, by design, because it cannot
+            // know which of them its caller can tolerate.
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return new Dictionary<uint, FdrExperimentRecord>();
+            var map = FdrExperimentSidecar.ReadMap(path, pass);
+            if (map == null)
+            {
+                throw new InvalidOperationException(string.Format(
+                    @"The {0} experiment-scope FDR sidecar exists but could not be read: {1}. " +
+                    @"Treating it as empty would leave every entry on its reset defaults - an " +
+                    @"experiment aggregate score of 0 and an experiment q of 1 - and the run " +
+                    @"would then report those as computed values. See issue #4486.",
+                    pass, path));
+            }
+            return map;
         }
 
         internal sealed class Pass1ScalarSeeder

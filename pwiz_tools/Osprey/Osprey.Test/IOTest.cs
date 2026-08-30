@@ -3340,6 +3340,7 @@ namespace pwiz.Osprey.Test
             {
                 AssertExperimentSidecarRoundTrips(dir);
                 AssertExperimentCollapseRejectsDisagreement();
+                AssertUnreadableExperimentSidecarStopsTheRun(dir);
                 AssertSidecarsRejectEachOther(dir);
                 AssertPepPatchMatchesSinglePhaseWrite(dir);
             }
@@ -3390,6 +3391,52 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(3, accumulator.Count);
             AssertBitEqual(0.5, accumulator.Records[9].ExperimentProteinQvalue);
             AssertBitEqual(0.031, accumulator.Records[9].ExperimentPrecursorQvalue);
+        }
+
+        /// <summary>
+        /// Absence and unreadability are DIFFERENT answers, and only absence is tolerable.
+        ///
+        /// <para>A sidecar the analysis never wrote reads as an empty map, because the callers'
+        /// defaults cover it. One that EXISTS and cannot be read stops the run: every consumer
+        /// applies these values through a <c>TryGetValue</c>, so an empty map is
+        /// indistinguishable from one that simply holds no matching entry, and every entry then
+        /// keeps its <c>ResetScores</c> defaults - which the run reports as computed values. A
+        /// valid file is read back FIRST as the negative control, because a throws-on-corrupt
+        /// assertion fed only corrupt input proves nothing about the case it must let through.
+        /// </para>
+        /// </summary>
+        private static void AssertUnreadableExperimentSidecarStopsTheRun(string dir)
+        {
+            const FdrScoresSidecar.Pass pass = FdrScoresSidecar.Pass.SecondPass;
+
+            // Nothing named and nothing on disk: the analysis has none, which is not an error.
+            Assert.AreEqual(0, Pass2FdrSidecar.LoadExperimentRecordsFrom(null, pass).Count);
+            Assert.AreEqual(0, Pass2FdrSidecar.LoadExperimentRecordsFrom(string.Empty, pass).Count);
+            Assert.AreEqual(0, Pass2FdrSidecar.LoadExperimentRecordsFrom(
+                Path.Combine(dir, "never-written.2nd-pass.fdr_experiment.bin"), pass).Count);
+
+            // Control: a valid file of the expected pass reads back with its records.
+            string path = Path.Combine(dir, "unreadable-probe.2nd-pass.fdr_experiment.bin");
+            var accumulator = new FdrExperimentAccumulator();
+            accumulator.Add(4, 0.041, 0.042, 0.043, -4.5);
+            accumulator.Add(5, 0.051, 0.052, 0.053, -5.5);
+            FdrExperimentSidecar.Write(path, accumulator.Records, pass);
+            Assert.AreEqual(2, Pass2FdrSidecar.LoadExperimentRecordsFrom(path, pass).Count);
+
+            // The same file asked for as the OTHER pass. It is present and it is not what the
+            // caller needs, which is the shape a stale or mis-wired artifact arrives in.
+            Assert.ThrowsException<InvalidOperationException>(
+                () => Pass2FdrSidecar.LoadExperimentRecordsFrom(path, FdrScoresSidecar.Pass.FirstPass));
+
+            // Truncated mid-record, with a header whose count still claims both records - the
+            // shape a killed writer leaves behind.
+            string truncated = Path.Combine(dir, "truncated.2nd-pass.fdr_experiment.bin");
+            var bytes = File.ReadAllBytes(path);
+            var shortened = new byte[bytes.Length - 8];
+            Array.Copy(bytes, shortened, shortened.Length);
+            File.WriteAllBytes(truncated, shortened);
+            Assert.ThrowsException<InvalidOperationException>(
+                () => Pass2FdrSidecar.LoadExperimentRecordsFrom(truncated, pass));
         }
 
         /// <summary>
