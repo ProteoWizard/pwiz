@@ -534,7 +534,15 @@ namespace pwiz.Skyline.Model.Tools
                         break;
                 }
             }
-            catch 
+            catch (PythonBootstrapTimeoutException)
+            {
+                // Must not be swallowed with the rest. Swallowing it leaves the caller's task
+                // reporting "not complete" with no reason given, and the installer simply waits
+                // on it again - which is how a capped pip install still consumed the whole test
+                // budget. The caller needs to see that the step gave up.
+                throw;
+            }
+            catch
             {
                 return;
             }
@@ -606,13 +614,13 @@ namespace pwiz.Skyline.Model.Tools
                     catch (OperationCanceledException) when (timeoutSource.IsCancellationRequested &&
                                                              !cancellationToken.IsCancellationRequested)
                     {
-                        throw new ToolExecutionException(TimedOutMessage(timeout.Value, cmdLineForError));
+                        throw TimedOutMessage(timeout.Value, cmdLineForError);
                     }
 
                     // The runner reports cancellation as a non-zero exit rather than a throw, so the
                     // timeout has to be distinguished from a genuine failure here as well.
                     if (timeoutSource.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
-                        throw new ToolExecutionException(TimedOutMessage(timeout.Value, cmdLineForError));
+                        throw TimedOutMessage(timeout.Value, cmdLineForError);
 
                     if (exitCode == 0)
                         return;
@@ -631,10 +639,11 @@ namespace pwiz.Skyline.Model.Tools
             throw new ToolExecutionException(message);
         }
 
-        private static string TimedOutMessage(TimeSpan timeout, string cmdLineForError)
+        private static PythonBootstrapTimeoutException TimedOutMessage(TimeSpan timeout, string cmdLineForError)
         {
-            return string.Format(ToolsResources.PythonInstaller_RunProcessOrThrow_Timed_out_after__0__minutes_running___1__,
-                (int) timeout.TotalMinutes, cmdLineForError);
+            return new PythonBootstrapTimeoutException(
+                string.Format(ToolsResources.PythonInstaller_RunProcessOrThrow_Timed_out_after__0__minutes_running___1__,
+                    (int) timeout.TotalMinutes, cmdLineForError));
         }
 
         /// <summary>
@@ -1363,6 +1372,18 @@ namespace pwiz.Skyline.Model.Tools
 
         public override bool IsRequiredForPythonEnvironment => false;
         public override bool IsNvidiaTask => true;
+    }
+
+    /// <summary>
+    /// A bootstrap step gave up waiting on a process that never finished. Distinct from a
+    /// plain <see cref="ToolExecutionException"/> so that PipInstall, which deliberately
+    /// swallows ordinary install failures, can let this one through.
+    /// </summary>
+    public class PythonBootstrapTimeoutException : ToolExecutionException
+    {
+        public PythonBootstrapTimeoutException(string message) : base(message)
+        {
+        }
     }
 }
 
