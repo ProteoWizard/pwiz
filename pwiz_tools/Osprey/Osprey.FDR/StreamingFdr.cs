@@ -164,14 +164,23 @@ namespace pwiz.Osprey.FDR
         ///   for this file that is absent from it won no competition and takes run q 1.0.</param>
         /// <param name="stratumBaseIds">Null for the full-population competition; non-null restricts
         ///   the competition to these base_ids (protein-compact).</param>
+        /// <param name="authoritativeContribution">TEMPORARY (#4486). Supplies the per-file
+        ///   competition the RESCORE WORKER already computed and wrote to that file's per-run
+        ///   2nd-pass sidecar. When it returns non-null, that answer is what gets folded and the
+        ///   recomputation here exists only to assert against it, so a green run exercises the
+        ///   code that ships rather than the code being replaced. Null - for the callback or for
+        ///   one file - leaves this pass folding its own recomputation, which is the pre-move
+        ///   behaviour. Delete this parameter, the recomputation and the assert together once the
+        ///   move is verified; what survives is the fold over the worker's answer.</param>
         public static StreamedCompetitionState ComputeFullPopulationPrecursorFdrStreaming(
             IReadOnlyList<string> fileKeys,
             Func<string, (uint[] entryIds, double[] scores,
                 IReadOnlyDictionary<uint, double> survivorScores,
                 HashSet<uint> ownSurvivorIds)> readFile,
             IReadOnlyCollection<uint> survivorEntryIds,
-            Action<string, IReadOnlyDictionary<uint, double>> onFileRunQ,
-            HashSet<uint> stratumBaseIds = null)
+            Action<string, FileCompetition> onFileRunQ,
+            HashSet<uint> stratumBaseIds = null,
+            Func<string, FileCompetition> authoritativeContribution = null)
         {
             // stratumBaseIds == null -> full-population competition (transfer-compete).
             // non-null -> STRATIFIED competition (protein-compact): only observations whose
@@ -229,8 +238,26 @@ namespace pwiz.Osprey.FDR
                 // scores, the global survivor id set and the protein stratum - and a per-file
                 // worker can be handed all three: the model and the stratum already ride the
                 // phase2 -> phase3 -> phase4 relay, and the survivor id set is ~50 MB.
-                var contribution = CompeteOneFile(
+                // TEMPORARY, and deliberately expensive: while the per-file half moves to
+                // PerFileRescoring (#4486), the WORKER's answer is authoritative and this
+                // recomputation exists only to check it. Recomputing here costs the file's
+                // 1st-pass sidecar read and frozen rescore all over again - the very work the
+                // move removes - which is the point: the shipped path is the one producing
+                // output, and this is the oracle that says so. DELETE THIS RECOMPUTE, its
+                // parameter and the assert below before the PR merges; what survives is the
+                // fold over authoritativeContribution.
+                var recomputed = CompeteOneFile(
                     entryIds, scores, survivorScores, ownSurvivorIds, stratumBaseIds);
+                var contribution = recomputed;
+                var authoritative = authoritativeContribution?.Invoke(fileKey);
+                if (authoritative != null)
+                {
+                    // Fold the AUTHORITATIVE answer, then assert against the recomputation.
+                    // Folding the checker's answer instead would make a green run prove nothing
+                    // about the code that ships.
+                    contribution = authoritative;
+                    AssertContributionsMatch(fileKey, authoritative, recomputed);
+                }
 
                 // THE SECOND PRECONDITION OF THE RELOCATION, enforced the same way and for the
                 // same reason as the survivor-scope one above.
@@ -265,9 +292,16 @@ namespace pwiz.Osprey.FDR
                 // fold equivalence is a SEPARATE open question and needs its own measurement
                 // before that mode's per-file half moves; asserting the stratified invariant
                 // over it would only disguise the gap as coverage.
+                // Applied to the RECOMPUTED contribution, which is the one reduced over the whole
+                // stratum population. A sidecar-derived contribution satisfies this vacuously -
+                // it holds only survivors by construction - so when the recompute above is
+                // deleted this guard MUST move into CompeteOneFile, which is where the
+                // population and the survivor set are both still in hand, and which after the
+                // move runs in the worker. Leaving it here past the flip would keep a green
+                // assertion that had quietly stopped asserting anything.
                 if (stratumBaseIds != null)
                 {
-                    foreach (var kvp in contribution.BestTarget)
+                    foreach (var kvp in recomputed.BestTarget)
                     {
                         if (ownSurvivorIds.Contains(kvp.Value.entryId))
                             continue;
@@ -286,9 +320,15 @@ namespace pwiz.Osprey.FDR
                 // whole-run stage.
                 FoldFileContribution(contribution, fileIdx, bestTarget, bestDecoy, minRunQ);
 
-                // Hand this file's run q over and let it go. Called after the experiment fold so
-                // the caller cannot observe a partially-folded file.
-                onFileRunQ(fileKey, contribution.RunQ);
+                // Hand this file's whole contribution over and let it go. Called after the
+                // experiment fold so the caller cannot observe a partially-folded file.
+                //
+                // The CONTRIBUTION rather than just its run q: the caller writes this file's
+                // 2nd-pass sidecar here, and while the per-file half is being moved to
+                // PerFileRescoring (#4486) it also verifies the worker's independently computed
+                // answer against this one. That check needs the per-base_id bests - the actual
+                // fold inputs, and the risky half - not only the run q.
+                onFileRunQ(fileKey, contribution);
                 // entryIds/scores/labels/allIdx/fileRunQ and the caller's per-file survivor scores
                 // are all released here, before the next file is read.
             }
@@ -374,6 +414,92 @@ namespace pwiz.Osprey.FDR
             // run q, so handing that state back costs O(distinct) instead of O(files x entries).
             return new StreamedCompetitionState(
                 expQByWinnerId, minRunQ, winnerLoc, aggByEntryId, pepEstimator, fileKeys, fileKeys.Count > 1);
+        }
+
+        /// <summary>
+        /// Assert that the authoritative per-file competition - the one the rescore worker
+        /// computed and wrote down - matches the one recomputed here from the same file's
+        /// artifacts. TEMPORARY: delete with the recompute that feeds it (#4486).
+        ///
+        /// <para><b>Bitwise, and a throw rather than a warning.</b> The two sides are the same
+        /// computation reached by two routes, so any difference at all falsifies the move. A
+        /// tolerance would only decide how much of a wrong answer to accept, and a warning would
+        /// let a run complete and be believed - the failure this whole phase exists to make
+        /// impossible.</para>
+        ///
+        /// <para><b>The run q check is asymmetric on purpose.</b> The recomputed map holds only
+        /// entries that WON a competition. The authoritative map is read back from a sidecar
+        /// holding every survivor plus every carried-forward decoy, so entries that won nothing
+        /// read as 1.0 and cannot be told from a genuine 1.0 award. That difference is
+        /// immaterial: the sole consumer is the per-entry_id MINIMUM folded into
+        /// <c>minRunQ</c>, and its reader defaults an ABSENT entry to 1.0 - so present-at-1.0
+        /// and absent are already the same answer. Every recomputed key must therefore match
+        /// bitwise, while every extra authoritative key must be exactly 1.0; an extra key
+        /// carrying a real q would mean the worker awarded a competition this pass did not, and
+        /// that is a genuine divergence rather than a representational one.</para>
+        /// </summary>
+        public static void AssertContributionsMatch(
+            string fileKey, FileCompetition authoritative, FileCompetition recomputed)
+        {
+            AssertBestsMatch(fileKey, @"target", recomputed.BestTarget, authoritative.BestTarget);
+            AssertBestsMatch(fileKey, @"decoy", recomputed.BestDecoy, authoritative.BestDecoy);
+            foreach (var kv in recomputed.RunQ)
+            {
+                if (authoritative.RunQ.TryGetValue(kv.Key, out double aq) && aq.Equals(kv.Value))
+                    continue;
+                throw new InvalidOperationException(string.Format(
+                    @"Second-pass per-file competition disagreement in '{0}': run q for entry_id " +
+                    @"{1} is {2} as recomputed and {3} in the worker's answer. See issue #4486.",
+                    fileKey, kv.Key, kv.Value,
+                    authoritative.RunQ.TryGetValue(kv.Key, out double a) ? a : @"absent"));
+            }
+            foreach (var kv in authoritative.RunQ)
+            {
+                if (recomputed.RunQ.ContainsKey(kv.Key) || kv.Value.Equals(1.0))
+                    continue;
+                throw new InvalidOperationException(string.Format(
+                    @"Second-pass per-file competition disagreement in '{0}': the worker awarded " +
+                    @"run q {1} to entry_id {2}, which won no competition when recomputed. Only " +
+                    @"the 1.0 default may appear on an entry the recomputation did not award. " +
+                    @"See issue #4486.",
+                    fileKey, kv.Value, kv.Key));
+            }
+        }
+
+        /// <summary>
+        /// Compare one side of the per-base_id bests, bitwise on BOTH the score and the winning
+        /// entry_id. The entry_id matters as much as the score: two observations at an equal
+        /// score are a tie that both reductions resolve first-wins, so agreeing on the value
+        /// while disagreeing on WHICH observation carried it is precisely the silent divergence
+        /// that writing the sidecar in population order exists to prevent.
+        /// </summary>
+        private static void AssertBestsMatch(
+            string fileKey, string side,
+            IReadOnlyDictionary<uint, (double score, uint entryId)> recomputed,
+            IReadOnlyDictionary<uint, (double score, uint entryId)> authoritative)
+        {
+            foreach (var kv in recomputed)
+            {
+                if (authoritative.TryGetValue(kv.Key, out var a) &&
+                    a.score.Equals(kv.Value.score) && a.entryId == kv.Value.entryId)
+                {
+                    continue;
+                }
+                throw new InvalidOperationException(string.Format(
+                    @"Second-pass per-file competition disagreement in '{0}': best {1} for " +
+                    @"base_id {2} is score {3} on entry_id {4} as recomputed, but {5} in the " +
+                    @"worker's answer. See issue #4486.",
+                    fileKey, side, kv.Key, kv.Value.score, kv.Value.entryId,
+                    authoritative.TryGetValue(kv.Key, out var a2)
+                        ? string.Format(@"score {0} on entry_id {1}", a2.score, a2.entryId)
+                        : @"absent"));
+            }
+            if (authoritative.Count == recomputed.Count)
+                return;
+            throw new InvalidOperationException(string.Format(
+                @"Second-pass per-file competition disagreement in '{0}': the worker's answer " +
+                @"yields {1} best-{2} base_id(s) against {3} recomputed. See issue #4486.",
+                fileKey, authoritative.Count, side, recomputed.Count));
         }
 
         /// <summary>

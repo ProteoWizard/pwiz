@@ -214,6 +214,22 @@ namespace pwiz.Osprey.Tasks
                 if (ctx.Config.Reconciliation != null && ctx.Config.Reconciliation.Enabled)
                     yield return ReconciliationFile.PathForInput(input);
             }
+
+            // The analysis-wide 1st-pass EXPERIMENT sidecar (format v5, issue #4486). This task
+            // writes it in WriteExperimentSidecar and counts a failure to do so against the same
+            // total as the per-file writes - because the Stage 5 -> Stage 6 boundary is
+            // incomplete without it - but it was declared by nobody, so the driver could call
+            // this task done with the file absent and leave Stage 6's compaction and Stage 7's
+            // seeder reading an artifact that was never produced.
+            //
+            // Conditional on exactly what WriteExperimentSidecar is conditional on: with no
+            // output blib there is nothing to name the file after and none is written, so
+            // declaring it there would make IsTaskAlreadyDone permanently false.
+            string experimentPath = FdrExperimentSidecar.PathFor(
+                ctx.Config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(ctx.Config),
+                FdrScoresSidecar.Pass.FirstPass);
+            if (!string.IsNullOrEmpty(experimentPath))
+                yield return experimentPath;
         }
 
         public override string ValidityKey(PipelineContext ctx)

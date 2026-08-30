@@ -51,6 +51,20 @@ namespace pwiz.Osprey.Tasks
     internal static class Pass2FdrSidecar
     {
         /// <summary>
+        /// The low 31 bits of an entry_id: its base_id, with the high bit marking a decoy.
+        ///
+        /// <para>Declared here because <c>BASE_ID_MASK</c> is internal to
+        /// Osprey.FDR and therefore invisible from this assembly. Three other files in
+        /// Osprey.Tasks already carry a private copy of the same literal
+        /// (<c>FdrBenchInputWriter</c>, <c>ModelDiagnosticsReport</c>,
+        /// <c>PeakCoAssignmentSource</c>); this one is internal rather than private so the
+        /// second-pass worker shares it instead of adding a fifth. Consolidating all five - most
+        /// cleanly by making the FDR constant public, since it encodes a cross-assembly wire
+        /// convention rather than an implementation detail - is worth doing separately.</para>
+        /// </summary>
+        internal const uint BASE_ID_MASK = 0x7FFFFFFF;
+
+        /// <summary>
         /// Run the 2nd-pass FDR / sidecar persistence step for SecondPassFDR.
         /// Only invoked when protein FDR is enabled (the sole consumer of the
         /// 2nd-pass q-values). <paramref name="taskName"/> and
@@ -157,6 +171,22 @@ namespace pwiz.Osprey.Tasks
             // authoritative going into the write below - not whether a file gets written.
             bool recomputed = false;
 
+            // The files whose per-run 2nd-pass sidecar the RESCORE WORKER owns (#4486). Empty
+            // when no worker produced one, which is the pre-move behaviour throughout.
+            //
+            // Determined FROM DISK, not from a published byproduct. The byproduct answered
+            // correctly in-process and wrongly in an HPC chain, where PerFileRescoring and
+            // SecondPassFDR are separate PROCESSES: nothing published in Stage 6 reaches Stage
+            // 7, so Stage 7 concluded no worker had run and rewrote every sidecar with survivors
+            // only - 332,269 records against the straight route's 407,624, on artifacts that are
+            // supposed to be route-independent. An in-memory signal cannot answer a question
+            // about a file that outlives the process.
+            //
+            // The artifact answers it itself: the sidecar exists and carries a PerFileRescoring
+            // validity stamp with the current key. That is exactly "presence is the indicator,
+            // and you never have to open a file to learn who wrote it".
+            var workerWroteFiles = WorkerOwnedPass2Sidecars(ctx);
+
             // The one per-file .2nd-pass.fdr_scores.bin writer, shared by every path that
             // emits one - the projection score pass's flush callback, the frozen streamed
             // competition, and the resident write block below - so the resume skip, the
@@ -216,7 +246,19 @@ namespace pwiz.Osprey.Tasks
                 // reconciliation, multi-charge consensus or gap-fill anywhere in the cohort
                 // there is nothing for a second Percolator pass to re-score, and the standing
                 // first-pass values ARE the second-pass answer.
-                recomputed = anyRescoreWork && missingPass2 > 0;
+                // A sidecar the RESCORE WORKER wrote this run does NOT mean the second pass is
+                // done (#4486). It means the PER-FILE HALF is done. The join - the experiment
+                // competition, PEP, the protein FDR and the analysis-wide experiment sidecar -
+                // has not run, and skipping it leaves every entry on its pre-competition values
+                // and writes no .2nd-pass.fdr_experiment.bin at all.
+                //
+                // Measured, not theorised: without this clause Stage 7 finished in 2.7s, mode1c
+                // reported the experiment sidecar absent, and mode1's discovery set moved by 32
+                // RefSpectra keys - one cause, four failing modes. It also silently disabled the
+                // worker-vs-recompute assertion, so the run looked agreeable precisely because
+                // nothing was compared.
+                bool workerDidPerFileHalf = workerWroteFiles != null && workerWroteFiles.Count > 0;
+                recomputed = anyRescoreWork && (missingPass2 > 0 || workerDidPerFileHalf);
                 if (recomputed)
                 {
                     // LogInfo, not LogVerbose: this is the heading for the longest stretch of
@@ -698,6 +740,139 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Which per-run 2nd-pass sidecars the RESCORE WORKER owns, decided from what is on disk
+        /// (#4486).
+        ///
+        /// <para>A file qualifies when its <c>.2nd-pass.fdr_scores.bin</c> carries a VALID
+        /// <c>PerFileRescoring</c> validity stamp - the producer's own task name and current key.
+        /// Existence alone is not enough: an earlier run leaves the same file behind, and a
+        /// stale one must not be folded as though this run had computed it.</para>
+        ///
+        /// <para>Deliberately not a published byproduct. Stage 6 and Stage 7 are separate
+        /// PROCESSES in an HPC chain, so anything published in one is simply absent in the other
+        /// - and the failure is silent and asymmetric: the in-process route folds the worker's
+        /// answer while the distributed route quietly recomputes and rewrites it. Route
+        /// dependence in an artifact that is supposed to be route-independent is the exact class
+        /// of defect mode 3 exists to catch, and it caught this one.</para>
+        /// </summary>
+        private static HashSet<string> WorkerOwnedPass2Sidecars(PipelineContext ctx)
+        {
+            var owned = new HashSet<string>(StringComparer.Ordinal);
+            if (ctx.Config?.InputFiles == null)
+                return owned;
+            // The producer's key, computed the same way the producer computes it, so a change
+            // that invalidates PerFileRescoring invalidates this adoption too.
+            var producer = new PerFileRescoreTask();
+            string producerKey = producer.ValidityKey(ctx);
+            foreach (string inputFile in ctx.Config.InputFiles)
+            {
+                if (TaskValiditySidecar.IsValid(
+                        FdrScoresSidecar.Pass2Path(inputFile), producer.Name, producerKey))
+                {
+                    owned.Add(Path.GetFileNameWithoutExtension(inputFile));
+                }
+            }
+            return owned;
+        }
+
+        /// <summary>
+        /// On a per-file competition disagreement, write THIS pass's answer beside the worker's
+        /// so the two can be diffed directly (#4486).
+        ///
+        /// <para>The worker's sidecar is immutable and is the evidence; this goes to a NEW path
+        /// rather than over it. Without this the failure leaves one side on disk and the other
+        /// only in memory, and the first thing anyone would do is spend a run reproducing what
+        /// the failing process was already holding.</para>
+        ///
+        /// <para>Best-effort by design. This runs while an exception is in flight and its only
+        /// job is to improve the diagnosis; a failure to write the dump must not replace the
+        /// disagreement with an error about the dump. The path is logged either way, because a
+        /// dump nobody can find is not a diagnostic.</para>
+        /// </summary>
+        private static void DumpRecomputedForDiff(
+            PipelineContext ctx, Pass2SidecarWriter writer, string fileKey,
+            IReadOnlyList<FdrEntry> entries)
+        {
+            if (fileKey == null || entries == null)
+                return;
+            string inputFile = writer.InputFor(fileKey);
+            if (inputFile == null)
+                return;
+            string dumpPath = FdrScoresSidecar.Pass2Path(inputFile) + @".recomputed";
+            try
+            {
+                FdrScoresSidecar.Write(dumpPath, entries, FdrScoresSidecar.Pass.SecondPass);
+                ctx.LogWarning(string.Format(
+                    @"Second-pass competition disagreement on '{0}': wrote this pass's " +
+                    @"recomputed answer to {1} for diffing against the worker's sidecar at {2}.",
+                    fileKey, dumpPath, FdrScoresSidecar.Pass2Path(inputFile)));
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                ctx.LogWarning(string.Format(
+                    @"Second-pass competition disagreement on '{0}': could not write the " +
+                    @"recomputed answer to {1} for diffing: {2}",
+                    fileKey, dumpPath, ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// The AUTHORITATIVE per-file competition: the one the rescore worker computed and wrote
+        /// into this file's per-run 2nd-pass sidecar (#4486). Stage 7 folds this; its own
+        /// recomputation exists only to check it, and goes away with this transition.
+        ///
+        /// <para>Returns null when this file has no worker answer, which leaves Stage 7 folding
+        /// its own recomputation exactly as it always has. That is the ONLY tolerated absence,
+        /// and it is decided by an explicit published set rather than by probing for a file: a
+        /// resumed run finds standing 2nd-pass sidecars from an EARLIER run, and folding one of
+        /// those - or comparing against it - would be reading a previous run's answer as this
+        /// one's. Once the worker says it wrote a file, every failure below is a throw.</para>
+        /// </summary>
+        private static StreamingFdr.FileCompetition TryReadWorkerContribution(
+            Pass2SidecarWriter writer, string fileKey,
+            HashSet<uint> stratumBaseIds, HashSet<string> workerOwned)
+        {
+            // The owned set is computed ONCE per run and passed in: deciding it here would
+            // re-stat every input file's validity sidecar for every file streamed, which is
+            // O(files^2) on the artifact class this move exists to stop re-reading.
+            if (workerOwned == null || !workerOwned.Contains(fileKey))
+                return null;
+            string inputFile = writer.InputFor(fileKey);
+            if (inputFile == null)
+            {
+                throw new InvalidOperationException(string.Format(
+                    @"Second-pass worker verification for '{0}': the worker reported writing a " +
+                    @"sidecar for this file, but it matches no configured input file. See issue #4486.",
+                    fileKey));
+            }
+            string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
+            var records = new List<FdrScoreRecord>();
+            if (!FdrScoresSidecar.ReadRecords(
+                    pass2Path, FdrScoresSidecar.Pass.SecondPass, rec => records.Add(rec)))
+            {
+                throw new InvalidOperationException(string.Format(
+                    @"Second-pass worker verification for '{0}': the worker's sidecar could not " +
+                    @"be read back from {1}. Absence is not a pass - it is the one outcome that " +
+                    @"would let the move ship unverified. See issue #4486.",
+                    fileKey, pass2Path));
+            }
+            return FileCompetitionFromRecords(records, stratumBaseIds);
+        }
+
+        /// <summary>
+        /// The analysis-wide 1st-pass experiment-scope records, for a caller outside this class
+        /// that needs the same map on the same terms - today the rescore worker's
+        /// <see cref="Pass1ScalarSeeder"/> (issue #4486). Deliberately the SAME entry point Stage
+        /// 7 uses rather than a second reader, so the two stages cannot come to different
+        /// conclusions about a missing or unreadable sidecar.
+        /// </summary>
+        internal static IReadOnlyDictionary<uint, FdrExperimentRecord> LoadPass1ExperimentRecords(
+            OspreyConfig config)
+        {
+            return LoadExperimentRecords(config, FdrScoresSidecar.Pass.FirstPass);
+        }
+
+        /// <summary>
         /// The path-taking half of <see cref="LoadExperimentRecords"/>, split out so the
         /// absent-versus-unreadable distinction is testable without standing up an
         /// <see cref="OspreyConfig"/> and an artifact tree around it.
@@ -858,6 +1033,31 @@ namespace pwiz.Osprey.Tasks
             /// guarded. The warning therefore has to state the real consequence rather than imply
             /// there is none.</para>
             /// </summary>
+            /// <summary>
+            /// Files whose 1st-pass sidecar could not be read, for a caller that owns SEVERAL
+            /// seeders and has to report them as one run-wide set. Exposed rather than logged
+            /// per instance because the split across instances is a scheduling artifact: the
+            /// rescore worker keeps one seeder per THREAD, so which seeder holds which file
+            /// name depends on which thread happened to take that file. Reporting per instance
+            /// would make the warning text vary run to run for identical inputs.
+            /// </summary>
+            public IReadOnlyList<string> Unreadable
+            {
+                get { return _unreadable; }
+            }
+
+            /// <summary>Survivors this instance restored, for the same aggregation.</summary>
+            public int Restored
+            {
+                get { return _nRestored; }
+            }
+
+            /// <summary>Files this instance seeded, for the same aggregation.</summary>
+            public int FilesRead
+            {
+                get { return _filesRead; }
+            }
+
             public void LogSummary(PipelineContext ctx)
             {
                 if (_unreadable.Count > 0)
@@ -1410,6 +1610,10 @@ namespace pwiz.Osprey.Tasks
             // a failure to report, not a file to skip.
             var sidecarsWritten = new List<string>(fileKeys.Count);
             var writeFailures = new List<string>();
+            // The files the rescore worker already wrote a per-run 2nd-pass sidecar for, so this
+            // pass does not rewrite them (#4486). Null when no worker ran, which is the pre-move
+            // behaviour.
+            var workerWroteFiles = WorkerOwnedPass2Sidecars(ctx);
             // Seeds each file's 1st-pass Score/Pep/ExperimentAggregateScore as it is
             // materialized, in place of the whole-pool pass ComputeAndPersist skips for this
             // mode. Capacity grows to the largest file seen rather than being scanned for,
@@ -1494,8 +1698,9 @@ namespace pwiz.Osprey.Tasks
                 // The sidecar's four experiment-scope columns are NOT final here - the
                 // competition that produces them is not finished until every file has been read -
                 // so they go in as whatever the entry carries now and step 4 patches them.
-                void ApplyFileRunQ(string fileKey, IReadOnlyDictionary<uint, double> fileRunQ)
+                void ApplyFileRunQ(string fileKey, StreamingFdr.FileCompetition contribution)
                 {
+                    IReadOnlyDictionary<uint, double> fileRunQ = contribution.RunQ;
                     // The whole per-file cycle depends on StreamingFdr finishing each file
                     // before it reads the next. Asserted rather than assumed: if that order ever
                     // changed, the entries stamped here would silently belong to another file.
@@ -1518,7 +1723,17 @@ namespace pwiz.Osprey.Tasks
                     // failure, and counting it as one made the unpatched check below
                     // throw after the whole competition had already produced the
                     // in-memory values the report needs.
-                    if (writer.Write(fileKey, currentEntries))
+                    // A file the rescore worker already wrote is NOT rewritten here (#4486).
+                    // Pipeline artifacts are immutable once written: presence is the indicator,
+                    // so nobody has to open a file to learn who produced it. Rewriting would
+                    // also be destructive rather than merely redundant - this write serializes
+                    // the resident survivors, while the worker's file additionally carries the
+                    // carried-forward decoy observations the experiment fold needs, so the
+                    // rewrite would silently delete exactly the rows bestDecoy is recovered
+                    // from. Counted as written because it IS written; step 4 must patch it.
+                    if (workerWroteFiles != null && workerWroteFiles.Contains(fileKey))
+                        sidecarsWritten.Add(fileKey);
+                    else if (writer.Write(fileKey, currentEntries))
                         sidecarsWritten.Add(fileKey);
                     else if (!ctx.Config.DiagnosticsOnly)
                         writeFailures.Add(fileKey);
@@ -1526,8 +1741,25 @@ namespace pwiz.Osprey.Tasks
                     currentEntries = null;
                 }
 
-                competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
-                    fileKeys, ReadFile, survivorEntryIds, ApplyFileRunQ, stratumBaseIds);
+                try
+                {
+                    competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                        fileKeys, ReadFile, survivorEntryIds, ApplyFileRunQ, stratumBaseIds,
+                        // The rescore worker's answer, when it produced one, is what gets folded;
+                        // the streaming pass recomputes only to assert against it (#4486).
+                        fileKey => TryReadWorkerContribution(
+                            writer, fileKey, stratumBaseIds, workerWroteFiles));
+                }
+                catch (InvalidOperationException)
+                {
+                    // A per-file competition disagreement leaves the worker's sidecar on disk and
+                    // this pass's answer only in memory - i.e. exactly one side of the diff you
+                    // need. Persist the other side BESIDE it before the throw propagates, so the
+                    // investigation starts from two files rather than from a reproduction run.
+                    // Deliberately a NEW path: the worker's file is immutable and is the evidence.
+                    DumpRecomputedForDiff(ctx, writer, currentKey, currentEntries);
+                    throw;
+                }
             }
             // Once, after the stream, rather than per file: the counts are run-wide and a
             // missing 1st-pass sidecar is a run-wide conclusion.
@@ -2116,6 +2348,87 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             // featByScoreIndex released here (one file resident at a time).
+        }
+
+        /// <summary>
+        /// Rebuild one file's <see cref="StreamingFdr.FileCompetition"/> from the records its
+        /// per-run <c>.2nd-pass.fdr_scores.bin</c> already holds, instead of recomputing it from
+        /// that file's 1st-pass sidecar and reconciled parquet.
+        ///
+        /// <para>This is the JOIN side of the relocation (#4486). Once the per-file half runs in
+        /// <c>PerFileRescoreTask</c>, the worker has already competed the file and written its
+        /// answer down; Stage 7's remaining job is to FOLD, and folding needs nothing the
+        /// per-run sidecar does not carry. That is what stops Stage 7 opening a 1st-pass sidecar
+        /// at all - 52.3 GB of them at 257 files.</para>
+        ///
+        /// <para>It lives HERE and not beside <see cref="StreamingFdr.CompeteOneFile"/> because
+        /// <c>Osprey.FDR</c> does not reference <c>Osprey.IO</c>, so
+        /// <see cref="FdrScoreRecord"/> is not visible there. Adding that reference to put the
+        /// two halves in one file would invert the DLL layering for a cosmetic adjacency;
+        /// <c>Osprey.Tasks</c> already references both, and <c>FileCompetition</c> is public
+        /// precisely so a join stage can construct one.</para>
+        ///
+        /// <para><b>Why each output is recoverable from the records alone:</b></para>
+        /// <list type="bullet">
+        /// <item><b>BestTarget.</b> The winning target observation of every stratum base_id is
+        /// one of this file's survivors, so it HAS a record here. That is not assumed - it is the
+        /// experiment-fold scope invariant enforced in
+        /// <c>ComputeFullPopulationPrecursorFdrStreaming</c>, measured at 82 files. The
+        /// survivor-restricted scan is a subsequence of the population scan and both take the
+        /// FIRST observation at the maximum, so recovering the same winner needs only that the
+        /// winner be present. The SCORE matches too, which is the easy half to get wrong:
+        /// <see cref="ReadOneFilePass2Inputs"/> writes <c>e.Score = frozenScore</c> onto each
+        /// survivor whose reconciled features resolve, and leaves the seeded 1st-pass value on
+        /// the rest - which is exactly the score <c>CompeteOneFile</c> competes on in both
+        /// cases, since a survivor absent from its override map keeps its stored score.</item>
+        /// <item><b>BestDecoy.</b> Recoverable only because every non-survivor decoy observation
+        /// is carried FORWARD into this file's sidecar - decoys are never gap-filled, so they
+        /// never become survivors, and the join needs them to compute the null without reopening
+        /// a pass-1 file. Drop the carry-forward and this half silently loses the 305 decoy
+        /// base_ids measured on Stellar.</item>
+        /// <item><b>RunQ.</b> <c>CompeteOneFile</c> emits an entry only where it WON a
+        /// competition, and the stamp defaults every other survivor to 1.0 - so a record reading
+        /// 1.0 cannot be told from one that won nothing. It does not have to be: the only
+        /// consumer is the per-entry_id MINIMUM across files, and 1.0 is the largest value a q
+        /// can take, so a non-winner contributes nothing to a minimum it could only raise.</item>
+        /// </list>
+        /// </summary>
+        /// <param name="records">One file's 2nd-pass records, as written by the worker.</param>
+        /// <param name="stratumBaseIds">The protein stratum, or null for the full-population
+        /// competition. Mirrors <see cref="StreamingFdr.CompeteOneFile"/>: the per-base_id bests
+        /// are STRATUM ONLY when stratified, deliberately not the wider run-level admitted
+        /// set.</param>
+        internal static StreamingFdr.FileCompetition FileCompetitionFromRecords(
+            IReadOnlyList<FdrScoreRecord> records, HashSet<uint> stratumBaseIds)
+        {
+            var runQ = new Dictionary<uint, double>(records.Count);
+            var bestTarget = new Dictionary<uint, (double score, uint entryId)>();
+            var bestDecoy = new Dictionary<uint, (double score, uint entryId)>();
+            foreach (var rec in records)
+            {
+                uint eid = rec.EntryId;
+                runQ[eid] = rec.RunPrecursorQvalue;
+                uint bid = eid & BASE_ID_MASK;
+                if (stratumBaseIds != null && !stratumBaseIds.Contains(bid))
+                    continue;
+                // Strictly-greater, so the FIRST record at the maximum wins - the same rule
+                // CompeteOneFile and the cross-file fold use. Records are written in the
+                // worker's competition order, which is this file's sidecar order, so "first"
+                // means the same observation on both sides.
+                double s = rec.Score;
+                bool isDecoy = (eid & ~BASE_ID_MASK) != 0u;
+                if (isDecoy)
+                {
+                    if (!bestDecoy.TryGetValue(bid, out var curD) || s > curD.score)
+                        bestDecoy[bid] = (s, eid);
+                }
+                else
+                {
+                    if (!bestTarget.TryGetValue(bid, out var curT) || s > curT.score)
+                        bestTarget[bid] = (s, eid);
+                }
+            }
+            return new StreamingFdr.FileCompetition(runQ, bestTarget, bestDecoy);
         }
 
         internal static Dictionary<uint, double[]> LoadReconciledFeaturesByScoreIndex(

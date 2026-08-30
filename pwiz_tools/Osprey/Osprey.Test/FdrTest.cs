@@ -33,6 +33,7 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -3524,9 +3525,9 @@ namespace pwiz.Osprey.Test
                 => ((uint[])ids.Clone(), (double[])sc.Clone(), new Dictionary<uint, double>(),
                     survivorIds);
             var runQ = new Dictionary<uint, double>();
-            void OnFileRunQ(string _, IReadOnlyDictionary<uint, double> fileRunQ)
+            void OnFileRunQ(string _, StreamingFdr.FileCompetition contribution)
             {
-                foreach (var kv in fileRunQ) runQ[kv.Key] = kv.Value;
+                foreach (var kv in contribution.RunQ) runQ[kv.Key] = kv.Value;
             }
             var competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
                 new[] { F }, Read, survivorIds, OnFileRunQ, stratum);
@@ -3607,10 +3608,10 @@ namespace pwiz.Osprey.Test
                     survivorIds);
 
             var runQByFile = new Dictionary<string, Dictionary<uint, double>>();
-            void OnFileRunQ(string key, IReadOnlyDictionary<uint, double> fileRunQ)
+            void OnFileRunQ(string key, StreamingFdr.FileCompetition contribution)
             {
-                runQByFile[key] = new Dictionary<uint, double>(fileRunQ.Count);
-                foreach (var kv in fileRunQ) runQByFile[key][kv.Key] = kv.Value;
+                runQByFile[key] = new Dictionary<uint, double>(contribution.RunQ.Count);
+                foreach (var kv in contribution.RunQ) runQByFile[key][kv.Key] = kv.Value;
             }
 
             var competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
@@ -4057,6 +4058,82 @@ namespace pwiz.Osprey.Test
         /// inequality to mere presence in the override map, which is a mistake this code has
         /// already made once.
         /// </summary>
+        /// <summary>
+        /// The per-file competition survives a round trip through the per-run 2nd-pass sidecar,
+        /// which is what lets SecondPassFDR fold from that artifact instead of recomputing from
+        /// the 1st-pass sidecar and reconciled parquet once the per-file half moves to
+        /// PerFileRescoring (issue #4486).
+        ///
+        /// <para>Three properties, each of which is a way the round trip could be lossy while
+        /// still looking right on ordinary data:</para>
+        /// <list type="number">
+        /// <item><b>Ties resolve identically.</b> Two observations of one base_id at an EQUAL
+        /// score are reduced first-wins on both sides, so the records must be walked in the same
+        /// order the competition walked the population. Same value, different representative, is
+        /// the silent divergence - so the winning entry_id is asserted, not just the score.</item>
+        /// <item><b>Decoys survive only because they are carried forward.</b> A decoy that is not
+        /// a survivor has no record unless the worker writes one, and dropping it takes its
+        /// base_id out of the null.</item>
+        /// <item><b>Run q is recovered asymmetrically.</b> The sidecar cannot distinguish "won
+        /// with q = 1.0" from "won nothing", so the rebuilt map holds keys the competition's does
+        /// not. That is immaterial to the only consumer - minRunQ's reader defaults an ABSENT
+        /// entry to 1.0 - and the assertion pins exactly that: every competed key matches, and
+        /// every extra key is 1.0.</item>
+        /// </list>
+        /// </summary>
+        [TestMethod]
+        public void TestFileCompetitionRoundTripsThroughSidecarRecords()
+        {
+            var stratum = new HashSet<uint> { 1u, 2u };
+            // base_id 1: two target observations at an EQUAL score - the tie case. base_id 2:
+            // a target and a decoy. The decoy is NOT a survivor, so it only reaches the join if
+            // it is carried forward.
+            uint t1a = 1u, t1b = 0x00010001u, t2 = 2u, d2 = DecoyOf(2u);
+            var entryIds = new[] { t1a, t1b, t2, d2 };
+            var scores = new[] { 0.90, 0.90, 0.50, 0.20 };
+            var survivorIds = new HashSet<uint> { t1a, t1b, t2 };
+
+            var competed = StreamingFdr.CompeteOneFile(
+                entryIds, (double[])scores.Clone(),
+                new Dictionary<uint, double>(), survivorIds, stratum);
+
+            // What the worker writes: every survivor, then the carried-forward decoy, in
+            // POPULATION order.
+            var records = new List<FdrScoreRecord>
+            {
+                new FdrScoreRecord(t1a, 0.90, competed.RunQ.TryGetValue(t1a, out var q1) ? q1 : 1.0, 1.0, 1.0),
+                new FdrScoreRecord(t1b, 0.90, competed.RunQ.TryGetValue(t1b, out var q2) ? q2 : 1.0, 1.0, 1.0),
+                new FdrScoreRecord(t2, 0.50, competed.RunQ.TryGetValue(t2, out var q3) ? q3 : 1.0, 1.0, 1.0),
+                new FdrScoreRecord(d2, 0.20, 1.0, 1.0, 1.0),
+            };
+            var rebuilt = Pass2FdrSidecar.FileCompetitionFromRecords(records, stratum);
+
+            // The tie: both sides must name the SAME winning observation, not merely the same
+            // score. t1a precedes t1b in population order and both score 0.90.
+            Assert.AreEqual(competed.BestTarget[1u].entryId, rebuilt.BestTarget[1u].entryId);
+            Assert.AreEqual(t1a, rebuilt.BestTarget[1u].entryId);
+            Assert.AreEqual(competed.BestTarget[1u].score, rebuilt.BestTarget[1u].score);
+
+            // The carried decoy is why base_id 2 still has a decoy best at all.
+            Assert.AreEqual(competed.BestDecoy[2u].entryId, rebuilt.BestDecoy[2u].entryId);
+            Assert.AreEqual(competed.BestDecoy[2u].score, rebuilt.BestDecoy[2u].score);
+            Assert.AreEqual(competed.BestTarget.Count, rebuilt.BestTarget.Count);
+            Assert.AreEqual(competed.BestDecoy.Count, rebuilt.BestDecoy.Count);
+
+            // This is the assertion the streamed pass makes against the worker, in miniature.
+            StreamingFdr.AssertContributionsMatch("f", rebuilt, competed);
+
+            // And it has teeth: a rebuilt map that awards a REAL q where nothing was competed is
+            // a genuine divergence rather than the representational one above.
+            var bogus = new List<FdrScoreRecord>(records)
+            {
+                new FdrScoreRecord(DecoyOf(1u), 0.10, 0.5, 1.0, 1.0)
+            };
+            Assert.ThrowsException<InvalidOperationException>(
+                () => StreamingFdr.AssertContributionsMatch(
+                    "f", Pass2FdrSidecar.FileCompetitionFromRecords(bogus, stratum), competed));
+        }
+
         [TestMethod]
         public void TestStratifiedCompetitionExcludesUnchangedOffStratumPeaks()
         {

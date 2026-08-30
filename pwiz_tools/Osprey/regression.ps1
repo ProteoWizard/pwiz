@@ -1621,10 +1621,18 @@ foreach ($name in $selected) {
             if (-not $expDiff.Readable) {
                 $m3sIssues.Add("$expName : $($expDiff.Problem)")
             } elseif (-not $expDiff.Equal) {
-                $m3sIssues.Add(("{0} : {1} differs between routes - lengths {2} vs {3}, first " +
+                # DOUBLE parens, the same idiom as the two sites in Regression/FdrSidecars.ps1
+                # and for the reason spelled out at Regression/DiagnosticsGolden.ps1:279: -f
+                # binds TIGHTER than the ',' separating method arguments, so with single parens
+                # only the first operand reaches the format and the rest become extra arguments
+                # to Add. The format then throws "Index (zero based) must be ... less than the
+                # size of the argument list", replacing the comparison result with an exception
+                # that names neither file. Latent until now because this branch runs ONLY when
+                # the experiment sidecars actually differ between routes.
+                $m3sIssues.Add((("{0} : {1} differs between routes - lengths {2} vs {3}, first " +
                     "difference at byte {4}, {5}+ differing byte(s)") -f $expName,
                     $expStraight[0].Name, $expDiff.LengthExpected, $expDiff.LengthActual,
-                    $expDiff.FirstDiffOffset, $expDiff.DiffCount)
+                    $expDiff.FirstDiffOffset, $expDiff.DiffCount))
             } else {
                 $m3sCompared += [int](([System.IO.FileInfo]$expStraight[0].FullName).Length - 32) / 36
             }

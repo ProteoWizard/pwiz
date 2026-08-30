@@ -78,6 +78,16 @@ namespace pwiz.Osprey.Tasks
             foreach (var input in ctx.Config.InputFiles)
                 yield return ParquetScoreCache.EffectiveScoresPathFromScoresPath(
                     ParquetScoreCache.GetScoresPath(input));
+
+            // Under the frozen modes the per-run 2nd-pass FDR sidecars are this task's INPUTS:
+            // the rescore worker computed and wrote them, and the join folds the per-base_id
+            // bests out of them rather than recomputing from the 1st-pass sidecars (#4486).
+            // That inversion - from output to input - is the whole point of the move, so it is
+            // recorded here where the task graph can be read.
+            if (!OspreyEnvironment.Pass2ProteinCompact && !OspreyEnvironment.Pass2TransferCompete)
+                yield break;
+            foreach (var input in ctx.Config.InputFiles)
+                yield return FdrScoresSidecar.Pass2Path(input);
         }
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)
@@ -127,11 +137,42 @@ namespace pwiz.Osprey.Tasks
             // 1st-pass sidecar never had it, writing a 0-record file for a file with no scored
             // rows. A run with no rescore work writes the standing values, which ARE its
             // second-pass answer.
-            if (ctx.Config.InputFiles != null)
+            //
+            // ...but ONLY where this task still writes them. Under the frozen modes the per-file
+            // half of the second pass runs in the rescore worker (#4486), so those sidecars are
+            // PerFileRescoring's output and this task's INPUT - see Inputs(). Declaring an output
+            // another task produces gives one binary two owners (both stamp a validity sidecar
+            // via AnalysisPipeline.WriteTaskSidecars) and, worse, lets the driver's
+            // IsTaskAlreadyDone - which requires every declared output to exist - skip THIS task
+            // the moment Stage 6 has written them, which is the join never running at all.
+            bool workerOwnsPerFileSidecars =
+                OspreyEnvironment.Pass2ProteinCompact || OspreyEnvironment.Pass2TransferCompete;
+            if (ctx.Config.InputFiles != null && !workerOwnsPerFileSidecars)
             {
                 foreach (var input in ctx.Config.InputFiles)
                     yield return FdrScoresSidecar.Pass2Path(input);
             }
+
+            // The analysis-wide 2nd-pass EXPERIMENT sidecar (format v5, issue #4486): the
+            // experiment-scope half of the split, and unambiguously this task's own product -
+            // it is the fold across files, which is what a join stage is for. It had been
+            // declared by NOBODY, which is why its absence surfaced as a regression assertion
+            // (mode 1c) rather than as a task the driver knew had not finished.
+            //
+            // Gated on the same modes for a reason that is worth stating plainly: on the
+            // resident/retrain paths ComputePass2Resident never publishes a Pass2ExperimentScope,
+            // so WritePass2ExperimentSidecar takes its early return and NO experiment sidecar is
+            // written at all. Declaring an output that is never produced would make
+            // IsTaskAlreadyDone permanently false and re-run the whole of Stage 7 on every
+            // resume. That defect is open and ungated (regression.ps1 never sets
+            // OSPREY_PASS2_QVALUE=transfer); this gate is a symptom of it, not a fix for it.
+            if (!workerOwnsPerFileSidecars)
+                yield break;
+            string experimentPath = FdrExperimentSidecar.PathFor(
+                ctx.Config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(ctx.Config),
+                FdrScoresSidecar.Pass.SecondPass);
+            if (!string.IsNullOrEmpty(experimentPath))
+                yield return experimentPath;
         }
 
         public override string ValidityKey(PipelineContext ctx)

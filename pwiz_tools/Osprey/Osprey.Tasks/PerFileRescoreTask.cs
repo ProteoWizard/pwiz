@@ -208,6 +208,23 @@ namespace pwiz.Osprey.Tasks
             // fast per-file-skip its way back to the same answer.
             foreach (var input in ctx.Config.InputFiles)
                 yield return ParquetScoreCache.GetReconciledScoresPath(input);
+
+            // The per-run 2nd-pass FDR sidecar is THIS task's output now (#4486): the per-file
+            // half of the second pass runs in the rescore worker, so the file is produced here
+            // and merely READ by SecondPassFDR. Declaring it matters beyond provenance -
+            // AnalysisPipeline.WriteTaskSidecars stamps a validity sidecar for every declared
+            // output, so leaving it on SecondPassFDR's list gave one binary two owners and made
+            // "who wrote this?" unanswerable without opening it.
+            //
+            // Only when this run's mode actually has a per-file half. The retrain modes compute
+            // the second pass over the whole pool in Stage 7 by definition, and declaring an
+            // output this task will not write would make the driver's IsTaskAlreadyDone - which
+            // requires EVERY declared output to exist - permanently false, re-running Stage 6
+            // on every resume.
+            if (!OspreyEnvironment.Pass2ProteinCompact && !OspreyEnvironment.Pass2TransferCompete)
+                yield break;
+            foreach (var input in ctx.Config.InputFiles)
+                yield return FdrScoresSidecar.Pass2Path(input);
         }
 
         public override string ValidityKey(PipelineContext ctx)
@@ -686,6 +703,8 @@ namespace pwiz.Osprey.Tasks
                 TaskValidityKey = ValidityKey(ctx),
                 JoinFileStems = joinFileStems,
             };
+            inputs.Pass2Worker = TryCreatePass2Worker(
+                perFileParquetPaths, config, ctx, Name, inputs.TaskValidityKey);
 
             // Clean PERSISTENT floor entering reconciliation (post-GC, before the
             // rescore loop repopulates the heavy per-entry arrays) -- fires early,
@@ -779,6 +798,21 @@ namespace pwiz.Osprey.Tasks
                     rescoredFiles.Add(perFileEntries[fileNum].Key);
             }
 
+            // Publish what the per-file second-pass worker did, once the parallel loop has
+            // joined (#4486). The file SET is what makes Stage 7's shadow check self-disabling:
+            // it verifies exactly the sidecars this run wrote, and a resumed run that wrote none
+            // publishes an empty set rather than inviting a comparison against a previous run's
+            // artifacts. The summary is emitted here rather than per file for the same reason
+            // Stage 7 emits it after its stream - the counts are run-wide.
+            if (inputs.Pass2Worker != null)
+            {
+                // No byproduct is published: Stage 7 decides ownership from the validity
+                // stamp on disk, because a byproduct cannot cross the process boundary an
+                // HPC chain puts between Stage 6 and Stage 7 (#4486).
+                inputs.Pass2Worker.LogSummary(ctx);
+                inputs.Pass2Worker.Dispose();
+            }
+
             return new RescoreStats
             {
                 TotalRescored = totalRescored,
@@ -786,6 +820,91 @@ namespace pwiz.Osprey.Tasks
                 TotalGapCwt = totalGapCwt,
                 TotalGapForced = totalGapForced,
             };
+        }
+
+        /// <summary>
+        /// Build the per-file second-pass worker for this run, or return null when this run has
+        /// no per-file half for a worker to own.
+        ///
+        /// <para>Null, not a partially-built worker, in three cases: the pass-2 mode is a
+        /// retrain (which recomputes over the whole pool by definition and has no per-file
+        /// half); the 1st-pass model sidecar cannot be read; or its model has no usable
+        /// model/standardizer. The first is a legitimate configuration and Stage 7 handles it
+        /// as it always has. The other two are NOT silently tolerated - they log and leave
+        /// Stage 7 to answer for the run, which is the existing fallback rather than a new
+        /// default value invented here.</para>
+        ///
+        /// <para>The three whole-run constants it needs all ride the per-file
+        /// <c>.1st-pass.model.json</c> relay that <c>FirstPassFdrTask</c> already writes - the
+        /// frozen model, the experiment-agg arm and the protein stratum - which is why this move
+        /// needs no new relay. The fourth input, the analysis-wide 1st-pass experiment sidecar,
+        /// is the v5 addition (issue #4486) and is read from the analysis, not from a file.</para>
+        /// </summary>
+        private static Pass2PerFileWorker TryCreatePass2Worker(
+            IReadOnlyDictionary<string, string> perFileParquetPaths, OspreyConfig config,
+            PipelineContext ctx, string taskName, string taskValidityKey)
+        {
+            if (!OspreyEnvironment.Pass2ProteinCompact && !OspreyEnvironment.Pass2TransferCompete)
+                return null;
+            var sidecar = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
+            if (sidecar?.Model == null)
+            {
+                ctx.LogWarning(
+                    "Second-pass per-file competition: no readable 1st-pass model sidecar, so the " +
+                    "per-file half stays in SecondPassFDR for this run.");
+                return null;
+            }
+            var scorer = FrozenModelScorer.TryCreate(sidecar.Model);
+            if (scorer == null)
+            {
+                ctx.LogWarning(
+                    "Second-pass per-file competition: the frozen 1st-pass model has no usable " +
+                    "model/standardizer, so the per-file half stays in SecondPassFDR for this run.");
+                return null;
+            }
+            // protein-compact competes within the stratum; transfer-compete over the full
+            // population. Mirrors ComputePass2TransferCompeteFull's own selector so the two
+            // cannot drift on which mode means which competition.
+            bool proteinCompact = OspreyEnvironment.Pass2ProteinCompact;
+            var inputByName = new Dictionary<string, string>(StringComparer.Ordinal);
+            if (config.InputFiles != null)
+            {
+                foreach (string inputFile in config.InputFiles)
+                    inputByName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+            }
+            void WriteSidecar(string fileName, IReadOnlyList<FdrScoreRecord> records)
+            {
+                // --task ModelDiagnostics touches no artifact but the report, exactly as the
+                // Stage 7 writer this replaces.
+                if (config.DiagnosticsOnly)
+                    return;
+                if (!inputByName.TryGetValue(fileName, out string inputFile))
+                {
+                    throw new InvalidOperationException(string.Format(
+                        @"Second-pass per-file competition wrote records for '{0}', which matches " +
+                        @"no configured input file, so its sidecar has nowhere to go. See issue #4486.",
+                        fileName));
+                }
+                string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
+                FdrScoresSidecar.Write(pass2Path, records, FdrScoresSidecar.Pass.SecondPass);
+                // The validity sidecar is what makes PRESENCE a sufficient indicator. Written by
+                // the producer, under the PRODUCER's task and key: the artifact now belongs to
+                // PerFileRescoring, so it must be invalidated by whatever invalidates
+                // PerFileRescoring. Stamping SecondPassFDR's key here would leave a file that
+                // outlives the inputs it was computed from, which is the one thing a resume
+                // cannot detect by looking.
+                TaskValiditySidecar.Write(pass2Path, taskName, OspreyVersion.Current,
+                    taskValidityKey,
+                    new[] { ParquetScoreCache.EffectiveScoresPathFromScoresPath(
+                        ParquetScoreCache.GetScoresPath(inputFile)) });
+            }
+            return new Pass2PerFileWorker(
+                scorer,
+                proteinCompact ? @"protein-compact" : @"transfer-compete",
+                proteinCompact ? sidecar.StratumBaseIds : null,
+                Pass2FdrSidecar.LoadPass1ExperimentRecords(config),
+                WriteSidecar,
+                ctx.LogWarning);
         }
 
         /// <summary>
@@ -808,6 +927,19 @@ namespace pwiz.Osprey.Tasks
             public Dictionary<string, int> FileNameToIdx;
             public string TaskValidityKey;
             public IReadOnlyList<string> JoinFileStems;
+
+            /// <summary>
+            /// The per-file half of the second-pass competition, when this run does it HERE
+            /// rather than in Stage 7 (issue #4486). Null when the run's pass-2 mode has no
+            /// per-file half a worker can own - the retrain modes recompute over the whole pool
+            /// by definition - in which case the rescore worker does nothing extra and Stage 7
+            /// behaves exactly as it always did.
+            ///
+            /// <para>Built ONCE for the pass and shared across the parallel file loop. It is
+            /// safe to share: the scorer and the stratum are read-only, and the only mutable
+            /// state it owns is thread-local. See <see cref="Pass2PerFileWorker"/>.</para>
+            /// </summary>
+            public Pass2PerFileWorker Pass2Worker;
         }
 
         /// <summary>
@@ -1080,6 +1212,44 @@ namespace pwiz.Osprey.Tasks
             MultiProgressReporter.Current?.BeginSegment();
             // PHASE 3 -- reconciled parquet write-back + sidecar stamp.
             bool wroteReconciled = WriteReconciledAndStamp(fileName, inputFile, fdrEntries, inputs, ctx);
+
+            // PHASE 3b -- the per-file half of the SECOND pass (#4486).
+            //
+            // Here, and not in Stage 7, because this is the only moment all three of its inputs
+            // are simultaneously true: this file's survivors are in hand, its reconciled parquet
+            // is on disk (the frozen recompute reads it), and the heavy per-entry payload has not
+            // been dropped yet. Stage 7 could only reach the same state by holding every file's
+            // survivors resident and re-opening the 1st-pass sidecars - 52.3 GB of them at 257
+            // files - which is the whole of what this move removes.
+            //
+            // Gated on wroteReconciled for the same reason ReleaseRescoredPayload below is: when
+            // the write did not persist, the reconciled parquet this reads either does not exist
+            // or was deleted after a failed write, and competing against a stale Stage 4 parquet
+            // would produce a run q for peaks that no longer exist. Skipping leaves Stage 7's own
+            // path to answer for the file, which is what happens today.
+            if (wroteReconciled && inputs.Pass2Worker != null)
+            {
+                string parquetPath = inputs.ParquetPaths != null &&
+                                     inputs.ParquetPaths.TryGetValue(fileName, out string p)
+                    ? p
+                    : null;
+                if (parquetPath == null)
+                {
+                    // Absence is a stop. A file whose parquet is unmapped here would otherwise
+                    // silently get no 2nd-pass sidecar, and the join reads a missing file as a
+                    // file that contributed nothing - lowering nothing, reporting nothing, and
+                    // leaving its precursors to be represented by other runs alone.
+                    throw new InvalidOperationException(string.Format(
+                        @"Second-pass per-file competition for '{0}': no scores parquet is mapped " +
+                        @"for this file, so its reconciled parquet cannot be located. See issue #4486.",
+                        fileName));
+                }
+                inputs.Pass2Worker.CompeteStampAndWrite(
+                    fileName,
+                    FdrScoresSidecar.Pass1Path(inputFile),
+                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(parquetPath),
+                    fdrEntries);
+            }
 
             // Per-file rescore high-water mark: the raw (pre-GC) working_set peak and
             // managed_heap since the last collection -- the during-scoring transient (the
