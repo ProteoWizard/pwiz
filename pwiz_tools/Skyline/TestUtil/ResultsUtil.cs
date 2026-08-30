@@ -252,6 +252,14 @@ namespace pwiz.SkylineTestUtil
         {
         }
 
+        /// <summary>
+        /// Tests replace the document while loaders are running far more abruptly than the
+        /// application does, so they are the ones that see a loader cancel itself over a
+        /// superseded document and then restart. Wait that hand-off out rather than reporting it
+        /// as a failed load. See the base property for why this is not on everywhere.
+        /// </summary>
+        protected override bool WaitForCancelRestart { get { return true; } }
+
         private const int SLEEP_INTERVAL = 10;
         public const int WAIT_TIME = 5 * 1000;    // 5 seconds
 
@@ -283,9 +291,47 @@ namespace pwiz.SkylineTestUtil
             if (LastProgress.IsError)
                 Assert.Fail(LastProgress.ErrorException.ToString());
 
-            Assert.Fail(LastProgress.IsCanceled
-                            ? "Loader cancelled"
-                            : "Unexpected loader progress state \"" + LastProgress.State + "\"");
+            Assert.Fail((LastProgress.IsCanceled
+                             ? "Loader cancelled"
+                             : "Unexpected loader progress state \"" + LastProgress.State + "\"")
+                        + DescribeLoadState());
+        }
+
+        /// <summary>
+        /// What the document itself has to say about the progress status above. A non-complete
+        /// status on a document that IS loaded is a stale status left by a superseded document,
+        /// which is a different defect from a load that genuinely did not finish - and the
+        /// status alone tells the two apart not at all. This is what turns an intermittent
+        /// "Loader cancelled" into something diagnosable from a nightly log.
+        /// </summary>
+        private string DescribeLoadState()
+        {
+            var lines = new List<string>();
+            var progress = LastProgress;
+            if (progress != null)
+            {
+                lines.Add(string.Format("Progress: {0} at {1}%", progress.State, progress.PercentComplete));
+                if (!string.IsNullOrEmpty(progress.Message))
+                    lines.Add("Message: " + progress.Message);
+                if (!string.IsNullOrEmpty(progress.WarningMessage))
+                    lines.Add("Warning: " + progress.WarningMessage);
+            }
+
+            var document = Document;
+            if (document == null)
+            {
+                lines.Add("Document: none");
+            }
+            else if (document.IsLoaded)
+            {
+                lines.Add("Document IS loaded - the status above is stale, from a superseded document");
+            }
+            else
+            {
+                lines.Add("Document is NOT loaded:");
+                lines.AddRange(document.NonLoadedStateDescriptionsFull.Select(why => "  " + why));
+            }
+            return Environment.NewLine + string.Join(Environment.NewLine, lines);
         }
 
         public void AssertError(string expectedError)
