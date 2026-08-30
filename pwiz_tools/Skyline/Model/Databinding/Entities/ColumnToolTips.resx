@@ -774,6 +774,9 @@ The options for determining this value can be specified on the Quantification ta
   <data name="LinearFit">
     <value>The result of doing the linear regression to determine the fold change.</value>
   </data>
+  <data name="LocalizationIsomerCount">
+    <value>The number of positional isomers arising from ambiguously localized modifications on the peptide.</value>
+  </data>
   <data name="Log2FoldChange">
     <value>The logarithm base 2 of the fold change value.</value>
   </data>
@@ -897,6 +900,9 @@ edited all transitions for a precursor use the same integration boundaries</valu
   </data>
   <data name="ModelScore">
     <value>The sum of the feature values weighted according to the currently selected peak scoring model.</value>
+  </data>
+  <data name="ModificationLocalizationGroup">
+    <value>A key identifying peptides that share the same unmodified sequence and the same set of ambiguously localized modifications.</value>
   </data>
   <data name="ModifiedAreaProportion">
     <value>The normalized area of this peptide result divided by the sum of all peptide results in this protein and replicate that have the same unmodified sequence.</value>

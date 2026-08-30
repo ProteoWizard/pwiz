@@ -45,6 +45,7 @@ namespace pwiz.Skyline.Controls
         private bool _closing;
         private bool _autoManageChildren;
         private bool _selectalInternalChange;
+        private bool _siteDeterminingOnly;
 
         private int _leftText;
 
@@ -99,6 +100,11 @@ namespace pwiz.Skyline.Controls
             _autoManageChildren = _picker.AutoManageChildren;
             UpdateAutoManageUI();
 
+            // Show the site-determining ions toggle only for localizable peptides.
+            bool canSd = _picker is ISiteDeterminingIonPicker sd && sd.CanShowSiteDeterminingIons;
+            tbbSiteDetermining.Visible = canSd;
+            tbbSiteDetermining.ToolTipText = ControlsResources.PopupPickList_SiteDetermining_ToolTip;
+
             // Hide the synchronize checkbox, or set its label correctly
             string synchLabelText = _picker.SynchSiblingsLabel;
             if (string.IsNullOrEmpty(synchLabelText))
@@ -116,6 +122,13 @@ namespace pwiz.Skyline.Controls
                 cbSynchronize.Text = synchLabelText;
                 cbSynchronize.Checked = _picker.IsSynchSiblings;
             }
+
+            // Overlay the empty-state hint on the choices list. Shown only when the
+            // site-determining filter is on but no ion uniquely localizes the modification.
+            lblSiteDeterminingEmpty.Text = ControlsResources.PopupPickList_SiteDetermining_NoneFound;
+            lblSiteDeterminingEmpty.Bounds = pickListMulti.Bounds;
+            lblSiteDeterminingEmpty.Anchor = pickListMulti.Anchor;
+            lblSiteDeterminingEmpty.BringToFront();
         }
 
         public IEnumerable<string> ItemNames
@@ -125,6 +138,54 @@ namespace pwiz.Skyline.Controls
                 for (int i = 0; i < pickListMulti.Items.Count; i++)
                     yield return GetVisibleChoice(i).Label;
             }
+        }
+
+        /// <summary>
+        /// Test support: the <see cref="DocNode"/> behind each currently visible choice, in
+        /// display order. Lets a test map a visible pick to its underlying identity (e.g. a
+        /// <see cref="Transition"/>) rather than relying on the (localized) label.
+        /// </summary>
+        public IEnumerable<DocNode> VisibleChoices
+        {
+            get
+            {
+                for (int i = 0; i < pickListMulti.Items.Count; i++)
+                    yield return GetVisibleChoice(i).Choice;
+            }
+        }
+
+        /// <summary>
+        /// Test support: toggles the "site-determining ions only" filter the same way the
+        /// <see cref="tbbSiteDetermining"/> toolbar button does.
+        /// </summary>
+        public bool SiteDeterminingFilter
+        {
+            get { return _siteDeterminingOnly; }
+            set
+            {
+                _siteDeterminingOnly = value;
+                if (tbbSiteDetermining.Visible)
+                    tbbSiteDetermining.Checked = value;
+                ShowChoices();
+            }
+        }
+
+        /// <summary>
+        /// Test support: whether the site-determining ions toggle button is showing (only for
+        /// localizable peptides).
+        /// </summary>
+        public bool SiteDeterminingButtonVisible
+        {
+            get { return tbbSiteDetermining.Visible; }
+        }
+
+        /// <summary>
+        /// Test support: whether the empty-state hint (shown when the site-determining filter
+        /// leaves no visible choices) is currently displayed.
+        /// </summary>
+        public bool SiteDeterminingEmptyHintVisible
+        {
+            get { return lblSiteDeterminingEmpty.Visible; }
         }
 
         public Rectangle GetItemTextRectangle(int i)
@@ -246,12 +307,20 @@ namespace pwiz.Skyline.Controls
             for (int i = 0; i < _choices.Count; i++)
             {
                 var choice = _choices[i];
+                if (_siteDeterminingOnly && _picker is ISiteDeterminingIonPicker sd2 &&
+                    !sd2.IsSiteDeterminingChoice(choice.Choice))
+                    continue;
                 if (!textSearch.Visible || AcceptChoice(choice, searches))
                 {
                     pickListMulti.Items.Add(choice);
                 }
             }
             pickListMulti.EndUpdate();
+
+            // Show the empty-state hint when the site-determining filter is on and it left the
+            // choices list empty (no ion uniquely localizes the modification).
+            lblSiteDeterminingEmpty.Visible = _siteDeterminingOnly && pickListMulti.Items.Count == 0;
+
             UpdateSelectAll();
         }
 
@@ -360,6 +429,12 @@ namespace pwiz.Skyline.Controls
         private void tbbAutoManageChildren_Click(object sender, EventArgs e)
         {
             ToggleAutoManageChildren();
+        }
+
+        private void tbbSiteDetermining_Click(object sender, EventArgs e)
+        {
+            _siteDeterminingOnly = tbbSiteDetermining.Checked;
+            ShowChoices();
         }
 
         public void ToggleAutoManageChildren()

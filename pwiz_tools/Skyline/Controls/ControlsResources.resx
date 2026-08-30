@@ -154,6 +154,12 @@
   <data name="MessageBoxHelper_ValidateNumberListTextBox__0__must_contain_a_comma_separated_list_of_integers_from__1__to__2__" xml:space="preserve">
     <value>{0} must contain a comma separated list of integers from {1} to {2}.</value>
   </data>
+  <data name="PopupPickList_SiteDetermining_NoneFound" xml:space="preserve">
+    <value>No ions uniquely localize this modification</value>
+  </data>
+  <data name="PopupPickList_SiteDetermining_ToolTip" xml:space="preserve">
+    <value>Show only ions that uniquely localize modifications</value>
+  </data>
   <data name="PopupPickList_UpdateAutoManageUI_Auto_select_filtered__0_" xml:space="preserve">
     <value>Auto-select filtered {0}</value>
   </data>
