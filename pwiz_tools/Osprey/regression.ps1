@@ -1358,6 +1358,23 @@ function Invoke-HpcChain {
         # protein-compact's stratum rides inside this same sidecar, so it needs no second hop.
         $modelSide = Join-Path $ph3 "$s.1st-pass.model.json"
         if (Test-Path $modelSide) { Copy-Item $modelSide (Join-Path $ph4 "$s.1st-pass.model.json") }
+        # The per-run 2nd-pass sidecar is now an INPUT to phase 4, not its output (#4486): the
+        # per-file half of the second pass runs in PerFileRescoring, so phase 3 produces this
+        # file and phase 4 folds it. Its VALIDITY STAMP travels with it, because that stamp is
+        # how SecondPassFDR knows the worker owns the file - the filename records the producer,
+        # so presence answers "who wrote this" without opening it.
+        #
+        # Copying the binary but not the stamp would be worse than copying neither: phase 4
+        # would fold a file it believed it had produced itself. Guarded with Test-Path because
+        # the retrain modes have no per-file half and phase 3 writes nothing here.
+        $pass2Side = Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"
+        if (Test-Path $pass2Side) {
+            Copy-Item $pass2Side (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin")
+            $pass2Stamp = "$pass2Side.PerFileRescoring.osprey.task"
+            if (Test-Path $pass2Stamp) {
+                Copy-Item $pass2Stamp (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task")
+            }
+        }
         # Same relay for the analysis-wide experiment sidecar: SecondPassFDR seeds pass-1
         # scalars from it, and $ph2 is gone by now, so phase 3 is its only route here.
         $ph3exp = Join-Path $ph3 'output.1st-pass.fdr_experiment.bin'

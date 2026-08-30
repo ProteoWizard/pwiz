@@ -142,7 +142,13 @@ namespace pwiz.Osprey.Tasks
         // See RescoreOneFileStreamed for why that trade is free.
         private readonly object _survivorLoadLock = new object();
 
-        public override string Name => @"PerFileRescoring";
+        /// <summary>
+        /// This task's name, as a constant so another task can name the stamp it looks for
+        /// without constructing one of these or duplicating the literal (#4486).
+        /// </summary>
+        public const string TASK_NAME = @"PerFileRescoring";
+
+        public override string Name => TASK_NAME;
 
         /// <summary>
         /// Computes the Stage 6 rescore in straight-through, the rescore worker

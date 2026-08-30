@@ -760,14 +760,28 @@ namespace pwiz.Osprey.Tasks
             var owned = new HashSet<string>(StringComparer.Ordinal);
             if (ctx.Config?.InputFiles == null)
                 return owned;
-            // The producer's key, computed the same way the producer computes it, so a change
-            // that invalidates PerFileRescoring invalidates this adoption too.
-            var producer = new PerFileRescoreTask();
-            string producerKey = producer.ValidityKey(ctx);
+            // PRESENCE of the producer's stamp, not a recomputation of the producer's KEY.
+            //
+            // The stamp is named <output>.<taskName>.osprey.task, so the filename already says
+            // who wrote the binary - which is the whole point of stamping it. Recomputing
+            // PerFileRescoring's key from THIS process was wrong and failed exactly where it
+            // mattered: PerFileRescoreTask.ValidityKey folds in
+            // LibraryFragmentRelease.ValidityKeySuffix, which asks RunsOnThisLeg(ctx) ->
+            // ctx.Config.ExpectReconciledInput - a PER-LEG flag. A --task SecondPassFDR process
+            // and a --task PerFileRescoring process therefore compute different keys for the
+            // same task, so in an HPC chain IsValid said "not valid", Stage 7 concluded no
+            // worker had run, and it recomputed and rewrote every sidecar. One task cannot
+            // reconstruct another task's key from a different leg, and should not try.
+            //
+            // Staleness is still covered, by the task that owns it rather than by this check: if
+            // the worker's inputs changed, PerFileRescoring's OWN validity fails, the driver
+            // re-runs it, and it rewrites both the binary and this stamp. A stamp that survives
+            // is one whose producer was legitimately skipped as already-done.
             foreach (string inputFile in ctx.Config.InputFiles)
             {
-                if (TaskValiditySidecar.IsValid(
-                        FdrScoresSidecar.Pass2Path(inputFile), producer.Name, producerKey))
+                string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
+                if (File.Exists(pass2Path) &&
+                    File.Exists(TaskValiditySidecar.PathFor(pass2Path, PerFileRescoreTask.TASK_NAME)))
                 {
                     owned.Add(Path.GetFileNameWithoutExtension(inputFile));
                 }
