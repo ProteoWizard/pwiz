@@ -51,6 +51,10 @@ namespace pwiz.SkylineTest
             TestSpectrumClassFilterSerialization();
             TestTransitionGroupSpectrumClassFilter();
             TestRoundTripSpectrumFilters();
+            TestCvParamColumnRoundTrip();
+            TestCvParamFilterPredicate();
+            TestCvParamBlankFilter();
+            TestDiscoverCvColumns();
         }
 
         private void TestSpectrumPrecursorFilterOperand()
@@ -151,6 +155,383 @@ namespace pwiz.SkylineTest
                     string.Format(
                         MessageResources.ListFilterHandler_MatchesComparison_Cannot_compare_a_list_of__0__values_with_a_list_of__1__values_,
                         3, 2)));
+        }
+
+        private static SpectrumMetadata CvSpectrum(string id, string accession, string name, string value, string unit)
+        {
+            return new SpectrumMetadata(id, 1.0)
+                .ChangeOtherParams(new[] { new SpectrumMetadataTerm(accession, name, value, unit) });
+        }
+
+        private void TestCvParamColumnRoundTrip()
+        {
+            // A dynamic mzML CV column is not one of the static columns, but it must resolve from its
+            // encoded property path (so saved filters validate and reload before any file is imported),
+            // and it must survive the filter-string round-trip that persists to .sky and the cache.
+            const string accession = @"MS:1000505";
+            var column = SpectrumClassColumn.CvParam(accession, @"base peak intensity", true);
+
+            // The encoded column name is a single alphanumeric identifier (so PropertyPath and the
+            // filter-string serializer never have to quote it), and readably encodes the CV accession.
+            Assert.IsTrue(column.ColumnName.All(char.IsLetterOrDigit), @"CV column name must be alphanumeric: " + column.ColumnName);
+            Assert.AreEqual(@"cvidMS1000505", column.ColumnName);
+
+            // FindColumn reconstructs a CV column from the path alone (no backing data).
+            var reconstructed = SpectrumClassColumn.FindColumn(column.PropertyPath);
+            Assert.IsNotNull(reconstructed);
+            Assert.IsTrue(SpectrumClassColumn.IsCvParamColumn(reconstructed));
+            Assert.AreEqual(column.PropertyPath, reconstructed.PropertyPath);
+
+            // The path also round-trips through PropertyPath's own string form.
+            Assert.AreEqual(column.PropertyPath, PropertyPath.Parse(column.PropertyPath.ToString()));
+
+            // A filter built on the CV column round-trips through the filter-string form and validates.
+            var filter = new SpectrumClassFilter(new FilterClause(new[]
+            {
+                new FilterSpec(column.PropertyPath, FilterOperations.OP_IS_GREATER_THAN, @"500"),
+                new FilterSpec(SpectrumClassColumn.MsLevel.PropertyPath, FilterOperations.OP_EQUALS, 1)
+            }));
+            var filterString = filter.ToFilterString();
+            Assert.AreEqual(filter, SpectrumClassFilter.ParseFilterString(filterString));
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString(filterString),
+                @"CV filter string should validate: " + filterString);
+
+            // The capture gate: a filter that references a CV column reports it (so extraction knows to
+            // capture the otherwise-dropped terms); a filter without one, and the empty filter, do not.
+            Assert.IsTrue(filter.ReferencesCvColumns());
+            Assert.IsFalse(new SpectrumClassFilter(new FilterClause(new[]
+            {
+                new FilterSpec(SpectrumClassColumn.MsLevel.PropertyPath, FilterOperations.OP_EQUALS, 1)
+            })).ReferencesCvColumns());
+            Assert.IsFalse(default(SpectrumClassFilter).ReferencesCvColumns());
+
+            // A vendor userParam (arbitrary name, no CVID) encodes via the hex scheme and reconstructs too.
+            var userParamColumn = SpectrumClassColumn.CvParam(@"vendorSetting", @"vendorSetting", false);
+            Assert.IsTrue(userParamColumn.ColumnName.StartsWith(@"cvup"));
+            var userParamReconstructed = SpectrumClassColumn.FindColumn(userParamColumn.PropertyPath);
+            Assert.IsNotNull(userParamReconstructed);
+            Assert.AreEqual(userParamColumn.PropertyPath, userParamReconstructed.PropertyPath);
+        }
+
+        private void TestCvParamFilterPredicate()
+        {
+            const string accession = @"MS:1000505";
+            const string name = @"base peak intensity";
+            const string unit = @"number of detector counts";
+            var numericColumn = SpectrumClassColumn.CvParam(accession, name, true);
+
+            Predicate<SpectrumMetadata> Numeric(IFilterOperation op, string operand) =>
+                new SpectrumClassFilter(new FilterClause(new[] { new FilterSpec(numericColumn.PropertyPath, op, operand) }))
+                    .MakePredicate();
+
+            // Numeric comparison filters include/exclude by the parsed value; a spectrum lacking the term
+            // simply does not match (no value), it does not error.
+            var big = CvSpectrum(@"big", accession, name, @"1000", unit);
+            var small = CvSpectrum(@"small", accession, name, @"100", unit);
+            var absent = new SpectrumMetadata(@"absent", 1.0);
+            Assert.IsTrue(Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500")(big));
+            Assert.IsFalse(Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500")(small));
+            Assert.IsFalse(Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500")(absent));
+            Assert.IsTrue(Numeric(FilterOperations.OP_IS_LESS_THAN, @"500")(small));
+            Assert.IsTrue(Numeric(FilterOperations.OP_EQUALS, @"1000")(big));
+            Assert.IsFalse(Numeric(FilterOperations.OP_EQUALS, @"999")(big));
+
+            // A numeric filter that meets a present but non-numeric value warns and does not match, rather
+            // than aborting: failing the whole extraction over one odd value would cost everything
+            // imported so far. The column is reconstructed from the persisted filter path, whose friendly
+            // name is resolved from the compiled-in ontology catalog, so the warning names the property the
+            // same way the interactive surfaces do.
+            var nonNumeric = CvSpectrum(@"bad", accession, name, @"not a number", unit);
+            var columnDisplay = SpectrumClassColumn.FindColumn(numericColumn.PropertyPath)
+                .GetLocalizedColumnName(CultureInfo.CurrentCulture);
+            var warnings = new List<string>();
+            var writeUserMessage = Messages.WriteUserMessage;
+            try
+            {
+                Messages.WriteUserMessage = (message, args) => warnings.Add(string.Format(message, args));
+                var greaterThan500 = Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500");
+                Assert.IsFalse(greaterThan500(nonNumeric),
+                    @"a value that is not a number has nothing to compare, so it must not match");
+                // Every spectrum carrying the term would report the same thing, so it is said once.
+                Assert.IsFalse(greaterThan500(CvSpectrum(@"bad2", accession, name, @"also not", unit)));
+                Assert.AreEqual(1, warnings.Count, @"the non-numeric warning should be issued only once");
+                Assert.AreEqual(string.Format(
+                        SpectraResources.SpectrumClassFilter_WarnNonNumericValue_Spectrum_property___0___has_values_that_are_not_numbers__starting_with___1____Those_spectra_do_not_match_this_filter_,
+                        columnDisplay, @"not a number"),
+                    warnings[0]);
+            }
+            finally
+            {
+                Messages.WriteUserMessage = writeUserMessage;
+            }
+
+            // An ordered comparison whose OPERAND is not a number (e.g. a typo) is rejected with the same
+            // spectrum-filter context when the predicate is compiled, rather than throwing a raw parse
+            // error. The ordered path forces a numeric operand, so a non-numeric one is caught up front.
+            AssertEx.ThrowsException<InvalidDataException>(
+                () => Numeric(FilterOperations.OP_IS_GREATER_THAN, @"abc"),
+                string.Format(SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,
+                    string.Format(
+                        SpectraResources.SpectrumClassFilter_CompileCvSpec_The_filter_value___0___for_spectrum_property___1___is_not_a_number,
+                        @"abc", columnDisplay)));
+
+            // A number typed where the decimal separator is a comma is stored in its invariant form, so
+            // the filter matches the same spectra wherever it was authored. Equality types its operand as
+            // text (so a string operator stays usable on a numeric term), which otherwise stores the text
+            // verbatim and compares it against a file's invariant "1000.5" - matching nothing, silently.
+            var french = CultureInfo.GetCultureInfo(@"fr-FR");
+            Assert.AreEqual(@"1000.5", SpectrumClassFilter.ToInvariantCvOperand(@"1000,5", french));
+            // Already invariant, or not a number at all: left exactly as written.
+            Assert.AreEqual(@"1000.5", SpectrumClassFilter.ToInvariantCvOperand(@"1000.5", french));
+            Assert.AreEqual(@"FTMS + p", SpectrumClassFilter.ToInvariantCvOperand(@"FTMS + p", french));
+
+            var frenchAuthored = new SpectrumClassFilter(new FilterClause(new[]
+            {
+                new FilterSpec(numericColumn.PropertyPath, FilterOperations.OP_EQUALS,
+                    SpectrumClassFilter.ToInvariantCvOperand(@"1000,5", french))
+            })).MakePredicate();
+            Assert.IsTrue(frenchAuthored(CvSpectrum(@"fr", accession, name, @"1000.5", unit)));
+
+            // A string term filters with equals/contains. Identity is the accession; the term's unit is
+            // not part of it (units are unavailable from the ontology), so matching is unit-independent.
+            var stringColumn = SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", false);
+            Predicate<SpectrumMetadata> StringFilter(IFilterOperation op, string operand) =>
+                new SpectrumClassFilter(new FilterClause(new[] { new FilterSpec(stringColumn.PropertyPath, op, operand) }))
+                    .MakePredicate();
+            var thermo = CvSpectrum(@"thermo", @"MS:1000512", @"filter string", @"FTMS + p ESI Full ms", null);
+            Assert.IsTrue(StringFilter(FilterOperations.OP_CONTAINS, @"ESI")(thermo));
+            Assert.IsFalse(StringFilter(FilterOperations.OP_CONTAINS, @"CID")(thermo));
+            Assert.IsTrue(StringFilter(FilterOperations.OP_EQUALS, @"FTMS + p ESI Full ms")(thermo));
+
+            // An ordered comparison IS offered on a term the ontology declares as text, deliberately: the
+            // declaration describes the term, not every value a vendor writes under it, and a text-declared
+            // term holding numbers is a real thing. Since an unparseable value now warns and does not match
+            // rather than aborting, the user is allowed to try. Do not "fix" this by hiding the comparison
+            // operators on text terms - that would withhold a filter that works on data like this.
+            var numericText = CvSpectrum(@"numericText", @"MS:1000512", @"filter string", @"1500", null);
+            Assert.IsTrue(StringFilter(FilterOperations.OP_IS_GREATER_THAN, @"500")(numericText));
+            Assert.IsFalse(StringFilter(FilterOperations.OP_IS_LESS_THAN, @"500")(numericText));
+            // ...and the same filter simply does not match a value that is not a number.
+            var warningsText = new List<string>();
+            var writeUserMessageText = Messages.WriteUserMessage;
+            try
+            {
+                Messages.WriteUserMessage = (message, args) => warningsText.Add(string.Format(message, args));
+                Assert.IsFalse(StringFilter(FilterOperations.OP_IS_GREATER_THAN, @"500")(thermo));
+                Assert.AreEqual(1, warningsText.Count, @"the unparseable value should be reported once");
+            }
+            finally
+            {
+                Messages.WriteUserMessage = writeUserMessageText;
+            }
+
+            // An ordered comparison against a non-numeric operand parses and resolves happily - the column
+            // exists and the operand is a valid string - so only compiling the filter catches it. Validation
+            // compiles, so a transition list or grid cell carrying this is rejected where it is written
+            // rather than importing cleanly and failing later during chromatogram extraction. Unlike the
+            // value above, this filter is wrong for every spectrum, not just the ones with odd values.
+            var badOrdered = new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(stringColumn.PropertyPath, FilterOperations.OP_IS_GREATER_THAN, @"abc") }));
+            var badOrderedString = badOrdered.ToFilterString();
+            var stringColumnDisplay = SpectrumClassColumn.FindColumn(stringColumn.PropertyPath)
+                .GetLocalizedColumnName(CultureInfo.CurrentCulture);
+            Assert.AreEqual(
+                string.Format(SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,
+                    string.Format(
+                        SpectraResources.SpectrumClassFilter_CompileCvSpec_The_filter_value___0___for_spectrum_property___1___is_not_a_number,
+                        @"abc", stringColumnDisplay)),
+                SpectrumClassFilter.ValidateFilterString(badOrderedString),
+                @"validation should reject an ordered comparison whose operand is not a number: " + badOrderedString);
+
+            // A well-formed filter still validates, so compiling has not made validation reject good input.
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString(
+                new SpectrumClassFilter(new FilterClause(new[]
+                    { new FilterSpec(stringColumn.PropertyPath, FilterOperations.OP_CONTAINS, @"ESI") })).ToFilterString()));
+
+            // Identity is the accession alone: a column matches a term with the same accession regardless
+            // of the unit the term happens to carry.
+            var sameAccessionDifferentUnitTerm = CvSpectrum(@"pct", accession, name, @"1000", @"percent of base peak");
+            Assert.IsTrue(Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500")(sameAccessionDifferentUnitTerm));
+
+            // Equals/Not Equals with a numeric operand does NOT hard-fail the way the ordered comparisons
+            // do. It compares numerically where the term's value is a number (so scientific notation still
+            // matches "1000"), and by string otherwise, so a string term meeting a numeric operand is just
+            // compared as text rather than aborting extraction.
+            var scientific = CvSpectrum(@"sci", accession, name, @"1.0e03", unit);
+            Assert.IsTrue(Numeric(FilterOperations.OP_EQUALS, @"1000")(scientific));
+            Assert.IsFalse(Numeric(FilterOperations.OP_EQUALS, @"999")(scientific));
+            // The string term "filter string" holds non-numeric text; "equals 5" must string-compare
+            // (no match, no throw), while a term whose value really is "5" matches via the numeric path.
+            Assert.IsFalse(StringFilter(FilterOperations.OP_EQUALS, @"5")(thermo));
+            var literalFive = CvSpectrum(@"five", @"MS:1000512", @"filter string", @"5", null);
+            Assert.IsTrue(StringFilter(FilterOperations.OP_EQUALS, @"5")(literalFive));
+            Assert.IsTrue(StringFilter(FilterOperations.OP_NOT_EQUALS, @"5")(thermo));
+            Assert.IsFalse(StringFilter(FilterOperations.OP_NOT_EQUALS, @"5")(literalFive));
+
+            // The operand type for a CV comparison is chosen by the operator (matching how the predicate
+            // evaluates it), so the filter editor can validate operands the same way: ordered comparisons
+            // are numeric, everything else (contains/equals) is text - independent of the column's type.
+            Assert.AreEqual(typeof(double), SpectrumClassFilter.GetCvOperandType(FilterOperations.OP_IS_GREATER_THAN));
+            Assert.AreEqual(typeof(double), SpectrumClassFilter.GetCvOperandType(FilterOperations.OP_IS_LESS_THAN_OR_EQUAL));
+            Assert.AreEqual(typeof(string), SpectrumClassFilter.GetCvOperandType(FilterOperations.OP_CONTAINS));
+            Assert.AreEqual(typeof(string), SpectrumClassFilter.GetCvOperandType(FilterOperations.OP_EQUALS));
+        }
+
+        private void TestCvParamBlankFilter()
+        {
+            // For a CV/user term, blank means absent: the term is blank when the spectrum does not carry it
+            // and is never blank when it does, whatever value it carries. That is what makes a value-less
+            // flag term (e.g. "zoom scan") matchable at all - it captures with an empty value, which for an
+            // ordinary text column would read as blank. Identity is the accession alone, as for the value
+            // operators.
+            const string accession = @"MS:1000497";
+            const string name = @"zoom scan";
+            var flagColumn = SpectrumClassColumn.CvParam(accession, name, false);
+
+            // The ontology declares no value type for this term, which is what tells the filter editor to
+            // offer only the blank tests for it - a comparison against a term that cannot carry a value
+            // could never match. Terms that do declare a value type, numeric or text alike, are unaffected,
+            // as is a vendor userParam, whose type the ontology has no way to know.
+            Assert.IsTrue(SpectrumClassColumn.IsValuelessCvColumn(flagColumn),
+                @"zoom scan declares no value type and should be treated as a flag");
+            Assert.IsFalse(SpectrumClassColumn.IsValuelessCvColumn(
+                    SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity", true)),
+                @"base peak intensity declares a numeric value type");
+            Assert.IsFalse(SpectrumClassColumn.IsValuelessCvColumn(
+                    SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", false)),
+                @"filter string declares a text value type");
+            Assert.IsFalse(SpectrumClassColumn.IsValuelessCvColumn(
+                    SpectrumClassColumn.CvParam(@"vendorSetting", @"vendorSetting", false)),
+                @"a userParam has no ontology entry, so its operators must not be restricted");
+            Assert.IsFalse(SpectrumClassColumn.IsValuelessCvColumn(SpectrumClassColumn.MsLevel),
+                @"an interpreted column is not a CV flag");
+
+            Predicate<SpectrumMetadata> Blankness(IFilterOperation op) =>
+                new SpectrumClassFilter(new FilterClause(new[] { new FilterSpec(flagColumn.PropertyPath, op, (string)null) }))
+                    .MakePredicate();
+
+            // A value-less flag term captures with an empty (non-null) value: it is present, so not blank.
+            var flagPresent = CvSpectrum(@"flag", accession, name, string.Empty, null);
+            // A value-bearing term of the same accession is likewise not blank.
+            var valued = CvSpectrum(@"valued", accession, name, @"1", null);
+            // A spectrum lacking the term entirely is blank.
+            var absent = new SpectrumMetadata(@"absent", 1.0);
+
+            Assert.IsFalse(Blankness(FilterOperations.OP_IS_BLANK)(flagPresent));
+            Assert.IsFalse(Blankness(FilterOperations.OP_IS_BLANK)(valued));
+            Assert.IsTrue(Blankness(FilterOperations.OP_IS_BLANK)(absent));
+
+            Assert.IsTrue(Blankness(FilterOperations.OP_IS_NOT_BLANK)(flagPresent));
+            Assert.IsTrue(Blankness(FilterOperations.OP_IS_NOT_BLANK)(valued));
+            Assert.IsFalse(Blankness(FilterOperations.OP_IS_NOT_BLANK)(absent));
+
+            // This is a deliberate divergence from an ordinary text column, where an empty string IS blank.
+            Assert.IsTrue(new DataSchema().GetFilterHandler(typeof(string)).IsBlank(string.Empty),
+                @"an empty string is blank for an ordinary text column, which is what CV terms diverge from");
+
+            // An empty value is asked about specifically with Equals and an empty operand, which matches the
+            // present flag and not the spectrum that lacks the term.
+            Predicate<SpectrumMetadata> EqualsEmpty() =>
+                new SpectrumClassFilter(new FilterClause(new[]
+                    { new FilterSpec(flagColumn.PropertyPath, FilterOperations.OP_EQUALS, string.Empty) })).MakePredicate();
+            Assert.IsTrue(EqualsEmpty()(flagPresent));
+            Assert.IsFalse(EqualsEmpty()(valued));
+            Assert.IsFalse(EqualsEmpty()(absent));
+
+            // That test survives a filter string as well as the document and the cache. The blank tests
+            // have their own syntax ("is null" / "is not null"), so "= ''" is left to mean equality with
+            // the empty string and comes back as such. While Is Blank rendered as "= ''", the two were
+            // indistinguishable on the way back and this returned as Is Blank - which for a term absent
+            // from a spectrum is the opposite answer.
+            var equalsEmptyString = new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(flagColumn.PropertyPath, FilterOperations.OP_EQUALS, string.Empty) })).ToFilterString();
+            var equalsEmptyRoundTripped =
+                SpectrumClassFilter.ParseFilterString(equalsEmptyString).Clauses.Single().FilterSpecs.Single();
+            Assert.AreEqual(FilterOperations.OP_EQUALS, equalsEmptyRoundTripped.Operation,
+                @"equals-empty should round-trip as itself: " + equalsEmptyString);
+            // And it still means what it meant: matching the present flag, not the spectrum lacking the term.
+            var equalsEmptyPredicate = new SpectrumClassFilter(
+                new FilterClause(new[] { equalsEmptyRoundTripped })).MakePredicate();
+            Assert.IsTrue(equalsEmptyPredicate(flagPresent));
+            Assert.IsFalse(equalsEmptyPredicate(absent));
+
+            // A blank filter references a CV column, so it triggers term capture during extraction, and its
+            // persisted filter string validates and re-parses to a predicate that behaves identically.
+            var filter = new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(flagColumn.PropertyPath, FilterOperations.OP_IS_NOT_BLANK, (string)null) }));
+            Assert.IsTrue(filter.ReferencesCvColumns());
+            var filterString = filter.ToFilterString();
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString(filterString),
+                @"blank filter string should validate: " + filterString);
+            var roundTripped = SpectrumClassFilter.ParseFilterString(filterString).MakePredicate();
+            Assert.IsTrue(roundTripped(flagPresent));
+            Assert.IsFalse(roundTripped(absent));
+        }
+
+        private void TestDiscoverCvColumns()
+        {
+            SpectrumMetadata Spectrum(string id, params SpectrumMetadataTerm[] terms) =>
+                new SpectrumMetadata(id, 1.0).ChangeOtherParams(terms);
+
+            const string counts = @"number of detector counts";
+            var specA = Spectrum(@"a",
+                new SpectrumMetadataTerm(@"MS:1000505", @"base peak intensity", @"500", counts),
+                new SpectrumMetadataTerm(@"MS:1000512", @"filter string", @"FTMS + p NSI", null),
+                new SpectrumMetadataTerm(@"vendorCount", @"vendorCount", @"3", @"ea"));
+            // A CV term is typed by the ontology, so an unparseable value in one spectrum does not
+            // make base peak intensity (declared xsd:float) a string column.
+            var specB = Spectrum(@"b",
+                new SpectrumMetadataTerm(@"MS:1000505", @"base peak intensity", @"n/a", counts),
+                new SpectrumMetadataTerm(@"vendorCount", @"vendorCount", @"5", @"ea"),
+                new SpectrumMetadataTerm(@"vendorSetting", @"vendorSetting", @"5", @"ea"));
+            // A userParam is not in the ontology, so the values seen type it: mixed values make it a string.
+            var specC = Spectrum(@"c", new SpectrumMetadataTerm(@"vendorSetting", @"vendorSetting", @"abc", @"ea"));
+
+            var columns = SpectrumClassColumn.DiscoverCvColumns(new[] { specA, specB, specC });
+            Assert.AreEqual(4, columns.Count);
+            Assert.IsTrue(columns.All(SpectrumClassColumn.IsCvParamColumn));
+
+            SpectrumClassColumn Find(string accession) =>
+                columns.Single(c => Equals(c.PropertyPath, SpectrumClassColumn.CvParam(accession, null, false).PropertyPath));
+
+            // Base peak intensity is numeric by ontology, and it displays its friendly name with the
+            // accession as the cue.
+            var bpi = Find(@"MS:1000505");
+            Assert.AreEqual(typeof(double), bpi.ValueType);
+            var bpiName = bpi.GetLocalizedColumnName(CultureInfo.CurrentCulture);
+            Assert.IsTrue(bpiName.Contains(@"base peak intensity") && bpiName.Contains(@"MS:1000505"), bpiName);
+
+            // Filter string is declared xsd:string, and the mixed-value userParam falls back to a string.
+            Assert.AreEqual(typeof(string), Find(@"MS:1000512").ValueType);
+            Assert.AreEqual(typeof(string), Find(@"vendorSetting").ValueType);
+            // A userParam whose every value parses as a number is still typed from those values.
+            Assert.AreEqual(typeof(double), Find(@"vendorCount").ValueType);
+
+            TestCvColumnCatalogTypes();
+        }
+
+        /// <summary>
+        /// The ontology types a CV column before any data is imported, so the filter editor offers numeric
+        /// comparisons on a numeric term without waiting to see a value, and a column reconstructed from a
+        /// saved filter path is typed the same way.
+        /// </summary>
+        private void TestCvColumnCatalogTypes()
+        {
+            var catalog = SpectrumClassColumn.GetCvColumnCatalog();
+
+            SpectrumClassColumn CatalogEntry(string accession) =>
+                catalog.Single(c => Equals(c.PropertyPath, SpectrumClassColumn.CvParam(accession, null, false).PropertyPath));
+
+            // Base peak intensity is declared xsd:float, filter string xsd:string, and zoom scan is a pure
+            // flag that carries no value at all, so only the first offers numeric comparisons.
+            Assert.AreEqual(typeof(double), CatalogEntry(@"MS:1000505").ValueType);
+            Assert.AreEqual(typeof(string), CatalogEntry(@"MS:1000512").ValueType);
+            Assert.AreEqual(typeof(string), CatalogEntry(@"MS:1000497").ValueType);
+
+            var savedPath = SpectrumClassColumn.CvParam(@"MS:1000505", null, false).PropertyPath;
+            var reconstructed = SpectrumClassColumn.FindColumn(savedPath);
+            Assert.IsNotNull(reconstructed);
+            Assert.AreEqual(typeof(double), reconstructed.ValueType);
         }
 
         private void TestSpectrumClassFilterSerialization()
