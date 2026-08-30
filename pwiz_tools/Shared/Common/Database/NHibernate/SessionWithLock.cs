@@ -35,23 +35,33 @@ namespace pwiz.Common.Database.NHibernate
     public class SessionWithLock : AbstractSessionWithLock, ISession
     {
         readonly ISession _session;
+        // A factory this session OWNS and disposes with itself. NHibernate registers every
+        // SessionFactory in the static SessionFactoryObjectFactory.Instances dictionary and
+        // only Dispose() removes it, so an undisposed factory is rooted for the life of the
+        // process along with its persisters, dialect and emitted proxies. Tying the factory
+        // to a session that callers always dispose means no factory can outlive its scope.
+        readonly ISessionFactory _ownedSessionFactory;
 
-        public SessionWithLock(ISession session, ReaderWriterLock readerWriterLock, bool writeLock)
-            : this(session, readerWriterLock, writeLock, CancellationToken.None)
+        public SessionWithLock(ISession session, ReaderWriterLock readerWriterLock, bool writeLock,
+            ISessionFactory ownedSessionFactory = null)
+            : this(session, readerWriterLock, writeLock, CancellationToken.None, ownedSessionFactory)
         {
             
         }
 
-        public SessionWithLock(ISession session, ReaderWriterLock readerWriterLock, bool writeLock, CancellationToken cancellationToken)
+        public SessionWithLock(ISession session, ReaderWriterLock readerWriterLock, bool writeLock, CancellationToken cancellationToken,
+            ISessionFactory ownedSessionFactory = null)
             :base(readerWriterLock, writeLock, cancellationToken, session.CancelQuery)
         {
             _session = session;
+            _ownedSessionFactory = ownedSessionFactory;
         }
 
         public override void Dispose()
         {
             _session.Dispose();
             base.Dispose();
+            _ownedSessionFactory?.Dispose();
         }
 
         public void Flush()
