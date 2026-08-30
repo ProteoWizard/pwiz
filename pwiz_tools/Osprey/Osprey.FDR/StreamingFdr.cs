@@ -232,6 +232,55 @@ namespace pwiz.Osprey.FDR
                 var contribution = CompeteOneFile(
                     entryIds, scores, survivorScores, ownSurvivorIds, stratumBaseIds);
 
+                // THE SECOND PRECONDITION OF THE RELOCATION, enforced the same way and for the
+                // same reason as the survivor-scope one above.
+                //
+                // CompeteOneFile reduces to the per-base_id bests over this file's whole STRATUM
+                // POPULATION. Once the per-file half runs in a worker (#4486), SecondPassFDR
+                // folds those bests out of the per-run .2nd-pass.fdr_scores.bin instead - and
+                // that file carries only the survivors this file holds. The two agree exactly
+                // when the winning TARGET observation is itself a survivor, because the
+                // survivor-restricted scan is a subsequence of the population scan and both take
+                // the first observation at the maximum: if the population winner is in the
+                // subset, it is also the subset's winner.
+                //
+                // DECOYS are deliberately not checked. Every non-survivor decoy observation is
+                // carried forward into the per-run sidecar by design (they are never gap-filled,
+                // so they never become survivors, and the join needs them to compute the null
+                // without reopening a pass-1 file), which makes the decoy half true by
+                // construction. That is also why the carry-forward is not optional: drop it and
+                // this loop would need the same check for bestDecoy, and it would fail.
+                //
+                // Measured on Stellar 3-file as target population-only = 0. Three files cannot
+                // speak for a cohort, so this is the standing measurement at every scale the
+                // gates run, and it fails loudly rather than drifting: a target best that is not
+                // a survivor is UNREPRESENTABLE in the per-file sidecar, so the folded
+                // experiment-wide maximum would silently fall to a lower observation.
+                //
+                // STRATIFIED ONLY, because that is the whole of what was measured. Unstratified
+                // (transfer-compete) reduces over the file's ENTIRE population, which includes
+                // base_ids that survive nowhere, and their bests are non-survivors by
+                // definition - so the same check there would fire on the first file and say
+                // nothing about the fold. The relocation covers transfer-compete too, so its
+                // fold equivalence is a SEPARATE open question and needs its own measurement
+                // before that mode's per-file half moves; asserting the stratified invariant
+                // over it would only disguise the gap as coverage.
+                if (stratumBaseIds != null)
+                {
+                    foreach (var kvp in contribution.BestTarget)
+                    {
+                        if (ownSurvivorIds.Contains(kvp.Value.entryId))
+                            continue;
+                        throw new InvalidOperationException(string.Format(
+                            @"Experiment-fold scope violation in '{0}': base_id {1} takes its " +
+                            @"best target observation from entry_id {2}, which is not one of " +
+                            @"this file's survivors, so the per-run 2nd-pass sidecar cannot " +
+                            @"carry it. Folding the experiment maximum from the sidecars would " +
+                            @"silently substitute a lower-scoring observation. See issue #4486.",
+                            fileKey, kvp.Key, kvp.Value.entryId));
+                    }
+                }
+
                 // The JOIN half. Everything here is O(distinct base_id) / O(distinct survivor),
                 // never O(observations), which is what makes it the part that has to stay in a
                 // whole-run stage.
