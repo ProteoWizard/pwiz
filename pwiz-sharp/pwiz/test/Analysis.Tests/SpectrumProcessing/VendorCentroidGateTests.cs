@@ -44,6 +44,43 @@ public class VendorCentroidGateTests
         AssertUntouched(picked, inner, 2, "MS2 was not requested and must not be centroided");
     }
 
+    /// <summary>
+    /// The string overload must understand the same interval forms as cpp, because that is the
+    /// overload Skyline uses: MsDataFileImpl asks for "1-" when both MS1 and MS2 centroiding are
+    /// wanted, and "2-" for MS2 only. Parsing those with a plain int.TryParse per token yields an
+    /// EMPTY set, and an empty set gates every spectrum off - so vendor centroiding was skipped
+    /// entirely and Skyline silently imported profile data. Only the bare "1" case survived, which
+    /// is why this escaped the unit tests and only showed up as drifted peak areas in the perf
+    /// suite (BrukerDiaPasefImportTest, TestThermoSureQuantFAIMS).
+    /// </summary>
+    [TestMethod]
+    public void PeakPicker_MsLevelSpecUnderstandsIntervalForms()
+    {
+        // (spec, levels that must be selected, levels that must not be)
+        var cases = new[]
+        {
+            ("1-", new[] { 1, 2, 3 }, new[] { 0 }),
+            ("2-", new[] { 2, 3 }, new[] { 0, 1 }),
+            ("1", new[] { 1 }, new[] { 0, 2 }),
+            ("1,2", new[] { 1, 2 }, new[] { 0, 3 }),
+            ("1-2", new[] { 1, 2 }, new[] { 0, 3 }),
+        };
+
+        foreach (var (spec, selected, notSelected) in cases)
+        {
+            var picker = new SpectrumList_PeakPicker(
+                new RecordingVendorList(1), new LocalMaximumPeakDetector(3),
+                preferVendorPeakPicking: true, spec);
+
+            foreach (int level in selected)
+                Assert.IsTrue(picker.MsLevels.Contains(level),
+                    $"\"{spec}\" must select MS level {level}");
+            foreach (int level in notSelected)
+                Assert.IsFalse(picker.MsLevels.Contains(level),
+                    $"\"{spec}\" must not select MS level {level}");
+        }
+    }
+
     /// <summary>A picked spectrum carries the centroid term and NOT the profile term.</summary>
     private static void AssertCentroided(Spectrum spec, string because)
     {

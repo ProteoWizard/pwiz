@@ -86,15 +86,16 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
         string msLevelsToPeakPick)
         : this(inner, algorithm, preferVendorPeakPicking, ParseIntegerSet(msLevelsToPeakPick)) { }
 
-    private static readonly char[] s_separators = { ',', ' ' };
-
     private static IntegerSet ParseIntegerSet(string spec)
     {
+        // Must go through IntegerSet.Parse, which understands the interval forms cpp uses
+        // ("n", "a-b", "a-", "[a,b]"). Splitting on separators and calling int.TryParse per
+        // token silently dropped every open-ended range: Skyline asks for "1-" when both MS1
+        // and MS2 centroiding are wanted and "2-" for MS2 only (MsDataFileImpl.centroidLevels),
+        // and both parsed to an EMPTY set. An empty set gates every spectrum off, so vendor
+        // centroiding was skipped altogether and callers silently got profile data.
         var set = new IntegerSet();
-        foreach (var part in spec.Split(s_separators, System.StringSplitOptions.RemoveEmptyEntries))
-        {
-            if (int.TryParse(part, out int n)) set.Insert(n);
-        }
+        set.Parse(spec);
         return set;
     }
 
