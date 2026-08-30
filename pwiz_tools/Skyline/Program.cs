@@ -965,13 +965,16 @@ namespace pwiz.Skyline
         /// WinForms and the core library, while a callback of ours leaves its own frames (or
         /// the InvokeMarshaledCallback* dispatch helpers) in that window.</para>
         ///
-        /// <para>Only that window is examined. Frames BELOW InvokeMarshaledCallbacks are the
-        /// message pump, and they are legitimately ours: every Skyline control that overrides
-        /// WndProc (SequenceTree, AllChromatogramsGraph, CustomTip and others) puts a Skyline
-        /// frame there whenever it is the marshaling control. Judging the whole stack would
-        /// reject exactly those controls and let the nightly failures back in for them -
-        /// verified against .NET 10.0.11, where adding a WndProc override to the target is the
-        /// only change needed to flip the verdict.</para>
+        /// <para>DELIBERATELY INCOMPLETE. Any Skyline frame anywhere on the stack disqualifies
+        /// it, including one BELOW InvokeMarshaledCallbacks in the message pump - which is where
+        /// a control that overrides WndProc (SequenceTree, AllChromatogramsGraph, CustomTip and
+        /// four others) puts one whenever it is the marshaling control. Those cases stay
+        /// unfiltered on purpose. Failing to silence a benign exception costs one visible test
+        /// failure that can be investigated; silencing a real one hides a defect with nothing
+        /// to find it by, and the message below is Trace-level, which the registered listener
+        /// discards. Widen this only after a nightly actually fails that way, and recognize it
+        /// by this exact ObjectDisposedException with a Skyline WndProc frame under
+        /// Control.InvokeMarshaledCallbacks.</para>
         ///
         /// <para>Fails CLOSED: an unresolvable frame, or a trace that never reaches
         /// InvokeMarshaledCallbacks, reports rather than swallows.</para>
@@ -986,6 +989,7 @@ namespace pwiz.Skyline
 
             var winFormsAssembly = typeof(Control).Assembly;
             var coreLibAssembly = typeof(object).Assembly;
+            var reachedCompletionSignal = false;
             foreach (var frame in new StackTrace(disposedException).GetFrames())
             {
                 var method = frame.GetMethod();
@@ -994,13 +998,18 @@ namespace pwiz.Skyline
                 {
                     return false;   // Cannot identify the frame, so cannot claim it is benign
                 }
-                if (declaringType == typeof(Control) && Equals(method.Name, @"InvokeMarshaledCallbacks"))
-                {
-                    return true;    // Reached the pump without passing through a callback of ours
-                }
                 if (declaringType.Assembly != winFormsAssembly && declaringType.Assembly != coreLibAssembly)
                 {
-                    return false;   // A callback of ours ran and threw
+                    return false;   // Code of ours is involved somewhere, so report it
+                }
+                if (reachedCompletionSignal)
+                {
+                    continue;       // Below the signal: the pump, and it must stay framework-only
+                }
+                if (declaringType == typeof(Control) && Equals(method.Name, @"InvokeMarshaledCallbacks"))
+                {
+                    reachedCompletionSignal = true;
+                    continue;
                 }
                 if (method.Name.StartsWith(@"InvokeMarshaledCallback", StringComparison.Ordinal) ||
                     declaringType == typeof(ExecutionContext))
@@ -1008,7 +1017,7 @@ namespace pwiz.Skyline
                     return false;   // The callback-dispatch path, so a callback of ours ran
                 }
             }
-            return false;
+            return reachedCompletionSignal;
         }
 
         private static void ReportExceptionUI(Exception exception, StackTrace stackTrace)

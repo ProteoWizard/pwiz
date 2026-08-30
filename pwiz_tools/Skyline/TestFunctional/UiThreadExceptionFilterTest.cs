@@ -32,9 +32,8 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Verifies that the UI-thread exception handler ignores the benign ObjectDisposedException
-    /// WinForms raises when it signals a marshaled call whose wait handle is already disposed,
-    /// and still reports one thrown by a callback of ours.
+    /// Verifies what the UI-thread exception handler ignores when WinForms signals a marshaled
+    /// call whose wait handle is already disposed - and, just as importantly, what it does not.
     ///
     /// <para>Since .NET 9 (dotnet/winforms#10460) Control.MarshaledInvoke disposes that handle
     /// with a using as soon as WaitForWaitHandle returns, and WaitForWaitHandle has paths that
@@ -44,12 +43,17 @@ namespace pwiz.SkylineTestFunctional
     /// Program.TestExceptions and fails whatever test happened to be running, which is how eight
     /// unrelated tests failed in one .NET 10 nightly. Reported as dotnet/winforms#14996.</para>
     ///
-    /// <para>Both halves assert something POSITIVE. The benign half waits for the handler's own
-    /// debug message rather than for an absence, so it cannot pass by the repro silently
-    /// ceasing to strand anything - which it would do if WinForms stopped lazily allocating
-    /// ThreadMethodEntry's ManualResetEvent, the one undocumented internal this setup rests on.
-    /// The reporting half provokes from a framework method group on purpose: that produces an
-    /// all-framework stack, the case a whole-stack allowlist would wrongly swallow.</para>
+    /// <para>The filter is deliberately narrow, so the second case here asserts that an
+    /// exception IS still reported. Failing to silence a benign one costs a visible test
+    /// failure; silencing a real one hides a defect. Change these expectations only with that
+    /// asymmetry in mind.</para>
+    ///
+    /// <para>Not covered: a completion failure marshaled through a control that overrides
+    /// WndProc, which puts a Skyline frame in the pump and is deliberately not filtered.
+    /// Reproduced in isolation against .NET 10.0.11, but not from inside Skyline - stranding a
+    /// call on SkylineWindow.SequenceTree still produced an all-framework stack, so the
+    /// marshaling control in practice was not the tree. Worth revisiting if a nightly ever
+    /// fails that way.</para>
     /// </summary>
     [TestClass]
     public class UiThreadExceptionFilterTest : AbstractFunctionalTest
@@ -79,11 +83,7 @@ namespace pwiz.SkylineTestFunctional
             };
             try
             {
-                // SkylineWindow does not override WndProc; SequenceTree does. A control that
-                // overrides it puts a Skyline frame BELOW Control.InvokeMarshaledCallbacks, so
-                // only the second case catches a filter that judges the whole stack.
-                AssertBenignCompletionFailureIgnored(SkylineWindow);
-                AssertBenignCompletionFailureIgnored(SkylineWindow.SequenceTree);
+                AssertCompletionFailureIgnored();
                 AssertCallbackFailureStillReported();
             }
             finally
@@ -93,15 +93,55 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Strands a marshaled call the way MarshaledInvoke does on the paths that stop waiting
-        /// before the entry completes, then verifies the completion failure was ignored.
+        /// The case the filter exists for: SkylineWindow does not override WndProc, so every
+        /// frame belongs to WinForms or the core library and the completion failure is ignored.
         /// </summary>
-        private void AssertBenignCompletionFailureIgnored(Control target)
+        private void AssertCompletionFailureIgnored()
+        {
+            var strandedCallbackRan = StrandMarshaledCall(SkylineWindow);
+
+            // Wait for the handler to say it ignored it, not merely for nothing to be recorded.
+            // The exception names the disposed type, so this needs no copy of the handler's text.
+            WaitForCondition(WAIT_TIME, () => HasDebugMessageNaming(typeof(SafeWaitHandle).FullName),
+                null, true, false);
+
+            AssertEx.IsTrue(strandedCallbackRan(),
+                @"The marshaled callback did not run after its wait handle was disposed.");
+            AssertEx.AreEqual(0, Program.TestExceptions.Count,
+                @"Completing a marshaled call on SkylineWindow reached the test harness.");
+        }
+
+        /// <summary>
+        /// An ObjectDisposedException thrown by a callback of ours must still be reported.
+        /// Provoked from a framework method group so every frame above
+        /// Control.InvokeMarshaledCallbacks belongs to the framework - the case a filter that
+        /// only asked whether any frame above it was ours would wrongly swallow.
+        /// </summary>
+        private void AssertCallbackFailureStillReported()
+        {
+            var disposedMutex = new Mutex();
+            disposedMutex.Dispose();
+            SkylineWindow.BeginInvoke(new Action(disposedMutex.ReleaseMutex));
+
+            var reported = AssertReportedObjectDisposedException(
+                @"The filter swallowed an ObjectDisposedException thrown by a marshaled callback.");
+            // Identity, not just type: both candidates are ObjectDisposedException naming a
+            // SafeWaitHandle, so only the throwing method separates them.
+            AssertEx.Contains(reported.StackTrace, nameof(Mutex.ReleaseMutex));
+        }
+
+        /// <summary>
+        /// Queues a marshaled call behind a parked one and disposes its wait handle before it can
+        /// be dispatched - what MarshaledInvoke leaves behind on the paths that stop waiting
+        /// before the entry completes. Returns a func reporting whether the callback ran.
+        /// </summary>
+        private Func<bool> StrandMarshaledCall(Control target)
         {
             lock (_debugMessages)
             {
                 _debugMessages.Clear();
             }
+
             var callbackEntered = new ManualResetEventSlim(false);
             var releaseCallback = new ManualResetEventSlim(false);
             var strandedCallbackRan = false;
@@ -120,60 +160,35 @@ namespace pwiz.SkylineTestFunctional
                         target.GetType().Name));
 
                 var stranded = target.BeginInvoke(new Action(() => strandedCallbackRan = true));
-                // What MarshaledInvoke does on the paths that stop waiting before the entry completes.
                 stranded.AsyncWaitHandle.Dispose();
             }
             finally
             {
                 releaseCallback.Set();
             }
-
-            // Wait for the handler to say it ignored it, not merely for nothing to be recorded.
-            // The exception names the disposed type, so this needs no copy of the handler's text.
-            WaitForCondition(WAIT_TIME, () => HasDebugMessageNaming(typeof(SafeWaitHandle).FullName),
-                null, true, false);
-
-            AssertEx.IsTrue(strandedCallbackRan,
-                string.Format(@"The marshaled callback on {0} did not run after its wait handle was disposed.",
-                    target.GetType().Name));
-            AssertEx.AreEqual(0, Program.TestExceptions.Count,
-                string.Format(@"Completing a marshaled call on {0} reached the test harness.",
-                    target.GetType().Name));
+            return () => strandedCallbackRan;
         }
 
         /// <summary>
-        /// The other half of the filter: an ObjectDisposedException thrown by a callback of ours
-        /// must still be reported. Provoked from a framework method group so every frame above
-        /// Control.InvokeMarshaledCallbacks belongs to the framework - the case that a filter
-        /// judging the whole stack, rather than the window below the throw, would swallow.
+        /// Waits for one ObjectDisposedException to reach the harness, then removes it. Removes
+        /// only what was observed: clearing would discard an unrelated failure recorded by a
+        /// background thread, and the harness check at teardown would then pass with the real
+        /// bug gone.
         /// </summary>
-        private void AssertCallbackFailureStillReported()
+        private Exception AssertReportedObjectDisposedException(string timeoutMessage)
         {
-            AssertEx.AreEqual(0, Program.TestExceptions.Count,
-                @"Something recorded an exception before the reporting half provoked one.");
-
-            var disposedMutex = new Mutex();
-            disposedMutex.Dispose();
-            SkylineWindow.BeginInvoke(new Action(disposedMutex.ReleaseMutex));
-
             Exception reported = null;
             try
             {
                 WaitForCondition(WAIT_TIME, () => Program.TestExceptions.Count > 0,
-                    @"The filter swallowed an ObjectDisposedException thrown by a marshaled callback.",
-                    true, false);
+                    timeoutMessage, true, false);
                 reported = Program.TestExceptions[0];
                 AssertEx.IsTrue(reported is ObjectDisposedException,
-                    @"Expected the reported exception to be the one the callback threw.");
-                // Identity, not just type: both candidates are ObjectDisposedException naming a
-                // SafeWaitHandle, so only the throwing method separates them.
-                AssertEx.Contains(reported.StackTrace, nameof(Mutex.ReleaseMutex));
+                    @"Expected the reported exception to be an ObjectDisposedException.");
+                return reported;
             }
             finally
             {
-                // Remove only what this test provoked. Clearing would discard an unrelated
-                // failure recorded by a background thread while this test ran, and the harness
-                // check at teardown would then pass with the real bug gone.
                 if (reported != null)
                 {
                     lock (Program.TestExceptions)
