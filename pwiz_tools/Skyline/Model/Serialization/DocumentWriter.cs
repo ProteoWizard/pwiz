@@ -22,6 +22,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -51,7 +52,7 @@ namespace pwiz.Skyline.Model.Serialization
         public SrmDocument Document { get; private set; }
         public CompactFormatOption CompactFormatOption { get; set; }
 
-        public event Action<int> WroteTransitions;
+        public event Action WrotePeptide;
 
         public void WriteXml(XmlWriter writer)
         {
@@ -59,8 +60,14 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttribute(ATTR.software_version, SkylineVersion.InvariantVersionName);
 
             writer.WriteElement(Settings.RemoveUnsupportedFeatures(SkylineVersion.SrmDocumentVersion));
-            foreach (PeptideGroupDocNode nodeGroup in Document.Children)
+
+            using var processor = new PeptideProcessor(this);
+            processor.AddAll(Document.Molecules);
+
+            // Write each group, waiting for peptide XElements one at a time
+            for (int g = 0; g < Document.Children.Count; g++)
             {
+                var nodeGroup = (PeptideGroupDocNode)Document.Children[g];
                 if (nodeGroup.Id is FastaSequenceGroup &&
                     SkylineVersion.SrmDocumentVersion >= DocumentFormat.PROTEIN_GROUPS)
                     writer.WriteStartElement(EL.protein_group);
@@ -68,9 +75,26 @@ namespace pwiz.Skyline.Model.Serialization
                     writer.WriteStartElement(EL.protein);
                 else
                     writer.WriteStartElement(EL.peptide_list);
-                WritePeptideGroupXml(writer, nodeGroup);
+
+                WritePeptideGroupXml(writer, nodeGroup, processor);
                 writer.WriteEndElement();
             }
+        }
+
+        /// <summary>
+        /// Creates a complete XElement for a PeptideDocNode by writing to a
+        /// temporary XDocument. Called on worker threads during parallel saving.
+        /// </summary>
+        private XElement CreatePeptideXElement(PeptideDocNode node)
+        {
+            var doc = new XDocument();
+            using (var writer = doc.CreateWriter())
+            {
+                writer.WriteStartDocument();
+                WritePeptideXml(writer, node);
+                writer.WriteEndDocument();
+            }
+            return doc.Root;
         }
 
         private void WriteProteinMetadataXML(XmlWriter writer, ProteinMetadata proteinMetadata, bool skipNameAndDescription)
@@ -96,9 +120,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// Serializes the contents of a single <see cref="PeptideGroupDocNode"/>
         /// to XML.
         /// </summary>
-        /// <param name="writer">The XML writer</param>
-        /// <param name="node">The peptide group document node</param>
-        private void WritePeptideGroupXml(XmlWriter writer, PeptideGroupDocNode node)
+        private void WritePeptideGroupXml(XmlWriter writer, PeptideGroupDocNode node, PeptideProcessor peptideProcessor)
         {
             // save the identity info
             if (node.PeptideGroup.Name != null)
@@ -174,9 +196,11 @@ namespace pwiz.Skyline.Model.Serialization
                     writeFastaSequence(seq);
             }
 
-            foreach (PeptideDocNode nodePeptide in node.Children)
+            foreach (var child in node.Molecules)
             {
-                WritePeptideXml(writer, nodePeptide);
+                var peptideXElement = peptideProcessor.GetPeptideXElement(child.Peptide);
+                peptideXElement.WriteTo(writer);
+                WrotePeptide?.Invoke();
             }
         }
 
@@ -632,11 +656,8 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteStartElement(EL.transition_data);
                 var transitionData = new SkylineDocumentProto.Types.TransitionData();
                 transitionData.Transitions.AddRange(node.Transitions.Select(transition => transition.ToTransitionProto(Settings, nodePep, node)));
-                byte[] bytes = transitionData.ToByteArray();
-                writer.WriteBase64(bytes, 0, bytes.Length);
+                WriteBase64(writer, transitionData.ToByteArray());
                 writer.WriteEndElement();
-                if (WroteTransitions != null)
-                    WroteTransitions(node.TransitionCount);
             }
             else
             {
@@ -819,7 +840,7 @@ namespace pwiz.Skyline.Model.Serialization
                     protoResults.Peaks.AddRange(nodeTransition.GetTransitionPeakProtos(Settings.MeasuredResults));
                     byte[] bytes = protoResults.ToByteArray();
                     writer.WriteStartElement(EL.results_data);
-                    writer.WriteBase64(bytes, 0, bytes.Length);
+                    WriteBase64(writer, bytes);
                     writer.WriteEndElement();
                 }
                 else
@@ -829,8 +850,6 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
-            if (WroteTransitions != null)
-                WroteTransitions(1);
         }
 
         private void WriteTransitionLosses(XmlWriter writer, TransitionLosses losses)
@@ -1010,6 +1029,47 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteEndElement();
         }
 
+        private static void WriteBase64(XmlWriter writer, byte[] bytes)
+        {
+            // Avoid calling XmlWriter.WriteBase64String because XNodeBuilder implementation throws NotSupportedException
+            writer.WriteString(Convert.ToBase64String(bytes));
+        }
 
+        /// <summary>
+        /// Maintains a work queue for building the XML for peptides and molecules
+        /// in parallel. Analogous to <see cref="DocumentReader.PeptideProcessor"/>
+        /// but for writing instead of reading.
+        /// </summary>
+        private class PeptideProcessor : ParallelOrderedTransformer<PeptideDocNode, Tuple<Peptide, XElement>>
+        {
+            private readonly DocumentWriter _documentWriter;
+
+            public PeptideProcessor(DocumentWriter documentWriter) : base(100)
+            {
+                _documentWriter = documentWriter;
+            }
+
+            protected override string GetThreadName()
+            {
+                return @"Save Document XML";
+            }
+
+            protected override Tuple<Peptide, XElement> Transform(PeptideDocNode node)
+            {
+                return Tuple.Create(node.Peptide, _documentWriter.CreatePeptideXElement(node));
+            }
+
+            public XElement GetPeptideXElement(Peptide peptide)
+            {
+                var result = TakeNext();
+                if (!ReferenceEquals(peptide, result.Item1))
+                {
+                    throw new InvalidOperationException(string.Format(@"Expected: {0} Actual: {1}", peptide,
+                        result.Item1));
+                }
+
+                return result.Item2;
+            }
+        }
     }
 }
