@@ -41,10 +41,22 @@ fail() {
 # installs the SDK global.json pins when the agent image does not have it.
 . "$SCRIPT_DIR/scripts/ensure-dotnet.sh"
 
+# Self-check the guard before relying on it. Sub-second, no network, no SDK - a
+# stub dotnet stands in for the agent image. Worth running every build because
+# the failure it catches is silent: a guard that probes the wrong directory
+# reports "satisfied" and the build dies later on an error that looks like an
+# agent problem. Optional-if-absent, like clean.sh below, so a checkout without
+# it still builds.
+if [ -f "$SCRIPT_DIR/scripts/test-ensure-dotnet.sh" ]; then
+    bash "$SCRIPT_DIR/scripts/test-ensure-dotnet.sh" || fail "ensure-dotnet.sh self-check failed"
+fi
+
 resolve_dotnet || fail "dotnet not found on PATH or at /usr/bin, /usr/local/bin, /usr/share/dotnet, /usr/lib/dotnet, \$DOTNET_ROOT, ~/.dotnet"
 
-# global.json is at the repo root, one level above pwiz-sharp/.
-ensure_dotnet_sdk "$SCRIPT_DIR/.." || fail "no .NET SDK satisfying global.json, and installing one failed"
+# Probe from the directory the build actually runs in, which is the one whose
+# global.json governs the dotnet call below. Passing the repo root here made the
+# guard resolve a different global.json than the command it guards.
+ensure_dotnet_sdk "$SCRIPT_DIR" || fail "no .NET SDK satisfying global.json, and installing one failed"
 
 echo "##teamcity[progressMessage 'dotnet --version (resolves via global.json)']"
 dotnet --version || fail "dotnet --version failed"
