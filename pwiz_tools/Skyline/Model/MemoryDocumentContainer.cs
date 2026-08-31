@@ -159,14 +159,28 @@ namespace pwiz.Skyline.Model
         /// there - it can leave the command line writing a document whose alignments never
         /// finished - but that is a separate change, made deliberately and measured on its own.
         /// </para>
+        ///
+        /// <para>SETTABLE rather than overridden, because "every results test wants this" turned
+        /// out to be false. Two callers depend on the fail-fast it removes:
+        /// <c>AssertEx.ForceDocumentLoad</c>, whose own comment explains that its callers sit in a
+        /// bare catch-and-retry where a longer wait silently deletes the fix it exists to apply;
+        /// and CommandLineTest, which drives the shipping CommandLine path through a TEST
+        /// container, so switching this on there would make the production gap named above
+        /// permanently invisible to the suite that covers it. Both switch it back off.</para>
         /// </summary>
-        protected virtual bool WaitForCancelRestart { get { return false; } }
+        public bool WaitForCancelRestart { get; set; }
 
         private bool IsSupersededCancel(ref int cancelLoops)
         {
             if (!WaitForCancelRestart || LastProgress == null || !LastProgress.IsCanceled || Document.IsLoaded)
             {
-                cancelLoops = 0;
+                // Deliberately NOT resetting cancelLoops. The budget is spent per WAIT, not per
+                // cancellation episode, because LastProgress is one container-wide status written
+                // by every registered loader - six of them here, nine under SkylineWindow. Resetting
+                // whenever it reads non-cancelled would let an unrelated loader's progress buy a
+                // fresh 30 seconds each time round, and WaitForComplete has no overall deadline: a
+                // named "Loader cancelled" failure would become an open-ended hang, diagnosable
+                // only as a harness timeout. Now the cap bounds the whole wait.
                 return false;
             }
             if (cancelLoops == 0 && Program.UnitTest)

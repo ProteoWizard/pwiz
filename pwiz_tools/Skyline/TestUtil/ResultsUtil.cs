@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
@@ -245,20 +246,29 @@ namespace pwiz.SkylineTestUtil
         public ResultsTestDocumentContainer(SrmDocument docInitial, string pathInitial)
             : base(docInitial, pathInitial)
         {
+            EnableWaitForCancelRestart();
         }
 
         public ResultsTestDocumentContainer(SrmDocument docInitial, string pathInitial, bool wait)
             : base(docInitial, pathInitial, wait)
         {
+            EnableWaitForCancelRestart();
         }
 
         /// <summary>
         /// Tests replace the document while loaders are running far more abruptly than the
         /// application does, so they are the ones that see a loader cancel itself over a
         /// superseded document and then restart. Wait that hand-off out rather than reporting it
-        /// as a failed load. See the base property for why this is not on everywhere.
+        /// as a failed load.
+        ///
+        /// <para>On by default here but SETTABLE, not baked in: two callers deliberately turn it
+        /// back off because they depend on the fail-fast it removes. See
+        /// <see cref="MemoryDocumentContainer.WaitForCancelRestart"/>.</para>
         /// </summary>
-        protected override bool WaitForCancelRestart { get { return true; } }
+        private void EnableWaitForCancelRestart()
+        {
+            WaitForCancelRestart = true;
+        }
 
         private const int SLEEP_INTERVAL = 10;
         public const int WAIT_TIME = 5 * 1000;    // 5 seconds
@@ -287,14 +297,19 @@ namespace pwiz.SkylineTestUtil
 
         public void AssertComplete()
         {
-            if (LastProgress == null || LastProgress.IsComplete) return;
-            if (LastProgress.IsError)
-                Assert.Fail(LastProgress.ErrorException.ToString());
+            // Snapshot it. LastProgress is written by loader threads that are demonstrably still
+            // alive here - the wait that just returned ends on a cancel or error status, not on
+            // the loaders exiting - so re-reading the property can throw a NullReferenceException
+            // out of the diagnostic, or describe a different status than the one being reported.
+            var progress = LastProgress;
+            if (progress == null || progress.IsComplete) return;
+            if (progress.IsError)
+                Assert.Fail(progress.ErrorException.ToString());
 
-            Assert.Fail((LastProgress.IsCanceled
+            Assert.Fail((progress.IsCanceled
                              ? "Loader cancelled"
-                             : "Unexpected loader progress state \"" + LastProgress.State + "\"")
-                        + DescribeLoadState());
+                             : "Unexpected loader progress state \"" + progress.State + "\"")
+                        + DescribeLoadState(progress));
         }
 
         /// <summary>
@@ -304,10 +319,9 @@ namespace pwiz.SkylineTestUtil
         /// status alone tells the two apart not at all. This is what turns an intermittent
         /// "Loader cancelled" into something diagnosable from a nightly log.
         /// </summary>
-        private string DescribeLoadState()
+        private string DescribeLoadState(IProgressStatus progress)
         {
             var lines = new List<string>();
-            var progress = LastProgress;
             if (progress != null)
             {
                 lines.Add(string.Format("Progress: {0} at {1}%", progress.State, progress.PercentComplete));
@@ -331,6 +345,16 @@ namespace pwiz.SkylineTestUtil
                 lines.Add("Document is NOT loaded:");
                 lines.AddRange(document.NonLoadedStateDescriptionsFull.Select(why => "  " + why));
             }
+
+            // The loader trace has to be surfaced HERE, not only from
+            // AbstractFunctionalTest.WaitForDocumentLoaded. The failures this instrumentation was
+            // built for - "Loader cancelled", and an import that reaches 100% while the document
+            // never becomes loaded - are reported by this method, from TestData, an assembly that
+            // never calls WaitForDocumentLoaded at all. Surfaced only there, the trace would be
+            // recorded at the moment of the failure and then discarded unread.
+            lines.Add(string.Empty);
+            lines.Add("*** Loader trace (most recent last):");
+            lines.Add(BackgroundLoader.GetLoaderTrace());
             return Environment.NewLine + string.Join(Environment.NewLine, lines);
         }
 

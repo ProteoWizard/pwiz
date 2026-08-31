@@ -1001,6 +1001,11 @@ namespace pwiz.SkylineTestData
             var commandLine = new CommandLine();
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
+                // Stand in for CommandLine faithfully: it waits on a plain
+                // ResultsMemoryDocumentContainer, where a superseded cancel ends the wait early.
+                // Leaving the test container's default on here would make that production gap
+                // permanently invisible to the test that covers this path.
+                docContainer.WaitForCancelRestart = false;
                 commandLine.ImportResults(docContainer, replicate, MsDataFileUri.Parse(rawPath), null);
                 docContainer.WaitForComplete();
                 docContainer.AssertComplete();  // No errors
@@ -1044,6 +1049,8 @@ namespace pwiz.SkylineTestData
             var commandLine = new CommandLine();
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
+                // Same reason as above: keep this standing in for CommandLine's real wait.
+                docContainer.WaitForCancelRestart = false;
                 commandLine.ImportResults(docContainer, replicate, MsDataFileUri.Parse(rawPath), null);
                 docContainer.WaitForComplete();
                 docContainer.AssertComplete();  // No errors
