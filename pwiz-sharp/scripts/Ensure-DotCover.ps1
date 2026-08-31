@@ -8,11 +8,12 @@
     globally on the machine. Shared by Core (pwiz-sharp), Skyline and Osprey, each of which
     keeps its own manifest.
 
-    The version is deliberately per-app rather than shared: Skyline's TestRunner resolves
-    ...\jetbrains.dotcover.commandlinetools\2023.3.3\tools\dotCover.exe by path and passes the
-    old /Filters= syntax, while Osprey's build.ps1 passes the kebab-case flags that replaced it
-    (--exclude-assemblies and friends). One version cannot satisfy both without rewriting one
-    caller's arguments, so each manifest pins what its caller was written against.
+    All three manifests pin 2023.3.3. The 2026.1 console runner dropped the native
+    dotCover.exe in favour of a managed dotCover.dll, and TeamCity's agent-side coverage
+    processor runs dotCover.exe out of the home directory to turn a .dcvr snapshot into the
+    Code Coverage tab - given a dll-only home it reports "No available .NET Coverage report
+    generator for type 'dotcover'" and drops the snapshot. 2023.3.3 also still has the HTML
+    report type that 2026.1 removed, and it profiles net10.0 test runs fine.
 
     A local manifest is used rather than `dotnet tool install -g` so the version is pinned in
     source and the build leaves nothing behind on the agent. Note the global package name that
@@ -82,16 +83,22 @@ $version = (Get-Content $manifest -Raw | ConvertFrom-Json).tools.'jetbrains.dotc
 $packagesRoot = (dotnet nuget locals global-packages --list) -replace '^.*?:\s*', '' | Select-Object -First 1
 $toolsDir = Join-Path $packagesRoot "jetbrains.dotcover.commandlinetools/$version/tools"
 
-# The two pinned generations package the runner differently: 2023.3.3 ships a native
-# dotCover.exe, 2026.1.1 ships a managed dotCover.dll with no launcher. Return whichever
-# exists and let the caller launch a .dll through `dotnet`.
 $launcher = Join-Path $toolsDir 'dotCover.exe'
 if (-not (Test-Path $launcher)) {
-    $launcher = Join-Path $toolsDir 'dotCover.dll'
-}
-if (-not (Test-Path $launcher)) {
-    Write-Failure "dotCover $version restored but neither dotCover.exe nor dotCover.dll is in $toolsDir"
+    Write-Failure "dotCover $version restored but dotCover.exe is not in $toolsDir"
     exit 2
+}
+
+if ($TeamCity) {
+    # Point TeamCity's coverage processor at the restored copy. Its own dotCover comes from the
+    # bundled tool that the (now disabled) "Install dotCover (.NET)" build step provisioned; with
+    # every step moved into the build scripts nothing installs it any more, so without this the
+    # build ends in "No available .NET Coverage report generator for type 'dotcover'" and the
+    # imported snapshot is skipped instead of becoming the Code Coverage tab. This message must
+    # precede the importData that names the snapshot, which it does - callers restore before
+    # they run tests.
+    $escaped = $toolsDir -replace '\|', '||' -replace "'", "|'" -replace '\[', '|[' -replace '\]', '|]'
+    Write-Host "##teamcity[dotNetCoverage dotcover_home='$escaped']"
 }
 
 Write-Info "dotCover $version at $launcher"
