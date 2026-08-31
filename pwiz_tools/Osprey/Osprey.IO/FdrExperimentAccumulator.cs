@@ -72,7 +72,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public void Add(uint entryId, double experimentPrecursorQvalue,
             double experimentPeptideQvalue, double experimentProteinQvalue,
-            double experimentAggregateScore, double pep = 1.0)
+            double experimentAggregateScore, double pep)
         {
             var incoming = new FdrExperimentRecord(entryId, experimentPrecursorQvalue,
                 experimentPeptideQvalue, experimentProteinQvalue, experimentAggregateScore, pep);
@@ -125,9 +125,14 @@ namespace pwiz.Osprey.IO
         {
             if (!_byEntryId.TryGetValue(entryId, out var r))
                 return;
+            // EVERY other column carried through, PEP included. This method replaces ONE field
+            // of an existing record; omitting another lets the constructor's default silently
+            // overwrite a value that was already correct. That is not hypothetical - PEP was
+            // dropped here on its first day in this record, and the cross-impl gate caught it
+            // as 79,957 winners reporting 1.0 against Rust's real values (issue #4486).
             _byEntryId[entryId] = new FdrExperimentRecord(r.EntryId,
                 r.ExperimentPrecursorQvalue, r.ExperimentPeptideQvalue,
-                proteinQvalue, r.ExperimentAggregateScore);
+                proteinQvalue, r.ExperimentAggregateScore, r.Pep);
         }
     }
 }

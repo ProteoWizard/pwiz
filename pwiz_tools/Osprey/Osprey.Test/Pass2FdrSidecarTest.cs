@@ -413,7 +413,7 @@ namespace pwiz.Osprey.Test
             var gapExp = new FdrExperimentRecord(
                 entryId: 2, experimentPrecursorQvalue: 0.004,
                 experimentPeptideQvalue: 0.006, experimentProteinQvalue: 0.5,
-                experimentAggregateScore: 7.25);
+                experimentAggregateScore: 7.25, pep: 1.0);
             var clsG = Pass2FdrSidecar.AssignPerRunQ(gap, 5.0, null, gapExp,
                 precScoresDesc, precQDesc, pepScoresDesc, pepQDesc);
             Assert.AreEqual(Pass2FdrSidecar.PerRunClass.GapFill, clsG);

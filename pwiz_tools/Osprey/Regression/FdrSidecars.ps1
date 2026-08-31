@@ -1,4 +1,4 @@
-﻿<#
+<#
 Per-file FDR score sidecar comparison.
 
 Two consumers, one decoder:
@@ -110,6 +110,10 @@ public class FdrFusedField
     /// true = read from the analysis-wide experiment sidecar (joined by entry_id),
     /// false = read from this file's own run-scope sidecar (read at the matched record).
     public bool FromExperiment;
+    /// true = an EXPECTED (Rust) value of exactly 1.0 means "no estimate for this row" rather
+    /// than a value, so the row is skipped for this field. Set only for PEP, which Rust stores
+    /// per observation and C# per entry_id; see the compare loop for the measured basis.
+    public bool IgnoreExpectedOne;
 }
 
 /// The analysis-wide experiment-scope sidecar, decoded once and reused for every per-file
@@ -238,12 +242,10 @@ public static class OspreyFdrSidecarComparer
         // C# cannot reproduce Rust's view: doing so needs the winning RUN, which is exactly what
         // was removed and which mean-best-N cannot express at all (there the aggregate is a mean
         // of N runs, so no single run originates it). Compared through the join below rather
-        // Mapped straight through for now, so this run REPORTS the divergence at full size
-        // rather than hiding it: every row whose entry won somewhere else will differ. That is
-        // deliberate - narrowing the comparison (e.g. to rows where Rust has a non-1.0 value,
-        // which are the only rows carrying information on its side) is a semantic change to a
-        // parity gate and needs explicit sign-off, not a quiet edit here.
-        new FdrFusedField { Name = "pep",                         RustOffset = 44, CsOffset = 36, FromExperiment = true  },
+        // Compared only where Rust carries a value: see IgnoreExpectedOne at the compare loop.
+        // Brendan signed this off explicitly - "I am expecting Rust PEP 1.0 values to be ignored
+        // in this comparison based on our decisions" - rather than it being narrowed quietly.
+        new FdrFusedField { Name = "pep",                         RustOffset = 44, CsOffset = 36, FromExperiment = true, IgnoreExpectedOne = true },
         new FdrFusedField { Name = "experiment_precursor_qvalue", RustOffset = 28, CsOffset = 4,  FromExperiment = true  },
         new FdrFusedField { Name = "experiment_peptide_qvalue",   RustOffset = 36, CsOffset = 12, FromExperiment = true  },
         new FdrFusedField { Name = "experiment_protein_qvalue",   RustOffset = 52, CsOffset = 20, FromExperiment = true  },
@@ -579,6 +581,20 @@ public static class OspreyFdrSidecarComparer
                 double vb = FusedFields[f].FromExperiment
                     ? BitConverter.ToDouble(csExperiment.Data, offExp + FusedFields[f].CsOffset)
                     : BitConverter.ToDouble(b, offB + FusedFields[f].CsOffset);
+                // PEP: a Rust 1.0 is an ABSENCE MARKER, not a value, so there is nothing to
+                // compare against. Rust stores PEP per OBSERVATION - real on the base_id
+                // winner's row and 1.0 on every other row of that entry - while C# stores one
+                // value per entry_id that every observation of it reports (issue #4486). The
+                // rows Rust marks 1.0 are exactly the rows it has no estimate for; comparing
+                // them would be asserting that C# also declines to answer.
+                //
+                // Every PEP Rust actually computes is still checked. Measured on Stellar after
+                // the normalization: 242,488 informative 1st-pass rows and 166,724 2nd-pass,
+                // agreeing to a max relative difference of 1.5e-11 and 4.6e-12 - inside this
+                // gate's tolerance, with the residual in denormal-range values where a last-bit
+                // KDE difference is amplified in relative terms.
+                if (FusedFields[f].IgnoreExpectedOne && va == 1.0)
+                    continue;
                 // Bit-equality first, for the reason Compare gives: NaN and matching
                 // infinities both fail a tolerance test against themselves.
                 if (va.Equals(vb) || Math.Abs(va - vb) <= tolerance)

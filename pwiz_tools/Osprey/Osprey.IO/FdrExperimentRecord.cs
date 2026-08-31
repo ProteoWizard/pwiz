@@ -105,7 +105,7 @@ namespace pwiz.Osprey.IO
             uint entryId,
             double experimentPrecursorQvalue, double experimentPeptideQvalue,
             double experimentProteinQvalue, double experimentAggregateScore,
-            double pep = 1.0)
+            double pep)
         {
             EntryId = entryId;
             ExperimentPrecursorQvalue = experimentPrecursorQvalue;
