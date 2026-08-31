@@ -28,9 +28,9 @@
 
 .PARAMETER Coverage
     Wrap test execution in JetBrains dotCover.  Writes .dcvr
-    coverage data under TestResults/.  Requires the dotcover
-    global tool on PATH (install:
-    dotnet tool install -g JetBrains.dotCover.GlobalTools).
+    coverage data under TestResults/.  dotCover is restored from
+    this directory's .config/dotnet-tools.json, so no global
+    install and no agent provisioning is needed.
 
 .PARAMETER TeamCity
     Emit TeamCity service messages: progress lines during the
@@ -123,14 +123,14 @@ if (-not $NoTests) {
         exit 2
     }
 }
-$dotcover = $null
 if ($Coverage) {
-    $cmd = Get-Command dotcover -ErrorAction SilentlyContinue
-    if (-not $cmd) {
-        Write-Problem-Tc "dotcover not on PATH (install JetBrains.dotCover.GlobalTools)"
-        exit 2
-    }
-    $dotcover = $cmd.Source
+    # Restore dotCover from this directory's tool manifest rather than requiring a global
+    # install. The previous check demanded `dotcover` on PATH, which held only on the
+    # long-lived agent that happened to have it: every ephemeral CI agent failed here, and the
+    # package name the message suggested (JetBrains.dotCover.GlobalTools) does not exist.
+    $ensure = Join-Path $PSScriptRoot '../../pwiz-sharp/scripts/Ensure-DotCover.ps1'
+    if ($TeamCity) { & $ensure -ManifestDir $PSScriptRoot -TeamCity } else { & $ensure -ManifestDir $PSScriptRoot }
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
 # --- Pre-build cleanup ---------------------------------------------------
@@ -253,9 +253,11 @@ foreach ($fw in $testFrameworks) {
         ) + ($vstestArgs | ForEach-Object { Quote-IfNeeded $_ })
         $dcArgString = $dcArgs -join ' '
         Write-Host "DC ARGS: $dcArgString"
+        # Invoked as the local tool (`dotnet dotcover ...`) rather than a global dotcover.exe,
+        # so the version is the one pinned in .config/dotnet-tools.json.
         $psi = New-Object System.Diagnostics.ProcessStartInfo
-        $psi.FileName = $dotcover
-        $psi.Arguments = $dcArgString
+        $psi.FileName = 'dotnet'
+        $psi.Arguments = "dotcover $dcArgString"
         $psi.UseShellExecute = $false
         $proc = [System.Diagnostics.Process]::Start($psi)
         $proc.WaitForExit()
