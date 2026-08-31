@@ -50,7 +50,6 @@ namespace pwiz.Common.SystemUtil
         private string _progressMessageWithoutSize; // Base message before download size is appended
         private const int ReadTimeoutMilliseconds = 15000; // timeout per chunk to avoid long hangs when network drops
         private TimeSpan? _requestTimeout;
-        private bool _disposed;
 
         // Per-request state (stored in instance, applied to HttpRequestMessage)
         private string _authHeader;
@@ -303,16 +302,9 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         private HttpRequestMessage CreateRequest(HttpMethod method, Uri uri)
         {
-            ThrowIfDisposed();
             var request = new HttpRequestMessage(method, uri);
             ApplyHeadersToRequest(request);
             return request;
-        }
-
-        private void ThrowIfDisposed()
-        {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(HttpClientWithProgress));
         }
 
         /// <summary>
@@ -479,7 +471,6 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public HttpResponseMessage SendRequest(HttpRequestMessage request)
         {
-            ThrowIfDisposed();
             // Apply per-instance headers and cookies to the request
             ApplyHeadersToRequest(request);
 
@@ -1188,9 +1179,6 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public void Dispose()
         {
-            // Refuse further requests: a request racing past Dispose would otherwise be sent
-            // without the cleared Authorization header, i.e. unauthenticated to a live server.
-            _disposed = true;
             // Clear per-request state
             _authHeader = null;
             _customHeaders.Clear();
