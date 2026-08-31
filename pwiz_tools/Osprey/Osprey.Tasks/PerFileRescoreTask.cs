@@ -230,7 +230,15 @@ namespace pwiz.Osprey.Tasks
             if (!OspreyEnvironment.Pass2ProteinCompact && !OspreyEnvironment.Pass2TransferCompete)
                 yield break;
             foreach (var input in ctx.Config.InputFiles)
+            {
                 yield return FdrScoresSidecar.Pass2Path(input);
+                // The decoy side of this file's competition, written by the same worker in the
+                // same call (#4486). Declared for the same reason the sidecar is: it is an
+                // output of THIS task, its validity is this task's validity, and a resume that
+                // found the pool image but not this file would fold an empty null. Two declared
+                // outputs make that state fail the task rather than be discovered downstream.
+                yield return Pass2CompetitionDecoys.PathFor(input);
+            }
         }
 
         public override string ValidityKey(PipelineContext ctx)
@@ -878,7 +886,8 @@ namespace pwiz.Osprey.Tasks
                 foreach (string inputFile in config.InputFiles)
                     inputByName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
             }
-            void WriteSidecar(string fileName, IReadOnlyList<FdrScoreRecord> records)
+            void WriteAnswer(string fileName, IReadOnlyList<FdrScoreRecord> records,
+                IReadOnlyDictionary<uint, (double score, uint entryId)> bestDecoy)
             {
                 // --task ModelDiagnostics touches no artifact but the report, exactly as the
                 // Stage 7 writer this replaces.
@@ -891,6 +900,13 @@ namespace pwiz.Osprey.Tasks
                         @"no configured input file, so its sidecar has nowhere to go. See issue #4486.",
                         fileName));
                 }
+                // The DECOY side first, then the pool image. The pool image's validity stamp is
+                // what makes Stage 7 fold this file as the worker's rather than recompute it, so
+                // it has to be the LAST thing that lands: an interruption between the two writes
+                // then leaves a file Stage 7 recomputes, rather than one it folds against a decoy
+                // artifact that was never written.
+                string decoysPath = Pass2CompetitionDecoys.PathFor(inputFile);
+                Pass2CompetitionDecoys.Write(decoysPath, bestDecoy);
                 string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
                 FdrScoresSidecar.Write(pass2Path, records, FdrScoresSidecar.Pass.SecondPass);
                 // The validity sidecar is what makes PRESENCE a sufficient indicator. Written by
@@ -899,17 +915,19 @@ namespace pwiz.Osprey.Tasks
                 // PerFileRescoring. Stamping SecondPassFDR's key here would leave a file that
                 // outlives the inputs it was computed from, which is the one thing a resume
                 // cannot detect by looking.
+                var stampInputs = new[] { ParquetScoreCache.EffectiveScoresPathFromScoresPath(
+                    ParquetScoreCache.GetScoresPath(inputFile)) };
+                TaskValiditySidecar.Write(decoysPath, taskName, OspreyVersion.Current,
+                    taskValidityKey, stampInputs);
                 TaskValiditySidecar.Write(pass2Path, taskName, OspreyVersion.Current,
-                    taskValidityKey,
-                    new[] { ParquetScoreCache.EffectiveScoresPathFromScoresPath(
-                        ParquetScoreCache.GetScoresPath(inputFile)) });
+                    taskValidityKey, stampInputs);
             }
             return new Pass2PerFileWorker(
                 scorer,
                 proteinCompact ? @"protein-compact" : @"transfer-compete",
                 proteinCompact ? sidecar.StratumBaseIds : null,
                 Pass2FdrSidecar.LoadPass1ExperimentRecords(config),
-                WriteSidecar,
+                WriteAnswer,
                 ctx.LogWarning);
         }
 

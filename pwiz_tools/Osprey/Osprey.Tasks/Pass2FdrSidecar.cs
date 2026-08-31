@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -870,7 +870,30 @@ namespace pwiz.Osprey.Tasks
                     @"would let the move ship unverified. See issue #4486.",
                     fileKey, pass2Path));
             }
-            return FileCompetitionFromRecords(records, stratumBaseIds, LoadGapFillEntryIds(inputFile));
+            // The DECOY side comes from the artifact the worker wrote it to, never from the
+            // records. A non-survivor decoy is not a pool member, so the pool image cannot carry
+            // the observation that won its base_id - the competition runs over the file's
+            // pre-compaction population (issue #4436), which is exactly the point.
+            //
+            // Absence is a stop. Deriving the decoy bests from the pool anyway is what the
+            // previous shape did, and it produced a null missing real decoy observations: every
+            // experiment q computed against it moved (113,552 entries measured on Stellar), with
+            // every correctness leg green because none of the movement crossed the 1% cutoff.
+            // There is no gate that can see this, so a missing file has to fail the run.
+            string decoysPath = Pass2CompetitionDecoys.PathFor(inputFile);
+            var bestDecoy = Pass2CompetitionDecoys.ReadMap(decoysPath);
+            if (bestDecoy == null)
+            {
+                throw new InvalidOperationException(string.Format(
+                    @"Second-pass worker verification for '{0}': the worker's per-run sidecar is " +
+                    @"present, but the decoy side of its competition could not be read from {1}. " +
+                    @"The pool image cannot supply it - a non-survivor decoy holds no pool row - " +
+                    @"so folding without it would compute every experiment q against a " +
+                    @"decoy-depleted null. See issue #4486.",
+                    fileKey, decoysPath));
+            }
+            return FileCompetitionFromRecords(
+                records, stratumBaseIds, bestDecoy, LoadGapFillEntryIds(inputFile));
         }
 
         /// <summary>
@@ -2480,11 +2503,13 @@ namespace pwiz.Osprey.Tasks
         /// survivor whose reconciled features resolve, and leaves the seeded 1st-pass value on
         /// the rest - which is exactly the score <c>CompeteOneFile</c> competes on in both
         /// cases, since a survivor absent from its override map keeps its stored score.</item>
-        /// <item><b>BestDecoy.</b> Recoverable only because every non-survivor decoy observation
-        /// is carried FORWARD into this file's sidecar - decoys are never gap-filled, so they
-        /// never become survivors, and the join needs them to compute the null without reopening
-        /// a pass-1 file. Drop the carry-forward and this half silently loses the 305 decoy
-        /// base_ids measured on Stellar.</item>
+        /// <item><b>BestDecoy.</b> NOT recoverable from the records, and not attempted here - it
+        /// is supplied by <paramref name="bestDecoy"/>, read from the artifact the worker
+        /// serialized its own competition to (<see cref="Pass2CompetitionDecoys"/>). The winning
+        /// decoy of a base_id is routinely a non-survivor, which by definition holds no row in
+        /// the pool image. An earlier form smuggled those observations INTO the sidecar to make
+        /// this half work; that made one file answer two questions and cost 594 gap-fill
+        /// observations their records.</item>
         /// <item><b>RunQ.</b> <c>CompeteOneFile</c> emits an entry only where it WON a
         /// competition, and the stamp defaults every other survivor to 1.0 - so a record reading
         /// 1.0 cannot be told from one that won nothing. It does not have to be: the only
@@ -2507,13 +2532,19 @@ namespace pwiz.Osprey.Tasks
         /// recorded: that map is per-observation and its only consumer is a cross-file MINIMUM,
         /// which a gap-fill's q participates in exactly as the resident pool's did.
         /// </param>
+        /// <param name="bestDecoy">The decoy side of this file's competition, read back from
+        /// <see cref="Pass2CompetitionDecoys"/> - the map the worker's <c>CompeteOneFile</c>
+        /// returned, not a reconstruction. Used as given: it is already reduced to exactly the
+        /// population that competed under whatever mode was active, and re-filtering it here
+        /// (by stratum, by gap-fill, by anything) would re-introduce the coupling the artifact
+        /// exists to remove.</param>
         internal static StreamingFdr.FileCompetition FileCompetitionFromRecords(
             IReadOnlyList<FdrScoreRecord> records, HashSet<uint> stratumBaseIds,
+            Dictionary<uint, (double score, uint entryId)> bestDecoy,
             HashSet<uint> gapFillEntryIds = null)
         {
             var runQ = new Dictionary<uint, double>(records.Count);
             var bestTarget = new Dictionary<uint, (double score, uint entryId)>();
-            var bestDecoy = new Dictionary<uint, (double score, uint entryId)>();
             foreach (var rec in records)
             {
                 if (gapFillEntryIds != null && gapFillEntryIds.Contains(rec.EntryId))
@@ -2528,22 +2559,19 @@ namespace pwiz.Osprey.Tasks
                 uint bid = eid & BASE_ID_MASK;
                 if (stratumBaseIds != null && !stratumBaseIds.Contains(bid))
                     continue;
+                // DECOY records contribute their run q and nothing else. Their per-base_id best
+                // comes from the worker's own artifact, and a pool decoy that outscored the
+                // competition's winner would be an observation the competition never ranked -
+                // the same error the gap-fill exclusion above prevents on the target side.
+                if ((eid & ~BASE_ID_MASK) != 0u)
+                    continue;
                 // Strictly-greater, so the FIRST record at the maximum wins - the same rule
                 // CompeteOneFile and the cross-file fold use. Records are written in the
-                // worker's competition order, which is this file's sidecar order, so "first"
-                // means the same observation on both sides.
+                // reconciled parquet's canonical order, which is the order CompeteOneFile's own
+                // population scan runs in, so "first" means the same observation on both sides.
                 double s = rec.Score;
-                bool isDecoy = (eid & ~BASE_ID_MASK) != 0u;
-                if (isDecoy)
-                {
-                    if (!bestDecoy.TryGetValue(bid, out var curD) || s > curD.score)
-                        bestDecoy[bid] = (s, eid);
-                }
-                else
-                {
-                    if (!bestTarget.TryGetValue(bid, out var curT) || s > curT.score)
-                        bestTarget[bid] = (s, eid);
-                }
+                if (!bestTarget.TryGetValue(bid, out var curT) || s > curT.score)
+                    bestTarget[bid] = (s, eid);
             }
             return new StreamingFdr.FileCompetition(runQ, bestTarget, bestDecoy);
         }

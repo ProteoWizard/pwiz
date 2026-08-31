@@ -83,20 +83,28 @@ namespace pwiz.Osprey.Tasks
         private readonly object _seederListLock = new object();
 
         /// <summary>
-        /// Persists one file's records. Supplied rather than constructed here so the worker owns
-        /// the COMPUTATION and not the artifact policy - which task name the validity sidecar
-        /// carries, and whether a --task ModelDiagnostics run declines the write at all, are the
-        /// caller's to decide and are already implemented once.
+        /// Persists one file's pass-2 answer: the pool-image records AND the decoy side of the
+        /// competition that produced them. Supplied rather than constructed here so the worker
+        /// owns the COMPUTATION and not the artifact policy - which task name the validity
+        /// sidecar carries, and whether a --task ModelDiagnostics run declines the write at all,
+        /// are the caller's to decide and are already implemented once.
+        ///
+        /// <para>ONE callback for both files, not two. They are two halves of a single answer and
+        /// a node that received one without the other would either fold a competition with an
+        /// empty null or reject the run; making them separate calls would make "wrote one, not
+        /// the other" a reachable state.</para>
         /// </summary>
-        private readonly Action<string, IReadOnlyList<FdrScoreRecord>> _writeSidecar;
+        private readonly Action<string, IReadOnlyList<FdrScoreRecord>,
+            IReadOnlyDictionary<uint, (double score, uint entryId)>> _writeAnswer;
 
         public Pass2PerFileWorker(
             FrozenModelScorer scorer, string mode, HashSet<uint> stratumBaseIds,
             IReadOnlyDictionary<uint, FdrExperimentRecord> pass1Experiment,
-            Action<string, IReadOnlyList<FdrScoreRecord>> writeSidecar,
+            Action<string, IReadOnlyList<FdrScoreRecord>,
+                IReadOnlyDictionary<uint, (double score, uint entryId)>> writeAnswer,
             Action<string> logWarning)
         {
-            _writeSidecar = writeSidecar ?? throw new ArgumentNullException(nameof(writeSidecar));
+            _writeAnswer = writeAnswer ?? throw new ArgumentNullException(nameof(writeAnswer));
             _scorer = scorer ?? throw new ArgumentNullException(nameof(scorer));
             _nFeatures = scorer.NumFeatures;
             _mode = mode;
@@ -130,7 +138,11 @@ namespace pwiz.Osprey.Tasks
         {
             var result = CompeteAndStamp(
                 fileName, pass1SidecarPath, effectiveParquetPath, survivors);
-            _writeSidecar(fileName, result.Records);
+            // The competition's BestDecoy is serialized as the worker COMPUTED it, never
+            // reassembled from the records, the stratum or the 1st-pass population - see
+            // Pass2CompetitionDecoys. This is the whole of the transmission the join needs and
+            // the pool image cannot carry.
+            _writeAnswer(fileName, result.Records, result.Competition.BestDecoy);
             return result;
         }
 
@@ -203,14 +215,29 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="Pass2FdrSidecar.AssertSidecarDescribesPool"/> is the verifier that closes
         /// it.</para>
         ///
-        /// <para><b>Pool order, not competition order.</b> The pool list is the order Stage 6
-        /// wrote the reconciled parquet in - measured identical, ids and order, to the per-run
-        /// sidecar this replaces - so emitting in list order reproduces it exactly. The join
-        /// (<see cref="Pass2FdrSidecar.FileCompetitionFromRecords"/>) resolves a per-base_id
-        /// maximum with strict greater-than and takes the FIRST observation at the maximum, so
-        /// the order it reduces over has to be the one <c>CompeteOneFile</c> reduced over; both
-        /// are subsequences of the same pool order, which is what keeps them agreeing on ties.
-        /// </para>
+        /// <para><b>Pool ORDER, not the pool list's order.</b> The record sequence must be the
+        /// reconciled parquet's row sequence, and the in-memory list is not it: gap-fill entries
+        /// are APPENDED by the rescore task's phase 2, so emitting in list order puts them in a
+        /// trailing block, while
+        /// <see cref="ParquetScoreCache.StreamReconciledScoresParquet"/> merges each one into its
+        /// canonical <c>(entry_id, charge, scan_number)</c> sorted position. Measured on Stellar:
+        /// the branch's sequence was <c>(baseline minus gap-fills) + gap-fills ascending</c>
+        /// against a baseline that is fully ascending.</para>
+        ///
+        /// <para>So the records are sorted on the parquet's OWN canonical key rather than on
+        /// entry_id alone. Ordering by entry_id happens to reproduce it wherever a file holds one
+        /// row per entry_id, which is the measured case here - but "happens to" is what this
+        /// method already got wrong once, and the parquet writer hard-fails on a row that is out
+        /// of canonical order, so the key it enforces is the one to reproduce. A STABLE sort
+        /// (LINQ <c>OrderBy</c>, as the parquet's own gap-fill merge uses), so a full key tie
+        /// leaves the original row ahead of the gap-fill - which is the disposition
+        /// <c>KeyLess</c> gives it on the merge side.</para>
+        ///
+        /// <para>The join (<see cref="Pass2FdrSidecar.FileCompetitionFromRecords"/>) resolves a
+        /// per-base_id maximum with strict greater-than and takes the FIRST observation at the
+        /// maximum, so the order it reduces over has to be the one <c>CompeteOneFile</c> reduced
+        /// over; both are subsequences of the same canonical order, which is what keeps them
+        /// agreeing on ties.</para>
         ///
         /// <para><b>No decoy carry-forward.</b> Decoys that are pool entries are emitted like any
         /// other pool entry - the baseline artifact holds 466,055 decoy observations across these
@@ -225,7 +252,8 @@ namespace pwiz.Osprey.Tasks
             List<FdrEntry> survivors, string fileName, string effectiveParquetPath)
         {
             var records = new List<FdrScoreRecord>(survivors.Count);
-            foreach (var e in survivors)
+            foreach (var e in survivors.OrderBy(e => e.EntryId)
+                         .ThenBy(e => e.Charge).ThenBy(e => e.ScanNumber))
             {
                 records.Add(new FdrScoreRecord(
                     e.EntryId, e.Score, e.RunPrecursorQvalue, e.RunPeptideQvalue));

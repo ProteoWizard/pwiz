@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -3301,6 +3301,109 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(expBefore[i][2], loaded[i].ExperimentProteinQvalue);
                     Assert.AreEqual(expBefore[i][3], loaded[i].ExperimentAggregateScore);
                 }
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// The per-file second-pass competition decoys artifact (issue #4486) - the decoy side of
+        /// one file's pass-2 competition, which the pool-image sidecar structurally cannot carry
+        /// because the winning decoy of a base_id is routinely a non-survivor.
+        ///
+        /// <list type="bullet">
+        /// <item><b>Canonical.</b> The file is a function of its CONTENTS, not of the order the
+        /// producer's dictionary enumerated: the same pairs inserted in opposite orders must
+        /// produce byte-identical files. The straight-through and distributed routes accumulate
+        /// in different orders and the gate compares their artifacts byte for byte.</item>
+        /// <item><b>Key-checked.</b> The base_id key is not stored - it is the entry_id's low 31
+        /// bits - so a TARGET entry_id or a mis-filed key would have the reader silently
+        /// re-derive a different base_id and put a target observation into the decoy null. Both
+        /// fail the write instead.</item>
+        /// <item><b>Rejects a foreign file.</b> This shares a header shape with the per-file
+        /// scores sidecar and the analysis-wide experiment sidecar; only the magic separates
+        /// them, so a mix-up has to be a rejection rather than plausible garbage.</item>
+        /// <item><b>Unreadable is null, never empty.</b> An empty competition and an unreadable
+        /// file must be distinguishable: the second silently empties the null every experiment
+        /// q-value is computed against, and no golden or entrapment gate can see that.</item>
+        /// </list>
+        /// </summary>
+        [TestMethod]
+        public void TestPass2CompetitionDecoysArtifact()
+        {
+            // The decoy high bit, as PercolatorEntry sets it. Spelled out here because the
+            // artifact under test derives every base_id key from it.
+            const uint DECOY_BIT = 0x80000000;
+            string dir = Path.Combine(Path.GetTempPath(), "osprey_dcy_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var ascending = new Dictionary<uint, (double score, uint entryId)>();
+                var descending = new Dictionary<uint, (double score, uint entryId)>();
+                for (uint b = 1; b <= 8; b++)
+                    ascending[b] = (0.1 * b, DECOY_BIT | b);
+                for (uint b = 8; b >= 1; b--)
+                    descending[b] = (0.1 * b, DECOY_BIT | b);
+
+                string a = Path.Combine(dir, "a.bin");
+                string d = Path.Combine(dir, "d.bin");
+                Pass2CompetitionDecoys.Write(a, ascending);
+                Pass2CompetitionDecoys.Write(d, descending);
+                CollectionAssert.AreEqual(File.ReadAllBytes(a), File.ReadAllBytes(d),
+                    "the artifact must be a function of its contents, not of insertion order");
+
+                var map = Pass2CompetitionDecoys.ReadMap(a);
+                Assert.IsNotNull(map);
+                Assert.AreEqual(8, map.Count);
+                for (uint b = 1; b <= 8; b++)
+                {
+                    Assert.AreEqual(DECOY_BIT | b, map[b].entryId);
+                    Assert.AreEqual(0.1 * b, map[b].score);
+                }
+                Assert.IsTrue(Pass2CompetitionDecoys.IsCurrentFormat(a));
+
+                // A target entry_id has no decoy bit, so the reader would key it to its own
+                // base_id and the file would claim a target observation as a decoy best.
+                var target = new Dictionary<uint, (double score, uint entryId)> { { 3u, (0.5, 3u) } };
+                Assert.ThrowsException<InvalidOperationException>(
+                    () => Pass2CompetitionDecoys.Write(Path.Combine(dir, "t.bin"), target));
+
+                // A key that does not match the entry_id it files means the map was assembled
+                // rather than serialized - the one error this format cannot survive.
+                var misfiled = new Dictionary<uint, (double score, uint entryId)>
+                {
+                    { 3u, (0.5, DECOY_BIT | 4u) }
+                };
+                Assert.ThrowsException<InvalidOperationException>(
+                    () => Pass2CompetitionDecoys.Write(Path.Combine(dir, "m.bin"), misfiled));
+
+                // Empty is a real answer and round trips as one - distinct from unreadable.
+                string empty = Path.Combine(dir, "empty.bin");
+                Pass2CompetitionDecoys.Write(empty,
+                    new Dictionary<uint, (double score, uint entryId)>());
+                var emptyMap = Pass2CompetitionDecoys.ReadMap(empty);
+                Assert.IsNotNull(emptyMap);
+                Assert.AreEqual(0, emptyMap.Count);
+
+                // A corrupted magic byte is a rejection on both entry points, not a decode.
+                string foreign = Path.Combine(dir, "foreign.bin");
+                var bytes = File.ReadAllBytes(a);
+                bytes[5] = (byte)'X';
+                File.WriteAllBytes(foreign, bytes);
+                Assert.IsFalse(Pass2CompetitionDecoys.IsCurrentFormat(foreign));
+                Assert.IsNull(Pass2CompetitionDecoys.ReadMap(foreign));
+
+                // So is a truncated body, which is what a partial write leaves behind.
+                string truncated = Path.Combine(dir, "truncated.bin");
+                var full = File.ReadAllBytes(a);
+                File.WriteAllBytes(truncated, full.Take(full.Length - 1).ToArray());
+                Assert.IsFalse(Pass2CompetitionDecoys.IsCurrentFormat(truncated));
+                Assert.IsNull(Pass2CompetitionDecoys.ReadMap(truncated));
+
+                // And so is a missing file: null, never an empty map.
+                Assert.IsNull(Pass2CompetitionDecoys.ReadMap(Path.Combine(dir, "absent.bin")));
             }
             finally
             {

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -4059,10 +4059,10 @@ namespace pwiz.Osprey.Test
         /// already made once.
         /// </summary>
         /// <summary>
-        /// The per-file competition survives a round trip through the per-run 2nd-pass sidecar,
-        /// which is what lets SecondPassFDR fold from that artifact instead of recomputing from
-        /// the 1st-pass sidecar and reconciled parquet once the per-file half moves to
-        /// PerFileRescoring (issue #4486).
+        /// The per-file competition survives a round trip through the two artifacts the worker
+        /// writes - the pool-image per-run 2nd-pass sidecar and the decoy side of the
+        /// competition - which is what lets SecondPassFDR fold from them instead of recomputing
+        /// from the 1st-pass sidecar and reconciled parquet (issue #4486).
         ///
         /// <para>Three properties, each of which is a way the round trip could be lossy while
         /// still looking right on ordinary data:</para>
@@ -4071,9 +4071,11 @@ namespace pwiz.Osprey.Test
         /// score are reduced first-wins on both sides, so the records must be walked in the same
         /// order the competition walked the population. Same value, different representative, is
         /// the silent divergence - so the winning entry_id is asserted, not just the score.</item>
-        /// <item><b>Decoys survive only because they are carried forward.</b> A decoy that is not
-        /// a survivor has no record unless the worker writes one, and dropping it takes its
-        /// base_id out of the null.</item>
+        /// <item><b>The decoy side comes from its own artifact.</b> The competition's winning
+        /// decoy for a base_id is routinely a NON-SURVIVOR, which holds no row in the pool image,
+        /// so it reaches the join only because the worker serialized the map it computed. The
+        /// records here are the pool image and carry no such decoy, which is exactly the state
+        /// that used to take the base_id out of the null.</item>
         /// <item><b>Run q is recovered asymmetrically.</b> The sidecar cannot distinguish "won
         /// with q = 1.0" from "won nothing", so the rebuilt map holds keys the competition's does
         /// not. That is immaterial to the only consumer - minRunQ's reader defaults an ABSENT
@@ -4086,8 +4088,8 @@ namespace pwiz.Osprey.Test
         {
             var stratum = new HashSet<uint> { 1u, 2u };
             // base_id 1: two target observations at an EQUAL score - the tie case. base_id 2:
-            // a target and a decoy. The decoy is NOT a survivor, so it only reaches the join if
-            // it is carried forward.
+            // a target and a decoy. The decoy is NOT a survivor, so it holds no pool row and
+            // reaches the join only through the competition-decoys artifact.
             uint t1a = 1u, t1b = 0x00010001u, t2 = 2u, d2 = DecoyOf(2u);
             var entryIds = new[] { t1a, t1b, t2, d2 };
             var scores = new[] { 0.90, 0.90, 0.50, 0.20 };
@@ -4097,41 +4099,98 @@ namespace pwiz.Osprey.Test
                 entryIds, (double[])scores.Clone(),
                 new Dictionary<uint, double>(), survivorIds, stratum);
 
-            // What the worker writes: every survivor, then the carried-forward decoy, in
-            // POPULATION order.
+            // What the worker writes as the per-run sidecar: the POOL, in canonical order. The
+            // non-survivor decoy is absent - that is the property this test exists for.
             var records = new List<FdrScoreRecord>
             {
                 new FdrScoreRecord(t1a, 0.90, competed.RunQ.TryGetValue(t1a, out var q1) ? q1 : 1.0, 1.0),
                 new FdrScoreRecord(t1b, 0.90, competed.RunQ.TryGetValue(t1b, out var q2) ? q2 : 1.0, 1.0),
                 new FdrScoreRecord(t2, 0.50, competed.RunQ.TryGetValue(t2, out var q3) ? q3 : 1.0, 1.0),
-                new FdrScoreRecord(d2, 0.20, 1.0, 1.0),
             };
-            var rebuilt = Pass2FdrSidecar.FileCompetitionFromRecords(records, stratum);
 
-            // The tie: both sides must name the SAME winning observation, not merely the same
-            // score. t1a precedes t1b in population order and both score 0.90.
-            Assert.AreEqual(competed.BestTarget[1u].entryId, rebuilt.BestTarget[1u].entryId);
-            Assert.AreEqual(t1a, rebuilt.BestTarget[1u].entryId);
-            Assert.AreEqual(competed.BestTarget[1u].score, rebuilt.BestTarget[1u].score);
-
-            // The carried decoy is why base_id 2 still has a decoy best at all.
-            Assert.AreEqual(competed.BestDecoy[2u].entryId, rebuilt.BestDecoy[2u].entryId);
-            Assert.AreEqual(competed.BestDecoy[2u].score, rebuilt.BestDecoy[2u].score);
-            Assert.AreEqual(competed.BestTarget.Count, rebuilt.BestTarget.Count);
-            Assert.AreEqual(competed.BestDecoy.Count, rebuilt.BestDecoy.Count);
-
-            // This is the assertion the streamed pass makes against the worker, in miniature.
-            StreamingFdr.AssertContributionsMatch("f", rebuilt, competed);
-
-            // And it has teeth: a rebuilt map that awards a REAL q where nothing was competed is
-            // a genuine divergence rather than the representational one above.
-            var bogus = new List<FdrScoreRecord>(records)
+            // ... and the decoy side, through the real file rather than the in-memory map, so a
+            // format or ordering fault fails here rather than only in a multi-hour gate.
+            string decoysPath = Path.Combine(Path.GetTempPath(),
+                @"osprey_test_dcy_" + Guid.NewGuid().ToString(@"N") + @".bin");
+            try
             {
-                new FdrScoreRecord(DecoyOf(1u), 0.10, 0.5, 1.0)
+                Pass2CompetitionDecoys.Write(decoysPath, competed.BestDecoy);
+                var readBack = Pass2CompetitionDecoys.ReadMap(decoysPath);
+                Assert.IsNotNull(readBack, @"the decoys artifact must read back");
+                var rebuilt = Pass2FdrSidecar.FileCompetitionFromRecords(records, stratum, readBack);
+
+                // The tie: both sides must name the SAME winning observation, not merely the same
+                // score. t1a precedes t1b in population order and both score 0.90.
+                Assert.AreEqual(competed.BestTarget[1u].entryId, rebuilt.BestTarget[1u].entryId);
+                Assert.AreEqual(t1a, rebuilt.BestTarget[1u].entryId);
+                Assert.AreEqual(competed.BestTarget[1u].score, rebuilt.BestTarget[1u].score);
+
+                // The artifact is why base_id 2 still has a decoy best at all: d2 has no record.
+                Assert.AreEqual(d2, rebuilt.BestDecoy[2u].entryId);
+                Assert.AreEqual(competed.BestDecoy[2u].entryId, rebuilt.BestDecoy[2u].entryId);
+                Assert.AreEqual(competed.BestDecoy[2u].score, rebuilt.BestDecoy[2u].score);
+                Assert.AreEqual(competed.BestTarget.Count, rebuilt.BestTarget.Count);
+                Assert.AreEqual(competed.BestDecoy.Count, rebuilt.BestDecoy.Count);
+
+                // This is the assertion the streamed pass makes against the worker, in miniature.
+                StreamingFdr.AssertContributionsMatch(@"f", rebuilt, competed);
+
+                // And it has teeth: losing the artifact's decoy is precisely the decoy-depleted
+                // null this design exists to prevent, and the assert must see it.
+                var depleted = new Dictionary<uint, (double score, uint entryId)>(readBack);
+                depleted.Remove(2u);
+                Assert.ThrowsException<InvalidOperationException>(
+                    () => StreamingFdr.AssertContributionsMatch(@"f",
+                        Pass2FdrSidecar.FileCompetitionFromRecords(records, stratum, depleted),
+                        competed));
+
+                // A rebuilt map that awards a REAL q where nothing was competed is a genuine
+                // divergence rather than the representational one above.
+                var bogus = new List<FdrScoreRecord>(records)
+                {
+                    new FdrScoreRecord(DecoyOf(1u), 0.10, 0.5, 1.0)
+                };
+                Assert.ThrowsException<InvalidOperationException>(
+                    () => StreamingFdr.AssertContributionsMatch(
+                        @"f", Pass2FdrSidecar.FileCompetitionFromRecords(bogus, stratum, readBack),
+                        competed));
+            }
+            finally
+            {
+                try { File.Delete(decoysPath); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// A DECOY row in the pool image must not become a base_id's best. The pool is not the
+        /// competition's population, so a pool decoy that outscores the competition's winner is
+        /// an observation the competition never ranked - the same error the gap-fill exclusion
+        /// prevents on the target side, and the reason the fold reads the decoy half from the
+        /// worker's artifact instead of reducing it out of the records.
+        /// </summary>
+        [TestMethod]
+        public void TestPoolDecoyRecordDoesNotOverrideCompetitionDecoyBest()
+        {
+            var stratum = new HashSet<uint> { 2u };
+            uint t2 = 2u, d2 = DecoyOf(2u);
+            // The competition's answer: the decoy won its base_id at 0.20.
+            var fromWorker = new Dictionary<uint, (double score, uint entryId)>
+            {
+                { 2u, (0.20, d2) }
             };
-            Assert.ThrowsException<InvalidOperationException>(
-                () => StreamingFdr.AssertContributionsMatch(
-                    "f", Pass2FdrSidecar.FileCompetitionFromRecords(bogus, stratum), competed));
+            // The pool image happens to hold a decoy row scoring HIGHER. It is still a pool row,
+            // not a competition observation, so it must not displace the worker's answer.
+            var records = new List<FdrScoreRecord>
+            {
+                new FdrScoreRecord(t2, 0.50, 1.0, 1.0),
+                new FdrScoreRecord(d2, 0.95, 1.0, 1.0),
+            };
+            var rebuilt = Pass2FdrSidecar.FileCompetitionFromRecords(records, stratum, fromWorker);
+            Assert.AreEqual(0.20, rebuilt.BestDecoy[2u].score);
+            Assert.AreEqual(d2, rebuilt.BestDecoy[2u].entryId);
+            // The pool decoy still contributes its run q - that map is per observation, and its
+            // only consumer is a cross-file minimum.
+            Assert.IsTrue(rebuilt.RunQ.ContainsKey(d2));
         }
 
         [TestMethod]

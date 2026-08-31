@@ -1394,9 +1394,25 @@ function Invoke-HpcChain {
         # Copying the binary but not the stamp would be worse than copying neither: phase 4
         # would fold a file it believed it had produced itself. Guarded with Test-Path because
         # the retrain modes have no per-file half and phase 3 writes nothing here.
+        #
+        # The DECOY SIDE of the same competition travels with it, and is not optional once the
+        # sidecar is here: the pool image cannot carry the winning decoy of a base_id (a
+        # non-survivor holds no pool row), so phase 4 THROWS rather than folding an experiment
+        # q against a decoy-depleted null. Relaying one without the other is the exact defect
+        # this relay produced once before - a per-file artifact that silently did not arrive,
+        # leaving phase 4 to recompute and answer differently from the straight route.
         $pass2Side = Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"
         if (Test-Path $pass2Side) {
+            $pass2Decoys = Join-Path $ph3 "$s.2nd-pass.fdr_decoys.bin"
+            if (-not (Test-Path $pass2Decoys)) {
+                throw "PerFileRescoring wrote $s.2nd-pass.fdr_scores.bin but no matching .2nd-pass.fdr_decoys.bin in $ph3"
+            }
             Copy-Item $pass2Side (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin")
+            Copy-Item $pass2Decoys (Join-Path $ph4 "$s.2nd-pass.fdr_decoys.bin")
+            $decoysStamp = "$pass2Decoys.PerFileRescoring.osprey.task"
+            if (Test-Path $decoysStamp) {
+                Copy-Item $decoysStamp (Join-Path $ph4 "$s.2nd-pass.fdr_decoys.bin.PerFileRescoring.osprey.task")
+            }
             $pass2Stamp = "$pass2Side.PerFileRescoring.osprey.task"
             if (Test-Path $pass2Stamp) {
                 Copy-Item $pass2Stamp (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task")
