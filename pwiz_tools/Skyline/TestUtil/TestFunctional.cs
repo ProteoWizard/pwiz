@@ -1178,6 +1178,16 @@ namespace pwiz.SkylineTestUtil
             return SkylineWindow.Document;
         }
 
+        /// <summary>
+        /// Set SKYLINE_LOADER_TRACE=1 to dump <see cref="BackgroundLoader.GetLoaderTrace"/> after
+        /// every successful document load wait. The trace exists for a failure that is rare enough
+        /// to wait weeks for, and instrumentation nobody has watched work is a poor thing to be
+        /// relying on when it finally happens - this makes it possible to confirm the trace
+        /// records what it should against a PASSING run. Read once, so an unset run pays nothing.
+        /// </summary>
+        private static readonly bool LOADER_TRACE_DUMP =
+            Equals(Environment.GetEnvironmentVariable(@"SKYLINE_LOADER_TRACE"), @"1");
+
         public static SrmDocument WaitForDocumentLoaded(int millis = WAIT_TIME)
         {
             WaitForConditionUI(millis, () =>
@@ -1194,7 +1204,19 @@ namespace pwiz.SkylineTestUtil
                 },
                 () => TextUtil.LineSeparate(
                     $"Expecting loaded document but still not loaded after {millis / 1000} seconds",
-                    TextUtil.LineSeparate(SkylineWindow.DocumentUI.NonLoadedStateDescriptionsFull)));
+                    TextUtil.LineSeparate(SkylineWindow.DocumentUI.NonLoadedStateDescriptionsFull),
+                    // The thread dump taken here is always empty of loader threads, because by now
+                    // they have all exited - so it cannot say what the loader decided. This can.
+                    string.Empty,
+                    "*** Loader trace (most recent last):",
+                    BackgroundLoader.GetLoaderTrace()));
+            if (LOADER_TRACE_DUMP)
+            {
+                // Leading hash keeps SkylineTester from reading these as results.
+                Console.WriteLine(TextUtil.LineSeparate(
+                    "# Loader trace after a SUCCESSFUL WaitForDocumentLoaded:",
+                    BackgroundLoader.GetLoaderTrace()));
+            }
             WaitForProteinMetadataBackgroundLoaderCompletedUI(millis);  // make sure document is stable
             return SkylineWindow.Document;
         }
