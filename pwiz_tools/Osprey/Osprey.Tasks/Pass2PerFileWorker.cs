@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -169,7 +169,18 @@ namespace pwiz.Osprey.Tasks
             // while both sets were still in one place - which is the only reason this call is
             // safe to make from here at all.
             var competition = StreamingFdr.CompeteOneFile(
-                entryIds, scores, survivorScores, survivorIds, _stratumBaseIds);
+                entryIds, scores, survivorScores, survivorIds, _stratumBaseIds, fileName);
+
+            // FREE VERIFICATION of the artifact that has no other one. Every decoy best must be
+            // an observation of THIS file at the score it competed on - which is exactly what
+            // entryIds/scores hold, already in memory, so this costs one pass over a map that is
+            // O(distinct base_id) and no I/O at all.
+            //
+            // It is deliberately NOT the gated Stage 7 recompute: that re-reads the 1st-pass
+            // sidecar to answer the same question, and both sides of it call this very function
+            // so it cannot see a defect inside it. This catches the shape that a recompute
+            // cannot - a serialization or aliasing fault between competing and writing.
+            AssertDecoyBestsAreLocalObservations(fileName, competition.BestDecoy, entryIds, scores);
 
             // Stamp the run q onto the entries the sidecar write will serialize. An entry absent
             // from the map won no competition in this file and takes 1.0 - the same default the
@@ -186,6 +197,50 @@ namespace pwiz.Osprey.Tasks
             return new Pass2FileResult(
                 competition,
                 BuildRecords(survivors, fileName, effectiveParquetPath));
+        }
+
+        /// <summary>
+        /// Every entry in the competition's decoy side must be an observation THIS file holds, at
+        /// the score it competed on.
+        ///
+        /// <para>The decoys artifact is the one thing the join cannot re-derive - that is why it
+        /// is written - so it is also the one thing a downstream consumer must take on trust. This
+        /// makes the trust cheap: <paramref name="entryIds"/> and <paramref name="scores"/> are
+        /// the arrays the competition just reduced, still in memory, so the check is O(distinct
+        /// base_id) with no I/O. A wrong POPULATION is not what this catches (only the mode knows
+        /// which base_ids should be admitted); it catches a wrong VALUE or a wrong entry_id, which
+        /// is the failure a serialization step can introduce and a recompute of the same function
+        /// cannot see.</para>
+        /// </summary>
+        private static void AssertDecoyBestsAreLocalObservations(
+            string fileName, IReadOnlyDictionary<uint, (double score, uint entryId)> bestDecoy,
+            uint[] entryIds, double[] scores)
+        {
+            if (bestDecoy.Count == 0)
+                return;
+            // One pass to index this file's observations, then one pass over the bests. Built
+            // here rather than kept by the competition because it is scratch: it dies with this
+            // call, where a field would live for the length of the run times the thread count.
+            var scoreByEntryId = new Dictionary<uint, double>(entryIds.Length);
+            for (int i = 0; i < entryIds.Length; i++)
+                scoreByEntryId[entryIds[i]] = scores[i];
+            foreach (var kv in bestDecoy)
+            {
+                if (!scoreByEntryId.TryGetValue(kv.Value.entryId, out double competed))
+                {
+                    throw new InvalidOperationException(string.Format(
+                        @"Second-pass competition decoys for '{0}': base_id {1} names entry_id " +
+                        @"{2}, which is not an observation of this file. See issue #4486.",
+                        fileName, kv.Key, kv.Value.entryId));
+                }
+                if (!competed.Equals(kv.Value.score))
+                {
+                    throw new InvalidOperationException(string.Format(
+                        @"Second-pass competition decoys for '{0}': base_id {1} records score {2} " +
+                        @"for entry_id {3}, which competed at {4}. See issue #4486.",
+                        fileName, kv.Key, kv.Value.score, kv.Value.entryId, competed));
+                }
+            }
         }
 
         /// <summary>

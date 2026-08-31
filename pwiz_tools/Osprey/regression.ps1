@@ -211,6 +211,19 @@ $ospreyExe    = Join-Path $ospreyBinDir 'Osprey.exe'
 # osprey_version value committed in osprey-regression.data/*/tables/OspreyMetadata.tsv.
 $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 
+# Turn ON the per-file second-pass verifier for this gate (issue #4486). Stage 7 recomputes each
+# file's competition and asserts it against the answer PerFileRescoring wrote.
+#
+# COSTS THIS GATE NOTHING. The recompute used to be unconditional, so switching it on here is
+# exactly today's behaviour; what changed is that it is now OFF by default, which is what lets a
+# cohort-scale run stop paying for it (measured at 82 files: 9.2 GB of 1st-pass re-reads against
+# the 2.8 GB the fold needs, inside an 860.8 s Stage 7).
+#
+# Invoke-HpcChain deliberately turns it OFF for its phases - see the note there. That asymmetry
+# is what covers the shipped path, and it also costs nothing, because mode 3 already compares the
+# chain's output against the straight leg's.
+$env:OSPREY_PASS2_VERIFY_WORKER = '1'
+
 # No leg of this gate may run under a resident-pool allowance, so clear any INHERITED
 # one rather than merely declining to set it. A TeamCity agent, or a developer shell
 # that just ran a Stage 6 A/B, can have OSPREY_ALLOW_UNFIXED_RESIDENT exported; every
@@ -1225,6 +1238,20 @@ function Invoke-HpcChain {
           # Directory holding the straight-through leg's .spectra.bin. Phase 1 is
           # seeded from these instead of the mzML - see the block that stages them.
           [string]$CacheSource)
+    # THE SHIPPED PATH RUNS HERE, and this is the whole of what it costs to gate it.
+    #
+    # The straight leg runs with OSPREY_PASS2_VERIFY_WORKER=1, so Stage 7 recomputes and asserts.
+    # This chain runs with it OFF, which is the configuration a real cohort run uses: Stage 7
+    # folds the worker's written answer and never opens a 1st-pass sidecar. Mode 3 then compares
+    # this chain's output against the straight leg's - a comparison it already made - so the
+    # verified and unverified paths are proven to agree at ZERO added run time.
+    #
+    # Without the asymmetry the gate would only ever exercise the path we do NOT ship, which is
+    # the exact shape of defect this sprint keeps finding: a green check on code that production
+    # does not run.
+    $priorVerifyWorker = $env:OSPREY_PASS2_VERIFY_WORKER
+    $env:OSPREY_PASS2_VERIFY_WORKER = $null
+    try {
     $libName = Split-Path -Leaf $Library
     # Every phase gets the SAME dataset flags as the straight-through run -- the
     # chain is only a self-consistency oracle if both sides run the same search.
@@ -1444,6 +1471,10 @@ function Invoke-HpcChain {
     Copy-Item (Join-Path $ph4 'phase4.log') (Join-Path $chainLogDir 'phase4.log') -Force
 
     return (Join-Path $ph4 'output.blib')
+    } finally {
+        # Restore whatever the straight leg runs under, whether this chain returned or threw.
+        $env:OSPREY_PASS2_VERIFY_WORKER = $priorVerifyWorker
+    }
 }
 
 # --- Per-dataset legs ---------------------------------------------------------
@@ -1712,6 +1743,26 @@ foreach ($name in $selected) {
             Write-Problem-Tc "$name mode3 (per-file FDR sidecars==straight): FAIL - $($m3sIssues.Count) issue(s)"
             $m3sIssues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
             $summaryLines.Add("$name mode3 (per-file FDR sidecars==straight): FAIL ($($m3sIssues.Count) issues)")
+        }
+
+        # PROVE THE SPLIT HAPPENED, do not assume it. mode 3's value as coverage of the shipped
+        # fold rests entirely on the two legs having run DIFFERENT paths - straight with the
+        # verifier on, this chain with it off. If the env var stopped reaching a child process,
+        # both would run whichever path the environment supplied and this comparison would still
+        # be green while covering only one of them. Osprey states which fold it ran on every run,
+        # so the assertion is a grep, not a new leg.
+        $straightFold = Select-String -Path (Join-Path $straightDir 'straight.log') `
+            -Pattern 'Second-pass worker verification ACTIVE' -Quiet
+        $chainFold = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
+            -Pattern 'Second-pass worker verification ACTIVE' -Quiet
+        if (-not $straightFold -or $chainFold) {
+            $overallFail = $true
+            Write-Problem-Tc ("$name mode3 (verifier split): FAIL - straight leg verified=" +
+                "$([bool]$straightFold) (expected True), HPC chain verified=$([bool]$chainFold) " +
+                "(expected False). The gate is then comparing two runs of the same path.")
+            $summaryLines.Add("$name mode3 (verifier split): FAIL")
+        } else {
+            $summaryLines.Add("$name mode3 (verifier split): PASS (straight verified, chain shipped-path)")
         }
 
         $m3 = Compare-BlibFull -BlibExpected $straightBlib -BlibActual $chainBlib -Tolerance $Tolerance

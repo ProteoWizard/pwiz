@@ -176,6 +176,14 @@ namespace pwiz.Osprey.FDR
         ///   one file - leaves this pass folding its own recomputation, which is the pre-move
         ///   behaviour. Delete this parameter, the recomputation and the assert together once the
         ///   move is verified; what survives is the fold over the worker's answer.</param>
+        /// <param name="verifyAgainstRecompute">Recompute each file's competition here and assert
+        ///   the worker's answer against it (OSPREY_PASS2_VERIFY_WORKER). A TEST INSTRUMENT, off
+        ///   by default: the recomputation re-reads every 1st-pass sidecar and re-runs the frozen
+        ///   rescore, which is the cost this phase exists to remove - 9.2 GB of re-reads at 82
+        ///   files against the 2.8 GB the fold actually needs. With a worker answer present and
+        ///   this off, no 1st-pass sidecar is opened at all. It has no effect when
+        ///   <paramref name="authoritativeContribution"/> yields nothing, because then the
+        ///   recomputation is not a check but the only source of the answer.</param>
         public static StreamedCompetitionState ComputeFullPopulationPrecursorFdrStreaming(
             IReadOnlyList<string> fileKeys,
             Func<string, (uint[] entryIds, double[] scores,
@@ -184,7 +192,8 @@ namespace pwiz.Osprey.FDR
             IReadOnlyCollection<uint> survivorEntryIds,
             Action<string, FileCompetition> onFileRunQ,
             HashSet<uint> stratumBaseIds = null,
-            Func<string, FileCompetition> authoritativeContribution = null)
+            Func<string, FileCompetition> authoritativeContribution = null,
+            bool verifyAgainstRecompute = false)
         {
             // stratumBaseIds == null -> full-population competition (transfer-compete).
             // non-null -> STRATIFIED competition (protein-compact): only observations whose
@@ -250,17 +259,31 @@ namespace pwiz.Osprey.FDR
                 // output, and this is the oracle that says so. DELETE THIS RECOMPUTE, its
                 // parameter and the assert below before the PR merges; what survives is the
                 // fold over authoritativeContribution.
-                var recomputed = CompeteOneFile(
-                    entryIds, scores, survivorScores, ownSurvivorIds, stratumBaseIds);
-                var contribution = recomputed;
                 var authoritative = authoritativeContribution?.Invoke(fileKey);
-                if (authoritative != null)
+                FileCompetition contribution;
+                if (authoritative != null && !verifyAgainstRecompute)
                 {
-                    // Fold the AUTHORITATIVE answer, then assert against the recomputation.
-                    // Folding the checker's answer instead would make a green run prove nothing
-                    // about the code that ships.
+                    // THE SHIPPED PATH. The worker already competed this file and wrote its
+                    // answer down, so the join just folds it - and never opens the 1st-pass
+                    // sidecar, which is the whole of what #4486 removes (9.2 GB of re-reads at
+                    // 82 files against the 2.8 GB actually needed).
                     contribution = authoritative;
-                    AssertContributionsMatch(fileKey, authoritative, recomputed);
+                }
+                else
+                {
+                    // Either no worker answer exists (the pre-relocation path, and the retrain
+                    // modes), or verification was asked for. Both need the recomputation.
+                    var recomputed = CompeteOneFile(
+                        entryIds, scores, survivorScores, ownSurvivorIds, stratumBaseIds, fileKey);
+                    contribution = recomputed;
+                    if (authoritative != null)
+                    {
+                        // Fold the AUTHORITATIVE answer, then assert against the recomputation.
+                        // Folding the checker's answer instead would make a green run prove
+                        // nothing about the code that ships.
+                        contribution = authoritative;
+                        AssertContributionsMatch(fileKey, authoritative, recomputed);
+                    }
                 }
 
                 // THE SECOND PRECONDITION OF THE RELOCATION, enforced the same way and for the
@@ -303,22 +326,6 @@ namespace pwiz.Osprey.FDR
                 // population and the survivor set are both still in hand, and which after the
                 // move runs in the worker. Leaving it here past the flip would keep a green
                 // assertion that had quietly stopped asserting anything.
-                if (stratumBaseIds != null)
-                {
-                    foreach (var kvp in recomputed.BestTarget)
-                    {
-                        if (ownSurvivorIds.Contains(kvp.Value.entryId))
-                            continue;
-                        throw new InvalidOperationException(string.Format(
-                            @"Experiment-fold scope violation in '{0}': base_id {1} takes its " +
-                            @"best target observation from entry_id {2}, which is not one of " +
-                            @"this file's survivors, so the per-run 2nd-pass sidecar cannot " +
-                            @"carry it. Folding the experiment maximum from the sidecars would " +
-                            @"silently substitute a lower-scoring observation. See issue #4486.",
-                            fileKey, kvp.Key, kvp.Value.entryId));
-                    }
-                }
-
                 // The JOIN half. Everything here is O(distinct base_id) / O(distinct survivor),
                 // never O(observations), which is what makes it the part that has to stay in a
                 // whole-run stage.
@@ -560,10 +567,12 @@ namespace pwiz.Osprey.FDR
         /// the local set is what lets this run in a per-file worker (#4486).</param>
         /// <param name="stratumBaseIds">Null for the full-population competition; otherwise the
         /// protein stratum, which constrains both competitions - see the remarks.</param>
+        /// <param name="fileKey">This file's stem, for the scope-violation message only.</param>
         public static FileCompetition CompeteOneFile(
             uint[] entryIds, double[] scores,
             IReadOnlyDictionary<uint, double> survivorScores,
-            HashSet<uint> survivorIds, HashSet<uint> stratumBaseIds)
+            HashSet<uint> survivorIds, HashSet<uint> stratumBaseIds,
+            string fileKey = null)
         {
             int m = entryIds.Length;
             var labels = new bool[m];
@@ -707,6 +716,37 @@ namespace pwiz.Osprey.FDR
                 {
                     if (!bestTarget.TryGetValue(bid, out var cur) || s > cur.score)
                         bestTarget[bid] = (s, eid);
+                }
+            }
+
+            // THE EXPERIMENT-FOLD SCOPE INVARIANT, asserted HERE because this is the only place
+            // the whole stratum population and the survivor set are both in hand - and after
+            // #4486 this runs in the per-file worker, which is where it belongs.
+            //
+            // It used to live in the join, over the recomputed contribution. That stopped being
+            // viable once the recompute became a gated test instrument
+            // (OSPREY_PASS2_VERIFY_WORKER): a sidecar-derived contribution satisfies it
+            // VACUOUSLY, because such a contribution holds only survivors by construction, so
+            // leaving it there would have left a green assertion that had quietly stopped
+            // asserting anything the moment the flag defaulted off.
+            //
+            // Stratified only, because that is the whole of what was measured. Unstratified
+            // (transfer-compete) reduces over the file's ENTIRE population, which includes
+            // base_ids that survive nowhere, so their bests are non-survivors by definition and
+            // the same check would fire on the first file while saying nothing about the fold.
+            if (stratumBaseIds != null)
+            {
+                foreach (var kvp in bestTarget)
+                {
+                    if (survivorIds.Contains(kvp.Value.entryId))
+                        continue;
+                    throw new InvalidOperationException(string.Format(
+                        @"Experiment-fold scope violation in '{0}': base_id {1} takes its " +
+                        @"best target observation from entry_id {2}, which is not one of " +
+                        @"this file's survivors, so the per-run 2nd-pass sidecar cannot " +
+                        @"carry it. Folding the experiment maximum from the sidecars would " +
+                        @"silently substitute a lower-scoring observation. See issue #4486.",
+                        fileKey ?? @"(unnamed)", kvp.Key, kvp.Value.entryId));
                 }
             }
 

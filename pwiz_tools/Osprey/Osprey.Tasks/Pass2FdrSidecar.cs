@@ -1825,6 +1825,28 @@ namespace pwiz.Osprey.Tasks
                     currentEntries = null;
                 }
 
+                // Say which way this run folded, ALWAYS - the two paths read different artifacts
+                // and cost different amounts, and a silent flag is indistinguishable from a flag
+                // that stopped reaching the child process. This line is what regression.ps1
+                // asserts on to prove its straight leg and its HPC chain really did run the
+                // verified and shipped paths respectively, rather than both running whichever
+                // one the environment happened to supply.
+                if (OspreyEnvironment.Pass2VerifyWorker)
+                {
+                    ctx.LogInfo(string.Format(
+                        @"Second-pass worker verification ACTIVE (OSPREY_PASS2_VERIFY_WORKER): " +
+                        @"recomputing the per-file competition for {0} file(s) to assert the " +
+                        @"worker's answer. This re-reads each 1st-pass sidecar; it is a test " +
+                        @"instrument and is off by default.", fileKeys.Count));
+                }
+                else
+                {
+                    ctx.LogInfo(string.Format(
+                        @"Second-pass fold reading the worker's written answer for {0} file(s); " +
+                        @"no 1st-pass sidecar is opened (OSPREY_PASS2_VERIFY_WORKER off).",
+                        fileKeys.Count));
+                }
+
                 try
                 {
                     competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
@@ -1832,7 +1854,10 @@ namespace pwiz.Osprey.Tasks
                         // The rescore worker's answer, when it produced one, is what gets folded;
                         // the streaming pass recomputes only to assert against it (#4486).
                         fileKey => TryReadWorkerContribution(
-                            writer, fileKey, stratumBaseIds, workerWroteFiles));
+                            writer, fileKey, stratumBaseIds, workerWroteFiles),
+                        // Off by default: the recompute is a TEST INSTRUMENT and costs exactly
+                        // the re-reads this phase exists to remove. regression.ps1 turns it on.
+                        OspreyEnvironment.Pass2VerifyWorker);
                 }
                 catch (InvalidOperationException)
                 {
