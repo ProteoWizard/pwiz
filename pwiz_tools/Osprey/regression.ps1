@@ -1275,8 +1275,17 @@ function Invoke-HpcChain {
 
     # Phase 1: per-file raw workers (Stage 1-4). Writes <stem>.scores.parquet +
     # <stem>.calibration.json per file.
-    $ph1 = Join-Path $ChainRoot 'phase1_scoring'
-    New-Item -ItemType Directory -Path $ph1 -Force | Out-Null
+    # ONE PROCESS PER FILE, in its own directory, because that is what PerFileScoring is.
+    # Running all three mzMLs through a single process proved the task works on a node that can
+    # see every file - the one condition an HPC worker never has. A worker that reached for a
+    # sibling's data would have passed here and failed in production.
+    $ph1Root = Join-Path $ChainRoot 'phase1_scoring'
+    New-Item -ItemType Directory -Path $ph1Root -Force | Out-Null
+    $ph1Dirs = @{}
+    foreach ($stem in $stemList) {
+        $ph1Dirs[$stem] = Join-Path $ph1Root $stem
+        New-Item -ItemType Directory -Path $ph1Dirs[$stem] -Force | Out-Null
+    }
     # Seeded with the straight-through leg's CACHES, not the mzML. Phase 1 is the only HPC
     # phase that reads spectra and it deletes the copied mzML right after running anyway, so
     # this costs nothing, stops copying multi-GB inputs, and makes the phase the gate on
@@ -1287,26 +1296,29 @@ function Invoke-HpcChain {
     # Also the only leg covering the UNREDIRECTED lookup: phase 1 passes no --work-dir, so
     # ResolveCacheDir returns the input directory, which is what an operator gets by default.
     foreach ($stem in $stemList) {
+        $d1 = $ph1Dirs[$stem]
         $srcCache = Join-Path $CacheSource "$stem.spectra.bin"
         if (-not (Test-Path -LiteralPath $srcCache)) {
             throw "regression: HPC phase 1 needs the straight-through spectra cache '$srcCache'; the cache-only PerFileScoring gate cannot run without it."
         }
-        Copy-Item -LiteralPath $srcCache (Join-Path $ph1 "$stem.spectra.bin")
+        # THIS worker's data and nothing else: its own cache, its own 0-byte mzML stub for path
+        # derivation, and the library. No sibling's mzML, cache or parquet is present.
+        Copy-Item -LiteralPath $srcCache (Join-Path $d1 "$stem.spectra.bin")
+        New-Item -ItemType File -Path (Join-Path $d1 "$stem.mzML") -Force | Out-Null
+        Copy-LibraryInto -Library $Library -Dir $d1 -Manifest $Manifest
+        $a1 = @('-i', "$stem.mzML",
+                '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
+                '--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--task', 'PerFileScoring')
+        $a1 += $extraArgs
+        $a1 += $memStampArgs
+        Invoke-OspreyTaskRun -WorkDir $d1 -CliArgs $a1 -LogName 'phase1.log'
+        Copy-Item (Join-Path $d1 'phase1.log') (Join-Path $chainLogDir "phase1_$stem.log") -Force
     }
-    Copy-LibraryInto -Library $Library -Dir $ph1 -Manifest $Manifest
-    $a1 = @()
-    foreach ($m in $Mzmls) { $a1 += @('-i', (Split-Path -Leaf $m)) }
-    $a1 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
-             '--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--task', 'PerFileScoring')
-    $a1 += $extraArgs
-    $a1 += $memStampArgs
-    Invoke-OspreyTaskRun -WorkDir $ph1 -CliArgs $a1 -LogName 'phase1.log'
-    Copy-Item (Join-Path $ph1 'phase1.log') (Join-Path $chainLogDir 'phase1.log') -Force
     # Phase 1's copied mzMLs are dead weight once it has run: phase 2/3 read its
     # parquets + calibration, never its mzML (phase 3 re-copies the mzML from the
     # data dir). Drop them so they don't sit on disk through the per-file rescore loop.
     if (-not $KeepOutput) {
-        Get-ChildItem -Path $ph1 -Filter '*.mzML' -File -ErrorAction SilentlyContinue |
+        Get-ChildItem -Path $ph1Root -Recurse -Filter '*.mzML' -File -ErrorAction SilentlyContinue |
             Remove-Item -Force -ErrorAction SilentlyContinue
     }
 
@@ -1316,8 +1328,8 @@ function Invoke-HpcChain {
     $ph2 = Join-Path $ChainRoot 'phase2_FirstPassFDR'
     New-Item -ItemType Directory -Path $ph2 -Force | Out-Null
     foreach ($s in $stemList) {
-        Copy-Item (Join-Path $ph1 "$s.scores.parquet")   (Join-Path $ph2 "$s.scores.parquet")
-        Copy-Item (Join-Path $ph1 "$s.calibration.json") (Join-Path $ph2 "$s.calibration.json")
+        Copy-Item (Join-Path $ph1Dirs[$s] "$s.scores.parquet")   (Join-Path $ph2 "$s.scores.parquet")
+        Copy-Item (Join-Path $ph1Dirs[$s] "$s.calibration.json") (Join-Path $ph2 "$s.calibration.json")
         New-Item -ItemType File -Path (Join-Path $ph2 "$s.mzML") -Force | Out-Null
     }
     Copy-LibraryInto -Library $Library -Dir $ph2 -Manifest $Manifest
@@ -1344,10 +1356,10 @@ function Invoke-HpcChain {
         $ph3 = Join-Path $ChainRoot "phase3_rescore_$s"
         $ph3Dirs[$s] = $ph3
         New-Item -ItemType Directory -Path $ph3 -Force | Out-Null
-        Copy-Item (Join-Path $ph1 "$s.spectra.bin")             (Join-Path $ph3 "$s.spectra.bin")
+        Copy-Item (Join-Path $ph1Dirs[$s] "$s.spectra.bin")     (Join-Path $ph3 "$s.spectra.bin")
         New-Item -ItemType File -Path (Join-Path $ph3 "$s.mzML") -Force | Out-Null
-        Copy-Item (Join-Path $ph1 "$s.scores.parquet")          (Join-Path $ph3 "$s.scores.parquet")
-        Copy-Item (Join-Path $ph1 "$s.calibration.json")        (Join-Path $ph3 "$s.calibration.json")
+        Copy-Item (Join-Path $ph1Dirs[$s] "$s.scores.parquet")  (Join-Path $ph3 "$s.scores.parquet")
+        Copy-Item (Join-Path $ph1Dirs[$s] "$s.calibration.json") (Join-Path $ph3 "$s.calibration.json")
         Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")
         Copy-Item (Join-Path $ph2 "$s.reconciliation.json")     (Join-Path $ph3 "$s.reconciliation.json")
         # The 1st-pass model sidecar (frozen 2nd-pass modes) must ride the same
@@ -1391,7 +1403,7 @@ function Invoke-HpcChain {
 
     # Phases 1 and 2 are fully consumed once every rescore worker has copied its
     # inputs (phase 4 reads only phase-3 outputs). Free them before SecondPassFDR.
-    Remove-Scratch $ph1
+    Remove-Scratch $ph1Root
     Remove-Scratch $ph2
 
     # Phase 4: SecondPassFDR (Stage 7 + blib). Consumes each worker's
