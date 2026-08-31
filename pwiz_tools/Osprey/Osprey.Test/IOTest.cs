@@ -3353,8 +3353,39 @@ namespace pwiz.Osprey.Test
         /// Accumulate out of entry_id order, then assert the file comes back in ascending
         /// entry_id order with every column intact.
         /// </summary>
+        /// <summary>
+        /// A PARTIAL update of an experiment record preserves every field it does not set.
+        ///
+        /// <para><c>SetProteinQvalue</c> replaces one column by rebuilding the record, so any
+        /// field it forgets to carry is silently replaced by whatever the constructor supplies.
+        /// PEP was dropped exactly that way on its first day in this record, and no C#-only gate
+        /// noticed: the whole Stellar regression stayed green while every experiment winner
+        /// reported 1.0. Only the cross-impl comparison against Rust caught it, and that gate is
+        /// scheduled for retirement (issue #4486).</para>
+        ///
+        /// <para>Asserts the WHOLE record rather than the one column, because "the field I
+        /// happened to think of" is the bug. The constructor no longer defaults <c>pep</c>, so a
+        /// newly added column is a compile error at every construction site - this covers the
+        /// case where a site compiles because it passed something wrong instead.</para>
+        /// </summary>
+        private static void AssertPartialUpdatePreservesEveryField()
+        {
+            var accumulator = new FdrExperimentAccumulator();
+            accumulator.Add(7, 0.011, 0.012, 1.0, -1.5, 0.25);
+            accumulator.SetProteinQvalue(7, 0.0042);
+
+            var updated = accumulator.Records[7];
+            Assert.AreEqual(7u, updated.EntryId);
+            AssertBitEqual(0.011, updated.ExperimentPrecursorQvalue);
+            AssertBitEqual(0.012, updated.ExperimentPeptideQvalue);
+            AssertBitEqual(0.0042, updated.ExperimentProteinQvalue);
+            AssertBitEqual(-1.5, updated.ExperimentAggregateScore);
+            AssertBitEqual(0.25, updated.Pep);
+        }
+
         private static void AssertExperimentSidecarRoundTrips(string dir)
         {
+            AssertPartialUpdatePreservesEveryField();
             string path = Path.Combine(dir, "analysis.1st-pass.fdr_experiment.bin");
             var accumulator = new FdrExperimentAccumulator();
             accumulator.Add(7, 0.011, 0.012, 0.013, -1.5, 1.0);
