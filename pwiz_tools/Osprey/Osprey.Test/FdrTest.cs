@@ -4101,10 +4101,10 @@ namespace pwiz.Osprey.Test
             // POPULATION order.
             var records = new List<FdrScoreRecord>
             {
-                new FdrScoreRecord(t1a, 0.90, competed.RunQ.TryGetValue(t1a, out var q1) ? q1 : 1.0, 1.0, 1.0),
-                new FdrScoreRecord(t1b, 0.90, competed.RunQ.TryGetValue(t1b, out var q2) ? q2 : 1.0, 1.0, 1.0),
-                new FdrScoreRecord(t2, 0.50, competed.RunQ.TryGetValue(t2, out var q3) ? q3 : 1.0, 1.0, 1.0),
-                new FdrScoreRecord(d2, 0.20, 1.0, 1.0, 1.0),
+                new FdrScoreRecord(t1a, 0.90, competed.RunQ.TryGetValue(t1a, out var q1) ? q1 : 1.0, 1.0),
+                new FdrScoreRecord(t1b, 0.90, competed.RunQ.TryGetValue(t1b, out var q2) ? q2 : 1.0, 1.0),
+                new FdrScoreRecord(t2, 0.50, competed.RunQ.TryGetValue(t2, out var q3) ? q3 : 1.0, 1.0),
+                new FdrScoreRecord(d2, 0.20, 1.0, 1.0),
             };
             var rebuilt = Pass2FdrSidecar.FileCompetitionFromRecords(records, stratum);
 
@@ -4127,7 +4127,7 @@ namespace pwiz.Osprey.Test
             // a genuine divergence rather than the representational one above.
             var bogus = new List<FdrScoreRecord>(records)
             {
-                new FdrScoreRecord(DecoyOf(1u), 0.10, 0.5, 1.0, 1.0)
+                new FdrScoreRecord(DecoyOf(1u), 0.10, 0.5, 1.0)
             };
             Assert.ThrowsException<InvalidOperationException>(
                 () => StreamingFdr.AssertContributionsMatch(

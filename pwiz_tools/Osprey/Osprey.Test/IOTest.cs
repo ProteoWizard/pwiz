@@ -3449,8 +3449,8 @@ namespace pwiz.Osprey.Test
             // Control: a valid file of the expected pass reads back with its records.
             string path = Path.Combine(dir, "unreadable-probe.2nd-pass.fdr_experiment.bin");
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(4, 0.041, 0.042, 0.043, -4.5);
-            accumulator.Add(5, 0.051, 0.052, 0.053, -5.5);
+            accumulator.Add(4, 0.041, 0.042, 0.043, -4.5, 1.0);
+            accumulator.Add(5, 0.051, 0.052, 0.053, -5.5, 1.0);
             FdrExperimentSidecar.Write(path, accumulator.Records, pass);
             Assert.AreEqual(2, Pass2FdrSidecar.LoadExperimentRecordsFrom(path, pass).Count);
 

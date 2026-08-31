@@ -228,7 +228,7 @@ namespace pwiz.Osprey.Tasks
             foreach (var e in survivors)
             {
                 records.Add(new FdrScoreRecord(
-                    e.EntryId, e.Score, e.RunPrecursorQvalue, e.RunPeptideQvalue, e.Pep));
+                    e.EntryId, e.Score, e.RunPrecursorQvalue, e.RunPeptideQvalue));
             }
             // Checked HERE rather than at the write, so a pool that arrived short fails on the
             // node that built the records instead of somewhere downstream that can only see a
