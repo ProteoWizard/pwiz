@@ -77,10 +77,20 @@ namespace pwiz.SkylineTestFunctional
 
         private string GetExpectedWarningMessage()
         {
+            // The times must be float, and must be the values a float actually round-trips to,
+            // because that is what the message formats: they come from ChromDataSet.MaxRawTime
+            // and ChromData.Times, both float. .NET Core 3.0 changed float.ToString() from 7
+            // significant digits to the shortest round-trippable form, so the value that used to
+            // render as 89.89957 under net472 now renders as 89.899574. Passing doubles here made
+            // the expected text disagree with the product text in that last digit.
+            //
+            // English hid the disagreement: {3} is the last token of the neutral resource, so
+            // StringAssert.Contains still matched "...and 89.89957" as a prefix of
+            // "...and 89.899574". Chinese and Japanese continue after {3}, so only they failed.
             return string.Format(
                 ResultsResources
                     .PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
-                "TIAQYAR", 100, 0.717615, 89.89957);
+                "TIAQYAR", 100, 0.717615f, 89.899574f);
         }
     }
 }

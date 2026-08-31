@@ -41,7 +41,6 @@
     <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj" />
     <ProjectReference Include="..\..\Shared\Common\Common.csproj" />
     <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
-    <ProjectReference Include="..\..\Shared\PortableUtil\PortableUtil.csproj" />
     <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj" />
     <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj" />
     <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
@@ -67,9 +66,11 @@
     <PackageReference Include="ExcelDataReader" Version="3.7.0" />
     <PackageReference Include="ExcelDataReader.DataSet" Version="3.7.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
-    <Reference Include="Microsoft.Diagnostics.Runtime">
-      <HintPath>..\..\Shared\Lib\Microsoft.Diagnostics.Runtime\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath>
-    </Reference>
+    <!-- The on-disk ClrMD is the net40 build, assembly version 0.8.31, and it was carried into
+         the net8 group unchanged when the other legacy DLLs here moved to packages. It has no
+         GCRoot type at all, so it cannot answer "what is still rooting this object". 3.1.512801
+         is the version SkylineNightly's net8 group already uses. -->
+    <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="3.1.512801" />
     <Reference Include="DigitalRune.Windows.Docking">
       <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>

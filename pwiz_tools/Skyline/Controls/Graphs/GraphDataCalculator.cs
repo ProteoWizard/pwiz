@@ -18,6 +18,7 @@
  */
 using System;
 using System.Threading;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
@@ -144,7 +145,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-            CommonActionUtil.SafeBeginInvoke(ZedGraphControl, ()=>
+            ControlUtil.SafeBeginInvoke(ZedGraphControl, ()=>
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {

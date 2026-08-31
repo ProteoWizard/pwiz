@@ -1,22 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- CommonUtil — multi-target net472 + net10.0-windows.
-       net472: legacy Skyline build path (Skyline.sln) — keeps building exactly as today.
-       net10.0-windows: Skyline net8 port path. Same .cs source compiles under both,
-       with #if NET472 / NET8_0_OR_GREATER conditional compilation where needed
-       (currently just ConcurrencyVisualizer.cs which references a VS-tooling-only
-       Microsoft.ConcurrencyVisualizer.Markers DLL not available on net8).
-       Pattern mirrors PortableUtil.csproj alongside this one. -->
+  <!-- CommonUtil - multi-target net472 + plain net10.0.
+       net472: legacy Skyline build path (Skyline.sln) - keeps building exactly as today.
+       net10.0 (PLAIN - no -windows, no UseWindowsForms): Skyline net8 port path. This is
+       what lets ProteowizardWrapper be plain net10.0, which is what lets Osprey use the
+       wrapper on Linux. Same .cs source compiles under both,
+       with #if NET472 / NET8_0_OR_GREATER conditional compilation where needed.
+       The WinForms types that used to live here moved to CommonBaseUI alongside this
+       project; CommonUtil is meant to stay WinForms-free so that portable consumers
+       (ProteowizardWrapper, and Osprey through it) do not inherit a UI dependency.
+       PortableUtil used to sit alongside this project as a net8-capable staging ground
+       for the portable parts of CommonUtil. That reason is gone - CommonUtil is now
+       SDK-style, multi-targeted and WinForms-free - so its ten files (CommandLine/ and
+       CommandStatusWriter) were absorbed here and the project retired. Skyline and
+       Osprey share through CommonUtil directly now. -->
   <PropertyGroup>
     <ProjectGuid>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</ProjectGuid>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>pwiz.Common</RootNamespace>
     <AssemblyName>pwiz.CommonUtil</AssemblyName>
-    <UseWindowsForms>true</UseWindowsForms>
     <Company>University of Washington</Company>
     <Copyright>Copyright (c) University of Washington 2026</Copyright>
     <!-- Legacy AssemblyInfo.cs under Properties/ owns the version + GUID + title
@@ -38,9 +44,26 @@
     <!-- HintPath-loaded legacy DLLs, kept net472-only so the existing build
          path keeps using exactly the binaries it always has. -->
     <!-- net472 BCL assemblies that the SDK doesn't reference by default. -->
+    <Reference Include="System.Net.Http" Condition="'$(TargetFramework)' == 'net472'" />
+    <Reference Include="System.Web" Condition="'$(TargetFramework)' == 'net472'" />
+    <Reference Include="System.Security" Condition="'$(TargetFramework)' == 'net472'" />
+    <Reference Include="JetBrains.Annotations" Condition="'$(TargetFramework)' == 'net472'">
+      <HintPath>..\Lib\JetBrains.Annotations.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json" Condition="'$(TargetFramework)' == 'net472'">
+      <HintPath>..\Lib\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <!-- DPAPI (CommonTextUtil.EncryptString/DecryptString). It used to arrive free with
+         the WindowsDesktop framework when this project was net10.0-windows; plain net10.0
+         needs the package. NOTE: DPAPI is Windows-only and throws
+         PlatformNotSupportedException elsewhere, so a Linux consumer of CommonUtil must
+         not call those two methods. -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
     <!-- net8 replacements via NuGet. Versions pinned to track the legacy
          bundled DLLs so behavior doesn't drift. -->
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />

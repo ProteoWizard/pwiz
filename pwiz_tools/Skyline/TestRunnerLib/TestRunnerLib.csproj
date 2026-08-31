@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\..\Shared\CommonBaseUI\CommonBaseUI.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +38,10 @@
     <PackageReference Include="log4net" Version="3.4.0" />
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+    <!-- Used by GarbageCollectionTracker to report what is still rooting a survivor. Same
+         version as TestUtil and SkylineNightly: staging flattens every project's output into
+         one directory, so a second Microsoft.Diagnostics.Runtime.dll would silently win. -->
+    <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="3.1.512801" />
   </ItemGroup>
 
 </Project>
