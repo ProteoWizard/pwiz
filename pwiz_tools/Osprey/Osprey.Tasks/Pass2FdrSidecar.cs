@@ -870,7 +870,51 @@ namespace pwiz.Osprey.Tasks
                     @"would let the move ship unverified. See issue #4486.",
                     fileKey, pass2Path));
             }
-            return FileCompetitionFromRecords(records, stratumBaseIds);
+            return FileCompetitionFromRecords(records, stratumBaseIds, LoadGapFillEntryIds(inputFile));
+        }
+
+        /// <summary>
+        /// This file's GAP-FILL entry ids, from the <c>gap_fill_targets</c> the join node already
+        /// persists in its <c>.reconciliation.json</c>. Empty when the envelope is absent or
+        /// unreadable, which is the correct degrade: a file with no envelope had no gap-fill
+        /// planned for it.
+        ///
+        /// <para><b>Why the sidecar cannot answer this itself.</b> A gap-filled peak is a POOL
+        /// member that never COMPETED - the per-file competition takes its population from the
+        /// file's 1st-pass sidecar, where a gap-fill has no record by definition. The per-run
+        /// 2nd-pass sidecar is the pool image, so it necessarily contains rows the competition
+        /// never saw, and nothing in a record distinguishes them. That distinction used to live
+        /// only in memory, on the machine that recomputed the competition; a separate
+        /// experiment-wide node has to read it from somewhere (issue #4486).</para>
+        ///
+        /// <para>It is read from the envelope rather than from the reconciled parquet's
+        /// <c>score_index</c> + <c>osprey.scores_row_count</c> footer - the other discriminator
+        /// Phase 1 left for exactly this question - because this list is ~200 entries against a
+        /// 311K-row column read, and because the envelope is already the artifact whose join-wide
+        /// hash this stage validates against.</para>
+        /// </summary>
+        private static HashSet<uint> LoadGapFillEntryIds(string inputFile)
+        {
+            var ids = new HashSet<uint>();
+            try
+            {
+                string reconPath = ReconciliationFile.PathForInput(inputFile);
+                if (!File.Exists(reconPath))
+                    return ids;
+                var envelope = ReconciliationFile.Load(reconPath);
+                if (envelope?.GapFillTargets == null)
+                    return ids;
+                foreach (var g in envelope.GapFillTargets)
+                    ids.Add(g.TargetEntryId);
+            }
+            catch (Exception)
+            {
+                // An unreadable envelope leaves the set empty, which reproduces the pre-#4486
+                // behaviour of folding every record. The competition assert downstream is what
+                // turns that into a visible failure rather than a silent one.
+                return ids;
+            }
+            return ids;
         }
 
         /// <summary>
@@ -2314,6 +2358,47 @@ namespace pwiz.Osprey.Tasks
         /// refilled here so a per-file loop does not reallocate them; the caller reads
         /// <c>pass1Records</c> again for the off-stratum experiment-q carry-forward.</para>
         /// </summary>
+        /// <summary>
+        /// Assert that a per-run 2nd-pass sidecar about to be written describes the POOL its
+        /// file's Stage 6 parquet defines - one record per row - and throw naming both counts
+        /// if it does not.
+        ///
+        /// <para><b>The invariant this protects.</b> The per-run 2nd-pass sidecar is the only
+        /// thing a separate experiment-wide node receives about a run. Its population is not the
+        /// writer's to choose: the join node fixes it, distributing each file's
+        /// <c>.reconciliation.json</c> from the traversal of the whole population, and
+        /// <c>ReconciledParquetWriter</c> stamps the parquet Stage 6 derives from it with the
+        /// join-wide reconciliation hash. Every node emitting the same rows is what makes an
+        /// HPC split equal a single-machine run. Nothing checked it.</para>
+        ///
+        /// <para><b>Why it is worth a per-file parquet footer read.</b> The omission it was
+        /// written for (594 gap-fill observations across 3 Stellar files) passed every other
+        /// gate the project has - golden blib, 2nd-pass protein q, resume, HPC-chain route
+        /// independence, warm re-run and library-fragment release - and surfaced only as two
+        /// moved numbers in a diagnostics panel. A silently short artifact is exactly the shape
+        /// that reads as correct downstream: the entries it omits keep <c>ResetScores</c>'
+        /// defaults, so they report as never having competed rather than as missing. The probe
+        /// decodes no column data, so the cost is a footer per file.</para>
+        ///
+        /// <para>Skipped when the effective parquet is not a reconciled SURVIVORS parquet: with
+        /// no reconciled sibling the caller falls back to the Stage 4 file, whose rows are the
+        /// whole pre-compaction population and are not this artifact's population.</para>
+        /// </summary>
+        internal static void AssertSidecarDescribesPool(
+            string fileName, string effectiveParquetPath, int recordCount)
+        {
+            var pool = ParquetScoreCache.ProbePoolPopulation(effectiveParquetPath);
+            if (!pool.IsReconciledSurvivors || pool.RowCount == recordCount)
+                return;
+            throw new InvalidOperationException(string.Format(
+                @"Second-pass per-file competition wrote {0} record(s) for '{1}', but its Stage 6 " +
+                @"pool holds {2} (from {3}). The per-run 2nd-pass sidecar must describe that pool " +
+                @"one record per row - it is all a separate experiment-wide node receives about " +
+                @"this run, and its population is fixed by the join, not chosen by the writer. " +
+                @"See issue #4486.",
+                recordCount, fileName, pool.RowCount, effectiveParquetPath));
+        }
+
         internal static void ReadOneFilePass2Inputs(
             string pass1SidecarPath, string effectiveParquetPath, List<FdrEntry> survivors,
             FrozenModelScorer scorer, int nFeatures, Pass1ScalarSeeder seeder,
@@ -2412,14 +2497,32 @@ namespace pwiz.Osprey.Tasks
         /// competition. Mirrors <see cref="StreamingFdr.CompeteOneFile"/>: the per-base_id bests
         /// are STRATUM ONLY when stratified, deliberately not the wider run-level admitted
         /// set.</param>
+        /// <param name="gapFillEntryIds">
+        /// This file's gap-fill entry ids (see <see cref="LoadGapFillEntryIds"/>). Excluded from
+        /// the per-base_id bests because a gap-filled peak is a POOL member that never entered
+        /// the per-file competition - <see cref="StreamingFdr.CompeteOneFile"/> draws its
+        /// population from the file's 1st-pass sidecar, where a gap-fill has no record. Folding
+        /// one in here would let a row the competition never ranked become a base_id's best, and
+        /// the fold would then disagree with the worker that produced it. Their run q is still
+        /// recorded: that map is per-observation and its only consumer is a cross-file MINIMUM,
+        /// which a gap-fill's q participates in exactly as the resident pool's did.
+        /// </param>
         internal static StreamingFdr.FileCompetition FileCompetitionFromRecords(
-            IReadOnlyList<FdrScoreRecord> records, HashSet<uint> stratumBaseIds)
+            IReadOnlyList<FdrScoreRecord> records, HashSet<uint> stratumBaseIds,
+            HashSet<uint> gapFillEntryIds = null)
         {
             var runQ = new Dictionary<uint, double>(records.Count);
             var bestTarget = new Dictionary<uint, (double score, uint entryId)>();
             var bestDecoy = new Dictionary<uint, (double score, uint entryId)>();
             foreach (var rec in records)
             {
+                if (gapFillEntryIds != null && gapFillEntryIds.Contains(rec.EntryId))
+                {
+                    // Run q only - see the parameter remarks. Recorded BEFORE the stratum test
+                    // below for the same reason that one does: the map is not stratum-scoped.
+                    runQ[rec.EntryId] = rec.RunPrecursorQvalue;
+                    continue;
+                }
                 uint eid = rec.EntryId;
                 runQ[eid] = rec.RunPrecursorQvalue;
                 uint bid = eid & BASE_ID_MASK;

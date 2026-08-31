@@ -1193,6 +1193,33 @@ namespace pwiz.Osprey.IO
         /// equals the returned <c>RowCount</c> when the column is present and 0 when
         /// it is absent (that method returns an empty list for a missing column).
         /// </summary>
+        /// <summary>
+        /// Footer-only probe of a parquet's POPULATION: whether it is a reconciled
+        /// survivors parquet (<c>osprey.reconciled=survivors</c>) and how many rows it
+        /// holds. Decodes no column data - both answers come from the footer - so this is
+        /// cheap enough to run per file on every route.
+        ///
+        /// <para>Exists so a per-file node can check that what it wrote describes the pool
+        /// Stage 6 defined for it (issue #4486). <c>RowCount</c> is meaningful for that
+        /// comparison ONLY when <c>IsReconciledSurvivors</c> is true: the effective parquet
+        /// falls back to the Stage 4 file when reconciliation produced no sibling, and that
+        /// one holds the whole pre-compaction population rather than the pool.</para>
+        /// </summary>
+        public static (bool IsReconciledSurvivors, long RowCount) ProbePoolPopulation(string path)
+        {
+            if (!File.Exists(path))
+                return (false, 0L);
+            var footer = LoadFooterMetadata(path);
+            footer.TryGetValue(@"osprey.reconciled", out string marker);
+            if (!string.Equals(marker, RECONCILED_SURVIVORS, StringComparison.Ordinal))
+                return (false, 0L);
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                return (true, reader.Metadata?.NumRows ?? 0L);
+            }
+        }
+
         public static (long RowCount, bool HasCwtCandidatesField) ProbeCwtRowMetadata(string path)
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))

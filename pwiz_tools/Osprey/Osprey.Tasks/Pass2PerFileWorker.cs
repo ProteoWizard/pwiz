@@ -173,77 +173,67 @@ namespace pwiz.Osprey.Tasks
             }
             return new Pass2FileResult(
                 competition,
-                BuildRecords(entryIds, scores, survivors, survivorIds, _stratumBaseIds));
+                BuildRecords(survivors, fileName, effectiveParquetPath));
         }
 
         /// <summary>
-        /// Serialize this file's pass-2 answer in POPULATION ORDER: every survivor, plus every
-        /// non-survivor DECOY observation carried forward.
+        /// Serialize this file's pass-2 answer: ONE RECORD PER POOL ENTRY, in pool order.
         ///
-        /// <para><b>Population order is not cosmetic.</b> Both this writer and the join
-        /// (<see cref="Pass2FdrSidecar.FileCompetitionFromRecords"/>) resolve a per-base_id
-        /// maximum with strict greater-than, so the FIRST observation at the maximum wins. Emit
-        /// the survivors in their own list order instead and two observations of one base_id at
-        /// an equal score would be reduced in a different order here than
-        /// <c>CompeteOneFile</c> reduced them, and the two sides would disagree on WHICH
-        /// observation represents the precursor - silently, and only on ties.</para>
+        /// <para><b>This artifact's population is not this writer's to choose.</b> The per-run
+        /// 2nd-pass sidecar describes the file's Stage 6 pool, and that pool is already defined
+        /// for every node by the join: <c>FirstPassFdrTask</c> writes each file's
+        /// <c>.reconciliation.json</c> from the node that traversed the whole population, and
+        /// <c>ReconciledParquetWriter</c> stamps the resulting parquet with the JOIN-wide
+        /// reconciliation hash and <c>osprey.reconciled=survivors</c>. Stage 6 abides by that
+        /// envelope, which is what makes any number of nodes emit the same rows. Writing this
+        /// file from a set assembled some other way opts out of a contract the rest of the
+        /// pipeline is already keyed to.</para>
         ///
-        /// <para><b>Why the decoys.</b> Decoys are deliberately never gap-filled - the 1st-pass
-        /// parquet already has a score for every decoy at its own natural-but-best peak - so
-        /// they never become survivors and would otherwise vanish from this artifact entirely.
-        /// The join needs them to compute the null without reopening a pass-1 file. They are NOT
-        /// blib candidates and must never re-enter the survivor pool; they exist so
-        /// <c>bestDecoy</c> is recoverable. Measured on Stellar: 305 decoy base_ids.</para>
+        /// <para><b>Measured consequence of getting it wrong (issue #4486).</b> An earlier form
+        /// of this method iterated the 1st-pass sidecar's entry ids and emitted a record only for
+        /// per-file survivors, plus non-survivor decoys. A GAP-FILLED peak has no 1st-pass record
+        /// in its file by definition, so it was unreachable: 594 gap-fill observations across 3
+        /// Stellar files (208 / 185 / 201, exactly the <c>gap_fill_targets</c> the envelope
+        /// declares) lost their record. Those pool entries then never received experiment-scope
+        /// values from the fold and kept <c>ResetScores</c>' defaults - experiment q 1.0 and
+        /// aggregate 0.0 - for precursors whose analysis-wide q was as low as 6.6e-05, while the
+        /// experiment sidecar still held the real values. That is strictly wrong, and it reached
+        /// no gate: the blib, protein-q, resume, HPC-chain, warm-rerun and fragment-release legs
+        /// all stayed green, and it surfaced only as two moved numbers in a diagnostics panel.
+        /// <see cref="Pass2FdrSidecar.AssertSidecarDescribesPool"/> is the verifier that closes
+        /// it.</para>
         ///
-        /// <para><b>Only decoys the FOLD can use.</b> Restricted to the stratum, because that is
-        /// exactly the population <c>CompeteOneFile</c> reduces to per-base_id bests and
-        /// therefore all the join can consume. Carrying every non-survivor decoy in the file
-        /// instead added 75,486 records per Stellar file against the 305 decoy base_ids the
-        /// design measured - a 23% larger artifact, none of it readable by anything.</para>
+        /// <para><b>Pool order, not competition order.</b> The pool list is the order Stage 6
+        /// wrote the reconciled parquet in - measured identical, ids and order, to the per-run
+        /// sidecar this replaces - so emitting in list order reproduces it exactly. The join
+        /// (<see cref="Pass2FdrSidecar.FileCompetitionFromRecords"/>) resolves a per-base_id
+        /// maximum with strict greater-than and takes the FIRST observation at the maximum, so
+        /// the order it reduces over has to be the one <c>CompeteOneFile</c> reduced over; both
+        /// are subsequences of the same pool order, which is what keeps them agreeing on ties.
+        /// </para>
         ///
-        /// <para>A carried decoy takes run q 1.0 - it won no competition it was eligible for -
-        /// and pep 1.0, which is what a non-winner observation carries anyway. Its SCORE is the
-        /// value the competition ranked it on, straight out of the array
-        /// <c>CompeteOneFile</c> competed over.</para>
+        /// <para><b>No decoy carry-forward.</b> Decoys that are pool entries are emitted like any
+        /// other pool entry - the baseline artifact holds 466,055 decoy observations across these
+        /// three files, 294,540 of them at run q 1.0, so the null was never short of them.
+        /// Injecting non-pool decoys was measured inert: it moved none of the 313,537 shared
+        /// experiment-wide values, and the baseline's experiment sidecar is exactly the union of
+        /// what the per-run sidecars already contained (0 ids in either direction). If the fold
+        /// ever does need something this file does not carry, that has to show up as a failure
+        /// with a diagnosis, not as a pre-emptive redefinition of the artifact.</para>
         /// </summary>
         private static List<FdrScoreRecord> BuildRecords(
-            uint[] entryIds, double[] scores, List<FdrEntry> survivors, HashSet<uint> survivorIds,
-            HashSet<uint> stratumBaseIds)
+            List<FdrEntry> survivors, string fileName, string effectiveParquetPath)
         {
-            var byEntryId = new Dictionary<uint, FdrEntry>(survivors.Count);
-            foreach (var e in survivors)
-                byEntryId[e.EntryId] = e;
-
             var records = new List<FdrScoreRecord>(survivors.Count);
-            for (int i = 0; i < entryIds.Length; i++)
+            foreach (var e in survivors)
             {
-                uint eid = entryIds[i];
-                if (byEntryId.TryGetValue(eid, out var entry))
-                {
-                    records.Add(new FdrScoreRecord(
-                        eid, entry.Score, entry.RunPrecursorQvalue, entry.RunPeptideQvalue,
-                        entry.Pep));
-                    continue;
-                }
-                // Not a survivor. Carried forward only when it is a decoy; a non-survivor TARGET
-                // is genuinely absent from this artifact, and the experiment-fold scope guard is
-                // what says the join never needs one (its base_id's winning target observation is
-                // always a survivor).
-                if (survivorIds.Contains(eid))
-                    continue;
-                bool isDecoy = (eid & ~Pass2FdrSidecar.BASE_ID_MASK) != 0u;
-                if (!isDecoy)
-                    continue;
-                // Stratum only - see the remarks. When unstratified the competition reduces over
-                // the whole population, so every decoy is fold-visible and the filter is a no-op
-                // by construction rather than by exception.
-                if (stratumBaseIds != null &&
-                    !stratumBaseIds.Contains(eid & Pass2FdrSidecar.BASE_ID_MASK))
-                {
-                    continue;
-                }
-                records.Add(new FdrScoreRecord(eid, scores[i], 1.0, 1.0, 1.0));
+                records.Add(new FdrScoreRecord(
+                    e.EntryId, e.Score, e.RunPrecursorQvalue, e.RunPeptideQvalue, e.Pep));
             }
+            // Checked HERE rather than at the write, so a pool that arrived short fails on the
+            // node that built the records instead of somewhere downstream that can only see a
+            // plausible smaller file.
+            Pass2FdrSidecar.AssertSidecarDescribesPool(fileName, effectiveParquetPath, records.Count);
             return records;
         }
 
