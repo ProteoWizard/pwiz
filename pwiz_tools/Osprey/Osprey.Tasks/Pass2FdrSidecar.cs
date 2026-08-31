@@ -3098,13 +3098,44 @@ namespace pwiz.Osprey.Tasks
         private static FdrExperimentAccumulator BuildExperimentScope(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
         {
+            // PEP IS A WINNER FACT, not a per-observation value. PepEstimator computes it over
+            // the single winning observation of an entry_id; every other observation carries 1.0,
+            // which is a SENTINEL meaning "not the row the estimate was computed on" and was
+            // never a posterior error probability. Collapsing per observation therefore pits the
+            // sentinel against the real value - measured on Stellar entry_id 1737, pep 1 vs
+            // 0.1476, with every other column identical.
+            //
+            // Reduce to the winner first. Minimum recovers it exactly: a real PEP is <= 1 and the
+            // sentinel IS 1, so an entry whose observations are all sentinel keeps 1.0 - which is
+            // the same answer either way.
+            var pepByEntryId = new Dictionary<uint, double>();
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var e in kvp.Value)
+                {
+                    if (!pepByEntryId.TryGetValue(e.EntryId, out double best) || e.Pep < best)
+                        pepByEntryId[e.EntryId] = e.Pep;
+                }
+            }
+
             var experiment = new FdrExperimentAccumulator();
             foreach (var kvp in perFileEntries)
             {
                 foreach (var e in kvp.Value)
                 {
+                    // PROTEIN Q IS NOT AN EXPERIMENT-SCOPE VALUE YET AT THIS POINT. Protein FDR
+                    // is Stage 8; here some entries still carry a value and most hold the 1.0
+                    // reset default, so reading it off the entries makes observations of one
+                    // entry_id disagree - which the accumulator correctly refuses. Measured on
+                    // Stellar entry_id 12: protein_q 1 vs 0.000204, every other column identical
+                    // to the last digit.
+                    //
+                    // Pass the reset default and let WritePass2ExperimentSidecar apply the real
+                    // value through SetProteinQvalue once protein FDR has run, exactly as the
+                    // competition path does. That is also why the competition path never hit
+                    // this: it builds from written records, after the column is real.
                     experiment.Add(e.EntryId, e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue,
-                        e.ExperimentProteinQvalue, e.ExperimentAggregateScore, e.Pep);
+                        1.0, e.ExperimentAggregateScore, pepByEntryId[e.EntryId]);
                 }
             }
             return experiment;

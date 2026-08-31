@@ -1435,6 +1435,18 @@ function Invoke-HpcChain {
         # them), they are simply not phase 4's input. The worker dirs are scrubbed a few lines
         # below, so without this the files the comparison needs would be gone.
         Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3Out "$s.1st-pass.fdr_scores.bin")
+
+        # WITHHELD ONLY WHEN THE WORKER ANSWERED. The modes with a per-file half
+        # (protein-compact, transfer-compete) leave a 2nd-pass sidecar here, and phase 4 folds it
+        # without opening anything from the first pass - that is the contract issue #4486
+        # establishes, and withholding is how it is proven. OSPREY_PASS2_QVALUE=transfer and the
+        # retrain modes have NO per-file half, so Stage 7 legitimately recomputes and legitimately
+        # needs these files; withholding them there would fail a mode for a contract it never
+        # claimed. Decided from what phase 3 actually WROTE rather than from the mode flag, so a
+        # future mode gets the right answer without editing this line.
+        if (-not (Test-Path (Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"))) {
+            Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph4 "$s.1st-pass.fdr_scores.bin")
+        }
         Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
         Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
         # Ship the persisted 1st-pass model so SecondPassFDR can run the frozen 2nd-pass
@@ -1801,9 +1813,19 @@ foreach ($name in $selected) {
         # not the same as "the shipped path ran": a node given no 2nd-pass artifacts also has the
         # verifier off, and silently recomputes every file from 1st-pass sidecars. That is exactly
         # what a SEA-AD measurement did for hours while reporting the shipped path (2026-08-31).
+        # Only the modes with a per-file half make this claim. OSPREY_PASS2_QVALUE=transfer and
+        # the retrain modes compute the second pass in Stage 7 by definition, so there is no
+        # worker answer to fold and demanding one would fail them for a contract they never
+        # made. Detected from the worker's own validity stamp reaching phase 4, not from the
+        # mode flag.
+        $chainHasWorkerOutput = @(Get-ChildItem -File -Path $chainDir `
+            -Filter '*.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task' `
+            -ErrorAction SilentlyContinue).Count -gt 0
         $chainAllAnswered = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
             -Pattern "worker's written answer for all \d+ file\(s\)" -Quiet
-        if (-not $chainAllAnswered) {
+        if (-not $chainHasWorkerOutput) {
+            $summaryLines.Add("$name mode3 (shipped fold): SKIP (mode has no per-file half)")
+        } elseif (-not $chainAllAnswered) {
             $overallFail = $true
             Write-Problem-Tc ("$name mode3 (shipped fold): FAIL - phase 4 did not report a worker " +
                 "answer for ALL files, so it recomputed some from 1st-pass sidecars rather than " +
@@ -1813,7 +1835,15 @@ foreach ($name in $selected) {
             $summaryLines.Add("$name mode3 (shipped fold): PASS (worker answer folded for every file)")
         }
 
-        if (-not $straightFold -or $chainFold) {
+        # Scoped for the same reason as the shipped-fold check above: the verifier only exists on
+        # the frozen-competition path, so OSPREY_PASS2_QVALUE=transfer and the retrain modes emit
+        # NEITHER fold line and there is no split to assert. Detected from the straight leg having
+        # emitted a fold line at all, rather than from the mode flag.
+        $straightUsedFrozenPath = Select-String -Path (Join-Path $straightDir 'straight.log') `
+            -Pattern 'Second-pass (worker verification ACTIVE|fold )' -Quiet
+        if (-not $straightUsedFrozenPath) {
+            $summaryLines.Add("$name mode3 (verifier split): SKIP (mode has no per-file half)")
+        } elseif (-not $straightFold -or $chainFold) {
             $overallFail = $true
             Write-Problem-Tc ("$name mode3 (verifier split): FAIL - straight leg verified=" +
                 "$([bool]$straightFold) (expected True), HPC chain verified=$([bool]$chainFold) " +
