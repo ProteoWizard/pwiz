@@ -1301,10 +1301,11 @@ function Invoke-HpcChain {
         if (-not (Test-Path -LiteralPath $srcCache)) {
             throw "regression: HPC phase 1 needs the straight-through spectra cache '$srcCache'; the cache-only PerFileScoring gate cannot run without it."
         }
-        # THIS worker's data and nothing else: its own cache, its own 0-byte mzML stub for path
-        # derivation, and the library. No sibling's mzML, cache or parquet is present.
+        # THIS worker's data and nothing else: its own spectra cache and the library. No
+        # sibling's cache or parquet is present, and NO mzML - Osprey tolerates a missing
+        # data file once the .spectra.bin exists, so the chain stages what an orchestrator
+        # would and no longer fakes an input file to satisfy path derivation.
         Copy-Item -LiteralPath $srcCache (Join-Path $d1 "$stem.spectra.bin")
-        New-Item -ItemType File -Path (Join-Path $d1 "$stem.mzML") -Force | Out-Null
         Copy-LibraryInto -Library $Library -Dir $d1 -Manifest $Manifest
         $a1 = @('-i', "$stem.mzML",
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
@@ -1330,7 +1331,6 @@ function Invoke-HpcChain {
     foreach ($s in $stemList) {
         Copy-Item (Join-Path $ph1Dirs[$s] "$s.scores.parquet")   (Join-Path $ph2 "$s.scores.parquet")
         Copy-Item (Join-Path $ph1Dirs[$s] "$s.calibration.json") (Join-Path $ph2 "$s.calibration.json")
-        New-Item -ItemType File -Path (Join-Path $ph2 "$s.mzML") -Force | Out-Null
     }
     Copy-LibraryInto -Library $Library -Dir $ph2 -Manifest $Manifest
     $a2 = @('--task', 'FirstPassFDR')
@@ -1357,7 +1357,6 @@ function Invoke-HpcChain {
         $ph3Dirs[$s] = $ph3
         New-Item -ItemType Directory -Path $ph3 -Force | Out-Null
         Copy-Item (Join-Path $ph1Dirs[$s] "$s.spectra.bin")     (Join-Path $ph3 "$s.spectra.bin")
-        New-Item -ItemType File -Path (Join-Path $ph3 "$s.mzML") -Force | Out-Null
         Copy-Item (Join-Path $ph1Dirs[$s] "$s.scores.parquet")  (Join-Path $ph3 "$s.scores.parquet")
         Copy-Item (Join-Path $ph1Dirs[$s] "$s.calibration.json") (Join-Path $ph3 "$s.calibration.json")
         Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")
@@ -1488,7 +1487,6 @@ function Invoke-HpcChain {
         # it fired it would have handed phase 4 a CURRENT 2nd-pass sidecar, and phase 4 would
         # then have skipped computing its own, quietly turning mode 3 into a test of a copy.
         # Phase 4 is the only node that writes these.
-        New-Item -ItemType File -Path (Join-Path $ph4 "$s.mzML") -Force | Out-Null
     }
     # SecondPassFDR now has every worker's reconciled output copied in; the phase-3
     # worker dirs are done.
@@ -1799,6 +1797,22 @@ foreach ($name in $selected) {
             -Pattern 'Second-pass worker verification ACTIVE' -Quiet
         $chainFold = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
             -Pattern 'Second-pass worker verification ACTIVE' -Quiet
+        # And the chain must have folded a worker answer for EVERY file. "Verification off" is
+        # not the same as "the shipped path ran": a node given no 2nd-pass artifacts also has the
+        # verifier off, and silently recomputes every file from 1st-pass sidecars. That is exactly
+        # what a SEA-AD measurement did for hours while reporting the shipped path (2026-08-31).
+        $chainAllAnswered = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
+            -Pattern "worker's written answer for all \d+ file\(s\)" -Quiet
+        if (-not $chainAllAnswered) {
+            $overallFail = $true
+            Write-Problem-Tc ("$name mode3 (shipped fold): FAIL - phase 4 did not report a worker " +
+                "answer for ALL files, so it recomputed some from 1st-pass sidecars rather than " +
+                "folding what the workers wrote.")
+            $summaryLines.Add("$name mode3 (shipped fold): FAIL")
+        } else {
+            $summaryLines.Add("$name mode3 (shipped fold): PASS (worker answer folded for every file)")
+        }
+
         if (-not $straightFold -or $chainFold) {
             $overallFail = $true
             Write-Problem-Tc ("$name mode3 (verifier split): FAIL - straight leg verified=" +

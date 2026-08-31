@@ -1658,6 +1658,11 @@ namespace pwiz.Osprey.Tasks
             // inputs this stage never opens - and would make a SecondPassFDR node fail on files
             // an HPC orchestrator has no reason to send it. That demand is the last thing tying
             // the default path to the first pass (issue #4486).
+            // Which files the rescore worker already answered for. Needed HERE, not just at the
+            // fold, because it decides whether this pass must be able to recompute a given file -
+            // and therefore whether that file's 1st-pass sidecar is required input.
+            var workerAnswered = WorkerOwnedPass2Sidecars(ctx);
+
             var sidecarByKey = new Dictionary<string, string>(fileNames.Count, StringComparer.Ordinal);
             foreach (string fileName in fileNames)
             {
@@ -1676,7 +1681,15 @@ namespace pwiz.Osprey.Tasks
                 // list Stage 7 streams - and validates the parquet mapping. Skipping the loop
                 // wholesale left fileKeys empty, so the competition streamed zero files and wrote
                 // a 32-byte experiment sidecar and a wrong blib, all without an error.
-                if (!OspreyEnvironment.Pass2VerifyWorker)
+                // PER FILE, not per run. Verification needs every file's 1st-pass sidecar; so
+                // does any file the worker did not answer for, because that file can only be
+                // folded by recomputing it. Skipping the requirement for such a file left the
+                // recompute with an empty map and a KeyNotFoundException - a run that failed
+                // with no explanation instead of either working or naming what was missing.
+                bool needsFirstPass = OspreyEnvironment.Pass2VerifyWorker ||
+                                      workerAnswered == null ||
+                                      !workerAnswered.Contains(fileName);
+                if (!needsFirstPass)
                 {
                     fileKeys.Add(fileName);
                     continue;
@@ -1959,20 +1972,39 @@ namespace pwiz.Osprey.Tasks
                 // asserts on to prove its straight leg and its HPC chain really did run the
                 // verified and shipped paths respectively, rather than both running whichever
                 // one the environment happened to supply.
+                // REPORT WHAT WILL HAPPEN, not what the flag says. The first version of this
+                // line printed "no 1st-pass sidecar is opened" purely from the flag - and said
+                // so while recomputing every file, because the run had been given no worker
+                // output to fold. A gate was then built on that line. It now counts the files
+                // that actually have a worker answer, so the two cases are distinguishable.
+                int answered = 0;
+                foreach (string fk in fileKeys)
+                {
+                    if (workerAnswered != null && workerAnswered.Contains(fk))
+                        answered++;
+                }
                 if (OspreyEnvironment.Pass2VerifyWorker)
                 {
                     ctx.LogInfo(string.Format(
                         @"Second-pass worker verification ACTIVE (OSPREY_PASS2_VERIFY_WORKER): " +
                         @"recomputing the per-file competition for {0} file(s) to assert the " +
-                        @"worker's answer. This re-reads each 1st-pass sidecar; it is a test " +
-                        @"instrument and is off by default.", fileKeys.Count));
+                        @"worker's answer ({1} of them have one). This re-reads each 1st-pass " +
+                        @"sidecar; it is a test instrument and is off by default.",
+                        fileKeys.Count, answered));
+                }
+                else if (answered == fileKeys.Count)
+                {
+                    ctx.LogInfo(string.Format(
+                        @"Second-pass fold reading the worker's written answer for all {0} " +
+                        @"file(s); no 1st-pass sidecar is opened.", fileKeys.Count));
                 }
                 else
                 {
                     ctx.LogInfo(string.Format(
-                        @"Second-pass fold reading the worker's written answer for {0} file(s); " +
-                        @"no 1st-pass sidecar is opened (OSPREY_PASS2_VERIFY_WORKER off).",
-                        fileKeys.Count));
+                        @"Second-pass fold has a worker answer for {0} of {1} file(s); the " +
+                        @"remaining {2} are RECOMPUTED from their 1st-pass sidecars. A node given " +
+                        @"complete worker output would open none.",
+                        answered, fileKeys.Count, fileKeys.Count - answered));
                 }
 
                 try
