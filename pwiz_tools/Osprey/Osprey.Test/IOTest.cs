@@ -3471,6 +3471,14 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(2, read.Count);
             AssertBitEqual(-2.0, read[0].Score);
             AssertBitEqual(0.03, read[1].RunPrecursorQvalue);
+
+            // WRITE-ONCE. Rewriting a sidecar inside one run is the defect class this whole
+            // change exists to remove: the file no longer matches the validity sidecar that
+            // attests it, and a separate experiment-wide node has only what the per-file node
+            // left behind. Asserted here rather than trusted to the contract, because the
+            // contract WAS stated - in a commit title - and drifted for a sprint regardless.
+            Assert.ThrowsException<InvalidOperationException>(
+                () => FdrScoresSidecar.Write(first, records, FdrScoresSidecar.Pass.SecondPass));
         }
 
         /// <summary>Bit-exact double comparison, so a rounded value cannot pass.</summary>

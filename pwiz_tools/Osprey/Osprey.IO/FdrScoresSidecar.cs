@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using pwiz.Osprey.Core;
 
@@ -455,6 +456,7 @@ namespace pwiz.Osprey.IO
         private static void WriteInternal(
             string path, int entryCount, Pass pass, Action<BinaryWriter> writeBody)
         {
+            AssertNotWrittenAlready(path);
             string parent = Path.GetDirectoryName(Path.GetFullPath(path));
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
@@ -483,6 +485,50 @@ namespace pwiz.Osprey.IO
         /// v5 field order. Single-sourced so the FdrEntry and FdrProjection write
         /// paths cannot drift on byte layout.
         /// </summary>
+        /// <summary>
+        /// Refuse a SECOND write of the same per-file sidecar within one run.
+        ///
+        /// <para>These files are write-once by contract: a per-file node computes its artifact
+        /// and a separate experiment-wide node only reads it. That contract was claimed by the
+        /// scope split and then quietly broken - <c>PatchPep</c> re-opened every 2nd-pass sidecar
+        /// after the experiment fold to stamp a column that could not be known earlier, which
+        /// also meant the experiment-wide stage needed write access to output it does not own.
+        /// The claim lived in a commit title and a doc comment, and nothing enforced it, so it
+        /// drifted for a whole sprint before anyone looked (issue #4486).</para>
+        ///
+        /// <para>Hard failure, not a warning: a file rewritten after it was stamped no longer
+        /// matches what its validity sidecar attests, and a consumer cannot tell. It fires on
+        /// every route, including straight-through, which is what makes it stronger than the
+        /// harness check on the HPC legs - those only see cross-TASK modification, and this
+        /// catches a task rewriting its own output too.</para>
+        ///
+        /// <para>Per PROCESS, keyed by full path. A resumed run is a new process and legitimately
+        /// rewrites what a previous one left; what is forbidden is producing the same artifact
+        /// twice inside one run, because only one of those writes can be the one that was
+        /// stamped.</para>
+        /// </summary>
+        private static void AssertNotWrittenAlready(string path)
+        {
+            string key = Path.GetFullPath(path);
+            lock (WrittenThisRun)
+            {
+                if (WrittenThisRun.Add(key))
+                    return;
+            }
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture,
+                @"FDR sidecar '{0}' was written twice in one run. These files are write-once: " +
+                @"whatever is computed for them must be complete when they are first written, " +
+                @"because a later rewrite no longer matches the validity sidecar that attests " +
+                @"them and a separate experiment-wide node has only what the per-file node left. " +
+                @"An experiment-scope value that is not knowable yet belongs in the experiment " +
+                @"sidecar, not in a second pass over this one. See issue #4486.", key));
+        }
+
+        // Full paths of every per-file sidecar written by this process. Never cleared: the
+        // question it answers is "twice in one run", and a run is a process.
+        private static readonly HashSet<string> WrittenThisRun =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         private static void WriteRecord(
             BinaryWriter bw, uint entryId, double score,
             double runPrecursorQvalue, double runPeptideQvalue)
