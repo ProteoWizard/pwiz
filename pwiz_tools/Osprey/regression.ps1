@@ -1399,10 +1399,31 @@ function Invoke-HpcChain {
     # an mzML -- a 0-byte stub provides path derivation only) and writes the blib.
     $ph4 = Join-Path $ChainRoot 'phase4_SecondPassFDR'
     New-Item -ItemType Directory -Path $ph4 -Force | Out-Null
+    # Where the phase-3 workers' own outputs are kept for comparison after their dirs are cleaned.
+    $ph3Out = Join-Path $ChainRoot 'phase3_outputs'
+    New-Item -ItemType Directory -Path $ph3Out -Force | Out-Null
     foreach ($s in $stemList) {
         $ph3 = $ph3Dirs[$s]
         Copy-Item (Join-Path $ph3 "$s.scores-reconciled.parquet") (Join-Path $ph4 "$s.scores-reconciled.parquet")
-        Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")   (Join-Path $ph4 "$s.1st-pass.fdr_scores.bin")
+        # THE PER-FILE 1st-PASS SIDECARS ARE DELIBERATELY WITHHELD when the verifier is off.
+        #
+        # This is the gate for issue #4486's actual goal, and it is an ENFORCEMENT rather than an
+        # assertion: phase 4 is given exactly what an HPC orchestrator would give a SecondPassFDR
+        # node - the reconciled parquets, the per-run 2nd-pass artifacts, and the analysis-wide
+        # experiment sidecar - and nothing per-file from the first pass. If Stage 7 reaches for
+        # one, it fails on a missing file rather than passing quietly, and no log line or count
+        # has to be trusted to notice.
+        #
+        # A green mode 3 therefore MEANS the default path is independent of these files. That is
+        # not something a passing run could otherwise demonstrate: the straight leg has them
+        # sitting in its own directory, so it would read them without anyone knowing.
+        #
+        # Under OSPREY_PASS2_VERIFY_WORKER they ARE relayed, because the recomputation legitimately
+        # needs them - the flag changes what this node is being asked to do.
+        # Preserved for the mode-3 comparison regardless: these ARE chain outputs (phase 3 wrote
+        # them), they are simply not phase 4's input. The worker dirs are scrubbed a few lines
+        # below, so without this the files the comparison needs would be gone.
+        Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3Out "$s.1st-pass.fdr_scores.bin")
         Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
         Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
         # Ship the persisted 1st-pass model so SecondPassFDR can run the frozen 2nd-pass
@@ -1680,10 +1701,21 @@ foreach ($name in $selected) {
         # Stage-5 divergence would otherwise surface here as a pass-2 defect and send the
         # reader to the wrong stage.
         $chainDir = Split-Path $chainBlib -Parent
+        $chainPhase3Dir = Join-Path (Split-Path $chainDir -Parent) 'phase3_outputs'
         $m3sIssues = [System.Collections.Generic.List[string]]::new()
         $m3sCompared = 0
+        # The 1st-pass sidecars are compared where the chain actually PRODUCES them - the phase-3
+        # rescore workers - not in phase 4. Phase 4 is deliberately not given them on the default
+        # path (see the withholding in Invoke-HpcChain), because a SecondPassFDR node must run
+        # without per-file first-pass input. Looking for them there would turn that contract into
+        # a mode-3 failure, and "the file we refused to stage is missing" is not a divergence.
         foreach ($sidecarPass in 1, 2) {
-            $cmp = Compare-FdrSidecars -ExpectedDir $straightDir -ActualDir $chainDir `
+            # Pass 1 is compared against the phase-3 workers' outputs, ALWAYS: Invoke-HpcChain
+            # runs its phases with the verifier off whatever the caller set, so phase 4 never
+            # receives these files. Reading the ambient flag here asked the caller's value, not
+            # the chain's, and sent the comparison to a directory the contract keeps empty.
+            $actualDir = if ($sidecarPass -eq 1) { $chainPhase3Dir } else { $chainDir }
+            $cmp = Compare-FdrSidecars -ExpectedDir $straightDir -ActualDir $actualDir `
                 -Pass $sidecarPass -Tolerance $Tolerance
             $cmp.Issues | ForEach-Object { $m3sIssues.Add("pass${sidecarPass}: $_") }
             $m3sCompared += $cmp.Compared

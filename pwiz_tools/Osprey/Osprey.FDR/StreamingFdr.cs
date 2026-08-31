@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -184,6 +184,12 @@ namespace pwiz.Osprey.FDR
         ///   this off, no 1st-pass sidecar is opened at all. It has no effect when
         ///   <paramref name="authoritativeContribution"/> yields nothing, because then the
         ///   recomputation is not a check but the only source of the answer.</param>
+        /// <param name="beginFile">Called once per file BEFORE anything else, always. The
+        ///   caller stages that file's entries here - it stamps run q onto them and writes its
+        ///   sidecar from them, so this must happen on every path. It is separate from
+        ///   <paramref name="readFile"/> because that one also reads the file's whole 1st-pass
+        ///   population and re-runs the frozen rescore, which only a recomputation needs. Fusing
+        ///   the two is what made the shipped path pay for verification it was not doing.</param>
         public static StreamedCompetitionState ComputeFullPopulationPrecursorFdrStreaming(
             IReadOnlyList<string> fileKeys,
             Func<string, (uint[] entryIds, double[] scores,
@@ -193,7 +199,8 @@ namespace pwiz.Osprey.FDR
             Action<string, FileCompetition> onFileRunQ,
             HashSet<uint> stratumBaseIds = null,
             Func<string, FileCompetition> authoritativeContribution = null,
-            bool verifyAgainstRecompute = false)
+            bool verifyAgainstRecompute = false,
+            Action<string> beginFile = null)
         {
             // stratumBaseIds == null -> full-population competition (transfer-compete).
             // non-null -> STRATIFIED competition (protein-compact): only observations whose
@@ -215,7 +222,7 @@ namespace pwiz.Osprey.FDR
             for (int fileIdx = 0; fileIdx < fileKeys.Count; fileIdx++)
             {
                 string fileKey = fileKeys[fileIdx];
-                var (entryIds, scores, survivorScores, ownSurvivorIds) = readFile(fileKey);
+                beginFile?.Invoke(fileKey);
 
                 // The run-q filter below uses this file's OWN survivor set, not the global
                 // union, because that is all a per-file worker will have once this half moves
@@ -233,19 +240,6 @@ namespace pwiz.Osprey.FDR
                 // per-file sidecar, which only ever carries this file's own survivors, so the
                 // sidecar-fold architecture depends on this holding, not merely the worker's
                 // choice of set. Loud failure is the only honest option.
-                foreach (uint eid in entryIds)
-                {
-                    if (survivorIds.Contains(eid) && !ownSurvivorIds.Contains(eid))
-                    {
-                        throw new InvalidOperationException(string.Format(
-                            @"Survivor scope violation in '{0}': entry_id {1} is in this file's " +
-                            @"1st-pass population and survives in another file, but not here. " +
-                            @"The per-file run-q filter would drop its contribution to the " +
-                            @"cross-file minimum, which silently lowers experiment q. See " +
-                            @"issue #4486.", fileKey, eid));
-                    }
-                }
-
                 // The PER-FILE half, isolated so it can move to PerFileRescoring (#4486).
                 // Beyond this file's own arrays its only inputs are the frozen-model survivor
                 // scores, the global survivor id set and the protein stratum - and a per-file
@@ -263,7 +257,10 @@ namespace pwiz.Osprey.FDR
                 FileCompetition contribution;
                 if (authoritative != null && !verifyAgainstRecompute)
                 {
-                    // THE SHIPPED PATH. The worker already competed this file and wrote its
+                    // THE SHIPPED PATH. readFile is NOT called: no 1st-pass sidecar is opened,
+                    // no reconciled parquet is re-read for PIN features, and no frozen rescore
+                    // runs. Everything this fold needs, the caller already has from the worker's
+                    // own 2nd-pass artifacts. The worker already competed this file and wrote its
                     // answer down, so the join just folds it - and never opens the 1st-pass
                     // sidecar, which is the whole of what #4486 removes (9.2 GB of re-reads at
                     // 82 files against the 2.8 GB actually needed).
@@ -272,7 +269,28 @@ namespace pwiz.Osprey.FDR
                 else
                 {
                     // Either no worker answer exists (the pre-relocation path, and the retrain
-                    // modes), or verification was asked for. Both need the recomputation.
+                    // modes), or verification was asked for. Both need this file's whole
+                    // 1st-pass population, so the expensive read belongs here and only here.
+                    var (entryIds, scores, survivorScores, ownSurvivorIds) = readFile(fileKey);
+
+                    // THE SURVIVOR-SCOPE PRECONDITION, which needs that population. It compares
+                    // this file's rows against the GLOBAL survivor set, so unlike the
+                    // experiment-fold guard it cannot move into the per-file worker - a worker
+                    // holds only its own set. It is a check ON the relocation rather than
+                    // production work, so it runs with the verification it shares a source with.
+                    foreach (uint eid in entryIds)
+                    {
+                        if (survivorIds.Contains(eid) && !ownSurvivorIds.Contains(eid))
+                        {
+                            throw new InvalidOperationException(string.Format(
+                                @"Survivor scope violation in '{0}': entry_id {1} is in this " +
+                                @"file's 1st-pass population and survives in another file, but " +
+                                @"not here. The per-file run-q filter would drop its " +
+                                @"contribution to the cross-file minimum, which silently lowers " +
+                                @"experiment q. See issue #4486.", fileKey, eid));
+                        }
+                    }
+
                     var recomputed = CompeteOneFile(
                         entryIds, scores, survivorScores, ownSurvivorIds, stratumBaseIds, fileKey);
                     contribution = recomputed;

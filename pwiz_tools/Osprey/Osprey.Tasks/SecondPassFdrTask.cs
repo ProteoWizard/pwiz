@@ -84,10 +84,42 @@ namespace pwiz.Osprey.Tasks
             // bests out of them rather than recomputing from the 1st-pass sidecars (#4486).
             // That inversion - from output to input - is the whole point of the move, so it is
             // recorded here where the task graph can be read.
+            // THE PER-FILE 1st-PASS SIDECARS ARE NOT INPUTS TO THIS TASK on the default path,
+            // and that is the contract issue #4486 exists to establish - an HPC orchestrator
+            // hands a SecondPassFDR node the per-run 2nd-pass artifacts and the analysis-wide
+            // experiment sidecar, and nothing per-file from the first pass. They were never
+            // DECLARED here, but they were READ every run, which is worse than declaring them
+            // wrongly: an undeclared dependency cannot be checked by anyone.
+            //
+            // They become a real input only when OSPREY_PASS2_VERIFY_WORKER asks this stage to
+            // recompute each file's competition and assert the worker's answer against it. That
+            // is a test instrument, so the dependency is the instrument's, not the task's.
+            if (OspreyEnvironment.Pass2VerifyWorker)
+            {
+                foreach (var input in ctx.Config.InputFiles)
+                    yield return FdrScoresSidecar.Pass1Path(input);
+            }
+
+            // The ANALYSIS-WIDE 1st-pass experiment sidecar IS an input, on every path: it is
+            // where the scope split put Pep and ExperimentAggregateScore, and it is how
+            // OSPREY_PASS2_QVALUE=transfer obtains its experiment values without competing at
+            // all. One file per analysis, not one per run - which is the distinction that makes
+            // it compatible with a node that never sees the inputs.
+            string pass1Experiment = FdrExperimentSidecar.PathFor(
+                ctx.Config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(ctx.Config),
+                FdrScoresSidecar.Pass.FirstPass);
+            if (!string.IsNullOrEmpty(pass1Experiment))
+                yield return pass1Experiment;
+
             if (!OspreyEnvironment.Pass2ProteinCompact && !OspreyEnvironment.Pass2TransferCompete)
                 yield break;
             foreach (var input in ctx.Config.InputFiles)
+            {
                 yield return FdrScoresSidecar.Pass2Path(input);
+                // The decoy side of that file's competition - the null this stage folds. Also an
+                // input, for the same reason and from the same producer.
+                yield return Pass2CompetitionDecoys.PathFor(input);
+            }
         }
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)
@@ -159,15 +191,18 @@ namespace pwiz.Osprey.Tasks
             // declared by NOBODY, which is why its absence surfaced as a regression assertion
             // (mode 1c) rather than as a task the driver knew had not finished.
             //
-            // Gated on the same modes for a reason that is worth stating plainly: on the
-            // resident/retrain paths ComputePass2Resident never publishes a Pass2ExperimentScope,
-            // so WritePass2ExperimentSidecar takes its early return and NO experiment sidecar is
-            // written at all. Declaring an output that is never produced would make
-            // IsTaskAlreadyDone permanently false and re-run the whole of Stage 7 on every
-            // resume. That defect is open and ungated (regression.ps1 never sets
-            // OSPREY_PASS2_QVALUE=transfer); this gate is a symptom of it, not a fix for it.
-            if (!workerOwnsPerFileSidecars)
-                yield break;
+            // DECLARED UNCONDITIONALLY. This used to be gated on the frozen-competition modes,
+            // because OSPREY_PASS2_QVALUE=transfer published no Pass2ExperimentScope and so wrote
+            // no experiment sidecar at all - and declaring an output that is never produced would
+            // make IsTaskAlreadyDone permanently false, re-running the whole of Stage 7 on every
+            // resume. That gate was a symptom, and the comment here said so.
+            //
+            // The cause is fixed: `transfer` now publishes its experiment scope like every other
+            // mode (Pass2FdrSidecar.TransferPerRunQ). Its values are derived differently - from
+            // the composite-score -> q table FirstPassFDR established, with no re-competition and
+            // no decoy pool - but the artifact is the same artifact, and a consumer cannot be
+            // asked to know which mode wrote it. So the declaration is now what it always should
+            // have been: every mode that computes a second pass produces this file.
             string experimentPath = FdrExperimentSidecar.PathFor(
                 ctx.Config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(ctx.Config),
                 FdrScoresSidecar.Pass.SecondPass);
