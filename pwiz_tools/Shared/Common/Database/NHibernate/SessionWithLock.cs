@@ -59,9 +59,29 @@ namespace pwiz.Common.Database.NHibernate
 
         public override void Dispose()
         {
-            _session.Dispose();
-            base.Dispose();
-            _ownedSessionFactory?.Dispose();
+            // Each step must run even if an earlier one throws, and the order of the damage is why.
+            // A throwing _session.Dispose() (NHibernate closes the connection here, so an I/O
+            // failure surfaces at exactly this point) would otherwise skip base.Dispose(), leaving
+            // the ReaderWriterLock write-held forever - and since the lock is shared by reference
+            // through ImClone, every later session on any clone would block in
+            // AcquireWriterLock(int.MaxValue), a silent hang with no exception to find it by. It
+            // would also skip the factory dispose and hand back the very leak this class exists to
+            // close.
+            try
+            {
+                _session.Dispose();
+            }
+            finally
+            {
+                try
+                {
+                    base.Dispose();
+                }
+                finally
+                {
+                    _ownedSessionFactory?.Dispose();
+                }
+            }
         }
 
         public void Flush()

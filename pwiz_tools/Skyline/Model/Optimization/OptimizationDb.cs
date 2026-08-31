@@ -85,10 +85,25 @@ namespace pwiz.Skyline.Model.Optimization
             // Each session owns the factory it was opened from, so nothing retains one. NHibernate
             // roots every SessionFactory in the static SessionFactoryObjectFactory.Instances
             // dictionary until Dispose() removes it, so a retained factory never becomes
-            // collectible. IrtDb has always worked this way; these two did not, which is what
-            // leaked once the NHibernate upgrade stopped them disposing after Load.
+            // collectible - which is what leaked once the NHibernate upgrade stopped these two
+            // disposing after Load. (IrtDb closes the same hole differently, passing a
+            // caller-scoped factory into OpenWriteSession; that shape cannot leak here at all.)
+            //
+            // Ownership does not transfer until the constructor RETURNS, so the window between
+            // has to be guarded: OpenSession() throws if SQLite cannot open the file, and
+            // AbstractSessionWithLock's constructor throws by design when this thread already
+            // holds a read lock. Without the catch the factory is registered, owned by nobody,
+            // and the leak comes back on exactly the error paths no test looks at.
             var sessionFactory = GetSessionFactory(_path);
-            return new SessionWithLock(sessionFactory.OpenSession(), _databaseLock, true, sessionFactory);
+            try
+            {
+                return new SessionWithLock(sessionFactory.OpenSession(), _databaseLock, true, sessionFactory);
+            }
+            catch
+            {
+                sessionFactory.Dispose();
+                throw;
+            }
         }
 
         public IEnumerable<DbOptimization> GetOptimizations()
