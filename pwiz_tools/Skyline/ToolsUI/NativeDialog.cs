@@ -32,8 +32,10 @@ namespace pwiz.Skyline.ToolsUI
     /// One open native Windows dialog (window class "#32770" -- a message box, or the common Open/Save/folder
     /// dialog), identified by its window handle. Not a WinForms form, so it is absent from FormUtil.OpenForms and
     /// none of the managed element model reaches it: it is driven entirely by Win32 (EnumChildWindows to find its
-    /// controls, WM_SETTEXT / BM_CLICK / WM_CLOSE to act on them). Those are window-manager calls, so they are safe
-    /// from ANY thread -- which matters, because the dialog's modal loop is running on the UI thread.
+    /// controls, WM_SETTEXT / BM_CLICK / WM_CLOSE to act on them). Those are window-manager calls, so a READ is safe
+    /// from any thread -- which matters, because the dialog's modal loop is running on the UI thread. A gesture that
+    /// rides the dialog-watch (<see cref="NativeFileDialog.EnterPath"/>, the DismissWith... verbs) must run OFF that
+    /// thread, which is where it is posting the work and waiting for it.
     ///
     /// <para>Concrete: this class alone drives any "#32770" (list its buttons, click one by caption, accept by its
     /// default button, cancel by WM_CLOSE). <see cref="NativeFileDialog"/> adds the file-name field. Obtain one
@@ -90,6 +92,25 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>The dialog's message body (its Static-control text) else its caption.</summary>
         public override string DetailedMessage => NativeBodyText(Hwnd) ?? User32.GetWindowTextNoBlock(Hwnd);
 
+        /// <summary>
+        /// Whether the shell has finished bringing this dialog up, so it can be driven. <see cref="Create"/> gates
+        /// on this, so a dialog that is still opening is reported by NOTHING -- not <see cref="GetOpenDialogs"/>,
+        /// not the connector's form list, not the modal watch. That is the point: a window a caller cannot act on
+        /// is not worth telling anyone about, and reporting it made whoever acted first fail (see
+        /// <see cref="NativeFileDialog.EnterPath"/>).
+        ///
+        /// <para>The window becomes classifiable a moment BEFORE the shell has SHOWN the controls that classified
+        /// it -- they are created, then displayed -- which is the gap this closes. Every dialog classified by a
+        /// control it later acts on has that gap and overrides this (<see cref="NativeFileDialog"/> by its commit
+        /// button, <see cref="NativeFolderBrowserDialog"/> by its tree). The default is for the generic message
+        /// box, which is classified by nothing and driven through buttons the caller reads by caption -- so it has
+        /// no control whose appearance it could wait on, and is ready when its window is shown.</para>
+        ///
+        /// <para>An override must key on something that, once true, stays true: this reports a dialog as NOT
+        /// THERE.</para>
+        /// </summary>
+        protected virtual bool IsOpenComplete => true;
+
         // The message body of a native dialog box (a Win32 #32770, e.g. a system message box), read from its child
         // controls, or null when none is found. The body is a "Static" control with text -- the icon's Static has
         // none -- so among the Static children with non-empty text, take the LONGEST, so the message wins over any
@@ -107,12 +128,22 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// The wrapper that drives the "#32770" at <paramref name="handle"/>: a file-dialog subclass when it is
-        /// one, otherwise a generic <see cref="NativeDialog"/>. Null when the window is not a dialog (or is gone).
+        /// one, otherwise a generic <see cref="NativeDialog"/>. Null when the window is not a dialog (or is gone),
+        /// AND null while it is still opening (see <see cref="IsOpenComplete"/>) -- a dialog is not reported until
+        /// it can be driven, so no caller ever holds one it cannot act on.
         ///
         /// <para>Every test is a window-manager read (a control id, a window class), so classifying is safe from any
         /// thread: it cannot deadlock against the modal loop running on the UI thread.</para>
         /// </summary>
         public static NativeDialog Create(IntPtr handle, CancellationToken cancellationToken)
+        {
+            var dialog = Classify(handle, cancellationToken);
+            return dialog?.IsOpenComplete == true ? dialog : null;
+        }
+
+        // The subclass that drives the window, by what its controls say it is, or null when it is not a "#32770".
+        // Says only WHICH dialog it is -- whether it is ready to be driven is Create's separate question.
+        private static NativeDialog Classify(IntPtr handle, CancellationToken cancellationToken)
         {
             if (handle == IntPtr.Zero || User32.GetClassName(handle) != DIALOG_CLASS_NAME)
                 return null;
@@ -132,7 +163,8 @@ namespace pwiz.Skyline.ToolsUI
             return new NativeDialog(handle, cancellationToken);
         }
 
-        /// <summary>The native dialogs currently open in this process, each wrapped as the class that drives it.</summary>
+        /// <summary>The native dialogs currently open in this process AND ready to be driven, each wrapped as the
+        /// class that drives it -- see <see cref="Create"/>, which drops one the shell is still bringing up.</summary>
         public static IList<NativeDialog> GetOpenDialogs(CancellationToken cancellationToken)
         {
             var result = new List<NativeDialog>();
@@ -295,11 +327,6 @@ namespace pwiz.Skyline.ToolsUI
             if (!IsEnabled)
                 throw new InvalidOperationException(LlmInstruction.Format(
                     @"Cannot interact with native dialog '{0}' because it is blocked.", FormId));
-        }
-
-        protected void BringToForeground()
-        {
-            User32.SetForegroundWindow(Hwnd);
         }
 
         // Posts Enter (key down then up) to a control. Enter MUST be POSTED, not sent: the dialog's modal message

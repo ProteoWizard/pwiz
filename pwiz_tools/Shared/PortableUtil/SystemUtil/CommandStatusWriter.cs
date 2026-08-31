@@ -124,6 +124,12 @@ namespace pwiz.Common.SystemUtil
 
         public override void WriteLine(string value)
         {
+            // A background loader can still report progress after the command finished and
+            // closed this writer. Dropping the line is right - nothing is listening - but
+            // throwing unwinds the loader thread and leaks whatever it had open.
+            var writer = _writer;
+            if (writer == null)
+                return;
             var message = new StringBuilder();
             if (IsTimeStamped)
                 // ReSharper disable LocalizableElement
@@ -131,7 +137,7 @@ namespace pwiz.Common.SystemUtil
                 // ReSharper restore LocalizableElement
             if (IsMemStamped)
             {
-                lock (_writer)
+                lock (writer)
                 {
                     // This can take long enough that we need to introduce a lock to keep
                     // output ordered as much as possible
@@ -140,8 +146,8 @@ namespace pwiz.Common.SystemUtil
                 }
             }
             message.Append(value);
-            _writer.WriteLine(message);
-            Flush();
+            writer.WriteLine(message);
+            writer.Flush();
 
             if (!IsErrorReported && IsErrorMessage(value))
             {
