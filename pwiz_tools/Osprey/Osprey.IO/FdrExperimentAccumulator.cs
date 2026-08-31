@@ -72,10 +72,10 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public void Add(uint entryId, double experimentPrecursorQvalue,
             double experimentPeptideQvalue, double experimentProteinQvalue,
-            double experimentAggregateScore)
+            double experimentAggregateScore, double pep = 1.0)
         {
             var incoming = new FdrExperimentRecord(entryId, experimentPrecursorQvalue,
-                experimentPeptideQvalue, experimentProteinQvalue, experimentAggregateScore);
+                experimentPeptideQvalue, experimentProteinQvalue, experimentAggregateScore, pep);
             if (!_byEntryId.TryGetValue(entryId, out var existing))
             {
                 _byEntryId[entryId] = incoming;
@@ -87,20 +87,23 @@ namespace pwiz.Osprey.IO
             if (existing.ExperimentPrecursorQvalue.Equals(incoming.ExperimentPrecursorQvalue) &&
                 existing.ExperimentPeptideQvalue.Equals(incoming.ExperimentPeptideQvalue) &&
                 existing.ExperimentProteinQvalue.Equals(incoming.ExperimentProteinQvalue) &&
-                existing.ExperimentAggregateScore.Equals(incoming.ExperimentAggregateScore))
+                existing.ExperimentAggregateScore.Equals(incoming.ExperimentAggregateScore) &&
+                existing.Pep.Equals(incoming.Pep))
             {
                 return;
             }
             throw new InvalidOperationException(string.Format(
                 @"Experiment-scope values disagree across observations of entry_id {0}: " +
                 @"precursor_q {1} vs {2}, peptide_q {3} vs {4}, protein_q {5} vs {6}, " +
-                @"aggregate_score {7} vs {8}. These columns are written once per entry_id " +
+                @"aggregate_score {7} vs {8}, pep {9} vs {10}. " +
+                @"These columns are written once per entry_id " +
                 @"because they are experiment-scope; a disagreement means they are not.",
                 entryId,
                 existing.ExperimentPrecursorQvalue, incoming.ExperimentPrecursorQvalue,
                 existing.ExperimentPeptideQvalue, incoming.ExperimentPeptideQvalue,
                 existing.ExperimentProteinQvalue, incoming.ExperimentProteinQvalue,
-                existing.ExperimentAggregateScore, incoming.ExperimentAggregateScore));
+                existing.ExperimentAggregateScore, incoming.ExperimentAggregateScore,
+                existing.Pep, incoming.Pep));
         }
 
         /// <summary>

@@ -626,6 +626,27 @@ namespace pwiz.Osprey.FDR
                     return _pepEstimator.PosteriorError(loc.score);
                 return 1.0;
             }
+
+            /// <summary>
+            /// This entry's posterior error probability: the estimator evaluated at the score
+            /// its base_id's competition was won on, or 1.0 when this entry_id is not the winner.
+            ///
+            /// <para>This is what gets STORED - once per entry_id, in the experiment-wide
+            /// sidecar, exactly like the q-values beside it. It does NOT depend on which run held
+            /// the winning observation: that run is where the maximum happened to occur, not part
+            /// of the value. <see cref="Pep"/> above answers the per-OBSERVATION question the old
+            /// per-run column encoded, and survives only for the diagnostics dumps; nothing
+            /// writes its answer into a per-run file any more. Persisting that joined form is
+            /// what forced the second pass to re-open and rewrite every per-run sidecar after the
+            /// fold, breaking their immutability (issue #4486).</para>
+            /// </summary>
+            public double PepWinner(uint entryId)
+            {
+                uint baseId = entryId & PercolatorEntry.BASE_ID_MASK;
+                if (!_winnerLoc.TryGetValue(baseId, out var loc) || loc.entryId != entryId)
+                    return 1.0;
+                return _pepEstimator.PosteriorError(loc.score);
+            }
         }
 
         /// <summary>

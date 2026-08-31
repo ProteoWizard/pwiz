@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -118,9 +118,10 @@ namespace pwiz.Osprey.IO
     /// they are why the file used to be written and then rewritten -
     /// <c>PatchProteinQvalues</c> rewrote every 1st-pass sidecar after
     /// protein FDR, <c>PatchExperimentValues</c> every 2nd-pass sidecar after
-    /// the experiment competition. Both are deleted. <see cref="PatchPep"/>
-    /// is the one survivor, and <see cref="FdrScoreRecord.Pep"/> explains
-    /// why it could not go with them.</item>
+    /// the experiment competition. All three are now deleted: PEP was the last
+    /// survivor, and it moved to <see cref="FdrExperimentRecord.Pep"/> with
+    /// issue #4486, so a per-file sidecar is written exactly once on both
+    /// passes and no later stage reopens it.</item>
     /// </list>
     /// No conversion path is written: pre-first-public-release, a v4 sidecar
     /// simply fails <see cref="IsCurrentFormat"/> and is recomputed, which
@@ -132,9 +133,9 @@ namespace pwiz.Osprey.IO
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'F', (byte)'D', (byte)'R' };
 
-        public const byte FormatVersion = 5;
+        public const byte FormatVersion = 6;
         public const int HeaderLength = 32;
-        public const int RecordLength = 36;
+        public const int RecordLength = 28;
 
         /// <summary>
         /// Pass identifier embedded in the header. Mirrors the Rust pass
@@ -376,7 +377,7 @@ namespace pwiz.Osprey.IO
                 foreach (var e in entries)
                 {
                     WriteRecord(bw, e.EntryId, e.Score,
-                        e.RunPrecursorQvalue, e.RunPeptideQvalue, e.Pep);
+                        e.RunPrecursorQvalue, e.RunPeptideQvalue);
                 }
             });
         }
@@ -405,121 +406,9 @@ namespace pwiz.Osprey.IO
                 foreach (var r in records)
                 {
                     WriteRecord(bw, r.EntryId, r.Score,
-                        r.RunPrecursorQvalue, r.RunPeptideQvalue, r.Pep);
+                        r.RunPrecursorQvalue, r.RunPeptideQvalue);
                 }
             });
-        }
-
-        /// <summary>
-        /// Rewrite the <c>pep</c> column <c>[28..36]</c> of every record in an existing sidecar
-        /// from <paramref name="pepByEntryId"/>, leaving every other byte untouched. Records
-        /// whose entry_id is absent keep what they carry, which is the 1.0 every non-winner
-        /// observation is entitled to.
-        ///
-        /// <para><b>The one patch the v5 scope split did not delete, and why.</b> Its two
-        /// siblings - <c>PatchProteinQvalues</c> and <c>PatchExperimentValues</c> - existed to
-        /// push EXPERIMENT-scope values back into per-run files, and the experiment sidecar
-        /// retired both. PEP is the awkward case: its VALUE is per-observation, because it is
-        /// real only on the single experiment-winner observation of each base_id and 1.0
-        /// everywhere else, so an entry_id-keyed experiment record cannot express which
-        /// observation won. But the competition that decides which one won is experiment-wide,
-        /// so on the 2nd pass the value is not knowable when a file's records are written
-        /// mid-stream. Per-observation value, experiment-scope timing: it fits neither file, and
-        /// the 2nd pass pays for that with one more traversal.</para>
-        ///
-        /// <para>The FIRST pass never needs this - its sidecars are written after the whole
-        /// first-pass competition has run, so <see cref="Write(string, IReadOnlyList{FdrEntry}, Pass)"/>
-        /// already carries the final PEP and a 1st-pass sidecar is written exactly once.</para>
-        ///
-        /// <para>Streams one record at a time into the <see cref="FileSaver"/> temp (one record
-        /// resident, never an O(file-size) buffer) and promotes atomically on Commit. Same
-        /// header validation as every reader here (magic / version / pass / size); returns
-        /// <c>false</c> on any mismatch or IO failure, leaving the file unchanged.
-        /// <paramref name="recordsPatched"/> counts records actually rewritten, NOT the size of
-        /// <paramref name="pepByEntryId"/>: the two differ exactly when the map carries
-        /// entry_ids the file does not, which is the coverage hole worth seeing.</para>
-        /// </summary>
-        public static bool PatchPep(
-            string path,
-            IReadOnlyDictionary<uint, double> pepByEntryId,
-            Pass expectedPass,
-            out int recordsPatched)
-        {
-            recordsPatched = 0;
-            // Accumulated locally and published only after Commit, so a failed patch reports
-            // zero rather than a count for records the caller's file never actually kept.
-            int nPatchedHere = 0;
-            if (path == null) throw new ArgumentNullException(nameof(path));
-            if (pepByEntryId == null) throw new ArgumentNullException(nameof(pepByEntryId));
-
-            try
-            {
-                using (var saver = new FileSaver(path))
-                {
-                    // Source stays open only while streaming; the FileSaver Commit that
-                    // deletes+replaces the source runs AFTER this block closes src, so the
-                    // source is never locked at rename time.
-                    using (var src = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    using (var dst = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
-                    {
-                        long fileLen = src.Length;
-                        if (fileLen < HeaderLength)
-                            return false;
-
-                        // Read + validate the 32-byte header, then copy it through
-                        // byte-for-byte. On any mismatch we return false before Commit, so the
-                        // source file is left unchanged (the temp is discarded on dispose).
-                        var header = new byte[HeaderLength];
-                        if (!ReadFully(src, header, HeaderLength))
-                            return false;
-                        for (int i = 0; i < Magic.Length; i++)
-                        {
-                            if (header[i] != Magic[i])
-                                return false;
-                        }
-                        if (header[8] != FormatVersion)
-                            return false;
-                        if (header[9] != (byte)expectedPass)
-                            return false;
-                        ulong headerCount = BitConverter.ToUInt64(header, 16);
-                        if (!TryComputeExpectedLen(headerCount, out int expectedLen))
-                            return false;
-                        if (fileLen != expectedLen)
-                            return false;
-
-                        dst.Write(header, 0, HeaderLength);
-
-                        // Overwrite ONLY the pep bytes [28..36] with the finalized value looked
-                        // up by entry_id [0..4], in the identical little-endian f64 encoding
-                        // BinaryWriter.Write(double) produced for every other field; every
-                        // other byte is copied straight through. The result is byte-identical
-                        // to a single-phase Write whose records already carried the real PEP.
-                        var record = new byte[RecordLength];
-                        for (ulong rec = 0; rec < headerCount; rec++)
-                        {
-                            if (!ReadFully(src, record, RecordLength))
-                                return false;
-                            uint recordEntryId = BitConverter.ToUInt32(record, 0);
-                            if (pepByEntryId.TryGetValue(recordEntryId, out double pep))
-                            {
-                                WriteDouble(record, 28, pep);
-                                nPatchedHere++;
-                            }
-                            dst.Write(record, 0, RecordLength);
-                        }
-                    }
-                    saver.Commit();
-                }
-            }
-            // NOT a bare catch: an OutOfMemoryException here would be reported as a failed
-            // patch, leaving the run going with half-finished values rather than killing it
-            // (#4615 review).
-            catch (Exception ex) when (!(ex is OutOfMemoryException))
-            {
-                return false;
-            }
-            recordsPatched = nPatchedHere;
-            return true;
         }
 
         /// <summary>
@@ -596,13 +485,12 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static void WriteRecord(
             BinaryWriter bw, uint entryId, double score,
-            double runPrecursorQvalue, double runPeptideQvalue, double pep)
+            double runPrecursorQvalue, double runPeptideQvalue)
         {
             bw.Write(entryId);                          // [0..4]
             bw.Write(score);                            // [4..12]
             bw.Write(runPrecursorQvalue);               // [12..20]
             bw.Write(runPeptideQvalue);                 // [20..28]
-            bw.Write(pep);                              // [28..36]
         }
 
         /// <summary>
@@ -744,7 +632,6 @@ namespace pwiz.Osprey.IO
                 e.Score                       = BitConverter.ToDouble(data, off + 4);
                 e.RunPrecursorQvalue          = BitConverter.ToDouble(data, off + 12);
                 e.RunPeptideQvalue            = BitConverter.ToDouble(data, off + 20);
-                e.Pep                         = BitConverter.ToDouble(data, off + 28);
                 // The EXPERIMENT-scope half, applied HERE so it reaches exactly the entries this
                 // sidecar has a record for and no others (format v5, issue #4486).
                 //
@@ -837,7 +724,6 @@ namespace pwiz.Osprey.IO
                 e.Score                       = BitConverter.ToDouble(data, off + 4);
                 e.RunPrecursorQvalue          = BitConverter.ToDouble(data, off + 12);
                 e.RunPeptideQvalue            = BitConverter.ToDouble(data, off + 20);
-                e.Pep                         = BitConverter.ToDouble(data, off + 28);
                 // The EXPERIMENT-scope half, for the records THIS file's sidecar carries and no
                 // others (format v5, issue #4486). Scoping it to the matched records is the
                 // whole point: those columns are keyed by entry_id for the analysis, so applying
@@ -873,7 +759,7 @@ namespace pwiz.Osprey.IO
         /// discard) on any mismatch or IO failure. Streams one <see cref="RecordLength"/>-byte
         /// record at a time from the source (one record resident, not an O(file-size)
         /// whole-file buffer), matching
-        /// <see cref="PatchPep"/>. Records are delivered in stored (file) order.
+        /// Records are delivered in stored (file) order.
         /// </summary>
         public static bool ReadRecords(string path, Pass expectedPass, Action<FdrScoreRecord> onRecord)
         {
@@ -927,7 +813,7 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Decode one 36-byte record into a <see cref="FdrScoreRecord"/>, reading the exact v5
+        /// Decode one 28-byte record into a <see cref="FdrScoreRecord"/>, reading the exact v6
         /// field order <see cref="WriteRecord"/> wrote (little-endian). Single-sourced with the
         /// writer so the read/write byte layout cannot drift.
         /// </summary>
@@ -937,8 +823,7 @@ namespace pwiz.Osprey.IO
                 BitConverter.ToUInt32(rec, 0),    // [0..4]   entry_id
                 BitConverter.ToDouble(rec, 4),    // [4..12]  svm_score
                 BitConverter.ToDouble(rec, 12),   // [12..20] run_precursor_qvalue
-                BitConverter.ToDouble(rec, 20),   // [20..28] run_peptide_qvalue
-                BitConverter.ToDouble(rec, 28));  // [28..36] pep
+                BitConverter.ToDouble(rec, 20));  // [20..28] run_peptide_qvalue
         }
     }
 }

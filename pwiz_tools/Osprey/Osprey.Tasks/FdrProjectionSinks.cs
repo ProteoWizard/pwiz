@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -214,7 +214,7 @@ namespace pwiz.Osprey.Tasks
             // here, so the file is written once and never revisited.
             _buffer.Add(new FdrScoreRecord(
                 entryId, score,
-                q.RunPrecursorQvalue, q.RunPeptideQvalue, q.Pep));
+                q.RunPrecursorQvalue, q.RunPeptideQvalue));
 
             // The EXPERIMENT-scope values collapse to one record per distinct entry_id. The
             // protein q is the one that is not known yet - it needs the pooled parsimony +
@@ -323,7 +323,7 @@ namespace pwiz.Osprey.Tasks
 
             _buffer.Add(new FdrScoreRecord(
                 entryId, score,
-                q.RunPrecursorQvalue, q.RunPeptideQvalue, q.Pep));
+                q.RunPrecursorQvalue, q.RunPeptideQvalue));
             _experiment.Add(entryId,
                 q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
                 experimentProteinQvalue, experimentAggregateScore);

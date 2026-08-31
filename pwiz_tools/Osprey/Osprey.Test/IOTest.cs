@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -3294,8 +3294,8 @@ namespace pwiz.Osprey.Test
                                     BitConverter.DoubleToInt64Bits(loaded[i].RunPrecursorQvalue));
                     Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].RunPeptideQvalue),
                                     BitConverter.DoubleToInt64Bits(loaded[i].RunPeptideQvalue));
-                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].Pep),
-                                    BitConverter.DoubleToInt64Bits(loaded[i].Pep));
+                    // NOT Pep: the per-file sidecar no longer carries it (issue #4486). It is an
+                    // experiment-scope value now, asserted against the experiment map below.
                     Assert.AreEqual(expBefore[i][0], loaded[i].ExperimentPrecursorQvalue);
                     Assert.AreEqual(expBefore[i][1], loaded[i].ExperimentPeptideQvalue);
                     Assert.AreEqual(expBefore[i][2], loaded[i].ExperimentProteinQvalue);
@@ -3341,7 +3341,7 @@ namespace pwiz.Osprey.Test
                 AssertExperimentSidecarRoundTrips(dir);
                 AssertExperimentCollapseRejectsDisagreement();
                 AssertSidecarsRejectEachOther(dir);
-                AssertPepPatchMatchesSinglePhaseWrite(dir);
+                AssertPerFileSidecarCarriesNoPep(dir);
             }
             finally
             {
@@ -3435,41 +3435,42 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// A write carrying placeholder PEP followed by <see cref="FdrScoresSidecar.PatchPep"/>
-        /// must produce a file BYTE-IDENTICAL to a single-phase write whose records already
-        /// carried the finalized PEP, and must refuse a mismatched pass byte without touching
-        /// the file.
+        /// A per-file sidecar carries NO PEP column, on either pass, and a second write of the
+        /// same records reproduces the file byte for byte (issue #4486).
+        ///
+        /// <para>This replaces a test that asserted a placeholder write plus <c>PatchPep</c>
+        /// equalled a single-phase write. That test passed for as long as the patch existed, and
+        /// the patch is exactly what it should have been questioning: PEP is one value per
+        /// base_id, so writing it per observation forced the second pass to reopen and rewrite
+        /// every per-run sidecar after the experiment fold. Those files are now written once and
+        /// never revisited, and PEP lives on <see cref="FdrExperimentRecord.Pep"/>.</para>
         /// </summary>
-        private static void AssertPepPatchMatchesSinglePhaseWrite(string dir)
+        private static void AssertPerFileSidecarCarriesNoPep(string dir)
         {
-            string patched = Path.Combine(dir, "a.2nd-pass.fdr_scores.bin");
-            string direct = Path.Combine(dir, "b.2nd-pass.fdr_scores.bin");
-            // Non-sequential entry_ids, and a map built in a different order, so a positional
-            // patch cannot pass.
-            var finalPep = new Dictionary<uint, double> { { 77, 0.25 }, { 3, 0.75 } };
-            var placeholder = new List<FdrScoreRecord>
+            string first = Path.Combine(dir, "a.2nd-pass.fdr_scores.bin");
+            string second = Path.Combine(dir, "b.2nd-pass.fdr_scores.bin");
+            // Non-sequential entry_ids, so a positional read cannot pass for a keyed one.
+            var records = new List<FdrScoreRecord>
             {
-                new FdrScoreRecord(3, -2.0, 0.01, 0.02, 1.0),
-                new FdrScoreRecord(77, -1.0, 0.03, 0.04, 1.0),
+                new FdrScoreRecord(3, -2.0, 0.01, 0.02),
+                new FdrScoreRecord(77, -1.0, 0.03, 0.04),
             };
-            var single = new List<FdrScoreRecord>
-            {
-                new FdrScoreRecord(3, -2.0, 0.01, 0.02, 0.75),
-                new FdrScoreRecord(77, -1.0, 0.03, 0.04, 0.25),
-            };
-            FdrScoresSidecar.Write(patched, placeholder, FdrScoresSidecar.Pass.SecondPass);
-            FdrScoresSidecar.Write(direct, single, FdrScoresSidecar.Pass.SecondPass);
-            Assert.IsTrue(FdrScoresSidecar.PatchPep(
-                patched, finalPep, FdrScoresSidecar.Pass.SecondPass, out int nPatched));
-            Assert.AreEqual(2, nPatched);
-            CollectionAssert.AreEqual(File.ReadAllBytes(direct), File.ReadAllBytes(patched));
+            FdrScoresSidecar.Write(first, records, FdrScoresSidecar.Pass.SecondPass);
+            FdrScoresSidecar.Write(second, records, FdrScoresSidecar.Pass.SecondPass);
+            CollectionAssert.AreEqual(File.ReadAllBytes(first), File.ReadAllBytes(second));
 
-            // A first-pass patch of a second-pass file must fail and leave the bytes alone.
-            byte[] before = File.ReadAllBytes(patched);
-            Assert.IsFalse(FdrScoresSidecar.PatchPep(
-                patched, finalPep, FdrScoresSidecar.Pass.FirstPass, out int nRejected));
-            Assert.AreEqual(0, nRejected);
-            CollectionAssert.AreEqual(before, File.ReadAllBytes(patched));
+            // The record is exactly entry_id + score + the two RUN q-values. A PEP column would
+            // widen it, and the whole point is that no experiment-scope value lives here.
+            Assert.AreEqual(sizeof(uint) + 3 * sizeof(double), FdrScoresSidecar.RecordLength);
+            Assert.AreEqual(FdrScoresSidecar.HeaderLength + records.Count * FdrScoresSidecar.RecordLength,
+                new FileInfo(first).Length);
+
+            var read = new List<FdrScoreRecord>();
+            Assert.IsTrue(FdrScoresSidecar.ReadRecords(
+                first, FdrScoresSidecar.Pass.SecondPass, rec => read.Add(rec)));
+            Assert.AreEqual(2, read.Count);
+            AssertBitEqual(-2.0, read[0].Score);
+            AssertBitEqual(0.03, read[1].RunPrecursorQvalue);
         }
 
         /// <summary>Bit-exact double comparison, so a rounded value cannot pass.</summary>

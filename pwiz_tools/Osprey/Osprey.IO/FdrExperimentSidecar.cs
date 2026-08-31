@@ -87,9 +87,9 @@ namespace pwiz.Osprey.IO
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'E', (byte)'X', (byte)'P' };
 
-        public const byte FormatVersion = 1;
+        public const byte FormatVersion = 2;
         public const int HeaderLength = 32;
-        public const int RecordLength = 36;
+        public const int RecordLength = 44;
 
         /// <summary>
         /// Path for the experiment-wide sidecar of one pass: named after the output blib's stem,
@@ -221,6 +221,7 @@ namespace pwiz.Osprey.IO
                         bw.Write(r.ExperimentPeptideQvalue);        // [12..20]
                         bw.Write(r.ExperimentProteinQvalue);        // [20..28]
                         bw.Write(r.ExperimentAggregateScore);       // [28..36]
+                        bw.Write(r.Pep);                            // [36..44]
                     }
                 }
                 saver.Commit();
@@ -266,7 +267,8 @@ namespace pwiz.Osprey.IO
                             BitConverter.ToDouble(record, 4),
                             BitConverter.ToDouble(record, 12),
                             BitConverter.ToDouble(record, 20),
-                            BitConverter.ToDouble(record, 28)));
+                            BitConverter.ToDouble(record, 28),
+                            BitConverter.ToDouble(record, 36)));
                     }
                 }
             }
