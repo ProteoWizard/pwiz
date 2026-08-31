@@ -83,16 +83,20 @@ namespace pwiz.Osprey.FDR
         {
             int n = finalScores.Length;
 
-            // PEP via global target-decoy competition. The bounded winner->PEP map
-            // (base_id-ascending KDE order -- see PercolatorQValues.ComputePepWinnerMap) is expanded to the
-            // full per-row peps array here; the projection score pass reads the map directly
-            // so the O(n) array is never materialized (issue #4355 Part B).
-            var pepByWinnerIdx = PercolatorQValues.ComputePepWinnerMap(finalScores, labels, entryIds);
+            // PEP via global target-decoy competition. The bounded ENTRY_ID->PEP map
+            // (base_id-ascending KDE order -- see PercolatorQValues.ComputePepWinnerMap) is
+            // expanded to the full per-row peps array here; the projection score pass reads the
+            // map directly so the O(n) array is never materialized (issue #4355 Part B).
+            //
+            // Expanded BY ENTRY, not by winning row: PEP is one value per base_id, so every
+            // observation of the entry that won reports it. It used to be written onto the
+            // winner's row alone with 1.0 on the rest, which made a per-entry fact look like a
+            // per-observation one and is what issue #4486 removed. A row whose entry won nothing
+            // still takes 1.0 - it has no posterior error of its own.
+            var pepByEntryId = PercolatorQValues.ComputePepWinnerMap(finalScores, labels, entryIds);
             peps = new double[n];
             for (int i = 0; i < n; i++)
-                peps[i] = 1.0;
-            foreach (var kv in pepByWinnerIdx)
-                peps[kv.Key] = kv.Value;
+                peps[i] = pepByEntryId.TryGetValue(entryIds[i], out double pv) ? pv : 1.0;
 
             // Per-run precursor + peptide q-values (each file independently).
             runPrecursorQvalues = PercolatorQValues.ComputePerRunPrecursorQvalues(
@@ -836,6 +840,27 @@ namespace pwiz.Osprey.FDR
                     return _pepEstimator.PosteriorError(loc.score);
                 return 1.0;
             }
+
+            /// <summary>
+            /// This entry's posterior error probability: the estimator evaluated at the score
+            /// its base_id's competition was won on, or 1.0 when this entry_id is not the winner.
+            ///
+            /// <para>This is what gets STORED - once per entry_id, in the experiment-wide
+            /// sidecar, exactly like the q-values beside it. It does NOT depend on which run held
+            /// the winning observation: that run is where the maximum happened to occur, not part
+            /// of the value. <see cref="Pep"/> above answers the per-OBSERVATION question the old
+            /// per-run column encoded, and survives only for the diagnostics dumps; nothing
+            /// writes its answer into a per-run file any more. Persisting that joined form is
+            /// what forced the second pass to re-open and rewrite every per-run sidecar after the
+            /// fold, breaking their immutability (issue #4486).</para>
+            /// </summary>
+            public double PepWinner(uint entryId)
+            {
+                uint baseId = entryId & PercolatorEntry.BASE_ID_MASK;
+                if (!_winnerLoc.TryGetValue(baseId, out var loc) || loc.entryId != entryId)
+                    return 1.0;
+                return _pepEstimator.PosteriorError(loc.score);
+            }
         }
 
         /// <summary>
@@ -1064,7 +1089,7 @@ namespace pwiz.Osprey.FDR
             /// order-sensitive), then posterior-error each winner -- byte-identical to
             /// <see cref="PercolatorQValues.ComputePepWinnerMap"/>.
             /// </summary>
-            public Dictionary<int, double> BuildPepWinnerMap()
+            public Dictionary<uint, double> BuildPepWinnerMap()
             {
                 TargetDecoyCompetition.CompeteFromDicts(_precTargets, _precDecoys,
                     out int[] wi, out double[] ws, out bool[] wd, out uint[] wb);
@@ -1081,9 +1106,15 @@ namespace pwiz.Osprey.FDR
                     pepIsDecoy[k] = wd[pepOrder[k]];
                 }
                 var pepEstimator = PepEstimator.FitDefault(pepScores, pepIsDecoy);
-                var map = new Dictionary<int, double>(nWinners);
+                // Keyed by the WINNER's entry_id (decoy bit intact), matching
+                // PercolatorQValues.ComputePepWinnerMap and expQByWinnerId above: PEP is one
+                // value per base_id, reported by every observation of the entry that won.
+                var map = new Dictionary<uint, double>(nWinners);
                 for (int k = 0; k < nWinners; k++)
-                    map[wi[k]] = pepEstimator.PosteriorError(ws[k]);
+                {
+                    uint winnerId = wd[k] ? wb[k] | ~PercolatorEntry.BASE_ID_MASK : wb[k];
+                    map[winnerId] = pepEstimator.PosteriorError(ws[k]);
+                }
                 return map;
             }
 

@@ -1163,8 +1163,25 @@ function Test-LibraryFragmentRelease {
 # real HPC worker that ships only its inputs and writes beside them. Throws on a
 # non-zero exit so the chain aborts loudly at the failing phase.
 function Invoke-OspreyTaskRun {
+    <#
+    Run one --task phase of the HPC chain, and assert it MODIFIED NOTHING IT WAS GIVEN.
+
+    A phase receives its inputs by copy and produces its outputs as new files. Modifying a
+    file that was already in the directory is a phase reaching back into another task's
+    artifact - the exact violation that let PatchPep rewrite every per-run 2nd-pass sidecar
+    after the experiment fold, breaking the write-once contract those files are supposed to
+    have and requiring the experiment-wide node to hold write access to output it does not
+    own (issue #4486).
+
+    Mode 3 is the right place for this check because here task boundaries ARE process
+    boundaries: we know exactly which task ran, so a modification can be attributed. The
+    straight-through legs cannot say that, which is why the in-code write-once guard on
+    FdrScoresSidecar exists as well - the two catch different halves. New and removed files
+    are NOT flagged: producing outputs is the job, and each phase cleans up after itself.
+    #>
     param([string]$WorkDir, [string[]]$CliArgs, [string]$LogName)
     New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
+    $before = Get-DirFingerprint -Dir $WorkDir
     $logPath = Join-Path $WorkDir $LogName
     Push-Location $WorkDir
     try {
@@ -1174,6 +1191,16 @@ function Invoke-OspreyTaskRun {
         Pop-Location
     }
     if ($exit -ne 0) { throw "Osprey --task exited $exit (see $logPath)" }
+    # Logs excluded: this phase writes its own, and a re-run appends to it.
+    $touched = @(Compare-DirFingerprint -Before $before -Dir $WorkDir |
+        Where-Object { $_ -like 'modified:*' -and $_ -notmatch '\.log$' })
+    if ($touched.Count -gt 0) {
+        throw ("Osprey --task modified {0} file(s) it was given, which no task may do: [{1}]. " +
+               "A phase produces new artifacts; rewriting one it received means a later stage " +
+               "is reaching back into an earlier stage's output, so that file no longer matches " +
+               "the validity sidecar attesting it. See issue #4486. Log: {2}") -f
+              $touched.Count, ($touched -join ', '), $logPath
+    }
 }
 
 # Stage the library (+ its .libcache when present) into a phase dir.

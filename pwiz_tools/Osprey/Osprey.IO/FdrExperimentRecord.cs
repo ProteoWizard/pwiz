@@ -77,16 +77,42 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public readonly double ExperimentAggregateScore;
 
+        /// <summary>
+        /// Posterior error probability for this entry's identification: 
+        /// <c>PepEstimator.PosteriorError</c> of the score its base_id's experiment-wide
+        /// target/decoy competition won on. Real on the WINNING entry_id of each base_id and 1.0
+        /// on the losing label, which lost the competition and so has no posterior error of its
+        /// own.
+        ///
+        /// <para>Experiment-scope for exactly the reason the three q-values above are: one
+        /// competition over the whole analysis assigns the precursor one value, and it is the
+        /// same in every run the precursor appears in. The WINNING RUN is where the maximum
+        /// happened to occur, not part of the value - which is why no file is recorded here.
+        /// </para>
+        ///
+        /// <para>It used to live on the per-observation <see cref="FdrScoreRecord"/> instead,
+        /// real on the winning run's row and 1.0 on every other observation of the same
+        /// precursor. That 1.0 was not a probability but a sentinel meaning "not the row the
+        /// estimate was computed on" - one fact materialized across ~933K slots on a 3-file run.
+        /// Worse, it was unknowable until the whole experiment had been folded, so the 2nd pass
+        /// re-opened and rewrote every per-run sidecar afterwards; that rewrite is what broke
+        /// those files' immutability and forced the experiment-wide stage to hold write access to
+        /// output it does not own (issue #4486).</para>
+        /// </summary>
+        public readonly double Pep;
+
         public FdrExperimentRecord(
             uint entryId,
             double experimentPrecursorQvalue, double experimentPeptideQvalue,
-            double experimentProteinQvalue, double experimentAggregateScore)
+            double experimentProteinQvalue, double experimentAggregateScore,
+            double pep)
         {
             EntryId = entryId;
             ExperimentPrecursorQvalue = experimentPrecursorQvalue;
             ExperimentPeptideQvalue = experimentPeptideQvalue;
             ExperimentProteinQvalue = experimentProteinQvalue;
             ExperimentAggregateScore = experimentAggregateScore;
+            Pep = pep;
         }
     }
 }

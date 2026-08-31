@@ -55,30 +55,29 @@ namespace pwiz.Osprey.IO
         public readonly double RunPrecursorQvalue;
         public readonly double RunPeptideQvalue;
 
-        /// <summary>
-        /// Posterior error probability for this observation. Real only on the single
-        /// experiment-winner observation of each base_id - the winner set the estimator was fit
-        /// over (<c>PercolatorQValues.ComputePepWinnerMap</c>) - so every other observation of
-        /// that precursor carries 1.0.
-        ///
-        /// <para>Kept in the per-OBSERVATION record even though the competition that produces it
-        /// is experiment-wide, because which observation won is exactly the information an
-        /// entry_id-keyed experiment record cannot express. Consequence for the 2nd pass: the
-        /// value is not knowable when a file's records are written mid-stream, which is why
-        /// <see cref="FdrScoresSidecar.PatchPep"/> exists and is the one patch the v5 scope
-        /// split did not delete.</para>
-        /// </summary>
-        public readonly double Pep;
+        // NO Pep COLUMN, on either pass (issue #4486). PEP is one value per base_id -
+        // PepEstimator.PosteriorError over the single winning observation - and storing it here
+        // meant writing that one fact into every observation of the precursor, real on the winner
+        // and 1.0 everywhere else. The 1.0 was never a posterior error probability; it was a
+        // sentinel meaning "not the row the estimate was computed on", i.e. a materialized
+        // left-outer-join. It also could not be known until the whole experiment had been folded,
+        // so the 2nd pass re-opened and rewrote every per-run sidecar afterwards, which is what
+        // broke these files' immutability and forced the experiment-wide stage to hold write
+        // access to output it does not own.
+        //
+        // The winner fact now lives once on FdrExperimentRecord (Pep + PepWinnerFileIndex) and
+        // consumers that want the per-observation view join to it at read time via
+        // FdrExperimentRecord.PepForFile. Both passes store it the same way, which they did not
+        // before: pass 1 wrote a final value once, pass 2 wrote a placeholder and patched it.
 
         public FdrScoreRecord(
             uint entryId, double score,
-            double runPrecursorQvalue, double runPeptideQvalue, double pep)
+            double runPrecursorQvalue, double runPeptideQvalue)
         {
             EntryId = entryId;
             Score = score;
             RunPrecursorQvalue = runPrecursorQvalue;
             RunPeptideQvalue = runPeptideQvalue;
-            Pep = pep;
         }
     }
 }

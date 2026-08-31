@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -3294,8 +3294,8 @@ namespace pwiz.Osprey.Test
                                     BitConverter.DoubleToInt64Bits(loaded[i].RunPrecursorQvalue));
                     Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].RunPeptideQvalue),
                                     BitConverter.DoubleToInt64Bits(loaded[i].RunPeptideQvalue));
-                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].Pep),
-                                    BitConverter.DoubleToInt64Bits(loaded[i].Pep));
+                    // NOT Pep: the per-file sidecar no longer carries it (issue #4486). It is an
+                    // experiment-scope value now, asserted against the experiment map below.
                     Assert.AreEqual(expBefore[i][0], loaded[i].ExperimentPrecursorQvalue);
                     Assert.AreEqual(expBefore[i][1], loaded[i].ExperimentPeptideQvalue);
                     Assert.AreEqual(expBefore[i][2], loaded[i].ExperimentProteinQvalue);
@@ -3342,7 +3342,7 @@ namespace pwiz.Osprey.Test
                 AssertExperimentCollapseRejectsDisagreement();
                 AssertUnreadableExperimentSidecarStopsTheRun(dir);
                 AssertSidecarsRejectEachOther(dir);
-                AssertPepPatchMatchesSinglePhaseWrite(dir);
+                AssertPerFileSidecarCarriesNoPep(dir);
             }
             finally
             {
@@ -3354,16 +3354,47 @@ namespace pwiz.Osprey.Test
         /// Accumulate out of entry_id order, then assert the file comes back in ascending
         /// entry_id order with every column intact.
         /// </summary>
+        /// <summary>
+        /// A PARTIAL update of an experiment record preserves every field it does not set.
+        ///
+        /// <para><c>SetProteinQvalue</c> replaces one column by rebuilding the record, so any
+        /// field it forgets to carry is silently replaced by whatever the constructor supplies.
+        /// PEP was dropped exactly that way on its first day in this record, and no C#-only gate
+        /// noticed: the whole Stellar regression stayed green while every experiment winner
+        /// reported 1.0. Only the cross-impl comparison against Rust caught it, and that gate is
+        /// scheduled for retirement (issue #4486).</para>
+        ///
+        /// <para>Asserts the WHOLE record rather than the one column, because "the field I
+        /// happened to think of" is the bug. The constructor no longer defaults <c>pep</c>, so a
+        /// newly added column is a compile error at every construction site - this covers the
+        /// case where a site compiles because it passed something wrong instead.</para>
+        /// </summary>
+        private static void AssertPartialUpdatePreservesEveryField()
+        {
+            var accumulator = new FdrExperimentAccumulator();
+            accumulator.Add(7, 0.011, 0.012, 1.0, -1.5, 0.25);
+            accumulator.SetProteinQvalue(7, 0.0042);
+
+            var updated = accumulator.Records[7];
+            Assert.AreEqual(7u, updated.EntryId);
+            AssertBitEqual(0.011, updated.ExperimentPrecursorQvalue);
+            AssertBitEqual(0.012, updated.ExperimentPeptideQvalue);
+            AssertBitEqual(0.0042, updated.ExperimentProteinQvalue);
+            AssertBitEqual(-1.5, updated.ExperimentAggregateScore);
+            AssertBitEqual(0.25, updated.Pep);
+        }
+
         private static void AssertExperimentSidecarRoundTrips(string dir)
         {
+            AssertPartialUpdatePreservesEveryField();
             string path = Path.Combine(dir, "analysis.1st-pass.fdr_experiment.bin");
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(7, 0.011, 0.012, 0.013, -1.5);
-            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5);
-            accumulator.Add(9, 0.031, 0.032, 0.033, -3.5);
+            accumulator.Add(7, 0.011, 0.012, 0.013, -1.5, 1.0);
+            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0);
+            accumulator.Add(9, 0.031, 0.032, 0.033, -3.5, 1.0);
             // A repeat sighting of an entry_id already held, with identical values: the ordinary
             // case, since every observation of a precursor carries the same experiment values.
-            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5);
+            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0);
             Assert.AreEqual(3, accumulator.Count);
 
             FdrExperimentSidecar.Write(path, accumulator.Records, FdrScoresSidecar.Pass.FirstPass);
@@ -3447,10 +3478,10 @@ namespace pwiz.Osprey.Test
         private static void AssertExperimentCollapseRejectsDisagreement()
         {
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(4, 0.01, 0.02, 0.03, -1.0);
+            accumulator.Add(4, 0.01, 0.02, 0.03, -1.0, 1.0);
             try
             {
-                accumulator.Add(4, 0.01, 0.02, 0.03, -1.25);
+                accumulator.Add(4, 0.01, 0.02, 0.03, -1.25, 1.0);
                 Assert.Fail("Disagreeing experiment values for one entry_id must throw.");
             }
             catch (InvalidOperationException)
@@ -3471,7 +3502,7 @@ namespace pwiz.Osprey.Test
                 new List<FdrEntry> { MakeFdrEntry(1, -1.0, 0.01, 0.02) },
                 FdrScoresSidecar.Pass.FirstPass);
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(1, 0.01, 0.02, 0.03, -1.0);
+            accumulator.Add(1, 0.01, 0.02, 0.03, -1.0, 1.0);
             FdrExperimentSidecar.Write(experiment, accumulator.Records, FdrScoresSidecar.Pass.FirstPass);
 
             Assert.IsFalse(FdrExperimentSidecar.IsCurrentFormat(perFile, FdrScoresSidecar.Pass.FirstPass));
@@ -3482,41 +3513,50 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// A write carrying placeholder PEP followed by <see cref="FdrScoresSidecar.PatchPep"/>
-        /// must produce a file BYTE-IDENTICAL to a single-phase write whose records already
-        /// carried the finalized PEP, and must refuse a mismatched pass byte without touching
-        /// the file.
+        /// A per-file sidecar carries NO PEP column, on either pass, and a second write of the
+        /// same records reproduces the file byte for byte (issue #4486).
+        ///
+        /// <para>This replaces a test that asserted a placeholder write plus <c>PatchPep</c>
+        /// equalled a single-phase write. That test passed for as long as the patch existed, and
+        /// the patch is exactly what it should have been questioning: PEP is one value per
+        /// base_id, so writing it per observation forced the second pass to reopen and rewrite
+        /// every per-run sidecar after the experiment fold. Those files are now written once and
+        /// never revisited, and PEP lives on <see cref="FdrExperimentRecord.Pep"/>.</para>
         /// </summary>
-        private static void AssertPepPatchMatchesSinglePhaseWrite(string dir)
+        private static void AssertPerFileSidecarCarriesNoPep(string dir)
         {
-            string patched = Path.Combine(dir, "a.2nd-pass.fdr_scores.bin");
-            string direct = Path.Combine(dir, "b.2nd-pass.fdr_scores.bin");
-            // Non-sequential entry_ids, and a map built in a different order, so a positional
-            // patch cannot pass.
-            var finalPep = new Dictionary<uint, double> { { 77, 0.25 }, { 3, 0.75 } };
-            var placeholder = new List<FdrScoreRecord>
+            string first = Path.Combine(dir, "a.2nd-pass.fdr_scores.bin");
+            string second = Path.Combine(dir, "b.2nd-pass.fdr_scores.bin");
+            // Non-sequential entry_ids, so a positional read cannot pass for a keyed one.
+            var records = new List<FdrScoreRecord>
             {
-                new FdrScoreRecord(3, -2.0, 0.01, 0.02, 1.0),
-                new FdrScoreRecord(77, -1.0, 0.03, 0.04, 1.0),
+                new FdrScoreRecord(3, -2.0, 0.01, 0.02),
+                new FdrScoreRecord(77, -1.0, 0.03, 0.04),
             };
-            var single = new List<FdrScoreRecord>
-            {
-                new FdrScoreRecord(3, -2.0, 0.01, 0.02, 0.75),
-                new FdrScoreRecord(77, -1.0, 0.03, 0.04, 0.25),
-            };
-            FdrScoresSidecar.Write(patched, placeholder, FdrScoresSidecar.Pass.SecondPass);
-            FdrScoresSidecar.Write(direct, single, FdrScoresSidecar.Pass.SecondPass);
-            Assert.IsTrue(FdrScoresSidecar.PatchPep(
-                patched, finalPep, FdrScoresSidecar.Pass.SecondPass, out int nPatched));
-            Assert.AreEqual(2, nPatched);
-            CollectionAssert.AreEqual(File.ReadAllBytes(direct), File.ReadAllBytes(patched));
+            FdrScoresSidecar.Write(first, records, FdrScoresSidecar.Pass.SecondPass);
+            FdrScoresSidecar.Write(second, records, FdrScoresSidecar.Pass.SecondPass);
+            CollectionAssert.AreEqual(File.ReadAllBytes(first), File.ReadAllBytes(second));
 
-            // A first-pass patch of a second-pass file must fail and leave the bytes alone.
-            byte[] before = File.ReadAllBytes(patched);
-            Assert.IsFalse(FdrScoresSidecar.PatchPep(
-                patched, finalPep, FdrScoresSidecar.Pass.FirstPass, out int nRejected));
-            Assert.AreEqual(0, nRejected);
-            CollectionAssert.AreEqual(before, File.ReadAllBytes(patched));
+            // The record is exactly entry_id + score + the two RUN q-values. A PEP column would
+            // widen it, and the whole point is that no experiment-scope value lives here.
+            Assert.AreEqual(sizeof(uint) + 3 * sizeof(double), FdrScoresSidecar.RecordLength);
+            Assert.AreEqual(FdrScoresSidecar.HeaderLength + records.Count * FdrScoresSidecar.RecordLength,
+                new FileInfo(first).Length);
+
+            var read = new List<FdrScoreRecord>();
+            Assert.IsTrue(FdrScoresSidecar.ReadRecords(
+                first, FdrScoresSidecar.Pass.SecondPass, rec => read.Add(rec)));
+            Assert.AreEqual(2, read.Count);
+            AssertBitEqual(-2.0, read[0].Score);
+            AssertBitEqual(0.03, read[1].RunPrecursorQvalue);
+
+            // WRITE-ONCE. Rewriting a sidecar inside one run is the defect class this whole
+            // change exists to remove: the file no longer matches the validity sidecar that
+            // attests it, and a separate experiment-wide node has only what the per-file node
+            // left behind. Asserted here rather than trusted to the contract, because the
+            // contract WAS stated - in a commit title - and drifted for a sprint regardless.
+            Assert.ThrowsException<InvalidOperationException>(
+                () => FdrScoresSidecar.Write(first, records, FdrScoresSidecar.Pass.SecondPass));
         }
 
         /// <summary>Bit-exact double comparison, so a rounded value cannot pass.</summary>

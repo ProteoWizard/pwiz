@@ -1151,10 +1151,13 @@ namespace pwiz.Osprey.Tasks
             private void ApplyRecord(FdrEntry entry, FdrScoreRecord rec)
             {
                 entry.Score = rec.Score;
-                entry.Pep = rec.Pep;
+                // PEP comes from the EXPERIMENT record beside the aggregate, not from the
+                // per-run record: it is one value per entry_id for the whole analysis, and the
+                // per-run sidecars stopped carrying it with issue #4486.
                 if (_experimentRecords != null &&
                     _experimentRecords.TryGetValue(rec.EntryId, out var exp))
                 {
+                    entry.Pep = exp.Pep;
                     entry.ExperimentAggregateScore = exp.ExperimentAggregateScore;
                 }
             }
@@ -1847,7 +1850,6 @@ namespace pwiz.Osprey.Tasks
                 sidecarsWritten.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int patchIdx = 0;
-                var pepByEntryId = new Dictionary<uint, double>();
                 foreach (string fileKey in sidecarsWritten)
                 {
                     patchProgress.Report(++patchIdx);
@@ -1855,25 +1857,17 @@ namespace pwiz.Osprey.Tasks
                     if (inputFile == null)
                         continue;
                     string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
+                    // READ-ONLY over the per-run sidecars. This loop used to finish by rewriting
+                    // each one's pep column (PatchPep), which is what made a per-file sidecar
+                    // mutable and required this stage to hold write access to every run's output.
+                    // PEP is now stored once, as a winner fact on the experiment record below.
+                    //
                     // Staged, then applied: ReadRecords can return false AFTER invoking the
                     // callback, so accumulating experiment values as they arrive would leave the
                     // analysis-wide record half-built from a file that then failed.
-                    pepByEntryId.Clear();
                     var staged = new List<FdrExperimentRecord>();
                     if (!FdrScoresSidecar.ReadRecords(pass2Path, FdrScoresSidecar.Pass.SecondPass,
-                            rec =>
-                            {
-                                var finished = FinishRecord(fileKey, rec);
-                                staged.Add(finished.exp);
-                                pepByEntryId[rec.EntryId] = finished.pep;
-                            }))
-                    {
-                        unpatched.Add(fileKey);
-                        continue;
-                    }
-                    if (!FdrScoresSidecar.PatchPep(
-                            pass2Path, pepByEntryId, FdrScoresSidecar.Pass.SecondPass,
-                            out int patchedHere))
+                            rec => staged.Add(FinishRecord(rec))))
                     {
                         unpatched.Add(fileKey);
                         continue;
@@ -1882,9 +1876,9 @@ namespace pwiz.Osprey.Tasks
                     {
                         experiment.Add(exp.EntryId, exp.ExperimentPrecursorQvalue,
                             exp.ExperimentPeptideQvalue, exp.ExperimentProteinQvalue,
-                            exp.ExperimentAggregateScore);
+                            exp.ExperimentAggregateScore, exp.Pep);
                     }
-                    nMapped += patchedHere;
+                    nMapped += staged.Count;
                 }
             }
             // Handed to the protein-FDR step, which fills the one column it owns and writes the
@@ -1914,7 +1908,7 @@ namespace pwiz.Osprey.Tasks
             // The experiment-scope record for one observation plus its PEP, from the bounded
             // competition state. Split out of the loop above only so the two dispositions -
             // on-stratum recompute and off-stratum carry-through - read side by side.
-            (FdrExperimentRecord exp, double pep) FinishRecord(string fileKey, FdrScoreRecord rec)
+            FdrExperimentRecord FinishRecord(FdrScoreRecord rec)
             {
                 // stratumBaseIds != null IS proteinCompact - written as the null test the branch
                 // actually depends on, so the guard is local to the dereference it protects.
@@ -1932,9 +1926,12 @@ namespace pwiz.Osprey.Tasks
                     // takes the 1.0 that says so, rather than a stale q describing a peak that
                     // no longer exists (the post-rescore overlay zeroes it for that reason).
                     pass1Experiment.TryGetValue(rec.EntryId, out var q1);
-                    return (new FdrExperimentRecord(rec.EntryId,
+                    // PEP carried with the rest of the pass-1 experiment scope: an off-stratum
+                    // entry did not enter this pass's competition, so it has no 2nd-pass winner
+                    // and its pass-1 winner fact is the one that still describes it.
+                    return new FdrExperimentRecord(rec.EntryId,
                         q1.ExperimentPrecursorQvalue, q1.ExperimentPeptideQvalue,
-                        1.0, q1.ExperimentAggregateScore), rec.Pep);
+                        1.0, q1.ExperimentAggregateScore, q1.Pep);
                 }
                 double eq = competition.ExperimentQ(rec.EntryId, rec.RunPrecursorQvalue);
                 // The aggregate MUST move with the q. This mode recomputes experiment q from a
@@ -1955,9 +1952,12 @@ namespace pwiz.Osprey.Tasks
                 // Precursor-level path: peptide q stays in step with precursor q for the
                 // reported set (peptide-level FDR is not the target here).
                 pass1Experiment.TryGetValue(rec.EntryId, out var prior);
-                return (new FdrExperimentRecord(rec.EntryId, eq, eq, 1.0,
-                        agg ?? prior.ExperimentAggregateScore),
-                    competition.Pep(fileKey, rec.EntryId));
+                // The PEP WINNER FACT, stored once per entry rather than joined onto every
+                // observation. This is what retired PatchPep: the value used to be knowable only
+                // after the fold and only for one run, so it was written back into each per-run
+                // sidecar afterwards - which is what made those files mutable (issue #4486).
+                return new FdrExperimentRecord(rec.EntryId, eq, eq, 1.0,
+                    agg ?? prior.ExperimentAggregateScore, competition.PepWinner(rec.EntryId));
             }
         }
 
@@ -2820,6 +2820,9 @@ namespace pwiz.Osprey.Tasks
             double expPrecQ = firstPassExperiment?.ExperimentPrecursorQvalue ?? 1.0;
             double expPepQ = firstPassExperiment?.ExperimentPeptideQvalue ?? 1.0;
             double expAgg = firstPassExperiment?.ExperimentAggregateScore ?? 0.0;
+            // PEP rides with the other experiment-scope values: one per entry_id, from the
+            // analysis-wide record rather than from any run's own file (issue #4486).
+            double expPep = firstPassExperiment?.Pep ?? 1.0;
             if (firstPass.HasValue)
             {
                 FdrScoreRecord rec1 = firstPass.Value;
@@ -2835,7 +2838,7 @@ namespace pwiz.Osprey.Tasks
                     entry.RunPeptideQvalue = rec1.RunPeptideQvalue;
                     entry.ExperimentPrecursorQvalue = expPrecQ;
                     entry.ExperimentPeptideQvalue = expPepQ;
-                    entry.Pep = rec1.Pep;
+                    entry.Pep = expPep;
                     entry.ExperimentAggregateScore = expAgg;
                     return PerRunClass.Unchanged;
                 }
@@ -2845,7 +2848,7 @@ namespace pwiz.Osprey.Tasks
                 // Experiment q is a pass-1 property (best-peak anchor) -- carry it, never re-map.
                 entry.ExperimentPrecursorQvalue = expPrecQ;
                 entry.ExperimentPeptideQvalue = expPepQ;
-                entry.Pep = rec1.Pep;
+                entry.Pep = expPep;
                 // Carried with the experiment q for the same reason, and NOT re-derived from
                 // newScore: it is the score that pass-1 experiment q was computed from, so
                 // re-mapping it to the rescored value would break the pairing that is the

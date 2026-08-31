@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -366,13 +366,13 @@ namespace pwiz.Osprey.Test
             // two would show up here.
             var rec = new FdrScoreRecord(
                 entryId: 1, score: 10.0,
-                runPrecursorQvalue: 0.001, runPeptideQvalue: 0.002, pep: 0.03);
+                runPrecursorQvalue: 0.001, runPeptideQvalue: 0.002);
             // The EXPERIMENT-scope half is one analysis-wide record per entry_id (format v5,
             // issue #4486), so it arrives beside the run-scope record rather than inside it.
             var exp = new FdrExperimentRecord(
                 entryId: 1, experimentPrecursorQvalue: 0.0005,
                 experimentPeptideQvalue: 0.0006, experimentProteinQvalue: 0.004,
-                experimentAggregateScore: 12.5);
+                experimentAggregateScore: 12.5, pep: 0.03);
 
             // (a) UNCHANGED: recomputed score == the record's score -> carry the whole record.
             var unchanged = new FdrEntry { EntryId = 1 };
@@ -413,7 +413,7 @@ namespace pwiz.Osprey.Test
             var gapExp = new FdrExperimentRecord(
                 entryId: 2, experimentPrecursorQvalue: 0.004,
                 experimentPeptideQvalue: 0.006, experimentProteinQvalue: 0.5,
-                experimentAggregateScore: 7.25);
+                experimentAggregateScore: 7.25, pep: 1.0);
             var clsG = Pass2FdrSidecar.AssignPerRunQ(gap, 5.0, null, gapExp,
                 precScoresDesc, precQDesc, pepScoresDesc, pepQDesc);
             Assert.AreEqual(Pass2FdrSidecar.PerRunClass.GapFill, clsG);

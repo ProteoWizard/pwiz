@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -214,7 +214,7 @@ namespace pwiz.Osprey.Tasks
             // here, so the file is written once and never revisited.
             _buffer.Add(new FdrScoreRecord(
                 entryId, score,
-                q.RunPrecursorQvalue, q.RunPeptideQvalue, q.Pep));
+                q.RunPrecursorQvalue, q.RunPeptideQvalue));
 
             // The EXPERIMENT-scope values collapse to one record per distinct entry_id. The
             // protein q is the one that is not known yet - it needs the pooled parsimony +
@@ -224,7 +224,7 @@ namespace pwiz.Osprey.Tasks
             // rewritten on disk, which is what the placeholder-plus-patch used to cost.
             _experiment.Add(entryId,
                 q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
-                1.0, experimentAggregateScore);
+                1.0, experimentAggregateScore, q.Pep);
 
             // RowCount, not PerFile[fileIdx].Value.Count: on the 1st-pass streaming path the
             // projection carries per-file counts but NO resident rows (issue #4355 struct-shrink
@@ -323,10 +323,10 @@ namespace pwiz.Osprey.Tasks
 
             _buffer.Add(new FdrScoreRecord(
                 entryId, score,
-                q.RunPrecursorQvalue, q.RunPeptideQvalue, q.Pep));
+                q.RunPrecursorQvalue, q.RunPeptideQvalue));
             _experiment.Add(entryId,
                 q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
-                experimentProteinQvalue, experimentAggregateScore);
+                experimentProteinQvalue, experimentAggregateScore, q.Pep);
 
             // Last row of this file: flush its sidecar and release the buffer. RowCount
             // (not the row list) so the 2nd-pass resident projection and the 1st-pass
