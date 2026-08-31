@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\..\..\..\Shared\CommonBaseUI\CommonBaseUI.csproj" />
     <ProjectReference Include="..\..\..\..\Shared\PanoramaClient\PanoramaClient.csproj" />
     <ProjectReference Include="..\..\SharedBatch\SharedBatchTest\SharedBatchTest.csproj" />
     <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj" />

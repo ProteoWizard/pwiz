@@ -2,7 +2,14 @@
 
 namespace Pwiz.Vendor.Bruker;
 
-/// <summary>Bruker <c>.d</c> sub-formats, keyed by the metadata file that lives inside.</summary>
+/// <summary>Bruker <c>.d</c> sub-formats, keyed by the metadata file that lives inside.
+///
+/// The CompassXtract references below are <c>&lt;c&gt;</c> rather than <c>&lt;see cref&gt;</c>
+/// on purpose: <c>CompassXtractData.cs</c> is compiled out when
+/// <c>$(NativeVendorsAvailable)</c> is not true, and with GenerateDocumentationFile plus
+/// TreatWarningsAsErrors an unresolvable cref is CS1574 - i.e. a build ERROR in exactly the
+/// no-vendor-licenses configuration. A doc comment cannot be conditionally compiled, so the
+/// reference has to be one that needs no resolution.</summary>
 public enum BrukerFormat
 {
     /// <summary>Unknown / unsupported format.</summary>

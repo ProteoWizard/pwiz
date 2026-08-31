@@ -308,16 +308,26 @@ namespace SkylineTester
 
         public void AddTestRunner(string args)
         {
-            // Running tests needs a selected build directory that actually contains TestRunner.exe.
-            // When SkylineTester is launched standalone (e.g. from its own build output) no build is
-            // discovered, so bail out with a clear message instead of failing deep in the run.
-            var selectedBuildDir = GetSelectedBuildDir();
-            if (string.IsNullOrEmpty(selectedBuildDir) || !File.Exists(Path.Combine(selectedBuildDir, "TestRunner.exe")))
+            // Running tests needs a build directory that contains TestRunner.exe. Nothing is staged
+            // after a clean build, so fall back to the directory the staging step below will create
+            // rather than refusing: demanding a staged directory in order to stage one is a deadlock
+            // a developer cannot get out of except by running something else first.
+            var selectedBuildDir = GetRunBuildDir();
+            if (string.IsNullOrEmpty(selectedBuildDir))
             {
-                MessageBox.Show(this,
-                    "No Skyline build containing TestRunner.exe was found. Use the Build menu to select a build directory that has been built and staged before running tests.");
+                MessageBox.Show(this, string.Join(Environment.NewLine,
+                    "No Skyline build containing TestRunner.exe was found, and none could be staged.",
+                    string.Empty,
+                    "Build the solution in " + PreferredConfiguration() +
+                    ", the configuration this program was built as, or use the Build menu to select a build directory."));
                 return;
             }
+
+            // Tests run from a staged directory, not from what the IDE just built, so stage first.
+            // Queued ahead of the test commands below so it streams progress to the log; running
+            // stale binaries silently is how a fixed bug keeps "reproducing".
+            if (!AddStagingCommand(selectedBuildDir))
+                return;
 
             //MemoryChartWindow.Start("TestRunnerMemory.log");
             TestsRun = 0;
@@ -327,7 +337,9 @@ namespace SkylineTester
             if (!args.Contains("pause=") || args.Contains("pause=0"))
                 DeleteTestRunnerConfigFiles();
 
-            var testRunner = Path.Combine(GetSelectedBuildDir(), "TestRunner.exe");
+            // The resolved directory, not another lookup: when staging is bootstrapping it,
+            // the directory does not exist yet at the time these commands are queued.
+            var testRunner = Path.Combine(selectedBuildDir, "TestRunner.exe");
             _testRunnerIndex = new List<int>();
 
             //
@@ -423,11 +435,17 @@ namespace SkylineTester
             {
                 _testRunnerIndex = new List<int>(new[]{int.MaxValue});
 
-                // Report test results.
-                var testRunner = Path.Combine(GetSelectedBuildDir(), "TestRunner.exe");
-                commandShell.NextCommand = commandShell.Add("{0} report={1}", testRunner.Quote(), commandShell.LogFile.Quote());
-                RunCommands();
-                return;
+                // Report test results. Resolved the same way the run was, because the UI selection
+                // can still read as "no build" here even though the run just staged one.
+                var reportBuildDir = GetRunBuildDir();
+                if (!string.IsNullOrEmpty(reportBuildDir))
+                {
+                    var testRunner = Path.Combine(reportBuildDir, "TestRunner.exe");
+                    commandShell.NextCommand = commandShell.Add("{0} report={1}", testRunner.Quote(), commandShell.LogFile.Quote());
+                    RunCommands();
+                    return;
+                }
+                // No directory to report from: finish normally rather than throwing on the way out
             }
 
             commandShell.Done(success);
@@ -463,7 +481,7 @@ namespace SkylineTester
         /// </summary>
         private IEnumerable<string> GetLanguages()
         {
-            return (new FindLanguages(GetSelectedBuildDir(), "en", "fr", "tr").Enumerate());
+            return (new FindLanguages(GetRunBuildDir(), "en", "fr", "tr").Enumerate());
         }
 
         public void InitLanguages(ComboBox comboBox)
@@ -546,7 +564,12 @@ namespace SkylineTester
             var file = GetSelectedLog(combo);
             if (File.Exists(file))
             {
-                var editLogFile = new Process { StartInfo = { FileName = file } };
+                // UseShellExecute must be explicit: it defaults to true on .NET Framework but
+                // FALSE on net8, where Process.Start then tries to CreateProcess the .log itself
+                // and throws Win32Exception 193 ("not a valid application for this OS platform")
+                // instead of opening it in the associated editor.
+                var editLogFile = new Process
+                    { StartInfo = { FileName = file, UseShellExecute = true } };
                 editLogFile.Start();
             }
         }

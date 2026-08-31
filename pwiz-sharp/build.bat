@@ -216,11 +216,12 @@ if %WITHOUT_MASCOT%==1 set PS_FLAGS=%PS_FLAGS% -WithoutMascot
 echo ##teamcity[progressMessage 'dotnet test (%CONFIG%)']
 
 if %COVERAGE%==1 (
-    echo ##teamcity[progressMessage 'dotnet tool restore - local manifest .config\dotnet-tools.json']
-    dotnet tool restore
+    REM # Shared with Osprey (pwiz_tools\Osprey\build.ps1): restores dotCover from this
+    REM # directory's manifest and proves the tool runs before the test step depends on it.
+    pwsh -NoProfile -File "%~dp0scripts\Ensure-DotCover.ps1" -ManifestDir "%~dp0." -TeamCity
     if !ERRORLEVEL! NEQ 0 (
         set EXIT=2
-        set ERROR_TEXT=`dotnet tool restore` failed; see .config\dotnet-tools.json. Coverage cannot run.
+        set ERROR_TEXT=Could not make dotCover available; see .config\dotnet-tools.json. Coverage cannot run.
         goto error
     )
 

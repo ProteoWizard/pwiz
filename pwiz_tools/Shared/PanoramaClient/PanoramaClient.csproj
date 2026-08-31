@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\CommonBaseUI\CommonBaseUI.csproj" />
   </ItemGroup>
 
 

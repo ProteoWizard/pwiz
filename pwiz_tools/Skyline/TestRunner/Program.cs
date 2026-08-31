@@ -249,6 +249,41 @@ namespace TestRunner
             }
         }
 
+        /// <summary>
+        /// Assembles the staged test directory that net8 tests run from, and reports what it did.
+        /// </summary>
+        private static int StageTests(CommandLineArgs commandLineArgs)
+        {
+            try
+            {
+                var skylineDir = GetSkylineDirectory().FullName;
+                var configuration = commandLineArgs.ArgAsString("configuration");
+                var stager = new TestStager(skylineDir, configuration, Console.WriteLine);
+
+                // stageprojects= narrows staging to the projects named, comma separated.
+                // SkylineTester is not in the default set - it is a dev/CI tool rather than
+                // part of the product - so the only way it reaches the staging directory it
+                // has to RUN from is for the build to ask for it by name. Empty means the
+                // default set, which is what a plain staging pass wants.
+                var projects = commandLineArgs.ArgAsString("stageprojects");
+                if (!string.IsNullOrEmpty(projects))
+                    stager.Projects = projects.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+                // The portable runtime is the same bytes every time and takes about thirty
+                // seconds, so a caller staging one project at a time bundles it on the first
+                // pass and turns it off for the rest.
+                stager.StageRuntime = commandLineArgs.ArgAsBool("stageruntime");
+
+                stager.Stage();
+                return 0;
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Staging failed: " + e.Message);
+                return 1;
+            }
+        }
+
         static readonly string commandLineOptions =
             "?;/?;-?;help;skylinetester;debug;results;" +
             "test;skip;filter;form;" +
@@ -257,6 +292,7 @@ namespace TestRunner
             "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
             "demo=off;showformnames=off;status=off;buildcheck=0;" +
+            "stage=off;configuration=Debug;stageprojects=;stageruntime=on;" +
             "quality=off;qualityonly=off;pass0=off;pass1=off;pass2=on;" +
             "perftests=off;" +
             "retrydatadownloads=off;" +
@@ -278,6 +314,13 @@ namespace TestRunner
         static int Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
+
+            // Pin the WinForms default font exactly as shipping Skyline does, before any control
+            // is created. Skyline sets this in its own Main, but by the time the first functional
+            // test calls that, hundreds of unit tests have run in this process and may already
+            // have created a window - after which the font can no longer be set. Doing it here
+            // guarantees every test sees the same metrics as the shipping app.
+            pwiz.Skyline.Program.SetDefaultFont();
 
             // Opt the test runner into the latest WinForms accessibility level by explicitly setting
             // all four UseLegacyAccessibilityFeatures switches to false BEFORE any control is created.
@@ -332,6 +375,12 @@ namespace TestRunner
             // it stays available for diagnosing heap issues without a rebuild.
             if (commandLineArgs.ArgAsBool("skipsystemheaps"))
                 RunTests.SkipSystemHeaps = true;
+
+            // stage=1 assembles the staged test directory and exits. This is the same code the
+            // staging script and SkylineTester use, so there is one implementation of staging
+            // rather than one per caller.
+            if (commandLineArgs.ArgAsBool("stage"))
+                return StageTests(commandLineArgs);
 
             switch (commandLineArgs.SearchArgs("?;/?;-?;help;report"))
             {

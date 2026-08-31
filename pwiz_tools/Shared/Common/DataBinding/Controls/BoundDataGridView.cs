@@ -536,7 +536,7 @@ namespace pwiz.Common.DataBinding.Controls
                 var reportColorScheme = ReportColorScheme.FromClusteredResults(cancellationToken, reportResults);
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    CommonActionUtil.SafeBeginInvoke(this, () =>
+                    ControlUtil.SafeBeginInvoke(this, () =>
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {

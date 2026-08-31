@@ -129,7 +129,7 @@ namespace pwiz.Common.SystemUtil
                         if (File.Exists(skylineTesterSln))
                             File.Delete(skylineTesterSln);
                         File.Copy(skylineSln, skylineTesterSln);
-                        Process.Start(skylineTesterSln);
+                        ProcessEx.OpenInShell(skylineTesterSln);
                         Thread.Sleep(20000); // Wait for it to fire up sp it's offered in the list of debuggers
                     }
                 }

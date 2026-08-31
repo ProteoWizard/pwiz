@@ -470,7 +470,11 @@ namespace ZedGraph
 
 						if ( url != string.Empty )
 						{
-							System.Diagnostics.Process.Start( url );
+							// UseShellExecute must be set: it defaults to true on .NET Framework but false
+							// on .NET Core and later, where a URL then fails with Win32Exception. ZedGraph
+							// cannot use pwiz.Common's ProcessEx.OpenInShell - it references no pwiz code.
+							System.Diagnostics.Process.Start( new System.Diagnostics.ProcessStartInfo( url )
+								{ UseShellExecute = true } );
 							// linkable objects override any other actions with mouse
 							return;
 						}

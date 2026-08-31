@@ -8,94 +8,71 @@
     its own bin\<Config>\net10.0-windows, so nothing sees the others. TestRunner (and its
     container workers) load Skyline + the test DLLs from one directory, so assemble them here.
 
-    Each source project's output is merged (robocopy) into the staging dir; the shared
-    dependencies (Skyline-daily.dll, etc.) simply overwrite identically, and the union yields a
-    complete run directory. Run TestRunner.exe from the staging dir (or mount pwizRoot into the
-    container and point at the staged path).
+    This is a thin wrapper. The staging itself lives in TestRunnerLib's TestStager, which
+    SkylineTester also calls, so there is ONE implementation rather than one per caller that can
+    drift. It used to be implemented here in PowerShell, which meant every test run in
+    SkylineTester shelled out to a script: its colored warnings arrived as escape codes, its
+    robocopy retried a locked file a million times at thirty second intervals - indistinguishable
+    from a hang - and reading its output streams could deadlock.
 
 .EXAMPLE
-    pwsh -File .\Stage-Tests.ps1 -Configuration Debug
+    pwsh -File .\Stage-Net8Tests.ps1 -Configuration Debug
+
+.EXAMPLE
+    pwsh -File .\Stage-Net8Tests.ps1 -Configuration Release -Projects SkylineTester
 #>
+# CmdletBinding so that an argument this script does not declare is an ERROR. A plain param()
+# block makes this a SIMPLE script, and PowerShell routes anything it cannot bind there into
+# $args without a word. That is how -Projects survived the move of staging into TestRunner as
+# an argument nobody read: the build went on staging the default set, SkylineTester never
+# reached the staging directory, and the first sign of it was the zip step failing thirteen
+# minutes into a CI build, pointing at a staging step whose own output said it had succeeded.
+[CmdletBinding()]
 param(
     [ValidateSet('Debug', 'Release')] [string] $Configuration = 'Debug',
-    [string] $StagingDir = '',
-    [string[]] $Projects = @('Skyline', 'CommonTest', 'Test', 'TestData', 'TestFunctional', 'TestConnected', 'TestRunner'),
-    # Bundle a portable .NET 10 Desktop runtime into <staging>\dotnet so the Docker workers can run
-    # the net10 apphost without any runtime installed in the container (pointed at via DOTNET_ROOT).
-    [switch] $NoRuntime,
-    [string] $DotnetSource = (Join-Path $env:ProgramFiles 'dotnet'),
-    [string] $RuntimeMajorMinor = '10.0'
+    # Empty means the stager's default set. Naming projects stages ONLY those, which is how
+    # SkylineTester reaches the staging directory at all - it is a dev/CI tool rather than
+    # part of the product, so it is not in that set - and how the perf build adds one at a time.
+    [string[]] $Projects = @(),
+    # The bundled portable runtime only has to be staged once, so a second staging into the
+    # same directory can leave it alone.
+    [switch] $NoRuntime
 )
 
 $ErrorActionPreference = 'Stop'
 $skylineDir = $PSScriptRoot
-$tfm = 'net10.0-windows'
 
-if ([string]::IsNullOrEmpty($StagingDir)) {
-    $StagingDir = Join-Path $skylineDir "bin\staging\$Configuration"
-}
-New-Item -ItemType Directory -Force -Path $StagingDir | Out-Null
+# Run the stager out of the build output, never the staged copy: staging with a stale stager is
+# how staging quietly stops keeping up with its own fixes.
+#
+# Platform-aware, and newest wins. Visual Studio (and Build-Skyline.ps1) build x64 into
+# bin\x64\<Config>\<TFM>, while a plain "dotnet build" with no platform writes
+# bin\<Config>\<TFM>. Picking one blindly finds a binary from the OTHER build whenever an
+# older one was left there - which is worse than finding none, because staging then runs a
+# stager that does not match the source and fails on something unrelated to staging.
+$stagerCandidates = @(
+    (Join-Path $skylineDir "TestRunner\bin\x64\$Configuration\net10.0-windows\TestRunner.exe"),
+    (Join-Path $skylineDir "TestRunner\bin\$Configuration\net10.0-windows\TestRunner.exe")
+) | Where-Object { Test-Path $_ }
 
-# Skyline.csproj sits at the Skyline root (bin directly under it); the test projects are in
-# their own subdirectories.
-function Get-ProjectOutput([string] $project) {
-    if ($project -eq 'Skyline') {
-        return Join-Path $skylineDir "bin\$Configuration\$tfm"
-    }
-    return Join-Path $skylineDir "$project\bin\$Configuration\$tfm"
-}
-
-foreach ($project in $Projects) {
-    $src = Get-ProjectOutput $project
-    if (-not (Test-Path $src)) {
-        Write-Warning "Skipping $project - no output at $src (build it first)."
-        continue
-    }
-    Write-Host "Staging $project  ($src)"
-    # /E recurse (satellite resource dirs), /XO keep newest on identical shared deps,
-    # /NP /NDL /NFL /NJH /NJS quiet. robocopy exit codes 0-7 are success.
-    robocopy $src $StagingDir /E /XO /NP /NDL /NFL /NJH /NJS | Out-Null
-    if ($LASTEXITCODE -ge 8) { throw "robocopy failed staging $project (exit $LASTEXITCODE)" }
+$stager = $stagerCandidates | Sort-Object { (Get-Item $_).LastWriteTimeUtc } -Descending | Select-Object -First 1
+if (-not $stager) {
+    throw ("TestRunner.exe was not found under TestRunner\bin (x64 or AnyCPU) for $Configuration. " +
+           "Build TestRunner ($Configuration) first.")
 }
 
-# Stage a portable .NET 10 Desktop runtime so the Docker workers (which have no .NET installed)
-# can run the net10 apphost. The apphost is pointed here via DOTNET_ROOT (set on `docker run`).
-# Minimal set the apphost needs: host\fxr\<ver>\hostfxr.dll + the two shared frameworks. dotnet.exe
-# is included so `dotnet TestRunner.dll` also works as a fallback.
-function Get-HighestVersionDir([string] $parent, [string] $prefix) {
-    if (-not (Test-Path $parent)) { return $null }
-    Get-ChildItem -Path $parent -Directory |
-        Where-Object { $_.Name -like "$prefix*" } |
-        Sort-Object { try { [version]$_.Name } catch { [version]'0.0.0' } } |
-        Select-Object -Last 1
+$stageArgs = @("stage=1", "configuration=$Configuration")
+if ($Projects.Count -gt 0) {
+    # Joined, because the stager splits on commas: a list that arrived as several elements
+    # and one that arrived as a single comma-joined string - all `pwsh -File` can bind -
+    # then agree.
+    $stageArgs += "stageprojects=$($Projects -join ',')"
+}
+if ($NoRuntime) {
+    $stageArgs += "stageruntime=off"
 }
 
-if (-not $NoRuntime) {
-    $runtimeDest = Join-Path $StagingDir 'dotnet'
-    $netCore = Get-HighestVersionDir (Join-Path $DotnetSource 'shared\Microsoft.NETCore.App') $RuntimeMajorMinor
-    $winDesktop = Get-HighestVersionDir (Join-Path $DotnetSource 'shared\Microsoft.WindowsDesktop.App') $RuntimeMajorMinor
-    $fxr = Get-HighestVersionDir (Join-Path $DotnetSource 'host\fxr') $RuntimeMajorMinor
-    if (-not $netCore -or -not $winDesktop -or -not $fxr) {
-        throw "Could not find a $RuntimeMajorMinor.x runtime under $DotnetSource (NETCore.App/WindowsDesktop.App/host\fxr). Pass -DotnetSource or -NoRuntime."
-    }
-    Write-Host ""
-    Write-Host "Staging .NET runtime  (NETCore.App $($netCore.Name), WindowsDesktop.App $($winDesktop.Name), fxr $($fxr.Name))"
-    New-Item -ItemType Directory -Force -Path $runtimeDest | Out-Null
-
-    $dotnetExe = Join-Path $DotnetSource 'dotnet.exe'
-    if (Test-Path $dotnetExe) { Copy-Item $dotnetExe (Join-Path $runtimeDest 'dotnet.exe') -Force }
-
-    $pairs = @(
-        @{ Src = $fxr.FullName;        Dst = Join-Path $runtimeDest "host\fxr\$($fxr.Name)" },
-        @{ Src = $netCore.FullName;    Dst = Join-Path $runtimeDest "shared\Microsoft.NETCore.App\$($netCore.Name)" },
-        @{ Src = $winDesktop.FullName; Dst = Join-Path $runtimeDest "shared\Microsoft.WindowsDesktop.App\$($winDesktop.Name)" }
-    )
-    foreach ($p in $pairs) {
-        robocopy $p.Src $p.Dst /E /XO /NP /NDL /NFL /NJH /NJS | Out-Null
-        if ($LASTEXITCODE -ge 8) { throw "robocopy failed staging runtime $($p.Src) (exit $LASTEXITCODE)" }
-    }
+& $stager @stageArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "Staging failed (exit $LASTEXITCODE)."
 }
-
-Write-Host ""
-Write-Host "Staged net8 tests to: $StagingDir"
-Write-Host "Run e.g.:  $StagingDir\TestRunner.exe test=<name> parallelmode=off"
