@@ -24,6 +24,7 @@
   <ItemGroup>
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\..\..\..\Shared\CommonBaseUI\CommonBaseUI.csproj" />
   </ItemGroup>
 
   <!-- net8: managed NuGet equivalents of the legacy on-disk DLLs + the settings config provider -->

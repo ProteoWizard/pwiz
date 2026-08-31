@@ -261,7 +261,10 @@ namespace pwiz.SkylineTestData
                 CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas, reorderedValues[replicateName].PeakAreas);
             }
 
-            var reverseNames = originalNames.Reverse().ToArray();
+            // AsEnumerable() so Reverse() binds to Enumerable and returns a reversed copy.
+            // Without it C# 14 prefers MemoryExtensions.Reverse, which reverses the array in
+            // place and returns void, so the array-typed receiver alone does not say enough.
+            var reverseNames = originalNames.AsEnumerable().Reverse().ToArray();
             File.WriteAllLines(orderPath, reverseNames);
             RunCommand(CommandArgs.ARG_IN + docPath, CommandArgs.ARG_REORDER_REPLICATES + orderPath,
                 CommandArgs.ARG_OUT + outPath);

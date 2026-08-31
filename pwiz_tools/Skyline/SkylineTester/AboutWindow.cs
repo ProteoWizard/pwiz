@@ -31,7 +31,9 @@ namespace SkylineTester
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start(@"https://skyline.ms/funding.url");
+            // UseShellExecute is required for a URL on net8 (defaults false there, true on net472).
+            Process.Start(new ProcessStartInfo(@"https://skyline.ms/funding.url")
+                { UseShellExecute = true });
         }
     }
 }

@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 
 namespace TestRunnerLib
@@ -154,6 +155,17 @@ namespace TestRunnerLib
         public static string CheckAfterTest(string testName, int dotMemoryWarmupRuns,
             Exception exception, Action<string, object[]> log)
         {
+            // SKYLINE_GC_LEAK_ROOTS=smoke exercises the reporter on every test, whether or not
+            // anything leaked, so the ClrMD snapshot path can be proven to work in an environment
+            // (notably a Windows container) without waiting out the ~30,000 executions it takes to
+            // hit a real leak. RunTests is alive and rooted here, so it should produce a root path;
+            // SkylineWindow should normally report no live instance.
+            if (string.Equals(Environment.GetEnvironmentVariable(ROOT_PATHS), @"smoke", StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var line in GcRootReporter.DescribeRoots(new[] { @"SkylineWindow", @"RunTests" }))
+                    log("# GCROOT-SMOKE {0}\n", new object[] { line });
+            }
+
             if (dotMemoryWarmupRuns > 0)
             {
                 PinSurvivors();
@@ -187,6 +199,15 @@ namespace TestRunnerLib
 
             // Phase 3: Still leaking after retries - pin survivors and report. Dump BEFORE pinning,
             // so the only roots in the dump are the ones actually holding the survivors.
+            WriteRootPathsIfRequested(log);
+
+            // Phase 3a: a survivor held only by WinForms' own SystemEvents hook is a framework
+            // condition, not a Skyline leak. Unhook it and re-check; if that releases everything,
+            // this was the known condition and the run continues with a warning.
+            leakMessage = ReleaseFrameworkSystemEventsHook(leakMessage, log);
+            if (leakMessage == null)
+                return null;
+
             WriteLeakDumpIfRequested(testName, log);
             PinSurvivors();
             return leakMessage;
@@ -200,6 +221,185 @@ namespace TestRunnerLib
         /// Unset (the normal case) costs one environment read per leak.
         /// </summary>
         public const string LEAK_DUMP_DIR = "SKYLINE_GC_LEAK_DUMP";
+
+        /// <summary>
+        /// Root-chain reporting is ON by default; set this to "off" to suppress it, or to "smoke"
+        /// to exercise it on every test (see <see cref="CheckAfterTest"/>).
+        ///
+        /// <para>On by default deliberately. This is the cheap alternative to
+        /// <see cref="LEAK_DUMP_DIR"/> - it answers the only question a dump gets opened to answer,
+        /// "what is still holding this", in a few lines of text. And it has to be on by default to
+        /// be useful at all in parallel mode: an environment variable cannot reach a Docker worker,
+        /// because TestRunner passes no -e arguments and the AlwaysUp .\TestUser service session
+        /// would not inherit them anyway. Worker stdout IS relayed to the server log, so a default
+        /// -on reporter gets the answer out of a container with no plumbing whatsoever - including
+        /// from TeamCity, which is where most executions happen.</para>
+        ///
+        /// <para>The cost is a PSS snapshot and one heap walk, paid only when a leak has already
+        /// survived every retry - about once per 30,000 test executions - on a test that is failing
+        /// regardless.</para>
+        /// </summary>
+        public const string ROOT_PATHS = "SKYLINE_GC_LEAK_ROOTS";
+
+        /// <summary>
+        /// WinForms hooks <c>SystemEvents.UserPreferenceChanged</c> for every top-level window -
+        /// the private <c>Control.UserPreferenceChanged</c> handler, with the window as its target -
+        /// and very occasionally does not remove that hook when the window is disposed. Because
+        /// SystemEvents' handler table is static, the disposed window is then rooted for the life
+        /// of the process, and everything it references with it. Measured at roughly one occurrence
+        /// per 30,000 test executions, on whichever test happens to be running; it is not a property
+        /// of any test, and every root chain captured for it has been this hook.
+        ///
+        /// <para>Rather than trust that pattern match, this DISPROVES the alternative: it unhooks
+        /// only the identified handlers - via the public event accessor, on objects positively
+        /// identified as already-disposed Controls that are already leaking - and then collects
+        /// again. If everything is released, the hook really was the only thing holding them, and
+        /// the test continues with a warning. If anything survives, the message names what is left
+        /// and the test still fails, so a genuine Skyline leak cannot hide behind this.</para>
+        ///
+        /// <para>Returns null when the leak was fully explained and released, otherwise the message
+        /// describing what remains.</para>
+        /// </summary>
+        private static string ReleaseFrameworkSystemEventsHook(string leakMessage, Action<string, object[]> log)
+        {
+            int unhooked;
+            try
+            {
+                // Deliberately a count, not the delegates: a Delegate holds its target, so keeping
+                // the removed handlers around would re-root the very window we are trying to prove
+                // collectable, and the check below would never pass.
+                unhooked = UnhookSystemEventsForSurvivors(log);
+            }
+            catch (Exception x)
+            {
+                log("\n# Could not check the SystemEvents hook ({0}: {1}); reporting the leak.\n",
+                    new object[] { x.GetType().Name, x.Message });
+                return leakMessage;
+            }
+
+            if (unhooked == 0)
+                return leakMessage;   // not the known condition - report it unchanged
+
+            RunTests.MemoryManagement.FlushMemory();
+            var remaining = CheckForLeaks();
+            if (remaining != null)
+            {
+                log("\n# Removed {0} stale SystemEvents hook(s), but objects are still held: {1}\n",
+                    new object[] { unhooked, remaining });
+                return remaining;
+            }
+
+            log("\n# GC-LEAK WARNING {0} - released by removing {1} stale WinForms" +
+                " SystemEvents.UserPreferenceChanged hook(s) on disposed windows. Known framework" +
+                " condition, not a Skyline leak; the root chain is above.\n",
+                new object[] { leakMessage, unhooked });
+            return null;
+        }
+
+        /// <summary>
+        /// Removes the <c>SystemEvents.UserPreferenceChanged</c> hooks whose delegate target is one
+        /// of the current survivors and is an already-disposed Control. Reads the handler table by
+        /// reflection but removes through the public event accessor, so nothing internal is mutated.
+        /// </summary>
+        private static int UnhookSystemEventsForSurvivors(Action<string, object[]> log)
+        {
+            var unhooked = 0;
+            var seType = Type.GetType(@"Microsoft.Win32.SystemEvents, Microsoft.Win32.SystemEvents");
+            var controlType = Type.GetType(@"System.Windows.Forms.Control, System.Windows.Forms");
+            if (seType == null || controlType == null)
+            {
+                log("# GCHOOK types unresolved: SystemEvents={0} Control={1}\n",
+                    new object[] { seType != null, controlType != null });
+                return unhooked;
+            }
+
+            object[] survivors;
+            lock (_lock)
+            {
+                survivors = _trackedObjects.Select(t => t.Reference.Target).Where(o => o != null).ToArray();
+            }
+            if (survivors.Length == 0)
+                return unhooked;
+
+            const BindingFlags stat = BindingFlags.NonPublic | BindingFlags.Static;
+            const BindingFlags inst = BindingFlags.NonPublic | BindingFlags.Instance;
+            var key = seType.GetField(@"s_onUserPreferenceChangedEvent", stat)?.GetValue(null);
+            var handlers = seType.GetField(@"s_handlers", stat)?.GetValue(null) as System.Collections.IDictionary;
+            if (key == null || handlers == null || !handlers.Contains(key))
+                return unhooked;
+
+            var isDisposed = controlType.GetProperty(@"IsDisposed");
+            // SystemEvents mutates this list under its own private lock whenever a Control is
+            // created or disposed on any thread, so an unsynchronized snapshot can throw
+            // "Collection was modified". Upstream swallows that into "could not check the
+            // hook", which then reports the very GC-LEAK this method exists to suppress -
+            // intermittently, which is the hardest form to diagnose. Retake the snapshot.
+            object[] entries = null;
+            for (int attempt = 0; attempt < 3 && entries == null; attempt++)
+            {
+                try
+                {
+                    entries = ((System.Collections.IEnumerable)handlers[key]).Cast<object>().ToArray();
+                }
+                catch (InvalidOperationException)
+                {
+                    // Modified while reading - fall through and take a fresh snapshot.
+                }
+            }
+            if (entries == null)
+                return unhooked;
+
+            foreach (var info in entries)
+            {
+                if (!(info?.GetType().GetField(@"_delegate", inst)?.GetValue(info) is Delegate del))
+                    continue;
+                // Only the framework's own per-window hook, only on a survivor, only once disposed.
+                bool isHook = del.Method.DeclaringType == controlType && del.Method.Name == @"UserPreferenceChanged";
+                bool isSurvivor = del.Target != null && survivors.Any(s => ReferenceEquals(s, del.Target));
+                // Check the type first: a tracked survivor need not be a Control (SrmDocument
+                // is registered too), and PropertyInfo.GetValue against a non-Control throws
+                // TargetException, which escapes the loop and skips every remaining entry -
+                // including the genuine framework hooks that would have explained the leak.
+                bool disposed = isSurvivor && controlType.IsInstanceOfType(del.Target) &&
+                                true.Equals(isDisposed?.GetValue(del.Target));
+                if (!isSurvivor)
+                    continue;   // static and unrelated subscribers are the normal case, not news
+                // A survivor found in the table is always worth logging, including when it is not
+                // the framework hook - that would be a Skyline subscription that was never removed.
+                log("# GCHOOK survivor in SystemEvents: {0}.{1} target={2} frameworkHook={3} disposed={4}\n",
+                    new object[]
+                    {
+                        del.Method.DeclaringType?.Name, del.Method.Name,
+                        del.Target.GetType().Name, isHook, disposed
+                    });
+                if (!isHook || !disposed)
+                    continue;
+                seType.GetEvent(@"UserPreferenceChanged")?.RemoveEventHandler(null, del);
+                unhooked++;
+            }
+            return unhooked;
+        }
+
+        private static void WriteRootPathsIfRequested(Action<string, object[]> log)
+        {
+            if (string.Equals(Environment.GetEnvironmentVariable(ROOT_PATHS), @"off", StringComparison.OrdinalIgnoreCase))
+                return;
+            try
+            {
+                var typeNames = new HashSet<string>();
+                lock (_lock)
+                {
+                    foreach (var survivor in _trackedObjects)
+                        typeNames.Add(survivor.TypeName);
+                }
+                foreach (var line in GcRootReporter.DescribeRoots(typeNames))
+                    log("# GCROOT {0}\n", new object[] { line });
+            }
+            catch (Exception x)
+            {
+                log("\n# GC root reporting failed: {0}: {1}\n", new object[] { x.GetType().Name, x.Message });
+            }
+        }
 
         private static void WriteLeakDumpIfRequested(string testName, Action<string, object[]> log)
         {

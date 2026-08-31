@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\..\..\..\Shared\CommonBaseUI\CommonBaseUI.csproj" />
     <ProjectReference Include="..\SharedBatch\SharedBatch.csproj" />
   </ItemGroup>
 

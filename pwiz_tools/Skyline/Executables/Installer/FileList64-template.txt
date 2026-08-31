@@ -112,6 +112,7 @@ ja\pwiz.Common.resources.dll
 ja\pwiz.CommonFileDialogs.resources.dll
 ja\pwiz.CommonMsData.resources.dll
 ja\pwiz.CommonUtil.resources.dll
+ja\pwiz.CommonBaseUI.resources.dll
 ja\SkylineCmd.resources.dll
 ja\Skyline-daily.resources.dll
 ja\ZedGraph.resources.dll
@@ -251,8 +252,8 @@ pwiz.CommonMsData.dll
 pwiz.CommonMsData.pdb
 pwiz.CommonUtil.dll
 pwiz.CommonUtil.pdb
-pwiz.PortableUtil.dll
-pwiz.PortableUtil.pdb
+pwiz.CommonBaseUI.dll
+pwiz.CommonBaseUI.pdb
 pwiz_data_cli.dll
 PanoramaClient.dll
 PanoramaClient.pdb

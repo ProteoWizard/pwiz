@@ -29,6 +29,7 @@
   <ItemGroup>
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\..\..\..\Shared\CommonBaseUI\CommonBaseUI.csproj" />
     <ProjectReference Include="..\..\..\..\Shared\PanoramaClient\PanoramaClient.csproj" />
     <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj" />
   </ItemGroup>

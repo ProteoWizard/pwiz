@@ -76,8 +76,9 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
     /// <param name="preferVendorPeakPicking">When true, defer to vendor centroid if available.</param>
     /// <param name="msLevelsToPeakPick">Only spectra with MS level in this set are picked.</param>
     /// <summary>
-    /// Legacy pwiz.CLI convenience overload - msLevelsToPeakPick as a comma-separated
-    /// string ("1", "1,2", etc.). Parses into <see cref="IntegerSet"/>.
+    /// Legacy pwiz.CLI convenience overload - msLevelsToPeakPick in pwiz's interval syntax,
+    /// i.e. whatever msconvert's "peakPicking vendor msLevel=..." accepts: "1", "1,2",
+    /// "2-3", or an open-ended "1-". Parses into <see cref="IntegerSet"/>.
     /// </summary>
     public SpectrumList_PeakPicker(
         ISpectrumList inner,
@@ -88,12 +89,14 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
 
     private static IntegerSet ParseIntegerSet(string spec)
     {
-        // Must go through IntegerSet.Parse, which understands the interval forms cpp uses
-        // ("n", "a-b", "a-", "[a,b]"). Splitting on separators and calling int.TryParse per
-        // token silently dropped every open-ended range: Skyline asks for "1-" when both MS1
-        // and MS2 centroiding are wanted and "2-" for MS2 only (MsDataFileImpl.centroidLevels),
-        // and both parsed to an EMPTY set. An empty set gates every spectrum off, so vendor
-        // centroiding was skipped altogether and callers silently got profile data.
+        // IntegerSet.Parse, NOT a local split-and-TryParse: the callers pass pwiz's
+        // interval syntax, in which a trailing dash means "and everything above" ("1-" is
+        // how msconvert spells all MS levels). Splitting on ',' and int.TryParse-ing each
+        // token cannot express that - "1-" parsed to NOTHING, leaving an EMPTY set, and an
+        // empty set means GetSpectrum's level check matches no spectrum at all and hands
+        // back every one of them unpicked. IntegerSet.Parse is the faithful port of the
+        // C++ IntegerSet::parse these strings were written for, and handles the plain "1"
+        // and "1,2" forms identically.
         var set = new IntegerSet();
         set.Parse(spec);
         return set;
