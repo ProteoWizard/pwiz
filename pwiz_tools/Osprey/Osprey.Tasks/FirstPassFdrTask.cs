@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
@@ -1667,7 +1667,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     experiment.Add(e.EntryId, e.ExperimentPrecursorQvalue,
                         e.ExperimentPeptideQvalue, e.ExperimentProteinQvalue,
-                        e.ExperimentAggregateScore);
+                        e.ExperimentAggregateScore, e.Pep);
                 }
                 string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
                 try

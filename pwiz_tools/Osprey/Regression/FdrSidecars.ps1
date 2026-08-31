@@ -24,13 +24,15 @@ a value both routes copy identically from pass 1. See issue #4559.
 
 Two artifacts since the v5 scope split (issue #4486), and this decodes both.
 
-Per-file run-scope (Osprey.IO\FdrScoresSidecar.cs), v5: 32-byte header, 36-byte records,
-  entry_id u32 @0, score f64 @4, run_precursor_q @12, run_peptide_q @20, pep @28.
+Per-file run-scope (Osprey.IO\FdrScoresSidecar.cs), v6: 32-byte header, 28-byte records,
+  entry_id u32 @0, score f64 @4, run_precursor_q @12, run_peptide_q @20.
+  NO pep: it is experiment-scope and moved to the experiment sidecar (issue #4486).
   Magic OSPRYFDR. One record per OBSERVATION, one file per input.
 
 Analysis-wide experiment-scope (Osprey.IO\FdrExperimentSidecar.cs), v1: 32-byte header,
-  36-byte records, entry_id u32 @0, experiment_precursor_q f64 @4,
-  experiment_peptide_q @12, experiment_protein_q @20, experiment_aggregate_score @28.
+  v2: 44-byte records, entry_id u32 @0, experiment_precursor_q f64 @4,
+  experiment_peptide_q @12, experiment_protein_q @20, experiment_aggregate_score @28,
+  pep @36.
   Magic OSPRYEXP. One record per DISTINCT entry_id, ONE file per pass per analysis, named
   after the output blib.
 
@@ -172,15 +174,15 @@ public class Pass2ProteinQLiveness
 public static class OspreyFdrSidecarComparer
 {
     private const int HeaderLen = 32;
-    private const int RecordLen = 36;
-    private const byte ExpectedVersion = 5;
+    private const int RecordLen = 28;
+    private const byte ExpectedVersion = 6;
     private static readonly byte[] Magic = { 0x4F, 0x53, 0x50, 0x52, 0x59, 0x46, 0x44, 0x52 }; // OSPRYFDR
 
     // The analysis-wide experiment-scope sidecar (format v5, issue #4486): its own magic, its
     // own version, one record per DISTINCT entry_id.
     public const int ExperimentHeaderLen = 32;
-    public const int ExperimentRecordLen = 36;
-    private const byte ExpectedExperimentVersion = 1;
+    public const int ExperimentRecordLen = 44;
+    private const byte ExpectedExperimentVersion = 2;
     private static readonly byte[] ExperimentMagic =
         { 0x4F, 0x53, 0x50, 0x52, 0x59, 0x45, 0x58, 0x50 }; // OSPRYEXP
 
@@ -194,7 +196,6 @@ public static class OspreyFdrSidecarComparer
         new FdrSidecarField { Name = "score",                Offset = 4  },
         new FdrSidecarField { Name = "run_precursor_qvalue", Offset = 12 },
         new FdrSidecarField { Name = "run_peptide_qvalue",   Offset = 20 },
-        new FdrSidecarField { Name = "pep",                  Offset = 28 },
     };
 
     /// The experiment-scope record's fields, in its own file. Kept as a separate table for the
@@ -206,6 +207,7 @@ public static class OspreyFdrSidecarComparer
         new FdrSidecarField { Name = "experiment_peptide_qvalue",   Offset = 12 },
         new FdrSidecarField { Name = "experiment_protein_qvalue",   Offset = 20 },
         new FdrSidecarField { Name = "experiment_aggregate_score",  Offset = 28 },
+        new FdrSidecarField { Name = "pep",                          Offset = 36 },
     };
 
     // Rust's FUSED per-file sidecar (write_fdr_scores_sidecar, pipeline.rs): the same nine
@@ -226,7 +228,22 @@ public static class OspreyFdrSidecarComparer
         new FdrFusedField { Name = "score",                       RustOffset = 4,  CsOffset = 4,  FromExperiment = false },
         new FdrFusedField { Name = "run_precursor_qvalue",        RustOffset = 12, CsOffset = 12, FromExperiment = false },
         new FdrFusedField { Name = "run_peptide_qvalue",          RustOffset = 20, CsOffset = 20, FromExperiment = false },
-        new FdrFusedField { Name = "pep",                         RustOffset = 44, CsOffset = 28, FromExperiment = false },
+        // PEP moved to the EXPERIMENT record (issue #4486), and its MEANING changed with it.
+        // Rust still writes it per OBSERVATION - real on the base_id winner's row, 1.0 on every
+        // other row of that entry. C# now stores one value per entry_id, which every observation
+        // of that entry reports, because PEP is PosteriorError(winner score) and that is a
+        // property of the precursor, not of a row.
+        //
+        // So the two sides agree on the winner's row and disagree everywhere else BY DESIGN, and
+        // C# cannot reproduce Rust's view: doing so needs the winning RUN, which is exactly what
+        // was removed and which mean-best-N cannot express at all (there the aggregate is a mean
+        // of N runs, so no single run originates it). Compared through the join below rather
+        // Mapped straight through for now, so this run REPORTS the divergence at full size
+        // rather than hiding it: every row whose entry won somewhere else will differ. That is
+        // deliberate - narrowing the comparison (e.g. to rows where Rust has a non-1.0 value,
+        // which are the only rows carrying information on its side) is a semantic change to a
+        // parity gate and needs explicit sign-off, not a quiet edit here.
+        new FdrFusedField { Name = "pep",                         RustOffset = 44, CsOffset = 36, FromExperiment = true  },
         new FdrFusedField { Name = "experiment_precursor_qvalue", RustOffset = 28, CsOffset = 4,  FromExperiment = true  },
         new FdrFusedField { Name = "experiment_peptide_qvalue",   RustOffset = 36, CsOffset = 12, FromExperiment = true  },
         new FdrFusedField { Name = "experiment_protein_qvalue",   RustOffset = 52, CsOffset = 20, FromExperiment = true  },
