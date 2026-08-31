@@ -15,7 +15,7 @@ resume mechanisms the port adds (a per-task `.osprey.task` validity sidecar and 
 | File pattern | Format | C# writer/reader | Purpose |
 |---|---|---|---|
 | `<stem>.calibration.json` | JSON (Newtonsoft) | `Osprey.Chromatography/CalibrationIO.cs` | RT + MS1/MS2 mass calibration parameters |
-| `<stem>.spectra.bin` | Custom binary v3 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload |
+| `<stem>.spectra.bin` | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload — and the only copy once the source is deleted |
 | `<stem>.scores.parquet` | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
 | `<stem>.scores-reconciled.parquet` | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
 | `<stem>.1st-pass.fdr_scores.bin` | Custom binary v4 | `Osprey.IO/FdrScoresSidecar.cs` | SVM score + 4 q-values + PEP + experiment_protein_qvalue + experiment_aggregate_score after first-pass Percolator |
@@ -117,45 +117,60 @@ filter, `PerFileScoringTask.cs:1758`).
 A raw little-endian dump of decoded MS1 and MS2 spectra, written after the first parse and
 reloaded during Stage 6 reconciliation re-scoring to avoid re-parsing mzML.
 
-### Header and format (VERSION 3)
+### Header and format (VERSION 4)
 
 The C# header is **larger than the 20-byte header in the Rust doc** because it adds a source
-fingerprint (`SpectraCache.cs:90`):
+fingerprint:
 
 ```
 [magic:        8 bytes  "OSPRSPC\0"]
-[version:      uint32   = 3]
-[source_size:  uint64   source file length, 0 when unknown]
+[version:      uint32   = 4]
+[source_size:  uint64   source file length; 0 when unknown, ulong.MaxValue when unmeasurable]
 [source_mtime: int64    source last-write time, Unix ms UTC, 0 when unknown]
 [n_ms2:        uint32]
 [n_ms1:        uint32]
 ```
 
+MS2 records are written **grouped by isolation window** (every record sharing a rounded
+iso-center key is contiguous), then the MS1 section, then a per-MS2 index in *acquisition*
+order — 40 bytes each: record offset, iso center/lower/upper, retention time — and a 16-byte
+EOF footer carrying the MS1-section and index offsets. `SpectraWindowIndex` reads a whole
+window in one sequential run, and the index restores acquisition order without walking records.
+
 Per-MS2 record: `scan_number:u32, retention_time:f64, precursor_mz:f64, iso_center:f64,
-iso_lower:f64, iso_upper:f64, n_peaks:u32, mzs:f64×n, intensities:f32×n`
-(`SpectraCache.cs:99`). Per-MS1 record drops the three precursor/isolation fields
-(`SpectraCache.cs:113`). Per-peak storage is 12 bytes (f64 m/z + f32 intensity), matching Rust.
+iso_lower:f64, iso_upper:f64, n_peaks:u32, mzs:f64×n, intensities:f32×n`. Per-MS1 record drops
+the three precursor/isolation fields. Per-peak storage is 12 bytes (f64 m/z + f32 intensity),
+matching Rust.
 
 The Unix-ms mtime is deliberately not .NET ticks so that C# and Rust compute an *identical*
-fingerprint for the same file and can share one cache (`SpectraCache.cs:43`,
-`ComputeSourceFingerprint` at `SpectraCache.cs:227`).
+fingerprint for the same file and can share one cache.
 
 ### Version-bump invalidation
 
-`LoadSpectraCache` (`SpectraCache.cs:132`) returns `null` (⇒ re-parse + rewrite) on: missing
-file, wrong magic, or `version != 3` (`SpectraCache.cs:152`). The version constant records its
-own history (`SpectraCache.cs:61`): v1→v2 (2026-05-09) because non-monotonic centroids are now
-sorted before caching; v2→v3 (2026-06-09) added the source fingerprint. Any older cache is
-rejected and repopulated.
+`TryReadHeader` rejects a cache — the caller then re-parses and rewrites — on wrong magic,
+`version != VERSION`, the unmeasurable-source sentinel, or a fingerprint that no longer matches
+the source. The version constant records its own history: v1→v2 (2026-05-09) sorts
+non-monotonic centroids before caching; v2→v3 (2026-06-09) added the source fingerprint;
+v3→v4 (2026-07-16) grouped the MS2 body by window and added the index + footer. Any older cache
+is rejected and repopulated **from its source**, which is why a cohort that deleted its sources
+is pinned to the format version it was staged with.
 
 ### Source-fingerprint invalidation
 
 When the stored `source_size != 0` and a `sourcePath` is supplied, the loader recomputes the
-fingerprint and rejects the cache if size or mtime changed (`SpectraCache.cs:162`). When the
-cache recorded no fingerprint, or the source is unavailable (e.g. a resume run whose mzML is not
-beside the cache), the check is skipped and the within-run cache is trusted.
+fingerprint and rejects the cache if size or mtime changed. When the cache recorded no
+fingerprint, or the source is unavailable — a resume run whose mzML is not beside the cache, or
+a cohort whose sources were deleted after staging — the check is skipped and the cache is
+trusted.
 
-Safe to delete: yes — recreated on next run.
+**Safe to delete: only while the source still exists.** Osprey runs a search from
+`.spectra.bin` alone when the source is absent, which is what makes a staged cohort's sources
+deletable and roughly halves the disk it needs. That trade is one-way. Once the sources are
+gone the cache is the only copy of the spectra: nothing can rebuild it, a format bump has
+nothing to re-parse, and the fingerprint check that would have caught a mismatched cache is
+skipped precisely because there is nothing left to compare against. So validate the caches
+against their sources — magic, version, fingerprint, and that the index offset agrees with
+`n_ms2` — **before** deleting either, and treat the caches as data from then on.
 
 ---
 
@@ -499,9 +514,13 @@ hashes alone.
 
 ## Cleanup
 
-All intermediate files are safe to delete and are recreated on the next run:
+Every intermediate file except the spectra cache is safe to delete and is recreated on the next
+run:
 
-- `<stem>.spectra.bin` — recreated by re-parsing mzML.
+- `<stem>.spectra.bin` — recreated by re-parsing the source, **and only then**. On a cohort
+  whose sources were deleted after staging (the supported way to halve a large cohort's disk),
+  this file is not an intermediate at all — it is the data, and deleting it loses the run.
+  Prune caches only where the source is still on disk.
 - `<stem>.scores.parquet` / `<stem>.scores-reconciled.parquet` — recreated by re-scoring.
 - `<stem>.{1st,2nd}-pass.fdr_scores.bin` — first-pass required by the Stage 6 worker; deleting
   forces a Stage 5 re-join.
@@ -583,12 +602,13 @@ default resume mechanism.
   `reconciliation_io.rs` carries the matching fields for byte parity — i.e. the Rust code evolved
   past its own doc. Evidence: `ReconciliationFile.cs:75,77,84,124,138,150`. Severity: minor.
 
-- **[STALE-RUST-DOC] `.spectra.bin` header is v3 with a source fingerprint, not the doc's
-  20-byte v1** - The Rust doc's header shows `version = 1` and no size/mtime; C# writes v3 with
-  `source_size:u64` + `source_mtime:i64` (Unix ms) and invalidates on both version bump and
-  fingerprint change, computing the fingerprint as Unix-ms specifically to match Rust. Evidence:
-  `SpectraCache.cs:61,70,90,162`. The matching fingerprint implies the Rust code also advanced;
-  the doc did not. Severity: minor.
+- **[STALE-RUST-DOC] `.spectra.bin` is v4 with a source fingerprint and a window-grouped body,
+  not the doc's 20-byte v1** - The Rust doc's header shows `version = 1`, no size/mtime, and a
+  file-order body; C# writes v4 with `source_size:u64` + `source_mtime:i64` (Unix ms), groups
+  the MS2 records by isolation window, and appends an acquisition-order index + EOF footer. It
+  invalidates on both version bump and fingerprint change, computing the fingerprint as Unix-ms
+  specifically to match Rust. The matching fingerprint implies the Rust code also advanced; the
+  doc did not. Severity: minor.
 
 - **[INTENTIONAL-CSHARP-DESIGN] Calibration reuse is not gated on a `search_hash` inside
   `.calibration.json`** - Rust doc: the calibration file is reused when its `search_hash`
