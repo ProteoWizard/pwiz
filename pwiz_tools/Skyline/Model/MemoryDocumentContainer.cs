@@ -133,7 +133,8 @@ namespace pwiz.Skyline.Model
         private const int CANCEL_RESTART_LOOPS = 30;
 
         /// <summary>
-        /// True while a cancelled status should NOT be believed yet.
+        /// Whether to wait out a loader that cancelled itself because its document was
+        /// superseded, rather than take that cancellation for the end of the load.
         ///
         /// <para>A background loader cancels its own work whenever the document it was handed is
         /// superseded - <see cref="RetentionTimeManager"/>'s test for it is nothing but a
@@ -167,6 +168,14 @@ namespace pwiz.Skyline.Model
             {
                 cancelLoops = 0;
                 return false;
+            }
+            if (cancelLoops == 0 && Program.UnitTest)
+            {
+                // Leading hash is a cue to SkylineTester to ignore these informational lines.
+                // Worth saying out loud: without it a run that rides out a hand-off looks exactly
+                // like a run where the race never happened, and the fix cannot be told from luck.
+                Console.WriteLine(@"# Waiting out a cancelled loader that lost its document: {0}",
+                    LastProgress.Message);
             }
             return ++cancelLoops <= CANCEL_RESTART_LOOPS;
         }
