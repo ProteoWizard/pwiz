@@ -1898,13 +1898,11 @@ namespace pwiz.Skyline.Util
             if (runAsAdministrator)
                 startInfo.Verb = @"runas";
 
-            var process = new Process {StartInfo = startInfo, EnableRaisingEvents = true};
+            var process = new Process {StartInfo = startInfo};
             string pipeName = @"SkylineProcessRunnerPipe" + guidSuffix;
 
             using (var pipeStream = new NamedPipeServerStream(pipeName))
             {
-                bool processFinished = false;
-                process.Exited += (sender, args) => processFinished = true;
                 try
                 {
                     process.Start();
@@ -1936,10 +1934,15 @@ namespace pwiz.Skyline.Util
                         writer.WriteLine(line);
                     }
 
-                    while (!processFinished)
-                    {
-                        // wait for process to finish
-                    }
+                    // Block rather than spinning on a flag set from Process.Exited. That flag was a
+                    // non-volatile captured local written on a ThreadPool thread, so once this loop
+                    // got hot the JIT hoisted the read into a register and never observed the write.
+                    // The thread then spun on a core forever and RunProcess never returned, which
+                    // made everything downstream of the caller unreachable - including
+                    // PythonInstaller's bootstrap timeout, which cannot fire from a call that never
+                    // returns. A race, so it was intermittent: when Exited fired before the loop got
+                    // hot the flag was already set and the call returned normally.
+                    process.WaitForExit();
 
                     return process.ExitCode;
                 }
