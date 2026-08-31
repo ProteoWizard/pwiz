@@ -121,6 +121,28 @@ public class ReaderAgilentTests
         ctx.Check();
     }
 
+    /// <summary>
+    /// A fixture that makes MHDAC centroid ON THE FLY, which is a distinct code path
+    /// from every other Agilent fixture here.
+    /// </summary>
+    /// <remarks>
+    /// <para>Two properties have to hold together and nothing else in the corpus has both:
+    /// the file stores profile data ONLY (no <c>mspeak.bin</c>), so <c>PeakElseProfile</c> has
+    /// nothing stored to return and the SDK must centroid on demand; and the device is a Q-TOF,
+    /// which is the family MHDAC will centroid at all.</para>
+    /// <para>Subset of the 77.8 MB corpus file <c>Neg_MS_002.d</c>, cut to its first scan
+    /// (0.43 MB) so it can be tracked.</para>
+    /// </remarks>
+    [TestMethod]
+    public void Reader_Agilent_Neg_MS_002_1scan_ProfileOnlyVendorCentroid()
+    {
+        var ctx = SetUp("Neg_MS_002_1scan.d");
+        if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig());
+        ctx.Run(new ReaderTestConfig { PeakPicking = true });
+        ctx.Check();
+    }
+
     // -------------------- IM fixtures --------------------
     //
     // cpp Reader_Agilent_Test.cpp runs the DEFAULT config over every .d (line 62,
