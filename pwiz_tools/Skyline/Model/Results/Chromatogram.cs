@@ -329,6 +329,7 @@ namespace pwiz.Skyline.Model.Results
 
             private void CancelLoad(MeasuredResults results)
             {
+                _manager.LoaderTrace(@"chrom CancelLoad doc={0} -> posting a cancelled status", _document);
                 _manager.CancelProgress();
                 _manager.EndProcessing(_document);
             }
@@ -352,6 +353,12 @@ namespace pwiz.Skyline.Model.Results
                         {
                             throw;
                         }
+                        // Terminal line, and the trace is useless without it: swallowing this into
+                        // an error status and returning would leave the trace showing the hand-off
+                        // followed by silence - identical to the callback never running at all,
+                        // which is the one distinction the trace exists to make.
+                        _manager.LoaderTrace(@"chrom FinishLoad doc={0} -> THREW, converted to an error status: " + ex.GetType().Name,
+                            _document);
                         foreach (var chromatogramStatus in _multiFileLoader.Status.ProgressList)
                         {
                             _multiFileLoader.ChangeStatus((ChromatogramLoadingStatus)chromatogramStatus.ChangeErrorException(ex));

@@ -132,10 +132,29 @@ namespace pwiz.Skyline.Model
             public int Arg0, Arg1, Arg2;
         }
 
-        private const int LOADER_TRACE_SIZE = 512;    // Power of two, for the index mask below
+        // Power of two, for the index mask below. Sized for how fast this fills, not for how much
+        // history feels sufficient: EVERY registered loader writes on EVERY document change - six
+        // under a results container, nine under SkylineWindow - so 512 slots would have held only
+        // about 57 document changes, and a chromatogram import makes far more than that. The line
+        // the trace exists to capture would have been evicted before the test timed out, with
+        // nothing in the output to distinguish "the ring wrapped" from "nothing happened".
+        private const int LOADER_TRACE_SIZE = 8192;
         private static readonly LoaderTraceEntry[] LOADER_TRACE = new LoaderTraceEntry[LOADER_TRACE_SIZE];
         private static int _loaderTraceIndex = -1;
         private string _loaderName;
+
+        /// <summary>
+        /// Drops everything recorded so far. Called at the start of each test, because the ring is
+        /// static and a TestRunner process runs test after test: without this, a failure early in
+        /// one test is handed a tail belonging to EARLIER tests and presents it, under a heading
+        /// claiming to describe this failure, as evidence. Entries carry loader and thread but no
+        /// test identity, so there would be no way to tell.
+        /// </summary>
+        public static void ClearLoaderTrace()
+        {
+            _loaderTraceIndex = -1;
+            Array.Clear(LOADER_TRACE, 0, LOADER_TRACE.Length);
+        }
 
         protected void LoaderTrace(string message, SrmDocument doc = null, SrmDocument doc2 = null, int arg2 = int.MinValue)
         {
