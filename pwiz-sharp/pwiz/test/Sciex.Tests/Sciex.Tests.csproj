@@ -53,8 +53,13 @@
     </ProjectReference>
   </ItemGroup>
 
+  <!-- Gated on $(NativeVendorsAvailable), not $(IAgreeToVendorLicenses), for the same reason as
+       MsConvert.csproj's StageWiff2NativeAssemblies: these files come from Sciex.csproj's archive
+       extraction, which only runs on Windows. The Linux CI passes IAgreeToVendorLicenses=true, so
+       the weaker gate let this target run there and fail the whole build on the missing
+       SQLite.Interop.dll before a single test could execute. -->
   <Target Name="StageWiff2NativeAssembliesForTests" AfterTargets="Build"
-          Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+          Condition="'$(NativeVendorsAvailable)' == 'true'">
     <PropertyGroup>
       <_SciexWiff2DepsDir>$(PwizVendorArchivesPath)\Sciex</_SciexWiff2DepsDir>
       <_SciexAssembliesDir>$(PwizVendorAssembliesPath)\Sciex</_SciexAssembliesDir>
