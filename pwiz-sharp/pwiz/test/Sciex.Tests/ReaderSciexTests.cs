@@ -175,8 +175,20 @@ public class ReaderSciexTests
             return (list.Count, withBasePeak);
         }
 
-        var off = Read(wiff, acceptZeroLength: false);
-        var on = Read(wiff, acceptZeroLength: true);
+        // Reads directly rather than through VendorReaderTestHarness, so the harness's
+        // identify-only fallback does not apply and the SDK-less build would see the
+        // exception escape. Counting cycles needs the real reader either way.
+        (int Count, int WithBasePeak) off, on;
+        try
+        {
+            off = Read(wiff, acceptZeroLength: false);
+            on = Read(wiff, acceptZeroLength: true);
+        }
+        catch (Pwiz.Data.MsData.Readers.VendorSupportNotEnabledException)
+        {
+            Assert.Inconclusive("Sciex SDK not compiled into this build; direct-read coverage is Windows-only.");
+            return;
+        }
 
         Assert.AreEqual(2651, off.Count, "default spectrum count changed");
         Assert.AreEqual(4762, on.Count, "--acceptZeroLengthSpectra spectrum count changed");

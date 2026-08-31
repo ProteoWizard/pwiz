@@ -225,8 +225,20 @@ public class ReaderAgilentTests
             return (list.Count, zeroLength);
         }
 
-        var off = Read(d, acceptZeroLength: false);
-        var on = Read(d, acceptZeroLength: true);
+        // Reads directly rather than through VendorReaderTestHarness, so the harness's
+        // identify-only fallback does not apply and the SDK-less build would see the
+        // exception escape. Counting drift bins needs the real reader either way.
+        (int Count, int ZeroLength) off, on;
+        try
+        {
+            off = Read(d, acceptZeroLength: false);
+            on = Read(d, acceptZeroLength: true);
+        }
+        catch (Pwiz.Data.MsData.Readers.VendorSupportNotEnabledException)
+        {
+            Assert.Inconclusive("Agilent SDK not compiled into this build; direct-read coverage is Windows-only.");
+            return;
+        }
 
         Assert.AreEqual(701, off.Count, "default spectrum count changed");
         Assert.AreEqual(0, off.ZeroLength, "the default path must not emit zero-length spectra");
