@@ -103,5 +103,19 @@ ensure_dotnet_sdk "$root/ok_pin/pwiz-sharp" >/dev/null 2>&1
 [ $? -eq 0 ] && ok "satisfied pin returns success without provisioning" \
              || bad "satisfied pin was treated as unsatisfied"
 
+echo "tc_escape - keeps a diagnostic from being truncated by TeamCity"
+
+# The real case: `dotnet --list-sdks` output. An unescaped ] ends the service
+# message, so build #156 lost the list of SDKs the agent had - the one fact the
+# warning exists to convey.
+check "brackets escaped" \
+      "8.0.423 |[/usr/share/dotnet/sdk|]" \
+      "$(tc_escape "8.0.423 [/usr/share/dotnet/sdk]")"
+
+# | must double first, or it would re-escape the escapes.
+check "pipe doubled before other escapes" "a||b" "$(tc_escape "a|b")"
+check "single quote escaped" "it|'s" "$(tc_escape "it's")"
+check "newline folded to a space" "a b" "$(printf 'a\nb' | { IFS= read -r -d '' v || true; tc_escape "$v"; })"
+
 echo "passed=$pass failed=$fail"
 [ "$fail" -eq 0 ]

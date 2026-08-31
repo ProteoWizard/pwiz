@@ -48,6 +48,14 @@ resolve_dotnet() {
     return 1
 }
 
+# Escape a value for interpolation into a ##teamcity[...] service message.
+# TeamCity's escapes are | ' [ ] and newline; | must be doubled first or it would
+# re-escape the escapes this adds.
+tc_escape() {
+    printf '%s' "$1" | tr -d '\r' | tr '\n' ' ' \
+        | sed -e 's/|/||/g' -e "s/'/|'/g" -e 's/\[/|[/g' -e 's/\]/|]/g'
+}
+
 # Channel (major.minor) of the global.json that governs $1: 10.0.100 -> 10.0.
 # Read rather than hard-coded so bumping the pin needs no edit here.
 #
@@ -102,9 +110,13 @@ ensure_dotnet_sdk() {
     fi
 
     local installed
-    installed="$(dotnet --list-sdks 2>/dev/null | tr '\n' ' ')"
+    installed="$(dotnet --list-sdks 2>/dev/null | tr -d '\r' | tr '\n' ' ')"
     [ -n "$installed" ] || installed="(none)"
-    echo "##teamcity[message text='No installed SDK satisfies global.json; need .NET $channel, have: $installed' status='WARNING']"
+    # Escape before interpolating: `dotnet --list-sdks` prints "8.0.423 [/usr/share/dotnet/sdk]",
+    # and an unescaped ] ENDS a TeamCity service message. Build #156 truncated this warning at
+    # the first bracket and logged a parse error instead - losing the one line that says which
+    # SDKs the agent actually has, exactly when that is the thing you need to read.
+    echo "##teamcity[message text='No installed SDK satisfies global.json; need .NET $channel, have: $(tc_escape "$installed")' status='WARNING']"
 
     if [ "${PWIZ_NO_DOTNET_INSTALL:-0}" = "1" ]; then
         echo "##teamcity[message text='PWIZ_NO_DOTNET_INSTALL=1; refusing to install. Provision .NET $channel on the agent.' status='ERROR']"
