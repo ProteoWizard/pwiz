@@ -68,15 +68,29 @@ public class VendorCentroidGateTests
 
         foreach (var (spec, selected, notSelected) in cases)
         {
-            var picker = new SpectrumList_PeakPicker(
-                new RecordingVendorList(1), new LocalMaximumPeakDetector(3),
-                preferVendorPeakPicking: true, spec);
+            // Assert through the reader rather than through picker.MsLevels: that property hands
+            // back the constructor argument, so asserting on it would only exercise IntegerSet and
+            // would still pass if the picker stopped applying the set at all - which is the
+            // regression this guards.
+            var levels = selected.Concat(notSelected).ToArray();
+            var inner = new RecordingVendorList(levels);
+            var picked = new SpectrumList_PeakPicker(
+                inner, new LocalMaximumPeakDetector(3), preferVendorPeakPicking: true, spec);
 
+            for (int i = 0; i < levels.Length; i++)
+            {
+                var spectrum = picked.GetSpectrum(i, true);
+                bool wanted = selected.Contains(levels[i]);
+                Assert.AreEqual(wanted, spectrum.Params.HasCVParam(CVID.MS_centroid_spectrum),
+                    $"\"{spec}\" and MS level {levels[i]}: wrong centroiding decision");
+            }
+
+            Assert.IsNotNull(inner.LastMsLevelsReceived, $"\"{spec}\" never reached the reader");
             foreach (int level in selected)
-                Assert.IsTrue(picker.MsLevels.Contains(level),
+                Assert.IsTrue(inner.LastMsLevelsReceived.Contains(level),
                     $"\"{spec}\" must select MS level {level}");
             foreach (int level in notSelected)
-                Assert.IsFalse(picker.MsLevels.Contains(level),
+                Assert.IsFalse(inner.LastMsLevelsReceived.Contains(level),
                     $"\"{spec}\" must not select MS level {level}");
         }
     }

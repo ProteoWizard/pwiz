@@ -57,14 +57,12 @@ namespace pwiz.SkylineTest
                 AssertEx.IsTrue(runner.WasCancelled, @"the runner was never asked to stop");
                 AssertEx.IsLessThan(stopwatch.Elapsed, TimeSpan.FromSeconds(30));
 
-                // And it survives PipInstall, which swallows ordinary install failures. Before the
-                // timeout was given its own type this was caught there and discarded, so a capped
-                // pip install still ran to the caller's own limit.
+                // A process that exits on its own is not a timeout, even when it exits close enough
+                // to the deadline that the timer fires before the exit code is examined.
                 runner.Reset();
-                var package = new PythonPackage { Name = PythonInstaller.VIRTUALENV, Version = null };
-                var installer = new PythonInstaller(new[] { package }, TextWriter.Null, @"testenv");
-                AssertEx.ThrowsException<PythonBootstrapTimeoutException>(() =>
-                    installer.PipInstall(@"python.exe", new[] { package }, null, timeout));
+                runner.ExitImmediatelyWith = 0;
+                PythonInstaller.RunProcessOrThrow(runner, @"cmd", @"cmd", false, true,
+                    CancellationToken.None, TimeSpan.Zero);
             }
             finally
             {
@@ -80,16 +78,25 @@ namespace pwiz.SkylineTest
         {
             public bool WasCancelled { get; private set; }
 
+            /// <summary>Set to return that exit code at once instead of waiting to be cancelled.</summary>
+            public int? ExitImmediatelyWith { get; set; }
+
             public void Reset()
             {
                 WasCancelled = false;
+                ExitImmediatelyWith = null;
             }
 
             public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer,
                 bool createNoWindow = false, CancellationToken cancellationToken = default)
             {
+                if (ExitImmediatelyWith.HasValue)
+                    return ExitImmediatelyWith.Value;
+
                 cancellationToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(30));
                 WasCancelled = cancellationToken.IsCancellationRequested;
+                // The real runner does not return the token's state - it kills the child and reports
+                // the child's exit code. A non-zero code is what RunProcessOrThrow actually sees.
                 return WasCancelled ? 1 : 0;
             }
         }

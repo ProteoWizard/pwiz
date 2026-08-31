@@ -1926,7 +1926,20 @@ namespace pwiz.Skyline.Util
 
                     using var registration = cancellationToken.Register(o =>
                     {
-                        KillProcessAndDescendants(process.Id);
+                        // Nothing may escape here. A token cancelled by a timer runs this on a
+                        // ThreadPool thread, where an exception is unhandled and takes the process
+                        // down; KillProcessAndDescendants queries WMI and calls Process.Kill, both of
+                        // which throw for reasons that have nothing to do with us (WMI busy, an
+                        // elevated child, a PID that exited in between). Failing to kill leaves the
+                        // wait below to run its course, which is the same place we were without it.
+                        try
+                        {
+                            KillProcessAndDescendants(process.Id);
+                        }
+                        catch (Exception x)
+                        {
+                            Messages.WriteAsyncDebugMessage(@"Could not kill process tree {0}: {1}", pipeName, x.Message);
+                        }
                     }, null);
 
                     while (reader.ReadLine() is { } line)
