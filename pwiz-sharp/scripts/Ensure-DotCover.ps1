@@ -73,5 +73,27 @@ finally {
     Pop-Location
 }
 
-Write-Info 'dotCover is available as: dotnet dotcover'
+# Resolve the executable rather than leaving callers to run `dotnet dotcover`. A local tool is
+# only on the command line when the working directory is at or under the manifest, and the
+# builds invoke it from the repo root, where `dotnet dotcover` fails with "dotnet-dotcover does
+# not exist". Callers should not have to move their working directory - that would change CWD
+# for the tests running underneath - so hand back a path that works from anywhere.
+$version = (Get-Content $manifest -Raw | ConvertFrom-Json).tools.'jetbrains.dotcover.commandlinetools'.version
+$packagesRoot = (dotnet nuget locals global-packages --list) -replace '^.*?:\s*', '' | Select-Object -First 1
+$toolsDir = Join-Path $packagesRoot "jetbrains.dotcover.commandlinetools/$version/tools"
+
+# The two pinned generations package the runner differently: 2023.3.3 ships a native
+# dotCover.exe, 2026.1.1 ships a managed dotCover.dll with no launcher. Return whichever
+# exists and let the caller launch a .dll through `dotnet`.
+$launcher = Join-Path $toolsDir 'dotCover.exe'
+if (-not (Test-Path $launcher)) {
+    $launcher = Join-Path $toolsDir 'dotCover.dll'
+}
+if (-not (Test-Path $launcher)) {
+    Write-Failure "dotCover $version restored but neither dotCover.exe nor dotCover.dll is in $toolsDir"
+    exit 2
+}
+
+Write-Info "dotCover $version at $launcher"
+Write-Output $launcher
 exit 0

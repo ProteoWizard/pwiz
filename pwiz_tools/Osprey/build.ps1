@@ -123,14 +123,20 @@ if (-not $NoTests) {
         exit 2
     }
 }
+$dotcover = $null
 if ($Coverage) {
     # Restore dotCover from this directory's tool manifest rather than requiring a global
     # install. The previous check demanded `dotcover` on PATH, which held only on the
     # long-lived agent that happened to have it: every ephemeral CI agent failed here, and the
     # package name the message suggested (JetBrains.dotCover.GlobalTools) does not exist.
+    #
+    # The script returns the resolved dotCover.exe. `dotnet dotcover` is not usable here: a
+    # local tool is only on the command line when the working directory is at or under its
+    # manifest, and TeamCity runs this build from the repo root.
     $ensure = Join-Path $PSScriptRoot '../../pwiz-sharp/scripts/Ensure-DotCover.ps1'
-    if ($TeamCity) { & $ensure -ManifestDir $PSScriptRoot -TeamCity } else { & $ensure -ManifestDir $PSScriptRoot }
+    $dotcover = if ($TeamCity) { & $ensure -ManifestDir $PSScriptRoot -TeamCity } else { & $ensure -ManifestDir $PSScriptRoot }
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $dotcover = @($dotcover)[-1]
 }
 
 # --- Pre-build cleanup ---------------------------------------------------
@@ -253,11 +259,17 @@ foreach ($fw in $testFrameworks) {
         ) + ($vstestArgs | ForEach-Object { Quote-IfNeeded $_ })
         $dcArgString = $dcArgs -join ' '
         Write-Host "DC ARGS: $dcArgString"
-        # Invoked as the local tool (`dotnet dotcover ...`) rather than a global dotcover.exe,
-        # so the version is the one pinned in .config/dotnet-tools.json.
+        # Resolved from the local tool manifest, so the version is the pinned one and the call
+        # does not depend on the working directory. 2026.1.1 packages the runner as a managed
+        # dotCover.dll with no launcher, so that generation goes through `dotnet`.
         $psi = New-Object System.Diagnostics.ProcessStartInfo
-        $psi.FileName = 'dotnet'
-        $psi.Arguments = "dotcover $dcArgString"
+        if ($dotcover -like '*.dll') {
+            $psi.FileName = 'dotnet'
+            $psi.Arguments = "$(Quote-IfNeeded $dotcover) $dcArgString"
+        } else {
+            $psi.FileName = $dotcover
+            $psi.Arguments = $dcArgString
+        }
         $psi.UseShellExecute = $false
         $proc = [System.Diagnostics.Process]::Start($psi)
         $proc.WaitForExit()
