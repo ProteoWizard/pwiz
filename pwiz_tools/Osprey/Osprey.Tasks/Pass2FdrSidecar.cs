@@ -2408,18 +2408,85 @@ namespace pwiz.Osprey.Tasks
         /// whole pre-compaction population and are not this artifact's population.</para>
         /// </summary>
         internal static void AssertSidecarDescribesPool(
-            string fileName, string effectiveParquetPath, int recordCount)
+            string fileName, string effectiveParquetPath, IReadOnlyList<FdrScoreRecord> records)
         {
             var pool = ParquetScoreCache.ProbePoolPopulation(effectiveParquetPath);
-            if (!pool.IsReconciledSurvivors || pool.RowCount == recordCount)
+            if (!pool.IsReconciledSurvivors)
+                return;
+            if (pool.RowCount != records.Count)
+            {
+                throw new InvalidOperationException(string.Format(
+                    @"Second-pass per-file competition wrote {0} record(s) for '{1}', but its Stage 6 " +
+                    @"pool holds {2} (from {3}). The per-run 2nd-pass sidecar must describe that pool " +
+                    @"one record per row - it is all a separate experiment-wide node receives about " +
+                    @"this run, and its population is fixed by the join, not chosen by the writer. " +
+                    @"See issue #4486.",
+                    records.Count, fileName, pool.RowCount, effectiveParquetPath));
+            }
+            AssertRecordsMatchPoolSequence(fileName, effectiveParquetPath, records,
+                ParquetScoreCache.StreamEntryIds(effectiveParquetPath));
+        }
+
+        /// <summary>
+        /// The per-run 2nd-pass sidecar's record SEQUENCE must equal the reconciled parquet's row
+        /// sequence, position for position - not merely its population or its length.
+        ///
+        /// <para><b>Why a count is not enough.</b> A count cannot see a PERMUTATION, and a
+        /// permutation is exactly what this file acquired: the rescore task APPENDS gap-fill
+        /// entries to its in-memory pool list, while
+        /// <see cref="ParquetScoreCache.StreamReconciledScoresParquet"/> merges each one into its
+        /// canonical <c>(entry_id, charge, scan_number)</c> position, so writing in list order
+        /// emitted the same rows with the gap-fills in a trailing block. Every count-based check
+        /// passed. The reconciled parquet is the authority here rather than the writer's
+        /// convenience: its population and order are fixed by the JOIN, stamped with a join-wide
+        /// reconciliation hash, and the parquet writer itself hard-fails a row out of canonical
+        /// order - so a sidecar that disagrees is the thing that is wrong.</para>
+        ///
+        /// <para><b>Why it matters beyond byte-identity with a baseline.</b> The fold
+        /// (<see cref="FileCompetitionFromRecords"/>) resolves a per-base_id maximum with strict
+        /// greater-than and takes the FIRST record at the maximum, matching
+        /// <c>StreamingFdr.CompeteOneFile</c>'s reduction over the population. That agreement
+        /// holds only while both walk the same order. A baseline comparison catches this today
+        /// and will not exist for the next dataset.</para>
+        ///
+        /// <para>Pure, and takes the pool sequence as an <see cref="IEnumerable{T}"/>, so the
+        /// comparison is unit-testable without writing a parquet and stays O(1) in memory over a
+        /// streamed column.</para>
+        /// </summary>
+        internal static void AssertRecordsMatchPoolSequence(
+            string fileName, string effectiveParquetPath,
+            IReadOnlyList<FdrScoreRecord> records, IEnumerable<uint> poolEntryIds)
+        {
+            int i = 0;
+            foreach (uint poolEntryId in poolEntryIds)
+            {
+                if (i >= records.Count)
+                {
+                    throw new InvalidOperationException(string.Format(
+                        @"Second-pass per-file competition for '{0}': its Stage 6 pool has more " +
+                        @"rows than the {1} record(s) written, starting at row {2} (from {3}). " +
+                        @"See issue #4486.",
+                        fileName, records.Count, i, effectiveParquetPath));
+                }
+                if (records[i].EntryId != poolEntryId)
+                {
+                    throw new InvalidOperationException(string.Format(
+                        @"Second-pass per-file competition for '{0}': record {1} is entry_id {2}, " +
+                        @"but its Stage 6 pool holds entry_id {3} at that row (from {4}). The " +
+                        @"per-run 2nd-pass sidecar must describe the pool in the pool's own order " +
+                        @"- the experiment fold takes the FIRST observation at a per-base_id " +
+                        @"maximum, so a reordering silently changes which observation represents " +
+                        @"a precursor. See issue #4486.",
+                        fileName, i, records[i].EntryId, poolEntryId, effectiveParquetPath));
+                }
+                i++;
+            }
+            if (i == records.Count)
                 return;
             throw new InvalidOperationException(string.Format(
-                @"Second-pass per-file competition wrote {0} record(s) for '{1}', but its Stage 6 " +
-                @"pool holds {2} (from {3}). The per-run 2nd-pass sidecar must describe that pool " +
-                @"one record per row - it is all a separate experiment-wide node receives about " +
-                @"this run, and its population is fixed by the join, not chosen by the writer. " +
-                @"See issue #4486.",
-                recordCount, fileName, pool.RowCount, effectiveParquetPath));
+                @"Second-pass per-file competition for '{0}': wrote {1} record(s) but its Stage 6 " +
+                @"pool yielded only {2} row(s) (from {3}). See issue #4486.",
+                fileName, records.Count, i, effectiveParquetPath));
         }
 
         internal static void ReadOneFilePass2Inputs(

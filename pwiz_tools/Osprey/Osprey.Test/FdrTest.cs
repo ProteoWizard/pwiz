@@ -4162,6 +4162,52 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The per-run 2nd-pass sidecar's record SEQUENCE is asserted against the reconciled
+        /// parquet's row sequence, not merely its length (issue #4486).
+        ///
+        /// <para>The case that matters is a PERMUTATION at equal length and equal population,
+        /// because that is the one a count check cannot see and the one this writer actually
+        /// produced: the rescore task appends gap-fill entries to its pool list while the parquet
+        /// merges them into canonical position, so the sidecar came out as
+        /// <c>(pool minus gap-fills) + gap-fills</c>. Every count-based gate passed.</para>
+        ///
+        /// <para>The trailing-block shape is reproduced literally here rather than a generic
+        /// shuffle, so the test fails for the reason the field failure had.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestSidecarRecordSequenceMustMatchPoolOrder()
+        {
+            // Canonical pool order: ascending, with 7 and 9 the "gap-fills" interleaved.
+            var poolOrder = new uint[] { 3, 5, 7, 8, 9, 11 };
+            var inOrder = poolOrder
+                .Select(id => new FdrScoreRecord(id, 0.5, 1.0, 1.0)).ToList();
+            Pass2FdrSidecar.AssertRecordsMatchPoolSequence(@"f", @"p.parquet", inOrder, poolOrder);
+
+            // The real defect: same rows, same count, gap-fills moved to a trailing block.
+            var gapFills = new uint[] { 7, 9 };
+            var trailing = poolOrder.Where(id => !gapFills.Contains(id))
+                .Concat(gapFills)
+                .Select(id => new FdrScoreRecord(id, 0.5, 1.0, 1.0)).ToList();
+            Assert.AreEqual(inOrder.Count, trailing.Count, "the permutation must not change length");
+            var ex = Assert.ThrowsException<InvalidOperationException>(
+                () => Pass2FdrSidecar.AssertRecordsMatchPoolSequence(
+                    @"f", @"p.parquet", trailing, poolOrder));
+            StringAssert.Contains(ex.Message, "record 2");
+
+            // Short and long are both failures, and neither may read as agreement: a pool that
+            // yields nothing must not pass vacuously.
+            Assert.ThrowsException<InvalidOperationException>(
+                () => Pass2FdrSidecar.AssertRecordsMatchPoolSequence(
+                    @"f", @"p.parquet", inOrder, new uint[] { 3, 5, 7 }));
+            Assert.ThrowsException<InvalidOperationException>(
+                () => Pass2FdrSidecar.AssertRecordsMatchPoolSequence(
+                    @"f", @"p.parquet", inOrder, new uint[0]));
+            Assert.ThrowsException<InvalidOperationException>(
+                () => Pass2FdrSidecar.AssertRecordsMatchPoolSequence(
+                    @"f", @"p.parquet", inOrder.Take(3).ToList(), poolOrder));
+        }
+
+        /// <summary>
         /// A DECOY row in the pool image must not become a base_id's best. The pool is not the
         /// competition's population, so a pool decoy that outscores the competition's winner is
         /// an observation the competition never ranked - the same error the gap-fill exclusion

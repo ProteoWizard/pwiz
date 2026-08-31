@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -1005,6 +1005,51 @@ namespace pwiz.Osprey.IO
             if (pool == null || string.IsNullOrEmpty(value))
                 return value;
             return pool.Intern(value);
+        }
+
+        /// <summary>
+        /// Stream a scores parquet's <c>entry_id</c> column in physical row order, one row group
+        /// resident at a time.
+        ///
+        /// <para>Exists so the per-run 2nd-pass sidecar's record SEQUENCE can be asserted against
+        /// the pool it claims to describe (issue #4486). The pool's population and order are
+        /// defined by the reconciled parquet - <c>ReconciledParquetWriter</c> merges gap-fills
+        /// into canonical <c>(entry_id, charge, scan_number)</c> position and hard-fails a row out
+        /// of that order - so the parquet is the authority and the sidecar is what has to match
+        /// it. A row COUNT alone cannot see a permutation, and a permutation is exactly what the
+        /// sidecar acquired when gap-fills were appended rather than merged.</para>
+        ///
+        /// <para>Deliberately a full column read rather than a footer probe: the whole point is
+        /// the ORDER, which no metadata carries. One <c>uint</c> per row - 4.7 MB on the largest
+        /// Astral file - and nothing else is decoded.</para>
+        /// </summary>
+        public static IEnumerable<uint> StreamEntryIds(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                for (int g = 0; g < reader.RowGroupCount; g++)
+                {
+                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    {
+                        var col = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
+                        // Absence is a stop, not an early end. ReadColumnByName ends in an `as`
+                        // cast, so a missing column and one written at another width both land
+                        // here; yielding nothing would let the caller's positional comparison
+                        // pass vacuously on zero rows, which is the one outcome that must not
+                        // read as agreement.
+                        if (col == null)
+                        {
+                            throw new InvalidDataException(string.Format(
+                                @"Scores parquet '{0}' row group {1} has no readable uint entry_id " +
+                                @"column, so its row order cannot be established.", path, g));
+                        }
+                        foreach (uint id in col)
+                            yield return id;
+                    }
+                }
+            }
         }
 
         /// <summary>

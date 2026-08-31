@@ -261,7 +261,7 @@ namespace pwiz.Osprey.Tasks
             // Checked HERE rather than at the write, so a pool that arrived short fails on the
             // node that built the records instead of somewhere downstream that can only see a
             // plausible smaller file.
-            Pass2FdrSidecar.AssertSidecarDescribesPool(fileName, effectiveParquetPath, records.Count);
+            Pass2FdrSidecar.AssertSidecarDescribesPool(fileName, effectiveParquetPath, records);
             return records;
         }
 
