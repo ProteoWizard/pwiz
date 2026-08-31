@@ -786,7 +786,7 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_RT_LINE = new Regex(@"^RetentionTime(Mins)*:\s*([^ ]+)", NOCASE); // On its own line
         private static readonly Regex REGEX_IRT = new Regex(@" iRT=([^ ,]+)", NOCASE);
         private static readonly Regex REGEX_RI = new Regex(@"^Retention_index:\s*([^ ]+)", NOCASE); // Retention Index for GC
-        private static readonly Regex REGEX_RI_LINE = new Regex(@"^(?:Synon:.* )?RI:\s*([^ ]+)", NOCASE); // Retention Index for GC
+        private static readonly Regex REGEX_RI_LINE = SynonPrefixedOrBare(@"RI:", @"\s*([^ ]+)"); // Retention Index for GC
         private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)", NOCASE);  // Observer spectrum count
         private static readonly char[] MODS_MAJOR_SEP = { '/' }; 
         private static readonly char[] MODS_ALTERNATE_MAJOR_SEP = { ')','(' };
@@ -794,13 +794,13 @@ namespace pwiz.Skyline.Model.Lib
         // Small molecule items
         private static readonly Regex REGEX_NAME_SMALLMOL = new Regex(@"^Name:\s*(.*)", NOCASE); // small molecule names can be anything
         private static readonly string SYNON = "Synon:";
-        private static readonly Regex REGEX_INCHIKEY = new Regex(@"^(?:Synon:.* )?InChIKey:\s*(.*)", NOCASE);
-        private static readonly Regex REGEX_INCHI = new Regex(@"^(?:Synon:.* )?InChI:\s*(?:InChI\=)?(.*)", NOCASE);
+        private static readonly Regex REGEX_INCHIKEY = SynonPrefixedOrBare(@"InChIKey:", @"\s*(.*)");
+        private static readonly Regex REGEX_INCHI = SynonPrefixedOrBare(@"InChI:", @"\s*(?:InChI\=)?(.*)");
         private static readonly Regex REGEX_INCHI_COMMENT = new Regex(@"(InChI=InChI=|InChI=)([^ ""]*)", NOCASE);
         private static readonly Regex REGEX_FORMULA = new Regex(@"^(Formula|Form):\s*(.*)", NOCASE);
-        private static readonly Regex REGEX_CAS = new Regex(@"^(?:Synon:.* )?CAS(?:#?|No|Nbr):\s*(\d+-\d+-\d)", NOCASE); // CONSIDER(bspratt): capture NIST# as well?
-        private static readonly Regex REGEX_KEGG = new Regex(@"^(?:Synon:.* )?KEGG:\s*(.*)", NOCASE);
-        private static readonly Regex REGEX_SMILES = new Regex(@"^(?:Synon:.* )?SMILES:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_CAS = SynonPrefixedOrBare(@"CAS(?:#?|No|Nbr):", @"\s*(\d+-\d+-\d)"); // CONSIDER(bspratt): capture NIST# as well?
+        private static readonly Regex REGEX_KEGG = SynonPrefixedOrBare(@"KEGG:", @"\s*(.*)");
+        private static readonly Regex REGEX_SMILES = SynonPrefixedOrBare(@"SMILES:", @"\s*(.*)");
         private static readonly Regex REGEX_SMILES_COMMENT = new Regex(@"SMILES\=([^ ""]*)", NOCASE);
         private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type:\s*(.*)", NOCASE);
         private static readonly Regex REGEX_ADDUCT_COMMENT = new Regex(@"Adduct=([^ ,""]+)", NOCASE);
@@ -812,6 +812,27 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_MOLWEIGHT_COMMENT = new Regex(@"ExactMass=([^ ,""]+)", NOCASE);
         private static readonly Regex REGEX_EXACTMASS = new Regex(@"^ExactMass[:=]\s*(.*)", NOCASE);
         private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode:\s*(.*)", NOCASE);
+
+        /// <summary>
+        /// Builds a regex matching <paramref name="token"/> followed by <paramref name="rest"/>, either
+        /// at the start of a line or after a "Synon: ..." prefix, as GC libraries write their accessions
+        /// ("Synon: METB InChIKey: ..." as well as a bare "InChIKey: ...").
+        ///
+        /// Spelled as an explicit alternation rather than the more natural optional prefix
+        /// "^(?:Synon:.* )?" because .NET 10.0.3 does not backtrack into an optional group that follows
+        /// "^" and contains ".*": every prefixed accession line silently stopped matching, so small
+        /// molecule entries lost their CAS, KEGG, InChI, InChIKey, SMILES and retention index, and
+        /// entries that differed only by accession collapsed together. The runtime bug is fixed by
+        /// 10.0.8, but Skyline bundles whichever runtime the build machine has, so the pattern itself
+        /// has to be one that every version gets right. Both spellings were verified equivalent on a
+        /// correct runtime before the switch. Covered by LibraryLoadTest.GMDLoadLibrary and
+        /// InvalidPeptidesInLibraryTest.
+        /// </summary>
+        private static Regex SynonPrefixedOrBare(string token, string rest)
+        {
+            return new Regex(@"^(?:Synon:.* " + token + @"|" + token + @")" + rest, NOCASE);
+        }
+
         private const double DEFAULT_MZ_MATCH_TOLERANCE = 0.01; // Most .MSP formats we see present precursor m/z values that match at about this tolerance
         private const string MZVAULT_POSITIVE_SCAN_INDICATOR = @"Positive scan";
         private const string MZVAULT_NEGATIVE_SCAN_INDICATOR = @"Negative scan";

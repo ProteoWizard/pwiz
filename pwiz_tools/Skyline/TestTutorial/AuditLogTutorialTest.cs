@@ -44,6 +44,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -430,11 +431,30 @@ namespace pwiz.SkylineTestTutorial
 //                    SkylineWindow.AuditLogForm.DataGridView.Rows[i].Cells[reasonIndex].Selected = true;
 //            });
 //            RunUI(() => SkylineWindow.AuditLogForm.DataboundGridControl.FillDown());
-            RunUI(() =>
+            // The audit log grid is filled by a background query, so its rows can still describe
+            // the document as it was before the four exclusions above. A row holds the
+            // AuditLogEntry it was built from and writes the Reason back to that entry by
+            // LogIndex, so editing a stale row 0 puts the reason on the peak-bounds entry instead
+            // of the Standard_8 exclusion. That surfaced only as two swapped "Reason Changed"
+            // entries in the recorded audit log - an identical diff every time, at 1 in 240
+            // executions. Wait for each row to hold the entry it is meant to edit, and name the
+            // entry actually found there if it never does.
+            var logIndexesToEdit = CallUI(() => SkylineWindow.Document.AuditLog.AuditLogEntries
+                .Enumerate().Take(4).Select(entry => entry.LogIndex).ToArray());
+            for (int i = 0; i < 4; i++)
             {
-                for (int i = 0; i < 4; i++)
-                    SetCellValue(SkylineWindow.AuditLogForm.DataGridView, i, reasonIndex, "Excluded standard below LOD");
-            });
+                int row = i;
+                WaitForConditionUI(() => GetAuditLogRowLogIndex(row) == logIndexesToEdit[row],
+                    () => string.Format("Audit log grid row {0} holds entry {1}, expected entry {2}",
+                        row, GetAuditLogRowLogIndex(row), logIndexesToEdit[row]));
+                // Setting a Reason modifies the document. Wait for each one so the next row is
+                // read from a grid that has caught up with the edit before it.
+                using (new WaitDocumentChange())
+                {
+                    RunUI(() => SetCellValue(SkylineWindow.AuditLogForm.DataGridView, row, reasonIndex,
+                        "Excluded standard below LOD"));
+                }
+            }
             RunUI(() =>
             {
                 SkylineWindow.AuditLogForm.ChooseView(AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo);
@@ -681,6 +701,27 @@ namespace pwiz.SkylineTestTutorial
             catch (Exception e)
             {
                 AssertEx.Fail("Error creating Panorama test folder. {0}", e.Message);
+            }
+        }
+
+        /// <summary>
+        /// The LogIndex of the audit log entry the given audit log grid row was built from, or -1
+        /// if the grid does not have that row yet. Rows are built by a background query, so this
+        /// can lag the document.
+        /// </summary>
+        private static int GetAuditLogRowLogIndex(int row)
+        {
+            var bindingListSource = SkylineWindow.AuditLogForm.BindingListSource;
+            if (row >= bindingListSource.Count)
+                return -1;
+            switch ((bindingListSource[row] as RowItem)?.Value)
+            {
+                case AuditLogRow logRow:
+                    return logRow.Entry.LogIndex;
+                case AuditLogDetailRow detailRow:
+                    return detailRow.AuditLogRow.Entry.LogIndex;
+                default:
+                    return -1;
             }
         }
     }

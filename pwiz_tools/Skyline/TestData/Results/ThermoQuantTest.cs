@@ -105,10 +105,12 @@ namespace pwiz.SkylineTestData.Results
             string dirPath = Path.GetDirectoryName(resultsPath) ?? "";
             string docPath;
             SrmDocument doc = InitThermoDocument(TestFilesDir, out docPath);
-            // Give this two chances to succeed. It can succeed tens of thousands of times
-            // in a row, but it still occasionally fails on nightly tests. Hopefully two
-            // tries will make this extremely unlikely.
-            for (int tries = 0; tries < 2; tries++)
+            // Give this several chances to succeed. It can succeed tens of thousands of times
+            // in a row, but it still occasionally fails on nightly tests. Two tries was not
+            // enough on the CI agents, where both attempts have come back with the finished
+            // cache - see the retry below for why that outcome proves nothing.
+            const int maxTries = 5;
+            for (int tries = 0; tries < maxTries; tries++)
             {
                 using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
                 {
@@ -166,9 +168,15 @@ namespace pwiz.SkylineTestData.Results
                     }
                     if (!cacheRemoved)
                     {
-                        if (tries == 0 && File.Exists(Path.ChangeExtension(docPath, ChromatogramCache.EXT)))
+                        if (tries < maxTries - 1 && File.Exists(Path.ChangeExtension(docPath, ChromatogramCache.EXT)))
                         {
-                            // Allow a single failure where we end up with the final cache instead of a cancelation
+                            // Ending up with the final cache means the import finished before the
+                            // cancel could take effect, so the cancellation this test exists to
+                            // check never actually happened - the attempt proves nothing either
+                            // way and is not a failure. Retrying that was already the intent here,
+                            // but allowing it only on the first attempt is not enough where the
+                            // import consistently wins the race: importing pre-converted mzML
+                            // (pass 0) is fast enough that both attempts finished first.
                             FileEx.SafeDelete(docPath);
                             continue;   // Try again
                         }

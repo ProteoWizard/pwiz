@@ -1194,7 +1194,10 @@ function Copy-LibraryInto {
 # referenced in place), so the read-only data dir is untouched.
 function Invoke-HpcChain {
     param([string[]]$Mzmls, [string]$Library, [string]$Resolution, [string]$ChainRoot,
-          [hashtable]$Spec, [string]$Manifest)
+          [hashtable]$Spec, [string]$Manifest,
+          # Directory holding the straight-through leg's .spectra.bin. Phase 1 is
+          # seeded from these instead of the mzML - see the block that stages them.
+          [string]$CacheSource)
     $libName = Split-Path -Leaf $Library
     # Every phase gets the SAME dataset flags as the straight-through run -- the
     # chain is only a self-consistency oracle if both sides run the same search.
@@ -1220,7 +1223,22 @@ function Invoke-HpcChain {
     # <stem>.calibration.json per file.
     $ph1 = Join-Path $ChainRoot 'phase1_scoring'
     New-Item -ItemType Directory -Path $ph1 -Force | Out-Null
-    foreach ($m in $Mzmls) { Copy-Item $m (Join-Path $ph1 (Split-Path -Leaf $m)) }
+    # Seeded with the straight-through leg's CACHES, not the mzML. Phase 1 is the only HPC
+    # phase that reads spectra and it deletes the copied mzML right after running anyway, so
+    # this costs nothing, stops copying multi-GB inputs, and makes the phase the gate on
+    # PerFileScoring reading a .spectra.bin with no source. Mode 2 cannot cover that - it
+    # requires PerFileScoring to be SKIPPED, and a skipped task opens no cache. Mode 3's
+    # chain==straight comparison is what proves the results identical.
+    #
+    # Also the only leg covering the UNREDIRECTED lookup: phase 1 passes no --work-dir, so
+    # ResolveCacheDir returns the input directory, which is what an operator gets by default.
+    foreach ($stem in $stemList) {
+        $srcCache = Join-Path $CacheSource "$stem.spectra.bin"
+        if (-not (Test-Path -LiteralPath $srcCache)) {
+            throw "regression: HPC phase 1 needs the straight-through spectra cache '$srcCache'; the cache-only PerFileScoring gate cannot run without it."
+        }
+        Copy-Item -LiteralPath $srcCache (Join-Path $ph1 "$stem.spectra.bin")
+    }
     Copy-LibraryInto -Library $Library -Dir $ph1 -Manifest $Manifest
     $a1 = @()
     foreach ($m in $Mzmls) { $a1 += @('-i', (Split-Path -Leaf $m)) }
@@ -1529,7 +1547,8 @@ foreach ($name in $selected) {
         # --input-scores worker (--task PerFileScoring / PerFileRescoring), which is exactly
         # what mode 3 exists to exercise.
         $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
-            -Resolution $cfg.Resolution -ChainRoot $chainRoot -Spec $cfg -Manifest $inputs.Manifest
+            -Resolution $cfg.Resolution -ChainRoot $chainRoot -Spec $cfg -Manifest $inputs.Manifest `
+            -CacheSource $straightDir
         $sw3.Stop()
         Write-Host ("  HPC chain wall {0:mm\:ss}; blib {1:N0} bytes" -f $sw3.Elapsed, (Get-Item $chainBlib).Length)
         # Per-file sidecar comparison, alongside the blib. The blib carries no protein
@@ -1658,7 +1677,21 @@ foreach ($name in $selected) {
         # leg exists to catch, which is why mode 3 and mode 4 never had one either: the former
         # blanket OSPREY_ALLOW_UNBOUNDED_MEMORY=1 wrapped a whole leg and let a transfer
         # regression ride along unnoticed for ten days.
-        $rResume = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
+        # The inputs this leg names DO NOT EXIST: same file names, but under the work dir,
+        # where an mzML is never placed - only the .spectra.bin is. The sources stay in the
+        # read-only Perftests tree, untouched.
+        #
+        # SCOPE: this proves the pipeline ACCEPTS absent inputs and still produces the
+        # identical blib. It does NOT prove spectra can be READ from cache - the two tasks
+        # that open one are the two this leg requires to be skipped. HPC phase 1 covers that.
+        $resumeInputs = @($inputs.Mzmls | ForEach-Object { Join-Path $straightDir (Split-Path $_ -Leaf) })
+        foreach ($p in $resumeInputs) {
+            # Guard the premise. If an mzML ever does land in the work dir, the leg would
+            # quietly go back to testing the ordinary path and the cache-only property
+            # would stop being covered with nothing turning red.
+            if (Test-Path $p) { throw "regression: work dir unexpectedly holds a source input ($p); the resume leg's cache-only premise is broken." }
+        }
+        $rResume = Invoke-OspreyRun -Mzmls $resumeInputs -Library $inputs.Library -Resolution $cfg.Resolution `
             -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
         $resumeBlib = Join-Path $straightDir 'output.blib'
         Write-Host ("  resume wall {0:mm\:ss}; blib {1:N0} bytes" -f $rResume.Wall, (Get-Item $resumeBlib).Length)
@@ -1679,6 +1712,17 @@ foreach ($name in $selected) {
             -ExpectSkipped @('PerFileScoring', 'PerFileRescoring') `
             -ExpectRan @('FirstPassFDR', 'SecondPassFDR') `
             -NoColdScoring -NoColdRescoring
+        # ... and this is the only thing that says the run took the CACHE-ONLY path. The
+        # premise guard above proves the named inputs are absent, and a build without the
+        # absent-source support would die on them outright - but neither notices if this
+        # leg is ever pointed back at the real sources, which would drop the coverage with
+        # nothing going red. Same reason mode 5 asserts its rehydrate marker.
+        $m2absent = Test-LogMarker -LogPath $rResume.Log `
+            -Marker 'are absent but have a spectra cache' `
+            -Description 'Osprey resolving inputs from the spectra cache with no source present'
+        foreach ($issue in $m2absent.Issues) { $m2cache.Issues.Add($issue) }
+        # Repair Pass after mutating Issues - Test-TaskCacheHits computed it at return time.
+        $m2cache.Pass = ($m2cache.Issues.Count -eq 0)
         if ($m2cache.Pass) {
             $summaryLines.Add("$name mode2 (resume cache hits): PASS")
         } else {

@@ -92,7 +92,12 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        [TestMethod]
+        // PressureTrace1.wiff is read out of the shared vendor data directory through the
+        // SAME Sciex reader TestInstrumentInfo above is excluded for - the legacy .wiff path
+        // rather than .wiff2, which is why a sweep looking for "wiff2" missed it. The other
+        // vendors here are not the problem: Thermo shared data survives six concurrent
+        // containers at 100 runs each. Excluded on the .NET 8 line for the same reason.
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)]
         public void TestTicChromatogram()
         {
             if (Skyline.Program.NoVendorReaders)
@@ -321,7 +326,15 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        [TestMethod]
+        // Reads swath.api.wiff2 out of the shared vendor data directory, the same file
+        // TestInstrumentInfo above is excluded for. A second process opening it while another
+        // holds it does not fail cleanly - it takes the worker down, with no managed exception
+        // and no result ever produced. Observed here on 2026-08-28: a worker stopped responding
+        // running this test and was given up on, costing the run a worker for its remainder.
+        // Only across the Docker volume mount, so nothing a Skyline user does is affected.
+        // The .NET 8 line excluded this test for the same reason after losing five workers to
+        // it across two nightly runs.
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)]
         public void TestInstrumentSerialNumbers()
         {
             if (SkipWiff2TestInTestExplorer(nameof(TestInstrumentSerialNumbers)))

@@ -101,7 +101,9 @@ if [ "$IAGREE" = 1 ] && [ -f "$SEVEN_ZZ" ] && [ ! -x "$SEVEN_ZZ" ]; then
 fi
 
 resolve_dotnet || { echo "##teamcity[message text='dotnet not found on PATH or at /usr/bin, /usr/local/bin, /usr/share/dotnet, /usr/lib/dotnet, \$DOTNET_ROOT, ~/.dotnet' status='ERROR']"; exit 1; }
-ensure_dotnet_sdk "$SCRIPT_DIR/.." || { echo "##teamcity[message text='no .NET SDK satisfying global.json, and installing one failed' status='ERROR']"; exit 1; }
+# $SCRIPT_DIR, not the repo root: the guard has to resolve the same global.json
+# as the dotnet call it guards, and resolution walks up from the working dir.
+ensure_dotnet_sdk "$SCRIPT_DIR" || { echo "##teamcity[message text='no .NET SDK satisfying global.json, and installing one failed' status='ERROR']"; exit 1; }
 echo "##teamcity[progressMessage 'dotnet --version']"
 dotnet --version || { echo "##teamcity[message text='dotnet --version failed' status='ERROR']"; exit 1; }
 

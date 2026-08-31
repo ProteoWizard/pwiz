@@ -48,38 +48,75 @@ resolve_dotnet() {
     return 1
 }
 
-# Channel (major.minor) from the repo-root global.json: 10.0.100 -> 10.0.
+# Escape a value for interpolation into a ##teamcity[...] service message.
+# TeamCity's escapes are | ' [ ] and newline; | must be doubled first or it would
+# re-escape the escapes this adds.
+tc_escape() {
+    printf '%s' "$1" | tr -d '\r' | tr '\n' ' ' \
+        | sed -e 's/|/||/g' -e "s/'/|'/g" -e 's/\[/|[/g' -e 's/\]/|]/g'
+}
+
+# Channel (major.minor) of the global.json that governs $1: 10.0.100 -> 10.0.
 # Read rather than hard-coded so bumping the pin needs no edit here.
+#
+# Resolved the way dotnet itself resolves it: start in the directory and walk UP.
+# Deliberately not one fixed path - where global.json sits is NOT stable across
+# the branches this config builds. The net10 retarget moved it from pwiz-sharp/
+# to the repo root, so branches cut before that still carry pwiz-sharp/global.json
+# while branches after it carry the root one. Walking up is correct for both.
 pwiz_required_sdk_channel() {
-    local gj="$1/global.json"
-    [ -f "$gj" ] || return 1
-    local v
-    v="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([0-9][^"]*\)".*/\1/p' "$gj" | head -1)"
-    [ -n "$v" ] || return 1
-    printf '%s\n' "${v%.*}"
+    local dir gj v
+    dir="$(cd "$1" 2>/dev/null && pwd)" || return 1
+    while : ; do
+        gj="$dir/global.json"
+        if [ -f "$gj" ]; then
+            v="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([0-9][^"]*\)".*/\1/p' "$gj" | head -1)"
+            [ -n "$v" ] || return 1
+            printf '%s\n' "${v%.*}"
+            return 0
+        fi
+        [ "$dir" = "/" ] && return 1
+        dir="$(dirname "$dir")"
+    done
 }
 
 # Ensure SOME installed SDK satisfies global.json, installing one if not.
-# $1 = repo root (the directory whose global.json governs).
+#
+# $1 = the directory the build will run dotnet FROM - that directory, not the
+# repo root. global.json resolution walks UP, so probing a PARENT of the real
+# working directory cannot see a global.json sitting below it: dotnet answers
+# from the parent, where nothing governs, and reports the newest installed SDK.
+# The probe then returns "satisfied" for a build that is about to fail.
+#
+# That is exactly how ProteoWizard_CoreLinuxNet broke on every branch carrying
+# pwiz-sharp/global.json (e.g. PR 4587, builds #143/#144/#147/#148/#154): the
+# probe ran in the repo root and got 8.0.423 back, provisioning was skipped, and
+# the very next line - dotnet --version from pwiz-sharp/ - died on the 10.0.100
+# pin the probe never looked at. The guard and the command it guards must run in
+# the same directory or the guard is measuring something else.
 ensure_dotnet_sdk() {
-    local repo_root="$1"
+    local governed_dir="$1"
 
     # global.json resolution is what actually decides, so ask dotnet itself from
     # the governed directory rather than pattern-matching `dotnet --list-sdks`.
-    if ( cd "$repo_root" && dotnet --version >/dev/null 2>&1 ); then
+    if ( cd "$governed_dir" && dotnet --version >/dev/null 2>&1 ); then
         return 0
     fi
 
     local channel
-    if ! channel="$(pwiz_required_sdk_channel "$repo_root")"; then
-        echo "##teamcity[message text='Could not read the SDK version from $repo_root/global.json' status='ERROR']"
+    if ! channel="$(pwiz_required_sdk_channel "$governed_dir")"; then
+        echo "##teamcity[message text='dotnet --version failed in $governed_dir and no global.json governs it, so the pin is not the problem - the dotnet install is' status='ERROR']"
         return 1
     fi
 
     local installed
-    installed="$(dotnet --list-sdks 2>/dev/null | tr '\n' ' ')"
+    installed="$(dotnet --list-sdks 2>/dev/null | tr -d '\r' | tr '\n' ' ')"
     [ -n "$installed" ] || installed="(none)"
-    echo "##teamcity[message text='No installed SDK satisfies global.json; need .NET $channel, have: $installed' status='WARNING']"
+    # Escape before interpolating: `dotnet --list-sdks` prints "8.0.423 [/usr/share/dotnet/sdk]",
+    # and an unescaped ] ENDS a TeamCity service message. Build #156 truncated this warning at
+    # the first bracket and logged a parse error instead - losing the one line that says which
+    # SDKs the agent actually has, exactly when that is the thing you need to read.
+    echo "##teamcity[message text='No installed SDK satisfies global.json; need .NET $channel, have: $(tc_escape "$installed")' status='WARNING']"
 
     if [ "${PWIZ_NO_DOTNET_INSTALL:-0}" = "1" ]; then
         echo "##teamcity[message text='PWIZ_NO_DOTNET_INSTALL=1; refusing to install. Provision .NET $channel on the agent.' status='ERROR']"
@@ -122,10 +159,10 @@ ensure_dotnet_sdk() {
     export DOTNET_ROOT="$install_dir"
     export PATH="$install_dir:$PATH"
 
-    if ! ( cd "$repo_root" && dotnet --version >/dev/null 2>&1 ); then
+    if ! ( cd "$governed_dir" && dotnet --version >/dev/null 2>&1 ); then
         echo "##teamcity[message text='Installed .NET $channel but global.json is still unsatisfied' status='ERROR']"
         return 1
     fi
-    echo "##teamcity[message text='Using freshly installed SDK $( cd "$repo_root" && dotnet --version )']"
+    echo "##teamcity[message text='Using freshly installed SDK $( cd "$governed_dir" && dotnet --version )']"
     return 0
 }
