@@ -54,8 +54,20 @@ public sealed class Reader_Agilent : IReader
         if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return false;
         string acqData = Path.Combine(path, "AcqData");
         if (!Directory.Exists(acqData)) return false;
-        return File.Exists(Path.Combine(acqData, "MSScan.bin"))
-            || File.Exists(Path.Combine(acqData, "MSPeak.bin"));
+
+        // MatchCasing rather than File.Exists, which follows the platform and so is
+        // case-sensitive on Linux. The on-disk case varies by acquisition software - this corpus
+        // holds both MSScan.bin and msscan.bin - and the lowercase one was rejected as "not an
+        // Agilent .d directory" on Linux while working on Windows. Stating the casing makes the
+        // probe behave the same everywhere instead of inheriting MatchCasing.PlatformDefault.
+        return HasFileIgnoringCase(acqData, "MSScan.bin") || HasFileIgnoringCase(acqData, "MSPeak.bin");
+    }
+
+    private static bool HasFileIgnoringCase(string directory, string fileName)
+    {
+        var options = new EnumerationOptions { MatchCasing = MatchCasing.CaseInsensitive };
+        using var matches = Directory.EnumerateFiles(directory, fileName, options).GetEnumerator();
+        return matches.MoveNext();
     }
 
     /// <inheritdoc/>
