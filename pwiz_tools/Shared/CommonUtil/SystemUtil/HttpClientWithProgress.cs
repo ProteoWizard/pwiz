@@ -483,13 +483,34 @@ namespace pwiz.Common.SystemUtil
         {
             // Apply per-instance headers and cookies to the request
             ApplyHeadersToRequest(request);
-            
+
+            // Consult the request-level test seam so every verb is mockable, not just GET. The
+            // consult sits outside the exception mapping, like the download path's, so an
+            // exception thrown by a behavior's factory - a simulated HTTP failure or a genuine
+            // test assertion - reaches the caller unmapped.
+            if (TestBehavior != null)
+            {
+                var mockStream = TestBehavior.GetMockResponseStreamFromRequest(request);
+                if (mockStream != null)
+                {
+                    return new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StreamContent(mockStream),
+                        RequestMessage = request
+                    };
+                }
+            }
+
+            // Bounded like the download path. This one reads the body too (ResponseContentRead),
+            // because callers of SendRequest read Content afterwards and ReadChunk's per-chunk guard
+            // covers only the download loop, so an unbounded send here could still hang on a server
+            // that answers with headers and then stalls the body.
             var response = WithExceptionHandling(request.RequestUri,
-                () => _sharedHttpClient.SendAsync(request, CancellationToken).Result);
-            
+                () => SendWithResponseTimeout(request, HttpCompletionOption.ResponseContentRead));
+
             // Process cookies from response
             ProcessResponseCookies(response, request.RequestUri);
-            
+
             return response;
         }
 
@@ -554,16 +575,20 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Sends a request and waits up to <see cref="ResponseTimeoutMilliseconds"/> for the response
-        /// headers. A server that accepts a connection and then never answers would otherwise block
+        /// Sends a request and waits up to <see cref="ResponseTimeoutMilliseconds"/> for it to
+        /// complete. A server that accepts a connection and then never answers would otherwise block
         /// the calling thread forever, because the shared HttpClient has no timeout of its own.
         /// Only the wait is abandoned, never the request: cancelling it here would also tear down a
-        /// response that may be arriving, and the body is still guarded per chunk by
-        /// <see cref="ReadTimeoutMilliseconds"/>. This is the pattern <see cref="ReadChunk"/> uses.
+        /// response that may be arriving. This is the pattern <see cref="ReadChunk"/> uses.
+        /// <para><paramref name="completionOption"/> decides what "complete" means: the download path
+        /// waits for headers only and guards the body per chunk with
+        /// <see cref="ReadTimeoutMilliseconds"/>, while <see cref="SendRequest"/> waits for the whole
+        /// response, since nothing guards its body.</para>
         /// </summary>
-        private HttpResponseMessage SendWithResponseTimeout(HttpRequestMessage request)
+        private HttpResponseMessage SendWithResponseTimeout(HttpRequestMessage request,
+            HttpCompletionOption completionOption = HttpCompletionOption.ResponseHeadersRead)
         {
-            var sendTask = _sharedHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationToken);
+            var sendTask = _sharedHttpClient.SendAsync(request, completionOption, CancellationToken);
 
             // Dedicated source for the delay so its timer is released as soon as the wait ends.
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);

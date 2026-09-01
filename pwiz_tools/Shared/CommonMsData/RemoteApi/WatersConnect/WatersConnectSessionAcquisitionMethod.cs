@@ -1,5 +1,6 @@
 /*
  * Original author: Rita Chupalov <ritach .at. uw.edu>
+ * AI assistance: Claude Code (Claude Fable 5) <noreply .at. anthropic.com>
  *
  * Copyright 2025 University of Washington - Seattle, WA
  *
@@ -68,11 +69,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         private ImmutableList<WatersConnectAcquisitionMethodObject> GetAcquisitionMethods(Uri requestUri)
         {
-            var response = _httpClient.GetAsync(requestUri).Result;
-            EnsureSuccess(response);
+            string responseBody = DownloadStringChecked(requestUri);
 
-            string responseBody = response.Content.ReadAsStringAsync().Result;
-            
             var itemsValue = JArray.Parse(responseBody);
             if (itemsValue.Count == 0)
             {
@@ -101,9 +99,15 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             }
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(@"application/json");
             request.Content.Headers.ContentType.CharSet = @"utf-8";
-            var response = _httpClient.SendAsync(request).Result;
-            EnsureSuccess(response);
-            return response.Content?.ReadAsStringAsync().Result;
+            try
+            {
+                var response = _httpClient.SendRequest(request);
+                return response.Content?.ReadAsStringAsync().Result;
+            }
+            catch (NetworkRequestException e)
+            {
+                throw MapToRemoteServerException(e);
+            }
         }
         
         public override IEnumerable<RemoteItem> ListContents(MsDataFileUri parentUrl)
