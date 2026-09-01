@@ -36,7 +36,7 @@ namespace pwiz.SkylineTest
         //[TestMethod]
         public void AaaTestIsDiskFull()
         {
-            var rootPath = Path.GetPathRoot(TestContext.TestDir);
+            var rootPath = Path.GetPathRoot(TestContext.TestRunDirectory);
             var drive = new DriveInfo(rootPath);
             Assert.IsTrue(drive.TotalFreeSpace >= MIN_SPACE_BYTES, $"Warning: this machine is running out of disk space. The {rootPath} drive has {FormatBytes(drive.TotalFreeSpace)} of space remaining, which is {(100.0 * drive.TotalFreeSpace / drive.TotalSize):0.00}% of total space. Running out of space will cause other tests to fail. This test expects {FormatBytes(MIN_SPACE_BYTES)} of space.");
         }

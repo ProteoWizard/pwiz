@@ -1044,6 +1044,168 @@ namespace pwiz.SkylineTestUtil
             return false; // Could not account for difference
         }
 
+        // Tolerances used only by AreAuditLogsEquivalentWithNumericTolerance to absorb the
+        // tiny last-few-ULP differences between net8's 64-bit SSE2 math and net472's 32-bit
+        // x87 math (typically ~1e-15). They are deliberately far tighter than any meaningful
+        // change (which is >= ~1e-3), so a real regression still fails the comparison.
+        private const double AUDIT_LOG_NUMERIC_RELATIVE_TOLERANCE = 1e-9;
+        private const double AUDIT_LOG_NUMERIC_ABSOLUTE_FLOOR = 1e-12;
+
+        // Matches a numeric literal: optional leading '-', an integer part, an optional
+        // fractional part (with '.' or ',' as the separator, since audit logs are recorded in the
+        // current culture and French uses commas), and an optional exponent. Quotes around a
+        // number (e.g. "0.151...") are not part of the match, so they are compared as ordinary
+        // non-numeric text.
+        private static readonly Regex NUMERIC_TOKEN_REGEX =
+            new Regex(@"-?\d+(?:[.,]\d+)?(?:[eE][-+]?\d+)?", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Compares two audit-log texts line-by-line, tolerating only tiny floating-point
+        /// differences in embedded numeric tokens. Every non-numeric character and every
+        /// integer token must match exactly; only non-integer (float) tokens are allowed to
+        /// differ, and then only within a very tight relative/absolute tolerance. This lets
+        /// tutorials whose audit log records a computed value (e.g. a regression slope) pass
+        /// when net8 and net472 produce the same value to within a few ULP, while still
+        /// catching any real change (counts, indices, text, or a numeric change larger than
+        /// the noise floor).
+        /// </summary>
+        /// <returns>True if the two texts are equivalent under these rules.</returns>
+        public static bool AreAuditLogsEquivalentWithNumericTolerance(string expected, string actual, out string failureMessage)
+        {
+            failureMessage = string.Empty;
+            if (string.Equals(expected, actual, StringComparison.Ordinal))
+                return true; // Identical, nothing to reconcile
+
+            var expectedLines = SplitIntoLines(expected);
+            var actualLines = SplitIntoLines(actual);
+            if (expectedLines.Count != actualLines.Count)
+            {
+                // A differing line count is a real diff, not floating-point noise.
+                failureMessage = string.Format(
+                    "Audit logs differ in line count: expected {0} lines, actual {1} lines",
+                    expectedLines.Count, actualLines.Count);
+                return false;
+            }
+
+            for (var i = 0; i < expectedLines.Count; i++)
+            {
+                if (!LineEquivalentWithinNumericTolerance(expectedLines[i], actualLines[i], out var lineFailure))
+                {
+                    failureMessage = string.Format("Line {0}: {1}", i + 1, lineFailure);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static List<string> SplitIntoLines(string text)
+        {
+            var lines = new List<string>();
+            using (var reader = new StringReader(text))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                    lines.Add(line);
+            }
+            return lines;
+        }
+
+        // Two lines are equivalent iff the non-numeric spans between numeric tokens match
+        // exactly (same order and count) and each corresponding numeric-token pair is
+        // numerically equal within tolerance.
+        private static bool LineEquivalentWithinNumericTolerance(string expected, string actual, out string failureMessage)
+        {
+            failureMessage = string.Empty;
+            if (string.Equals(expected, actual, StringComparison.Ordinal))
+                return true;
+
+            var expectedTokens = NUMERIC_TOKEN_REGEX.Matches(expected);
+            var actualTokens = NUMERIC_TOKEN_REGEX.Matches(actual);
+            if (expectedTokens.Count != actualTokens.Count)
+            {
+                failureMessage = "different count of numeric tokens";
+                return false;
+            }
+
+            var expectedPos = 0;
+            var actualPos = 0;
+            for (var i = 0; i < expectedTokens.Count; i++)
+            {
+                var expectedMatch = expectedTokens[i];
+                var actualMatch = actualTokens[i];
+
+                // The non-numeric span preceding this token must match exactly (this includes
+                // any surrounding quotes, so a change in wording or quoting is still a diff).
+                var expectedGap = expected.Substring(expectedPos, expectedMatch.Index - expectedPos);
+                var actualGap = actual.Substring(actualPos, actualMatch.Index - actualPos);
+                if (!string.Equals(expectedGap, actualGap, StringComparison.Ordinal))
+                {
+                    failureMessage = "non-numeric text differs";
+                    return false;
+                }
+
+                if (!NumericTokensEquivalent(expectedMatch.Value, actualMatch.Value, out failureMessage))
+                    return false;
+
+                expectedPos = expectedMatch.Index + expectedMatch.Length;
+                actualPos = actualMatch.Index + actualMatch.Length;
+            }
+
+            // The trailing non-numeric span (after the last token) must also match exactly.
+            if (!string.Equals(expected.Substring(expectedPos), actual.Substring(actualPos), StringComparison.Ordinal))
+            {
+                failureMessage = "non-numeric text differs";
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool NumericTokensEquivalent(string expectedToken, string actualToken, out string failureMessage)
+        {
+            failureMessage = string.Empty;
+            if (string.Equals(expectedToken, actualToken, StringComparison.Ordinal))
+                return true;
+
+            // Integer tokens (no decimal point and no exponent) must match exactly, so a change
+            // like "3 peptides" vs "4 peptides" or a shifted index is never masked as noise.
+            if (IsIntegerToken(expectedToken) || IsIntegerToken(actualToken))
+            {
+                failureMessage = string.Format("integer token '{0}' does not match '{1}'", expectedToken, actualToken);
+                return false;
+            }
+
+            // Non-integer (float) tokens: accept when within a tight relative/absolute tolerance.
+            // Parse culture-uncertain because audit logs are recorded in the current culture (French
+            // uses ',' as the decimal separator).
+            if (CommonTextUtil.TryParseDoubleUncertainCulture(expectedToken, out var expectedValue) &&
+                CommonTextUtil.TryParseDoubleUncertainCulture(actualToken, out var actualValue))
+            {
+                var diff = Math.Abs(expectedValue - actualValue);
+                var tolerance = Math.Max(AUDIT_LOG_NUMERIC_ABSOLUTE_FLOOR,
+                    AUDIT_LOG_NUMERIC_RELATIVE_TOLERANCE * Math.Max(Math.Abs(expectedValue), Math.Abs(actualValue)));
+                if (diff <= tolerance)
+                    return true;
+                failureMessage = string.Format("decimal value '{0}' does not match '{1}' to within tolerance {2}",
+                    expectedToken, actualToken, tolerance);
+                return false;
+            }
+
+            // If a token doesn't parse as a number on either side, fall back to exact string
+            // match (which we already know fails, since the tokens are not string-equal).
+            failureMessage = string.Format("token '{0}' does not match '{1}'", expectedToken, actualToken);
+            return false;
+        }
+
+        private static bool IsIntegerToken(string token)
+        {
+            // An integer token has neither a decimal separator ('.' or the current-culture ','
+            // used in e.g. French audit logs) nor an exponent marker.
+            return token.IndexOf('.') < 0 && token.IndexOf(',') < 0 &&
+                   token.IndexOf('e') < 0 && token.IndexOf('E') < 0;
+        }
+
         public class ColumnTolerances
         {
             private readonly ColumnToleranceValue _defaultTolerance;
@@ -1053,14 +1215,14 @@ namespace pwiz.SkylineTestUtil
             {
             }
 
-            public ColumnTolerances(double defaultTolerance)
+            public ColumnTolerances(double defaultTolerance, double defaultRelativeTolerance = 0)
             {
-                _defaultTolerance = new ColumnToleranceValue(defaultTolerance);
+                _defaultTolerance = new ColumnToleranceValue(defaultTolerance, defaultRelativeTolerance);
             }
 
-            public void AddTolerance(int column, double tolerance)
+            public void AddTolerance(int column, double tolerance, double relativeTolerance = 0)
             {
-                _explicitTolerances.Add(column, new ColumnToleranceValue(tolerance));
+                _explicitTolerances.Add(column, new ColumnToleranceValue(tolerance, relativeTolerance));
             }
 
             public bool LinesEquivalent(string lineExpected, string lineActual, out string failureMessage)
@@ -1095,6 +1257,35 @@ namespace pwiz.SkylineTestUtil
                     if (toleranceValue == null)
                         return false; // No tolerance given for this column
                 }
+                // Chromatogram exports pack arrays into a single column as a delimited list
+                // (e.g. "46.37717,46.39237,..."); compare those element-wise. The list
+                // separator follows the file's culture (CSV convention): ';' when ',' is the
+                // decimal separator, else ','. Splitting on the wrong one would mangle numbers
+                // under a comma-decimal culture (e.g. fr-FR "46,377;46,392").
+                var listSeparator = Equals(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, ",") ? ';' : ',';
+                if (textExpected.IndexOf(listSeparator) >= 0 || textActual.IndexOf(listSeparator) >= 0)
+                {
+                    var expectedList = textExpected.Split(listSeparator);
+                    var actualList = textActual.Split(listSeparator);
+                    if (expectedList.Length != actualList.Length)
+                        return false;
+                    for (var e = 0; e < expectedList.Length; e++)
+                    {
+                        if (!SingleValueEquivalent(toleranceValue, expectedList[e], actualList[e], out failureMessage))
+                            return false;
+                    }
+                    return true;
+                }
+
+                return SingleValueEquivalent(toleranceValue, textExpected, textActual, out failureMessage);
+            }
+
+            private static bool SingleValueEquivalent(ColumnToleranceValue toleranceValue, string textExpected, string textActual, out string failureMessage)
+            {
+                failureMessage = string.Empty;
+                if (Equals(textExpected, textActual))
+                    return true;
+
                 if (!CommonTextUtil.TryParseDoubleUncertainCulture(textActual, out var valActual) ||
                     !CommonTextUtil.TryParseDoubleUncertainCulture(textExpected, out var valExpected))
                 {
@@ -1122,7 +1313,14 @@ namespace pwiz.SkylineTestUtil
 
                 double tolerance = toleranceValue.Tolerance;
                 tolerance += tolerance / 1000; // Allow for rounding cruft
-                if (Math.Abs(valActual - valExpected) > tolerance)
+                var diff = Math.Abs(valActual - valExpected);
+                // Opt-in only: net8 vs net472 float32 ToString() can differ in the last digit
+                // or in notation (e.g. "2.050069E+08" vs "205006940", same value). A column can
+                // set a relative tolerance to absorb that; columns that don't keep their exact
+                // absolute tolerance so a real regression isn't masked.
+                var relativeTolerance = toleranceValue.RelativeTolerance;
+                var scale = Math.Max(Math.Abs(valActual), Math.Abs(valExpected));
+                if (diff > tolerance && (relativeTolerance <= 0 || scale == 0 || diff / scale > relativeTolerance))
                 {
                     if (expectedParts.Length == 2)
                     {
@@ -1145,12 +1343,18 @@ namespace pwiz.SkylineTestUtil
 
         private class ColumnToleranceValue
         {
-            public ColumnToleranceValue(double tolerance)
+            public ColumnToleranceValue(double tolerance, double relativeTolerance = 0)
             {
                 Tolerance = tolerance;
+                RelativeTolerance = relativeTolerance;
             }
 
             public double Tolerance { get; }
+
+            // Optional relative tolerance (fraction of magnitude), applied in addition to the
+            // absolute Tolerance. 0 disables it. Only opt-in callers get this; a column with a
+            // deliberately tight absolute tolerance is not silently widened.
+            public double RelativeTolerance { get; }
         }
 
         private static string GetEarlyEndingMessage(string helpMsg, string name, int count, string lineEqualLast, string lineNext, TextReader reader)
@@ -1215,7 +1419,7 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Compare two DSV files, accounting for possible L10N differences
         /// </summary>
-        public static void AreEquivalentDsvFiles(string path1, string path2, bool hasHeaders, int[] ignoredColumns = null)
+        public static void AreEquivalentDsvFiles(string path1, string path2, bool hasHeaders, int[] ignoredColumns = null, double relativeTolerance = 0)
         {
             var lines1 = File.ReadAllLines(path1);
             var lines2 = File.ReadAllLines(path2);
@@ -1271,6 +1475,22 @@ namespace pwiz.SkylineTestUtil
                                 Replace(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, @"_dot_");
                         }
                         same = Equals(Dotted(cols1[colNum]), Dotted(cols2[colNum]));
+                    }
+
+                    if (!same && relativeTolerance > 0)
+                    {
+                        // Numeric columns can drift in the last significant digit between frameworks
+                        // (net8 vs net472 float32 accumulation/FMA order). Accept a relative tolerance.
+                        bool TryParseNum(string s, out double d)
+                        {
+                            return double.TryParse(s, NumberStyles.Float, CultureInfo.CurrentCulture, out d) ||
+                                   double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out d);
+                        }
+                        if (TryParseNum(cols1[colNum], out var d1) && TryParseNum(cols2[colNum], out var d2))
+                        {
+                            var scale = Math.Max(Math.Abs(d1), Math.Abs(d2));
+                            same = Math.Abs(d1 - d2) <= relativeTolerance * scale;
+                        }
                     }
 
                     if (!same)
@@ -1432,6 +1652,9 @@ namespace pwiz.SkylineTestUtil
                                 }
                                 if (allowForTinyNumericDifferences)
                                 {
+                                    if (dTarget == dActual)
+                                        continue; // Numerically identical, e.g. "0" vs net8's "-0"
+                                                  // (net8 keeps the sign of negative zero in ToString; net472 doesn't).
                                     // how much of that was decimal places?
                                     var precTarget = targetField.Length - String.Format("{0}.", (int)dTarget).Length;
                                     var precActual = actualField.Length - String.Format("{0}.", (int)dActual).Length;
@@ -1447,6 +1670,19 @@ namespace pwiz.SkylineTestUtil
                                             {
                                                 continue; // e.g. 5432 vs 5433 but not 1 vs 2
                                             }
+                                        }
+                                    }
+                                    else if (precTarget == -1 || precActual == -1)
+                                    {
+                                        // One side is a bare integer, the other a decimal/scientific form
+                                        // (e.g. net472's %.7g "1.130326e+07" or "177994" vs net8's
+                                        // "11303264"/"177993.96875"). Same value, formatted differently;
+                                        // accept a small RELATIVE difference (7-sig-fig formatting) but keep
+                                        // small values strict so real errors still fail (5 vs 5.4 fails).
+                                        var max = Math.Max(Math.Abs(dTarget), Math.Abs(dActual));
+                                        if (max != 0 && Math.Abs(dTarget - dActual) / max <= 1e-5)
+                                        {
+                                            continue;
                                         }
                                     }
                                     else

@@ -20,6 +20,7 @@ using System;
 using System.Windows.Forms;
 using AutoQC.Properties;
 using SharedBatch;
+using pwiz.Common.SystemUtil;
 
 namespace AutoQC
 {
@@ -179,7 +180,8 @@ namespace AutoQC
         
         private void btnFolderToWatch_Click(object sender, EventArgs e)
         {
-            var dialog = new FolderBrowserDialog();
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            var dialog = FormUtil.CreateFolderBrowserDialog();
             dialog.SelectedPath = FileUtil.GetInitialDirectory(textFolderToWatchPath.Text, _lastEnteredPath);
             if (dialog.ShowDialog(this) == DialogResult.OK)
             {

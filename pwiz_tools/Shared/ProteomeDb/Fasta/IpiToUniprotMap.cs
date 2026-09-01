@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using Ionic.Zip;
+using System.IO.Compression;
 
 namespace pwiz.ProteomeDatabase.Fasta
 {
@@ -111,22 +111,23 @@ namespace pwiz.ProteomeDatabase.Fasta
 
             // Add the mappings from an embedded resouce file.  See notes above for why this is done dynamically.
             var streamInfo = Assembly.GetExecutingAssembly().GetManifestResourceStream(@"pwiz.ProteomeDatabase.Fasta.IpiToUniprotMap.zip");
-            using (var zip = ZipFile.Read(streamInfo))
+            // BCL System.IO.Compression on net8 replaces Ionic.Zip — same logical
+            // operation, different shape. ZipArchive's leaveOpen ctor lets the
+            // outer Stream caller continue managing the underlying stream.
+            using (var archive = new ZipArchive(streamInfo, ZipArchiveMode.Read))
             {
-                var entry = zip[@"MapUniprotIPI.txt"];
-                using (var zstream = entry.OpenReader())
+                var entry = archive.GetEntry("MapUniprotIPI.txt");
+                using (var zstream = entry.Open())
+                using (var stream = new StreamReader(zstream))
                 {
-                    using (var stream = new StreamReader(zstream))
+                    string line = stream.ReadLine();
+                    while (line != null)
                     {
-                        string line = stream.ReadLine();
-                        while (line != null)
-                        {
-                            var pair = line.Split(' ');
-                            _ipi[added / SEGMENT_SIZE][added % SEGMENT_SIZE] = Convert.ToInt32(pair[0]);
-                            _accession[added / SEGMENT_SIZE][added % SEGMENT_SIZE] = pair[1];
-                            added++;
-                            line = stream.ReadLine();
-                        }
+                        var pair = line.Split(' ');
+                        _ipi[added / SEGMENT_SIZE][added % SEGMENT_SIZE] = Convert.ToInt32(pair[0]);
+                        _accession[added / SEGMENT_SIZE][added % SEGMENT_SIZE] = pair[1];
+                        added++;
+                        line = stream.ReadLine();
                     }
                 }
             }

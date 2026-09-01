@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Pwiz.Tools.BiblioSpec.BlibToMs2</RootNamespace>
+    <AssemblyName>BlibToMs2</AssemblyName>
+    <Description>BlibToMs2 CLI tool. Port of pwiz_tools/BiblioSpec/src/BlibToMs2.cpp.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BiblioSpec\BiblioSpec.csproj" />
+  </ItemGroup>
+
+</Project>

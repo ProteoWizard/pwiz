@@ -1,0 +1,195 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Agilent</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Agilent</AssemblyName>
+    <Description>Agilent MassHunter (.d) reader. References Agilent's managed MassSpecDataReader / BaseDataAccess / BaseTof / MIDAC assemblies.</Description>
+  </PropertyGroup>
+
+  <!--
+    Vendor archive: pwiz_aux/msrc/utility/vendor_api_Agilent.7z. ExtractAgilentAssemblies
+    unpacks the x64 .NET assemblies on every build (idempotent). Sharp targets x64 only.
+    -->
+  <PropertyGroup>
+    <!-- Forward slashes so these resolve on Linux as well as Windows. $(SevenZaExe) is no
+         longer set here: Directory.Build.props picks 7za.exe or 7zz per OS. -->
+    <AgilentArchive>$(PwizCppAuxRoot)/msrc/utility/vendor_api_Agilent.7z</AgilentArchive>
+    <AgilentAssembliesDir>$(PwizVendorAssembliesPath)/Agilent</AgilentAssembliesDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Let Agilent.Tests reach TranslateAsChromatogramType: no shipped fixture has a pump or
+         sampler signal, so the reference mzMLs cannot cover that half of the table. -->
+    <InternalsVisibleTo Include="Agilent.Tests" />
+  </ItemGroup>
+
+  <!-- The Agilent SDK's GetChromatogram / GetSpectrum non-MS code path goes through
+       Agilent.MassSpectrometry.SignalAccess (or similar) which loads
+       System.Configuration.ConfigurationManager. .NET 8 doesn't bundle that assembly in the
+       default BCL — without the package the DAD/UV chromatogram + spectrum reads fail with
+       "Could not load file or assembly 'System.Configuration.ConfigurationManager'". Same
+       reason Sciex.csproj references this package. -->
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+  </ItemGroup>
+
+  <!-- Without $(NativeVendorsAvailable) (-p:IAgreeToVendorLicenses=true AND Windows; this SDK
+       is Windows-only), the encrypted vendor archive is not extracted
+       and the SDK <Reference> entries below are dropped. NO_VENDOR_SUPPORT lets Reader_Agilent
+       compile without the SDK and throw from Read() while keeping Identify() working. The
+       SDK-only files (AgilentRawData / SpectrumList_Agilent) reference Agilent.MassSpectrometry.*
+       directly, so they must be excluded from compilation in that mode. -->
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+    <Compile Remove="AgilentRawData.cs" />
+    <Compile Remove="SpectrumList_Agilent.cs" />
+  </ItemGroup>
+
+  <Target Name="ExtractAgilentAssemblies"
+          Condition="'$(NativeVendorsAvailable)' == 'true'"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
+          Inputs="$(AgilentArchive)"
+          Outputs="$(AgilentAssembliesDir)\MassSpecDataReader.dll;$(AgilentAssembliesDir)\BaseDataAccess.dll;$(AgilentAssembliesDir)\MIDAC.dll">
+    <MakeDir Directories="$(AgilentAssembliesDir)" />
+    <!-- Forward slashes in the archive member patterns: 7zz on non-Windows does not treat
+         '\' as a separator, so a backslash pattern matches nothing and 7-Zip still exits 0. -->
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(AgilentAssembliesDir)&quot; &quot;$(AgilentArchive)&quot; &quot;vendor_api/Agilent/x64/*.dll&quot; &quot;vendor_api/Agilent/x64/*.config&quot;" StandardOutputImportance="low" />
+    <!-- Flatten the extracted layout so the references below are stable. -->
+    <ItemGroup>
+      <_AgilentExtracted Include="$(AgilentAssembliesDir)\vendor_api\Agilent\x64\*.dll" />
+      <_AgilentExtracted Include="$(AgilentAssembliesDir)\vendor_api\Agilent\x64\*.config" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_AgilentExtracted)" DestinationFolder="$(AgilentAssembliesDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Cecil-patches BaseDataAccess.dll + BaseCommon.dll to remove uses of
+       Delegate.BeginInvoke/EndInvoke (removed from .NET 5+; the SDK throws
+       PlatformNotSupportedException on first OpenDataFile without this). The patcher backs
+       each input DLL up to <name>.prepatched on first run and reads from that copy on every
+       subsequent run, so applying the patch to an already-patched DLL is idempotent. Patched
+       DLLs live only in vendor-assemblies/Agilent/ — never committed (gitignored).
+
+       Sequencing: AfterTargets="ExtractAgilentAssemblies" guarantees the SDK exists before
+       we touch it; BeforeTargets="ResolveAssemblyReferences" makes the patched files visible
+       to the reference-copy step that follows. We don't bother with Inputs/Outputs because
+       the patcher is fast (~1s) and the .prepatched-backed idempotency makes re-runs safe.
+
+       WorkingDirectory: anchors the child `dotnet run` inside the repo so it resolves the
+       repo-root global.json (SDK 10.0.100, rollForward latestFeature) and relative paths
+       behave. NOTE: this used to exist to make the child pick up a *different*, older SDK
+       from pwiz-sharp/global.json than the outer build was using; that file no longer
+       exists (global.json moved to the repo root), so parent and child now resolve the
+       same SDK and this is belt-and-braces rather than load-bearing. -->
+  <PropertyGroup>
+    <AgilentPatcherProj>$(PwizSharpRoot)build\AgilentPatcher\AgilentPatcher.csproj</AgilentPatcherProj>
+  </PropertyGroup>
+  <Target Name="PatchAgilentBeginInvoke"
+          Condition="'$(NativeVendorsAvailable)' == 'true'"
+          AfterTargets="ExtractAgilentAssemblies"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths">
+    <Message Importance="high" Text="Cecil-patching Agilent SDK (BaseDataAccess.dll, BaseCommon.dll) to remove BeginInvoke/EndInvoke." />
+    <!-- No EnvironmentVariables scrubbing. It used to clear MSBUILD_EXE_PATH, MSBuildSDKsPath,
+         MSBuildToolsPath, MSBuildExtensionsPath and DOTNET_HOST_PATH so the child would do a
+         fresh SDK resolution instead of inheriting the outer build's. Two reasons it is gone:
+         (1) clearing MSBuildSDKsPath or MSBuildExtensionsPath makes the child fail with MSB4236
+             ("The SDK 'Microsoft.NET.Sdk' specified could not be found") under SDK 10, but only
+             when invoked from inside the outer build - which is what made it look intermittent;
+         (2) the other three are pointless. Measured under `dotnet msbuild` (SDK 10.0.400), the
+             Exec child inherits MSBuildSDKsPath, MSBuildExtensionsPath and DOTNET_HOST_PATH,
+             while MSBUILD_EXE_PATH and MSBuildToolsPath are never set at all - so clearing that
+             subset scrubbed nothing and left the SDK inherited regardless.
+         Inheriting is now the correct behaviour: there is one global.json at the repo root, so
+         parent and child want the same SDK, and building this tool with the same SDK as the
+         build that invokes it is what we want. -->
+    <Exec Command="dotnet run --project &quot;$(AgilentPatcherProj)&quot; -c Release -- &quot;$(AgilentAssembliesDir)&quot;"
+          WorkingDirectory="$(PwizSharpRoot)"
+          StandardOutputImportance="low" />
+  </Target>
+
+  <!-- Managed-assembly references (after extraction). EmbedInteropTypes=false because these are
+       plain .NET assemblies, not COM interop wrappers. -->
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <Reference Include="MassSpecDataReader">
+      <HintPath>$(AgilentAssembliesDir)\MassSpecDataReader.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="BaseCommon">
+      <HintPath>$(AgilentAssembliesDir)\BaseCommon.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="BaseDataAccess">
+      <HintPath>$(AgilentAssembliesDir)\BaseDataAccess.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="BaseError">
+      <HintPath>$(AgilentAssembliesDir)\BaseError.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="BaseTof">
+      <HintPath>$(AgilentAssembliesDir)\BaseTof.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="MIDAC">
+      <HintPath>$(AgilentAssembliesDir)\MIDAC.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Runtime files that must land in the build output. The native agtsampleinforw.dll isn't a
+       managed Reference at all, so it needs an explicit copy; the managed Reference items above
+       copy themselves because Private=true. BaseTof.dll is staged explicitly too: it is only a
+       runtime dependency (loaded by CalibrationMgr for TOF calibration, never referenced by
+       pwiz-sharp's C#), so an explicit Content item keeps it in the output independent of
+       reference-trimming decisions. -->
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <Content Include="$(AgilentAssembliesDir)\agtsampleinforw.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>agtsampleinforw.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(AgilentAssembliesDir)\BaseTof.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>BaseTof.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(AgilentAssembliesDir)\BaseDataAccess.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>BaseDataAccess.dll.config</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+  <!-- Visual C++ 2013 runtime, deployed app-local.
+       BaseTof.dll is the one mixed-mode (C++/CLI) assembly in Agilent's MHDAC set: its PE import
+       table lists MSVCR120.dll + MSVCP120.dll (the other Agilent DLLs are pure managed and import
+       only mscoree.dll). On a machine without the VC++ 2013 x64 redistributable, loading BaseTof
+       fails with ERROR_MOD_NOT_FOUND, surfaced as
+         "Could not load file or assembly '...BaseTof.dll'. The specified module could not be found."
+       — the file is present, its native dependency is not. Every Agilent reader test failed this
+       way on a freshly provisioned CI agent; developer machines and the older agents happened to
+       have the redist installed, which masked it.
+       Microsoft supports app-local deployment of the VC runtime, and pwiz already vendors these
+       DLLs, so copy them next to BaseTof.dll instead of requiring a machine-wide install. -->
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <Content Include="$(PwizCppToolsRoot)\Shared\Lib\Microsoft.VC120.CRT\x64\msvcr120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>msvcr120.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(PwizCppToolsRoot)\Shared\Lib\Microsoft.VC120.CRT\x64\msvcp120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>msvcp120.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+</Project>

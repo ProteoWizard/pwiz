@@ -2,19 +2,24 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <RootNamespace>SkylineAiConnector</RootNamespace>
     <AssemblyName>SkylineAiConnector</AssemblyName>
     <LangVersion>latest</LangVersion>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- Version attributes only. There is no Properties/AssemblyInfo.cs (the net472-era one is
+         long gone), so leaving GenerateAssemblyInfo=false stamped the shipped exe 0.0.0.0 while
+         the ZIP manifest claimed the real version. The remaining attributes stay off to keep the
+         previous behaviour. Values come from SetConnectorVersion below. -->
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <ApplicationIcon>SkylineAiConnector.ico</ApplicationIcon>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\SkylineTool\SkylineTool.csproj" />
@@ -22,23 +27,46 @@
 
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
   </ItemGroup>
 
-  <!-- Build the MCP server (net8.0) before packaging, since cross-targeting
-       prevents a normal ProjectReference from net472 to net8.0 -->
-  <Target Name="BuildMcpServer" BeforeTargets="PackageToolZip">
+  <!-- Central Skyline version (YEAR.ORDINAL.BRANCH.DOY), shared with Skyline.csproj,
+       so the tool ZIP's info.properties tracks the Skyline version automatically. -->
+  <Import Project="..\..\..\..\SkylineVersion.targets" />
+
+  <!-- Stamp THIS assembly. BuildMcpServer below forwards the same values to the nested server
+       build; without this target the connector exe users actually launch reports no version at
+       all in Explorer, Task Manager or crash telemetry. GetAssemblyVersion is when the SDK reads
+       $(Version), so the computation has to land before it. -->
+  <Target Name="SetConnectorVersion"
+          DependsOnTargets="ComputeSkylineVersion"
+          BeforeTargets="GetAssemblyVersion">
+    <PropertyGroup>
+      <Version>$(SkylineNumericVersion)</Version>
+      <FileVersion>$(SkylineNumericVersion)</FileVersion>
+      <InformationalVersion>$(SkylineInformationalVersion)</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Build the MCP server before packaging. The server builds with a win-x64
+       RuntimeIdentifier and its full output is copied into the tool ZIP's
+       mcp-server\ folder by PackageToolZip below, so it stays a separate build
+       (restored + built via the SkylineMcp solution) rather than a ProjectReference. -->
+  <Target Name="BuildMcpServer" BeforeTargets="PackageToolZip" DependsOnTargets="ComputeSkylineVersion">
+    <!-- Forward the computed version: the child MSBuild does not inherit it, and
+         SkylineMcpTest asserts the bundled exe FileVersion == the tool ZIP version. -->
     <MSBuild Projects="$(MSBuildProjectDirectory)\..\SkylineMcpServer\SkylineMcpServer.csproj"
              Targets="Build"
-             Properties="Configuration=$(Configuration)" />
+             Properties="Configuration=$(Configuration);Version=$(SkylineNumericVersion);FileVersion=$(SkylineNumericVersion);InformationalVersion=$(SkylineInformationalVersion)" />
   </Target>
 
   <!-- Package the Skyline External Tool ZIP after build -->
-  <Target Name="PackageToolZip" AfterTargets="Build">
+  <Target Name="PackageToolZip" AfterTargets="Build" DependsOnTargets="ComputeSkylineVersion">
     <PropertyGroup>
       <_ToolZipDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\SkylineMcp\</_ToolZipDir>
       <_ToolZipPath>$(MSBuildProjectDirectory)\SkylineAiConnector.zip</_ToolZipPath>
       <_ConnectorBinDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\</_ConnectorBinDir>
-      <_McpServerBinDir>$(MSBuildProjectDirectory)\..\SkylineMcpServer\bin\$(Configuration)\net8.0-windows\win-x64\</_McpServerBinDir>
+      <_McpServerBinDir>$(MSBuildProjectDirectory)\..\SkylineMcpServer\bin\$(Configuration)\net10.0-windows\win-x64\</_McpServerBinDir>
     </PropertyGroup>
 
     <!-- Clean staging directory -->
@@ -47,9 +75,10 @@
     <MakeDir Directories="$(_ToolZipDir)tool-inf\" />
     <MakeDir Directories="$(_ToolZipDir)mcp-server\" />
 
-    <!-- Copy connector output (exe + all dependencies) -->
+    <!-- Copy connector output (exe + all dependencies). *.json picks up the net8
+         apphost companions (runtimeconfig.json + deps.json) the exe needs to launch. -->
     <ItemGroup>
-      <ConnectorFiles Include="$(_ConnectorBinDir)*.exe;$(_ConnectorBinDir)*.dll;$(_ConnectorBinDir)*.config" />
+      <ConnectorFiles Include="$(_ConnectorBinDir)*.exe;$(_ConnectorBinDir)*.dll;$(_ConnectorBinDir)*.config;$(_ConnectorBinDir)*.json" />
     </ItemGroup>
     <Copy SourceFiles="@(ConnectorFiles)" DestinationFolder="$(_ToolZipDir)" />
 
@@ -59,9 +88,9 @@
     </ItemGroup>
     <Copy SourceFiles="@(ToolInfFiles)" DestinationFolder="$(_ToolZipDir)tool-inf\%(RecursiveDir)" />
 
-    <!-- Stamp version into staged info.properties, reading the exact string
-         from AssemblyInfo.cs to preserve leading zeros (e.g. 26.1.1.070) -->
-    <Exec Command="powershell -NoProfile -Command &quot;$v = (Select-String -Path '$(MSBuildProjectDirectory)\Properties\AssemblyInfo.cs' -Pattern 'AssemblyVersion\(\&quot;(.+?)\&quot;\)').Matches[0].Groups[1].Value; (Get-Content '$(_ToolZipDir)tool-inf\info.properties') -replace '\$\{version\}',$v | Set-Content '$(_ToolZipDir)tool-inf\info.properties'&quot;" />
+    <!-- Stamp the central Skyline version (SkylineVersion.targets) into the staged
+         info.properties, replacing the ${version} placeholder. -->
+    <Exec Command="powershell -NoProfile -Command &quot;(Get-Content '$(_ToolZipDir)tool-inf\info.properties') -replace '\$\{version\}','$(SkylineNumericVersion)' | Set-Content '$(_ToolZipDir)tool-inf\info.properties'&quot;" />
 
     <!-- Copy MCP server output -->
     <ItemGroup>

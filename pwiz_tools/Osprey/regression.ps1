@@ -199,7 +199,7 @@ $ErrorActionPreference = 'Stop'
 $scriptRoot   = Split-Path -Parent $PSCommandPath
 $regressionDir = Join-Path $scriptRoot 'Regression'
 $goldenRoot   = Join-Path $scriptRoot 'osprey-regression.data'
-$ospreyBinDir = Join-Path $scriptRoot 'Osprey\bin\x64\Release\net8.0'
+$ospreyBinDir = Join-Path $scriptRoot 'Osprey\bin\x64\Release\net10.0'
 $ospreyExe    = Join-Path $ospreyBinDir 'Osprey.exe'
 
 # Bit-parity version pin. The build stamps a daily Skyline-scheme version
@@ -505,9 +505,9 @@ function Remove-Scratch([string]$Path) {
 
 # --- Build (unless -NoBuild) --------------------------------------------------
 if (-not $NoBuild) {
-    Write-Progress-Tc 'Building Osprey (Release, net8.0)'
+    Write-Progress-Tc 'Building Osprey (Release, net10.0)'
     $buildPs1 = Join-Path $scriptRoot 'build.ps1'
-    & $buildPs1 -Configuration Release -Framework net8.0 -NoTests
+    & $buildPs1 -Configuration Release -Framework net10.0 -NoTests
     if ($LASTEXITCODE -ne 0) { Write-Problem-Tc "Osprey build failed (exit $LASTEXITCODE)"; exit $LASTEXITCODE }
 }
 if (-not (Test-Path $ospreyExe)) {

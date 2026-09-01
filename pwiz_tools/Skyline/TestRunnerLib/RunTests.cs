@@ -172,9 +172,20 @@ namespace TestRunnerLib
         private int _dotMemoryIterationCount;
         private string _dotMemoryTestName;
 
+        // Escape hatch to skip the system-heap accounting (GetProcessHeapSizes) entirely. Normally left
+        // off: the accounting is segment-heap safe. HeapWalk/HeapLock fault with a fatal, non-catchable
+        // AccessViolation in a Windows Segment Heap process (the default on Windows Server + Windows
+        // containers, hence on the net8 Docker workers and the TeamCity build agents) -- and even on some
+        // classic HEAP_NO_SERIALIZE heaps -- so on net8 GetProcessHeapSizes reads committed/reserved via
+        // HeapSummary (which never walks) instead of walking; net472 keeps the historically-safe walk.
+        // Leak tracking therefore keeps working on net8. This flag is just a manual escape hatch now: the
+        // SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS env var or the skipsystemheaps=on arg forces it all off.
+        public static bool SkipSystemHeaps { get; set; } =
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS"));
+
         public bool ReportSystemHeaps
         {
-            get { return !RunPerfTests; }   // 12-hour perf runs get much slower with system heap reporting
+            get { return !RunPerfTests && !SkipSystemHeaps; }   // 12-hour perf runs get much slower with system heap reporting
         }
 
         public static bool WriteMiniDumps
@@ -281,7 +292,12 @@ namespace TestRunnerLib
                 resultsDir = Path.Combine(GetProjectPath("TestResults"), "TestRunner results");
             else if (IsParallelClient && resultsDir.Contains("TestResults_"))
                 ParallelClientId = resultsDir.Split('_').Last();
+            // Seed both keys. The deprecated TestDir property and TestRunDirectory read different
+            // entries, so moving callers onto the latter needs it present: under VSTest the adapter
+            // fills these in, but under TestRunner we are the adapter, and the property MSTest is
+            // steering everyone toward would otherwise come back null.
             testContext.Properties["TestDir"] = resultsDir;
+            testContext.Properties["TestRunDirectory"] = resultsDir;
             if (Directory.Exists(resultsDir))
                 Try<Exception>(() => Directory.Delete(resultsDir, true), 4, false);
             if (Directory.Exists(resultsDir))
@@ -356,7 +372,7 @@ namespace TestRunnerLib
             var saveTmp = Environment.GetEnvironmentVariable(@"TMP");
 
             if (string.IsNullOrEmpty(dmpDir))
-                dmpDir = Path.Combine(TestContext.TestDir, test.TestMethod.Name, "Minidumps");
+                dmpDir = Path.Combine(TestContext.TestRunDirectory, test.TestMethod.Name, "Minidumps");
 
             var preDumpPath = WritePreMiniDumpIfRequested(test, pass, testNumber, dmpDir);
 
@@ -462,24 +478,10 @@ namespace TestRunnerLib
                     Log("# Heaps " + string.Join("\t", heapCounts.Select(s => s.ToString())) + Environment.NewLine);
                 }
                 
-                // Report handle counts if requested (useful for debugging handle leaks)
-                if (ReportHandles)
-                {
-                    var handleInfos = HandleEnumeratorWrapper.GetHandleInfos();
-                    // Build list of (Type, Count) including User and GDI handles
-                    // (User/GDI are not returned by HandleEnumeratorWrapper)
-                    var allHandleCounts = handleInfos
-                        .GroupBy(h => h.Type)
-                        .Select(g => (Type: g.Key, Count: g.Count()))
-                        .Where(hc => hc.Count > 10)
-                        .Concat(new[] { (Type: "User", Count: LastUserHandleCount), (Type: "GDI", Count: LastGdiHandleCount) });
-                    // Sort by count descending (leaking types rise to top) or alphabetically
-                    var sortedHandleCounts = SortHandlesByCount
-                        ? allHandleCounts.OrderByDescending(c => c.Count)
-                        : allHandleCounts.OrderBy(c => c.Type);
-
-                    Log("# Handles " + string.Join("\t", sortedHandleCounts.Select(c => c.Type + ": " + c.Count)) + Environment.NewLine);
-                }
+                // Report handle counts if requested (useful for debugging handle leaks).
+                // The per-type handle enumeration comes from the C++/CLI TestDiagnostics.dll
+                // (HandleEnumeratorWrapper), which is net472-only. On net8 a pure-C# P/Invoke
+                // reimplementation would be needed; skip per-type handle reporting for now.
                 // CRT leak checking removed - was disabled (required special debug pwiz_cli_data.dll build)
 
                 if (heapOutput && ReportSystemHeaps)
@@ -779,7 +781,7 @@ namespace TestRunnerLib
             // If everything is supposed to be cleaned up, then check for any left over files
             if (_cleanupLevelAll)
             {
-                CleanupAbandonedFiles(TestContext.TestDir, !final, abandonedFilesList);
+                CleanupAbandonedFiles(TestContext.TestRunDirectory, !final, abandonedFilesList);
             }
             CleanupAbandonedFiles(tmpTestDir, !final, abandonedFilesList); // It's always an error to leave any tempfiles behind
 
@@ -916,6 +918,22 @@ namespace TestRunnerLib
             [DllImport("kernel32.dll", SetLastError = true)]
             static extern bool HeapUnlock(IntPtr hHeap);
 
+            // HeapSummary yields committed/reserved/allocated totals without walking the heap, so it can
+            // read a segment heap where HeapWalk cannot. Available on Windows 8+ (kernelbase.dll). Wrapped
+            // in try/catch at the call site in case the export is unavailable on the host OS.
+            [StructLayoutAttribute(LayoutKind.Sequential)]
+            public struct HEAP_SUMMARY
+            {
+                public uint cb;                 // sizeof(HEAP_SUMMARY); must be set before the call
+                public UIntPtr cbAllocated;
+                public UIntPtr cbCommitted;
+                public UIntPtr cbReserved;
+                public UIntPtr cbMaxReserve;
+            }
+
+            [DllImport("kernelbase.dll", SetLastError = true)]
+            static extern bool HeapSummary(IntPtr hHeap, uint dwFlags, ref HEAP_SUMMARY lpSummary);
+
             public static bool HeapDiagnostics { get; set; }
 
             public struct HeapAllocationSizes
@@ -1034,55 +1052,31 @@ namespace TestRunnerLib
                 var buffer = new IntPtr[count];
                 GetProcessHeaps(count, buffer);
                 var sizes = new HeapAllocationSizes[count];
+
+                // net8: never walk. HeapLock/HeapWalk fault with a fatal, non-catchable AccessViolation on
+                // a Windows Segment Heap (the default on Windows Server + Windows containers) AND on some
+                // classic-signature heaps -- e.g. HEAP_NO_SERIALIZE ones with a null lock -- and no cheap
+                // heap-type check reliably tells the safe ones from the unsafe ones across Windows builds
+                // (a segment-signature check still crashed on HeapLock on the TeamCity Windows Server
+                // agent). HeapSummary never walks and works on every heap, so use it for the
+                // committed/reserved totals. cbAllocated matches the walk's "busy bytes" Committed
+                // semantics (and is the more sensitive leak signal); leak tracking keeps working. The
+                // per-block HeapDiagnostics detail is net472-only.
                 for (int i = 0; i < count; i++)
                 {
-                    var committedSizes = HeapDiagnostics ? new Dictionary<long, int>() : null;
-                    var stringCounts = HeapDiagnostics ? new Dictionary<string, int>() : null;
-
-                    var h = buffer[i];
-                    HeapLock(h);
-                    var e = new PROCESS_HEAP_ENTRY();
-                    while (HeapWalk(h, ref e))
+                    try
                     {
-                        if ((e.wFlags & PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_ENTRY_BUSY) != 0)
+                        var summary = new HEAP_SUMMARY { cb = (uint)Marshal.SizeOf(typeof(HEAP_SUMMARY)) };
+                        if (HeapSummary(buffer[i], 0, ref summary))
                         {
-                            sizes[i].Committed += e.cbData + e.cbOverhead;
-
-                            if (committedSizes != null)
-                            {
-                                // Update count
-                                if (!committedSizes.ContainsKey(e.cbData))
-                                    committedSizes[e.cbData] = 0;
-                                committedSizes[e.cbData]++;
-                            }
-
-                            if (stringCounts != null)
-                            {
-                                // Find string(s)
-                                var byteData = new byte[e.cbData];
-                                IntPtr pData = e.lpData;
-                                Marshal.Copy(pData, byteData, 0, byteData.Length);
-                                TRACK_SIZES.ForEach(t => t.DumpUnseenSize(pData, byteData));
-                                foreach (var byteString in FindStrings(byteData))
-                                {
-                                    if (!stringCounts.ContainsKey(byteString))
-                                        stringCounts[byteString] = 0;
-                                    stringCounts[byteString]++;
-                                }
-                            }
+                            sizes[i].Committed += (long)summary.cbAllocated.ToUInt64();
+                            sizes[i].Reserved += (long)summary.cbReserved.ToUInt64();
                         }
-                        else if ((e.wFlags & PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_UNCOMMITTED_RANGE) != 0)
-                            sizes[i].Reserved += e.cbData + e.cbOverhead;
-                        else
-                            sizes[i].Unknown += e.cbData + e.cbOverhead;
-
                     }
-                    HeapUnlock(h);
-
-                    if (committedSizes != null)
-                        sizes[i].CommittedSizes = committedSizes.OrderByDescending(p => p.Value).ToList();
-                    if (stringCounts != null)
-                        sizes[i].StringCounts = stringCounts.OrderByDescending(p => p.Value).ToList();
+                    catch (Exception)
+                    {
+                        // HeapSummary unavailable on this OS; leave this heap's totals at zero.
+                    }
                 }
                 if (HeapDiagnostics)
                     TRACK_SIZES.ForEach(t => t.CloseDumpFile());
@@ -1347,9 +1341,20 @@ namespace TestRunnerLib
             }
         }
 
-        public static IEnumerable<TestInfo> GetTestInfos(string testDll)
+        /// <param name="testDll">The test assembly, by name next to TestRunner or by full path</param>
+        /// <param name="loader">How to load it. Defaults to <see cref="LoadFromAssembly.Try"/>,
+        /// which is what TestRunner needs: it goes on to RUN these tests, so the assemblies have to
+        /// load the way they will at execution time. A caller that only reads names - a test tree -
+        /// passes <see cref="LoadFromAssembly.TryWithoutLocking"/> instead, so that browsing a build
+        /// directory does not take a write lock on everything in it.</param>
+        public static IEnumerable<TestInfo> GetTestInfos(string testDll, Func<string, Assembly> loader = null)
         {
-            var assembly = LoadFromAssembly.Try(GetAssemblyPath(testDll));
+            var dllPath = GetAssemblyPath(testDll);
+            // Not every test project is necessarily deployed next to TestRunner (each net8 SDK
+            // project builds to its own bin). A test DLL that isn't present simply has no tests.
+            if (!File.Exists(dllPath))
+                yield break;
+            var assembly = (loader ?? LoadFromAssembly.Try)(dllPath);
             var types = assembly.GetTypes();
 
             foreach (var type in types)

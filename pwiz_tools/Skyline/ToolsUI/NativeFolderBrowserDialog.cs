@@ -35,6 +35,11 @@ namespace pwiz.Skyline.ToolsUI
     /// file-name box: a folder is chosen in a tree. So set_value selects the folder by sending the dialog a
     /// BFFM_SETSELECTION message with the path, and the accept gesture clicks its OK button. See
     /// <see cref="NativeDialog"/> for the threading contract and how an instance is obtained.
+    ///
+    /// This only drives the classic dialog. .NET 8 would otherwise show the newer IFileDialog folder picker,
+    /// which ignores BFFM_SETSELECTION and would quietly return the folder it opened on instead of the one it
+    /// was asked for; <see cref="pwiz.Common.SystemUtil.FormUtil.CreateFolderBrowserDialog"/> is what keeps
+    /// every folder browser in the tree classic. Adopting the newer picker means rewriting this class.
     /// </summary>
     public class NativeFolderBrowserDialog : NativeDialog
     {

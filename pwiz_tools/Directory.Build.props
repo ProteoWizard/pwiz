@@ -4,7 +4,35 @@
  <!-- MSB3178: Assembly xxx is incorrectly specified as a file. --> 
  <!-- MSB3187: Referenced assembly xxx targets a different processor than the application. --> 
  <!-- MSB3270: There was a mismatch between the processor architecture of the project being built "MSIL" and the processor architecture of the reference xxx, "AMD64". This mismatch may cause runtime failures. Please consider changing the targeted processor architecture of your project through the Configuration Manager so as to align the processor architectures between your project and references, or take a dependency on references with a processor architecture that matches the targeted processor architecture of your project. --> 
- <MSBuildWarningsAsMessages>MSB3187;MSB3270;MSB3178</MSBuildWarningsAsMessages> 
+ <MSBuildWarningsAsMessages>MSB3187;MSB3270;MSB3178;MSB3825</MSBuildWarningsAsMessages> 
+ <!-- Platform-agnostic net8 migration noise the legacy net472 build never emitted:
+      CS8981     third-party alglib math types are all-lowercase; can't rename vendor code.
+      SYSLIB0003 Code Access Security attributes (ZedGraph fork); CAS no-ops on net8.
+      CA1416 (platform-compat) is handled in Directory.Build.targets - suppressed only on
+      Windows-targeted projects, so multi-platform net10.0 model/command-line code keeps it. -->
+ <!-- NU1510: new in .NET 10 (package pruning); flags PackageReferences the shared
+      framework now provides. -->
+ <NoWarn>$(NoWarn);CS8981;SYSLIB0003;NU1510</NoWarn>
+ <!-- .NET 9+ defaults this to "all" (transitive), which fails restore. Restore the
+      net8 default; transitive advisories are tracked separately. -->
+ <NuGetAuditMode>direct</NuGetAuditMode>
+ <!-- MSB3825 (demoted above): WinForms ImageList .ImageStream resources serialize via
+      BinaryFormatter (disabled by default on net8, removed in net9). The build-time
+      GenerateResourceUsePreserializedResources switch does NOT clear it - ImageListStreamer
+      has no non-BinaryFormatter converter - so the real fix is to stop inlining the ~8
+      image lists into .resx (load icons programmatically), tracked for later. It runs fine
+      on net8 today (WinForms reads ImageStream intrinsically); demoted until that lands. -->
  <LangVersion>8.0</LangVersion>
- </PropertyGroup> 
+ <!-- Legacy SkylineTool IPC (ToolService/RemoteService) and other trusted, local serialization still
+      use BinaryFormatter. net472 had it enabled everywhere.
+      IMPORTANT on net9+: the implementation was REMOVED from the shared framework, so this switch
+      alone is NOT sufficient - by itself it is inert and every Serialize/Deserialize throws
+      PlatformNotSupportedException at runtime (it still compiles). What actually restores a working
+      implementation is the out-of-band System.Runtime.Serialization.Formatters package referenced by
+      SkylineTool.csproj; that package requires this runtimeconfig switch alongside it, which is why
+      the property stays. Deserializes trusted, local data only (net472 ignores the property).
+      The tool IPC is migrating to the JSON protocol (JsonToolServer); once that lands, both this
+      property and the compat package can be dropped along with RemoteBase. -->
+ <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+ </PropertyGroup>
  </Project>

@@ -1398,17 +1398,7 @@ namespace pwiz.Skyline.Alerts
 
         public class CoreWebView2ExceptionWrapper : Exception
         {
-            private readonly CoreWebView2ScriptException _ex;
-
-            public CoreWebView2ExceptionWrapper(CoreWebView2ScriptException ex) : base(ex.Message)
-            {
-                _ex = ex;
-            }
-
-            public override string ToString()
-            {
-                return _ex.ToJson;
-            }
+            public CoreWebView2ExceptionWrapper(object ex) : base(ex?.ToString()) { }
         }
 
         private async Task<string> ExecuteScriptAsync(string script, bool showExceptions = true)

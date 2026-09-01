@@ -1,0 +1,232 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Bruker</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Bruker</AssemblyName>
+    <Description>Bruker timsTOF (.d) reader. P/Invoke bindings for Bruker's native timsdata.dll.</Description>
+
+    <!--
+      The Bruker SDKs ship in pwiz_aux/msrc/utility/. The ExtractBrukerAssemblies target below
+      unpacks them into $(BrukerAssembliesDir) on every build (idempotent). Only x64 is extracted;
+      msconvert-sharp targets x64 exclusively.
+
+      One archive per OS rather than a single dual-OS archive, so nobody downloads 32 MB of
+      binaries for a platform they are not building for: vendor_api_Bruker.7z holds the Windows
+      DLLs (and is shared with the cpp tree, which extracts it wholesale), while
+      vendor_api_Bruker_linux.7z holds only the Linux .so files. The internal layout matches -
+      vendor_api/Bruker/x64 vs vendor_api/Bruker/linux_x64.
+
+      The Linux libtimsdata.so is the exact sibling of the Windows timsdata.dll we already
+      shipped: both come from Bruker's tdf-sdk 2.21 download, and the DLL in the Windows archive
+      is byte-identical to that download's win64 copy. Bruker's redist.txt permits redistributing
+      the shared libraries as long as THIRD-PARTY-LICENSE-README.txt accompanies them, so the
+      Linux archive carries a copy of it.
+      -->
+    <BrukerArchive Condition="'$(OS)' == 'Windows_NT'">$(PwizCppAuxRoot)\msrc\utility\vendor_api_Bruker.7z</BrukerArchive>
+    <BrukerArchive Condition="'$(OS)' != 'Windows_NT'">$(PwizCppAuxRoot)\msrc\utility\vendor_api_Bruker_linux.7z</BrukerArchive>
+    <BrukerAssembliesDir>$(PwizVendorAssembliesPath)\Bruker</BrukerAssembliesDir>
+    <BrukerArchiveDir Condition="'$(OS)' == 'Windows_NT'">x64</BrukerArchiveDir>
+    <BrukerArchiveDir Condition="'$(OS)' != 'Windows_NT'">linux_x64</BrukerArchiveDir>
+    <BrukerTimsLib Condition="'$(OS)' == 'Windows_NT'">timsdata.dll</BrukerTimsLib>
+    <BrukerTimsLib Condition="'$(OS)' != 'Windows_NT'">libtimsdata.so</BrukerTimsLib>
+    <BrukerBafLib Condition="'$(OS)' == 'Windows_NT'">baf2sql_c.dll</BrukerBafLib>
+    <BrukerBafLib Condition="'$(OS)' != 'Windows_NT'">libbaf2sql_c.so</BrukerBafLib>
+    <!-- libbaf2sql_c.so links libgomp.so.1 (libtimsdata.so does not) and not every distro or
+         container ships it. The Linux archive carries a copy, which NativeInit preloads by
+         absolute path - the vendor's RPATH has no $ORIGIN, so an app-local copy is otherwise
+         never found. Note the bundled build needs GLIBC 2.34, higher than either Bruker library
+         asks for; on an older distro the preload simply fails and the system libgomp is used
+         instead, so bundling can only help. -->
+    <BrukerOpenMpLib Condition="'$(OS)' != 'Windows_NT'">libgomp.so.1</BrukerOpenMpLib>
+    <!-- $(SevenZaExe) is deliberately NOT set here: Directory.Build.props picks 7za.exe or
+         7zz per OS, and hardcoding the Windows PE breaks any non-Windows build. -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Bruker.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
+    <!-- The only vendor reader that references Vendor.Common directly. Every other vendor SDK
+         arrives through VendorSdkLoader's assembly/native-library resolvers, which the hosting
+         application installs, so the reader never names the loader. CompassXtract fits neither
+         resolver - it is a registration-free COM server, so nothing the CLR or the native
+         loader resolves by name - and has to ask for its archive explicitly via
+         EnsureExtracted. Vendor.Common references only Util, so this adds no cycle. -->
+    <ProjectReference Include="..\Common\Vendor.Common.csproj" />
+  </ItemGroup>
+
+  <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted
+       and the native library Content entries below are dropped. NO_VENDOR_SUPPORT compiles
+       Reader_Bruker without the P/Invoke surface so Read() throws but Identify() still works.
+       This gates on $(IAgreeToVendorLicenses) rather than $(NativeVendorsAvailable) because
+       Bruker's SDK is no longer Windows-only - see the archive comment above. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+
+  <!--
+    CompassXtract (YEP / FID) is the one Bruker sub-format family that is NOT cross-platform: it
+    is Bruker's 2008-era in-process COM server, so it gates on $(NativeVendorsAvailable)
+    (IAgreeToVendorLicenses AND Windows) rather than on $(IAgreeToVendorLicenses) alone. Without
+    it the three CompassXtract*.cs files are compiled out and BrukerData.Create throws a clear
+    NotSupportedException for those two formats, while TDF / TSF / BAF keep working everywhere.
+    -->
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_COMPASSXTRACT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+    <Compile Remove="CompassXtractActivationContext.cs" />
+    <Compile Remove="CompassXtractParameters.cs" />
+    <Compile Remove="CompassXtractData.cs" />
+  </ItemGroup>
+
+  <!--
+    Interop.EDAL is the tlbimp wrapper around CompassXtractMS.dll's EDAL type library. It is a
+    BUILD-TIME input only: EmbedInteropTypes bakes the interfaces we use straight into
+    Pwiz.Vendor.Bruker.dll, so nothing named Interop.EDAL is ever loaded at runtime, which is why
+    it is deliberately absent from the runtime-downloaded vendor_api_BrukerCompassXtract.7z (see
+    build/vendor-sdk-pins.json). The only in-repo copy lives inside the upstream
+    vendor_api_Bruker.7z that this project already extracts on Windows, so pull it from there
+    rather than hardcoding a path into a cpp build output directory.
+
+    <Private>false</Private> keeps it out of the output; NoWarn silences the "reference targets
+    .NET Framework" pair, which is expected for a metadata-only interop assembly.
+    -->
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <NoWarn>$(NoWarn);MSB3277;CS1701</NoWarn>
+  </PropertyGroup>
+
+  <Target Name="ExtractBrukerCompassXtractInterop"
+          Condition="'$(NativeVendorsAvailable)' == 'true'"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
+          Inputs="$(BrukerArchive)"
+          Outputs="$(BrukerAssembliesDir)\Interop.EDAL.dll">
+    <MakeDir Directories="$(BrukerAssembliesDir)" />
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; &quot;vendor_api/Bruker/x64/Interop.EDAL.dll&quot;" StandardOutputImportance="low" />
+    <Copy SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\x64\Interop.EDAL.dll"
+          DestinationFolder="$(BrukerAssembliesDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <Reference Include="Interop.EDAL">
+      <HintPath>$(BrukerAssembliesDir)\Interop.EDAL.dll</HintPath>
+      <Private>false</Private>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </Reference>
+  </ItemGroup>
+
+  <!--
+    Visual C++ 2008 runtime, app-local.
+
+    CompassXtractMS.dll's embedded manifest depends on the Microsoft.VC90.CRT, Microsoft.VC90.MFC
+    and Microsoft.VC90.OpenMP side-by-side assemblies (the BDal.* DLLs it loads add CRT and
+    OpenMP); pwiz's C++ msconvert relies on the VC++ 2008 redistributable being installed on the
+    machine. We ship them instead, from the copies already vendored for the C++/Skyline trees.
+
+    These are SxS assemblies, NOT plain imports, so this is deliberately unlike the flat
+    msvcr120.dll / msvcp120.dll Content in Agilent.csproj: BaseTof.dll imports those by plain
+    name and ordinary DLL search finds them beside the executable, whereas a VC90 dependency is
+    resolved through an activation context and a private copy is only found as a folder named
+    after the assembly identity, holding that identity's manifest. Hence the per-assembly <Link>
+    subfolders below, and hence Microsoft.VC90.OpenMP gets its own folder even though its two
+    files are vendored inside the Microsoft.VC90.CRT one.
+
+    The staged copy is also the source CompassXtractActivationContext mirrors into the vendor
+    cache directory at runtime - see StageVc90Runtime there for which of the two placements is
+    expected to do the resolving.
+    -->
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <Vc90CrtDir>$(PwizCppToolsRoot)\Shared\Lib\Microsoft.VC90.CRT\x64</Vc90CrtDir>
+    <Vc90MfcDir>$(PwizCppToolsRoot)\Shared\Lib\Microsoft.VC90.MFC\x64</Vc90MfcDir>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <Content Include="$(Vc90CrtDir)\Microsoft.VC90.CRT.manifest;$(Vc90CrtDir)\msvcr90.dll;$(Vc90CrtDir)\msvcp90.dll;$(Vc90CrtDir)\msvcm90.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Microsoft.VC90.CRT\%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(Vc90MfcDir)\Microsoft.VC90.MFC.manifest;$(Vc90MfcDir)\mfc90.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Microsoft.VC90.MFC\%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(Vc90CrtDir)\Microsoft.VC90.OpenMP.manifest;$(Vc90CrtDir)\vcomp90.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Microsoft.VC90.OpenMP\%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+  <Target Name="ExtractBrukerAssemblies"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'"
+          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
+          Inputs="$(BrukerArchive)"
+          Outputs="$(BrukerAssembliesDir)\$(BrukerTimsLib);$(BrukerAssembliesDir)\$(BrukerBafLib)">
+    <MakeDir Directories="$(BrukerAssembliesDir)" />
+    <!-- timsdata is the TDF/TSF reader; baf2sql_c is the SQL-cached BAF reader. -->
+    <!-- Forward slashes in the archive member patterns: 7zz on non-Windows does not treat
+         '\' as a separator, so a backslash pattern matches nothing and 7-Zip still exits 0. -->
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; &quot;vendor_api/Bruker/$(BrukerArchiveDir)/$(BrukerTimsLib)&quot; &quot;vendor_api/Bruker/$(BrukerArchiveDir)/$(BrukerBafLib)&quot;" StandardOutputImportance="low" />
+    <!-- The copyright file travels with libgomp: it is GPLv3 with the GCC Runtime Library
+         Exception, and that exception is what permits shipping it beside a non-GPL application,
+         so redistributing the binary without it would not be compliant. -->
+    <Exec Condition="'$(BrukerOpenMpLib)' != ''"
+          Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; &quot;vendor_api/Bruker/$(BrukerArchiveDir)/$(BrukerOpenMpLib)&quot; &quot;vendor_api/Bruker/libgomp-COPYRIGHT.txt&quot;" StandardOutputImportance="low" />
+    <Copy Condition="'$(BrukerOpenMpLib)' != ''"
+          SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\libgomp-COPYRIGHT.txt"
+          DestinationFolder="$(BrukerAssembliesDir)"
+          SkipUnchangedFiles="true" />
+    <!-- Flatten the extracted layout. -->
+    <Copy SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\$(BrukerArchiveDir)\$(BrukerTimsLib);$(BrukerAssembliesDir)\vendor_api\Bruker\$(BrukerArchiveDir)\$(BrukerBafLib)"
+          DestinationFolder="$(BrukerAssembliesDir)"
+          SkipUnchangedFiles="true" />
+    <Copy Condition="'$(BrukerOpenMpLib)' != ''"
+          SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\$(BrukerArchiveDir)\$(BrukerOpenMpLib)"
+          DestinationFolder="$(BrukerAssembliesDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <!--
+    Copy the native libraries into the build output directory so DllImport can find them at
+    runtime. Content files keep them out of the managed assembly metadata.
+    -->
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <Content Include="$(BrukerAssembliesDir)\$(BrukerTimsLib)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>$(BrukerTimsLib)</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(BrukerAssembliesDir)\$(BrukerBafLib)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>$(BrukerBafLib)</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Condition="'$(BrukerOpenMpLib)' != ''" Include="$(BrukerAssembliesDir)\$(BrukerOpenMpLib)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>$(BrukerOpenMpLib)</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Condition="'$(BrukerOpenMpLib)' != ''" Include="$(BrukerAssembliesDir)\libgomp-COPYRIGHT.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>libgomp-COPYRIGHT.txt</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+  <!--
+    System.Data.SQLite.Core: reads the .tdf metadata tables. Matches what the legacy
+    pwiz_tools/Shared/Common uses on .NET Framework, so Skyline and pwiz-sharp end up
+    sharing one SQLite backend in a combined process.
+    -->
+  <ItemGroup>
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+  </ItemGroup>
+
+</Project>

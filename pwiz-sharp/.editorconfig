@@ -1,0 +1,58 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{csproj,props,targets,xml}]
+indent_size = 2
+
+[*.{json,yml,yaml}]
+indent_size = 2
+
+[*.cs]
+# Prefer file-scoped namespaces
+csharp_style_namespace_declarations = file_scoped:warning
+
+# Use var when the type is apparent
+csharp_style_var_when_type_is_apparent = true:suggestion
+
+# Expression-bodied members
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = when_on_single_line:suggestion
+
+# Readonly fields
+dotnet_style_readonly_field = true:warning
+
+# Nullable reference types
+dotnet_diagnostic.CS8600.severity = error
+dotnet_diagnostic.CS8602.severity = error
+dotnet_diagnostic.CS8603.severity = error
+
+# Using directives
+dotnet_sort_system_directives_first = true
+csharp_using_directive_placement = outside_namespace:warning
+
+# WFO1000 ("property does not configure the code serialization for its property content")
+# is new in the .NET 9+ WinForms SDK and ships at Error severity, so WarningsNotAsErrors
+# cannot demote it. It fires on runtime-only properties in the vendored ZedGraph fork, the
+# ported SeeMS and MsConvertGUI - none of which are designer-edited, so the designer never
+# serializes them. Demoted to a warning (kept visible) rather than silenced with NoWarn.
+dotnet_diagnostic.WFO1000.severity = warning
+
+# Test method naming: Given_When_Then / Method_Scenario_Expected conventions use underscores.
+# Inline array literals in CollectionAssert / DataRow are idiomatic in test code.
+# Two patterns — direct children of test/ and deeper descendants — because the .NET
+# editorconfig glob impl treats `**/` as one-or-more, so `**/test/**/*.cs` doesn't
+# match files directly under test/ (post-flatten layout).
+[**/test/*.cs]
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1861.severity = none
+
+[**/test/**/*.cs]
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1861.severity = none

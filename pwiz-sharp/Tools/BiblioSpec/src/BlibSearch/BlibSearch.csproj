@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Pwiz.Tools.BiblioSpec.BlibSearchExe</RootNamespace>
+    <AssemblyName>BlibSearch</AssemblyName>
+    <Description>BlibSearch CLI tool. Port of pwiz_tools/BiblioSpec/src/BlibSearch.cpp.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BiblioSpec\BiblioSpec.csproj" />
+  </ItemGroup>
+
+</Project>

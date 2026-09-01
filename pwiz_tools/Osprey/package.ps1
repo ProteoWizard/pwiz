@@ -7,7 +7,7 @@
     Produces the canonical Osprey redistributable artifacts described in
     ai/todos/active/TODO-20260627_osprey_redistribution.md:
 
-      * For each RID, a `dotnet publish -c Release -f net8.0 -r <rid>
+      * For each RID, a `dotnet publish -c Release -f net10.0 -r <rid>
         --self-contained` is laid out under a single versioned top-level
         folder (Osprey.exe + runtime/dependency DLLs + Documentation/ +
         README + LICENSE) and zipped to `Osprey-<version>-<rid>.zip`. The
@@ -20,7 +20,7 @@
         (Osprey-<version>-win-x64.msi) with an Add/Remove-Programs entry.
 
     Self-contained means ZERO system-.NET dependency: copy the folder to an
-    HPC node and run it. net8.0 is the canonical distribution runtime; net472
+    HPC node and run it. net10.0 is the canonical distribution runtime; net472
     is intentionally not packaged.
 
     This script is standalone (build.ps1 / Osprey.sln are the dev+CI build;
@@ -166,11 +166,11 @@ function New-OspreyStage {
     if (Test-Path $stageDir) { Remove-Item $stageDir -Recurse -Force }
     New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
 
-    Write-Progress-Tc "Publishing $folderName ($Configuration, self-contained net8.0)"
+    Write-Progress-Tc "Publishing $folderName ($Configuration, self-contained net10.0)"
     $publishArgs = @(
         'publish', $ospreyCsproj,
         '-c', $Configuration,
-        '-f', 'net8.0',
+        '-f', 'net10.0',
         '-r', $Rid,
         '--self-contained', 'true',
         '-p:PublishSingleFile=false',

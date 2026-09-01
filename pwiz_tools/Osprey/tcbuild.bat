@@ -10,7 +10,8 @@ REM Pre-requisites on the build agent:
 REM   * pwsh (PowerShell 7+) on PATH (project standard; no powershell.exe fallback)
 REM   * Visual Studio Build Tools (MSBuild + vstest.console.exe)
 REM   * .NET 8 SDK
-REM   * JetBrains.dotCover.GlobalTools (dotnet tool install -g)
+REM   (dotCover is restored from .config\dotnet-tools.json by the build, so it
+REM   needs no agent provisioning.)
 REM   The wix v5 tool (for the .msi) is self-provisioned below if absent, so no
 REM   manual agent step is needed; this can be replaced by explicit provisioning.
 REM
@@ -27,7 +28,7 @@ setlocal
 REM Make dotnet global tools (wix, etc.) resolvable in this build's environment.
 set "PATH=%PATH%;%USERPROFILE%\.dotnet\tools"
 
-pwsh -NoProfile -File "%~dp0build.ps1" -TeamCity -Coverage -Configuration Release -Framework net8.0
+pwsh -NoProfile -File "%~dp0build.ps1" -TeamCity -Coverage -Configuration Release -Framework net10.0
 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
 REM Bootstrap the wix v5 tool + matching v5 UI extension if the agent lacks them

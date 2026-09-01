@@ -25,13 +25,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using Excel;
+using ExcelDataReader;
 using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -703,8 +704,22 @@ namespace pwiz.SkylineTestUtil
             SetClipboardText(GetExcelFileText(filePath, page, columns, hasHeader));
         }
 
+        private static bool _excelCodePagesRegistered;
+
+        // Modern ExcelDataReader throws NotSupportedException ("No data is available for
+        // encoding 1252.") on net8 when reading legacy .xls (BIFF) files unless the code-pages
+        // provider is registered first. .NET Framework registered these by default; net8 does not.
+        private static void EnsureExcelCodePagesRegistered()
+        {
+            if (_excelCodePagesRegistered)
+                return;
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            _excelCodePagesRegistered = true;
+        }
+
         protected static string GetExcelFileText(string filePath, string page, int columns, bool hasHeader)
         {
+            EnsureExcelCodePagesRegistered();
             bool[] legacyFileValues = new[] {false};
             if (filePath.EndsWith(".xls"))
             {
@@ -2310,6 +2325,20 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected void RunFunctionalTest(string defaultUiMode = UiModes.PROTEOMIC)
         {
+            // WinForms requires an STA thread: creating a TreeView calls SetAcceptDrops, which
+            // makes OLE calls and throws "DragDrop registration did not succeed" from MTA.
+            // The console harness and Skyline both mark Main [STAThread], so harness runs never
+            // hit this. Visual Studio / ReSharper used to match, because VSTest defaults
+            // ExecutionThreadApartmentState to STA on .NET Framework - but that setting is not
+            // supported on net8, so the test host thread is MTA and every functional test failed
+            // there with the DragDrop error. Marshal onto an STA thread instead of requiring
+            // every test class to be attributed (MSTest 3.2 has no [STATestClass] for net8).
+            if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+            {
+                RunOnStaThread(() => RunFunctionalTest(defaultUiMode));
+                return;
+            }
+
             if (IsPerfTest && !RunPerfTests)
             {
                 return; // Don't want to run this lengthy test right now
@@ -2356,6 +2385,39 @@ namespace pwiz.SkylineTestUtil
                 //Log<AbstractFunctionalTest>.Fail(@"Functional test did not complete");
                 Assert.Fail("Functional test did not complete");
             }
+        }
+
+        /// <summary>
+        /// Runs <paramref name="action"/> on a dedicated STA thread and blocks until it finishes,
+        /// rethrowing any exception with its original stack trace intact so the test framework
+        /// still reports the real failure rather than a wrapper.
+        /// </summary>
+        private static void RunOnStaThread(Action action)
+        {
+            Exception pending = null;
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    // This thread is about to run Skyline's message loop, and WinForms keeps the
+                    // exception mode and the ThreadException subscription PER THREAD. Program.Init
+                    // only establishes them once per process, so without this the second and later
+                    // functional tests in a test-host process route no UI exceptions: WinForms shows
+                    // its own modal dialog and Join below waits on it forever.
+                    Program.InitUiThreadExceptionHandling();
+                    action();
+                }
+                catch (Exception x)
+                {
+                    pending = x;
+                }
+            });
+            thread.Name = @"Functional test STA thread";   // named so hang dumps identify it
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+            if (pending != null)
+                ExceptionDispatchInfo.Capture(pending).Throw();
         }
 
         private void RunFunctionalTestAttempt(string defaultUiMode)
@@ -2622,6 +2684,13 @@ namespace pwiz.SkylineTestUtil
 
         private static bool AreEquivalentAuditLogs(string expected, string actual)
         {
+            // First accept audit logs that differ only in tiny embedded floating-point values
+            // (e.g. a regression slope) between net8 (64-bit SSE2) and net472 (32-bit x87).
+            // Non-numeric text and integer tokens must still match exactly, so this only masks
+            // last-few-ULP noise, never a real regression. See
+            // AssertEx.AreAuditLogsEquivalentWithNumericTolerance for the exact rules.
+            if (AssertEx.AreAuditLogsEquivalentWithNumericTolerance(expected, actual, out _))
+                return true;
             try
             {
                 // Asserts that the files are the same other than generated GUIDs and timestamps
@@ -2792,7 +2861,63 @@ namespace pwiz.SkylineTestUtil
             EndTest();
 
             Settings.Default.Reset();
-            MsDataFileImpl.PerfUtilFactory.Reset();
+        }
+
+        /// <summary>
+        /// TEMPORARY diagnostic. Dumps Microsoft.Win32.SystemEvents' static handler table, naming
+        /// each subscriber and its delegate target, to identify what subscribes
+        /// UserPreferenceChanged with SkylineWindow as the target. Reflection rather than a
+        /// reference, so TestUtil takes no new dependency. Remove once the leak is understood.
+        /// </summary>
+        /// <summary>
+        /// TEMPORARY verifier. Set SKYLINE_FORCE_SYSEVENTS_LEAK=1 to reproduce, on demand, the
+        /// framework condition that otherwise appears about once per 30,000 test executions:
+        /// a SystemEvents.UserPreferenceChanged hook on SkylineWindow that outlives its disposal.
+        ///
+        /// <para>Adds a second, identical subscription of WinForms' own private
+        /// Control.UserPreferenceChanged handler for the main window. WinForms removes one matching
+        /// entry when the window is disposed, so exactly one is left behind - which is precisely
+        /// the leak that has been observed in the wild.</para>
+        /// </summary>
+        // TEMPORARY. Roots SkylineWindow the way a real Skyline regression would - a static
+        // reference that has nothing to do with SystemEvents - so the counter-case can be checked:
+        // the framework-hook classification must NOT excuse this one.
+        // ReSharper disable once CollectionNeverQueried.Local
+        private static readonly List<object> _forcedRealLeak = new List<object>();
+
+        private static void ForceSystemEventsLeak()
+        {
+            var mode = Environment.GetEnvironmentVariable(@"SKYLINE_FORCE_SYSEVENTS_LEAK");
+            if (mode == null || SkylineWindow == null)
+                return;
+            if (mode.Contains(@"real"))
+            {
+                _forcedRealLeak.Add(SkylineWindow);
+                Console.WriteLine(@"FORCELEAK added static reference to SkylineWindow (genuine leak)");
+            }
+            if (!mode.Contains(@"hook") && mode != @"1")
+                return;
+            try
+            {
+                var seType = Type.GetType(@"Microsoft.Win32.SystemEvents, Microsoft.Win32.SystemEvents");
+                var controlType = typeof(Control);
+                var handlerType = seType?.GetEvent(@"UserPreferenceChanged")?.EventHandlerType;
+                var method = controlType.GetMethod(@"UserPreferenceChanged",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (handlerType == null || method == null)
+                {
+                    Console.WriteLine(@"FORCELEAK could not find Control.UserPreferenceChanged");
+                    return;
+                }
+                var del = Delegate.CreateDelegate(handlerType, SkylineWindow, method);
+                seType.GetEvent(@"UserPreferenceChanged").AddEventHandler(null, del);
+                Console.WriteLine(@"FORCELEAK added duplicate {0}.{1} hook for SkylineWindow",
+                    method.DeclaringType?.Name, method.Name);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(@"FORCELEAK FAILED {0}: {1}", e.GetType().Name, e.Message);
+            }
         }
 
         private void RunTest()
@@ -2835,6 +2960,8 @@ namespace pwiz.SkylineTestUtil
             {
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
             }
+
+            ForceSystemEventsLeak();
 
             DoTest();
 
@@ -2922,6 +3049,14 @@ namespace pwiz.SkylineTestUtil
             {
                 // Clear the clipboard to avoid the appearance of a memory leak.
                 ClipboardEx.Release();
+                // Release the two net8 WinForms holds on this window (see ReleaseModalMenuFilterWindow
+                // and ReleaseToolStripToolTips) before closing, so SkylineWindow and its document can be
+                // collected and are not reported as a cross-test GC leak.
+                RunUI(() =>
+                {
+                    ReleaseModalMenuFilterWindow();
+                    ReleaseToolStripToolTips();
+                });
                 // Occasionally this causes an InvalidOperationException during stress testing.
                 RunUI(SkylineWindow.Close);
             }
@@ -2933,6 +3068,107 @@ namespace pwiz.SkylineTestUtil
             catch (InvalidOperationException)
 // ReSharper restore EmptyGeneralCatchClause
             {
+            }
+        }
+
+        // net8 WinForms tracks the last active top-level window during menu mode via
+        // ToolStripManager.ModalMenuFilter._lastActiveWindow, a HandleRef<HWND> whose Wrapper keeps
+        // the Form managed-alive. Unlike net472 (which tracked a bare HWND), this survives menu-mode
+        // exit, so each test's SkylineWindow (and its document) would be reported as a cross-test GC
+        // leak. WinForms exposes no public reset and is not reachable via InternalsVisibleTo, so
+        // clear the HandleRef fields reflectively. Must run on the UI thread - the filter instance is
+        // thread-static. Field names verified against Microsoft.WindowsDesktop.App 8.0.
+        private static void ReleaseModalMenuFilterWindow()
+        {
+            var filterType = typeof(System.Windows.Forms.ToolStripManager).GetNestedType(
+                @"ModalMenuFilter", System.Reflection.BindingFlags.NonPublic);
+            var instance = filterType?
+                .GetField(@"t_instance",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                ?.GetValue(null);
+            if (instance == null)
+                return; // no menu was shown on this thread - nothing to release
+            foreach (var fieldName in new[] { @"_lastActiveWindow", @"_activeHwnd" })
+            {
+                var field = filterType.GetField(fieldName,
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (field != null)
+                    field.SetValue(instance, System.Activator.CreateInstance(field.FieldType));
+            }
+        }
+
+        // WinForms shows a tool tip for the drop-down item a test selects, and arms the owning ToolTip's
+        // 5-second auto-pop timer to take it back down. Timer.Start() roots the timer with a GCHandle,
+        // and ToolTipTimer.Host is the drop-down, whose owner item's Click handler holds one of the
+        // Skyline menu classes - which holds SkylineWindow. A user's mouse leaving the item hides the
+        // tool tip and stops the timer, but a test drives menus without a mouse, so nothing hides it,
+        // and the UI message pump ends with the test before the timer could fire on its own. The handle
+        // is never released and SkylineWindow is reported as a GC leak (TestDiaFragPipeTutorial hit this
+        // whenever the document was slow enough for the tool tip to appear at all - 10 timers were still
+        // armed at the end of that test). So stop them, the way ToolTip.StopTimer() would. The ToolStrip
+        // list is thread-static, so this must run on the UI thread.
+        // Field names verified against Microsoft.WindowsDesktop.App 8.0 AND 10.0. WinForms renamed the
+        // static in .NET 10 (t_toolStripWeakArrayList -> t_activeToolStrips) AND changed its type from an
+        // ArrayList-derived list to WeakRefCollection<ToolStrip>, which implements IEnumerable but NOT
+        // non-generic IList - so both the lookup and the cast have to tolerate either shape, and a miss
+        // has to be reported rather than silently skipped.
+        private static void ReleaseToolStripToolTips()
+        {
+            const System.Reflection.BindingFlags nonPublicInstance =
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+            const System.Reflection.BindingFlags nonPublicStatic =
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
+            // net10 name first, then the net8 name.
+            var toolStripsField =
+                typeof(System.Windows.Forms.ToolStripManager).GetField(@"t_activeToolStrips", nonPublicStatic) ??
+                typeof(System.Windows.Forms.ToolStripManager).GetField(@"t_toolStripWeakArrayList", nonPublicStatic);
+            if (toolStripsField == null)
+            {
+                // Same reasoning as the ToolStrip.ToolTip / ToolTip._timer check below: a silent return
+                // here is indistinguishable from "no ToolStrip on this thread", and the leak comes back.
+                Program.AddTestException(new MissingMemberException(
+                    @"WinForms no longer has ToolStripManager.t_activeToolStrips (or the older " +
+                    @"t_toolStripWeakArrayList), so tool tip timers left armed by a test can no longer " +
+                    @"be found. See ReleaseToolStripToolTips."));
+                return;
+            }
+            var toolStripsValue = toolStripsField.GetValue(null);
+            if (toolStripsValue == null)
+                return; // No ToolStrip was ever created on this thread
+            // net8: ArrayList-derived (IList). net10: WeakRefCollection<ToolStrip>, IEnumerable only.
+            if (toolStripsValue is not System.Collections.IEnumerable toolStrips)
+            {
+                Program.AddTestException(new MissingMemberException(
+                    @"ToolStripManager's ToolStrip list is no longer enumerable (" +
+                    toolStripsValue.GetType().FullName + @"), so tool tip timers left armed by a test " +
+                    @"can no longer be stopped. See ReleaseToolStripToolTips."));
+                return;
+            }
+            var toolTipProperty = typeof(ToolStrip).GetProperty(@"ToolTip", nonPublicInstance);
+            var timerField = typeof(System.Windows.Forms.ToolTip).GetField(@"_timer", nonPublicInstance);
+            if (toolTipProperty == null || timerField == null)
+            {
+                // Say so rather than quietly doing nothing: without these the leak comes back, and a
+                // GC-leak failure in some unrelated test is a long way from the rename that caused it.
+                // Reported rather than thrown - this runs during teardown, which has to finish.
+                Program.AddTestException(new MissingMemberException(
+                    @"WinForms no longer has ToolStrip.ToolTip or ToolTip._timer, so tool tip timers " +
+                    @"left armed by a test can no longer be stopped. See ReleaseToolStripToolTips."));
+                return;
+            }
+            foreach (var entry in toolStrips)
+            {
+                // The collection holds weak references, so a collected ToolStrip reads as null here
+                if (entry is not ToolStrip toolStrip || toolStrip.IsDisposed)
+                    continue;
+                var toolTip = toolTipProperty.GetValue(toolStrip);
+                if (toolTip == null || timerField.GetValue(toolTip) is not System.Windows.Forms.Timer timer)
+                    continue;
+                // What ToolTip.StopTimer() does. Stop() releases the GCHandle Start() took out; the
+                // ToolTip itself stays usable and arms a fresh timer if it is shown again.
+                timer.Stop();
+                timer.Dispose();
+                timerField.SetValue(toolTip, null);
             }
         }
 

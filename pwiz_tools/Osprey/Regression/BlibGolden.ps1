@@ -193,16 +193,16 @@ JOIN RefSpectra r ON p.RefSpectraID = r.id
 # ----------------------------------------------------------------------
 function Initialize-Sqlite {
     <#
-    Load System.Data.SQLite from the Osprey net8.0 build output and make
+    Load System.Data.SQLite from the Osprey net10.0 build output and make
     sure its native SQLite.Interop.dll sits beside the managed assembly (the
     P/Invoke probes the assembly dir directly when loaded via Add-Type). Call
-    once before any Open-Blib. -OspreyBinDir points at the build's net8.0 dir.
+    once before any Open-Blib. -OspreyBinDir points at the build's net10.0 dir.
     #>
     param([Parameter(Mandatory = $true)][string]$OspreyBinDir)
 
     $dll = Join-Path $OspreyBinDir 'System.Data.SQLite.dll'
     if (-not (Test-Path $dll)) {
-        throw "System.Data.SQLite.dll not found at $dll -- build Osprey (net8.0) first."
+        throw "System.Data.SQLite.dll not found at $dll -- build Osprey (net10.0) first."
     }
     $rid = if ($IsLinux) { 'linux-x64' } else { 'win-x64' }
     $nativeSrc = Join-Path $OspreyBinDir "runtimes/$rid/native/SQLite.Interop.dll"

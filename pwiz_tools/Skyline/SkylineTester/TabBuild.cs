@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 
 namespace SkylineTester
 {
@@ -126,11 +127,6 @@ namespace SkylineTester
                 : "Skyline ({0}/{1})".With(branchParts[branchParts.Length - 2], branchParts[branchParts.Length - 1]);
             var git = MainWindow.Git;
             
-            // Default to VS 2022 (msvc-14.3) for compatibility with vendor DLLs.
-            // VS 2026 (msvc-14.5) can cause access violations with some vendor libraries.
-            // Set environment variable SKYLINE_BUILD_TOOLSET to override (e.g., "msvc-14.5" for VS 2026)
-            var toolset = Environment.GetEnvironmentVariable("SKYLINE_BUILD_TOOLSET") ?? "msvc-14.3";
-            var toolsetArg = "toolset=" + toolset;
             /* But retain this code in case we someday get back to a state where we need to choose
 
             // Determine toolset requirement based on .Net usage
@@ -182,8 +178,7 @@ namespace SkylineTester
             var toolsetArg = "toolset=" + toolset;
             */
 
-            var architectureList = string.Join("- and ", architectures);
-            commandShell.Add("# Build {0} {1}-bit...", branchName, architectureList);
+            commandShell.Add("# Build {0}...", branchName);
             commandShell.RunStartTime = DateTime.UtcNow;
 
             if (Directory.Exists(buildRoot) && updateBuild)
@@ -191,7 +186,10 @@ namespace SkylineTester
                 commandShell.Add("#@ Updating Build directory...\n");
                 commandShell.Add("# Updating Build directory...");
                 commandShell.Add("cd {0}", buildRoot.Quote());
-                commandShell.Add("{0} pull", git.Quote());
+                // --progress for the same reason the clone below passes it: git suppresses
+                // progress output when stdout is not a terminal, and this shell is a pipe. Without
+                // it a long fetch looks like a hang, with nothing logged until it completes.
+                commandShell.Add("{0} pull --progress", git.Quote());
             }
 
             if (nukeBuild)
@@ -218,15 +216,23 @@ namespace SkylineTester
             commandShell.Add("# Building Skyline...");
             commandShell.Add("cd {0}", buildRoot.Quote());
 
-            foreach (int architecture in architectures)
-            {
-                commandShell.Add("#@ Building Skyline {0} bit...\n", architecture);
-                commandShell.Add("{0} {1} {2} --i-agree-to-the-vendor-licenses {3} nolog",
-                    Path.Combine(buildRoot, @"pwiz_tools\build-apps.bat").Quote(),
-                    architecture,
-                    runBuildTests ? "pwiz_tools/Skyline" : "pwiz_tools/Skyline//Skyline.exe",
-                    toolsetArg);
-            }
+            // Build through pwiz_tools\Skyline\build.bat (dotnet build + stage), which supersedes
+            // the bjam wrapper. The old "pwiz_tools/Skyline//Skyline.exe" bjam target still declares
+            // pwiz_data_cli and install-native-dependencies, so it rebuilt the entire native tree
+            // (HDF5 and friends) before reaching any managed code.
+            //
+            // No architecture argument: build.bat is x64-only, so this no longer loops over
+            // `architectures`. The parameter is kept because callers still use it to validate that
+            // the user picked a platform, and to decide the nightly's build directory.
+            //
+            // build.bat runs the test suite itself unless told not to. Only the Build tab's
+            // "run build verification tests" option wants that -- the nightly and quality runs test
+            // afterwards under their own duration budget and requeue logic, so letting build.bat
+            // test as well would double the work.
+            commandShell.Add("#@ Building Skyline...\n");
+            commandShell.Add("{0} Release --i-agree-to-the-vendor-licenses{1}",
+                Path.Combine(buildRoot, @"pwiz_tools\Skyline\build.bat").Quote(),
+                runBuildTests ? string.Empty : " --no-tests");
 
             commandShell.Add("# Build done.");
             return true;
@@ -262,7 +268,8 @@ namespace SkylineTester
 
         public void BrowseBuild()
         {
-            using (var dlg = new FolderBrowserDialog())
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            using (var dlg = FormUtil.CreateFolderBrowserDialog())
             {
                 dlg.Description = "Select or create a root folder for build source files.";
                 dlg.ShowNewFolderButton = true;

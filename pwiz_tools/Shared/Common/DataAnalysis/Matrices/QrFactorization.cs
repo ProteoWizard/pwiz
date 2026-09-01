@@ -23,7 +23,6 @@ using System.Linq;
 using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
-using MathNet.Numerics.Properties;
 
 namespace pwiz.Common.DataAnalysis.Matrices
 {
@@ -85,7 +84,10 @@ namespace pwiz.Common.DataAnalysis.Matrices
         {
             double[] finalResult = new double[_rFull.GetLength(1)];
             var originalResult = new double[NumberIndependentColumns];
-            Control.LinearAlgebraProvider.QRSolveFactored(_qFlat,
+            // Old MathNet.Numerics.Control.LinearAlgebraProvider was moved to
+            // Providers.LinearAlgebra.LinearAlgebraControl.Provider in 4.x+. The
+            // legacy bundled DLL (net472 path) still exposes the old name.
+            MathNet.Numerics.Providers.LinearAlgebra.LinearAlgebraControl.Provider.QRSolveFactored(_qFlat,
                 _independentRFlat, _q.GetLength(0), NumberIndependentColumns, 
                 _tau.Take(NumberIndependentColumns).ToArray(),
                 values, 1, originalResult);
@@ -143,12 +145,12 @@ namespace pwiz.Common.DataAnalysis.Matrices
                 var minmn = Math.Min(rowsR, columnsR);
                 if (tau.Length < minmn)
                 {
-                    throw new ArgumentException(string.Format(Resources.ArrayTooSmall, "min(m,n)"), nameof(tau));
+                    throw new ArgumentException("The array argument must have a length of at least min(m,n).", nameof(tau));
                 }
 
                 if (q.GetLength(0) != r.GetLength(0) || q.GetLength(1) != r.GetLength(0))
                 {
-                    throw new ArgumentException(string.Format(Resources.ArgumentArrayWrongLength, "rowsR * rowsR"), nameof(q));
+                    throw new ArgumentException("The array argument must have a length of rowsR * rowsR.", nameof(q));
                 }
                 for (int i = 0; i < r.GetLength(0); i++)
                 {

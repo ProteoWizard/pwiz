@@ -9,240 +9,241 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
+    <Filter Include="Source Files\zlib" />
+    <Filter Include="Source Files\expat" />
+    <Filter Include="Source Files\MSToolkit" />
+    <Filter Include="Source Files\mzParser" />
+    <Filter Include="Source Files\Hardklor" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CAveragine.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\adler32.c">
+      <Filter>Source Files\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="CHardklor.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\compress.c">
+      <Filter>Source Files\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="CHardklor2.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\crc32.c">
+      <Filter>Source Files\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="CHardklorFileReader.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\deflate.c">
+      <Filter>Source Files\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="CHardklorOutput.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\gzio.c">
+      <Filter>Source Files\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="CHardklorParser.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\infback.c">
+      <Filter>Source Files\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="CHardklorProtein.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\inffast.c">
+      <Filter>Source Files\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="CHardklorSetting.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\inflate.c">
+      <Filter>Source Files\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="CHardklorVariant.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\inftrees.c">
+      <Filter>Source Files\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="CMercury8.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\trees.c">
+      <Filter>Source Files\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="CModelLibrary.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\uncompr.c">
+      <Filter>Source Files\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="CNoiseReduction.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\zutil.c">
+      <Filter>Source Files\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="CPeriodicTable.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\expat-2.0.1\lib\xmlparse.c">
+      <Filter>Source Files\expat</Filter>
     </ClCompile>
-    <ClCompile Include="CSpecAnalyze.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\expat-2.0.1\lib\xmlrole.c">
+      <Filter>Source Files\expat</Filter>
     </ClCompile>
-    <ClCompile Include="CSplitSpectrum.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\expat-2.0.1\lib\xmltok.c">
+      <Filter>Source Files\expat</Filter>
     </ClCompile>
-    <ClCompile Include="FFT-HK.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\expat-2.0.1\lib\xmltok_impl.c">
+      <Filter>Source Files\expat</Filter>
     </ClCompile>
-    <ClCompile Include="FFT.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\..\libraries\expat-2.0.1\lib\xmltok_ns.c">
+      <Filter>Source Files\expat</Filter>
     </ClCompile>
-    <ClCompile Include="HardklorApp.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\MSToolkit\MSObject.cpp">
+      <Filter>Source Files\MSToolkit</Filter>
     </ClCompile>
-    <ClCompile Include="S2N.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\MSToolkit\MSReader.cpp">
+      <Filter>Source Files\MSToolkit</Filter>
     </ClCompile>
-    <ClCompile Include="Smooth.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\MSToolkit\mzMLWriter.cpp">
+      <Filter>Source Files\MSToolkit</Filter>
     </ClCompile>
-    <ClCompile Include="SpecAnalyzeSupport.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\MSToolkit\pepXMLWriter.cpp">
+      <Filter>Source Files\MSToolkit</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\MSToolkit\MSObject.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\MSToolkit\Spectrum.cpp">
+      <Filter>Source Files\MSToolkit</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\MSToolkit\MSReader.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\mzParser\BasicChromatogram.cpp">
+      <Filter>Source Files\mzParser</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\MSToolkit\mzMLWriter.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\mzParser\BasicSpectrum.cpp">
+      <Filter>Source Files\mzParser</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\MSToolkit\pepXMLWriter.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\mzParser\Czran.cpp">
+      <Filter>Source Files\mzParser</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\MSToolkit\Spectrum.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\mzParser\MSNumpress.cpp">
+      <Filter>Source Files\mzParser</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\libraries\zlib-1.2.3\compress.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\mzParser\mzParser.cpp">
+      <Filter>Source Files\mzParser</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\libraries\zlib-1.2.3\deflate.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\mzParser\mzp_base64.cpp">
+      <Filter>Source Files\mzParser</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\libraries\zlib-1.2.3\inffast.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\mzParser\PWIZface.cpp">
+      <Filter>Source Files\mzParser</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\libraries\zlib-1.2.3\inflate.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\mzParser\RAMPface.cpp">
+      <Filter>Source Files\mzParser</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\libraries\zlib-1.2.3\trees.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\mzParser\saxhandler.cpp">
+      <Filter>Source Files\mzParser</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\libraries\zlib-1.2.3\uncompr.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\mzParser\saxmzmlhandler.cpp">
+      <Filter>Source Files\mzParser</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\libraries\zlib-1.2.3\adler32.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MSToolkit\src\mzParser\saxmzxmlhandler.cpp">
+      <Filter>Source Files\mzParser</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\libraries\zlib-1.2.3\crc32.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CAveragine.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\libraries\zlib-1.2.3\zutil.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CHardklor.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\libraries\zlib-1.2.3\gzio.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CHardklor2.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\libraries\zlib-1.2.3\infback.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CHardklorFileReader.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\libraries\zlib-1.2.3\inftrees.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CHardklorOutput.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\mzParser\BasicChromatogram.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CHardklorParser.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\mzParser\BasicSpectrum.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CHardklorProtein.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\mzParser\MSNumpress.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CHardklorSetting.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\mzParser\mzp_base64.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CHardklorVariant.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\mzParser\mzParser.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CMercury8.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\mzParser\saxhandler.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CModelLibrary.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\mzParser\saxmzmlhandler.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CNoiseReduction.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\mzParser\saxmzxmlhandler.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CPeriodicTable.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\mzParser\PWIZface.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CSpecAnalyze.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\mzParser\RAMPface.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\CSplitSpectrum.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\mzParser\Czran.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\FFT-HK.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\expat-2.2.9\lib\xmlparse.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\FFT.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\expat-2.2.9\lib\xmlrole.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\HardklorApp.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\expat-2.2.9\lib\xmltok.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\S2N.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\expat-2.2.9\lib\xmltok_impl.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\Smooth.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
-    <ClCompile Include="..\MSToolKit\src\expat-2.2.9\lib\xmltok_ns.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Hardklor\SpecAnalyzeSupport.cpp">
+      <Filter>Source Files\Hardklor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CAveragine.h">
+    <ClInclude Include="Hardklor\CAveragine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CHardklor.h">
+    <ClInclude Include="Hardklor\CHardklor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CHardklor2.h">
+    <ClInclude Include="Hardklor\CHardklor2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CHardklorFileReader.h">
+    <ClInclude Include="Hardklor\CHardklorFileReader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CHardklorOutput.h">
+    <ClInclude Include="Hardklor\CHardklorOutput.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CHardklorParser.h">
+    <ClInclude Include="Hardklor\CHardklorParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CHardklorProtein.h">
+    <ClInclude Include="Hardklor\CHardklorProtein.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CHardklorSetting.h">
+    <ClInclude Include="Hardklor\CHardklorSetting.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CHardklorVariant.h">
+    <ClInclude Include="Hardklor\CHardklorVariant.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CMercury8.h">
+    <ClInclude Include="Hardklor\CMercury8.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CModelLibrary.h">
+    <ClInclude Include="Hardklor\CModelLibrary.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CNoiseReduction.h">
+    <ClInclude Include="Hardklor\CNoiseReduction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CPeriodicTable.h">
+    <ClInclude Include="Hardklor\CPeriodicTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CSpecAnalyze.h">
+    <ClInclude Include="Hardklor\CSpecAnalyze.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CSplitSpectrum.h">
+    <ClInclude Include="Hardklor\CSplitSpectrum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FFT.h">
+    <ClInclude Include="Hardklor\FFT-HK.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FFT-HK.h">
+    <ClInclude Include="Hardklor\FFT.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HardklorTypes.h">
+    <ClInclude Include="Hardklor\HardklorTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mercury.h">
+    <ClInclude Include="Hardklor\mercury.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="S2N.h">
+    <ClInclude Include="Hardklor\S2N.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Smooth.h">
+    <ClInclude Include="Hardklor\Smooth.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SpecAnalyzeSupport.h">
+    <ClInclude Include="Hardklor\SpecAnalyzeSupport.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

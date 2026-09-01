@@ -22,10 +22,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
-using EnvDTE;
 using TestRunnerLib.PInvoke;
 
 namespace SkylineTester
@@ -214,36 +211,17 @@ namespace SkylineTester
             var file = text.Substring(fileStart, lineNumberStart - fileLinePattern.Length - fileStart);
             var lineNumberText = text.Substring(lineNumberStart, lineEnd - lineNumberStart);
 
-            var dte = GetDTE(file, lineNumberText);
-            if (dte == null)
-                return;
-            try
-            {
-                // Open in Visual Studio and go to the indicated line number.
-                dte.ExecuteCommand("File.OpenFile", file);
-                dte.ExecuteCommand("Edit.GoTo", lineNumberText);
-                ((TextSelection)dte.ActiveDocument.Selection).SelectLine();
-
-                // Bring Visual Studio to the foreground.
-                User32Test.SetForegroundWindow((IntPtr)dte.MainWindow.HWnd);
-            }
-            catch (COMException)
-            {
-                MessageBox.Show(MainWindow, "Failure attempting to communicate with Visual Studio.");
-            }
-
-            Marshal.ReleaseComObject(dte);
+            // net8 has no EnvDTE COM automation; degrade to launching devenv.exe on the enclosing
+            // Skyline solution with an Edit.Goto (see OpenFileInVisualStudio).
+            OpenFileInVisualStudio(file, lineNumberText);
         }
 
-        // from http://blogs.msdn.com/b/kirillosenkov/archive/2011/08/10/how-to-get-dte-from-visual-studio-process-id.aspx
-        public static DTE GetDTE(string file, string lineNumberText)
+        // net8 has no EnvDTE (VS COM automation). The "open the clicked stack-trace line in a
+        // running Visual Studio" convenience degrades to launching devenv.exe on the enclosing
+        // Skyline solution with an Edit.Goto command (the same fallback the net472 path uses when
+        // no running VS instance owns the file). No-op if no Skyline.sln / devenv is found.
+        private static void OpenFileInVisualStudio(string file, string lineNumberText)
         {
-            var dte = FindDTE(file);
-            if (dte != null)
-                return dte;
-
-            // Couldn't find an instance of Visual Studio with a solution containing this file.
-            // Try finding a Skyline solution we can use and open that one.
             var parentDirectory = Path.GetDirectoryName(file);
             while (parentDirectory != null)
             {
@@ -253,70 +231,10 @@ namespace SkylineTester
                 {
                     System.Diagnostics.Process.Start(vsExe,
                         @"{0} {1} /command ""Edit.Goto {2}""".With(skylineSln, file, lineNumberText));
-                    return null;
+                    return;
                 }
                 parentDirectory = Path.GetDirectoryName(parentDirectory);
             }
-
-            return null;
-        }
-
-        private static DTE FindDTE(string file)
-        {
-            const string id = "!VisualStudio.DTE.";
-
-            IBindCtx bindCtx = null;
-            IRunningObjectTable rot = null;
-            IEnumMoniker enumMonikers = null;
-
-            try
-            {
-                Marshal.ThrowExceptionForHR(Ole32Test.CreateBindCtx(0, out bindCtx));
-                bindCtx.GetRunningObjectTable(out rot);
-                rot.EnumRunning(out enumMonikers);
-
-                IMoniker[] moniker = new IMoniker[1];
-                IntPtr numberFetched = IntPtr.Zero;
-                while (enumMonikers.Next(1, moniker, numberFetched) == 0)
-                {
-                    IMoniker runningObjectMoniker = moniker[0];
-
-                    string name = null;
-
-                    try
-                    {
-                        if (runningObjectMoniker != null)
-                            runningObjectMoniker.GetDisplayName(bindCtx, null, out name);
-                    }
-                    catch (UnauthorizedAccessException)
-                    {
-                        // Do nothing, there is something in the ROT that we do not have access to.
-                    }
-
-                    if (!string.IsNullOrEmpty(name) && name.StartsWith(id, StringComparison.Ordinal))
-                    {
-                        object runningObject;
-                        Marshal.ThrowExceptionForHR(rot.GetObject(runningObjectMoniker, out runningObject));
-                        var dte = runningObject as DTE;
-                        if (dte != null && dte.Solution.FindProjectItem(file) != null)
-                        {
-                            Console.WriteLine(dte.Solution.FindProjectItem(file).Name);
-                            return dte;
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                if (enumMonikers != null)
-                    Marshal.ReleaseComObject(enumMonikers);
-                if (rot != null)
-                    Marshal.ReleaseComObject(rot);
-                if (bindCtx != null)
-                    Marshal.ReleaseComObject(bindCtx);
-            }
-
-            return null;
         }
 
         public void ErrorSelectionChanged()

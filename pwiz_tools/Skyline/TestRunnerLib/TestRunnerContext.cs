@@ -26,53 +26,28 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestRunnerLib
 {
+    // MSTest 3.x reshaped the abstract TestContext: Write/WriteLine replace the old
+    // timer/data members, and Properties is the only data bag. TestRunner only needs the
+    // outcome + a property dictionary; the rest are no-ops.
     public class TestRunnerContext : TestContext
     {
-        private readonly Dictionary<string, string> _dictionary;
-
-        public TestRunnerContext()
-        {
-            _dictionary = new Dictionary<string, string>();
-        }
+        private readonly Dictionary<string, object> _dictionary = new Dictionary<string, object>();
 
         public bool HasPassed { get; set; }
 
         public override UnitTestOutcome CurrentTestOutcome => HasPassed ? UnitTestOutcome.Passed : base.CurrentTestOutcome;
 
-        public override void WriteLine(string format, params object[] args)
-        {
-            throw new NotImplementedException();
-        }
+        public override IDictionary Properties => _dictionary;
 
-        public override void AddResultFile(string fileName)
-        {
-            throw new NotImplementedException();
-        }
+        public override void AddResultFile(string fileName) { }
 
-        public override void BeginTimer(string timerName)
-        {
-            throw new NotImplementedException();
-        }
+        public override void Write(string message) { }
 
-        public override void EndTimer(string timerName)
-        {
-            throw new NotImplementedException();
-        }
+        public override void Write(string format, params object[] args) { }
 
-        public override IDictionary Properties
-        {
-            get { return _dictionary; }
-        }
+        public override void WriteLine(string message) { }
 
-        public override DataRow DataRow
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public override DbConnection DataConnection
-        {
-            get { throw new NotImplementedException(); }
-        }
+        public override void WriteLine(string format, params object[] args) { }
     }
 
     /// <summary>

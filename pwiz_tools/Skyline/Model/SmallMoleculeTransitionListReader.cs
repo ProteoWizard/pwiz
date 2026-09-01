@@ -1845,10 +1845,19 @@ namespace pwiz.Skyline.Model
                                 else if (mzCalc.HasValue)
                                 {
                                     // There was an initial charge value, but it didn't make sense with formula and proposed mz
+                                    // Format the m/z values to 7 significant figures so the message reads
+                                    // the same on both frameworks: .NET Core's float.ToString() emits the
+                                    // shortest round-trip form (up to 9 digits) where .NET Framework capped
+                                    // at ~7, so an unpinned delta showed e.g. "402.99658" on net8 vs
+                                    // "402.9966" on net472. G7 restores the 7-figure display (a float only
+                                    // carries ~7 significant digits anyway; MS-recommended workaround).
                                     errMessage = String.Format(getPrecursorColumns
                                         ? Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_
                                         : Resources.SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_,
-                                        (float)mz, (float)mzCalc.Value, (float)(mzCalc.Value - mz), (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance);
+                                        ((float)mz).ToString(@"G7", CultureInfo.CurrentCulture),
+                                        ((float)mzCalc.Value).ToString(@"G7", CultureInfo.CurrentCulture),
+                                        ((float)(mzCalc.Value - mz)).ToString(@"G7", CultureInfo.CurrentCulture),
+                                        ((float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance).ToString(@"G7", CultureInfo.CurrentCulture));
                                     errColumn = indexMz;
                                 }
                                 else
