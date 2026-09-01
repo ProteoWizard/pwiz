@@ -17,7 +17,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
@@ -120,7 +119,6 @@ namespace pwiz.Skyline.Controls.Clustering
             UpdateSelection();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ClusterInput ClusterInput
         {
             get
@@ -324,7 +322,6 @@ namespace pwiz.Skyline.Controls.Clustering
             zedGraphControl1.AxisChange();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowXAxisLabels
         {
             get
@@ -339,7 +336,6 @@ namespace pwiz.Skyline.Controls.Clustering
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowYAxisLabels
         {
             get
@@ -354,7 +350,6 @@ namespace pwiz.Skyline.Controls.Clustering
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowSelection
         {
             get

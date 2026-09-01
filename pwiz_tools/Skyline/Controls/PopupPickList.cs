@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -150,7 +149,6 @@ namespace pwiz.Skyline.Controls
             return -1;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsSynchSiblings
         {
             get { return cbSynchronize.Checked; }
@@ -162,7 +160,6 @@ namespace pwiz.Skyline.Controls
             get { return cbSynchronize.Visible; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AutoManageChildren
         {
             get
@@ -370,7 +367,6 @@ namespace pwiz.Skyline.Controls
             AutoManageChildren = tbbAutoManageChildren.Checked;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SearchString
         {
             get { return textSearch.Text; }
@@ -413,7 +409,6 @@ namespace pwiz.Skyline.Controls
             return GetVisibleChoice(i).Label;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool SelectAll
         {
             get { return cbItems.Checked; }

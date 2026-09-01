@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.GUI;
 using pwiz.Skyline.Util;
@@ -58,7 +57,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             CancelButton = btnCancelDlg;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool DontShowAgain
         {
             get => _cbDontShowAgain.Checked;

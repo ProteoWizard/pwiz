@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -50,7 +49,6 @@ namespace pwiz.Skyline.SettingsUI
             textName.Focus();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public LibrarySpec LibrarySpec
         {
             get { return _librarySpec; }
@@ -259,14 +257,12 @@ namespace pwiz.Skyline.SettingsUI
 
         #region Functional test support
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LibraryName
         {
             get { return textName.Text; }
             set { textName.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LibraryPath
         {
             get { return textPath.Text; }

@@ -67,7 +67,6 @@ namespace pwiz.Skyline.SettingsUI
 
         public SrmDocument Document{ get; private set; } 
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MetadataRuleSet MetadataRuleSet
         {
             get
@@ -504,7 +503,6 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string RuleName
         {
             get

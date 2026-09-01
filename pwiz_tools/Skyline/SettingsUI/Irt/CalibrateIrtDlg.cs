@@ -20,7 +20,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -130,7 +129,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public int StandardPeptideCount => StandardPeptideList.Count;
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsRecalibration
         {
             get => _standard != null;
@@ -833,7 +831,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         #region Functional Test Support
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string StandardName
         {
             get => textName.Text;
@@ -842,7 +839,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public RegressionOption[] RegressionOptions => comboRegression.Items.Cast<RegressionOption>().ToArray();
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public RegressionOption SelectedRegressionOption
         {
             get => comboRegression.SelectedItem as RegressionOption;

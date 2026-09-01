@@ -109,7 +109,6 @@ namespace pwiz.Skyline.ToolsUI
 
         private bool _unsaved;
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Unsaved
         { 
             
@@ -1095,7 +1094,6 @@ namespace pwiz.Skyline.ToolsUI
             RefreshListBox();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ToolInstallUI.InstallProgram TestInstallProgram { get; set; }
 
         #endregion

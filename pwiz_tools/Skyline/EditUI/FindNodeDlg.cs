@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Find;
@@ -41,7 +40,6 @@ namespace pwiz.Skyline.EditUI
                 _finders.Select(finder=>finder.DisplayName).Cast<object>().ToArray());
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FindOptions FindOptions
         {
             get
@@ -71,21 +69,18 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SearchString
         {
             get { return textSequence.Text; }
             set { textSequence.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool SearchUp
         {
             get { return radioUp.Checked; }
             set { radioUp.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool CaseSensitive
         {
             get { return cbCaseSensitive.Checked; }
@@ -149,7 +144,6 @@ namespace pwiz.Skyline.EditUI
             ((SkylineWindow) Owner).FindAll(this);
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AdvancedVisible
         {
             get

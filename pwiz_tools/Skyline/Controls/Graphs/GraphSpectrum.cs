@@ -287,7 +287,6 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Normalized collision energy for Koina
         /// </summary>
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int KoinaNCE
         {
             get { return (int) (comboCE.SelectedItem ?? -1); }
@@ -1572,7 +1571,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
         
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowPropertiesSheet 
         {
             set

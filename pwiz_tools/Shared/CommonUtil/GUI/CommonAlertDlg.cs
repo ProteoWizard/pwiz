@@ -73,7 +73,6 @@ namespace pwiz.Common.GUI
             AddMessageBoxButtons(messageBoxButtons, defaultButton);
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Message
         {
             get { return _message; }
@@ -100,7 +99,6 @@ namespace pwiz.Common.GUI
             Height = _originalFormHeight + formGrowth;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string DetailMessage
         {
             get { return _detailMessage; }
@@ -126,7 +124,6 @@ namespace pwiz.Common.GUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Exception Exception
         {
             get { return _exception; }

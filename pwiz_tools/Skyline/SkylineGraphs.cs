@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -959,7 +958,6 @@ namespace pwiz.Skyline
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AlignToRtPrediction
         {
             get { return _alignToPrediction; }
@@ -2322,7 +2320,6 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowIonMobility
         {
             get { return Settings.Default.ShowIonMobility; }
@@ -2337,7 +2334,6 @@ namespace pwiz.Skyline
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowCollisionCrossSection
         {
             get { return Settings.Default.ShowCollisionCrossSection; }
@@ -2610,7 +2606,6 @@ namespace pwiz.Skyline
             get { return SequenceTree != null ? SequenceTree.SelectedNode as TreeNodeMS : null; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IdentityPath SelectedPath
         {
             get { return SequenceTree != null ? SequenceTree.SelectedPath : new IdentityPath(); }
@@ -2622,7 +2617,6 @@ namespace pwiz.Skyline
             get { return SequenceTree != null ? SequenceTree.SelectedNodes.ToArray() : new TreeNodeMS[0]; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SelectedResultsIndex
         {
             get { return ComboResults != null ? ComboResults.SelectedIndex : -1; }
@@ -2659,13 +2653,9 @@ namespace pwiz.Skyline
             return false;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MsDataFileUri SelectedScanFile { get; set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double SelectedScanRetentionTime { get; set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Identity SelectedScanTransition { get; set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int? SelectedScanOptStep { get; set; }
 
         public void ActivateReplicate(string name)
@@ -3235,7 +3225,6 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public NormalizeOption AreaNormalizeOption
         {
             get

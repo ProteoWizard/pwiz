@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -47,21 +46,18 @@ namespace pwiz.Skyline.EditUI
 
         public LibraryKey[] AcceptedPeptides { get; private set; }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool RemoveEmptyProteins
         {
             get { return cbRemoveProteins.Checked; }
             set { cbRemoveProteins.Checked = value; }            
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool MatchModified
         {
             get { return cbMatchModified.Checked; }
             set { cbMatchModified.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string PeptidesText
         {
             get { return textPeptides.Text; }

@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -31,14 +30,8 @@ namespace pwiz.Skyline.Controls.Startup
             InitializeComponent();
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FileName { get { return labelFileName.Text; } set { labelFileName.Text = value; } }
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FilePath { get { return labelFilePath.Text; } set { labelFilePath.Text = value; } }
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Action EventAction { get; set; }
 
         // IButtonControl: lets generic UI automation (e.g. the JSON tool service's ClickFormButton)

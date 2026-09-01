@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -34,7 +33,6 @@ namespace pwiz.PanoramaClient
         public const string EXT = ".sky";
         public const string ZIP_EXT = ".sky.zip";
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string OkButtonText { get; set; }
         public bool IsLoaded { get; private set; }
         public PanoramaFolderBrowser FolderBrowser { get; private set; }

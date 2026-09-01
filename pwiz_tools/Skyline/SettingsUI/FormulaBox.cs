@@ -107,8 +107,6 @@ namespace pwiz.Skyline.SettingsUI
 
         public event EventHandler ChargeChange;
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FormulaText // For test support
         {
             get { return textFormula.Text; }
@@ -134,8 +132,6 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Formula
         {
             get { return (NeutralFormula ?? string.Empty) + (_adduct.AdductFormula ?? string.Empty); }
@@ -192,8 +188,6 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         // Isotopes for mass calc - any isotopic description in adduct overrides
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Dictionary<string, string> IsotopeLabelsForMassCalc
         {
             get { return _isotopeLabelsForMassCalc; }
@@ -204,8 +198,6 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string NeutralFormula
         {
             get { return _neutralFormula; }
@@ -233,8 +225,6 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Adduct Adduct
         {
             get { return _adduct; }
@@ -268,8 +258,6 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? MonoMass
         {
             get { return _monoMass; }
@@ -287,8 +275,6 @@ namespace pwiz.Skyline.SettingsUI
             get { return textMono.Text; }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? AverageMass
         {
             get { return _averageMass; }
@@ -306,8 +292,6 @@ namespace pwiz.Skyline.SettingsUI
             get { return textAverage.Text; }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool FormulaVisible
         {
             get { return textFormula.Visible; }
@@ -332,8 +316,6 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public string FormulaError { get; private set; }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool MassEnabled
         {
             get { return textMono.Enabled; }

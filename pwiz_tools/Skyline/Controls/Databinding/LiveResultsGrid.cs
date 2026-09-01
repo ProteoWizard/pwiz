@@ -126,7 +126,6 @@ namespace pwiz.Skyline.Controls.Databinding
             SelectedIdentityPaths = _sequenceTree.SelectedPaths;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList<IdentityPath> SelectedIdentityPaths
         {
             get { return _selectedIdentityPaths; }

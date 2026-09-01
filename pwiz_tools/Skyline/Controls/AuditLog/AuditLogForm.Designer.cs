@@ -36,6 +36,7 @@ namespace pwiz.Skyline.Controls.AuditLog
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Name = "AuditLogForm";
+            this.ShowViewsMenu = true;
             this.ResumeLayout(false);
 
         }

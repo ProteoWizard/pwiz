@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -40,8 +39,6 @@ namespace SkylineTester
 
         private int _processId;
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int ProcessId
         {
             get { return _processId; }

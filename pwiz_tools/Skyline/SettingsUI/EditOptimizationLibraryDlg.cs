@@ -81,14 +81,12 @@ namespace pwiz.Skyline.SettingsUI
             comboType.SelectedIndex = 0;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ViewType
         {
             get { return comboType.SelectedItem != null ? comboType.SelectedItem.ToString() : null; }
             set { comboType.SelectedItem = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public OptimizationType ViewDbType
         {
             get
@@ -1145,7 +1143,6 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         #region Functional Test Support
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LibName
         {
             get { return textName.Text; }

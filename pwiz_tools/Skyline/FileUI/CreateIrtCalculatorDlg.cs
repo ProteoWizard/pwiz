@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -375,42 +374,36 @@ namespace pwiz.Skyline.FileUI
 
         #region test helpers
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string CalculatorName
         {
             get { return textCalculatorName.Text; }
             set { textCalculatorName.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ExistingDatabaseName
         {
             get { return textOpenDatabase.Text; }
             set { textOpenDatabase.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string NewDatabaseName
         {
             get { return textNewDatabase.Text; }
             set { textNewDatabase.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string NewDatabaseNameProtein
         {
             get { return textNewDatabaseProteins.Text; }
             set { textNewDatabaseProteins.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string TextFilename
         {
             get { return textImportText.Text; }
             set { textImportText.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IrtType IrtImportType
         {
             get { return GetIrtType(); }
@@ -423,7 +416,6 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SelectedProtein
         {
             get { return comboBoxProteins.SelectedItem.ToString(); }

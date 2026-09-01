@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Util;
@@ -39,16 +38,13 @@ namespace pwiz.Skyline.Alerts
             ResetTextBoxToReccommendedPath();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ExtractionPath
         {
             get { return textBoxPath.Text; }
             set { textBoxPath.Text = value; }
         }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string DefaultExtractionPath { get; set; }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public String SkylineFileLocation { get; set; }
         private void btnBrowse_Click(object sender, EventArgs e)
         {

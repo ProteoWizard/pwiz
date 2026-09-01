@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -61,14 +60,12 @@ namespace pwiz.Skyline.SettingsUI
                 gridEnrichments.Rows.Add(nameSymbol.Key, nameSymbol.Value);
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string EnrichmentsName
         {
             get { return textName.Text; }
             set { textName.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IsotopeEnrichments Enrichments
         {
             get { return _enrichments; }

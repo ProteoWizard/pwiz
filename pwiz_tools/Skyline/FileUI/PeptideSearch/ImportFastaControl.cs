@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -113,8 +112,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool ContainsFastaContent { get { return !string.IsNullOrWhiteSpace(tbxFasta.Text); } }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsDDASearch
         {
             get => _isDdaSearch;
@@ -186,8 +183,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public bool AutoTrain { get; private set; }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Enzyme Enzyme
         {
             get { return Settings.Default.GetEnzymeByName(comboEnzyme.SelectedItem.ToString()); }
@@ -209,8 +204,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MaxMissedCleavages
         {
             get { return int.Parse(cbMissedCleavages.SelectedItem.ToString()); }
@@ -222,24 +215,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool RequirePrecursorTransition { private get; set; }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsImportingResults { private get; set; }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool DecoyGenerationEnabled
         {
             get { return _decoyGenerationEnabled; }
             set { panelDecoys.Visible = _decoyGenerationEnabled = value; }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string DecoyGenerationMethod
         {
             get { return DecoyGenerationEnabled ? cbDecoyMethod.SelectedItem.ToString() : string.Empty; }
@@ -251,8 +236,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? NumDecoys
         {
             get
@@ -263,8 +246,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { txtNumDecoys.Text = value.ToString(); }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AutoTrain
         {
             get { return DecoyGenerationEnabled && cbAutoTrain.Checked; }
@@ -281,8 +262,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             tbxFasta.Text = string.Empty;
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FastaImportTargetsFile
         {
             get { return tbxFastaTargets.Text; }

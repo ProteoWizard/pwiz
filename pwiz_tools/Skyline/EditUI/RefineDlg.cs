@@ -27,7 +27,6 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -182,70 +181,60 @@ namespace pwiz.Skyline.EditUI
 
         public RefinementSettings RefinementSettings { get; private set; }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MaxTransitionPeakRank
         { 
             get { return Convert.ToInt32(textMaxPeakRank.Text);}
             set { textMaxPeakRank.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool PreferLargerIons
         {
             get { return cbPreferLarger.Checked;  }
             set { cbPreferLarger.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool MaxPrecursorPeakOnly
         {
             get { return cbMaxPrecursorOnly.Checked; }
             set { cbMaxPrecursorOnly.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool RemoveMissingResults
         {
             get { return radioRemoveMissing.Checked; }
             set { radioRemoveMissing.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double RTRegressionThreshold
         {
             get { return Convert.ToDouble(textRTRegressionThreshold.Text); }
             set { textRTRegressionThreshold.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double DotProductThreshold
         {
             get { return Convert.ToDouble(textMinDotProduct.Text); }
             set { textMinDotProduct.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int CVCutoff
         {
             get { return Convert.ToInt32(textCVCutoff.Text); }
             set { textCVCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AreaCVTransitions Transition
         {
             get { return GetTransitionFromIdx(comboTransitions.SelectedIndex); }
             set { SetTransitionIdx(value); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int TransitionCount
         {
             get { return comboTransitions.SelectedIndex - 1; }
             set { comboTransitions.SelectedIndex = value + 1; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AreaCVMsLevel MSLevel
         {
             get
@@ -255,7 +244,6 @@ namespace pwiz.Skyline.EditUI
             set { comboTransType.SelectedItem = value.ToString(); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? QValueCutoff
         {
             get
@@ -269,14 +257,12 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MinimumDetections
         {
             get { return (int) numericUpDownDetections.Value; }
             set { numericUpDownDetections.Value = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public NormalizeOption NormalizationMethod
         {
             get
@@ -305,7 +291,6 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IsotopeLabelType CVRefineLabelType
         {
             get
@@ -322,7 +307,6 @@ namespace pwiz.Skyline.EditUI
             set { comboNormalizeTo.SelectedItem = value.Title; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IsotopeLabelType RefineLabelType
         {
             get
@@ -337,49 +321,42 @@ namespace pwiz.Skyline.EditUI
             set { comboRefineLabelType.SelectedItem = value.ToString(); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AddLabelType
         {
             get { return cbAdd.Checked; }
             set { cbAdd.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Log
         {
             get { return checkBoxLog.Checked; }
             set { checkBoxLog.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double AdjustedPValueCutoff
         {
             get { return Convert.ToDouble(textPValue.Text); }
             set { textPValue.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double FoldChangeCutoff
         {
             get { return Convert.ToDouble(textFoldChange.Text); }
             set { textFoldChange.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AutoPeptides
         {
             get => cbAutoPeptides.Checked;
             set => cbAutoPeptides.Checked = value;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AutoPrecursors
         {
             get => cbAutoPrecursors.Checked;
             set => cbAutoPrecursors.Checked = value;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AutoTransitions
         {
             get => cbAutoTransitions.Checked;
@@ -673,28 +650,24 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public TABS SelectedTab
         {
             get { return (TABS)tabControl1.SelectedIndex; }
             set { tabControl1.SelectedIndex = (int)value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MinTransitions
         {
             get { return Convert.ToInt32(textMinTransitions.Text); }
             set { textMinTransitions.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MinPeptides
         {
             get { return int.Parse(textMinPeptides.Text); }
             set { textMinPeptides.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double MinPeakFoundRatio
         {
             get { return double.Parse(textMinPeakFoundRatio.Text); }

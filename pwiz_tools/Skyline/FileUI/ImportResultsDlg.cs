@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -118,10 +117,8 @@ namespace pwiz.Skyline.FileUI
 
         private bool IsOptimizing { get { return comboOptimizing.SelectedIndex != -1; } }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public KeyValuePair<string, MsDataFileUri[]>[] NamedPathSets { get; set; }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string OptimizationName
         {
             get
@@ -618,7 +615,6 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int ImportSimultaneousIndex
         {
             get { return comboSimultaneousFiles.SelectedIndex;}
@@ -700,35 +696,30 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool RadioAddNewChecked
         {
             get { return radioCreateNew.Checked; }
             set { radioCreateNew.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool RadioAddExistingChecked
         {
             get { return radioAddExisting.Checked; }
             set { radioAddExisting.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool RadioCreateMultipleChecked
         {
             get { return radioCreateMultiple.Checked; }
             set { radioCreateMultiple.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool RadioCreateMultipleMultiChecked
         {
             get { return radioCreateMultipleMulti.Checked; }
             set { radioCreateMultipleMulti.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ReplicateName
         {
             get { return textName.Text; }

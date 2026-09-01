@@ -17,7 +17,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Net; // HttpStatusCode
@@ -61,7 +60,6 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         public string DestinationPath { get; private set; }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MaxPartSize
         {
             get => Client.UploadPartSizeBytes;

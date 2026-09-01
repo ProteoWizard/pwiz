@@ -59,17 +59,11 @@ namespace SkylineTester
         public string Exe { get; private set; }
         public string ExeDir { get; private set; }
         public string DefaultLogFile { get; private set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string NightlyLogFile { get; set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Summary Summary { get; set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Summary.Run NewNightlyRun { get; set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int TestsRun { get; set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LastTestResult { get; set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LastRunName { get; set; }
         public string RunningTestName { get; private set; }
         public int LastTabIndex { get; private set; }
@@ -80,7 +74,6 @@ namespace SkylineTester
         private Button _defaultButton;
         private bool _restart;
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Button DefaultButton
         {
             get { return _defaultButton; }

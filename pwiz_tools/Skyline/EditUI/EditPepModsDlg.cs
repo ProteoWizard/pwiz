@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -281,7 +280,6 @@ namespace pwiz.Skyline.EditUI
         /// True if a copy of the currently selected peptide should be
         /// made, with the explicit modifications applied.
         /// </summary>
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsCreateCopy
         {
             get { return cbCreateCopy.Checked; }

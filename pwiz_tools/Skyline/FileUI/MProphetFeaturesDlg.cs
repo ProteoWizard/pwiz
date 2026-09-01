@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -147,14 +146,12 @@ namespace pwiz.Skyline.FileUI
 
         #region TestHelpers
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool BestScoresOnly
         {
             get { return checkBoxBestOnly.Checked; }
             set { checkBoxBestOnly.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool TargetsOnly
         {
             get { return checkBoxTargetsOnly.Checked; }

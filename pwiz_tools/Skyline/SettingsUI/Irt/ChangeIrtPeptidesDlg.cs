@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -76,7 +75,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public TargetResolver TargetResolver { get; }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList<DbIrtPeptide> Peptides
         {
             get { return _standardPeptides; }
@@ -89,14 +87,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public PeptideGroupDocNode ReplacementProtein { get; private set; }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string PeptidesText
         {
             get { return textPeptides.Text; }
             set { textPeptides.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string[] PeptideLines
         {
             get { return textPeptides.Lines; }
@@ -106,7 +102,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
         public IEnumerable<PeptideGroupDocNode> Proteins => comboProteins.Items.Cast<ComboBoxProtein>()
             .Where(obj => obj.IsNotNull).Select(protein => protein.Protein);
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public PeptideGroupDocNode SelectedProtein
         {
             get

@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.ComponentModel;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -51,7 +50,6 @@ namespace pwiz.Skyline.SettingsUI
             integrateAllOnText = SettingsUIResources.StartPageSettingsUI_StartPageSettingsUI_Integrate_all__on;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsIntegrateAll 
         {
             get { return radioBtnQuant.Checked; }

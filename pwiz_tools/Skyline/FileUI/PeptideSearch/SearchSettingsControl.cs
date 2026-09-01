@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -149,8 +148,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SearchEngine SelectedSearchEngine
         {
             get
@@ -606,16 +603,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool HardklorInstrumentSettingsAreEditable => _hardklorInstrumentSettingsControl.Enabled;
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FullScanMassAnalyzerType HardklorInstrument
         {
             get { return _hardklorInstrumentSettingsControl.PrecursorMassAnalyzer; }
             set { _hardklorInstrumentSettingsControl.PrecursorMassAnalyzer = value; }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double HardklorResolution
         {
             get
@@ -628,32 +621,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double HardklorMinIdotP
         {
             get { return double.TryParse(textHardklorMinIdotP.Text, out var corr) ? corr : 0; }
             set { textHardklorMinIdotP.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double HardklorMinIntensityPPM
         {
             get { return double.TryParse(textHardklorMinIntensityPPM.Text, out var cutoff) ? cutoff : 0; }
             set { textHardklorMinIntensityPPM.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double HardklorSignalToNoise
         {
             get { return double.TryParse(textHardklorSignalToNoise.Text, out var sn) ? sn : 0; }
             set { textHardklorSignalToNoise.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MzTolerance PrecursorTolerance
         {
             get
@@ -674,8 +659,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MzTolerance FragmentTolerance
         {
             get
@@ -698,8 +681,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MaxVariableMods
         {
             get { return Convert.ToInt32(cbMaxVariableMods.SelectedItem); }
@@ -709,16 +690,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public string CutoffLabel => ImportPeptideSearch.SearchEngine.CutoffScoreLabel;
         public string CutoffScoreName => ImportPeptideSearch.SearchEngine.CutoffScoreName;
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double CutoffScore
         {
             get { return Convert.ToDouble(textCutoff.Text, CultureInfo.CurrentCulture); }
             set { textCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FragmentIons
         {
             get { return cbFragmentIons.SelectedItem.ToString(); }
@@ -732,8 +709,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Ms2Analyzer
         {
             get { return cbMs2Analyzer.SelectedItem.ToString(); }
@@ -747,8 +722,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IDictionary<string, AbstractDdaSearchEngine.Setting> AdditionalSettings
         {
             get => ImportPeptideSearch.SearchEngine.AdditionalSettings;

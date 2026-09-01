@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -47,7 +46,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             OkDialog();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<SampleType> DisplaySampleTypes
         {
             get

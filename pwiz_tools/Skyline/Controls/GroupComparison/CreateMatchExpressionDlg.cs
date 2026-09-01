@@ -390,14 +390,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
         #region Function Test Support
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Expression
         {
             get { return expressionTextBox.Text; }
             set { expressionTextBox.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MatchOptionStringPair PValueSelectedItem
         {
             get { return (MatchOptionStringPair) pValueComboBox.SelectedItem; }
@@ -409,7 +407,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return pValueComboBox.Items.Cast<MatchOptionStringPair>(); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MatchOptionStringPair FoldChangeSelectedItem
         {
             get { return (MatchOptionStringPair)foldChangeComboBox.SelectedItem; }
@@ -421,7 +418,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return foldChangeComboBox.Items.Cast<MatchOptionStringPair>(); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MatchOptionStringPair MatchSelectedItem
         {
             get { return (MatchOptionStringPair)matchComboBox.SelectedItem; }

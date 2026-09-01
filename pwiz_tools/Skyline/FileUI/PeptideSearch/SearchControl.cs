@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -107,8 +106,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private IProgressLock _progressLock;
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IProgressLock ProgressLock
         {
             get

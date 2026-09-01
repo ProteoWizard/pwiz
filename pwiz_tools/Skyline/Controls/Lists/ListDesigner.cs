@@ -226,7 +226,6 @@ namespace pwiz.Skyline.Controls.Lists
             DialogResult = DialogResult.OK;
         }
 #region For test automation
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ListName
         {
             get { return tbxListName.Text; }
@@ -244,10 +243,8 @@ namespace pwiz.Skyline.Controls.Lists
         }
 
         public DataGridView ListPropertiesGrid { get { return dataGridViewProperties; } }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string IdProperty { get { return comboIdProperty.Text; } set { comboIdProperty.Text = value; } }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string DisplayProperty
         {
             get { return comboDisplayProperty.Text; }

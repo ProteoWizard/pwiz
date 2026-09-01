@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -38,14 +37,12 @@ namespace pwiz.Skyline.SettingsUI
         public RetentionTimeRegression Regression { get; private set; }
         public RCalcIrt Calculator { get; private set; }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string PredictorName 
         {
             get { return txtName.Text; }
             set { txtName.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? PredictorWindow
         {
             get

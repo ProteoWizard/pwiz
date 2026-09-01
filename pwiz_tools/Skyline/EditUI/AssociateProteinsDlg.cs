@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -66,7 +65,6 @@ namespace pwiz.Skyline.EditUI
         private readonly string _originalRemoveSubsetProteinsText;
         private readonly string _originalMinPeptidesText;
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FastaFileName
         {
             get { return tbxFastaTargets.Text; }
@@ -317,41 +315,35 @@ namespace pwiz.Skyline.EditUI
         public ProteinAssociation.IMappingResults Results => _proteinAssociation?.Results;
         public ProteinAssociation.IMappingResults FinalResults => _proteinAssociation?.FinalResults;
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool GroupProteins
         {
             get => cbGroupProteins.Checked;
             set => cbGroupProteins.Checked = value;
         }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool GeneLevelParsimony
         {
             get => cbGeneLevel.Checked;
             set => cbGeneLevel.Checked = value;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool FindMinimalProteinList
         {
             get => cbMinimalProteinList.Checked;
             set => cbMinimalProteinList.Checked = value;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool RemoveSubsetProteins
         {
             get => cbRemoveSubsetProteins.Checked;
             set => cbRemoveSubsetProteins.Checked = value;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ProteinAssociation.SharedPeptides SelectedSharedPeptides
         {
             get => (ProteinAssociation.SharedPeptides) comboSharedPeptides.SelectedIndex;
             set => comboSharedPeptides.SelectedIndex = (int) value;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MinPeptidesPerProtein
         {
             get => (int) numMinPeptides.Value;
@@ -636,7 +628,6 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MinPeptides
         {
             //get => MinPeptidesPerProtein;
@@ -653,7 +644,6 @@ namespace pwiz.Skyline.EditUI
                 SelectedSharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool RemoveRepeatedPeptides
         {
             get => SelectedSharedPeptides == ProteinAssociation.SharedPeptides.AssignedToFirstProtein ||
@@ -661,7 +651,6 @@ namespace pwiz.Skyline.EditUI
             set => SetRepeatedDuplicatePeptides(value, RemoveDuplicatePeptides);
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool RemoveDuplicatePeptides
         {
             get => SelectedSharedPeptides == ProteinAssociation.SharedPeptides.Removed;

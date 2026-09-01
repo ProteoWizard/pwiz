@@ -159,16 +159,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private IModifyDocumentContainer DocumentContainer { get; set; }
         private LibraryManager LibraryManager { get; set; }
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ImportPeptideSearch ImportPeptideSearch { get; set; }
 
         private SrmDocument.DOCUMENT_TYPE ModeUI => (WizardForm is FormEx parent) ? parent.ModeUI : SrmDocument.DOCUMENT_TYPE.none;
 
         private Form WizardForm => FormEx.GetParentForm(this);
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IrtStandard IrtStandards
         {
             get { return _driverStandards.SelectedItem; }
@@ -191,15 +187,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool? PreferEmbeddedSpectra { get; set; }
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool DebugMode { get; set; }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ImportPeptideSearchDlg.Workflow WorkflowType
         {
             get
@@ -233,8 +223,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ImportPeptideSearchDlg.InputFile InputFileType
         {
             get => _inputFileType;
@@ -245,24 +233,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool FilterForDocumentPeptides
         {
             get { return cbFilterForDocumentPeptides.Checked; }
             set { cbFilterForDocumentPeptides.Checked = value; }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string[] SearchFilenames
         {
             get => ImportPeptideSearch.SearchFilenames;
             set => Grid.FilePaths = value;
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MsDataFileUri[] DdaSearchDataSources
         {
             get => _ddaSearchDataSources;
@@ -326,8 +308,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool NeedsCutoffScore => _isRunPeptideSearch; // Only needed if Skyline is conducting the search
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IncludeAmbiguousMatches
         {
             get { return cbIncludeAmbiguousMatches.Checked; }
@@ -631,8 +611,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             FireInputFilesChanged();
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseExistingLibrary
         {
             get { return radioExistingLibrary.Checked; }
@@ -645,8 +623,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool IsReady => UseExistingLibrary ? !string.IsNullOrEmpty(tbxLibraryPath.Text) : Grid.IsReady;
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ExistingLibraryPath
         {
             get { return tbxLibraryPath.Text; }

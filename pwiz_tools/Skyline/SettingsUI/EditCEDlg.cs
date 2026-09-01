@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -50,14 +49,12 @@ namespace pwiz.Skyline.SettingsUI
             btnShowGraph.Enabled = btnUseCurrent.Enabled;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string RegressionName
         {
             get { return textName.Text; }
             set { textName.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public CollisionEnergyRegression Regression
         {
             get { return _regression; }
@@ -395,14 +392,12 @@ namespace pwiz.Skyline.SettingsUI
 
         #region Functional test support
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double StepSize
         {
              get { return double.Parse(textStepSize.Text); }
              set { textStepSize.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int StepCount
         {
             get { return int.Parse(textStepCount.Text); }

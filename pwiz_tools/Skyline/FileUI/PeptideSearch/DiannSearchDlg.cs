@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -43,7 +42,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     public partial class DiannSearchDlg : FormEx, IModifyDocumentContainer, IMultipleViewProvider
     {
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineWindow SkylineWindow { get; set; }
         public DiannSearchControl SearchControl { get; private set; }
 
@@ -242,26 +240,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 listBox.Items.RemoveAt(listBox.SelectedIndex);
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ImportResultsDIAControl DataFileResults { get; set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ImportFastaControl ImportFastaControl { get; set; }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double Ms1Tolerance
         {
             get => (double)numMs1Tolerance.Value;
             set => numMs1Tolerance.Value = (decimal)value;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double Ms2Tolerance
         {
             get => (double)numMs2Tolerance.Value;
             set => numMs2Tolerance.Value = (decimal)value;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double QValueThreshold
         {
             get => double.TryParse(txtQValue.Text, out var v) ? v : 0.01;
@@ -270,7 +263,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public const int MAX_THREAD_COUNT = 24;
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int Threads
         {
             get => (int)numThreads.Value;
@@ -462,7 +454,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public SrmDocument Document => _documents.Count == 0 ? null : _documents.Peek();
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string DocumentFilePath
         {
             get => SkylineWindow.DocumentFilePath;
@@ -743,20 +734,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Parent = HostDialog = hostControl;
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DiannConfig DiannConfig { get; set; }
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FastaFilePath { get; set; }
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<string> DataFiles { get; set; }
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<StaticMod> FixedMods { get; set; }
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<StaticMod> VariableMods { get; set; }
         public string OutputSpecLibPath { get; private set; }
 

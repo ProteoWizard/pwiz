@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -387,7 +386,6 @@ namespace pwiz.Skyline.Controls.Startup
             DoAction(new ActionImport(type).DoStartupAction);
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Action<string, string, string> Tutorial { get; set; }
 
         private void TutorialAction(string skyFileLocation, string pdfFileLocation, string zipSkyFileLocation)
@@ -483,7 +481,6 @@ namespace pwiz.Skyline.Controls.Startup
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public TABS SelectedTab
         {
             get { return (TABS)tabControlMain.SelectedIndex; }

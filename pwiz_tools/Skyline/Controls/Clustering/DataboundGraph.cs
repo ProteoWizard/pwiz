@@ -39,8 +39,6 @@ namespace pwiz.Skyline.Controls.Clustering
         private bool _updateSelectionPending;
         private bool _refreshDataPending;
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IDataboundGridForm OwnerGridForm
         {
             get
@@ -60,8 +58,6 @@ namespace pwiz.Skyline.Controls.Clustering
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public BindingListSource BindingListSource
         {
             get { return _bindingListSource; }
@@ -139,8 +135,6 @@ namespace pwiz.Skyline.Controls.Clustering
             Close();
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineWindow SkylineWindow
         {
             get

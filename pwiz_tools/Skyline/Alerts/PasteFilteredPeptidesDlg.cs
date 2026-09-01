@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -36,7 +35,6 @@ namespace pwiz.Skyline.Alerts
             InitializeComponent();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList<string> Peptides
         {
             get { return _peptides; }

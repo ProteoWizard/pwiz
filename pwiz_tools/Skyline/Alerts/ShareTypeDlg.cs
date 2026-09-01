@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
@@ -105,7 +104,6 @@ namespace pwiz.Skyline.Alerts
             OkDialog();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineVersion SelectedSkylineVersion
         {
             get
@@ -124,7 +122,6 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShareTypeComplete
         {
             get
@@ -146,7 +143,6 @@ namespace pwiz.Skyline.Alerts
 
         #region Functional testing support
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IncludeReplicateFiles
         {
             get { return cbIncludeReplicateFiles.Checked; }

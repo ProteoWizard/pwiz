@@ -536,8 +536,6 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ReportColorScheme ReportColorScheme { get; set; }
     }
 }

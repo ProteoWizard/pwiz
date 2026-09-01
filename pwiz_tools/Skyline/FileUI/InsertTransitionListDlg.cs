@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -50,7 +49,6 @@ namespace pwiz.Skyline.FileUI
             textBox1.GotFocus += textBox1_HideCaret;  
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string TransitionListText
         {
             get => textBox1.Text;

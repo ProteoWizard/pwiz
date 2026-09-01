@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -56,7 +55,6 @@ namespace pwiz.Skyline.FileUI
         }
 
         private int? _replicateNum;
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int? ReplicateNum
         {
             get
@@ -73,7 +71,6 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ExportSchedulingAlgorithm Algorithm
         {
             get

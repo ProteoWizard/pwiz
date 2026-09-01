@@ -381,35 +381,30 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public TABS SelectedTab
         {
             get { return (TABS)tabControl.SelectedIndex; }
             set { tabControl.SelectedIndex = (int)value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool PowerOfTenCheckBox
         {
             get { return powerOfTenCheckBox.Checked; }
             set { powerOfTenCheckBox.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string KoinaIntensityModelCombo
         {
             get { return (string)intensityModelCombo.SelectedItem; }
             set { intensityModelCombo.SelectedItem = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string KoinaRetentionTimeModelCombo
         {
             get { return (string) iRTModelCombo.SelectedItem; }
             set { iRTModelCombo.SelectedItem = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int CECombo
         {
             get { return (int) ceCombo.SelectedItem; }

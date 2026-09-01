@@ -459,7 +459,6 @@ namespace pwiz.Skyline
         /// <summary>
         /// The currently saved location of the document
         /// </summary>
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string DocumentFilePath { get; set; }
 
         public DocumentFormat SavedDocumentFormat { get; private set; }
@@ -501,7 +500,6 @@ namespace pwiz.Skyline
 
         private bool _useKeysOverride;
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseKeysOverride
         {
             get { return _useKeysOverride; }
@@ -554,7 +552,6 @@ namespace pwiz.Skyline
         {
             get { return redoToolBarButton; }
         }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool DiscardChanges { get; set; }
 
         /// <summary>
@@ -782,7 +779,6 @@ namespace pwiz.Skyline
             return _documentChangeLock;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Action<SrmDocument, SrmDocument> LogChange { get; set; }
 
         public void ModifyDocument(string description, [InstantHandle] Func<SrmDocument, SrmDocument> act)
@@ -832,7 +828,6 @@ namespace pwiz.Skyline
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AssumeNonNullModificationAuditLogging { get; set; }
 
         public void ModifyDocumentOrThrow(string description, IUndoState undoState, IDocumentModifier modifier,
@@ -1828,7 +1823,6 @@ namespace pwiz.Skyline
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double TargetsTextFactor
         {
             get { return ViewMenu.TargetsTextFactor; }

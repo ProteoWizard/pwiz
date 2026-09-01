@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -35,7 +34,6 @@ namespace pwiz.Skyline.EditUI
         // Number of precursor (TransitionGroup) decoys
         private int _numDecoys;
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int NumDecoys
         {
             get { return _numDecoys; }
@@ -46,14 +44,12 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string DecoysMethod
         {
             get { return comboDecoysGenerationMethod.SelectedItem.ToString(); }
             set { comboDecoysGenerationMethod.SelectedItem = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool PreservePrecursorMass
         {
             get

@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -40,7 +39,6 @@ namespace pwiz.Skyline.FileUI
 
         private IEnumerable<string> ExistingNames { get; set; }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ReplicateName
         {
             get { return textName.Text; }

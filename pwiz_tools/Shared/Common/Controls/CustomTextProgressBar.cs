@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -34,7 +33,6 @@ namespace pwiz.Common.Controls
         /// <summary>
         /// Set whether to print a % or Text
         /// </summary>
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public ProgressBarDisplayText DisplayStyle { get; set; }
 
         private string m_CustomText;
@@ -42,7 +40,6 @@ namespace pwiz.Common.Controls
         /// <summary>
         /// Custom text to display over the progress bar
         /// </summary>
-        [DefaultValue(null)]
         public string CustomText
         {
             get { return m_CustomText; }

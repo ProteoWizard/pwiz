@@ -244,8 +244,6 @@ namespace pwiz.Common.DataBinding.Controls
             ClusteringSpec = viewLayout.ClusterSpec;
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public INewRowHandler NewRowHandler
         {
             get { return BindingListView.NewRowHandler; }

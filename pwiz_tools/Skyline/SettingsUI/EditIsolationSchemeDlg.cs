@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -178,7 +177,6 @@ namespace pwiz.Skyline.SettingsUI
             gridIsolationWindows.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IsolationScheme IsolationScheme
         {
             get { return _isolationScheme; }
@@ -841,14 +839,12 @@ namespace pwiz.Skyline.SettingsUI
 
         #region Functional Test Support
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string IsolationSchemeName
         {
             get { return textName.Text; }
             set { textName.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseResults
         {
             get { return rbUseResultsData.Checked; }
@@ -859,14 +855,12 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? PrecursorFilter
         {
             get { return Helpers.ParseNullableDouble(textPrecursorFilterMz.Text); }
             set { textPrecursorFilterMz.Text = Helpers.NullableDoubleToString(value); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string IsolationWidthTypeName
         {
             get { return (string) comboIsolationWidth.SelectedItem; }
@@ -878,7 +872,6 @@ namespace pwiz.Skyline.SettingsUI
             get { return _gridViewDriver; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SpecialHandling
         {
             get
@@ -893,28 +886,24 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double? WindowsPerScan
         {
             get { return Helpers.ParseNullableDouble(textWindowsPerScan.Text); }
             set { textWindowsPerScan.Text = Helpers.NullableDoubleToString(value); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool SpecifyMargin
         {
             get { return cbSpecifyMargin.Checked; }
             set { cbSpecifyMargin.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool SpecifyCERange
         {
             get { return cbSpecifyCERange.Checked; }
             set { cbSpecifyCERange.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public object CurrentWindowType
         {
             get { return comboIsolation.SelectedIndex; }

@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -46,7 +45,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
             ComboHelper.AutoSizeDropDown(comboLibrary);
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IrtCalculatorSource Source
         {
             get { return radioSettings.Checked ? IrtCalculatorSource.settings : IrtCalculatorSource.file; }
@@ -151,7 +149,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         #region Functional test support
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FilePath
         {
             get { return textFilePath.Text; }
@@ -162,7 +159,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string CalculatorName
         {
             get { return ((RCalcIrt) comboLibrary.SelectedItem).Name; }

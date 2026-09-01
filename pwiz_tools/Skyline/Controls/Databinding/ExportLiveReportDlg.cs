@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -315,7 +314,6 @@ namespace pwiz.Skyline.Controls.Databinding
             DialogResult = btnCancel.DialogResult;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ReportName
         {
             get

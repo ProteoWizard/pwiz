@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -50,7 +49,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private int _undoIndex;
         private IList<PropertyPath> _selectedPaths = ImmutableList.Empty<PropertyPath>();
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public TabPage TabPageSource
         {
             get { return tabPageSource; }
@@ -102,7 +100,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<PropertyPath> SelectedPaths
         {
             get
@@ -123,7 +120,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ViewName
         {
             get
@@ -195,7 +191,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             get; private set;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowHiddenFields
         {
             get
@@ -214,7 +209,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Alphabetical
         {
             get
@@ -234,7 +228,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowSourceTab
         {
             get
@@ -392,7 +385,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             get { return _filterTab; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool PreviewButtonVisible
         {
             get

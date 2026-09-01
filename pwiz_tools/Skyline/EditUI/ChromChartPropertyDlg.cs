@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -116,35 +115,30 @@ namespace pwiz.Skyline.EditUI
 
         #region Functional test support
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int LineWidth
         {
             get { return int.Parse(textLineWidth.Text); }
             set { textLineWidth.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public GraphFontSize FontSize
         {
             get { return textSizeComboBox.SelectedItem as GraphFontSize; }
             set { textSizeComboBox.SelectedItem = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsPeakWidthRelative
         {
             get { return cbRelative.Checked; }
             set { cbRelative.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double TimeRange
         {
             get { return double.Parse(textTimeRange.Text); }
             set { textTimeRange.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int DisplayRTDigits
         {
             get { return (int)numericUpDownRTDigits.Value; }

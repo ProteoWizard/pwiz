@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -44,7 +43,6 @@ namespace pwiz.Skyline.EditUI
 
         public string GroupByPersistedString => SelectedGroupBy.PersistedString;
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string GroupBy
         {
             get => SelectedGroupBy.ToString();
@@ -58,7 +56,6 @@ namespace pwiz.Skyline.EditUI
 
         public bool IsAll => listSync.Items.Count > 0 && listSync.CheckedItems.Count == listSync.Items.Count;
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<string> Targets
         {
             get => listSync.CheckedItems.Cast<object>().Select(o => o.ToString());

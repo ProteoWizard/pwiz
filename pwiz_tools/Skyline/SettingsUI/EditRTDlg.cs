@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
@@ -66,7 +65,6 @@ namespace pwiz.Skyline.SettingsUI
             ShowPeptides(Settings.Default.EditRTVisible);
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public RetentionTimeRegression Regression
         {
             get { return _regression; }

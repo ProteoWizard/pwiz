@@ -216,7 +216,6 @@ namespace pwiz.Common.DataBinding.Controls
             return clusteringSpec;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ClusterMetricType DistanceMetric
         {
             get

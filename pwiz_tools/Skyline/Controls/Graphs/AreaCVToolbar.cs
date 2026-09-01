@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
@@ -238,8 +237,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool GroupsVisible { get { return toolStripLabel1.Visible && toolStripComboGroup.Visible; } }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<object> Annotations
         {
             get { return toolStripComboGroup.Items.Cast<object>(); }
@@ -251,8 +248,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<string> NormalizationMethods
         {
             get { return toolStripComboNormalizedTo.Items.Cast<string>(); }

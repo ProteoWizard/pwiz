@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -61,7 +60,6 @@ namespace pwiz.Skyline.Alerts
         public bool UpdateAutomatic { get; private set; }
         public bool UpdateFound { get; private set; }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool CheckAtStartup
         {
             get { return cbAtStartup.Checked; }

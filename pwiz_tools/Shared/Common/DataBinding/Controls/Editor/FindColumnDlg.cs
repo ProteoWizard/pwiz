@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 
@@ -63,7 +62,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             Close();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ViewEditor ViewEditor { get; set; }
 
         public AvailableFieldsTree AvailableFieldsTree
@@ -295,7 +293,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         #region Test Methods
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FindText
         {
             get { return tbxFind.Text; }

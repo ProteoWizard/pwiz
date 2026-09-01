@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
@@ -59,14 +58,12 @@ namespace pwiz.Common.DataBinding.Controls
             DialogResult = DialogResult.OK;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LayoutName
         {
             get { return tbxLayoutName.Text; }
             set { tbxLayoutName.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool MakeDefault
         {
             get { return cbxMakeDefault.Checked; }

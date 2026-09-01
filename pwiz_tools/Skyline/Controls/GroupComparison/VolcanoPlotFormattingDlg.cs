@@ -334,15 +334,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public SummaryRelativeAbundanceGraphPane RelativeAbundanceGraph { get; private set; }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AnyProteomic { get; set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AnyMolecules { get; set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool PerProtein { get; set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool HasFoldChangeResults { get; set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SrmDocument Document { get; set; }
 
         private void SetExpressionMinimumWidth()

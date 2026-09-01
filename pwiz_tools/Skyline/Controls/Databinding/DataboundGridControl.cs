@@ -173,8 +173,6 @@ namespace pwiz.Skyline.Controls.Databinding
             _cellEditToolTip.SetToolTip(textBox, error ?? string.Empty);
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public BindingListSource BindingListSource
         {
             get { return bindingListSource; }
@@ -196,8 +194,6 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IViewContext ViewContext
         {
             get

@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -48,14 +47,12 @@ namespace pwiz.Skyline.SettingsUI
             btnShowGraph.Enabled = btnUseCurrent.Enabled;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string RegressionName
         {
             get { return textName.Text; }
             set { textName.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DeclusteringPotentialRegression Regression
         {
             get { return _regression; }

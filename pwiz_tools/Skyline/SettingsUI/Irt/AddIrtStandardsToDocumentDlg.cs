@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
@@ -28,7 +27,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
 {
     public partial class AddIrtStandardsToDocumentDlg : FormEx, IAuditLogModifier<AddIrtStandardsToDocumentDlg.AddIrtStandardsToDocumentSettings>
     {
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int NumTransitions
         {
             get { return Convert.ToInt32(numTransitions.Value); }

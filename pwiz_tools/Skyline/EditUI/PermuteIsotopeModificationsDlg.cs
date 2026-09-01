@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -44,7 +43,6 @@ namespace pwiz.Skyline.EditUI
 
         public SkylineWindow SkylineWindow { get; private set; }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool SimplePermutation
         {
             get

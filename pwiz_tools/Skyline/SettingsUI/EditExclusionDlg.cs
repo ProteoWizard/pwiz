@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
@@ -39,7 +38,6 @@ namespace pwiz.Skyline.SettingsUI
             _existing = existing;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public PeptideExcludeRegex Exclusion
         {
             get

@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -36,7 +35,6 @@ namespace pwiz.Skyline.Controls
         }
 
         // Test support
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LogMessage
         {
             get { return logMessageTextBox.Text; }

@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
@@ -173,21 +172,18 @@ namespace pwiz.Skyline.EditUI
 
         #region TestHelpers
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double Cutoff
         {
             get { return double.Parse(textBoxCutoff.Text); }
             set { textBoxCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool OverwriteManual
         {
             get { return checkBoxOverwrite.Checked; }
             set { checkBoxOverwrite.Checked = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ReintegrateAll
         {
             get { return reintegrateAllPeaks.Checked; }
@@ -198,7 +194,6 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ScoreAnnotation
         {
             get { return _scoreAnnotation; }
@@ -215,7 +210,6 @@ namespace pwiz.Skyline.EditUI
             _driverPeakScoringModel.EditList();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ComboPeakScoringModelSelected
         {
             get { return comboBoxScoringModel.SelectedItem.ToString(); }

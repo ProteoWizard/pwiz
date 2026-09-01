@@ -1074,9 +1074,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         #region Functional Test Support
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseOverridenKeys { get; set; }
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Keys OverridenModifierKeys { get; set; }
         private new Keys ModifierKeys
         {

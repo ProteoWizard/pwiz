@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -38,7 +37,6 @@ namespace pwiz.Skyline.EditUI
             Icon = Resources.Skyline;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int ColorIndex { get; set; }
         private Annotations _originalAnnotations;
         private string _originalText;
@@ -220,7 +218,6 @@ namespace pwiz.Skyline.EditUI
             return annotations;
         }
         
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string NoteText
         {
             get { return textNote.Text; }
@@ -264,7 +261,6 @@ namespace pwiz.Skyline.EditUI
             OkDialog();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ClearAll { get; set; }
 
         private void dataGridView1_DataError(object sender, DataGridViewDataErrorEventArgs e)

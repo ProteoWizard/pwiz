@@ -511,7 +511,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SelectedPresetName
         {
             get => _settingsPresetDriver?.SelectedItem?.Name;

@@ -93,8 +93,6 @@ namespace pwiz.Skyline.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Keys KeysOverride { get; set; }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UseKeysOverride { get; set; }
 
         private Keys ModifierKeysOverriden
@@ -167,7 +165,6 @@ namespace pwiz.Skyline.Controls
         }
 
         [Browsable(true)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool AutoExpandSingleNodes { get; set; }
 
         protected void TreeViewMS_BeforeExpand(object sender, TreeViewCancelEventArgs e)
@@ -195,8 +192,6 @@ namespace pwiz.Skyline.Controls
 
         protected abstract int EnsureChildren(TreeNode node);
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool RestoredFromPersistentString { get; set; }
         internal TreeViewMSStateRestorer TreeStateRestorer { get; private set; }
 

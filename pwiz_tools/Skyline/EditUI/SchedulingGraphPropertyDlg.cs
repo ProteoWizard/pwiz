@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
 using System.Linq;
@@ -45,14 +44,12 @@ namespace pwiz.Skyline.EditUI
             BrukerTemplateFile = RTScheduleGraphPane.BrukerTemplateFile;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double[] TimeWindows
         {
             get { return textTimeWindows.Text.Split(',').Select(t => double.Parse(t.Trim())).ToArray(); }
             set { textTimeWindows.Text = WindowsToString(value); }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int PrimaryTransitionCount
         {
             get
@@ -69,7 +66,6 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string BrukerTemplateFile
         {
             get => textBrukerTemplate.Text;

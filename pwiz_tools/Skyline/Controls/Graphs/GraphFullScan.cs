@@ -2443,7 +2443,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool IsAnnotated => _showIonSeriesAnnotations;
         public LibraryRankedSpectrumInfo SpectrumInfo => _rmis;
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowPropertiesSheet
         {
             set

@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -431,7 +430,6 @@ namespace pwiz.Skyline.ToolsUI
 
         #region Functional test support
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool TestingDownloadOnly { get; set; }       
  
         public void SelectAll()

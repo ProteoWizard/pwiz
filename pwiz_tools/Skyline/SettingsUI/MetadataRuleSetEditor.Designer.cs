@@ -212,6 +212,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // bindingListSourceResults
             // 
+            this.bindingListSourceResults.NewRowHandler = null;
             // 
             // panelButtons
             // 

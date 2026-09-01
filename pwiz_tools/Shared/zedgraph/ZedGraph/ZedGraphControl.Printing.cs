@@ -116,8 +116,6 @@ namespace ZedGraph
 		/// Gets or sets the <see cref="System.Drawing.Printing.PrintDocument" /> instance
 		/// that is used for all of the context menu printing functions.
 		/// </summary>
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public PrintDocument PrintDocument
 		{
 			get

@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -53,7 +52,6 @@ namespace pwiz.Skyline.ToolsUI
             Icon = Resources.Skyline;
         }
         
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IToolStoreClient ToolStoreClient
         {
             set => _toolStoreClient = value;

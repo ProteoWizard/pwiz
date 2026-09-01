@@ -58,47 +58,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private IModifyDocumentContainer DocumentContainer { get; set; }
         private string BrowseResultsDialogText { get; }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SimultaneousFiles
         {
             get { return comboSimultaneousFiles.SelectedIndex; }
             set { comboSimultaneousFiles.SelectedIndex = value; }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool DoAutoRetry
         {
             get { return cbAutoRetry.Checked; }
             set { cbAutoRetry.Checked = value; }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsGpf
         {
             get => cbGpf.Checked;
             set => cbGpf.Checked = value;
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool HideFileAddRemoveButtons
         {
             get => btnBrowse.Visible;
             set => btnBrowse.Visible = btnRemove.Visible = value;
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Prefix { get; set; }
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Suffix { get; set; }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList<ImportPeptideSearch.FoundResultsFile> FoundResultsFiles
         {
             get { return _foundResultsFiles; }

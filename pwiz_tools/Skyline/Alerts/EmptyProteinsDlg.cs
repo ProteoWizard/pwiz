@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -74,7 +73,6 @@ namespace pwiz.Skyline.Alerts
             private SrmDocument.DOCUMENT_TYPE DocType { get; set; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsKeepEmptyProteins { get; set; }
 
         protected override void CreateHandle()

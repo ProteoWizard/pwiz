@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -44,7 +43,6 @@ namespace pwiz.Skyline.EditUI
             cbReversed.Checked = Settings.Default.ArrangeGraphsReversed;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int Groups
         {
             get { return Settings.Default.ArrangeGraphsGroups; }
@@ -55,7 +53,6 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public GroupGraphsType GroupType
         {
             get
@@ -72,7 +69,6 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public GroupGraphsOrder GroupOrder
         {
             get
@@ -86,7 +82,6 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DisplayGraphsType DisplayType
         {
             get

@@ -1807,6 +1807,7 @@ namespace SkylineTester
             | System.Windows.Forms.AnchorStyles.Right)));
             this.qualityThumbnail.Location = new System.Drawing.Point(8, 19);
             this.qualityThumbnail.Name = "qualityThumbnail";
+            this.qualityThumbnail.ProcessId = 0;
             this.qualityThumbnail.Size = new System.Drawing.Size(301, 229);
             this.qualityThumbnail.TabIndex = 34;
             // 
@@ -2386,6 +2387,7 @@ namespace SkylineTester
             | System.Windows.Forms.AnchorStyles.Right)));
             this.nightlyThumbnail.Location = new System.Drawing.Point(294, 21);
             this.nightlyThumbnail.Name = "nightlyThumbnail";
+            this.nightlyThumbnail.ProcessId = 0;
             this.nightlyThumbnail.Size = new System.Drawing.Size(138, 79);
             this.nightlyThumbnail.TabIndex = 34;
             // 
@@ -2800,14 +2802,27 @@ namespace SkylineTester
             // 
             // commandShell
             // 
+            this.commandShell.ColorLine = null;
+            this.commandShell.DefaultDirectory = null;
             this.commandShell.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.commandShell.FilterFunc = null;
+            this.commandShell.FinishedOneCommand = null;
             this.commandShell.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.commandShell.IgnorePaint = 0;
+            this.commandShell.IsUnattended = false;
+            this.commandShell.IsWaiting = false;
             this.commandShell.Location = new System.Drawing.Point(0, 0);
+            this.commandShell.LogFile = null;
             this.commandShell.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
             this.commandShell.Name = "commandShell";
+            this.commandShell.NextCommand = 0;
+            this.commandShell.RestartCount = 0;
+            this.commandShell.RunStartTime = new System.DateTime(((long)(0)));
             this.commandShell.Size = new System.Drawing.Size(671, 332);
+            this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
+            this.commandShell.VisibleLogFile = null;
             this.commandShell.WordWrap = false;
             this.commandShell.MouseClick += new System.Windows.Forms.MouseEventHandler(this.commandShell_MouseClick);
             // 

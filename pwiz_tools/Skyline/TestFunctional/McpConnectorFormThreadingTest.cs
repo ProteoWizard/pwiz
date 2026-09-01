@@ -19,7 +19,6 @@
  */
 
 using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -133,8 +132,6 @@ namespace pwiz.SkylineTestFunctional
         /// thread (MultithreadSafeCallScope) and so will not complain when it is not.</summary>
         private class ThreadRecordingTextBox : TextBox
         {
-            [Browsable(false)]
-            [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
             public int ReadOnThreadId { get; set; }
 
             public override string Text

@@ -63,6 +63,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.filesTree.ItemHeight = 16;
             this.filesTree.LabelEdit = true;
             this.filesTree.Name = "filesTree";
+            this.filesTree.RestoredFromPersistentString = false;
+            this.filesTree.UseKeysOverride = false;
             this.filesTree.BeforeLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.FilesTree_BeforeLabelEdit);
             this.filesTree.AfterLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.FilesTree_AfterLabelEdit);
             this.filesTree.BeforeCollapse += new System.Windows.Forms.TreeViewCancelEventHandler(this.FilesTree_BeforeCollapse);

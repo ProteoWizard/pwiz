@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Properties;
@@ -134,28 +133,24 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             ViewContext.ImportViewsFromFile(this, chooseViewsControl1.SelectedGroup, filename);
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AddButtonVisible
         {
             get { return btnAdd.Visible; }
             set { btnAdd.Visible = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool EditButtonVisible
         {
             get { return btnEdit.Visible; }
             set { btnEdit.Visible = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool RemoveButtonVisible
         {
             get { return btnRemove.Visible; }
             set { btnRemove.Visible = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShareButtonVisible
         {
             get { return btnShare.Visible; }

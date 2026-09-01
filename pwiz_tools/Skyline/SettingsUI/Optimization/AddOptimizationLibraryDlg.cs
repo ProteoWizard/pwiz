@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -44,7 +43,6 @@ namespace pwiz.Skyline.SettingsUI.Optimization
                 comboLibrary.SelectedIndex = 0;
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public OptimizationLibrarySource Source
         {
             get { return radioSettings.Checked ? OptimizationLibrarySource.settings : OptimizationLibrarySource.file; }
@@ -58,7 +56,6 @@ namespace pwiz.Skyline.SettingsUI.Optimization
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FilePath
         {
             get { return radioFile.Checked ? textFilePath.Text : string.Empty; }

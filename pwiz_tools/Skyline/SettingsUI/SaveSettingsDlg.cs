@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -35,12 +34,10 @@ namespace pwiz.Skyline.SettingsUI
             InitializeComponent();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SaveName { get; set; }
 
         #region Test helpers
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string SettingsName
         {
             get { return textName.Text; }

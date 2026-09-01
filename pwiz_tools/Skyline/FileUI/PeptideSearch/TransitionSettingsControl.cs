@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -154,23 +153,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SpectrumFilter = settings.FullScan.SpectrumClassFilter;
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IonFilter
         {
             get { return panelIonFilter.Visible; }
             set { panelIonFilter.Visible = value; }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Adduct[] PeptidePrecursorCharges
         {
             set { txtPeptidePrecursorCharges.Text = value.ToString(@", "); }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Adduct[] PeptideIonCharges
         {
             set { txtPrecursorIonCharges.Text = value.ToString(@", "); }
@@ -181,24 +174,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get;
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IonType[] PeptideIonTypes
         {
             get { return TransitionFilter.ParseTypes(txtIonTypes.Text, new IonType[0]); }
             set { txtIonTypes.Text = TransitionFilter.ToStringIonTypes(value, true); }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ExclusionUseDIAWindow
         {
             get { return cbExclusionUseDIAWindow.Checked; }
             set { cbExclusionUseDIAWindow.Checked = value; }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MzTolerance IonMatchMzTolerance
         {
             get 
@@ -212,40 +199,30 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double IonMatchTolerance
         {
             get { return double.Parse(txtTolerance.Text); }
             set { txtTolerance.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MzTolerance.Units IonMatchToleranceUnits
         {
             get { return (MzTolerance.Units)comboMatchToleranceUnit.SelectedIndex; }
             set { comboMatchToleranceUnit.SelectedIndex = (int)value; }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MinIonCount
         {
             get { return txtMinIonCount.Text == string.Empty ? 0 : int.Parse(txtMinIonCount.Text, LocalizationHelper.CurrentCulture); }
             set { txtMinIonCount.Text = value != 0 ? value.ToString(LocalizationHelper.CurrentCulture) : string.Empty; }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int IonCount
         {
             get { return int.Parse(txtIonCount.Text, LocalizationHelper.CurrentCulture); }
             set { txtIonCount.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string IonRangeFrom
         {
             get { return comboRangeFrom.SelectedItem.ToString(); }
@@ -258,8 +235,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string IonRangeTo
         {
             get { return comboRangeTo.SelectedItem.ToString(); }
@@ -272,24 +247,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MinIonMz
         {
             get { return int.Parse(txtMinMz.Text, LocalizationHelper.CurrentCulture); }
             set { txtMinMz.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MaxIonMz
         {
             get { return int.Parse(txtMaxMz.Text, LocalizationHelper.CurrentCulture); }
             set { txtMaxMz.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SpectrumClassFilter SpectrumFilter
         {
             get

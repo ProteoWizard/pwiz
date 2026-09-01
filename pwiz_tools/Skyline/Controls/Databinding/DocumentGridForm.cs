@@ -116,8 +116,6 @@ namespace pwiz.Skyline.Controls.Databinding
             base.OnHandleDestroyed(e);
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ViewInfo ViewInfo
         {
             get
@@ -138,8 +136,6 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowViewsMenu
         {
             get

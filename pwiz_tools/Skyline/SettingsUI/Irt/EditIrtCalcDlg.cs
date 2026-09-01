@@ -182,14 +182,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<DbIrtPeptide> StandardPeptides
         {
             get => StandardPeptideList;
             set => LoadStandard(value);
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<DbIrtPeptide> LibraryPeptides
         {
             get => LibraryPeptideList;
@@ -207,7 +205,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IrtRegressionType SelectedRegressionType
         {
             get => comboRegressionType.SelectedItem as IrtRegressionType ?? IrtRegressionType.DEFAULT;
@@ -218,7 +215,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsRedundant
         {
             get => cbRedundant.Checked;
@@ -1412,14 +1408,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         #region Functional Test Support
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string CalcName
         {
             get { return textCalculatorName.Text; }
             set { textCalculatorName.Text = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string CalcPath
         {
             get { return textDatabase.Text; }
@@ -1442,7 +1436,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
             _gridViewLibraryDriver.FireCellChanged(this, new DataGridViewCellEventArgs(LibraryGridViewDriver.COLUMN_TIME, row));
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IrtStandard IrtStandards
         {
             get { return _driverStandards.SelectedItem; }

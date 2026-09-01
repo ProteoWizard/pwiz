@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
@@ -107,7 +106,6 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public String AnnotationName
         {
             get
@@ -120,7 +118,6 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AnnotationDef.AnnotationType AnnotationType
         {
             get
@@ -136,14 +133,12 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ListPropertyType ListPropertyType
         {
             get { return (ListPropertyType) comboType.SelectedItem; }
             set { comboType.SelectedItem = value; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AnnotationDef.AnnotationTargetSet AnnotationTargets
         {
             get
@@ -190,7 +185,6 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList<String> Items {
             get
             {
@@ -231,14 +225,12 @@ namespace pwiz.Skyline.SettingsUI
             availableFieldsTree1.SelectColumn(propertyPath);
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsCalculated
         {
             get { return tabControl1.SelectedTab == tabPageCalculated; }
             set { tabControl1.SelectedTab = value ? tabPageCalculated : tabPageEditable; }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public AggregateOperation AggregateOperation
         {
             get

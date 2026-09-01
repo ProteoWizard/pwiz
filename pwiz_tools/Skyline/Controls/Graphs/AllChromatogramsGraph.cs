@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -201,7 +200,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ChromatogramManager ChromatogramManager { get; set; }
 
         public bool IsUserCanceled { get; private set; }
@@ -218,7 +216,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int Selected
         {
             get { return _selected; }
