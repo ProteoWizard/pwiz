@@ -204,6 +204,11 @@ namespace pwiz.Skyline
         [STAThread]
         public static int Main(string[] args = null)
         {
+            // Must come before the first Settings.Default use on the next line. Every setting is
+            // read from the provider and cached the first time any one of them is touched, so a
+            // user.config put in place after that point would go unseen until a Reload, and
+            // CopyOldTools further down has nothing to copy without the migrated tool lists.
+            MigrateSettingsFromClickOnceInstallation();
             SetDefaultFont();
 
             if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID
@@ -649,6 +654,70 @@ namespace pwiz.Skyline
         private static void DocumentChangedEventHandler(object sender, DocumentChangedEventArgs args)
         {
             MainToolService.SendDocumentChange();
+        }
+
+        /// <summary>
+        /// Gives a new installation the user settings of the ClickOnce installed Skyline it is
+        /// replacing. Only for the upgrade from 26.1 and earlier, which kept settings in a per
+        /// version folder under %LOCALAPPDATA%; from here on an installation reads the
+        /// user.config beside its own executable, and successive installations into the same
+        /// folder find the settings already there with nothing to look for.
+        ///
+        /// A missing user.config is what identifies a first run. Everything else the migration
+        /// needs follows from the settings it brings over, including the tool lists that
+        /// <see cref="CopyOldTools"/> reads to decide which external tools to bring along.
+        /// </summary>
+        private static void MigrateSettingsFromClickOnceInstallation()
+        {
+            // Tests run out of a build folder, and would otherwise inherit whatever the developer
+            // happens to have installed.
+            if (UnitTest || FunctionalTest)
+                return;
+            try
+            {
+                var configFile = Path.Combine(UserConfigSettingsProvider.GetDefaultConfigFolder(),
+                    UserConfigSettingsProvider.CONFIG_FILE_NAME);
+                if (File.Exists(configFile))
+                    return;
+                var candidate = ChooseClickOnceInstallation(
+                    new ClickOnceInstallations(typeof(Program).Assembly).ListCandidates());
+                if (candidate == null)
+                    return;
+                File.Copy(candidate.UserConfigFile, configFile);
+            }
+            catch (Exception)
+            {
+                // Starting on default settings beats not starting. The next run tries again,
+                // since a failed copy leaves no user.config behind.
+            }
+        }
+
+        /// <summary>
+        /// Which of the installations found gets to hand its settings on. The one Programs and
+        /// Features still lists is the one being replaced, so it wins; among installations that
+        /// are equally current, or equally not, the highest version is the most recent.
+        /// </summary>
+        private static ClickOnceInstallations.Candidate ChooseClickOnceInstallation(
+            IEnumerable<ClickOnceInstallations.Candidate> candidates)
+        {
+            ClickOnceInstallations.Candidate best = null;
+            foreach (var candidate in candidates)
+            {
+                if (best == null || IsBetterClickOnceInstallation(candidate, best))
+                    best = candidate;
+            }
+            return best;
+        }
+
+        private static bool IsBetterClickOnceInstallation(ClickOnceInstallations.Candidate candidate,
+            ClickOnceInstallations.Candidate best)
+        {
+            if (candidate.IsCurrentlyInstalled != best.IsCurrentlyInstalled)
+                return candidate.IsCurrentlyInstalled;
+            // An unparsable version loses to one that reads as a version, and to nothing else.
+            if (!Version.TryParse(candidate.Version, out var candidateVersion))
+                return false;
+            return !Version.TryParse(best.Version, out var bestVersion) || candidateVersion > bestVersion;
         }
 
         private static void CopyOldTools(string outerToolsFolderPath, ILongWaitBroker broker)
