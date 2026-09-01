@@ -41,15 +41,11 @@ namespace SkylineTester
             // Stop running task.
             if (_runningTab != null && (_runningTab.IsRunning() || _runningTab.IsWaiting()))
             {
+                // StopByUser disables the buttons before it kills anything. Stopping is otherwise
+                // asynchronous - _runningTab is not cleared until Done() - and until then this same
+                // button means Run again, which is how a nine-hour log was lost.
                 if (StopByUser())
-                {
                     AcceptButton = DefaultButton;   // Only change if the stop is successful
-                    // Stopping is asynchronous - _runningTab is not cleared until Done(). Until it
-                    // is, this same button means Run again, and a second click starts a run, which
-                    // is how a nine-hour log was lost. Take the button out of reach for that window
-                    // instead of relying on nobody clicking into it.
-                    ShowStopInProgress();
-                }
                 return;
             }
 
@@ -235,6 +231,11 @@ namespace SkylineTester
                 Program.UserKilledTestRun = true;
             }
 
+            // Before Stop(), not after: Cancel() kills the process tree on this thread and takes
+            // long enough to see, and until it returns the button is still live and still reads
+            // "Stop". Every caller of StopByUser gets this, including the Output tab's own button.
+            ShowStopInProgress();
+
             Stop();
 
             return true;
@@ -292,8 +293,10 @@ namespace SkylineTester
             {
                 runButton.Text = "Stopping...";
                 runButton.Enabled = false;
+                runButton.Update();     // Paint now - the caller is about to block killing processes
             }
             buttonStop.Enabled = false;
+            buttonStop.Update();
         }
 
         /// <summary>
