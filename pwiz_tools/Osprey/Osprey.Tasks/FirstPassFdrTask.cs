@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
@@ -2579,6 +2579,64 @@ namespace pwiz.Osprey.Tasks
                 }
             }
 
+            // FORWARD SCAN: with every file's sidecar current AND the analysis-wide experiment
+            // sidecar current, everything from here to the compaction gate has already been done
+            // and is on disk. Re-running it is not a safety margin, it is 20 of this task's 29
+            // minutes at 86 files spent reproducing artifacts byte-for-byte:
+            //
+            //   pass 1 builds the experiment competition, whose result IS the experiment sidecar;
+            //   pass 2 emits the per-file sidecars, which are what the gate above just matched;
+            //   protein FDR's q-values are read back out of the experiment sidecar by the gate;
+            //   model diagnostics is a report.
+            //
+            // So resume where the work actually stops: at ComputeFirstPassBaseIds, which streams
+            // the finalized sidecars off disk rather than reading anything this block would have
+            // built. The two byproducts the skipped region publishes are taken from the per-file
+            // .1st-pass.model.json instead - the model and the protein-compact stratum - so a
+            // consumer sees the same values from the same run that produced the scores.
+            //
+            // Deliberately all-or-nothing: one missing sidecar means the competition would differ,
+            // so anything short of complete falls through and recomputes.
+            string experimentPathForResume = FdrExperimentSidecar.PathFor(
+                config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(config),
+                FdrScoresSidecar.Pass.FirstPass);
+            FirstPassModelIO.Sidecar resumeSidecar = null;
+            bool canEnterAtGate =
+                projections.PerFile.Count > 0 &&
+                resumableFiles.Count == projections.PerFile.Count &&
+                !string.IsNullOrEmpty(experimentPathForResume) &&
+                PerFileResumeDriver.IsCurrent(experimentPathForResume, Name, sidecarValidityKey) &&
+                (resumeSidecar = FirstPassModelIO.LoadFromAny(perFileParquetPaths)) != null &&
+                resumeSidecar.Model != null &&
+                // protein-compact's gate admits present-protein peptides through the stratum, so
+                // entering at the gate WITHOUT it selects a different, smaller survivor set - and
+                // does it silently, because nothing downstream can tell a stratum that was never
+                // loaded from one that was legitimately empty. The stratum rides in the same
+                // sidecar as the model, so a run that never reached Stage 6 has neither and
+                // correctly falls through to recompute.
+                (!OspreyEnvironment.Pass2ProteinCompact || resumeSidecar.StratumBaseIds != null);
+            if (canEnterAtGate)
+            {
+                ctx.LogInfo(string.Format(
+                    @"Resume: all {0} sidecars and the experiment sidecar are current - skipping the " +
+                    @"score passes, protein FDR and model diagnostics, and entering at the compaction gate.",
+                    projections.PerFile.Count));
+                ctx.Publish(new FirstPassPercolatorModel
+                {
+                    Results = resumeSidecar.Model,
+                    ExperimentAgg = resumeSidecar.ExperimentAgg
+                });
+                if (resumeSidecar.StratumBaseIds != null)
+                {
+                    _proteinCompactStratum = resumeSidecar.StratumBaseIds;
+                    ctx.Publish(new ProteinCompactStratum(_proteinCompactStratum));
+                    ctx.LogInfo(string.Format(
+                        @"Resume: reloaded the persisted protein-compact stratum ({0} base ids).",
+                        _proteinCompactStratum.Count));
+                }
+                return CompactFromSidecars(projections, perFileParquetPaths, beforeCount, config, ctx);
+            }
+
             var experiment = new FdrExperimentAccumulator();
             var sink = new FdrStoringSink(projections, config, @"First-pass", FlushPartialSidecar,
                 experiment, mdiagAccumulator);
@@ -2751,6 +2809,25 @@ namespace pwiz.Osprey.Tasks
             // Compaction predicate streamed over the finalized per-file sidecar -> passing
             // base_id set (identical to CompactFirstPass's non-bundle branch, risk #7). The
             // stratum (protein-compact) admits present-protein peptides that failed 1st-pass FDR.
+            return CompactFromSidecars(projections, perFileParquetPaths, beforeCount, config, ctx);
+        }
+
+        /// <summary>
+        /// The compaction gate, the survivor reload, and the count line - the part of Stage 5
+        /// that reads its inputs off disk rather than out of the score pass.
+        ///
+        /// <para>Shared by the compute path and the resume path deliberately. The resume path
+        /// exists precisely because these three steps are the only ones whose inputs are NOT
+        /// already on disk in finished form, so a second copy of them would be the one thing
+        /// guaranteed to drift.</para>
+        /// </summary>
+        private List<KeyValuePair<string, List<FdrEntry>>> CompactFromSidecars(
+            FdrProjectionSet projections,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            int beforeCount,
+            OspreyConfig config,
+            PipelineContext ctx)
+        {
             var firstPassBaseIds = ComputeFirstPassBaseIds(
                 projections, perFileParquetPaths, config, ctx, _proteinCompactStratum);
             if (firstPassBaseIds == null)
