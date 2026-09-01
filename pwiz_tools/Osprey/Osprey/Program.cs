@@ -92,7 +92,8 @@ namespace pwiz.Osprey
                     {
                         if (i + 1 >= args.Length || args[i + 1].StartsWith("-", StringComparison.Ordinal))
                         {
-                            LogError("--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, or SecondPassFDR).");
+                            LogError("--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, " +
+                                     "PerFileRescoring, SecondPassFDR, or ModelDiagnostics).");
                             return 1;
                         }
                         taskName = args[i + 1];

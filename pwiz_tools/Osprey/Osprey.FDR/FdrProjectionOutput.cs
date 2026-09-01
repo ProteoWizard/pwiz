@@ -56,7 +56,7 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// Effective run-level q-value for the FDR control level, matching
-        /// <see cref="FdrEntry.EffectiveRunQvalue"/> (and the retired
+        /// <see cref="FdrRowExtensions.EffectiveRunQvalue{T}"/> (and the retired
         /// <c>FdrProjection.EffectiveRunQvalue</c>) exactly.
         /// </summary>
         public double EffectiveRunQvalue(FdrLevel level)
@@ -76,7 +76,7 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// Effective experiment-level q-value for the FDR control level, matching
-        /// <see cref="FdrEntry.EffectiveExperimentQvalue"/> exactly. Used by the
+        /// <see cref="FdrRowExtensions.EffectiveExperimentQvalue{T}"/> exactly. Used by the
         /// streaming <c>--model-diagnostics</c> accumulator's cross-run experiment
         /// gate, where the entry is off the struct and only these q-values are live.
         /// </summary>

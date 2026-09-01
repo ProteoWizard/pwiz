@@ -153,8 +153,8 @@ namespace pwiz.Osprey.Tasks
             uint maxIdx = 0;
             foreach (var entry in entries)
             {
-                if (entry.ParquetIndex > maxIdx)
-                    maxIdx = entry.ParquetIndex;
+                if (entry.ParquetIndex.HasValue && entry.ParquetIndex.Value > maxIdx)
+                    maxIdx = entry.ParquetIndex.Value;
             }
             return maxIdx;
         }

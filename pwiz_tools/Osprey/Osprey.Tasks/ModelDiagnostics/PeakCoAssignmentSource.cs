@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -67,6 +67,12 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// Searched library by FULL entry id, supplying each row's precursor m/z and its
         /// modified sequence + charge (the precursor identity), so no parquet string column is read.
         /// </param>
+        /// <param name="experimentRecords">
+        /// The analysis-wide 1st-pass EXPERIMENT-scope records by entry_id, supplying each row's
+        /// experiment q-values and the aggregate score the acceptance boundary is drawn from.
+        /// Supplied by the caller because the score-pass path holds them in memory before the
+        /// sidecar is written, while the rehydrate path reads one an earlier run left.
+        /// </param>
         /// <param name="logInfo">Run log sink; every degrade path explains itself through it.</param>
         public static ModelDiagnosticsData.CoAssignmentData Build(
             IReadOnlyList<string> fileNames,
@@ -74,6 +80,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             OspreyConfig config,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             Action<string> logInfo)
         {
             // The "never throws" promise above needs an actual guard, and it was only ever
@@ -84,7 +91,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // that aborts a ten-hour search is a worse outcome than a panel that is missing.
             try
             {
-                return BuildCore(fileNames, perFileParquetPaths, config, classByBaseId, libraryById, logInfo);
+                return BuildCore(fileNames, perFileParquetPaths, config, classByBaseId,
+                    libraryById, experimentRecords, logInfo);
             }
             catch (Exception ex)
             {
@@ -101,11 +109,32 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             OspreyConfig config,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             Action<string> logInfo)
         {
             if (fileNames == null || perFileParquetPaths == null || libraryById == null)
             {
                 logInfo(@"[MODEL-DIAGNOSTICS] peak co-assignment skipped: no per-file parquet or library available.");
+                return null;
+            }
+
+            // The analysis-wide EXPERIMENT-scope records (format v5, issue #4486), supplied by
+            // the caller rather than read here, because the two callers hold them in different
+            // places: the score-pass path has them in memory BEFORE the sidecar is written, and
+            // the rehydrate path reads a sidecar an earlier run left. Reading the file here
+            // silently produced an EMPTY map on the score-pass path, for that ordering reason.
+            //
+            // This panel cannot proceed without them, and must not substitute a default for a
+            // missing one: the experiment aggregate is a signed discriminant, so a fabricated
+            // 0.0 is an ordinary mid-distribution score rather than an obvious absence, and the
+            // run cutoff below is a MINIMUM over accepted precursors' aggregates. Zeros drag it
+            // to 0.0 and admit the entire decoy pool - measured on StellarLibDecoy when this
+            // defaulted: decoys 272 -> 483,220 and the cutoff 0.669 -> 0. See the remarks on
+            // StreamingFdr.ExperimentAggregateScore, which chose double? over an in-band
+            // sentinel for exactly this failure.
+            if (experimentRecords == null || experimentRecords.Count == 0)
+            {
+                logInfo(@"[MODEL-DIAGNOSTICS] peak co-assignment skipped: no 1st-pass experiment-scope FDR records were supplied, and their aggregate scores are what the acceptance boundary is drawn from.");
                 return null;
             }
 
@@ -150,11 +179,20 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     bool readOk = FdrScoresSidecar.ReadRecords(sidecar, FdrScoresSidecar.Pass.FirstPass, rec =>
                     {
                         bool dec = (rec.EntryId & LibraryEntry.DECOY_ID_BIT) != 0;
+                        // The experiment-scope half comes from the analysis-wide sidecar
+                        // (format v5, issue #4486). An entry with no record there took part in
+                        // no experiment competition, so it keeps the default q of 1.0 and a
+                        // 0.0 aggregate - exactly what the pre-split record carried for it.
+                        // A record with no experiment entry took part in no experiment
+                        // competition, so it has no aggregate to be ranked on. Skip it rather
+                        // than feed 0.0, for the reason given where the map is read.
+                        if (!experimentRecords.TryGetValue(rec.EntryId, out var exp))
+                            return;
                         builder.ObserveCutoff(fileIdx,
                             ModelDiagnosticsData.ClassifyEntry(dec, rec.EntryId, classByBaseId), rec.EntryId, rec.Score,
-                            rec.ExperimentAggregateScore,
-                            EffectiveQvalue(rec, config.FdrLevel, true),
-                            EffectiveQvalue(rec, config.FdrLevel, false), config.RunFdr);
+                            exp.ExperimentAggregateScore,
+                            EffectiveQvalue(rec, exp, config.FdrLevel, true),
+                            EffectiveQvalue(rec, exp, config.FdrLevel, false), config.RunFdr);
                     });
                     if (!readOk)
                     {
@@ -211,7 +249,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     string reason;
                     int fileUnresolved;
                     int detected = AddFile(builder, f, fileNames[f], perFileParquetPaths, config,
-                        classByBaseId, libraryById, out reason, out fileUnresolved);
+                        classByBaseId, libraryById, experimentRecords, out reason,
+                        out fileUnresolved);
                     totalUnresolved += fileUnresolved;
                     if (reason != null)
                     {
@@ -278,6 +317,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             OspreyConfig config,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             out string reason,
             out int unresolved)
         {
@@ -296,9 +336,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 return 0;
             }
             // The same path the score-pass sink wrote, so the panel reads exactly what this run
-            // produced. At this point the records are the PARTIAL ones (experiment_protein_qvalue is
-            // still the 1.0 placeholder that first-pass protein FDR patches later) - harmless
-            // here, since the panel reads only the score and the precursor/peptide q-values.
+            // produced - and it is final when written, because the experiment-scope columns that
+            // used to arrive by a later patch now live in their own analysis-wide sidecar.
             string sidecarPath = FdrScoresSidecar.Pass1Path(sidecarBase);
             if (!File.Exists(sidecarPath))
             {
@@ -341,8 +380,10 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 }
                 int current = row++;
                 // Gate BEFORE any allocation: this callback fires for every pre-compaction row.
-                double runQ = EffectiveQvalue(rec, config.FdrLevel, true);
-                double experimentQ = EffectiveQvalue(rec, config.FdrLevel, false);
+                if (!experimentRecords.TryGetValue(rec.EntryId, out var exp))
+                    return;
+                double runQ = EffectiveQvalue(rec, exp, config.FdrLevel, true);
+                double experimentQ = EffectiveQvalue(rec, exp, config.FdrLevel, false);
                 bool isDecoy = (rec.EntryId & LibraryEntry.DECOY_ID_BIT) != 0;
                 var cls = ModelDiagnosticsData.ClassifyEntry(isDecoy, rec.EntryId, classByBaseId);
                 if (!builder.Includes(fileIdx, cls, rec.EntryId, runQ, experimentQ, config.RunFdr))
@@ -411,25 +452,27 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         /// <summary>
         /// The q-value for the configured FDR control level at one scope, off a sidecar record.
-        /// Mirrors <see cref="FdrEntry.EffectiveRunQvalue"/> /
-        /// <see cref="FdrEntry.EffectiveExperimentQvalue"/>, which cannot be used here because
+        /// Mirrors <see cref="FdrRowExtensions.EffectiveRunQvalue{T}"/> /
+        /// <see cref="FdrRowExtensions.EffectiveExperimentQvalue{T}"/>, which cannot be used here because
         /// this path never materializes an <see cref="FdrEntry"/>.
         /// </summary>
-        /// <param name="rec">One 60-byte sidecar record's decoded payload.</param>
+        /// <param name="rec">One per-file sidecar record's decoded payload, for the run scope.</param>
+        /// <param name="exp">The entry's experiment-scope record, for the experiment scope.</param>
         /// <param name="level">FDR control level the run reports at.</param>
         /// <param name="runScope">True for the run-level q, false for the experiment-wide q.</param>
-        private static double EffectiveQvalue(in FdrScoreRecord rec, FdrLevel level, bool runScope)
+        private static double EffectiveQvalue(in FdrScoreRecord rec, in FdrExperimentRecord exp,
+            FdrLevel level, bool runScope)
         {
             switch (level)
             {
                 case FdrLevel.Precursor:
-                    return runScope ? rec.RunPrecursorQvalue : rec.ExperimentPrecursorQvalue;
+                    return runScope ? rec.RunPrecursorQvalue : exp.ExperimentPrecursorQvalue;
                 case FdrLevel.Peptide:
-                    return runScope ? rec.RunPeptideQvalue : rec.ExperimentPeptideQvalue;
+                    return runScope ? rec.RunPeptideQvalue : exp.ExperimentPeptideQvalue;
                 case FdrLevel.Both:
                     return runScope
                         ? Math.Max(rec.RunPrecursorQvalue, rec.RunPeptideQvalue)
-                        : Math.Max(rec.ExperimentPrecursorQvalue, rec.ExperimentPeptideQvalue);
+                        : Math.Max(exp.ExperimentPrecursorQvalue, exp.ExperimentPeptideQvalue);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(level));
             }
