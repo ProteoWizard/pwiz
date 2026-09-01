@@ -61,7 +61,7 @@ The exact per-task membership per mode is pinned by `Osprey.Test/PipelineMembers
 
 - `<stem>.scores.parquet` — the per-file PIN-feature / fragment / CWT-candidate cache (`ParquetScoreCache.GetScoresPath`).
 - `<stem>.calibration.json` — RT + MS1/MS2 mass calibration (`CalibrationIO.CalibrationPathForInput`).
-- `<stem>.spectra.bin` — local mzML-decode fast-reload cache (not needed by joins).
+- `<stem>.spectra.bin` — the decoded-spectrum cache. No *join* reads it, but Stage 6 rescore does, and it is what lets a search run at all once the input has been deleted (see 14-intermediate-files.md).
 
 The parquet footer is stamped once against the unmutated outer config (`:226-232`) with `osprey.version`, `osprey.search_hash`, `osprey.library_hash`, and `osprey.reconciled = "false"`. Under `--task PerFileScoring` (`config.NoJoin` with no `--input-scores`) the task stops after writing the parquets and returns false with `ExitCode = 0` (`FinalizeAndCheck`, `:649-658`) — Stage 5+ is skipped, no blib is written. `--output` is accepted but not used (`Osprey/Program.cs:228-232` reports the real per-file parquet output instead of warning).
 
@@ -88,7 +88,7 @@ Under `--task FirstPassFDR` (`config.StopAfterStage5`), `PlanStage6` writes the 
 
 `PerFileRescoreTask` (`Osprey.Tasks/PerFileRescoreTask.cs`). Consumes the boundary file pair + the per-file parquet and re-scores each file against the consensus + reconciliation boundaries, runs the gap-fill two-pass, and writes a **reconciled** parquet. `Run` (`:185-315`) reads the post-FirstPassFDR buffer (`ctx.Get<CompactedEntries>()`, `:200`; demanding it materializes `FirstPassFdrTask`), self-gates on planning state (`didPlan` or a rescore bundle, and no 2nd-pass sidecar already present, `:232-247`), then calls `ExecuteRescore` (`:491-612`).
 
-`ExecuteRescore` runs the per-file loop `RescoreOneFile` (`:644-813`), which for each file with work: builds `boundary_overrides` keyed by entry_id + the subset library, reloads spectra (`.spectra.bin` → mzML fallback) and mass calibrations, picks the refined RT calibration (falling back to first-pass), re-scores via `ScoringPipeline.RunCoelutionScoring`, overlays the rescored entries in place, runs gap-fill, and writes the reconciled parquet. Rescore runs the files **in parallel** under the same `EffectiveFileParallelism` the scoring phase resolved (`:547-584`).
+`ExecuteRescore` runs the per-file loop `RescoreOneFile` (`:644-813`), which for each file with work: builds `boundary_overrides` keyed by entry_id + the subset library, streams spectra from `.spectra.bin` (`LoadSpectraForRescore`; there is **no** mzML fallback — an absent, stale or wrong-version cache is fatal here) and reloads mass calibrations, picks the refined RT calibration (falling back to first-pass), re-scores via `ScoringPipeline.RunCoelutionScoring`, overlays the rescored entries in place, runs gap-fill, and writes the reconciled parquet. Rescore runs the files **in parallel** under the same `EffectiveFileParallelism` the scoring phase resolved (`:547-584`).
 
 Reconciled output goes to a **separate** `<stem>.scores-reconciled.parquet` sibling, leaving the Stage 4 `<stem>.scores.parquet` intact (`ParquetScoreCache.GetReconciledScoresPath`; `WriteReconciledAndStamp`, `:944-987`). Its footer carries `osprey.reconciled = "true"` plus `osprey.reconciliation_hash` (`Osprey.Tasks/ReconciledParquetWriter.cs:198-205`). This differs from the Rust doc, which says Stage 6 "rewrites each `<stem>.scores.parquet`" in place (see Divergences).
 
@@ -143,7 +143,7 @@ On mismatch the run aborts before any FDR/reconciliation work, naming the offend
 |---|---|---|
 | `<stem>.calibration.json` | Stage 1-2 | Stage 6 (inverse RT prediction + isolation windows) |
 | `<stem>.scores.parquet` | Stage 4 (`PerFileScoringTask`) | Stages 5-7 (stubs, PIN features, CWT candidates, blib plan) |
-| `<stem>.spectra.bin` | Stage 1-2 | local fast-reload only; no join depends on it |
+| `<stem>.spectra.bin` | Stage 1-2 | Stage 6 rescore (**mandatory** — streamed per window, no mzML fallback); the only spectrum source once the input is deleted |
 | `<stem>.1st-pass.fdr_scores.bin` | Stage 5 (`FirstPassFdrTask`) | Stage 6 worker (mandatory); skip-Percolator on rerun |
 | `<stem>.reconciliation.json` | Stage 5 (`FirstPassFdrTask`) | Stage 6 worker (mandatory) |
 | `<stem>.scores-reconciled.parquet` | Stage 6 (`PerFileRescoreTask`) | Stage 7 (`SecondPassFdrTask`) 2nd-pass FDR + blib |

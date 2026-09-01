@@ -558,18 +558,74 @@ namespace SkylineTester
             set
             {
                 _logFile = value;
-                if (File.Exists(_logFile))
+                VisibleLogFile = _logFile;
+            }
+        }
+
+        /// <summary>
+        /// Points the shell at <paramref name="logFile"/> for a new run, rolling any existing log
+        /// aside to a timestamped name instead of deleting it.
+        /// <para>Assigning <see cref="LogFile"/> used to delete the file it was given, which made
+        /// starting a run destroy the previous run's log before a single test had produced output.
+        /// A second click on the Run/Stop button while a stop was still in flight was enough to
+        /// lose a nine-hour run that way, so the record of a long run now survives one accidental
+        /// start.</para>
+        /// <para>Exactly one previous log is kept: older rolled logs are removed, so this cannot
+        /// accumulate. A failure to roll leaves the old log in place and is reported to the log
+        /// rather than swallowed - losing the previous log is the thing being prevented.</para>
+        /// </summary>
+        public void StartNewLog(string logFile)
+        {
+            LogFile = logFile;  // Set first, so a failure below is logged against the new target
+
+            if (string.IsNullOrEmpty(logFile))
+                return;
+
+            // Everything below is inside the try: the file can be locked, or vanish between two
+            // calls, and File.Exists/FileInfo.Length/Move all throw on that. Nothing about
+            // preparing a log is worth taking the window down at the start of a run.
+            try
+            {
+                // Under LogLock, like every other access to this file: UpdateLog appends under it
+                // and the memory graph reads the whole file under it on a background thread. A
+                // refresh landing mid-roll would otherwise fail the Move with a sharing violation.
+                lock (LogLock)
                 {
-                    try
+                    if (!File.Exists(logFile) || new FileInfo(logFile).Length == 0)
+                        return;     // Nothing worth keeping
+
+                    var directory = Path.GetDirectoryName(logFile) ?? string.Empty;
+                    var baseName = Path.GetFileNameWithoutExtension(logFile);
+                    var extension = Path.GetExtension(logFile);
+
+                    var rolledLog = Path.Combine(directory,
+                        baseName + DateTime.Now.ToString("-yyyyMMdd-HHmmss") + extension);
+
+                    // Second resolution, so a second roll within the same second would collide and
+                    // Move would throw. That destination is a log seconds old at most, unlike the
+                    // one being rolled now.
+                    if (File.Exists(rolledLog))
+                        File.Delete(rolledLog);
+
+                    // Move before pruning. Pruning first would mean a Move that then throws - the
+                    // log is the file most likely to be locked at run start - had already discarded
+                    // the older rolled log for nothing.
+                    File.Move(logFile, rolledLog);
+
+                    // Keep exactly one previous log. Nightly logs are named and pruned by Summary in
+                    // its own directory, and do not match this pattern.
+                    foreach (var oldLog in Directory.GetFiles(directory, baseName + "-*" + extension))
                     {
-                        File.Delete(_logFile);
-                    }
-// ReSharper disable once EmptyGeneralCatchClause
-                    catch (Exception)
-                    {
+                        if (!string.Equals(oldLog, rolledLog, StringComparison.OrdinalIgnoreCase))
+                            File.Delete(oldLog);
                     }
                 }
-                VisibleLogFile = _logFile;
+            }
+            catch (Exception e)
+            {
+                // The old log stays where it is and the run appends to it. Mixed output beats
+                // destroying the record of a long run, which is the reason for rolling at all.
+                Log("# Could not roll the previous log aside: " + e.Message);
             }
         }
 
