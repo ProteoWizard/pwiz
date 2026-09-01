@@ -2441,6 +2441,10 @@ namespace pwiz.Osprey.Tasks
             // and the Stage 6 worker read identical bytes; it returns a per-file failure
             // count the sink accumulates (sink.PartialWriteFailures) for the
             // StopAfterStage5 gate. Phase 2 patches [52..60] after protein FDR (below).
+            // Hoisted: the sidecar stamp below runs once per file inside the score pass, and
+            // recomputing the key per file would hash the search + library identity 446 times.
+            string sidecarValidityKey = ValidityKey(ctx);
+
             int FlushPartialSidecar(string fileName, IReadOnlyList<FdrScoreRecord> records)
             {
                 string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
@@ -2451,9 +2455,27 @@ namespace pwiz.Osprey.Tasks
                     return 1;
                 }
                 string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
+                // Cleared BEFORE the write so a marker from an earlier invocation can never
+                // outlive the file it vouches for, and stamped AFTER, so the marker's presence
+                // means this build finished this file. FdrScoresSidecar.Write commits through
+                // FileSaver, i.e. an atomic rename, so the sidecar is absent or complete and
+                // never half-written; the marker adds the one thing existence cannot say, which
+                // is WHICH task and which validity key produced it.
+                //
+                // Per file, at write time, on purpose. The driver stamps declared outputs only
+                // after Run returns, and this score pass takes 137 minutes over 446 files - so a
+                // machine lost partway (the Windows-Update case) previously left every finished
+                // sidecar unmarked and unusable, and the restart re-scored all 446. Stamping
+                // here makes recovery proportional to work completed.
+                PerFileResumeDriver.ClearStale(fdrPath, Name);
                 try
                 {
                     FdrScoresSidecar.Write(fdrPath, records, FdrScoresSidecar.Pass.FirstPass);
+                    string parquetPath;
+                    perFileParquetPaths.TryGetValue(fileName, out parquetPath);
+                    PerFileResumeDriver.Stamp(fdrPath, Name, OspreyVersion.Current, sidecarValidityKey,
+                        parquetPath == null ? Array.Empty<string>() : new[] { parquetPath },
+                        ctx.LogWarning);
                 }
                 catch (Exception ex)
                 {
