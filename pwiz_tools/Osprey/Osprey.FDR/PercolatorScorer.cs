@@ -399,7 +399,7 @@ namespace pwiz.Osprey.FDR
             // used (PercolatorQValues.ComputePepWinnerMap / PercolatorQValues.ComputeExperimentPrecursorQMap /
             // PercolatorQValues.ComputeExperimentPeptideQMap / PercolatorQValues.ComputePerFileRunQvalues all mirror
             // StreamingFdr.ComputeStreamingCompetitionQvalues), so the streamed outputs are identical.
-            var pepByWinnerIdx = PercolatorQValues.ComputePepWinnerMap(finalScores, labels, entryIds);
+            var pepByEntryId = PercolatorQValues.ComputePepWinnerMap(finalScores, labels, entryIds);
 
             // The per-file q-value passes below slice each file as one contiguous block
             // [off, off+count). The full-length ComputePerRun* path instead grouped by file
@@ -517,7 +517,7 @@ namespace pwiz.Osprey.FDR
                         floorPept > epe)
                         epe = floorPept;
 
-                    double pep = pepByWinnerIdx.TryGetValue(g, out double pv) ? pv : 1.0;
+                    double pep = pepByEntryId.TryGetValue(entryIds[g], out double pv) ? pv : 1.0;
 
                     double ea = expAggByEntryId.TryGetValue(entryIds[g], out double eav)
                         ? eav : finalScores[g];
@@ -931,7 +931,7 @@ namespace pwiz.Osprey.FDR
             // Finalize the bounded lookups. PEP is global (built always); the experiment maps use
             // the single-file shortcut (exp == per-run) so they are built only when multi-file --
             // matching ScoreProjectionAndComputeFdrInPlace exactly.
-            var pepByWinnerIdx = streamingQ.BuildPepWinnerMap();
+            var pepByEntryId = streamingQ.BuildPepWinnerMap();
             bool isSingleFile = nonEmptyFiles <= 1;
             Dictionary<uint, double> expPrecByWinnerId = isSingleFile
                 ? null : streamingQ.BuildExperimentPrecursorQMap();
@@ -990,7 +990,7 @@ namespace pwiz.Osprey.FDR
                         minRunBothByPeptide.TryGetValue((pept, fLabels[r]), out double floorPept) && floorPept > epe)
                         epe = floorPept;
 
-                    double pep = pepByWinnerIdx.TryGetValue(gEmit + r, out double pv) ? pv : 1.0;
+                    double pep = pepByEntryId.TryGetValue(fEntryIds[r], out double pv) ? pv : 1.0;
 
                     double ea = expAggByEntryId.TryGetValue(fEntryIds[r], out double eav)
                         ? eav : fScores[r];
