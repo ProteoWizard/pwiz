@@ -254,6 +254,7 @@ namespace pwiz.SkylineTestUtil
 
         private const int SLEEP_INTERVAL = 10;
         public const int WAIT_TIME = 5 * 1000;    // 5 seconds
+        public const int WAIT_TIME_LIBRARIES = 60 * 1000;    // 60 seconds
 
         private static int GetWaitCycles(int millis = WAIT_TIME)
         {
@@ -275,6 +276,28 @@ namespace pwiz.SkylineTestUtil
         public bool AnyProcessing
         {
             get { return BackgroundLoaders.Any(l => l.AnyProcessing()); }
+        }
+
+        /// <summary>
+        /// Waits for the document's spectral libraries to finish loading.
+        /// <see cref="AssertComplete"/> only inspects the chromatogram loader's progress, so it
+        /// can return while the library manager is still working. A caller that then reads
+        /// Settings.PeptideSettings.Libraries.IsLoaded sees false purely because it got there
+        /// first, and silently takes whatever path the code has for a library-less document.
+        /// A document with no libraries reports itself loaded, so this returns immediately.
+        /// </summary>
+        public void WaitForLibrariesLoaded(int millis = WAIT_TIME_LIBRARIES)
+        {
+            int waitCycles = GetWaitCycles(millis);
+            for (int i = 0; i < waitCycles; i++)
+            {
+                if (Document.Settings.PeptideSettings.Libraries.IsLoaded)
+                    return;
+                Thread.Sleep(SLEEP_INTERVAL);
+            }
+            Assert.Fail("Libraries still not loaded after {0} seconds: {1}",
+                waitCycles*SLEEP_INTERVAL/1000,
+                Document.Settings.PeptideSettings.Libraries.IsNotLoadedExplained);
         }
 
         public void AssertComplete()
