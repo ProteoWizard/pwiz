@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
@@ -98,7 +98,7 @@ namespace pwiz.Osprey.Tasks
             typeof(FullLibrary), typeof(LibraryById), typeof(PerFileCalibrations),
             typeof(PerFileCalibrationDiagnostics),
             typeof(PerFileIsolationMz), typeof(PerFileParquetPaths),
-            typeof(RescoreBundle), typeof(ScoredEntries),
+            typeof(RescoreBundle), typeof(ScoredEntries), typeof(SequencePool),
             // Must be declared, not just published: PipelineContext builds its
             // producer registry from this list, so an undeclared byproduct cannot be
             // lazily materialized and ctx.Get<T> throws UnknownByproductException on a
@@ -113,6 +113,10 @@ namespace pwiz.Osprey.Tasks
         // outputs from a not-yet-run task never NPE on the accessor.
         private List<LibraryEntry> _fullLibrary = new List<LibraryEntry>();
         private Dictionary<uint, LibraryEntry> _libraryById = new Dictionary<uint, LibraryEntry>();
+        // The ONE pool the run's sidecar readers canonicalize through, held here rather than
+        // built per loader so the instance this task's own stub loads use is the instance it
+        // publishes. Two pools over the same library would not share a single string.
+        private SequencePool _sequencePool = new SequencePool(new Dictionary<uint, LibraryEntry>());
         private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries
             = new List<KeyValuePair<string, List<FdrEntry>>>();
         private ConcurrentDictionary<string, RTCalibration> _perFileCalibrations
@@ -135,10 +139,9 @@ namespace pwiz.Osprey.Tasks
         // Probe-the-disk hydration bundle: populated when the joinOnly
         // dispatch finds every parquet's sibling .1st-pass.fdr_scores.bin
         // sidecar already on disk. Null otherwise. Carries the reconciliation
-        // state that the worker-mode RescoreHydration.HydrateForRescore
-        // produces, sharing it with FirstPassFdrTask's reconciliation accessors
-        // so the worker entry-path collapse (next commit) does not need
-        // a separate code path.
+        // state RescoreHydration.HydrateReconciliationOverlay produces, sharing
+        // it with FirstPassFdrTask's reconciliation accessors so the two entry
+        // paths do not need separate code.
         private RescoreInputs _rescoreInputs;
 
         // The backing fields above are built and mutated ONLY inside this task
@@ -423,7 +426,8 @@ namespace pwiz.Osprey.Tasks
                         if (!File.Exists(parquetPath))
                             continue;
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
-                            fileName, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)));
+                            fileName, ParquetScoreCache.LoadFdrStubsFromParquet(
+                                parquetPath, null, _sequencePool.Value)));
                     }
                 }
                 foreach (var kvp in perFileEntries)
@@ -583,8 +587,7 @@ namespace pwiz.Osprey.Tasks
             // the rescore bundle (1st-pass q-values overlay + reconciliation
             // actions + refined RT calibration + gap-fill targets) so the
             // worker hydration path and the in-pipeline path produce
-            // identical post-Stage-5 state. Mirrors the worker's
-            // RescoreHydration.HydrateForRescore but reuses the stubs +
+            // identical post-Stage-5 state. Reuses the stubs +
             // PIN features already loaded above (so PIN features survive
             // for stage7's Percolator skip path). Stage 5 entry (no
             // sidecars present yet) skips this block and _rescoreInputs
@@ -709,7 +712,8 @@ namespace pwiz.Osprey.Tasks
                             // features. Strict load: CanRehydrate already certified these
                             // outputs valid, so a null is a genuine fault, not a "fall back
                             // to rescore" case. Fail loudly; Rehydrate must not compute.
-                            var stubs = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx, resumeStrict: true);
+                            var stubs = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations,
+                                perFileIsolationMz, ctx, resumeStrict: true, sequencePool: _sequencePool.Value);
                             if (stubs == null)
                             {
                                 ctx.ExitCode = 1;
@@ -826,6 +830,12 @@ namespace pwiz.Osprey.Tasks
             // bundle (null at a Stage-5 entry / straight-through run).
             ctx.Publish(new FullLibrary(_fullLibrary));
             ctx.Publish(new LibraryById(_libraryById));
+            // Published next to the library it is seeded from: every stub reader that
+            // canonicalizes a sidecar ModifiedSequence has to reach THIS pool, or it will
+            // build a second set of instances beside the library's rather than share them.
+            // The published instance is the FIELD, not a fresh wrapper - this task loads
+            // stubs of its own before publishing, and those have to share the same pool.
+            ctx.Publish(_sequencePool);
             ctx.Publish(new PerFileCalibrations(_perFileCalibrations));
             // CAL-view per-file diagnostics for --model-diagnostics. Harvested directly
             // onto the instance field by ProcessFile (compute path only), so it is
@@ -901,7 +911,7 @@ namespace pwiz.Osprey.Tasks
         /// missing library decoys, an unreadable pairing manifest, or a
         /// pairing fraction below the configured threshold.
         /// </summary>
-        private bool LoadLibraryAndDecoys(OspreyConfig config, out List<LibraryEntry> fullLibrary, PipelineContext ctx)
+        internal bool LoadLibraryAndDecoys(OspreyConfig config, out List<LibraryEntry> fullLibrary, PipelineContext ctx)
         {
             fullLibrary = null;
 
@@ -1039,6 +1049,7 @@ namespace pwiz.Osprey.Tasks
 
             _fullLibrary = fullLibrary;
             _libraryById = libraryById;
+            _sequencePool = new SequencePool(libraryById);
 
             // Diagnostic: the true resident-library managed heap. The working set
             // at this point still holds the one-time TSV/cache read buffers and freed
@@ -1338,13 +1349,18 @@ namespace pwiz.Osprey.Tasks
                         perFileEntries, config.InputScores,
                         (fileIdx, fileName, parquetPath) => LoadJoinOnlyScoresForFile(
                             config, fileIdx, fileName, parquetPath, perFileParquetPaths,
-                            perFileCalibrations, perFileIsolationMz, ctx),
+                            perFileCalibrations, perFileIsolationMz, _sequencePool.Value, ctx),
                         (fileIdx, fileName, stubs, tally) =>
                         {
                             ScoringTaskShared.TallyPreCompaction(config, stubs, tally);
                             if (mdiagAccumulator != null)
                                 ScoringTaskShared.FeedModelDiagnostics(mdiagAccumulator, fileIdx, stubs);
-                        }), ctx);
+                        },
+                        FdrExperimentSidecar.ReadMap(
+                            FdrExperimentSidecar.PathFor(config.OutputBlib,
+                                ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
+                            FdrScoresSidecar.Pass.FirstPass),
+                        _sequencePool.Value), ctx);
                 if (_rescoreInputs == null)
                 {
                     hydrationFailed = true;
@@ -1365,7 +1381,7 @@ namespace pwiz.Osprey.Tasks
                 // ".scores" strip would leave the bogus key "<stem>.reconciled").
                 string fileName = Path.GetFileNameWithoutExtension(
                     RescoreHydration.SyntheticInputFromParquet(parquetPath)) ?? string.Empty;
-                ctx.LogInfo(string.Format(@"===== Loading file {0}/{1}: {2} (from {3}) =====",
+                ctx.LogInfo(string.Format(@"Loading file {0}/{1}: {2} (from {3})",
                     fileIdx + 1, config.InputScores.Count, fileName, parquetPath));
                 if (builder != null)
                 {
@@ -1400,7 +1416,7 @@ namespace pwiz.Osprey.Tasks
                     // Fat: Stage 5+ (Percolator SVM) requires the 21 PIN features on each
                     // FdrEntry. Load them in lockstep with the stubs and bind by row index
                     // (rows stable).
-                    var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+                    var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, null, _sequencePool.Value);
                     var features = ParquetScoreCache.LoadPinFeaturesFromParquet(parquetPath);
                     if (features.Count != stubs.Count)
                     {
@@ -1432,7 +1448,7 @@ namespace pwiz.Osprey.Tasks
                     // reloads the features it needs from each reconciled parquet rather than
                     // reading them off these stubs - so state the reason rather than a predicate
                     // that no longer implies it.
-                    var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+                    var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, null, _sequencePool.Value);
                     // Keep the fail-fast the feature load used to provide: a foreign or
                     // truncated parquet missing the PIN schema must stop here, not surface
                     // downstream. Footer-only probe, no feature memory (same guard the lean
@@ -1585,11 +1601,18 @@ namespace pwiz.Osprey.Tasks
             Dictionary<string, string> perFileParquetPaths,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
             ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
+            LibraryStringInterner sequencePool,
             PipelineContext ctx)
         {
-            ctx.LogInfo(string.Format(@"===== Loading file {0}/{1}: {2} (from {3}) =====",
+            // Indented two levels: this runs inside RescoreHydration.HydrateCompactedStreaming's
+            // "Hydrating reconciliation bundle" reporter, whose heading is at column 0 and whose
+            // percent lines are at 2. Printed flush left, these per-file lines read as siblings
+            // of that heading and its percentages read as theirs - the parent printed as a child
+            // of its own child. The counter here is this file within the bundle; the percentage
+            // above it is the bundle's own.
+            ctx.LogInfo(string.Format(@"    Loading file {0}/{1}: {2} (from {3})",
                 fileIdx + 1, config.InputScores.Count, fileName, parquetPath));
-            var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+            var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, null, sequencePool);
             // Keep the fail-fast the feature load used to provide: a foreign or truncated
             // parquet missing the PIN schema must stop here, not surface downstream.
             // Footer-only probe, no feature memory.
@@ -1600,7 +1623,7 @@ namespace pwiz.Osprey.Tasks
                     parquetPath));
             }
             ctx.LogInfo(string.Format(
-                @"  Loaded {0} FDR stubs (features not loaded - not read on this path)", stubs.Count));
+                @"      Loaded {0} FDR stubs (features not loaded - not read on this path)", stubs.Count));
             perFileParquetPaths[fileName] = parquetPath;
             LoadJoinOnlyCalibration(fileName, parquetPath, perFileCalibrations,
                 perFileIsolationMz, ctx);
@@ -1740,7 +1763,12 @@ namespace pwiz.Osprey.Tasks
                 {
                     _rescoreInputs = HydrateRescoreBundleOrNull(
                         () => RescoreHydration.HydrateReconciliationOverlay(
-                            perFileEntries, config.InputScores), ctx);
+                            perFileEntries, config.InputScores,
+                            FdrExperimentSidecar.ReadMap(
+                                FdrExperimentSidecar.PathFor(config.OutputBlib,
+                                ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
+                                FdrScoresSidecar.Pass.FirstPass),
+                            _sequencePool.Value), ctx);
                 }
                 if (_rescoreInputs == null)
                     return false;
@@ -2199,6 +2227,12 @@ namespace pwiz.Osprey.Tasks
         /// failure is a genuine fault and logs an error instead -- no misleading
         /// "will rescore" messaging. Mirrors the load logic in the
         /// <c>--task FirstPassFDR</c> branch above.
+        ///
+        /// <para><paramref name="sequencePool"/> is supplied by the resume caller, whose stubs
+        /// accumulate into the all-files buffer the interning targets.
+        /// <see cref="ScoreOrLoadForFile"/> passes null: its result is one file's own scoring
+        /// output on its way to that file's parquet, so pooling it would canonicalize strings
+        /// nothing holds afterwards.</para>
         /// </summary>
         private static List<FdrEntry> TryLoadStubsAndCalibration(
             string scoresPath,
@@ -2206,12 +2240,13 @@ namespace pwiz.Osprey.Tasks
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
             ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             PipelineContext ctx,
-            bool resumeStrict = false)
+            bool resumeStrict = false,
+            LibraryStringInterner sequencePool = null)
         {
             List<FdrEntry> stubs;
             try
             {
-                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(scoresPath);
+                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(scoresPath, null, sequencePool);
                 var features = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
                 if (features.Count != stubs.Count)
                 {

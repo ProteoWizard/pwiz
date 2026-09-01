@@ -61,6 +61,96 @@ namespace pwiz.Osprey.Tasks
         public LibraryById(IReadOnlyDictionary<uint, LibraryEntry> value) { Value = value; }
     }
 
+    /// <summary>
+    /// The run's ONE modified-sequence pool, seeded from the library so that every sidecar
+    /// reader canonicalizes onto the library's own string instances.
+    ///
+    /// <para>A parquet reader hands out a fresh string per row, so the FDR pool would hold one
+    /// string object per observation - ~72 B of a survivor's measured 274 B, about 9.9 GB at
+    /// 137 M survivors (issue #4486). Interning against a pool of its OWN would elect the first
+    /// parquet instance as canonical, leaving the run holding the library's set AND the
+    /// sidecars', which costs more than it saves. Seeding from the library first is what makes
+    /// this a collapse rather than a duplication, and it is why there is exactly one of these
+    /// per run rather than one per loader.</para>
+    ///
+    /// <para>Seeded LAZILY: a run that never loads stubs (Stage 1-4 only) should not pay a walk
+    /// of six million library entries. The seed is guarded because the byproduct is reachable
+    /// from more than one task; <see cref="LibraryStringInterner"/> itself is not synchronized,
+    /// so its CALLERS must stay single-threaded loads - which every stub loader is.</para>
+    /// </summary>
+    internal sealed class SequencePool
+    {
+        private readonly IReadOnlyDictionary<uint, LibraryEntry> _libraryById;
+        private readonly object _seedLock = new object();
+        private LibraryStringInterner _interner;
+
+        public SequencePool(IReadOnlyDictionary<uint, LibraryEntry> libraryById)
+        {
+            _libraryById = libraryById;
+        }
+
+        public LibraryStringInterner Value
+        {
+            get
+            {
+                lock (_seedLock)
+                {
+                    if (_interner == null)
+                        _interner = Seed();
+                    return _interner;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Distinct sequences the LIBRARY contributed, captured before any sidecar was read.
+        /// Compared against the pool's distinct count afterwards it answers the only question
+        /// worth asking of this design: a count that has not moved means every sidecar value
+        /// landed on a library instance and the readers allocated no sequences at all.
+        /// </summary>
+        public int SeedCount { get; private set; }
+
+        /// <summary>
+        /// Log what the pool holds and how much of it the library supplied. No-op when the pool
+        /// was never seeded - a run that read no sidecar has nothing to report.
+        /// </summary>
+        public void LogSummary(Action<string> logInfo)
+        {
+            if (logInfo == null)
+                return;
+            LibraryStringInterner interner;
+            lock (_seedLock)
+                interner = _interner;
+            if (interner == null)
+                return;
+            logInfo(string.Format(
+                "Sequence pool: {0} distinct seeded from the library, {1} sidecar lookup(s) missed it",
+                SeedCount, interner.FrozenMisses));
+        }
+
+        /// <summary>
+        /// Prime the pool with every library modified sequence, so a later sidecar value equal
+        /// to one of them is answered with the LIBRARY's instance and costs no string at all.
+        /// </summary>
+        private LibraryStringInterner Seed()
+        {
+            var interner = new LibraryStringInterner();
+            if (_libraryById == null)
+                return interner;
+            foreach (var entry in _libraryById.Values)
+            {
+                if (entry != null)
+                    interner.Intern(entry.ModifiedSequence);
+            }
+            SeedCount = interner.DistinctCount;
+            // Frozen from here on. Stage 6 reads this pool from inside a Parallel.For over
+            // files, and a Dictionary tolerates concurrent readers but not a writer among
+            // them - so the seeding walk is the only write it ever takes.
+            interner.Freeze();
+            return interner;
+        }
+    }
+
     /// <summary>Per-file first-pass RT calibrations from Stages 2-4.</summary>
     internal sealed class PerFileCalibrations
     {
@@ -307,6 +397,36 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>The buffer already at its post-rescore state - nothing deferred.</summary>
         public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
+
+        /// <summary>
+        /// The run's file names, in buffer order. Reading them builds the buffer when the
+        /// build is still deferred, exactly as <see cref="PerFileEntries.Value"/> does -
+        /// every consumer of this milestone runs after Stage 7's own pool build, so by the
+        /// time anyone asks there is nothing left to defer.
+        /// </summary>
+        public IReadOnlyList<string> FileNames
+        {
+            get { return Value.ConvertAll(kv => kv.Key); }
+        }
+
+        /// <summary>
+        /// The run's files, one at a time, for a consumer that ITERATES and does not retain.
+        ///
+        /// <para>Yields from the resident buffer. The enumeration shape is the point: every
+        /// Stage 7 consumer folds to an O(distinct) aggregate through this seam rather than
+        /// indexing into the pool, which is what lets a per-file source replace the buffer
+        /// behind it (#4486) without those consumers changing. A per-file streamed source
+        /// stood here once and was removed as unreachable: Stage 7 builds the pool before
+        /// any consumer runs, and the source's rebuild-from-disk overlaid only the 1st-pass
+        /// sidecar, so the second-pass gates would have read 1st-pass q-values had it ever
+        /// run. The lean-row work is what retires the pool build and puts a streamed source
+        /// here for real.</para>
+        /// </summary>
+        public IEnumerable<KeyValuePair<string, List<FdrEntry>>> Files()
+        {
+            foreach (var kv in Value)
+                yield return kv;
+        }
 
         /// <param name="value">The shared backing buffer, filled in place by
         /// <paramref name="materialize"/>.</param>

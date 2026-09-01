@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -324,6 +324,29 @@ namespace pwiz.Osprey.Tasks
                     passing++;
             }
             tally.PassingTargets = passing;
+        }
+
+        /// <summary>
+        /// A path from this analysis that resolves to the directory its per-file artifacts go
+        /// to, for naming the analysis-wide experiment-scope FDR sidecar
+        /// (<see cref="FdrExperimentSidecar.PathFor"/>).
+        ///
+        /// <para>Prefers <c>InputScores</c> over <c>InputFiles</c> because a distributed
+        /// <c>--task</c> node is given its inputs as scores parquets and may have no mzML list
+        /// at all; both resolve to the same directory, since the parquets are written beside the
+        /// inputs. What matters is only that every phase of one analysis picks a path that
+        /// resolves the SAME way - the blib's own directory does not, which is the bug this
+        /// exists to avoid.</para>
+        /// </summary>
+        internal static string ArtifactSiblingPath(OspreyConfig config)
+        {
+            if (config == null)
+                return null;
+            if (config.InputScores != null && config.InputScores.Count > 0)
+                return config.InputScores[0];
+            if (config.InputFiles != null && config.InputFiles.Count > 0)
+                return config.InputFiles[0];
+            return null;
         }
 
         /// <summary>
