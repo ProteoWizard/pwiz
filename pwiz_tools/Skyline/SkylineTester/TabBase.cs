@@ -88,8 +88,10 @@ namespace SkylineTester
         {
             MainWindow.ClearLog();
             MainWindow.LastRunName = runName;
+            // No need to create the file here: AddImmediate below appends the run header, which
+            // creates it. Truncating it would also destroy the previous log whenever StartNewLog
+            // failed to roll it aside - the one case rolling exists for.
             MainWindow.CommandShell.StartNewLog(logFile ?? MainWindow.DefaultLogFile);
-            File.WriteAllText(MainWindow.CommandShell.LogFile, "");
             MainWindow.CommandShell.AddImmediate("\n# {0} started {1}".With(runName, DateTime.Now.ToString("f")));
             MainWindow.RefreshLogs();
             if (switchToOutputTab)

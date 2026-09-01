@@ -576,29 +576,37 @@ namespace SkylineTester
         /// </summary>
         public void StartNewLog(string logFile)
         {
-            if (!string.IsNullOrEmpty(logFile) && File.Exists(logFile) && new FileInfo(logFile).Length > 0)
+            LogFile = logFile;  // Set first, so a failure below is logged against the new target
+
+            if (string.IsNullOrEmpty(logFile))
+                return;
+
+            // Everything below is inside the try: the file can be locked, or vanish between two
+            // calls, and File.Exists/FileInfo.Length/Move all throw on that. Nothing about
+            // preparing a log is worth taking the window down at the start of a run.
+            try
             {
-                try
-                {
-                    var directory = Path.GetDirectoryName(logFile) ?? string.Empty;
-                    var baseName = Path.GetFileNameWithoutExtension(logFile);
-                    var extension = Path.GetExtension(logFile);
+                if (!File.Exists(logFile) || new FileInfo(logFile).Length == 0)
+                    return;     // Nothing worth keeping
 
-                    // Remove previously rolled logs first, so at most one is ever kept. Nightly logs
-                    // are named and pruned by Summary in its own directory, and do not match this.
-                    foreach (var oldLog in Directory.GetFiles(directory, baseName + "-*" + extension))
-                        File.Delete(oldLog);
+                var directory = Path.GetDirectoryName(logFile) ?? string.Empty;
+                var baseName = Path.GetFileNameWithoutExtension(logFile);
+                var extension = Path.GetExtension(logFile);
 
-                    File.Move(logFile,
-                        Path.Combine(directory, baseName + DateTime.Now.ToString("-yyyyMMdd-HHmmss") + extension));
-                }
-                catch (Exception e)
-                {
-                    Log("# Could not roll the previous log aside: " + e.Message);
-                }
+                // Remove previously rolled logs first, so at most one is ever kept. Nightly logs
+                // are named and pruned by Summary in its own directory, and do not match this.
+                foreach (var oldLog in Directory.GetFiles(directory, baseName + "-*" + extension))
+                    File.Delete(oldLog);
+
+                File.Move(logFile,
+                    Path.Combine(directory, baseName + DateTime.Now.ToString("-yyyyMMdd-HHmmss") + extension));
             }
-
-            LogFile = logFile;
+            catch (Exception e)
+            {
+                // The old log stays where it is and the run appends to it. Mixed output beats
+                // destroying the record of a long run, which is the reason for rolling at all.
+                Log("# Could not roll the previous log aside: " + e.Message);
+            }
         }
 
         /// <summary>
