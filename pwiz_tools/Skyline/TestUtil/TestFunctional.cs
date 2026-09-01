@@ -1320,7 +1320,9 @@ namespace pwiz.SkylineTestUtil
 
         public static void WaitForGraphs(bool throwOnProgramException = true)
         {
-            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, throwOnProgramException);
+            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending,
+                () => string.Format("Graph update still pending: {0}", SkylineWindow.GraphUpdatePendingDescription),
+                true, throwOnProgramException);
         }
 
         public static void WaitForRegression()
