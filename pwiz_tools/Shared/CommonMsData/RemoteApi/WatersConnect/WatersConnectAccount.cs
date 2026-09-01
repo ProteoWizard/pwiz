@@ -267,7 +267,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             {
                 var requestUri = new Uri(IdentityServer + IdentityConnectEndpoint);
                 using var httpClient = new HttpClientWithProgress();
-                httpClient.RequestTimeout = REQUEST_TIMEOUT;
                 httpClient.AddAuthorizationHeader(@"Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(
                     EscapeClientCredential(ClientId) + @":" + EscapeClientCredential(ClientSecret))));
                 httpClient.AddHeader(@"Accept", @"application/json");
@@ -338,20 +337,16 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         }
 
         /// <summary>
-        /// The overall timeout for waters_connect requests, matching the 100-second HttpClient
-        /// default the replaced IHttpClientFactory clients had, so a black-holed connection
-        /// surfaces as a timeout error instead of hanging the UI thread indefinitely.
-        /// </summary>
-        private static readonly TimeSpan REQUEST_TIMEOUT = TimeSpan.FromSeconds(100);
-
-        /// <summary>
         /// Creates an <see cref="HttpClientWithProgress"/> carrying this account's bearer token,
-        /// authenticating first if no valid token is cached.
+        /// authenticating first if no valid token is cached. Waits are bounded by
+        /// <see cref="HttpClientWithProgress.ResponseTimeoutMilliseconds"/>, which replaced the
+        /// 100-second default the removed IHttpClientFactory clients had, so a black-holed
+        /// connection surfaces as a timeout instead of hanging the UI thread indefinitely.
         /// </summary>
         public HttpClientWithProgress CreateAuthenticatedClient()
         {
             var tokenResponse = Authenticate();
-            var httpClient = new HttpClientWithProgress { RequestTimeout = REQUEST_TIMEOUT };
+            var httpClient = new HttpClientWithProgress();
             httpClient.AddAuthorizationHeader(@"Bearer " + tokenResponse.AccessToken);
             return httpClient;
         }

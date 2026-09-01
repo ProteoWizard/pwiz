@@ -49,6 +49,7 @@ namespace pwiz.Common.SystemUtil
         private IProgressStatus _progressStatus;
         private string _progressMessageWithoutSize; // Base message before download size is appended
         private const int ReadTimeoutMilliseconds = 15000; // timeout per chunk to avoid long hangs when network drops
+        private const int RESPONSE_TIMEOUT_MILLISECONDS_DEFAULT = 120000;
         private TimeSpan? _requestTimeout;
 
         // Per-request state (stored in instance, applied to HttpRequestMessage)
@@ -63,10 +64,19 @@ namespace pwiz.Common.SystemUtil
         public bool ShowTransferSize { get; set; } = true;
 
         /// <summary>
-        /// Optional request timeout. Enforced for <see cref="SendRequest"/>-based calls (uploads
-        /// and custom verbs) via a linked cancellation token; download paths detect stalls
-        /// per-chunk via ReadTimeoutMilliseconds instead. Null (the default) means no overall
-        /// timeout, matching the shared HttpClient's infinite timeout.
+        /// How long to wait for a server to begin answering before giving up on the request.
+        /// Deliberately generous: this exists to break an endless wait, not to hold a server to a
+        /// latency target, so real services answer well inside it and a caller wanting to give up
+        /// sooner should cancel through its progress monitor. Tests that stall a server on purpose
+        /// shorten it, and must restore it afterwards.
+        /// </summary>
+        public static int ResponseTimeoutMilliseconds { get; set; } = RESPONSE_TIMEOUT_MILLISECONDS_DEFAULT;
+
+        /// <summary>
+        /// Optional request timeout. This property is retained for API compatibility but does not
+        /// affect the underlying HttpClient (which uses infinite timeout). Waiting for a response is
+        /// bounded by ResponseTimeoutMilliseconds and reading the body per chunk by
+        /// ReadTimeoutMilliseconds, neither of which this value can tighten or relax.
         /// </summary>
         public TimeSpan? RequestTimeout
         {
@@ -491,28 +501,17 @@ namespace pwiz.Common.SystemUtil
                 }
             }
 
-            var response = WithExceptionHandling(request.RequestUri, () => SendWithTimeout(request));
+            // Bounded like the download path. This one reads the body too (ResponseContentRead),
+            // because callers of SendRequest read Content afterwards and ReadChunk's per-chunk guard
+            // covers only the download loop, so an unbounded send here could still hang on a server
+            // that answers with headers and then stalls the body.
+            var response = WithExceptionHandling(request.RequestUri,
+                () => SendWithResponseTimeout(request, HttpCompletionOption.ResponseContentRead));
 
             // Process cookies from response
             ProcessResponseCookies(response, request.RequestUri);
 
             return response;
-        }
-
-        /// <summary>
-        /// Sends a request, enforcing <see cref="RequestTimeout"/> when one is set. The shared
-        /// HttpClient itself uses an infinite timeout, so the per-instance timeout is applied
-        /// with a linked cancellation token. A timeout cancellation is distinguished from user
-        /// cancellation by <see cref="MapHttpException"/> (the progress monitor's token is not
-        /// signaled) and maps to a Timeout failure.
-        /// </summary>
-        private HttpResponseMessage SendWithTimeout(HttpRequestMessage request)
-        {
-            if (_requestTimeout == null)
-                return _sharedHttpClient.SendAsync(request, CancellationToken).Result;
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
-            timeoutCts.CancelAfter(_requestTimeout.Value);
-            return _sharedHttpClient.SendAsync(request, timeoutCts.Token).Result;
         }
 
         /// <summary>
@@ -568,11 +567,63 @@ namespace pwiz.Common.SystemUtil
         {
             // Process cookies from response
             var response = WithExceptionHandling(request.RequestUri,
-                () => _sharedHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationToken).Result);
-            
+                () => SendWithResponseTimeout(request));
+
             ProcessResponseCookies(response, request.RequestUri);
-            
+
             return response;
+        }
+
+        /// <summary>
+        /// Sends a request and waits up to <see cref="ResponseTimeoutMilliseconds"/> for it to
+        /// complete. A server that accepts a connection and then never answers would otherwise block
+        /// the calling thread forever, because the shared HttpClient has no timeout of its own.
+        /// Only the wait is abandoned, never the request: cancelling it here would also tear down a
+        /// response that may be arriving. This is the pattern <see cref="ReadChunk"/> uses.
+        /// <para><paramref name="completionOption"/> decides what "complete" means: the download path
+        /// waits for headers only and guards the body per chunk with
+        /// <see cref="ReadTimeoutMilliseconds"/>, while <see cref="SendRequest"/> waits for the whole
+        /// response, since nothing guards its body.</para>
+        /// </summary>
+        private HttpResponseMessage SendWithResponseTimeout(HttpRequestMessage request,
+            HttpCompletionOption completionOption = HttpCompletionOption.ResponseHeadersRead)
+        {
+            var sendTask = _sharedHttpClient.SendAsync(request, completionOption, CancellationToken);
+
+            // Dedicated source for the delay so its timer is released as soon as the wait ends.
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
+            try
+            {
+                var delayTask = Task.Delay(ResponseTimeoutMilliseconds, timeoutCts.Token);
+                if (Task.WaitAny(sendTask, delayTask) != 0)
+                {
+                    // Nothing else will look at the abandoned request, so observe its outcome and
+                    // release a response that turns up after we have stopped waiting.
+                    sendTask.ContinueWith(t =>
+                    {
+                        if (t.IsFaulted)
+                            _ = t.Exception;
+                        else if (t.Status == TaskStatus.RanToCompletion)
+                            t.Result?.Dispose();
+                    }, TaskScheduler.Default);
+
+                    // The delay shares the caller's token, so cancelling completes it too and the
+                    // wait ends exactly as it would on a timeout. Without this the user who clicked
+                    // Cancel is told the request timed out, and callers that catch
+                    // NetworkRequestException before OperationCanceledException record the work as
+                    // failed rather than cancelled. Same guard ReadChunk applies after its WaitAny.
+                    CancellationToken.ThrowIfCancellationRequested();
+
+                    throw new TimeoutException(string.Format(
+                        MessageResources.HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_,
+                        request.RequestUri));
+                }
+                return sendTask.Result;
+            }
+            finally
+            {
+                timeoutCts.Cancel();
+            }
         }
 
         /// <summary>
@@ -974,8 +1025,14 @@ namespace pwiz.Common.SystemUtil
             try
             {
                 // Attempt to read response body for server-specific error details
-                // This is important for servers like LabKey that include structured error info in responses
-                responseBody = response.Content.ReadAsStringAsync().Result;
+                // This is important for servers like LabKey that include structured error info in responses.
+                // Bounded, because a server that sends error headers and then stalls the body would
+                // otherwise block here exactly as an unanswered request once did.
+                var readTask = response.Content.ReadAsStringAsync();
+                if (readTask.Wait(ReadTimeoutMilliseconds))
+                    responseBody = readTask.Result;
+                else
+                    readTask.ContinueWith(t => _ = t.Exception, TaskScheduler.Default);
             }
             catch
             {
