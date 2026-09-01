@@ -1783,7 +1783,50 @@ namespace TestRunner
                                     // pair it usually is, which would mean never noticing a worker died
                                     if (workerInfo.Retired || cts.IsCancellationRequested)
                                         return;
-                                    Console.WriteLine($"Worker {workerName} stopped responding while working on test {workerInfo.CurrentTest}.");
+                                    // Reported as a FAILURE of the TEST, in the shape Report() and
+                                    // SkylineNightly parse, and written to the LOG rather than only to
+                                    // the console. Deliberately says nothing about WHY the worker went
+                                    // quiet: all this detection knows is that heartbeats stopped, and a
+                                    // container starved of CPU can miss its window while its test runs
+                                    // on - see MISSED_HEARTBEATS_BEFORE_DEAD. The exit code would settle
+                                    // it, but `docker run --rm` deletes the container before anything
+                                    // can ask. What IS known is that no result ever came back, which is
+                                    // a failure of the test whatever caused it.
+                                    // A lost worker used to be one plain line among thousands of
+                                    // results: it named the test but counted for nothing, so a run
+                                    // that shed half its workers still ended saying "No failures" and
+                                    // read as a 40% performance regression instead of five crashes.
+                                    // CurrentTest is "Name/Language/Pass"; the bare name goes on the
+                                    // !!! line because that is what the parsers key on.
+                                    // Only a worker that was HOLDING a test failed one. Between tests it
+                                    // takes nothing down with it, and naming a test there is worse than
+                                    // saying nothing: the !!! shape makes Report() and SkylineNightly
+                                    // record whatever word follows as a failing test, so a placeholder
+                                    // becomes a test called "(no test)" in the failure list.
+                                    var lostTest = workerInfo.CurrentTest;
+                                    var report = lostTest == null
+                                        ? new[]
+                                        {
+                                            $"Worker {workerName} stopped responding between tests and was " +
+                                            @"given up on. No test result was lost, but the pool is smaller."
+                                        }
+                                        : new[]
+                                        {
+                                            $"!!! {lostTest.Split('/')[0]} FAILED",
+                                            $"Worker {workerName} stopped responding while running {lostTest} and " +
+                                            @"was given up on. No result was ever produced for it, and no stack " +
+                                            @"trace: nothing came back from the worker to write one.",
+                                            @"!!!"
+                                        };
+                                    lock (workerInfoByName)   // Every worker's heartbeat runs its own thread
+                                    {
+                                        foreach (var line in report)
+                                        {
+                                            Console.WriteLine(line);
+                                            log?.WriteLine(line);
+                                        }
+                                        log?.Flush();
+                                    }
                                     if (commandLineArgs.ArgAsBool("coverage"))
                                     {
                                         Console.WriteLine("Aborting coverage run due to failed worker (coverage from that worker is lost).");
@@ -1877,13 +1920,19 @@ namespace TestRunner
             // Every worker has finished, so anything still queued is work nobody ever ran - most likely
             // because the only worker that could have run it went away. Report that rather than passing:
             // a run that quietly skipped tests must not look like a run that passed them.
-            var neverRun = testQueue.Concat(nonParallelTestQueue).Concat(abandonedEntries).ToList();
-
             // A run that loops until something stops it always has work outstanding at the moment it
-            // stops, so leftover entries prove nothing by themselves. The ones that never ran at all
-            // still do.
+            // stops, so leftover QUEUE entries prove nothing by themselves. The ones that never ran
+            // at all still do.
+            var leftInQueue = testQueue.Concat(nonParallelTestQueue).ToList();
             if (LoopsForever(loop))
-                neverRun = neverRun.Where(entry => !entry.HasRun).ToList();
+                leftInQueue = leftInQueue.Where(entry => !entry.HasRun).ToList();
+
+            // Abandoned entries are NOT subject to that: they were taken from the queue by a worker
+            // that then went away or wedged, which is a failure whatever the loop mode. Filtering
+            // them by HasRun is what hid this all along - a test that dies on its fifth pass has run
+            // four times, so every one of them was dropped, and four nights of runs that each lost
+            // half their workers ended reporting no failures at all.
+            var neverRun = leftInQueue.Concat(abandonedEntries).ToList();
 
             if (neverRun.Count > 0)
             {

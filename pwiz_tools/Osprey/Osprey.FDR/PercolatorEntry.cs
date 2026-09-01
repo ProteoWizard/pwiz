@@ -62,7 +62,9 @@ namespace pwiz.Osprey.FDR
         /// 21-feature vector on demand (issue #4355 Phase 4) instead of holding
         /// every entry's <see cref="Features"/> resident for the whole join.
         /// <c>uint.MaxValue</c> marks an appended entry (e.g. Stage 6 gap-fill)
-        /// that has no original parquet row.
+        /// that has no original parquet row - assigned at exactly one boundary,
+        /// <c>PercolatorEntryBuilder</c>, from <c>FdrEntry.ParquetIndex</c>, which is
+        /// nullable so the absence is a state rather than a magic number (#4486).
         /// </summary>
         public uint ParquetIndex { get; set; }
 

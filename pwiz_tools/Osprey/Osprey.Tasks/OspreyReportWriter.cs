@@ -53,12 +53,13 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Write both default reports next to <paramref name="config"/>'s output blib.
         /// A no-op (with a warning) when no output path is known. Called once, from the
-        /// Stage-7 protein-FDR step, with the experiment-level parsimony + FDR result and
-        /// the full per-file entry pool the per-replicate rows re-derive from.
+        /// Stage-7 protein-FDR step, with the experiment-level parsimony + FDR result and the
+        /// survivor milestone the per-replicate rows re-derive from - one file at a time, which
+        /// is all this writer ever needed (#4486).
         /// </summary>
-        public static void WriteReports(
+        internal static void WriteReports(
             SecondPassProteinFdrResult experimentResult,
-            IList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            RescoredEntries rescored,
             IList<LibraryEntry> fullLibrary,
             OspreyConfig config,
             Action<string> logInfo)
@@ -82,7 +83,7 @@ namespace pwiz.Osprey.Tasks
             if (config.WriteSummaryReport)
             {
                 string path = stem + @".stats.tsv";
-                WriteSummary(path, experimentResult, perFileEntries, fullLibrary, config, logInfo);
+                WriteSummary(path, experimentResult, rescored, fullLibrary, config, logInfo);
                 logInfo?.Invoke(string.Format(
                     "[COUNT] Wrote summary report: {0}", path));
             }
@@ -235,13 +236,20 @@ namespace pwiz.Osprey.Tasks
         private static void WriteSummary(
             string path,
             SecondPassProteinFdrResult experimentResult,
-            IList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            RescoredEntries rescored,
             IList<LibraryEntry> fullLibrary,
             OspreyConfig config,
             Action<string> logInfo)
         {
             var level = config.FdrLevel;
             var rows = new List<string[]>();
+            int nFiles = rescored.FileNames.Count;
+            // The experiment row's two sets, folded as the per-replicate loop walks rather than
+            // in a second pass over the pool. Both are O(distinct), and folding them here is
+            // what lets this writer see each file once and drop it - it used to walk the whole
+            // pool a second time for exactly these two counts.
+            var expPrecSet = new HashSet<string>(StringComparer.Ordinal);
+            var expPepSet = new HashSet<string>(StringComparer.Ordinal);
 
             // Per replicate: precursors + peptides passing RUN-level FDR in that file, and
             // an INDEPENDENT run-level protein FDR (its own parsimony + picked-protein FDR
@@ -252,12 +260,14 @@ namespace pwiz.Osprey.Tasks
             // the caller's heading in front of it (#4571).
             int runIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Per-replicate protein FDR over {0} run(s)", perFileEntries.Count),
-                       perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                       string.Format(@"Per-replicate protein FDR over {0} run(s)", nFiles),
+                       nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                foreach (var kvp in perFileEntries)
+                foreach (var kvp in rescored.Files())
                 {
                     progress.Report(++runIdx);
+                    AccumulatePrecursorsPeptides(kvp.Value, level, config, runLevel: false,
+                        expPrecSet, expPepSet);
                     CountPrecursorsPeptides(new[] { kvp }, level, config, runLevel: true,
                         out int precursors, out int peptides);
                     int proteins = ProteinFdrEngine.CountPassingProteinGroups(
@@ -273,10 +283,10 @@ namespace pwiz.Osprey.Tasks
             }
 
             // Experiment row: precursors + peptides passing EXPERIMENT-level FDR (a
-            // precursor detected in any run counts once), and the experiment-level protein
-            // count already computed by the Stage-7 pass.
-            CountPrecursorsPeptides(perFileEntries, level, config, runLevel: false,
-                out int expPrec, out int expPep);
+            // precursor detected in any run counts once), folded above, and the
+            // experiment-level protein count already computed by the Stage-7 pass.
+            int expPrec = expPrecSet.Count;
+            int expPep = expPepSet.Count;
             int expProteins = 0;
             foreach (var q in experimentResult.ProteinFdr.GroupQvalues.Values)
                 if (q <= config.EffectiveProteinFdr) expProteins++;
@@ -305,24 +315,31 @@ namespace pwiz.Osprey.Tasks
             FdrLevel level, OspreyConfig config, bool runLevel,
             out int precursors, out int peptides)
         {
-            double gate = runLevel ? config.RunFdr : config.ExperimentFdr;
             var precSet = new HashSet<string>(StringComparer.Ordinal);
             var pepSet = new HashSet<string>(StringComparer.Ordinal);
             foreach (var kvp in entries)
-            {
-                foreach (var e in kvp.Value)
-                {
-                    if (e.IsDecoy)
-                        continue;
-                    double q = runLevel ? e.EffectiveRunQvalue(level) : e.EffectiveExperimentQvalue(level);
-                    if (q > gate)
-                        continue;
-                    precSet.Add(e.ModifiedSequence + "|" + e.Charge.ToString(CultureInfo.InvariantCulture));
-                    pepSet.Add(e.ModifiedSequence);
-                }
-            }
+                AccumulatePrecursorsPeptides(kvp.Value, level, config, runLevel, precSet, pepSet);
             precursors = precSet.Count;
             peptides = pepSet.Count;
+        }
+
+        // The per-file half, so the experiment row can be folded across the same walk that
+        // writes the per-replicate rows instead of taking a second pass over the pool.
+        private static void AccumulatePrecursorsPeptides(
+            List<FdrEntry> entries, FdrLevel level, OspreyConfig config, bool runLevel,
+            HashSet<string> precSet, HashSet<string> pepSet)
+        {
+            double gate = runLevel ? config.RunFdr : config.ExperimentFdr;
+            foreach (var e in entries)
+            {
+                if (e.IsDecoy)
+                    continue;
+                double q = runLevel ? e.EffectiveRunQvalue(level) : e.EffectiveExperimentQvalue(level);
+                if (q > gate)
+                    continue;
+                precSet.Add(e.ModifiedSequence + "|" + e.Charge.ToString(CultureInfo.InvariantCulture));
+                pepSet.Add(e.ModifiedSequence);
+            }
         }
 
         // Strip directory + extension for a readable run label (the blib RefSpectra source

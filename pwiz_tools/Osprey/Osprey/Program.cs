@@ -92,7 +92,8 @@ namespace pwiz.Osprey
                     {
                         if (i + 1 >= args.Length || args[i + 1].StartsWith("-", StringComparison.Ordinal))
                         {
-                            LogError("--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, or SecondPassFDR).");
+                            LogError("--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, " +
+                                     "PerFileRescoring, SecondPassFDR, or ModelDiagnostics).");
                             return 1;
                         }
                         taskName = args[i + 1];
@@ -202,6 +203,7 @@ namespace pwiz.Osprey
                 // paths were already validated by ResolveInputScores during parsing).
                 if (!fromInputScores)
                 {
+                    int cacheOnlyInputs = 0;
                     foreach (string inputFile in config.InputFiles)
                     {
                         // A directory counts as present. Several vendor formats ARE
@@ -212,9 +214,27 @@ namespace pwiz.Osprey
                         // which must work on a build that cannot read the raw itself.
                         if (!File.Exists(inputFile) && !Directory.Exists(inputFile))
                         {
+                            // An absent source is fine once its cache is built: Stage 1 is
+                            // the only stage that reads a source, and SpectraCache already
+                            // treats a missing one as "trust the cache". That makes
+                            // delete-the-sources-after-caching a supported way to halve the
+                            // disk a large cohort needs.
+                            if (File.Exists(SpectraCache.GetCachePath(inputFile)))
+                            {
+                                cacheOnlyInputs++;
+                                continue;
+                            }
                             LogError(string.Format("Input file not found: {0}", inputFile));
                             return 1;
                         }
+                    }
+                    // Announced, not silent: a run whose sources are gone cannot rebuild a
+                    // cache that turns out to be wrong, so the log is the only provenance.
+                    if (cacheOnlyInputs > 0)
+                    {
+                        LogInfo(string.Format(
+                            "{0} of {1} input(s) are absent but have a spectra cache; reading those from the cache.",
+                            cacheOnlyInputs, config.InputFiles.Count));
                     }
                 }
                 if (config.LibrarySource != null && !File.Exists(config.LibrarySource.Path))
