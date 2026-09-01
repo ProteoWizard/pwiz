@@ -2601,6 +2601,28 @@ namespace pwiz.Osprey.Tasks
                 config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(config),
                 FdrScoresSidecar.Pass.FirstPass);
             FirstPassModelIO.Sidecar resumeSidecar = null;
+            // Each condition reported by name when it refuses. A silent fall-through here looks
+            // exactly like a run that never had the artifacts, and the whole point of the fast
+            // path is that an operator can tell why they are waiting 29 minutes instead of 8.
+            if (projections.PerFile.Count > 0 && resumableFiles.Count == projections.PerFile.Count)
+            {
+                var refusals = new List<string>();
+                if (string.IsNullOrEmpty(experimentPathForResume))
+                    refusals.Add(@"no experiment-sidecar path (no output blib to name it after)");
+                else if (!PerFileResumeDriver.IsCurrent(experimentPathForResume, Name, sidecarValidityKey))
+                    refusals.Add(string.Format(@"experiment sidecar not current: {0}", experimentPathForResume));
+                var probe = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
+                if (probe == null)
+                    refusals.Add(@"no readable .1st-pass.model.json beside any input parquet");
+                else if (probe.Model == null)
+                    refusals.Add(@".1st-pass.model.json carries no model");
+                else if (OspreyEnvironment.Pass2ProteinCompact && probe.StratumBaseIds == null)
+                    refusals.Add(@".1st-pass.model.json carries no protein-compact stratum");
+                if (refusals.Count > 0)
+                    ctx.LogInfo(string.Format(
+                        @"Resume: every sidecar is current but the compaction-gate entry was refused ({0}); " +
+                        @"the score passes will run.", string.Join(@"; ", refusals)));
+            }
             bool canEnterAtGate =
                 projections.PerFile.Count > 0 &&
                 resumableFiles.Count == projections.PerFile.Count &&
