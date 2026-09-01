@@ -581,6 +581,14 @@ namespace pwiz.Common.SystemUtil
                         else if (t.Status == TaskStatus.RanToCompletion)
                             t.Result?.Dispose();
                     }, TaskScheduler.Default);
+
+                    // The delay shares the caller's token, so cancelling completes it too and the
+                    // wait ends exactly as it would on a timeout. Without this the user who clicked
+                    // Cancel is told the request timed out, and callers that catch
+                    // NetworkRequestException before OperationCanceledException record the work as
+                    // failed rather than cancelled. Same guard ReadChunk applies after its WaitAny.
+                    CancellationToken.ThrowIfCancellationRequested();
+
                     throw new TimeoutException(string.Format(
                         MessageResources.HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_,
                         request.RequestUri));
