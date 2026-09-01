@@ -2613,10 +2613,32 @@ namespace pwiz.Osprey.Tasks
                             FdrScoresSidecar.Pass1Path(doneBase), FdrScoresSidecar.Pass.FirstPass,
                             rec => onScore(rec.EntryId, rec.Score));
                     };
+                // With every file resumable there is nothing left for a model to score, so the
+                // training subset and the SVM are pure waste - 21 minutes of feature loading at
+                // 446 files to reproduce a model that was already persisted per file as
+                // .1st-pass.model.json when this cohort first ran.
+                //
+                // Reused rather than skipped: the scorer still publishes it through captureModel,
+                // so a second pass that needs the frozen first-pass model gets the SAME model the
+                // scores on disk were produced by. Synthesising a stub to satisfy the arithmetic
+                // would publish a meaningless model and corrupt pass 2 silently.
+                //
+                // Null when no sidecar is there to load - a run killed before Stage 6 wrote them
+                // has none - and the scorer then trains as it always did.
+                PercolatorResults pretrainedModel = null;
+                if (resumableFiles.Count == projections.PerFile.Count && projections.PerFile.Count > 0)
+                {
+                    var reloadedModel = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
+                    pretrainedModel = reloadedModel?.Model;
+                    ctx.LogInfo(pretrainedModel != null
+                        ? @"Resume: every file has a current sidecar; reusing the persisted 1st-pass model instead of retraining."
+                        : @"Resume: every file has a current sidecar, but no .1st-pass.model.json was found, so the model is retrained.");
+                }
                 aborted = PercolatorEngine.RunFirstPassStreaming(
                     projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
                     config, featureInfos, ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
-                    @"First-pass", captureContributions, captureModel, tryStreamCompletedScores);
+                    @"First-pass", captureContributions, captureModel, tryStreamCompletedScores,
+                    pretrainedModel);
             }
             else
             {

@@ -630,7 +630,8 @@ namespace pwiz.Osprey.FDR
             IFdrOutputSink sink,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null,
-            Func<string, Action<uint, double>, bool> tryStreamCompletedScores = null)
+            Func<string, Action<uint, double>, bool> tryStreamCompletedScores = null,
+            PercolatorResults pretrainedModel = null)
         {
             if (streamFileRows == null)
                 throw new ArgumentNullException(nameof(streamFileRows));
@@ -821,19 +822,31 @@ namespace pwiz.Osprey.FDR
             // Load ONLY the subset's feature vectors, one file at a time (bounded by MaxTrainSize),
             // cloning each row so the subset entry owns it -- mirrors RunStreamingIntoProjection.
             var subsetByFile = GroupIndicesByFileName(subsetEntries);
-            int subsetFilesLoaded = 0;
-            using (var loadProgress = new ProgressReporter(string.Format(
-                       @"Loading training-subset feature vectors from {0} file(s)", subsetByFile.Count), subsetByFile.Count))
-            foreach (var kvp in subsetByFile)
+            // Both skipped when the caller supplied the model this pass would have trained.
+            // Training exists to score entries; when every entry's score is already on disk
+            // there is nothing for a model to do, and loading the training subset's feature
+            // vectors is the single most expensive thing left - 21 minutes at 446 files, spent
+            // to reproduce a model that was already persisted per file as .1st-pass.model.json.
+            if (pretrainedModel == null)
             {
-                IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
-                foreach (int k in kvp.Value)
+                int subsetFilesLoaded = 0;
+                using (var loadProgress = new ProgressReporter(string.Format(
+                           @"Loading training-subset feature vectors from {0} file(s)", subsetByFile.Count), subsetByFile.Count))
+                foreach (var kvp in subsetByFile)
                 {
-                    var entry = subsetEntries[k];
-                    entry.Features = (double[])ResolveFeatureRow(
-                        rows, entry.ParquetIndex, entry.CoelutionSum, nFeatures).Clone();
+                    IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
+                    foreach (int k in kvp.Value)
+                    {
+                        var entry = subsetEntries[k];
+                        entry.Features = (double[])ResolveFeatureRow(
+                            rows, entry.ParquetIndex, entry.CoelutionSum, nFeatures).Clone();
+                    }
+                    loadProgress.Report(++subsetFilesLoaded);
                 }
-                loadProgress.Report(++subsetFilesLoaded);
+            }
+            else
+            {
+                logInfo(@"Reusing the persisted first-pass model; no training subset is loaded and no SVM is trained.");
             }
 
             var trainConfig = new PercolatorConfig
@@ -849,7 +862,8 @@ namespace pwiz.Osprey.FDR
                 TrainOnly = true,
                 Diagnostics = percConfig.Diagnostics
             };
-            PercolatorResults trainResults = PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
+            PercolatorResults trainResults =
+                pretrainedModel ?? PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
             if (trainResults.DiagnosticAbort)
                 return true;
 
