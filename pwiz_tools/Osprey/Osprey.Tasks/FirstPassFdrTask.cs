@@ -1668,6 +1668,19 @@ namespace pwiz.Osprey.Tasks
         {
             int failures = 0;
             var experiment = new FdrExperimentAccumulator();
+            // Stamped per file as each sidecar lands, NOT left to the driver's post-Run pass.
+            // The driver stamps every declared output only after Run returns, so a task that
+            // writes 446 durable artifacts and then dies in a later step leaves all 446
+            // unmarked and the next invocation redoes work that is already complete and
+            // correct on disk. A 446-file run lost 3h45m of streaming ingest, Percolator and
+            // protein FDR that way on 2026-09-01: it wrote every one of these sidecars at
+            // 07:09 and was killed at 08:41 in the survivor reload that follows.
+            //
+            // Stamping here is sound because these sidecars are written ONCE and never
+            // mutated (#4621), so a file that exists is a file that is finished - there is no
+            // partially-updated state for a marker to vouch for wrongly. That immutability is
+            // the precondition; without it "present" would not imply "complete".
+            string validityKey = ValidityKey(ctx);
             foreach (var kvp in perFileEntries)
             {
                 string fileName = kvp.Key;
@@ -1686,9 +1699,17 @@ namespace pwiz.Osprey.Tasks
                         e.ExperimentAggregateScore, e.Pep);
                 }
                 string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
+                // Clear first so a marker from an earlier invocation cannot outlive the file it
+                // vouches for if this write throws halfway.
+                PerFileResumeDriver.ClearStale(fdrPath, Name);
                 try
                 {
                     FdrScoresSidecar.Write(fdrPath, kvp.Value, FdrScoresSidecar.Pass.FirstPass);
+                    string parquetPath;
+                    perFileParquetPaths.TryGetValue(fileName, out parquetPath);
+                    PerFileResumeDriver.Stamp(fdrPath, Name, OspreyVersion.Current, validityKey,
+                        parquetPath == null ? Array.Empty<string>() : new[] { parquetPath },
+                        ctx.LogWarning);
                 }
                 catch (Exception ex)
                 {
@@ -1711,7 +1732,10 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         /// <returns>1 if the write failed or the analysis has no output blib to name it
         /// after, 0 on success.</returns>
-        private static int WriteExperimentSidecar(FdrExperimentAccumulator experiment,
+        // Not static: it stamps its own validity marker, which needs the task's Name and
+        // ValidityKey. This file is a declared Output, so leaving it unstamped would hold the
+        // whole task un-resumable no matter how many per-file sidecars were marked.
+        private int WriteExperimentSidecar(FdrExperimentAccumulator experiment,
             FdrScoresSidecar.Pass pass, OspreyConfig config, PipelineContext ctx)
         {
             string path = FdrExperimentSidecar.PathFor(
@@ -1724,12 +1748,15 @@ namespace pwiz.Osprey.Tasks
                     "q-values it rescues on.");
                 return 1;
             }
+            PerFileResumeDriver.ClearStale(path, Name);
             try
             {
                 FdrExperimentSidecar.Write(path, experiment.Records, pass);
                 ctx.LogInfo(string.Format(
                     @"Wrote experiment-scope FDR sidecar: {0} ({1} distinct entry ids)",
                     path, experiment.Count));
+                PerFileResumeDriver.Stamp(path, Name, OspreyVersion.Current, ValidityKey(ctx),
+                    Array.Empty<string>(), ctx.LogWarning);
                 return 0;
             }
             catch (Exception ex)
@@ -1901,6 +1928,7 @@ namespace pwiz.Osprey.Tasks
                     fileEntries, fileActions, fileGapFill,
                     refinedCalibrations.TryGetValue(fileName, out var fileCal) ? fileCal : null,
                     searchHash, libraryHash, joinFileStems, globalBaseIds);
+                PerFileResumeDriver.ClearStale(reconPath, Name);
                 try
                 {
                     ReconciliationFile.Save(reconPath, reconFile);
@@ -1910,6 +1938,10 @@ namespace pwiz.Osprey.Tasks
                         reconFile.UseCwtPeakActions.Count,
                         reconFile.ForcedIntegrationActions.Count,
                         reconFile.GapFillTargets.Count));
+                    // The third declared Output kind. All three must be stamped as they land or
+                    // the task stays un-resumable on whichever one was missed.
+                    PerFileResumeDriver.Stamp(reconPath, Name, OspreyVersion.Current,
+                        ValidityKey(ctx), Array.Empty<string>(), ctx.LogWarning);
                 }
                 catch (Exception ex)
                 {
