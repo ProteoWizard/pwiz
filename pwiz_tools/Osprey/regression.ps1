@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Osprey overnight end-to-end regression. Self-contained entry point for
     the scheduled TeamCity "Osprey Windows .NET Regression" config (via
@@ -210,6 +210,19 @@ $ospreyExe    = Join-Path $ospreyBinDir 'Osprey.exe'
 # golden stays green without the comparator skipping the field. Must match the
 # osprey_version value committed in osprey-regression.data/*/tables/OspreyMetadata.tsv.
 $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
+
+# Turn ON the per-file second-pass verifier for this gate (issue #4486). Stage 7 recomputes each
+# file's competition and asserts it against the answer PerFileRescoring wrote.
+#
+# COSTS THIS GATE NOTHING. The recompute used to be unconditional, so switching it on here is
+# exactly today's behaviour; what changed is that it is now OFF by default, which is what lets a
+# cohort-scale run stop paying for it (measured at 82 files: 9.2 GB of 1st-pass re-reads against
+# the 2.8 GB the fold needs, inside an 860.8 s Stage 7).
+#
+# Invoke-HpcChain deliberately turns it OFF for its phases - see the note there. That asymmetry
+# is what covers the shipped path, and it also costs nothing, because mode 3 already compares the
+# chain's output against the straight leg's.
+$env:OSPREY_PASS2_VERIFY_WORKER = '1'
 
 # No leg of this gate may run under a resident-pool allowance, so clear any INHERITED
 # one rather than merely declining to set it. A TeamCity agent, or a developer shell
@@ -1163,8 +1176,25 @@ function Test-LibraryFragmentRelease {
 # real HPC worker that ships only its inputs and writes beside them. Throws on a
 # non-zero exit so the chain aborts loudly at the failing phase.
 function Invoke-OspreyTaskRun {
+    <#
+    Run one --task phase of the HPC chain, and assert it MODIFIED NOTHING IT WAS GIVEN.
+
+    A phase receives its inputs by copy and produces its outputs as new files. Modifying a
+    file that was already in the directory is a phase reaching back into another task's
+    artifact - the exact violation that let PatchPep rewrite every per-run 2nd-pass sidecar
+    after the experiment fold, breaking the write-once contract those files are supposed to
+    have and requiring the experiment-wide node to hold write access to output it does not
+    own (issue #4486).
+
+    Mode 3 is the right place for this check because here task boundaries ARE process
+    boundaries: we know exactly which task ran, so a modification can be attributed. The
+    straight-through legs cannot say that, which is why the in-code write-once guard on
+    FdrScoresSidecar exists as well - the two catch different halves. New and removed files
+    are NOT flagged: producing outputs is the job, and each phase cleans up after itself.
+    #>
     param([string]$WorkDir, [string[]]$CliArgs, [string]$LogName)
     New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
+    $before = Get-DirFingerprint -Dir $WorkDir
     $logPath = Join-Path $WorkDir $LogName
     Push-Location $WorkDir
     try {
@@ -1174,6 +1204,16 @@ function Invoke-OspreyTaskRun {
         Pop-Location
     }
     if ($exit -ne 0) { throw "Osprey --task exited $exit (see $logPath)" }
+    # Logs excluded: this phase writes its own, and a re-run appends to it.
+    $touched = @(Compare-DirFingerprint -Before $before -Dir $WorkDir |
+        Where-Object { $_ -like 'modified:*' -and $_ -notmatch '\.log$' })
+    if ($touched.Count -gt 0) {
+        throw ("Osprey --task modified {0} file(s) it was given, which no task may do: [{1}]. " +
+               "A phase produces new artifacts; rewriting one it received means a later stage " +
+               "is reaching back into an earlier stage's output, so that file no longer matches " +
+               "the validity sidecar attesting it. See issue #4486. Log: {2}") -f
+              $touched.Count, ($touched -join ', '), $logPath
+    }
 }
 
 # Stage the library (+ its .libcache when present) into a phase dir.
@@ -1198,6 +1238,20 @@ function Invoke-HpcChain {
           # Directory holding the straight-through leg's .spectra.bin. Phase 1 is
           # seeded from these instead of the mzML - see the block that stages them.
           [string]$CacheSource)
+    # THE SHIPPED PATH RUNS HERE, and this is the whole of what it costs to gate it.
+    #
+    # The straight leg runs with OSPREY_PASS2_VERIFY_WORKER=1, so Stage 7 recomputes and asserts.
+    # This chain runs with it OFF, which is the configuration a real cohort run uses: Stage 7
+    # folds the worker's written answer and never opens a 1st-pass sidecar. Mode 3 then compares
+    # this chain's output against the straight leg's - a comparison it already made - so the
+    # verified and unverified paths are proven to agree at ZERO added run time.
+    #
+    # Without the asymmetry the gate would only ever exercise the path we do NOT ship, which is
+    # the exact shape of defect this sprint keeps finding: a green check on code that production
+    # does not run.
+    $priorVerifyWorker = $env:OSPREY_PASS2_VERIFY_WORKER
+    $env:OSPREY_PASS2_VERIFY_WORKER = $null
+    try {
     $libName = Split-Path -Leaf $Library
     # Every phase gets the SAME dataset flags as the straight-through run -- the
     # chain is only a self-consistency oracle if both sides run the same search.
@@ -1221,8 +1275,17 @@ function Invoke-HpcChain {
 
     # Phase 1: per-file raw workers (Stage 1-4). Writes <stem>.scores.parquet +
     # <stem>.calibration.json per file.
-    $ph1 = Join-Path $ChainRoot 'phase1_scoring'
-    New-Item -ItemType Directory -Path $ph1 -Force | Out-Null
+    # ONE PROCESS PER FILE, in its own directory, because that is what PerFileScoring is.
+    # Running all three mzMLs through a single process proved the task works on a node that can
+    # see every file - the one condition an HPC worker never has. A worker that reached for a
+    # sibling's data would have passed here and failed in production.
+    $ph1Root = Join-Path $ChainRoot 'phase1_scoring'
+    New-Item -ItemType Directory -Path $ph1Root -Force | Out-Null
+    $ph1Dirs = @{}
+    foreach ($stem in $stemList) {
+        $ph1Dirs[$stem] = Join-Path $ph1Root $stem
+        New-Item -ItemType Directory -Path $ph1Dirs[$stem] -Force | Out-Null
+    }
     # Seeded with the straight-through leg's CACHES, not the mzML. Phase 1 is the only HPC
     # phase that reads spectra and it deletes the copied mzML right after running anyway, so
     # this costs nothing, stops copying multi-GB inputs, and makes the phase the gate on
@@ -1233,26 +1296,30 @@ function Invoke-HpcChain {
     # Also the only leg covering the UNREDIRECTED lookup: phase 1 passes no --work-dir, so
     # ResolveCacheDir returns the input directory, which is what an operator gets by default.
     foreach ($stem in $stemList) {
+        $d1 = $ph1Dirs[$stem]
         $srcCache = Join-Path $CacheSource "$stem.spectra.bin"
         if (-not (Test-Path -LiteralPath $srcCache)) {
             throw "regression: HPC phase 1 needs the straight-through spectra cache '$srcCache'; the cache-only PerFileScoring gate cannot run without it."
         }
-        Copy-Item -LiteralPath $srcCache (Join-Path $ph1 "$stem.spectra.bin")
+        # THIS worker's data and nothing else: its own spectra cache and the library. No
+        # sibling's cache or parquet is present, and NO mzML - Osprey tolerates a missing
+        # data file once the .spectra.bin exists, so the chain stages what an orchestrator
+        # would and no longer fakes an input file to satisfy path derivation.
+        Copy-Item -LiteralPath $srcCache (Join-Path $d1 "$stem.spectra.bin")
+        Copy-LibraryInto -Library $Library -Dir $d1 -Manifest $Manifest
+        $a1 = @('-i', "$stem.mzML",
+                '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
+                '--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--task', 'PerFileScoring')
+        $a1 += $extraArgs
+        $a1 += $memStampArgs
+        Invoke-OspreyTaskRun -WorkDir $d1 -CliArgs $a1 -LogName 'phase1.log'
+        Copy-Item (Join-Path $d1 'phase1.log') (Join-Path $chainLogDir "phase1_$stem.log") -Force
     }
-    Copy-LibraryInto -Library $Library -Dir $ph1 -Manifest $Manifest
-    $a1 = @()
-    foreach ($m in $Mzmls) { $a1 += @('-i', (Split-Path -Leaf $m)) }
-    $a1 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
-             '--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--task', 'PerFileScoring')
-    $a1 += $extraArgs
-    $a1 += $memStampArgs
-    Invoke-OspreyTaskRun -WorkDir $ph1 -CliArgs $a1 -LogName 'phase1.log'
-    Copy-Item (Join-Path $ph1 'phase1.log') (Join-Path $chainLogDir 'phase1.log') -Force
     # Phase 1's copied mzMLs are dead weight once it has run: phase 2/3 read its
     # parquets + calibration, never its mzML (phase 3 re-copies the mzML from the
     # data dir). Drop them so they don't sit on disk through the per-file rescore loop.
     if (-not $KeepOutput) {
-        Get-ChildItem -Path $ph1 -Filter '*.mzML' -File -ErrorAction SilentlyContinue |
+        Get-ChildItem -Path $ph1Root -Recurse -Filter '*.mzML' -File -ErrorAction SilentlyContinue |
             Remove-Item -Force -ErrorAction SilentlyContinue
     }
 
@@ -1262,9 +1329,8 @@ function Invoke-HpcChain {
     $ph2 = Join-Path $ChainRoot 'phase2_FirstPassFDR'
     New-Item -ItemType Directory -Path $ph2 -Force | Out-Null
     foreach ($s in $stemList) {
-        Copy-Item (Join-Path $ph1 "$s.scores.parquet")   (Join-Path $ph2 "$s.scores.parquet")
-        Copy-Item (Join-Path $ph1 "$s.calibration.json") (Join-Path $ph2 "$s.calibration.json")
-        New-Item -ItemType File -Path (Join-Path $ph2 "$s.mzML") -Force | Out-Null
+        Copy-Item (Join-Path $ph1Dirs[$s] "$s.scores.parquet")   (Join-Path $ph2 "$s.scores.parquet")
+        Copy-Item (Join-Path $ph1Dirs[$s] "$s.calibration.json") (Join-Path $ph2 "$s.calibration.json")
     }
     Copy-LibraryInto -Library $Library -Dir $ph2 -Manifest $Manifest
     $a2 = @('--task', 'FirstPassFDR')
@@ -1282,16 +1348,17 @@ function Invoke-HpcChain {
     # <stem>.mzML (the cache fingerprint check is skipped for a 0-byte source, so the
     # stub is enough for path derivation and forces a cache hit -- the real 6 GB mzML is
     # never shipped to a rescore worker). Plus the Stage 4 parquet/calibration + the
-    # Stage 5 sidecar pair; writes <stem>.scores-reconciled.parquet + the 2nd-pass bin.
+    # Stage 5 sidecar pair; writes <stem>.scores-reconciled.parquet. NOT the 2nd-pass bin:
+    # --task PerFileRescoring sets NoJoin, which excludes SecondPassFdrTask entirely, so
+    # phase 4 is the only node that writes one.
     $ph3Dirs = @{}
     foreach ($s in $stemList) {
         $ph3 = Join-Path $ChainRoot "phase3_rescore_$s"
         $ph3Dirs[$s] = $ph3
         New-Item -ItemType Directory -Path $ph3 -Force | Out-Null
-        Copy-Item (Join-Path $ph1 "$s.spectra.bin")             (Join-Path $ph3 "$s.spectra.bin")
-        New-Item -ItemType File -Path (Join-Path $ph3 "$s.mzML") -Force | Out-Null
-        Copy-Item (Join-Path $ph1 "$s.scores.parquet")          (Join-Path $ph3 "$s.scores.parquet")
-        Copy-Item (Join-Path $ph1 "$s.calibration.json")        (Join-Path $ph3 "$s.calibration.json")
+        Copy-Item (Join-Path $ph1Dirs[$s] "$s.spectra.bin")     (Join-Path $ph3 "$s.spectra.bin")
+        Copy-Item (Join-Path $ph1Dirs[$s] "$s.scores.parquet")  (Join-Path $ph3 "$s.scores.parquet")
+        Copy-Item (Join-Path $ph1Dirs[$s] "$s.calibration.json") (Join-Path $ph3 "$s.calibration.json")
         Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")
         Copy-Item (Join-Path $ph2 "$s.reconciliation.json")     (Join-Path $ph3 "$s.reconciliation.json")
         # The 1st-pass model sidecar (frozen 2nd-pass modes) must ride the same
@@ -1301,6 +1368,14 @@ function Invoke-HpcChain {
         # the GBDT golden, so guard with Test-Path.
         $ph2model = Join-Path $ph2 "$s.1st-pass.model.json"
         if (Test-Path $ph2model) { Copy-Item $ph2model (Join-Path $ph3 "$s.1st-pass.model.json") }
+        # The analysis-wide EXPERIMENT-scope sidecar (format v5, issue #4486) rides the same
+        # relay. It is a RUN-level file, not per-stem - one record per distinct entry_id for the
+        # whole analysis - but it is copied inside this per-stem loop because each stem gets its
+        # own phase-3 directory and a PerFileRescoring worker reads it from its own working
+        # directory. Stage 6's compaction reads the protein-rescue q out of this file, so a
+        # worker that cannot see it computes a different survivor set than straight-through.
+        $ph2exp = Join-Path $ph2 'output.1st-pass.fdr_experiment.bin'
+        if (Test-Path $ph2exp) { Copy-Item $ph2exp (Join-Path $ph3 'output.1st-pass.fdr_experiment.bin') }
         Copy-LibraryInto -Library $Library -Dir $ph3 -Manifest $Manifest
         $a3 = @('--task', 'PerFileRescoring', '--input-scores', "$s.scores.parquet",
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
@@ -1309,8 +1384,8 @@ function Invoke-HpcChain {
         $a3 += $memStampArgs
         Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
         Copy-Item (Join-Path $ph3 'phase3.log') (Join-Path $chainLogDir "phase3_$s.log") -Force
-        # This worker has written its reconciled parquet + 2nd-pass bin; phase 4
-        # consumes only those plus the calibration / reconciliation / 1st-pass
+        # This worker has written its reconciled parquet; phase 4
+        # consumes it plus the calibration / reconciliation / 1st-pass
         # sidecars copied above -- never this worker's spectra cache, input
         # scores.parquet, or library. Drop those big inputs now so at most one
         # worker's 6 GB spectra.bin + library copy is on disk at a time (the
@@ -1327,7 +1402,7 @@ function Invoke-HpcChain {
 
     # Phases 1 and 2 are fully consumed once every rescore worker has copied its
     # inputs (phase 4 reads only phase-3 outputs). Free them before SecondPassFDR.
-    Remove-Scratch $ph1
+    Remove-Scratch $ph1Root
     Remove-Scratch $ph2
 
     # Phase 4: SecondPassFDR (Stage 7 + blib). Consumes each worker's
@@ -1335,10 +1410,43 @@ function Invoke-HpcChain {
     # an mzML -- a 0-byte stub provides path derivation only) and writes the blib.
     $ph4 = Join-Path $ChainRoot 'phase4_SecondPassFDR'
     New-Item -ItemType Directory -Path $ph4 -Force | Out-Null
+    # Where the phase-3 workers' own outputs are kept for comparison after their dirs are cleaned.
+    $ph3Out = Join-Path $ChainRoot 'phase3_outputs'
+    New-Item -ItemType Directory -Path $ph3Out -Force | Out-Null
     foreach ($s in $stemList) {
         $ph3 = $ph3Dirs[$s]
         Copy-Item (Join-Path $ph3 "$s.scores-reconciled.parquet") (Join-Path $ph4 "$s.scores-reconciled.parquet")
-        Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")   (Join-Path $ph4 "$s.1st-pass.fdr_scores.bin")
+        # THE PER-FILE 1st-PASS SIDECARS ARE DELIBERATELY WITHHELD when the verifier is off.
+        #
+        # This is the gate for issue #4486's actual goal, and it is an ENFORCEMENT rather than an
+        # assertion: phase 4 is given exactly what an HPC orchestrator would give a SecondPassFDR
+        # node - the reconciled parquets, the per-run 2nd-pass artifacts, and the analysis-wide
+        # experiment sidecar - and nothing per-file from the first pass. If Stage 7 reaches for
+        # one, it fails on a missing file rather than passing quietly, and no log line or count
+        # has to be trusted to notice.
+        #
+        # A green mode 3 therefore MEANS the default path is independent of these files. That is
+        # not something a passing run could otherwise demonstrate: the straight leg has them
+        # sitting in its own directory, so it would read them without anyone knowing.
+        #
+        # Under OSPREY_PASS2_VERIFY_WORKER they ARE relayed, because the recomputation legitimately
+        # needs them - the flag changes what this node is being asked to do.
+        # Preserved for the mode-3 comparison regardless: these ARE chain outputs (phase 3 wrote
+        # them), they are simply not phase 4's input. The worker dirs are scrubbed a few lines
+        # below, so without this the files the comparison needs would be gone.
+        Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3Out "$s.1st-pass.fdr_scores.bin")
+
+        # WITHHELD ONLY WHEN THE WORKER ANSWERED. The modes with a per-file half
+        # (protein-compact, transfer-compete) leave a 2nd-pass sidecar here, and phase 4 folds it
+        # without opening anything from the first pass - that is the contract issue #4486
+        # establishes, and withholding is how it is proven. OSPREY_PASS2_QVALUE=transfer and the
+        # retrain modes have NO per-file half, so Stage 7 legitimately recomputes and legitimately
+        # needs these files; withholding them there would fail a mode for a contract it never
+        # claimed. Decided from what phase 3 actually WROTE rather than from the mode flag, so a
+        # future mode gets the right answer without editing this line.
+        if (-not (Test-Path (Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"))) {
+            Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph4 "$s.1st-pass.fdr_scores.bin")
+        }
         Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
         Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
         # Ship the persisted 1st-pass model so SecondPassFDR can run the frozen 2nd-pass
@@ -1348,9 +1456,49 @@ function Invoke-HpcChain {
         # protein-compact's stratum rides inside this same sidecar, so it needs no second hop.
         $modelSide = Join-Path $ph3 "$s.1st-pass.model.json"
         if (Test-Path $modelSide) { Copy-Item $modelSide (Join-Path $ph4 "$s.1st-pass.model.json") }
-        $pass2 = Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"
-        if (Test-Path $pass2) { Copy-Item $pass2 (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin") }
-        New-Item -ItemType File -Path (Join-Path $ph4 "$s.mzML") -Force | Out-Null
+        # The per-run 2nd-pass sidecar is now an INPUT to phase 4, not its output (#4486): the
+        # per-file half of the second pass runs in PerFileRescoring, so phase 3 produces this
+        # file and phase 4 folds it. Its VALIDITY STAMP travels with it, because that stamp is
+        # how SecondPassFDR knows the worker owns the file - the filename records the producer,
+        # so presence answers "who wrote this" without opening it.
+        #
+        # Copying the binary but not the stamp would be worse than copying neither: phase 4
+        # would fold a file it believed it had produced itself. Guarded with Test-Path because
+        # the retrain modes have no per-file half and phase 3 writes nothing here.
+        #
+        # The DECOY SIDE of the same competition travels with it, and is not optional once the
+        # sidecar is here: the pool image cannot carry the winning decoy of a base_id (a
+        # non-survivor holds no pool row), so phase 4 THROWS rather than folding an experiment
+        # q against a decoy-depleted null. Relaying one without the other is the exact defect
+        # this relay produced once before - a per-file artifact that silently did not arrive,
+        # leaving phase 4 to recompute and answer differently from the straight route.
+        $pass2Side = Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"
+        if (Test-Path $pass2Side) {
+            $pass2Decoys = Join-Path $ph3 "$s.2nd-pass.fdr_decoys.bin"
+            if (-not (Test-Path $pass2Decoys)) {
+                throw "PerFileRescoring wrote $s.2nd-pass.fdr_scores.bin but no matching .2nd-pass.fdr_decoys.bin in $ph3"
+            }
+            Copy-Item $pass2Side (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin")
+            Copy-Item $pass2Decoys (Join-Path $ph4 "$s.2nd-pass.fdr_decoys.bin")
+            $decoysStamp = "$pass2Decoys.PerFileRescoring.osprey.task"
+            if (Test-Path $decoysStamp) {
+                Copy-Item $decoysStamp (Join-Path $ph4 "$s.2nd-pass.fdr_decoys.bin.PerFileRescoring.osprey.task")
+            }
+            $pass2Stamp = "$pass2Side.PerFileRescoring.osprey.task"
+            if (Test-Path $pass2Stamp) {
+                Copy-Item $pass2Stamp (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task")
+            }
+        }
+        # Same relay for the analysis-wide experiment sidecar: SecondPassFDR seeds pass-1
+        # scalars from it, and $ph2 is gone by now, so phase 3 is its only route here.
+        $ph3exp = Join-Path $ph3 'output.1st-pass.fdr_experiment.bin'
+        if (Test-Path $ph3exp) { Copy-Item $ph3exp (Join-Path $ph4 'output.1st-pass.fdr_experiment.bin') -Force }
+        # No 2nd-pass bin relay. There was a `if (Test-Path ...) { Copy-Item ... }` here, and
+        # it could never fire: --task PerFileRescoring sets NoJoin, so SecondPassFdrTask is not
+        # in a phase-3 worker's pipeline and no such file exists to copy. Worse than dead - had
+        # it fired it would have handed phase 4 a CURRENT 2nd-pass sidecar, and phase 4 would
+        # then have skipped computing its own, quietly turning mode 3 into a test of a copy.
+        # Phase 4 is the only node that writes these.
     }
     # SecondPassFDR now has every worker's reconciled output copied in; the phase-3
     # worker dirs are done.
@@ -1366,6 +1514,10 @@ function Invoke-HpcChain {
     Copy-Item (Join-Path $ph4 'phase4.log') (Join-Path $chainLogDir 'phase4.log') -Force
 
     return (Join-Path $ph4 'output.blib')
+    } finally {
+        # Restore whatever the straight leg runs under, whether this chain returned or threw.
+        $env:OSPREY_PASS2_VERIFY_WORKER = $priorVerifyWorker
+    }
 }
 
 # --- Per-dataset legs ---------------------------------------------------------
@@ -1474,15 +1626,22 @@ foreach ($name in $selected) {
     # TeamCity exercises - no baseline, no second route. It covers the one failure a two-route
     # comparison structurally cannot see: a column both routes copy identically out of pass 1.
     # That is what issue #4559 was, and mode 3 was green on the default arm throughout.
-    # Guarded like its siblings (mode 1b on ModelDiagnostics, mode 3 on SkipHpcChain). The
-    # 2nd-pass sidecars only exist when Stage 6 rescored something -- SecondPassFdrTask writes
-    # them on AnyReconciledParquet -- so an arm that legitimately does no reconciliation work has
-    # nothing for this gate to assert on. Without the guard, "no .2nd-pass.fdr_scores.bin files"
-    # is reported as a hard failure and reds a run that is entirely correct.
+    # ASSERTED, not guarded. This used to skip when no 2nd-pass sidecars existed, because
+    # SecondPassFdrTask wrote them only on AnyReconciledParquet and "an arm that legitimately
+    # does no reconciliation work has nothing to assert on". That gate is gone: every input
+    # file now gets a 2nd-pass sidecar whatever Stage 6 did, because a missing file cannot be
+    # told apart from a write that failed and never committed. So the count IS the invariant,
+    # and the skip that tolerated absence was the harness half of the same ambiguity - it would
+    # have reported a run that silently wrote nothing as SKIPPED rather than red.
     $pass2Sidecars = @(Get-ChildItem -File -Path $straightDir -Filter '*.2nd-pass.fdr_scores.bin' `
         -ErrorAction SilentlyContinue)
-    if ($pass2Sidecars.Count -eq 0) {
-        $summaryLines.Add("$name mode1c (2nd-pass protein q is pass-2): SKIPPED (no 2nd-pass sidecars - Stage 6 rescored nothing)")
+    if ($pass2Sidecars.Count -ne $inputs.Mzmls.Count) {
+        $overallFail = $true
+        Write-Problem-Tc ("$name mode1c (2nd-pass protein q is pass-2): FAIL -- " +
+            "$($pass2Sidecars.Count) 2nd-pass sidecar(s) for $($inputs.Mzmls.Count) input file(s); " +
+            "every input file must have one")
+        $summaryLines.Add(("$name mode1c (2nd-pass protein q is pass-2): FAIL " +
+            "($($pass2Sidecars.Count) sidecars for $($inputs.Mzmls.Count) inputs)"))
     }
     else {
     Write-Progress-Tc "${name}: 2nd-pass protein q liveness (mode 1c)"
@@ -1564,14 +1723,66 @@ foreach ($name in $selected) {
         # Stage-5 divergence would otherwise surface here as a pass-2 defect and send the
         # reader to the wrong stage.
         $chainDir = Split-Path $chainBlib -Parent
+        $chainPhase3Dir = Join-Path (Split-Path $chainDir -Parent) 'phase3_outputs'
         $m3sIssues = [System.Collections.Generic.List[string]]::new()
         $m3sCompared = 0
+        # The 1st-pass sidecars are compared where the chain actually PRODUCES them - the phase-3
+        # rescore workers - not in phase 4. Phase 4 is deliberately not given them on the default
+        # path (see the withholding in Invoke-HpcChain), because a SecondPassFDR node must run
+        # without per-file first-pass input. Looking for them there would turn that contract into
+        # a mode-3 failure, and "the file we refused to stage is missing" is not a divergence.
         foreach ($sidecarPass in 1, 2) {
-            $cmp = Compare-FdrSidecars -ExpectedDir $straightDir -ActualDir $chainDir `
+            # Pass 1 is compared against the phase-3 workers' outputs, ALWAYS: Invoke-HpcChain
+            # runs its phases with the verifier off whatever the caller set, so phase 4 never
+            # receives these files. Reading the ambient flag here asked the caller's value, not
+            # the chain's, and sent the comparison to a directory the contract keeps empty.
+            $actualDir = if ($sidecarPass -eq 1) { $chainPhase3Dir } else { $chainDir }
+            $cmp = Compare-FdrSidecars -ExpectedDir $straightDir -ActualDir $actualDir `
                 -Pass $sidecarPass -Tolerance $Tolerance
             $cmp.Issues | ForEach-Object { $m3sIssues.Add("pass${sidecarPass}: $_") }
             $m3sCompared += $cmp.Compared
         }
+        # And the analysis-wide EXPERIMENT-scope sidecars (format v5, issue #4486). A byte
+        # comparison is exact here and needs no field decoder: both routes write one record per
+        # distinct entry_id in ascending entry_id order, so the file is a function of its
+        # contents rather than of the order the route walked its inputs. Absence is a FAILURE,
+        # not a skip - these files carry the experiment q-values the per-file sidecars used to,
+        # so a route that stopped writing one would otherwise pass this leg by having nothing to
+        # compare.
+        foreach ($expPass in '1st-pass', '2nd-pass') {
+            $expName = "*.$expPass.fdr_experiment.bin"
+            $expStraight = @(Get-ChildItem -File -Path $straightDir -Filter $expName -ErrorAction SilentlyContinue)
+            $expChain = @(Get-ChildItem -File -Path $chainDir -Filter $expName -ErrorAction SilentlyContinue)
+            if ($expStraight.Count -eq 0 -or $expChain.Count -eq 0) {
+                $m3sIssues.Add("$expName : straight-through has $($expStraight.Count), chain has $($expChain.Count) - expected one each")
+                continue
+            }
+            # OspreyFdrSidecarComparer.CompareBytes, NOT Compare-Object: this is a memcmp, and
+            # Compare-Object boxes every byte into a PSObject and hashes it. On Astral (85.8 MB,
+            # 2,498,773 records) that took the harness process to a 53 GB working set and stalled
+            # this leg for many minutes; the span compare is under a second.
+            $expDiff = [OspreyFdrSidecarComparer]::CompareBytes(
+                $expStraight[0].FullName, $expChain[0].FullName, 1000)
+            if (-not $expDiff.Readable) {
+                $m3sIssues.Add("$expName : $($expDiff.Problem)")
+            } elseif (-not $expDiff.Equal) {
+                # DOUBLE parens, the same idiom as the two sites in Regression/FdrSidecars.ps1
+                # and for the reason spelled out at Regression/DiagnosticsGolden.ps1:279: -f
+                # binds TIGHTER than the ',' separating method arguments, so with single parens
+                # only the first operand reaches the format and the rest become extra arguments
+                # to Add. The format then throws "Index (zero based) must be ... less than the
+                # size of the argument list", replacing the comparison result with an exception
+                # that names neither file. Latent until now because this branch runs ONLY when
+                # the experiment sidecars actually differ between routes.
+                $m3sIssues.Add((("{0} : {1} differs between routes - lengths {2} vs {3}, first " +
+                    "difference at byte {4}, {5}+ differing byte(s)") -f $expName,
+                    $expStraight[0].Name, $expDiff.LengthExpected, $expDiff.LengthActual,
+                    $expDiff.FirstDiffOffset, $expDiff.DiffCount))
+            } else {
+                $m3sCompared += [int](([System.IO.FileInfo]$expStraight[0].FullName).Length - 32) / 36
+            }
+        }
+
         # Liveness: a comparison that verified nothing is not a passing comparison. Empty or
         # absent sidecars satisfy every field check trivially while breaking every resume,
         # and the rest of this harness fails closed on the same shape (Invoke-ResumeInvalidation
@@ -1586,6 +1797,60 @@ foreach ($name in $selected) {
             Write-Problem-Tc "$name mode3 (per-file FDR sidecars==straight): FAIL - $($m3sIssues.Count) issue(s)"
             $m3sIssues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
             $summaryLines.Add("$name mode3 (per-file FDR sidecars==straight): FAIL ($($m3sIssues.Count) issues)")
+        }
+
+        # PROVE THE SPLIT HAPPENED, do not assume it. mode 3's value as coverage of the shipped
+        # fold rests entirely on the two legs having run DIFFERENT paths - straight with the
+        # verifier on, this chain with it off. If the env var stopped reaching a child process,
+        # both would run whichever path the environment supplied and this comparison would still
+        # be green while covering only one of them. Osprey states which fold it ran on every run,
+        # so the assertion is a grep, not a new leg.
+        $straightFold = Select-String -Path (Join-Path $straightDir 'straight.log') `
+            -Pattern 'Second-pass worker verification ACTIVE' -Quiet
+        $chainFold = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
+            -Pattern 'Second-pass worker verification ACTIVE' -Quiet
+        # And the chain must have folded a worker answer for EVERY file. "Verification off" is
+        # not the same as "the shipped path ran": a node given no 2nd-pass artifacts also has the
+        # verifier off, and silently recomputes every file from 1st-pass sidecars. That is exactly
+        # what a SEA-AD measurement did for hours while reporting the shipped path (2026-08-31).
+        # Only the modes with a per-file half make this claim. OSPREY_PASS2_QVALUE=transfer and
+        # the retrain modes compute the second pass in Stage 7 by definition, so there is no
+        # worker answer to fold and demanding one would fail them for a contract they never
+        # made. Detected from the worker's own validity stamp reaching phase 4, not from the
+        # mode flag.
+        $chainHasWorkerOutput = @(Get-ChildItem -File -Path $chainDir `
+            -Filter '*.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task' `
+            -ErrorAction SilentlyContinue).Count -gt 0
+        $chainAllAnswered = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
+            -Pattern "worker's written answer for all \d+ file\(s\)" -Quiet
+        if (-not $chainHasWorkerOutput) {
+            $summaryLines.Add("$name mode3 (shipped fold): SKIP (mode has no per-file half)")
+        } elseif (-not $chainAllAnswered) {
+            $overallFail = $true
+            Write-Problem-Tc ("$name mode3 (shipped fold): FAIL - phase 4 did not report a worker " +
+                "answer for ALL files, so it recomputed some from 1st-pass sidecars rather than " +
+                "folding what the workers wrote.")
+            $summaryLines.Add("$name mode3 (shipped fold): FAIL")
+        } else {
+            $summaryLines.Add("$name mode3 (shipped fold): PASS (worker answer folded for every file)")
+        }
+
+        # Scoped for the same reason as the shipped-fold check above: the verifier only exists on
+        # the frozen-competition path, so OSPREY_PASS2_QVALUE=transfer and the retrain modes emit
+        # NEITHER fold line and there is no split to assert. Detected from the straight leg having
+        # emitted a fold line at all, rather than from the mode flag.
+        $straightUsedFrozenPath = Select-String -Path (Join-Path $straightDir 'straight.log') `
+            -Pattern 'Second-pass (worker verification ACTIVE|fold )' -Quiet
+        if (-not $straightUsedFrozenPath) {
+            $summaryLines.Add("$name mode3 (verifier split): SKIP (mode has no per-file half)")
+        } elseif (-not $straightFold -or $chainFold) {
+            $overallFail = $true
+            Write-Problem-Tc ("$name mode3 (verifier split): FAIL - straight leg verified=" +
+                "$([bool]$straightFold) (expected True), HPC chain verified=$([bool]$chainFold) " +
+                "(expected False). The gate is then comparing two runs of the same path.")
+            $summaryLines.Add("$name mode3 (verifier split): FAIL")
+        } else {
+            $summaryLines.Add("$name mode3 (verifier split): PASS (straight verified, chain shipped-path)")
         }
 
         $m3 = Compare-BlibFull -BlibExpected $straightBlib -BlibActual $chainBlib -Tolerance $Tolerance
