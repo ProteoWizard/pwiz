@@ -586,33 +586,39 @@ namespace SkylineTester
             // preparing a log is worth taking the window down at the start of a run.
             try
             {
-                if (!File.Exists(logFile) || new FileInfo(logFile).Length == 0)
-                    return;     // Nothing worth keeping
-
-                var directory = Path.GetDirectoryName(logFile) ?? string.Empty;
-                var baseName = Path.GetFileNameWithoutExtension(logFile);
-                var extension = Path.GetExtension(logFile);
-
-                var rolledLog = Path.Combine(directory,
-                    baseName + DateTime.Now.ToString("-yyyyMMdd-HHmmss") + extension);
-
-                // Second resolution, so a second roll within the same second would collide and
-                // Move would throw. That destination is a log seconds old at most, unlike the one
-                // being rolled now.
-                if (File.Exists(rolledLog))
-                    File.Delete(rolledLog);
-
-                // Move before pruning. Pruning first would mean a Move that then throws - the log is
-                // the file most likely to be locked at run start - had already discarded the older
-                // rolled log for nothing.
-                File.Move(logFile, rolledLog);
-
-                // Keep exactly one previous log. Nightly logs are named and pruned by Summary in
-                // its own directory, and do not match this pattern.
-                foreach (var oldLog in Directory.GetFiles(directory, baseName + "-*" + extension))
+                // Under LogLock, like every other access to this file: UpdateLog appends under it
+                // and the memory graph reads the whole file under it on a background thread. A
+                // refresh landing mid-roll would otherwise fail the Move with a sharing violation.
+                lock (LogLock)
                 {
-                    if (!string.Equals(oldLog, rolledLog, StringComparison.OrdinalIgnoreCase))
-                        File.Delete(oldLog);
+                    if (!File.Exists(logFile) || new FileInfo(logFile).Length == 0)
+                        return;     // Nothing worth keeping
+
+                    var directory = Path.GetDirectoryName(logFile) ?? string.Empty;
+                    var baseName = Path.GetFileNameWithoutExtension(logFile);
+                    var extension = Path.GetExtension(logFile);
+
+                    var rolledLog = Path.Combine(directory,
+                        baseName + DateTime.Now.ToString("-yyyyMMdd-HHmmss") + extension);
+
+                    // Second resolution, so a second roll within the same second would collide and
+                    // Move would throw. That destination is a log seconds old at most, unlike the
+                    // one being rolled now.
+                    if (File.Exists(rolledLog))
+                        File.Delete(rolledLog);
+
+                    // Move before pruning. Pruning first would mean a Move that then throws - the
+                    // log is the file most likely to be locked at run start - had already discarded
+                    // the older rolled log for nothing.
+                    File.Move(logFile, rolledLog);
+
+                    // Keep exactly one previous log. Nightly logs are named and pruned by Summary in
+                    // its own directory, and do not match this pattern.
+                    foreach (var oldLog in Directory.GetFiles(directory, baseName + "-*" + extension))
+                    {
+                        if (!string.Equals(oldLog, rolledLog, StringComparison.OrdinalIgnoreCase))
+                            File.Delete(oldLog);
+                    }
                 }
             }
             catch (Exception e)

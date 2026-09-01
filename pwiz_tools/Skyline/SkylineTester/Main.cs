@@ -231,6 +231,13 @@ namespace SkylineTester
                 Program.UserKilledTestRun = true;
             }
 
+            // The confirmation above pumps the message loop, so the run can finish and Done() can
+            // run while it is up. Without this the buttons would be disabled for a run that no
+            // longer exists, with no Done() left to restore them, and Stop() would dereference a
+            // null _runningTab.
+            if (_runningTab == null)
+                return false;
+
             // Before Stop(), not after: Cancel() kills the process tree on this thread and takes
             // long enough to see, and until it returns the button is still live and still reads
             // "Stop". Every caller of StopByUser gets this, including the Output tab's own button.

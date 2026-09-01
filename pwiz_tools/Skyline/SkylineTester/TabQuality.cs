@@ -93,9 +93,8 @@ namespace SkylineTester
 
             MainWindow.TestsRun = 0;
 
-            // Rolls the previous log aside rather than deleting it, so an accidental start does not
-            // destroy the record of a long run. StartNewLog leaves no file behind to delete.
-            MainWindow.CommandShell.StartNewLog(MainWindow.DefaultLogFile);
+            // No roll here: StartLog below does it for this same file. It used to delete the log
+            // at this point, which is what made starting a run destroy the previous run's record.
             MainWindow.NewNightlyRun = _lastRun = new Summary.Run
             {
                 Date = DateTime.Now
