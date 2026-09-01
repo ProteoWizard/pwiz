@@ -90,18 +90,7 @@ namespace pwiz.Osprey.FDR
             // bit-equal. Mirrors Rust pipeline.rs::run_percolator_fdr.
             foreach (var kvp in perFileEntries)
             {
-                // Array.Sort OK: the terminal key is ParquetIndex, which is unique per row,
-                // so the comparator never returns 0 and the unstable-sort tie path is unreachable.
-                kvp.Value.Sort((a, b) => // Array.Sort OK: (see above) terminal key ParquetIndex is unique per row, comparator never ties
-                {
-                    int c = a.EntryId.CompareTo(b.EntryId);
-                    if (c != 0) return c;
-                    c = a.Charge.CompareTo(b.Charge);
-                    if (c != 0) return c;
-                    c = a.ScanNumber.CompareTo(b.ScanNumber);
-                    if (c != 0) return c;
-                    return a.ParquetIndex.CompareTo(b.ParquetIndex);
-                });
+                kvp.Value.Sort(FdrEntry.CANONICAL_ORDER); // Array.Sort OK: CANONICAL_ORDER's terminal key ParquetIndex is unique per row here (reconciled-write numbering), so the comparison never ties
             }
 
             // Build the flat PercolatorEntry list (one per observation), preferring
@@ -260,7 +249,7 @@ namespace pwiz.Osprey.FDR
                     if (c != 0) return c;
                     c = a.Charge.CompareTo(b.Charge);
                     if (c != 0) return c;
-                    return a.ParquetIndex.CompareTo(b.ParquetIndex);
+                    return FdrEntry.CompareParquetIndex(a.ParquetIndex, b.ParquetIndex);
                 });
             }
 
@@ -1017,8 +1006,23 @@ namespace pwiz.Osprey.FDR
             var minRunBothByEntryId = new Dictionary<uint, double>();
             var minRunBothByPeptide = new Dictionary<(string ModifiedSequence, bool IsDecoy), double>();
             foreach (var kvp in perFileEntries)
+                AccumulateExperimentQFloors(kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
+            foreach (var kvp in perFileEntries)
+                ApplyExperimentQFloors(kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
+        }
+
+        /// <summary>
+        /// Fold ONE file's entries into the experiment-q floors - the min run q per entry_id and
+        /// per (peptide, isDecoy). Both maps are O(distinct), so a caller can walk the run one
+        /// file at a time and drop each as it goes; nothing here needs a whole-run view.
+        /// </summary>
+        public static void AccumulateExperimentQFloors(
+            IReadOnlyList<FdrEntry> entries,
+            Dictionary<uint, double> minRunBothByEntryId,
+            Dictionary<(string ModifiedSequence, bool IsDecoy), double> minRunBothByPeptide)
+        {
             {
-                foreach (var e in kvp.Value)
+                foreach (var e in entries)
                 {
                     double runBoth = e.EffectiveRunQvalue(FdrLevel.Both);
                     double curPrec;
@@ -1039,10 +1043,21 @@ namespace pwiz.Osprey.FDR
                         minRunBothByPeptide[pkey] = runBoth;
                 }
             }
+        }
 
-            foreach (var kvp in perFileEntries)
+        /// <summary>
+        /// Raise ONE file's experiment q-values to the floors folded by
+        /// <see cref="AccumulateExperimentQFloors"/>. The apply half of the same operation,
+        /// separated so a streamed consumer can fold over every file first and then apply as it
+        /// revisits them - the floors are whole-run, the application is per row.
+        /// </summary>
+        public static void ApplyExperimentQFloors(
+            IReadOnlyList<FdrEntry> entries,
+            IReadOnlyDictionary<uint, double> minRunBothByEntryId,
+            IReadOnlyDictionary<(string ModifiedSequence, bool IsDecoy), double> minRunBothByPeptide)
+        {
             {
-                foreach (var e in kvp.Value)
+                foreach (var e in entries)
                 {
                     double floorPrec;
                     if (minRunBothByEntryId.TryGetValue(e.EntryId, out floorPrec) &&

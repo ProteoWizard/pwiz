@@ -507,6 +507,33 @@ namespace pwiz.Osprey.Core
             IsSetAndNotZero(@"OSPREY_PROTEIN_COMPACT_RETRAIN");
 
         /// <summary>
+        /// OSPREY_PASS2_VERIFY_WORKER: re-run the per-file second-pass competition inside Stage 7
+        /// and assert it against the answer the rescore worker wrote (issue #4486). A TEST
+        /// INSTRUMENT, off by default.
+        ///
+        /// <para><b>Why it is not always on.</b> The recompute re-reads each file's 1st-pass
+        /// sidecar and re-runs the frozen rescore - measured at 82 files as 9.2 GB of re-reads
+        /// against the 2.8 GB the join actually needs, inside an 860.8 s Stage 7. That is
+        /// precisely the cost #4486 exists to remove, so leaving it on would hide the whole gain
+        /// behind a check of the code that produces it.</para>
+        ///
+        /// <para><b>What it is and is not.</b> Both sides call the SAME
+        /// <c>StreamingFdr.CompeteOneFile</c>, so this verifies that the worker's inputs and the
+        /// transmission of its answer agree - it cannot see a defect INSIDE that function, where
+        /// both sides would be wrong together. It is also blind to the artifact's POPULATION: a
+        /// gap-fill never competes, so dropping one changes no competition map, which is why 594
+        /// dropped records once passed this check and surfaced only in a diagnostics golden. The
+        /// population and order are covered instead by
+        /// <c>Pass2FdrSidecar.AssertSidecarDescribesPool</c>, which is cheap and always on.</para>
+        ///
+        /// <para>Deliberately NOT in any validity key: it changes no output, so including it
+        /// would invalidate every cached artifact the moment it was flipped, turning a
+        /// diagnostic into a re-run.</para>
+        /// </summary>
+        public static readonly bool Pass2VerifyWorker =
+            IsSetAndNotZero(@"OSPREY_PASS2_VERIFY_WORKER");
+
+        /// <summary>
         /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the known-unfixed resident path(s) this run may
         /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=fdrbench-pass1</c>. Legal values are
         /// exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>; anything else, and any resident path

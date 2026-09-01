@@ -101,7 +101,9 @@ if [ "$IAGREE" = 1 ] && [ -f "$SEVEN_ZZ" ] && [ ! -x "$SEVEN_ZZ" ]; then
 fi
 
 resolve_dotnet || { echo "##teamcity[message text='dotnet not found on PATH or at /usr/bin, /usr/local/bin, /usr/share/dotnet, /usr/lib/dotnet, \$DOTNET_ROOT, ~/.dotnet' status='ERROR']"; exit 1; }
-ensure_dotnet_sdk "$SCRIPT_DIR/.." || { echo "##teamcity[message text='no .NET SDK satisfying global.json, and installing one failed' status='ERROR']"; exit 1; }
+# $SCRIPT_DIR, not the repo root: the guard has to resolve the same global.json
+# as the dotnet call it guards, and resolution walks up from the working dir.
+ensure_dotnet_sdk "$SCRIPT_DIR" || { echo "##teamcity[message text='no .NET SDK satisfying global.json, and installing one failed' status='ERROR']"; exit 1; }
 echo "##teamcity[progressMessage 'dotnet --version']"
 dotnet --version || { echo "##teamcity[message text='dotnet --version failed' status='ERROR']"; exit 1; }
 
@@ -120,9 +122,9 @@ else
 fi
 
 # Test projects: the platform-agnostic suites, plus the vendors whose SDKs ship
-# an off-Windows build (Thermo/Waters/Bruker). The remaining native-Windows
-# vendor suites (Agilent/Sciex/Shimadzu/UIMF/Mobilion/UNIFI) and
-# Installer.Tests are excluded by design.
+# an off-Windows build (Thermo/Waters/Bruker), plus the native-Windows vendors in
+# identify-only mode (see below). Installer.Tests is Windows-only by nature, and
+# UNIFI.Tests reaches a live Waters demo server, so neither runs here.
 TEST_TARGET=(
     "pwiz/test/Util.Tests/Util.Tests.csproj"
     "pwiz/test/Common.Tests/Common.Tests.csproj"
@@ -143,6 +145,28 @@ TEST_TARGET=(
 # matching .so, so TDF/TSF and BAF all read off-Windows. Both are far less demanding than
 # the Waters .so -- libtimsdata.so needs only GLIBC_2.14 and links no libstdc++ at all.
 [ "$IAGREE" = 1 ] && TEST_TARGET+=("pwiz/test/Bruker.Tests/Bruker.Tests.csproj")
+
+# The native-Windows vendors, run for what they CAN prove off-Windows: that the
+# reader still identifies its own format. Their Read() is compiled out here
+# (NO_VENDOR_SUPPORT) and throws VendorSupportNotEnabledException, which
+# VendorReaderTestHarness catches and converts into an Identify() assertion -
+# a pass only if Identify() still returns a real CVID, so a reader that stops
+# recognizing its format off-Windows fails rather than silently skipping. This
+# is the same coverage cpp gets from testAcceptOnly under #ifdef PWIZ_READER_*,
+# reached at runtime by exception type instead of at compile time.
+#
+# Ungated by --i-agree-to-the-vendor-licenses on purpose: identify-only needs no
+# SDK, so this coverage should not depend on the licence flag.
+#
+# Fixtures still archived in Reader_*_Test.data.tar.bz2 are not extracted here,
+# so those tests report Inconclusive; the ones tracked as loose files do run.
+TEST_TARGET+=(
+    "pwiz/test/Agilent.Tests/Agilent.Tests.csproj"
+    "pwiz/test/Sciex.Tests/Sciex.Tests.csproj"
+    "pwiz/test/Shimadzu.Tests/Shimadzu.Tests.csproj"
+    "pwiz/test/UIMF.Tests/UIMF.Tests.csproj"
+    "pwiz/test/Mobilion.Tests/Mobilion.Tests.csproj"
+)
 
 # The test projects have to be restored and built here too, not just the product ones.
 # `dotnet test --no-build` below does no building, and when the test assembly is missing

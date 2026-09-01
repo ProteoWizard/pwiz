@@ -53,10 +53,24 @@ internal static class BrukerInstrumentFamilyCodes
     /// <summary>
     /// Maps the raw <c>InstrumentFamily</c> code stored in the analysis metadata (the TDF/TSF
     /// <c>GlobalMetadata</c> table, the BAF <c>Properties</c> table) onto the SDK enum. Port of
-    /// <c>translateInstrumentFamily</c>, which appears verbatim in <c>Baf2Sql.cpp</c>,
-    /// <c>TimsData.cpp</c> and <c>TsfData.cpp</c>. (The BAF copy omits the timsTOF case, but no
-    /// timsTOF instrument writes BAF, so one table serves all three.)
+    /// <c>translateInstrumentFamily</c>, which appears — in an anonymous namespace, so each
+    /// translation unit gets its own copy — in <c>Baf2Sql.cpp</c>, <c>TimsData.cpp</c> and
+    /// <c>TsfData.cpp</c>.
     /// </summary>
+    /// <remarks>
+    /// <para>One table serves all three on purpose. cpp's BAF copy omits <c>case 9</c> (timsTOF);
+    /// the TDF and TSF copies have it. That is a cpp defect, not a format distinction, so this
+    /// port deliberately does not reproduce it.</para>
+    /// <para>The code is not container-specific: in cpp's BAF copy <c>9</c> is <b>absent</b>, not
+    /// remapped to another family, and the three tables are otherwise identical. A timsTOF can
+    /// write BAF — the corpus has two, whose <c>InstrumentName</c> says so — and reading one
+    /// through cpp's BAF path yields <c>Unknown</c>, hence <c>MS:1000122 instrument model</c> and
+    /// a componentList of just the ion source, where the TDF/TSF path yields
+    /// <c>MS:1003123 timsTOF series</c> and the full analyzer/detector chain.</para>
+    /// <para>Fixed upstream by adding <c>case 9</c> to <c>Baf2Sql.cpp</c>; until that ships, those
+    /// files read <c>differs</c> on a corpus sweep for this reason alone and the C# output is the
+    /// correct one.</para>
+    /// </remarks>
     public static BrukerInstrumentFamily FromGlobalMetadata(IReadOnlyDictionary<string, string> globalMetadata)
     {
         ArgumentNullException.ThrowIfNull(globalMetadata);

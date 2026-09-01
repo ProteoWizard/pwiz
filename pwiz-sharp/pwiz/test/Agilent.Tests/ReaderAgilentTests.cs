@@ -121,6 +121,28 @@ public class ReaderAgilentTests
         ctx.Check();
     }
 
+    /// <summary>
+    /// A fixture that makes MHDAC centroid ON THE FLY, which is a distinct code path
+    /// from every other Agilent fixture here.
+    /// </summary>
+    /// <remarks>
+    /// <para>Two properties have to hold together and nothing else in the corpus has both:
+    /// the file stores profile data ONLY (no <c>mspeak.bin</c>), so <c>PeakElseProfile</c> has
+    /// nothing stored to return and the SDK must centroid on demand; and the device is a Q-TOF,
+    /// which is the family MHDAC will centroid at all.</para>
+    /// <para>Subset of the 77.8 MB corpus file <c>Neg_MS_002.d</c>, cut to its first scan
+    /// (0.43 MB) so it can be tracked.</para>
+    /// </remarks>
+    [TestMethod]
+    public void Reader_Agilent_Neg_MS_002_1scan_ProfileOnlyVendorCentroid()
+    {
+        var ctx = SetUp("Neg_MS_002_1scan.d");
+        if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig());
+        ctx.Run(new ReaderTestConfig { PeakPicking = true });
+        ctx.Check();
+    }
+
     // -------------------- IM fixtures --------------------
     //
     // cpp Reader_Agilent_Test.cpp runs the DEFAULT config over every .d (line 62,
@@ -203,8 +225,20 @@ public class ReaderAgilentTests
             return (list.Count, zeroLength);
         }
 
-        var off = Read(d, acceptZeroLength: false);
-        var on = Read(d, acceptZeroLength: true);
+        // Reads directly rather than through VendorReaderTestHarness, so the harness's
+        // identify-only fallback does not apply and the SDK-less build would see the
+        // exception escape. Counting drift bins needs the real reader either way.
+        (int Count, int ZeroLength) off, on;
+        try
+        {
+            off = Read(d, acceptZeroLength: false);
+            on = Read(d, acceptZeroLength: true);
+        }
+        catch (Pwiz.Data.MsData.Readers.VendorSupportNotEnabledException)
+        {
+            Assert.Inconclusive("Agilent SDK not compiled into this build; direct-read coverage is Windows-only.");
+            return;
+        }
 
         Assert.AreEqual(701, off.Count, "default spectrum count changed");
         Assert.AreEqual(0, off.ZeroLength, "the default path must not emit zero-length spectra");

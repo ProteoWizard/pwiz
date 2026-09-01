@@ -578,6 +578,16 @@ public sealed class AgilentRawData : IDisposable
     public IMSScanRecord GetScanRecord(int rowIndex) => _reader.GetScanRecord(rowIndex);
 
     /// <summary>
+    /// Whether <see cref="GetSpectrumByRow"/> must hand MHDAC a peak filter, i.e. whether this
+    /// call is asking the SDK to centroid. Mirrors the device gate cpp applies inside
+    /// <c>getPeakSpectrumByRow</c> (MassHunterData.cpp:716-720).
+    /// </summary>
+    internal static bool NeedsPeakFilter(bool preferProfile, DeviceType deviceType) =>
+        !preferProfile &&
+        deviceType != DeviceType.Quadrupole &&
+        deviceType != DeviceType.TandemQuadrupole;
+
+    /// <summary>
     /// Returns the full spectrum for row <paramref name="rowIndex"/>. <paramref name="preferProfile"/>
     /// asks for profile data when both formats are stored; otherwise the SDK returns the centroid
     /// representation. Mirrors cpp <c>getProfileSpectrumByRow</c> / <c>getPeakSpectrumByRow</c>.
@@ -587,12 +597,23 @@ public sealed class AgilentRawData : IDisposable
         var storage = preferProfile
             ? DesiredMSStorageType.ProfileElsePeak
             : DesiredMSStorageType.PeakElseProfile;
-        // The 3-arg overload takes (scanId, peakFilterMS1, peakFilterMSn, storageType). Passing
-        // null for the peak filters means "no filtering". rowIndex here is the row, not scan id —
-        // the SDK overloads on int treat the int as a row when called via this signature.
+
+        // The peak filters are NOT optional on the centroid path, and null does NOT mean "no
+        // filtering" - it means "do not centroid". Handed null, MHDAC ignores PeakElseProfile and
+        // returns whatever is stored, so a profile-mode acquisition comes back as profile however
+        // the storage type was asked for. cpp always constructs a default-valued MsdrPeakFilter
+        // here (MassHunterData.cpp:712-724 via msdrPeakFilter() at :54-64) and leaves it null only
+        // for the non-TOF devices MHDAC cannot centroid at all - the same device gate the caller
+        // applies, repeated here as cpp repeats it.
+        IMsdrPeakFilter? peakFilter = NeedsPeakFilter(preferProfile, DeviceType)
+            ? new MsdrPeakFilter()
+            : null;
+
+        // rowIndex here is the row, not scan id — the SDK overloads on int treat the int as a
+        // row when called via this signature.
         try
         {
-            return _reader.GetSpectrum(rowIndex, null, null, storage);
+            return _reader.GetSpectrum(rowIndex, peakFilter, peakFilter, storage);
         }
         catch (Exception ex)
         {

@@ -24,6 +24,9 @@
   <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
     <Compile Remove="AgilentChromatogramTypeTests.cs" />
     <Compile Remove="AgilentInstrumentMetadataTests.cs" />
+    <!-- AgilentPeakFilterTests takes DeviceType and calls AgilentRawData, which Agilent.csproj
+         removes from the SDK-less build. -->
+    <Compile Remove="AgilentPeakFilterTests.cs" />
   </ItemGroup>
 
   <!-- AgilentSignal carries the SDK's DeviceType enum. Agilent.csproj's <Reference> items are

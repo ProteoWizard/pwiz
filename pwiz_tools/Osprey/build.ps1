@@ -22,9 +22,9 @@
 
 .PARAMETER Coverage
     Wrap test execution in JetBrains dotCover.  Writes .dcvr
-    coverage data under TestResults/.  Requires the dotcover
-    global tool on PATH (install:
-    dotnet tool install -g JetBrains.dotCover.GlobalTools).
+    coverage data under TestResults/.  dotCover is restored from
+    this directory's .config/dotnet-tools.json, so no global
+    install and no agent provisioning is needed.
 
 .PARAMETER TeamCity
     Emit TeamCity service messages: progress lines during the
@@ -121,12 +121,18 @@ if (-not $NoTests) {
 }
 $dotcover = $null
 if ($Coverage) {
-    $cmd = Get-Command dotcover -ErrorAction SilentlyContinue
-    if (-not $cmd) {
-        Write-Problem-Tc "dotcover not on PATH (install JetBrains.dotCover.GlobalTools)"
-        exit 2
-    }
-    $dotcover = $cmd.Source
+    # Restore dotCover from this directory's tool manifest rather than requiring a global
+    # install. The previous check demanded `dotcover` on PATH, which held only on the
+    # long-lived agent that happened to have it: every ephemeral CI agent failed here, and the
+    # package name the message suggested (JetBrains.dotCover.GlobalTools) does not exist.
+    #
+    # The script returns the resolved dotCover.exe. `dotnet dotcover` is not usable here: a
+    # local tool is only on the command line when the working directory is at or under its
+    # manifest, and TeamCity runs this build from the repo root.
+    $ensure = Join-Path $PSScriptRoot '../../pwiz-sharp/scripts/Ensure-DotCover.ps1'
+    $dotcover = if ($TeamCity) { & $ensure -ManifestDir $PSScriptRoot -TeamCity } else { & $ensure -ManifestDir $PSScriptRoot }
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $dotcover = @($dotcover)[-1]
 }
 
 # --- Pre-build cleanup ---------------------------------------------------
@@ -215,46 +221,44 @@ foreach ($fw in $testFrameworks) {
     if ($Coverage) {
         $dcvrPath = Join-Path $trxDir "Osprey.Test-$Configuration-$fw.dcvr"
         Write-Progress-Tc "Running tests under dotCover ($fw)"
-        # dotCover 2026.1+ renamed every flag to kebab-case
-        # (--target-executable, --snapshot-output, ...).  The legacy
-        # /PascalCase=value form is silently ignored, which is why every
-        # earlier attempt (--, /, cmd /c, Process.Start) saw dotcover
-        # autodetect dotnet.exe and run nothing.  The Skyline TestRunner
-        # still works on the old syntax because it pins dotCover 2023.3.3.
+        # /PascalCase=value is the console runner syntax through 2024.3.  The
+        # 2026.1 rewrite replaced it with kebab-case flags and also dropped both
+        # the HTML report type and the native dotCover.exe launcher that
+        # TeamCity's agent-side coverage processor needs to turn a .dcvr into the
+        # Code Coverage tab, so all three apps pin 2023.3.3 (see
+        # Ensure-DotCover.ps1) and this call uses the syntax that runner speaks.
         #
         # https://www.jetbrains.com/help/dotcover/dotCover__Console_Runner_Commands.html
         function Quote-IfNeeded([string]$s) {
             if ($s -match '\s') { return '"' + $s + '"' }
             return $s
         }
-        # dotCover 2026.1.1's `cover` command only supports EXCLUDE filters
-        # (verified via `dotcover help cover` in build #4030563):
-        #   --exclude-assemblies <list>
-        #   --exclude-attributes <list>
-        #   --exclude-processes  <list>
-        # There is no include-side flag.  Translation of the old
-        # /Filters=+:Osprey.* allowlist: list the third-party + test
-        # assemblies we want OUT of the coverage report, and let dotcover
-        # cover everything else (which includes the Osprey.* assemblies
-        # we care about).  Wildcards (*) work, per the help text for
-        # --exclude-processes; assumed to be the same parser for assemblies.
+        # Cover everything the test run loads except the test assembly itself and
+        # the third-party dependencies, which leaves the Osprey.* assemblies we
+        # care about.  Stated as exclusions rather than a +:module=Osprey*
+        # allowlist so the shared pwiz.CommonUtil code Osprey builds against is
+        # measured too.
         $excludeAssemblies = @(
             'Osprey.Test',
             'Apache.Arrow', 'ProDotNetZip', 'IronCompress',
             'JetBrains.*', 'MathNet.*', 'Microsoft.*', 'Newtonsoft.*',
             'Parquet', 'Snappier', 'System.*', 'ZstdSharp',
             'MSTest.*', 'testhost*', 'vstest.*'
-        ) -join ','
+        )
+        $filters = ($excludeAssemblies | ForEach-Object { "-:module=$_" }) -join ';'
         $dcArgs = @(
             'cover',
-            '--target-executable', (Quote-IfNeeded $vstest),
-            '--snapshot-output', (Quote-IfNeeded $dcvrPath),
-            '--exclude-assemblies', $excludeAssemblies,
-            '--exclude-attributes', 'System.CodeDom.Compiler.GeneratedCodeAttribute',
+            "/TargetExecutable=$(Quote-IfNeeded $vstest)",
+            "/Output=$(Quote-IfNeeded $dcvrPath)",
+            "/Filters=$(Quote-IfNeeded $filters)",
+            '/AttributeFilters=System.CodeDom.Compiler.GeneratedCodeAttribute',
+            '/ReturnTargetExitCode',
             '--'
         ) + ($vstestArgs | ForEach-Object { Quote-IfNeeded $_ })
         $dcArgString = $dcArgs -join ' '
         Write-Host "DC ARGS: $dcArgString"
+        # Resolved from the local tool manifest, so the version is the pinned one and the call
+        # does not depend on the working directory.
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = $dotcover
         $psi.Arguments = $dcArgString
