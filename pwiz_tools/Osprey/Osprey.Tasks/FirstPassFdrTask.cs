@@ -311,12 +311,20 @@ namespace pwiz.Osprey.Tasks
             if (aggError != null)
                 throw new InvalidOperationException(aggError);
 
-            // Mid-Run crash safety: clear stale sidecars for the outputs
-            // this task is about to produce. A crash before the matching
-            // post-Run sidecar write leaves no false-positive sidecar
-            // claiming the partially-written output is valid.
-            foreach (var output in Outputs(ctx))
-                TaskValiditySidecar.Delete(output, Name);
+            // NOT a blanket wipe of every declared output's marker on entry. That was written
+            // against a partially-written output, and there is no such state: every one of these
+            // artifacts is committed through FileSaver, an atomic rename, so a file is absent or
+            // complete. What the wipe actually did was destroy the record of which files this
+            // task had already finished - the only thing a per-file resume can read - so a run
+            // interrupted at file 300 of 446 came back and re-scored all 446.
+            //
+            // Staleness is handled where it can be handled correctly: each writer clears its own
+            // marker immediately before its own write and stamps it immediately after
+            // (FlushPartialSidecar, WriteFdrScoresSidecars, WriteExperimentSidecar,
+            // WriteReconciliationFiles). A marker therefore never outlives the file it vouches
+            // for, and one that survives a crash vouches for a file that really is complete.
+            //
+            // SecondPassFdrTask still has the blanket form and wants the same treatment.
 
             // Stage 5: First-pass FDR. The Percolator framework (SVM or Gbdt) prints
             // its own "Running First-pass Percolator on N entries..." line from the FDR
@@ -2528,6 +2536,49 @@ namespace pwiz.Osprey.Tasks
             // Collapses the score pass's EXPERIMENT-scope columns to one record per distinct
             // entry_id (format v5, issue #4486). Protein FDR fills its protein q below, then
             // the whole thing is written once beside the blib.
+            // PER-FILE RESUME GATE. Which files already carry a 1st-pass sidecar this build
+            // wrote, under this arm and this cohort? Those need no re-scoring: the sidecar holds
+            // their scores and run q-values, and the sink can be fed from it.
+            //
+            // Per FILE rather than per phase on purpose. A phase-level gate still redoes a
+            // 99%-complete phase, and this score pass is 137 minutes over 446 files - so a
+            // machine lost partway (a Windows Update, a blue screen) has to resume proportional
+            // to what it finished, not to what the phase was.
+            //
+            // Presence alone is not the test. FdrScoresSidecar.Write commits through FileSaver,
+            // so a sidecar that exists is complete - but completeness is not identity, and
+            // IsCurrent also demands the validity key, which carries the search and library
+            // hashes, the pick arm, the pass-2 mode AND the cohort (the reconciliation hash is
+            // taken over the sorted input file stems). Drop 82 more files into a directory and
+            // every existing sidecar stops being current, which is exactly right.
+            var resumableFiles = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kv in projections.PerFile)
+            {
+                string resumeBase = ScoringTaskShared.ResolveSidecarBasePath(
+                    kv.Key, perFileParquetPaths, config);
+                if (string.IsNullOrEmpty(resumeBase))
+                    continue;
+                if (PerFileResumeDriver.IsCurrent(
+                        FdrScoresSidecar.Pass1Path(resumeBase), Name, sidecarValidityKey))
+                    resumableFiles.Add(kv.Key);
+            }
+            if (resumableFiles.Count > 0)
+            {
+                // Named, not just counted: an operator reading this needs to see WHICH files were
+                // taken from disk, because a wrong-cohort adoption would look identical to a
+                // right one in a bare count.
+                ctx.LogInfo(string.Format(
+                    @"Resume: {0} of {1} file(s) already carry a current 1st-pass sidecar and will " +
+                    @"not be re-scored ({2} to score).",
+                    resumableFiles.Count, projections.PerFile.Count,
+                    projections.PerFile.Count - resumableFiles.Count));
+                foreach (var kv in projections.PerFile)
+                {
+                    if (resumableFiles.Contains(kv.Key))
+                        ctx.LogInfo(string.Format(@"  resume-skip: {0}", kv.Key));
+                }
+            }
+
             var experiment = new FdrExperimentAccumulator();
             var sink = new FdrStoringSink(projections, config, @"First-pass", FlushPartialSidecar,
                 experiment, mdiagAccumulator);
@@ -2546,10 +2597,26 @@ namespace pwiz.Osprey.Tasks
                 // same parquet to count its rows), so the indexer cannot miss.
                 Action<string, Action<uint, byte, bool, double, string>> streamFileRows =
                     (fileName, onRow) => ParquetScoreCache.ReadFdrStubScalars(perFileParquetPaths[fileName], onRow);
+                // Feeds the scorer a resumable file's scores off its 1st-pass sidecar so neither
+                // pass loads that file's feature vectors or re-runs the dot product. Returns
+                // false for anything not in the gate above, which scores normally.
+                Func<string, Action<uint, double>, bool> tryStreamCompletedScores =
+                    (fileName, onScore) =>
+                    {
+                        if (!resumableFiles.Contains(fileName))
+                            return false;
+                        string doneBase = ScoringTaskShared.ResolveSidecarBasePath(
+                            fileName, perFileParquetPaths, config);
+                        if (string.IsNullOrEmpty(doneBase))
+                            return false;
+                        return FdrScoresSidecar.ReadRecords(
+                            FdrScoresSidecar.Pass1Path(doneBase), FdrScoresSidecar.Pass.FirstPass,
+                            rec => onScore(rec.EntryId, rec.Score));
+                    };
                 aborted = PercolatorEngine.RunFirstPassStreaming(
                     projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
                     config, featureInfos, ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
-                    @"First-pass", captureContributions, captureModel);
+                    @"First-pass", captureContributions, captureModel, tryStreamCompletedScores);
             }
             else
             {

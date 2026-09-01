@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -597,6 +597,29 @@ namespace pwiz.Osprey.FDR
         /// <paramref name="loadFileFeatures"/> loads one file's feature vectors, indexed by the
         /// running parquet row ordinal. Returns <c>true</c> on a diagnostic-only train abort.
         /// </summary>
+        /// <summary>
+        /// A file's already-computed scores, in parquet row order, or null when the caller has
+        /// nothing on disk for it.
+        ///
+        /// <para>Only the SCORE is taken from disk. The run q-values are recomputed from it,
+        /// which is a sort and costs nothing next to loading a file's feature vectors and
+        /// re-running the dot product - and recomputing keeps a resumed file byte-identical to a
+        /// freshly scored one by construction rather than by trusting two writers to agree.</para>
+        /// </summary>
+        private static double[] TryLoadCompletedScores(
+            Func<string, Action<uint, double>, bool> tryStream, string fileName, int expectedCount)
+        {
+            if (tryStream == null)
+                return null;
+            var scores = new List<double>(expectedCount);
+            if (!tryStream(fileName, (entryId, score) => scores.Add(score)))
+                return null;
+            // A count mismatch means the sidecar and the parquet disagree about how many rows
+            // this file has, which no validity key can catch - so refuse the shortcut and score
+            // it rather than emit a silently misaligned file.
+            return scores.Count == expectedCount ? scores.ToArray() : null;
+        }
+
         internal static bool RunStreamingFirstPass(
             IReadOnlyList<string> fileNames,
             Action<string, Action<uint, byte, bool, double, string>> streamFileRows,
@@ -606,7 +629,8 @@ namespace pwiz.Osprey.FDR
             string passLabel,
             IFdrOutputSink sink,
             Action<FeatureContributions> captureContributions = null,
-            Action<PercolatorResults> captureModel = null)
+            Action<PercolatorResults> captureModel = null,
+            Func<string, Action<uint, double>, bool> tryStreamCompletedScores = null)
         {
             if (streamFileRows == null)
                 throw new ArgumentNullException(nameof(streamFileRows));
@@ -888,12 +912,16 @@ namespace pwiz.Osprey.FDR
             using (var scoreProgress = new ProgressReporter(string.Format(@"Scoring {0} entries", n), n))
             for (int f = 0; f < nFiles; f++)
             {
-                IReadOnlyList<double[]> rows = loadFileFeatures(fileNames[f]);
+                // Identity first (entry_id / charge / decoy / modseq): scalar parquet columns,
+                // cheap, and needed either way. The FEATURE vectors are what cost, so they are
+                // loaded only when this file actually has to be scored.
                 buffer.Clear();
                 streamFileRows(fileNames[f], buffer.Add);
                 int count = buffer.Count;
                 if (count > 0)
                     nonEmptyFiles++;
+                double[] doneScores = TryLoadCompletedScores(tryStreamCompletedScores, fileNames[f], count);
+                IReadOnlyList<double[]> rows = doneScores == null ? loadFileFeatures(fileNames[f]) : null;
                 var fScores = new double[count];
                 var fLabels = new bool[count];
                 var fEntryIds = new uint[count];
@@ -901,15 +929,22 @@ namespace pwiz.Osprey.FDR
                 for (int r = 0; r < count; r++)
                 {
                     // ComputeStreamedScore leaves featureBuf standardized, which contribAcc bins.
-                    double score = ComputeStreamedScore(
-                        avgWeights, avgBias, standardizer, featureBuf, rows, r, buffer.CoelutionSums[r], nFeatures);
+                    double score = doneScores != null
+                        ? doneScores[r]
+                        : ComputeStreamedScore(
+                            avgWeights, avgBias, standardizer, featureBuf, rows, r, buffer.CoelutionSums[r], nFeatures);
                     bool isDecoy = buffer.IsDecoys[r];
                     fScores[r] = score;
                     fLabels[r] = isDecoy;
                     fEntryIds[r] = buffer.EntryIds[r];
                     fPeptides[r] = buffer.Peptides[r];
                     streamingQ.Add(g1, score, buffer.EntryIds[r], isDecoy, buffer.Peptides[r]);
-                    contribAcc.Add(featureBuf, isDecoy);
+                    // featureBuf is filled by ComputeStreamedScore, so it holds nothing meaningful
+                    // for a resumed file. Feeding it would poison the feature-contribution report
+                    // with a stale or zeroed vector; omitting it makes the report cover the files
+                    // actually scored, which is the honest reading.
+                    if (doneScores == null)
+                        contribAcc.Add(featureBuf, isDecoy);
                     g1++;
                     scoreProgress.Report(g1);
                 }
@@ -950,10 +985,11 @@ namespace pwiz.Osprey.FDR
             using (var emitProgress = new ProgressReporter(string.Format(@"Assigning q-values to {0} entries", n), n))
             for (int f = 0; f < nFiles; f++)
             {
-                IReadOnlyList<double[]> rows = loadFileFeatures(fileNames[f]);
                 buffer.Clear();
                 streamFileRows(fileNames[f], buffer.Add);
                 int count = buffer.Count;
+                double[] doneScores2 = TryLoadCompletedScores(tryStreamCompletedScores, fileNames[f], count);
+                IReadOnlyList<double[]> rows = doneScores2 == null ? loadFileFeatures(fileNames[f]) : null;
                 var fScores = new double[count];
                 var fLabels = new bool[count];
                 var fEntryIds = new uint[count];
@@ -961,8 +997,10 @@ namespace pwiz.Osprey.FDR
                 var fCharges = new byte[count];
                 for (int r = 0; r < count; r++)
                 {
-                    fScores[r] = ComputeStreamedScore(
-                        avgWeights, avgBias, standardizer, featureBuf, rows, r, buffer.CoelutionSums[r], nFeatures);
+                    fScores[r] = doneScores2 != null
+                        ? doneScores2[r]
+                        : ComputeStreamedScore(
+                            avgWeights, avgBias, standardizer, featureBuf, rows, r, buffer.CoelutionSums[r], nFeatures);
                     fLabels[r] = buffer.IsDecoys[r];
                     fEntryIds[r] = buffer.EntryIds[r];
                     fPeptides[r] = buffer.Peptides[r];
