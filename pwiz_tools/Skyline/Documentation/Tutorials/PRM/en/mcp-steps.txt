@@ -1,0 +1,201 @@
+# PRM tutorial (en) -- SkylineMCP / AI Connector steps
+#
+# This is the English (en) step list. It lives next to en/index.html because the steps name
+# UI strings (form titles, menu paths, button/control labels) in English. Each localized
+# tutorial (ja/, zh-CHS/) needs its OWN mcp-steps.txt with those strings in that language.
+# The {DATA} files are NOT localized -- the same data drives every language.
+#
+# Each line is one operation: a verb name, then its arguments. '#' lines and blanks are ignored.
+#
+# Argument format:
+#   - formId and controlId arguments are wrapped in double quotes.
+#   - The VALUE argument of SetFormValue is the rest of the line after the controlId (verbatim,
+#     so it may contain spaces and double quotes -- needed for multi-file selection, see below).
+#
+# Verbs that map directly to IJsonToolService methods:
+#   InvokeMenuItem        "<menu path>"                     -> skyline_invoke_menu_item
+#   InvokeContextMenuItem "<graph formId>" "<menu path>"    -> skyline_invoke_context_menu_item
+#   ClickFormButton       "<formId>" "<button>"             -> skyline_click_form_button
+#   SetFormValue          "<formId>" "<controlId>" <value>  -> skyline_set_form_value
+#
+# Control / menu matching:
+#   - A button/control or a (context-)menu item is matched by its visible Text OR its control
+#     Name. Matching prefers an exact match, then a match after stripping non-alphanumeric
+#     symbols, and among equal matches a visible+enabled control -- so "Next" matches the
+#     "Next >" button and "Finish" the (visible) Finish button.
+#   - SetFormValue sets a TextBox's text; a CheckBox/RadioButton checked state ("true"/"false");
+#     or a ComboBox selection (by visible item text).
+#   - InvokeContextMenuItem builds a graph's right-click menu and walks it by path, the same way
+#     InvokeMenuItem walks the main menu. Items that are context-dependent (e.g. Show Library,
+#     Show Dot Product) only appear -- and so only match -- when the current selection makes them
+#     available, exactly as in the real UI.
+#   - Controls are matched by the VISIBLE TEXT a user sees, never by an internal control name. A text
+#     field with no caption is addressed by its adjacent Label (e.g. "Ion match tolerance" sets the box
+#     that label names); a control with no caption and no label is addressed by its type ("TreeView",
+#     "ListView"); a form's single grid/list/tree takes an empty controlId.
+#
+# Harness synchronization primitives (poll skyline_get_open_forms; NOT MCP methods):
+#   WaitForForm     "<formId>"   -- wait until that form/dialog is listed by GetOpenForms
+#   WaitForNoForm   "<formId>"   -- wait until it is gone
+# Needed because InvokeMenuItem / ClickFormButton return as soon as a dialog appears, so the
+# resulting form is usually not open yet on the next line. Page-to-page moves WITHIN the wizard
+# reuse the same formId, so there is no new form to wait for between consecutive Next clicks; the
+# dialog-watch makes each click return only after its synchronous work (library build, import).
+#
+# formIds are the stable "TypeName:Title" identifiers from GetOpenForms. The titles below are the
+# English UI strings.
+#
+# {DATA} is replaced by the PRM tutorial data directory: the 'Low Res' folder that contains
+# BSA_Protea_label_free_meth3.sky and the 'search' subfolder. Validated against the mzML download
+# (TargetedMSMSMzml_2.zip); the .raw download (TargetedMSMS_2.zip) works the same.
+#
+# Scope: this covers the first (low-resolution LTQ) half of the tutorial -- File > Open through the
+# completed import, then the "Reviewing the Data" steps that are connector-driveable. Validated end
+# to end against a live Skyline. The streamlined path configures full-scan inside the Import Peptide
+# Search wizard, so it does not need Settings > Transition Settings (tabs) or the method/report
+# export. The second (high-resolution Q-TOF) half (BSA_Agilent.sky in the 'TOF' folder) uses the
+# same verbs and is not captured here.
+
+# --- (Optional) Get past the Start Page -------------------------------------------------
+# Only needed when Skyline launches to the Start Page (Settings.Default.ShowStartupForm). A test
+# that disables the start page can skip these and start at File > Open. ClickFormButton works on
+# the tiles because ActionBoxControl is an IButtonControl whose Caption is its visible label.
+# WaitForForm     "StartPage:Start Page"
+# ClickFormButton "StartPage:Start Page" "Blank Document"
+# WaitForNoForm   "StartPage:Start Page"
+
+# --- Open the starting document ---
+InvokeMenuItem  "File > Open"
+WaitForForm     "FileDialog:Open"
+SetFormValue    "FileDialog:Open" "FileName" {DATA}\BSA_Protea_label_free_meth3.sky
+ClickFormButton "FileDialog:Open" "Open"
+WaitForNoForm   "FileDialog:Open"
+
+# --- File > Import > Peptide Search (the document is already saved, so no save prompt) ---
+InvokeMenuItem  "File > Import > Peptide Search"
+WaitForForm     "ImportPeptideSearchDlg:Import Peptide Search"
+
+# Spectral Library page: keep only spectra that identify document peptides, and pick the PRM
+# workflow (this gives the PRM full-scan defaults on the later page).
+SetFormValue    "ImportPeptideSearchDlg:Import Peptide Search" "Filter for document peptides" true
+SetFormValue    "ImportPeptideSearchDlg:Import Peptide Search" "PRM" true
+
+# --- Add both search-result files at once ---
+# Multi-select on the common (classic) Open dialog: navigate INTO the folder first, then set the
+# file name to the QUOTED BARE filenames separated by spaces. (Quoted FULL paths are rejected;
+# bare names in the current folder work.)
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Add Files"
+WaitForForm     "FileDialog:Add Input Files"
+SetFormValue    "FileDialog:Add Input Files" "FileName" {DATA}\search
+ClickFormButton "FileDialog:Add Input Files" "Open"
+SetFormValue    "FileDialog:Add Input Files" "FileName" "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml" "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
+ClickFormButton "FileDialog:Add Input Files" "Open"
+WaitForNoForm   "FileDialog:Add Input Files"
+# Both files are now in the grid. Their Score Type is "Percolator q-value" and the Score Threshold
+# defaults to 0.01 -- the tutorial's value -- so no SetFormValue is needed for the threshold.
+
+# --- Build the spectral library (Next) ---
+# Runs BiblioSpec, then advances. With "Filter for document peptides" on, a "Skyline" information
+# dialog lists peptides excluded for ambiguous matches and must be dismissed. (Data-dependent: with
+# no ambiguous matches this dialog does not appear -- skip the next three lines if so.)
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Next"
+WaitForForm     "MessageDlg:Skyline"
+ClickFormButton "MessageDlg:Skyline" "OK"
+WaitForNoForm   "MessageDlg:Skyline"
+
+# --- Extract Chromatograms page: Skyline found the two mzML/raw files. Advance. ---
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Next"
+
+# Skyline detects a common prefix/suffix on the long file names and offers to shorten them.
+WaitForForm     "ImportResultsNameDlg:Import Results"
+ClickFormButton "ImportResultsNameDlg:Import Results" "OK"
+WaitForNoForm   "ImportResultsNameDlg:Import Results"
+
+# --- Add Modifications page (no modifications to add for these peptides). Advance. ---
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Next"
+
+# --- Configure Transition Settings page (defaults are fine). Advance. ---
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Next"
+
+# --- Configure Full-Scan Settings page (PRM defaults from the workflow choice). Finish. ---
+# On the last page the Next button reads "Finish"; clicking it closes the wizard and starts the
+# chromatogram import. The dialog-watch waits through the "Importing Results" progress, so this
+# click returns only once the wizard has closed and import has begun.
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Finish"
+WaitForNoForm   "ImportPeptideSearchDlg:Import Peptide Search"
+# The document now has 2 replicates (20fmol, 80fmol) with extracted chromatograms.
+
+# --- Reviewing the Data ------------------------------------------------------------------
+# Main-menu steps (validated live):
+InvokeMenuItem  "View > Arrange Graphs > Tiled"
+InvokeMenuItem  "Edit > Collapse All > Precursors"
+InvokeMenuItem  "View > Auto-Zoom > Best Peak"
+InvokeMenuItem  "View > Peak Areas > Replicate Comparison"
+InvokeMenuItem  "View > Transitions > Products"
+
+# Graph right-click context menus (validated live). The chromatogram graphs are
+# "GraphChromatogram:<replicate>" (here 20fmol / 80fmol); the peak-area graph is
+# "GraphSummary:Peak Areas - Replicate Comparison".
+InvokeContextMenuItem "GraphChromatogram:20fmol" "Peptide ID Times > Matching"
+InvokeContextMenuItem "GraphSummary:Peak Areas - Replicate Comparison" "Normalized To > None"
+InvokeContextMenuItem "GraphSummary:Peak Areas - Replicate Comparison" "Transitions > All"
+InvokeContextMenuItem "GraphSummary:Peak Areas - Replicate Comparison" "Transitions > Split Graph"
+InvokeContextMenuItem "GraphSummary:Peak Areas - Replicate Comparison" "Transitions > Products"
+InvokeContextMenuItem "GraphSummary:Peak Areas - Replicate Comparison" "Normalized To > Total"
+# Selection-conditional items the tutorial also uses ("Show Dot Product > Labels", "Show Library")
+# appear only when a peptide with library data is selected. Selecting a specific target
+# (skyline_set_selection) is available but its element locators are not captured here.
+
+# --- Configuring a Skyline Document for PRM (the tutorial's manual path) -----------------
+# The streamlined wizard above configures full-scan for you. The tutorial also teaches the manual
+# path: open the document, set Transition Settings by hand, then add the precursor transitions with
+# the Targets-tree pick-list. These steps are connector-driveable (validated live through OK on
+# Transition Settings; the Pick Children popup is covered by PickChildrenConnectorTest).
+#
+# Settings > Transition Settings -- tabs are selected with ClickFormButton on the tab text, and the
+# combo boxes resolve from their adjacent labels (SetFormValue label -> next control in tab order).
+# InvokeMenuItem  "Settings > Transition Settings"
+# WaitForForm     "TransitionSettingsUI:Transition Settings"
+# ClickFormButton "TransitionSettingsUI:Transition Settings" "Full-Scan"
+# SetFormValue    "TransitionSettingsUI:Transition Settings" "Isotope peaks included" "Count"
+# SetFormValue    "TransitionSettingsUI:Transition Settings" "Precursor mass analyzer" "QIT"
+# SetFormValue    "TransitionSettingsUI:Transition Settings" "Acquisition method" "PRM"
+# # RT extraction window: the box sits in a flow panel between the labels "Use only scans within" and
+# # "minutes of MS/MS IDs"; the preceding label resolves to the box (label -> next editable field).
+# SetFormValue    "TransitionSettingsUI:Transition Settings" "Use only scans within" "2"
+# ClickFormButton "TransitionSettingsUI:Transition Settings" "Library"
+# # Ion match tolerance: the "Ion match tolerance" label resolves to the box it names.
+# # DISCREPANCY: the tutorial says enter 0.7, but current Skyline validates "<= 0.6" ("Method match
+# # tolerance m/z must be less than or equal to 0.6") and rejects 0.7 on OK. Use 0.6 (or update the
+# # tutorial). The dialog-watch surfaces the validation alert as the SetFormValue/OK error text.
+# SetFormValue    "TransitionSettingsUI:Transition Settings" "Ion match tolerance" "0.6"
+# ClickFormButton "TransitionSettingsUI:Transition Settings" "OK"
+# WaitForNoForm   "TransitionSettingsUI:Transition Settings"
+#
+# Add the precursor transitions per precursor via the Targets-tree pick-list ("Pick Children"). The
+# tree has no caption, so it is the form's single tree -- pass an EMPTY controlId.
+# InvokeMenuItem  "Edit > Expand All > Precursors"
+# # For each precursor node (path = 'Protein > Peptide > Precursor', using the live node texts). A
+# # tree path is split ONLY on '>', so a UniProt protein name keeps its '|' (e.g.
+# # 'sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [66, 75] > 582.3190++'). Each segment is matched exactly.
+# SetItemSelected       "SequenceTreeForm:Targets" "" "<protein> > <peptide> > <precursor>" true
+# InvokeContextMenuItem "SequenceTreeForm:Targets" "" "Pick Children"
+# WaitForForm           "PopupPickList:*"
+# SetItemChecked        "PopupPickList:*" "" "<transition label>" true
+# ClickFormButton       "PopupPickList:*" "OK"
+# WaitForNoForm         "PopupPickList:*"
+
+# --- Notes / known limitations found while validating against a live Skyline ---
+# 1. The native Save As / Save dialog IS driveable (modern IFileDialog: file name set via
+#    WM_SETTEXT on its Edit, accepted via the Save button). It lists as "FileDialog:Save As".
+#    This tutorial opens an already-saved document, so it is not exercised here.
+# 2. Now supported (were prior gaps): selecting a tabbed settings dialog's tab -- ClickFormButton on
+#    the tab's text; and checking a transition in the Targets-tree pop-up pick-list -- select the
+#    node (SetItemSelected with an empty controlId, the form's single tree), open it with
+#    InvokeContextMenuItem "" "Pick Children", toggle items with SetItemChecked, commit with
+#    ClickFormButton "OK" (the green check). See the "Configuring a Skyline Document for PRM" section
+#    below. Still NOT supported:
+#    GetFormState (enumerate a form's controls + labels), which is what would let the connector
+#    DISCOVER the right item label/name per form instead of relying on prior knowledge of names.
+# 3. RadioButton selection (e.g. the "PRM" workflow, the "Retention time filtering" options) is
+#    done with SetFormValue "<formId>" "<radio label>" true.

@@ -104,6 +104,16 @@ PWIZ_API_DECL bool running_on_wine();
 PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, bool closeMemoryMappedSections = false) noexcept(true);
 
 
+/// Always exported. When PWIZ_HAS_RESTART_MANAGER is defined (set by the Jamfile
+/// under the msvc toolset, where rstrtmgr.lib is linked), the body uses the Restart
+/// Manager API to identify processes holding handles on the given path; returns a
+/// comma-separated "appname (PID N)" listing, or a sentinel string describing the
+/// failure mode (RmStartSession / RmRegisterResources / RmGetList failure with rc,
+/// etc.). On any other build the body returns a stub sentinel string -- the symbol
+/// itself is always linkable so callers do not need to conditionally compile.
+PWIZ_API_DECL std::string find_locking_processes(const std::string& path);
+
+
 /// adds utf8_codecvt_facet to boost::filesystem::path's default behavior so it works with UTF-8 std::strings;
 /// uses a singleton so the imbuement is only done once
 PWIZ_API_DECL void enable_utf8_path_operations();

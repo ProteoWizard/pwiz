@@ -1866,6 +1866,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reorder results replicates using a UTF-8 text file containing one existing replicate name per line. Listed replicates are placed first; unlisted replicates retain their relative order..
+        /// </summary>
+        public static string _reorder_replicates {
+            get {
+                return ResourceManager.GetString("_reorder_replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add reports from a saved report template file to the running program..
         /// </summary>
         public static string _report_add {
@@ -1934,6 +1943,15 @@ namespace pwiz.Skyline {
         public static string _save_as {
             get {
                 return ResourceManager.GetString("_save_as", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Sets how transitions are written when the document is saved in this run: &apos;never&apos; writes individual transition elements, &apos;always&apos; writes a compact base64 blob, and &apos;largefilesonly&apos; uses the compact blob only for large documents. Applies only to this invocation and overrides the CompactFormatOption setting persisted in user.config; when this argument is omitted, that persisted setting (which defaults to &apos;largefilesonly&apos;) is used..
+        /// </summary>
+        public static string _save_compact_format {
+            get {
+                return ResourceManager.GetString("_save_compact_format", resourceCulture);
             }
         }
 
@@ -2564,11 +2582,11 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Removing results replicates.
+        ///   Looks up a localized string similar to Managing results replicates.
         /// </summary>
-        public static string CommandArgs_GROUP_REMOVE_Removing_results_replicates {
+        public static string CommandArgs_GROUP_MANAGE_REPLICATES_Managing_results_replicates {
             get {
-                return ResourceManager.GetString("CommandArgs_GROUP_REMOVE_Removing_results_replicates", resourceCulture);
+                return ResourceManager.GetString("CommandArgs_GROUP_MANAGE_REPLICATES_Managing_results_replicates", resourceCulture);
             }
         }
         

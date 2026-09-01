@@ -33,6 +33,9 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline;
+using pwiz.Common.CommandLine;
+using Argument = pwiz.Common.CommandLine.Argument<pwiz.Skyline.CommandArgs>;
+using ArgumentGroup = pwiz.Common.CommandLine.ArgumentGroup<pwiz.Skyline.CommandArgs>;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -76,6 +79,11 @@ namespace pwiz.SkylineTestData
             if (args.Contains(a => a.StartsWith("--out=")))
                 args = args.Append("--overwrite").ToArray();
             return AbstractUnitTestEx.RunCommand(args);
+        }
+
+        private static string RunCommand(bool expectSuccess, params string[] args)
+        {
+            return AbstractUnitTestEx.RunCommand(expectSuccess, args);
         }
 
         [TestMethod]
@@ -216,6 +224,118 @@ namespace pwiz.SkylineTestData
             AssertEx.Contains(output, allFiles);
 
             Assert.IsNull(doc.Settings.MeasuredResults);
+        }
+
+        [TestMethod]
+        public void ConsoleReorderReplicatesTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            var docPath = TestFilesDir.GetTestPath("Remove_Test.sky");
+            var outPath = TestFilesDir.GetTestPath("Reorder_Test_Out.sky");
+            var orderPath = TestFilesDir.GetTestPath("replicate-order.txt");
+            Dictionary<string, (string[] FilePaths, float[] PeakAreas)> originalValues;
+            string[] originalNames;
+            using (var documentContainer = new ResultsMemoryDocumentContainer(null, docPath))
+            {
+                var originalDocument = ResultsUtil.DeserializeDocument(docPath);
+                documentContainer.SetDocument(originalDocument, null, true);
+                originalValues = GetReplicateValues(documentContainer.Document);
+                originalNames = documentContainer.Document.MeasuredResults.Chromatograms
+                    .Select(chrom => chrom.Name).ToArray();
+            }
+
+            var requestedNames = new[] { originalNames[2], originalNames[0] };
+            File.WriteAllLines(orderPath, new[] { string.Empty, new string(' ', 2) + requestedNames[0] + new string(' ', 2), requestedNames[1] });
+
+            RunCommand(CommandArgs.ARG_IN + docPath,
+                CommandArgs.ARG_REORDER_REPLICATES + orderPath,
+                CommandArgs.ARG_OUT + outPath);
+
+            var reorderedDocument = ResultsUtil.DeserializeDocument(outPath);
+            CollectionAssert.AreEqual(requestedNames.Concat(originalNames.Skip(1).Where(name => name != requestedNames[0])).ToArray(),
+                reorderedDocument.MeasuredResults.Chromatograms.Select(chrom => chrom.Name).ToArray());
+            CollectionAssert.AreEquivalent(originalNames, reorderedDocument.MeasuredResults.Chromatograms.Select(chrom => chrom.Name).ToArray());
+            var reorderedValues = GetReplicateValues(reorderedDocument);
+            foreach (var replicateName in originalNames)
+            {
+                CollectionAssert.AreEqual(originalValues[replicateName].FilePaths, reorderedValues[replicateName].FilePaths);
+                CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas, reorderedValues[replicateName].PeakAreas);
+            }
+
+            var reverseNames = originalNames.Reverse().ToArray();
+            File.WriteAllLines(orderPath, reverseNames);
+            RunCommand(CommandArgs.ARG_IN + docPath, CommandArgs.ARG_REORDER_REPLICATES + orderPath,
+                CommandArgs.ARG_OUT + outPath);
+            reorderedDocument = ResultsUtil.DeserializeDocument(outPath);
+            CollectionAssert.AreEqual(reverseNames,
+                reorderedDocument.MeasuredResults.Chromatograms.Select(chrom => chrom.Name).ToArray());
+            reorderedValues = GetReplicateValues(reorderedDocument);
+            foreach (var replicateName in originalNames)
+            {
+                CollectionAssert.AreEqual(originalValues[replicateName].FilePaths, reorderedValues[replicateName].FilePaths);
+                CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas, reorderedValues[replicateName].PeakAreas);
+            }
+
+            var savedOutput = File.ReadAllBytes(outPath);
+            var missingPath = orderPath + ".missing";
+            var output = RunCommand(false, CommandArgs.ARG_IN + docPath,
+                CommandArgs.ARG_REORDER_REPLICATES + missingPath, CommandArgs.ARG_OUT + outPath,
+                CommandArgs.ARG_OVERWRITE.ArgumentText);
+            CheckRunCommandOutputContains(string.Format(
+                SkylineResources.CommandLine_ReorderReplicates_Error__Could_not_read_replicate_order_file__0____1_, missingPath, string.Empty), output);
+            CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));
+
+            File.WriteAllLines(orderPath, new[] { string.Empty, new string(' ', 3) });
+            output = RunCommand(false, CommandArgs.ARG_IN + docPath,
+                CommandArgs.ARG_REORDER_REPLICATES + orderPath, CommandArgs.ARG_OUT + outPath,
+                CommandArgs.ARG_OVERWRITE.ArgumentText);
+            CheckRunCommandOutputContains(string.Format(
+                SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate_order_file_does_not_contain_any_replicate_names_, orderPath), output);
+            CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));
+
+            File.WriteAllLines(orderPath, new[] { originalNames[0], originalNames[0] });
+            output = RunCommand(false, CommandArgs.ARG_IN + docPath,
+                CommandArgs.ARG_REORDER_REPLICATES + orderPath, CommandArgs.ARG_OUT + outPath,
+                CommandArgs.ARG_OVERWRITE.ArgumentText);
+            CheckRunCommandOutputContains(string.Format(
+                SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate_name__0__appears_more_than_once_in_the_order_file_,
+                originalNames[0], orderPath), output);
+            CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));
+
+            var unknownName = originalNames[0].ToLowerInvariant();
+            Assert.AreNotEqual(originalNames[0], unknownName);
+            File.WriteAllLines(orderPath, new[] { unknownName });
+            output = RunCommand(false, CommandArgs.ARG_IN + docPath,
+                CommandArgs.ARG_REORDER_REPLICATES + orderPath, CommandArgs.ARG_OUT + outPath,
+                CommandArgs.ARG_OVERWRITE.ArgumentText);
+            CheckRunCommandOutputContains(string.Format(
+                SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate__0__was_not_found_in_the_document_,
+                unknownName, orderPath), output);
+            CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));
+
+            File.WriteAllLines(orderPath, new[] { originalNames[0] });
+            var documentWithoutResults = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            output = RunCommand(false, CommandArgs.ARG_IN + documentWithoutResults,
+                CommandArgs.ARG_REORDER_REPLICATES + orderPath, CommandArgs.ARG_OUT + outPath,
+                CommandArgs.ARG_OVERWRITE.ArgumentText);
+            CheckRunCommandOutputContains(
+                SkylineResources.CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replicates_, output);
+            CollectionAssert.AreEqual(savedOutput, File.ReadAllBytes(outPath));
+        }
+
+        private static Dictionary<string, (string[] FilePaths, float[] PeakAreas)> GetReplicateValues(SrmDocument document)
+        {
+            return document.MeasuredResults.Chromatograms.Select((chromatogramSet, replicateIndex) =>
+                new
+                {
+                    chromatogramSet.Name,
+                    FilePaths = chromatogramSet.MSDataFilePaths.Select(path => path.ToString()).ToArray(),
+                    PeakAreas = document.MoleculeTransitionGroups.SelectMany(group => group.Transitions)
+                        .SelectMany(transition => transition.GetSafeChromInfo(replicateIndex))
+                        .Select(chromInfo => chromInfo.Area)
+                        .ToArray()
+                }).ToDictionary(value => value.Name,
+                value => (value.FilePaths, value.PeakAreas));
         }
 
         [TestMethod]
@@ -829,7 +949,7 @@ namespace pwiz.SkylineTestData
                     Resources.PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_, printErrors);
 
                 RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-mod-variable=X" },
-                    new CommandArgs.ValueInvalidBoolException(CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE, "X").Message, printErrors);
+                    new ValueInvalidBoolException(CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE, "X").Message, printErrors);
 
                 // Variable failure on loss-only modification
                 RunCommandAndValidateError(new[] { "--pep-add-mod=Water Loss (D, E, S, T)", "--pep-add-mod-variable=true" },
@@ -1234,7 +1354,7 @@ namespace pwiz.SkylineTestData
             output = RunCommand("--in=" + docPath,
                                        "--decoys-add=" + badDecoyMethod);
             var arg = CommandArgs.ARG_DECOYS_ADD;
-            AssertEx.Contains(output, new CommandArgs.ValueInvalidException(arg, badDecoyMethod, arg.Values).Message);
+            AssertEx.Contains(output, new ValueInvalidException(arg, badDecoyMethod, arg.Values).Message);
 
             output = RunCommand("--in=" + outPath,
                                        "--decoys-add");
@@ -1564,7 +1684,7 @@ namespace pwiz.SkylineTestData
             };
             string output = RunCommand(args);
 
-            AssertEx.Contains(output, new CommandArgs.ValueInvalidIntException(CommandArgs.ARG_EXP_PRIMARY_COUNT, "x").Message);
+            AssertEx.Contains(output, new ValueInvalidIntException(CommandArgs.ARG_EXP_PRIMARY_COUNT, "x").Message);
             args[args.Length - 1] = "--exp-primary-count=1";
             output = RunCommand(args);
 
@@ -1824,7 +1944,7 @@ namespace pwiz.SkylineTestData
 
             //Test value lists for failing values
             const string bogusValue = "BOGUS";
-            CommandArgs.Argument[] valueListArgs = 
+            Argument[] valueListArgs = 
             {
                 CommandArgs.ARG_REPORT_FORMAT,
                 CommandArgs.ARG_EXP_STRATEGY,
@@ -1836,7 +1956,7 @@ namespace pwiz.SkylineTestData
             {
                 args[3] = valueListArg.ArgumentText + "=" + bogusValue;
                 output = RunCommand(args);
-                AssertEx.Contains(output, new CommandArgs.ValueInvalidException(valueListArg, bogusValue, valueListArg.Values).Message);
+                AssertEx.Contains(output, new ValueInvalidException(valueListArg, bogusValue, valueListArg.Values).Message);
             }
 
             // Transition list, isolation list, and method export
@@ -1862,7 +1982,7 @@ namespace pwiz.SkylineTestData
                 TextUtil.LineSeparate(ExportInstrumentType.METHOD_TYPES),
                 SkylineResources.CommandArgs_ParseArgsInternal_No_method_will_be_exported_);
 
-            CommandArgs.Argument[] valueIntArguments =
+            Argument[] valueIntArguments =
             {
                 CommandArgs.ARG_EXP_MAX_TRANS,
                 CommandArgs.ARG_EXP_DWELL_TIME
@@ -1871,10 +1991,10 @@ namespace pwiz.SkylineTestData
             {
                 args[3] = valueIntArg.ArgumentText + "=" + bogusValue;
                 output = RunCommand(args);
-                AssertEx.Contains(output, new CommandArgs.ValueInvalidIntException(valueIntArg, bogusValue).Message);
+                AssertEx.Contains(output, new ValueInvalidIntException(valueIntArg, bogusValue).Message);
             }
 
-            CommandArgs.Argument[] valueDoubleArguments =
+            Argument[] valueDoubleArguments =
             {
                 CommandArgs.ARG_EXP_RUN_LENGTH,
                 CommandArgs.ARG_IMPORT_LOCKMASS_POSITIVE,
@@ -1885,16 +2005,16 @@ namespace pwiz.SkylineTestData
             {
                 args[3] = valueDoubleArg.ArgumentText + "=" + bogusValue;
                 output = RunCommand(args);
-                AssertEx.Contains(output, new CommandArgs.ValueInvalidDoubleException(valueDoubleArg, bogusValue).Message);
+                AssertEx.Contains(output, new ValueInvalidDoubleException(valueDoubleArg, bogusValue).Message);
             }
             const int bigValue = 100000000;
             args[3] = "--exp-dwell-time=" + bigValue;
             output = RunCommand(args);
-            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_EXP_DWELL_TIME, bigValue,
+            AssertEx.Contains(output, new ValueOutOfRangeIntException(CommandArgs.ARG_EXP_DWELL_TIME, bigValue,
                 AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX).Message);
             args[3] = "--exp-run-length=" + bigValue;
             output = RunCommand(args);
-            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeIntException(CommandArgs.ARG_EXP_RUN_LENGTH, bigValue,
+            AssertEx.Contains(output, new ValueOutOfRangeIntException(CommandArgs.ARG_EXP_RUN_LENGTH, bigValue,
                 AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX).Message);
 
 
@@ -3811,7 +3931,7 @@ namespace pwiz.SkylineTestData
 
         private static void CheckUsageOutput(string output)
         {
-            foreach (CommandArgs.ArgumentGroup group in CommandArgs.UsageBlocks.Where(b => b is CommandArgs.ArgumentGroup))
+            foreach (ArgumentGroup group in CommandArgs.UsageBlocks.Where(b => b is ArgumentGroup))
             {
                 if (group.IncludeInUsage)
                 {
@@ -3969,7 +4089,7 @@ namespace pwiz.SkylineTestData
             // --new without a path should fail in CLI mode.
             // The DocArgument validation catches it as "no document specified".
             string output = AbstractUnitTestEx.RunCommand(false, CommandArgs.ARG_NEW);
-            AssertEx.Contains(output, new CommandArgs.ValueMissingException(CommandArgs.ARG_NEW).Message);
+            AssertEx.Contains(output, new ValueMissingException(CommandArgs.ARG_NEW).Message);
         }
 
         [TestMethod]

@@ -107,6 +107,19 @@ print(f"Changed files ({len(changed_files)}):\n", changed_files_str)
 
 # substitute "release" for specific skyline_##.# versions
 base_branch = re.sub("(Skyline/)?skyline_.*", "release", base_branch)
+
+# A stacked PR is based on a work branch rather than master, but it is ultimately headed for
+# master and should get master's validations. Without this, base_branch matches none of
+# possible_base_branches, so the promotion loop below never flattens any target group - every
+# group in this config is nested under "master" (and sometimes "release") - and the trigger
+# loop then skips them all as isBaseBranchDict. The result is a PR whose only check is this
+# script reporting that it triggered nothing.
+#
+# Only target promotion is affected. The change list is still computed as base...FETCH_HEAD
+# against the REAL base ref, so a stacked PR still sees only its own commits' files.
+if base_branch.startswith("Skyline/work/"):
+    base_branch = "master"
+
 print("Base branch: '%s'" % base_branch)
 
 possible_base_branches = ["master", "release"]
@@ -133,11 +146,17 @@ else:
         triggered = False # only trigger once per path
         for tuple in matchPaths:
             if re.match(tuple[0], path):
+                # First match wins: stop here even if tuple[1] is the empty-dict
+                # sentinel (e.g. the ai/ or smartBuildTrigger.py rules).  Setting
+                # `triggered` inside the inner `for target` loop misses that case
+                # because the inner loop has zero iterations on an empty dict,
+                # so paths fell through to the catch-all `pwiz_tools/.*` rule
+                # and fired everything (see PR #4277 smart-trigger run).
+                triggered = True
                 for target in tuple[1]:
                     isBaseBranchDict = isinstance(tuple[1][target], dict) # these targets were promoted into top-level above
                     if not isBaseBranchDict and target not in triggers:
                         triggers[target] = path
-                    triggered = True
             if triggered:
                 break
     

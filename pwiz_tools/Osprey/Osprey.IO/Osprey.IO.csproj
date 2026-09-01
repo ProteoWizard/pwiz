@@ -1,0 +1,96 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.Osprey.IO</RootNamespace>
+    <AssemblyName>Osprey.IO</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Osprey.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ReSharper disable once VulnerablePackage -->
+    <PackageReference Include="Parquet.Net" Version="4.25.0" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <!-- net472 needs System.Memory explicitly; net8 has it built in. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Vendor raw reading (issue #4496) is an OPT-IN build capability, off by
+       default. Build with /p:OspreyVendorReader=true to include it.
+       Off  : Osprey.sln builds anywhere, with no ProteoWizard dependency. This
+              is what the unit-test CI config and a plain developer clone use.
+       On   : requires pwiz_tools/Shared/ProteowizardWrapper/obj/x64 to have been
+              staged by a bjam build (bs.bat, or the pwiz_data_cli + vendor
+              install targets). Used by the Perf/Regression config, which can
+              afford that build and runs the raw-vs-mzML parity test.
+       Opt-in by property rather than by probing for the DLL on disk: a missing
+       staged assembly is then a hard build error in the configuration that asked
+       for the capability, instead of silently producing an Osprey that cannot
+       read raw files - which would vary by machine and quietly skip the very
+       test that validates the feature. -->
+  <PropertyGroup>
+    <OspreyVendorReader Condition="'$(OspreyVendorReader)' == ''">false</OspreyVendorReader>
+    <!-- pwiz_data_cli is net472-only, so the capability can never be on for
+         net8.0 no matter what the property says. -->
+    <OspreyVendorReaderEnabled>false</OspreyVendorReaderEnabled>
+    <OspreyVendorReaderEnabled
+        Condition="'$(TargetFramework)' == 'net472' And '$(OspreyVendorReader)' == 'true'">true</OspreyVendorReaderEnabled>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(OspreyVendorReaderEnabled)' == 'true'">
+    <DefineConstants>$(DefineConstants);OSPREY_VENDOR_READER</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Assembly references to the ALREADY-BUILT x64 wrapper, not ProjectReferences.
+       ProteowizardWrapper resolves pwiz_data_cli and the vendor assemblies out of
+       obj\$(Platform)\, and only obj\x64\ is ever staged, so it must be built as
+       x64. An SDK-style project will not pass Platform across a ProjectReference
+       to an old-style one - AdditionalProperties, SetPlatform and
+       EnableDynamicPlatformResolution were all tried and none take effect - and
+       putting it in Osprey.sln to get the mapping would build it even when this
+       capability is off, which is what the default build must avoid. Referencing
+       the built output sidesteps the negotiation entirely and follows the
+       existing precedent in pwiz_tools/Skyline/BullseyeSharp/BullseyeSharp.csproj,
+       which references pwiz_data_cli by HintPath for the same reason.
+       The bjam build that stages obj\x64 also produces these. -->
+  <ItemGroup Condition="'$(OspreyVendorReaderEnabled)' == 'true'">
+    <Reference Include="ProteowizardWrapper">
+      <HintPath>..\..\Shared\ProteowizardWrapper\bin\x64\$(Configuration)\ProteowizardWrapper.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="pwiz.CommonUtil">
+      <HintPath>..\..\Shared\CommonUtil\bin\x64\$(Configuration)\pwiz.CommonUtil.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- The vendor reader compiles only where ProteoWizard is available.
+       SpectrumFileReader (the by-extension dispatcher) always builds, and
+       raises a clear error for a vendor path when the capability is absent. -->
+  <ItemGroup Condition="'$(OspreyVendorReaderEnabled)' != 'true'">
+    <Compile Remove="VendorRawReader.cs" />
+  </ItemGroup>
+
+  <!-- DotNetZip (Ionic.Zlib) for stock-zlib-compatible deflate output.
+       Matches Skyline's BlibData writer (Util/Extensions/UtilDB.Compress)
+       so Osprey .blib peak blobs are byte-identical to Skyline's
+       and to Rust osprey's flate2 output. .NET's built-in DeflateStream
+       produces a 4-byte-shorter non-stock-zlib variant which would split
+       cross-impl byte parity. -->
+  <ItemGroup>
+    <Reference Include="DotNetZip">
+      <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

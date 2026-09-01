@@ -44,6 +44,9 @@
     <Setting Name="SequenceTreeExpandPeptides" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="SpectrumSequenceRulersEnabled" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="ActiveDirectory" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
@@ -947,9 +950,12 @@
     <Setting Name="MaxChromatogramGraphs" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">100</Value>
     </Setting>
-	<Setting Name="MaxGridRowCount" Type="System.Int32" Scope="User">
+    <Setting Name="MaxGridRowCount" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">10000000</Value>
-	</Setting>
+    </Setting>
+    <Setting Name="WarnOnPresetChange" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="AllowMcpScreenCapture" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>

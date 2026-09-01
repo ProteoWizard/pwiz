@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Model
             public string ValueToString(IFormatProvider provider = null)
             {
                 if (Value is double d)
-                    return d.ToString(@"F", provider);
+                    return d.ToString(@"G", provider);
                 return Value.ToString();
             }
 

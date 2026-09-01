@@ -444,6 +444,57 @@ class install-target-class : basic-target
             }
         }
 
+        # Under <install-dependencies>on the recursively-collected graph can
+        # contain a raw *source* file whose basename matches the *generated*
+        # copy of the same name -- e.g. a vendor .dll fed to a 'make' copy, or a
+        # <manifest-dependency> DLL referenced only so its version can be read.
+        # Staging both to one location is a fatal "Name clash ... none/none".
+        # The generated artifact is the one meant to be installed, so drop the
+        # raw source (a target with no creating action) that it shadows.
+        #
+        # This deliberately resolves -- rather than errors on -- that specific
+        # collision, but only for a *flat* install: when <install-source-root>
+        # is set the destination preserves sub-directories, so a basename is no
+        # longer the full destination and two same-basename files in different
+        # sub-dirs are distinct (must not be collapsed). Skipping source-root
+        # installs keeps "basename == destination", so this fires only where the
+        # copies would truly land on one path and b2 would otherwise abort.
+        # Every generated target is kept, so a genuine two-generated (or two
+        # raw-source) same-name conflict still reaches the clash check.
+        if [ $(property-set).get <install-dependencies> ] = "on"
+            && ! [ $(property-set).get <install-source-root> ]
+        {
+            # Basenames produced by a generated (action-bearing) target.
+            local generated-dests ;
+            for local r in $(result)
+            {
+                if [ $(r).action ]
+                {
+                    local rn = [ $(r).name ] ;
+                    generated-dests += $(rn:BS) ;
+                }
+            }
+            local deduped ;
+            for local r in $(result)
+            {
+                if [ $(r).action ]
+                {
+                    deduped += $(r) ;  # always keep generated artifacts
+                }
+                else
+                {
+                    local rn = [ $(r).name ] ;
+                    if ! $(rn:BS) in $(generated-dests)
+                    {
+                        deduped += $(r) ;  # raw source not shadowed by a generated copy
+                    }
+                    # else: raw source shadowed by a generated copy of the same
+                    # name -- drop it (it would otherwise clash on install).
+                }
+            }
+            result = $(deduped) ;
+        }
+
         return $(result) ;
     }
 

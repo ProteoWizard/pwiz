@@ -70,7 +70,6 @@ namespace pwiz.Skyline.SettingsUI
                     if (Equals(Combo.Items[i].ToString(), selectedItemLast))
                         Combo.SelectedIndex = i;
                 }
-                // If nothing was added, add a blank to avoid starting with "Add..." selected.
                 if (Combo.Items.Count == 0)
                     Combo.Items.Add(string.Empty);
                 if (IsVisibleEditting)
@@ -240,7 +239,7 @@ namespace pwiz.Skyline.SettingsUI
                     // If default items were excluded from editing,
                     // then make sure they are preserved as the first items.
                     List<TItem> tmpList = new List<TItem>();
-                    int countExclude = List.ExcludeDefaults;
+                    int countExclude = Math.Min(List.ExcludeDefaults, List.Count);
                     for (int i = 0; i < countExclude; i++)
                         tmpList.Add(List[i]);
                     List.Clear();

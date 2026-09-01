@@ -700,6 +700,7 @@ namespace pwiz.Skyline.Controls.Databinding
             
             // Marker types for properties with generic types (like string, bool)
             { typeof(SurrogateStandardName), typeof(SurrogateStandardDataGridViewColumn) },
+            { typeof(SpectrumFilterColumnType), typeof(SpectrumFilterDataGridViewColumn) },
             { typeof(AnnotationPropertyDescriptor.TrueFalseAnnotation), typeof(DataGridViewCheckBoxColumn) },
             { typeof(AnnotationPropertyDescriptor.ValueListAnnotation), typeof(AnnotationValueListDataGridViewColumn) }
         };

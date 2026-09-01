@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
@@ -43,6 +44,7 @@ namespace pwiz.Common.GUI
         private readonly int _originalMessageHeight;
         private string _message;
         private string _detailMessage;
+        private Exception _exception;
 
         public CommonAlertDlg() : this(@"Alert dialog for Forms designer")
         {
@@ -124,8 +126,10 @@ namespace pwiz.Common.GUI
 
         public Exception Exception
         {
+            get { return _exception; }
             set
             {
+                _exception = value;
                 if (null == value)
                 {
                     DetailMessage = null;
@@ -466,6 +470,16 @@ namespace pwiz.Common.GUI
 
             if (TestMode && !PauseMode && !Debugger.IsAttached)
             {
+                // Never display an earlier unattended-dialog failure. Showing it starts a second
+                // watchdog over text nobody is going to dismiss either, and that second timeout
+                // escapes through a reentrant WndProc where WinForms cannot route it. Rethrow so
+                // the failure reaches the test harness naming the dialog it was really about.
+                // See DialogTimeoutException.
+                if (_exception is DialogTimeoutException previousTimeout)
+                {
+                    ExceptionDispatchInfo.Capture(previousTimeout).Throw();
+                }
+
                 bool timeout = false;
                 var timeoutTimer = new Timer { Interval = TIMEOUT_SECONDS * 1000 };
                 timeoutTimer.Tick += (sender, args) =>
@@ -482,11 +496,23 @@ namespace pwiz.Common.GUI
                 var result = base.ShowDialog(parent);
                 timeoutTimer.Stop();
                 if (timeout)
-                    throw new TimeoutException(
+                {
+                    var timedOut = new DialogTimeoutException(
                         string.Format(@"{0} not closed for {1} seconds. Message = {2}",
                             GetType(),
                             TIMEOUT_SECONDS,
                             message));
+
+                    // Record the failure BEFORE throwing it. The throw unwinds into the WndProc of
+                    // whatever showed this dialog, and WinForms catching an exception inside a
+                    // reentrant WndProc bypasses the Application.ThreadException handler and pops its
+                    // own ThreadExceptionDialog. The harness then reports that as a hang, burying the
+                    // only useful fact - which dialog went unanswered, and what it said. Reported
+                    // here, this is the first exception the harness holds, so the test fails with
+                    // that message no matter what becomes of the throw.
+                    CommonActionUtil.ExceptionReporter?.Invoke(timedOut);
+                    throw timedOut;
+                }
                 return result;
             }
 
@@ -494,5 +520,17 @@ namespace pwiz.Common.GUI
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Thrown when a functional test leaves an alert dialog unattended past its timeout. The
+    /// distinct type is what lets <see cref="CommonAlertDlg.ShowWithTimeout"/> rethrow it rather
+    /// than display it in a dialog that would time out in turn.
+    /// </summary>
+    public class DialogTimeoutException : TimeoutException
+    {
+        public DialogTimeoutException(string message) : base(message)
+        {
+        }
     }
 }

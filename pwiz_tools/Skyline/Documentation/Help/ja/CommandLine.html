@@ -51,6 +51,7 @@ td {
 <tr><td><nobr>--save-settings</nobr></td><td>グローバル環境の設定変更が（追加されたレポート、ライブラリ、酵素など）がプログラム設定ファイルに保存されます。</td></tr>
 <tr><td><nobr>--out</nobr>=path/to/file（ファイル）.sky</td><td>指定されたファイルに書き込まれること以外は、保存と同じです。</td></tr>
 <tr><td><nobr>--save-as</nobr>=path/to/file（ファイル）.sky</td><td>Synonym for <nobr>--out</nobr>. Save to the specified file.</td></tr>
+<tr><td><nobr>--save-compact-format</nobr>=&lt;never | largefilesonly | always&gt;</td><td>Sets how transitions are written when the document is saved in this run: &#39;never&#39; writes individual transition elements, &#39;always&#39; writes a compact base64 blob, and &#39;largefilesonly&#39; uses the compact blob only for large documents. Applies only to this invocation and overrides the CompactFormatOption setting persisted in user.config; when this argument is omitted, that persisted setting (which defaults to &#39;largefilesonly&#39;) is used.</td></tr>
 <tr><td><nobr>--new</nobr>[=path/to/file（ファイル）.sky]</td><td>現在のSkyline設定を使用して新規ドキュメントを作成します。</td></tr>
 <tr><td><nobr>--overwrite</nobr></td><td><nobr>--newで指定されたファイルパスが既に存在する場合に</nobr>、エラーとなる代わりにファイルパスを上書きします。</td></tr>
 <tr><td><nobr>--discard-changes</nobr></td><td>Allows <nobr>--new</nobr> or <nobr>--in</nobr> to proceed when the current document has unsaved changes. Without this flag, the command will fail with an error if there are unsaved changes.</td></tr>
@@ -97,10 +98,11 @@ td {
 <tr><td><nobr>--reintegrate-overwrite-peaks</nobr></td><td>手動で積分された既存のピークは、再積分モデルで選択されたピークによって上書きされます。（必要なのは、<nobr>--reintegrate-model-nameです</nobr>。）</td></tr>
 <tr><td><nobr>--reintegrate-exclude-feature</nobr>=<br/>&lt;フィーチャー名&gt;</td><td>モデルから名前別で特定のフィーチャースコアを除外するのに使用します。名前はユーザーインターフェイスで見つけることができます。この引数は複数フィーチャーを除外するため複数回使用することができます。</td></tr>
 </table>
-<div class="RowType">結果の繰り返し測定を削除中</div>
+<div class="RowType">Managing results replicates</div>
 <table>
 <tr><td><nobr>--remove-before</nobr>=&lt;日付&gt;</td><td>指定された日付以前に取得時間のある、開いているドキュメントからすべての結果を削除します。</td></tr>
 <tr><td><nobr>--remove-all</nobr></td><td>開いているドキュメントからすべての結果を削除します。</td></tr>
+<tr><td><nobr>--reorder-replicates</nobr>=path/to/file（ファイル）</td><td>Reorder results replicates using a <nobr>UTF-8</nobr> text file containing one existing replicate name per line. Listed replicates are placed first; unlisted replicates retain their relative order.</td></tr>
 </table>
 <div class="RowType">結果ファイルサイズを最小にする</div>
 <table>
@@ -229,8 +231,8 @@ td {
 <tr><td><nobr>--report-file</nobr>=path/to/file（ファイル）.csv</td><td>レポートのエクスポート先のパスです。<nobr>--report-nameが指定されている場合</nobr>、必要です。</td></tr>
 <tr><td><nobr>--report-add</nobr>=path/to/file（ファイル）.skyr</td><td>保存済みのレポートテンプレートファイルからレポートを実行中のプログラムに追加します。</td></tr>
 <tr><td><nobr>--report-conflict-resolution</nobr>=<br/>&lt;overwrite | skip&gt;</td><td><nobr>--report-addを使用する際</nobr>、レポート名の重複を解決する方法を、上書きするか重複をスキップするかのいずれかで指定します。（デフォルトは、重複のエラーメッセージを出力することです。）</td></tr>
-<tr><td><nobr>--report-format</nobr>=&lt;csv | tsv&gt;</td><td>カンマ区切り（地域に応じてセミコロン区切り）のレポート用CSVか、タブ区切りのレポート用TSVです（デフォルトはCSV）。</td></tr>
-<tr><td><nobr>--report-invariant</nobr></td><td>[インバリアント]（特定の言語や国・地域に依存しない）の言語設定でレポートをエクスポートします。米国英語の番号書式とスペースなしのヘッダーテキストを用いており、R統計解析プログラミング環境での使用に理想的です。</td></tr>
+<tr><td><nobr>--report-format</nobr>=<br/>&lt;csv | tsv | parquet&gt;</td><td>カンマ区切り（地域に応じてセミコロン区切り）のレポート用CSVか、タブ区切りのレポート用TSVです（デフォルトはCSV）。</td></tr>
+<tr><td><nobr>--report-invariant</nobr>[=True&nbsp;または&nbsp;False]</td><td>[インバリアント]（特定の言語や国・地域に依存しない）の言語設定でレポートをエクスポートします。米国英語の番号書式とスペースなしのヘッダーテキストを用いており、R統計解析プログラミング環境での使用に理想的です。</td></tr>
 </table>
 <div class="RowType">クロマトグラムをエクスポート中</div>
 <table>

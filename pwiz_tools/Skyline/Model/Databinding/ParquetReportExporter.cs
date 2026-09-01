@@ -39,11 +39,6 @@ namespace pwiz.Skyline.Model.Databinding
             var columns = BuildColumns(rowItemEnumerator.ItemProperties);
             var schema = new ParquetSchema(columns.Select(col => col.SchemaField).ToArray());
 
-            // Parquet.Net 4.x uses an async-only API; the no-async/await rule
-            // means we synchronously bridge each Task. GetAwaiter().GetResult()
-            // rethrows the original exception instead of wrapping it in an
-            // AggregateException. This is only safe because the export runs off
-            // the UI thread (no captured SynchronizationContext to deadlock on).
             using var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
             writer.CompressionMethod = CompressionMethod.Zstd;
             using var writeWorker = new QueueWorker<DataColumn[]>(
@@ -120,6 +115,12 @@ namespace pwiz.Skyline.Model.Databinding
         private void PopulateChunk(IProgressMonitor progressMonitor,
             IList<RowItem> rowItems, List<ColumnData> columns, Array[] chunkArrays)
         {
+            // Values with no Parquet storage type get stored as strings by calling ToString(),
+            // which formats using the thread's culture, so the values have to be converted under
+            // the culture this report is being exported with. All of the columns come from the
+            // same DataSchema, so the culture only needs to be set once per row.
+            var dataSchemaLocalizer = columns.FirstOrDefault()?.PropertyDescriptor.DataSchemaLocalizer
+                                      ?? DataSchemaLocalizer.INVARIANT;
             ParallelEx.For(0, rowItems.Count, rowIndex =>
             {
                 if (progressMonitor.IsCanceled)
@@ -128,10 +129,13 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 var rowItem = rowItems[rowIndex];
                 rowItems[rowIndex] = null;
-                for (int colIndex = 0; colIndex < columns.Count; colIndex++)
+                dataSchemaLocalizer.CallWithCultureInfo(() =>
                 {
-                    columns[colIndex].StoreValue(rowItem, rowIndex, chunkArrays[colIndex]);
-                }
+                    for (int colIndex = 0; colIndex < columns.Count; colIndex++)
+                    {
+                        columns[colIndex].StoreValue(rowItem, rowIndex, chunkArrays[colIndex]);
+                    }
+                });
             }, threadName:nameof(PopulateChunk));
         }
 
@@ -209,8 +213,8 @@ namespace pwiz.Skyline.Model.Databinding
                 PropertyDescriptor = propertyDescriptor;
                 var valueType = PropertyDescriptor.DataSchema.GetWrappedValueType(PropertyDescriptor.PropertyType);
 
-                // Check if this is a FormattableList<T>
-                ListElementType = GetFormattableListElementType(valueType);
+                // Check if this is a ListColumnValue<T>
+                ListElementType = GetListColumnValueStorageType(valueType);
                 if (ListElementType != null)
                 {
                     // This is a list column
@@ -301,25 +305,20 @@ namespace pwiz.Skyline.Model.Databinding
 
                 if (ListElementType != null)
                 {
-                    // Extract the list from FormattableList<T>
-                    value = ConvertListValue(value);
+                    // Extract the list from ListColumnValue<T>
+                    value = ConvertListColumnValue(value);
                 }
-                else 
+                else
                 {
                     value = ConvertToStorageType(value, StorageType);
                 }
                 values.SetValue(value, rowIndex);
             }
 
-            private Array ConvertListValue(object formattableList)
+            private Array ConvertListColumnValue(object listColumnValue)
             {
-                // Get the underlying list via ToImmutableList() method
-                var toArrayMethod = formattableList.GetType().GetMethod(nameof(FormattableList<object>.ToArray));
-                if (toArrayMethod == null)
-                {
-                    return null;
-                }
-                Array array = (Array)toArrayMethod.Invoke(formattableList, null);
+                // Get the underlying list as an array
+                Array array = (listColumnValue as IListColumnValue)?.ToArray();
                 if (array == null)
                 {
                     return null;
@@ -342,15 +341,16 @@ namespace pwiz.Skyline.Model.Databinding
 
                 return convertedArray;
             }
-
-            private static Type GetFormattableListElementType(Type type)
+        }
+        private static Type GetListColumnValueStorageType(Type type)
+        {
+            var elementType = ListColumnValue.GetElementType(type);
+            if (elementType == null)
             {
-                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(FormattableList<>))
-                {
-                    return DecideStorageType(type.GetGenericArguments()[0]);
-                }
                 return null;
             }
+
+            return DecideStorageType(elementType);
         }
 
         private static Dictionary<Type, Type> _storageTypes = new Dictionary<Type, Type>
@@ -469,7 +469,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return Marshal.SizeOf(columnType);
             }
-            if (columnType.IsGenericType && columnType.GetGenericTypeDefinition() == typeof(FormattableList<>))
+            if (GetListColumnValueStorageType(columnType) != null)
             {
                 return 64;
             }

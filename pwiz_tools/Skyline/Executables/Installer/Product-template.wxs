@@ -330,6 +330,12 @@
       <Component Id="pwiz.CommonUtil.pdb">
         <File Source="$(var.Skyline.TargetDir)/pwiz.CommonUtil.pdb" KeyPath="yes"/>
       </Component>
+      <Component Id="pwiz.PortableUtil.dll">
+        <File Source="$(var.Skyline.TargetDir)/pwiz.PortableUtil.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="pwiz.PortableUtil.pdb">
+        <File Source="$(var.Skyline.TargetDir)/pwiz.PortableUtil.pdb" KeyPath="yes"/>
+      </Component>
       <Component Id="pwiz_data_cli.dll">
         <File Source="$(var.Skyline.TargetDir)/pwiz_data_cli.dll" KeyPath="yes"/>
       </Component>

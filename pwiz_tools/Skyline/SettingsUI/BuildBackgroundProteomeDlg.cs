@@ -215,7 +215,14 @@ namespace pwiz.Skyline.SettingsUI
             {
                 textName.Text = Path.GetFileNameWithoutExtension(fileName);
             }
-            textPath.Text = fileName;   // This will cause RefreshStatus()
+            if (textPath.Text == fileName)
+            {
+                RefreshStatus();
+            }
+            else
+            {
+                textPath.Text = fileName;   // This will cause RefreshStatus()
+            }
         }
 
         private void btnOk_Click(object sender, EventArgs e)

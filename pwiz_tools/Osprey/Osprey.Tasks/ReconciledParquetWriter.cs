@@ -1,0 +1,219 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ *
+ * Based on osprey (https://github.com/MacCossLab/osprey)
+ *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Collections.Generic;
+using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
+
+namespace pwiz.Osprey.Tasks
+{
+    /// <summary>
+    /// Writes the reconciled per-file <c>.scores-reconciled.parquet</c> for
+    /// Stage 6 by STREAMING the original Stage 4 parquet group-by-group: each
+    /// original row group is read, the re-scored rows whose original
+    /// <see cref="FdrEntry.ParquetIndex"/> falls in that group are overlaid, and the
+    /// group is written straight through to a SEPARATE reconciled sibling (the
+    /// original is never overwritten); gap-fill rows are merged into their canonical
+    /// (entry_id, charge, scan_number) sorted position. Peak residency is one original
+    /// row group rather than the whole file's <see cref="FdrEntry"/> list -- see
+    /// <see cref="ParquetScoreCache.StreamReconciledScoresParquet"/>.
+    ///
+    /// The overlay/gap-fill split (<see cref="BuildOverlay"/>) and metadata-hash
+    /// selection (<see cref="BuildReconciliationMetadata"/>) are pure and unit-tested
+    /// here; the streaming transfer itself is covered by the IO round-trip test.
+    /// Logging is taken as <see cref="Action{T}"/> callbacks so no live
+    /// <see cref="PipelineContext"/> is needed. The streaming merge reproduces the exact
+    /// physical row order of the former load-all + re-sort write (gap-fill interleaved by
+    /// scan, not appended at the end), which Pass 2's projection sort relies on. Mirrors
+    /// Rust pipeline.rs:3050-3110.
+    /// </summary>
+    internal static class ReconciledParquetWriter
+    {
+        /// <summary>
+        /// Stream <paramref name="originalPath"/> group-by-group, overlaying the
+        /// re-scored + gap-fill rows from <paramref name="fdrEntries"/>, and write the
+        /// result to <paramref name="reconciledPath"/>. Returns true when the reconciled
+        /// parquet was written; false on a read/write failure (so the caller does not
+        /// stamp a validity sidecar over a stale or absent output).
+        /// </summary>
+        internal static bool Write(string originalPath, string reconciledPath,
+            List<FdrEntry> fdrEntries,
+            string fileName, IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            OspreyConfig config,
+            IReadOnlyList<string> joinFileStems,
+            Action<string> logInfo, Action<string> logWarning)
+        {
+            // 1. Split the re-scored entries into the small resident overlay map
+            //    (keyed by original ParquetIndex) + the gap-fill list. No whole-file
+            //    materialization -- these hold references into the per-file fdrEntries.
+            var overlayByIndex = new Dictionary<uint, FdrEntry>();
+            var gapFill = new List<FdrEntry>();
+            BuildOverlay(fdrEntries, overlayByIndex, gapFill);
+
+            // 2. libraryById (the run's shared entry_id index, passed in rather than
+            //    rebuilt per file) serves the sequence / precursor_mz / protein_ids
+            //    columns.
+
+            // 3. Reconciliation metadata (mirrors Rust build_reconciled_metadata).
+            //    Whether this file had rescore work at all is recorded here, because the
+            //    artifact's mere existence stopped answering that question once every file
+            //    started getting one. SecondPassFdrTask gates the 2nd Percolator pass on it
+            //    as the C# analog of Rust's total_rescored > 0, and a faithful copy must not
+            //    read as work. The condition is exactly BuildOverlay's two outputs being
+            //    empty - no re-scored row to overlay and no gap-fill row to append.
+            var metadata = BuildReconciliationMetadata(config, joinFileStems,
+                rescored: overlayByIndex.Count > 0 || gapFill.Count > 0);
+
+            // 4. The survivors this file is allowed to carry forward, which is exactly the
+            //    entries Stage 5's compaction left in the buffer (per-run q under the
+            //    threshold, plus every peptide of a protein with 2+ peptides detected) with
+            //    the gap-fill rows the rescore appended. Taken from the buffer rather than
+            //    re-derived so the artifact cannot disagree with what the run computed.
+            //    Keyed on the full canonical identity: compaction removes an entry_id's extra
+            //    SCANS, not whole entry_ids, so an entry_id-keyed set matches every original
+            //    row and would drop nothing (measured on Stellar: 482,891 rows compact to
+            //    332,138, about one surviving row per entry_id).
+            var keepIdentities = new HashSet<(uint, byte, uint)>(fdrEntries.Count);
+            foreach (var entry in fdrEntries)
+                keepIdentities.Add((entry.EntryId, entry.Charge, entry.ScanNumber));
+
+            // 5. Stream the reconciled transfer group-by-group: read the original,
+            //    overlay re-scored rows, drop the compacted-away rows, merge gap-fill into
+            //    canonical position, write the sibling. Peak residency is one original row
+            //    group, not the whole file.
+            int nReplaced, nAppended, origRowCount, nWritten;
+            try
+            {
+                var result = ParquetScoreCache.StreamReconciledScoresParquet(
+                    originalPath, reconciledPath, overlayByIndex, gapFill,
+                    metadata, libraryById, fileName, keepIdentities, @"  ", logWarning);
+                nReplaced = result.NReplaced;
+                nAppended = result.NAppended;
+                origRowCount = result.OrigRowCount;
+                nWritten = result.NWritten;
+            }
+            // A read/write IO failure is a recoverable per-file skip (clears the sidecar,
+            // re-rescored next run). But an InvalidOperationException from the streaming
+            // merge is the canonical-order invariant guard firing -- that is silently-invalid
+            // output, so let it propagate and ABORT the run (hard-fail over warn-and-proceed).
+            catch (Exception ex) when (!(ex is InvalidOperationException))
+            {
+                logWarning(string.Format(
+                    "Stage 6 write-back: failed to transfer {0} -> {1}: {2}",
+                    originalPath, reconciledPath, ex.Message));
+                return false;
+            }
+
+            // Reports what was WRITTEN against what was read. The two differ now that the
+            // compacted-away rows are dropped, and the ratio is the whole point of the
+            // artifact - a log that still printed original+appended would hide it.
+            logInfo(string.Format(
+                "  Wrote reconciled parquet for {0}: {1} rows ({2} replaced + {3} appended; original {4} rows)",
+                fileName, nWritten, nReplaced, nAppended, origRowCount));
+            return true;
+        }
+
+        /// <summary>
+        /// Split the re-scored entries in <paramref name="fdrEntries"/> into the resident
+        /// overlay map <paramref name="overlayByIndex"/> (keyed by original
+        /// <see cref="FdrEntry.ParquetIndex"/>) and the <paramref name="gapFill"/> list
+        /// that <see cref="ParquetScoreCache.StreamReconciledScoresParquet"/> consumes --
+        /// the streaming replacement for the former load-all + in-place overlay (no
+        /// whole-file <see cref="FdrEntry"/> list is ever built).
+        ///
+        /// Replacement is keyed on <see cref="FdrEntry.ParquetIndex"/> (NOT post-compaction
+        /// Vec position; the two diverge after first-pass FDR drops non-passing entries).
+        /// Re-scored rows are detected by <see cref="FdrEntry.Features"/> != null:
+        /// hydration's LoadFdrStubsFromParquet does NOT populate Features, so an unchanged
+        /// post-compaction stub (Features == null) is skipped, leaving its original parquet
+        /// row (Features + CwtCandidates + the binary blob columns) to stream through
+        /// untouched. A row with no <see cref="FdrEntry.ParquetIndex"/> is a gap-fill
+        /// stub (absent from the original parquet) and is appended; every other
+        /// re-scored row overlays the original row at its ParquetIndex (last write wins,
+        /// matching the former fullEntries[pqIdx] = entry). Out-of-range indices are
+        /// reported by the streaming write, not here.
+        /// </summary>
+        internal static void BuildOverlay(List<FdrEntry> fdrEntries,
+            Dictionary<uint, FdrEntry> overlayByIndex, List<FdrEntry> gapFill)
+        {
+            foreach (var entry in fdrEntries)
+            {
+                if (!entry.ParquetIndex.HasValue)
+                {
+                    gapFill.Add(entry);
+                    continue;
+                }
+                if (entry.Features == null)
+                    continue;  // hydrated stub, never re-scored
+                // Every row past the gap-fill route above has an index: an overlay row
+                // addresses an ORIGINAL parquet row.
+                overlayByIndex[entry.ParquetIndex.Value] = entry;
+            }
+        }
+
+        /// <summary>
+        /// Build the reconciliation parquet metadata (mirrors Rust
+        /// build_reconciled_metadata). <c>osprey.version</c> is what the next
+        /// reload's CacheValidity check compares against.
+        ///
+        /// The reconciliation hash must be the JOIN-wide hash (over every file in
+        /// the planner step), not the worker's single-file InputFiles hash;
+        /// without that, a worker rescoring a single parquet stamps a single-file
+        /// hash that the downstream --task SecondPassFDR node rejects on
+        /// mismatch. The join file stems come from the planner's
+        /// reconciliation.json (v2+) via <see cref="RescoreInputs.JoinFileStems"/>;
+        /// fall back to the config-derived hash when the caller passed none
+        /// (in-process pipeline where config.InputFiles already has all files, or
+        /// v1 backward compat).
+        /// </summary>
+        internal static Dictionary<string, string> BuildReconciliationMetadata(
+            OspreyConfig config, IReadOnlyList<string> joinFileStems, bool rescored = true)
+        {
+            string reconciliationHash = (joinFileStems != null && joinFileStems.Count > 0)
+                ? config.Identity.ReconciliationParameterHashForStems(joinFileStems)
+                : config.Identity.ReconciliationParameterHash();
+            return new Dictionary<string, string>
+            {
+                { @"osprey.version", OspreyVersion.Current },
+                { @"osprey.search_hash", config.Identity.SearchParameterHash() },
+                { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
+                // "survivors", not "true": this parquet holds only the Stage 5 survivor rows,
+                // where every build before this one wrote a row-for-row twin of the Stage 4
+                // parquet. The shape changed, so the marker changes with it - an older Osprey
+                // compares this value against "true" exactly and REFUSES, instead of reading
+                // a subset as though it were the whole file and reporting a confidently wrong
+                // answer. The version stamp cannot carry this: OSPREY_VERSION_OVERRIDE is the
+                // sanctioned way to consume another build's artifacts, so it is exactly the
+                // guard an operator turns off. (issue #4486)
+                { @"osprey.reconciled", ParquetScoreCache.RECONCILED_SURVIVORS },
+                { @"osprey.reconciliation_hash", reconciliationHash },
+                // "1" iff Stage 6 actually re-scored or gap-filled something in this file.
+                // Absent on a parquet written before this key existed, which is why the
+                // reader treats a MISSING value as "1": back then the file was only written
+                // when there was work, so its existence meant the same thing.
+                { @"osprey.rescored", rescored ? @"1" : @"0" },
+            };
+        }
+    }
+}
