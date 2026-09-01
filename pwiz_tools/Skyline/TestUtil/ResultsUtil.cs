@@ -295,6 +295,12 @@ namespace pwiz.SkylineTestUtil
                     return;
                 Thread.Sleep(SLEEP_INTERVAL);
             }
+            // One last look: the loop sleeps after its final check, so the libraries may have
+            // finished during that sleep, and a timeout below SLEEP_INTERVAL yields no cycles
+            // at all and must still get one check rather than failing without ever looking.
+            if (Document.Settings.PeptideSettings.Libraries.IsLoaded)
+                return;
+
             Assert.Fail("Libraries still not loaded after {0} seconds: {1}",
                 waitCycles*SLEEP_INTERVAL/1000,
                 Document.Settings.PeptideSettings.Libraries.IsNotLoadedExplained);
