@@ -27,7 +27,6 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using IdentityModel.Client;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 
@@ -74,7 +73,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         public class TokenCacheEntry
         {
-            public TokenResponse TokenResponse { get; set; }
+            public WatersConnectTokenResponse TokenResponse { get; set; }
             public DateTime ExpirationDateTime { get; set; }
         }
 
@@ -202,7 +201,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         private string IdentityConnectEndpoint => @"/connect/token";
 
-        public TokenResponse Authenticate()
+        public WatersConnectTokenResponse Authenticate()
         {
             // First check the cache for a valid token
             if (_authenticationTokens.TryGetValue(this, out var tokenCacheEntry) && tokenCacheEntry.ExpirationDateTime > DateTime.UtcNow)
@@ -236,7 +235,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             if (newToken.IsError)
             {
                 AuthenticationException ex;
-                if (newToken.ErrorType == ResponseErrorType.Exception)
+                if (newToken.ErrorType == TokenErrorType.Exception)
                     ex = new AuthenticationException(newToken.Error);
                 else
                     ex = new AuthenticationException(string.Format(CultureInfo.CurrentCulture,
@@ -254,14 +253,14 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         /// POSTs a token request to the identity server and returns the parsed response. Client
         /// credentials go in an HTTP Basic authorization header with each half URL-escaped per
         /// RFC 6749 section 2.3.1, matching the wire format of the IdentityModel TokenClient this
-        /// replaced. Every failure is returned as an error <see cref="TokenResponse"/> - the same
-        /// contract TokenClient had - so callers route all failures through the
+        /// replaced. Every failure is returned as an error <see cref="WatersConnectTokenResponse"/> -
+        /// the same contract TokenClient had - so callers route all failures through the
         /// authentication-error path: a 400 is an OAuth protocol error whose JSON body carries
         /// error/error_description; any other HTTP failure becomes an HTTP-error response (IsError
         /// true even when the body is a proxy's HTML page); a transport or URL-format exception
         /// becomes an exception-type response.
         /// </summary>
-        private TokenResponse RequestToken(NameValueCollection form)
+        private WatersConnectTokenResponse RequestToken(NameValueCollection form)
         {
             try
             {
@@ -271,17 +270,17 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                     EscapeClientCredential(ClientId) + @":" + EscapeClientCredential(ClientSecret))));
                 httpClient.AddHeader(@"Accept", @"application/json");
                 var raw = Encoding.UTF8.GetString(httpClient.UploadValues(requestUri, @"POST", form));
-                return new TokenResponse(raw);
+                return WatersConnectTokenResponse.FromJson(raw);
             }
             catch (NetworkRequestException ex)
             {
                 if (ex.StatusCode == HttpStatusCode.BadRequest && !string.IsNullOrEmpty(ex.ResponseBody))
-                    return new TokenResponse(ex.ResponseBody);
-                return new TokenResponse(ex.StatusCode ?? HttpStatusCode.ServiceUnavailable, ex.Message, ex.ResponseBody);
+                    return WatersConnectTokenResponse.FromJson(ex.ResponseBody);
+                return WatersConnectTokenResponse.FromHttpError(ex.StatusCode ?? HttpStatusCode.ServiceUnavailable, ex.Message, ex.ResponseBody);
             }
             catch (Exception ex)
             {
-                return new TokenResponse(ex);
+                return WatersConnectTokenResponse.FromException(ex);
             }
         }
 

@@ -129,6 +129,7 @@
     </Compile>
     <Compile Include="RemoteApi\WatersConnect\WatersConnectSession.cs" />
     <Compile Include="RemoteApi\WatersConnect\WatersConnectSessionAcquisitionMethod.cs" />
+    <Compile Include="RemoteApi\WatersConnect\WatersConnectTokenResponse.cs" />
     <Compile Include="RemoteApi\WatersConnect\WatersConnectUrl.cs" />
     <Compile Include="CommonMsDataResources.Designer.cs">
       <AutoGen>True</AutoGen>
