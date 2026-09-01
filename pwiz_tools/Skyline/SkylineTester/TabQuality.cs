@@ -93,9 +93,9 @@ namespace SkylineTester
 
             MainWindow.TestsRun = 0;
 
-            MainWindow.CommandShell.LogFile = MainWindow.DefaultLogFile;
-            if (File.Exists(MainWindow.DefaultLogFile))
-                Try.Multi<Exception>(() => File.Delete(MainWindow.DefaultLogFile), 4, false);
+            // Rolls the previous log aside rather than deleting it, so an accidental start does not
+            // destroy the record of a long run. StartNewLog leaves no file behind to delete.
+            MainWindow.CommandShell.StartNewLog(MainWindow.DefaultLogFile);
             MainWindow.NewNightlyRun = _lastRun = new Summary.Run
             {
                 Date = DateTime.Now

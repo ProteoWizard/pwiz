@@ -558,19 +558,47 @@ namespace SkylineTester
             set
             {
                 _logFile = value;
-                if (File.Exists(_logFile))
-                {
-                    try
-                    {
-                        File.Delete(_logFile);
-                    }
-// ReSharper disable once EmptyGeneralCatchClause
-                    catch (Exception)
-                    {
-                    }
-                }
                 VisibleLogFile = _logFile;
             }
+        }
+
+        /// <summary>
+        /// Points the shell at <paramref name="logFile"/> for a new run, rolling any existing log
+        /// aside to a timestamped name instead of deleting it.
+        /// <para>Assigning <see cref="LogFile"/> used to delete the file it was given, which made
+        /// starting a run destroy the previous run's log before a single test had produced output.
+        /// A second click on the Run/Stop button while a stop was still in flight was enough to
+        /// lose a nine-hour run that way, so the record of a long run now survives one accidental
+        /// start.</para>
+        /// <para>Exactly one previous log is kept: older rolled logs are removed, so this cannot
+        /// accumulate. A failure to roll leaves the old log in place and is reported to the log
+        /// rather than swallowed - losing the previous log is the thing being prevented.</para>
+        /// </summary>
+        public void StartNewLog(string logFile)
+        {
+            if (!string.IsNullOrEmpty(logFile) && File.Exists(logFile) && new FileInfo(logFile).Length > 0)
+            {
+                try
+                {
+                    var directory = Path.GetDirectoryName(logFile) ?? string.Empty;
+                    var baseName = Path.GetFileNameWithoutExtension(logFile);
+                    var extension = Path.GetExtension(logFile);
+
+                    // Remove previously rolled logs first, so at most one is ever kept. Nightly logs
+                    // are named and pruned by Summary in its own directory, and do not match this.
+                    foreach (var oldLog in Directory.GetFiles(directory, baseName + "-*" + extension))
+                        File.Delete(oldLog);
+
+                    File.Move(logFile,
+                        Path.Combine(directory, baseName + DateTime.Now.ToString("-yyyyMMdd-HHmmss") + extension));
+                }
+                catch (Exception e)
+                {
+                    Log("# Could not roll the previous log aside: " + e.Message);
+                }
+            }
+
+            LogFile = logFile;
         }
 
         /// <summary>

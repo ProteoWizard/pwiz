@@ -88,7 +88,7 @@ namespace SkylineTester
         {
             MainWindow.ClearLog();
             MainWindow.LastRunName = runName;
-            MainWindow.CommandShell.LogFile = logFile ?? MainWindow.DefaultLogFile;
+            MainWindow.CommandShell.StartNewLog(logFile ?? MainWindow.DefaultLogFile);
             File.WriteAllText(MainWindow.CommandShell.LogFile, "");
             MainWindow.CommandShell.AddImmediate("\n# {0} started {1}".With(runName, DateTime.Now.ToString("f")));
             MainWindow.RefreshLogs();

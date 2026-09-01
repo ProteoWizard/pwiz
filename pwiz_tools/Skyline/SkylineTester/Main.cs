@@ -42,7 +42,14 @@ namespace SkylineTester
             if (_runningTab != null && (_runningTab.IsRunning() || _runningTab.IsWaiting()))
             {
                 if (StopByUser())
+                {
                     AcceptButton = DefaultButton;   // Only change if the stop is successful
+                    // Stopping is asynchronous - _runningTab is not cleared until Done(). Until it
+                    // is, this same button means Run again, and a second click starts a run, which
+                    // is how a nine-hour log was lost. Take the button out of reach for that window
+                    // instead of relying on nobody clicking into it.
+                    ShowStopInProgress();
+                }
                 return;
             }
 
@@ -71,8 +78,15 @@ namespace SkylineTester
             if (_runningTab == null)    // note: may be cleared by Run() (e.g., Cancel in DeleteWindow)
                 return;
 
+            // A restart can arrive while a "Stopped" hold is still pending; drop it so the button
+            // is not restored to "&Run" a second into the run that just started.
+            CancelStoppedTimer();
+            _stoppingByUser = false;
             foreach (var runButton in _runButtons)
+            {
                 runButton.Text = "&Stop";
+                runButton.Enabled = true;
+            }
             buttonStop.Enabled = true;
             EnableButtonSelectFailedTests(false); // Until we have failures to select
             AcceptButton = null;
@@ -240,8 +254,10 @@ namespace SkylineTester
         {
             _runningTab = null;
 
-            foreach (var runButton in _runButtons)
-                runButton.Text = "&Run";
+            if (_stoppingByUser)
+                ShowStopped();      // Holds a disabled "Stopped" briefly, then restores "&Run"
+            else
+                ShowReadyToRun();
             buttonStop.Enabled = false;
             AcceptButton = DefaultButton;
 
@@ -259,6 +275,63 @@ namespace SkylineTester
                 _restart = false;
                 Run();
             }
+        }
+
+        private bool _stoppingByUser;
+        private Timer _stoppedTimer;
+
+        /// <summary>
+        /// Disables the Run/Stop buttons and shows "Stopping..." for the window between a stop
+        /// request and <see cref="Done"/>, during which the toggle would otherwise start a new run.
+        /// </summary>
+        private void ShowStopInProgress()
+        {
+            _stoppingByUser = true;
+            CancelStoppedTimer();
+            foreach (var runButton in _runButtons)
+            {
+                runButton.Text = "Stopping...";
+                runButton.Enabled = false;
+            }
+            buttonStop.Enabled = false;
+        }
+
+        /// <summary>
+        /// Holds a disabled "Stopped" for a second so the click that ended the run is visibly
+        /// finished before the same button can start another one.
+        /// </summary>
+        private void ShowStopped()
+        {
+            foreach (var runButton in _runButtons)
+            {
+                runButton.Text = "Stopped";
+                runButton.Enabled = false;
+            }
+
+            CancelStoppedTimer();
+            _stoppedTimer = new Timer { Interval = 1000 };
+            _stoppedTimer.Tick += (s, a) => ShowReadyToRun();
+            _stoppedTimer.Start();
+        }
+
+        private void ShowReadyToRun()
+        {
+            CancelStoppedTimer();
+            _stoppingByUser = false;
+            foreach (var runButton in _runButtons)
+            {
+                runButton.Text = "&Run";
+                runButton.Enabled = true;
+            }
+        }
+
+        private void CancelStoppedTimer()
+        {
+            if (_stoppedTimer == null)
+                return;
+            _stoppedTimer.Stop();
+            _stoppedTimer.Dispose();
+            _stoppedTimer = null;
         }
 
         public string GetBuildRoot()
