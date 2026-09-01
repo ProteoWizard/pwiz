@@ -34,13 +34,14 @@ namespace pwiz.Osprey.IO
     /// Osprey consumes, independent of where the peaks came from.
     ///
     /// This is the single definition of what a spectrum IS: peak sort order,
-    /// the isolation-window fail-fast, the precursor-m/z fallback. Both
-    /// <see cref="MzmlReader"/> and (on net472) the vendor-raw reader build
-    /// through it, so a cache written from a <c>.raw</c> and one written from the
-    /// mzML msconvert produced from that same <c>.raw</c> can differ only where
-    /// the two PARSERS genuinely disagree - never because two code paths
-    /// assembled equivalent data differently. That distinction is what makes a
-    /// raw-vs-mzML byte comparison a meaningful test (issue #4496).
+    /// the isolation-window fail-fast, the precursor-m/z fallback.
+    /// <see cref="SpectrumFileReader"/> builds every format through it, so a
+    /// cache written from a <c>.raw</c> and one written from the mzML msconvert
+    /// produced from that same <c>.raw</c> can differ only where ProteoWizard's
+    /// two READER paths genuinely disagree - never because two code paths
+    /// assembled equivalent data differently. That distinction is what made the
+    /// raw-vs-mzML byte comparison a meaningful test (issue #4496), back when
+    /// Osprey still had a second parser to compare against.
     /// </summary>
     internal static class SpectrumBuilder
     {
@@ -55,7 +56,7 @@ namespace pwiz.Osprey.IO
         /// Sort a spectrum's peaks by m/z if they are not already sorted,
         /// permuting the intensity array with them. Returns true when a sort was
         /// performed, which the callers accumulate into
-        /// <see cref="MzmlResult.UnsortedSpectrumCount"/>.
+        /// <see cref="SpectrumFileResult.UnsortedSpectrumCount"/>.
         ///
         /// Some producers emit peaks that are not strictly ascending in m/z
         /// (observed in a HeLa Astral 3 mz DIA file: ~0.07% of spectra have a

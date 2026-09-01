@@ -17,7 +17,9 @@
          GHSA-pggp-6c3x-2xmx; 1.3.1 is the first clean release. Remove once
          Parquet.Net is on 6.x, which depends on [1.3.1,) itself. -->
     <PackageReference Include="Snappier" Version="1.3.1" />
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+    <!-- 1.0.119 to match pwiz-sharp, whose Bruker and UIMF readers pull the same
+         package (a lower version here is an NU1605 downgrade error). -->
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
@@ -25,58 +27,41 @@
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
   </ItemGroup>
 
-  <!-- Vendor raw reading (issue #4496) is an OPT-IN build capability, off by
-       default. Build with /p:OspreyVendorReader=true to include it.
-       Off  : Osprey.sln builds anywhere, with no ProteoWizard dependency. This
-              is what the unit-test CI config and a plain developer clone use.
-       On   : requires pwiz_tools/Shared/ProteowizardWrapper/obj/x64 to have been
-              staged by a bjam build (bs.bat, or the pwiz_data_cli + vendor
-              install targets). Used by the Perf/Regression config, which can
-              afford that build and runs the raw-vs-mzML parity test.
-       Opt-in by property rather than by probing for the DLL on disk: a missing
-       staged assembly is then a hard build error in the configuration that asked
-       for the capability, instead of silently producing an Osprey that cannot
-       read raw files - which would vary by machine and quietly skip the very
-       test that validates the feature. -->
-  <PropertyGroup>
-    <OspreyVendorReader Condition="'$(OspreyVendorReader)' == ''">false</OspreyVendorReader>
-    <!-- Hard off: the reader needs pwiz_data_cli, which only ever existed for
-         net472. The property is kept so the plumbing below stays readable. -->
-    <OspreyVendorReaderEnabled>false</OspreyVendorReaderEnabled>
-  </PropertyGroup>
+  <!-- ProteoWizard, as the ONLY spectrum reader (issue #4497), reached through the
+       same wrapper Skyline uses rather than through pwiz-sharp directly. The wrapper
+       was net8.0-windows until CommonUtil's WinForms half moved to CommonBaseUI; it is
+       plain net10.0 now, so a plain net10.0 Osprey can reference it and still run on
+       Linux without the Wine container.
 
-  <PropertyGroup Condition="'$(OspreyVendorReaderEnabled)' == 'true'">
-    <DefineConstants>$(DefineConstants);OSPREY_VENDOR_READER</DefineConstants>
-  </PropertyGroup>
+       ONE reference in place of twelve, and more to the point one definition of the read
+       semantics - MsDataFileImpl carries the ReaderConfig, the vendor centroiding and the
+       vendor reader registration that SpectrumFileReader.Vendors.cs used to duplicate
+       here. It pulls the same eight vendor projects transitively; a file Skyline can open
+       is a file Osprey can open, by construction rather than by matching lists.
 
-  <!-- Assembly references to the ALREADY-BUILT x64 wrapper, not ProjectReferences.
-       ProteowizardWrapper resolves pwiz_data_cli and the vendor assemblies out of
-       obj\$(Platform)\, and only obj\x64\ is ever staged, so it must be built as
-       x64. An SDK-style project will not pass Platform across a ProjectReference
-       to an old-style one - AdditionalProperties, SetPlatform and
-       EnableDynamicPlatformResolution were all tried and none take effect - and
-       putting it in Osprey.sln to get the mapping would build it even when this
-       capability is off, which is what the default build must avoid. Referencing
-       the built output sidesteps the negotiation entirely and follows the
-       existing precedent in pwiz_tools/Skyline/BullseyeSharp/BullseyeSharp.csproj,
-       which references pwiz_data_cli by HintPath for the same reason.
-       The bjam build that stages obj\x64 also produces these. -->
-  <ItemGroup Condition="'$(OspreyVendorReaderEnabled)' == 'true'">
-    <Reference Include="ProteowizardWrapper">
-      <HintPath>..\..\Shared\ProteowizardWrapper\bin\x64\$(Configuration)\ProteowizardWrapper.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="pwiz.CommonUtil">
-      <HintPath>..\..\Shared\CommonUtil\bin\x64\$(Configuration)\pwiz.CommonUtil.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-  </ItemGroup>
+       The vendor projects still carry no SDK unless the build opts in to the licenses
+       (pwiz-sharp's IAgreeToVendorLicenses, plus NativeVendorsAvailable for the
+       Windows-only native SDKs); without it they compile in NO_VENDOR_SUPPORT mode where
+       Identify() works and Read() throws. So this reference costs a default developer
+       clone nothing.
 
-  <!-- The vendor reader compiles only where ProteoWizard is available.
-       SpectrumFileReader (the by-extension dispatcher) always builds, and
-       raises a clear error for a vendor path when the capability is absent. -->
-  <ItemGroup Condition="'$(OspreyVendorReaderEnabled)' != 'true'">
-    <Compile Remove="VendorRawReader.cs" />
+       FIXED (was: a Release Osprey deployed the DEBUG build of everything reached through
+       here). Building a .sln unsets Configuration and Platform across a ProjectReference
+       to a project that is not in that solution - MSBuild's
+       ShouldUnsetParentConfigurationAndPlatform, on by default - and neither
+       ProteowizardWrapper nor pwiz-sharp is in Osprey.sln, so both fell back to their own
+       Debug default. Osprey's Directory.Build.props now sets that property false.
+
+       Clearing the property was tried BEFORE and made it worse, producing pwiz-sharp under
+       bin/Release, bin/Debug AND bin/x64 with the deployed assembly matching none of them.
+       What changed is the tree, not the property: that attempt was made while these
+       projects still multi-targeted net472, so each transitive hop negotiated its own
+       TFM/platform set and MSBuild built several instances. Single-TFM net10.0 leaves one
+       instance per configuration, and a Release build now deploys x64/Release throughout -
+       verified by hashing all 109 in-tree assemblies in Osprey's output against their
+       build directories, with the Debug build still correctly deploying x64/Debug. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
   </ItemGroup>
 
   <!-- PROdotnetzip (Ionic.Zlib) for stock-zlib-compatible deflate output.

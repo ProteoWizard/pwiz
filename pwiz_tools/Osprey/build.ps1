@@ -4,7 +4,7 @@
     dev (via build.bat) and CI (via tcbuild.bat).
 
 .DESCRIPTION
-    Drives MSBuild on Osprey.sln, then runs the Osprey.Test
+    Drives the build of Osprey.sln, then runs the Osprey.Test
     suite via vstest.console.exe.  Optional dotCover wrap for coverage
     measurement, optional TeamCity service messages for CI reporting.
 
@@ -16,12 +16,6 @@
 
 .PARAMETER Configuration
     Debug or Release.  Default Release (CI canonical).
-
-.PARAMETER Framework
-    Which target framework to test.  net10.0 (default), net472, or
-    both.  The MSBuild step always builds every framework declared
-    in the per-project files; this flag controls which framework's
-    test DLLs get run.
 
 .PARAMETER NoTests
     Build only.
@@ -47,17 +41,19 @@
     .\build.bat
 
 .EXAMPLE
-    # Local dev: pick a specific framework, skip tests
-    .\build.bat -Framework net472 -NoTests
+    # Local dev: build only
+    .\build.bat -NoTests
 
 .EXAMPLE
     # TeamCity (what tcbuild.bat invokes)
-    .\build.ps1 -TeamCity -Coverage -Configuration Release -Framework net10.0
+    .\build.ps1 -TeamCity -Coverage -Configuration Release
 #>
 param(
     [ValidateSet('Debug','Release')] [string]$Configuration = 'Release',
-    [ValidateSet('net10.0','net472','both')] [string]$Framework = 'net10.0',
     [switch]$NoTests,
+    # Acknowledge the vendor SDK EULAs. pwiz-sharp gates its real vendor readers on
+    # this, so without it Osprey builds against the no-vendor-support stubs.
+    [switch]$IAgreeToVendorLicenses,
     [switch]$Coverage,
     [switch]$TeamCity,
     [ValidateSet('quiet','minimal','normal','detailed','diagnostic')]
@@ -178,6 +174,9 @@ $buildArgs = @(
     '/nologo',
     "/verbosity:$Verbosity"
 )
+if ($IAgreeToVendorLicenses) {
+    $buildArgs += '/p:IAgreeToVendorLicenses=true'
+}
 & $msbuild @buildArgs
 $buildExit = $LASTEXITCODE
 $buildSec = ((Get-Date) - $buildStart).TotalSeconds
@@ -193,7 +192,10 @@ if ($NoTests) {
 }
 
 # --- Test ---------------------------------------------------------------
-$testFrameworks = if ($Framework -eq 'both') { @('net472','net10.0') } else { @($Framework) }
+# Osprey is net10.0 only (issue #4497), so there is one test assembly. Kept as a
+# list rather than collapsed inline: the loop below is the same shape either way,
+# and a future second TFM would be one entry rather than a restructure.
+$testFrameworks = @('net10.0')
 $trxDir = Join-Path $scriptRoot 'TestResults'
 New-Item -ItemType Directory -Force -Path $trxDir | Out-Null
 
