@@ -12,7 +12,7 @@ resume mechanisms the port adds (a per-task `.osprey.task` validity sidecar and 
 
 > **Scope, ownership, and who may read what** live in
 > [00-pipeline-architecture.md](00-pipeline-architecture.md). That document owns the file
-> contract — which artifact is per-run or experiment-wide, which task writes it, which may
+> contract - which artifact is per-run or experiment-wide, which task writes it, which may
 > read it, and what an HPC node must be shipped. **This document owns the bytes**: headers,
 > versions, schemas, hashing, and invalidation mechanics. When the two disagree about a
 > writer or a reader, 00 is the one that is verified against the path-building code.
@@ -25,14 +25,14 @@ experiment-wide, **exp/rep** = experiment-wide content replicated under each run
 | File pattern | Scope | Format | C# writer/reader | Purpose |
 |---|---|---|---|---|
 | `<stem>.calibration.json` | run | JSON (Newtonsoft) | `Osprey.Chromatography/CalibrationIO.cs` | RT + MS1/MS2 mass calibration parameters |
-| `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload — and the only copy once the source is deleted |
+| `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted |
 | `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
 | `<stem>.scores-reconciled.parquet` | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
-| `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary v4 | `Osprey.IO/FdrScoresSidecar.cs` | SVM score + 4 q-values + PEP + experiment_protein_qvalue + experiment_aggregate_score after first-pass Percolator |
-| `<stem>.2nd-pass.fdr_scores.bin` | run | Custom binary v4 | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
+| `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v6**, 32-byte header + 28-byte records | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row |
+| `<stem>.2nd-pass.fdr_scores.bin` | run | Custom binary **v6**, same layout | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
 | `<stem>.2nd-pass.fdr_decoys.bin` | run | Custom binary v1 | `Osprey.IO/Pass2CompetitionDecoys.cs` | Per-run second-pass competition decoys; written before the scores sidecar |
 | `<stem>.reconciliation.json` | run | JSON (Newtonsoft) | `Osprey.IO/ReconciliationFile.cs` | Stage 5 planner output: actions, gap-fill targets, refined RT calibration |
-| `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary v5 | `Osprey.IO/FdrExperimentSidecar.cs` | Experiment-scope q-values; **name** from the output blib, **directory** from `ResolveOutputDir` |
+| `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary **v2**, 32-byte header + 44-byte records | `Osprey.IO/FdrExperimentSidecar.cs` | The experiment-scope columns: precursor q, peptide q, PEP, protein q, aggregate score. **Name** from the output blib, **directory** from `ResolveOutputDir` |
 | `<stem>.1st-pass.model.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model, plus the protein-compact stratum when that mode is active |
 | `<output>.<TaskName>.osprey.task` | its artifact's | JSON (hand-rolled) | `Osprey.Tasks/TaskValiditySidecar.cs` | **C# addition**: per-(output, task) resume validity record |
 | `<lib>.<...>` library cache | exp | Custom binary v2 | `Osprey.IO/LibraryCache.cs` | Parsed spectral library reload cache |
@@ -49,13 +49,13 @@ redirection applies uniformly to every artifact.
 **Moved.** Where artifacts are written (`--work-dir` / `--output-dir` / `--cache-dir` and the
 `ArtifactPaths` resolution behind them) and why every writer commits atomically through
 `FileSaver` are architecture, not format, and are now stated once in
-[00-pipeline-architecture.md](00-pipeline-architecture.md) — see "Directory resolution" and
+[00-pipeline-architecture.md](00-pipeline-architecture.md) - see "Directory resolution" and
 principle P8. The one-line summary: a `FileSaver` stages into a sibling temp file in the same
 directory and promotes it with an in-volume rename, so a crash leaves either the previous
 content or no file, and **presence proves completeness** for every artifact in this document.
 
 The C# realization is Rust's "safe NAS file writes / `copy_and_verify`" pattern. Because the
-temp is a sibling, the promote is an in-volume rename rather than a local-temp → NAS
+temp is a sibling, the promote is an in-volume rename rather than a local-temp -> NAS
 cross-volume copy, which sidesteps the truncation risk `copy_and_verify` guards against.
 
 ### `FileSaver` call sites
@@ -81,7 +81,7 @@ durable artifact writer in the tree, as of this document's last verification:
 
 **A new durable artifact that does not commit through `FileSaver` is a defect**, because
 every reader in the pipeline treats presence as proof of completeness. **Exempt**: `-d`
-diagnostic dumps, the streaming CLI log, and test fixtures — transient or append-streaming
+diagnostic dumps, the streaming CLI log, and test fixtures - transient or append-streaming
 files that no later stage reads back.
 
 ---
@@ -330,7 +330,16 @@ Per-file persistence of FDR state at the Stage 5 → Stage 6 boundary (first pas
 second-pass FDR. Carries the SVM discriminant plus every q-value needed for downstream filtering
 and protein-FDR-aware compaction.
 
-### Format (v4) — byte-identical to Rust
+> **STALE - do not implement a reader from the layout below.** It documents v4: a 68-byte
+> record carrying the experiment-scope columns. The current format is **v6 with 28-byte
+> records** (`FdrScoresSidecar.FormatVersion`, `RecordLength`), holding only entry_id, SVM
+> score, run precursor q and run peptide q - the experiment columns moved to
+> `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` at v5 (issue #4486). The header is still
+> 32 bytes. Re-verifying and rewriting this subsection against `WriteRecord` is tracked as
+> follow-up work; it was not rewritten in the PR that added this warning because that PR
+> changed no code and could not test a reader.
+
+### Format (v4, SUPERSEDED) - byte-identical to Rust
 
 `FdrScoresSidecar` writes a 32-byte header + fixed 68-byte records (`FdrScoresSidecar.cs:97`):
 
@@ -395,7 +404,7 @@ the file back, overwriting bytes `[52..60]` per entry_id. That method and its tw
 moved into `<blib-stem>.1st-pass.fdr_experiment.bin`, so a per-file sidecar is now written
 exactly once on each pass and no later stage reopens it. This is what makes the write-once
 guarantee (P11 in [00-pipeline-architecture.md](00-pipeline-architecture.md)) true rather
-than aspirational — do not reintroduce a patch path.
+than aspirational - do not reintroduce a patch path.
 
 ### Validation and record→entry matching
 
@@ -518,20 +527,20 @@ It records the producing task, the Osprey version, a `validity_key`, and the inp
 
 The base `validity_key` is
 `search=<SearchParameterHash>;library=<LibraryIdentityHash>` plus the peak-pick arm
-(`OspreyTask.ValidityKey`); tasks with extra state append to it — `FirstPassFdrTask` adds six
-further components. **What goes in a key, and why each component is there, is owned by
-[00-pipeline-architecture.md](00-pipeline-architecture.md)** ("What the key is made of"); this
-document owns only the on-disk form above.
+(`OspreyTask.ValidityKey`); tasks with extra state append to it - `FirstPassFdrTask` adds six
+further components; the full composition, with the defect each entry prevents, is under
+"What a validity key is made of" below. 00 owns the *rule* those entries serve (P15: an
+under-inclusive key is the dangerous direction); this document owns what they are.
 
 Mechanics: `IsValid` (`TaskValiditySidecar.cs`) compares the recorded `validity_key` against
 the current one and returns `false` for a missing, malformed, or mismatched sidecar ("can't
-tell ⇒ re-run", the conservative answer). Note it compares the key **only** — the `version`
+tell => re-run", the conservative answer). Note it compares the key **only** - the `version`
 field is provenance, and build-compatibility is enforced separately by the parquet footer
 check in section 3. The task-name in the filename disambiguates per-task records for tasks
-that once shared an output path. `Delete` clears a sidecar when its task starts, so a crash
+that once shared an output path. `Delete` clears a sidecar before its output is recomputed - at Run start for the two joins, per run for the two fan-out tasks - so a crash
 mid-write cannot leave a stale "valid" marker. Callers reach these through
 `PerFileResumeDriver` (`IsCurrent` / `ClearStale` / `Stamp`), which additionally requires the
-output file itself to exist — a sidecar can outlive its output.
+output file itself to exist - a sidecar can outlive its output.
 
 
 ### What a validity key is made of
@@ -580,8 +589,8 @@ direction and an over-inclusive one merely costs a recompute - is P15 in
 
 This is the C# equivalent of, and refinement over, Rust's implicit "skip-if-cache-valid"
 behavior: it makes resume explicit and per-task rather than inferring state from parquet footer
-hashes alone. For the resume semantics built on it — the forward scan, per-run guards, and the
-HPC relay lists — see 00.
+hashes alone. For the resume semantics built on it - the forward scan, per-run guards, and the
+HPC relay lists - see 00.
 
 ---
 
@@ -613,7 +622,7 @@ written or reused. Defaults from `Osprey/OspreyCommandArgs.cs` + `Osprey.Core/Os
 |---|---|---|
 | `--work-dir <dir>` | unset (beside input) | Sets both `ArtifactPaths.OutputDir` and `CacheDir`; redirects every artifact |
 | `--output-dir <dir>` | unset | Sets `ArtifactPaths.OutputDir` (scores parquet, calibration JSON, FDR sidecars, reconciliation JSON) |
-| `--cache-dir <dir>` | unset | Sets `ArtifactPaths.CacheDir` (`.spectra.bin` only); a shared cache dir lets analyses reuse one parse |
+| `--cache-dir <dir>` | unset | Sets `ArtifactPaths.CacheDir`, which holds `.spectra.bin` **and** `<library-leaf>.libcache` (`LibraryLoader` routes the library cache through it too); a shared cache dir lets analyses reuse one parse |
 | `--task <T>` | unset (in-process) | `FirstPassFDR`/`SecondPassFDR` trigger `ValidateScoresParquetGroup`; `SecondPassFDR` sets `ExpectReconciledInput` (requires `osprey.reconciled = "true"`). See 15-hpc-scoring-split.md |
 | `--resolution {unit\|hram\|auto}` | `auto` | Folded into `SearchParameterHash` ⇒ changing it invalidates `.scores.parquet` and (via the task key) recalibration |
 | `--fragment-tolerance` / `--fragment-unit` | ppm; unit-res forces mz 0.5 | Folded into `SearchParameterHash` |

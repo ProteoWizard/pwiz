@@ -106,7 +106,7 @@ disk. Two experiment-wide artifacts carry it:
 
 | Artifact | Carries |
 |---|---|
-| `<stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases), the first pass's `OSPREY_EXPERIMENT_AGG` provenance, and — under `protein-compact` — the protein stratum |
+| `<stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases), the first pass's `OSPREY_EXPERIMENT_AGG` provenance, and - under `protein-compact` - the protein stratum |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | the first pass's experiment-scope q-values |
 
 **They must relay together.** A node holding one without the other cannot proceed:

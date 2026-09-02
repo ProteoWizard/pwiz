@@ -20,7 +20,7 @@ Skyline release/versioning scheme.
 | Start here | For |
 |---|---|
 | [`docs/00-pipeline-architecture.md`](docs/00-pipeline-architecture.md) | The pipeline's architecture and sidecar file contract. **Read before changing what any task reads, writes, or keeps.** |
-| [`docs/README.md`](docs/README.md) | Ordered index of the per-stage algorithm deep dives (01-20), numbered by pipeline execution order |
+| [`docs/README.md`](docs/README.md) | Ordered index of docs 00-20, numbered by pipeline execution order |
 | [`Osprey-workflow.html`](Osprey-workflow.html) | The annotated end-to-end diagram: stages, HPC task boundaries, per-task inputs and outputs |
 | [`docs/20-command-line.md`](docs/20-command-line.md) | Every CLI flag with defaults, plus copy-paste examples |
 
@@ -142,8 +142,8 @@ Osprey --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.b
 ```
 
 The example above shows the *commands*. What each node must actually be **shipped** at each
-boundary — including the experiment-wide artifacts that are easy to miss because a node can
-often proceed without them and produce a plausible wrong answer — is the relay checklist in
+boundary - including the experiment-wide artifacts that are easy to miss because a node can
+often proceed without them and produce a plausible wrong answer - is the relay checklist in
 [`docs/00-pipeline-architecture.md`](docs/00-pipeline-architecture.md).
 
 ### Notes that matter for a workflow engine (NextFlow, etc.)

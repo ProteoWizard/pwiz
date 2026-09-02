@@ -95,9 +95,13 @@ a cluster.
 
 **`regression.ps1` mode 3 is the enforcement of this section and of the relay checklist at
 the end of this document**, not an anecdote about it: it runs the split as separate
-processes, stages exactly the files the checklist names, and asserts each per-node
-reconciled parquet is byte-identical to the straight-through run's. A relay obligation that
-mode 3 does not stage is an obligation nothing is checking.
+processes, stages the files the checklist names, and compares the split run's products
+against the straight-through run's. Read what it actually asserts before relying on it: the
+per-run FDR sidecars and the `.blib` are compared at the run tolerance, and only
+`*.fdr_experiment.bin` byte for byte. It does **not** open the reconciled parquets, so a
+Stage 6 content change can leave mode 3 green. A relay obligation mode 3 does not stage is
+an obligation nothing is checking - and `<output>.model-diagnostics.data.json` is currently
+one of those.
 
 Its one blind spot is worth stating, because it has already hidden a defect: a phase-3 node
 is handed **one** run, and at N=1 a correct per-run implementation and an all-runs one
@@ -373,6 +377,14 @@ length prefix, or a two-phase protocol. The claim is checkable rather than aspir
 [14-intermediate-files](14-intermediate-files.md) enumerates the call sites, and a new
 durable artifact that does not appear there is a defect.
 
+**Three artifacts do not yet obey this, and they are defects rather than exceptions.** The
+Stage-7 reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` are written with a
+truncating `StreamWriter`, and both flags default on, so a kill during Stage 7 destroys the
+previous run's report and leaves a half-written one. `--write-pin` output is the third.
+None of them is in the contract table below - nothing in the pipeline reads them - but the
+"presence proves completeness" guarantee a *user* draws from a report file is exactly as
+strong as `FileSaver`, which is to say currently absent for these three.
+
 **P9. A validity key answers set inclusion, not completeness.** This follows from P8
 and is the most easily confused point in the design. Because atomic placement already
 guarantees the bytes are whole, the key never asks "did the writer finish?" - it asks
@@ -451,9 +463,9 @@ reuses an artifact computed under different settings and reports it as the new r
 Erring toward more key is therefore always the safe direction, and "I cannot tell"
 resolves to re-run.
 
-Identity is also, with one exception, free of paths: the library hash uses file name,
-size and mtime with the directory excluded, and the reconciliation hash names sorted
-file *stems*. A completed run can therefore be moved, copied, or hard-linked into a new
+Identity is also mostly free of paths: the library hash uses file name, size and mtime
+with the directory excluded, and the reconciliation hash names sorted file *stems*. Two
+user-supplied paths do reach it, both noted below. A completed run can therefore be moved, copied, or hard-linked into a new
 output directory and still be recognised as valid - the property external tooling relies
 on to adopt a prior run's Stage 1-4 artifacts instead of recomputing them for hours.
 
@@ -493,19 +505,21 @@ node running that task needs a copy, whatever batch it was handed.
 |---|---|---|---|---|
 | `<library-leaf>.libcache` | experiment cache | library load, any task | all tasks | rebuild locally |
 | `<stem>.spectra.bin` | per-run cache | `PerFileScoring` (Stage 2), or `--task SpectraCache` | `PerFileScoring`, `PerFileRescoring` | with the run |
-| `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileRescoring`, `FirstPassFDR`, `SecondPassFDR` | with the run, on **every** leg |
-| `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring` | with the run |
+| `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `PerFileRescoring`, `FirstPassFDR`, `SecondPassFDR` | with the run, on **every** leg |
+| `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring`, **`SecondPassFDR`** (fallback for runs with no reconciled sibling) | with the run |
 | `<stem>.1st-pass.fdr_scores.bin` | per-run product | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` or where no worker answer exists | with the run |
 | `<stem>.reconciliation.json` | per-run product | `FirstPassFDR` (Stage 6 planning) | `PerFileRescoring`, `SecondPassFDR` (gap-fill entry ids) | with the run |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | experiment product | `FirstPassFDR` | `PerFileRescoring`, `SecondPassFDR`, `PerFileScoring` (rehydrate) | **every node** |
 | `<stem>.1st-pass.model.json` | experiment product, replicated | `FirstPassFDR` (training) | `PerFileRescoring`, `SecondPassFDR` | **every node** (any one copy) |
-| `<stem>.scores-reconciled.parquet` | per-run product | `PerFileRescoring` (Stage 6) | `SecondPassFDR` | with the run |
+| `<stem>.scores-reconciled.parquet` | per-run product | `PerFileRescoring` (Stage 6) | `SecondPassFDR`, and `PerFileRescoring` itself on its per-run resume arm | with the run |
 | `<stem>.2nd-pass.fdr_decoys.bin` | per-run product | `PerFileRescoring` (pass-2 worker) | `SecondPassFDR` | with the run |
 | `<stem>.2nd-pass.fdr_scores.bin` | per-run product | `PerFileRescoring` (pass-2 worker), else `SecondPassFDR` | `SecondPassFDR` | with the run |
 | `<blib-stem>.2nd-pass.fdr_experiment.bin` | experiment product | `SecondPassFDR` | `SecondPassFDR` on a resume | n/a |
 | `<output>.model-diagnostics.data.json` | experiment product (`--model-diagnostics`) | `FirstPassFDR` | `SecondPassFDR`, which deletes it | **every node** running `SecondPassFDR` |
-| `<output>.model-diagnostics.html` | experiment product (`--model-diagnostics`) | `SecondPassFDR` | terminal | n/a |
+| `<output>.model-diagnostics.html` | experiment product (`--model-diagnostics`) | `FirstPassFDR` renders it; `SecondPassFDR` appends the pass-2 views and re-renders | terminal | n/a |
 | `<output>.<TaskName>.osprey.task` | scope of its artifact | every task, via `PerFileResumeDriver` | the driver | with its artifact |
+
+In that last row `<output>` is the **full artifact path including its extension** - `foo.scores.parquet.PerFileScoring.osprey.task` - not the blib stem it means in the rows above it. A staging glob written from the uniform reading misses every per-run stamp.
 | `<output>.blib` | experiment product (terminal) | `SecondPassFDR` | Skyline | n/a |
 
 Nothing else is part of this contract. The `--fdrbench` pairing manifests and the
@@ -595,8 +609,7 @@ matching key alone is not enough (P8 and P9 are separate tests, and
 
 ### Where blib-named experiment-wide artifacts live
 
-This rule governs the artifacts named for the analysis - `fdr_experiment.bin` for both
-passes, and the `--model-diagnostics` pair. It does **not** govern
+This rule governs `fdr_experiment.bin` for both passes. It does **not** govern
 `<stem>.1st-pass.model.json`, which is the replicated exception described above: that one
 takes its name from the run stem and its directory from that run's own parquet, precisely
 so a fan-out node can find it without knowing this rule.
@@ -692,17 +705,26 @@ prior run's expensive Stage 1-4 output instead of recomputing it - see
 is a property of the hashes, and any change that folds a directory into one of them
 removes it for every run.
 
-**The one exception is `--decoy-pairing-manifest`.** Its path enters
-`SearchParameterHash` verbatim and unnormalised - the user's own spelling, relative or
-absolute - so it is the single place a directory reaches artifact identity. A cohort
-searched with a pairing manifest therefore *does* invalidate when it moves, which is why
-relocating an entrapment dataset needs a junction restoring the original path rather than
-a re-run. Everything else in this section holds regardless.
+**Two user-supplied paths reach artifact identity, and both defeat relocation for the
+runs that use them.** `--decoy-pairing-manifest` enters `SearchParameterHash` verbatim and
+unnormalised - the user's own spelling, relative or absolute. `OSPREY_PICK_LDA_MODEL`
+enters the *base* key through the peak-pick suffix, so it is inherited by all four tasks:
+moving, renaming, or per-node-mounting that model JSON invalidates every `.osprey.task`
+stamp in the tree and silently stops `-LinkFrom` adoption. A cohort using either therefore
+*does* invalidate when it moves, which is why relocating such a dataset needs a junction
+restoring the original path rather than a re-run. Everything else in this section holds
+regardless, and adding a third path to a hash would narrow it further.
 
 A warm resume across builds is a separate matter: the version stamp is compared for exact
-equality (`YEAR.ORDINAL.BRANCH.DOY`), so artifacts from another day's build are refused
-rather than silently reused. `OSPREY_VERSION_OVERRIDE` pins the stamp and is the
-sanctioned way to consume another build's artifacts deliberately.
+equality (`YEAR.ORDINAL.BRANCH.DOY`) - **but only where it is checked, which is narrower
+than it sounds.** That comparison guards the `--input-scores` parquet load. The
+`.osprey.task` resume path does not do it: `TaskValiditySidecar.IsValid` compares the
+`validity_key` only, and the `version` field it records is provenance. No version component
+is in the base key either. So re-invoking the same straight-through command line the next
+day, against yesterday's output directory, reuses every task on a key match alone even
+across a build with different scoring - the under-inclusive-key outcome P15 calls the
+dangerous direction. Treat that as a gap, not a guarantee. `OSPREY_VERSION_OVERRIDE` pins
+the stamp and is the sanctioned way to consume another build's artifacts deliberately.
 
 ---
 
@@ -711,7 +733,11 @@ sanctioned way to consume another build's artifacts deliberately.
 ### What the key is made of, and why it decides correctness
 
 Each task composes its own key: a base of search parameters, library identity and the
-peak-pick arm, plus per-task additions - `FirstPassFDR` adds six, `PerFileRescoring` six.
+peak-pick arm, plus per-task additions - `FirstPassFDR` adds six, `PerFileRescoring`
+seven, `SecondPassFDR` seven. `PerFileRescoring`'s seventh is the one to know about:
+`LibraryFragmentRelease.ValidityKeySuffix` branches on the per-leg flags, which is exactly
+why a `SecondPassFDR` process and a `PerFileRescoring` process compute different keys for
+the same task - the asymmetry the stamp-presence rule above exists to work around.
 **The exact composition, and the defect each component was added to prevent, is
 invalidation mechanics and lives in [14-intermediate-files](14-intermediate-files.md).**
 
@@ -740,8 +766,14 @@ Two details are easy to get wrong:
   downstream artifact stamped with a matching key is still describing the right input.
   Correctness therefore rests entirely on keys being exhaustive, which is why the table
   above exists.
-- **A sidecar is cleared when its task starts, not when it finishes.** A crash mid-Run
-  then leaves no stale marker claiming a partially written output is valid.
+- **A stale sidecar is cleared before its output is recomputed, not after.** A crash
+  mid-Run then leaves no stale marker claiming a partially written output is valid. **The
+  granularity differs by task and must not be unified.** The two joins clear their single
+  coarse output's sidecar at the start of `Run`. The two fan-out tasks clear *per run*,
+  immediately before recomputing that run, because a task-level delete would wipe the
+  per-run stamps they rely on for their own within-task skip. Hoisting the delete into the
+  driver to remove the apparent asymmetry would make a resumed 500-run cohort re-score
+  every run - expensive, and it produces correct output, so no gate would catch it.
 
 Sidecars are stamped even for the tasks that deliberately return "stop here" at an HPC
 boundary. Gating the stamp on the pipeline continuing would skip sidecar writes for
@@ -786,11 +818,14 @@ Four things hold at every boundary and are not repeated in each list:
 - **The library, and the `--decoy-pairing-manifest` if the search used one**, go to every
   node of every task. The manifest's path must match the one the search hash was computed
   from, or every artifact on that node invalidates.
-- **A fan-out node gets `<stem>.spectra.bin` plus a 0-byte `<stem>.mzML` stub, never the
-  real mzML.** The stub exists only so path derivation works; the cache's source
-  fingerprint check is skipped for a 0-byte source, which forces the cache hit. Shipping
-  the real file would move gigabytes per run to a worker that will not read them - on the
-  reference cohorts the 6 GB mzML is never sent to a rescore worker.
+- **A fan-out node gets `<stem>.spectra.bin` and no data file at all.** Osprey tolerates
+  an absent source once the cache exists - the source fingerprint check treats "absent" as
+  the documented resume case - so shipping the real mzML would move gigabytes per run to a
+  worker that will not read them. Do **not** substitute a 0-byte stub: an empty file makes
+  the mzML path reachable, so a cache that is rejected for any reason (version bump,
+  truncated footer) is silently replaced by parsing an empty file, and the run finishes
+  success-shaped with zero spectra. With the file simply absent, a rejected cache fails
+  loudly.
 - **Pass `--cache-dir` on any `--task` leg whose `--output-dir` differs from the data
   directory.** Such a leg has no raw input path to resolve `.spectra.bin` from, so without
   it the cache is not found and the run rebuilds it.
@@ -825,6 +860,12 @@ case they are the data and must be preserved.
 
 ### Boundary 2 -> 3: `FirstPassFDR` to `PerFileRescoring`
 
+> **In flight** - this list is not yet one a single-run node can run on. The artifact that
+> lets a fan-out worker obtain the join-wide compaction set without surveying the batch,
+> `<blib-stem>.1st-pass.retained_base_ids.bin`, does not exist on master; a node staged
+> with exactly the list below derives a different survivor set rather than erroring. See
+> item 2 under `## In flight`. Stage the whole cohort's envelopes until it lands.
+
 Each rescore node needs its own runs' artifacts plus the experiment-wide set:
 
 Per run, for each run in the node's batch:
@@ -832,11 +873,13 @@ Per run, for each run in the node's batch:
 - `<stem>.1st-pass.fdr_scores.bin`
 - `<stem>.reconciliation.json`
 - `<stem>.calibration.json`
-- `<stem>.spectra.bin`, with a 0-byte `<stem>.mzML` stub beside it
+- `<stem>.spectra.bin`, with no data file beside it
 
 Experiment-wide, to **every** node:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`
-- `<stem>.1st-pass.model.json` (any one copy; needed for the frozen pass-2 modes)
+- `<stem>.1st-pass.model.json` (any one copy) - **mandatory on an ordinary run**, because
+  the default pass-2 mode is a frozen one (`protein-compact`); an unset
+  `OSPREY_PASS2_QVALUE` is not an opt-out
 
 This is the boundary where a missing experiment-wide file does the most damage, because
 the node can often proceed without it and produce a plausible wrong answer rather than
@@ -864,8 +907,13 @@ Experiment-wide:
 Not needed on the default path: `<stem>.1st-pass.fdr_scores.bin`. Establishing that is
 what issue #4486 was for - an orchestrator hands a `SecondPassFDR` node the per-run
 second-pass artifacts and the analysis-wide experiment sidecar, and nothing per-run from
-the first pass. They become a real input only under `OSPREY_PASS2_VERIFY_WORKER`, which is
-a test instrument, or where no worker answer exists.
+the first pass on the **default** mode. Two exceptions: `OSPREY_PASS2_VERIFY_WORKER`, a
+test instrument; and `OSPREY_PASS2_QVALUE=transfer`, which reads every run's copy to build
+its score-to-run-q table. Under `transfer` a missing sidecar is **not** fatal - it logs that
+the run's per-run q is left unadjusted and continues, so trimming these files and later
+running a transfer arm yields a whole cohort of reconciliation-moved peaks carrying
+pre-reconciliation q-values, in a success-shaped run. Ship them unless you know no transfer
+arm will follow.
 
 The `.osprey.task` sidecars are not optional bookkeeping here. Without the stamp,
 `SecondPassFDR` cannot tell that a worker wrote the pass-2 files and will recompute them
@@ -896,7 +944,7 @@ the text says so rather than describing the current shape as though it were the 
    protein FDR ends. See "The protein-q split, and the rule behind it" in
    `ai/todos/active/TODO-20260901_osprey_firstpassfdr_resume.md`.
 
-1a. **Two experiment-wide artifacts arrive with the fan-out fix**, and both are relay
+2. **Two experiment-wide artifacts arrive with the fan-out fix**, and both are relay
    obligations the checklist below will gain. `<blib-stem>.1st-pass.retained_base_ids.bin`
    is written by `FirstPassFDR` when Stage 6 planning ends and carries the join-wide
    first-pass base ids unioned with every planned action target - sorted `uint32`,
@@ -908,20 +956,20 @@ the text says so rather than describing the current shape as though it were the 
    `Skyline/work/20260901_osprey_firstpass_resume`; when it lands, "two experiment-wide
    artifacts that must relay together" becomes four.
 
-2. **The bounded-loop shape of `PerFileRescoring`.** The task is still entered with a
+3. **The bounded-loop shape of `PerFileRescoring`.** The task is still entered with a
    materialised all-runs entry list, and its baseline still carries maps keyed by run whose
    values are per-entry - the `O(runs x entries)` shape P5 and P6 forbid. See "THE TARGET
    SHAPE for --task PerFileRescoring" and its violation table (items 6 and 7,
    `perFileEntries` and `reconciliationActions`) in
    `ai/todos/active/TODO-20260901_osprey_stage5_reload_materialization.md`.
 
-3. **Retiring the resident survivor handoff.** `OSPREY_STAGE6_STREAM_SURVIVORS=0` still
+4. **Retiring the resident survivor handoff.** `OSPREY_STAGE6_STREAM_SURVIVORS=0` still
    selects the resident path, where Stage 5's all-runs survivor buffer stays live across
    the whole Stage 6 rescore instead of being refilled one run at a time from each run's
    `.scores.parquet` and first-pass sidecar. The streamed path is the default; the switch
    goes when the resident one does.
 
-4. **Whether the 500-run / 64 GB target is met.** It is not yet, and which stage binds is
+5. **Whether the 500-run / 64 GB target is met.** It is not yet, and which stage binds is
    itself moving as each is fixed. The two TODOs above carry the current measurements;
    deliberately not restated here, because a number in a contract document is stale the
    week after it is written.

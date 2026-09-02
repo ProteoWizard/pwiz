@@ -72,6 +72,7 @@
     # CI
     .\package.ps1 -TeamCity -Msi
 #>
+#Requires -Version 7.0
 param(
     [string[]]$Rid = @('win-x64','linux-x64'),
     [ValidateSet('Debug','Release')] [string]$Configuration = 'Release',
@@ -227,13 +228,25 @@ function Add-OspreyDocs {
     # the COPY so the bundled README has no dead links: docs/ links go to GitHub
     # (there is nothing local to point at), and the workflow link gets its
     # subdirectory. Same approach as the CommandLine.html retarget above.
+    #
+    # The docs URL deliberately points at master rather than this build's commit.
+    # A commit URL would describe exactly the code in the ZIP, but it 404s for any
+    # bundle built from an unpushed branch (every developer build), and a dead link
+    # is worse than a slightly newer one. Revisit if bundles are ever produced only
+    # from pushed release tags.
+    #
+    # Read and write with explicit encoding rather than Get-Content/Set-Content
+    # defaults: the README is BOM-less UTF-8 containing em dashes, and the default
+    # round-trip mangles them and prepends a BOM on Windows PowerShell 5.1. The
+    # #Requires above should prevent that, but the file is data, so make the
+    # handling of it explicit anyway.
     $readmeStaged = Join-Path $StageDir 'README.md'
     Copy-Item (Join-Path $scriptRoot 'README.md') $readmeStaged -Force
-    $readme = Get-Content $readmeStaged -Raw
+    $readme = [System.IO.File]::ReadAllText($readmeStaged, [System.Text.Encoding]::UTF8)
     $docsUrl = 'https://github.com/ProteoWizard/pwiz/blob/master/pwiz_tools/Osprey/docs/'
     $readme = [regex]::Replace($readme, '\]\(docs/([^)]+)\)', ('](' + $docsUrl + '$1)'))
     $readme = [regex]::Replace($readme, '\]\(Osprey-workflow\.html\)', '](Documentation/Osprey-workflow.html)')
-    Set-Content -Path $readmeStaged -Value $readme -NoNewline -Encoding utf8
+    [System.IO.File]::WriteAllText($readmeStaged, $readme, (New-Object System.Text.UTF8Encoding $false))
 
     Copy-Item (Join-Path $repoRoot 'LICENSE') (Join-Path $StageDir 'LICENSE') -Force
 }

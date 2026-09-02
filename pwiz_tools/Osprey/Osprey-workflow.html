@@ -74,7 +74,7 @@
 </header>
 
 <main>
-<svg class="pipeline" viewBox="0 0 1200 2868" xmlns="http://www.w3.org/2000/svg">
+<svg class="pipeline" viewBox="0 0 1200 2884" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <!-- Arrowhead for control flow between stages -->
   <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
@@ -152,6 +152,7 @@
     .task-hdr-io   { font-family: ui-monospace, SFMono-Regular, monospace;
                      font-size: 10px; fill: #37474f; }
     .task-hdr-key  { font-weight: 700; fill: #5e35b1; }
+    .subtitle a    { fill: #1565c0; text-decoration: underline; }
     .task-hdr-relay{ font-size: 9px; font-weight: 700; fill: #6a1b9a;
                      text-transform: uppercase; letter-spacing: 0.5px; }
 
@@ -184,7 +185,7 @@
 <!-- ================================================================= -->
 <!-- LEGEND                                                             -->
 <!-- ================================================================= -->
-<g transform="translate(40, 90)">
+<g transform="translate(40, 106)">
   <text class="legend-title">Port status</text>
   <g transform="translate(0, 16)">
     <rect class="st-done"    x="0"   y="0" width="16" height="12"/>
@@ -202,7 +203,7 @@
     <rect class="st-missing" x="830" y="0" width="16" height="12"/>
     <text class="legend-label" x="852" y="10">missing / stubbed</text>
 
-    <rect class="st-n/a"     x="980" y="0" width="16" height="12"/>
+    <rect class="st-na"      x="980" y="0" width="16" height="12"/>
     <text class="legend-label" x="1002" y="10">not applicable</text>
   </g>
 
@@ -222,7 +223,7 @@
 <!-- ================================================================= -->
 <!-- INPUTS                                                             -->
 <!-- ================================================================= -->
-<g transform="translate(0, 190)">
+<g transform="translate(0, 206)">
   <text class="phase-label" x="40" y="0">inputs</text>
 
   <rect class="input-pill" x="260"  y="16" width="260" height="48" rx="24"/>
@@ -235,13 +236,13 @@
 </g>
 
 <!-- Arrows from inputs into the PerFileScoring task banner -->
-<path class="flow" d="M 390 254 L 390 268" marker-end="url(#arrow)"/>
-<path class="flow" d="M 810 254 L 810 268" marker-end="url(#arrow)"/>
+<path class="flow" d="M 390 270 L 390 284" marker-end="url(#arrow)"/>
+<path class="flow" d="M 810 270 L 810 284" marker-end="url(#arrow)"/>
 
 <!-- ================================================================= -->
 <!-- TASK 1 of 4: PerFileScoring (Stages 1-4, per-file fan-out)         -->
 <!-- ================================================================= -->
-<g transform="translate(0, 270)">
+<g transform="translate(0, 286)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
   <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileScoring</text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-run fan-out &#183; any batch size, 1..N nodes</text>
@@ -252,13 +253,13 @@
 </g>
 
 <!-- Arrows from the PerFileScoring banner into Stage 1 and Stage 2 -->
-<path class="flow" d="M 390 368 L 390 410" marker-end="url(#arrow)"/>
-<path class="flow" d="M 810 368 L 810 410" marker-end="url(#arrow)"/>
+<path class="flow" d="M 390 384 L 390 426" marker-end="url(#arrow)"/>
+<path class="flow" d="M 810 384 L 810 426" marker-end="url(#arrow)"/>
 
 <!-- ================================================================= -->
 <!-- STAGE 1 + STAGE 2 (parallel: library prep / mzML prep)             -->
 <!-- ================================================================= -->
-<g transform="translate(0, 402)">
+<g transform="translate(0, 418)">
   <!-- Stage 1 container -->
   <rect class="phase-bg" x="40"  y="10" width="540" height="180" rx="6"/>
   <text class="phase-label" x="60"  y="30">stage 1</text>
@@ -297,13 +298,13 @@
 </g>
 
 <!-- Arrows down into calibration -->
-<path class="flow" d="M 310 612 L 310 642 L 600 642 L 600 672" marker-end="url(#arrow)"/>
-<path class="flow" d="M 890 612 L 890 642 L 600 642" />
+<path class="flow" d="M 310 628 L 310 658 L 600 658 L 600 688" marker-end="url(#arrow)"/>
+<path class="flow" d="M 890 628 L 890 658 L 600 658" />
 
 <!-- ================================================================= -->
 <!-- STAGE 3 CALIBRATION                                                 -->
 <!-- ================================================================= -->
-<g transform="translate(0, 672)">
+<g transform="translate(0, 688)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="540" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 3</text>
   <text class="phase-title" x="60" y="42">Calibration (a.k.a. recalibration)</text>
@@ -357,12 +358,12 @@
 </g>
 
 <!-- Arrow from calibration to main search -->
-<path class="flow" d="M 600 1212 L 600 1252" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 1228 L 600 1268" marker-end="url(#arrow)"/>
 
 <!-- ================================================================= -->
 <!-- STAGE 4 MAIN FIRST-PASS SEARCH                                     -->
 <!-- ================================================================= -->
-<g transform="translate(0, 1252)">
+<g transform="translate(0, 1268)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="200" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 4</text>
   <text class="phase-title" x="60" y="42">Main first-pass search</text>
@@ -388,13 +389,13 @@
 <!-- ================================================================= -->
 <!-- TASK 2 of 4: FirstPassFDR (Stage 5, join / coordinator node)        -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 1452 L 600 1466" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 1468 L 600 1482" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 1468)">
+<g transform="translate(0, 1484)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
   <text x="140" y="22" class="task-hdr-name">&#9656; --task FirstPassFDR</text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; 1 node &#183; holds O(distinct), never O(runs x entries)</text>
-  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan>  (every run, via --input-scores)</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan>, <tspan class="sc-run">&lt;stem&gt;.calibration.json</tspan>  (every run, via --input-scores)</text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.1st-pass.fdr_scores.bin</tspan>, <tspan class="sc-run">&lt;stem&gt;.reconciliation.json</tspan> (Stage 5&#8594;6 boundary)   &#183;   validity  <tspan class="sc-run">&lt;out&gt;.FirstPassFDR.osprey.task</tspan></text>
   <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">&lt;stem&gt;.1st-pass.model.json</tspan> (frozen pass-1 model, for the frozen pass-2 modes)</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: both experiment-wide files to EVERY downstream node</text>
@@ -403,13 +404,13 @@
 <!-- ================================================================= -->
 <!-- STAGE 5 FIRST-PASS FDR + RECONCILIATION PLANNING                   -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 1564 L 600 1582" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 1580 L 600 1598" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 1584)">
+<g transform="translate(0, 1600)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="500" rx="8"/>
   <text class="phase-label" x="60" y="24">stage 5</text>
   <text class="phase-title" x="60" y="42">First-pass FDR + reconciliation planning</text>
-  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — needs all-run representation</text>
+  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join - needs all-run representation</text>
   <text class="phase-note"  x="60" y="58">First-pass FDR across all files. Runs Percolator SVM on the joined per-file scores, computes cross-run consensus RTs,</text>
   <text class="phase-note"  x="60" y="72">refits per-file calibration, and emits a per-(file, entry) reconciliation plan. All work that needs all-file representation lives here.</text>
 
@@ -455,9 +456,9 @@
 <!-- ================================================================= -->
 <!-- TASK 3 of 4: PerFileRescoring (Stage 6, second per-file fan-out)    -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 2084 L 600 2098" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 2100 L 600 2114" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 2100)">
+<g transform="translate(0, 2116)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
   <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileRescoring</text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-run fan-out &#183; reads its own runs + the experiment baseline only</text>
@@ -470,15 +471,15 @@
 <!-- ================================================================= -->
 <!-- STAGE 6 PER-FILE RESCORE (SECOND PER-FILE FAN-OUT)                  -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 2196 L 600 2214" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 2212 L 600 2230" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 2216)">
+<g transform="translate(0, 2232)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="260" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 6</text>
   <text class="phase-title" x="60" y="42">Per-file rescore + gap-fill + parquet write-back</text>
-  <text class="phase-shape-fanout" x="1115" y="24" text-anchor="end">per-run fan-out — 1..N nodes</text>
+  <text class="phase-shape-fanout" x="1115" y="24" text-anchor="end">per-run fan-out - 1..N nodes</text>
   <text class="phase-note"  x="60" y="58">Second per-file fan-out. Each file independently reloads its mzML, re-invokes the search engine with the reconciled boundary overrides,</text>
-  <text class="phase-note"  x="60" y="72">runs the gap-fill two-pass for missing precursors, and writes reconciled scores back to its .scores.parquet. No cross-file work.</text>
+  <text class="phase-note"  x="60" y="72">runs the gap-fill two-pass for missing precursors, and writes a SEPARATE &lt;stem&gt;.scores-reconciled.parquet - never back over its input. No cross-run work.</text>
 
   <rect class="st-done" x="80" y="90" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="110" text-anchor="middle">Per-file rescore at reconciled boundaries</text>
@@ -499,15 +500,15 @@
 <!-- ================================================================= -->
 <!-- TASK 4 of 4: SecondPassFDR (Stage 7, join / aggregator node)        -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 2476 L 600 2490" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 2492 L 600 2506" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 2492)">
+<g transform="translate(0, 2508)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
   <text x="140" y="22" class="task-hdr-name">&#9656; --task SecondPassFDR</text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; 1 node &#183; final aggregation</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores-reconciled.parquet</tspan> (via --input-scores; falls back to <tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> for no-work runs)</text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">&lt;stem&gt;.1st-pass.model.json</tspan>, <tspan class="sc-run">&lt;stem&gt;.reconciliation.json</tspan>, <tspan class="sc-run">.calibration.json</tspan></text>
-  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;output&gt;.blib</tspan>, <tspan class="sc-exp">&lt;blib-stem&gt;.2nd-pass.fdr_experiment.bin</tspan>, <tspan class="sc-run">&lt;stem&gt;.2nd-pass.fdr_scores.bin</tspan> (where no worker ran)</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;output&gt;.blib</tspan>, <tspan class="sc-exp">&lt;blib-stem&gt;.2nd-pass.fdr_experiment.bin</tspan>, <tspan class="sc-run">&lt;stem&gt;.2nd-pass.fdr_scores.bin</tspan> (where no worker ran)   &#183;   validity  <tspan class="sc-exp">&lt;out&gt;.SecondPassFDR.osprey.task</tspan></text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: every run's reconciled set, with its .osprey.task stamps</text>
 </g>
 
@@ -522,9 +523,9 @@
 <!-- experiment-level FDR, first-pass protein FDR, reconciliation       -->
 <!-- planning) under the FirstPassFDR phase.                            -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 2588 L 600 2606" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 2604 L 600 2622" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 2608)">
+<g transform="translate(0, 2624)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="230" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 7</text>
   <text class="phase-title" x="60" y="42">Post-join: second-pass Percolator + protein FDR + .blib output</text>
