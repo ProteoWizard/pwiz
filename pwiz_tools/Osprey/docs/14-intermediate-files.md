@@ -533,6 +533,51 @@ mid-write cannot leave a stale "valid" marker. Callers reach these through
 `PerFileResumeDriver` (`IsCurrent` / `ClearStale` / `Stamp`), which additionally requires the
 output file itself to exist — a sidecar can outlive its output.
 
+
+### What a validity key is made of
+
+The base key every task carries is search parameters, library identity, and the peak-pick
+arm (`OspreyTask.ValidityKey`). Tasks with extra state append to it; `FirstPassFDR` adds
+six components, and each one is in the key because leaving it out produced a specific
+wrong answer:
+
+| Component | Without it |
+|---|---|
+| reconciliation parameter hash | toggling reconciliation between runs reuses the prior shape |
+| FDR sidecar format version | a resume across a format bump skips the task, then every reader refuses the old file by version and defaults are written instead |
+| experiment-aggregation mode | an A/B arm re-run in a directory holding the other arm's results reuses the previous mode's q and reports it as the new measurement |
+| pass-2 q-value mode | a sidecar written under `transfer` carries no stratum, so a `protein-compact` re-run adopts an artifact that cannot answer its question |
+| training-sample settings | a resume adopts maximum-trained scores as though the reservoir had produced them |
+| library-fragment release | the retained-fragment arm differs and the outputs are not interchangeable |
+
+`PerFileRescoring` appends its own set for the same reasons - the reconciliation hash and
+sidecar format version, the experiment-aggregation, pass-2 q and training-sample arms, and
+the survivor-streaming switch, whose two paths must not adopt each other's output.
+
+The peak-pick arm sits in the *base* rather than in the overrides because it is the one
+lever that reaches every task: the pick decides which peak a precursor's row describes,
+back in Stage 4, and everything downstream inherits that choice. Putting it in the base
+also means a task added later carries it without having to know.
+
+Read that table as a worked example of P15's asymmetry. Every row was added after an
+under-inclusive key reused something it should not have, and none of them cost more than
+a recompute if they were unnecessary.
+
+### The build stamp
+
+The version stamped into each artifact follows the Skyline scheme
+`YEAR.ORDINAL.BRANCH.DOY`, with the full informational form carrying the git short hash
+(`26.1.1.182-b2373f9f9c`, plus `-dirty` for a modified tree) so a binary is always
+traceable to its source commit. Reuse requires an exact match on all four numeric
+components; a difference in release line or daily build aborts reuse with a hard error
+rather than a warning, because a cache from a different build may carry different scoring
+and a logged warning is easily missed while the run still completes and looks valid.
+
+
+The rule these serve - why an under-inclusive key is the dangerous
+direction and an over-inclusive one merely costs a recompute - is P15 in
+[00-pipeline-architecture.md](00-pipeline-architecture.md).
+
 This is the C# equivalent of, and refinement over, Rust's implicit "skip-if-cache-valid"
 behavior: it makes resume explicit and per-task rather than inferring state from parquet footer
 hashes alone. For the resume semantics built on it — the forward scan, per-run guards, and the

@@ -8,6 +8,8 @@ The C# port implements this split as **four pipeline tasks** driven by a single 
 
 > **This document owns operations**: CLI flags, the membership truth table, `--input-scores` resolution and ordering, footer-hash validation, and concurrency. *Why* the split has this shape — the scope of each artifact, which task may read what, and the exact file list a node must be shipped at each boundary — is owned by [00-pipeline-architecture.md](00-pipeline-architecture.md), and the byte formats by [14-intermediate-files.md](14-intermediate-files.md). Read 00 before changing what any task writes.
 
+> **In flight** - this document describes `--task PerFileRescoring` as rehydrating `FirstPassFdrTask` and reading an all-runs `CompactedEntries` buffer (the membership truth table below, and the Stage 6 section). That is what the branch `Skyline/work/20260901_osprey_firstpass_resume` replaces with a per-run hydrate, so both statements change when it lands. **Deviations from the target architecture are tracked in one place - 00's `## In flight` section - not per document**; this note exists so a reader of 15 alone knows to look there.
+
 ## Task-name mapping (CLI name vs internal enum)
 
 The CLI `--task` spelling, the `HpcTask` enum member, and the task class are now one name per task. The only one that still needs a second look is `PerFileRescoring` (CLI) vs `PerFileRescore` (enum and class); the rest differ at most in the `Fdr`/`FDR` casing.

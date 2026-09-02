@@ -90,9 +90,21 @@ The same pipeline runs three ways, and all three must produce identical output:
 
 These are not three code paths. They are the same four tasks with different subsets
 included in the driver loop, reading the same sidecar files from disk. A single-process
-run writes every file an HPC run writes; that is what makes the HPC mode testable
-without a cluster, and why regression mode 3 can assert that a per-node reconciled
-parquet is byte-identical to the one the straight-through run produced.
+run writes every file an HPC run writes, which is what makes the HPC mode testable without
+a cluster.
+
+**`regression.ps1` mode 3 is the enforcement of this section and of the relay checklist at
+the end of this document**, not an anecdote about it: it runs the split as separate
+processes, stages exactly the files the checklist names, and asserts each per-node
+reconciled parquet is byte-identical to the straight-through run's. A relay obligation that
+mode 3 does not stage is an obligation nothing is checking.
+
+Its one blind spot is worth stating, because it has already hidden a defect: a phase-3 node
+is handed **one** run, and at N=1 a correct per-run implementation and an all-runs one
+produce identical bytes, so the mode stayed green while the per-run path was not running at
+all. **Where a contract cannot be distinguished by output at N=1, the gate must assert the
+path** - a marker line the run emits, checked as a string - rather than trusting the bytes
+to reveal it.
 
 ### What "bounded" means
 
@@ -114,6 +126,33 @@ appears innocently: a dictionary keyed by file name whose values are per-entry l
 map built once "for convenience" outside a per-run loop, a join that materialises every
 run's rows to compute a summary over them. At 3 runs it is invisible. At 500 it is the
 whole 64 GB.
+
+### Visited is not resident
+
+Those three shapes describe what is **resident**. A separate question is how many runs a
+computation **visits**, and conflating the two leaves no vocabulary for the shape that
+does most of the work in the joins: a **fold over a stream** - visit every run in turn,
+hold one at a time, and accumulate a bounded summary.
+
+That is a third shape, and it is why a join is not automatically expensive. Every
+genuinely whole-experiment computation named in this document is one of these folds: the
+best-of-runs experiment-q floor, protein parsimony, the pre-blib q re-clamp. The code says
+so where it matters - "both maps are O(distinct) ... nothing here needs a whole-run view" -
+and `StreamingFdr.StreamingFirstPassQ` is the worked example, pinned against its resident
+twin by a test.
+
+Read the vocabulary this way:
+
+| | Visits | Holds |
+|---|---|---|
+| Fan-out iteration | one run | one run |
+| Fold over a stream | every run | a bounded summary |
+| Resident whole-experiment structure | every run | every run - **inadmissible** |
+
+The distinction matters because "it stays in the join" and "it may be resident" are
+different permissions, and the gap between them is where an all-runs pre-pass can grow
+without violating any rule stated in terms of fan-out versus join alone.
+
 
 ---
 
@@ -256,6 +295,15 @@ tier, and an artifact that fits neither is a design error rather than a special 
 Scope is a statement about *content* - whose data is in the file - and it is what the
 memory model in P5 and P6 is built on.
 
+The converse of the replication below is the shape to watch for: **a per-run artifact
+carrying an analysis-wide payload.** `<stem>.reconciliation.json` does this today - every
+one of its N copies restates the same join-wide `first_pass_base_ids` array, which at 446
+runs is 2.79 GB of pure duplication inside 10.7 GB of envelopes that a fan-out worker then
+has to parse to rebuild a union it could have been handed. Replication is only benign when
+the payload is small and fixed, as the frozen model is; when it scales with the experiment
+it belongs in one experiment-wide artifact, and the fan-out reads that instead. This is the
+P6 startup rule seen from the writer's side.
+
 Scope is not the same question as naming, and the two must not be conflated. Most
 per-run content is named for its run stem and most experiment-wide content is named for
 the analysis, but an experiment-wide payload small enough to duplicate may be
@@ -294,10 +342,21 @@ experiment-wide artifacts must be *summaries* - O(library) or O(distinct entries
 never a concatenation of per-run data. An experiment-wide file that grows with the
 cohort puts the cohort in the floor.
 
-**P6. Per-run artifacts are loaded and freed inside one iteration.** Nothing a run's
-processing allocates may outlive its iteration. The peak is then
-`baseline + max(one run)`, independent of batch size and of cohort size, which is the
-identity in the figure above and the property the 64 GB target rests on.
+**P6. Per-run artifacts are loaded and freed inside one iteration, and the task's startup
+is independent of batch size in wall clock as well as memory.** Nothing a run's processing
+allocates may outlive its iteration, so the peak is `baseline + max(one run)`, independent
+of batch size and of cohort size - the identity in the figure above, and the property the
+64 GB target rests on.
+
+That identity alone is not the whole requirement, because it constrains only the *peak*. A
+worker that opens all 446 `reconciliation.json` envelopes to build a union, then frees them
+before the loop starts, never exceeds the peak and has still done O(runs) work before
+rescoring its first run. That is not hypothetical: it shipped, as 8m42s and 17.2 GB of
+startup on an 86-run plate - work the rescore loop then discarded and redid. So the rule is
+both terms: **no fan-out task may have a loading phase whose cost grows with the number of
+runs it was handed.** Where such a task needs a cohort-wide fact, an earlier phase computes
+it once and writes it (P12) and the fan-out reads that bounded summary - it never conducts
+its own survey of the batch.
 
 **P7. Persist at phase end, not task end.** Crash exposure is one in-flight file no
 matter how large the cohort, and a downstream task starting mid-pipeline finds each
@@ -334,6 +393,19 @@ published in Stage 6 reaches Stage 7, so it concluded no worker had run and rewr
 sidecar with survivors only: 332,269 records where the straight-through route produced
 407,624, on artifacts whose whole purpose is to be route-independent. An in-memory signal
 cannot answer a question about a file that outlives the process.
+
+The corollary governs the byproduct registry, which is how tasks pass state in-process.
+Tasks do not take each other's output as constructor arguments; they `Publish` typed
+byproducts and `Get` them, and a `Get` that misses lazily materialises the producing task
+through its `Rehydrate` (disk-load) path. That is what lets a worker starting mid-pipeline
+pull upstream state from the boundary files - but it also means one `Get` can materialise
+several tasks in a chain, and that the in-process route can quietly stop resembling the
+distributed one. So: **every byproduct that crosses a task boundary must have a disk
+counterpart, and the in-process path should read the same artifact the distributed path
+does.** Otherwise the two shapes drift, because the distributed route is forced to write
+files while the in-process route just reaches backwards through a cache - and a change that
+stops producing something in memory will not have stopped the consumers that rebuild it
+for themselves.
 
 **P11. Artifacts are write-once: a new column means a new file, never a revisit.** A
 phase writes its product once and no later phase reopens it. Reconciled scores go to
@@ -465,13 +537,17 @@ it beside each run's other sidecars means a node finds it by the same stem deriv
 already uses. `LoadFromAny` takes the first copy that exists, because the copies are
 identical.
 
-**The protein-compact stratum has no file of its own.** It rides inside
-`<stem>.1st-pass.model.json` as an optional field, present only under
-`OSPREY_PASS2_QVALUE=protein-compact`. This is deliberate and worth not undoing: the
-mode needs both the frozen model and the stratum, they are produced by the same
-first-pass span, and a node holding one without the other can do nothing. One artifact
-means one relay hop and one reload site, and makes it impossible to ship half of what
-the mode requires.
+**The protein-compact stratum rides inside `<stem>.1st-pass.model.json`** as an optional
+field, present only under `OSPREY_PASS2_QVALUE=protein-compact`. The mode needs both the
+frozen model and the stratum, and a node holding one without the other can do nothing, so
+one artifact meant one relay hop and one reload site.
+
+> **In flight** - this is changing, and P12 is why: training does not compute the stratum,
+> first-pass protein FDR does, so the column belongs in a file written by that phase.
+> `.1st-pass.stratum.json` is a separate artifact on
+> `Skyline/work/20260901_osprey_firstpass_resume` and is staged as its own relay hop by
+> `regression.ps1`. When that branch lands, this becomes a fourth experiment-wide artifact
+> that must relay with the other three.
 
 **`<stem>.2nd-pass.fdr_scores.bin` has two possible writers, and the sidecar's NAME says
 which.** When `PerFileRescoring` runs the pass-2 per-run worker it writes this file and
@@ -500,6 +576,15 @@ m/z filter its per-run coverage - which is how a `SecondPassFDR` node with no mz
 gets that coverage. It is read behind a `File.Exists`, so an orchestrator that leaves it
 behind does not get an error: gap-fill filtering silently changes. That is the P13-shaped
 hazard this document warns about, in the contract itself.
+
+**A cohort-wide union cannot ride in a per-run envelope, for an ordering reason.** Each
+`<stem>.reconciliation.json` is written the instant that run's planning finishes, so the
+planned actions of runs planned *later* do not exist yet and cannot be in it. Any fact that
+is a union over all runs is therefore only knowable after the last run is planned, which
+means it belongs in an artifact written at the end of planning - not replicated into
+envelopes that were each sealed too early to hold it. This is why "just add it to the
+per-run file" is not an available answer for that class of fact, and the reason is not
+deducible from the scope taxonomy alone.
 
 **`<output>.<TaskName>.osprey.task` is per-artifact, not per-task.** One sidecar is
 written next to each output, and its name carries the producing task so two tasks
@@ -546,8 +631,23 @@ default:
   stratum with it. A distributed `SecondPassFDR` node that never trained pass 1 has no
   other source for either.
 
-Ship both to every node running either task. A node that has one and not the other is
-the case the fail-fast exists for, and it is the orchestrator's job never to create it.
+Ship both to every node running either task. **Their failure behaviour differs, and only
+one of them fails safely:**
+
+- A missing `<stem>.1st-pass.model.json` under an explicitly requested frozen pass-2 mode
+  aborts with a `ConfigError` rather than degrading to the anti-conservative retrain
+  (see [12-second-pass-fdr](12-second-pass-fdr.md), "Fail-fast"). That is the behaviour to
+  copy.
+- An unreadable `<blib-stem>.1st-pass.fdr_experiment.bin` does **not** abort. First-pass
+  compaction logs `[ERROR] First-pass compaction: failed to read the experiment-scope FDR
+  sidecar`, sets a non-zero exit code, and **the run continues** - with a different
+  retained set, finishing success-shaped hours later. On a large cohort that is a wrong
+  answer that looks like a right one.
+
+So this is not a hazard the orchestrator can be trusted to avoid; a task handed an
+incomplete relay must refuse to proceed, and the second case does not yet. Treat the
+current behaviour as a defect to fix, not a contract to preserve - and until it is fixed,
+check the exit code, because the log line is the only other signal.
 
 
 ## Directory resolution
@@ -608,44 +708,22 @@ sanctioned way to consume another build's artifacts deliberately.
 
 ## Validity and resume
 
-### What the key is made of
+### What the key is made of, and why it decides correctness
 
-The base key every task carries is search parameters, library identity, and the peak-pick
-arm (`OspreyTask.ValidityKey`). Tasks with extra state append to it; `FirstPassFDR` adds
-six components, and each one is in the key because leaving it out produced a specific
-wrong answer:
+Each task composes its own key: a base of search parameters, library identity and the
+peak-pick arm, plus per-task additions - `FirstPassFDR` adds six, `PerFileRescoring` six.
+**The exact composition, and the defect each component was added to prevent, is
+invalidation mechanics and lives in [14-intermediate-files](14-intermediate-files.md).**
 
-| Component | Without it |
-|---|---|
-| reconciliation parameter hash | toggling reconciliation between runs reuses the prior shape |
-| FDR sidecar format version | a resume across a format bump skips the task, then every reader refuses the old file by version and defaults are written instead |
-| experiment-aggregation mode | an A/B arm re-run in a directory holding the other arm's results reuses the previous mode's q and reports it as the new measurement |
-| pass-2 q-value mode | a sidecar written under `transfer` carries no stratum, so a `protein-compact` re-run adopts an artifact that cannot answer its question |
-| training-sample settings | a resume adopts maximum-trained scores as though the reservoir had produced them |
-| library-fragment release | the retained-fragment arm differs and the outputs are not interchangeable |
+What belongs here is why that list matters: correctness under resume rests entirely on
+those keys being exhaustive, because nothing cascades. Read the list in 14 as the worked
+example of P15's asymmetry - every entry was added after an under-inclusive key reused
+something it should not have, and none would have cost more than a recompute if it had
+turned out to be unnecessary.
 
-`PerFileRescoring` appends its own set for the same reasons - the reconciliation hash and
-sidecar format version, the experiment-aggregation, pass-2 q and training-sample arms, and
-the survivor-streaming switch, whose two paths must not adopt each other's output.
-
-The peak-pick arm sits in the *base* rather than in the overrides because it is the one
-lever that reaches every task: the pick decides which peak a precursor's row describes,
-back in Stage 4, and everything downstream inherits that choice. Putting it in the base
-also means a task added later carries it without having to know.
-
-Read that table as a worked example of P15's asymmetry. Every row was added after an
-under-inclusive key reused something it should not have, and none of them cost more than
-a recompute if they were unnecessary.
-
-### The build stamp
-
-The version stamped into each artifact follows the Skyline scheme
-`YEAR.ORDINAL.BRANCH.DOY`, with the full informational form carrying the git short hash
-(`26.1.1.182-b2373f9f9c`, plus `-dirty` for a modified tree) so a binary is always
-traceable to its source commit. Reuse requires an exact match on all four numeric
-components; a difference in release line or daily build aborts reuse with a hard error
-rather than a warning, because a cache from a different build may carry different scoring
-and a logged warning is easily missed while the run still completes and looks valid.
+The build stamp is likewise 14's: reuse requires an exact match on all four components of
+`YEAR.ORDINAL.BRANCH.DOY`, and a mismatch is a hard failure rather than a warning, because
+a cache from another build may carry different scoring.
 
 ### Resume is a forward scan
 
@@ -703,7 +781,19 @@ The general rule, if you remember nothing else: **a fan-out node needs its own r
 files plus every experiment-wide artifact produced so far.** The checklists below are
 that rule made explicit at each boundary.
 
-Two things hold at every boundary and are not repeated in each list:
+Four things hold at every boundary and are not repeated in each list:
+
+- **The library, and the `--decoy-pairing-manifest` if the search used one**, go to every
+  node of every task. The manifest's path must match the one the search hash was computed
+  from, or every artifact on that node invalidates.
+- **A fan-out node gets `<stem>.spectra.bin` plus a 0-byte `<stem>.mzML` stub, never the
+  real mzML.** The stub exists only so path derivation works; the cache's source
+  fingerprint check is skipped for a 0-byte source, which forces the cache hit. Shipping
+  the real file would move gigabytes per run to a worker that will not read them - on the
+  reference cohorts the 6 GB mzML is never sent to a rescore worker.
+- **Pass `--cache-dir` on any `--task` leg whose `--output-dir` differs from the data
+  directory.** Such a leg has no raw input path to resolve `.spectra.bin` from, so without
+  it the cache is not found and the run rebuilds it.
 
 - **Every artifact travels with its `.osprey.task` sidecar.** The stamp is how the
   receiving node learns who produced the file and whether it may be reused; shipping the
@@ -742,7 +832,7 @@ Per run, for each run in the node's batch:
 - `<stem>.1st-pass.fdr_scores.bin`
 - `<stem>.reconciliation.json`
 - `<stem>.calibration.json`
-- `<stem>.spectra.bin` (or the raw file it was built from)
+- `<stem>.spectra.bin`, with a 0-byte `<stem>.mzML` stub beside it
 
 Experiment-wide, to **every** node:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`
@@ -786,9 +876,12 @@ from survivors only - which is not the same answer (P10).
 
 ## In flight
 
-Four items are being settled on branch `Skyline/work/20260901_osprey_firstpass_resume` and
-its companion TODOs. Each is marked at the point it applies above; they are collected here
-so that clearing them after that work merges is a single edit.
+**This section is the single list of known deviations from the architecture above**, for
+every document in this set. Docs 12, 14 and 15 point here rather than keeping their own,
+because a per-document in-flight note is how 15 fell out of step with 00 in the first
+place. Items are being settled on branch `Skyline/work/20260901_osprey_firstpass_resume`
+and its companion TODOs; each is marked at the point it applies above, so clearing them
+after that work merges is a single edit.
 
 The contract above states the **target** in every case. Where today's code does not meet it,
 the text says so rather than describing the current shape as though it were the design.
@@ -802,6 +895,18 @@ the text says so rather than describing the current shape as though it were the 
    peptide q, PEP and aggregate score when pass 2 ends; protein FDR writes protein q when
    protein FDR ends. See "The protein-q split, and the rule behind it" in
    `ai/todos/active/TODO-20260901_osprey_firstpassfdr_resume.md`.
+
+1a. **Two experiment-wide artifacts arrive with the fan-out fix**, and both are relay
+   obligations the checklist below will gain. `<blib-stem>.1st-pass.retained_base_ids.bin`
+   is written by `FirstPassFDR` when Stage 6 planning ends and carries the join-wide
+   first-pass base ids unioned with every planned action target - sorted `uint32`,
+   library-bounded (1.49 MB at 373,487 ids). It is what lets a fan-out worker obtain the
+   compaction set without surveying the batch (P6), and it is the artifact that makes the
+   single-run input contract executable: today's Boundary 2 -> 3 list is not one a
+   one-run node can actually run on. `<stem>.1st-pass.stratum.json` is the P12 split
+   described under "Rows that are not what they look like". Both are on
+   `Skyline/work/20260901_osprey_firstpass_resume`; when it lands, "two experiment-wide
+   artifacts that must relay together" becomes four.
 
 2. **The bounded-loop shape of `PerFileRescoring`.** The task is still entered with a
    materialised all-runs entry list, and its baseline still carries maps keyed by run whose

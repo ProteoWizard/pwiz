@@ -396,7 +396,7 @@
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; 1 node &#183; holds O(distinct), never O(runs x entries)</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan>  (every run, via --input-scores)</text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.1st-pass.fdr_scores.bin</tspan>, <tspan class="sc-run">&lt;stem&gt;.reconciliation.json</tspan> (Stage 5&#8594;6 boundary)   &#183;   validity  <tspan class="sc-run">&lt;out&gt;.FirstPassFDR.osprey.task</tspan></text>
-  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">&lt;stem&gt;.1st-pass.model.json</tspan> (frozen model + protein-compact stratum)</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">&lt;stem&gt;.1st-pass.model.json</tspan> (frozen pass-1 model, for the frozen pass-2 modes)</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: both experiment-wide files to EVERY downstream node</text>
 </g>
 
@@ -506,7 +506,7 @@
   <text x="140" y="22" class="task-hdr-name">&#9656; --task SecondPassFDR</text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; 1 node &#183; final aggregation</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores-reconciled.parquet</tspan> (via --input-scores; falls back to <tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> for no-work runs)</text>
-  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">&lt;stem&gt;.1st-pass.model.json</tspan>   &#183;   required by the frozen pass-2 modes</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">&lt;stem&gt;.1st-pass.model.json</tspan>, <tspan class="sc-run">&lt;stem&gt;.reconciliation.json</tspan>, <tspan class="sc-run">.calibration.json</tspan></text>
   <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;output&gt;.blib</tspan>, <tspan class="sc-exp">&lt;blib-stem&gt;.2nd-pass.fdr_experiment.bin</tspan>, <tspan class="sc-run">&lt;stem&gt;.2nd-pass.fdr_scores.bin</tspan> (where no worker ran)</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: every run's reconciled set, with its .osprey.task stamps</text>
 </g>

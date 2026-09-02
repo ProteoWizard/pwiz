@@ -111,11 +111,15 @@ disk. Two experiment-wide artifacts carry it:
 
 **They must relay together.** A node holding one without the other cannot proceed:
 the model without the stratum cannot constrain a `protein-compact` competition, and
-the stratum without the model has nothing to score with. That is why the stratum
-rides inside the model sidecar rather than in a file of its own — one artifact means
-one relay hop, and makes shipping half of what the mode needs impossible. The model
-sidecar is written beside **every** run's other Stage-5 artifacts, identical each
-time, so any one copy serves.
+the stratum without the model has nothing to score with. The model sidecar is written
+beside **every** run's other Stage-5 artifacts, identical each time, so any one copy
+serves.
+
+> **In flight** - the stratum is moving out of the model sidecar into its own
+> `.1st-pass.stratum.json`, because first-pass protein FDR computes it and training does
+> not. Relay obligations are unchanged in substance: the two still travel together, as
+> two files rather than one. See
+> `Skyline/work/20260901_osprey_firstpass_resume`.
 
 See [00-pipeline-architecture.md](00-pipeline-architecture.md) for the full contract
 and the per-boundary relay checklist.
