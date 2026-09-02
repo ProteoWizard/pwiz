@@ -263,7 +263,13 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.AuditLogForm.Close();
                 SkylineWindow.ShowDocumentGrid(true);
             });
-            var documentGridForm = FindOpenForm<DocumentGridForm>();
+            // Wait for the form rather than demanding it already be there. FindOpenForm only sees
+            // a form once its handle is created, which showing a dockable form does not guarantee
+            // by the time the call returns, and it reports a miss by returning null - which
+            // reached the line below as a bare NullReferenceException, seen once in roughly 20
+            // runs of this test. WaitForOpenForm rides out the gap, and says which forms were
+            // open if the form really never arrives.
+            var documentGridForm = WaitForOpenForm<DocumentGridForm>();
             RunUI(() =>
             {
                 documentGridForm.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates);
@@ -382,7 +388,7 @@ namespace pwiz.SkylineTestTutorial
 
             // View the calibration curve p. 15
             RunUI(()=>SkylineWindow.ShowCalibrationForm());
-            var calibrationForm = FindOpenForm<CalibrationForm>();
+            var calibrationForm = WaitForOpenForm<CalibrationForm>();
             var priorZoomState = ZoomCalibrationCurve(calibrationForm, 0.52);
 
             RunUI(() =>

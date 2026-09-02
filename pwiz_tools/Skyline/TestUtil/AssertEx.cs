@@ -1867,6 +1867,10 @@ namespace pwiz.SkylineTestUtil
                 var docLoad = cmd.Document;
                 using (var docContainer = new ResultsTestDocumentContainer(null, tmpSky))
                 {
+                    // Keep the fail-fast this method depends on - see the comment below, which
+                    // explains why a longer wait here silently removes the fix rather than
+                    // slowing it. ResultsTestDocumentContainer switches this on by default.
+                    docContainer.WaitForCancelRestart = false;
                     docContainer.SetDocument(docLoad, null, true);
                     // SetDocument's wait ends at MemoryDocumentContainer.IsFinal, which
                     // deliberately reports final for a document that never flipped to loaded, so
