@@ -6,6 +6,8 @@ For large experiments (hundreds to thousands of mzML files) the Osprey pipeline 
 
 The C# port implements this split as **four pipeline tasks** driven by a single `--task <Name>` CLI selector, rather than the Rust doc's `--no-join` / `--join-at-pass` / `--join-only` flag family. Each task is a subclass of `OspreyTask` (`Osprey.Tasks/OspreyTask.cs`), and the orchestration model is a per-task membership predicate walked by a driver loop (`Osprey/AnalysisPipeline.cs:99-112`) rather than a contiguous `[start..stop]` stage window.
 
+> **This document owns operations**: CLI flags, the membership truth table, `--input-scores` resolution and ordering, footer-hash validation, and concurrency. *Why* the split has this shape — the scope of each artifact, which task may read what, and the exact file list a node must be shipped at each boundary — is owned by [00-pipeline-architecture.md](00-pipeline-architecture.md), and the byte formats by [14-intermediate-files.md](14-intermediate-files.md). Read 00 before changing what any task writes.
+
 ## Task-name mapping (CLI name vs internal enum)
 
 The CLI `--task` spelling, the `HpcTask` enum member, and the task class are now one name per task. The only one that still needs a second look is `PerFileRescoring` (CLI) vs `PerFileRescore` (enum and class); the rest differ at most in the `Fdr`/`FDR` casing.
@@ -17,7 +19,7 @@ The CLI `--task` spelling, the `HpcTask` enum member, and the task class are now
 | Stage 6 per-file rescore | `PerFileRescoring` | `HpcTask.PerFileRescore` | `PerFileRescoreTask` (`"PerFileRescoring"`) |
 | Stages 7-8 second-pass FDR | `SecondPassFDR` | `HpcTask.SecondPassFdr` | `SecondPassFdrTask` (`"SecondPassFDR"`) |
 
-- The enum is defined in `Osprey.Core/OspreyConfig.cs` as `{ PerFileScoring, FirstPassFdr, PerFileRescore, SecondPassFdr }`.
+- The enum is defined in `Osprey.Core/OspreyConfig.cs`. Its first four members are the pipeline tasks above, in execution order: `{ PerFileScoring, FirstPassFdr, PerFileRescore, SecondPassFdr }`. Two more are appended — `SpectraCache` (build each input's `.spectra.bin` and stop; the data-staging step *ahead* of the pipeline) and `ModelDiagnostics` (regenerate the `--model-diagnostics` report for a completed analysis). **Neither is a pipeline stage**: both are reachable only by naming them in `--task`, neither appears in `CanonicalPipeline()`, and neither belongs in an HPC relay plan. They are appended rather than ordered first so the existing members keep their ordinal values. See 00-pipeline-architecture.md, "Two selectable tasks that are not pipeline tasks".
 - The CLI-name to enum mapping is `Program.ResolveTask` and its inverse `Program.TaskCliName`, both in `Osprey/Program.cs`.
 - The `OspreyTask.Name` strings (used in `[TASK]` log lines and `.osprey.task` sidecar naming) ARE the CLI spelling, and the class names now match them: `PerFileScoringTask.Name => "PerFileScoring"`, `FirstPassFdrTask.Name => "FirstPassFDR"` (`Osprey.Tasks/FirstPassFdrTask.cs:71`), `PerFileRescoreTask.Name => "PerFileRescoring"` (`Osprey.Tasks/PerFileRescoreTask.cs:114`), `SecondPassFdrTask.Name => "SecondPassFDR"` (`Osprey.Tasks/SecondPassFdrTask.cs:49`). The one name to read carefully is `PerFileRescore`/`PerFileRescoring`; everything else differs only in the `Fdr`/`FDR` casing, which follows this codebase's own type convention (`FdrEntry`, `FdrController`) rather than the all-caps `pwiz.Osprey.FDR` namespace.
 
@@ -139,17 +141,23 @@ On mismatch the run aborts before any FDR/reconciliation work, naming the offend
 
 ## Persistent files per input
 
-| File | Written by | Consumed by |
-|---|---|---|
-| `<stem>.calibration.json` | Stage 1-2 | Stage 6 (inverse RT prediction + isolation windows) |
-| `<stem>.scores.parquet` | Stage 4 (`PerFileScoringTask`) | Stages 5-7 (stubs, PIN features, CWT candidates, blib plan) |
-| `<stem>.spectra.bin` | Stage 1-2 | Stage 6 rescore (**mandatory** — streamed per window, no mzML fallback); the only spectrum source once the input is deleted |
-| `<stem>.1st-pass.fdr_scores.bin` | Stage 5 (`FirstPassFdrTask`) | Stage 6 worker (mandatory); skip-Percolator on rerun |
-| `<stem>.reconciliation.json` | Stage 5 (`FirstPassFdrTask`) | Stage 6 worker (mandatory) |
-| `<stem>.scores-reconciled.parquet` | Stage 6 (`PerFileRescoreTask`) | Stage 7 (`SecondPassFdrTask`) 2nd-pass FDR + blib |
-| `<stem>.2nd-pass.fdr_scores.bin` | Stage 7 (`SecondPassFdrTask`) | skip-Percolator on rerun |
+**Moved.** The authoritative list of what each task writes and reads — including the
+experiment-wide artifacts this section never covered, and which of them must be relayed to
+every node — is the sidecar file contract in
+[00-pipeline-architecture.md](00-pipeline-architecture.md). It is verified row by row against
+the path-building code; the table that used to sit here had drifted (it attributed
+`<stem>.2nd-pass.fdr_scores.bin` to Stage 7, when `PerFileRescoring`'s pass-2 worker writes it
+whenever that worker runs).
 
-See 14-intermediate-files.md for the full cache formats.
+Per-run notes worth keeping alongside the contract:
+
+- `<stem>.spectra.bin` is **mandatory** for the Stage 6 rescore — streamed per window, with no
+  mzML fallback — and is the only spectrum source once the input has been deleted.
+- `<stem>.1st-pass.fdr_scores.bin` and `<stem>.reconciliation.json` are both mandatory for a
+  Stage 6 worker.
+
+See 00 for the relay checklist per boundary and 14-intermediate-files.md for the full cache
+formats.
 
 ## Cross-implementation compatibility and bisection dumps
 
@@ -157,7 +165,12 @@ The parquet cache and `reconciliation.json` boundary file are shared with Rust O
 
 ## Safe concurrent writes
 
-All cache writers write to a local temp file and copy-and-verify to the final destination, so a mid-write process kill on a NAS/CIFS mount leaves no corrupt cache that a downstream stage must reject. See 16-determinism.md.
+Every cache writer stages through a `FileSaver` temp file that is a **sibling in the same
+directory** as its destination, then promotes it with an in-volume rename — not a local temp
+plus a cross-volume copy-and-verify, which is the Rust pattern this port replaced. A mid-write
+process kill on a NAS/CIFS mount therefore leaves either the previous content or no file, never
+a corrupt cache a downstream stage must reject. See principle P8 in
+[00-pipeline-architecture.md](00-pipeline-architecture.md), and 16-determinism.md.
 
 ## Flags and switches
 

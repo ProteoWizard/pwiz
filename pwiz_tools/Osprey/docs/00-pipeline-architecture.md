@@ -359,11 +359,13 @@ rather than one it trusts and folds against a companion that was never written.
 ### Resume and relocation
 
 **P15. Resume is a forward scan, and identity is path-independent.** The driver walks
-the stages in order, reusing each output whose sidecar key matches and recomputing from
-the first that does not; a stage that runs invalidates everything downstream. Because
-the scan is forward and downstream invalidation is total, a key that is not exhaustive
-enough costs a recompute, never a wrong answer - which is why "I cannot tell" resolves
-to re-run.
+the stages in order, reusing each output whose sidecar key matches and recomputing the
+rest. Invalidation is by key rather than by cascade, and the asymmetry in the cost of
+getting a key wrong is what every key component in the codebase is arguing about: an
+over-inclusive key costs an unnecessary recompute, while an under-inclusive one silently
+reuses an artifact computed under different settings and reports it as the new result.
+Erring toward more key is therefore always the safe direction, and "I cannot tell"
+resolves to re-run.
 
 Identity is also deliberately free of paths: the library hash uses file name, size and
 mtime with the directory excluded, and the reconciliation hash names sorted file
@@ -492,3 +494,257 @@ default:
 Ship both to every node running either task. A node that has one and not the other is
 the case the fail-fast exists for, and it is the orchestrator's job never to create it.
 
+
+## Directory resolution
+
+Every artifact path is resolved through `ArtifactPaths`, so redirection applies uniformly
+rather than one writer at a time. Two process-wide settings decide where things land,
+both defaulting to "beside the input file":
+
+| Setting | Sets | Holds |
+|---|---|---|
+| `--output-dir` | `ArtifactPaths.OutputDir` | products: scores parquet, calibration JSON, FDR sidecars, reconciliation JSON |
+| `--cache-dir` | `ArtifactPaths.CacheDir` | caches: `.spectra.bin`, `.libcache` |
+| `--work-dir` | both | the single-flag form |
+
+This is the product/cache split from the contract table made operational. `ResolveOutputDir`
+returns `OutputDir` when set and the input's own directory otherwise. `ResolveCacheDir`
+prefers an explicit `CacheDir`, falls back to the data file's own directory when that is
+writable - probed once and memoized - and otherwise to `OutputDir`. A cache is
+settings-independent, which is what lets several analyses share one `--cache-dir` and
+reuse a single parse of the raw data.
+
+Reaching for the input file's directory rather than a resolved one is the recurring bug
+in this area: it works in a single-process run, where they coincide, and diverges the
+moment anyone passes `--output-dir`.
+
+### Identity does not name the directory
+
+Every hash that decides artifact reuse deliberately excludes paths. `LibraryIdentityHash`
+takes the library's file *name*, size and mtime and drops the directory, so the same
+library identifies identically across implementations, operating systems, and node-local
+versus shared mounts - drive-letter case, slash direction, and relative-versus-absolute
+spelling all stop mattering. `ReconciliationParameterHash` names sorted, deduplicated file
+*stems* rather than paths, for the same reason and with the ordering removed too, so the
+hash cannot depend on the order files were passed on the command line.
+
+The consequence is that **a completed run is relocatable**. Its artifacts can be moved,
+copied, or hard-linked into a new output directory and remain valid, because nothing in
+their identity records where they used to be. External tooling relies on this to adopt a
+prior run's expensive Stage 1-4 output instead of recomputing it - see
+`ai/docs` for the workflow scripts that do so. That relocatability is a property of the
+hashes, and any change that folds a directory into one of them removes it.
+
+A warm resume across builds is a separate matter: the version stamp is compared for exact
+equality (`YEAR.ORDINAL.BRANCH.DOY`), so artifacts from another day's build are refused
+rather than silently reused. `OSPREY_VERSION_OVERRIDE` pins the stamp and is the
+sanctioned way to consume another build's artifacts deliberately.
+
+---
+
+## Validity and resume
+
+### What the key is made of
+
+The base key every task carries is search parameters, library identity, and the peak-pick
+arm (`OspreyTask.ValidityKey`). Tasks with extra state append to it; `FirstPassFDR` adds
+six components, and each one is in the key because leaving it out produced a specific
+wrong answer:
+
+| Component | Without it |
+|---|---|
+| reconciliation parameter hash | toggling reconciliation between runs reuses the prior shape |
+| FDR sidecar format version | a resume across a format bump skips the task, then every reader refuses the old file by version and defaults are written instead |
+| experiment-aggregation mode | an A/B arm re-run in a directory holding the other arm's results reuses the previous mode's q and reports it as the new measurement |
+| pass-2 q-value mode | a sidecar written under `transfer` carries no stratum, so a `protein-compact` re-run adopts an artifact that cannot answer its question |
+| training-sample settings | a resume adopts maximum-trained scores as though the reservoir had produced them |
+| library-fragment release | the retained-fragment arm differs and the outputs are not interchangeable |
+
+The peak-pick arm sits in the *base* rather than in the overrides because it is the one
+lever that reaches every task: the pick decides which peak a precursor's row describes,
+back in Stage 4, and everything downstream inherits that choice. Putting it in the base
+also means a task added later carries it without having to know.
+
+Read that table as a worked example of P15's asymmetry. Every row was added after an
+under-inclusive key reused something it should not have, and none of them cost more than
+a recompute if they were unnecessary.
+
+### The build stamp
+
+The version stamped into each artifact follows the Skyline scheme
+`YEAR.ORDINAL.BRANCH.DOY`, with the full informational form carrying the git short hash
+(`26.1.1.182-b2373f9f9c`, plus `-dirty` for a modified tree) so a binary is always
+traceable to its source commit. Reuse requires an exact match on all four numeric
+components; a difference in release line or daily build aborts reuse with a hard error
+rather than a warning, because a cache from a different build may carry different scoring
+and a logged warning is easily missed while the run still completes and looks valid.
+
+### Resume is a forward scan
+
+The driver walks the four tasks in order and, for each one that is included, skips it when
+every declared output exists *and* carries a validity sidecar matching that task's current
+key (`PipelineContext.CanRehydrate`). Otherwise it runs the task and stamps sidecars over
+its outputs afterward.
+
+Two details are easy to get wrong:
+
+- **Skipping is per task, on that task's own key.** There is no cascade that invalidates
+  downstream artifacts when an upstream task re-runs. This is safe because the pipeline is
+  deterministic: a task re-run under an unchanged key writes the same bytes, so a
+  downstream artifact stamped with a matching key is still describing the right input.
+  Correctness therefore rests entirely on keys being exhaustive, which is why the table
+  above exists.
+- **A sidecar is cleared when its task starts, not when it finishes.** A crash mid-Run
+  then leaves no stale marker claiming a partially written output is valid.
+
+Sidecars are stamped even for the tasks that deliberately return "stop here" at an HPC
+boundary. Gating the stamp on the pipeline continuing would skip sidecar writes for
+exactly the successful early-exit modes the split depends on, and break resume for them.
+
+### Per-run guards inside a stage
+
+A stage that has already processed some of its runs resumes per run, not only per task.
+The rule for those guards is the one that is easy to get wrong:
+
+> A per-run resume arm must leave the state a fresh run would have left. Skipping the
+> work is not the same as producing its result.
+
+`PerFileRescoring` is the worked example. Its per-run guard finds a valid reconciled
+parquet and skips re-scoring - but a downstream `SecondPassFDR` in the same process reads
+apex and boundary values straight off the in-memory entries, so a guard that only skipped
+would leave first-pass retention times in the buffer and ship them in the final `.blib`.
+The guard therefore overlays the reconciled values back onto the in-memory entries and
+re-sorts them, reproducing the fresh end state in place.
+
+The memory contract applies to the resume arm too. That overlay re-inflates every entry
+from the reconciled parquet, so the skip path once rooted the same per-entry arrays the
+rescore path does, across every resumed run - reintroducing the O(runs) growth term the
+rescore path had already been fixed to avoid. It now releases that payload immediately,
+leaving exactly the buffer shape a fresh rescore leaves. A resume path is not exempt from
+P6 just because it did no work.
+
+---
+
+## HPC relay checklist
+
+What an orchestrator must place on a node before its task can run. Per-run files travel
+with the run they are named for; experiment-wide files go to every node running that
+task, whatever batch it was handed.
+
+The general rule, if you remember nothing else: **a fan-out node needs its own runs'
+files plus every experiment-wide artifact produced so far.** The checklists below are
+that rule made explicit at each boundary.
+
+### Boundary 1 -> 2: `PerFileScoring` to `FirstPassFDR`
+
+The join needs every run's Stage 1-4 output, since training and experiment-wide q-values
+are functions of all runs:
+
+- `<stem>.scores.parquet` for **every** run in the cohort
+- the library, and `--input-scores` naming the parquets
+
+`<stem>.spectra.bin` and `<stem>.calibration.json` do not need to travel: the join reads
+parquets, not spectra. Leave them on the scoring nodes unless the raw data was deleted
+after staging, in which case the spectra caches are the data and must be preserved.
+
+### Boundary 2 -> 3: `FirstPassFDR` to `PerFileRescoring`
+
+Each rescore node needs its own runs' artifacts plus the experiment-wide set:
+
+Per run, for each run in the node's batch:
+- `<stem>.scores.parquet`
+- `<stem>.1st-pass.fdr_scores.bin`
+- `<stem>.reconciliation.json`
+- `<stem>.calibration.json`
+- `<stem>.spectra.bin` (or the raw file it was built from)
+
+Experiment-wide, to **every** node:
+- `<blib-stem>.1st-pass.fdr_experiment.bin`
+- `<stem>.1st-pass.model.json` (any one copy; needed for the frozen pass-2 modes)
+
+This is the boundary where a missing experiment-wide file does the most damage, because
+the node can often proceed without it and produce a plausible wrong answer rather than
+failing. Ship both experiment-wide artifacts together or neither.
+
+### Boundary 3 -> 4: `PerFileRescoring` to `SecondPassFDR`
+
+The final join needs every run's reconciled output:
+
+Per run, for **every** run in the cohort:
+- `<stem>.scores-reconciled.parquet`
+- `<stem>.2nd-pass.fdr_scores.bin` and `<stem>.2nd-pass.fdr_decoys.bin`, where the
+  rescore node ran the pass-2 worker - together with their `.osprey.task` sidecars,
+  which is how this task learns the worker produced them and folds them instead of
+  recomputing
+
+Experiment-wide:
+- `<blib-stem>.1st-pass.fdr_experiment.bin`
+- `<stem>.1st-pass.model.json` (any one copy)
+
+The `.osprey.task` sidecars are not optional bookkeeping here. Without the stamp,
+`SecondPassFDR` cannot tell that a worker wrote the pass-2 files and will recompute them
+from survivors only - which is not the same answer (P10).
+
+
+---
+
+## In flight
+
+Four items are being settled on branch `Skyline/work/20260901_osprey_firstpass_resume` and
+its companion TODOs. Each is marked at the point it applies above; they are collected here
+so that clearing them after that work merges is a single edit.
+
+The contract above states the **target** in every case. Where today's code does not meet it,
+the text says so rather than describing the current shape as though it were the design.
+
+1. **Protein-q split of the experiment-scope FDR sidecar.** Protein q-values are currently
+   added by rewriting an existing first-pass sidecar in place
+   (`FdrScoresSidecar.PatchProteinQvalues`), which is the one surviving violation of P11.
+   The target is a separate experiment-wide artifact written by the phase that computes it.
+   See `ai/todos/active/TODO-20260901_osprey_firstpassfdr_resume.md`.
+
+2. **The bounded-loop shape of `PerFileRescoring`.** The task is still entered with a
+   materialised all-runs entry list, and its baseline still carries maps keyed by run whose
+   values are per-entry - the `O(runs x entries)` shape P5 and P6 forbid. See
+   `ai/todos/active/TODO-20260901_osprey_stage5_reload_materialization.md`.
+
+3. **Deletion of the fat pre-compaction path**, once the streamed path is the only one.
+
+4. **Whether the 500-run / 64 GB target is met.** It is not yet, and which stage binds is
+   itself moving as each is fixed. The two TODOs above carry the current measurements;
+   deliberately not restated here, because a number in a contract document is stale the
+   week after it is written.
+
+---
+
+## Cross-references
+
+**By stage** - the algorithm deep dives, numbered by pipeline execution order:
+
+| Stage | Docs |
+|---|---|
+| 1-2 library and mzML | [01-decoy-generation](01-decoy-generation.md) |
+| 3 calibration | [04-calibration](04-calibration.md), [05-rt-alignment](05-rt-alignment.md) |
+| 4 first-pass search | [02-xcorr-scoring](02-xcorr-scoring.md), [03-spectral-scoring](03-spectral-scoring.md), [06-peak-detection](06-peak-detection.md), [17-vectorization](17-vectorization.md) |
+| 5 first-pass FDR | [07-fdr-control](07-fdr-control.md), [08-protein-parsimony](08-protein-parsimony.md), [09-multi-charge-consensus](09-multi-charge-consensus.md), [10-cross-run-reconciliation](10-cross-run-reconciliation.md) |
+| 6 rescore | [10-cross-run-reconciliation](10-cross-run-reconciliation.md), [11-boundary-overrides](11-boundary-overrides.md) |
+| 7 second-pass FDR and output | [12-second-pass-fdr](12-second-pass-fdr.md), [13-blib-output-schema](13-blib-output-schema.md) |
+
+**By subject** - the documents this one shares a boundary with:
+
+- [14-intermediate-files](14-intermediate-files.md) - the byte formats of every artifact in
+  the contract table.
+- [15-hpc-scoring-split](15-hpc-scoring-split.md) - the CLI and orchestration mechanics for
+  running the split described here.
+- [16-determinism](16-determinism.md) - why a task re-run under an unchanged key writes the
+  same bytes, which is the property resume correctness rests on.
+- [19-testing](19-testing.md) - the gates that hold this contract, including the regression
+  mode that asserts a per-node reconciled parquet is byte-identical to the straight-through
+  one.
+- [20-command-line](20-command-line.md) - every flag, including `--task`, `--work-dir`,
+  `--output-dir` and `--cache-dir`.
+
+**How we work on Osprey** - not documentation of the code, and deliberately outside this
+tree - lives in `ai/docs`: the test gates and datasets, the run layout and machine paths,
+the environment-variable reference, and the workflow scripts that adopt a prior run's
+artifacts rather than recomputing them.

@@ -98,6 +98,28 @@ it **skips** the frozen-model + stratum competition and instead retrains the
 second pass over the stratum-expanded compacted pool, isolating the
 frozen-vs-retrain calibration difference for the entrapment oracle.
 
+## Inputs from the first pass
+
+The frozen modes are frozen against artifacts, not against in-process state, so a
+`SecondPassFDR` node that never ran the first pass reads everything it needs from
+disk. Two experiment-wide artifacts carry it:
+
+| Artifact | Carries |
+|---|---|
+| `<stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases), the first pass's `OSPREY_EXPERIMENT_AGG` provenance, and — under `protein-compact` — the protein stratum |
+| `<blib-stem>.1st-pass.fdr_experiment.bin` | the first pass's experiment-scope q-values |
+
+**They must relay together.** A node holding one without the other cannot proceed:
+the model without the stratum cannot constrain a `protein-compact` competition, and
+the stratum without the model has nothing to score with. That is why the stratum
+rides inside the model sidecar rather than in a file of its own — one artifact means
+one relay hop, and makes shipping half of what the mode needs impossible. The model
+sidecar is written beside **every** run's other Stage-5 artifacts, identical each
+time, so any one copy serves.
+
+See [00-pipeline-architecture.md](00-pipeline-architecture.md) for the full contract
+and the per-boundary relay checklist.
+
 ## Fail-fast
 
 An **explicitly requested** frozen mode never silently degrades to the
