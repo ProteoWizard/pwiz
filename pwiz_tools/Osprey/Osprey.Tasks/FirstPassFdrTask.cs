@@ -2686,6 +2686,40 @@ namespace pwiz.Osprey.Tasks
             var experiment = new FdrExperimentAccumulator();
             var sink = new FdrStoringSink(projections, config, @"First-pass", FlushPartialSidecar,
                 experiment, mdiagAccumulator);
+
+            // Which files' 1st-pass sidecars are on disk. Seeded with the ones an earlier run
+            // left, and GROWN by pass 1 as it writes each file it scores - which is what lets
+            // pass 2 read every score back instead of reloading features and repeating the dot
+            // product for all of them. An adopted file is marked on the sink for the same reason
+            // a freshly written one is: its sidecar exists, so the sink must not write it again.
+            var scoresOnDisk = new HashSet<string>(resumableFiles, StringComparer.Ordinal);
+            for (int f = 0; f < projections.PerFile.Count; f++)
+            {
+                if (resumableFiles.Contains(projections.PerFile[f].Key))
+                    sink.MarkSidecarWritten(f);
+            }
+
+            // Pass 1 hands each file's finished run-scope output straight to the sidecar writer.
+            // Nothing about it is provisional: the score and both run q-values are final the
+            // moment that file's rows have been walked, and no later phase revises them.
+            int pass1WriteFailures = 0;
+            FileRunScopeSink flushFileRunScope =
+                (fileName, fileIndex, rowCount, entryIds, scores, runPrecQ, runPeptQ) =>
+                {
+                    var records = new List<FdrScoreRecord>(rowCount);
+                    for (int r = 0; r < rowCount; r++)
+                        records.Add(new FdrScoreRecord(entryIds[r], scores[r], runPrecQ[r], runPeptQ[r]));
+                    // Marked before the result is known: a failed write must not be retried by
+                    // the sink either, because FdrScoresSidecar registers the path on the way in
+                    // and would refuse the second attempt as a double write. The failure is
+                    // counted instead, and the file simply stays absent from scoresOnDisk so
+                    // pass 2 falls back to scoring it from features.
+                    sink.MarkSidecarWritten(fileIndex);
+                    int failures = FlushPartialSidecar(fileName, records);
+                    if (failures == 0)
+                        scoresOnDisk.Add(fileName);
+                    pass1WriteFailures += failures;
+                };
             var featureInfos = OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES);
             var swFdr = Stopwatch.StartNew();
             bool aborted;
@@ -2701,13 +2735,16 @@ namespace pwiz.Osprey.Tasks
                 // same parquet to count its rows), so the indexer cannot miss.
                 Action<string, Action<uint, byte, bool, double, string>> streamFileRows =
                     (fileName, onRow) => ParquetScoreCache.ReadFdrStubScalars(perFileParquetPaths[fileName], onRow);
-                // Feeds the scorer a resumable file's scores off its 1st-pass sidecar so neither
-                // pass loads that file's feature vectors or re-runs the dot product. Returns
-                // false for anything not in the gate above, which scores normally.
+                // Feeds the scorer a file's scores off its 1st-pass sidecar so the pass does not
+                // load that file's feature vectors or re-run the dot product. Consulted by BOTH
+                // passes, and the set grows during pass 1 - so on a cold run this is what stops
+                // pass 2 recomputing all 446 files' scores 82 minutes after pass 1 computed
+                // them. Returns false for a file whose sidecar is not on disk, which scores
+                // normally.
                 Func<string, Action<uint, double>, bool> tryStreamCompletedScores =
                     (fileName, onScore) =>
                     {
-                        if (!resumableFiles.Contains(fileName))
+                        if (!scoresOnDisk.Contains(fileName))
                             return false;
                         string doneBase = ScoringTaskShared.ResolveSidecarBasePath(
                             fileName, perFileParquetPaths, config);
@@ -2745,7 +2782,15 @@ namespace pwiz.Osprey.Tasks
                     projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
                     config, featureInfos, ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
                     @"First-pass", captureContributions, captureModel, tryStreamCompletedScores,
-                    pretrainedModel);
+                    pretrainedModel, flushFileRunScope);
+                // Says whether the pass-1 write actually engaged. Without it a run in which
+                // flushFileRunScope never fired would look identical from the outside - the
+                // sink would have written the same sidecars from pass 2, and the output would
+                // be byte-identical - so the log is the only place the distinction is visible.
+                ctx.LogInfo(string.Format(
+                    @"First-pass: {0} of {1} file(s) had their sidecar written during pass 1, so " +
+                    @"pass 2 read those scores back instead of reloading features.",
+                    scoresOnDisk.Count, projections.PerFile.Count));
             }
             else
             {
@@ -2847,7 +2892,8 @@ namespace pwiz.Osprey.Tasks
             // Combine the per-file write failures the sink accumulated during the score pass
             // with the protein-q resolve failures and the experiment write for the
             // StopAfterStage5 boundary gate.
-            int sidecarFailures = sink.PartialWriteFailures + patchFailures + experimentFailures;
+            int sidecarFailures =
+                sink.PartialWriteFailures + pass1WriteFailures + patchFailures + experimentFailures;
             if (sidecarFailures > 0 && config.StopAfterStage5)
             {
                 ctx.LogError(string.Format(

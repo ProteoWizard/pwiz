@@ -631,7 +631,8 @@ namespace pwiz.Osprey.FDR
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null,
             Func<string, Action<uint, double>, bool> tryStreamCompletedScores = null,
-            PercolatorResults pretrainedModel = null)
+            PercolatorResults pretrainedModel = null,
+            FileRunScopeSink flushFileRunScope = null)
         {
             if (streamFileRows == null)
                 throw new ArgumentNullException(nameof(streamFileRows));
@@ -971,6 +972,16 @@ namespace pwiz.Osprey.FDR
                     PercolatorQValues.UpdateExperimentQClampFloor(
                         minRunBothByEntryId, minRunBothByPeptide, fEntryIds[r], fPeptides[r], fLabels[r], runBoth);
                 }
+
+                // This file's run-scope output is COMPLETE here - score, run precursor q and run
+                // peptide q are all final, and none of them depends on another file. Hand it to
+                // the caller so it lands on disk now rather than one phase later, which is what
+                // makes an interrupted run lose one file instead of every file (see
+                // FileRunScopeSink). Skipped when the scores came off an existing sidecar: that
+                // file is already written, and rewriting an artifact a validity marker attests
+                // would replace it with a copy the marker no longer describes.
+                if (doneScores == null)
+                    flushFileRunScope?.Invoke(fileNames[f], f, count, fEntryIds, fScores, runPrecFile, runPeptFile);
             }
 
             var contributions = contribAcc.Build(trainResults.FoldWeights, percConfig.FeatureInfos);
