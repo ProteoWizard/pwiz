@@ -289,6 +289,30 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return !ChromInfo.RetentionTime.HasValue;
         }
 
+        [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
+        public double? MedianPolishedArea
+        {
+            get
+            {
+                var polished = Peptide.GetMedianPolishedLog2Abundances();
+                if (polished == null)
+                {
+                    return null;
+                }
+                int replicateIndex = ResultFile.Replicate.ReplicateIndex;
+                if (replicateIndex < 0 || replicateIndex >= polished.Length)
+                {
+                    return null;
+                }
+                var log2Value = polished[replicateIndex];
+                if (!log2Value.HasValue || double.IsNaN(log2Value.Value) || double.IsInfinity(log2Value.Value))
+                {
+                    return null;
+                }
+                return Math.Pow(2, log2Value.Value);
+            }
+        }
+
         private class CachedValues : CachedValues<PeptideResult, PeptideChromInfo,
             CalibrationCurveFitter, QuantificationResult>
         {
@@ -313,7 +337,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
 
                 var calibrationCurveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(
-                    owner.DataSchema.LazyNormalizationData, owner.SrmDocument.Settings,
+                    owner.DataSchema.NormalizedValueCalculator, owner.SrmDocument.Settings,
                     new IdPeptideDocNode(owner.Peptide.Protein.DocNode.PeptideGroup, owner.Peptide.DocNode));
                 calibrationCurveFitter.SingleBatchReplicateIndex = owner.ResultFile.Replicate.ReplicateIndex;
                 return calibrationCurveFitter;
