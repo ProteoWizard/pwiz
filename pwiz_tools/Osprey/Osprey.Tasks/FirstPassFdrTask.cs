@@ -2643,7 +2643,8 @@ namespace pwiz.Osprey.Tasks
                 else if (probe.Model == null)
                     refusals.Add(@".1st-pass.model.json carries no model");
                 else if (OspreyEnvironment.Pass2ProteinCompact && probe.StratumBaseIds == null)
-                    refusals.Add(@".1st-pass.model.json carries no protein-compact stratum");
+                    refusals.Add(@"no protein-compact stratum (.1st-pass.stratum.json, or the " +
+                                 @"legacy field in .1st-pass.model.json)");
                 if (refusals.Count > 0)
                 {
                     ctx.LogInfo(string.Format(
@@ -2661,9 +2662,10 @@ namespace pwiz.Osprey.Tasks
                 // protein-compact's gate admits present-protein peptides through the stratum, so
                 // entering at the gate WITHOUT it selects a different, smaller survivor set - and
                 // does it silently, because nothing downstream can tell a stratum that was never
-                // loaded from one that was legitimately empty. The stratum rides in the same
-                // sidecar as the model, so a run that never reached Stage 6 has neither and
-                // correctly falls through to recompute.
+                // loaded from one that was legitimately empty. The stratum is its own artifact
+                // (.1st-pass.stratum.json, written when protein FDR ends), so a run killed
+                // before protein FDR has the model and no stratum and correctly falls through to
+                // recompute; LoadFromAny pairs the two from the same stem.
                 (!OspreyEnvironment.Pass2ProteinCompact || resumeSidecar.StratumBaseIds != null);
             if (canEnterAtGate)
             {

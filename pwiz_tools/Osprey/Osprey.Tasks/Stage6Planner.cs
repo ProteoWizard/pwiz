@@ -41,7 +41,11 @@ namespace pwiz.Osprey.Tasks
     {
         public string FileName;
         public IReadOnlyList<FdrEntry> Entries;
-        /// <summary>This file's non-Keep actions by entry index, or null when it has none.</summary>
+        /// <summary>This file's non-Keep actions by entry index. EMPTY means planning ran and
+        /// chose Keep for every entry; NULL means planning did not run at all (empty consensus,
+        /// single-file, or a diagnostic dump about to exit). The distinction matters to a
+        /// consumer writing an envelope: an empty list is a planned result, a null is the
+        /// absence of one.</summary>
         public IReadOnlyList<KeyValuePair<int, ReconcileAction>> Actions;
         public IReadOnlyList<GapFillTarget> GapFill;
         public RTCalibration RefinedCalibration;
