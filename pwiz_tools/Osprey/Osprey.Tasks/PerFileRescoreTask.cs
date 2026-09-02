@@ -335,7 +335,16 @@ namespace pwiz.Osprey.Tasks
             // materializes the slot's producer (FirstPassFdrTask) if it has not run
             // yet, so the value is always populated; FirstPassFDR publishes
             // PlanningPerformed alongside CompactedEntries (already read above)
-            // from every materialization path.
+            // from every materialization path - Run with its own _didPlan, Rehydrate with false.
+            //
+            // The false value is the FIRST of two gates behind defect (b): a straight-through
+            // resume of a Stage-5-only directory reads false here AND has no worker
+            // RescoreBundle, so it self-gates to a refill-only no-op and leaves SecondPassFDR
+            // nothing to fold. Publishing true instead does NOT fix it - the rescore still has
+            // no execution path for a self-built bundle - so the fix belongs here, in telling
+            // "no rescore needed because the outputs exist" apart from "no rescore possible
+            // because nobody supplied a bundle". See
+            // TODO-20260901_osprey_firstpassfdr_resume.md.
             bool didPlan = ctx.Get<PlanningPerformed>().Value;
             var rescoreBundle = ctx.Get<RescoreBundle>().Value;
             bool anyPass2Present = false;

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
@@ -435,6 +435,18 @@ namespace pwiz.Osprey.Tasks
             {
                 var swFdr = Stopwatch.StartNew();
                 var featureContributions = RunFdr(perFileEntries, config, ctx, loadFileFeatures);
+                // Persist the model on the RESIDENT path too. The projection path does it in
+                // its captureModel hook, but this path's hook only publishes - and the block
+                // in PlanStage6 that used to persist for BOTH was removed with this change.
+                // Left as it was, OSPREY_FDR_PROJECTION=0 and --fdrbench-pass 1 would produce a
+                // directory carrying a stratum and no model, which LoadFromAny reads as no
+                // frozen state at all.
+                if (ctx.TryGet<FirstPassPercolatorModel>(out var residentModel) &&
+                    residentModel.Results != null)
+                {
+                    PersistFirstPassModel(residentModel.Results, perFileParquetPaths,
+                        ValidityKey(ctx), ctx);
+                }
                 swFdr.Stop();
                 ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
                     swFdr.Elapsed.TotalSeconds));
@@ -1587,19 +1599,32 @@ namespace pwiz.Osprey.Tasks
             // Two passes over the files, one file resident at a time -- see Stage6Planner.
             var planner = new Stage6Planner(ctx);
             Stage6Planner.Stage6Plan plan;
-            if (_survivorsStreamed)
+            try
             {
-                var fileNames = new List<string>(perFileEntries.Count);
-                foreach (var kvp in perFileEntries)
-                    fileNames.Add(kvp.Key);
-                plan = planner.Plan(fileNames, LoadSurvivorsForPlanning, perFileCalibrations,
-                    perFileParquetPaths, libLookup, libPrecursorMz, perFileIsolationMz, config,
-                    onFilePlanned);
+                if (_survivorsStreamed)
+                {
+                    var fileNames = new List<string>(perFileEntries.Count);
+                    foreach (var kvp in perFileEntries)
+                        fileNames.Add(kvp.Key);
+                    plan = planner.Plan(fileNames, LoadSurvivorsForPlanning, perFileCalibrations,
+                        perFileParquetPaths, libLookup, libPrecursorMz, perFileIsolationMz, config,
+                        onFilePlanned);
+                }
+                else
+                {
+                    plan = planner.Plan(perFileEntries, perFileCalibrations, perFileParquetPaths,
+                        libLookup, libPrecursorMz, perFileIsolationMz, config, onFilePlanned);
+                }
             }
-            else
+            catch (InvalidDataException ex)
             {
-                plan = planner.Plan(perFileEntries, perFileCalibrations, perFileParquetPaths,
-                    libLookup, libPrecursorMz, perFileIsolationMz, config, onFilePlanned);
+                // A survivor load fault. The materialized path reported this as an error plus
+                // exit 1, and losing that on the streamed path would replace an actionable
+                // message with a stack trace at the process boundary. The message already names
+                // the file and what to do about it.
+                ctx.LogError(ex.Message);
+                ctx.ExitCode = 1;
+                return false;
             }
 
             // The 1st-pass model and the protein-compact stratum used to be written HERE, at the
@@ -1870,7 +1895,7 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(sidecarBase))
             {
                 ctx.LogWarning(string.Format(
-                    "No sidecar base path for `{0}` — skipping reconciliation.json write", fileName));
+                    "No sidecar base path for `{0}` - skipping reconciliation.json write", fileName));
                 return 1;
             }
             string reconPath = ReconciliationFile.PathForInput(sidecarBase);
@@ -2350,6 +2375,11 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new ProteinCompactStratum(_proteinCompactStratum));
             if (perFileParquetPaths == null)
                 return;
+            // Sorted and serialized ONCE. The copies are byte-identical, and at 446 files a
+            // ~0.9 M-id stratum re-rendered per file is several GB of writes for nothing.
+            string stratumJson = FirstPassModelIO.SerializeStratum(_proteinCompactStratum);
+            if (stratumJson == null)
+                return;
             int stratumWrites = 0;
             foreach (var kvp in perFileParquetPaths)
             {
@@ -2357,8 +2387,7 @@ namespace pwiz.Osprey.Tasks
                 PerFileResumeDriver.ClearStale(path, Name);
                 try
                 {
-                    if (!FirstPassModelIO.SaveStratum(path, _proteinCompactStratum))
-                        continue;
+                    FirstPassModelIO.WriteText(path, stratumJson);
                     stratumWrites++;
                     PerFileResumeDriver.Stamp(path, Name, OspreyVersion.Current, validityKey,
                         new[] { kvp.Value }, ctx.LogWarning);
@@ -2516,7 +2545,11 @@ namespace pwiz.Osprey.Tasks
                     ctx.Publish(new FirstPassPercolatorModel
                     {
                         Results = results,
-                        ExperimentAgg = OspreyEnvironment.ExperimentAgg
+                        // The arm the TRAINING process ran under, not this one's. When the model
+                        // came off disk those differ, and the recorded arm is what the pass-2
+                        // mean-best-N refusal is evaluated against - so re-reading the
+                        // environment here would judge a reused model by the wrong arm.
+                        ExperimentAgg = reloadedModel?.ExperimentAgg ?? OspreyEnvironment.ExperimentAgg
                     });
                 }
                 // Nothing to write when the model came off disk: it is already there, already
@@ -2612,9 +2645,11 @@ namespace pwiz.Osprey.Tasks
                 else if (OspreyEnvironment.Pass2ProteinCompact && probe.StratumBaseIds == null)
                     refusals.Add(@".1st-pass.model.json carries no protein-compact stratum");
                 if (refusals.Count > 0)
+                {
                     ctx.LogInfo(string.Format(
                         @"Resume: every sidecar is current but the compaction-gate entry was refused ({0}); " +
                         @"the score passes will run.", string.Join(@"; ", refusals)));
+                }
             }
             bool canEnterAtGate =
                 projections.PerFile.Count > 0 &&
@@ -2641,7 +2676,12 @@ namespace pwiz.Osprey.Tasks
                     Results = resumeSidecar.Model,
                     ExperimentAgg = resumeSidecar.ExperimentAgg
                 });
-                if (resumeSidecar.StratumBaseIds != null)
+                // Gated on the MODE, matching the canEnterAtGate clause above. The stratum file
+                // is not a declared Output, so nothing invalidates or removes it when a later
+                // run uses a different pass-2 arm - and the compaction gate applies whatever it
+                // is handed, so an ungated adoption would silently widen the survivor set of an
+                // arm that never computes a stratum at all.
+                if (OspreyEnvironment.Pass2ProteinCompact && resumeSidecar.StratumBaseIds != null)
                 {
                     _proteinCompactStratum = resumeSidecar.StratumBaseIds;
                     ctx.Publish(new ProteinCompactStratum(_proteinCompactStratum));
@@ -2680,14 +2720,25 @@ namespace pwiz.Osprey.Tasks
                         records.Add(new FdrScoreRecord(entryIds[r], scores[r], runPrecQ[r], runPeptQ[r]));
                     // Marked before the result is known: a failed write must not be retried by
                     // the sink either, because FdrScoresSidecar registers the path on the way in
-                    // and would refuse the second attempt as a double write. The failure is
-                    // counted instead, and the file simply stays absent from scoresOnDisk so
-                    // pass 2 falls back to scoring it from features.
+                    // and would refuse the second attempt as a double write.
                     sink.MarkSidecarWritten(fileIndex);
                     int failures = FlushPartialSidecar(fileName, records);
                     if (failures == 0)
+                    {
                         scoresOnDisk.Add(fileName);
+                        return;
+                    }
+                    // Fatal HERE, naming the write that failed. Since the sink can no longer
+                    // write this file either, continuing produces a run that walks every
+                    // remaining row and then dies an hour later in the compaction gate saying
+                    // the sidecar could not be READ - blaming a missing artifact instead of the
+                    // write that never happened.
                     pass1WriteFailures += failures;
+                    throw new IOException(string.Format(
+                        @"First-pass sidecar write failed for '{0}'. The score pass cannot " +
+                        @"continue: these sidecars are write-once, so no later phase can " +
+                        @"supply the file, and every downstream stage reads it. See the " +
+                        @"warning above for the underlying cause.", fileName));
                 };
             var featureInfos = OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES);
             var swFdr = Stopwatch.StartNew();
@@ -2739,13 +2790,25 @@ namespace pwiz.Osprey.Tasks
                 // below corroborates cohort identity through the sidecars themselves; here there
                 // is no such corroboration, so an unstamped model file - one written before this
                 // artifact was stamped - is not adopted.
-                PercolatorResults pretrainedModel = reloadedModel?.Model;
+                // Requires at least one file to actually be resumable. The model file is not a
+                // declared Output, so deleting the declared ones - the standard way to force a
+                // clean re-score - leaves it behind, and adopting it then would score every file
+                // with the previous arm's discriminant while the log says only that a model was
+                // reused. With one sidecar adopted there is already an on-disk score that model
+                // produced, so reusing it is the consistent choice rather than a surprising one.
+                PercolatorResults pretrainedModel = resumableFiles.Count > 0 ? reloadedModel?.Model : null;
                 if (pretrainedModel != null)
                 {
                     ctx.LogInfo(string.Format(
                         @"Resume: reusing the persisted 1st-pass model instead of retraining " +
                         @"({0} of {1} file(s) already scored).",
                         resumableFiles.Count, projections.PerFile.Count));
+                }
+                else if (reloadedModel?.Model != null)
+                {
+                    ctx.LogInfo(
+                        @"Resume: a current 1st-pass model is on disk but no file's scores are, " +
+                        @"so the model is retrained rather than adopted for a full re-score.");
                 }
                 aborted = PercolatorEngine.RunFirstPassStreaming(
                     projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,

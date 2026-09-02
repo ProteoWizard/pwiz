@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -202,8 +202,10 @@ namespace pwiz.Osprey.Test
                 if (now > result.PeakBytes)
                     result.PeakBytes = now;
                 if (++n % 10 == 0)
+                {
                     Console.WriteLine(@"  {0} {1,4}/{2}  heap {3:N2} GB", label, n,
                         perFileParquetPaths.Count, now / (double)(1024 * 1024 * 1024));
+                }
             }
             sw.Stop();
             result.Seconds = sw.Elapsed.TotalSeconds;

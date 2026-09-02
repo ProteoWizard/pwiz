@@ -156,30 +156,32 @@ namespace pwiz.Osprey.Tasks
         {
             if (perFileParquetPaths == null)
                 return null;
-            Sidecar sidecar = null;
+            // The stratum is a SEPARATE artifact written by a later phase, so a run killed
+            // between training and protein FDR legitimately has the model and no stratum - that
+            // is not a reason to reject the model. But the two must come from the SAME stem:
+            // splitting them removed the structural guarantee that they matched, and with
+            // parquets spanning directories (-LinkFrom junctions, per-file worker dirs, a
+            // partly-rewritten directory) an independent scan for each could pair one run's
+            // model with another run's stratum and publish that as the frozen first-pass state.
+            Sidecar first = null;
             foreach (var kvp in perFileParquetPaths)
             {
-                sidecar = Load(PathFor(kvp.Value, kvp.Key));
-                if (sidecar != null)
-                    break;
-            }
-            if (sidecar == null)
-                return null;
-
-            // The stratum is a SEPARATE artifact written by a later phase, so it is scanned for
-            // separately: a run killed between training and protein FDR has the model and no
-            // stratum, which is a legitimate state and not a reason to reject the model. The
-            // dedicated file wins where it exists; sidecar.StratumBaseIds is whatever the model
-            // file carried, which is non-null only for a directory written before the split.
-            foreach (var kvp in perFileParquetPaths)
-            {
-                var stratum = LoadStratum(StratumPathFor(kvp.Value, kvp.Key));
-                if (stratum == null)
+                var sidecar = Load(PathFor(kvp.Value, kvp.Key));
+                if (sidecar == null)
                     continue;
-                sidecar.StratumBaseIds = stratum;
-                break;
+                // sidecar.StratumBaseIds is whatever the model file itself carried, which is
+                // non-null only for a directory written before the split; the dedicated file
+                // beside the same stem wins where it exists.
+                var stratum = LoadStratum(StratumPathFor(kvp.Value, kvp.Key));
+                if (stratum != null)
+                    sidecar.StratumBaseIds = stratum;
+                if (sidecar.StratumBaseIds != null)
+                    return sidecar;
+                first = first ?? sidecar;
             }
-            return sidecar;
+            // No stem had both. Return the first model found, with whatever it carried - the
+            // caller's mode gate decides whether a missing stratum is fatal.
+            return first;
         }
 
         /// <summary>
@@ -229,14 +231,42 @@ namespace pwiz.Osprey.Tasks
         ///   the artifact is stable across runs.</param>
         public static bool SaveStratum(string path, HashSet<uint> stratumBaseIds)
         {
-            if (stratumBaseIds == null || stratumBaseIds.Count == 0)
+            string json = SerializeStratum(stratumBaseIds);
+            if (json == null)
                 return false;
+            WriteText(path, json);
+            return true;
+        }
+
+        /// <summary>
+        /// The stratum's serialized form, or null when there is nothing to persist. Separate
+        /// from <see cref="SaveStratum"/> so a caller writing the identical copy beside every
+        /// input file sorts and serializes ONCE: the set reaches ~0.9 M ids on a 446-file
+        /// cohort, which is ~12 MB of indented JSON, and re-rendering it per file spends
+        /// several GB of writes plus 446 sorts producing byte-identical output.
+        /// </summary>
+        public static string SerializeStratum(HashSet<uint> stratumBaseIds)
+        {
+            if (stratumBaseIds == null || stratumBaseIds.Count == 0)
+                return null;
 
             var sortedBaseIds = new uint[stratumBaseIds.Count];
             stratumBaseIds.CopyTo(sortedBaseIds);
             Array.Sort(sortedBaseIds); // Array.Sort OK: distinct uint keys, so stability cannot change the result
-            WriteJson(path, new StratumDto { SchemaVersion = 1, StratumBaseIds = sortedBaseIds });
-            return true;
+            return SerializeJson(new StratumDto { SchemaVersion = 1, StratumBaseIds = sortedBaseIds });
+        }
+
+        /// <summary>Write an already-serialized artifact through <see cref="FileSaver"/>.</summary>
+        public static void WriteText(string path, string json)
+        {
+            string parent = Path.GetDirectoryName(Path.GetFullPath(path));
+            if (!string.IsNullOrEmpty(parent))
+                Directory.CreateDirectory(parent);
+            using (var saver = new FileSaver(path))
+            {
+                File.WriteAllText(saver.SafeName, json);
+                saver.Commit();
+            }
         }
 
         /// <summary>
@@ -334,21 +364,22 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private static void WriteJson(string path, object dto)
         {
-            string parent = Path.GetDirectoryName(Path.GetFullPath(path));
-            if (!string.IsNullOrEmpty(parent))
-                Directory.CreateDirectory(parent);
+            WriteText(path, SerializeJson(dto));
+        }
 
+        /// <summary>
+        /// Serialize <paramref name="dto"/> in the artifact's canonical form: LF + trailing
+        /// newline, matching the reconciliation.json convention so the artifact is stable
+        /// across platforms.
+        /// </summary>
+        private static string SerializeJson(object dto)
+        {
             var settings = new JsonSerializerSettings { Converters = { new RoundtripDoubleConverter() } };
             string json = JsonConvert.SerializeObject(dto, Formatting.Indented, settings);
             json = json.Replace("\r\n", "\n");
             if (!json.EndsWith("\n", StringComparison.Ordinal))
                 json += "\n";
-
-            using (var saver = new FileSaver(path))
-            {
-                File.WriteAllText(saver.SafeName, json);
-                saver.Commit();
-            }
+            return json;
         }
     }
 }

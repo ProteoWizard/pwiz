@@ -32,7 +32,7 @@ namespace pwiz.Osprey.Tasks
     /// <summary>
     /// Streams the per-file CWT candidate lists the Stage 6 reconciliation planner
     /// indexes by <see cref="FdrEntry.ParquetIndex"/> (mirrors Rust
-    /// reconciliation.rs:672). <see cref="ValidateAllInRange"/> confirms up front --
+    /// reconciliation.rs:672). <see cref="ValidateFileInRange"/> confirms up front --
     /// via a footer-only metadata probe, nothing held resident -- that every
     /// post-compaction stub's ParquetIndex is in range of its file's parquet row
     /// count (the reconciliation all-or-nothing gate); the planner then pulls each
@@ -48,28 +48,8 @@ namespace pwiz.Osprey.Tasks
     internal static class CwtCandidateLoader
     {
         /// <summary>
-        /// Fail-fast validation -- via a footer-only metadata probe, decoding no CWT
-        /// blobs and holding nothing resident -- that EVERY file's post-compaction
-        /// stubs have a <see cref="FdrEntry.ParquetIndex"/> in range of its scores
-        /// parquet's row count, and that the parquet is present and readable. THROWS
-        /// <see cref="InvalidDataException"/> (naming every offending file) if any file
-        /// is missing, unreadable, or out of range -- a corrupt Stage-4 output stops the
-        /// run before Stage 6 rather than silently reconciling only the good files. A
-        /// footer-clean file whose CWT blob column still fails to decode is caught during
-        /// planning by <see cref="LoadOneFile"/>, which throws the same way.
-        /// </summary>
-        internal static void ValidateAllInRange(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<string, string> perFileParquetPaths)
-        {
-            var invalid = new List<string>();
-            foreach (var kvp in perFileEntries)
-                ValidateFileInRange(kvp.Key, kvp.Value, perFileParquetPaths, invalid);
-            ThrowIfAnyInvalid(invalid, perFileEntries.Count);
-        }
-
-        /// <summary>
-        /// The per-file half of <see cref="ValidateAllInRange"/>: probe ONE file and append a
+        /// Fail-fast validation via a footer-only metadata probe, decoding no CWT blobs and
+        /// holding nothing resident: probe ONE file and append a
         /// description to <paramref name="invalid"/> if it is missing, unreadable, or has a
         /// stub whose <see cref="FdrEntry.ParquetIndex"/> is out of range. Nothing is thrown
         /// here - the caller collects every offending file first and then calls
@@ -142,7 +122,7 @@ namespace pwiz.Osprey.Tasks
         /// is missing or its CWT blob column fails to decode (a corrupt Stage-4 output),
         /// so the run fails fast rather than silently reconciling with this file's peaks
         /// kept. The cheap missing / out-of-range cases are already caught up front by
-        /// <see cref="ValidateAllInRange"/>; this catches a footer-clean-but-corrupt blob.
+        /// <see cref="ValidateFileInRange"/>; this catches a footer-clean-but-corrupt blob.
         /// </summary>
         internal static IReadOnlyList<IReadOnlyList<CwtCandidate>> LoadOneFile(
             string fileName,

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -574,17 +574,38 @@ namespace pwiz.Osprey.FDR
         /// freshly scored one by construction rather than by trusting two writers to agree.</para>
         /// </summary>
         private static double[] TryLoadCompletedScores(
-            Func<string, Action<uint, double>, bool> tryStream, string fileName, int expectedCount)
+            Func<string, Action<uint, double>, bool> tryStream, string fileName, int expectedCount,
+            IReadOnlyList<uint> expectedEntryIds)
         {
             if (tryStream == null)
                 return null;
             var scores = new List<double>(expectedCount);
-            if (!tryStream(fileName, (entryId, score) => scores.Add(score)))
+            var entryIds = new List<uint>(expectedCount);
+            if (!tryStream(fileName, (entryId, score) =>
+                {
+                    entryIds.Add(entryId);
+                    scores.Add(score);
+                }))
+            {
                 return null;
+            }
             // A count mismatch means the sidecar and the parquet disagree about how many rows
             // this file has, which no validity key can catch - so refuse the shortcut and score
             // it rather than emit a silently misaligned file.
-            return scores.Count == expectedCount ? scores.ToArray() : null;
+            if (scores.Count != expectedCount)
+                return null;
+            // And the ROWS must line up, not just the count. This binds the sidecar's records
+            // to parquet rows by POSITION, while every other reader of the file matches by
+            // entry_id - so a sidecar that is complete but ordered differently (the resident
+            // write path sorts by FdrEntry, not by parquet row) would hand every row its
+            // neighbour's score, and the run would finish clean with wrong identifications.
+            // The identity is already in hand at both call sites, so checking is free.
+            for (int r = 0; r < expectedCount; r++)
+            {
+                if (entryIds[r] != expectedEntryIds[r])
+                    return null;
+            }
+            return scores.ToArray();
         }
 
         /// <summary>
@@ -820,6 +841,31 @@ namespace pwiz.Osprey.FDR
                 "[COUNT] {0} Percolator streaming subsample: {1} entries ({2} targets, {3} decoys)",
                 passLabel, subsetEntries.Count, subTargets, subsetEntries.Count - subTargets));
 
+            // A persisted model is only usable if it was trained on THIS run's feature set, and
+            // nothing upstream can establish that: the validity key the caller checks carries no
+            // feature-set or build term, so a model from a build with a different feature list
+            // matches it exactly. Adopting one would either index past the end of its weight
+            // vector mid-score-pass or, when it is wider, silently truncate it and apply the
+            // standardizer at the wrong width - scores that look plausible and are wrong.
+            //
+            // Checked HERE, above the subset load, because rejecting it after that branch would
+            // leave the subset unloaded and then train on entries with no features.
+            if (pretrainedModel != null)
+            {
+                int modelFeatures = pretrainedModel.FoldWeights != null && pretrainedModel.FoldWeights.Count > 0
+                    ? pretrainedModel.FoldWeights[0].Length
+                    : -1;
+                if (modelFeatures != nFeatures ||
+                    pretrainedModel.Standardizer == null ||
+                    pretrainedModel.Standardizer.NumFeatures != nFeatures)
+                {
+                    logInfo(string.Format(
+                        @"[TRAIN] Ignoring the persisted 1st-pass model: it carries {0} features " +
+                        @"and this run scores {1}. Training a fresh model.", modelFeatures, nFeatures));
+                    pretrainedModel = null;
+                }
+            }
+
             // Load ONLY the subset's feature vectors, one file at a time (bounded by MaxTrainSize),
             // cloning each row so the subset entry owns it -- mirrors RunStreamingIntoProjection.
             var subsetByFile = GroupIndicesByFileName(subsetEntries);
@@ -935,7 +981,7 @@ namespace pwiz.Osprey.FDR
                 int count = buffer.Count;
                 if (count > 0)
                     nonEmptyFiles++;
-                double[] doneScores = TryLoadCompletedScores(tryStreamCompletedScores, fileNames[f], count);
+                double[] doneScores = TryLoadCompletedScores(tryStreamCompletedScores, fileNames[f], count, buffer.EntryIds);
                 IReadOnlyList<double[]> rows = doneScores == null ? loadFileFeatures(fileNames[f]) : null;
                 var fScores = new double[count];
                 var fLabels = new bool[count];
@@ -1013,7 +1059,7 @@ namespace pwiz.Osprey.FDR
                 buffer.Clear();
                 streamFileRows(fileNames[f], buffer.Add);
                 int count = buffer.Count;
-                double[] doneScores2 = TryLoadCompletedScores(tryStreamCompletedScores, fileNames[f], count);
+                double[] doneScores2 = TryLoadCompletedScores(tryStreamCompletedScores, fileNames[f], count, buffer.EntryIds);
                 IReadOnlyList<double[]> rows = doneScores2 == null ? loadFileFeatures(fileNames[f]) : null;
                 var fScores = new double[count];
                 var fLabels = new bool[count];

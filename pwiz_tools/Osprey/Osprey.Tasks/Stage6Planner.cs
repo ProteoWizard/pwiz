@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -354,8 +354,20 @@ namespace pwiz.Osprey.Tasks
             // A refit-only bisection dump exits before planning, exactly as it did when refit
             // and planning were separate passes over the whole cohort. Deciding it up front
             // keeps the early exit from doing a cohort's worth of planning it will discard.
-            bool refitOnlyExit = (_ctx.Diagnostics?.LoessFitOnly ?? false) ||
-                                 (_ctx.Diagnostics?.RefitOnly ?? false);
+            //
+            // Gated on the DUMP flag as well as the ONLY flag, because the two env vars are
+            // independent and only the dump block calls ExitAfterDump. Testing the ONLY flag
+            // alone would skip planning and then NOT exit, so the run would write no
+            // reconciliation envelope at all and still report success.
+            bool refitOnlyExit =
+                ((_ctx.Diagnostics?.DumpLoessFit ?? false) && (_ctx.Diagnostics?.LoessFitOnly ?? false)) ||
+                ((_ctx.Diagnostics?.DumpRefit ?? false) && (_ctx.Diagnostics?.RefitOnly ?? false));
+            // The reconciliation dump DOES plan - its whole subject is the planned actions -
+            // but it exits immediately afterwards, so writing and stamping a full set of
+            // envelopes on the way out would leave a diagnostic run looking like a completed
+            // planning pass to the next resume.
+            bool suppressEnvelopes = (_ctx.Diagnostics?.DumpReconciliation ?? false) &&
+                                     (_ctx.Diagnostics?.ReconciliationOnly ?? false);
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
             // Empty consensus (single-file / no cross-file evidence) is a legitimate
             // skip, not an error -- only a corrupt input aborts (in pass A).
@@ -401,11 +413,11 @@ namespace pwiz.Osprey.Tasks
                         fileGapFill = gapFiller.IdentifyFile(fileName, entries);
                     }
 
-                    // Nothing is handed on when a refit-only dump is about to end the run: the
+                    // Nothing is handed on when a diagnostic dump is about to end the run: the
                     // caller writes a per-file envelope from this, and an envelope recording
                     // "no actions" because planning was skipped would be indistinguishable
                     // from one that was planned and found none.
-                    if (!refitOnlyExit)
+                    if (!refitOnlyExit && !suppressEnvelopes)
                     {
                         onFilePlanned?.Invoke(new Stage6FilePlan
                         {
