@@ -64,46 +64,74 @@ namespace pwiz.Osprey.Tasks
         {
             var invalid = new List<string>();
             foreach (var kvp in perFileEntries)
+                ValidateFileInRange(kvp.Key, kvp.Value, perFileParquetPaths, invalid);
+            ThrowIfAnyInvalid(invalid, perFileEntries.Count);
+        }
+
+        /// <summary>
+        /// The per-file half of <see cref="ValidateAllInRange"/>: probe ONE file and append a
+        /// description to <paramref name="invalid"/> if it is missing, unreadable, or has a
+        /// stub whose <see cref="FdrEntry.ParquetIndex"/> is out of range. Nothing is thrown
+        /// here - the caller collects every offending file first and then calls
+        /// <see cref="ThrowIfAnyInvalid"/>, so one corrupt parquet does not hide the others.
+        ///
+        /// <para>Split out so a caller that already walks the files one at a time can validate
+        /// as it goes, instead of needing every file's stubs resident to validate them
+        /// together.</para>
+        /// </summary>
+        internal static void ValidateFileInRange(
+            string fileName,
+            IReadOnlyList<FdrEntry> entries,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            List<string> invalid)
+        {
+            if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath) ||
+                !File.Exists(parquetPath))
             {
-                if (!perFileParquetPaths.TryGetValue(kvp.Key, out string parquetPath) ||
-                    !File.Exists(parquetPath))
-                {
-                    invalid.Add(string.Format(@"{0} (scores parquet missing)", kvp.Key));
-                    continue;
-                }
-
-                long effectiveRowCount;
-                try
-                {
-                    var probe = ParquetScoreCache.ProbeCwtRowMetadata(parquetPath);
-                    // LoadCwtCandidatesFromParquet yields an empty list (count 0) when
-                    // the cwt_candidates column is absent, so a file lacking it reads as
-                    // zero rows here -- and thus fails the in-range check below.
-                    effectiveRowCount = probe.HasCwtCandidatesField ? probe.RowCount : 0L;
-                }
-                catch (Exception ex)
-                {
-                    invalid.Add(string.Format(@"{0} (unreadable: {1})", kvp.Key, ex.Message));
-                    continue;
-                }
-
-                // The planner indexes CWT lists by entry.ParquetIndex (mirrors Rust at
-                // reconciliation.rs:672). effectiveRowCount is the parquet's raw Stage-4
-                // row count; kvp.Value.Count is the post-compaction stub count -- unequal
-                // by design. What must hold is that every stub's ParquetIndex is in range.
-                uint maxIdx = MaxParquetIndex(kvp.Value);
-                if (kvp.Value.Count > 0 && maxIdx >= effectiveRowCount)
-                    invalid.Add(string.Format(
-                        @"{0} (max stub ParquetIndex {1} >= {2} parquet rows)",
-                        kvp.Key, maxIdx, effectiveRowCount));
+                invalid.Add(string.Format(@"{0} (scores parquet missing)", fileName));
+                return;
             }
 
-            if (invalid.Count > 0)
-                throw new InvalidDataException(string.Format(
-                    @"Reconciliation planning aborted: {0} of {1} file(s) have missing or corrupt CWT " +
-                    @"candidates and cannot be reconciled: [{2}]. Delete the affected .scores.parquet " +
-                    @"file(s) and re-run so they are regenerated.",
-                    invalid.Count, perFileEntries.Count, string.Join(@"; ", invalid)));
+            long effectiveRowCount;
+            try
+            {
+                var probe = ParquetScoreCache.ProbeCwtRowMetadata(parquetPath);
+                // LoadCwtCandidatesFromParquet yields an empty list (count 0) when
+                // the cwt_candidates column is absent, so a file lacking it reads as
+                // zero rows here -- and thus fails the in-range check below.
+                effectiveRowCount = probe.HasCwtCandidatesField ? probe.RowCount : 0L;
+            }
+            catch (Exception ex)
+            {
+                invalid.Add(string.Format(@"{0} (unreadable: {1})", fileName, ex.Message));
+                return;
+            }
+
+            // The planner indexes CWT lists by entry.ParquetIndex (mirrors Rust at
+            // reconciliation.rs:672). effectiveRowCount is the parquet's raw Stage-4
+            // row count; the stub count is the post-compaction one -- unequal by design.
+            // What must hold is that every stub's ParquetIndex is in range.
+            uint maxIdx = MaxParquetIndex(entries);
+            if (entries.Count > 0 && maxIdx >= effectiveRowCount)
+                invalid.Add(string.Format(
+                    @"{0} (max stub ParquetIndex {1} >= {2} parquet rows)",
+                    fileName, maxIdx, effectiveRowCount));
+        }
+
+        /// <summary>
+        /// Throw naming every file <see cref="ValidateFileInRange"/> rejected, or return when
+        /// none was. A corrupt Stage-4 output stops the run before Stage 6 rather than
+        /// silently reconciling only the good files.
+        /// </summary>
+        internal static void ThrowIfAnyInvalid(List<string> invalid, int fileCount)
+        {
+            if (invalid.Count == 0)
+                return;
+            throw new InvalidDataException(string.Format(
+                @"Reconciliation planning aborted: {0} of {1} file(s) have missing or corrupt CWT " +
+                @"candidates and cannot be reconciled: [{2}]. Delete the affected .scores.parquet " +
+                @"file(s) and re-run so they are regenerated.",
+                invalid.Count, fileCount, string.Join(@"; ", invalid)));
         }
 
         /// <summary>

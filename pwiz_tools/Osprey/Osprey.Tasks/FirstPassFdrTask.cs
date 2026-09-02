@@ -158,6 +158,10 @@ namespace pwiz.Osprey.Tasks
         // hands back on the bundle; null only on the legacy resident path, whose consumers
         // fall back to CompactedEntries.
         private FirstPassSurvivorLoader _survivorLoader;
+        /// <summary>True once the compaction gate has decided to hand Stage 6 the survivor
+        /// LOADER instead of a materialized buffer, so the per-file lists it published are
+        /// empty by design rather than by failure.</summary>
+        private bool _survivorsStreamed;
         private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> _perFileConsensusTargets
             = new Dictionary<string, IReadOnlyList<(int, double, double, double)>>();
         private IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> _reconciliationActions
@@ -1549,32 +1553,54 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Empty);
             ctx.LogInfo(@"Reconciliation planning");
 
+            // The library lookups gap-fill needs, and the per-file envelope's join-wide
+            // fields. Built once, before any file is planned, because none of them varies by
+            // file and the library scan is O(library).
+            BuildGapFillLibraryLookups(fullLibrary, out var libLookup, out var libPrecursorMz);
+            var writerState = PrepareReconciliationWrite(perFileEntries, config);
+            var gapFillByFile = new Dictionary<string, List<GapFillTarget>>(StringComparer.Ordinal);
+            int reconWriteFailures = 0;
+
+            // Stage 5 -> Stage 6 boundary: each file's .reconciliation.json envelope is written
+            // the moment that file's planning finishes, rather than after every file's. Same
+            // artifact, one phase earlier, and it is what lets the planner release the file's
+            // entries immediately - the whole point of not holding the all-files survivor
+            // buffer. Pairs with the --task PerFileRescoring Stage 6 worker mode.
+            //
+            // Gap-fill targets are collected here too, for the in-process Stage 6 rescore below.
+            Stage6FilePlanned onFilePlanned = filePlan =>
+            {
+                if (filePlan.GapFill != null && filePlan.GapFill.Count > 0)
+                {
+                    var copy = new List<GapFillTarget>(filePlan.GapFill.Count);
+                    foreach (var target in filePlan.GapFill)
+                        copy.Add(target);
+                    gapFillByFile[filePlan.FileName] = copy;
+                }
+                reconWriteFailures += WriteReconciliationFile(
+                    writerState, filePlan, perFileParquetPaths, config, ctx);
+            };
+
             // Four cross-file planning phases (multi-charge consensus, cross-run
             // consensus RTs, per-file calibration refit, reconciliation
             // planning), each routing its diagnostic dump through ctx.Diagnostics.
-            var plan = new Stage6Planner(ctx).Plan(
-                perFileEntries, perFileCalibrations, perFileParquetPaths, config);
-
-            // Stage 5 → Stage 6 boundary: write the per-file
-            // .reconciliation.json envelope (the .fdr_scores.bin
-            // companion was already written above pre-compaction).
-            // Pairs with the --task PerFileRescoring Stage 6
-            // worker mode (next sprint).
-            //
-            // Surfaces gap-fill targets via out param so the in-
-            // process Stage 6 rescore call below can execute them.
-            int reconWriteFailures = WriteReconciliationFiles(
-                perFileEntries,
-                plan.ReconciliationActions,
-                plan.Consensus,
-                plan.RefinedCalibrations,
-                perFileCalibrations,
-                perFileIsolationMz,
-                fullLibrary,
-                perFileParquetPaths,
-                config,
-                out var perFileGapFillForRescore,
-                ctx);
+            // Two passes over the files, one file resident at a time -- see Stage6Planner.
+            var planner = new Stage6Planner(ctx);
+            Stage6Planner.Stage6Plan plan;
+            if (_survivorsStreamed)
+            {
+                var fileNames = new List<string>(perFileEntries.Count);
+                foreach (var kvp in perFileEntries)
+                    fileNames.Add(kvp.Key);
+                plan = planner.Plan(fileNames, LoadSurvivorsForPlanning, perFileCalibrations,
+                    perFileParquetPaths, libLookup, libPrecursorMz, perFileIsolationMz, config,
+                    onFilePlanned);
+            }
+            else
+            {
+                plan = planner.Plan(perFileEntries, perFileCalibrations, perFileParquetPaths,
+                    libLookup, libPrecursorMz, perFileIsolationMz, config, onFilePlanned);
+            }
 
             // The 1st-pass model and the protein-compact stratum used to be written HERE, at the
             // end of planning. Both now land when the phase that computes them ends - the model
@@ -1614,9 +1640,23 @@ namespace pwiz.Osprey.Tasks
             _reconciliationActions = plan.ReconciliationActions
                 ?? new Dictionary<(string, int), ReconcileAction>();
             _refinedCalibrations = plan.RefinedCalibrations;
-            _perFileGapFillForRescore = perFileGapFillForRescore
-                ?? new Dictionary<string, List<GapFillTarget>>();
+            _perFileGapFillForRescore = gapFillByFile;
             return true;
+        }
+
+        /// <summary>
+        /// One file's survivors, loaded on demand for Stage 6 planning and released by the
+        /// planner before the next file is read. THROWS on a load fault rather than returning
+        /// null: planning around a file whose survivors could not be read would silently plan a
+        /// smaller cohort than the compaction gate selected, and the resulting envelopes would
+        /// look complete.
+        /// </summary>
+        private IReadOnlyList<FdrEntry> LoadSurvivorsForPlanning(string fileName)
+        {
+            var stubs = _survivorLoader.Load(fileName, out string error);
+            if (stubs == null)
+                throw new InvalidDataException(error);
+            return stubs;
         }
 
         /// <summary>
@@ -1749,64 +1789,18 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Write the per-file <c>.reconciliation.json</c> envelope for
-        /// each input — the second half of the Stage 5 → Stage 6 boundary
-        /// (the <c>.fdr_scores.bin</c> companion is written earlier,
-        /// pre-compaction). Mirrors the matching block in
-        /// osprey/src/pipeline.rs immediately after
-        /// dump_stage6_reconciliation. The file is written sibling to
-        /// the input mzML (or, in --task FirstPassFDR mode, the synthetic input
-        /// path derived from the parquet stem).
+        /// Build the <c>(modified_sequence, charge) -&gt; (target_id, decoy_id)</c> and
+        /// <c>entry_id -&gt; precursor_mz</c> lookups gap-fill identification needs. Decoy ID
+        /// convention: <c>target_id | 0x80000000</c> (mirrors Rust at pipeline.rs:3330-3340).
+        /// O(library), built once for the whole cohort.
         /// </summary>
-        /// <returns>
-        /// Number of files for which the reconciliation.json write failed
-        /// (0 means success). Callers in
-        /// <see cref="OspreyConfig.StopAfterStage5"/> mode treat any
-        /// failure as fatal — the Stage 6 worker would otherwise be
-        /// missing an envelope and either refuse to start or score the
-        /// wrong files.
-        /// </returns>
-        private int WriteReconciliationFiles(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<(string File, int Index), ReconcileAction> reconciliationActions,
-            IReadOnlyList<PeptideConsensusRT> consensus,
-            Dictionary<string, RTCalibration> refinedCalibrations,
-            IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
-            IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
+        private static void BuildGapFillLibraryLookups(
             List<LibraryEntry> fullLibrary,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
-            OspreyConfig config,
-            out Dictionary<string, List<GapFillTarget>> gapFillByFileOut,
-            PipelineContext ctx)
+            out Dictionary<(string ModifiedSequence, byte Charge), (uint TargetEntryId, uint DecoyEntryId)> libLookup,
+            out Dictionary<uint, double> libPrecursorMz)
         {
-            string searchHash = config.Identity.SearchParameterHash();
-            string libraryHash = config.Identity.LibraryIdentityHash();
-            var actions = reconciliationActions
-                ?? new Dictionary<(string File, int Index), ReconcileAction>();
-
-            // Pre-group reconciliation actions by file name to avoid the
-            // O(num_files * num_actions) walk that the previous
-            // implementation performed inside BuildReconciliationFile
-            // (one full Dictionary traversal per file).
-            var actionsByFile = new Dictionary<string, List<KeyValuePair<int, ReconcileAction>>>(
-                StringComparer.Ordinal);
-            foreach (var kvp in actions)
-            {
-                if (!actionsByFile.TryGetValue(kvp.Key.File, out var list))
-                {
-                    list = new List<KeyValuePair<int, ReconcileAction>>();
-                    actionsByFile[kvp.Key.File] = list;
-                }
-                list.Add(new KeyValuePair<int, ReconcileAction>(kvp.Key.Index, kvp.Value));
-            }
-
-            // Build the (modified_sequence, charge) → (target_id, decoy_id)
-            // and entry_id → precursor_mz lookups from the library. Decoy
-            // ID convention: target_id | 0x80000000 (mirrors Rust at
-            // pipeline.rs:3330-3340).
-            var libLookup = new Dictionary<(string ModifiedSequence, byte Charge),
-                (uint TargetEntryId, uint DecoyEntryId)>();
-            var libPrecursorMz = new Dictionary<uint, double>();
+            libLookup = new Dictionary<(string ModifiedSequence, byte Charge), (uint TargetEntryId, uint DecoyEntryId)>();
+            libPrecursorMz = new Dictionary<uint, double>();
             foreach (var entry in fullLibrary)
             {
                 if (entry.IsDecoy)
@@ -1815,52 +1809,23 @@ namespace pwiz.Osprey.Tasks
                 libLookup[(entry.ModifiedSequence, entry.Charge)] = (entry.Id, decoyId);
                 libPrecursorMz[entry.Id] = entry.PrecursorMz;
             }
+        }
 
-            // Compute per-file gap-fill targets. Per-file isolation-window m/z
-            // intervals (from each file's extracted windows straight through, or
-            // rehydrated from calibration.json on an HPC SecondPassFDR node) constrain
-            // gap-fill candidates to the m/z ranges each file actually isolated --
-            // essential for GPF datasets with disjoint windows. Inert for a single
-            // sDIA window covering the whole range (every precursor is in-range).
-            // Matches Rust reconciliation.rs's per_file_isolation_mz argument.
-            var perFileForGapFill = new List<KeyValuePair<string,
-                IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
-            foreach (var kvp in perFileEntries)
-            {
-                perFileForGapFill.Add(new KeyValuePair<string,
-                    IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
-            }
-            var gapFillByFile = GapFillTargetIdentifier.Identify(
-                consensus,
-                perFileForGapFill,
-                refinedCalibrations,
-                perFileCalibrations,
-                config.Reconciliation.ConsensusFdr,
-                libLookup,
-                libPrecursorMz,
-                perFileIsolationMz);
+        /// <summary>Everything a per-file <c>.reconciliation.json</c> envelope carries that is
+        /// the same for every file of the run. Resolved once, before planning starts.</summary>
+        private sealed class ReconciliationWriteState
+        {
+            public string SearchHash;
+            public string LibraryHash;
+            /// <summary>The multi-file stems set, sorted and deduped. It goes into every
+            /// per-file envelope so a worker rescoring its single parquet can compute the
+            /// join-wide reconciliation hash that --task SecondPassFDR validates against.</summary>
+            public List<string> JoinFileStems;
+        }
 
-            // Mirror gapFillByFile into the out param for the in-process
-            // Stage 6 rescore caller. Identify returns IReadOnlyList<>;
-            // ExecuteStage6Rescore's perFileGapFill type is
-            // IReadOnlyDictionary<string, List<GapFillTarget>>, so build
-            // a List<> per file. The conversion is per-file (3-15 files
-            // typical), each list 100-3000 GapFillTarget structs.
-            gapFillByFileOut = new Dictionary<string, List<GapFillTarget>>(
-                gapFillByFile.Count, StringComparer.Ordinal);
-            foreach (var kvp in gapFillByFile)
-            {
-                var copy = new List<GapFillTarget>(kvp.Value.Count);
-                foreach (var g in kvp.Value)
-                    copy.Add(g);
-                gapFillByFileOut[kvp.Key] = copy;
-            }
-
-            // The multi-file stems set goes into every per-file
-            // reconciliation.json so a worker rescoring its single
-            // parquet can compute the join-wide reconciliation hash that
-            // --task SecondPassFDR will validate against. Sort + dedup once;
-            // BuildReconciliationFile copies the list into the wire form.
+        private static ReconciliationWriteState PrepareReconciliationWrite(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries, OspreyConfig config)
+        {
             var joinFileStems = new List<string>(perFileEntries.Count);
             foreach (var fEntry in perFileEntries)
             {
@@ -1873,65 +1838,69 @@ namespace pwiz.Osprey.Tasks
                 if (string.Equals(joinFileStems[i], joinFileStems[i - 1], StringComparison.Ordinal))
                     joinFileStems.RemoveAt(i);
             }
-
-            // The join-wide first-pass passing base_id set. perFileEntries is
-            // already compacted here (a base_id passing peptide-q in ANY file is
-            // kept in ALL files), so the distinct base_ids remaining across all
-            // files ARE that set. Persisted per file (below) so an HPC
-            // PerFileRescore worker -- which only has its own file in memory --
-            // compacts to the same set the in-memory straight-through pipeline
-            // uses, instead of a per-file subset that drops cross-file entries.
-            var globalBaseIds = new HashSet<uint>();
-            foreach (var fEntry in perFileEntries)
-                foreach (var e in fEntry.Value)
-                    globalBaseIds.Add(e.EntryId & ScoringTaskShared.BASE_ID_MASK);
-
-            int failures = 0;
-            foreach (var kvp in perFileEntries)
+            return new ReconciliationWriteState
             {
-                string fileName = kvp.Key;
-                var fileEntries = kvp.Value;
+                SearchHash = config.Identity.SearchParameterHash(),
+                LibraryHash = config.Identity.LibraryIdentityHash(),
+                JoinFileStems = joinFileStems,
+            };
+        }
 
-                string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
-                if (string.IsNullOrEmpty(sidecarBase))
-                {
-                    ctx.LogWarning(string.Format(
-                        "No sidecar base path for `{0}` — skipping reconciliation.json write", fileName));
-                    failures++;
-                    continue;
-                }
-                string reconPath = ReconciliationFile.PathForInput(sidecarBase);
-                IReadOnlyList<GapFillTarget> fileGapFill;
-                if (!gapFillByFile.TryGetValue(fileName, out fileGapFill))
-                    fileGapFill = Array.Empty<GapFillTarget>();
-                actionsByFile.TryGetValue(fileName, out var fileActions);
-                var reconFile = BuildReconciliationFile(
-                    fileEntries, fileActions, fileGapFill,
-                    refinedCalibrations.TryGetValue(fileName, out var fileCal) ? fileCal : null,
-                    searchHash, libraryHash, joinFileStems, globalBaseIds);
-                PerFileResumeDriver.ClearStale(reconPath, Name);
-                try
-                {
-                    ReconciliationFile.Save(reconPath, reconFile);
-                    ctx.LogInfo(string.Format(
-                        "Wrote reconciliation.json for {0} ({1} use_cwt + {2} forced + {3} gap-fill)",
-                        fileName,
-                        reconFile.UseCwtPeakActions.Count,
-                        reconFile.ForcedIntegrationActions.Count,
-                        reconFile.GapFillTargets.Count));
-                    // The third declared Output kind. All three must be stamped as they land or
-                    // the task stays un-resumable on whichever one was missed.
-                    PerFileResumeDriver.Stamp(reconPath, Name, OspreyVersion.Current,
-                        ValidityKey(ctx), Array.Empty<string>(), ctx.LogWarning);
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        "Failed to write reconciliation.json for {0}: {1}", fileName, ex.Message));
-                    failures++;
-                }
+        /// <summary>
+        /// Write ONE file's <c>.reconciliation.json</c> envelope at the Stage 5 -> Stage 6
+        /// boundary, from the plan the planner just produced for it. Pairs with the
+        /// <c>--task PerFileRescoring</c> Stage 6 worker mode.
+        ///
+        /// <para>Per file, as each file's planning ends, rather than for every file after all
+        /// planning: the entries it describes can then be released immediately, which is what
+        /// lets Stage 6 planning run without the all-files survivor buffer. It is also the same
+        /// rule the model and the stratum now follow - an artifact is written by the phase that
+        /// produces it.</para>
+        /// </summary>
+        /// <returns>1 if the write failed (already logged), 0 on success.</returns>
+        private int WriteReconciliationFile(
+            ReconciliationWriteState state,
+            Stage6FilePlan filePlan,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            OspreyConfig config,
+            PipelineContext ctx)
+        {
+            string fileName = filePlan.FileName;
+            string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+            if (string.IsNullOrEmpty(sidecarBase))
+            {
+                ctx.LogWarning(string.Format(
+                    "No sidecar base path for `{0}` — skipping reconciliation.json write", fileName));
+                return 1;
             }
-            return failures;
+            string reconPath = ReconciliationFile.PathForInput(sidecarBase);
+            var reconFile = BuildReconciliationFile(
+                filePlan.Entries, filePlan.Actions,
+                filePlan.GapFill ?? Array.Empty<GapFillTarget>(),
+                filePlan.RefinedCalibration,
+                state.SearchHash, state.LibraryHash, state.JoinFileStems, filePlan.GlobalBaseIds);
+            PerFileResumeDriver.ClearStale(reconPath, Name);
+            try
+            {
+                ReconciliationFile.Save(reconPath, reconFile);
+                ctx.LogInfo(string.Format(
+                    "Wrote reconciliation.json for {0} ({1} use_cwt + {2} forced + {3} gap-fill)",
+                    fileName,
+                    reconFile.UseCwtPeakActions.Count,
+                    reconFile.ForcedIntegrationActions.Count,
+                    reconFile.GapFillTargets.Count));
+                // The third declared Output kind. All three must be stamped as they land or
+                // the task stays un-resumable on whichever one was missed.
+                PerFileResumeDriver.Stamp(reconPath, Name, OspreyVersion.Current,
+                    ValidityKey(ctx), Array.Empty<string>(), ctx.LogWarning);
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(string.Format(
+                    "Failed to write reconciliation.json for {0}: {1}", fileName, ex.Message));
+                return 1;
+            }
+            return 0;
         }
 
 
@@ -3003,28 +2972,101 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             var firstPassBaseIds = ComputeFirstPassBaseIds(
-                projections, perFileParquetPaths, config, ctx, _proteinCompactStratum);
+                projections, perFileParquetPaths, config, ctx, _proteinCompactStratum,
+                out var rowsPerBaseId);
             if (firstPassBaseIds == null)
                 return null;  // streaming sidecar read fault; ExitCode already set
             _firstPassBaseIds = firstPassBaseIds;
 
-            // Reload full FdrEntry survivors from the ORIGINAL parquet + the
-            // just-written 1st-pass sidecar. ParquetIndex therefore comes from
-            // LoadFdrStubsFromParquet on the original parquet (risk #9), keeping
-            // Stage 6's positional CWT lookup byte-identical -- the same parquet +
-            // sidecar round-trip modes 2/3 already validate.
-            var survivors = ReloadFirstPassSurvivors(
-                projections, perFileParquetPaths, firstPassBaseIds, config, ctx);
-            if (survivors == null)
-                return null;  // reload fault; ExitCode already set
+            // The survivor LOADER, not a survivor buffer. Collecting every file's survivors
+            // into one list is what made this step the memory peak of a large cohort - 289 M
+            // entries and ~100 GB at 446 files (issue #4526) - and nothing downstream needs
+            // them together: Stage 6 planning walks the files, and so do Stage 6 and Stage 7.
+            // So the buffer is never built, and the per-file lists below stay empty; every
+            // consumer takes a file from the loader and drops it again.
+            //
+            // The loader reads the ORIGINAL parquet + the 1st-pass sidecar, so ParquetIndex
+            // comes from LoadFdrStubsFromParquet on the original parquet (risk #9), keeping
+            // Stage 6's positional CWT lookup byte-identical -- the same parquet + sidecar
+            // round-trip modes 2/3 already validate.
+            _survivorLoader = new FirstPassSurvivorLoader(
+                perFileParquetPaths, config, firstPassBaseIds, ctx.Get<SequencePool>().Value);
 
+            // Summing the per-base_id row counts over the passing set gives exactly what a
+            // materialized reload would have counted: a survivor is a parquet row whose
+            // base_id passed, and the sidecar carries one record per parquet row.
             int afterCount = 0;
-            foreach (var kvp in survivors)
-                afterCount += kvp.Value.Count;
+            foreach (uint baseId in firstPassBaseIds)
+            {
+                if (rowsPerBaseId.TryGetValue(baseId, out int rows))
+                    afterCount += rows;
+            }
             ctx.LogInfo(string.Format(
                 @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids)",
                 beforeCount, afterCount, firstPassBaseIds.Count));
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after Stage-5 CompactFirstPass");
+
+            // OSPREY_STAGE6_STREAM_SURVIVORS=0 keeps the materialized buffer: it is the A/B
+            // byte-identity oracle for the streamed default, and it can only be that if it
+            // still produces the buffer Stage 6 would read. It is guarded (and refused without
+            // OSPREY_ALLOW_UNFIXED_RESIDENT) precisely because it is the O(files) shape.
+            if (!OspreyEnvironment.Stage6StreamSurvivors)
+                return ReloadFirstPassSurvivors(projections, afterCount, ctx);
+
+            var survivors = new List<KeyValuePair<string, List<FdrEntry>>>(projections.PerFile.Count);
+            foreach (var kvp in projections.PerFile)
+                survivors.Add(new KeyValuePair<string, List<FdrEntry>>(kvp.Key, new List<FdrEntry>()));
+            _survivorsStreamed = true;
+            return survivors;
+        }
+
+        /// <summary>
+        /// Collect every file's survivors into one buffer - the O(files) shape the streamed
+        /// default exists to avoid (289 M entries and ~100 GB at 446 files, issue #4526). Kept
+        /// only for <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c>, which is the A/B byte-identity
+        /// oracle for the streamed path and would be no oracle at all if it stopped producing
+        /// the buffer.
+        ///
+        /// <para><paramref name="expectedCount"/> is the survivor count the compaction gate
+        /// derived arithmetically, from rows-per-base_id summed over the passing set. This is
+        /// the one path that also has the materialized answer, so it checks the two against
+        /// each other: a mismatch means the gate's count is wrong on EVERY path, including the
+        /// streamed one where nothing else could notice.</para>
+        /// </summary>
+        private List<KeyValuePair<string, List<FdrEntry>>> ReloadFirstPassSurvivors(
+            FdrProjectionSet projections, int expectedCount, PipelineContext ctx)
+        {
+            var survivors = new List<KeyValuePair<string, List<FdrEntry>>>(projections.PerFile.Count);
+            // Per-file progress: reloading each file's survivor stubs from parquet + the 1st-pass
+            // sidecar was the ~70 s silent "First-pass compaction" gap at 82 files. Console-only.
+            using (var reloadProgress = new ProgressReporter(
+                       string.Format(@"Reloading first-pass survivors from {0} file(s)", projections.PerFile.Count),
+                       projections.PerFile.Count))
+            {
+                int reloadDone = 0;
+                int loadedCount = 0;
+                foreach (var kvp in projections.PerFile)
+                {
+                    reloadProgress.Report(++reloadDone);
+                    var stubs = _survivorLoader.Load(kvp.Key, out string error);
+                    if (stubs == null)
+                    {
+                        ctx.LogError(error);
+                        ctx.ExitCode = 1;
+                        return null;
+                    }
+                    loadedCount += stubs.Count;
+                    survivors.Add(new KeyValuePair<string, List<FdrEntry>>(kvp.Key, stubs));
+                }
+                if (loadedCount != expectedCount)
+                {
+                    throw new InvalidOperationException(string.Format(
+                        @"First-pass compaction counted {0} survivors from the passing base_id set " +
+                        @"but the reload produced {1}. The reported compaction boundary is wrong on " +
+                        @"every path, including the streamed one that has nothing to compare against.",
+                        expectedCount, loadedCount));
+                }
+            }
             return survivors;
         }
 
@@ -3236,9 +3278,17 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
             PipelineContext ctx,
-            HashSet<uint> stratum)
+            HashSet<uint> stratum,
+            out Dictionary<uint, int> rowsPerBaseId)
         {
             var firstPassBaseIds = new HashSet<uint>();
+            // Rows per base_id, over every file and both labels. Summed over the passing set
+            // below, this IS the survivor count - so the compaction line can report what
+            // survived without anyone materializing the survivors to count them. O(distinct
+            // base_ids) (~0.9 M at 446 files), and free here because this pass already visits
+            // every record and computes every base_id.
+            rowsPerBaseId = new Dictionary<uint, int>();
+            var rowCounts = rowsPerBaseId;
             // Peptide-q compaction gate: the dedicated field (default 0.01 = RunFdr)
             // loosenable to broaden the reconciliation pool, mirroring Rust
             // config.reconciliation_compaction_fdr (pipeline.rs:4650) -- identical to
@@ -3282,9 +3332,13 @@ namespace pwiz.Osprey.Tasks
                         {
                             // Decoy bit in entry_id == IsDecoy (decoys minted
                             // target.Id | DECOY_ID_BIT); skip decoys, mask to the shared base_id.
+                            uint rowBaseId = record.EntryId & ScoringTaskShared.BASE_ID_MASK;
+                            // Counted BEFORE the decoy skip: a base_id is kept or dropped with
+                            // its paired decoy, so the survivor count includes both labels.
+                            rowCounts[rowBaseId] = rowCounts.TryGetValue(rowBaseId, out int n) ? n + 1 : 1;
                             if ((record.EntryId & LibraryEntry.DECOY_ID_BIT) != 0)
                                 return;
-                            uint baseId = record.EntryId & ScoringTaskShared.BASE_ID_MASK;
+                            uint baseId = rowBaseId;
                             double proteinQ =
                                 experimentByEntryId.TryGetValue(record.EntryId, out var exp)
                                     ? exp.ExperimentProteinQvalue
@@ -3347,55 +3401,5 @@ namespace pwiz.Osprey.Tasks
             return map;
         }
 
-        /// <summary>
-        /// Reload full <see cref="FdrEntry"/> survivors for the projection path, one
-        /// file at a time through <see cref="FirstPassSurvivorLoader"/>, and collect
-        /// them into the all-files buffer Stage 6 and Stage 7 read today.
-        ///
-        /// <para>The per-file load is the reusable half and lives on the loader; the
-        /// collection into one list is the O(files) half this method still performs.
-        /// Keeping them separate is what lets a consumer take the loader alone and
-        /// never build the buffer - the direction issue #4526 is headed.</para>
-        ///
-        /// <para>Returns <c>null</c> (ExitCode set) on any missing parquet path or
-        /// failed sidecar overlay - both genuine faults here, since this task just
-        /// wrote the sidecar.</para>
-        /// </summary>
-        private List<KeyValuePair<string, List<FdrEntry>>> ReloadFirstPassSurvivors(
-            FdrProjectionSet projections,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
-            HashSet<uint> firstPassBaseIds,
-            OspreyConfig config,
-            PipelineContext ctx)
-        {
-            // Keep the loader for the byproduct: Stage 6 and Stage 7 use it to rebuild a
-            // file's survivors on demand rather than reading them off a buffer somebody
-            // had to hold for the whole run.
-            var loader = _survivorLoader =
-                new FirstPassSurvivorLoader(perFileParquetPaths, config, firstPassBaseIds,
-                    ctx.Get<SequencePool>().Value);
-            var survivors = new List<KeyValuePair<string, List<FdrEntry>>>(projections.PerFile.Count);
-            // Per-file progress: reloading each file's survivor stubs from parquet + the 1st-pass
-            // sidecar was the ~70 s silent "First-pass compaction" gap at 82 files. Console-only.
-            var reloadProgress = new ProgressReporter(
-                string.Format(@"Reloading first-pass survivors from {0} file(s)", projections.PerFile.Count),
-                projections.PerFile.Count);
-            int reloadDone = 0;
-            foreach (var kvp in projections.PerFile)
-            {
-                reloadProgress.Report(++reloadDone);
-                string fileName = kvp.Key;
-                var stubs = loader.Load(fileName, out string error);
-                if (stubs == null)
-                {
-                    ctx.LogError(error);
-                    ctx.ExitCode = 1;
-                    return null;
-                }
-                survivors.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
-            }
-            reloadProgress.Dispose();
-            return survivors;
-        }
     }
 }

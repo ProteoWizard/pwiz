@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -89,57 +89,120 @@ namespace pwiz.Osprey.FDR.Reconciliation
             if (libPrecursorMz == null)
                 throw new ArgumentNullException(nameof(libPrecursorMz));
 
-            // 1. Build passing precursors. Targets only — paired decoys ride
-            //    along via the same library lookup. Match the Rust rationale
-            //    at reconciliation.rs:870-891: a precursor is eligible if ANY
-            //    of the four q-values clears the threshold so a peptide that
-            //    passes peptide-level FDR (even with middling precursor q)
-            //    still gets its missing charge states gap-filled.
             var passingPrecursors = new HashSet<(string ModifiedSequence, byte Charge)>();
             foreach (var fileKvp in perFileEntries)
+                CollectPassingPrecursors(fileKvp.Value, experimentFdr, passingPrecursors);
+
+            var result = new Dictionary<string, IReadOnlyList<GapFillTarget>>();
+            var identifier = new FileIdentifier(consensus, passingPrecursors, perFileRefinedCal,
+                perFileOriginalCal, libLookup, libPrecursorMz, perFileIsolationMz);
+            foreach (var fileKvp in perFileEntries)
             {
-                foreach (var entry in fileKvp.Value)
+                var targets = identifier.IdentifyFile(fileKvp.Key, fileKvp.Value);
+                if (targets.Count > 0)
+                    result[fileKvp.Key] = targets;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Fold ONE file's entries into the cross-file set of precursors eligible for
+        /// gap-fill. Targets only - paired decoys ride along via the same library lookup.
+        /// Match the Rust rationale at reconciliation.rs:870-891: a precursor is eligible if
+        /// ANY of the four q-values clears the threshold, so a peptide that passes
+        /// peptide-level FDR (even with middling precursor q) still gets its missing charge
+        /// states gap-filled.
+        ///
+        /// <para>Exposed per file so a caller that already walks the files one at a time can
+        /// build the set as it goes. This is the ONLY thing gap-fill identification reads
+        /// across files, and it is O(distinct precursors) - which is what lets the rest of it
+        /// run with a single file resident.</para>
+        /// </summary>
+        public static void CollectPassingPrecursors(
+            IReadOnlyList<FdrEntry> entries, double experimentFdr,
+            HashSet<(string ModifiedSequence, byte Charge)> passingPrecursors)
+        {
+            if (passingPrecursors == null)
+                throw new ArgumentNullException(nameof(passingPrecursors));
+            if (entries == null)
+                return;
+            foreach (var entry in entries)
+            {
+                if (entry.IsDecoy)
+                    continue;
+                double bestQ = Math.Min(
+                    Math.Min(entry.RunPrecursorQvalue, entry.RunPeptideQvalue),
+                    Math.Min(entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue));
+                if (bestQ <= experimentFdr)
+                    passingPrecursors.Add((entry.ModifiedSequence, entry.Charge));
+            }
+        }
+
+        /// <summary>
+        /// Gap-fill identification with its cross-file inputs already resolved, so it can be
+        /// driven ONE FILE AT A TIME. Everything it holds is O(distinct precursors),
+        /// O(distinct peptides) or O(library) - none of it grows with file count.
+        /// </summary>
+        public sealed class FileIdentifier
+        {
+            private readonly HashSet<(string ModifiedSequence, byte Charge)> _passingPrecursors;
+            private readonly Dictionary<string, PeptideConsensusRT> _consensusMap;
+            private readonly IReadOnlyDictionary<string, RTCalibration> _perFileRefinedCal;
+            private readonly IReadOnlyDictionary<string, RTCalibration> _perFileOriginalCal;
+            private readonly IReadOnlyDictionary<(string ModifiedSequence, byte Charge),
+                (uint TargetEntryId, uint DecoyEntryId)> _libLookup;
+            private readonly IReadOnlyDictionary<uint, double> _libPrecursorMz;
+            private readonly IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> _perFileIsolationMz;
+
+            public FileIdentifier(
+                IReadOnlyList<PeptideConsensusRT> consensus,
+                HashSet<(string ModifiedSequence, byte Charge)> passingPrecursors,
+                IReadOnlyDictionary<string, RTCalibration> perFileRefinedCal,
+                IReadOnlyDictionary<string, RTCalibration> perFileOriginalCal,
+                IReadOnlyDictionary<(string ModifiedSequence, byte Charge),
+                    (uint TargetEntryId, uint DecoyEntryId)> libLookup,
+                IReadOnlyDictionary<uint, double> libPrecursorMz,
+                IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz)
+            {
+                if (consensus == null)
+                    throw new ArgumentNullException(nameof(consensus));
+                _passingPrecursors = passingPrecursors ?? throw new ArgumentNullException(nameof(passingPrecursors));
+                _perFileRefinedCal = perFileRefinedCal ?? throw new ArgumentNullException(nameof(perFileRefinedCal));
+                _perFileOriginalCal = perFileOriginalCal ?? throw new ArgumentNullException(nameof(perFileOriginalCal));
+                _libLookup = libLookup ?? throw new ArgumentNullException(nameof(libLookup));
+                _libPrecursorMz = libPrecursorMz ?? throw new ArgumentNullException(nameof(libPrecursorMz));
+                _perFileIsolationMz = perFileIsolationMz;
+
+                // Consensus lookup by modified_sequence (targets only).
+                _consensusMap = new Dictionary<string, PeptideConsensusRT>();
+                foreach (var c in consensus)
                 {
-                    if (entry.IsDecoy)
+                    if (c.IsDecoy)
                         continue;
-                    double bestQ = Math.Min(
-                        Math.Min(entry.RunPrecursorQvalue, entry.RunPeptideQvalue),
-                        Math.Min(entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue));
-                    if (bestQ <= experimentFdr)
-                        passingPrecursors.Add((entry.ModifiedSequence, entry.Charge));
+                    _consensusMap[c.ModifiedSequence] = c;
                 }
             }
 
-            var result = new Dictionary<string, IReadOnlyList<GapFillTarget>>();
-            if (passingPrecursors.Count == 0)
-                return result;
-
-            // 2. Consensus lookup by (modified_sequence, is_decoy=false).
-            var consensusMap = new Dictionary<string, PeptideConsensusRT>();
-            foreach (var c in consensus)
+            /// <summary>
+            /// Find one file's missing precursors, optionally filter by isolation-window m/z,
+            /// look up the consensus RT and emit the <see cref="GapFillTarget"/> records. The
+            /// caller may release <paramref name="entries"/> as soon as this returns. Empty
+            /// when nothing qualifies - the caller decides whether to record that.
+            /// </summary>
+            public IReadOnlyList<GapFillTarget> IdentifyFile(string fileName, IReadOnlyList<FdrEntry> entries)
             {
-                if (c.IsDecoy)
-                    continue;
-                consensusMap[c.ModifiedSequence] = c;
-            }
+                if (entries == null || _passingPrecursors.Count == 0)
+                    return Array.Empty<GapFillTarget>();
 
-            // 3. Per-file: find missing precursors, optionally filter by
-            //    isolation-window m/z, look up consensus RT, and emit
-            //    GapFillTarget records.
-            foreach (var fileKvp in perFileEntries)
-            {
-                string fileName = fileKvp.Key;
-                var entries = fileKvp.Value;
-
-                RTCalibration cal = null;
-                if (!perFileRefinedCal.TryGetValue(fileName, out cal))
-                    perFileOriginalCal.TryGetValue(fileName, out cal);
+                RTCalibration cal;
+                if (!_perFileRefinedCal.TryGetValue(fileName, out cal))
+                    _perFileOriginalCal.TryGetValue(fileName, out cal);
                 if (cal == null)
-                    continue;
+                    return Array.Empty<GapFillTarget>();
 
                 IReadOnlyList<(double Lo, double Hi)> isoWindows = null;
-                if (perFileIsolationMz != null)
-                    perFileIsolationMz.TryGetValue(fileName, out isoWindows);
+                if (_perFileIsolationMz != null)
+                    _perFileIsolationMz.TryGetValue(fileName, out isoWindows);
 
                 var present = new HashSet<(string ModifiedSequence, byte Charge)>();
                 foreach (var e in entries)
@@ -150,12 +213,12 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 }
 
                 var targets = new List<GapFillTarget>();
-                foreach (var key in passingPrecursors)
+                foreach (var key in _passingPrecursors)
                 {
                     if (present.Contains(key))
                         continue;
 
-                    if (!libLookup.TryGetValue(key, out var ids))
+                    if (!_libLookup.TryGetValue(key, out var ids))
                         continue;
 
                     // m/z range filter: skip precursors whose m/z is not
@@ -164,7 +227,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
                     // reconciliation.rs:954-956.
                     if (isoWindows != null && isoWindows.Count > 0)
                     {
-                        if (!libPrecursorMz.TryGetValue(ids.TargetEntryId, out double precursorMz))
+                        if (!_libPrecursorMz.TryGetValue(ids.TargetEntryId, out double precursorMz))
                             continue;
                         bool inRange = false;
                         for (int i = 0; i < isoWindows.Count; i++)
@@ -180,7 +243,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
                             continue;
                     }
 
-                    if (!consensusMap.TryGetValue(key.ModifiedSequence, out var consensusEntry))
+                    if (!_consensusMap.TryGetValue(key.ModifiedSequence, out var consensusEntry))
                         continue;
 
                     double expectedRt = cal.Predict(consensusEntry.ConsensusLibraryRt);
@@ -197,18 +260,15 @@ namespace pwiz.Osprey.FDR.Reconciliation
                     });
                 }
 
-                if (targets.Count == 0)
-                    continue;
-
                 // Sort by target_entry_id for deterministic output (matches
-                // Rust serializer in reconciliation_io.rs line 167).
+                // Rust serializer in reconciliation_io.rs line 167). The set this walks is a
+                // HashSet, so its enumeration order is an implementation detail - the sort is
+                // what makes the artifact a function of its contents.
                 // Array.Sort OK: targets are built one per distinct (modseq, charge) key mapping
                 // to a unique TargetEntryId, so TargetEntryId is unique per file and the comparator never ties.
                 targets.Sort((a, b) => a.TargetEntryId.CompareTo(b.TargetEntryId)); // Array.Sort OK: (see above) TargetEntryId is unique per file, comparator never ties
-                result[fileName] = targets;
+                return targets;
             }
-
-            return result;
         }
     }
 }

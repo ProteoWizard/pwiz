@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -118,70 +118,13 @@ namespace pwiz.Osprey.FDR.Reconciliation
             if (perFileOriginalCal == null)
                 throw new ArgumentNullException(nameof(perFileOriginalCal));
 
-            // Consensus lookup by (modified_sequence, is_decoy).
-            var consensusMap = new Dictionary<(string, bool), PeptideConsensusRT>();
-            foreach (var c in consensus)
-                consensusMap[(c.ModifiedSequence, c.IsDecoy)] = c;
-
-            // Global within-peptide RT MAD (library RT space) — median of
-            // per-peptide apex MADs across all target peptides with >= 3
-            // detections. See the Rust docstring at reconciliation.rs:469-487
-            // for the rationale: after cross-run alignment, within-peptide
-            // scatter is roughly peptide-independent (instrument/LC
-            // reproducibility), and the cross-peptide median is a far more
-            // stable estimator than any single peptide's 3-5-replicate MAD.
-            double globalWithinPeptideMadLib;
-            {
-                var peptideMads = new List<double>();
-                foreach (var c in consensus)
-                {
-                    if (c.IsDecoy)
-                        continue;
-                    if (c.ApexLibraryRtMad.HasValue)
-                        peptideMads.Add(c.ApexLibraryRtMad.Value);
-                }
-                if (peptideMads.Count == 0)
-                {
-                    globalWithinPeptideMadLib = FALLBACK_GLOBAL_MAD_LIB;
-                }
-                else
-                {
-                    peptideMads.Sort(); // Array.Sort OK: median of a single primitive (double) list, no parallel data; tie order is irrelevant
-                    int mid = peptideMads.Count / 2;
-                    globalWithinPeptideMadLib = peptideMads.Count % 2 == 0
-                        ? 0.5 * (peptideMads[mid - 1] + peptideMads[mid])
-                        : peptideMads[mid];
-                }
-            }
-
-            // Passing precursors keyed on (base_id, charge) where any of the
-            // four q-values passes at experimentFdr. Rationale at
-            // reconciliation.rs:560-576 — blib admits a precursor if ANY level
-            // passes, so reconciliation must include them in every file to keep
-            // per-file boundaries self-consistent. We key on
-            // base_id = EntryId & 0x7FFFFFFF (plus charge) rather than
-            // modified_sequence so paired decoys are recognised regardless of
-            // whether their modified_sequence carries a DECOY_ prefix: a target
-            // and its library-supplied decoy (Carafe / FDRBench manifest) share
-            // the same base_id by construction. Mirrors Rust plan_reconciliation
-            // and the base_id linkage already used by ConsensusRts.Compute.
             var passingBaseIds = new HashSet<(uint, byte)>();
             foreach (var fileKvp in perFileEntries)
-            {
-                foreach (var entry in fileKvp.Value)
-                {
-                    if (entry.IsDecoy)
-                        continue;
-                    double bestQ = Math.Min(
-                        Math.Min(entry.RunPrecursorQvalue, entry.RunPeptideQvalue),
-                        Math.Min(entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue));
-                    if (bestQ <= experimentFdr)
-                        passingBaseIds.Add((entry.EntryId & 0x7FFFFFFFu, entry.Charge));
-                }
-            }
+                CollectPassingBaseIds(fileKvp.Value, experimentFdr, passingBaseIds);
 
+            var planner = new FilePlanner(consensus, passingBaseIds, perFileRefinedCal, perFileOriginalCal);
             var actions = new Dictionary<(string, int), ReconcileAction>();
-            var emptyCwt = new List<IReadOnlyList<CwtCandidate>>();
+            var fileActions = new List<KeyValuePair<int, ReconcileAction>>();
 
             // Per-file progress: planning reconciliation actions across all files ran
             // ~5 min silent on the 82-file join. Console-only, never affects the plan.
@@ -192,15 +135,146 @@ namespace pwiz.Osprey.FDR.Reconciliation
             foreach (var fileKvp in perFileEntries)
             {
                 planProgress.Report(++planIdx);
-                string fileName = fileKvp.Key;
-                var entries = fileKvp.Value;
+                fileActions.Clear();
+                planner.PlanFile(fileKvp.Key, fileKvp.Value, loadFileCwt(fileKvp.Key), fileActions);
+                foreach (var action in fileActions)
+                    actions[(fileKvp.Key, action.Key)] = action.Value;
+            }
+            planProgress.Dispose();
+
+            return actions;
+        }
+
+        /// <summary>
+        /// Fold ONE file's entries into the cross-file set of passing precursors, keyed on
+        /// (base_id, charge) where any of the four q-values passes at
+        /// <paramref name="experimentFdr"/>.
+        ///
+        /// <para>Rationale at reconciliation.rs:560-576 - the blib admits a precursor if ANY
+        /// level passes, so reconciliation must include them in every file to keep per-file
+        /// boundaries self-consistent. Keyed on base_id (plus charge) rather than modified
+        /// sequence so paired decoys are recognised regardless of whether their modified
+        /// sequence carries a DECOY_ prefix: a target and its library-supplied decoy (Carafe /
+        /// FDRBench manifest) share the same base id by construction. Mirrors Rust
+        /// plan_reconciliation and the base-id linkage <see cref="ConsensusRts"/> uses.</para>
+        ///
+        /// <para>Exposed per file so a streaming caller can build this set while it walks each
+        /// file for other reasons, and drop that file's entries afterwards. It is the only
+        /// thing the planner reads across files, and it is O(distinct precursors) - so
+        /// separating it is what lets the planner run without every file's entries resident.</para>
+        /// </summary>
+        public static void CollectPassingBaseIds(
+            IReadOnlyList<FdrEntry> entries, double experimentFdr, HashSet<(uint, byte)> passingBaseIds)
+        {
+            if (passingBaseIds == null)
+                throw new ArgumentNullException(nameof(passingBaseIds));
+            if (entries == null)
+                return;
+            foreach (var entry in entries)
+            {
+                if (entry.IsDecoy)
+                    continue;
+                double bestQ = Math.Min(
+                    Math.Min(entry.RunPrecursorQvalue, entry.RunPeptideQvalue),
+                    Math.Min(entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue));
+                if (bestQ <= experimentFdr)
+                    passingBaseIds.Add((entry.EntryId & 0x7FFFFFFFu, entry.Charge));
+            }
+        }
+
+        /// <summary>
+        /// The planner with its cross-file inputs already resolved, so it can be driven ONE
+        /// FILE AT A TIME. Holds the consensus map, the global within-peptide RT MAD and the
+        /// passing-precursor set - all O(distinct peptides) or O(distinct precursors), none of
+        /// them O(files x entries).
+        ///
+        /// <para>A class rather than three loose parameters because all three are derived from
+        /// the same consensus and must describe the same one; passing them separately invites a
+        /// caller that recomputes one of them and silently plans against a mismatch.</para>
+        /// </summary>
+        public sealed class FilePlanner
+        {
+            private static readonly IReadOnlyList<IReadOnlyList<CwtCandidate>> EMPTY_CWT =
+                new List<IReadOnlyList<CwtCandidate>>();
+
+            private readonly Dictionary<(string, bool), PeptideConsensusRT> _consensusMap;
+            private readonly double _globalWithinPeptideMadLib;
+            private readonly HashSet<(uint, byte)> _passingBaseIds;
+            private readonly IReadOnlyDictionary<string, RTCalibration> _perFileRefinedCal;
+            private readonly IReadOnlyDictionary<string, RTCalibration> _perFileOriginalCal;
+
+            public FilePlanner(
+                IReadOnlyList<PeptideConsensusRT> consensus,
+                HashSet<(uint, byte)> passingBaseIds,
+                IReadOnlyDictionary<string, RTCalibration> perFileRefinedCal,
+                IReadOnlyDictionary<string, RTCalibration> perFileOriginalCal)
+            {
+                if (consensus == null)
+                    throw new ArgumentNullException(nameof(consensus));
+                _passingBaseIds = passingBaseIds ?? throw new ArgumentNullException(nameof(passingBaseIds));
+                _perFileRefinedCal = perFileRefinedCal ?? throw new ArgumentNullException(nameof(perFileRefinedCal));
+                _perFileOriginalCal = perFileOriginalCal ?? throw new ArgumentNullException(nameof(perFileOriginalCal));
+
+                // Consensus lookup by (modified_sequence, is_decoy).
+                _consensusMap = new Dictionary<(string, bool), PeptideConsensusRT>();
+                foreach (var c in consensus)
+                    _consensusMap[(c.ModifiedSequence, c.IsDecoy)] = c;
+
+                // Global within-peptide RT MAD (library RT space) - median of
+                // per-peptide apex MADs across all target peptides with >= 3
+                // detections. See the Rust docstring at reconciliation.rs:469-487
+                // for the rationale: after cross-run alignment, within-peptide
+                // scatter is roughly peptide-independent (instrument/LC
+                // reproducibility), and the cross-peptide median is a far more
+                // stable estimator than any single peptide's 3-5-replicate MAD.
+                var peptideMads = new List<double>();
+                foreach (var c in consensus)
+                {
+                    if (c.IsDecoy)
+                        continue;
+                    if (c.ApexLibraryRtMad.HasValue)
+                        peptideMads.Add(c.ApexLibraryRtMad.Value);
+                }
+                if (peptideMads.Count == 0)
+                {
+                    _globalWithinPeptideMadLib = FALLBACK_GLOBAL_MAD_LIB;
+                }
+                else
+                {
+                    peptideMads.Sort(); // Array.Sort OK: median of a single primitive (double) list, no parallel data; tie order is irrelevant
+                    int mid = peptideMads.Count / 2;
+                    _globalWithinPeptideMadLib = peptideMads.Count % 2 == 0
+                        ? 0.5 * (peptideMads[mid - 1] + peptideMads[mid])
+                        : peptideMads[mid];
+                }
+            }
+
+            /// <summary>
+            /// Plan one file's reconciliation actions, appending them to
+            /// <paramref name="fileActions"/> as (entry index, action) pairs. The caller may
+            /// release <paramref name="entries"/> and <paramref name="fileCwt"/> as soon as
+            /// this returns. Only non-Keep actions are appended; absence means Keep.
+            ///
+            /// <para>Appends to a PER-FILE list rather than writing into the join-wide
+            /// dictionary, so a caller that needs this file's actions on their own - to write
+            /// its reconciliation envelope, say - has them without scanning every other file's.
+            /// </para>
+            /// </summary>
+            public void PlanFile(
+                string fileName,
+                IReadOnlyList<FdrEntry> entries,
+                IReadOnlyList<IReadOnlyList<CwtCandidate>> fileCwt,
+                IList<KeyValuePair<int, ReconcileAction>> fileActions)
+            {
+                if (entries == null)
+                    return;
 
                 // Refined calibration if present, else original.
-                RTCalibration cal = null;
-                if (!perFileRefinedCal.TryGetValue(fileName, out cal))
-                    perFileOriginalCal.TryGetValue(fileName, out cal);
+                RTCalibration cal;
+                if (!_perFileRefinedCal.TryGetValue(fileName, out cal))
+                    _perFileOriginalCal.TryGetValue(fileName, out cal);
                 if (cal == null)
-                    continue;
+                    return;
 
                 // Per-file RT tolerance ceiling from refined residuals.
                 // Sigma-clipped MAD guards against wrong-peak residuals
@@ -216,7 +290,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
                         clippedMad * MAD_TO_SIGMA * SIGMA_FACTOR, MIN_RT_TOLERANCE);
 
                     double cap = refinedTolerance;
-                    if (perFileOriginalCal.TryGetValue(fileName, out var originalCal))
+                    if (_perFileOriginalCal.TryGetValue(fileName, out var originalCal))
                     {
                         cap = Math.Max(
                             originalCal.Stats().MAD * MAD_TO_SIGMA * SIGMA_FACTOR,
@@ -226,39 +300,36 @@ namespace pwiz.Osprey.FDR.Reconciliation
                     fileCalToleranceCeiling = Math.Min(refinedTolerance, cap);
                 }
 
-                // Per-peptide RT tolerance — global within-peptide MAD
+                // Per-peptide RT tolerance - global within-peptide MAD
                 // converted to ~3-sigma, floored at MIN_RT_TOLERANCE and
                 // capped by the file's cross-peptide ceiling.
                 double peptideTolerance = Math.Min(
-                    Math.Max(globalWithinPeptideMadLib * MAD_TO_SIGMA * SIGMA_FACTOR, MIN_RT_TOLERANCE),
+                    Math.Max(_globalWithinPeptideMadLib * MAD_TO_SIGMA * SIGMA_FACTOR, MIN_RT_TOLERANCE),
                     fileCalToleranceCeiling);
 
-                // Load this file's CWT candidates on demand and release them at
-                // the end of the iteration -- one file resident at a time.
-                var fileCwt = loadFileCwt(fileName) ?? emptyCwt;
-
+                var cwtByIndex = fileCwt ?? EMPTY_CWT;
                 for (int entryIdx = 0; entryIdx < entries.Count; entryIdx++)
                 {
                     var entry = entries[entryIdx];
 
                     // Only consider entries in the consensus set.
                     var key = (entry.ModifiedSequence, entry.IsDecoy);
-                    if (!consensusMap.TryGetValue(key, out var consensusEntry))
+                    if (!_consensusMap.TryGetValue(key, out var consensusEntry))
                         continue;
 
                     // Only reconcile precursors that passed experiment-FDR (or
                     // their paired decoys). Pair by base_id (EntryId & 0x7FFFFFFF)
                     // so a library-supplied decoy whose modified_sequence has no
-                    // DECOY_ prefix is still recognised -- see the passingBaseIds
-                    // rationale above.
-                    if (!passingBaseIds.Contains((entry.EntryId & 0x7FFFFFFFu, entry.Charge)))
+                    // DECOY_ prefix is still recognised -- see the CollectPassingBaseIds
+                    // rationale.
+                    if (!_passingBaseIds.Contains((entry.EntryId & 0x7FFFFFFFu, entry.Charge)))
                         continue;
 
                     double expectedRt = cal.Predict(consensusEntry.ConsensusLibraryRt);
 
                     IReadOnlyList<CwtCandidate> cwt;
-                    if (entry.ParquetIndex < (uint)fileCwt.Count)
-                        cwt = fileCwt[(int)entry.ParquetIndex];
+                    if (entry.ParquetIndex < (uint)cwtByIndex.Count)
+                        cwt = cwtByIndex[(int)entry.ParquetIndex];
                     else
                         cwt = Array.Empty<CwtCandidate>();
 
@@ -271,12 +342,9 @@ namespace pwiz.Osprey.FDR.Reconciliation
 
                     // Only store non-Keep actions (Keep is implicit absence).
                     if (!ReferenceEquals(action, ReconcileAction.Keep))
-                        actions[(fileName, entryIdx)] = action;
+                        fileActions.Add(new KeyValuePair<int, ReconcileAction>(entryIdx, action));
                 }
             }
-            planProgress.Dispose();
-
-            return actions;
         }
 
         /// <summary>
