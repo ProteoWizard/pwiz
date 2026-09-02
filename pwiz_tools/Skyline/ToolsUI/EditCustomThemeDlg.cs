@@ -77,6 +77,18 @@ namespace pwiz.Skyline.ToolsUI
             UpdateColorCount(_newScheme);
         }
 
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            if (DpiUtil.GetFactor(this) > 1)
+            {
+                // The form's autoscale skips the nested ColorGrid container's size (see
+                // VolcanoPlotFormattingDlg.OnShown); scale it here so the grid's scaled
+                // rows and columns get a matching container (issue #4599).
+                colorGrid1.Size = DpiUtil.ScaleSize(this, colorGrid1.Size);
+            }
+        }
+
         public void LoadCategory(ColorScheme colorScheme)
         {
             try

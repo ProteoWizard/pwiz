@@ -205,14 +205,17 @@ namespace pwiz.Skyline.Controls.SeqNode
                     {
                         // Draw the peptide color rectangle: white background to erase text underneath,
                         // black border, and the peptide color in the interior.
-                        const int imgWidth = TreeViewMS.IMG_WIDTH, imgHeight = TreeViewMS.IMG_WIDTH;
-                        const int colorRectWidth = imgWidth;
-                        const int colorRectHeight = imgHeight;
-                        rightEdge -= imgWidth + 3;
+                        var treeView = TreeViewMS;
+                        int imgWidth = treeView.ImgWidth, imgHeight = treeView.ImgWidth;
+                        int colorRectWidth = imgWidth;
+                        int colorRectHeight = imgHeight;
+                        rightEdge -= imgWidth + treeView.TextPadding;
                         int top = BoundsMS.Top + (BoundsMS.Height - imgHeight) / 2;
-                        var backgroundRect = new Rectangle(rightEdge - 2, top, colorRectWidth + 7, colorRectHeight);
+                        var backgroundRect = new Rectangle(rightEdge - DpiUtil.Scale(g, 2), top,
+                            colorRectWidth + DpiUtil.Scale(g, 7), colorRectHeight);
                         g.FillRectangle(Brushes.White, backgroundRect);
-                        var colorRect = new Rectangle(rightEdge, top, colorRectWidth - 2, colorRectHeight - 3);
+                        var colorRect = new Rectangle(rightEdge, top,
+                            colorRectWidth - DpiUtil.Scale(g, 2), colorRectHeight - DpiUtil.Scale(g, 3));
                         g.FillRectangle(new SolidBrush(color.Value), colorRect);
 
                         // Draw red outline around selected peptide if the tree isn't focused.
@@ -250,11 +253,12 @@ namespace pwiz.Skyline.Controls.SeqNode
                     zoomFactor = 1;
                 if (Equals(Settings.Default.TextZoom, TreeViewMS.XLRG_TEXT_FACTOR))
                     zoomFactor = 2;
+                int annotationWidth = DpiUtil.Scale(g, ANNOTATION_WIDTH + zoomFactor);
                 g.FillPolygon(Model.Annotations.ColorBrush, new[]
                     {
                         new Point(bounds.Right, bounds.Top),
-                        new Point(bounds.Right - (ANNOTATION_WIDTH + zoomFactor), bounds.Top),
-                        new Point(bounds.Right, bounds.Top + ANNOTATION_WIDTH + zoomFactor)
+                        new Point(bounds.Right - annotationWidth, bounds.Top),
+                        new Point(bounds.Right, bounds.Top + annotationWidth)
                     });
             }
         }

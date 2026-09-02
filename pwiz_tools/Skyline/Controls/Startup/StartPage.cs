@@ -76,9 +76,10 @@ namespace pwiz.Skyline.Controls.Startup
             checkBoxShowStartup.Checked = Settings.Default.ShowStartupForm;
             // Get placement values before changing anything.
 
-            // Restore window placement.
+            // Restore window placement. The persisted size is in 96-DPI logical units
+            // (see DpiUtil), so scale it to the current display DPI.
             if (!size.IsEmpty)
-                Size = size;
+                Size = DpiUtil.ScaleFromLogical(this, size);
             if (!location.IsEmpty)
             {
                 StartPosition = FormStartPosition.Manual;
@@ -152,7 +153,7 @@ namespace pwiz.Skyline.Controls.Startup
                 {
                     FileName = Path.GetFileName(filePath),
                     FilePath = filePath,
-                    Width = recentFilesPanel.Width - 20,
+                    Width = recentFilesPanel.Width - DpiUtil.Scale(this, 20),
                     Top = distanceFromTop,
                     EventAction = () => DoAction(skylineWindow=>skylineWindow.LoadFile(filePath, this))
                 };
@@ -163,7 +164,7 @@ namespace pwiz.Skyline.Controls.Startup
                     toolTip.SetToolTip(control, filePath);
                 }
                 recentFilesPanel.Controls.Add(recentFileControl);
-                distanceFromTop += recentFileControl.Height + 3; // 3 is padding between each RecentFileControl.
+                distanceFromTop += recentFileControl.Height + DpiUtil.Scale(this, 3); // 3 is padding between each RecentFileControl.
             }
         }
 
@@ -431,12 +432,12 @@ namespace pwiz.Skyline.Controls.Startup
             leftPanel.Height = Height;
             flowLayoutPanelWizard.Height = Height;
             recentFilesPanel.Height = Height - recentFilesPanel.Top - leftBottomPanel.Height*2;
-            leftBottomPanel.Location = new Point(18,recentFilesPanel.Height + recentFilesPanel.Top);
+            leftBottomPanel.Location = new Point(DpiUtil.Scale(this, 18), recentFilesPanel.Height + recentFilesPanel.Top);
             // Tab Panel Controls
             tabControlMain.Width = Width - leftPanel.Width;
             tabControlMain.Height = Height;
             flowLayoutPanelWizard.Height = Height;
-            flowLayoutPanelWizard.Width = tabControlMain.Width - 40;
+            flowLayoutPanelWizard.Width = tabControlMain.Width - DpiUtil.Scale(this, 40);
             // Resize section tutorial dividers
             foreach (Control control in flowLayoutPanelTutorials.Controls)
             {
@@ -447,7 +448,7 @@ namespace pwiz.Skyline.Controls.Startup
             PositionButtonsModeUI(); 
             // Start Page Window Settings to avoid saving minimized or maximized sizes
             if (WindowState == FormWindowState.Normal)
-                Settings.Default.StartPageSize = Size;
+                Settings.Default.StartPageSize = DpiUtil.ScaleToLogical(this, Size);
             Settings.Default.StartPageMaximized =
                 (WindowState == FormWindowState.Maximized);
         }
