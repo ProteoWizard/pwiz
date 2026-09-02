@@ -369,11 +369,19 @@ reuses an artifact computed under different settings and reports it as the new r
 Erring toward more key is therefore always the safe direction, and "I cannot tell"
 resolves to re-run.
 
-Identity is also deliberately free of paths: the library hash uses file name, size and
-mtime with the directory excluded, and the reconciliation hash names sorted file
-*stems*. A completed run can therefore be moved, copied, or hard-linked into a new
+Identity is also, with one exception, free of paths: the library hash uses file name,
+size and mtime with the directory excluded, and the reconciliation hash names sorted
+file *stems*. A completed run can therefore be moved, copied, or hard-linked into a new
 output directory and still be recognised as valid - the property external tooling relies
 on to adopt a prior run's Stage 1-4 artifacts instead of recomputing them for hours.
+
+**The exception is `--decoy-pairing-manifest`**, whose path goes into
+`SearchParameterHash` verbatim and unnormalised. It is the only path anywhere in artifact
+identity, so it is the only reason a move invalidates: relocate a cohort that was searched
+with a pairing manifest and every artifact invalidates, because the manifest is named from
+somewhere else now. Restoring the original path with a junction is the cheap fix. Anything
+that adds a second path to a hash removes relocatability for every run, not just
+entrapment ones.
 
 ---
 
@@ -522,7 +530,8 @@ moment anyone passes `--output-dir`.
 
 ### Identity does not name the directory
 
-Every hash that decides artifact reuse deliberately excludes paths. `LibraryIdentityHash`
+Every hash that decides artifact reuse excludes paths, with one exception noted at the end
+of this section. `LibraryIdentityHash`
 takes the library's file *name*, size and mtime and drops the directory, so the same
 library identifies identically across implementations, operating systems, and node-local
 versus shared mounts - drive-letter case, slash direction, and relative-versus-absolute
@@ -531,11 +540,19 @@ spelling all stop mattering. `ReconciliationParameterHash` names sorted, dedupli
 hash cannot depend on the order files were passed on the command line.
 
 The consequence is that **a completed run is relocatable**. Its artifacts can be moved,
-copied, or hard-linked into a new output directory and remain valid, because nothing in
-their identity records where they used to be. External tooling relies on this to adopt a
+copied, or hard-linked into a new output directory and remain valid, because their
+identity does not record where they used to be. External tooling relies on this to adopt a
 prior run's expensive Stage 1-4 output instead of recomputing it - see
-`ai/docs` for the workflow scripts that do so. That relocatability is a property of the
-hashes, and any change that folds a directory into one of them removes it.
+`ai/docs/osprey-run-layout.md` for the runner parameter that does so. That relocatability
+is a property of the hashes, and any change that folds a directory into one of them
+removes it for every run.
+
+**The one exception is `--decoy-pairing-manifest`.** Its path enters
+`SearchParameterHash` verbatim and unnormalised - the user's own spelling, relative or
+absolute - so it is the single place a directory reaches artifact identity. A cohort
+searched with a pairing manifest therefore *does* invalidate when it moves, which is why
+relocating an entrapment dataset needs a junction restoring the original path rather than
+a re-run. Everything else in this section holds regardless.
 
 A warm resume across builds is a separate matter: the version stamp is compared for exact
 equality (`YEAR.ORDINAL.BRANCH.DOY`), so artifacts from another day's build are refused
