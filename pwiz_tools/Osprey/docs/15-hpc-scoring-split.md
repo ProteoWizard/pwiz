@@ -155,6 +155,10 @@ Per-run notes worth keeping alongside the contract:
   mzML fallback — and is the only spectrum source once the input has been deleted.
 - `<stem>.1st-pass.fdr_scores.bin` and `<stem>.reconciliation.json` are both mandatory for a
   Stage 6 worker.
+- `<stem>.calibration.json` is read for **inverse RT prediction and isolation windows** — the
+  latter giving the gap-fill m/z filter its per-run coverage, which is why a `SecondPassFDR`
+  node with no mzML still needs it. Read behind a `File.Exists`, so its absence changes
+  gap-fill filtering silently rather than failing.
 
 See 00 for the relay checklist per boundary and 14-intermediate-files.md for the full cache
 formats.

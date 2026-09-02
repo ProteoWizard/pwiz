@@ -58,6 +58,32 @@ The C# realization is Rust's "safe NAS file writes / `copy_and_verify`" pattern.
 temp is a sibling, the promote is an in-volume rename rather than a local-temp → NAS
 cross-volume copy, which sidesteps the truncation risk `copy_and_verify` guards against.
 
+### `FileSaver` call sites
+
+P8 is only as good as this list being complete, so it lives here, with the formats. Every
+durable artifact writer in the tree, as of this document's last verification:
+
+| Writer | Artifact |
+|---|---|
+| `CalibrationIO` | `<stem>.calibration.json` |
+| `SpectraCache` | `<stem>.spectra.bin` |
+| `LibraryCache` | `<library-leaf>.libcache` |
+| `ParquetScoreCache` (2 sites) | `<stem>.scores.parquet`, `<stem>.scores-reconciled.parquet` |
+| `FdrScoresSidecar` | `<stem>.{1st,2nd}-pass.fdr_scores.bin` |
+| `FdrExperimentSidecar` | `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` |
+| `Pass2CompetitionDecoys` | `<stem>.2nd-pass.fdr_decoys.bin` |
+| `ReconciliationFile` | `<stem>.reconciliation.json` |
+| `FirstPassModelIO` | `<stem>.1st-pass.model.json` |
+| `TaskValiditySidecar` | `<output>.<TaskName>.osprey.task` |
+| `BlibOutputWriter` | `<output>.blib` |
+| `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.{html,data.json}` |
+| `FdrBenchInputWriter` (2 sites) | `--fdrbench` input + pairing manifest |
+
+**A new durable artifact that does not commit through `FileSaver` is a defect**, because
+every reader in the pipeline treats presence as proof of completeness. **Exempt**: `-d`
+diagnostic dumps, the streaming CLI log, and test fixtures — transient or append-streaming
+files that no later stage reads back.
+
 ---
 
 ## 1. Calibration JSON (`<stem>.calibration.json`)
@@ -219,7 +245,7 @@ Mirroring Rust's specialized loaders, the C# side never loads the full parquet u
 | `LoadPinFeaturesFromParquet` (`:981`) | 21 feature columns | SVM re-scoring |
 | `LoadFullFdrEntries` (`:897`) | all scalar + feature + blob columns | Full rehydration for Stage 6 reconciled write-back |
 
-`ParquetIndex` bookkeeping is load-bearing: both write overloads and every loader assign
+`ParquetIndex` bookkeeping is essential: both write overloads and every loader assign
 `ParquetIndex` to the post-sort row so Stage 5's per-file CWT lookup indexes each entry's own
 candidate list. A code comment (`ParquetScoreCache.cs:364`) documents a bisected bug where the
 in-memory path once left `ParquetIndex = 0` and force-integrated nearly every entry.
@@ -359,13 +385,17 @@ carries the same value.
 Two caveats worth keeping straight. It is **not** a general q→score inverse: the best-of-runs
 clamp (`ClampExperimentQToBestRunFlat`, issue #4390) floors an experiment q up to a run q, so
 after clamping the experiment q is not a monotone function of this score. And the field was
-appended at the END specifically so every v3 offset is unchanged, which is what keeps
-`PatchProteinQvalues`'s `[52..60]` patch valid without modification.
+appended at the END specifically so every v3 offset is unchanged.
 
-A two-phase write exists for the lean projection path (issue #4355): phase 1 writes records with
-a 1.0 placeholder `experiment_protein_qvalue`; `PatchProteinQvalues` (`FdrScoresSidecar.cs:247`)
-then streams the file one record at a time and overwrites only bytes `[52..60]` per entry_id,
-producing a file byte-identical to a single-phase write.
+**The two-phase write is gone** (removed 2026-09-02 from this document; the code changed at
+sidecar v5, issue #4486). Historically the lean projection path (issue #4355) wrote records
+with a 1.0 placeholder `experiment_protein_qvalue` and then had `PatchProteinQvalues` stream
+the file back, overwriting bytes `[52..60]` per entry_id. That method and its two siblings
+(`PatchExperimentValues`, and the PEP patch) are **deleted**: the experiment-scope columns
+moved into `<blib-stem>.1st-pass.fdr_experiment.bin`, so a per-file sidecar is now written
+exactly once on each pass and no later stage reopens it. This is what makes the write-once
+guarantee (P11 in [00-pipeline-architecture.md](00-pipeline-architecture.md)) true rather
+than aspirational — do not reintroduce a patch path.
 
 ### Validation and record→entry matching
 

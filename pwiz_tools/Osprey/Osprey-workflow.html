@@ -800,7 +800,7 @@
     <code>C:\test</code> and the Windows mount points the WSL distro
     touches; without those exclusions, every disk-bound stage paid
     a 5-10% scan overhead.
-    <em>(2) Rust dump-writer patch (still load-bearing).</em> Rust's
+    <em>(2) Rust dump-writer patch (still essential).</em> Rust's
     stage-5/6 diagnostic-dump writers in osprey v26.6.0 use unbuffered
     <code>std::fs::File::create</code>: each <code>writeln!</code>
     crosses to the kernel. On WSL drvfs/9P that took ~14 min for

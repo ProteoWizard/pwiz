@@ -49,9 +49,11 @@ Throughout this document a **run** is one MS data file: one mzML or one vendor r
 file, one LC-MS/MS acquisition. It is the unit the pipeline fans out over.
 
 The code spells this concept `file`, because a run arrives as a file and is keyed by
-its file stem. The two fan-out tasks are named `PerFileScoring` and `PerFileRescoring`
-in the CLI, the `HpcTask` enum, and the `.osprey.task` sidecar names, and Stage 6's
-canonical name is "Per-file rescore". **Proper names are quoted as they are spelled** -
+its file stem. The two fan-out tasks are `PerFileScoring` and `PerFileRescoring` in the
+CLI and in the `.osprey.task` sidecar names; the `HpcTask` enum spells three of the four
+differently (`FirstPassFdr`, `PerFileRescore`, `SecondPassFdr`), so a name copied from the
+enum will not match a filename. Stage 6's canonical name is "Per-file rescore".
+**Proper names are quoted as they are spelled** -
 tasks, types, paths, stage names - and this document says **run** everywhere else,
 because "per-run versus experiment-wide" is the distinction that carries the
 architecture and "per-file" invites confusion with the dozen other files in play. The
@@ -274,8 +276,9 @@ placed there is paid at full cost by every cohort. Moving work into a `PerFile*`
 makes it scale with the cluster; leaving it in a join makes it scale with nothing.
 
 **P4. A per-run artifact's validity key must not name the cohort.** `PerFileScoring`'s
-key is search parameters plus library identity, and deliberately omits the file set,
-because a run's Stage 1-4 scores do not depend on which other runs are being searched.
+key is the base key - search parameters, library identity, and the peak-pick arm - and
+deliberately omits the file set, because a run's Stage 1-4 scores do not depend on which
+other runs are being searched.
 Were the cohort in that key, scoring one run per node would stamp a different key than
 the join expects, and every artifact would invalidate on rebatching - the HPC split
 would be defeated by its own bookkeeping. Contrast `ReconciliationParameterHash`, which
@@ -307,7 +310,9 @@ completeness.** The writer stages into a sibling temp file in the same directory
 promotes it with an in-volume rename; a crash mid-write leaves the previous content or
 no file, never a half-written one. Every consumer in the pipeline relies on this: a
 file that exists is a file that is whole, so no reader needs a completeness check, a
-length prefix, or a two-phase protocol.
+length prefix, or a two-phase protocol. The claim is checkable rather than aspirational -
+[14-intermediate-files](14-intermediate-files.md) enumerates the call sites, and a new
+durable artifact that does not appear there is a defect.
 
 **P9. A validity key answers set inclusion, not completeness.** This follows from P8
 and is the most easily confused point in the design. Because atomic placement already
@@ -321,12 +326,14 @@ tests both, because a sidecar can outlive its output.
 never by process state.** Under an HPC split the phases are separate processes, so any
 signal held in memory is simply absent on the next node - and a task that infers from
 its own emptiness infers wrongly. This is why the `.osprey.task` stamp records the
-producing task's name: a later phase can ask "who wrote this, and is it current?"
-without opening the artifact. The rule is written in blood. Stage 7 once decided whether
-the Stage 6 worker had run by checking an in-process flag; correct in one process, and
-in an HPC chain it concluded no worker had run and rewrote every sidecar with survivors
-only - 332,269 records where the straight-through route produced 407,624, on artifacts
-whose whole purpose is to be route-independent.
+producing task's name: a later phase can ask "who wrote this?" without opening the
+artifact. This rule was learned from a defect. Stage 7 once decided whether the Stage 6
+worker had run by reading a pipeline byproduct the worker published in memory; correct in
+one process, and in an HPC chain - where the two are separate processes - nothing
+published in Stage 6 reaches Stage 7, so it concluded no worker had run and rewrote every
+sidecar with survivors only: 332,269 records where the straight-through route produced
+407,624, on artifacts whose whole purpose is to be route-independent. An in-memory signal
+cannot answer a question about a file that outlives the process.
 
 **P11. Artifacts are write-once: a new column means a new file, never a revisit.** A
 phase writes its product once and no later phase reopens it. Reconciled scores go to
@@ -334,10 +341,13 @@ phase writes its product once and no later phase reopens it. Reconciled scores g
 which is what lets Stage 6 rerun without destroying its own input and lets two arms
 share one Stage 1-4 result.
 
-> **In flight** - `FdrScoresSidecar.PatchProteinQvalues` still rewrites an existing
-> first-pass sidecar in place to add protein q-values. Splitting that column into its
-> own experiment-wide file, written by the phase that computes it, is tracked in
-> ai/todos/active/TODO-20260901_osprey_firstpassfdr_resume.md.
+Write-once is fully achieved today. The per-file sidecars were once written and then
+revisited - `PatchProteinQvalues` rewrote every first-pass sidecar after protein FDR, and
+`PatchExperimentValues` every second-pass sidecar after the experiment competition -
+because the experiment-scope columns were the only ones not knowable when a run's records
+were written. Issue #4486 moved those columns into the experiment-wide sidecar and deleted
+all three patch paths, so a per-file sidecar is now written exactly once on each pass and
+no later stage reopens it.
 
 **P12. A column lives in the file written by the phase that computes it.** The
 corollary of P11 that decides where a *new* column goes. Adding a column to an existing
@@ -410,24 +420,34 @@ node running that task needs a copy, whatever batch it was handed.
 | File | Scope / kind | Written by | Read by | Relay |
 |---|---|---|---|---|
 | `<library-leaf>.libcache` | experiment cache | library load, any task | all tasks | rebuild locally |
-| `<stem>.spectra.bin` | per-run cache | `PerFileScoring` (Stage 2) | `PerFileScoring`, `PerFileRescoring` | with the run |
-| `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileRescoring` | with the run |
+| `<stem>.spectra.bin` | per-run cache | `PerFileScoring` (Stage 2), or `--task SpectraCache` | `PerFileScoring`, `PerFileRescoring` | with the run |
+| `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileRescoring`, `FirstPassFDR`, `SecondPassFDR` | with the run, on **every** leg |
 | `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring` | with the run |
-| `<stem>.1st-pass.fdr_scores.bin` | per-run product | `FirstPassFDR` (pass 1) | `PerFileRescoring`, `SecondPassFDR` | with the run |
-| `<stem>.reconciliation.json` | per-run product | `FirstPassFDR` (Stage 6 planning) | `PerFileRescoring` | with the run |
-| `<blib-stem>.1st-pass.fdr_experiment.bin` | experiment product | `FirstPassFDR` | `PerFileRescoring`, `SecondPassFDR` | **every node** |
+| `<stem>.1st-pass.fdr_scores.bin` | per-run product | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` or where no worker answer exists | with the run |
+| `<stem>.reconciliation.json` | per-run product | `FirstPassFDR` (Stage 6 planning) | `PerFileRescoring`, `SecondPassFDR` (gap-fill entry ids) | with the run |
+| `<blib-stem>.1st-pass.fdr_experiment.bin` | experiment product | `FirstPassFDR` | `PerFileRescoring`, `SecondPassFDR`, `PerFileScoring` (rehydrate) | **every node** |
 | `<stem>.1st-pass.model.json` | experiment product, replicated | `FirstPassFDR` (training) | `PerFileRescoring`, `SecondPassFDR` | **every node** (any one copy) |
 | `<stem>.scores-reconciled.parquet` | per-run product | `PerFileRescoring` (Stage 6) | `SecondPassFDR` | with the run |
 | `<stem>.2nd-pass.fdr_decoys.bin` | per-run product | `PerFileRescoring` (pass-2 worker) | `SecondPassFDR` | with the run |
 | `<stem>.2nd-pass.fdr_scores.bin` | per-run product | `PerFileRescoring` (pass-2 worker), else `SecondPassFDR` | `SecondPassFDR` | with the run |
-| `<blib-stem>.2nd-pass.fdr_experiment.bin` | experiment product | `SecondPassFDR` | terminal | n/a |
+| `<blib-stem>.2nd-pass.fdr_experiment.bin` | experiment product | `SecondPassFDR` | `SecondPassFDR` on a resume | n/a |
+| `<output>.model-diagnostics.data.json` | experiment product (`--model-diagnostics`) | `FirstPassFDR` | `SecondPassFDR`, which deletes it | **every node** running `SecondPassFDR` |
+| `<output>.model-diagnostics.html` | experiment product (`--model-diagnostics`) | `SecondPassFDR` | terminal | n/a |
 | `<output>.<TaskName>.osprey.task` | scope of its artifact | every task, via `PerFileResumeDriver` | the driver | with its artifact |
 | `<output>.blib` | experiment product (terminal) | `SecondPassFDR` | Skyline | n/a |
 
-Nothing else is part of this contract. Diagnostic outputs - the `--fdrbench` pairing
-manifests, the `--model-diagnostics` HTML and JSON, the peptide-trace dumps - are
-side channels: no task reads them, nothing relays them, and removing one changes no
-result. Do not add a pipeline dependency on any of them.
+Nothing else is part of this contract. The `--fdrbench` pairing manifests and the
+peptide-trace dumps are side channels: no task reads them, nothing relays them, and
+removing one changes no result. Do not add a pipeline dependency on any of them.
+
+The `--model-diagnostics` artifacts are **not** in that category, which is easy to assume
+from the flag name. `.model-diagnostics.data.json` is a real cross-task, cross-process
+hand-off - `FirstPassFDR` stashes the fully-built pass-1 data model in it because the
+pass-1 pool and trained model are gone by the time `SecondPassFDR` runs, and
+`SecondPassFDR` reads it, appends the pass-2 views, renders the page and deletes it. An
+HPC orchestrator that omits it from the `SecondPassFDR` node loses the pass-1 half of the
+report. And `.model-diagnostics.html` is a *declared output* of `SecondPassFdrTask`, so
+deleting it invalidates that task and a re-run regenerates it.
 
 ### Rows that are not what they look like
 
@@ -453,14 +473,33 @@ first-pass span, and a node holding one without the other can do nothing. One ar
 means one relay hop and one reload site, and makes it impossible to ship half of what
 the mode requires.
 
-**`<stem>.2nd-pass.fdr_scores.bin` has two possible writers, and the sidecar says
-which.** When `PerFileRescoring` runs the pass-2 per-file worker it writes this file and
+**`<stem>.2nd-pass.fdr_scores.bin` has two possible writers, and the sidecar's NAME says
+which.** When `PerFileRescoring` runs the pass-2 per-run worker it writes this file and
 stamps the validity sidecar under its *own* task and key - the artifact belongs to the
 task that produced it, so it must be invalidated by whatever invalidates that task.
-`SecondPassFDR` then reads the stamp to decide whether to fold the worker's file or
-recompute. Stamping `SecondPassFDR`'s key at production time would leave a file that
-outlives the inputs it was computed from, which is the one staleness a resume cannot
-detect by looking. Where no worker ran, `SecondPassFDR` writes the file itself.
+Stamping `SecondPassFDR`'s key at production time would leave a file that outlives the
+inputs it was computed from, which is the one staleness a resume cannot detect by looking.
+Where no worker ran, `SecondPassFDR` writes the file itself.
+
+`SecondPassFDR` then decides fold-versus-recompute on the **presence** of a stamp named
+for `PerFileRescoring` - never by re-deriving that task's key. The filename already says
+who wrote the binary, which is the whole point of stamping it. Recomputing the producer's
+key from the consumer's process was tried and failed exactly where it mattered:
+`PerFileRescoreTask.ValidityKey` folds in a per-leg flag, so a `--task SecondPassFDR`
+process and a `--task PerFileRescoring` process compute *different* keys for the same
+task; in an HPC chain the check said "not valid", Stage 7 concluded no worker had run, and
+it rewrote every sidecar. **One task cannot reconstruct another task's key from a
+different leg, and must not try.** Staleness is still covered, by the task that owns it: if
+the worker's inputs changed, `PerFileRescoring`'s own validity fails, the driver re-runs
+it, and it rewrites both the binary and the stamp. A stamp that survives is one whose
+producer was legitimately skipped as already done.
+
+**`<stem>.calibration.json` is read on every leg, not just the rescore.** Besides RT
+calibration for Stage 6, it carries the isolation-scheme windows that give the gap-fill
+m/z filter its per-run coverage - which is how a `SecondPassFDR` node with no mzML still
+gets that coverage. It is read behind a `File.Exists`, so an orchestrator that leaves it
+behind does not get an error: gap-fill filtering silently changes. That is the P13-shaped
+hazard this document warns about, in the contract itself.
 
 **`<output>.<TaskName>.osprey.task` is per-artifact, not per-task.** One sidecar is
 written next to each output, and its name carries the producing task so two tasks
@@ -469,9 +508,15 @@ output to exist *and* its sidecar key to match: a sidecar can outlive its output
 matching key alone is not enough (P8 and P9 are separate tests, and
 `PerFileResumeDriver.IsCurrent` runs both).
 
-### Where experiment-wide artifacts live
+### Where blib-named experiment-wide artifacts live
 
-An experiment-wide product takes its **name** from the output blib and its **directory**
+This rule governs the artifacts named for the analysis - `fdr_experiment.bin` for both
+passes, and the `--model-diagnostics` pair. It does **not** govern
+`<stem>.1st-pass.model.json`, which is the replicated exception described above: that one
+takes its name from the run stem and its directory from that run's own parquet, precisely
+so a fan-out node can find it without knowing this rule.
+
+A blib-named artifact takes its **name** from the output blib and its **directory**
 from the same resolution the per-run sidecars use - `ArtifactPaths.ResolveOutputDir` off
 any input or scores-parquet path of the analysis. Both halves are deliberate, and
 getting either wrong breaks the HPC chain rather than the single-process run:
@@ -579,6 +624,10 @@ wrong answer:
 | training-sample settings | a resume adopts maximum-trained scores as though the reservoir had produced them |
 | library-fragment release | the retained-fragment arm differs and the outputs are not interchangeable |
 
+`PerFileRescoring` appends its own set for the same reasons - the reconciliation hash and
+sidecar format version, the experiment-aggregation, pass-2 q and training-sample arms, and
+the survivor-streaming switch, whose two paths must not adopt each other's output.
+
 The peak-pick arm sits in the *base* rather than in the overrides because it is the one
 lever that reaches every task: the pick decides which peak a precursor's row describes,
 back in Stage 4, and everything downstream inherits that choice. Putting it in the base
@@ -654,17 +703,35 @@ The general rule, if you remember nothing else: **a fan-out node needs its own r
 files plus every experiment-wide artifact produced so far.** The checklists below are
 that rule made explicit at each boundary.
 
+Two things hold at every boundary and are not repeated in each list:
+
+- **Every artifact travels with its `.osprey.task` sidecar.** The stamp is how the
+  receiving node learns who produced the file and whether it may be reused; shipping the
+  artifact without it turns a valid reuse into a recompute, or worse (P10).
+- **Preserve mtime when copying the library.** `LibraryIdentityHash` is file name + size
+  + mtime, so a copy tool that stamps a fresh timestamp gives the library a new identity
+  and invalidates every artifact on the receiving node - a multi-hour recompute reported
+  as a stale cache. Use `robocopy /COPY:DAT`, `rsync -t`, or whatever preserves mtime on
+  the cluster.
+
 ### Boundary 1 -> 2: `PerFileScoring` to `FirstPassFDR`
 
 The join needs every run's Stage 1-4 output, since training and experiment-wide q-values
 are functions of all runs:
 
 - `<stem>.scores.parquet` for **every** run in the cohort
+- `<stem>.calibration.json` for **every** run
 - the library, and `--input-scores` naming the parquets
 
-`<stem>.spectra.bin` and `<stem>.calibration.json` do not need to travel: the join reads
-parquets, not spectra. Leave them on the scoring nodes unless the raw data was deleted
-after staging, in which case the spectra caches are the data and must be preserved.
+`.calibration.json` must travel, which is easy to get wrong because the join reads
+parquets rather than spectra. It supplies RT calibration and the isolation-scheme windows
+behind the gap-fill m/z filter, and it is read on this leg and the `SecondPassFDR` leg as
+well as the rescore. It is read behind a `File.Exists`: leaving it out produces no error,
+just different gap-fill filtering.
+
+`<stem>.spectra.bin` does not need to travel - the join reads parquets, not spectra. Leave
+the caches on the scoring nodes unless the raw data was deleted after staging, in which
+case they are the data and must be preserved.
 
 ### Boundary 2 -> 3: `FirstPassFDR` to `PerFileRescoring`
 
@@ -695,10 +762,20 @@ Per run, for **every** run in the cohort:
   rescore node ran the pass-2 worker - together with their `.osprey.task` sidecars,
   which is how this task learns the worker produced them and folds them instead of
   recomputing
+- `<stem>.reconciliation.json` - read here for the gap-fill entry ids on the Stage-7 fold
+- `<stem>.calibration.json` - isolation-window coverage, so a node with no mzML still has it
 
 Experiment-wide:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`
 - `<stem>.1st-pass.model.json` (any one copy)
+- `<output>.model-diagnostics.data.json`, when `--model-diagnostics` is on - the pass-1
+  half of the report exists nowhere else by this point
+
+Not needed on the default path: `<stem>.1st-pass.fdr_scores.bin`. Establishing that is
+what issue #4486 was for - an orchestrator hands a `SecondPassFDR` node the per-run
+second-pass artifacts and the analysis-wide experiment sidecar, and nothing per-run from
+the first pass. They become a real input only under `OSPREY_PASS2_VERIFY_WORKER`, which is
+a test instrument, or where no worker answer exists.
 
 The `.osprey.task` sidecars are not optional bookkeeping here. Without the stamp,
 `SecondPassFDR` cannot tell that a worker wrote the pass-2 files and will recompute them
@@ -716,18 +793,28 @@ so that clearing them after that work merges is a single edit.
 The contract above states the **target** in every case. Where today's code does not meet it,
 the text says so rather than describing the current shape as though it were the design.
 
-1. **Protein-q split of the experiment-scope FDR sidecar.** Protein q-values are currently
-   added by rewriting an existing first-pass sidecar in place
-   (`FdrScoresSidecar.PatchProteinQvalues`), which is the one surviving violation of P11.
-   The target is a separate experiment-wide artifact written by the phase that computes it.
-   See `ai/todos/active/TODO-20260901_osprey_firstpassfdr_resume.md`.
+1. **Protein-q split of the experiment-scope FDR sidecar.** This is a P7 and P12 item, not
+   a write-once one: `<blib-stem>.1st-pass.fdr_experiment.bin` is written once and never
+   mutated, but it is written *late* - after protein FDR - so pass 2's experiment-scope
+   product sits in an in-memory accumulator across the whole protein-FDR phase and is lost
+   if that phase dies. The target splits it into two immutable files joined on entry_id at
+   read time, each written by the phase that computes it: pass 2 writes precursor q,
+   peptide q, PEP and aggregate score when pass 2 ends; protein FDR writes protein q when
+   protein FDR ends. See "The protein-q split, and the rule behind it" in
+   `ai/todos/active/TODO-20260901_osprey_firstpassfdr_resume.md`.
 
 2. **The bounded-loop shape of `PerFileRescoring`.** The task is still entered with a
    materialised all-runs entry list, and its baseline still carries maps keyed by run whose
-   values are per-entry - the `O(runs x entries)` shape P5 and P6 forbid. See
+   values are per-entry - the `O(runs x entries)` shape P5 and P6 forbid. See "THE TARGET
+   SHAPE for --task PerFileRescoring" and its violation table (items 6 and 7,
+   `perFileEntries` and `reconciliationActions`) in
    `ai/todos/active/TODO-20260901_osprey_stage5_reload_materialization.md`.
 
-3. **Deletion of the fat pre-compaction path**, once the streamed path is the only one.
+3. **Retiring the resident survivor handoff.** `OSPREY_STAGE6_STREAM_SURVIVORS=0` still
+   selects the resident path, where Stage 5's all-runs survivor buffer stays live across
+   the whole Stage 6 rescore instead of being refilled one run at a time from each run's
+   `.scores.parquet` and first-pass sidecar. The streamed path is the default; the switch
+   goes when the resident one does.
 
 4. **Whether the 500-run / 64 GB target is met.** It is not yet, and which stage binds is
    itself moving as each is fixed. The two TODOs above carry the current measurements;
