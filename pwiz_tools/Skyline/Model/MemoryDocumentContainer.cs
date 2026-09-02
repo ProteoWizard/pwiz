@@ -91,7 +91,9 @@ namespace pwiz.Skyline.Model
             {
                 // Wait for completing document changed event
                 uint nLoops = 0;
-                while (!IsFinal(Document))
+                int cancelLoops = 0;
+                // Order matters: IsSupersededCancel must run every pass so it can reset its count
+                while (IsSupersededCancel(ref cancelLoops) || !IsFinal(Document))
                 {
                     Monitor.Wait(CHANGE_EVENT_LOCK, 1000);  // Check every second or risk deadlock
 
@@ -121,6 +123,75 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Number of one-second waits allowed for a loader to restart after it cancelled itself
+        /// because its document was superseded. The restart is normally posted within
+        /// milliseconds, so this only has to outlast a heavily loaded machine.
+        /// </summary>
+        private const int CANCEL_RESTART_LOOPS = 30;
+
+        /// <summary>
+        /// Whether to wait out a loader that cancelled itself because its document was
+        /// superseded, rather than take that cancellation for the end of the load.
+        ///
+        /// <para>A background loader cancels its own work whenever the document it was handed is
+        /// superseded - <see cref="RetentionTimeManager"/>'s test for it is nothing but a
+        /// reference comparison against the container's current document. Nothing was cancelled
+        /// in any meaningful sense: <see cref="BackgroundLoader"/> re-notifies on the way out and
+        /// the loader starts again on the new document. But that hand-off posts a cancelled
+        /// status, and <see cref="IsFinal"/> counts any cancellation as terminal, so the wait
+        /// could end on a document still short of loaded. Under a parallel run, where a
+        /// chromatogram load commits its new document just as a retention time alignment begins,
+        /// that surfaced as an intermittent "Loader cancelled" - the alignment had been running
+        /// for 0% of its work.</para>
+        ///
+        /// <para>So give the restart a bounded chance to post its own status. Anything that
+        /// arrives - progress, completion, or the document simply becoming loaded - ends this and
+        /// the wait proceeds normally. A cancellation that really is the end of the line still
+        /// gets reported, just <see cref="CANCEL_RESTART_LOOPS"/> seconds later.</para>
+        ///
+        /// <para>OFF by default, because <see cref="CommandLine"/> waits on this same container
+        /// and already has its own handling for an early return, and buying a test's stability
+        /// with up to <see cref="CANCEL_RESTART_LOOPS"/> seconds added to a shipping import's
+        /// failure path is not a trade worth making blind. The same early return is a real gap
+        /// there - it can leave the command line writing a document whose alignments never
+        /// finished - but that is a separate change, made deliberately and measured on its own.
+        /// </para>
+        ///
+        /// <para>SETTABLE rather than overridden, because "every results test wants this" turned
+        /// out to be false. Two callers depend on the fail-fast it removes:
+        /// <c>AssertEx.ForceDocumentLoad</c>, whose own comment explains that its callers sit in a
+        /// bare catch-and-retry where a longer wait silently deletes the fix it exists to apply;
+        /// and CommandLineTest, which drives the shipping CommandLine path through a TEST
+        /// container, so switching this on there would make the production gap named above
+        /// permanently invisible to the suite that covers it. Both switch it back off.</para>
+        /// </summary>
+        public bool WaitForCancelRestart { get; set; }
+
+        private bool IsSupersededCancel(ref int cancelLoops)
+        {
+            if (!WaitForCancelRestart || LastProgress == null || !LastProgress.IsCanceled || Document.IsLoaded)
+            {
+                // Deliberately NOT resetting cancelLoops. The budget is spent per WAIT, not per
+                // cancellation episode, because LastProgress is one container-wide status written
+                // by every registered loader - six of them here, nine under SkylineWindow. Resetting
+                // whenever it reads non-cancelled would let an unrelated loader's progress buy a
+                // fresh 30 seconds each time round, and WaitForComplete has no overall deadline: a
+                // named "Loader cancelled" failure would become an open-ended hang, diagnosable
+                // only as a harness timeout. Now the cap bounds the whole wait.
+                return false;
+            }
+            if (cancelLoops == 0 && Program.UnitTest)
+            {
+                // Leading hash is a cue to SkylineTester to ignore these informational lines.
+                // Worth saying out loud: without it a run that rides out a hand-off looks exactly
+                // like a run where the race never happened, and the fix cannot be told from luck.
+                Console.WriteLine(@"# Waiting out a cancelled loader that lost its document: {0}",
+                    LastProgress.Message);
+            }
+            return ++cancelLoops <= CANCEL_RESTART_LOOPS;
         }
 
         private bool IsFinal(SrmDocument doc)

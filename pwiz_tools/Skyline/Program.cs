@@ -31,6 +31,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using Microsoft.Win32.SafeHandles;
 using pwiz.Common;
 using pwiz.ProteowizardWrapper;
 using pwiz.Common.Collections;
@@ -907,6 +908,13 @@ namespace pwiz.Skyline
                 return;
             }
 
+            if (IsBenignInvokeCompletionFailure(e.Exception))
+            {
+                Messages.WriteAsyncDebugMessage(@"Ignored benign failure signaling a completed marshaled call: {0}",
+                    e.Exception.Message);
+                return;
+            }
+
             if (TestExceptions != null)
             {
                 AddTestException(e.Exception);
@@ -934,6 +942,82 @@ namespace pwiz.Skyline
             return exception is ExternalException &&
                    exception.StackTrace != null &&
                    exception.StackTrace.Contains(@"RepaintSplitterRect");
+        }
+
+        /// <summary>
+        /// True for the benign ObjectDisposedException WinForms raises from
+        /// Control.InvokeMarshaledCallbacks when it signals a marshaled call whose wait handle
+        /// has already been disposed. Control.MarshaledInvoke disposes that handle with a using
+        /// as soon as WaitForWaitHandle returns (dotnet/winforms#10460, new in .NET 9), and
+        /// WaitForWaitHandle has paths that stop waiting while the entry is still queued. The
+        /// callback then runs normally on the UI thread and only the completion signal throws,
+        /// with no thread left waiting on it. .NET 8 disposed the handle from a finalizer
+        /// instead, so the same Set() was harmless - ignoring this restores that behavior
+        /// rather than hiding a new failure. Reported as dotnet/winforms#14996 (milestone
+        /// .NET 11), with no backport - remove this once Skyline targets a runtime carrying
+        /// that fix.
+        ///
+        /// <para>The method name alone is not enough to identify it. An ObjectDisposedException
+        /// thrown by OUR OWN code inside a marshaled callback reaches this handler with
+        /// InvokeMarshaledCallbacks on its stack too, and can name a SafeWaitHandle just as
+        /// readily. What separates them is the WINDOW between the throw and
+        /// InvokeMarshaledCallbacks: the completion signal reaches it through nothing but
+        /// WinForms and the core library, while a callback of ours leaves its own frames (or
+        /// the InvokeMarshaledCallback* dispatch helpers) in that window.</para>
+        ///
+        /// <para>DELIBERATELY INCOMPLETE. Any Skyline frame anywhere on the stack disqualifies
+        /// it, including one BELOW InvokeMarshaledCallbacks in the message pump - which is where
+        /// a control that overrides WndProc (SequenceTree, AllChromatogramsGraph, CustomTip and
+        /// four others) puts one whenever it is the marshaling control. Those cases stay
+        /// unfiltered on purpose. Failing to silence a benign exception costs one visible test
+        /// failure that can be investigated; silencing a real one hides a defect with nothing
+        /// to find it by, and the message below is Trace-level, which the registered listener
+        /// discards. Widen this only after a nightly actually fails that way, and recognize it
+        /// by this exact ObjectDisposedException with a Skyline WndProc frame under
+        /// Control.InvokeMarshaledCallbacks.</para>
+        ///
+        /// <para>Fails CLOSED: an unresolvable frame, or a trace that never reaches
+        /// InvokeMarshaledCallbacks, reports rather than swallows.</para>
+        /// </summary>
+        private static bool IsBenignInvokeCompletionFailure(Exception exception)
+        {
+            if (!(exception is ObjectDisposedException disposedException) ||
+                !Equals(disposedException.ObjectName, typeof(SafeWaitHandle).FullName))
+            {
+                return false;
+            }
+
+            var winFormsAssembly = typeof(Control).Assembly;
+            var coreLibAssembly = typeof(object).Assembly;
+            var reachedCompletionSignal = false;
+            foreach (var frame in new StackTrace(disposedException).GetFrames())
+            {
+                var method = frame.GetMethod();
+                var declaringType = method?.DeclaringType;
+                if (declaringType == null)
+                {
+                    return false;   // Cannot identify the frame, so cannot claim it is benign
+                }
+                if (declaringType.Assembly != winFormsAssembly && declaringType.Assembly != coreLibAssembly)
+                {
+                    return false;   // Code of ours is involved somewhere, so report it
+                }
+                if (reachedCompletionSignal)
+                {
+                    continue;       // Below the signal: the pump, and it must stay framework-only
+                }
+                if (declaringType == typeof(Control) && Equals(method.Name, @"InvokeMarshaledCallbacks"))
+                {
+                    reachedCompletionSignal = true;
+                    continue;
+                }
+                if (method.Name.StartsWith(@"InvokeMarshaledCallback", StringComparison.Ordinal) ||
+                    declaringType == typeof(ExecutionContext))
+                {
+                    return false;   // The callback-dispatch path, so a callback of ours ran
+                }
+            }
+            return reachedCompletionSignal;
         }
 
         private static void ReportExceptionUI(Exception exception, StackTrace stackTrace)
