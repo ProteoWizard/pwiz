@@ -222,7 +222,19 @@ function Add-OspreyDocs {
     $html = [regex]::Replace($html, 'https?://raw\.githack\.com/ProteoWizard/pwiz/[^"'' ]*Osprey-workflow\.html', 'Osprey-workflow.html')
     Set-Content -Path $staged -Value $html -NoNewline -Encoding utf8
 
-    Copy-Item (Join-Path $scriptRoot 'README.md') (Join-Path $StageDir 'README.md') -Force
+    # README.md ships, but docs/*.md does not, and the workflow page lands in
+    # Documentation/ rather than beside the README. Retarget both link shapes on
+    # the COPY so the bundled README has no dead links: docs/ links go to GitHub
+    # (there is nothing local to point at), and the workflow link gets its
+    # subdirectory. Same approach as the CommandLine.html retarget above.
+    $readmeStaged = Join-Path $StageDir 'README.md'
+    Copy-Item (Join-Path $scriptRoot 'README.md') $readmeStaged -Force
+    $readme = Get-Content $readmeStaged -Raw
+    $docsUrl = 'https://github.com/ProteoWizard/pwiz/blob/master/pwiz_tools/Osprey/docs/'
+    $readme = [regex]::Replace($readme, '\]\(docs/([^)]+)\)', ('](' + $docsUrl + '$1)'))
+    $readme = [regex]::Replace($readme, '\]\(Osprey-workflow\.html\)', '](Documentation/Osprey-workflow.html)')
+    Set-Content -Path $readmeStaged -Value $readme -NoNewline -Encoding utf8
+
     Copy-Item (Join-Path $repoRoot 'LICENSE') (Join-Path $StageDir 'LICENSE') -Force
 }
 

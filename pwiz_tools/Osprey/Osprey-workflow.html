@@ -74,7 +74,7 @@
 </header>
 
 <main>
-<svg class="pipeline" viewBox="0 0 1200 2700" xmlns="http://www.w3.org/2000/svg">
+<svg class="pipeline" viewBox="0 0 1200 2868" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <!-- Arrowhead for control flow between stages -->
   <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
@@ -152,6 +152,19 @@
     .task-hdr-io   { font-family: ui-monospace, SFMono-Regular, monospace;
                      font-size: 10px; fill: #37474f; }
     .task-hdr-key  { font-weight: 700; fill: #5e35b1; }
+    .task-hdr-relay{ font-size: 9px; font-weight: 700; fill: #6a1b9a;
+                     text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* File scope: which tier a named artifact belongs to. Per-run files fan  */
+    /* out with their own run; experiment-wide files must reach EVERY node    */
+    /* and form the resident baseline a per-run loop runs against; caches are */
+    /* rebuildable and live in --work-dir. See docs/00-pipeline-architecture. */
+    .sc-run        { fill: #00695c; font-weight: 700; }
+    .sc-exp        { fill: #c62828; font-weight: 700; }
+    .sc-cache      { fill: #757575; }
+    .sc-run-sw     { fill: #b2dfdb; stroke: #00695c; stroke-width: 1; }
+    .sc-exp-sw     { fill: #ffcdd2; stroke: #c62828; stroke-width: 1; }
+    .sc-cache-sw   { fill: #eeeeee; stroke: #757575; stroke-width: 1; }
   </style>
 </defs>
 
@@ -162,6 +175,9 @@
   <text class="title">Osprey DIA search pipeline</text>
   <text class="subtitle" y="22">
     Rust reference (osprey) vs C# implementation (Osprey)  -  end-to-end cross-impl parity from Stage 1 through Stage 7 + .blib on Stellar + Astral 3-file.
+  </text>
+  <text class="subtitle" y="38">
+    Architecture and the sidecar file contract - which artifact is whose, and what each HPC node must be shipped:  <a href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz_tools/Osprey/docs/00-pipeline-architecture.md">docs/00-pipeline-architecture.md</a>
   </text>
 </g>
 
@@ -189,12 +205,24 @@
     <rect class="st-n/a"     x="980" y="0" width="16" height="12"/>
     <text class="legend-label" x="1002" y="10">not applicable</text>
   </g>
+
+  <text class="legend-title" y="46">File scope</text>
+  <g transform="translate(0, 62)">
+    <rect class="sc-run-sw"   x="0"   y="0" width="16" height="12"/>
+    <text class="legend-label" x="22" y="10">per-run &#183; fans out with its own run</text>
+
+    <rect class="sc-exp-sw"   x="280" y="0" width="16" height="12"/>
+    <text class="legend-label" x="302" y="10">experiment-wide &#183; relay to EVERY node; the resident baseline</text>
+
+    <rect class="sc-cache-sw" x="720" y="0" width="16" height="12"/>
+    <text class="legend-label" x="742" y="10">shared cache &#183; --work-dir, rebuildable</text>
+  </g>
 </g>
 
 <!-- ================================================================= -->
 <!-- INPUTS                                                             -->
 <!-- ================================================================= -->
-<g transform="translate(0, 150)">
+<g transform="translate(0, 190)">
   <text class="phase-label" x="40" y="0">inputs</text>
 
   <rect class="input-pill" x="260"  y="16" width="260" height="48" rx="24"/>
@@ -207,28 +235,30 @@
 </g>
 
 <!-- Arrows from inputs into the PerFileScoring task banner -->
-<path class="flow" d="M 390 214 L 390 228" marker-end="url(#arrow)"/>
-<path class="flow" d="M 810 214 L 810 228" marker-end="url(#arrow)"/>
+<path class="flow" d="M 390 254 L 390 268" marker-end="url(#arrow)"/>
+<path class="flow" d="M 810 254 L 810 268" marker-end="url(#arrow)"/>
 
 <!-- ================================================================= -->
 <!-- TASK 1 of 4: PerFileScoring (Stages 1-4, per-file fan-out)         -->
 <!-- ================================================================= -->
-<g transform="translate(0, 230)">
-  <rect class="task-hdr-bg" x="120" y="0" width="960" height="64" rx="8"/>
+<g transform="translate(0, 270)">
+  <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
   <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileScoring</text>
-  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-file fan-out &#183; N nodes</text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-run fan-out &#183; any batch size, 1..N nodes</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>spectral library (.blib / DIA-NN TSV), DIA mzML file(s)  &mdash; via  -i</text>
-  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan>&lt;stem&gt;.scores.parquet, &lt;stem&gt;.calibration.json   &#183;   validity sidecar  &lt;out&gt;.PerFileScoring.osprey.task</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan>, <tspan class="sc-run">&lt;stem&gt;.calibration.json</tspan>   &#183;   validity sidecar  <tspan class="sc-run">&lt;out&gt;.PerFileScoring.osprey.task</tspan></text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-cache">&lt;stem&gt;.spectra.bin</tspan>, <tspan class="sc-cache">&lt;library-leaf&gt;.libcache</tspan>   &#183;   caches, written to --work-dir / --cache-dir; rebuildable</text>
+  <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: each node needs only its own runs</text>
 </g>
 
 <!-- Arrows from the PerFileScoring banner into Stage 1 and Stage 2 -->
-<path class="flow" d="M 390 296 L 390 338" marker-end="url(#arrow)"/>
-<path class="flow" d="M 810 296 L 810 338" marker-end="url(#arrow)"/>
+<path class="flow" d="M 390 368 L 390 410" marker-end="url(#arrow)"/>
+<path class="flow" d="M 810 368 L 810 410" marker-end="url(#arrow)"/>
 
 <!-- ================================================================= -->
 <!-- STAGE 1 + STAGE 2 (parallel: library prep / mzML prep)             -->
 <!-- ================================================================= -->
-<g transform="translate(0, 330)">
+<g transform="translate(0, 402)">
   <!-- Stage 1 container -->
   <rect class="phase-bg" x="40"  y="10" width="540" height="180" rx="6"/>
   <text class="phase-label" x="60"  y="30">stage 1</text>
@@ -267,13 +297,13 @@
 </g>
 
 <!-- Arrows down into calibration -->
-<path class="flow" d="M 310 540 L 310 570 L 600 570 L 600 600" marker-end="url(#arrow)"/>
-<path class="flow" d="M 890 540 L 890 570 L 600 570" />
+<path class="flow" d="M 310 612 L 310 642 L 600 642 L 600 672" marker-end="url(#arrow)"/>
+<path class="flow" d="M 890 612 L 890 642 L 600 642" />
 
 <!-- ================================================================= -->
 <!-- STAGE 3 CALIBRATION                                                 -->
 <!-- ================================================================= -->
-<g transform="translate(0, 600)">
+<g transform="translate(0, 672)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="540" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 3</text>
   <text class="phase-title" x="60" y="42">Calibration (a.k.a. recalibration)</text>
@@ -327,12 +357,12 @@
 </g>
 
 <!-- Arrow from calibration to main search -->
-<path class="flow" d="M 600 1140 L 600 1180" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 1212 L 600 1252" marker-end="url(#arrow)"/>
 
 <!-- ================================================================= -->
 <!-- STAGE 4 MAIN FIRST-PASS SEARCH                                     -->
 <!-- ================================================================= -->
-<g transform="translate(0, 1180)">
+<g transform="translate(0, 1252)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="200" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 4</text>
   <text class="phase-title" x="60" y="42">Main first-pass search</text>
@@ -358,26 +388,28 @@
 <!-- ================================================================= -->
 <!-- TASK 2 of 4: FirstPassFDR (Stage 5, join / coordinator node)        -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 1380 L 600 1394" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 1452 L 600 1466" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 1396)">
-  <rect class="task-hdr-bg" x="120" y="0" width="960" height="64" rx="8"/>
+<g transform="translate(0, 1468)">
+  <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
   <text x="140" y="22" class="task-hdr-name">&#9656; --task FirstPassFDR</text>
-  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; all-file representation</text>
-  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>&lt;stem&gt;.scores.parquet  (every file, via --input-scores)</text>
-  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan>&lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json (Stage 5&#8594;6 boundary)   &#183;   validity  &lt;out&gt;.FirstPassFDR.osprey.task</text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; 1 node &#183; holds O(distinct), never O(runs x entries)</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan>  (every run, via --input-scores)</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.1st-pass.fdr_scores.bin</tspan>, <tspan class="sc-run">&lt;stem&gt;.reconciliation.json</tspan> (Stage 5&#8594;6 boundary)   &#183;   validity  <tspan class="sc-run">&lt;out&gt;.FirstPassFDR.osprey.task</tspan></text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">&lt;stem&gt;.1st-pass.model.json</tspan> (frozen model + protein-compact stratum)</text>
+  <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: both experiment-wide files to EVERY downstream node</text>
 </g>
 
 <!-- ================================================================= -->
 <!-- STAGE 5 FIRST-PASS FDR + RECONCILIATION PLANNING                   -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 1460 L 600 1478" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 1564 L 600 1582" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 1480)">
+<g transform="translate(0, 1584)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="500" rx="8"/>
   <text class="phase-label" x="60" y="24">stage 5</text>
   <text class="phase-title" x="60" y="42">First-pass FDR + reconciliation planning</text>
-  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — needs all-file representation</text>
+  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join — needs all-run representation</text>
   <text class="phase-note"  x="60" y="58">First-pass FDR across all files. Runs Percolator SVM on the joined per-file scores, computes cross-run consensus RTs,</text>
   <text class="phase-note"  x="60" y="72">refits per-file calibration, and emits a per-(file, entry) reconciliation plan. All work that needs all-file representation lives here.</text>
 
@@ -423,26 +455,28 @@
 <!-- ================================================================= -->
 <!-- TASK 3 of 4: PerFileRescoring (Stage 6, second per-file fan-out)    -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 1980 L 600 1994" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 2084 L 600 2098" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 1996)">
-  <rect class="task-hdr-bg" x="120" y="0" width="960" height="64" rx="8"/>
+<g transform="translate(0, 2100)">
+  <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
   <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileRescoring</text>
-  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-file fan-out &#183; N nodes</text>
-  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>&lt;stem&gt;.scores.parquet (via --input-scores) + sidecars &lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json</text>
-  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan>&lt;stem&gt;.scores-reconciled.parquet  (work-files only)   &#183;   validity  &lt;out&gt;.PerFileRescoring.osprey.task</text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-run fan-out &#183; reads its own runs + the experiment baseline only</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> (via --input-scores) + <tspan class="sc-run">.1st-pass.fdr_scores.bin</tspan>, <tspan class="sc-run">.reconciliation.json</tspan>, <tspan class="sc-run">.calibration.json</tspan>, <tspan class="sc-cache">.spectra.bin</tspan></text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">&lt;stem&gt;.1st-pass.model.json</tspan>   &#183;   loaded once = the resident baseline</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores-reconciled.parquet</tspan>, <tspan class="sc-run">.2nd-pass.fdr_decoys.bin</tspan>, <tspan class="sc-run">.2nd-pass.fdr_scores.bin</tspan> (pass-2 worker)   &#183;   validity  <tspan class="sc-run">&lt;out&gt;.PerFileRescoring.osprey.task</tspan></text>
+  <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: the run's own set + 2 experiment-wide files</text>
 </g>
 
 <!-- ================================================================= -->
 <!-- STAGE 6 PER-FILE RESCORE (SECOND PER-FILE FAN-OUT)                  -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 2060 L 600 2078" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 2196 L 600 2214" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 2080)">
+<g transform="translate(0, 2216)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="260" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 6</text>
   <text class="phase-title" x="60" y="42">Per-file rescore + gap-fill + parquet write-back</text>
-  <text class="phase-shape-fanout" x="1115" y="24" text-anchor="end">per-file — N nodes</text>
+  <text class="phase-shape-fanout" x="1115" y="24" text-anchor="end">per-run fan-out — 1..N nodes</text>
   <text class="phase-note"  x="60" y="58">Second per-file fan-out. Each file independently reloads its mzML, re-invokes the search engine with the reconciled boundary overrides,</text>
   <text class="phase-note"  x="60" y="72">runs the gap-fill two-pass for missing precursors, and writes reconciled scores back to its .scores.parquet. No cross-file work.</text>
 
@@ -465,14 +499,16 @@
 <!-- ================================================================= -->
 <!-- TASK 4 of 4: SecondPassFDR (Stage 7, join / aggregator node)        -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 2340 L 600 2354" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 2476 L 600 2490" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 2356)">
-  <rect class="task-hdr-bg" x="120" y="0" width="960" height="64" rx="8"/>
+<g transform="translate(0, 2492)">
+  <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
   <text x="140" y="22" class="task-hdr-name">&#9656; --task SecondPassFDR</text>
-  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; final aggregation</text>
-  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>&lt;stem&gt;.scores-reconciled.parquet (via --input-scores; falls back to &lt;stem&gt;.scores.parquet for no-work files)</text>
-  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan>&lt;output&gt;.blib, &lt;stem&gt;.2nd-pass.fdr_scores.bin (when Stage 6 rescored)   &#183;   validity  &lt;out&gt;.SecondPassFDR.osprey.task</text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; 1 node &#183; final aggregation</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores-reconciled.parquet</tspan> (via --input-scores; falls back to <tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> for no-work runs)</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">&lt;stem&gt;.1st-pass.model.json</tspan>   &#183;   required by the frozen pass-2 modes</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;output&gt;.blib</tspan>, <tspan class="sc-exp">&lt;blib-stem&gt;.2nd-pass.fdr_experiment.bin</tspan>, <tspan class="sc-run">&lt;stem&gt;.2nd-pass.fdr_scores.bin</tspan> (where no worker ran)</text>
+  <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: every run's reconciled set, with its .osprey.task stamps</text>
 </g>
 
 <!-- ================================================================= -->
@@ -486,13 +522,13 @@
 <!-- experiment-level FDR, first-pass protein FDR, reconciliation       -->
 <!-- planning) under the FirstPassFDR phase.                            -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 2420 L 600 2438" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 2588 L 600 2606" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 2440)">
+<g transform="translate(0, 2608)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="230" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 7</text>
   <text class="phase-title" x="60" y="42">Post-join: second-pass Percolator + protein FDR + .blib output</text>
-  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join - final SecondPassFDR phase (no further per-file fan-out)</text>
+  <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join - final SecondPassFDR phase (no further per-run fan-out)</text>
 
   <rect class="st-done" x="80" y="62" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="82" text-anchor="middle">Single Percolator pass on the reconciled + gap-filled pool</text>

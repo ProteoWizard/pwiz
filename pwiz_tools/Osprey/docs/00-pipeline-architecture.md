@@ -50,11 +50,13 @@ file, one LC-MS/MS acquisition. It is the unit the pipeline fans out over.
 
 The code spells this concept `file`, because a run arrives as a file and is keyed by
 its file stem. The two fan-out tasks are named `PerFileScoring` and `PerFileRescoring`
-in the CLI, the `HpcTask` enum, and the `.osprey.task` sidecar names, and this document
-uses those spellings whenever it names a task, a type, or a path. It says **run** in
-prose, where "per-run" and "experiment-wide" is the distinction that carries the
+in the CLI, the `HpcTask` enum, and the `.osprey.task` sidecar names, and Stage 6's
+canonical name is "Per-file rescore". **Proper names are quoted as they are spelled** -
+tasks, types, paths, stage names - and this document says **run** everywhere else,
+because "per-run versus experiment-wide" is the distinction that carries the
 architecture and "per-file" invites confusion with the dozen other files in play. The
-`--model-diagnostics` report uses the same prose convention.
+`--model-diagnostics` report and the workflow diagram's role labels use the same
+convention.
 
 One run, one stem, one set of per-run sidecars. A cohort of 500 runs is 500 stems.
 
