@@ -565,6 +565,29 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// A file's already-computed scores, in parquet row order, or null when the caller has
+        /// nothing on disk for it.
+        ///
+        /// <para>Only the SCORE is taken from disk. The run q-values are recomputed from it,
+        /// which is a sort and costs nothing next to loading a file's feature vectors and
+        /// re-running the dot product - and recomputing keeps a resumed file byte-identical to a
+        /// freshly scored one by construction rather than by trusting two writers to agree.</para>
+        /// </summary>
+        private static double[] TryLoadCompletedScores(
+            Func<string, Action<uint, double>, bool> tryStream, string fileName, int expectedCount)
+        {
+            if (tryStream == null)
+                return null;
+            var scores = new List<double>(expectedCount);
+            if (!tryStream(fileName, (entryId, score) => scores.Add(score)))
+                return null;
+            // A count mismatch means the sidecar and the parquet disagree about how many rows
+            // this file has, which no validity key can catch - so refuse the shortcut and score
+            // it rather than emit a silently misaligned file.
+            return scores.Count == expectedCount ? scores.ToArray() : null;
+        }
+
+        /// <summary>
         /// 1st-pass-ONLY streaming Percolator that holds NO resident row buffer at all (issue
         /// #4355 struct-shrink S3, Stage B -- the FLAT-memory win): the memory-collapsing fork of
         /// <see cref="PercolatorEngine.RunStreamingIntoProjection"/> +
@@ -597,29 +620,6 @@ namespace pwiz.Osprey.FDR
         /// <paramref name="loadFileFeatures"/> loads one file's feature vectors, indexed by the
         /// running parquet row ordinal. Returns <c>true</c> on a diagnostic-only train abort.
         /// </summary>
-        /// <summary>
-        /// A file's already-computed scores, in parquet row order, or null when the caller has
-        /// nothing on disk for it.
-        ///
-        /// <para>Only the SCORE is taken from disk. The run q-values are recomputed from it,
-        /// which is a sort and costs nothing next to loading a file's feature vectors and
-        /// re-running the dot product - and recomputing keeps a resumed file byte-identical to a
-        /// freshly scored one by construction rather than by trusting two writers to agree.</para>
-        /// </summary>
-        private static double[] TryLoadCompletedScores(
-            Func<string, Action<uint, double>, bool> tryStream, string fileName, int expectedCount)
-        {
-            if (tryStream == null)
-                return null;
-            var scores = new List<double>(expectedCount);
-            if (!tryStream(fileName, (entryId, score) => scores.Add(score)))
-                return null;
-            // A count mismatch means the sidecar and the parquet disagree about how many rows
-            // this file has, which no validity key can catch - so refuse the shortcut and score
-            // it rather than emit a silently misaligned file.
-            return scores.Count == expectedCount ? scores.ToArray() : null;
-        }
-
         internal static bool RunStreamingFirstPass(
             IReadOnlyList<string> fileNames,
             Action<string, Action<uint, byte, bool, double, string>> streamFileRows,

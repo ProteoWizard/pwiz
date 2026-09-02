@@ -1368,6 +1368,12 @@ function Invoke-HpcChain {
         # the GBDT golden, so guard with Test-Path.
         $ph2model = Join-Path $ph2 "$s.1st-pass.model.json"
         if (Test-Path $ph2model) { Copy-Item $ph2model (Join-Path $ph3 "$s.1st-pass.model.json") }
+        # The protein-compact stratum is a SECOND artifact, not a field of the model sidecar:
+        # first-pass protein FDR computes it and training does not, so it is written when that
+        # later phase ends. It therefore needs its own hop on the same relay. Present only
+        # under OSPREY_PASS2_QVALUE=protein-compact, so guard with Test-Path.
+        $ph2stratum = Join-Path $ph2 "$s.1st-pass.stratum.json"
+        if (Test-Path $ph2stratum) { Copy-Item $ph2stratum (Join-Path $ph3 "$s.1st-pass.stratum.json") }
         # The analysis-wide EXPERIMENT-scope sidecar (format v5, issue #4486) rides the same
         # relay. It is a RUN-level file, not per-stem - one record per distinct entry_id for the
         # whole analysis - but it is copied inside this per-stem loop because each stem gets its
@@ -1453,9 +1459,12 @@ function Invoke-HpcChain {
         # modes (transfer / transfer-compete / protein-compact) without re-training. Written
         # by the FirstPassFDR join node (phase 2) and relayed into $ph3 above ($ph2 is already
         # deleted by now). Present for the SVM/percolator framework, so guard with Test-Path.
-        # protein-compact's stratum rides inside this same sidecar, so it needs no second hop.
+        # protein-compact's stratum is its own artifact (protein FDR computes it, training does
+        # not), so it takes the same second hop rather than riding inside the model sidecar.
         $modelSide = Join-Path $ph3 "$s.1st-pass.model.json"
         if (Test-Path $modelSide) { Copy-Item $modelSide (Join-Path $ph4 "$s.1st-pass.model.json") }
+        $stratumSide = Join-Path $ph3 "$s.1st-pass.stratum.json"
+        if (Test-Path $stratumSide) { Copy-Item $stratumSide (Join-Path $ph4 "$s.1st-pass.stratum.json") }
         # The per-run 2nd-pass sidecar is now an INPUT to phase 4, not its output (#4486): the
         # per-file half of the second pass runs in PerFileRescoring, so phase 3 produces this
         # file and phase 4 folds it. Its VALIDITY STAMP travels with it, because that stamp is
