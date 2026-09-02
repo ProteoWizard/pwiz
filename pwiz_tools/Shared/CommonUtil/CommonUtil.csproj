@@ -186,7 +186,6 @@
       <DependentUpon>Images.resx</DependentUpon>
     </Compile>
     <Compile Include="GUI\MessageIcons.cs" />
-    <Compile Include="Mock\HttpMessageHandlerFactory.cs" />
     <Compile Include="SystemUtil\Assume.cs" />
     <Compile Include="SystemUtil\Caching\ProductionFacility.cs" />
     <Compile Include="SystemUtil\Caching\Production.cs" />
@@ -197,6 +196,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="SystemUtil\CommonTextUtil.cs" />
+    <Compile Include="SystemUtil\IExplainDiff.cs" />
     <Compile Include="SystemUtil\FileLockingProcessFinder.cs" />
     <Compile Include="SystemUtil\FilteredUserMessageWriter.cs" />
     <Compile Include="SystemUtil\PInvoke\Advapi32.cs" />

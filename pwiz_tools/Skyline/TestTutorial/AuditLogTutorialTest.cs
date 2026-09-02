@@ -44,6 +44,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -300,6 +301,10 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<AuditLogForm>("Audit Log form with grid changes");
 
             ShowLastExtraInfo("Extra Info for the analyte data import.");
+            // Read the row count while the form is still open. Close() sets SkylineWindow's
+            // AuditLogForm to null synchronously, so reading it afterwards yields 0 and the wait
+            // further down degrades to "any rows at all", which is already true.
+            var auditRowsBefore = CallUI(() => SkylineWindow.AuditLogForm.DataGridView.Rows.Count);
             RunUI(SkylineWindow.AuditLogForm.Close);
 
             const string unknownReplicate = "FOXN1-GST";
@@ -311,7 +316,13 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("Heavy precursor chromatogram");
 
-            RunUI(()=>
+            // Build the change BEFORE opening the document-change scope. WaitDocumentChange waits in
+            // Dispose, so an assertion failing inside the using would unwind through a three-minute
+            // wait for a change that is never coming, and that timeout would replace the real
+            // failure - burying exactly the diagnosis these asserts exist to give.
+            GraphChromatogram graphChromHeavy = null;
+            List<ChangedPeakBoundsEventArgs> listChanges = null;
+            RunUI(() =>
             {
                 var pathHeavy = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, 1);
 
@@ -324,7 +335,8 @@ namespace pwiz.SkylineTestTutorial
                 var firstChromItem = graphChrom.GraphItems.FirstOrDefault(gci => gci.TransitionChromInfo != null);
                 Assert.IsNotNull(firstChromItem, "Missing graph item");
 
-                var listChanges = new List<ChangedPeakBoundsEventArgs>
+                graphChromHeavy = graphChrom;
+                listChanges = new List<ChangedPeakBoundsEventArgs>
                 {
                     new ChangedPeakBoundsEventArgs(pathHeavy,
                         null,
@@ -335,11 +347,21 @@ namespace pwiz.SkylineTestTutorial
                         PeakIdentification.FALSE,
                         PeakBoundsChangeType.both)
                 };
-                graphChrom.SimulateChangedPeakBounds(listChanges);
             });
 
+            // Wait for the document this produces before moving on. Without it the peak bounds
+            // change and the calibration exclusion further down could be written to the audit log
+            // in either order, and the log is compared line by line - the entries swapped places
+            // roughly one run in five. Every other document change in this test already does this.
+            using (new WaitDocumentChange())
+            {
+                RunUI(() => graphChromHeavy.SimulateChangedPeakBounds(listChanges));
+            }
+
             ShowAndPositionAuditLog(true, 50, 200);
-            WaitForConditionUI(500, () => SkylineWindow.AuditLogForm.DataGridView.Rows.Count > 0);
+            // Not "any rows": the audit log form has been shown three times before this and is
+            // already full, so that condition was true before the change above was even made.
+            WaitForConditionUI(() => SkylineWindow.AuditLogForm.DataGridView.Rows.Count > auditRowsBefore);
 
             PauseForScreenShot<AuditLogForm>("Audit Log form with changed integration boundary.");
             int reasonIndex = 2;
@@ -409,11 +431,30 @@ namespace pwiz.SkylineTestTutorial
 //                    SkylineWindow.AuditLogForm.DataGridView.Rows[i].Cells[reasonIndex].Selected = true;
 //            });
 //            RunUI(() => SkylineWindow.AuditLogForm.DataboundGridControl.FillDown());
-            RunUI(() =>
+            // The audit log grid is filled by a background query, so its rows can still describe
+            // the document as it was before the four exclusions above. A row holds the
+            // AuditLogEntry it was built from and writes the Reason back to that entry by
+            // LogIndex, so editing a stale row 0 puts the reason on the peak-bounds entry instead
+            // of the Standard_8 exclusion. That surfaced only as two swapped "Reason Changed"
+            // entries in the recorded audit log - an identical diff every time, at 1 in 240
+            // executions. Wait for each row to hold the entry it is meant to edit, and name the
+            // entry actually found there if it never does.
+            var logIndexesToEdit = CallUI(() => SkylineWindow.Document.AuditLog.AuditLogEntries
+                .Enumerate().Take(4).Select(entry => entry.LogIndex).ToArray());
+            for (int i = 0; i < 4; i++)
             {
-                for (int i = 0; i < 4; i++)
-                    SetCellValue(SkylineWindow.AuditLogForm.DataGridView, i, reasonIndex, "Excluded standard below LOD");
-            });
+                int row = i;
+                WaitForConditionUI(() => GetAuditLogRowLogIndex(row) == logIndexesToEdit[row],
+                    () => string.Format("Audit log grid row {0} holds entry {1}, expected entry {2}",
+                        row, GetAuditLogRowLogIndex(row), logIndexesToEdit[row]));
+                // Setting a Reason modifies the document. Wait for each one so the next row is
+                // read from a grid that has caught up with the edit before it.
+                using (new WaitDocumentChange())
+                {
+                    RunUI(() => SetCellValue(SkylineWindow.AuditLogForm.DataGridView, row, reasonIndex,
+                        "Excluded standard below LOD"));
+                }
+            }
             RunUI(() =>
             {
                 SkylineWindow.AuditLogForm.ChooseView(AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo);
@@ -660,6 +701,27 @@ namespace pwiz.SkylineTestTutorial
             catch (Exception e)
             {
                 AssertEx.Fail("Error creating Panorama test folder. {0}", e.Message);
+            }
+        }
+
+        /// <summary>
+        /// The LogIndex of the audit log entry the given audit log grid row was built from, or -1
+        /// if the grid does not have that row yet. Rows are built by a background query, so this
+        /// can lag the document.
+        /// </summary>
+        private static int GetAuditLogRowLogIndex(int row)
+        {
+            var bindingListSource = SkylineWindow.AuditLogForm.BindingListSource;
+            if (row >= bindingListSource.Count)
+                return -1;
+            switch ((bindingListSource[row] as RowItem)?.Value)
+            {
+                case AuditLogRow logRow:
+                    return logRow.Entry.LogIndex;
+                case AuditLogDetailRow detailRow:
+                    return detailRow.AuditLogRow.Entry.LogIndex;
+                default:
+                    return -1;
             }
         }
     }

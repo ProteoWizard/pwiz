@@ -1,5 +1,6 @@
 /*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
+ * AI assistance: Claude Code (Claude Fable 5) <noreply .at. anthropic.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
  *
@@ -18,16 +19,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Globalization;
-using System.Net.Http;
+using System.Net;
 using System.Security.Authentication;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using IdentityModel.Client;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
-using pwiz.Common;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.CommonMsData.RemoteApi.WatersConnect
@@ -68,8 +69,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
     [XmlRoot("waters_connect_account")]
     public class WatersConnectAccount : RemoteAccount
     {
-        public static readonly string HANDLER_NAME = @"WatersConnect.Handler.Main";
-        public static readonly string AUTH_HANDLER_NAME = @"WatersConnect.Handler.Authentication";
         public static readonly string TOKEN_DATA = @"token";
         public static readonly string GET_FOLDERS = @"/waters_connect/v2.0/folders";
 
@@ -80,7 +79,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         }
 
         public static readonly Dictionary<WatersConnectAccount, TokenCacheEntry> _authenticationTokens = new Dictionary<WatersConnectAccount, TokenCacheEntry>();
-        public static IHttpClientFactory _httpClientFactory;
 
         public static readonly WatersConnectAccount DEFAULT
             = new WatersConnectAccount(@"https://localhost:48444", string.Empty, string.Empty)
@@ -98,21 +96,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 ClientSecret = @"secret",
                 ClientId = @"resourceownerclient_jwt"
             };
-
-        static WatersConnectAccount()
-        {
-            var services = new ServiceCollection();
-            var builder = services.AddHttpClient(@"customClient");
-            builder.ConfigurePrimaryHttpMessageHandler(() =>
-                // Get mock handler for testing purposes.
-                CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(
-                    HANDLER_NAME,
-                    () => new WebRequestHandler()
-                        { UnsafeAuthenticatedConnectionSharing = true, PreAuthenticate = true })
-            );
-            var provider = services.BuildServiceProvider();
-            _httpClientFactory = provider.GetService<IHttpClientFactory>();
-        }
 
         public WatersConnectAccount(string serverUrl, string username, string password)
         {
@@ -226,14 +209,14 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             {
                 return tokenCacheEntry.TokenResponse;
             }
-            // Get mock handler for testing purposes.
-            var authHandler = CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(AUTH_HANDLER_NAME, () => new HttpClientHandler());
-            var tokenClient = new TokenClient(IdentityServer + IdentityConnectEndpoint, ClientId,
-                ClientSecret, authHandler);
             // Try to refresh the token if we have an expired one
             if (_authenticationTokens.TryGetValue(this, out var expiredTokenCacheEntry))
             {
-                var refreshedToken = tokenClient.RequestRefreshTokenAsync(expiredTokenCacheEntry.TokenResponse.RefreshToken).Result;
+                var refreshedToken = RequestToken(new NameValueCollection
+                {
+                    [@"grant_type"] = @"refresh_token",
+                    [@"refresh_token"] = expiredTokenCacheEntry.TokenResponse.RefreshToken
+                });
                 if (!refreshedToken.IsError)
                 {
                     // If the refresh token worked, update the cache with the new token
@@ -243,7 +226,13 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 }
             }
             // Otherwise, request a new token using the username and password
-            var newToken = tokenClient.RequestResourceOwnerPasswordAsync(Username, Password, ClientScope).Result;
+            var newToken = RequestToken(new NameValueCollection
+            {
+                [@"grant_type"] = @"password",
+                [@"username"] = Username,
+                [@"password"] = Password,
+                [@"scope"] = ClientScope
+            });
             if (newToken.IsError)
             {
                 AuthenticationException ex;
@@ -259,6 +248,50 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             _authenticationTokens[this] = new TokenCacheEntry()
                 { TokenResponse = newToken, ExpirationDateTime = DateTime.UtcNow.AddSeconds(newToken.ExpiresIn) };
             return newToken;
+        }
+
+        /// <summary>
+        /// POSTs a token request to the identity server and returns the parsed response. Client
+        /// credentials go in an HTTP Basic authorization header with each half URL-escaped per
+        /// RFC 6749 section 2.3.1, matching the wire format of the IdentityModel TokenClient this
+        /// replaced. Every failure is returned as an error <see cref="TokenResponse"/> - the same
+        /// contract TokenClient had - so callers route all failures through the
+        /// authentication-error path: a 400 is an OAuth protocol error whose JSON body carries
+        /// error/error_description; any other HTTP failure becomes an HTTP-error response (IsError
+        /// true even when the body is a proxy's HTML page); a transport or URL-format exception
+        /// becomes an exception-type response.
+        /// </summary>
+        private TokenResponse RequestToken(NameValueCollection form)
+        {
+            try
+            {
+                var requestUri = new Uri(IdentityServer + IdentityConnectEndpoint);
+                using var httpClient = new HttpClientWithProgress();
+                httpClient.AddAuthorizationHeader(@"Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(
+                    EscapeClientCredential(ClientId) + @":" + EscapeClientCredential(ClientSecret))));
+                httpClient.AddHeader(@"Accept", @"application/json");
+                var raw = Encoding.UTF8.GetString(httpClient.UploadValues(requestUri, @"POST", form));
+                return new TokenResponse(raw);
+            }
+            catch (NetworkRequestException ex)
+            {
+                if (ex.StatusCode == HttpStatusCode.BadRequest && !string.IsNullOrEmpty(ex.ResponseBody))
+                    return new TokenResponse(ex.ResponseBody);
+                return new TokenResponse(ex.StatusCode ?? HttpStatusCode.ServiceUnavailable, ex.Message, ex.ResponseBody);
+            }
+            catch (Exception ex)
+            {
+                return new TokenResponse(ex);
+            }
+        }
+
+        /// <summary>
+        /// RFC 6749 section 2.3.1: client_id and client_secret are form-urlencoded before being
+        /// combined into the Basic authorization credential.
+        /// </summary>
+        private static string EscapeClientCredential(string value)
+        {
+            return Uri.EscapeDataString(value ?? string.Empty).Replace(@"%20", @"+");
         }
 
         public static AuthenticationErrorType HandleAuthenticationException(AuthenticationException ex, out string message)
@@ -303,43 +336,18 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             }
         }
 
-        /*public IEnumerable<WatersConnectFolderObject> GetFolders()
-        {
-            var httpClient = GetAuthenticatedHttpClient();
-            var response = httpClient.GetAsync(GetFoldersUrl()).Result;
-            string responseBody = response.Content.ReadAsStringAsync().Result;
-            var jsonObject = JObject.Parse(responseBody);
-
-            var foldersValue = jsonObject[@"value"] as JArray;
-            if (foldersValue == null)
-            {
-                return new WatersConnectFolderObject[0];
-            }
-            return foldersValue.OfType<JObject>().Select(f => new WatersConnectFolderObject(f));
-        }
-
-        public IEnumerable<WatersConnectFileObject> GetFiles(WatersConnectFolderObject folder)
-        {
-            var httpClient = GetAuthenticatedHttpClient();
-            string url = string.Format(@"/waters_connect/v2.0/sample-sets?folderId={0}", folder.Id);
-            var response = httpClient.GetAsync(ServerUrl + url).Result;
-            string responseBody = response.Content.ReadAsStringAsync().Result;
-            var jsonObject = JObject.Parse(responseBody);
-            var itemsValue = jsonObject[@"value"] as JArray;
-            if (itemsValue == null)
-            {
-                return new WatersConnectFileObject[0];
-            }
-            return itemsValue.OfType<JObject>().Select(f => new WatersConnectFileObject(f));
-        }*/
-
-        public HttpClient GetAuthenticatedHttpClient()
+        /// <summary>
+        /// Creates an <see cref="HttpClientWithProgress"/> carrying this account's bearer token,
+        /// authenticating first if no valid token is cached. Waits are bounded by
+        /// <see cref="HttpClientWithProgress.ResponseTimeoutMilliseconds"/>, which replaced the
+        /// 100-second default the removed IHttpClientFactory clients had, so a black-holed
+        /// connection surfaces as a timeout instead of hanging the UI thread indefinitely.
+        /// </summary>
+        public HttpClientWithProgress CreateAuthenticatedClient()
         {
             var tokenResponse = Authenticate();
-            var httpClient = _httpClientFactory.CreateClient(@"customClient");
-            httpClient.SetBearerToken(tokenResponse.AccessToken);
-            //httpClient.DefaultRequestHeaders.Remove(@"Accept");
-            //httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");
+            var httpClient = new HttpClientWithProgress();
+            httpClient.AddAuthorizationHeader(@"Bearer " + tokenResponse.AccessToken);
             return httpClient;
         }
 

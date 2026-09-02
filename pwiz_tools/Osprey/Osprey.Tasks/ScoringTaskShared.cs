@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -172,6 +172,20 @@ namespace pwiz.Osprey.Tasks
             // parsed list. The "Processing file N/M: <path>" banner already named the file.
             // SpectrumFileReader picks the mzML or vendor-raw reader by extension; both
             // return the same MzmlResult, so nothing below here knows the source format.
+            // Deleting the sources once the caches exist is supported, so reaching a re-parse
+            // with no source is a real state, not a bad argument. Say which of the two is
+            // wrong - the cache, and why - rather than failing inside the reader on a path
+            // that is not there.
+            // TODO: name WHY the cache was rejected - a version bump reads very differently
+            // from a truncated body. The reader returns a bare bool from every rejection path,
+            // so the reason has to be captured by the validity check itself and carried out;
+            // re-deriving it here would duplicate that logic and drift from it.
+            if (!File.Exists(inputFile) && !Directory.Exists(inputFile))
+            {
+                throw new InvalidDataException(string.Format(
+                    @"Spectra cache '{0}' is not usable and cannot be rebuilt because the source '{1}' is missing. Restore the source and re-run.",
+                    cachePath, inputFile));
+            }
             MzmlResult mzmlResult;
             if (serializeMzmlRead)
                 s_mzmlReadGate.Wait();
@@ -310,6 +324,29 @@ namespace pwiz.Osprey.Tasks
                     passing++;
             }
             tally.PassingTargets = passing;
+        }
+
+        /// <summary>
+        /// A path from this analysis that resolves to the directory its per-file artifacts go
+        /// to, for naming the analysis-wide experiment-scope FDR sidecar
+        /// (<see cref="FdrExperimentSidecar.PathFor"/>).
+        ///
+        /// <para>Prefers <c>InputScores</c> over <c>InputFiles</c> because a distributed
+        /// <c>--task</c> node is given its inputs as scores parquets and may have no mzML list
+        /// at all; both resolve to the same directory, since the parquets are written beside the
+        /// inputs. What matters is only that every phase of one analysis picks a path that
+        /// resolves the SAME way - the blib's own directory does not, which is the bug this
+        /// exists to avoid.</para>
+        /// </summary>
+        internal static string ArtifactSiblingPath(OspreyConfig config)
+        {
+            if (config == null)
+                return null;
+            if (config.InputScores != null && config.InputScores.Count > 0)
+                return config.InputScores[0];
+            if (config.InputFiles != null && config.InputFiles.Count > 0)
+                return config.InputFiles[0];
+            return null;
         }
 
         /// <summary>

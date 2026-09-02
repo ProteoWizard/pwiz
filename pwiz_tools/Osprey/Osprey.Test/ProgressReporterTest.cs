@@ -36,7 +36,7 @@ namespace pwiz.Osprey.Test
     /// advancing slower than 1% per <see cref="ProgressReporter.HEARTBEAT_SECONDS"/> must
     /// still emit a line so it never looks hung, while a normally-advancing phase must not
     /// gain heartbeat clutter. The heartbeat interval is injected small/large so the
-    /// timer-driven behavior is deterministic without a real 30 s wait.
+    /// timer-driven behavior is deterministic without a real heartbeat-length wait.
     /// </summary>
     [TestClass]
     public class ProgressReporterTest

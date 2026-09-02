@@ -427,42 +427,61 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // users actually receive.
             bool anyDistinctApexRt = false;
             double firstApexRt = double.NaN;
-            for (int f = 0; f < perFileEntries.Count; f++)
+            // OSPREY_DUMP_COASSIGN_ROWS (unset in every ordinary run): the panel's own input,
+            // one row per pool observation, written from inside the walk that consumes it. The
+            // counts this panel reports are a reduction over exactly these rows, so an A/B that
+            // moves a count is answered here and nowhere upstream.
+            using (var rowDump = FdrDiagnostics.CreateCoAssignRowDump(pass))
             {
-                foreach (var e in perFileEntries[f].Value)
+                for (int f = 0; f < perFileEntries.Count; f++)
                 {
-                    double runQ = e.EffectiveRunQvalue(fdrLevel);
-                    double expQ = e.EffectiveExperimentQvalue(fdrLevel);
-                    int wc = 0, woc = 0;
-                    var cls = Classify(e.IsDecoy, e.EntryId & BASE_ID_MASK, classByBaseId,
-                        haveManifest, ref wc, ref woc);
-                    // Gate BEFORE building the row: the key is a fresh string per row, and pass 1
-                    // hands this method the whole pre-compaction pool.
-                    if (!builder.Includes(f, cls, e.EntryId, runQ, expQ, runFdr))
-                        continue;
-                    double mz = precursorMzByEntryId(e.EntryId);
-                    if (double.IsNaN(mz) || mz <= 0)
-                        continue;
-                    anyMz = true;
-                    if (!anyDistinctApexRt)
+                    foreach (var e in perFileEntries[f].Value)
                     {
-                        if (double.IsNaN(firstApexRt))
-                            firstApexRt = e.ApexRt;
-                        else if (e.ApexRt != firstApexRt)
-                            anyDistinctApexRt = true;
+                        double runQ = e.EffectiveRunQvalue(fdrLevel);
+                        double expQ = e.EffectiveExperimentQvalue(fdrLevel);
+                        int wc = 0, woc = 0;
+                        var cls = Classify(e.IsDecoy, e.EntryId & BASE_ID_MASK, classByBaseId,
+                            haveManifest, ref wc, ref woc);
+                        // Gate BEFORE building the row: the key is a fresh string per row, and pass 1
+                        // hands this method the whole pre-compaction pool.
+                        bool included = builder.Includes(f, cls, e.EntryId, runQ, expQ, runFdr);
+                        // Dumped for EVERY row, including the excluded ones. An entry that stopped
+                        // being counted and one that never was are the same absence in the panel's
+                        // output and different rows here, which is the distinction the A/B needs.
+                        rowDump?.WriteRow(f, perFileEntries[f].Key, e.EntryId, e.EntryId & BASE_ID_MASK,
+                            e.IsDecoy, cls.ToString(), e.Score, e.ExperimentAggregateScore,
+                            runQ, expQ, e.ApexRt, e.Charge, included, e.ModifiedSequence);
+                        if (!included)
+                            continue;
+                        double mz = precursorMzByEntryId(e.EntryId);
+                        if (double.IsNaN(mz) || mz <= 0)
+                            continue;
+                        anyMz = true;
+                        if (!anyDistinctApexRt)
+                        {
+                            if (double.IsNaN(firstApexRt))
+                                firstApexRt = e.ApexRt;
+                            else if (e.ApexRt != firstApexRt)
+                                anyDistinctApexRt = true;
+                        }
+                        // Tag decoy keys. A decoy carries its target's modified sequence, so an
+                        // untagged decoy key equals its target's and the precursor registry merges
+                        // the two, dropping the decoy. Same rule as the pass-1 source builds.
+                        string key = e.IsDecoy
+                            ? e.ModifiedSequence + "|" + e.Charge + "|decoy"
+                            : e.ModifiedSequence + "|" + e.Charge;
+                        builder.AddRow(f,
+                            new CoAssignmentRow(key, e.EntryId,
+                                e.ModifiedSequence, e.Charge, mz, e.ApexRt, e.Score, cls),
+                            runQ, expQ, runFdr);
                     }
-                    // Tag decoy keys. A decoy carries its target's modified sequence, so an
-                    // untagged decoy key equals its target's and the precursor registry merges
-                    // the two, dropping the decoy. Same rule as the pass-1 source builds.
-                    string key = e.IsDecoy
-                        ? e.ModifiedSequence + "|" + e.Charge + "|decoy"
-                        : e.ModifiedSequence + "|" + e.Charge;
-                    builder.AddRow(f,
-                        new CoAssignmentRow(key, e.EntryId,
-                            e.ModifiedSequence, e.Charge, mz, e.ApexRt, e.Score, cls),
-                        runQ, expQ, runFdr);
+                    builder.FlushFile();
                 }
-                builder.FlushFile();
+                // The boundaries every per-row verdict above was compared against. Written from
+                // the builder rather than recomputed, for the same reason the verdict is.
+                rowDump?.WriteCutoffs(builder.RunCutoff, runNames, builder.ExperimentCutoff,
+                    builder.ExperimentCutoffInStratum, builder.ExperimentCutoffOffStratum,
+                    builder.AcceptedInStratum, builder.AcceptedOffStratum);
             }
             // Refuse rather than report. A single apex RT shared by every row means the column
             // was absent or unreadable, and the panel would otherwise publish ~100% co-assignment

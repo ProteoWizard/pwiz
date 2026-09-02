@@ -129,11 +129,13 @@ namespace pwiz.Osprey.Test
                 EntryId = 10, ModifiedSequence = "PEPTIDEK", Charge = 2, ScanNumber = 100,
                 IsDecoy = false, CoelutionSum = 7.0, ParquetIndex = 5, Features = full
             };
-            // Appended entry (e.g. Stage 6 gap-fill): no original parquet row.
+            // Appended entry (e.g. Stage 6 gap-fill): no original parquet row, so a
+            // null ParquetIndex. PercolatorEntry keeps a local uint sentinel, so the
+            // builder is the one documented place the null becomes uint.MaxValue.
             var appended = new FdrEntry
             {
                 EntryId = 11, ModifiedSequence = "DECOYR", Charge = 3, ScanNumber = 200,
-                IsDecoy = true, CoelutionSum = 4.0, ParquetIndex = uint.MaxValue, Features = null
+                IsDecoy = true, CoelutionSum = 4.0, ParquetIndex = null, Features = null
             };
 
             var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>

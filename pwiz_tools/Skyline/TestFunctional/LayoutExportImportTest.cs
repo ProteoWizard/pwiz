@@ -216,7 +216,10 @@ namespace pwiz.SkylineTestFunctional
         {
             RunLongNativeDlg<NativeSaveFileDialog>(SkylineWindow.ShowExportLayoutDlg, dlg =>
             {
-                Assert.AreEqual(Path.GetFileName(SkylineWindow.GetViewFile(documentPath)), GetFileNameText(dlg));
+                string fileName = null;
+                WaitForConditionUI(() => null != (fileName =
+                    dlg.EnumerateChildren().OfType<NativeTextBox>().FirstOrDefault()?.GetValueNow() as string));
+                Assert.AreEqual(Path.GetFileName(SkylineWindow.GetViewFile(documentPath)), fileName);
                 // Captioned with the command, not the shell's generic "Save As"
                 Assert.AreEqual(SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout, dlg.Title);
                 dlg.DismissWithCancelButton();
@@ -275,17 +278,6 @@ namespace pwiz.SkylineTestFunctional
                 dlg.EnterPath(layoutPath);
                 dlg.Accept();
             });
-        }
-
-        /// <summary>
-        /// The text in the file dialog's file-name box, which the dialog presents under the label
-        /// <see cref="NativeFileDialog.FILE_NAME_FIELD"/>.
-        /// </summary>
-        private static string GetFileNameText(NativeFileDialog dlg)
-        {
-            return (string) dlg.EnumerateChildren()
-                .First(child => Equals(child.Label, NativeFileDialog.FILE_NAME_FIELD))
-                .GetValueNow();
         }
     }
 }

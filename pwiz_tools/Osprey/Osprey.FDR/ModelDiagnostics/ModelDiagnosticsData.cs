@@ -526,7 +526,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// <param name="fdrLevel">
         /// The FDR control level the run was reported at (Precursor / Peptide / Both).
         /// Decides which run-level q gates the "passing" set (via
-        /// <see cref="FdrEntry.EffectiveRunQvalue"/>), so the per-file and cross-run
+        /// <see cref="FdrRowExtensions.EffectiveRunQvalue{T}"/>), so the per-file and cross-run
         /// counts match what the pipeline actually reported -- not a hardcoded scope.
         /// </param>
         /// <param name="precursorMzByEntryId">

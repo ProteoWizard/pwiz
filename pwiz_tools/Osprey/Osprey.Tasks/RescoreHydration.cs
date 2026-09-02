@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -48,7 +48,7 @@ namespace pwiz.Osprey.Tasks
         /// + PEP + <c>ExperimentProteinQvalue</c> overlaid from the
         /// <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c> sidecar. File order
         /// matches the order of <c>parquetPaths</c> passed to
-        /// <see cref="RescoreHydration.HydrateForRescore"/>.
+        /// <see cref="RescoreHydration.HydrateReconciliationOverlay"/>.
         /// </summary>
         public List<KeyValuePair<string, List<FdrEntry>>> PerFileEntries { get; set; }
 
@@ -244,62 +244,6 @@ namespace pwiz.Osprey.Tasks
     public static class RescoreHydration
     {
         /// <summary>
-        /// Read each <c>&lt;stem&gt;.scores.parquet</c> in
-        /// <paramref name="parquetPaths"/>, overlay the matching
-        /// <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c> sidecar (v3 format,
-        /// pass = FirstPass), and parse the matching
-        /// <c>&lt;stem&gt;.reconciliation.json</c> envelope into the
-        /// per-file action map + refined calibration + gap-fill list.
-        ///
-        /// File names are extracted from the parquet stem with the
-        /// <c>.scores</c> suffix stripped, mirroring Rust's
-        /// <c>synthetic_input_from_parquet</c>. The output preserves the
-        /// input ordering.
-        ///
-        /// Throws <see cref="InvalidDataException"/> on any per-file boundary
-        /// file that is missing, unreadable, or fails its format-version /
-        /// count checks. Does not silently fall back to partial state — a
-        /// Stage 6 worker that proceeded with one file's planner output
-        /// missing would scramble gap-fill results across files.
-        /// </summary>
-        public static RescoreInputs HydrateForRescore(IList<string> parquetPaths)
-        {
-            if (parquetPaths == null) throw new ArgumentNullException(nameof(parquetPaths));
-            if (parquetPaths.Count == 0)
-                throw new InvalidDataException("HydrateForRescore: parquetPaths is empty");
-
-            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>(parquetPaths.Count);
-            foreach (var parquetPath in parquetPaths)
-            {
-                string syntheticInput = SyntheticInputFromParquet(parquetPath);
-                string fileName = Path.GetFileNameWithoutExtension(syntheticInput);
-                if (string.IsNullOrEmpty(fileName))
-                {
-                    throw new InvalidDataException(string.Format(
-                        "HydrateForRescore: could not derive file_name from parquet path {0}",
-                        parquetPath));
-                }
-
-                // Stubs from parquet (entry_id, charge, modseq, RTs,
-                // parquet_index assigned by LoadFdrStubsFromParquet).
-                List<FdrEntry> stubs;
-                try
-                {
-                    stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidDataException(string.Format(
-                        "HydrateForRescore: failed to load stubs from {0}: {1}",
-                        parquetPath, ex.Message), ex);
-                }
-                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
-            }
-
-            return HydrateReconciliationOverlay(perFileEntries, parquetPaths);
-        }
-
-        /// <summary>
         /// Overlay the per-file 1st-pass FDR sidecars and parse the per-file
         /// <c>reconciliation.json</c> envelopes onto an already-loaded
         /// <paramref name="perFileEntries"/> list. The per-file element at
@@ -308,11 +252,10 @@ namespace pwiz.Osprey.Tasks
         /// fileName key is rederived from the parquet path for the sidecar
         /// path computation.
         ///
-        /// Used by both the worker-mode <see cref="HydrateForRescore"/>
-        /// wrapper (which loads stubs first) and the in-pipeline joinOnly
-        /// dispatch (which already has stubs loaded with PIN features +
-        /// calibration siblings, and just needs the rescore overlay added
-        /// to share state with FirstPassFDR / PerFileRescore).
+        /// Used by the in-pipeline joinOnly dispatch, which already has stubs
+        /// loaded with PIN features + calibration siblings and just needs the
+        /// rescore overlay added to share state with FirstPassFDR /
+        /// PerFileRescore.
         ///
         /// The returned <see cref="RescoreInputs"/> references the SAME
         /// <see cref="FdrEntry"/> list objects passed in
@@ -323,7 +266,9 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public static RescoreInputs HydrateReconciliationOverlay(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IList<string> parquetPaths)
+            IList<string> parquetPaths,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            LibraryStringInterner sequencePool = null)
         {
             if (perFileEntries == null) throw new ArgumentNullException(nameof(perFileEntries));
             if (parquetPaths == null) throw new ArgumentNullException(nameof(parquetPaths));
@@ -344,7 +289,8 @@ namespace pwiz.Osprey.Tasks
             // Per-file progress. This loop reads a sidecar + a reconciliation envelope for
             // every file and was silent throughout: on a 20-file resume it produced a 35 s
             // gap in the log, the kind that reads as a hang. ProgressReporter also emits a
-            // HEARTBEAT_SECONDS (30 s) tick, so one slow file cannot reopen the gap.
+            // HEARTBEAT_SECONDS tick. That bounds the gap only while Report keeps being
+            // called - it fires from inside Report - so a single slow file still reopens it.
             using (var hydrateProgress = new ProgressReporter(
                        @"Hydrating reconciliation bundle", perFileEntries.Count))
             {
@@ -357,7 +303,7 @@ namespace pwiz.Osprey.Tasks
                     var stubs = perFileEntries[i].Value;
 
                     OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
-                        nameof(HydrateReconciliationOverlay));
+                        nameof(HydrateReconciliationOverlay), experimentRecords);
 
                     string reconPath = ReconciliationFile.PathForInput(syntheticInput);
                     var envelope = LoadEnvelope(reconPath, nameof(HydrateReconciliationOverlay));
@@ -372,7 +318,8 @@ namespace pwiz.Osprey.Tasks
 
                     MapPlannedActions(PlanActions(envelope), fileName, reconPath, idToIdx,
                         reconciliationActions, nameof(HydrateReconciliationOverlay));
-                    CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill);
+                    CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
+                        sequencePool);
                 }
                 hydrateProgress.Report(perFileEntries.Count);
             }
@@ -433,7 +380,9 @@ namespace pwiz.Osprey.Tasks
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IList<string> parquetPaths,
             Func<int, string, string, List<FdrEntry>> loadStubs,
-            Action<int, string, List<FdrEntry>, PreCompactionTally> onStubsHydrated)
+            Action<int, string, List<FdrEntry>, PreCompactionTally> onStubsHydrated,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            LibraryStringInterner sequencePool = null)
         {
             if (perFileEntries == null)
                 throw new ArgumentNullException(nameof(perFileEntries));
@@ -500,7 +449,8 @@ namespace pwiz.Osprey.Tasks
                     var planned = PlanActions(envelope);
                     foreach (var action in planned)
                         retainBaseIds.Add(action.EntryId & ScoringTaskShared.BASE_ID_MASK);
-                    CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill);
+                    CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
+                        sequencePool);
 
                     fileNames.Add(fileName);
                     syntheticInputs.Add(syntheticInput);
@@ -520,11 +470,25 @@ namespace pwiz.Osprey.Tasks
                         throw new InvalidDataException(string.Format(
                             "HydrateCompactedStreaming: no stubs loaded for {0}", fileName));
                     }
-                    // The sidecar overlay needs the FULL pre-compaction list: it was written
-                    // pre-compaction and its reader requires the stub list to be a superset of
-                    // its records. Same order as the batch twin - overlay, then compact.
+                    // The 1st-pass sidecar is written over the WHOLE pre-compaction row set,
+                    // but these stubs come from the reconciled parquet, which now holds only
+                    // the Stage 5 survivors (issue #4486) - so most of its records have no
+                    // entry to land on. Any OTHER missing entry_id is still the parquet drift
+                    // the reader rejects. Same order as the batch twin: overlay, then compact.
+                    //
+                    // The predicate states the FILTER, not what happened to load. Asking
+                    // "is this id absent from the stubs I loaded?" is tautological here -
+                    // FdrScoresSidecar.TryRead only consults it after its own stub lookup has
+                    // already missed - so it answered yes to every record and disabled the
+                    // drift check outright rather than narrowing it. A sidecar written from a
+                    // different parquet, a different library build (different entry_id
+                    // assignment) or a different binary would then be accepted record for
+                    // record, every survivor would keep Score = 0.0, and the un-q-gated decoy
+                    // zeros would compete in the picked-protein null. Same shape as
+                    // FirstPassSurvivorLoader's predicate, which asks the survivor test.
                     OverlayFirstPassSidecar(syntheticInputs[i], fileName, stubs,
-                        nameof(HydrateCompactedStreaming));
+                        nameof(HydrateCompactedStreaming), experimentRecords,
+                        id => !retainBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
 
                     // The caller's one look at this file's full pre-compaction pool: it fills
                     // in whatever it used to reduce off the resident all-files pool.
@@ -563,18 +527,42 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Overlay SVM scores + 4 q-values + PEP + ExperimentProteinQvalue from
-        /// <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c> v3 onto <paramref name="stubs"/>.
+        /// Overlay the first-pass FDR statistics onto <paramref name="stubs"/>: the RUN-scope
+        /// SVM score, run q-values and PEP from <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c>,
+        /// and the EXPERIMENT-scope q-values from <paramref name="experimentRecords"/>, which
+        /// the caller read once from the analysis-wide
+        /// <c>&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</c> (format v5, issue #4486).
         /// <c>expected_pass = FirstPass</c>: the planner's actions were computed against
         /// first-pass FDR, and the compaction predicate uses first-pass q-values. The stub
         /// list must be the FULL pre-compaction set - the sidecar was written before
         /// compaction and its reader requires a superset of its records.
+        ///
+        /// <para>Both halves are restored because a hydrated stub has to be indistinguishable
+        /// from the resident one it stands in for. The experiment q-values in particular reach
+        /// the <c>--model-diagnostics</c> report through
+        /// <c>ScoringTaskShared.FeedModelDiagnostics</c>, and that report is compared against a
+        /// committed golden - so a stub rehydrated without them would not fail here, it would
+        /// fail as a wrong number in a report two stages later.</para>
+        ///
+        /// <para><c>expectedAbsent</c> is non-null ONLY for a caller whose list is
+        /// legitimately a subset of that: today just <see cref="HydrateCompactedStreaming"/>,
+        /// which loads from the reconciled parquet, and that parquet now carries only the
+        /// Stage 5 survivors (issue #4486). The batch path stays strict, because a lean list
+        /// THERE means the caller was handed the wrong pool - which is exactly what
+        /// <c>AssertBatchOverlayRejectsLeanStubs</c> pins, and what caught this when the
+        /// tolerance was first applied to both paths at once.</para>
         /// </summary>
         private static void OverlayFirstPassSidecar(
-            string syntheticInput, string fileName, List<FdrEntry> stubs, string context)
+            string syntheticInput, string fileName, List<FdrEntry> stubs, string context,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            Func<uint, bool> expectedAbsent = null)
         {
             string sidecarPath = FdrScoresSidecar.Pass1Path(syntheticInput);
-            if (!FdrScoresSidecar.TryRead(sidecarPath, stubs, FdrScoresSidecar.Pass.FirstPass))
+            // The experiment records go THROUGH the reader, not over the stub list afterwards:
+            // the reader applies them to the entries it binds a record to, which is the set a
+            // by-entry_id loop would wrongly widen to include gap-fill stubs.
+            if (!FdrScoresSidecar.TryRead(sidecarPath, stubs, FdrScoresSidecar.Pass.FirstPass,
+                    expectedAbsent, experimentRecords))
             {
                 throw new InvalidDataException(string.Format(
                     "{0}: failed to overlay .1st-pass.fdr_scores.bin for {1} (expected at {2})",
@@ -598,7 +586,6 @@ namespace pwiz.Osprey.Tasks
                     "{0}: failed to read {1}: {2}", context, reconPath, ex.Message), ex);
             }
         }
-
         /// <summary>
         /// The planner's non-Keep actions for one file, flattened out of the envelope's two
         /// homogeneous arrays in the order the hydrators consume them (<c>use_cwt_peak</c>
@@ -665,12 +652,18 @@ namespace pwiz.Osprey.Tasks
         /// per-file dictionaries. A null <c>refined_rt_calibration</c> (Stage 5 refit failed)
         /// and an empty gap-fill list both leave the file absent, which is how the rescore
         /// engine reads "nothing to do here".
+        ///
+        /// <para>The gap-fill sequences go through <paramref name="sequencePool"/> for the same
+        /// reason the stubs do: Json.NET hands out a fresh string per property, and these
+        /// targets are retained for EVERY file at once (5.5 K - 12.3 K per file, ~2 M at 257
+        /// CHS files). Null pool leaves them as read.</para>
         /// </summary>
         private static void CaptureCalibrationAndGapFill(
             ReconciliationFile envelope,
             string fileName,
             Dictionary<string, RTCalibration> refinedCalibrations,
-            Dictionary<string, List<GapFillTarget>> perFileGapFill)
+            Dictionary<string, List<GapFillTarget>> perFileGapFill,
+            LibraryStringInterner sequencePool)
         {
             if (envelope.RefinedRtCalibration != null)
             {
@@ -692,7 +685,9 @@ namespace pwiz.Osprey.Tasks
                         DecoyEntryId = g.DecoyEntryId,
                         ExpectedRt = g.ExpectedRt,
                         HalfWidth = g.HalfWidth,
-                        ModifiedSequence = g.ModifiedSequence,
+                        ModifiedSequence = sequencePool != null
+                            ? sequencePool.Intern(g.ModifiedSequence)
+                            : g.ModifiedSequence,
                         Charge = g.Charge,
                     });
                 }
