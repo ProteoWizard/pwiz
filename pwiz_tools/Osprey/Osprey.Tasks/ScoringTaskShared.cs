@@ -398,9 +398,36 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static bool CanHydratePerRun(OspreyConfig config)
         {
-            if (config.InputScores == null || config.InputScores.Count == 0)
+            // ADMIT, do not exclude. This listed the tasks to keep OUT and so admitted anything
+            // unlisted - which is how --task ModelDiagnostics ended up routed down the per-run
+            // rescore path and skipped its own regeneration (Astral mode 7: "regeneration
+            // changed nothing at all"). It sets none of NoJoin / StopAfterStage5 /
+            // ExpectReconciledInput, because it is neither a fan-out nor a join; it is a fifth
+            // thing, and an exclusion list cannot know about the fifth thing.
+            //
+            // Naming what is admitted fails CLOSED: a task added later is excluded until someone
+            // decides otherwise, which is the direction a predicate guarding a memory shape
+            // should fail in.
+            if (config.SelectedTask.HasValue && config.SelectedTask != HpcTask.PerFileRescore)
                 return false;
             if (config.StopAfterStage5 || config.ExpectReconciledInput)
+                return false;
+            // --model-diagnostics keeps the OLD path. Its report is folded from the PRE-compaction
+            // rows during the all-runs hydrate, and the per-run hydrate sees those rows only
+            // later, inside the rescore loop - after the point where the report is written. So a
+            // per-run run does not produce a smaller report or a slower one; it produces NONE.
+            //
+            // It did exactly that, unnoticed, on an 86-run plate: exit 0, 86/86 reconciled
+            // parquets, `mdiag=True` on the command line, and no out.model-diagnostics.html at
+            // all. A requested output vanished and nothing failed - which is the shape
+            // "never conditionally write an output artifact" exists to forbid.
+            //
+            // Excluding it trades memory for correctness on an OPT-IN diagnostic mode, which is
+            // the right way round and is the policy ResidentPaths already applied to this mode.
+            // The real fix is to fold the report per run through HydrateOneRun's onStubsHydrated
+            // hook and write it after the loop instead of before it; until then this must not
+            // silently win.
+            if (config.ModelDiagnostics)
                 return false;
             string path = RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
             return !string.IsNullOrEmpty(path) && RetainedBaseIdSidecar.IsCurrentFormat(path);

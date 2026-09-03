@@ -1893,8 +1893,23 @@ foreach ($name in $selected) {
         # Which PATH the phase-3 workers took, before comparing what they produced. One marker
         # per worker log; every phase-3 node must show it, because a single node quietly falling
         # back to the all-runs hydrate is invisible in the output at one file per node.
-        $ph3Logs = @(Get-ChildItem (Join-Path $chainRoot 'logs\phase3_*.log') -ErrorAction SilentlyContinue)
-        if ($ph3Logs.Count -eq 0) {
+        # Not asserted under --model-diagnostics, where the per-run path is DELIBERATELY off:
+        # the report is folded from the PRE-compaction rows during the all-runs hydrate, and a
+        # per-run worker sees those rows only after the point the report is written - so it would
+        # emit no report at all rather than a smaller one. CanHydratePerRun excludes the mode for
+        # that reason, and asserting the marker here would fail a leg for doing the right thing.
+        # The assertion stays live on every dataset that does NOT set the flag.
+        # $cfg, not $Spec: the dataset spec is $cfg in this loop ($cfg = $datasets[$name],
+        # above) and $Spec is a parameter of the helper FUNCTIONS. Written as $Spec, this read
+        # returned $null on every dataset, so the skip never fired and the assertion failed
+        # Astral for doing exactly what CanHydratePerRun asks of it under --model-diagnostics.
+        $ph3Logs = @()
+        if (-not $cfg.ModelDiagnostics) {
+            $ph3Logs = @(Get-ChildItem (Join-Path $chainRoot 'logs\phase3_*.log') -ErrorAction SilentlyContinue)
+        }
+        if ($cfg.ModelDiagnostics) {
+            $summaryLines.Add("$name mode3 (per-run hydrate): SKIP (--model-diagnostics keeps the all-runs hydrate)")
+        } elseif ($ph3Logs.Count -eq 0) {
             $overallFail = $true
             Write-Problem-Tc "$name mode3 (per-run hydrate): FAIL - no phase3_*.log to read"
             $summaryLines.Add("$name mode3 (per-run hydrate): FAIL (no worker logs)")

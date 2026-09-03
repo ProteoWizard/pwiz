@@ -585,6 +585,44 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Read ONLY the gap-fill targets and refined calibrations out of each run's envelope -
+        /// no parquet rows, no stubs, no action mapping.
+        ///
+        /// <para>This exists for the one consumer that genuinely spans runs: the Stage 7 pool
+        /// rebuild in <c>PerFileRescoreTask.Rehydrate</c>, which overlays every run's reconciled
+        /// parquet and needs the gap-fill targets to restore the detections gap-fill transferred
+        /// into runs that did not find them independently. Publishing that map empty costs
+        /// exactly those detections - measured on Stellar as 94 missing <c>RetentionTimes</c>
+        /// rows and <c>NRunsDetected</c> falling 3 -> 2.</para>
+        ///
+        /// <para>It IS an all-runs read, and it is the honest scope of the remaining coupling:
+        /// gap-fill is a cross-run product, so a consumer that rebuilds a cross-run pool needs
+        /// all of it. It is far smaller than what it replaces - envelope JSON only, no parquet
+        /// pass and no stub materialisation - and a per-run rescore never calls it, because
+        /// nothing on that path rebuilds the pool.</para>
+        /// </summary>
+        public static void ReadGapFillAndCalibrations(
+            IEnumerable<string> parquetPaths,
+            Dictionary<string, List<GapFillTarget>> perFileGapFill,
+            Dictionary<string, RTCalibration> refinedCalibrations,
+            LibraryStringInterner sequencePool = null)
+        {
+            foreach (string parquetPath in parquetPaths)
+            {
+                string syntheticInput = SyntheticInputFromParquet(parquetPath);
+                string fileName = Path.GetFileNameWithoutExtension(syntheticInput);
+                if (string.IsNullOrEmpty(fileName))
+                    continue;
+                string reconPath = ReconciliationFile.PathForInput(syntheticInput);
+                if (!File.Exists(reconPath))
+                    continue;
+                var envelope = LoadEnvelope(reconPath, nameof(ReadGapFillAndCalibrations));
+                CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
+                    sequencePool);
+            }
+        }
+
+        /// <summary>
         /// Hydrate the Stage-6 rescore inputs for ONE run, from that run's own artifacts and the
         /// analysis-wide summaries - never from another run's.
         ///

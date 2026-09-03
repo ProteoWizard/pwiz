@@ -594,6 +594,21 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new ReconciliationActions(_reconciliationActions));
             ctx.Publish(new RefinedCalibrations(_refinedCalibrations));
             ctx.Publish(new PerFileGapFillForRescore(_perFileGapFillForRescore));
+
+            // Hand these over rather than keeping a copy. The byproducts now hold them, and this
+            // task has no further use for them - every field below is read only by Rehydrate,
+            // which is mutually exclusive with the Run that just executed.
+            //
+            // Nulling matters because a byproduct release alone frees NOTHING while the task
+            // object still points at the same objects: the task instance lives in the pipeline
+            // array for the life of the process, so these survive every consumer. That is how
+            // FirstPassFDR came to hold its whole-experiment planning products - the
+            // reconciliation action map alone is 30.8 M entries at 446 runs, order 13 GB with
+            // the rest - from the end of planning through the entire rescore, with no reader.
+            _perFileConsensusTargets = null;
+            _reconciliationActions = null;
+            _refinedCalibrations = null;
+            _perFileGapFillForRescore = null;
             ReleaseUnscorableLibraryFragments(fullLibrary, ctx);
             ctx.Publish(new CompactedEntries(perFileEntries));
             // Null off the projection path (legacy resident / rehydrate), where a
@@ -898,7 +913,25 @@ namespace pwiz.Osprey.Tasks
             _survivorLoader = new FirstPassSurvivorLoader(
                 perFileParquetPaths, ctx.Config, retainedBaseIds, ctx.Get<SequencePool>().Value);
             _firstPassBaseIds = retainedBaseIds;
-            _perFileGapFillForRescore = new Dictionary<string, List<GapFillTarget>>();
+
+            // Gap-fill and the refined calibrations ARE read across runs here, and that is the
+            // honest scope of the remaining coupling rather than an oversight. Stage 7's pool
+            // rebuild (PerFileRescoreTask.Rehydrate -> OverlayReconciledIntoFiles) overlays every
+            // run's reconciled parquet and needs the gap-fill targets to restore the detections
+            // gap-fill transferred into runs that did not find them independently. Published
+            // empty, it costs exactly those: 94 missing RetentionTimes rows on Stellar, with
+            // NRunsDetected falling 3 -> 2.
+            //
+            // This is envelope JSON only - no parquet pass, no stub materialisation - so it is a
+            // small fraction of the all-runs pre-load this path removed. It should become LAZY
+            // (built on first read, like the RescoredEntries milestone) so a --task
+            // PerFileRescoring worker, which never rebuilds the pool, does not pay it at all.
+            var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
+            var refinedCalibrations = new Dictionary<string, RTCalibration>();
+            RescoreHydration.ReadGapFillAndCalibrations(
+                perFileParquetPaths.Values, perFileGapFill, refinedCalibrations,
+                ctx.Get<SequencePool>().Value);
+            _perFileGapFillForRescore = perFileGapFill;
 
             // Release on this path too, for the reason Rehydrate's own release block gives: this
             // is a RESUME, which is what an operator runs after the OOM the release exists to
@@ -928,7 +961,7 @@ namespace pwiz.Osprey.Tasks
             // contents do not. No compaction runs here: the lists are empty, and each run is
             // compacted against the retained set as it is hydrated.
             ctx.Publish(new ReconciliationActions(new Dictionary<(string, int), ReconcileAction>()));
-            ctx.Publish(new RefinedCalibrations(new Dictionary<string, RTCalibration>()));
+            ctx.Publish(new RefinedCalibrations(refinedCalibrations));
             ctx.Publish(new PerFileGapFillForRescore(_perFileGapFillForRescore));
             ctx.Publish(new PerFileConsensusTargets(
                 new Dictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>>()));

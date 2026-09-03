@@ -434,19 +434,22 @@ namespace pwiz.Osprey.Tasks
             // their only reader, so nothing downstream can find them missing. Release IS final -
             // a later Get throws rather than rebuilding - which is why that two-party fact has
             // to stay true; a third reader appearing is a compile-visible change to this line.
-            bool perRunPlan = ScoringTaskShared.CanHydratePerRun(ctx.Config);
-            var gapFill = perRunPlan
-                ? ctx.Consume<PerFileGapFillForRescore>().Value
-                : ctx.Get<PerFileGapFillForRescore>().Value;
-            var consensusTargets = perRunPlan
-                ? ctx.Consume<PerFileConsensusTargets>().Value
-                : ctx.Get<PerFileConsensusTargets>().Value;
-            var reconciliationActions = perRunPlan
-                ? ctx.Consume<ReconciliationActions>().Value
-                : ctx.Get<ReconciliationActions>().Value;
-            var refinedCalibrations = perRunPlan
-                ? ctx.Consume<RefinedCalibrations>().Value
-                : ctx.Get<RefinedCalibrations>().Value;
+            // CONSUME the three that nothing reads after this task, on EVERY path - not just the
+            // per-run one. They are FirstPassFDR's whole-experiment planning products, and this
+            // task is their only reader (verified by grepping every Get/Consume/TryGet: the
+            // action map, the consensus targets and the refined calibrations appear nowhere
+            // else). Held, they are order 13 GB at 446 runs for the whole rescore and beyond.
+            //
+            // Gap-fill is the ONE exception and stays a Get: Stage 7's pool rebuild reads it
+            // (PerFileRescoreTask.Rehydrate -> OverlayReconciledIntoFiles) to restore the
+            // detections gap-fill transferred into runs that did not find them independently.
+            // Releasing it costs exactly those - measured as 94 missing RetentionTimes rows and
+            // NRunsDetected 3 -> 2. It can follow the others once that rebuild reads gap-fill
+            // from the envelopes instead (RescoreHydration.ReadGapFillAndCalibrations).
+            var gapFill = ctx.Get<PerFileGapFillForRescore>().Value;
+            var consensusTargets = ctx.Consume<PerFileConsensusTargets>().Value;
+            var reconciliationActions = ctx.Consume<ReconciliationActions>().Value;
+            var refinedCalibrations = ctx.Consume<RefinedCalibrations>().Value;
             var rescoreStats = ExecuteRescore(
                 _perFileEntries,
                 consensusTargets,
