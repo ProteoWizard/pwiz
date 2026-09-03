@@ -140,7 +140,7 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
         {
             using var httpClient = GetAuthenticatedHttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Get, GetFoldersUrl());
-            var response = httpClient.SendRequest(request);
+            using var response = httpClient.SendRequest(request);
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
 
@@ -157,7 +157,7 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
             using var httpClient = GetAuthenticatedHttpClient();
             string url = string.Format(@"/unifi/v1/folders({0})/items", folder.Id);
             using var request = new HttpRequestMessage(HttpMethod.Get, ServerUrl + url);
-            var response = httpClient.SendRequest(request);
+            using var response = httpClient.SendRequest(request);
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
             var itemsValue = jsonObject[@"value"] as JArray;

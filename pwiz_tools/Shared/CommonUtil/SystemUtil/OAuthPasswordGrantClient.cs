@@ -37,16 +37,6 @@ namespace pwiz.Common.SystemUtil
     public static class OAuthPasswordGrantClient
     {
         /// <summary>
-        /// POSTs <paramref name="form"/> to <paramref name="tokenEndpoint"/> with the client
-        /// credentials in an HTTP Basic authorization header, and returns the parsed response.
-        /// Every failure - protocol, HTTP, or transport - is returned as an error
-        /// <see cref="TokenResponse"/> rather than thrown, so callers route all failures through
-        /// a single path: a 400 is an OAuth protocol error whose JSON body carries
-        /// error/error_description; any other HTTP failure becomes an HTTP-error response
-        /// (IsError true even when the body is a proxy's HTML page); a transport or URL-format
-        /// exception becomes an exception-type response.
-        /// </summary>
-        /// <summary>
         /// Builds the RFC 6749 4.3 "resource owner password credentials" grant form - the same
         /// four fields for every caller here, so this is the one place that spells them out.
         /// </summary>
@@ -61,6 +51,16 @@ namespace pwiz.Common.SystemUtil
             };
         }
 
+        /// <summary>
+        /// POSTs <paramref name="form"/> to <paramref name="tokenEndpoint"/> with the client
+        /// credentials in an HTTP Basic authorization header, and returns the parsed response.
+        /// Every failure - protocol, HTTP, or transport - is returned as an error
+        /// <see cref="TokenResponse"/> rather than thrown, so callers route all failures through
+        /// a single path: a 400 is an OAuth protocol error whose JSON body carries
+        /// error/error_description; any other HTTP failure becomes an HTTP-error response
+        /// (IsError true even when the body is a proxy's HTML page); a transport or URL-format
+        /// exception becomes an exception-type response.
+        /// </summary>
         public static TokenResponse RequestToken(Uri tokenEndpoint, string clientId, string clientSecret, NameValueCollection form)
         {
             try

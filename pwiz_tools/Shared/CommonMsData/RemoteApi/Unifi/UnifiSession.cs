@@ -49,7 +49,7 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
             // SendRequest already throws NetworkRequestException on a non-2xx response, so there
             // is nothing left for an EnsureSuccessStatusCode() to catch here.
             using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
-            var response = httpClient.SendRequest(request);
+            using var response = httpClient.SendRequest(request);
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
 
@@ -65,7 +65,7 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
         {
             using var httpClient = UnifiAccount.GetAuthenticatedHttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
-            var response = httpClient.SendRequest(request);
+            using var response = httpClient.SendRequest(request);
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
             var itemsValue = jsonObject[@"value"] as JArray;
