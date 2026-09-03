@@ -3749,6 +3749,76 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Chunk-boundary coverage for the buffered body reads. Both
+        /// <see cref="FdrScoresSidecar.TryRead(string, IList{FdrEntry}, FdrScoresSidecar.Pass)"/>
+        /// and <see cref="FdrScoresSidecar.TryReadOverlay"/> now walk the body in fixed-size
+        /// buffers instead of materialising the file, which gives the record loop seams the
+        /// old whole-file indexing did not have: a count that is an exact multiple of the
+        /// buffer, one either side of it, and one that leaves a short final chunk.
+        ///
+        /// <para>Every other sidecar test in this file writes a handful of records, so all of
+        /// them would pass against a reader that dropped, duplicated or misaligned every
+        /// record past the first buffer. That is the whole reason this one exists.</para>
+        ///
+        /// <para>The counts bracket a range of plausible buffer sizes rather than naming the
+        /// private constant, so the test keeps its meaning if the buffer is ever retuned.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarChunkBoundaries()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_chunk_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                foreach (int count in new[] { 0, 1, 1023, 1024, 1025, 2047, 2048, 2049, 4096, 4103 })
+                {
+                    // A distinct path per count: FdrScoresSidecar refuses to write the same
+                    // path twice in one process, which is the guard that keeps a sidecar
+                    // write-once (P11).
+                    string path = Path.Combine(dir, "n" + count + ".1st-pass.fdr_scores.bin");
+                    var written = new List<FdrEntry>(count);
+                    for (int i = 0; i < count; i++)
+                        written.Add(MakeFdrEntry((uint)i, -i * 0.5, i * 1.0e-6, 0.0));
+                    FdrScoresSidecar.Write(path, written, FdrScoresSidecar.Pass.FirstPass);
+
+                    var loaded = new List<FdrEntry>(count);
+                    for (int i = 0; i < count; i++)
+                        loaded.Add(MakeFdrEntry((uint)i, 0.0, 0.0, 0.0));
+                    Assert.IsTrue(FdrScoresSidecar.TryRead(path, loaded, FdrScoresSidecar.Pass.FirstPass),
+                        "TryRead rejected a " + count + "-record sidecar");
+                    // Exact equality (delta 0.0): the assert recomputes the same expressions
+                    // MakeFdrEntry used, so anything but a bit-identical round trip is a
+                    // misaligned read rather than arithmetic drift.
+                    for (int i = 0; i < count; i++)
+                    {
+                        Assert.AreEqual(-i * 0.5, loaded[i].Score, 0.0,
+                            "Score at record " + i + " of " + count);
+                        Assert.AreEqual(i * 1.0e-6, loaded[i].RunPrecursorQvalue, 0.0,
+                            "RunPrecursorQvalue at record " + i + " of " + count);
+                        Assert.AreEqual(i * 1.0e-6 + 1.0e-9, loaded[i].RunPeptideQvalue, 0.0,
+                            "RunPeptideQvalue at record " + i + " of " + count);
+                    }
+
+                    var byId = new Dictionary<uint, FdrEntry>();
+                    for (int i = 0; i < count; i++)
+                        byId[(uint)i] = MakeFdrEntry((uint)i, 0.0, 0.0, 0.0);
+                    Assert.IsTrue(
+                        FdrScoresSidecar.TryReadOverlay(path, byId, FdrScoresSidecar.Pass.FirstPass),
+                        "TryReadOverlay rejected a " + count + "-record sidecar");
+                    for (int i = 0; i < count; i++)
+                    {
+                        Assert.AreEqual(-i * 0.5, byId[(uint)i].Score, 0.0,
+                            "Overlay Score at record " + i + " of " + count);
+                    }
+                }
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
         /// If a sidecar record's entry_id has no match in the caller's
         /// stub list, the reader must refuse rather than silently dropping
         /// the record. Detects "sidecar from a different parquet" and
