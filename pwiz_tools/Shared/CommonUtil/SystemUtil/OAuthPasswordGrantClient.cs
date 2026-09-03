@@ -95,10 +95,8 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         private static TokenResponse ParseTokenResponse(HttpStatusCode status, string body, string reason = null)
         {
-            using var response = new HttpResponseMessage(status)
-            {
-                Content = new StringContent(body ?? string.Empty, Encoding.UTF8, @"application/json")
-            };
+            using var response = new HttpResponseMessage(status);
+            response.Content = new StringContent(body ?? string.Empty, Encoding.UTF8, @"application/json");
             if (reason != null)
                 response.ReasonPhrase = reason;
             // The body is already in memory, so FromHttpResponseAsync's only await completes
