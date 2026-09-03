@@ -595,8 +595,17 @@ namespace pwiz.Osprey.Tasks
             //
             // The disk state determines the hydration shape, not the CLI
             // flag (Phase C principle: mechanism-driven, not flag-driven).
-            if (!HydrateRescoreBundleIfPresent(config, perFileEntries, hasReconSidecars, ctx))
+            // Skipped when the rescore hydrates per run: there is no experiment-wide bundle for
+            // it to build, and attempting one FAILS rather than merely wasting work. The per-run
+            // publish leaves an EMPTY stub list per run, and the batch overlay binds each
+            // sidecar record to a stub by entry_id and refuses a file whose records have nowhere
+            // to land - "failed to overlay .1st-pass.fdr_scores.bin". Same empty-list
+            // precondition FirstPassFdrTask documents for choosing its own streaming arm.
+            if (!ScoringTaskShared.CanHydratePerRun(config) &&
+                !HydrateRescoreBundleIfPresent(config, perFileEntries, hasReconSidecars, ctx))
+            {
                 return false;
+            }
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
                 perFileIsolationMz, perFileParquetPaths, nFiles, totalScored, projections);
@@ -1322,6 +1331,24 @@ namespace pwiz.Osprey.Tasks
             if (!streamCompaction && builder == null)
                 WarnPreCompactionPool(config, hasReconSidecars, ctx);
 
+            // The per-run rescore hydrates each run inside its own iteration, so building ANY
+            // all-runs structure here is work whose product that loop overwrites. Publish the
+            // run names, their parquet paths and their calibrations - the run-count-independent
+            // state the loop indexes by - and stop.
+            //
+            // This is the fan-out contract stated as code: entering PerFileRescoring must cost
+            // the same whether the process was handed 1 run or 446, because an HPC node holding
+            // one run cannot pay for the other 445 and must still produce identical output. The
+            // all-runs path below stays for the tasks that genuinely join.
+            if (ScoringTaskShared.CanHydratePerRun(config))
+            {
+                LoadJoinOnlyPerRunNames(config, perFileEntries, perFileParquetPaths,
+                    perFileCalibrations, perFileIsolationMz, ctx);
+                if (ctx.Diagnostics?.CalibrationOnly ?? false)
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
+                return null;
+            }
+
             // Bounded reconciled-bundle rehydrate: hand the per-file stub load to the
             // streaming hydrate, which compacts each file before touching the next, so the
             // pre-compaction pool (~1.19 GB per file) is never resident for more than one
@@ -1341,6 +1368,17 @@ namespace pwiz.Osprey.Tasks
                     ? FirstPassFdrTask.BuildModelDiagnosticsAccumulator(
                         JoinOnlyFileNames(config), _libraryById, config, ctx.LogInfo)
                     : null;
+                // The analysis-wide retained base_id set FirstPassFDR left behind. Read once,
+                // here, and held for the whole load like the library: it is what lets the
+                // hydrate below compact each run without a pre-pass over every run's envelope.
+                var retainedBaseIds = ScoringTaskShared.ReadRetainedBaseIds(config, out string retainedError);
+                if (retainedBaseIds == null)
+                {
+                    ctx.LogError(retainedError);
+                    ctx.ExitCode = 1;
+                    hydrationFailed = true;
+                    return null;
+                }
                 // Same graceful handling as the batch twin in HydrateRescoreBundleIfPresent:
                 // a corrupt or mismatched sidecar is an operator-facing error line and a
                 // non-zero exit code, not an unhandled stack trace.
@@ -1360,6 +1398,7 @@ namespace pwiz.Osprey.Tasks
                             FdrExperimentSidecar.PathFor(config.OutputBlib,
                                 ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
                             FdrScoresSidecar.Pass.FirstPass),
+                        retainedBaseIds,
                         _sequencePool.Value), ctx);
                 if (_rescoreInputs == null)
                 {
@@ -1628,6 +1667,51 @@ namespace pwiz.Osprey.Tasks
             LoadJoinOnlyCalibration(fileName, parquetPath, perFileCalibrations,
                 perFileIsolationMz, ctx);
             return stubs;
+        }
+
+        /// <summary>
+        /// Publish the run-count-independent state the per-run rescore loop indexes by: one
+        /// EMPTY entry list per run (keyed by stem, in input order), each run's parquet path,
+        /// and its best-effort calibration sibling. No parquet rows are read.
+        ///
+        /// <para>The empty lists are the shared backing store the loop refills and drains one
+        /// run at a time - the same list OBJECTS the <c>ScoredEntries</c> / <c>CompactedEntries</c>
+        /// milestones wrap, which is why they are created here rather than by the loop. Contents
+        /// are transient; identity is not.</para>
+        ///
+        /// <para>The calibration read stays here because it is the run's own JSON sibling and is
+        /// the FALLBACK when a run's envelope carries no refined calibration.</para>
+        ///
+        /// <para><b>It is the one term on this path that still grows with run count</b>, and it
+        /// is left here knowingly rather than overlooked. <c>PerFileCalibrations</c> retains one
+        /// <see cref="RTCalibration"/> per run, each holding the anchor arrays
+        /// (<c>AbsResiduals</c>, <c>FittedRts</c>, <c>LibraryRts</c>) - on the CHS cohort a
+        /// run's refined calibration is ~2 MB, so 446 runs is order-1 GB. Small enough to be
+        /// invisible at plate scale and NOT O(1), so it must be measured at 446 rather than
+        /// assumed: the mistake this whole change exists to correct was reading a single-point
+        /// measurement as a slope. Moving it inside the iteration is the fix if the measurement
+        /// says it matters.</para>
+        /// </summary>
+        private static void LoadJoinOnlyPerRunNames(
+            OspreyConfig config,
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            Dictionary<string, string> perFileParquetPaths,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
+            PipelineContext ctx)
+        {
+            ctx.LogInfo(string.Format(
+                @"--input-scores: {0} run(s) will be hydrated one at a time by the rescore; " +
+                @"no all-runs pre-load.", config.InputScores.Count));
+            foreach (string parquetPath in config.InputScores)
+            {
+                string fileName = Path.GetFileNameWithoutExtension(
+                    RescoreHydration.SyntheticInputFromParquet(parquetPath)) ?? string.Empty;
+                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>()));
+                perFileParquetPaths[fileName] = parquetPath;
+                LoadJoinOnlyCalibration(fileName, parquetPath, perFileCalibrations,
+                    perFileIsolationMz, ctx);
+            }
         }
 
         /// <summary>

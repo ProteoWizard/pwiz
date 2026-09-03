@@ -620,6 +620,21 @@ namespace pwiz.Osprey.Tasks
             var config = ctx.Config;
             var perFileEntries = ctx.Get<ScoredEntries>().Value;
 
+            // When the rescore hydrates per run there is nothing for this task to adopt. Building
+            // the experiment-wide bundle here would rebuild exactly what the per-run loop is
+            // about to read one run at a time - and it would do it by the OTHER route: not the
+            // upstream load (already skipped), but this task's own
+            // LoadOwnReconciliationBundle -> StreamOwnReconciliationBundle, which walks every
+            // run's envelope and parquet. Removing an O(runs) pre-load from one producer only
+            // moves it if the second producer is left standing.
+            //
+            // What downstream still needs from this task is the per-run SURVIVOR LOADER, and it
+            // needs the retained base_id set to build it. That set comes from the analysis-wide
+            // summary rather than from a bundle assembled by reading every run - which is the
+            // whole reason the summary exists.
+            if (ScoringTaskShared.CanHydratePerRun(config))
+                return RehydrateForPerRunRescore(ctx, perFileEntries);
+
             // The bundle to adopt. In worker mode the upstream PerFileScoring
             // task hydrated it from sibling sidecars and published it. On a
             // straight-through resume it published null (no bundle): the driver
@@ -865,6 +880,69 @@ namespace pwiz.Osprey.Tasks
         /// the pass that already reads every sidecar, so the report comes off the
         /// same PRE-compaction rows the batch write would have read.</para>
         /// </summary>
+        private bool RehydrateForPerRunRescore(
+            PipelineContext ctx, List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
+        {
+            var retainedBaseIds = ScoringTaskShared.ReadRetainedBaseIds(ctx.Config, out string error);
+            if (retainedBaseIds == null)
+            {
+                ctx.LogError(error);
+                ctx.ExitCode = 1;
+                return false;
+            }
+            ctx.LogInfo(string.Format(
+                @"Per-run rescore: FirstPassFDR publishes the survivor loader only; no " +
+                @"experiment-wide bundle is built for {0} run(s).", perFileEntries.Count));
+
+            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+            _survivorLoader = new FirstPassSurvivorLoader(
+                perFileParquetPaths, ctx.Config, retainedBaseIds, ctx.Get<SequencePool>().Value);
+            _firstPassBaseIds = retainedBaseIds;
+            _perFileGapFillForRescore = new Dictionary<string, List<GapFillTarget>>();
+
+            // Release on this path too, for the reason Rehydrate's own release block gives: this
+            // is a RESUME, which is what an operator runs after the OOM the release exists to
+            // prevent, so skipping it would leave the whole library resident in the run that most
+            // needs it lean. Mode 6 asserts it happens on every leg, including each --task
+            // PerFileRescoring worker.
+            //
+            // The retained set is the right predicate here even though the release elsewhere
+            // unions in the gap-fill targets: this path is only taken for --input-scores, where
+            // every run's gap-fill target is already inside the analysis-wide retained set the
+            // planner wrote. Skipping the release was tried while chasing a rehydrate-leg
+            // divergence and changed that divergence not at all - the cause was elsewhere - so
+            // this is not the place to economise on correctness grounds.
+            ReleaseUnscorableLibraryFragments(ctx.Get<FullLibrary>().Value, ctx);
+
+            // Every planning slot is published EMPTY on purpose. They are not absent - a
+            // consumer's ctx.Get still succeeds - but they carry nothing, because the per-run
+            // hydrate reads each run's actions, gap-fill and refined calibration out of that
+            // run's own reconciliation.json inside its own iteration. Publishing them empty
+            // rather than skipping the publish keeps the byproduct contract intact: an
+            // unpublished slot throws UnknownByproductException at the reader, turning a
+            // deliberate design into a crash at an unrelated call site.
+            //
+            // CompactedEntries republishes the SAME list objects ScoredEntries holds - one empty
+            // list per run, in input order. Those objects are the shared backing store the
+            // rescore loop refills and drains one run at a time, so identity matters and
+            // contents do not. No compaction runs here: the lists are empty, and each run is
+            // compacted against the retained set as it is hydrated.
+            ctx.Publish(new ReconciliationActions(new Dictionary<(string, int), ReconcileAction>()));
+            ctx.Publish(new RefinedCalibrations(new Dictionary<string, RTCalibration>()));
+            ctx.Publish(new PerFileGapFillForRescore(_perFileGapFillForRescore));
+            ctx.Publish(new PerFileConsensusTargets(
+                new Dictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>>()));
+            ctx.Publish(new CompactedEntries(perFileEntries));
+            ctx.Publish(new FirstPassSurvivorSource(_survivorLoader));
+            ctx.Publish(new PlanningPerformed(false));
+            return true;
+        }
+
+        /// <summary>
+        /// Build the post-Stage-6 rescore bundle from THIS task's own
+        /// sidecars for a straight-through resume. See the class remarks on the
+        /// bundle-adopt path.
+        /// </summary>
         private RescoreInputs LoadOwnReconciliationBundle(
             PipelineContext ctx,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
@@ -1027,6 +1105,14 @@ namespace pwiz.Osprey.Tasks
             // OBJECT still has to be the one that was published (Rehydrate compacts and
             // republishes it as CompactedEntries), which is why the contents are copied
             // rather than the reference replaced.
+            // The analysis-wide retained set this task itself wrote when planning ended. A
+            // resume reads it back rather than rebuilding the union from every run's envelope,
+            // which is what makes the rehydrate below a single pass. InvalidDataException so it
+            // joins the one graceful-failure policy the caller already applies to this hydrate.
+            var resumeRetainedBaseIds = ScoringTaskShared.ReadRetainedBaseIds(config, out string retainedError);
+            if (resumeRetainedBaseIds == null)
+                throw new InvalidDataException(retainedError);
+
             var hydrated = new List<KeyValuePair<string, List<FdrEntry>>>(fileNames.Count);
             var bundle = RescoreHydration.HydrateCompactedStreaming(
                 hydrated, parquetPaths,
@@ -1039,6 +1125,7 @@ namespace pwiz.Osprey.Tasks
                         ScoringTaskShared.FeedModelDiagnostics(mdiagAccumulator, fileIdx, stubs);
                 },
                 LoadFirstPassExperimentRecords(config, ctx),
+                resumeRetainedBaseIds,
                 ctx.Get<SequencePool>().Value);
 
             // The hydrate re-derived every key from its parquet stem, while the accumulator
@@ -1573,6 +1660,24 @@ namespace pwiz.Osprey.Tasks
             var gapFillByFile = new Dictionary<string, List<GapFillTarget>>(StringComparer.Ordinal);
             int reconWriteFailures = 0;
 
+            // The analysis-wide retained base_id set, accumulated as each run is planned: the
+            // join-wide first-pass passing set UNION the base_id of every action target in every
+            // run. Both terms are what RescoreCompaction.Apply retains, and this is the only
+            // point in the analysis where the second one becomes knowable - a run's envelope is
+            // written the moment that run's planning finishes, so it cannot carry actions the
+            // runs planned after it have not produced yet.
+            //
+            // Accumulating here rather than deriving it later is what lets --task PerFileRescoring
+            // stop being a join: without this summary every consumer had to rebuild the union by
+            // reading all 446 envelopes before it could compact a single run. Bounded by the
+            // LIBRARY, not by run count - both terms are base_id sets over the same library - so
+            // this costs one entry per library precursor no matter how large the cohort.
+            var retainedBaseIds = new HashSet<uint>();
+            // The join-wide term is identical on every plan, so union it once. Re-unioning it
+            // per run would be correct but would cost 446 x 744,943 set probes on the CHS cohort
+            // to add nothing after the first.
+            bool retainedSeeded = false;
+
             // Stage 5 -> Stage 6 boundary: each file's .reconciliation.json envelope is written
             // the moment that file's planning finishes, rather than after every file's. Same
             // artifact, one phase earlier, and it is what lets the planner release the file's
@@ -1589,6 +1694,12 @@ namespace pwiz.Osprey.Tasks
                         copy.Add(target);
                     gapFillByFile[filePlan.FileName] = copy;
                 }
+                if (!retainedSeeded && filePlan.GlobalBaseIds != null)
+                {
+                    retainedBaseIds.UnionWith(filePlan.GlobalBaseIds);
+                    retainedSeeded = true;
+                }
+                AccumulateActionTargetBaseIds(filePlan, retainedBaseIds);
                 reconWriteFailures += WriteReconciliationFile(
                     writerState, filePlan, perFileParquetPaths, config, ctx);
             };
@@ -1634,6 +1745,14 @@ namespace pwiz.Osprey.Tasks
             // them here meant a 446-file run held both in memory for 228 minutes and lost them
             // to any interruption. Nothing replaces the block: by the time planning runs, both
             // artifacts have been on disk for hours.
+
+            // Planning is complete, so the retained set is too. Write it BEFORE the
+            // StopAfterStage5 exit: --task FirstPassFDR is precisely the phase whose job is to
+            // leave behind the analysis-wide summaries --task PerFileRescoring then reads, and a
+            // summary written only on the straight-through path would be missing in the one
+            // configuration that exists to consume it.
+            if (!WriteRetainedBaseIdSummary(retainedBaseIds, perFileParquetPaths, config, ctx))
+                return false;
 
             if (config.StopAfterStage5)
             {
@@ -1928,6 +2047,76 @@ namespace pwiz.Osprey.Tasks
             return 0;
         }
 
+
+        /// <summary>
+        /// Add the base_id of every action target in one run's plan to the analysis-wide retained
+        /// set. Masked to the base_id (decoy bit stripped) for the reason
+        /// <see cref="RescoreCompaction"/> masks: a target and its paired decoy share a base_id,
+        /// so retaining the base_id keeps both and preserves the target-decoy invariant.
+        ///
+        /// <para>A null <see cref="Stage6FilePlan.Actions"/> means planning did not run for this
+        /// run at all - an empty consensus, a single-file analysis, or a diagnostic dump about to
+        /// exit - which contributes no targets, as distinct from an empty list, which is a
+        /// planned result that also contributes none. Neither is an error here.</para>
+        /// </summary>
+        private static void AccumulateActionTargetBaseIds(Stage6FilePlan filePlan, HashSet<uint> retained)
+        {
+            if (filePlan.Actions == null || filePlan.Entries == null)
+                return;
+            foreach (var action in filePlan.Actions)
+            {
+                int vecIdx = action.Key;
+                if (vecIdx < 0 || vecIdx >= filePlan.Entries.Count)
+                    continue;
+                retained.Add(filePlan.Entries[vecIdx].EntryId & ScoringTaskShared.BASE_ID_MASK);
+            }
+        }
+
+        /// <summary>
+        /// Write the analysis-wide <c>.1st-pass.retained_base_ids.bin</c> summary once planning
+        /// has produced the complete union. Returns false with
+        /// <see cref="PipelineContext.ExitCode"/> set when the write fails.
+        ///
+        /// <para>A write failure is FATAL rather than a warning, unlike the per-run envelope
+        /// writes this phase counts and reports. The asymmetry is deliberate: a missing envelope
+        /// fails the run that needs it, loudly, at the point it is read, whereas a missing
+        /// summary is silently survivable - every consumer can still rebuild the union by reading
+        /// every envelope, which is exactly the O(files) pre-pass this artifact exists to
+        /// delete. Degrading quietly back onto that path is how the resident behaviour would
+        /// return without anyone noticing, so the phase fails instead.</para>
+        ///
+        /// <para>No output blib means no analysis-scope artifact to name
+        /// (<see cref="RetainedBaseIdSidecar.PathFor"/> returns null), which is not a failure -
+        /// it is a configuration with no analysis-wide consumer.</para>
+        /// </summary>
+        private static bool WriteRetainedBaseIdSummary(
+            HashSet<uint> retainedBaseIds,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            OspreyConfig config,
+            PipelineContext ctx)
+        {
+            string siblingPath = ScoringTaskShared.ArtifactSiblingPath(config);
+            string path = RetainedBaseIdSidecar.PathFor(config.OutputBlib, siblingPath);
+            if (string.IsNullOrEmpty(path))
+                return true;
+            try
+            {
+                RetainedBaseIdSidecar.Write(path, retainedBaseIds);
+            }
+            catch (Exception ex)
+            {
+                ctx.LogError(string.Format(
+                    @"Failed to write the analysis-wide retained base_id summary {0}: {1}. " +
+                    @"--task PerFileRescoring reads this file to compact each run without " +
+                    @"re-reading every run's reconciliation.json.", path, ex.Message));
+                ctx.ExitCode = 1;
+                return false;
+            }
+            ctx.LogInfo(string.Format(
+                @"Wrote analysis-wide retained base_id summary: {0} base_id(s) across {1} run(s)",
+                retainedBaseIds.Count, perFileParquetPaths.Count));
+            return true;
+        }
 
         /// <summary>
         /// Convert pre-grouped reconciliation actions for one file into

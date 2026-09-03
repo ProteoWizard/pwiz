@@ -365,7 +365,20 @@ namespace pwiz.Osprey.Tasks
                 }
             }
 
-            if (!didPlan && (rescoreBundle == null || anyPass2Present))
+            // A THIRD source of "there is a plan to execute", alongside FirstPassFDR's in-process
+            // planning (didPlan) and a worker-supplied bundle. When the rescore hydrates per run
+            // the plan is not held anywhere at this point - it is read from each run's own
+            // reconciliation.json inside its iteration - so both older signals are legitimately
+            // false and the gate below would self-gate a run that has every input it needs.
+            //
+            // That is not hypothetical: removing the experiment-wide bundle made this gate fire
+            // and the phase-3 worker wrote no .scores-reconciled.parquet at all, which the gate
+            // caught as a missing file rather than as a wrong number. It is the same shape as
+            // defect (b) - "no rescore needed because the outputs exist" confused with "no
+            // rescore possible because nobody supplied a bundle" - and it is why anyPass2Present
+            // stays OUTSIDE this term: a completed run must still no-op.
+            bool perRunPlanAvailable = ScoringTaskShared.CanHydratePerRun(ctx.Config);
+            if (!didPlan && ((rescoreBundle == null && !perRunPlanAvailable) || anyPass2Present))
             {
                 // No rescore to run. The RESIDENT arm does nothing at all here - it leaves the
                 // buffer exactly as Stage 5 compacted it, and SecondPassFDR reloads the rescored
@@ -408,14 +421,37 @@ namespace pwiz.Osprey.Tasks
                 joinFileStems = rescoreBundle.JoinFileStems;
             }
 
-            var gapFill = ctx.Get<PerFileGapFillForRescore>().Value;
-            var consensusTargets = ctx.Get<PerFileConsensusTargets>().Value;
-            var reconciliationActions = ctx.Get<ReconciliationActions>().Value;
+            // On the per-run path these four are dead weight, and on a straight-through run they
+            // are the planner's own whole-experiment output: the reconciliation action map
+            // (30.8 M entries at 446 runs), the gap-fill targets (8.85 M), the per-run consensus
+            // targets and the refined calibrations - order 13 GB, held for the whole rescore.
+            // Each run reads its own slice from its own reconciliation.json instead, so CONSUME
+            // rather than Get: taking the value and dropping the pipeline's reference in one
+            // step is what actually frees them, where a Get would leave the byproduct cache
+            // holding every one for the life of the process.
+            //
+            // Safe to release: FirstPassFdrTask publishes these four and PerFileRescoreTask is
+            // their only reader, so nothing downstream can find them missing. Release IS final -
+            // a later Get throws rather than rebuilding - which is why that two-party fact has
+            // to stay true; a third reader appearing is a compile-visible change to this line.
+            bool perRunPlan = ScoringTaskShared.CanHydratePerRun(ctx.Config);
+            var gapFill = perRunPlan
+                ? ctx.Consume<PerFileGapFillForRescore>().Value
+                : ctx.Get<PerFileGapFillForRescore>().Value;
+            var consensusTargets = perRunPlan
+                ? ctx.Consume<PerFileConsensusTargets>().Value
+                : ctx.Get<PerFileConsensusTargets>().Value;
+            var reconciliationActions = perRunPlan
+                ? ctx.Consume<ReconciliationActions>().Value
+                : ctx.Get<ReconciliationActions>().Value;
+            var refinedCalibrations = perRunPlan
+                ? ctx.Consume<RefinedCalibrations>().Value
+                : ctx.Get<RefinedCalibrations>().Value;
             var rescoreStats = ExecuteRescore(
                 _perFileEntries,
                 consensusTargets,
                 reconciliationActions,
-                ctx.Get<RefinedCalibrations>().Value,
+                refinedCalibrations,
                 ctx.Get<PerFileCalibrations>().Value,
                 gapFill,
                 ctx.Get<PerFileParquetPaths>().Value,
@@ -728,6 +764,7 @@ namespace pwiz.Osprey.Tasks
             };
             inputs.Pass2Worker = TryCreatePass2Worker(
                 perFileParquetPaths, config, ctx, Name, inputs.TaskValidityKey);
+            inputs.HydrateRun = BuildPerRunHydrate(perFileParquetPaths, survivorLoader, config, ctx);
 
             // Clean PERSISTENT floor entering reconciliation (post-GC, before the
             // rescore loop repopulates the heavy per-entry arrays) -- fires early,
@@ -973,6 +1010,22 @@ namespace pwiz.Osprey.Tasks
             /// state it owns is thread-local. See <see cref="Pass2PerFileWorker"/>.</para>
             /// </summary>
             public Pass2PerFileWorker Pass2Worker;
+
+            /// <summary>
+            /// Hydrate ONE run's Stage-6 inputs from that run's own artifacts, or null to read
+            /// them out of the file-keyed dictionaries above. Non-null is the fan-out shape this
+            /// task is supposed to have: each iteration loads its run's survivors, actions,
+            /// gap-fill and refined calibration, uses them, and drops them.
+            ///
+            /// <para>The dictionaries are the join shape, and they are what made a per-run task
+            /// scale with run count: building them for 86 runs cost 8m42s and 17.2 GB before the
+            /// first run was rescored, and the loop then re-read each run's parquet anyway and
+            /// overwrote what had been loaded. They stay for the straight-through pipeline,
+            /// whose Stage 7 consumes the whole-run pool in process.</para>
+            ///
+            /// <para>Called under <c>_survivorLoadLock</c>, so it need not be thread-safe.</para>
+            /// </summary>
+            public Func<string, RunRescoreInputs> HydrateRun;
         }
 
         /// <summary>
@@ -1001,6 +1054,46 @@ namespace pwiz.Osprey.Tasks
             out string loadError)
         {
             loadError = null;
+
+            // Fan-out shape first: this run's inputs come from this run's own artifacts,
+            // hydrated here and dropped in the finally. Serialized for the same reason the
+            // refill below is - one run's full pre-compaction pool is transiently resident, and
+            // multiplying that by the file parallelism would add several GB of peak to a change
+            // whose whole purpose is removing peak.
+            if (inputs.HydrateRun != null)
+            {
+                RunRescoreInputs run;
+                lock (_survivorLoadLock)
+                {
+                    try
+                    {
+                        run = inputs.HydrateRun(file.Key);
+                    }
+                    catch (InvalidDataException ex)
+                    {
+                        // Same contract as the refill below: report rather than throw, so the
+                        // parallel loop reports every bad run instead of surfacing one wrapped
+                        // in an AggregateException whose net472 message drops the inner text.
+                        loadError = ex.Message;
+                        return (0, 0, 0, false);
+                    }
+                    file.Value.Clear();
+                    file.Value.AddRange(run.Survivors);
+                }
+                try
+                {
+                    return RescoreOneFile(fileNum, nTotalFiles, file.Key, file.Value, inputs, ctx, run);
+                }
+                finally
+                {
+                    if (ReconciledParquetOnDisk(file.Key, inputs))
+                    {
+                        file.Value.Clear();
+                        file.Value.TrimExcess();
+                    }
+                }
+            }
+
             if (survivorLoader == null)
                 return RescoreOneFile(fileNum, nTotalFiles, file.Key, file.Value, inputs, ctx);
 
@@ -1059,7 +1152,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private (int Rescored, int GapCwt, int GapForced, bool Scored) RescoreOneFile(
             int fileNum, int nTotalFiles, string fileName, List<FdrEntry> fdrEntries,
-            RescorePassInputs inputs, PipelineContext ctx)
+            RescorePassInputs inputs, PipelineContext ctx, RunRescoreInputs run = null)
         {
             int totalRescored = 0;
             int totalGapCwt = 0;
@@ -1073,7 +1166,7 @@ namespace pwiz.Osprey.Tasks
             // Assemble this file's rescore targets (multi-charge consensus +
             // reconciliation dedup + gap-fill) and resolve its input mzML.
             // Bails when there is no work or the file has no input_files entry.
-            if (!TryAssembleRescoreTargets(fileNum, nTotalFiles, fileName, inputs, ctx,
+            if (!TryAssembleRescoreTargets(fileNum, nTotalFiles, fileName, inputs, ctx, run,
                     out var combinedTargets, out var gapFillTargets, out string inputFile))
             {
                 // Still write this file's reconciled parquet. Leaving it out is what made the
@@ -1144,8 +1237,12 @@ namespace pwiz.Osprey.Tasks
                 out double? rtMadFromCalJson);
 
             // Pick the RT calibration: refined (from Stage 6 planning's
-            // calibration refit) wins; original first-pass falls back.
-            if (!inputs.RefinedCalibrations.TryGetValue(fileName, out RTCalibration rtCal))
+            // calibration refit) wins; original first-pass falls back. On the per-run hydrate
+            // the refined one comes off this run's own envelope, so the join-wide dictionary is
+            // not consulted at all; the first-pass fallback stays shared because it is this
+            // run's own .calibration.json either way.
+            RTCalibration rtCal = run?.RefinedCalibration;
+            if (rtCal == null && (run != null || !inputs.RefinedCalibrations.TryGetValue(fileName, out rtCal)))
                 inputs.PerFileCalibrations.TryGetValue(fileName, out rtCal);
 
             // Bisection seam DISABLED (paired with the per-candidate
@@ -1467,7 +1564,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private bool TryAssembleRescoreTargets(
             int fileNum, int nTotalFiles, string fileName,
-            RescorePassInputs inputs, PipelineContext ctx,
+            RescorePassInputs inputs, PipelineContext ctx, RunRescoreInputs run,
             out Dictionary<int, (double Apex, double Start, double End)> combinedTargets,
             out List<GapFillTarget> gapFillTargets,
             out string inputFile)
@@ -1475,19 +1572,34 @@ namespace pwiz.Osprey.Tasks
             combinedTargets = new Dictionary<int, (double Apex, double Start, double End)>();
             inputFile = null;
 
+            // The per-run hydrate supplies all three from THIS run's own artifacts; the
+            // file-keyed dictionaries are the join-shaped fallback for the straight-through
+            // pipeline. Consensus is derived here rather than carried, because
+            // MultiChargeConsensus reads one run's entries and nothing else - which is what
+            // made building it for every run up front pure waste.
             IReadOnlyList<(int Index, double Apex, double Start, double End)> consensusTargets;
-            if (!inputs.ConsensusTargets.TryGetValue(fileName, out consensusTargets))
-                consensusTargets = new List<(int, double, double, double)>();
-
             List<(int Index, double Apex, double Start, double End)> reconTargets;
-            if (!inputs.ReconTargets.TryGetValue(fileName, out reconTargets))
-                reconTargets = new List<(int, double, double, double)>();
-
-            // PHASE 2 (gap-fill): per-file gap-fill targets land here.
-            if (inputs.GapFill == null ||
-                !inputs.GapFill.TryGetValue(fileName, out gapFillTargets))
+            if (run != null)
             {
-                gapFillTargets = new List<GapFillTarget>();
+                consensusTargets = MultiChargeConsensus.SelectRescoreTargets(
+                    run.Survivors, inputs.Config.RunFdr);
+                reconTargets = ReconTargetsForRun(run);
+                gapFillTargets = run.GapFill ?? new List<GapFillTarget>();
+            }
+            else
+            {
+                if (!inputs.ConsensusTargets.TryGetValue(fileName, out consensusTargets))
+                    consensusTargets = new List<(int, double, double, double)>();
+
+                if (!inputs.ReconTargets.TryGetValue(fileName, out reconTargets))
+                    reconTargets = new List<(int, double, double, double)>();
+
+                // PHASE 2 (gap-fill): per-file gap-fill targets land here.
+                if (inputs.GapFill == null ||
+                    !inputs.GapFill.TryGetValue(fileName, out gapFillTargets))
+                {
+                    gapFillTargets = new List<GapFillTarget>();
+                }
             }
 
             // Merge consensus + reconciliation into a per-(idx, override) map.
@@ -1663,6 +1775,95 @@ namespace pwiz.Osprey.Tasks
                 totalReconciliation++;
             }
             return perFileReconTargets;
+        }
+
+        /// <summary>
+        /// The per-run hydrate this pass will use, or <c>null</c> to keep reading the join-wide
+        /// dictionaries. Returns non-null only for a run that reaches this task through
+        /// <c>--input-scores</c>: there the analysis-wide summaries FirstPassFDR left behind are
+        /// on disk by definition, and each run's own boundary artifacts sit beside its parquet,
+        /// so a run can be hydrated from its own files exactly as a single-run HPC node does.
+        ///
+        /// <para>Null for the straight-through pipeline, whose Stage 7 consumes the whole-run
+        /// pool in process and whose planning byproducts are already in memory - hydrating from
+        /// disk there would re-read what the planner just produced.</para>
+        ///
+        /// <para>Null also when the retained base_id summary cannot be read. That is NOT a
+        /// silent fallback to the join shape: <c>ScoringTaskShared.ReadRetainedBaseIds</c> is
+        /// the same reader whose absence already fails the upstream load, so reaching here
+        /// without it means the run is already failing for a named reason.</para>
+        /// </summary>
+        private static Func<string, RunRescoreInputs> BuildPerRunHydrate(
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            FirstPassSurvivorLoader survivorLoader,
+            OspreyConfig config,
+            PipelineContext ctx)
+        {
+            // The SAME predicate the --input-scores load reads to decide whether to skip building
+            // the all-runs bundle. Not survivorLoader != null: that is a runtime fact about what
+            // FirstPassFDR published, and if the two sites disagreed the load would hand this
+            // loop empty per-file lists it would then rescore as if they were survivors.
+            if (!ScoringTaskShared.CanHydratePerRun(config))
+                return null;
+            var retainedBaseIds = ScoringTaskShared.ReadRetainedBaseIds(config, out _);
+            if (retainedBaseIds == null)
+                return null;
+            var experimentRecords = FdrExperimentSidecar.ReadMap(
+                FdrExperimentSidecar.PathFor(config.OutputBlib,
+                    ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
+                FdrScoresSidecar.Pass.FirstPass);
+            // Say which shape this pass took. Without it the only evidence is a memory profile,
+            // and "the gate is green so the new path must have run" is precisely the inference
+            // that let an earlier resume fix report success while testing the old path (defect
+            // (b2), TODO-20260901_osprey_firstpassfdr_resume). A test can assert this line.
+            // Count the runs from the published parquet paths, NOT from config.InputScores -
+            // that list is null on a straight-through run, where the inputs are mzMLs. It read
+            // InputScores while the predicate above still required it; dropping that term left
+            // this line behind, and it threw a NullReferenceException on the first
+            // straight-through run. The paths are the right source on both shapes anyway: they
+            // are what the loop iterates.
+            ctx.LogInfo(string.Format(
+                @"Per-run rescore: hydrating each of {0} run(s) from its own artifacts " +
+                @"(no all-runs pre-load; {1} retained base_id(s) read once).",
+                perFileParquetPaths.Count, retainedBaseIds.Count));
+            var sequencePool = ctx.Get<SequencePool>().Value;
+            return fileName =>
+            {
+                if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
+                {
+                    throw new InvalidDataException(string.Format(
+                        @"Per-run rescore hydrate: no scores parquet path published for {0}",
+                        fileName));
+                }
+                // RAW pre-compaction stubs, which is what HydrateOneRun contracts for: it
+                // overlays the 1st-pass sidecar over the full row set and compacts afterwards.
+                // NOT FirstPassSurvivorLoader - that loader has already overlaid and filtered,
+                // so handing its output here would overlay a second time onto a list that is
+                // no longer the sidecar's superset. Same read the join-shaped load performs
+                // per file (LoadJoinOnlyScoresForFile), one run at a time.
+                return RescoreHydration.HydrateOneRun(parquetPath, retainedBaseIds,
+                    experimentRecords,
+                    (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool),
+                    sequencePool: sequencePool);
+            };
+        }
+
+        /// <summary>
+        /// One run's reconciliation targets, projected through the same
+        /// <see cref="GroupReconciliationActionsByFile"/> the join path uses so the two cannot
+        /// interpret an action differently. <see cref="RunRescoreInputs.ReconciliationActions"/>
+        /// is deliberately keyed <c>(file_name, vec_idx)</c> with exactly one file in it, which
+        /// is what lets that helper be reused unchanged rather than reimplemented per run - the
+        /// kind of duplication that drifts silently when a new <c>ReconcileAction</c> shape is
+        /// added to one copy.
+        /// </summary>
+        private static List<(int Index, double Apex, double Start, double End)> ReconTargetsForRun(
+            RunRescoreInputs run)
+        {
+            var byFile = GroupReconciliationActionsByFile(run.ReconciliationActions, out _);
+            return byFile.TryGetValue(run.FileName, out var targets)
+                ? targets
+                : new List<(int, double, double, double)>();
         }
 
         /// <summary>
@@ -2637,23 +2838,42 @@ namespace pwiz.Osprey.Tasks
         {
             string cachePath = SpectraCache.GetCachePath(inputFile);
             SpectraWindowIndex index;
+            var reason = SpectraCacheRejection.None;
             try
             {
-                // null = absent / stale (source changed) / bad magic-version -- the same
-                // rejection rules LoadSpectraCache applies. Any of them is fatal here.
-                index = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
+                // Ask for the REASON, not just null. The six rejection rules have different
+                // remedies, and a message that lists them all sends the reader to the wrong one:
+                // "re-run PerFileScoring" is right for a stale cache and wrong for an absent
+                // one, where the cache usually exists and is valid but sits beside the raw data
+                // rather than in this worker's directory.
+                index = SpectraWindowIndex.BuildFromCache(cachePath, inputFile, out reason);
             }
             catch (Exception ex)
             {
-                throw new InvalidDataException(string.Format(
+                throw new SpectraCacheException(string.Format(
                     "Stage-6 rescore requires the '{0}' spectra cache written by the per-file " +
-                    "scoring stage, but indexing it failed: {1}", cachePath, ex.Message), ex);
+                    "scoring stage, but indexing it failed: {1}", cachePath, ex.Message),
+                    SpectraCacheRejection.None, cachePath, ex);
             }
             if (index == null)
-                throw new InvalidDataException(string.Format(
-                    "Stage-6 rescore requires the '{0}' spectra cache written by the per-file " +
-                    "scoring stage (absent, stale, or wrong version). Re-run PerFileScoring for " +
-                    "'{1}' so the cache is present beside its outputs.", cachePath, fileName));
+            {
+                // Absence is the one refusal that is usually a LOCATION problem rather than a
+                // damaged cache, so it names the flag that fixes it. The others are about the
+                // file that is there, and re-running the scoring stage is what rebuilds it.
+                string remedy = reason == SpectraCacheRejection.Absent
+                    ? string.Format(
+                        @"The cache is written beside its source data, so a --task worker whose " +
+                        @"--output-dir differs from the data directory has to be pointed at it " +
+                        @"with --cache-dir. Pass --cache-dir <dir holding {0}.spectra.bin>, or " +
+                        @"re-run PerFileScoring for '{0}' if no cache was ever written.", fileName)
+                    : string.Format(
+                        @"Re-run PerFileScoring for '{0}' to rebuild it.", fileName);
+                throw new SpectraCacheException(string.Format(
+                    @"Stage-6 rescore requires the '{0}' spectra cache written by the per-file " +
+                    @"scoring stage, but {1}. {2}",
+                    cachePath, SpectraCacheException.Describe(reason), remedy),
+                    reason, cachePath);
+            }
 
             ctx.LogInfo(string.Format(
                 "  Streaming {1} MS1 and {0} MS/MS spectra from cache for {2}",

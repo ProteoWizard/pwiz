@@ -1022,6 +1022,22 @@ function Test-TaskCacheHits {
 # passing vacuously.
 $firstPassFdrRehydrateMarker = 'Resume rehydrate: streaming the first-pass bundle from'
 
+# Mode 3's phase-3 worker must take the PER-RUN hydrate - each run loaded from its own
+# artifacts - rather than the all-runs builder kept for the straight-through pipeline.
+#
+# The OUTCOME cannot tell those apart here, and that is the whole reason this marker exists: a
+# phase-3 node is given ONE run, where the all-runs path is O(1) and produces identical bytes.
+# So mode 3 would stay green if the per-run path silently stopped being selected, and the
+# regression would only surface as an O(runs) startup on a cohort nobody runs in the gate.
+# Asserting the outcome alone is exactly what let an earlier resume fix report success while
+# testing the old path (defect (b2), TODO-20260901_osprey_firstpassfdr_resume).
+$perRunHydrateMarker = 'Per-run rescore: hydrating each of'
+
+# FirstPassFDR's half of the same shape: on a rehydrate where the analysis-wide summary is on
+# disk it publishes the survivor loader and builds no experiment-wide bundle, so it emits this
+# instead of $firstPassFdrRehydrateMarker. Mode 5 accepts either.
+$firstPassFdrPerRunMarker = 'Per-run rescore: FirstPassFDR publishes the survivor loader only'
+
 function Test-LogMarker {
     <#
     Assert a run log contains a marker line proving a specific code path executed.
@@ -1382,6 +1398,14 @@ function Invoke-HpcChain {
         # worker that cannot see it computes a different survivor set than straight-through.
         $ph2exp = Join-Path $ph2 'output.1st-pass.fdr_experiment.bin'
         if (Test-Path $ph2exp) { Copy-Item $ph2exp (Join-Path $ph3 'output.1st-pass.fdr_experiment.bin') }
+        # The analysis-wide RETAINED BASE_ID summary rides the same relay, for the same reason
+        # and one step further: it is what lets this worker compact its single run without
+        # reading every other run's reconciliation.json. FirstPassFDR writes it when planning
+        # ends. Unlike the files above this one is NOT guarded with Test-Path - a worker that
+        # cannot see it fails rather than silently compacting to a per-run subset, so a missing
+        # copy here must surface as that failure and not as a skipped hop.
+        $ph2ret = Join-Path $ph2 'output.1st-pass.retained_base_ids.bin'
+        Copy-Item $ph2ret (Join-Path $ph3 'output.1st-pass.retained_base_ids.bin')
         Copy-LibraryInto -Library $Library -Dir $ph3 -Manifest $Manifest
         $a3 = @('--task', 'PerFileRescoring', '--input-scores', "$s.scores.parquet",
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
@@ -1502,6 +1526,10 @@ function Invoke-HpcChain {
         # scalars from it, and $ph2 is gone by now, so phase 3 is its only route here.
         $ph3exp = Join-Path $ph3 'output.1st-pass.fdr_experiment.bin'
         if (Test-Path $ph3exp) { Copy-Item $ph3exp (Join-Path $ph4 'output.1st-pass.fdr_experiment.bin') -Force }
+        # And the retained base_id summary, for the same reason: SecondPassFDR's reconciled-input
+        # load streams each run against it, so $ph2 being gone makes phase 3 its only route here.
+        $ph3ret = Join-Path $ph3 'output.1st-pass.retained_base_ids.bin'
+        Copy-Item $ph3ret (Join-Path $ph4 'output.1st-pass.retained_base_ids.bin') -Force
         # No 2nd-pass bin relay. There was a `if (Test-Path ...) { Copy-Item ... }` here, and
         # it could never fire: --task PerFileRescoring sets NoJoin, so SecondPassFdrTask is not
         # in a phase-3 worker's pipeline and no such file exists to copy. Worse than dead - had
@@ -1862,6 +1890,33 @@ foreach ($name in $selected) {
             $summaryLines.Add("$name mode3 (verifier split): PASS (straight verified, chain shipped-path)")
         }
 
+        # Which PATH the phase-3 workers took, before comparing what they produced. One marker
+        # per worker log; every phase-3 node must show it, because a single node quietly falling
+        # back to the all-runs hydrate is invisible in the output at one file per node.
+        $ph3Logs = @(Get-ChildItem (Join-Path $chainRoot 'logs\phase3_*.log') -ErrorAction SilentlyContinue)
+        if ($ph3Logs.Count -eq 0) {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode3 (per-run hydrate): FAIL - no phase3_*.log to read"
+            $summaryLines.Add("$name mode3 (per-run hydrate): FAIL (no worker logs)")
+        } else {
+            $m3path = @{ Pass = $true; Issues = [System.Collections.Generic.List[string]]::new() }
+            foreach ($lg in $ph3Logs) {
+                $one = Test-LogMarker -LogPath $lg.FullName -Marker $perRunHydrateMarker `
+                    -Description 'the phase-3 worker hydrating its run from that run''s own artifacts'
+                foreach ($issue in $one.Issues) { $m3path.Issues.Add($issue) }
+            }
+            $m3path.Pass = ($m3path.Issues.Count -eq 0)
+            if ($m3path.Pass) {
+                $summaryLines.Add(
+                    "$name mode3 (per-run hydrate): PASS ($($ph3Logs.Count) worker(s))")
+            } else {
+                $overallFail = $true
+                Write-Problem-Tc "$name mode3 (per-run hydrate): FAIL - $($m3path.Issues.Count) issue(s)"
+                $m3path.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+                $summaryLines.Add("$name mode3 (per-run hydrate): FAIL ($($m3path.Issues.Count) issues)")
+            }
+        }
+
         $m3 = Compare-BlibFull -BlibExpected $straightBlib -BlibActual $chainBlib -Tolerance $Tolerance
         if ($m3.Pass) {
             $summaryLines.Add("$name mode3 (HPC chain==straight): PASS")
@@ -2104,8 +2159,24 @@ foreach ($name in $selected) {
         # ... and the FirstPassFDR cache hit above is NOT evidence the rehydrate arm
         # ran: a skipped task whose state nobody demands never enters Rehydrate at
         # all. This marker is the only thing that says it did.
+        # EITHER rehydrate shape proves the leg is not vacuous, and which one runs depends on
+        # whether the analysis-wide retained base_id summary is on disk. With it, FirstPassFDR
+        # publishes the survivor loader and builds no experiment-wide bundle at all, so the
+        # streaming-bundle line never appears - correctly. Accepting either is NOT loosening the
+        # assertion: the leg still fails if NEITHER appears, which is the vacuous case it exists
+        # to catch. Asserting only the old marker would have made this leg red for taking the
+        # better path.
         $m5marker = Test-LogMarker -LogPath $rRehydrate.Log -Marker $firstPassFdrRehydrateMarker `
             -Description 'FirstPassFDR streaming the post-Stage-5 bundle from its own sidecars'
+        if (-not $m5marker.Pass) {
+            $m5perRun = Test-LogMarker -LogPath $rRehydrate.Log -Marker $firstPassFdrPerRunMarker `
+                -Description 'FirstPassFDR publishing the survivor loader for a per-run rescore'
+            if ($m5perRun.Pass) {
+                $m5marker = $m5perRun
+            } else {
+                foreach ($issue in $m5perRun.Issues) { $m5marker.Issues.Add($issue) }
+            }
+        }
         foreach ($issue in $m5marker.Issues) { $m5cache.Issues.Add($issue) }
         # Repair Pass after mutating Issues. Test-TaskCacheHits computed it at return
         # time, so appending above leaves Pass $true with a non-empty Issues list. Every
