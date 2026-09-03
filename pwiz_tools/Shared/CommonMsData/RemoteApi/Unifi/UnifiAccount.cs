@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -127,15 +128,19 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
 
         public TokenResponse Authenticate()
         {
-            var tokenClient = new TokenClient(IdentityServer + IdentityConnectEndpoint, ClientId,
-                ClientSecret, new HttpClientHandler());
-            return tokenClient.RequestResourceOwnerPasswordAsync(Username, Password, ClientScope).Result;
+            // Shared with WatersConnectAccount.RequestToken, which authenticates against a
+            // sibling Waters-hosted identity server the same way - see OAuthPasswordGrantClient
+            // for the POST, response parsing, and why both needed to stop constructing
+            // TokenResponse directly once IdentityModel 7 removed its constructors.
+            return OAuthPasswordGrantClient.RequestToken(new Uri(IdentityServer + IdentityConnectEndpoint), ClientId, ClientSecret,
+                OAuthPasswordGrantClient.PasswordGrantForm(Username, Password, ClientScope));
         }
 
         public IEnumerable<UnifiFolderObject> GetFolders()
         {
-            var httpClient = GetAuthenticatedHttpClient();
-            var response = httpClient.GetAsync(GetFoldersUrl()).Result;
+            using var httpClient = GetAuthenticatedHttpClient();
+            using var request = new HttpRequestMessage(HttpMethod.Get, GetFoldersUrl());
+            var response = httpClient.SendRequest(request);
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
 
@@ -149,9 +154,10 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
 
         public IEnumerable<UnifiFileObject> GetFiles(UnifiFolderObject folder)
         {
-            var httpClient = GetAuthenticatedHttpClient();
+            using var httpClient = GetAuthenticatedHttpClient();
             string url = string.Format(@"/unifi/v1/folders({0})/items", folder.Id);
-            var response = httpClient.GetAsync(ServerUrl + url).Result;
+            using var request = new HttpRequestMessage(HttpMethod.Get, ServerUrl + url);
+            var response = httpClient.SendRequest(request);
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
             var itemsValue = jsonObject[@"value"] as JArray;
@@ -162,13 +168,12 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
             return itemsValue.OfType<JObject>().Select(f => new UnifiFileObject(f));
         }
 
-        public HttpClient GetAuthenticatedHttpClient()
+        public HttpClientWithProgress GetAuthenticatedHttpClient()
         {
             var tokenResponse = Authenticate();
-            var httpClient = new HttpClient();
-            httpClient.SetBearerToken(tokenResponse.AccessToken);
-            httpClient.DefaultRequestHeaders.Remove(@"Accept");
-            httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json;odata.metadata=minimal");
+            var httpClient = new HttpClientWithProgress();
+            httpClient.AddAuthorizationHeader(@"Bearer " + tokenResponse.AccessToken);
+            httpClient.AddHeader(@"Accept", @"application/json;odata.metadata=minimal");
             return httpClient;
         }
 
