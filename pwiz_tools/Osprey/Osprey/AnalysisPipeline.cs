@@ -203,6 +203,12 @@ namespace pwiz.Osprey
             sw.Stop();
             ctx.LogInfo(string.Format(@"[TASK] {0}:done ({1:F1}s)",
                 task.Name, sw.Elapsed.TotalSeconds));
+            // DIAGNOSTIC (OSPREY_DROP_BETWEEN_TASKS=1): make the in-process pipeline behave like
+            // the HPC split - this task drops everything but the library, and the next reloads
+            // what it needs from artifacts. Off by default; the whole experiment reverts
+            // together. See PipelineContext.DropAllButLibrary.
+            if (OspreyEnvironment.DropBetweenTasks)
+                ctx.DropAllButLibrary();
 
             // [STAGE-WALL] one line per task->stage with parseable format
             // for Measure-Pipeline.ps1 / Osprey-workflow.html perf tables.
