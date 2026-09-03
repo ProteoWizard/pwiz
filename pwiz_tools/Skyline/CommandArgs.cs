@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: John Chilton <jchilton .at. u.washington.edu>,
  *                  Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
@@ -43,8 +43,6 @@ using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.CommonMsData.RemoteApi.Ardia;
-using pwiz.CommonMsData.RemoteApi.Unifi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Results.Scoring;
