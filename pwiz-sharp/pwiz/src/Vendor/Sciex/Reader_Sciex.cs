@@ -1,4 +1,4 @@
-using Pwiz.Data.Common.Cv;
+﻿using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Readers;
 #if !NO_VENDOR_SUPPORT
