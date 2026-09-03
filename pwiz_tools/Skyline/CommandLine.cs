@@ -41,6 +41,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
@@ -121,6 +122,21 @@ namespace pwiz.Skyline
         public SrmDocument Document { get { return _doc; } }
         public ImportPeptideSearch ImportPeptideSearch { get; private set; }
         public IDocumentOperations DocumentOperations { get; set; }
+
+        /// <summary>
+        /// When set, long-running command operations mirror their progress to this broker and honor its
+        /// cancellation -- the LongWaitDlg that <see cref="SkylineTool.IJsonToolService.RunCommand"/> runs the
+        /// command under. Null for a headless command line (text-only progress, nothing to cancel).
+        /// </summary>
+        public IProgressMonitor LongWaitBroker { get; set; }
+
+        // Builds a progress monitor for a long-running command operation, wired to LongWaitBroker so that -- when the
+        // command runs under a LongWaitDlg (IJsonToolService.RunCommand) -- progress reaches the dialog and its Cancel
+        // stops the work. In a headless command line LongWaitBroker is null and this is the text-only monitor.
+        private CommandProgressMonitor CreateProgressMonitor(IProgressStatus status, bool warnOnImportFailure = false, double secondsBetweenStatusUpdates = 2.0)
+        {
+            return new CommandProgressMonitor(_out, status, warnOnImportFailure, secondsBetweenStatusUpdates, LongWaitBroker);
+        }
 
         public CommandLine()
             : this(new CommandStatusWriter(new StringWriter()))
@@ -296,7 +312,7 @@ namespace pwiz.Skyline
                 // save in this run is deterministic regardless of the persisted setting. Null is a no-op.
                 using (CompactFormatOption.SetOverride(commandArgs.SaveCompactFormat))
                 {
-                    DocContainer.ProgressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(),
+                    DocContainer.ProgressMonitor = CreateProgressMonitor(new ProgressStatus(),
                         commandArgs.ImportWarnOnFailure);
                     // Make sure no joining happens on open, if joining is disabled
                     if (commandArgs.ImportDisableJoining && _doc != null && _doc.Settings.HasResults)
@@ -536,6 +552,11 @@ namespace pwiz.Skyline
                 RemoveResults(commandArgs.RemoveBeforeDate);
             }
 
+            if (!ReorderReplicates(commandArgs))
+            {
+                return false;
+            }
+
             if (commandArgs.Reintegrating && !ReintegratePeaks(commandArgs))
             {
                 return false;
@@ -701,7 +722,7 @@ namespace pwiz.Skyline
                 using var stream = File.OpenRead(commandArgs.ImportAnnotations);
                 using var progressStream = new ProgressStream(stream);
                 var progressStatus = new ProgressStatus();
-                progressStream.SetProgressMonitor(new CommandProgressMonitor(_out, progressStatus), progressStatus, true);
+                progressStream.SetProgressMonitor(CreateProgressMonitor(progressStatus), progressStatus, true);
                 var modifiedDocument =
                     documentAnnotations.ReadAnnotationsFromStream(CancellationToken.None, commandArgs.ImportAnnotations, progressStream);
                 ModifyDocument(DocumentModifier.FromResult(_doc, modifiedDocument));
@@ -721,11 +742,58 @@ namespace pwiz.Skyline
                 _out.WriteLine(SkylineResources.CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_, Path.GetFileName(commandArgs.ImportPeakBoundariesPath));
                 long lineCount = Helpers.CountLinesInFile(commandArgs.ImportPeakBoundariesPath);
                 PeakBoundaryImporter importer = new PeakBoundaryImporter(_doc);
-                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+                var progressMonitor = CreateProgressMonitor(new ProgressStatus(string.Empty));
                 var modifiedDocument = importer.ModifyDocument(SrmDocument.DOCUMENT_TYPE.none,
                     commandArgs.ImportPeakBoundariesPath, progressMonitor, lineCount);
                 ModifyDocument(DocumentModifier.FromResult(_doc, modifiedDocument));
+                WarnUnrecognizedPeakBoundaries(importer);
             }, SkylineResources.CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_);
+        }
+
+        /// <summary>
+        /// Reports each row the peak-boundary importer skipped (unrecognized peptide, file name, or
+        /// peptide/file/charge-state combination) as a console warning. The GUI surfaces these through a
+        /// dialog (see <see cref="FileUI.PeakBoundaryImporterUI"/>); the command line has no dialog, so
+        /// without this an --import-peak-boundaries file that matches nothing imports silently and still
+        /// reports success, leaving the user no way to tell "applied" from "matched nothing".
+        /// </summary>
+        private void WarnUnrecognizedPeakBoundaries(PeakBoundaryImporter importer)
+        {
+            WarnUnrecognizedItems(importer.UnrecognizedPeptides, p => p,
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_,
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_);
+            WarnUnrecognizedItems(importer.UnrecognizedFiles, f => f,
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_file_or_replicate_name_in_the_peak_boundaries_file_was_not_recognized_and_was_ignored_,
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following__0__file_or_replicate_names_in_the_peak_boundaries_file_were_not_recognized_and_were_ignored_);
+            WarnUnrecognizedItems(importer.UnrecognizedChargeStates, c => c.PrintLine(' '),
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following_peptide__file__and_charge_state_combination_was_not_recognized_and_was_ignored_,
+                SkylineResources.CommandLine_ImportPeakBoundaries_Warning__The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_and_were_ignored_);
+        }
+
+        /// <summary>
+        /// Writes a count-headed warning followed by up to <c>maxItemsToShow</c> of the offending values
+        /// (then an ellipsis when truncated), mirroring the bounded list the GUI shows. <paramref name="items"/>
+        /// maps each unrecognized value to the input-file line it first appeared on; the earliest rows are
+        /// shown first (dictionary order is arbitrary) so the list reliably points at the user's first bad rows.
+        /// </summary>
+        private void WarnUnrecognizedItems<TItem>(IDictionary<TItem, long> items, Func<TItem, string> printLine,
+            string singularHeader, string pluralHeaderFormat)
+        {
+            if (items.Count == 0)
+                return;
+            const int maxItemsToShow = 10;
+            _out.WriteLine(items.Count == 1 ? singularHeader : string.Format(pluralHeaderFormat, items.Count));
+            int shown = 0;
+            foreach (var item in items.OrderBy(pair => pair.Value))
+            {
+                if (shown++ == maxItemsToShow)
+                {
+                    _out.WriteLine(@"...");
+                    break;
+                }
+                _out.WriteLine(SkylineResources.CommandLine_ImportPeakBoundaries_Warning__line__0____1_,
+                    item.Value, printLine(item.Key));
+            }
         }
 
         private bool RefineDocument(CommandArgs commandArgs)
@@ -778,7 +846,7 @@ namespace pwiz.Skyline
             {
                 ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIonMobilityFiltering(ionMobilityFiltering =>
                 {
-                    var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(message));
+                    var progressMonitor = CreateProgressMonitor(new ProgressStatus(message));
                     var lib = IonMobilityLibrary.CreateFromResults(
                         doc, null,
                         doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator,
@@ -1228,7 +1296,7 @@ namespace pwiz.Skyline
                             isolationSchemeName = Path.GetFileNameWithoutExtension(isolationSchemeImportFilepath);
                             var reader = new IsolationSchemeReader(new MsDataFileUri[]
                                 { new MsDataFilePath(isolationSchemeImportFilepath) });
-                            var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
+                            var progressMonitor = CreateProgressMonitor(new ProgressStatus(String.Empty));
                             isolationScheme = reader.Import(isolationSchemeName, progressMonitor);
                             var windowsWithMarginApplied = isolationScheme.PrespecifiedIsolationWindows.Select(w => IsolationWindow.CreateWithMargin(w, true)).ToList();
                             isolationScheme = new IsolationScheme(isolationScheme.Name, windowsWithMarginApplied,
@@ -1508,7 +1576,7 @@ namespace pwiz.Skyline
 
             try
             {
-                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+                var progressMonitor = CreateProgressMonitor(new ProgressStatus(string.Empty));
                 using var fileStream = File.OpenRead(skylineFile);
                 using var progressStream = new ProgressStream(fileStream);
                 progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(skylineFile)), true);
@@ -2352,6 +2420,70 @@ namespace pwiz.Skyline
             }
         }
 
+        private bool ReorderReplicates(CommandArgs commandArgs)
+        {
+            if (string.IsNullOrEmpty(commandArgs.ReorderReplicatesPath))
+            {
+                return true;
+            }
+
+            string[] requestedNames;
+            try
+            {
+                requestedNames = File.ReadAllLines(PathEx.SafePath(commandArgs.ReorderReplicatesPath), Encoding.UTF8)
+                    .Select(line => line.Trim())
+                    .Where(line => line.Length > 0)
+                    .ToArray();
+            }
+            catch (Exception exception)
+            {
+                _out.WriteLine(Resources.CommandStatusWriter_WriteLine_Error_ + @" " +
+                    string.Format(SkylineResources.CommandLine_ReorderReplicates_Error__Could_not_read_replicate_order_file__0____1_,
+                        commandArgs.ReorderReplicatesPath, exception.Message));
+                return false;
+            }
+
+            if (requestedNames.Length == 0)
+            {
+                _out.WriteLine(Resources.CommandStatusWriter_WriteLine_Error_ + @" " +
+                    string.Format(SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate_order_file_does_not_contain_any_replicate_names_,
+                        commandArgs.ReorderReplicatesPath));
+                return false;
+            }
+
+            var duplicateName = requestedNames.GroupBy(name => name, StringComparer.Ordinal)
+                .FirstOrDefault(group => group.Count() > 1)?.Key;
+            if (duplicateName != null)
+            {
+                _out.WriteLine(Resources.CommandStatusWriter_WriteLine_Error_ + @" " +
+                    string.Format(SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate_name__0__appears_more_than_once_in_the_order_file_,
+                        duplicateName, commandArgs.ReorderReplicatesPath));
+                return false;
+            }
+
+            if (Document.MeasuredResults == null || Document.MeasuredResults.Chromatograms.Count == 0)
+            {
+                _out.WriteLine(Resources.CommandStatusWriter_WriteLine_Error_ + @" " +
+                    SkylineResources.CommandLine_ReorderReplicates_Error__The_document_does_not_contain_results_replicates_);
+                return false;
+            }
+
+            var replicatesByName = Document.MeasuredResults.Chromatograms
+                .ToDictionary(chromatogramSet => chromatogramSet.Name, StringComparer.Ordinal);
+            var unknownName = requestedNames.FirstOrDefault(name => !replicatesByName.ContainsKey(name));
+            if (unknownName != null)
+            {
+                _out.WriteLine(Resources.CommandStatusWriter_WriteLine_Error_ + @" " +
+                    string.Format(SkylineResources.CommandLine_ReorderReplicates_Error__The_replicate__0__was_not_found_in_the_document_,
+                        unknownName, commandArgs.ReorderReplicatesPath));
+                return false;
+            }
+
+            var replicateRefs = requestedNames.Select(name => ReplicateRef.FromChromatogramSet(replicatesByName[name]));
+            SetDocument(new ElementReorderer(CancellationToken.None, Document).SetNewOrder(replicateRefs));
+            return true;
+        }
+
         public bool MinimizeResults(CommandArgs commandArgs)
         {
             if (!_doc.Settings.HasResults)
@@ -2388,7 +2520,7 @@ namespace pwiz.Skyline
                 if (fastaPath.IsNullOrEmpty())
                     throw new ArgumentException(Resources.CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins);
                 _out.WriteLine(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath));
-                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(ProteomeResources.ProteinAssociation_ListPeptidesForMatching_Building_peptide_prefix_tree));
+                var progressMonitor = CreateProgressMonitor(new ProgressStatus(ProteomeResources.ProteinAssociation_ListPeptidesForMatching_Building_peptide_prefix_tree));
                 var proteinAssociation = new ProteinAssociation(Document, progressMonitor.CancellationToken);
                 proteinAssociation.UseFastaFile(fastaPath, progressMonitor);
                 proteinAssociation.ApplyParsimonyOptions(commandArgs.AssociateProteinsGroupProteins.GetValueOrDefault(),
@@ -2439,7 +2571,7 @@ namespace pwiz.Skyline
 
         private bool ImportSearchInternal(CommandArgs commandArgs, ref SrmDocument doc)
         {
-            var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
+            var progressMonitor = CreateProgressMonitor(new ProgressStatus(String.Empty));
             ImportPeptideSearch = new ImportPeptideSearch
             {
                 SearchFilenames = commandArgs.SearchResultsFiles.ToArray(),
@@ -2781,7 +2913,7 @@ namespace pwiz.Skyline
                 var scoringModel = CreateUntrainedScoringModel(modelName, modelType, excludeFeatures, decoys, secondBest);
                 if (scoringModel == null)
                     return null;
-                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
+                var progressMonitor = CreateProgressMonitor(new ProgressStatus(String.Empty));
                 var targetDecoyGenerator = new TargetDecoyGenerator(scoringModel,
                     _doc.GetPeakFeatures(scoringModel.PeakFeatureCalculators, progressMonitor));
 
@@ -2884,7 +3016,7 @@ namespace pwiz.Skyline
 
                 modelAndFeatures.ReleaseMemory();   // Avoid holding memory through peak adjustment
 
-                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+                var progressMonitor = CreateProgressMonitor(new ProgressStatus(string.Empty));
 
                 resultsHandler.ScoreFeatures(progressMonitor, true, _out);
                 if (resultsHandler.IsMissingScores())
@@ -2908,7 +3040,7 @@ namespace pwiz.Skyline
             _out.WriteLine(Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____, Path.GetFileName(path));
             using (var readerFasta = new StreamReader(PathEx.SafePath(path)))
             {
-                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+                var progressMonitor = CreateProgressMonitor(new ProgressStatus(string.Empty));
                 long lines = Helpers.CountLinesInFile(path);
                 // TODO(nicksh): Audit logging
                 ModifyDocument(d => d.ImportFasta(readerFasta, progressMonitor, lines, false, null, out _, out _));
@@ -2953,7 +3085,7 @@ namespace pwiz.Skyline
                 _out.Write(strNameMatches);
             }
 
-            var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+            var progressMonitor = CreateProgressMonitor(new ProgressStatus(string.Empty));
             ModifyDocument(d =>
             {
                 d = d.ImportFasta(new StringListReader(lineList), progressMonitor, lineList.Count, matcher,
@@ -2979,7 +3111,7 @@ namespace pwiz.Skyline
             var retentionTimeRegression = _doc.Settings.PeptideSettings.Prediction.RetentionTime;
             RCalcIrt calcIrt = retentionTimeRegression != null ? (retentionTimeRegression.Calculator as RCalcIrt) : null;
 
-            var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+            var progressMonitor = CreateProgressMonitor(new ProgressStatus(string.Empty));
             var inputs = new MassListInputs(commandArgs.TransitionListPath);
             var tolerateErrors = commandArgs.IsIgnoreTransitionErrors;
             var importer = _doc.PreImportMassList(inputs, progressMonitor, tolerateErrors, SrmDocument.DOCUMENT_TYPE.none, false, Document.DocumentType);
@@ -3566,8 +3698,13 @@ namespace pwiz.Skyline
 
         private bool ExportLiveReport(CommandArgs commandArgs)
         {
-            char? reportColSeparator = commandArgs.ReportColumnSeparator;
-            var dataSchema = SkylineDataSchema.MemoryDataSchema(_doc, commandArgs.IsReportInvariant
+            // The format has to be known before the localizer, because parquet defaults to
+            // invariant. It is written to be read by other programs, which do better with
+            // stable column names and round-trip numbers than with localized ones.
+            var reportFormat = commandArgs.ReportFormat ?? ReportExporters.FormatForFilenameExtension(
+                Path.GetExtension(commandArgs.ReportFile), TextUtil.EXT_CSV);
+            bool invariant = commandArgs.IsReportInvariant ?? reportFormat == ReportFormat.parquet;
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(_doc, invariant
                 ? DataSchemaLocalizer.INVARIANT
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
@@ -3592,19 +3729,9 @@ namespace pwiz.Skyline
                     }
 
                     IProgressStatus status = new ProgressStatus(string.Empty);
-                    IProgressMonitor broker = new CommandProgressMonitor(_out, status);
+                    IProgressMonitor broker = CreateProgressMonitor(status);
 
-                    IReportExporter rowItemExporter;
-                    if (reportColSeparator.HasValue)
-                    {
-                        rowItemExporter =
-                            ReportExporters.ForSeparator(dataSchema.DataSchemaLocalizer, reportColSeparator.Value);
-                    }
-                    else
-                    {
-                        rowItemExporter = ReportExporters.ForFilenameExtension(dataSchema.DataSchemaLocalizer,
-                            Path.GetExtension(commandArgs.ReportFile), TextUtil.EXT_CSV);
-                    }
+                    var rowItemExporter = ReportExporters.ForFormat(dataSchema.DataSchemaLocalizer, reportFormat);
                     rowFactories.ExportReport(saver.Stream, PersistedViews.MainGroup.Id.ViewName(commandArgs.ReportName), rowItemExporter, broker, ref status);
 
                     broker.UpdateProgress(status.Complete());
@@ -3655,7 +3782,7 @@ namespace pwiz.Skyline
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
                         var status = new ProgressStatus(string.Empty);
-                        IProgressMonitor broker = new CommandProgressMonitor(_out, status);
+                        IProgressMonitor broker = CreateProgressMonitor(status);
                         chromExporter.Export(writer, broker, filesToExport, LocalizationHelper.CurrentCulture,
                             chromExtractors, chromSources);
                         writer.Close();
@@ -3693,7 +3820,7 @@ namespace pwiz.Skyline
                 {
                     var libraryExporter = new SpectralLibraryExporter(Document, DocContainer.DocumentFilePath);
                     var status = new ProgressStatus(string.Empty);
-                    IProgressMonitor broker = new CommandProgressMonitor(_out, status);
+                    IProgressMonitor broker = CreateProgressMonitor(status);
                     libraryExporter.ExportSpectralLibrary(specLibFile, broker);
                     broker.UpdateProgress(status.Complete());
                     _out.WriteLine(Resources.CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_,
@@ -3730,7 +3857,7 @@ namespace pwiz.Skyline
                 var handler = new MProphetResultsHandler(Document, mProphetScoringModel);
                 var status = new ProgressStatus(string.Empty);
                 var cultureInfo = LocalizationHelper.CurrentCulture;
-                IProgressMonitor progressMonitor = new CommandProgressMonitor(_out, status);
+                IProgressMonitor progressMonitor = CreateProgressMonitor(status);
                 using (var fs = new FileSaver(mProphetFile))
                 using (var writer = new StreamWriter(fs.SafeName))
                 {
@@ -5051,18 +5178,24 @@ namespace pwiz.Skyline
         private Thread _waitingThread;
         private volatile bool _waiting;
 
-        public CommandProgressMonitor(TextWriter outWriter, IProgressStatus status, bool warnOnImportFailure = false, double secondsBetweenStatusUpdates = 2.0)
+        // When set (by IJsonToolService.RunCommand, which runs the command under a LongWaitDlg), progress is
+        // mirrored to this broker so the dialog shows it, and its IsCanceled lets the dialog's Cancel button stop
+        // the command. Null for a headless command line, where progress is text-only and there is nothing to cancel.
+        private readonly IProgressMonitor _broker;
+
+        public CommandProgressMonitor(TextWriter outWriter, IProgressStatus status, bool warnOnImportFailure = false, double secondsBetweenStatusUpdates = 2.0, IProgressMonitor broker = null)
         {
             SecondsBetweenStatusUpdates = secondsBetweenStatusUpdates;
             _out = outWriter;
             _waitStart = _lastOutput = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             _warnOnImportFailure = warnOnImportFailure;
+            _broker = broker;
             CancellationToken = new CancellationToken();
 
             UpdateProgress(status);
         }
 
-        bool IProgressMonitor.IsCanceled => false;
+        bool IProgressMonitor.IsCanceled => _broker?.IsCanceled ?? false;
         public bool IsCanceled => ((IProgressMonitor)this).IsCanceled;
 
         public int ProgressValue
@@ -5093,7 +5226,12 @@ namespace pwiz.Skyline
 
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
-            return UpdateProgressInternal(status);
+            var response = UpdateProgressInternal(status);
+            // Mirror to the LongWaitDlg broker on every update (not just the throttled text output above), so the
+            // dialog tracks progress, and honor a cancel it reports so the command stops when its Cancel is clicked.
+            if (_broker != null && _broker.UpdateProgress(status) == UpdateProgressResponse.cancel)
+                return UpdateProgressResponse.cancel;
+            return response;
         }
 
         public bool HasUI { get { return false; } }

@@ -26,8 +26,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using pwiz.Osprey.Core;
@@ -362,43 +360,12 @@ namespace pwiz.Osprey.IO
             }
             else if (msLevel == 2 && hasPrecursor)
             {
-                // Use selected ion m/z as center if no isolation window target
-                double center = hasIsolationWindow && isoTarget > 0 ? isoTarget : precursorMz;
-                if (center <= 0)
+                var ms2 = SpectrumBuilder.CreateMs2Spectrum(spectrumIndex, retentionTime,
+                    precursorMz, hasIsolationWindow, isoTarget, isoLower, isoUpper,
+                    mzArray, intensityArray);
+                if (ms2 == null)
                     return; // Skip spectra without precursor info
-
-                // Fail fast on missing offsets rather than substituting a
-                // 12.5 hardcoded default. DIA processing cannot proceed
-                // without true isolation windows, and a silent default
-                // produces bogus results that are very hard to diagnose
-                // downstream. The error names the spectrum index and which
-                // cvParam is missing. Mirrors the equivalent fail-fast
-                // change in osprey/crates/osprey-io/src/mzml/parser.rs
-                // (PR #39 on maccoss/osprey).
-                if (isoLower <= 0)
-                    throw new InvalidDataException(string.Format(
-                        "spectrum index {0}: no valid isolation-window lower offset " +
-                        "(cvParam MS:1000828 missing or non-positive); cannot process DIA data " +
-                        "without true isolation windows.",
-                        spectrumIndex));
-                if (isoUpper <= 0)
-                    throw new InvalidDataException(string.Format(
-                        "spectrum index {0}: no valid isolation-window upper offset " +
-                        "(cvParam MS:1000829 missing or non-positive); cannot process DIA data " +
-                        "without true isolation windows.",
-                        spectrumIndex));
-
-                var isoWindow = new IsolationWindow(center, isoLower, isoUpper);
-
-                ms2List.Add(new Spectrum
-                {
-                    ScanNumber = spectrumIndex,
-                    RetentionTime = retentionTime,
-                    PrecursorMz = precursorMz > 0 ? precursorMz : center,
-                    IsolationWindow = isoWindow,
-                    Mzs = mzArray,
-                    Intensities = intensityArray,
-                });
+                ms2List.Add(ms2);
             }
         }
 
@@ -657,91 +624,14 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Some mzML producers emit peaks that are not strictly ascending in
-        /// m/z (observed in a HeLa Astral 3 mz DIA file: ~0.07% of spectra
-        /// have a single inverted pair of consecutive centroids). Downstream
-        /// fragment matching binary-searches the spectrum; the Rust
-        /// partition_point and BinarySearchLowerBound here use procedurally
-        /// different step patterns, so an unsorted region produces UB-style
-        /// divergence between the two impls. Sort once at load time so every
-        /// downstream consumer sees a well-defined ordering. The leading O(n)
-        /// sortedness check is the common-case fast path; the OrderBy
-        /// permutation only runs on inversions. LINQ OrderBy is stable
-        /// (matches Rust slice::sort_by); Array.Sort on parallel arrays is
-        /// unstable introsort and would reorder ties differently.
+        /// Thin forwarder to <see cref="SpectrumBuilder.EnsureSorted"/>, which owns
+        /// the peak sort for every input format. Kept as a named method here
+        /// because both mzML parse paths call it from inside their decode loops.
         /// </summary>
-        // Cap on [unsorted-spectrum] log lines per process — otherwise an
-        // Astral 3-file run with millions of spectra and a 0.07% inversion
-        // rate produces thousands of interleaved lines from concurrent
-        // ProcessFile calls. After the cap, we suppress further lines
-        // (the first ones already prove the case is happening).
-        private static int s_unsortedLogCount;
-        private const int MaxUnsortedLogLines = 10;
-
         private static bool EnsureSortedSpectrum(uint spectrumIndex,
             ref double[] mzArray, ref float[] intensityArray)
         {
-            if (mzArray == null || mzArray.Length < 2)
-                return false;
-            // Defensive guard: a malformed mzML where the m/z and intensity
-            // arrays are not the same length would IndexOutOfRange on the
-            // permutation step. Skip sorting in that case (downstream code
-            // already has its own length checks).
-            if (intensityArray == null || intensityArray.Length != mzArray.Length)
-                return false;
-            // Walk the array once: detect NaN m/z (malformed mzML — fail
-            // loudly so a user report surfaces) and check sortedness in
-            // the same pass. NaN comparison semantics differ between
-            // Comparer<double>.Default and Rust's total_cmp, so we cannot
-            // sort consistently across impls; better to refuse the
-            // spectrum than silently diverge.
-            bool sorted = true;
-            for (int i = 0; i < mzArray.Length; i++)
-            {
-                if (double.IsNaN(mzArray[i]))
-                {
-                    throw new InvalidDataException(string.Format(
-                        "NaN m/z at index {0} of spectrum_index={1} (n_peaks={2}); " +
-                        "cannot sort or fragment-match a malformed centroid array.",
-                        i, spectrumIndex, mzArray.Length));
-                }
-                if (i > 0 && mzArray[i] < mzArray[i - 1])
-                    sorted = false;
-            }
-            if (sorted)
-                return false;
-            // Re-sorting below is unconditional (correctness); the per-spectrum
-            // notice is implementer detail -- some instrument mzML carries a tiny
-            // fraction of unsorted peak arrays (e.g. Astral ~0.07%) that Osprey
-            // silently corrects -- so it stays behind --verbose.
-            if (OspreyOutput.Verbose)
-            {
-                int logCount = Interlocked.Increment(ref s_unsortedLogCount);
-                if (logCount <= MaxUnsortedLogLines)
-                {
-                    OspreyOutput.Out.WriteLine(
-                        $"[unsorted-spectrum] spectrum_index={spectrumIndex} n_peaks={mzArray.Length}");
-                    if (logCount == MaxUnsortedLogLines)
-                    {
-                        OspreyOutput.Out.WriteLine(
-                            $"[unsorted-spectrum] suppressing further lines (>{MaxUnsortedLogLines} per process)");
-                    }
-                }
-            }
-            int n = mzArray.Length;
-            double[] keyMz = mzArray;
-            int[] order = Enumerable.Range(0, n)
-                .OrderBy(i => keyMz[i]).ToArray();
-            double[] sortedMzs = new double[n];
-            float[] sortedInts = new float[n];
-            for (int i = 0; i < n; i++)
-            {
-                sortedMzs[i] = mzArray[order[i]];
-                sortedInts[i] = intensityArray[order[i]];
-            }
-            mzArray = sortedMzs;
-            intensityArray = sortedInts;
-            return true;
+            return SpectrumBuilder.EnsureSorted(spectrumIndex, ref mzArray, ref intensityArray);
         }
 
         #endregion
@@ -784,63 +674,40 @@ namespace pwiz.Osprey.IO
 
             public MS1Spectrum ToMs1Spectrum()
             {
-                return new MS1Spectrum
-                {
-                    ScanNumber = Index,
-                    RetentionTime = RetentionTime,
-                    Mzs = MzArray,
-                    Intensities = IntensityArray,
-                };
+                return SpectrumBuilder.CreateMs1Spectrum(Index, RetentionTime,
+                    MzArray, IntensityArray);
             }
 
             public Spectrum ToMs2Spectrum()
             {
                 if (!HasPrecursor)
                     return null;
-                double center = HasIsolationWindow && IsoTarget > 0 ? IsoTarget : PrecursorMz;
-                if (center <= 0)
-                    return null;
-
-                // Fail fast on missing offsets (see the equivalent block
-                // in the linear convert path above for the rationale).
-                if (IsoLower <= 0)
-                    throw new InvalidDataException(string.Format(
-                        "spectrum index {0}: no valid isolation-window lower offset " +
-                        "(cvParam MS:1000828 missing or non-positive); cannot process DIA data " +
-                        "without true isolation windows.",
-                        Index));
-                if (IsoUpper <= 0)
-                    throw new InvalidDataException(string.Format(
-                        "spectrum index {0}: no valid isolation-window upper offset " +
-                        "(cvParam MS:1000829 missing or non-positive); cannot process DIA data " +
-                        "without true isolation windows.",
-                        Index));
-
-                return new Spectrum
-                {
-                    ScanNumber = Index,
-                    RetentionTime = RetentionTime,
-                    PrecursorMz = PrecursorMz > 0 ? PrecursorMz : center,
-                    IsolationWindow = new IsolationWindow(center, IsoLower, IsoUpper),
-                    Mzs = MzArray,
-                    Intensities = IntensityArray,
-                };
+                return SpectrumBuilder.CreateMs2Spectrum(Index, RetentionTime, PrecursorMz,
+                    HasIsolationWindow, IsoTarget, IsoLower, IsoUpper, MzArray, IntensityArray);
             }
         }
 
         #endregion
 
         /// <summary>
-        /// IEEE-754 correct double parser for mzML cvParam values.
-        /// .NET Framework 4.7.2's double.TryParse can be off by 1-2 ULPs
-        /// on 16-digit scientific values; XmlConvert.ToDouble is required
-        /// by XML schema spec to be IEEE-correct, matching Rust mzdata's
-        /// parser. Without this, cvParams like scan_start_time
-        /// "17.0286203070330" parse to slightly different f64 cross-impl,
-        /// producing 2-ULP apex_rt drift downstream.
+        /// IEEE-754 correct double parser for mzML cvParam values. Without a
+        /// correctly-rounded parse, cvParams like scan_start_time land 1-2 ULPs
+        /// away and produce apex_rt drift downstream and cross-impl.
+        ///
+        /// On .NET Framework this goes through the C runtime's strtod (see
+        /// <c>NativeStrtod</c>, which is compiled only for net472, so a cref to it
+        /// would not resolve in the net8.0 pass). The previous version of this method used
+        /// XmlConvert.ToDouble on the stated grounds that XML Schema requires it
+        /// to be IEEE-correct; **that is not true of .NET Framework's
+        /// implementation**, which parses "0.86653405" one ULP high. .NET Core 3.0
+        /// fixed both parsing and "R" formatting, so the .NET 8 build needs
+        /// nothing beyond XmlConvert.
         /// </summary>
         private static bool TryParseXmlDouble(string s, out double result)
         {
+#if NET472
+            return NativeStrtod.TryParse(s, out result);
+#else
             try
             {
                 result = XmlConvert.ToDouble(s);
@@ -851,6 +718,7 @@ namespace pwiz.Osprey.IO
                 result = 0.0;
                 return false;
             }
+#endif
         }
     }
 

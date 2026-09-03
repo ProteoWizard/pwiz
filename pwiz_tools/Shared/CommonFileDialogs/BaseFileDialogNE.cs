@@ -17,6 +17,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -42,6 +43,11 @@ namespace pwiz.CommonFileDialogs
         private RemoteSession _remoteSession;
         private readonly IList<RemoteAccount> _remoteAccounts;
         private bool _waitingForData;
+        private Label _scanningLabel;
+        private readonly Stopwatch _scanProgressTimer = new Stopwatch();
+        private long _lastScanUpdateMsec;
+        private const long SCAN_VISIBLE_DELAY_MSEC = 150;
+        private const long SCAN_PROGRESS_INTERVAL_MSEC = 100;
         private readonly IList<string> _specificDataSourceFilter; // Specific data sources to look for
         protected bool IsRemote { get; private set; }
 
@@ -72,6 +78,17 @@ namespace pwiz.CommonFileDialogs
                 sourceTypeComboBox.Items.AddRange(sourceTypes.Cast<object>().ToArray());
                 sourceTypeComboBox.SelectedIndex = 0;
             }
+
+            // The New Folder command is hidden by default; subclasses that support folder creation
+            // make it visible (and may give it an icon). Text is set here (not in the designer) so it
+            // stays localizable and serves as the tooltip / accessible name.
+            newFolderButton.Text = CommonFileDialogResources.BaseFileDialogNE_NewFolder;
+            newFolderButton.ToolTipText = CommonFileDialogResources.BaseFileDialogNE_NewFolder;
+
+            // The Refresh command is hidden by default; subclasses that support re-fetching the
+            // listing make it visible. Text is the accessible name and ToolTip is shown on hover.
+            refreshButton.Text = CommonFileDialogResources.BaseFileDialogNE_Refresh;
+            refreshButton.ToolTipText = CommonFileDialogResources.BaseFileDialogNE_Refresh;
 
             // Create a new image list for the list view that is the default size (16x16)
             ImageList imageList = new ImageList{ColorDepth = ColorDepth.Depth32Bit};
@@ -460,12 +477,71 @@ namespace pwiz.CommonFileDialogs
         {
         }
 
+        /// <summary>
+        /// Covers the empty list while a directory is being read, since the rows are not added
+        /// until every entry has been looked at, and looking at one can mean asking the reader
+        /// what a directory holds. Without this the dialog shows an empty list for as long as
+        /// that takes, which reads as an empty folder rather than as work in progress.
+        /// </summary>
+        private void ShowScanningInProgress(int itemsFound)
+        {
+            var showing = _scanningLabel != null && _scanningLabel.Visible;
+            var elapsed = _scanProgressTimer.ElapsedMilliseconds;
+            // A directory that reads quickly, which is any local one, should not flash a message
+            if (!showing && elapsed < SCAN_VISIBLE_DELAY_MSEC)
+                return;
+            // Repainting the count for every entry would cost more than the scanning it reports
+            // on, in a directory holding thousands of them
+            if (showing && elapsed - _lastScanUpdateMsec < SCAN_PROGRESS_INTERVAL_MSEC)
+                return;
+            _lastScanUpdateMsec = elapsed;
+
+            if (_scanningLabel == null)
+            {
+                _scanningLabel = new Label
+                {
+                    AutoSize = false,
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    BackColor = listView.BackColor,
+                    ForeColor = SystemColors.GrayText,
+                    Visible = false
+                };
+                Controls.Add(_scanningLabel);
+            }
+            _scanningLabel.Bounds = listView.Bounds;
+            _scanningLabel.Anchor = listView.Anchor;
+            _scanningLabel.Text = itemsFound == 0
+                ? CommonFileDialogResources.BaseFileDialogNE_populateListViewFromDirectory_Scanning___
+                : string.Format(CommonFileDialogResources.BaseFileDialogNE_populateListViewFromDirectory_Scanning____0__items, itemsFound);
+            _scanningLabel.Visible = true;
+            _scanningLabel.BringToFront(); // Controls.Add puts a control at the back of the z-order, behind the list
+            _scanningLabel.Refresh();
+            listView.Cursor = Cursors.WaitCursor;
+        }
+
+        private void ScanningComplete()
+        {
+            if (_scanningLabel == null || !_scanningLabel.Visible)
+                return;
+            _scanningLabel.Visible = false;
+            listView.Cursor = Cursors.Default;
+        }
+
         private void populateListViewFromDirectory(MsDataFileUri directory)
         {
             _abortPopulateList = false;
             listView.Cursor = Cursors.Default;
             _waitingForData = false;
+            // Cancel any in-progress New Folder inline edit: clearing the list orphans its placeholder.
+            if (_newFolderItem != null)
+            {
+                _newFolderItem = null;
+                listView.LabelEdit = false;
+            }
             listView.Items.Clear();
+            ScanningComplete(); // Any message left over from a scan that was navigated away from
+            _scanProgressTimer.Restart();
+            _lastScanUpdateMsec = 0;
 
             var listSourceInfo = new List<SourceInfo>();
             if (null == directory || directory is MsDataFilePath && string.IsNullOrEmpty(((MsDataFilePath) directory).FilePath))
@@ -552,6 +628,7 @@ namespace pwiz.CommonFileDialogs
                         catch (Exception x)
                         {
                             ShowErrorMessage(this, x.Message);
+                            ScanningComplete();
                             return;
                         }
                     }
@@ -602,6 +679,7 @@ namespace pwiz.CommonFileDialogs
                     foreach (var info in arraySubDirInfo)
                     {
                         listSourceInfo.Add(getSourceInfo(info));
+                        ShowScanningInProgress(listSourceInfo.Count);
                         Application.DoEvents();
                         if (_abortPopulateList)
                         {
@@ -615,6 +693,7 @@ namespace pwiz.CommonFileDialogs
                         foreach (var info in arrayFileInfo)
                         {
                             listSourceInfo.Add(getSourceInfo(info));
+                            ShowScanningInProgress(listSourceInfo.Count);
                             Application.DoEvents();
                             if (_abortPopulateList)
                             {
@@ -630,6 +709,7 @@ namespace pwiz.CommonFileDialogs
                         CommonFileDialogResources.OpenDataSourceDialog_populateListViewFromDirectory_An_error_occurred_attempting_to_retrieve_the_contents_of_this_directory,
                         x.Message);
                     // Might throw access violation.
+                    ScanningComplete();
                     ShowErrorWithException(this, message, x);
                     return;
                 }
@@ -685,6 +765,7 @@ namespace pwiz.CommonFileDialogs
                 }
             }
             listView.Items.AddRange(items.ToArray());
+            ScanningComplete();
             ListViewPostprocessing();
         }
 
@@ -942,6 +1023,105 @@ namespace pwiz.CommonFileDialogs
 
         protected virtual void OnFileNameTyped() {}
 
+        private ListViewItem _newFolderItem;
+
+        private void newFolderButton_Click(object sender, EventArgs e)
+        {
+            BeginCreateNewFolder();
+        }
+
+        /// <summary>
+        /// Starts inline creation of a new folder: adds an editable placeholder item to the list and
+        /// puts it into label-edit mode. When the user commits the name,
+        /// <see cref="listView_AfterLabelEdit"/> calls the <see cref="CreateNewFolder"/> hook, which a
+        /// subclass overrides to create the folder on its backing store.
+        /// </summary>
+        protected void BeginCreateNewFolder()
+        {
+            if (_newFolderItem != null)
+                return;
+            listView.LabelEdit = true;
+            // Build the placeholder with all columns (name, type, size, date); other list handlers
+            // such as listView_ItemSelectionChanged read SubItems[1], so a name-only item would throw.
+            _newFolderItem = new ListViewItem(
+                new[] { CommonFileDialogResources.BaseFileDialogNE_BeginCreateNewFolder_New_folder, DataSourceUtil.FOLDER_TYPE, string.Empty, string.Empty },
+                (int) ImageIndex.Folder);
+            listView.Items.Add(_newFolderItem);
+            listView.SelectedItems.Clear();
+            _newFolderItem.Selected = true;
+            _newFolderItem.EnsureVisible();
+            _newFolderItem.BeginEdit();
+        }
+
+        private void listView_BeforeLabelEdit(object sender, LabelEditEventArgs e)
+        {
+            // Only the new-folder placeholder may be renamed; cancel edits started on any other item.
+            if (_newFolderItem == null || e.Item != _newFolderItem.Index)
+                e.CancelEdit = true;
+        }
+
+        private void listView_AfterLabelEdit(object sender, LabelEditEventArgs e)
+        {
+            // Ignore if the placeholder was cancelled or removed (e.g. a repopulate cleared the list).
+            if (_newFolderItem == null || _newFolderItem.Index < 0 || e.Item != _newFolderItem.Index)
+                return;
+
+            var placeholder = _newFolderItem;
+            _newFolderItem = null;
+            listView.LabelEdit = false;
+
+            var folderName = e.Label?.Trim();
+            // The list is rebuilt from the backing store on success, so discard the inline edit
+            // result and remove the placeholder regardless of outcome.
+            e.CancelEdit = true;
+            listView.Items.Remove(placeholder);
+
+            if (!string.IsNullOrEmpty(folderName))
+            {
+                // Defer so the create work runs after the label-edit event completes, avoiding
+                // reentrancy on the list view.
+                BeginInvoke(new Action(() => CreateNewFolder(folderName)));
+            }
+        }
+
+        /// <summary>
+        /// Hook for creating a folder named <paramref name="folderName"/> under the current directory
+        /// on the dialog's backing store. The base implementation does nothing; subclasses that show
+        /// the New Folder button override this. Implementations are responsible for refreshing the
+        /// list (via <see cref="RefreshCurrentDirectory"/>) and reporting any errors.
+        /// </summary>
+        protected virtual void CreateNewFolder(string folderName)
+        {
+        }
+
+        /// <summary>
+        /// Re-reads the current directory, e.g. after a folder was created.
+        /// </summary>
+        public void RefreshCurrentDirectory()
+        {
+            _abortPopulateList = true;
+            populateListViewFromDirectory(_currentDirectory);
+        }
+
+        private void refreshButton_Click(object sender, EventArgs e)
+        {
+            RefreshFromServer();
+        }
+
+        /// <summary>
+        /// Hook invoked by the Refresh command. For a remote directory the base implementation
+        /// discards the cached remote session so contents are fetched from the server again,
+        /// rather than served from the session cache (as a plain re-populate would do).
+        /// Subclasses backed by a remote store can override this with a cheaper invalidation
+        /// that clears only the current directory's cached listing and keeps the session alive.
+        /// </summary>
+        protected virtual void RefreshFromServer()
+        {
+            if (_currentDirectory is RemoteUrl)
+                RemoteSession = null; // Drop cached contents so the server is queried again
+            RefreshCurrentDirectory();
+        }
+
         private void sourcePathTextBox_TextChanged(object sender, EventArgs e)
         {
             OnFileNameTyped();
@@ -1193,24 +1373,6 @@ namespace pwiz.CommonFileDialogs
         {
             if( _previousDirectories.Count > 0 )
                 SetCurrentDirectory( _previousDirectories.Pop());
-        }
-
-        private void refreshButton_Click( object sender, EventArgs e )
-        {
-            RefreshCurrentDirectory();
-        }
-
-        /// <summary>
-        /// Re-reads the current directory. For a remote directory this discards the cached
-        /// remote session so its contents are fetched from the server again, rather than
-        /// served from the session cache (as F5 / a plain re-populate would do).
-        /// </summary>
-        public void RefreshCurrentDirectory()
-        {
-            _abortPopulateList = true;
-            if (_currentDirectory is RemoteUrl)
-                RemoteSession = null; // Drop cached contents so the server is queried again
-            populateListViewFromDirectory(_currentDirectory);
         }
 
         private void listView_ItemSelectionChanged( object sender, ListViewItemSelectionChangedEventArgs e )

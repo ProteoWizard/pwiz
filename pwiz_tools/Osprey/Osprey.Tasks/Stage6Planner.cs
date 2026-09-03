@@ -30,7 +30,7 @@ using pwiz.Osprey.FDR.Reconciliation;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// Stage 6 planning subsystem extracted from <see cref="FirstJoinTask"/>.
+    /// Stage 6 planning subsystem extracted from <see cref="FirstPassFdrTask"/>.
     /// Runs the four cross-file planning phases that produce the rescore plan
     /// <see cref="PerFileRescoreTask"/> executes: multi-charge consensus per
     /// file, cross-run consensus RTs, per-file calibration refit, and
@@ -43,13 +43,13 @@ namespace pwiz.Osprey.Tasks
     /// <c>OspreyDiagnosticsLog.ExitAfterDump</c>), preserving the Stage-6 dump
     /// call order bisection relies on. Pure planning -- writing the
     /// .reconciliation.json envelopes and publishing the typed byproduct slots
-    /// stays in <see cref="FirstJoinTask"/>.
+    /// stays in <see cref="FirstPassFdrTask"/>.
     /// </summary>
     internal sealed class Stage6Planner
     {
         /// <summary>
         /// The four cross-file planning byproducts Stage 6 produces. Consumed by
-        /// <see cref="FirstJoinTask"/> to write the reconciliation envelopes and
+        /// <see cref="FirstPassFdrTask"/> to write the reconciliation envelopes and
         /// to publish the typed byproduct slots <see cref="PerFileRescoreTask"/>
         /// reads. <see cref="ReconciliationActions"/> is null when reconciliation
         /// was skipped (single-file / empty consensus).
@@ -193,13 +193,21 @@ namespace pwiz.Osprey.Tasks
                 @"Reconciliation consensus: {0} target peptides, {1} decoy peptides",
                 nTargets, nDecoys));
 
-            // Skip the dump on empty consensus to match Rust's
-            // dump_stage6_consensus, which silently elides the file when there
-            // is nothing to write (gated on Some(file) in Rust, derived from
-            // !consensus.is_empty()). Without this gate, C# emits a header-only
-            // cs_stage6_consensus.tsv and Test-Regression sees an
-            // asymmetric-absence FAIL even though both sides agree on empty.
-            if ((_ctx.Diagnostics?.DumpConsensus ?? false) && consensus.Count > 0)
+            // Fires UNCONDITIONALLY when OSPREY_DUMP_CONSENSUS=1, so an empty consensus
+            // still produces a header-only cs_stage6_consensus.tsv - the same rule the
+            // reconciliation dump below follows.
+            //
+            // This was gated on consensus.Count > 0 to match Rust's dump_stage6_consensus,
+            // which elides the file when there is nothing to write, because the cross-impl
+            // Test-Regression then saw an asymmetric-absence FAIL. That fixed the comparator's
+            // complaint by deleting the FILE, which is backwards: a reader of the directory
+            // then cannot tell "empty consensus" from "the dump crashed before writing", and
+            // the comparator was subsequently taught to treat symmetric absence as agreement,
+            // entrenching it. No live cross-impl gate compares this dump any more
+            // (Compare-EndToEnd-Crossimpl.ps1 does not), and its one consumer, Test-Snapshot,
+            // is same-impl. See "Never conditionally write an output artifact" in
+            // ai/docs/osprey-development-guide.md.
+            if (_ctx.Diagnostics?.DumpConsensus ?? false)
             {
                 _ctx.Diagnostics?.WriteStage6ConsensusDump(consensus);
                 if (_ctx.Diagnostics?.ConsensusOnly ?? false)
@@ -217,12 +225,22 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config)
         {
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
-            foreach (var kvp in perFileEntries)
+            // Per-file progress: the LOESS calibration refit runs per file and only logged its
+            // completion count, so it went silent for ~0.5s/file (41s at 82 files, O(files) toward
+            // minutes at 500). Report through the standard throttled reporter so it never goes silent.
+            using (var refitProgress = new ProgressReporter(
+                string.Format(@"Reconciliation calibration refit across {0} file(s)", perFileEntries.Count),
+                perFileEntries.Count))
             {
-                var refined = CalibrationRefit.Refit(consensus, kvp.Value,
-                    config.Reconciliation.ConsensusFdr);
-                if (refined != null)
-                    refinedCalibrations[kvp.Key] = refined;
+                int refitDone = 0;
+                foreach (var kvp in perFileEntries)
+                {
+                    var refined = CalibrationRefit.Refit(consensus, kvp.Value,
+                        config.Reconciliation.ConsensusFdr);
+                    if (refined != null)
+                        refinedCalibrations[kvp.Key] = refined;
+                    refitProgress.Report(++refitDone);
+                }
             }
             _ctx.LogInfo(string.Format(
                 @"Reconciliation calibration refit: {0}/{1} files produced refined calibrations",

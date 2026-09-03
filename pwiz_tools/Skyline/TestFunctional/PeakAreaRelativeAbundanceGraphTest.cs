@@ -117,8 +117,9 @@ namespace pwiz.SkylineTestFunctional
             var pane = FindGraphPane();
 
             var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(pane.ShowFormattingDialog);
-            // Add a line which says all peptides containing "QE" should be indigo diamonds 
-            // and all peptides containing "GQ" should be turquoise triangles
+            // Add a line which says all peptides containing "QE" should be indigo diamonds
+            // and all peptides containing "GQ" should be turquoise triangles. One peptide contains
+            // both substrings; with last-match-wins precedence it takes the lower (GQ/triangle) rule.
             RunUI(() =>
             {
                 Assert.AreEqual(Skyline.Controls.GroupComparison.GroupComparisonResources
@@ -137,13 +138,15 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForGraphs();
 
-            // Verify that 2 peptides are drawn as diamonds and 2 are drawn as triangles
+            // Verify that 1 peptide is drawn as a diamond and 3 are drawn as triangles. The QE-only
+            // peptide is a diamond; the GQ peptides plus the peptide matching both QE and GQ (which
+            // last-match-wins assigns to the triangle rule) are triangles.
             RunUI(() =>
             {
                 var diamondCurve = pane.CurveList.OfType<LineItem>().Single(curve => curve.Symbol.Type == SymbolType.Diamond);
-                Assert.AreEqual(2, diamondCurve.Points.Count);
+                Assert.AreEqual(1, diamondCurve.Points.Count);
                 var triangleCurve = pane.CurveList.OfType<LineItem>().Single(curve => curve.Symbol.Type == SymbolType.Triangle);
-                Assert.AreEqual(2, triangleCurve.Points.Count);
+                Assert.AreEqual(3, triangleCurve.Points.Count);
             });
 
             // The document should still have its original RelativeAbundanceFormatting because the formatting dialog has not been OK'd yet
@@ -158,7 +161,9 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(PointSymbol.Diamond, relativeAbundanceFormatting.ColorRows.First().PointSymbol);
             Assert.AreEqual(PointSymbol.Triangle, relativeAbundanceFormatting.ColorRows.ElementAt(1).PointSymbol);
             
-            // Include peptide lists and verify that the number of diamonds on the graph has changed to 4
+            // Include peptide lists and verify the symbol counts grow accordingly. The peptide matching
+            // both QE and GQ stays on the triangle (last-match-wins) rule, so diamonds become 3 and
+            // triangles become 4.
             RunUI(() =>
             {
                 SkylineWindow.SetExcludePeptideListsFromAbundanceGraph(false);
@@ -167,9 +172,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var diamondCurve = pane.CurveList.OfType<LineItem>().Single(curve => curve.Symbol.Type == SymbolType.Diamond);
-                Assert.AreEqual(4, diamondCurve.Points.Count);
+                Assert.AreEqual(3, diamondCurve.Points.Count);
                 var triangleCurve = pane.CurveList.OfType<LineItem>().Single(curve => curve.Symbol.Type == SymbolType.Triangle);
-                Assert.AreEqual(3, triangleCurve.Points.Count);
+                Assert.AreEqual(4, triangleCurve.Points.Count);
             });
 
             // Save and reopen the document

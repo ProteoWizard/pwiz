@@ -78,9 +78,9 @@ namespace pwiz.Osprey.FDR
                     if (streamFeatures)
                     {
                         features = null;
-                        // uint.MaxValue marks an appended entry with no original
+                        // A null ParquetIndex marks an appended entry with no original
                         // parquet row (its features will fall back to basic).
-                        if (fdrEntry.ParquetIndex != uint.MaxValue)
+                        if (fdrEntry.ParquetIndex.HasValue)
                             nWithFeatures++;
                         else
                             nWithoutFeatures++;
@@ -118,7 +118,11 @@ namespace pwiz.Osprey.FDR
                         Charge = fdrEntry.Charge,
                         IsDecoy = fdrEntry.IsDecoy,
                         EntryId = fdrEntry.EntryId,
-                        ParquetIndex = fdrEntry.ParquetIndex,
+                        // The ONE place FdrEntry's nullable becomes this row's sentinel.
+                        // PercolatorEntry is a per-observation scoring row held at first-pass
+                        // scale, so it keeps a plain uint; confining the conversion here means
+                        // the ambiguity no longer travels between subsystems on shared state.
+                        ParquetIndex = fdrEntry.ParquetIndex ?? uint.MaxValue,
                         CoelutionSum = fdrEntry.CoelutionSum,
                         Features = features
                     });
@@ -134,7 +138,7 @@ namespace pwiz.Osprey.FDR
         /// entry whose parquet row cannot be resolved). In normal operation the
         /// 21-feature vector is computed during coelution scoring in
         /// <c>CoelutionScorer</c> and stored on the entry. Internal so the
-        /// streaming score pass (<see cref="PercolatorFdr.ResolveFeatureRow"/>) can
+        /// streaming score pass (<see cref="PercolatorScorer.ResolveFeatureRow"/>) can
         /// reuse the exact same fallback vector for byte-identical results.
         /// </summary>
         internal static double[] BuildBasicFeatures(double coelutionSum, int numFeatures)

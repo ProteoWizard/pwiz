@@ -22,7 +22,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net; // HttpStatusCode
-using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -189,6 +188,17 @@ namespace pwiz.Skyline
         }
 
         private void openMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowOpenFileDialog();
+        }
+
+        /// <summary>
+        /// Shows the native Open dialog and opens whatever document the user selects.
+        /// Factored out of <see cref="openMenuItem_Click"/> so that automated tests can
+        /// invoke the same code path the menu command uses and drive the resulting native
+        /// dialog with UI Automation.
+        /// </summary>
+        public void ShowOpenFileDialog()
         {
             if (!CheckSaveDocument())
                 return;
@@ -1169,6 +1179,7 @@ namespace pwiz.Skyline
             }
 
             SrmDocument document = Document;
+            RenamedDocumentLibrary renamedLibrary = null;
 
             try
             {
@@ -1182,13 +1193,29 @@ namespace pwiz.Skyline
                         longWaitDlg.Message = Path.GetFileName(fileName);
                         longWaitDlg.PerformWork(this, 800, progressMonitor =>
                         {
-                            document.SerializeToFile(saver.SafeName, fileName, SkylineVersion.CURRENT, progressMonitor);
                             // If the user has chosen "Save As", and the document has a
-                            // document specific spectral library, copy this library to 
-                            // the new name.
+                            // document specific spectral library, copy this library to
+                            // the new name and rename the library within the document
+                            // before serializing. This ensures the saved file references
+                            // the library by its new name (including on each precursor's
+                            // spectrum header info) so that re-opening it does not require
+                            // a slow settings update. The copied library files are committed
+                            // (and the open document is updated) only after the .sky file has
+                            // been written successfully, so that cancelling or failing the save
+                            // leaves neither the open document nor the library files changed.
+                            var documentToSave = document;
                             if (!Equals(DocumentFilePath, fileName))
-                                SaveDocumentLibraryAs(fileName);
+                            {
+                                renamedLibrary = RenameDocumentLibraryAs(document, fileName);
+                                if (renamedLibrary != null)
+                                    documentToSave = renamedLibrary.Document;
+                            }
 
+                            documentToSave.SerializeToFile(saver.SafeName, fileName, SkylineVersion.CURRENT, progressMonitor);
+
+                            // The .sky file was written successfully. Commit the renamed library files
+                            // and then the .sky file itself.
+                            renamedLibrary?.Commit();
                             saver.Commit();
                         });
 
@@ -1202,11 +1229,41 @@ namespace pwiz.Skyline
             {
                 return false;
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 var message = TextUtil.LineSeparate(string.Format(SkylineResources.SkylineWindow_SaveDocument_Failed_writing_to__0__, fileName), ex.Message);
                 MessageDlg.ShowWithException(this, message, ex);
                 return false;
+            }
+            finally
+            {
+                // On success the library files were already committed above, and this disposes the
+                // (already committed) savers harmlessly. On cancel or failure it deletes the copied files.
+                renamedLibrary?.Dispose();
+            }
+
+            // The save succeeded. Now that the .sky file has been written, update the open document to
+            // reference the renamed library. Deferring this until after a successful save avoids leaving
+            // the open document pointing at a renamed library when the save is cancelled or fails.
+            if (renamedLibrary != null)
+            {
+                if (!SetDocument(renamedLibrary.Document, document))
+                {
+                    // A background loader changed the document while it was being saved (rare).
+                    // Reapply the library rename to the current document.
+                    SrmDocument docOriginal, docNew;
+                    do
+                    {
+                        docOriginal = Document;
+                        docNew = ChangeDocumentLibraryName(docOriginal, fileName);
+                    }
+                    while (!SetDocument(docNew, docOriginal));
+                    document = docNew;
+                }
+                else
+                {
+                    document = renamedLibrary.Document;
+                }
             }
 
             DocumentFilePath = fileName;
@@ -1219,7 +1276,7 @@ namespace pwiz.Skyline
 
             try
             {
-                SaveLayout(fileName);
+                SaveLayout(GetViewFile(fileName));
 
                 if (includingCacheFile)
                 {
@@ -1235,11 +1292,13 @@ namespace pwiz.Skyline
 
             // We allow silent failures because it is OK for the cache to remain unoptimized
             // or the layout to not be saved.  These aren't critical as long as the document
-            // was saved correctly.
-            catch (UnauthorizedAccessException) {}
-            catch (IOException) {}
-            catch (OperationCanceledException) {}
-            catch (TargetInvocationException) {}
+            // was saved correctly.  A programming defect still gets reported, but the document
+            // is already saved, so this function continues on rather than rethrowing.
+            catch (Exception x)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(x))
+                    Program.ReportException(x);
+            }
 
             // CONSIDER: it might be possible to remove the DocumentSaved event by moving DocumentFilePath into SrmSettings.
             //           DocumentSaved lets subscribers know about a new DocumentFilePath. Example: FilesTree uses this event 
@@ -1282,62 +1341,268 @@ namespace pwiz.Skyline
             }
         }
 
-        private void SaveDocumentLibraryAs(string newDocFilePath)
+        /// <summary>
+        /// When saving to a new name ("Save As"), copies the document-specific spectral library
+        /// to the new name and updates the document to reference the library by its new name. This
+        /// includes renaming the library on each precursor's spectrum header info so that the saved
+        /// file does not require a slow settings update the next time it is opened. Returns the
+        /// updated document (which has also been set as the current document), or the current
+        /// document unchanged if there is no document-specific library to rename.
+        /// </summary>
+        /// <summary>
+        /// If the document has a document-specific spectral library and this is a "Save As" to a new
+        /// name, copies the library files to the new name and returns a <see cref="RenamedDocumentLibrary"/>
+        /// holding the copied (not yet committed) files together with the document renamed to reference
+        /// the library by its new name. Returns null when there is no library to rename.
+        /// The caller must <see cref="RenamedDocumentLibrary.Commit"/> the returned object only after the
+        /// .sky file has been written successfully; disposing it without committing deletes the copied
+        /// files, so cancelling or failing the save leaves the library files unchanged.
+        /// </summary>
+        private RenamedDocumentLibrary RenameDocumentLibraryAs(SrmDocument document, string newDocFilePath)
         {
             string oldDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
             string oldRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(oldDocLibFile);
-            // If the document has a document-specific library, and the files for it
-            // exist on disk, and it's not stale due to conversion of document to small molecule representation
-            var document = Document;
             string newDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(newDocFilePath);
-            if (document.Settings.PeptideSettings.Libraries.HasDocumentLibrary
-                && File.Exists(oldDocLibFile)
-                && !Equals(newDocLibFile.Replace(BiblioSpecLiteSpec.DotConvertedToSmallMolecules, string.Empty), oldDocLibFile))
+            // If the document has no document-specific library, or the files for it do not
+            // exist on disk, or it's stale due to conversion of document to small molecule
+            // representation, there is nothing to rename.
+            if (!document.Settings.PeptideSettings.Libraries.HasDocumentLibrary
+                || !File.Exists(oldDocLibFile)
+                || Equals(newDocLibFile.Replace(BiblioSpecLiteSpec.DotConvertedToSmallMolecules, string.Empty), oldDocLibFile))
             {
-                using (var saverLib = new FileSaver(newDocLibFile))
-                {
-                    FileSaver saverRedundant = null;
-                    if (File.Exists(oldRedundantDocLibFile))
-                    {
-                        string newRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(newDocFilePath);
-                        saverRedundant = new FileSaver(newRedundantDocLibFile);
-                    }
-                    using (saverRedundant)
-                    {
-                        saverLib.CopyFile(oldDocLibFile);
-                        if (saverRedundant != null)
-                        {
-                            saverRedundant.CopyFile(oldRedundantDocLibFile);
-                        }
-                        saverLib.Commit();
-                        if (saverRedundant != null)
-                        {
-                            saverRedundant.Commit();
-                        }
-                    }
-                }
+                return null;
+            }
 
-                // Update the document library settings to point to the new library.
-                SrmDocument docOriginal, docNew;
-                do
+            var fileSavers = new List<FileSaver>();
+            try
+            {
+                var saverLib = new FileSaver(newDocLibFile);
+                fileSavers.Add(saverLib);
+                saverLib.CopyFile(oldDocLibFile);
+                if (File.Exists(oldRedundantDocLibFile))
                 {
-                    docOriginal = Document;
-                    docNew = docOriginal.ChangeSettingsNoDiff(docOriginal.Settings.ChangeDocumentLibraryPath(newDocFilePath));                        
+                    var saverRedundant = new FileSaver(BiblioSpecLiteSpec.GetRedundantName(newDocFilePath));
+                    fileSavers.Add(saverRedundant);
+                    saverRedundant.CopyFile(oldRedundantDocLibFile);
                 }
-                while (!SetDocument(docNew, docOriginal));
+            }
+            catch
+            {
+                foreach (var fileSaver in fileSavers)
+                    fileSaver.Dispose();
+                throw;
+            }
+
+            // Rename the document library settings to point to the new library, and rename the library
+            // on each precursor's spectrum header info to match. The document is not applied to the open
+            // window here; the caller does that only after the .sky file has been written successfully.
+            return new RenamedDocumentLibrary(ChangeDocumentLibraryName(document, newDocFilePath), fileSavers);
+        }
+
+        /// <summary>
+        /// Holds the copied but not yet committed document-specific spectral library files produced for a
+        /// "Save As", together with the document whose library settings and precursor spectrum header info
+        /// have been renamed to match the new file name. <see cref="Commit"/> renames the copied files into
+        /// place and must be called only after the .sky file has been written successfully. Disposing without
+        /// committing deletes the copied files.
+        /// </summary>
+        private class RenamedDocumentLibrary : IDisposable
+        {
+            private readonly List<FileSaver> _fileSavers;
+
+            public RenamedDocumentLibrary(SrmDocument document, IEnumerable<FileSaver> fileSavers)
+            {
+                Document = document;
+                _fileSavers = fileSavers.ToList();
+            }
+
+            /// <summary>
+            /// The document renamed to reference the copied library by its new name.
+            /// </summary>
+            public SrmDocument Document { get; }
+
+            public void Commit()
+            {
+                foreach (var fileSaver in _fileSavers)
+                    fileSaver.Commit();
+            }
+
+            public void Dispose()
+            {
+                foreach (var fileSaver in _fileSavers)
+                    fileSaver.Dispose();
             }
         }
 
-        private void SaveLayout(string fileName)
+        /// <summary>
+        /// Returns a copy of <paramref name="document"/> whose document-specific spectral library
+        /// has been renamed for the new document path. Both the library settings and the library
+        /// name stored on each precursor's spectrum header info are updated, so that the saved
+        /// document is self-consistent and does not require a slow settings update when re-opened.
+        /// </summary>
+        private static SrmDocument ChangeDocumentLibraryName(SrmDocument document, string newDocFilePath)
         {
-            using (var saverUser = new FileSaver(GetViewFile(fileName)))
+            var oldName = document.Settings.PeptideSettings.Libraries.LibrarySpecs
+                .FirstOrDefault(spec => spec != null && spec.IsDocumentLibrary)?.Name;
+            var newName = BiblioSpecLiteSpec.GetDocumentLibrarySpec(newDocFilePath).Name;
+            var docNew = document.ChangeSettingsNoDiff(document.Settings.ChangeDocumentLibraryPath(newDocFilePath));
+            if (oldName == null || Equals(oldName, newName))
+                return docNew;
+
+            return (SrmDocument) docNew.ChangeAll(node =>
             {
-                if (saverUser.CanSave())
+                if (node is TransitionGroupDocNode nodeGroup && nodeGroup.LibInfo != null &&
+                    Equals(nodeGroup.LibInfo.LibraryName, oldName))
+                {
+                    return nodeGroup.ChangeLibInfo(nodeGroup.LibInfo.ChangeLibraryName(newName));
+                }
+                return node;
+            }, (int) SrmDocument.Level.TransitionGroups);
+        }
+
+        private void SaveLayout(string viewFilePath)
+        {
+            using (var saverUser = new FileSaver(viewFilePath))
+            {
+                // Pass the parent: without it CanSave swallows read-only and access-denied and
+                // returns false, so Export Window Layout would write nothing and say nothing.
+                if (saverUser.CanSave(this))
                 {
                     dockPanel.SaveAsXml(saverUser.SafeName, new UTF8Encoding(false)); // UTF-8 without BOM
                     saverUser.Commit();
                 }
             }
+        }
+
+        public const string EXT_SKY_VIEW = ".sky.view";
+        public static string FILTER_SKY_VIEW
+        {
+            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_SKY_VIEW); }
+        }
+
+        /// <summary>
+        /// Where the layout dialogs start: beside the document, since that is where its ".sky.view"
+        /// belongs and what the Export dialog names the file after. Only falls back to
+        /// <see cref="Settings.ActiveDirectory"/> for an unsaved document - that setting is the last
+        /// folder ANY file operation used, including unrelated ones like picking an iRT database, so
+        /// on its own it can put a file named after this document somewhere else entirely.
+        /// Share Document starts from the document folder for the same reason.
+        /// </summary>
+        private string GetLayoutDirectory()
+        {
+            return !string.IsNullOrEmpty(DocumentFilePath)
+                ? Path.GetDirectoryName(DocumentFilePath)
+                : Settings.Default.ActiveDirectory;
+        }
+
+        private void exportLayoutMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowExportLayoutDlg();
+        }
+
+        public void ShowExportLayoutDlg()
+        {
+            using (var dlg = new SaveFileDialog())
+            {
+                dlg.Title = SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout;
+                dlg.SupportMultiDottedExtensions = true;
+                dlg.Filter = FILTER_SKY_VIEW;
+                dlg.InitialDirectory = GetLayoutDirectory();
+                dlg.DefaultExt = EXT_SKY_VIEW;
+                if (!string.IsNullOrEmpty(DocumentFilePath))
+                    dlg.FileName = Path.GetFileNameWithoutExtension(DocumentFilePath);
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                var exportPath = dlg.FileName;
+                if (exportPath.EndsWith(EXT_SKY_VIEW + EXT_SKY_VIEW))
+                {
+                    // Offering ".view" as a second filter entry also stops the doubling, but is worse:
+                    // switching the file type back to ".sky.view" then swaps the last extension of
+                    // "Doc.sky.view" and offers "Doc.sky.sky.view".
+                    // If the path ends in ".sky.view.sky.view" strip off the last ".sky.view";
+                    var stripped = exportPath.Substring(0, exportPath.Length - EXT_SKY_VIEW.Length);
+                    // Only strip off the extension if neither form of the file existed.
+                    // If the stripped filename had exists, the dialog would not have added the extra extension, and
+                    // we also would need to prompt the user again to overwrite.
+                    // If the duplicated filename exists, the user was already prompted to overwrite so we should not change the name.
+                    if (!File.Exists(exportPath) && !File.Exists(stripped))
+                    {
+                        exportPath = stripped;
+                    }
+                }
+                ExportLayout(exportPath);
+            }
+        }
+
+
+        public void ExportLayout(string viewFilePath)
+        {
+            try
+            {
+                SaveLayout(viewFilePath);
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(this,
+                    string.Format(SkylineResources.SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__, viewFilePath), x);
+            }
+        }
+
+        private void importLayoutMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowImportLayoutDlg();
+        }
+
+        public void ShowImportLayoutDlg()
+        {
+            using (var dlg = new OpenFileDialog())
+            {
+                dlg.Title = SkylineResources.SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout;
+                dlg.Filter = FILTER_SKY_VIEW;
+                dlg.InitialDirectory = GetLayoutDirectory();
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                ImportLayout(dlg.FileName);
+            }
+        }
+
+        public void ImportLayout(string viewFilePath)
+        {
+            MemoryStream previousLayout = null;
+            try
+            {
+                using var stream = File.OpenRead(viewFilePath);
+                try
+                {
+                    MemoryStream memoryStream = new MemoryStream();
+                    // Remember the current layout in case something goes wrong.
+                    dockPanel.SaveAsXml(memoryStream, new UTF8Encoding(false), true); // UTF-8 without BOM
+                    memoryStream.Position = 0;
+                    previousLayout = memoryStream;
+                }
+                catch
+                {
+                    // Failed to save the current layout (maybe too big). Continue without a backup.
+                }
+                LoadLayout(stream);
+            }
+            catch (Exception x)
+            {
+                if (previousLayout != null)
+                {
+                    try
+                    {
+                        LoadLayout(previousLayout);
+                    }
+                    catch (Exception restoreException)
+                    {
+                        x = new AggregateException(x, restoreException);
+                    }
+                }
+                MessageDlg.ShowWithException(this,
+                    string.Format(SkylineResources.SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__, viewFilePath), x);
+            }
+            EnsureApplicableForms();
         }
 
         private void SetActiveFile(string path)
@@ -1452,8 +1717,8 @@ namespace pwiz.Skyline
                     {
                         var tempDocumentPath = Path.Combine(sharing.EnsureTempDir().DirPath,
                             sharing.GetDocumentFileName());
-                        SaveLayout(tempDocumentPath);
                         sharing.ViewFilePath = GetViewFile(tempDocumentPath);
+                        SaveLayout(sharing.ViewFilePath);
                     }
                     else if (DocumentFilePath != null)
                     {

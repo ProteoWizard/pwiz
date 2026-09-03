@@ -182,20 +182,33 @@ namespace SkylineTester
 
             Exe = Assembly.GetExecutingAssembly().Location;
             ExeDir = Path.GetDirectoryName(Exe);
+            // Prefer a directory named exactly "Skyline", falling back to the first "Skyline*" only
+            // if there is none above us. The standalone SkylineTester deployment is rooted on a
+            // SkylineTester directory and needs that fallback, but in a source tree the same match
+            // hits the SkylineTester project folder: on net472 the exe is under Skyline\bin\..., so
+            // the walk reached Skyline, while an SDK-style build puts it under
+            // Skyline\SkylineTester\bin\..., which stopped a level early and put the run log and
+            // test list in the project folder instead of beside the solution.
             RootDir = ExeDir;
+            string skylineStarterDir = null;
             while (RootDir != null)
             {
-                if (Path.GetFileName(RootDir).StartsWith("Skyline"))
+                var dirName = Path.GetFileName(RootDir);
+                if (Equals(dirName, "Skyline"))
                     break;
+                if (skylineStarterDir == null && dirName.StartsWith("Skyline"))
+                    skylineStarterDir = RootDir;
                 RootDir = Path.GetDirectoryName(RootDir);
             }
+            RootDir = RootDir ?? skylineStarterDir;
             if (RootDir == null)
                 throw new ApplicationException("Can't find Skyline or SkylineTester directory");
 
             _resultsDir = Path.Combine(RootDir, "SkylineTester Results");
             DefaultLogFile = Path.Combine(RootDir, "SkylineTester.log");
-            if (File.Exists(DefaultLogFile))
-                Try.Multi<Exception>(() => File.Delete(DefaultLogFile));
+            // Deliberately not deleted here. Starting a run rolls it aside, so leaving it means the
+            // last run's log survives a restart of this window instead of being thrown away by the
+            // act of reopening it to go look at that log.
 
             testSet.SelectedIndex = 0;
 

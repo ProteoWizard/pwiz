@@ -98,10 +98,11 @@ td {
 <tr><td><nobr>--reintegrate-overwrite-peaks</nobr></td><td>手動で積分された既存のピークは、再積分モデルで選択されたピークによって上書きされます。（必要なのは、<nobr>--reintegrate-model-nameです</nobr>。）</td></tr>
 <tr><td><nobr>--reintegrate-exclude-feature</nobr>=<br/>&lt;フィーチャー名&gt;</td><td>モデルから名前別で特定のフィーチャースコアを除外するのに使用します。名前はユーザーインターフェイスで見つけることができます。この引数は複数フィーチャーを除外するため複数回使用することができます。</td></tr>
 </table>
-<div class="RowType">結果の繰り返し測定を削除中</div>
+<div class="RowType">Managing results replicates</div>
 <table>
 <tr><td><nobr>--remove-before</nobr>=&lt;日付&gt;</td><td>指定された日付以前に取得時間のある、開いているドキュメントからすべての結果を削除します。</td></tr>
 <tr><td><nobr>--remove-all</nobr></td><td>開いているドキュメントからすべての結果を削除します。</td></tr>
+<tr><td><nobr>--reorder-replicates</nobr>=path/to/file（ファイル）</td><td>Reorder results replicates using a <nobr>UTF-8</nobr> text file containing one existing replicate name per line. Listed replicates are placed first; unlisted replicates retain their relative order.</td></tr>
 </table>
 <div class="RowType">結果ファイルサイズを最小にする</div>
 <table>
@@ -230,8 +231,8 @@ td {
 <tr><td><nobr>--report-file</nobr>=path/to/file（ファイル）.csv</td><td>レポートのエクスポート先のパスです。<nobr>--report-nameが指定されている場合</nobr>、必要です。</td></tr>
 <tr><td><nobr>--report-add</nobr>=path/to/file（ファイル）.skyr</td><td>保存済みのレポートテンプレートファイルからレポートを実行中のプログラムに追加します。</td></tr>
 <tr><td><nobr>--report-conflict-resolution</nobr>=<br/>&lt;overwrite | skip&gt;</td><td><nobr>--report-addを使用する際</nobr>、レポート名の重複を解決する方法を、上書きするか重複をスキップするかのいずれかで指定します。（デフォルトは、重複のエラーメッセージを出力することです。）</td></tr>
-<tr><td><nobr>--report-format</nobr>=&lt;csv | tsv&gt;</td><td>カンマ区切り（地域に応じてセミコロン区切り）のレポート用CSVか、タブ区切りのレポート用TSVです（デフォルトはCSV）。</td></tr>
-<tr><td><nobr>--report-invariant</nobr></td><td>[インバリアント]（特定の言語や国・地域に依存しない）の言語設定でレポートをエクスポートします。米国英語の番号書式とスペースなしのヘッダーテキストを用いており、R統計解析プログラミング環境での使用に理想的です。</td></tr>
+<tr><td><nobr>--report-format</nobr>=<br/>&lt;csv | tsv | parquet&gt;</td><td>カンマ区切り（地域に応じてセミコロン区切り）のレポート用CSVか、タブ区切りのレポート用TSVです（デフォルトはCSV）。</td></tr>
+<tr><td><nobr>--report-invariant</nobr>[=True&nbsp;または&nbsp;False]</td><td>[インバリアント]（特定の言語や国・地域に依存しない）の言語設定でレポートをエクスポートします。米国英語の番号書式とスペースなしのヘッダーテキストを用いており、R統計解析プログラミング環境での使用に理想的です。</td></tr>
 </table>
 <div class="RowType">クロマトグラムをエクスポート中</div>
 <table>

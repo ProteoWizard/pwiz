@@ -61,6 +61,560 @@ namespace pwiz.Osprey.Test
             TestPassingSetHonorsFdrLevel();
             TestCalibrationBuildCalFile();
             TestStreamingAccumulatorMatchesBatch();
+            TestPeakCoAssignment();
+        }
+
+        // Single-peak multiple-ID co-assignment (issue #4522) on a fixture where every reported
+        // number is derived by hand. Two runs; m/z and apex RT chosen so each pair lands
+        // unambiguously inside one |dRT| histogram bin (bin width 0.005 min), well clear of the
+        // edges, so the assertions do not depend on floating-point luck.
+        //
+        // file1                      m/z        apex    score   q
+        //   A   z2  target          500.000    10.000    9.0    ok    the strong explanation
+        //   A   z2  target (dup)    500.000    10.150    2.0    ok    pre-compaction second peak
+        //   A   z3  target          333.670    10.000    5.0    ok    SAME sequence, other charge
+        //   B   z2  target          500.004    10.018    3.0    ok    co-assigned, A outscores it
+        //   E   z2  entrapment      500.005    10.032    4.0    ok    co-assigned, A outscores it
+        //   X   z2  decoy           500.006    10.008    6.0    ok    above the acceptance score; A outscores it
+        //   F   z2  target          500.002    10.010   20.0    FAIL  q-failing; must not partner
+        // file2
+        //   A   z2  target          500.000    30.000    6.0    ok    same precursor, no partner
+        //   C   z2  target          700.000    20.000    8.0    ok    partner 0.202 min away
+        //   D   z2  target          700.005    20.202    2.0    ok    C outscores it, but far in RT
+        private static void TestPeakCoAssignment()
+        {
+            var mz = new Dictionary<uint, double>
+            {
+                { 1, 500.000 }, { 6, 333.670 }, { 2, 500.004 }, { 3, 700.000 },
+                { 4, 700.005 }, { 7, 500.002 }, { 201, 500.005 }, { 5 | DECOY_BIT, 500.006 },
+            };
+            var cls = new Dictionary<uint, EntrapmentClass>
+            {
+                { 1, EntrapmentClass.Target }, { 2, EntrapmentClass.Target },
+                { 3, EntrapmentClass.Target }, { 4, EntrapmentClass.Target },
+                { 6, EntrapmentClass.Target }, { 7, EntrapmentClass.Target },
+                { 201, EntrapmentClass.PTarget },
+            };
+            var f1 = new List<FdrEntry>
+            {
+                // expAgg is a per-ENTRY cross-run roll-up, so every row of entry 1 carries 9.0
+                // (its best observation anywhere), not that row's own score.
+                CoEntry(1, false, 9.0, 0.001, "A", 2, 10.000, 9.0),
+                CoEntry(1, false, 2.0, 0.001, "A", 2, 10.150, 9.0),
+                CoEntry(6, false, 5.0, 0.001, "A", 3, 10.000, 5.0),
+                CoEntry(2, false, 3.0, 0.002, "B", 2, 10.018, 3.0),
+                CoEntry(201, false, 4.0, 0.003, "E", 2, 10.032, 4.0),
+                // The discriminating row. Its per-run SCORE (6.0) clears file1's run boundary
+                // (3.0, the worst accepted target there), so it is admitted at RUN scope. Its
+                // EXPERIMENT AGGREGATE (1.0) is below the experiment boundary (2.0, entry D's
+                // aggregate), so it must NOT be admitted at experiment scope. The two scopes
+                // therefore disagree about this one row, and they can only disagree if the
+                // experiment boundary reads ExperimentAggregateScore rather than Score.
+                CoEntry(5 | DECOY_BIT, true, 6.0, 0.004, "X", 2, 10.008, 1.0),
+                CoEntry(7, false, 20.0, 0.500, "F", 2, 10.010, 20.0),
+            };
+            var f2 = new List<FdrEntry>
+            {
+                CoEntry(1, false, 6.0, 0.001, "A", 2, 30.000, 9.0),
+                CoEntry(3, false, 8.0, 0.001, "C", 2, 20.000, 8.0),
+                CoEntry(4, false, 2.0, 0.002, "D", 2, 20.202, 2.0),
+            };
+
+            var data = ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(f1, f2), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
+                0.01, FdrLevel.Precursor, 1, false);
+            Assert.IsNotNull(data);
+            // "Detected" is reported at both q scopes; the fixture sets run and experiment q
+            // equal, so both scopes see the same rows and the run scope stands for both here.
+            var scope = data.Run;
+
+            // Detected targets are A z2, A z3, B, C, D - F fails q and is excluded from BOTH the
+            // denominator and the partner pool. If F leaked in it would outscore A (20.0 vs 9.0)
+            // and give A a better-scoring partner, so NBetter would be 2.
+            Assert.AreEqual(5, scope.Target.N);
+            Assert.AreEqual(2, scope.Target.NShared);      // A (partner B) and B (partner A)
+            Assert.AreEqual(1, scope.Target.NBetter);      // only B is outscored by its partner
+            Assert.AreEqual(0.2, scope.Target.BetterFraction, 1e-12);
+
+            // Entrapment and decoys are false by construction, so NBetter is how much of each
+            // would disappear under a best-match-wins rule on doubly-claimed peaks: all of it
+            // here, against a 0.2 target base rate.
+            Assert.IsNotNull(scope.Entrapment);
+            Assert.AreEqual(1, scope.Entrapment.N);
+            Assert.AreEqual(1, scope.Entrapment.NBetter);
+
+            Assert.IsNotNull(scope.Decoy);
+            Assert.AreEqual(1, scope.Decoy.N);
+            Assert.AreEqual(1, scope.Decoy.NBetter);
+
+            // THE DECOY BOUNDARY IS SCORE-SPACE, AND THE TWO SCOPES USE DIFFERENT SCORES.
+            // Decoys have no meaningful q of their own, so they are the one class admitted by
+            // comparing a score against the worst accepted target/entrapment. At RUN scope that
+            // comparison is the row's own Score; at EXPERIMENT scope it MUST be
+            // ExperimentAggregateScore, the score the experiment-wide competition actually
+            // ranked on. Decoy X is built to separate the two: score 6.0 clears file1's run
+            // boundary of 3.0, aggregate 1.0 does not clear the experiment boundary of 2.0.
+            //
+            // So a build that reads Score at experiment scope admits X and this assertion fails.
+            // Without it the entire v4 field is untested: every fixture row used to carry the
+            // 0.0 default, which made the experiment boundary 0.0 and admitted every decoy no
+            // matter what the code did. That is how the pass-2 panel shipped reporting 542,368
+            // decoys against 117,783 targets on astral.
+            Assert.IsNull(data.Experiment.Decoy,
+                @"a decoy whose experiment aggregate is below the experiment boundary must not be admitted");
+            // The classes gated on their own q are unaffected, which localizes any failure above
+            // to the decoy rule rather than to the acceptance set.
+            Assert.IsNotNull(data.Experiment.Target);
+            Assert.IsNotNull(data.Experiment.Entrapment);
+            Assert.AreEqual(1, data.Experiment.Entrapment.N);
+
+            // Every class here is far under MIN_N_FOR_ENRICHMENT, so the ratios are suppressed.
+            // A measured Stellar run accepted 7 decoys at experiment q and 1 of 7 rendered as
+            // "6.4x", indistinguishable at a glance from the 5.7x that took a 40-file cohort to
+            // establish. 1-of-1 here would read as an even more alarming 5x.
+            Assert.IsTrue(double.IsNaN(scope.Enrichment));
+            Assert.IsTrue(double.IsNaN(scope.DecoyEnrichment));
+
+            // None of these pairs is a PTM positional isomer - the sequences differ outright - so
+            // the whole "would go away" count survives the caveat subtraction.
+            Assert.AreEqual(0, scope.Entrapment.NBetterSameBaseSequence);
+            Assert.AreEqual(0, scope.Target.NBetterSameBaseSequence);
+            Assert.AreEqual(@"PEPTIDE",
+                ModelDiagnosticsData.CoAssignmentAccumulator.StripModifications(@"PEPT[+79.966]IDE"));
+
+            // The tolerance ladder falls out of the retained per-precursor minima: B is co-assigned
+            // at 0.018 min and D at 0.202, so the target rate steps 0 -> 1/5 at 0.02 and 1/5 -> 2/5
+            // at 0.25. This is the sensitivity the issue insists on showing rather than baking in.
+            CollectionAssert.AreEqual(new[] { 0.01, 0.02, 0.05, 0.10, 0.25 }, data.ToleranceLadder);
+            Assert.AreEqual(0.0, scope.Target.BetterByTolerance[0], 1e-12);
+            Assert.AreEqual(0.2, scope.Target.BetterByTolerance[1], 1e-12);
+            Assert.AreEqual(0.2, scope.Target.BetterByTolerance[3], 1e-12);
+            Assert.AreEqual(0.4, scope.Target.BetterByTolerance[4], 1e-12);
+
+            // MATCHING IS ON PRECURSOR m/z, NOT NEUTRAL MASS. "A" at z2 and z3 have identical
+            // neutral mass and identical apex RT, so a neutral-mass test would pair them - which
+            // is the only reason the prototype needed a same-sequence exclusion. Under m/z they
+            // are 500.000 vs 333.670 and cannot pair, so the z3 row contributes no co-assignment
+            // and the ladder's first entry stays 0 (a neutral-mass regression makes it 1/5).
+            Assert.AreEqual(0.0, scope.Target.BetterByTolerance[0], 1e-12);
+
+            // Pre-compaction dedup: A's second row in file1 (score 2.0, apex 10.150) must lose to
+            // its best-scoring row, so A's nearest partner is B at 0.018 min. Had the duplicate
+            // won, the histogram would carry 0.132 instead.
+            int binWidth200 = 200;                          // 50 bins over 0.25 min
+            Assert.AreEqual(2, scope.DeltaRtTarget[(int)(0.018 * binWidth200)]);   // A<->B, both directions
+            Assert.AreEqual(2, scope.DeltaRtTarget[(int)(0.202 * binWidth200)]);   // C<->D, both directions
+            Assert.IsNotNull(scope.DeltaRtEntrapment);
+            Assert.AreEqual(1, scope.DeltaRtEntrapment[(int)(0.032 * binWidth200)]);
+
+            // Runs are scanned independently: A is in both files, and its file2 peak at 30.0 min
+            // has no partner. Nothing pairs across runs, which would not be a shared peak at all.
+            Assert.AreEqual(3, scope.WorstOffenders.Count);
+
+            // KNOWN-FALSE CLASSES LEAD, then score gap. Entrapment E (gap 5.0) outranks decoy X
+            // (gap 3.0) and target B (gap 6.0) despite the smaller gap, because entrapment is
+            // absent by construction and is therefore the only DEMONSTRATED error. Ranking on gap
+            // alone put zero entrapment rows in a real 50-row listing - targets outnumber
+            // entrapment ~75:1 - so the class priority decides what reaches the report at all.
+            Assert.AreEqual(@"E", scope.WorstOffenders[0].ModifiedSequence);
+            Assert.AreEqual(@"A", scope.WorstOffenders[0].PartnerModifiedSequence);
+            Assert.AreEqual(@"file1", scope.WorstOffenders[0].File);
+            CollectionAssert.AreEqual(new[] { @"PTarget", @"Decoy", @"Target" },
+                scope.WorstOffenders.ConvertAll(o => o.Class));
+            // Target B has the LARGEST gap (6.0) and still sorts last, behind decoy X (3.0):
+            // class priority outranks the gap, which is the whole point.
+            Assert.AreEqual(6.0, scope.WorstOffenders[2].ScoreGap, 1e-12);
+
+            // DECOYS ARE INCLUDED BY SCORE, NOT BY THEIR OWN q. A decoy's q is a byproduct of the
+            // competition decoys themselves define, so gating on it asks the ruler to grade
+            // itself. The boundary is the worst-scoring accepted target/entrapment precursor in
+            // the run (B at 3.0 in file1); X at 6.0 clears it. Drop X below that and the class
+            // must empty out entirely.
+            var lowDecoy = new List<FdrEntry>(f1);
+            lowDecoy[5] = CoEntry(5 | DECOY_BIT, true, 1.0, 0.004, @"X", 2, 10.008);
+            var below = ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(lowDecoy, f2), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
+                0.01, FdrLevel.Precursor, 1, false);
+            Assert.IsNull(below.Run.Decoy);
+
+            // No resolvable library m/z means the panel cannot be computed at all, and must say so
+            // by returning null rather than reporting a zero co-assignment rate.
+            Assert.IsNull(ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(f1, f2), cls, id => double.NaN, 0.01, FdrLevel.Precursor, 1, false));
+
+            TestCoAssignmentEnrichmentAndOffenderDedup();
+            TestCoAssignmentAggregateStubDoesNotOutrankRealScore();
+            TestCoAssignmentExactTieGoesToTheDecoy();
+            TestCoAssignmentReportsInheritedQDivergence();
+            TestCoAssignmentDecoysUseTheirOwnStratumBoundary();
+        }
+
+        // A row still carrying the ResetScores 0.0 default must NOT outrank the entry's real
+        // experiment aggregate. The reduction in ObserveCutoff used to be a plain max(), defended
+        // on the grounds that a stub must not pull a real aggregate DOWN to zero - which only
+        // holds if aggregates are mostly positive. Measured on the 34-file SEA-AD 2nd-pass
+        // sidecars they are overwhelmingly negative (93.2%, boundary at -2.33), so 0.0 is an
+        // extreme upper outlier and max() hands the stub the win every time it appears.
+        //
+        // The fixture is built so the two rules give opposite answers:
+        //
+        //   target A   accepted, aggregate -1.0
+        //   target B   accepted, aggregate -5.0   <- the worst accepted, so it sets the boundary
+        //   target B   a SECOND row for the same entry, aggregate 0.0 (the stub)
+        //   decoy  X   aggregate -4.0
+        //
+        // prefer-real: B stays -5.0, boundary -5.0, decoy -4.0 clears it and IS admitted.
+        // max():      B becomes 0.0, boundary -1.0, decoy -4.0 misses it and vanishes.
+        //
+        // So reverting to max() turns the decoy row null and fails the assertion below. Note the
+        // direction: here the stub SUPPRESSES a real decoy, where the astral defect inflated the
+        // count. Both are the same collapse toward 0.0, and which way it lands depends only on
+        // whether the stub sits on an accepted target or on a decoy.
+        private static void TestCoAssignmentAggregateStubDoesNotOutrankRealScore()
+        {
+            var mz = new Dictionary<uint, double>
+            {
+                { 1, 500.000 }, { 2, 500.004 }, { 5 | DECOY_BIT, 500.006 },
+            };
+            var cls = new Dictionary<uint, EntrapmentClass>
+            {
+                { 1, EntrapmentClass.Target }, { 2, EntrapmentClass.Target },
+            };
+            var file = new List<FdrEntry>
+            {
+                CoEntry(1, false, 9.0, 0.001, "A", 2, 10.000, -1.0),
+                CoEntry(2, false, 3.0, 0.002, "B", 2, 10.018, -5.0),
+                // The stub: same entry as the row above, left at the ResetScores default.
+                CoEntry(2, false, 0.0, 0.002, "B", 2, 10.150, 0.0),
+                CoEntry(5 | DECOY_BIT, true, 6.0, 0.004, "X", 2, 10.008, -4.0),
+            };
+
+            var data = ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(file), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
+                0.01, FdrLevel.Precursor, 1, false);
+            Assert.IsNotNull(data);
+
+            Assert.IsNotNull(data.Experiment.Decoy,
+                @"the 0.0 stub outranked entry B's real -5.0 aggregate, lifting the experiment boundary and dropping a decoy that clears it");
+            Assert.AreEqual(1, data.Experiment.Decoy.N);
+
+            // The q-gated classes are untouched either way, which localizes a failure above to
+            // the aggregate reduction rather than to the acceptance set.
+            Assert.IsNotNull(data.Experiment.Target);
+            Assert.AreEqual(2, data.Experiment.Target.N);
+        }
+
+        // An EXACT target/decoy tie goes to the DECOY, matching what the competition that
+        // produced the q-values actually does: StreamingFdr computes
+        // `decoyWins = hasT && hasD ? !(t.score > d.score) : !hasT`, so a tied decoy is inside
+        // the FDR estimate that set the acceptance boundary. The panel used to require
+        // `decoyBest > targetBest` (and `tgt >= kv.Value` at run scope), which excluded exactly
+        // those decoys from the row the boundary is meant to admit.
+        //
+        // The fixture is built so the two rules give opposite answers:
+        //
+        //   target A   accepted, aggregate -1.0                 <- the only accepted target
+        //   decoy  X   aggregate -1.0, tied with its own target 5
+        //   target 5   aggregate -1.0                           <- NOT accepted (q = 0.5)
+        //
+        // decoy-wins-ties: X won its pair, clears the -1.0 boundary, and IS admitted.
+        // target-wins-ties: X "lost", is excluded, and the decoy class comes back null.
+        private static void TestCoAssignmentExactTieGoesToTheDecoy()
+        {
+            var mz = new Dictionary<uint, double>
+            {
+                { 1, 500.000 }, { 5, 500.006 }, { 5 | DECOY_BIT, 500.006 },
+            };
+            var cls = new Dictionary<uint, EntrapmentClass>
+            {
+                { 1, EntrapmentClass.Target }, { 5, EntrapmentClass.Target },
+            };
+            var file = new List<FdrEntry>
+            {
+                CoEntry(1, false, 9.0, 0.001, @"A", 2, 10.000, -1.0),
+                // Rejected, so it does not move the boundary - it exists only to be the decoy's
+                // tied competitor.
+                CoEntry(5, false, 4.0, 0.500, @"T5", 2, 10.004, -1.0),
+                CoEntry(5 | DECOY_BIT, true, 4.0, 0.500, @"T5", 2, 10.008, -1.0),
+            };
+
+            var data = ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(file), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
+                0.01, FdrLevel.Precursor, 1, false);
+            Assert.IsNotNull(data);
+            Assert.IsNotNull(data.Experiment.Decoy,
+                @"an exact target/decoy tie was resolved against the decoy, dropping it from the row the boundary admits - StreamingFdr gives the tie to the decoy");
+            Assert.AreEqual(1, data.Experiment.Decoy.N);
+        }
+
+        // THE CUTOFF-VERSUS-CROSSING DIVERGENCE IS A DETECTOR, AND IT MUST KEEP WORKING (#4573).
+        //
+        // The panel reports two boundaries: the acceptance cutoff (min experiment aggregate over
+        // the q-accepted set) and this pool's own FDR crossing (the score its own target-decoy
+        // count reaches the target FDR at). When a pool's q-values ARE its own, the two are the
+        // same quantity and agree by definition - q is monotone in the score the competition
+        // ranked on, so the worst accepted score IS the crossing. They can only separate when the
+        // q-values were computed over a DIFFERENT population than the pool being counted.
+        //
+        // That makes the gap a misconfiguration detector, and #4573 is the proof. Under
+        // OSPREY_PASS2_QVALUE=protein-compact only in-stratum base_ids recompete; everything else
+        // keeps its pass-1 experiment q AND pass-1 aggregate. On stellar-gendecoy-entrap the
+        // stratum had collapsed to 23 base_ids (7 proteins with >=2 detected peptides, from a
+        // library whose accessions were per-peptide pseudo-proteins), so nothing recompeted, the
+        // cutoff stayed bit-identical to pass 1's 0.2106 against a crossing of -1.9960, and the
+        // decoy row read 10 where the crossing said 325. Repairing the library moved the stratum
+        // to 167,660 base_ids and cutoff and crossing became EQUAL to ten decimals
+        // (-0.0378617924), with no product change at all.
+        //
+        // So the panel was right and the configuration was wrong. Do NOT "fix" this by making the
+        // cutoff adopt the crossing: that is a no-op whenever the run is sound, and when it is not
+        // it silently replaces the evidence with a bar drawn from a pool that never recompeted.
+        //
+        // Both arms below run at runFdr = 0.25 over one row per precursor, m/z 1.0 apart so no
+        // pair co-assigns - this measures the ADMISSION rule, not the geometry.
+        private static void TestCoAssignmentReportsInheritedQDivergence()
+        {
+            TestCoAssignmentInheritedQIsReportedNotHidden();
+            TestCoAssignmentOwnQAgreesWithItsCrossing();
+        }
+
+        // A DECOY IS ADMITTED AGAINST THE BOUNDARY OF ITS OWN q SYSTEM (issue #4573).
+        //
+        // Under OSPREY_PASS2_QVALUE=protein-compact the reported pool carries two q systems:
+        // in-stratum entries had q AND aggregate recomputed by the pass-2 stratified
+        // competition, off-stratum entries carry both forward from pass 1 untouched. Decoys have
+        // no q of their own and are admitted on SCORE, so a single pooled minimum over the
+        // accepted set is a pass-1 quantity for in-stratum decoys or a pass-2 quantity for
+        // off-stratum ones - whichever side happened to produce the lower score. On a healthy
+        // stratum most reported peptides are in-stratum, so the pooled bar is usually the WRONG
+        // one for the majority.
+        //
+        // The fixture puts the two systems at clearly different boundaries and a decoy just
+        // inside each, so a pooled minimum admits one decoy it should not:
+        //
+        //   base_id  entry            aggregate  q       stratum
+        //      1     T1  target          8.0     0.001   IN     <- in-stratum boundary = 8.0
+        //      2     T2  target          2.0     0.001   OFF    <- off-stratum boundary = 2.0
+        //      3     D3  decoy           5.0     n/a     IN     above 2.0, BELOW 8.0
+        //      4     D4  decoy           3.0     n/a     OFF    above 2.0
+        //
+        // Pooled minimum = 2.0, which admits BOTH decoys. Per-system: D3 is in-stratum and must
+        // clear 8.0, so it is correctly excluded; D4 is off-stratum and clears 2.0. The decoy row
+        // is therefore 1, not 2 - and a build that reverts to the pooled bar reports 2.
+        private static void TestCoAssignmentDecoysUseTheirOwnStratumBoundary()
+        {
+            const double runFdr = 0.25;
+            var mz = new Dictionary<uint, double>
+            {
+                { 1, 500.0 }, { 2, 501.0 }, { 3 | DECOY_BIT, 502.0 }, { 4 | DECOY_BIT, 503.0 },
+            };
+            var cls = new Dictionary<uint, EntrapmentClass>
+            {
+                { 1, EntrapmentClass.Target }, { 2, EntrapmentClass.Target },
+            };
+            var rows = new List<FdrEntry>
+            {
+                CoEntry(1, false, 8.0, 0.001, @"T1", 2, 10.0, 8.0),
+                CoEntry(2, false, 2.0, 0.001, @"T2", 2, 11.0, 2.0),
+                // Paired targets 3 and 4 are absent, so both decoys won by default.
+                CoEntry(3 | DECOY_BIT, true, 5.0, 0.900, @"D3", 2, 12.0, 5.0),
+                CoEntry(4 | DECOY_BIT, true, 3.0, 0.900, @"D4", 2, 13.0, 3.0),
+            };
+            var stratum = new HashSet<uint> { 1, 3 };   // base_ids 1 and 3 are in-stratum
+
+            var data = ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(rows), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
+                runFdr, FdrLevel.Precursor, 2, true, stratum);
+            Assert.IsNotNull(data);
+
+            // Both boundaries are reported, and the pooled one still shows the mixed minimum so
+            // the divergence between the systems stays visible on the page.
+            Assert.AreEqual(8.0, data.ExperimentCutoffInStratum, 1e-12);
+            Assert.AreEqual(2.0, data.ExperimentCutoffOffStratum, 1e-12);
+            Assert.AreEqual(2.0, data.ExperimentCutoff, 1e-12);
+            Assert.AreEqual(1, data.AcceptedInStratum);
+            Assert.AreEqual(1, data.AcceptedOffStratum);
+
+            Assert.IsNotNull(data.Experiment.Decoy);
+            Assert.AreEqual(1, data.Experiment.Decoy.N,
+                @"an in-stratum decoy below its own recomputed boundary was admitted on the off-stratum (pass-1) minimum");
+
+            // Without a stratum the builder must behave exactly as before - one boundary, both
+            // decoys admitted - so nothing outside protein-compact moves.
+            var pooled = ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(rows), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
+                runFdr, FdrLevel.Precursor, 2, true);
+            Assert.IsNotNull(pooled);
+            Assert.AreEqual(2, pooled.Experiment.Decoy.N,
+                @"the no-stratum path must keep the single pooled boundary");
+            Assert.IsTrue(double.IsNaN(pooled.ExperimentCutoffInStratum));
+            Assert.IsTrue(double.IsNaN(pooled.ExperimentCutoffOffStratum));
+        }
+
+        // ARM 1 - inherited q: the boundaries MUST diverge, and the class table must stay on the
+        // cutoff rather than quietly following the crossing.
+        //
+        //   aggregate  entry            q        q-accepted?
+        //      8.0     T1  target      0.001     yes
+        //      7.0     T2  target      0.001     yes
+        //      6.0     T3  target      0.001     yes
+        //      5.0     T4  target      0.001     yes   <- sets the cutoff
+        //      4.5     D1  decoy       n/a             target 11 absent, so it won its pair
+        //      4.0     T5  target      0.900     no
+        //      3.0     T6  target      0.900     no
+        //      2.0     T7  target      0.900     no
+        //      1.5     E   entrapment  0.900     no
+        //      1.0     T8  target      0.900     no
+        //      0.5     D2  decoy       n/a             target 12 absent, so it won its pair
+        //
+        // Cutoff = min aggregate over {T1..T4} = 5.0. The crossing is q-blind: it walks every
+        // precursor by descending score keeping the DEEPEST point still within 0.25, so D1 lands
+        // at 1/4 and D2 at 2/9 = 0.222, giving 0.5 with 2 decoys against 9 non-decoys. The 4.5
+        // gap between them is the signal.
+        private static void TestCoAssignmentInheritedQIsReportedNotHidden()
+        {
+            const double runFdr = 0.25;
+            var mz = new Dictionary<uint, double>();
+            var cls = new Dictionary<uint, EntrapmentClass>();
+            var rows = new List<FdrEntry>();
+            for (uint i = 0; i < 8; i++)
+            {
+                uint id = i + 1;
+                double agg = 8.0 - i;
+                mz[id] = 500.0 + i;
+                cls[id] = EntrapmentClass.Target;
+                rows.Add(CoEntry(id, false, agg, i < 4 ? 0.001 : 0.900, @"T" + id, 2, 10.0 + i, agg));
+            }
+            mz[201] = 520.0;
+            cls[201] = EntrapmentClass.PTarget;
+            rows.Add(CoEntry(201, false, 1.5, 0.900, @"E", 2, 18.0, 1.5));
+            // Paired targets 11 and 12 are absent, so both decoys won by default and are countable.
+            mz[11 | DECOY_BIT] = 530.0;
+            mz[12 | DECOY_BIT] = 531.0;
+            rows.Add(CoEntry(11 | DECOY_BIT, true, 4.5, 0.900, @"D1", 2, 19.0, 4.5));
+            rows.Add(CoEntry(12 | DECOY_BIT, true, 0.5, 0.900, @"D2", 2, 20.0, 0.5));
+
+            var data = ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(rows), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
+                runFdr, FdrLevel.Precursor, 2, true);
+            Assert.IsNotNull(data);
+
+            // BOTH numbers must reach the report. Collapsing either onto the other destroys the
+            // only on-page evidence that this pool's q-values are not its own.
+            Assert.AreEqual(5.0, data.ExperimentCutoff, 1e-12,
+                @"the acceptance cutoff stopped being the minimum aggregate over the q-accepted set");
+            Assert.AreEqual(0.5, data.ExperimentFdrCrossing, 1e-12,
+                @"the crossing stopped being this pool's own FDR point - it must stay q-blind");
+            Assert.AreEqual(2, data.ExperimentFdrCrossingDecoys);
+            Assert.AreEqual(9, data.ExperimentFdrCrossingNonDecoys);
+
+            // The class table is counted against the CUTOFF, so it reports what the run actually
+            // admitted: only T1..T4, no decoy clearing 5.0, and the q-failing entrapment absent.
+            Assert.AreEqual(4, data.Experiment.Target.N);
+            Assert.IsNull(data.Experiment.Decoy,
+                @"a decoy below the acceptance cutoff was admitted - the class table is following the crossing instead of the cutoff");
+            Assert.IsNull(data.Experiment.Entrapment);
+
+            // Run scope has its own per-file boundary (worst accepted run SCORE = 5.0) and is
+            // unaffected either way, which localizes a failure above to the experiment scope.
+            Assert.AreEqual(4, data.Run.Target.N);
+            Assert.IsNull(data.Run.Decoy);
+        }
+
+        // ARM 2 - q computed over the pool being counted: cutoff and crossing MUST agree exactly.
+        // This is the healthy protein-compact case, and the property that made #4573 dissolve once
+        // the stratum was real. Same shape as arm 1 with two changes: every non-decoy is
+        // q-accepted, and the tail decoy is gone so the crossing lands on the lowest non-decoy
+        // (1.0, T8) rather than below it.
+        private static void TestCoAssignmentOwnQAgreesWithItsCrossing()
+        {
+            const double runFdr = 0.25;
+            var mz = new Dictionary<uint, double>();
+            var cls = new Dictionary<uint, EntrapmentClass>();
+            var rows = new List<FdrEntry>();
+            for (uint i = 0; i < 8; i++)
+            {
+                uint id = i + 1;
+                double agg = 8.0 - i;
+                mz[id] = 500.0 + i;
+                cls[id] = EntrapmentClass.Target;
+                rows.Add(CoEntry(id, false, agg, 0.001, @"T" + id, 2, 10.0 + i, agg));
+            }
+            mz[201] = 520.0;
+            cls[201] = EntrapmentClass.PTarget;
+            rows.Add(CoEntry(201, false, 1.5, 0.001, @"E", 2, 18.0, 1.5));
+            mz[11 | DECOY_BIT] = 530.0;
+            rows.Add(CoEntry(11 | DECOY_BIT, true, 4.5, 0.900, @"D1", 2, 19.0, 4.5));
+
+            var data = ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(rows), cls, id => mz.TryGetValue(id, out double v) ? v : double.NaN,
+                runFdr, FdrLevel.Precursor, 2, true);
+            Assert.IsNotNull(data);
+
+            // 9 non-decoys and 1 winning decoy: the walk stays within 0.25 all the way down, so
+            // the crossing is T8's 1.0 - which is also the worst accepted aggregate.
+            Assert.AreEqual(1.0, data.ExperimentCutoff, 1e-12);
+            Assert.AreEqual(data.ExperimentCutoff, data.ExperimentFdrCrossing, 1e-12,
+                @"a pool whose q-values are its own must put the cutoff and the crossing at the same score - they are the same quantity");
+            Assert.AreEqual(1, data.ExperimentFdrCrossingDecoys);
+            Assert.AreEqual(9, data.ExperimentFdrCrossingNonDecoys);
+
+            // With one boundary the class table and the crossing counts are one population read
+            // two ways, so they agree without anything having to force them to.
+            Assert.AreEqual(8, data.Experiment.Target.N);
+            Assert.IsNotNull(data.Experiment.Entrapment);
+            Assert.AreEqual(1, data.Experiment.Entrapment.N);
+            Assert.IsNotNull(data.Experiment.Decoy);
+            Assert.AreEqual(data.ExperimentFdrCrossingDecoys, data.Experiment.Decoy.N);
+            Assert.AreEqual(data.ExperimentFdrCrossingNonDecoys,
+                data.Experiment.Target.N + data.Experiment.Entrapment.N);
+        }
+
+        // Enrichment arithmetic above MIN_N_FOR_ENRICHMENT, and one offender ROW per precursor
+        // pair rather than one per observation. Both need a bigger pool than the fixture above:
+        // 31 targets and 31 entrapment, padded with isolated precursors at m/z nobody shares.
+        // 1 of 31 targets and 2 of 31 entrapment are co-assigned, so enrichment is exactly 2.0.
+        private static void TestCoAssignmentEnrichmentAndOffenderDedup()
+        {
+            var mz = new Dictionary<uint, double> { { 1, 500.000 }, { 2, 500.004 }, { 201, 500.005 }, { 202, 500.006 } };
+            var cls = new Dictionary<uint, EntrapmentClass>
+            {
+                { 1, EntrapmentClass.Target }, { 2, EntrapmentClass.Target },
+                { 201, EntrapmentClass.PTarget }, { 202, EntrapmentClass.PTarget },
+            };
+            var rows = new List<FdrEntry>
+            {
+                CoEntry(1, false, 9.0, 0.001, "A", 2, 10.000),      // the strong explanation
+                CoEntry(2, false, 3.0, 0.001, "B", 2, 10.018),      // co-assigned target
+                CoEntry(201, false, 4.0, 0.001, "E1", 2, 10.020),   // co-assigned entrapment
+                CoEntry(202, false, 4.0, 0.001, "E2", 2, 10.022),   // co-assigned entrapment
+            };
+            for (uint i = 0; i < 29; i++)                            // isolated padding, no partners
+            {
+                uint t = 1000 + i, p = 2000 + i;
+                mz[t] = 600.0 + i; mz[p] = 800.0 + i;
+                cls[t] = EntrapmentClass.Target; cls[p] = EntrapmentClass.PTarget;
+                rows.Add(CoEntry(t, false, 5.0, 0.001, "T" + i, 2, 20.0 + i));
+                rows.Add(CoEntry(p, false, 5.0, 0.001, "P" + i, 2, 40.0 + i));
+            }
+            // The same two runs, so every co-assigned pair is seen TWICE. Row count per pair must
+            // still be one, with Runs == 2.
+            var data = ModelDiagnosticsData.BuildCoAssignment(
+                WrapFiles(rows, new List<FdrEntry>(rows)), cls,
+                id => mz.TryGetValue(id, out double v) ? v : double.NaN,
+                0.01, FdrLevel.Precursor, 1, false);
+            Assert.IsNotNull(data);
+            var scope = data.Run;
+            Assert.AreEqual(31, scope.Target.N);
+            Assert.AreEqual(1, scope.Target.NBetter);               // B, outscored by A
+            Assert.AreEqual(31, scope.Entrapment.N);
+            Assert.AreEqual(2, scope.Entrapment.NBetter);           // E1 and E2, both outscored by A
+            Assert.AreEqual(2.0, scope.Enrichment, 1e-12);
+
+            // Three distinct pairs, each observed in both runs: 3 rows, not 6.
+            Assert.AreEqual(3, scope.WorstOffenders.Count);
+            foreach (var o in scope.WorstOffenders)
+                Assert.AreEqual(2, o.Runs);
         }
 
         // The streaming pass-1 accumulator (fed per-row off the projection score-pass sink so an
@@ -776,8 +1330,8 @@ namespace pwiz.Osprey.Test
 
             // --- The Pass2 bundle survives a Newtonsoft round-trip (camelCase +
             // NaN-as-literal) -- the same serialization robustness the HTML embed relies
-            // on. (Pass2 itself is built at MergeNode and serialized only into the HTML,
-            // never through the FirstJoin->MergeNode data sidecar, which carries pass 1.)
+            // on. (Pass2 itself is built at SecondPassFDR and serialized only into the HTML,
+            // never through the FirstPassFDR->SecondPassFDR data sidecar, which carries pass 1.)
             var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, FdrLevel.Peptide);
             data.Pass2 = retrain;
             var settings = new JsonSerializerSettings
@@ -795,8 +1349,8 @@ namespace pwiz.Osprey.Test
         }
 
         // The pass-1 data model must survive a Newtonsoft round-trip (camelCase +
-        // NaN/Infinity as bare literals): FirstJoin stashes it to a sidecar and
-        // MergeNode reloads it to append the pass-2 views. Mirrors the settings in
+        // NaN/Infinity as bare literals): FirstPassFDR stashes it to a sidecar and
+        // SecondPassFDR reloads it to append the pass-2 views. Mirrors the settings in
         // ModelDiagnosticsReport.SidecarSettings -- the empty-bin NaN in the
         // win-fraction curve is the round-trip's sharp edge.
         private static void TestSidecarRoundTrip()
@@ -1138,6 +1692,31 @@ namespace pwiz.Osprey.Test
             };
         }
 
+        // An entry carrying a detection apex RT, for the peak co-assignment panel (the only card
+        // that reads FdrEntry.ApexRt).
+        /// <summary>
+        /// A co-assignment fixture row. <paramref name="expAgg"/> is the EXPERIMENT AGGREGATE
+        /// SCORE (sidecar v4), which defaults to the row's own score - right for an entry with a
+        /// single observation, and the reason it can be omitted on rows where the distinction
+        /// does not matter.
+        ///
+        /// <para>It must be settable, and it must default to something other than 0.0. The
+        /// experiment-scope decoy boundary is the ONLY quantity on this panel gated by score
+        /// rather than by a q, and it reads this field, not <c>Score</c>. Leaving every fixture
+        /// row at the <c>ResetScores</c> 0.0 default made the boundary 0.0, admitted every decoy
+        /// unconditionally, and let a real defect ship green - the pass-2 panel reported 542,368
+        /// decoys against 117,783 targets on astral before it was caught by inspecting the
+        /// rebaselined golden rather than by this test.</para>
+        /// </summary>
+        private static FdrEntry CoEntry(uint id, bool decoy, double score, double q,
+            string seq, byte charge, double apexRt, double expAgg = double.NaN)
+        {
+            var entry = Entry(id, decoy, score, q, seq, charge);
+            entry.ApexRt = apexRt;
+            entry.ExperimentAggregateScore = double.IsNaN(expAgg) ? score : expAgg;
+            return entry;
+        }
+
         // An entry with distinct per-run and experiment-wide precursor q (for the
         // per-scope yield curve, where the default Entry sets both scopes equal).
         private static FdrEntry EntryQ(uint id, bool decoy, double score,
@@ -1208,6 +1787,76 @@ namespace pwiz.Osprey.Test
             for (int i = 0; i < files.Length; i++)
                 list.Add(new KeyValuePair<string, List<FdrEntry>>("file" + (i + 1), files[i]));
             return list;
+        }
+
+        /// <summary>
+        /// Frontier math on a fully hand-computable case: N=4 runs, r=1 (combined factor 2),
+        /// 10% target. 100 real precursors detected in all 4 runs (run-q 0.005, best-peak exp-q
+        /// 0.01); 100 real detected in only 1 run (exp-q 0.20, off the exp grid); 10 entrapment
+        /// detected in 1 run (exp-q 0.20). Every asserted value is derived by hand.
+        /// </summary>
+        [TestMethod]
+        public void TestReproducibilityFrontier()
+        {
+            var precs = new List<ModelDiagnosticsData.FrontierPrec>();
+            for (int i = 0; i < 100; i++) precs.Add(MakeFrontierPrec(false, 0.01, 0.005, 4));
+            for (int i = 0; i < 100; i++) precs.Add(MakeFrontierPrec(false, 0.20, 0.005, 1));
+            for (int i = 0; i < 10; i++) precs.Add(MakeFrontierPrec(true, 0.20, 0.005, 1));
+
+            var f = ModelDiagnosticsData.BuildFrontier(precs, 4, 1.0, 0.10);
+            Assert.IsNotNull(f);
+            Assert.AreEqual(4, f.N);
+            Assert.AreEqual(0.10, f.Target, 1e-9);
+            // per-run: k=1 admits all 200 real at 20/210 = 9.5% FDP (<= 10%); k>=2 keeps only the
+            // 100 four-run real (entrapment does not reproduce) at 0% FDP.
+            CollectionAssert.AreEqual(new[] { 200, 100, 100, 100 }, f.PerRun.Yield);
+            Assert.AreEqual(1, f.PeakK);
+            Assert.AreEqual(200, f.PerRunPeak);
+            // best-peak "standard": real with exp-q <= 10% -> only the 100 with exp-q 0.01.
+            Assert.AreEqual(100, f.BestPeak);
+            Assert.AreEqual(0.0, f.BestPeakFdp, 1e-9);
+            Assert.AreEqual(1.0, f.GainPct, 1e-9);        // (200-100)/100
+            Assert.AreEqual(0.5, f.SacrificePct, 1e-9);   // (200-100)/200
+            // experiment-wide sees only the 100 exp-q-0.01 real (the 0.20 group is off-grid).
+            Assert.AreEqual(100, f.ExpPeak);
+            // content overlap at the peak: per-run-optimal = all 200 real; exp-optimal = the 100
+            // exp-q-0.01 real. Intersection 100, union 200 => Jaccard 0.5.
+            Assert.AreEqual(0.5, f.OverlapJaccard, 1e-9);
+        }
+
+        private static ModelDiagnosticsData.FrontierPrec MakeFrontierPrec(bool entrapment, double expQ, double runQ, int nRuns)
+        {
+            var p = new ModelDiagnosticsData.FrontierPrec { IsEntrapment = entrapment, MinExpQ = expQ };
+            p.RunQBins[ModelDiagnosticsData.FrontierBin(runQ)] = (ushort)nRuns;
+            return p;
+        }
+
+        /// <summary>
+        /// A precursor with several pre-compaction candidates in ONE file must count as one run for
+        /// that file, not one per candidate. Without the per-file dedup the run count would exceed
+        /// N (and index past the histogram in BuildFrontier); this pins the file-not-row semantic.
+        /// </summary>
+        [TestMethod]
+        public void TestFrontierPerFileDedup()
+        {
+            var frontier = new Dictionary<string, ModelDiagnosticsData.FrontierPrec>();
+            var fileMinQ = new Dictionary<string, double>();
+            // file 0: three candidates for the same precursor (best run-q 0.005).
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.010, 0.02);
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.005, 0.01);
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.020, 0.03);
+            ModelDiagnosticsData.FrontierFlushFile(frontier, fileMinQ);
+            // file 1: one candidate for the same precursor (run-q 0.008).
+            ModelDiagnosticsData.FrontierRow(frontier, fileMinQ, "PEP|2", false, 0.008, 0.05);
+            ModelDiagnosticsData.FrontierFlushFile(frontier, fileMinQ);
+
+            var fp = frontier["PEP|2"];
+            int total = 0;
+            foreach (var c in fp.RunQBins) total += c;
+            Assert.AreEqual(2, total);                 // two files, not four candidate rows
+            Assert.AreEqual(0.01, fp.MinExpQ, 1e-9);   // min effective exp-q across all rows
+            Assert.AreEqual(1, fp.RunQBins[ModelDiagnosticsData.FrontierBin(0.005)]);  // file 0 at its best run-q
+            Assert.AreEqual(1, fp.RunQBins[ModelDiagnosticsData.FrontierBin(0.008)]);  // file 1
         }
     }
 }

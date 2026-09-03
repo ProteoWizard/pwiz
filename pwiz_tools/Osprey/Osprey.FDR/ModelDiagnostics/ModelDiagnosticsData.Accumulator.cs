@@ -31,8 +31,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// Streaming builder for the pass-1 <see cref="ModelDiagnosticsData"/> that folds each
         /// first-pass FDR row into the SAME reduced structures the batch <see cref="Build"/>
         /// derives from the resident pool, WITHOUT ever holding the full pre-compaction
-        /// <see cref="FdrEntry"/> pool resident. Fed one row at a time from the projection
-        /// score-pass sink (<c>FdrProjectionSinkBase.Accept</c>) in nested (file, row) order;
+        /// <see cref="FdrEntry"/> pool resident. Fed one row at a time in nested (file, row)
+        /// order by either of the two pre-compaction row sources - the projection score-pass
+        /// sink (<c>FdrProjectionSinkBase.Accept</c>) as first-pass Percolator scores each row,
+        /// or the streaming reconciled-bundle rehydrate
+        /// (<c>RescoreHydration.HydrateCompactedStreaming</c>, per file after the 1st-pass
+        /// sidecar overlay and before compaction discards the non-survivors);
         /// <see cref="Build"/> then runs the identical downstream builders over the accumulated
         /// reductions.
         ///
@@ -54,7 +58,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// nested order the batch ReduceToPrecs walks perFileEntries, so _best.Values enumerates
         /// identically. So the streamed reduction reproduces the resident reduction
         /// element-for-element, while the 340M-row pre-compaction pool that OOM'd an 82-file
-        /// --model-diagnostics run at the join is never materialized -- the accumulator holds only
+        /// --model-diagnostics run at FirstPassFDR is never materialized -- the accumulator holds only
         /// ~unique-precursor / ~base_id-sized maps. (A future change that reorders projection rows
         /// within a file would threaten this last invariant -- keep the row order stable.)
         /// </summary>
@@ -94,6 +98,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private readonly Dictionary<uint, EntrapmentClass> _tClass =
                 new Dictionary<uint, EntrapmentClass>();
 
+            // Frontier: un-gated first-pass run-q distribution per target-side precursor, the
+            // one input the reproducibility frontier needs beyond the gated cross-run sets.
+            private readonly Dictionary<string, FrontierPrec> _frontier =
+                new Dictionary<string, FrontierPrec>(StringComparer.Ordinal);
+            // Within-file dedup buffer: the current file's per-precursor best run-q, flushed into
+            // the bins at each file boundary (rows arrive in file-major order).
+            private readonly Dictionary<string, double> _frontierFileMinQ =
+                new Dictionary<string, double>(StringComparer.Ordinal);
+            private int _frontierCurFile = -1;
+
             /// <param name="runNames">Input-file names in scoring (input-file) order -- the x for
             /// the per-file table and cross-run curves; also fixes <see cref="FileCount"/>.</param>
             /// <param name="classByBaseId">library base_id -> target-side entrapment class, exactly
@@ -127,6 +141,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 _entRunSets = NewSets(_nFiles);
                 _entExpSets = NewSets(_nFiles);
             }
+
+            /// <summary>
+            /// The entrapment classification this accumulator was built with, so a sibling panel
+            /// computed outside the streamed fold - the pass-1 peak co-assignment source, which
+            /// reads apex RT off the FDR sidecars rather than the score pass - classifies rows
+            /// identically without rebuilding it. Worth exposing rather than recomputing:
+            /// classifying the searched library runs for minutes at 6.3M entries.
+            /// </summary>
+            public IReadOnlyDictionary<uint, EntrapmentClass> ClassByBaseId => _classByBaseId;
 
             private static List<HashSet<string>> NewSets(int n)
             {
@@ -222,6 +245,21 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     }
                 }
 
+                // Frontier: fold the UN-GATED first-pass row into the within-file run-q tally
+                // (target side only). On a new file, flush the previous file's per-precursor best
+                // run-q into the bins first (rows arrive in file-major order).
+                if (!isDecoy)
+                {
+                    if (fileIdx != _frontierCurFile)
+                    {
+                        if (_frontierCurFile >= 0)
+                            FrontierFlushFile(_frontier, _frontierFileMinQ);
+                        _frontierCurFile = fileIdx;
+                    }
+                    FrontierRow(_frontier, _frontierFileMinQ, key, isEntrap,
+                        q.EffectiveRunQvalue(_fdrLevel), q.EffectiveExperimentQvalue(_fdrLevel));
+                }
+
                 // --- win fraction per base_id (== BuildWinFraction: best target vs best decoy) ---
                 if (!_bt.TryGetValue(baseId, out var slot))
                 {
@@ -311,6 +349,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
                 if (data.HasEntrapment)
                     data.FdpViews = BuildFdpViewsFromPrecs(precs, r, 1);
+
+                // Reproducibility frontier (first-pass, pre-compaction; entrapment-gated).
+                if (data.HasEntrapment)
+                {
+                    FrontierFlushFile(_frontier, _frontierFileMinQ);   // flush the final file
+                    data.Frontier = BuildFrontier(_frontier.Values, _nFiles, r, _runFdr);
+                }
 
                 return data;
             }

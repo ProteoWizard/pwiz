@@ -560,13 +560,17 @@ namespace pwiz.Skyline.Model.DocSettings
             var libs = new Library[specs.Length];
             BiblioSpecLiteLibrary oldDocumentLibrary = null;
             BiblioSpecLiteLibrary newDocumentLibrary = null;
+            string oldDocumentLibraryName = null;
+            string newDocumentLibraryName = null;
             for (int i = 0; i < specs.Length; i++)
             {
                 if (peptideLibraries.LibrarySpecs[i].IsDocumentLibrary)
                 {
                     var newDocumentLibrarySpec = BiblioSpecLiteSpec.GetDocumentLibrarySpec(newPath);
+                    oldDocumentLibraryName = peptideLibraries.LibrarySpecs[i].Name;
+                    newDocumentLibraryName = newDocumentLibrarySpec.Name;
                     specs[i] = newDocumentLibrarySpec;
-                    oldDocumentLibrary = libs[i] as BiblioSpecLiteLibrary;
+                    oldDocumentLibrary = peptideLibraries.Libraries[i] as BiblioSpecLiteLibrary;
                     if (oldDocumentLibrary != null)
                     {
                         newDocumentLibrary = oldDocumentLibrary.ChangeLibrarySpec(newDocumentLibrarySpec, FileStreamManager.Default.ConnectionPool);
@@ -580,8 +584,24 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
-            var result = ChangePeptideSettings(PeptideSettings.ChangeLibraries(
-                peptideLibraries.ChangeLibraries(specs, libs)));
+            var newPeptideSettings = PeptideSettings.ChangeLibraries(peptideLibraries.ChangeLibraries(specs, libs));
+            // An alignment target which names the document library has to follow it to its new name.
+            // Otherwise it no longer matches any library in the document, and retention time alignment
+            // silently stops working. This is keyed off the library spec rather than the loaded library,
+            // since the spec is renamed even when the library itself is not loaded.
+            var imputation = newPeptideSettings.Imputation;
+            if (imputation?.AlignmentTarget != null && oldDocumentLibraryName != null)
+            {
+                var newAlignmentTarget =
+                    imputation.AlignmentTarget.ChangeLibraryName(oldDocumentLibraryName, newDocumentLibraryName);
+                if (!ReferenceEquals(newAlignmentTarget, imputation.AlignmentTarget))
+                {
+                    newPeptideSettings = newPeptideSettings.ChangeImputation(
+                        imputation.ChangeAlignmentTarget(newAlignmentTarget));
+                }
+            }
+
+            var result = ChangePeptideSettings(newPeptideSettings);
             if (newDocumentLibrary != null)
             {
                 result = result.ChangeDocumentRetentionTimes(
@@ -1362,7 +1382,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     continue;
                 }
 
-                result.AddRange(library.GetRetentionTimesWithSequences(null, targets).SelectMany(list=>list));
+                result.AddRange(library.GetRetentionTimesWithSequences(targets).SelectMany(list=>list));
                 if (library is MidasLibrary)
                 {
                     foreach (var midasSpectra in precursorMzs.Select(precursorMz => GetMidasSpectra(precursorMz.Value)))
@@ -2960,6 +2980,7 @@ namespace pwiz.Skyline.Model.DocSettings
                               // MS1 filtering changed select peaks
                               newTran.FullScan.PrecursorIsotopes != oldTran.FullScan.PrecursorIsotopes ||
                               newTran.FullScan.PrecursorIsotopeFilter != oldTran.FullScan.PrecursorIsotopeFilter ||
+                              newTran.FullScan.IncludeMinusOnePrecursor != oldTran.FullScan.IncludeMinusOnePrecursor ||
                               (newTran.FullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None && enrichmentsChanged) ||
                               !Equals(newTran.FullScan.PrecursorRes, oldTran.FullScan.PrecursorRes) ||
                               !Equals(newTran.FullScan.PrecursorResMz, oldTran.FullScan.PrecursorResMz);
@@ -3055,9 +3076,19 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             for (int i = 0; i < measuredResultsNew.Chromatograms.Count; i++)
             {
-                var chromatogramSetNew = measuredResultsNew.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
+                var chromatogramSetNewSource = measuredResultsNew.Chromatograms[i];
+                var chromatogramSetOldSource = measuredResultsOld.Chromatograms[i];
+                // The comparison below ignores the name, and everything else it compares can be
+                // identical for two replicates measuring the same file. Without this check,
+                // reordering them looks like no change, DiffResults stays false, and the node
+                // results are left on their old indexes while the ChromatogramSet list moves.
+                if (!ReferenceEquals(chromatogramSetNewSource.Id, chromatogramSetOldSource.Id))
+                {
+                    return false;
+                }
+                var chromatogramSetNew = chromatogramSetNewSource.ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
                     .ChangeAnalyteConcentration(null).ChangeSampleType(SampleType.DEFAULT).ChangeName(string.Empty);
-                var chromatogramSetOld = measuredResultsOld.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
+                var chromatogramSetOld = chromatogramSetOldSource.ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
                     .ChangeAnalyteConcentration(null).ChangeSampleType(SampleType.DEFAULT).ChangeName(string.Empty);
                 if (!chromatogramSetNew.Equals(chromatogramSetOld))
                 {

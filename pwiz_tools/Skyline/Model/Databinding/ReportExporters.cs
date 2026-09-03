@@ -24,6 +24,9 @@ using System;
 
 namespace pwiz.Skyline.Model.Databinding
 {
+    /// <summary>The formats that "--report-format" can name on the command-line.</summary>
+    public enum ReportFormat { csv, tsv, parquet }
+
     public static class ReportExporters
     {
         /// <summary>
@@ -38,26 +41,58 @@ namespace pwiz.Skyline.Model.Databinding
         /// </list></param>
         public static IReportExporter ForFilenameExtension(DataSchemaLocalizer dataSchemaLocalizer, params string[] extensionsToTry)
         {
+            return ForFormat(dataSchemaLocalizer, FormatForFilenameExtension(extensionsToTry));
+        }
+
+        /// <summary>
+        /// The format <see cref="ForFilenameExtension"/> would use. Callers that have to know
+        /// the format before they can choose a <see cref="DataSchemaLocalizer"/> need this,
+        /// since the localizer is what <see cref="ForFilenameExtension"/> takes.
+        /// </summary>
+        public static ReportFormat FormatForFilenameExtension(params string[] extensionsToTry)
+        {
             foreach (var extension in extensionsToTry)
             {
                 if (TextUtil.EXT_CSV.Equals(extension, StringComparison.OrdinalIgnoreCase))
                 {
-                    var separator = TextUtil.GetCsvSeparator(dataSchemaLocalizer.FormatProvider);
-                    return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, separator));
+                    return ReportFormat.csv;
                 }
 
                 if (TextUtil.EXT_PARQUET.Equals(extension, StringComparison.OrdinalIgnoreCase))
                 {
-                    return new ParquetReportExporter();
+                    return ReportFormat.parquet;
                 }
             }
 
-            return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, TextUtil.SEPARATOR_TSV));
+            return ReportFormat.tsv;
         }
 
         public static IReportExporter ForSeparator(DataSchemaLocalizer dataSchemaLocalizer, char separator)
         {
             return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, separator));
+        }
+
+        /// <summary>
+        /// Returns an IReportExporter for an explicitly requested format, ignoring the
+        /// extension of the file being written.
+        /// </summary>
+        public static IReportExporter ForFormat(DataSchemaLocalizer dataSchemaLocalizer, ReportFormat reportFormat)
+        {
+            switch (reportFormat)
+            {
+                case ReportFormat.csv:
+                    // The localizer's separator, not TextUtil.CsvSeparator, so that
+                    // --report-invariant gets a comma whatever the OS culture is, and
+                    // --report-format=csv agrees with exporting to a .csv file name.
+                    return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer,
+                        TextUtil.GetCsvSeparator(dataSchemaLocalizer.FormatProvider)));
+                case ReportFormat.tsv:
+                    return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, TextUtil.SEPARATOR_TSV));
+                case ReportFormat.parquet:
+                    return new ParquetReportExporter();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(reportFormat));
+            }
         }
 
         private static DsvWriter CreateDsvWriter(DataSchemaLocalizer dataSchemaLocalizer, char separator)

@@ -306,35 +306,41 @@ namespace pwiz.Osprey.Test
         {
             var entry = new LibraryEntry(2, "PEPTIDER", "PEP[+80]TIDER", 3, 350.5, 15.0);
 
-            entry.Fragments.Add(new LibraryFragment
+            entry.Fragments = new[]
             {
-                Mz = 175.119,
-                RelativeIntensity = 1.0f,
-                Annotation = new FragmentAnnotation
+                new LibraryFragment
                 {
-                    IonType = IonType.Y,
-                    Ordinal = 3,
-                    Charge = 1
-                }
-            });
-            entry.Fragments.Add(new LibraryFragment
-            {
-                Mz = 274.187,
-                RelativeIntensity = 0.8f,
-                Annotation = new FragmentAnnotation
+                    Mz = 175.119,
+                    RelativeIntensity = 1.0f,
+                    Annotation = new FragmentAnnotation
+                    {
+                        IonType = IonType.Y,
+                        Ordinal = 3,
+                        Charge = 1
+                    }
+                },
+                new LibraryFragment
                 {
-                    IonType = IonType.B,
-                    Ordinal = 4,
-                    Charge = 1
+                    Mz = 274.187,
+                    RelativeIntensity = 0.8f,
+                    Annotation = new FragmentAnnotation
+                    {
+                        IonType = IonType.B,
+                        Ordinal = 4,
+                        Charge = 1
+                    }
                 }
-            });
+            };
 
-            entry.Modifications.Add(new Modification
+            entry.Modifications = new[]
             {
-                Position = 2,
-                UnimodId = 21,
-                MassDelta = 79.966331
-            });
+                new Modification
+                {
+                    Position = 2,
+                    UnimodId = 21,
+                    MassDelta = 79.966331
+                }
+            };
 
             Assert.AreEqual(2, entry.Fragments.Count);
             Assert.AreEqual(1, entry.Modifications.Count);

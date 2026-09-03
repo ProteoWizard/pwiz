@@ -209,6 +209,14 @@ void test()
     unit_assert_equal(precursor2.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>(), 123.45, 1e-5);
     unit_assert_operator_equal("2", precursor2.selectedIons[0].cvParamChildren(MS_possible_charge_state)[0].value);
     unit_assert_operator_equal("3", precursor2.selectedIons[0].cvParamChildren(MS_possible_charge_state)[1].value);
+
+    // an out of bounds index must throw, including the size() sentinel returned by find() for an unknown id
+
+    unit_assert(sl->find("index=42") == sl->size());
+    unit_assert_throws_what(sl->spectrumIdentity(sl->size()), runtime_error, "[SpectrumList_MGF::spectrumIdentity] Index out of bounds");
+    unit_assert_throws_what(sl->spectrumIdentity(sl->size() + 1), runtime_error, "[SpectrumList_MGF::spectrumIdentity] Index out of bounds");
+    unit_assert_throws_what(sl->spectrum(sl->size(), false), runtime_error, "[SpectrumList_MGF::spectrum] Index out of bounds");
+    unit_assert_throws_what(sl->spectrum(sl->size() + 1, false), runtime_error, "[SpectrumList_MGF::spectrum] Index out of bounds");
 }
 
 

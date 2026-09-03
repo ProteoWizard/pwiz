@@ -20,6 +20,7 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
+using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -28,8 +29,13 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class LongWaitDlg : FormEx, ILongWaitBroker
+    public partial class LongWaitDlg : FormEx, ILongWaitBroker, ILongWaitForm
     {
+        // ILongWaitForm: a LongWaitDlg exists only while it is driving a long-running operation, so it is
+        // always "busy" as far as the connector's no-progress watchdog is concerned. This preserves the
+        // watchdog's original behavior, which treated any open LongWaitDlg as a sign that work is advancing.
+        public bool IsBusy => true;
+
         private readonly string _cancelMessage = string.Format(@" ({0})", ControlsResources.LongWaitDlg_PerformWork_canceled);
 
         private const int MAX_HEIGHT = 500;
@@ -128,13 +134,16 @@ namespace pwiz.Skyline.Controls
             ProgressValue = (int)(step * 100.0 / totalSteps);
         }
 
-        public void PerformWork(Control parent, int delayMillis, Action performWork)
+        // PerformWork always runs performWork to completion before returning (even on cancel, which is
+        // cooperative), so the delegate is never stored for later. [InstantHandle] tells ReSharper this,
+        // so callers can capture and then modify local variables without an "access to modified closure" warning.
+        public void PerformWork(Control parent, int delayMillis, [InstantHandle] Action performWork)
         {
             var indefiniteWaitBroker = new IndefiniteWaitBroker(performWork);
             PerformWork(parent, delayMillis, indefiniteWaitBroker.PerformWork);
         }
 
-        public IProgressStatus PerformWork(Control parent, int delayMillis, Action<IProgressMonitor> performWork)
+        public IProgressStatus PerformWork(Control parent, int delayMillis, [InstantHandle] Action<IProgressMonitor> performWork)
         {
             var progressWaitBroker = new ProgressWaitBroker(performWork);
             PerformWork(parent, delayMillis, progressWaitBroker.PerformWork);
@@ -143,7 +152,7 @@ namespace pwiz.Skyline.Controls
             return progressWaitBroker.Status;
         }
 
-        public void PerformWork(Control parent, int delayMillis, Action<ILongWaitBroker> performWork)
+        public void PerformWork(Control parent, int delayMillis, [InstantHandle] Action<ILongWaitBroker> performWork)
         {
             _startTime = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             _parentForm = parent;

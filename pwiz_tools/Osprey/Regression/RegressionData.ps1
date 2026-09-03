@@ -96,6 +96,12 @@ function Expand-ZipNoOverwrite {
     Extract a zip into a destination, leaving any already-present file untouched
     (DoNotOverwrite). New files are written; existing ones are skipped. This is
     what makes a partially-staged tree safe to re-extract.
+
+    There is deliberately NO overwrite mode. A zip that supersedes an earlier
+    version of the same payload is extracted into its OWN version-named folder
+    (see LibraryUrl in regression.ps1) rather than over the older one, so nothing
+    in this repo needs to replace files in place -- and an older checkout that
+    shares the tree keeps working.
     #>
     param([string]$ZipPath, [string]$DestFolder)
 
@@ -127,6 +133,49 @@ function Expand-ZipNoOverwrite {
     } finally {
         $zip.Dispose()
     }
+}
+
+function Get-ZipEntryMismatches {
+    <#
+    Paths under $DestFolder that EXIST but do not match their entry in $ZipPath,
+    compared on uncompressed length and last-write time. Absent files are NOT
+    reported -- absence is what the ordinary skip-if-present extraction already
+    handles; this reports files whose CONTENT is not what the zip says it is.
+
+    Why this is needed at all: the LibraryUrl acquisition shipped 2026-08-19
+    extracted a separately-published library OVER the bundle's extraction point.
+    Every library version ships the same three entry names, so the files left
+    behind record nothing about which version they are, and a checkout that
+    resolves them through the bundle searches the wrong library while reporting
+    success. Comparing against the bundle's own nested zip -- already on disk --
+    is what makes that state detectable without re-downloading anything.
+
+    Length and last-write time rather than a content hash: both come from the
+    zip's central directory and the filesystem, so the check is O(entries)
+    instead of a multi-GB read, and ExtractToFile stamps the entry's timestamp
+    onto the file it writes, which makes the pair a version signature. Zip
+    timestamps have 2-second granularity, hence the tolerance.
+    #>
+    param([string]$ZipPath, [string]$DestFolder)
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $mismatched = @()
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($ZipPath)
+    try {
+        foreach ($entry in $zip.Entries) {
+            if ($entry.FullName.EndsWith('/')) { continue }
+            $destPath = Join-Path $DestFolder $entry.FullName
+            if (-not (Test-Path $destPath)) { continue }
+            $file = Get-Item $destPath
+            $skew = [Math]::Abs(($file.LastWriteTime - $entry.LastWriteTime.LocalDateTime).TotalSeconds)
+            if ($file.Length -ne $entry.Length -or $skew -gt 2) {
+                $mismatched += $destPath
+            }
+        }
+    } finally {
+        $zip.Dispose()
+    }
+    return $mismatched
 }
 
 function Get-RegressionData {
@@ -173,4 +222,97 @@ function Get-RegressionData {
     }
     & $Log ("data ready: {0}" -f $t.ExtractedRoot)
     return $t.ExtractedRoot
+}
+
+<#
+.SYNOPSIS
+    Invalidate FirstPassFDR + the blib so a re-run resumes (the rehydrate
+    paths fire) rather than recomputing from spectra.
+
+.DESCRIPTION
+    Shared by regression.ps1 (mode 2) and the ai-side cumulative-coverage
+    harness so there is ONE definition of what "resume" invalidates. The
+    patterns key off the task Name values the C# tasks stamp into their
+    validity sidecars: FirstPassFdrTask.Name is "FirstPassFDR" and
+    SecondPassFdrTask.Name is "SecondPassFDR" - the same words as the class
+    names, differing only in the Fdr/FDR casing used for type names.
+    They did NOT always agree: the classes were FirstJoinTask and MergeNodeTask
+    until issue #4535, and a private copy of this function that used those class
+    names matched zero files and silently produced a run that never resumed.
+
+    Deleting nothing is therefore treated as a hard failure: if the tokens
+    ever drift from the C# Name values again, this throws instead of
+    yielding a green "resume" leg that only re-ran SecondPassFDR.
+
+.PARAMETER WorkDir
+    The straight-through run directory to invalidate in place.
+#>
+function Invoke-ResumeInvalidation {
+    param([Parameter(Mandatory=$true)][string]$WorkDir)
+
+    $targets = Get-ChildItem -Path $WorkDir -File | Where-Object {
+        $_.Name -like '*.FirstPassFDR.osprey.task' -or
+        $_.Name -eq 'output.blib' -or $_.Name -eq 'output.blib.SecondPassFDR.osprey.task'
+    }
+    if (-not $targets) {
+        throw (("Invoke-ResumeInvalidation matched no files in '{0}'. The resume leg " +
+                "would not have resumed. Expected '*.FirstPassFDR.osprey.task' (FirstPassFdrTask.Name) " +
+                "and 'output.blib' + 'output.blib.SecondPassFDR.osprey.task' (SecondPassFdrTask.Name); " +
+                "check those Name values have not changed.") -f $WorkDir)
+    }
+    $targets | Remove-Item -Force
+}
+
+<#
+.SYNOPSIS
+    Invalidate ONLY the SecondPassFDR task, leaving FirstPassFDR valid, so a
+    re-run enters FirstPassFDR's rehydrate arm.
+
+.DESCRIPTION
+    Named for the task NAMES the driver stamps and logs -- FirstPassFDR and
+    SecondPassFDR. The stamp filenames below carry the Name, so the Name is what
+    this reads, and since issue #4535 the class names (FirstPassFdrTask,
+    SecondPassFdrTask) are the same words.
+
+    The narrower sibling of Invoke-ResumeInvalidation, and the only invalidation
+    that reaches FirstPassFDR's REHYDRATE arm. Invoke-ResumeInvalidation deletes
+    '*.FirstPassFDR.osprey.task' -- that task's validity stamp -- so FirstPassFDR
+    RUNS and recomputes from the entries it is handed. Rehydrate is entered on the
+    opposite state: FirstPassFDR's own outputs are still valid on disk, so the
+    driver skips its Run, and a downstream task is the first to touch its state
+    (FirstPassFdrTask.LoadOwnReconciliationBundle then rebuilds the post-Stage-5
+    bundle from the .1st-pass.fdr_scores.bin + .reconciliation.json sidecars).
+
+    Deleting the blib plus its SecondPassFDR stamp is exactly that state: every
+    per-file parquet, every 1st-pass sidecar, and the FirstPassFDR stamp survive,
+    so PerFileScoring / FirstPassFDR / PerFileRescoring must all report cache hits
+    while SecondPassFDR recomputes and demands FirstPassFDR's state on the way.
+
+    Deleting nothing is a hard failure, for Invoke-ResumeInvalidation's reason: a
+    silently no-op invalidation yields a green leg that only compared a run
+    against itself.
+
+.PARAMETER WorkDir
+    The straight-through run directory to invalidate in place.
+#>
+function Invoke-SecondPassOnlyInvalidation {
+    param([Parameter(Mandatory=$true)][string]$WorkDir)
+
+    $targets = @(Get-ChildItem -Path $WorkDir -File | Where-Object {
+        $_.Name -eq 'output.blib' -or $_.Name -eq 'output.blib.SecondPassFDR.osprey.task'
+    })
+    # BOTH are required, so check the count rather than truthiness. Realistic drift
+    # renames ONE of the two, and a single match is a truthy scalar that sails past a
+    # `-not $targets` test: deleting only the stamp leaves the blib un-invalidated (the
+    # leg then compares a stale blib to itself), and deleting only the blib leaves the
+    # SecondPassFDR leg cached (it never re-runs). Both surface downstream as a whole-run ABORTED
+    # from regression.ps1's outer catch, skipping every remaining dataset, instead of
+    # the named mode 5 failure the assertions here were written to produce.
+    if ($targets.Count -lt 2) {
+        throw (("Invoke-SecondPassOnlyInvalidation matched {1} of the 2 required files in '{0}'. " +
+                "The rehydrate leg would not have re-run SecondPassFDR. Expected 'output.blib' + " +
+                "'output.blib.SecondPassFDR.osprey.task' (SecondPassFdrTask.Name); check that " +
+                "Name value has not changed.") -f $WorkDir, $targets.Count)
+    }
+    $targets | Remove-Item -Force
 }

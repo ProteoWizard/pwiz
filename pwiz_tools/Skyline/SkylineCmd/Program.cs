@@ -92,7 +92,11 @@ namespace pwiz.SkylineCmd
                 {
                     continue;
                 }
-                var assembly = Assembly.LoadFrom(Path.Combine(dirPath, exeName));
+                // Assembly.Load, not LoadFrom: probing finds the .exe next to this one and puts
+                // Skyline in the default load context. LoadFrom is also refused for files marked
+                // as downloaded from the internet, which Windows applies to everything a user
+                // extracts from a .zip.
+                var assembly = Assembly.Load(new AssemblyName(Path.GetFileNameWithoutExtension(exeName)));
                 var programClass = assembly.GetType(@"pwiz.Skyline.Program");
                 var mainFunction = programClass.GetMethod(@"Main");
                 return mainFunction;

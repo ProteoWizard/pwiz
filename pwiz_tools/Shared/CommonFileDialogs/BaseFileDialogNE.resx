@@ -469,12 +469,6 @@
   <data name="refreshButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>29, 24</value>
   </data>
-  <data name="refreshButton.Text" xml:space="preserve">
-    <value>Refresh</value>
-  </data>
-  <data name="refreshButton.ToolTipText" xml:space="preserve">
-    <value>Reload the current folder (re-queries the server for remote folders)</value>
-  </data>
   <data name="tilesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>138, 26</value>
   </data>

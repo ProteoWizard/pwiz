@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -89,7 +89,7 @@ namespace pwiz.Osprey.Tasks
         /// duplicate). The one shared mutable buffer is registered like the rest:
         /// it is modeled as three single-producer milestone types over the same
         /// backing list (ScoredEntries -> PerFileScoring, CompactedEntries ->
-        /// FirstJoin, RescoredEntries -> PerFileRescore), so a consumer demanding
+        /// FirstPassFDR, RescoredEntries -> PerFileRescore), so a consumer demanding
         /// a given milestone resolves through this registry to the task that
         /// brings the buffer to that state. See PipelineByproducts.cs.
         /// </summary>
@@ -106,7 +106,7 @@ namespace pwiz.Osprey.Tasks
         /// records byproduct types read via <see cref="TryGet{TInfo}"/>;
         /// <see cref="_milestoneByBuffer"/> records, per backing-list reference,
         /// the milestone type last published over it. Keying on the list reference
-        /// (not a static type order) makes the guard path-independent: the merge
+        /// (not a static type order) makes the guard path-independent: the reconciled-input
         /// path publishes RescoredEntries directly over the ScoredEntries buffer,
         /// skipping CompactedEntries.
         /// </summary>
@@ -153,14 +153,12 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public int ExitCode { get; set; }
 
-        /// <summary>
-        /// The tasks participating in this pipeline, in execution order.
-        /// The driver walks this list (running each that is
-        /// <see cref="OspreyTask.IsIncluded"/> and not already valid on disk);
-        /// tasks that need state from an upstream sibling reach it through
-        /// <see cref="Demand{T}"/>.
-        /// </summary>
-        public IReadOnlyList<OspreyTask> Tasks { get; }
+        // No public list of the pipeline's tasks. The driver walks its own list, and a task
+        // that needs state from a sibling asks Get/Demand for the state, never the task.
+        // The one reader this property ever had was a predicate asking whether ITS OWN
+        // consumer was going to run, so it could decide whether to do whole-run work - the
+        // second copy of IsIncluded's truth table that issue #4597 deleted. Leaving the hook
+        // in place is an invitation to write that predicate again.
 
         /// <summary>
         /// The cross-implementation bisection diagnostics sink for this run, or
@@ -217,7 +215,6 @@ namespace pwiz.Osprey.Tasks
                     _producerByByproduct.Add(byproductType, task.GetType());
                 }
             }
-            Tasks = list;
         }
 
         public void LogInfo(string message) { _logInfo(message); }
@@ -385,7 +382,7 @@ namespace pwiz.Osprey.Tasks
         /// is a loud exception at the next <see cref="Get{TInfo}"/>, not silent corruption.
         ///
         /// NOT for the <c>PerFileEntries</c> milestone family: the DEBUG republish guard
-        /// (<c>_consumedByproducts</c> / <see cref="AssertMilestoneConsumedBeforeRepublish{TInfo}"/>)
+        /// (<c>_consumedByproducts</c> / <c>AssertMilestoneConsumedBeforeRepublish</c>)
         /// is not updated here, so releasing a milestone and republishing over the same
         /// backing list would read stale state. Prefer <see cref="Consume{TInfo}"/>.
         /// </summary>
@@ -452,7 +449,11 @@ namespace pwiz.Osprey.Tasks
         {
             if (!(info is PerFileEntries milestone))
                 return;
-            object buffer = milestone.Value;
+            // BufferIdentity, not Value: this guard needs list identity only, and reading
+            // Value would MATERIALIZE a deferred milestone (RescoredEntries), making the
+            // DEBUG build pay at publish time the very work deferral exists to move to the
+            // consumer's pull - and pay it before the rescore that fills it has run.
+            object buffer = milestone.BufferIdentity;
             if (buffer == null)
                 return;
             if (_milestoneByBuffer.TryGetValue(buffer, out var priorMilestone))

@@ -145,7 +145,7 @@ namespace pwiz.Osprey.Test
         /// Guards the HPC carrier half of fix #2: the <c>[center, width]</c> window
         /// pairs on <see cref="IsolationSchemeJson.Windows"/> (a <c>double[][]</c>
         /// on <see cref="CalibrationParams"/>'s metadata) must survive the
-        /// calibration.json serialize -&gt; deserialize round-trip so a merge node
+        /// calibration.json serialize -&gt; deserialize round-trip so a SecondPassFDR node
         /// with no mzML can rebuild the per-file gap-fill m/z filter. Uses the same
         /// Newtonsoft serializer + <c>[JsonProperty("windows")]</c> mapping the
         /// product uses.

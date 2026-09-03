@@ -649,33 +649,29 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// each case so the user can tell "no IDs" from "broken file" apart.
         /// </summary>
         /// <remarks>
-        /// Runs on a worker thread via <see cref="ActionUtil.RunAsync"/> because
+        /// Read through <see cref="ActionUtil.CallWithoutSynchronizationContext{T}"/> because
         /// ParquetReader.CreateAsync's continuation posts back to the calling
-        /// SynchronizationContext — invoking it directly on the UI thread deadlocks,
+        /// SynchronizationContext — blocking on it directly from the UI thread deadlocks,
         /// since the UI thread is the very thing the continuation is waiting for.
         /// </remarks>
         private static bool TryCountDiannLibParquetRows(string parquetPath, out long rowCount)
         {
-            long result = 0;
-            bool ok = false;
-            var worker = ActionUtil.RunAsync(() =>
+            long? count = ActionUtil.CallWithoutSynchronizationContext(() =>
             {
                 try
                 {
                     using var stream = File.OpenRead(parquetPath);
-                    using var reader = ParquetReader.CreateAsync(stream)
-                        .ConfigureAwait(false).GetAwaiter().GetResult();
-                    result = reader.RowGroups.Sum(rg => rg.RowCount);
-                    ok = true;
+                    using var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+                    return (long?) reader.RowGroups.Sum(rg => rg.RowCount);
                 }
                 catch
                 {
-                    // Leave ok=false so the caller shows the "unreadable" message.
+                    // Null so the caller shows the "unreadable" message.
+                    return null;
                 }
-            }, @"DiannParquetRowCount");
-            worker.Join();
-            rowCount = result;
-            return ok;
+            });
+            rowCount = count ?? 0;
+            return count.HasValue;
         }
 
         public void PreviousPage()

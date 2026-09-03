@@ -401,6 +401,38 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <div class="chartbox" id="runHistChart"></div>
     <p class="note" id="runHistNote"></p>
   </div>
+  <div class="card" id="frontierCard" style="display:none">
+    <h2>Yield at fixed FDR vs required reproducibility</h2>
+    <p class="desc">Holding the measured FDP at the nominal target and <b>floating the q-cutoff upward</b> as the run-count
+      requirement rises: the <b>left axis</b> is the real precursors accepted at that FDR, the <b>right axis</b> is the
+      loosest q-cutoff (Q*) that still holds it. Demanding more reproducibility buys you a looser score gate, so yield
+      climbs to a peak, then falls once the run requirement discards more real precursors than the looser q recovers &mdash;
+      an efficient-frontier sweet spot that is neither one run nor every run. Follows the per-run / experiment-wide selector
+      above: the per-run gate loosens the run-level q, the experiment-wide gate loosens the best-peak q. Because best-peak q
+      says nothing about <i>how many</i> runs a precursor reproduces in, reproducibility is independent information &mdash; so
+      even the experiment-wide gate gains here, and the two routes converge on nearly the same peptides. The dashed line is the
+      experiment-wide q&le;target <b>standard</b> (best-peak, no run requirement); the frontier rising above it is the reproducible
+      detections that standard forgoes at the same entrapment-validated FDP. <b>First pass only:</b> the loosen-q sweep needs the
+      full un-gated pre-compaction candidate pool, so this panel is empty in Pass&nbsp;2 (already FDR-compacted).</p>
+    <div class="kpis" id="frontierKpis"></div>
+    <div class="legend" id="frontierLegend"></div>
+    <div class="chartbox" id="frontierChart"></div>
+    <p class="note" id="frontierNote"></p>
+  </div>
+  <div class="card" id="yieldCutoffCard" style="display:none">
+    <h2>Peptides accepted vs required reproducibility</h2>
+    <p class="desc">The count of accepted precursors as you raise the reproducibility requirement &mdash; <b>keep only
+      precursors detected in &ge;&nbsp;k runs</b> &mdash; for <b>both</b> cut-off statistics: the per-run gate and the
+      best-peak experiment-wide q gate. Counts are directly comparable, so both share this axis (the earlier FDP panel could
+      not). Each curve is <b>solid where the retained set holds at or below the nominal FDR</b> and faded where it is above;
+      the ring is the smallest requirement that reaches the target, and the dashed line is the best-peak gate's controlled
+      yield. This is the quantitative goal made explicit: as the reproducibility bar rises you accept fewer precursors, but
+      up to a point the reproducibility route accepts <i>more</i> real precursors at the same FDR than best-peak alone &mdash;
+      the peptides you gain (or give up) by choosing your cut-off statistic on reproducibility versus best peak.</p>
+    <div class="legend" id="yieldCutoffLegend"></div>
+    <div class="chartbox" id="yieldCutoffChart"></div>
+    <p class="note" id="yieldCutoffNote"></p>
+  </div>
   <div class="card" id="unionFdpCard" style="display:none">
     <h2>Union FDP vs number of runs</h2>
     <p class="desc">The entrapment-measured FDP of the accumulated union of detected precursors as runs are added
@@ -441,6 +473,59 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <div class="legend" id="wfLegend"></div>
     <div class="chartbox" id="wfChart"></div>
     <p class="note" id="wfNote"></p>
+  </div>
+
+  <div class="card" id="caCard">
+    <h2>Single-peak multiple-ID co-assignment</h2>
+    <p class="desc">
+      Two IDs can be assigned to one chromatographic feature with no sequence-specific evidence
+      telling them apart, and nothing in the pipeline prevents it: every competition run here is
+      <i>within</i> an identity (best candidate peak per precursor, target against its own decoy,
+      charge states of one sequence), never <i>across</i> identities at a peak. A pair counts when it
+      is in the same run, within &plusmn;0.01 Da in precursor m/z, and within the apex RT tolerance.
+      No knowledge of the sequence relationship is used &mdash; the test is pure geometry, so it
+      finds relationships nobody thought to look for. Entrapment and decoys are false by
+      construction, so their "outscored" column is how much of the detected false population a
+      best-match-wins rule would remove.
+    </p>
+    <div class="vbtns" id="caScope"></div>
+    <div class="kpis" id="caKpis"></div>
+    <div id="caTable" style="overflow-x:auto"></div>
+    <div id="caCutoff" style="overflow-x:auto;margin-top:10px"></div>
+    <div class="cap">The composite score is a per-precursor property and does not change between
+      passes; the score at which the target-decoy competition reaches the target FDR is a
+      property of the population being counted, so it can. The two agree when the pool is intact.
+      A large gap means the pool the decoys are drawn from has been selected - read it as a
+      warning about the pool, <b>not</b> as a bar to lower: the target+entrapment and decoy counts
+      beside it rise together, so a lower score buys IDs at the error rate it buys decoys.</div>
+    <p class="note" id="caNote"></p>
+    <div class="grid2" style="margin-top:16px">
+      <div>
+        <h2 style="font-size:14px;margin:0 0 3px">Apex RT difference of co-assigned pairs</h2>
+        <p class="desc">Separates same-feature apex jitter from chance co-elution: where the
+          near-zero excess ends is what justifies a tolerance rather than leaving it a knob.</p>
+        <div class="legend" id="caHistLegend"></div>
+        <div class="chartbox" id="caHist"></div>
+        <p class="note" id="caHistNote"></p>
+      </div>
+      <div>
+        <h2 style="font-size:14px;margin:0 0 3px">Sensitivity to the RT tolerance</h2>
+        <p class="desc">The measured enrichment depends on where the tolerance is drawn, so the
+          whole ladder is reported rather than one baked-in choice. Tolerances finer than one
+          acquisition cycle give identical rows &mdash; apex RTs land on the scan grid, so there is
+          nothing between 0 and one cycle to separate.</p>
+        <div class="legend" id="caLadderLegend"></div>
+        <div class="chartbox" id="caLadder"></div>
+        <div id="caLadderTable" style="overflow-x:auto"></div>
+      </div>
+    </div>
+    <h2 style="font-size:14px;margin:18px 0 3px">Worst offenders</h2>
+    <p class="desc">Entrapment first, then decoys, then targets &mdash; entrapment and decoys are
+      absent by construction, so those are the rows where co-assignment is <i>demonstrated</i>
+      wrong, while a co-assigned target pair only tells you one of the two is. Within each class,
+      ranked by how far the partner outscores the ID sharing its peak. One row per precursor pair;
+      <b>runs</b> is how many runs that pair co-assigns in.</p>
+    <div class="collapsewrap collapsed" id="caOffWrap"><div id="caOffenders" style="overflow-x:auto"></div></div>
   </div>
   <!-- CAL: no paired target/decoy competition analog for the calibration model -->
   <div class="calbox" id="calCompetitionBox">
@@ -582,13 +667,15 @@ function passBundle(p){
     hasStructural:true,
     features:D.model||[],modelDegenerate:D.modelDegenerate,scores:D.scores,
     densityRatio:D.densityRatio,winFraction:D.winFraction,
-    fdpViews:D.fdpViews,idYield:D.idYield,crossRun:D.crossRun,perFile:D.perFile};
+    fdpViews:D.fdpViews,idYield:D.idYield,crossRun:D.crossRun,perFile:D.perFile,
+    coAssignment:D.coAssignment};
   const m=D.pass2.model;   // null under confidence-transfer mode
   return {pass:2,label:"2nd pass",desc:"post-reconciliation reported pool",
     hasStructural:!!m,
     features:m?(m.features||[]):[],modelDegenerate:m?m.degenerate:false,scores:m?m.scores:null,
     densityRatio:D.pass2.densityRatio,winFraction:D.pass2.winFraction,
-    fdpViews:D.pass2.fdpViews,idYield:D.pass2.idYield,crossRun:D.pass2.crossRun,perFile:D.pass2.perFile};
+    fdpViews:D.pass2.fdpViews,idYield:D.pass2.idYield,crossRun:D.pass2.crossRun,perFile:D.pass2.perFile,
+    coAssignment:D.pass2.coAssignment};
 }
 const PASSES=[passBundle(1)];
 if(D.pass2)PASSES.push(passBundle(2));
@@ -1166,7 +1253,7 @@ function renderReproTab(b){
   const sel0=document.getElementById("reproScopeSel");
   if(!hasCross){
     if(sel0)sel0.style.display="none";
-    ["detByRunCard","runHistCard","unionFdpCard"].forEach(id=>{const c=document.getElementById(id);if(c)c.style.display="none";});
+    ["detByRunCard","runHistCard","frontierCard","yieldCutoffCard","unionFdpCard"].forEach(id=>{const c=document.getElementById(id);if(c)c.style.display="none";});
     return;
   }
   if(sel0)sel0.style.display="";
@@ -1298,6 +1385,150 @@ function renderReproTab(b){
   // Phase C: entrapment-measured FDP of the accumulated union vs number of runs, BOTH
   // scopes on one axis (the run-vs-global gap is the point, so this panel is
   // scope-independent -- drawn once, not on the toggle). Hidden without entrapment or N<2.
+  // Cumulative "keep >= k runs" entrapment FDP for one scope's view: the SAME FDRBench
+  // combined estimator the per-slice curve uses -- (1+1/r)*np/(nt+np) -- applied to counts
+  // accumulated from k=N downward, i.e. the experiment-wide FDP of the set retained at each
+  // run-count cutoff. The (1+1/r) factor is a global constant; recover it from the populated
+  // slice with the most entrapment (it back-solves exactly from the per-slice fdp already in
+  // the data, so no extra serialized field is needed). Returns {cf:[N], cstar} or null.
+  function cutoffFdp(v){
+    const h=v&&v.runCountHistogram, eh=v&&v.entrapmentRunCountHistogram, fdp=v&&v.entrapmentFdpByRunCount;
+    if(!h||!eh||!fdp)return null;
+    let A=NaN,be=-1;
+    for(let k=0;k<N;k++){const e=eh[k]||0,f=fdp[k]==null?NaN:Number(fdp[k]);if(e>be&&!isNaN(f)){be=e;A=f*(h[k]+e)/e;}}
+    if(isNaN(A)||be<=0)return null;
+    const cf=new Array(N);let T=0,E=0;
+    for(let c=N;c>=1;c--){T+=h[c-1];E+=(eh[c-1]||0);cf[c-1]=(T+E>0)?A*E/(T+E):NaN;}
+    let cstar=null;for(let c=1;c<=N;c++){const f=cf[c-1];if(f!=null&&!isNaN(f)&&f<=D.runFdr){cstar=c;break;}}
+    return {cf:cf,cstar:cstar};
+  }
+
+  // "Peptides accepted vs required reproducibility": accepted count (>= k runs) for BOTH cut-off
+  // statistics on one axis -- counts are comparable across scopes (unlike FDP), so no mismatch.
+  // Solid where the retained set is FDR-controlled (>= c*), faded where above; ring at c*.
+  // Scope-independent (the two gates are the comparison), so drawn once.
+  function drawYieldCutoff(){
+    const card=document.getElementById("yieldCutoffCard");
+    const pr=hasCross&&cr.perRun?cutoffFdp(cr.perRun):null, ex=hasCross&&cr.experiment?cutoffFdp(cr.experiment):null;
+    if((!pr&&!ex)||N<2){if(card)card.style.display="none";return;}
+    card.style.display="";
+    const host=document.getElementById("yieldCutoffChart");host.innerHTML="";
+    const W=700,Hh=330,box={l:64,t:16,w:W-84,h:Hh-64};
+    const s=svg(W,Hh);host.appendChild(s);
+    function cumCount(v){const h=v.runCountHistogram,a=new Array(N);let T=0;for(let c=N;c>=1;c--){T+=h[c-1];a[c-1]=T;}return a;}
+    const prC=cr.perRun?cumCount(cr.perRun):null, exC=cr.experiment?cumCount(cr.experiment):null;
+    let ymax=1;[prC,exC].forEach(a=>{if(a)ymax=Math.max(ymax,a[0]);});ymax*=1.08;
+    const xt=N<=20?Array.from({length:N},(_,i)=>i+1):null;
+    const sc=axes(s,box,[1,N],[0,ymax],{xlab:"minimum runs a precursor must appear in (≥ k)",ylab:"precursors accepted",
+      xticks:xt,xfmt:v=>String(Math.round(v)),yfmt:v=>trim(v)});
+    if(ex&&exC&&ex.cstar){const yv=exC[ex.cstar-1];if(yv<=ymax){
+      E(s,"line",{x1:box.l,x2:box.l+box.w,y1:sc.y(yv),y2:sc.y(yv),stroke:COL.accent,"stroke-dasharray":"2 4",opacity:.45});
+      E(s,"text",{x:box.l+box.w-2,y:sc.y(yv)-4,"text-anchor":"end",fill:COL.accent,"font-size":"10"}).textContent="best-peak yield "+fmt(yv,0);}}
+    function draw(o,cum,color){if(!o||!cum)return;const cs=o.cstar||1;
+      function seg(a,b,faded){let p="";for(let c=a;c<=b;c++)p+=(c===a?"M":"L")+sc.x(c).toFixed(1)+" "+sc.y(cum[c-1]).toFixed(1)+" ";
+        if(p)E(s,"path",{d:p,fill:"none",stroke:color,"stroke-width":2,opacity:faded?0.35:1,"stroke-dasharray":faded?"4 3":""});}
+      if(cs>1)seg(1,cs,true); seg(cs,N,false);
+      if(N<=40)for(let c=1;c<=N;c++)E(s,"circle",{cx:sc.x(c),cy:sc.y(cum[c-1]),r:2,fill:color,opacity:c<cs?0.35:1});
+      if(o.cstar){const cx=sc.x(o.cstar),cy=sc.y(cum[o.cstar-1]);
+        E(s,"circle",{cx:cx,cy:cy,r:4.6,fill:"none",stroke:color,"stroke-width":2});
+        E(s,"text",{x:cx,y:(cy-8).toFixed(1),"text-anchor":"middle",fill:color,"font-size":"10"}).textContent="≥"+o.cstar+": "+fmt(cum[o.cstar-1],0);}}
+    draw(ex,exC,COL.accent);
+    draw(pr,prC,COL.decoy);
+    const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();const px=(ev.clientX-rb.left)/rb.width*W;
+      const c=Math.min(N,Math.max(1,Math.round((px-box.l)/box.w*(N-1)+1)));
+      let html="<b>require ≥"+c+" of "+N+" runs</b>";
+      if(prC)html+="<br><span style='color:"+COL.decoy+"'>■</span> per-run: "+fmt(prC[c-1],0)+" ("+(pr&&pr.cf[c-1]!=null?pct(pr.cf[c-1],1):"–")+" FDP)";
+      if(exC)html+="<br><span style='color:"+COL.accent+"'>■</span> experiment-wide: "+fmt(exC[c-1],0)+" ("+(ex&&ex.cf[c-1]!=null?pct(ex.cf[c-1],1):"–")+" FDP)";
+      showTip(ev,html);});
+    ov.addEventListener("mouseleave",hideTip);
+    legend(document.getElementById("yieldCutoffLegend"),[
+      {name:"per-run gate",color:COL.decoy,line:true},
+      {name:"experiment-wide (best-peak) gate",color:COL.accent,line:true},
+      {name:"solid = ≤"+pct(D.runFdr,0)+" FDR · faded = above",color:COL.muted,line:true},
+    ]);
+    let note="";
+    if(pr&&ex&&prC&&exC&&pr.cstar&&ex.cstar){
+      const perAt=prC[pr.cstar-1], expAt=exC[ex.cstar-1], d=perAt-expAt;
+      note = "At the "+pct(D.runFdr,0)+" target the reproducibility route (per-run gate, ≥"+pr.cstar+" runs) accepts "+
+        fmt(perAt,0)+" precursors vs "+fmt(expAt,0)+" for best-peak (experiment-wide q, ≥"+ex.cstar+" run"+(ex.cstar===1?"":"s")+") — "+
+        (d>=0?"<b>"+fmt(d,0)+" more ("+pct(d/expAt,0)+")</b>":"<b>"+fmt(-d,0)+" fewer</b>")+
+        " real-plus-false precursors at the same FDR. Raise the requirement further and the count falls along each curve: the precursors you give up to buy reproducibility.";
+    }
+    document.getElementById("yieldCutoffNote").innerHTML=note;
+  }
+
+  // Iso-FDR frontier: yield (left) + loosest q-cutoff Q* (right) vs run-count
+  // requirement, both scopes precomputed offline into D.frontier. Dual axis (two different
+  // quantities, one scope), scope chosen by the local toggle.
+  function drawFrontier(){
+    const fr=D.frontier, card=document.getElementById("frontierCard");
+    if(!fr||!fr.perRun){if(card)card.style.display="none";return;}
+    card.style.display="";
+    // First-pass, pre-compaction construction: on pass 2 the un-gated candidate pool the loosen-q
+    // sweep needs is gone, so show the explanation with no graph (no message needed on pass 1).
+    if(b.pass===2){
+      document.getElementById("frontierChart").innerHTML="";
+      const kp2=document.getElementById("frontierKpis"); if(kp2)kp2.innerHTML="";
+      const lg2=document.getElementById("frontierLegend"); if(lg2)lg2.innerHTML="";
+      document.getElementById("frontierNote").innerHTML="This panel is a <b>first-pass, pre-compaction</b> "+
+        "view: floating the q-cutoff needs the full un-gated candidate pool, which the second pass no longer "+
+        "carries (it is already FDR-compacted). Switch to <b>Pass 1</b> to see it.";
+      return;
+    }
+    const v=scope===0?fr.experiment:fr.perRun, Nn=fr.n, yld=v.yield, qs=v.q;
+    const host=document.getElementById("frontierChart");host.innerHTML="";
+    const W=700,Hh=340,rm=60,box={l:66,t:18,w:W-66-rm,h:Hh-70};
+    const s=svg(W,Hh);host.appendChild(s);
+    let ymax=1;for(const x of yld)ymax=Math.max(ymax,x);ymax*=1.08;
+    let qmax=fr.target;for(const x of qs)qmax=Math.max(qmax,x);qmax*=1.12;
+    const xt=Nn<=20?Array.from({length:Nn},(_,i)=>i+1):null;
+    const sc=axes(s,box,[0.5,Nn+0.5],[0,ymax],{xlab:"minimum runs a precursor must appear in (≥ k)",
+      ylab:"precursors accepted at "+pct(fr.target,0)+" FDR",xticks:xt,xfmt:v2=>String(Math.round(v2)),yfmt:v2=>trim(v2)});
+    const yR=q=>box.t+box.h-(q/qmax)*box.h;
+    ticks(0,qmax,5).forEach(t=>{if(t<0)return;E(s,"text",{x:box.l+box.w+7,y:yR(t)+3,"text-anchor":"start",fill:COL.warn,"font-size":"10"}).textContent=(t*100).toFixed(t<0.1?1:0)+"%";});
+    E(s,"line",{x1:box.l+box.w,x2:box.l+box.w,y1:box.t,y2:box.t+box.h,stroke:COL.warn,opacity:.5});
+    const tx=box.l+box.w+44;E(s,"text",{class:"axtitle",x:tx,y:box.t+box.h/2,"text-anchor":"middle",fill:COL.warn,transform:"rotate(90 "+tx+" "+(box.t+box.h/2)+")"}).textContent="q-cutoff Q* (right)";
+    function path(vals,yf,color){let p="",st=false;for(let k=1;k<=Nn;k++){const val=vals[k-1];if(val==null||isNaN(val)){st=false;continue;}
+      p+=(st?"L":"M")+sc.x(k).toFixed(1)+" "+yf(val).toFixed(1)+" ";st=true;if(Nn<=40)E(s,"circle",{cx:sc.x(k),cy:yf(val),r:2.3,fill:color});}
+      E(s,"path",{d:p,fill:"none",stroke:color,"stroke-width":2});}
+    path(qs,yR,COL.warn);      // Q* (right axis)
+    path(yld,sc.y,COL.target); // yield (left axis)
+    // The experiment-wide q<=target "standard" (best-peak, NO run requirement) as a reference:
+    // the frontier rising above it is the reproducible detections that standard forgoes.
+    if(fr.bestPeak&&fr.bestPeak<=ymax){const ys=sc.y(fr.bestPeak);
+      E(s,"line",{x1:box.l,x2:box.l+box.w,y1:ys,y2:ys,stroke:COL.muted,"stroke-dasharray":"2 4",opacity:.75});
+      E(s,"text",{x:box.l+box.w-2,y:ys-4,"text-anchor":"end",fill:COL.muted,"font-size":"10"}).textContent="exp-wide q≤"+pct(fr.target,0)+" standard "+fmt(fr.bestPeak,0);}
+    let pk=1;for(let k=2;k<=Nn;k++)if(yld[k-1]>yld[pk-1])pk=k;
+    const px=sc.x(pk),py=sc.y(yld[pk-1]);
+    E(s,"circle",{cx:px,cy:py,r:5,fill:"none",stroke:COL.ptarget,"stroke-width":2});
+    E(s,"line",{x1:px.toFixed(1),x2:px.toFixed(1),y1:box.t,y2:box.t+box.h,stroke:COL.ptarget,"stroke-dasharray":"4 3","stroke-width":1,opacity:.5});
+    E(s,"text",{x:px,y:box.t+11,"text-anchor":"middle",fill:COL.ptarget,"font-size":"10"}).textContent="peak ≥"+pk;
+    const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();const px2=(ev.clientX-rb.left)/rb.width*W;
+      const kk=Math.min(Nn,Math.max(1,Math.round((px2-box.l)/box.w*Nn+0.5)));
+      showTip(ev,"<b>require ≥"+kk+" of "+Nn+" runs</b><br><span style='color:"+COL.target+"'>■</span> yield: "+fmt(yld[kk-1],0)+
+        "<br><span style='color:"+COL.warn+"'>■</span> Q*: "+pct(qs[kk-1],1));});
+    ov.addEventListener("mouseleave",hideTip);
+    legend(document.getElementById("frontierLegend"),[
+      {name:"precursors accepted (left)",color:COL.target,line:true},
+      {name:"q-cutoff Q* (right)",color:COL.warn,line:true},
+      {name:"exp-wide q≤"+pct(fr.target,0)+" standard",color:COL.muted,line:true},
+    ]);
+    const y1=yld[0], yv=yld[pk-1];
+    const kp=document.getElementById("frontierKpis");
+    if(kp){kp.innerHTML="";
+      kpi(kp,"max detected at "+pct(fr.target,0)+" FDR",fmt(yv,0),"good");
+      kpi(kp,"best q-value (Q*)",pct(qs[pk-1],1),"");
+      kpi(kp,"best run count","≥"+pk,"");
+      if(fr.overlapJaccard!=null)kpi(kp,"overlap w/ "+(scope===0?"per-run":"experiment-wide"),pct(fr.overlapJaccard,0),"");
+      if(fr.bestPeak)kpi(kp,"vs exp-wide q≤"+pct(fr.target,0)+" standard","+"+pct((yv-fr.bestPeak)/fr.bestPeak,0),"good");}
+    document.getElementById("frontierNote").innerHTML=
+      "The peak accepts <b>"+fmt(yv-fr.bestPeak,0)+" more</b> real precursors than the experiment-wide-q standard at the same "+
+      "entrapment-validated FDP, and the peak set is ~"+pct(fr.overlapJaccard,0)+" the same peptides whichever route you take &mdash; "+
+      "reproducibility, not the q statistic, selects them.";
+  }
+
   function drawUnionFdp(){
     const card=document.getElementById("unionFdpCard");
     const pr=hasCross&&cr.perRun&&cr.perRun.unionFdp, ex=hasCross&&cr.experiment&&cr.experiment.unionFdp;
@@ -1337,7 +1568,7 @@ function renderReproTab(b){
         : "The two track closely here; the gap is expected to widen at higher run counts.");
   }
 
-  function renderRepro(){drawDet();drawHist();}
+  function renderRepro(){drawDet();drawHist();drawFrontier();}
   legend(document.getElementById("detLegend"),[
     {name:"detected / run",color:COL.target,toggle:o=>{detOff.bars=o;drawDet();}},
     {name:"cumulative union",color:COL.pdecoy,line:true,toggle:o=>{detOff.union=o;drawDet();}},
@@ -1360,7 +1591,8 @@ function renderReproTab(b){
   const sel=document.getElementById("reproScopeSel");sel.innerHTML="";
   SCOPES.forEach((sco,k)=>{const btn=H(sel,"button",{class:k===scope?"on":""},sco.name);
     btn.onclick=()=>{scope=k;reproScope=k;sel.querySelectorAll("button").forEach(x=>x.classList.remove("on"));btn.classList.add("on");renderRepro();};});
-  renderRepro();
+  renderRepro();    // drawDet + drawHist + drawFrontier (all follow the per-run/experiment-wide selector)
+  drawYieldCutoff();// scope-independent (both gates on one count axis); drawn once
   drawUnionFdp();   // scope-independent (shows both curves); drawn once
 }
 
@@ -1368,6 +1600,10 @@ function renderReproTab(b){
 // Structural card (built from the pass's reported-pool scores). Under Pass 2
 // confidence-transfer (no retrained model) it degrades to an n/a note.
 function renderCompetitionTab(b){
+  // Q-driven, so it renders on every pass INCLUDING pass-2 confidence transfer, where the
+  // structural coin above degrades to an n/a note. Called before those early returns for
+  // exactly that reason.
+  renderCoAssignment(b.coAssignment);
   if(!b.hasStructural){
     naChart("wfChart","wfLegend",PASS2_NA_COMPETITION);
     document.getElementById("wfKpis").innerHTML="";document.getElementById("wfNote").innerHTML="";
@@ -1423,6 +1659,211 @@ function renderCompetitionTab(b){
     "A fair target–decoy competition sits at 50%. "+(w.hasEntrapment
       ? "The entrapment coin is the honest ruler — it holds ~50% under any target-side effect; the <b>real coin collapsing below it</b> means real targets are beating their own decoys unfairly, i.e. score inflation that marginal densities and the entrapment FDP both miss (a target-score boost). This within-pair view is the one that sees it."
       : "Without an entrapment library this is confounded by true positives, but a real coin well below 50% in the null band is still suspect.");
+}
+
+// ========== Competition tab: single-peak multiple-ID co-assignment (#4522) ==========
+// Q-driven: renders on any pass that produced q-values. The card hides itself entirely when the
+// panel is absent (no apex RT source could be reconstructed), rather than showing zeros - a zero
+// co-assignment rate and "could not measure" are very different claims.
+// Scope order and labels match the FDR tab's selector exactly: experiment-wide FIRST, so the
+// broad view is the default everywhere and the per-run drill-down is always the secondary step.
+let caScope=0;   // 0 = experiment-wide, 1 = per-run (same indexing as fdrScope)
+function renderCoAssignment(ca){
+  const card=document.getElementById("caCard");
+  if(!card)return;
+  if(!ca||!ca.run){card.style.display="none";return;}
+  card.style.display="";
+  const SCOPES=[["experiment","experiment-wide"],["run","per-run"]];
+  const sel=document.getElementById("caScope");sel.innerHTML="";
+  SCOPES.forEach((sc,k)=>{const btn=H(sel,"button",{class:"vbtn"+(k===caScope?" on":"")},sc[1]);
+    btn.onclick=()=>{if(caScope===k)return;caScope=k;renderCoAssignment(ca);};});
+  const s=ca[SCOPES[caScope][0]];
+  if(!s){document.getElementById("caTable").innerHTML=
+    "<div class='na'>No co-assignment data at this q scope.</div>";return;}
+
+  const rows=[["Target",s.target,COL.target],["Entrapment",s.entrapment,COL.ptarget],
+              ["Decoy",s.decoy,COL.decoy]].filter(r=>r[1]);
+  // ---- KPIs: the false-class rate, the base rate it must be read against, the ratio ----
+  const kp=document.getElementById("caKpis");kp.innerHTML="";
+  if(s.entrapment)kpi(kp,"entrapment on a peak a better target explains",pct(s.entrapment.betterFraction,1),"bad");
+  kpi(kp,"target base rate (same test)",pct(s.target.betterFraction,1),"");
+  if(s.entrapment)kpi(kp,"entrapment enrichment",isFinite(s.enrichment)?fmt(s.enrichment,1)+"×":"–",
+    isFinite(s.enrichment)&&s.enrichment>1.5?"bad":"");
+  kpi(kp,"target IDs with no distinguishing evidence",fmt(s.target.nBetter,0),"");
+
+  // ---- the composite acceptance score, and what this pass's own pool needs to reach the FDR ----
+  // Two numbers, because they answer different questions and their DIVERGENCE is the signal.
+  // The per-entry composite score does not change between passes, but the score at which the
+  // target-decoy competition reaches a given q is a property of the POPULATION counted - so a
+  // pass whose pool has been compacted needs a different score for the same q. They agree at
+  // pass 1; a large gap at pass 2 says the pool the decoys are drawn from has been selected.
+  // NOT a threshold to adopt: the decoy and non-decoy counts beside it move TOGETHER, so a
+  // lower crossing buys targets and entrapment at the same error rate it buys decoys.
+  const cut=document.getElementById("caCutoff");
+  if(cut){
+    cut.innerHTML="";
+    // Either number can be present without the other: the crossing is computed from the
+    // whole population while the cutoff needs an accepted precursor, so a run with none has a
+    // NaN cutoff and a finite crossing. Gating the table on the cutoff hid a value the golden
+    // pins and the caption below discusses.
+    if(isFinite(ca.experimentCutoff)||isFinite(ca.experimentFdrCrossing)){
+      const t=H(cut,"table"),h=H(H(t,"thead"),"tr");
+      ["Composite acceptance score","Score","Target + entrapment","Decoys"]
+        .forEach((x,i)=>H(h,"th",{class:i===0?"l":""},x));
+      const tb2=H(t,"tbody");
+      const r1=H(tb2,"tr");
+      H(r1,"td",{class:"l"},"worst accepted precursor (the bar in use)");
+      H(r1,"td",{class:"num"},isFinite(ca.experimentCutoff)?fmt(ca.experimentCutoff,4):"–");
+      H(r1,"td",{class:"num"},"–");H(r1,"td",{class:"num"},"–");
+      const r2=H(tb2,"tr");
+      H(r2,"td",{class:"l"},"where this pass's own pool reaches the target FDR");
+      H(r2,"td",{class:"num"},isFinite(ca.experimentFdrCrossing)?fmt(ca.experimentFdrCrossing,4):"–");
+      H(r2,"td",{class:"num"},fmt(ca.experimentFdrCrossingNonDecoys,0));
+      H(r2,"td",{class:"num"},fmt(ca.experimentFdrCrossingDecoys,0));
+    }
+  }
+
+  // ---- per-class table ----
+  const host=document.getElementById("caTable");host.innerHTML="";
+  const tb=H(host,"table"),th=H(H(tb,"thead"),"tr");
+  ["Class","Detected","Shares a peak","Outscored by a target","Rate","vs base rate","of which PTM isomer"]
+    .forEach((h,i)=>H(th,"th",{class:i===0?"l":""},h));
+  const body=H(tb,"tbody");
+  rows.forEach(r=>{const tr=H(body,"tr"),c=r[1];
+    const cell=H(tr,"td",{class:"l"});
+    H(cell,"span",{class:"swatch",style:"display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;background:"+r[2]});
+    cell.appendChild(document.createTextNode(r[0]));
+    [fmt(c.n,0),fmt(c.nShared,0),fmt(c.nBetter,0),pct(c.betterFraction,2)].forEach(v=>H(tr,"td",{class:"num"},v));
+    const ratio=s.target.betterFraction>0?c.betterFraction/s.target.betterFraction:NaN;
+    // Suppress on the TARGET denominator too, not just this row's n. CoAssignmentAccumulator.Build
+    // gates on both, so gating on one here prints a ratio the KPI beside it withholds - computed
+    // off a denominator too small to mean anything, which is the arithmetic-noise-as-finding that
+    // MIN_N_FOR_ENRICHMENT was serialized to the payload to prevent (one definition, not one per
+    // renderer).
+    const suppressed=c.n<ca.minNForEnrichment||s.target.n<ca.minNForEnrichment;
+    H(tr,"td",{class:"num"},suppressed?"n<"+ca.minNForEnrichment:(isFinite(ratio)?fmt(ratio,1)+"×":"–"));
+    H(tr,"td",{class:"num"},fmt(c.nBetterSameBaseSequence,0));});
+
+  // ---- the operational reading, and where it would be wrong ----
+  const ent=s.entrapment,dec=s.decoy;
+  let note="Entrapment and decoys are false by construction, so the outscored column is the "+
+    "operational number: ";
+  const parts=[];
+  if(ent)parts.push("<b>"+fmt(ent.nBetter,0)+" of "+fmt(ent.n,0)+" entrapment ("+pct(ent.betterFraction,1)+")</b>");
+  if(dec)parts.push("<b>"+fmt(dec.nBetter,0)+" of "+fmt(dec.n,0)+" decoys ("+pct(dec.betterFraction,1)+")</b>");
+  note+=(parts.length?parts.join(" and ")+" would disappear":"nothing measurable would disappear")+
+    " if a best-match-wins rule were enforced on peaks claimed by two entries. The same rule would "+
+    "drop <b>"+fmt(s.target.nBetter,0)+" target IDs</b>, which may well be real — that is its "+
+    "cost, and why this is a diagnostic and not a filter.";
+  if(s.target.nBetterSameBaseSequence>0)
+    note+=" <b>"+fmt(s.target.nBetterSameBaseSequence,0)+"</b> of those target pairs differ only in "+
+      "modification placement: isobaric PTM positional isomers genuinely co-elute at one m/z with "+
+      "BOTH present, so a winner-takes-all rule would delete one of a real pair. Those need a "+
+      "distinguishing transition to quantify separately, not a winner.";
+  if(ca.pass===2)
+    note+=" This is the <b>reported pool</b> (post-reconciliation). Compare it with the 1st pass: "+
+      "compaction removes co-assigned precursors, so the rate falls, while the entrapment "+
+      "enrichment typically RISES because the pool sheds co-assigned targets faster.";
+  document.getElementById("caNote").innerHTML=note;
+
+  drawCaHist(ca,s);
+  drawCaLadder(ca,s);
+  drawCaOffenders(s);
+}
+
+// |dRT| histogram over the FULL scanned window, each class normalized to its own total.
+// Not truncated at the headline tolerance: truncating would hide the very shape (a spike at
+// small offsets decaying into a flat chance floor) that justifies the tolerance.
+function drawCaHist(ca,s){
+  const host=document.getElementById("caHist");host.innerHTML="";
+  const ed=ca.deltaRtEdges;
+  if(!ed||ed.length<2){host.innerHTML="<div class='na'>No co-assigned pairs to bin.</div>";return;}
+  const norm=a=>{if(!a)return null;const t=a.reduce((x,y)=>x+y,0);return t>0?a.map(v=>v/t):null;};
+  const tn=norm(s.deltaRtTarget), en=norm(s.deltaRtEntrapment);
+  if(!tn&&!en){host.innerHTML="<div class='na'>No co-assigned pairs to bin.</div>";return;}
+  const W=520,Hh=250,box={l:52,t:14,w:W-70,h:Hh-58};
+  let mx=0;[tn,en].forEach(a=>{if(a)a.forEach(v=>{if(v>mx)mx=v;});});
+  const sv=svg(W,Hh);host.appendChild(sv);
+  const sc=axes(sv,box,[ed[0],ed[ed.length-1]],[0,mx*1.08],
+    {xlab:"|apex RT difference| (min)",ylab:"fraction of pairs",yfmt:v=>pct(v,0)});
+  const bw=(box.w/(ed.length-1));
+  function bars(a,color,inset,op){if(!a)return;a.forEach((v,i)=>{if(v<=0)return;
+    E(sv,"rect",{x:sc.x(ed[i])+bw*inset,y:sc.y(v),width:Math.max(1,bw*(1-2*inset)),
+      height:box.t+box.h-sc.y(v),fill:color,opacity:op});});}
+  bars(tn,COL.target,0.02,.65);
+  bars(en,COL.ptarget,0.3,.95);
+  const xt=sc.x(ca.rtTolerance);
+  E(sv,"line",{x1:xt,y1:box.t,x2:xt,y2:box.t+box.h,stroke:COL.warn,"stroke-width":1.5,"stroke-dasharray":"4 3"});
+  E(sv,"text",{class:"axtitle",x:xt+5,y:box.t+11,fill:COL.warn}).textContent="±"+trim(ca.rtTolerance)+" min";
+  const items=[{name:"target",color:COL.target}];
+  if(en)items.push({name:"entrapment",color:COL.ptarget});
+  items.push({name:"tolerance",color:COL.warn,line:true});
+  legend(document.getElementById("caHistLegend"),items);
+  document.getElementById("caHistNote").innerHTML=
+    "Each class is normalized to its own total. Apexes land on the acquisition scan grid, so two "+
+    "IDs on ONE feature differ by a whole number of cycles — the histogram combs rather than "+
+    "curving, and the excess decays into the flat chance-co-elution floor. Where it flattens is "+
+    "the tolerance, read off the data rather than asserted.";
+}
+
+// The rate at every tolerance on the ladder, from a single scan (each precursor's minimum |dRT|
+// to a better-scoring partner is retained, so a rate is a threshold count over those minima).
+function drawCaLadder(ca,s){
+  const host=document.getElementById("caLadder");host.innerHTML="";
+  const tol=ca.toleranceLadder||[];
+  if(!tol.length){host.innerHTML="<div class='na'>No tolerance ladder.</div>";return;}
+  const series=[["target",s.target,COL.target],["entrapment",s.entrapment,COL.ptarget],
+                ["decoy",s.decoy,COL.decoy]].filter(x=>x[1]&&x[1].betterByTolerance);
+  const W=520,Hh=250,box={l:52,t:14,w:W-70,h:Hh-58};
+  let mx=0;series.forEach(x=>x[1].betterByTolerance.forEach(v=>{if(isFinite(v)&&v>mx)mx=v;}));
+  const sv=svg(W,Hh);host.appendChild(sv);
+  const sc=axes(sv,box,[tol[0],tol[tol.length-1]],[0,Math.max(mx*1.1,0.01)],
+    {xlab:"apex RT tolerance (min)",ylab:"outscored by a target",yfmt:v=>pct(v,0)});
+  series.forEach(x=>{let d="";const a=x[1].betterByTolerance;
+    tol.forEach((t,i)=>{if(!isFinite(a[i]))return;d+=(d?"L":"M")+sc.x(t).toFixed(1)+" "+sc.y(a[i]).toFixed(1)+" ";});
+    if(d)E(sv,"path",{d:d,fill:"none",stroke:x[2],"stroke-width":2});
+    tol.forEach((t,i)=>{if(isFinite(a[i]))E(sv,"circle",{cx:sc.x(t),cy:sc.y(a[i]),r:2.8,fill:x[2]});});});
+  const xt=sc.x(ca.rtTolerance);
+  E(sv,"line",{x1:xt,y1:box.t,x2:xt,y2:box.t+box.h,stroke:COL.warn,"stroke-width":1.5,"stroke-dasharray":"4 3"});
+  legend(document.getElementById("caLadderLegend"),
+    series.map(x=>({name:x[0],color:x[2]})).concat([{name:"headline tolerance",color:COL.warn,line:true}]));
+  // Table beside the chart: the ratio is the interpretable quantity, so give it a column.
+  const host2=document.getElementById("caLadderTable");host2.innerHTML="";
+  const tb=H(host2,"table"),th=H(H(tb,"thead"),"tr");
+  ["±RT (min)","Target","Entrapment","Enrichment"].forEach((h,i)=>H(th,"th",{class:i===0?"l":""},h));
+  const body=H(tb,"tbody");
+  tol.forEach((t,i)=>{const tr=H(body,"tr",{style:t===ca.rtTolerance?"font-weight:700":""});
+    H(tr,"td",{class:"l num"},trim(t));
+    const tv=s.target.betterByTolerance[i];
+    H(tr,"td",{class:"num"},pct(tv,2));
+    const ev=s.entrapment?s.entrapment.betterByTolerance[i]:NaN;
+    H(tr,"td",{class:"num"},s.entrapment?pct(ev,2):"–");
+    // Same MIN_N_FOR_ENRICHMENT gate the KPI and the class table apply. Without it this table
+    // printed a ratio for a population the two renderers above withhold as "n<30" - one
+    // suppressed headline beside five unsuppressed ratios for the same data. minNForEnrichment
+    // is serialized into the payload precisely so there is one definition, not one per renderer.
+    const caSuppressed=!s.entrapment||s.entrapment.n<ca.minNForEnrichment||s.target.n<ca.minNForEnrichment;
+    const r=(!caSuppressed&&tv>0)?ev/tv:NaN;
+    H(tr,"td",{class:"num"},caSuppressed?"n<"+ca.minNForEnrichment:(isFinite(r)?fmt(r,1)+"×":"–"));});
+}
+
+// One row per precursor PAIR (not per observation), ranked by score gap, with the run count.
+function drawCaOffenders(s){
+  const host=document.getElementById("caOffenders");host.innerHTML="";
+  const off=s.worstOffenders||[];
+  if(!off.length){host.innerHTML="<div class='na'>No co-assigned pairs at the headline tolerance.</div>";return;}
+  const tb=H(host,"table"),th=H(H(tb,"thead"),"tr");
+  ["Precursor","Class","Better-scoring target on the same peak","z","m/z","Apex","ΔRT","Score gap","Runs"]
+    .forEach((h,i)=>H(th,"th",{class:(i===0||i===1||i===2)?"l":""},h));
+  const body=H(tb,"tbody");
+  off.forEach(o=>{const tr=H(body,"tr");
+    H(tr,"td",{class:"l num"},o.modifiedSequence);
+    const c=H(tr,"td",{class:"l"});
+    c.appendChild(document.createTextNode(o.class==="PTarget"?"entrapment":o.class.toLowerCase()));
+    if(o.sameBaseSequence)H(c,"span",{class:"pill",title:"same sequence once modifications are stripped - both IDs may be real"},"PTM isomer");
+    H(tr,"td",{class:"l num"},o.partnerModifiedSequence);
+    [String(o.charge),fmt(o.precursorMz,4),fmt(o.apexRt,2),fmt(o.deltaRt,3),fmt(o.scoreGap,2),fmt(o.runs,0)]
+      .forEach(v=>H(tr,"td",{class:"num"},v));});
 }
 
 // ---------- summary: population KPIs (pass-independent, not q-gated) ----------

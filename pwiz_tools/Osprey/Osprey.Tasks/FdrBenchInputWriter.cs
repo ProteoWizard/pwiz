@@ -314,7 +314,7 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="MAX_PROTEIN_FIELD_CHARS"/>. On truncation, returns
         /// <c>&lt;kept&gt;;...+N_more</c> where N is the number of IDs dropped.
         /// </summary>
-        private static string FormatProteinField(IList<string> ids, out bool truncated)
+        private static string FormatProteinField(IReadOnlyList<string> ids, out bool truncated)
         {
             truncated = false;
             if (ids == null || ids.Count == 0)
