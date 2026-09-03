@@ -407,7 +407,35 @@ namespace pwiz.Osprey.Tasks
             // rescore possible because nobody supplied a bundle" - and it is why allPass2Present
             // stays OUTSIDE this term: a completed run must still no-op.
             bool perRunPlanAvailable = ScoringTaskShared.CanHydratePerRun(ctx.Config);
-            if (!didPlan && ((rescoreBundle == null && !perRunPlanAvailable) || allPass2Present))
+            // "No rescore POSSIBLE because nobody supplied a bundle" and "no rescore NEEDED
+            // because the outputs exist" are different answers, and only the second one may
+            // no-op. With work OUTSTANDING and no plan to do it, returning success writes a blib
+            // that is silently missing those runs - measured 2026-09-03 on Astral, where
+            // --model-diagnostics makes perRunPlanAvailable false and the bundle is null, so this
+            // arm fired for a cohort with 1 of 3 runs still to re-score. The log even announced
+            // "re-scoring the remaining 1" and the task ended in the same second.
+            //
+            // The allPass2Present half of the disjunct was fixed first (it broke on the first
+            // file with a current sidecar); this is the same defect in the other half, which no
+            // amount of counting reaches. Fail loudly instead - a resume that cannot finish is
+            // exactly the case an operator must be told about, not one to paper over.
+            bool noRescorePossible = rescoreBundle == null && !perRunPlanAvailable;
+            if (!didPlan && noRescorePossible && pass2Present < pass2Expected)
+            {
+                ctx.LogError(string.Format(
+                    @"Rescore resume: {0} of {1} run(s) still need re-scoring, but this process has " +
+                    @"no plan to do it - FirstPassFDR did not plan here, no worker bundle was " +
+                    @"supplied, and the per-run hydrate is unavailable{2}. Continuing would write " +
+                    @"an output silently missing those runs.",
+                    pass2Expected - pass2Present, pass2Expected,
+                    ctx.Config.ModelDiagnostics
+                        ? @" because --model-diagnostics keeps the all-runs hydrate"
+                        : string.Empty));
+                ctx.ExitCode = 1;
+                return false;
+            }
+
+            if (!didPlan && (noRescorePossible || allPass2Present))
             {
                 // No rescore to run. The RESIDENT arm does nothing at all here - it leaves the
                 // buffer exactly as Stage 5 compacted it, and SecondPassFDR reloads the rescored

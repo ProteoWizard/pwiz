@@ -512,7 +512,7 @@ namespace pwiz.Osprey.IO
         /// Read past one fragment record without materializing it, advancing the
         /// reader exactly as the full fragment read would. Must stay in lockstep
         /// with the fragment write in <see cref="SaveCache"/> / the full read in
-        /// <see cref="LoadCache(string,string,bool,Action{string},out LibraryCacheStatus)"/>.
+        /// <see cref="LoadCache(string,string,bool,Action{string},out LibraryCacheStatus,HashSet{uint})"/>.
         /// </summary>
         private static void SkipFragment(BinaryReader r)
         {
