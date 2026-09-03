@@ -2463,6 +2463,66 @@ foreach ($name in $selected) {
         }
     }
 
+    # ---- mode 8: a PARTIALLY completed rescore resumes and FINISHES ----------------
+    # The state no other leg produces, which is why a real defect shipped. Mode 2 resumes from a
+    # COMPLETE Stage-5 directory and mode 4 re-runs with EVERYTHING cached, so neither ever
+    # presents a per-file set that is part done - and part done is what every interruption
+    # leaves behind. PerFileRescoreTask read "ANY file has a current 2nd-pass sidecar" as "the
+    # rescore is finished": a 446-run cohort killed at 141 came back, skipped Stage 5 correctly,
+    # rescored NOTHING, and left 305 runs to carry 1st-pass q-values into the picked-protein FDR
+    # and the blib - then rebuilt the whole survivor pool toward ~86 GB (2026-09-03).
+    #
+    # Runs LAST, after mode 7, because it invalidates and rewrites the blib in the
+    # straight-through directory; every leg that reads that directory has already run.
+    if (-not $SkipResume) {
+        Write-Progress-Tc "${name}: partial rescore resume (mode 8)"
+        # Captured BEFORE the invalidation: the resume overwrites the blib in place. Mode 1 has
+        # already proved this blib matches the committed golden, so comparing against it is
+        # comparing against the golden one hop removed - and it stays correct if the golden is
+        # ever refreshed.
+        $m8Expected = Join-Path $straightDir 'output.blib.premode8'
+        Copy-Item (Join-Path $straightDir 'output.blib') $m8Expected -Force
+        $m8Cut = Invoke-PartialRescoreInvalidation -WorkDir $straightDir
+        Write-Host ("  invalidated the rescore for {0} of {1} run(s)" -f $m8Cut.Cut, $m8Cut.Runs)
+
+        $m8Inputs = @($inputs.Mzmls | ForEach-Object { Join-Path $straightDir (Split-Path $_ -Leaf) })
+        $rPartial = Invoke-OspreyRun -Mzmls $m8Inputs -Library $inputs.Library -Resolution $cfg.Resolution `
+            -WorkDir $straightDir -LogName 'partial-resume.log' -Spec $cfg -Manifest $inputs.Manifest
+        $m8Issues = [System.Collections.Generic.List[string]]::new()
+
+        # COUNT. The assertion the defect failed outright: the broken build left the count at the
+        # untouched runs and still reported success.
+        $m8Recon = @(Get-ChildItem $straightDir -Filter '*.scores-reconciled.parquet' -File |
+                     Where-Object { $_.Name -notlike '*.osprey.task' }).Count
+        if ($m8Recon -ne $m8Cut.Runs) {
+            $m8Issues.Add("only $m8Recon of $($m8Cut.Runs) reconciled parquet(s) after the resume; the rescore did not finish the cohort")
+        }
+
+        # VISIBILITY. How much was reused has to be STATED, not inferred from what the run does
+        # next; a resume nobody can audit is one nobody can trust after an interruption.
+        $m8Marker = Test-LogMarker -LogPath $rPartial.Log `
+            -Marker 'Rescore resume:' `
+            -Description 'the rescore reporting how many runs it adopted and how many it re-scored'
+        foreach ($issue in $m8Marker.Issues) { $m8Issues.Add($issue) }
+
+        # VALUE. Finishing is not finishing CORRECTLY. An interrupted run that completes to a
+        # different answer than an uninterrupted one is the failure that actually matters for the
+        # resume promise, and the COUNT check above cannot see it.
+        $m8 = Compare-BlibFull -BlibExpected $m8Expected `
+            -BlibActual (Join-Path $straightDir 'output.blib') -Tolerance $Tolerance
+        foreach ($issue in $m8.Issues) { $m8Issues.Add($issue) }
+        Remove-Item $m8Expected -Force -ErrorAction SilentlyContinue
+
+        if ($m8Issues.Count -eq 0) {
+            $summaryLines.Add("$name mode8 (partial rescore resume): PASS ($($m8Cut.Cut) of $($m8Cut.Runs) run(s) re-scored)")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode8 (partial rescore resume): FAIL - $($m8Issues.Count) issue(s)"
+            $m8Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode8 (partial rescore resume): FAIL ($($m8Issues.Count) issues)")
+        }
+    }
+
     # All legs for this dataset are done -- free its scratch now so peak disk stays
     # at ~one dataset (the next dataset / the perf-gate step gets the space back).
     Remove-Scratch (Join-Path $runRoot $name)

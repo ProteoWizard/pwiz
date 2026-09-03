@@ -360,8 +360,43 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal sealed class FdrProjections
     {
-        public FdrProjectionSet Value { get; }
-        public FdrProjections(FdrProjectionSet value) { Value = value; }
+        // DEFERRED, because on a resume this is usually built and never read. Its ONLY consumer
+        // is FirstPassFdrTask.Run (ctx.Consume<FdrProjections>()), and a resume whose 1st-pass
+        // outputs are already valid SKIPS that Run entirely - so PerFileScoring's rehydrate was
+        // streaming every row of every parquet to build a set nobody would ask for. Measured
+        // 2026-09-03 on the 446-file CHS cohort: 9m46s scanning 1,342,686,095 rows, discarded.
+        //
+        // Same shape as the RescoredEntries milestone, and for the same reason: the work belongs
+        // to whoever needs the product, at the moment they need it. Building it eagerly in a
+        // fan-out task is a pre-processing pass over all runs, which the target shape forbids.
+        private readonly Func<FdrProjectionSet> _build;
+        private FdrProjectionSet _value;
+        private bool _built;
+
+        public FdrProjections(FdrProjectionSet value)
+        {
+            _value = value;
+            _built = true;
+        }
+
+        /// <summary>Build on first read. A null factory means "no projection".</summary>
+        public FdrProjections(Func<FdrProjectionSet> build)
+        {
+            _build = build;
+        }
+
+        public FdrProjectionSet Value
+        {
+            get
+            {
+                if (!_built)
+                {
+                    _value = _build?.Invoke();
+                    _built = true;
+                }
+                return _value;
+            }
+        }
     }
 
     /// <summary>The buffer after FirstPassFDR's first-pass FDR + compaction.</summary>

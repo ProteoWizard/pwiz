@@ -265,6 +265,85 @@ function Invoke-ResumeInvalidation {
 
 <#
 .SYNOPSIS
+    Invalidate the PerFileRescoring output for SOME of the runs, leaving the rest valid, so a
+    re-run faces a PARTIALLY completed rescore.
+
+.DESCRIPTION
+    The state no other leg produces, and the reason a real defect shipped. Mode 2 resumes from a
+    COMPLETE Stage-5 directory and mode 4 re-runs with EVERYTHING cached, so neither ever
+    presents a per-file set that is part done - which is what every interruption leaves behind.
+    PerFileRescoreTask read "any file has a current 2nd-pass sidecar" as "the rescore is
+    finished": a 446-run cohort killed at 141 came back, skipped Stage 5 correctly, rescored
+    NOTHING, and left 305 runs to carry 1st-pass q-values into the picked-protein FDR and the
+    blib - then rebuilt the whole survivor pool and headed for ~86 GB. Measured 2026-09-03.
+
+    A kill leaves a run with ALL of its PerFileRescoring artifacts or NONE, so this removes all
+    of them for the runs it cuts. Anything in between is a state the pipeline never produces, and
+    a leg built on it would prove nothing about a real resume.
+
+    The blib and its SecondPassFDR stamp go too: Stage 7 must re-run so its output can be
+    compared against the uninterrupted golden. Without that the leg could only count files.
+
+    Deleting nothing is a hard failure, for the reason Invoke-ResumeInvalidation gives above: a
+    leg that silently invalidated nothing is a green "partial resume" that resumed from a
+    complete directory.
+
+.PARAMETER WorkDir
+    The straight-through run directory to invalidate in place.
+
+.PARAMETER KeepRuns
+    How many runs keep their rescore output. Default -1 means "all but the last one", the
+    smallest genuine partial state, which works on a 3-file dataset.
+#>
+function Invoke-PartialRescoreInvalidation {
+    param(
+        [Parameter(Mandatory=$true)][string]$WorkDir,
+        [int]$KeepRuns = -1
+    )
+
+    # Suffixes carry the producing task's Name, as Invoke-ResumeInvalidation's do, so a rename on
+    # the C# side breaks this loudly rather than matching zero files.
+    $suffixes = @(
+        '.scores-reconciled.parquet',
+        '.scores-reconciled.parquet.PerFileRescoring.osprey.task',
+        '.2nd-pass.fdr_scores.bin',
+        '.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task',
+        '.2nd-pass.fdr_decoys.bin',
+        '.2nd-pass.fdr_decoys.bin.PerFileRescoring.osprey.task'
+    )
+    $stems = @(Get-ChildItem -Path $WorkDir -File -Filter '*.scores-reconciled.parquet' |
+               Where-Object { $_.Name -notlike '*.osprey.task' } |
+               ForEach-Object { $_.Name -replace '\.scores-reconciled\.parquet$', '' } |
+               Sort-Object)
+    if ($stems.Count -lt 2) {
+        throw (("Invoke-PartialRescoreInvalidation found {0} reconciled parquet(s) in '{1}'; " +
+                "a partial state needs at least 2. Has PerFileRescoring run here?") -f $stems.Count, $WorkDir)
+    }
+    $keep = if ($KeepRuns -lt 0) { $stems.Count - 1 } else { [Math]::Min($KeepRuns, $stems.Count - 1) }
+    $cutStems = @($stems | Select-Object -Skip $keep)
+
+    $removed = 0
+    foreach ($stem in $cutStems) {
+        foreach ($suffix in $suffixes) {
+            $f = Join-Path $WorkDir ($stem + $suffix)
+            if (Test-Path $f) { Remove-Item $f -Force; $removed++ }
+        }
+    }
+    foreach ($f in @('output.blib', 'output.blib.SecondPassFDR.osprey.task')) {
+        $full = Join-Path $WorkDir $f
+        if (Test-Path $full) { Remove-Item $full -Force; $removed++ }
+    }
+    if ($removed -eq 0) {
+        throw (("Invoke-PartialRescoreInvalidation removed nothing in '{0}'. The leg would " +
+                "resume from a COMPLETE directory and prove nothing. Expected artifacts named " +
+                "'*.scores-reconciled.parquet' and '*.2nd-pass.fdr_*.bin' with their " +
+                "'.PerFileRescoring.osprey.task' stamps; check those Name values.") -f $WorkDir)
+    }
+    return [pscustomobject]@{ Runs = $stems.Count; Kept = $keep; Cut = $cutStems.Count; Removed = $removed }
+}
+
+<#
+.SYNOPSIS
     Invalidate ONLY the SecondPassFDR task, leaving FirstPassFDR valid, so a
     re-run enters FirstPassFDR's rehydrate arm.
 

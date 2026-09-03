@@ -1265,6 +1265,31 @@ namespace pwiz.Osprey.IO
             }
         }
 
+        /// <summary>
+        /// The two things a resume rehydrate needs from a scores parquet, in ONE open: does it
+        /// carry the PIN feature schema, and how many rows does it declare.
+        ///
+        /// <para>Both come from the footer - no column is read and no value is decoded - and
+        /// they are returned together because the caller needs both and opening the file twice
+        /// to answer them separately is the whole cost at cohort scale. 446 files is 446 opens,
+        /// not 892.</para>
+        ///
+        /// <para>The row count is a DECLARED count, not a scan. It exists so a caller can log
+        /// the cohort size and answer "are there any rows at all" without paying the
+        /// 1,342,686,095-row scalar scan that used to produce the same number.</para>
+        /// </summary>
+        public static (bool HasPinFeatures, long RowCount) ProbeResumeSchemaAndRows(string path)
+        {
+            if (!File.Exists(path))
+                return (false, 0L);
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                return (fieldsByName.ContainsKey(PIN_FEATURE_NAMES[0]), reader.Metadata?.NumRows ?? 0L);
+            }
+        }
+
         public static (long RowCount, bool HasCwtCandidatesField) ProbeCwtRowMetadata(string path)
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))

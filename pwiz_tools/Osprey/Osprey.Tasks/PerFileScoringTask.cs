@@ -669,7 +669,14 @@ namespace pwiz.Osprey.Tasks
             // rehydrate now feeds that accumulator from the per-file load it already performs
             // (FirstPassFdrTask.StreamOwnReconciliationBundle), off the same PRE-compaction rows,
             // so the report emits from this lean load at any file count.
-            FdrProjectionSet projections = null;
+            // No eager projection on this arm at all: it publishes a factory instead, so
+            // there is nothing to declare and nothing to test for null.
+            // Captured for the DEFERRED projection build, and for the footer-only row total that
+            // replaces the scan the lean branch used to perform. Both are O(files) in COUNT and
+            // O(1) in bytes per file - a file name, a path, and a long.
+            var deferredScanFiles = new List<KeyValuePair<string, string>>();
+            long leanRowCount = 0;
+            Func<FdrProjectionSet> deferredProjections = null;
 
             var swAllFiles = Stopwatch.StartNew();
             if (config.InputFiles != null)
@@ -743,7 +750,8 @@ namespace pwiz.Osprey.Tasks
                             // the feature schema stops the run here rather than surfacing at
                             // a murkier point downstream. NOT applied to Run's fresh-compute
                             // lean path (#4400), whose parquets this same run just wrote.
-                            if (!ParquetScoreCache.HasPinFeatureColumns(scoresPath))
+                            var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(scoresPath);
+                            if (!probe.HasPinFeatures)
                             {
                                 ctx.LogError(string.Format(
                                     @"  Resume rehydrate: {0} is missing the PIN feature columns -- it is not a valid Osprey scores parquet. Delete it and re-run so it is regenerated.",
@@ -752,22 +760,23 @@ namespace pwiz.Osprey.Tasks
                                 return false;
                             }
                             LoadCalibrationAndIsolation(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
-                            try
-                            {
-                                builder.BeginFile(fileName);
-                                ParquetScoreCache.ReadFdrStubScalars(scoresPath,
-                                    (entryId, charge, isDecoy, coelutionSum, modseq) =>
-                                        builder.AddRow(entryId, charge, isDecoy, coelutionSum, modseq));
-                                builder.EndFile();
-                            }
-                            catch (Exception ex)
-                            {
-                                ctx.LogError(string.Format(
-                                    @"  Resume rehydrate: failed to load valid-on-disk scores from {0}: {1}",
-                                    scoresPath, ex.Message));
-                                ctx.ExitCode = 1;
-                                return false;
-                            }
+                            // The SCAN does not happen here any more. It used to stream every row
+                            // of every parquet into the projection builder, and on the path that
+                            // reaches this code - a resume - the only consumer of that projection
+                            // (FirstPassFdrTask.Run) has usually been skipped because its outputs
+                            // are already valid. Measured on the 446-file CHS cohort:
+                            // 1,342,686,095 rows, 9m46s, discarded. That is a pre-processing pass
+                            // over all runs inside a task that must not have one.
+                            //
+                            // What survives here is only what a LATER consumer cannot get for
+                            // itself: this run's calibration and isolation windows, and its row
+                            // count - and the count comes from the footer, not a scan. The
+                            // projection is published as a factory (see the Build below) and
+                            // costs nothing unless something asks for it.
+                            // The row count rides along on the schema probe above - the footer
+                            // was already open, so it is free. No second read, and no scan.
+                            deferredScanFiles.Add(new KeyValuePair<string, string>(fileName, scoresPath));
+                            leanRowCount += probe.RowCount;
                             // Empty stub list on the lean path (mirrors Run), so the file-
                             // count guard + ScoredEntries consumers still see one entry per
                             // scored file.
@@ -777,17 +786,44 @@ namespace pwiz.Osprey.Tasks
                         loadProgress.Report(++fileIdx);
                     }
                 }
+                // The projection is a FACTORY, not a product. Nothing is scanned unless
+                // FirstPassFdrTask.Run asks for it - and on a resume whose 1st-pass outputs are
+                // valid that Run is skipped, so it never asks. Same files, same order, same
+                // rows: this rebuilds exactly what the eager loop used to, on first read.
                 if (builder != null)
-                    projections = builder.Build();
+                {
+                    var scanFiles = deferredScanFiles;
+                    deferredProjections = () =>
+                    {
+                        var lazyBuilder = new FdrProjectionSet.Builder(countsOnly: true);
+                        foreach (var scan in scanFiles)
+                        {
+                            lazyBuilder.BeginFile(scan.Key);
+                            ParquetScoreCache.ReadFdrStubScalars(scan.Value,
+                                (entryId, charge, isDecoy, coelutionSum, modseq) =>
+                                    lazyBuilder.AddRow(entryId, charge, isDecoy, coelutionSum, modseq));
+                            lazyBuilder.EndFile();
+                        }
+                        return lazyBuilder.Build();
+                    };
+                }
             }
             swAllFiles.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
                 swAllFiles.Elapsed.TotalSeconds));
 
-            int totalScored;
-            if (projections != null)
+            // long, not int: the deferred total is a footer sum over the whole cohort and hit
+            // 1,342,686,095 at 446 files - two thirds of int.MaxValue, and cohorts keep growing.
+            // No `projections != null` test here: this arm never builds one any more, it
+            // publishes a factory. ReSharper proves the branch dead (ExpressionIsAlwaysNull),
+            // and a dead branch guarding a resume's row total is worse than no branch.
+            long totalScored;
+            if (deferredProjections != null)
             {
-                totalScored = projections.TotalRows;
+                // From the parquet footers, NOT from perFileEntries: the lean arm deliberately
+                // adds an EMPTY list per file, so summing those reports zero and trips the
+                // "No scored entries found" guard on a perfectly good resume.
+                totalScored = leanRowCount;
             }
             else
             {
@@ -802,7 +838,8 @@ namespace pwiz.Osprey.Tasks
                 totalScored, nFiles));
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
-                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored, projections);
+                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored, null,
+                deferredProjections);
         }
 
         /// <summary>
@@ -820,7 +857,8 @@ namespace pwiz.Osprey.Tasks
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
             ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             Dictionary<string, string> perFileParquetPaths,
-            int nFiles, long totalScored, FdrProjectionSet projections = null)
+            int nFiles, long totalScored, FdrProjectionSet projections = null,
+            Func<FdrProjectionSet> deferredProjections = null)
         {
             _perFileEntries = perFileEntries;
             _perFileCalibrations = perFileCalibrations;
@@ -861,7 +899,11 @@ namespace pwiz.Osprey.Tasks
             // whenever this is null. A --model-diagnostics resume publishes a NON-null
             // projection since #4505 - it no longer needs resident entries, because
             // FirstPassFDR's rehydrate streams the report off its own per-file load.
-            ctx.Publish(new FdrProjections(projections));
+            // Deferred when the caller handed a factory instead of a built set (see
+            // FdrProjections); the eager form stays for the paths that genuinely built one.
+            ctx.Publish(deferredProjections != null
+                ? new FdrProjections(deferredProjections)
+                : new FdrProjections(projections));
             ctx.Publish(new RescoreBundle(_rescoreInputs));
 
             if (perFileEntries.Count == 0 || totalScored == 0)
