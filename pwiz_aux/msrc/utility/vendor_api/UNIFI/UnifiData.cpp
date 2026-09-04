@@ -63,8 +63,8 @@ using System::Threading::Tasks::Task;
 using System::Threading::Tasks::TaskScheduler;
 using System::Threading::Tasks::Schedulers::QueuedTaskScheduler;
 using System::Uri;
-using IdentityModel::Client::TokenClient;
 using IdentityModel::Client::TokenResponse;
+using pwiz::Common::SystemUtil::OAuthPasswordGrantClient;
 using std::size_t;
 
 
@@ -1002,14 +1002,8 @@ class UnifiData::Impl
             password = userPassPair[1];
         }
 
-        auto fields = gcnew System::Collections::Generic::Dictionary<System::String^, System::String^>();
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::GrantType, IdentityModel::OidcConstants::GrantTypes::Password);
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::UserName, username);
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::Password, password);
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, _clientScope);
-
-        auto tokenClient = gcnew TokenClient(tokenEndpoint(), _clientId, _clientSecret, nullptr, IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
-        TokenResponse^ response = tokenClient->RequestAsync(fields, System::Threading::CancellationToken::None)->Result;
+        TokenResponse^ response = OAuthPasswordGrantClient::RequestToken(gcnew Uri(tokenEndpoint()), _clientId, _clientSecret,
+            OAuthPasswordGrantClient::PasswordGrantForm(username, password, _clientScope));
         if (response->IsError)
             throw user_error("authentication error: incorrect hostname, username or password? (" + ToStdString(response->Error) + ")");
 

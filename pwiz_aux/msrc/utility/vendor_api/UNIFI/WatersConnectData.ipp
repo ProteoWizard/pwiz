@@ -61,8 +61,8 @@ using System::Threading::Tasks::TaskScheduler;
 using System::Threading::Tasks::Schedulers::QueuedTaskScheduler;
 using System::Net::Http::HttpClient;
 using System::Uri;
-using IdentityModel::Client::TokenClient;
 using IdentityModel::Client::TokenResponse;
+using pwiz::Common::SystemUtil::OAuthPasswordGrantClient;
 using std::size_t;
 #include "WatersConnectProtobuf.hpp"
 
@@ -475,14 +475,8 @@ private:
 
     static Object^ getAccessTokenResult(String^ uri, AccessTokenRequest^ request)
     {
-        auto fields = gcnew System::Collections::Generic::Dictionary<System::String^, System::String^>();
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::GrantType, IdentityModel::OidcConstants::GrantTypes::Password);
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::UserName, request->Username);
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::Password, request->Password);
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, request->Scope);
-
-        auto tokenClient = gcnew TokenClient(request->Uri, request->ClientId, request->Secret, nullptr);
-        TokenResponse^ response = tokenClient->RequestAsync(fields, System::Threading::CancellationToken::None)->Result;
+        TokenResponse^ response = OAuthPasswordGrantClient::RequestToken(gcnew Uri(request->Uri), request->ClientId, request->Secret,
+            OAuthPasswordGrantClient::PasswordGrantForm(request->Username, request->Password, request->Scope));
         if (response->IsError)
             throw user_error("authentication error: incorrect hostname, username or password? (" + ToStdString(response->Error) + ")");
         return gcnew KeyValuePair<String^, DateTime>(response->AccessToken, DateTime::UtcNow.AddSeconds(response->ExpiresIn));

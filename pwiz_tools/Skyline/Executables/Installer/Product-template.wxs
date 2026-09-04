@@ -276,9 +276,6 @@
       <Component Id="System.Text.Encodings.Web.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Text.Encodings.Web.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="System.Text.Json.dll">
-        <File Source="$(var.Skyline.TargetDir)/System.Text.Json.dll" KeyPath="yes"/>
-      </Component>
       <Component Id="ZstdSharp.dll">
         <File Source="$(var.Skyline.TargetDir)/ZstdSharp.dll" KeyPath="yes"/>
       </Component>

@@ -21,9 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
-using System.Net;
 using System.Security.Authentication;
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -226,13 +224,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 }
             }
             // Otherwise, request a new token using the username and password
-            var newToken = RequestToken(new NameValueCollection
-            {
-                [@"grant_type"] = @"password",
-                [@"username"] = Username,
-                [@"password"] = Password,
-                [@"scope"] = ClientScope
-            });
+            var newToken = RequestToken(OAuthPasswordGrantClient.PasswordGrantForm(Username, Password, ClientScope));
             if (newToken.IsError)
             {
                 AuthenticationException ex;
@@ -263,35 +255,11 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         /// </summary>
         private TokenResponse RequestToken(NameValueCollection form)
         {
-            try
-            {
-                var requestUri = new Uri(IdentityServer + IdentityConnectEndpoint);
-                using var httpClient = new HttpClientWithProgress();
-                httpClient.AddAuthorizationHeader(@"Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(
-                    EscapeClientCredential(ClientId) + @":" + EscapeClientCredential(ClientSecret))));
-                httpClient.AddHeader(@"Accept", @"application/json");
-                var raw = Encoding.UTF8.GetString(httpClient.UploadValues(requestUri, @"POST", form));
-                return new TokenResponse(raw);
-            }
-            catch (NetworkRequestException ex)
-            {
-                if (ex.StatusCode == HttpStatusCode.BadRequest && !string.IsNullOrEmpty(ex.ResponseBody))
-                    return new TokenResponse(ex.ResponseBody);
-                return new TokenResponse(ex.StatusCode ?? HttpStatusCode.ServiceUnavailable, ex.Message, ex.ResponseBody);
-            }
-            catch (Exception ex)
-            {
-                return new TokenResponse(ex);
-            }
-        }
-
-        /// <summary>
-        /// RFC 6749 section 2.3.1: client_id and client_secret are form-urlencoded before being
-        /// combined into the Basic authorization credential.
-        /// </summary>
-        private static string EscapeClientCredential(string value)
-        {
-            return Uri.EscapeDataString(value ?? string.Empty).Replace(@"%20", @"+");
+            // Shared with UnifiAccount.Authenticate, which authenticates against a sibling
+            // Waters-hosted identity server the same way - see OAuthPasswordGrantClient for the
+            // POST, response parsing, and why both needed to stop constructing TokenResponse
+            // directly once IdentityModel 7 removed its constructors.
+            return OAuthPasswordGrantClient.RequestToken(new Uri(IdentityServer + IdentityConnectEndpoint), ClientId, ClientSecret, form);
         }
 
         public static AuthenticationErrorType HandleAuthenticationException(AuthenticationException ex, out string message)
@@ -305,18 +273,26 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             try
             {
                 var tokenResponse = JObject.Parse((string)ex.Data[TOKEN_DATA]);
+                // error_description is frequently empty (e.g. Waters' invalid_scope response is just
+                // {"error":"invalid_scope"}), so fall back to the bare error code rather than leaving
+                // the caller with nothing to show - every classified branch below sets message for the
+                // same reason. Only EditRemoteAccountDlg's InvalidClientSecret case overrides this with
+                // a friendlier string; the others show this raw (deliberately non-L10N) server text.
                 string error = (tokenResponse[@"error_description"] ?? tokenResponse[@"error"] ?? "").ToString();
                 var errorType = (tokenResponse[@"error"] ?? "").ToString();
                 if (errorType == @"invalid_scope")
                 {
+                    message = error;
                     return AuthenticationErrorType.InvalidClientScope;
                 }
                 else if (errorType == @"invalid_client")
                 {
+                    message = error;
                     return AuthenticationErrorType.InvalidClientSecret;
                 }
                 else if (errorType == @"invalid_grant")
                 {
+                    message = error;
                     return AuthenticationErrorType.InvalidPassword;
                 }
                 else if (!string.IsNullOrEmpty(error))
@@ -326,6 +302,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 }
                 else
                 {
+                    message = ex.Message;
                     return AuthenticationErrorType.InvalidIdentityServer;
                 }
             }
