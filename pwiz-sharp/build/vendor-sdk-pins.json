@@ -24,10 +24,18 @@
         "copy instead of pwiz_aux/msrc/utility/vendor_api_Bruker.7z: the upstream archive is",
         "shared with the C++ build, which still wants CompassXtract in the same archive."
       ],
+      "$comment2": [
+        "BaseCommon / BaseDataAccess / BaseError / BaseTof are deliberately NOT here. They are",
+        "Agilent MHDAC assemblies and this archive holds none of them (it ships exactly two",
+        "DLLs: baf2sql_c and timsdata). Listing them here broke Agilent from every",
+        "installer-based install: FindPin returns the FIRST pin whose prefix matches, Bruker",
+        "precedes Agilent, so a BaseCommon bind resolved to this archive and failed with",
+        "'extracted cleanly but contains no BaseCommon.dll'. Dev and CI builds never saw it",
+        "because they keep the vendor DLLs app-local, which the resolver prefers over the cache."
+      ],
       "path": "pwiz-sharp/vendor-archives/vendor_api_Bruker.7z",
       "prefixes": [
-        "Bruker.", "BaseDataAccess", "ProtocolBuffers", "BaseError", "BaseCommon", "BaseTof",
-        "timsdata", "baf2sql", "mcd_lib"
+        "Bruker.", "ProtocolBuffers", "timsdata", "baf2sql", "mcd_lib"
       ]
     },
     {
@@ -76,10 +84,16 @@
     },
     {
       "name": "Agilent",
+      "$comment": [
+        "MIDAC has no trailing dot on purpose. Prefixes are matched with StartsWith against the",
+        "assembly simple name, and this archive's assembly is plain 'MIDAC', which never starts",
+        "with 'MIDAC.' - so the dotted form silently matched nothing and Agilent failed one",
+        "assembly later than the BaseCommon collision, with 'Could not load MIDAC'."
+      ],
       "path": "pwiz_aux/msrc/utility/vendor_api_Agilent.7z",
       "prefixes": [
-        "Agilent.", "BaseDataAccess", "MIDAC.", "Mhdac.", "MassHunter.", "MassSpecDataReader",
-        "agtsampleinforw"
+        "Agilent.", "BaseCommon", "BaseDataAccess", "BaseError", "BaseTof", "MIDAC", "Mhdac.",
+        "MassHunter.", "MassSpecDataReader", "agtsampleinforw"
       ]
     },
     {
@@ -102,8 +116,15 @@
     },
     {
       "name": "Mobilion",
+      "$comment": [
+        "MobilionShim is deliberately NOT a prefix here. It is pwiz-sharp's own shim assembly,",
+        "built from src/Vendor/Mobilion, not something this archive carries (the archive holds",
+        "MBI_SDK.dll and its headers). Listing it made the installer's staging filter strip a",
+        "binary nothing could then supply, so Mobilion failed from every installer-based install",
+        "with 'archive contains no library matching MobilionShim.dll'."
+      ],
       "path": "pwiz_aux/msrc/utility/vendor_api_Mobilion.7z",
-      "prefixes": [ "Mobilion.", "MBISDK", "MBI_SDK", "MobilionShim" ]
+      "prefixes": [ "Mobilion.", "MBISDK", "MBI_SDK" ]
     }
   ]
 }
