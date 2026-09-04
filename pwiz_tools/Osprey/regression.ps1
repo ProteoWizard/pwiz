@@ -1415,6 +1415,18 @@ function Invoke-HpcChain {
         # copy here must surface as that failure and not as a skipped hop.
         $ph2ret = Join-Path $ph2 'output.1st-pass.retained_base_ids.bin'
         Copy-Item $ph2ret (Join-Path $ph3 'output.1st-pass.retained_base_ids.bin')
+        # The pass-1 diagnostics product rides the same relay. FirstPassFDR is the only task
+        # that can produce it - the pass-1 pool and trained model are gone by SecondPassFDR - so
+        # a node that cannot see it renders a page with no first-pass half at all.
+        #
+        # This hop did not exist for its predecessor either, which doc 00 names as a standing
+        # gap: "a relay obligation mode 3 does not stage is an obligation nothing is checking".
+        # It stayed invisible because mode 3 compares the blib and the FDR sidecars and never
+        # opens the report, so the chain's SecondPassFDR silently logged "pass-1 data sidecar
+        # not found; pass-2 enrichment skipped" and the leg passed anyway. Guarded with
+        # Test-Path: present only under --model-diagnostics.
+        $ph2diag = Join-Path $ph2 'output.1st-pass.model-diagnostics.json'
+        if (Test-Path $ph2diag) { Copy-Item $ph2diag (Join-Path $ph3 'output.1st-pass.model-diagnostics.json') }
         Copy-LibraryInto -Library $Library -Dir $ph3 -Manifest $Manifest
         $a3 = @('--task', 'PerFileRescoring', '--input-scores', "$s.scores.parquet",
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
@@ -1539,6 +1551,11 @@ function Invoke-HpcChain {
         # load streams each run against it, so $ph2 being gone makes phase 3 its only route here.
         $ph3ret = Join-Path $ph3 'output.1st-pass.retained_base_ids.bin'
         Copy-Item $ph3ret (Join-Path $ph4 'output.1st-pass.retained_base_ids.bin') -Force
+        # The pass-1 diagnostics product takes its second hop for the same reason as the model
+        # sidecar: SecondPassFDR renders the page and $ph2 is gone by now, so phase 3 is its
+        # only route here. Without it the chain's report has no first-pass half.
+        $ph3diag = Join-Path $ph3 'output.1st-pass.model-diagnostics.json'
+        if (Test-Path $ph3diag) { Copy-Item $ph3diag (Join-Path $ph4 'output.1st-pass.model-diagnostics.json') -Force }
         # No 2nd-pass bin relay. There was a `if (Test-Path ...) { Copy-Item ... }` here, and
         # it could never fire: --task PerFileRescoring sets NoJoin, so SecondPassFdrTask is not
         # in a phase-3 worker's pipeline and no such file exists to copy. Worse than dead - had

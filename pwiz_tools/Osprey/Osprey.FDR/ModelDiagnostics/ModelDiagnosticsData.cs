@@ -65,6 +65,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         public string FdrLevel { get; set; }
         public bool HasEntrapment { get; set; }
 
+        /// <summary>
+        /// What this page does and does not represent, stated in the page itself. Set by the
+        /// render step (never by a fold), because it describes which products existed at render
+        /// time rather than anything pass 1 computed.
+        ///
+        /// <para>A report whose pass-2 sections are merely ABSENT is indistinguishable, to
+        /// someone opening the file a week later with no console scrollback, from a complete
+        /// report of a run that found nothing in pass 2. That is the silently-invalid-output
+        /// shape, so the incompleteness is an artifact-level statement and not only a log line.</para>
+        /// </summary>
+        public CompletenessInfo Completeness { get; set; }
+
         // ----- population counts (best-per-precursor) -----
         public int NTarget { get; set; }
         public int NDecoy { get; set; }
@@ -176,6 +188,24 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// which needs only the transferred q -- still renders.</item>
         /// </list>
         /// </summary>
+        /// <summary>
+        /// Which passes this page represents and how much of the cohort reached them, so the
+        /// page can say what it is rather than leaving the reader to infer it from an absent
+        /// section. Rendered as a banner whenever <see cref="Pass2Present"/> is false.
+        /// </summary>
+        public sealed class CompletenessInfo
+        {
+            /// <summary>True when the pass-2 product was on disk at render time.</summary>
+            public bool Pass2Present { get; set; }
+            /// <summary>Runs that contributed rows to the pass-1 fold.</summary>
+            public int RunsContributed { get; set; }
+            /// <summary>Runs the analysis was asked for; equal to <see cref="RunsContributed"/>
+            /// once every run's first pass has completed.</summary>
+            public int RunsExpected { get; set; }
+            /// <summary>Operator-facing reason the page is partial, or null when it is not.</summary>
+            public string Reason { get; set; }
+        }
+
         public sealed class Pass2Data
         {
             // ----- structural half (null under confidence-transfer mode) -----

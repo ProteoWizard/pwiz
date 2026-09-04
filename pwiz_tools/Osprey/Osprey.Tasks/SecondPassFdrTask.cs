@@ -477,7 +477,7 @@ namespace pwiz.Osprey.Tasks
                     stratumBaseIds = pcStratum.BaseIds;
                 ModelDiagnosticsReport.WritePass2AndFinalize(
                     perFileEntries, pass2Contributions, libraryById, config, ctx.LogInfo,
-                    stratumBaseIds);
+                    stratumBaseIds, ValidityKey(ctx));
             }
 
             return true;

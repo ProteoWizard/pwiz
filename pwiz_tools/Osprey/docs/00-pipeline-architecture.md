@@ -100,8 +100,8 @@ against the straight-through run's. Read what it actually asserts before relying
 per-run FDR sidecars and the `.blib` are compared at the run tolerance, and only
 `*.fdr_experiment.bin` byte for byte. It does **not** open the reconciled parquets, so a
 Stage 6 content change can leave mode 3 green. A relay obligation mode 3 does not stage is
-an obligation nothing is checking - and `<output>.model-diagnostics.data.json` is currently
-one of those.
+an obligation nothing is checking - and `<blib-stem>.1st-pass.model-diagnostics.json` is
+currently one of those.
 
 Its one blind spot is worth stating, because it has already hidden a defect: a phase-3 node
 is handed **one** run, and at N=1 a correct per-run implementation and an all-runs one
@@ -199,11 +199,24 @@ that does not:
   It exists because staging a cohort would otherwise mean running all of Stages 1-4 and
   paying for calibration, scoring and a parquet write that staging does not need. The
   caches it writes are byte-for-byte what a full run would have written.
-- **`--task ModelDiagnostics`** regenerates the `--model-diagnostics` HTML for a
-  completed analysis from that run's own outputs, suppressing every artifact write
-  except the report. It exists so that judging a diagnostics change on a large cohort
-  does not mean re-running the search - seven hours on the 82-run SEA-AD set - or
-  accepting a page written by an older build.
+- **`--task ModelDiagnostics`** renders the `--model-diagnostics` HTML from a completed
+  analysis's own diagnostics products. It **processes nothing**: no pool is constructed,
+  no Percolator runs, and no artifact but the page is written. It exists so that judging
+  a diagnostics change on a large cohort does not mean re-running the search - seven hours
+  on the 82-run SEA-AD set - or accepting a page written by an older build.
+
+  Three states, and the first two are the reason it is a state machine rather than a
+  write: with no completed first pass it **aborts** (the `.1st-pass.model.json` precedent
+  below, not the `fdr_experiment.bin` one that continues into a wrong answer); with a first
+  pass but no second it renders the first-pass page and says so **in the page**, because an
+  absent pass-2 section is otherwise indistinguishable from a complete report of a run that
+  found nothing in pass 2; with both, it renders both.
+
+  Suppressing the writes was never the same as suppressing the work. Before the diagnostics
+  products were retained, this task fell through to the ordinary pipeline with
+  `DiagnosticsOnly` merely silencing its writers, so it still built the whole-run survivor
+  pool - asking a 446-run analysis to describe itself cost what running it did, and met the
+  same memory wall.
 
 Both are appended after the four pipeline members so the existing ordinal values are
 undisturbed. Neither is a fan-out node, and neither belongs in an HPC relay plan.
@@ -539,8 +552,9 @@ node running that task needs a copy, whatever batch it was handed.
 | `<stem>.2nd-pass.fdr_decoys.bin` | per-run product | `PerFileRescoring` (pass-2 worker) | `SecondPassFDR` | with the run |
 | `<stem>.2nd-pass.fdr_scores.bin` | per-run product | `PerFileRescoring` (pass-2 worker), else `SecondPassFDR` | `SecondPassFDR` | with the run |
 | `<blib-stem>.2nd-pass.fdr_experiment.bin` | experiment product | `SecondPassFDR` | `SecondPassFDR` on a resume | n/a |
-| `<output>.model-diagnostics.data.json` | experiment product (`--model-diagnostics`) | `FirstPassFDR` | `SecondPassFDR`, which deletes it | **every node** running `SecondPassFDR` |
-| `<output>.model-diagnostics.html` | experiment product (`--model-diagnostics`) | `FirstPassFDR` renders it; `SecondPassFDR` appends the pass-2 views and re-renders | terminal | n/a |
+| `<blib-stem>.1st-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `FirstPassFDR` (pass 1) | `SecondPassFDR`, `--task ModelDiagnostics` | **every node** running `SecondPassFDR` |
+| `<blib-stem>.2nd-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `SecondPassFDR` (pass 2) | `--task ModelDiagnostics` | n/a |
+| `<blib-stem>.model-diagnostics.html` | experiment **cache** (`--model-diagnostics`) | the render step, at the end of whichever phase or task last wrote a diagnostics JSON | terminal | n/a |
 | `<output>.<TaskName>.osprey.task` | scope of its artifact | every task, via `PerFileResumeDriver` | the driver | with its artifact |
 
 In that last row `<output>` is the **full artifact path including its extension** - `foo.scores.parquet.PerFileScoring.osprey.task` - not the blib stem it means in the rows above it. A staging glob written from the uniform reading misses every per-run stamp.
@@ -551,13 +565,32 @@ peptide-trace dumps are side channels: no task reads them, nothing relays them, 
 removing one changes no result. Do not add a pipeline dependency on any of them.
 
 The `--model-diagnostics` artifacts are **not** in that category, which is easy to assume
-from the flag name. `.model-diagnostics.data.json` is a real cross-task, cross-process
-hand-off - `FirstPassFDR` stashes the fully-built pass-1 data model in it because the
-pass-1 pool and trained model are gone by the time `SecondPassFDR` runs, and
-`SecondPassFDR` reads it, appends the pass-2 views, renders the page and deletes it. An
-HPC orchestrator that omits it from the `SecondPassFDR` node loses the pass-1 half of the
-report. And `.model-diagnostics.html` is a *declared output* of `SecondPassFdrTask`, so
-deleting it invalidates that task and a re-run regenerates it.
+from the flag name. `.1st-pass.model-diagnostics.json` is a real cross-task, cross-process
+hand-off - `FirstPassFDR` writes the fully-built pass-1 data model to it because the pass-1
+pool and trained model are gone by the time `SecondPassFDR` runs, and `SecondPassFDR` reads
+it to render one page with both passes. An HPC orchestrator that omits it from the
+`SecondPassFDR` node loses the pass-1 half of the report.
+
+**The two JSONs are products; the HTML is a cache.** Each pass writes its own file when
+that pass ends and never revisits the other's (P11/P12), so the pass qualifier in the name
+is part of the contract: `.1st-pass.` is whole as soon as `FirstPassFDR` finishes, and the absence
+of `.2nd-pass.` means the second pass has not run rather than that it had nothing to say
+(P13). The page is a pure projection of whichever JSONs exist, so it is the one artifact
+here that is always overwritten - re-rendering cannot lose information, which is exactly
+what a cache is and a product is not.
+
+That leaves one thing unresolved, and it is recorded here rather than glossed: the page is
+**still** a declared output of `SecondPassFdrTask`. A declared output's presence is evidence
+its task completed, so "the HTML is always re-rendered" and "the HTML's presence means
+`SecondPassFDR` finished" cannot both hold indefinitely. The resolution is to declare
+`.2nd-pass.model-diagnostics.json` in its place - completion judged by the product, not by
+the view - and it is not done yet.
+
+`.1st-pass.model-diagnostics.json` used to be a single `.model-diagnostics.data.json` that
+`SecondPassFDR` **deleted once consumed**. That one line is why a finished run could not
+re-render its own report, and why `--task ModelDiagnostics` re-ran the pipeline to rebuild
+what it had just discarded - materialising the survivor pool to describe a cohort it was
+only being asked to report on. Retaining and splitting it is what makes that task a render.
 
 ### Rows that are not what they look like
 
@@ -925,8 +958,8 @@ Per run, for **every** run in the cohort:
 Experiment-wide:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`
 - `<stem>.1st-pass.model.json` (any one copy)
-- `<output>.model-diagnostics.data.json`, when `--model-diagnostics` is on - the pass-1
-  half of the report exists nowhere else by this point
+- `<blib-stem>.1st-pass.model-diagnostics.json`, when `--model-diagnostics` is on - the
+  pass-1 half of the report exists nowhere else by this point
 
 Not needed on the default path: `<stem>.1st-pass.fdr_scores.bin`. Establishing that is
 what issue #4486 was for - an orchestrator hands a `SecondPassFDR` node the per-run

@@ -234,6 +234,58 @@ namespace pwiz.Osprey.Tasks
                 FdrScoresSidecar.Pass.FirstPass);
             if (!string.IsNullOrEmpty(experimentPath))
                 yield return experimentPath;
+
+            // The pass-1 diagnostics product, when --model-diagnostics is on. Declaring it is
+            // what puts the report inside the resume driver's forward scan instead of beside
+            // it: a cohort that completed its first pass without the flag has every other
+            // output current, so adding the flag makes this the one thing outstanding and the
+            // driver runs the task - where Run's arm produces exactly it and nothing else.
+            //
+            // CONDITIONAL ON THE FLAG, for the reason SecondPassFdrTask's report output is:
+            // declaring it unconditionally would leave every run that never asked for
+            // diagnostics permanently invalid, re-running FirstPassFDR forever.
+            if (ctx.Config.ModelDiagnostics)
+            {
+                string diagnosticsPath = ModelDiagnosticsReport.Pass1SidecarPath(ctx.Config);
+                if (!string.IsNullOrEmpty(diagnosticsPath))
+                    yield return diagnosticsPath;
+            }
+        }
+
+        /// <summary>
+        /// True when the pass-1 diagnostics product is the single declared output this task
+        /// still owes: it is absent, and every other declared output exists with a current
+        /// validity stamp. The condition Run's fold arm turns on.
+        ///
+        /// <para>Asked over <see cref="Outputs"/> rather than a hand-listed set, so a future
+        /// output is covered without anyone remembering to add it here - the failure direction
+        /// of a forgotten entry is then a redundant recompute rather than a wrongly-adopted
+        /// first pass.</para>
+        /// </summary>
+        private bool OnlyDiagnosticsProductOutstanding(PipelineContext ctx)
+        {
+            string diagnosticsPath = ModelDiagnosticsReport.Pass1SidecarPath(ctx.Config);
+            if (string.IsNullOrEmpty(diagnosticsPath) || File.Exists(diagnosticsPath))
+                return false;
+            string validityKey = ValidityKey(ctx);
+            foreach (string output in Outputs(ctx))
+            {
+                if (string.Equals(output, diagnosticsPath, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                if (PerFileResumeDriver.IsCurrent(output, Name, validityKey))
+                    continue;
+                // Name the first output that failed. Declining here is not an error - it means a
+                // genuine first pass is owed - but on a large cohort it is the difference between
+                // seconds and hours, and without this line the only symptom is that the run takes
+                // a very long time and still produces the right answer.
+                ctx.LogInfo(string.Format(
+                    @"FirstPassFDR: not folding diagnostics from completed work - {0} is {1}, " +
+                    @"so the first pass is re-run.",
+                    output, File.Exists(output) ? @"present but not current for this analysis"
+                        : @"missing"));
+                return false;
+            }
+            return true;
         }
 
         public override string ValidityKey(PipelineContext ctx)
@@ -329,6 +381,26 @@ namespace pwiz.Osprey.Tasks
             // for, and one that survives a crash vouches for a file that really is complete.
             //
             // SecondPassFdrTask still has the blanket form and wants the same treatment.
+
+            // The diagnostics product is the ONLY outstanding output: every computational
+            // artifact this task produces is already on disk and key-current, and the driver
+            // reached Run solely because the pass-1 diagnostics JSON is missing - which is what
+            // happens when a cohort finished its first pass WITHOUT --model-diagnostics and the
+            // flag is added on a later invocation. Adopt the completed first pass rather than
+            // recomputing it: Rehydrate is exactly that path, and it folds the report per run
+            // and writes it on the way through.
+            //
+            // Placed ABOVE every writer below, because "runs the task" must mean "produces the
+            // one missing output" and not "redoes the search". Getting this wrong is expensive
+            // and SILENT: a FirstPassFDR that genuinely re-ran would clear the stamps of outputs
+            // that are already correct and spend 4h46m on a 446-run cohort to produce a report -
+            // and it would produce the RIGHT report, so no gate would ever report the cost.
+            if (config.ModelDiagnostics && OnlyDiagnosticsProductOutstanding(ctx))
+            {
+                ctx.LogInfo(@"FirstPassFDR: every output but the model-diagnostics product is " +
+                            @"current; folding the report from the completed first pass.");
+                return Rehydrate(ctx);
+            }
 
             // Stage 5: First-pass FDR. The Percolator framework (SVM or Gbdt) prints
             // its own "Running First-pass Percolator on N entries..." line from the FDR
@@ -1358,11 +1430,13 @@ namespace pwiz.Osprey.Tasks
                         mdiagAccumulator.ClassByBaseId, libraryById,
                         LoadFirstPassExperimentRecords(config, ctx), ctx.LogInfo);
                     ModelDiagnosticsReport.WriteFromAccumulator(
-                        mdiagAccumulator, contributions, cal, config, ctx.LogInfo, coAssignment);
+                        mdiagAccumulator, contributions, cal, config, ctx.LogInfo, coAssignment,
+                        ValidityKey(ctx));
                 }
                 else
                 {
-                    ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, cal, config, ctx.LogInfo);
+                    ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, cal,
+                        config, ctx.LogInfo, ValidityKey(ctx));
                 }
             }
         }
@@ -3117,7 +3191,8 @@ namespace pwiz.Osprey.Tasks
                     mdiagAccumulator.ClassByBaseId, ctx.Get<LibraryById>().Value,
                     experiment.Records, ctx.LogInfo);
                 ModelDiagnosticsReport.WriteFromAccumulator(
-                    mdiagAccumulator, mdiagContributions, cal, config, ctx.LogInfo, coAssignment);
+                    mdiagAccumulator, mdiagContributions, cal, config, ctx.LogInfo, coAssignment,
+                    ValidityKey(ctx));
             }
 
             // First-pass protein FDR streamed off the per-file sidecar + parquet scalars
