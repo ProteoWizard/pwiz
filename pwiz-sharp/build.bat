@@ -152,8 +152,16 @@ if %IAGREE%==1 (
         if !WITH_VENDOR_SDKS!==1 set INSTALLER_ARGS=!INSTALLER_ARGS! -WithVendorSdks
         echo ##teamcity[progressMessage 'installer/build.ps1 !INSTALLER_ARGS! ^(uses Release artifacts^)']
         pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\installer\build.ps1" !INSTALLER_ARGS!
+        REM # Fatal, not a warning. Reaching here means ISCC IS present -- the machine
+        REM # that lacks it took the else branch below -- so a failure is a real one.
+        REM # Downgrading it produced a false green: the installer never got built,
+        REM # Installer.Tests then went Inconclusive on "no ProteoWizard-Setup-*.exe
+        REM # found" and reported "Test Run Successful ... Skipped: 2", and the build
+        REM # went green with the vendor-resolution coverage silently not run.
         if !ERRORLEVEL! NEQ 0 (
-            echo ##teamcity[message text='installer build failed; Installer.Tests will skip' status='WARNING']
+            set EXIT=!ERRORLEVEL!
+            set ERROR_TEXT=installer/build.ps1 failed; Installer.Tests cannot run
+            goto error
         )
     ) else (
         echo ##teamcity[message text='Inno Setup ^(ISCC.exe^) not found; skipping installer build and Installer.Tests will skip' status='WARNING']
