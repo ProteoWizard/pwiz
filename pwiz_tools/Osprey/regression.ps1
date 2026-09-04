@@ -1967,6 +1967,39 @@ foreach ($name in $selected) {
             $m3.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
             $summaryLines.Add("$name mode3 (HPC chain==straight): FAIL ($($m3.Issues.Count) issues)")
         }
+
+        # The chain's report must represent BOTH passes. Asserts the PROPERTY the pass-1
+        # diagnostics relay exists for, not that the copy happened - the distinction mode 6
+        # got wrong with "release engaged", and doc 00 states as a standing hazard: "a relay
+        # obligation mode 3 does not stage is an obligation nothing is checking."
+        #
+        # Nothing else here can see this. Every other mode-3 assertion compares the blib and
+        # the FDR sidecars, and none opens the report, so removing the phase2 -> phase3 -> phase4
+        # hop would silently turn the chain's page back into a pass-1-only one with every leg
+        # still green. That was the state before the hop existed.
+        #
+        # completeness.pass2Present is the right signal precisely because it is not a copy
+        # check: it is true only when pass-2 content was ATTACHED at render time, which on the
+        # chain requires the relayed pass-1 product AND the node's own pass-2 fold.
+        if ($cfg.ModelDiagnostics) {
+            $chainHtml = Join-Path (Split-Path $chainBlib -Parent) 'output.model-diagnostics.html'
+            if (-not (Test-Path $chainHtml)) {
+                $overallFail = $true
+                Write-Problem-Tc "$name mode3 (chain report is two-pass): FAIL - no report at $chainHtml"
+                $summaryLines.Add("$name mode3 (chain report is two-pass): FAIL (no report)")
+            } else {
+                $chainDiag = Get-DiagnosticsPayload -HtmlPath $chainHtml
+                if ($chainDiag.completeness.pass2Present) {
+                    $summaryLines.Add("$name mode3 (chain report is two-pass): PASS")
+                } else {
+                    $overallFail = $true
+                    Write-Problem-Tc ("$name mode3 (chain report is two-pass): FAIL - the chain's " +
+                        "report covers the first pass only, so the pass-1 diagnostics product did " +
+                        "not reach the SecondPassFDR node")
+                    $summaryLines.Add("$name mode3 (chain report is two-pass): FAIL (pass-1 only)")
+                }
+            }
+        }
     }
 
     # ---- mode 4: warm re-run cache-hit assertion ----
