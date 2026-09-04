@@ -241,7 +241,32 @@ function Build-VendorCache {
                     if (-not (Test-Path $target)) { Move-Item $f.FullName $target }
                 }
             }
-            Remove-Item $nested -Recurse -Force
+            # By this point everything wanted has been moved out and $nested holds only the
+            # x86/mips subtrees and duplicates -- for Waters, two empty directories. Deleting
+            # it is tidying, not part of building the cache.
+            #
+            # Recursive delete is not reliable enough to bet the build on: on a TeamCity EC2
+            # agent this threw "The directory is not empty" on exactly that two-empty-directory
+            # tree, while the same commit and step passed on the MacCoss agent. Whatever holds
+            # the handle for those milliseconds (the agents' checkout volume behaves unlike
+            # local NTFS -- the same class of difference that makes std::filesystem::canonical
+            # throw there), retrying clears it.
+            #
+            # Leftover FILES would mean the flatten itself did not do its job, so those still
+            # throw. Leftover empty directories get packaged harmlessly, so they only warn:
+            # failing the installer build over them is what cost a CI run.
+            for ($try = 1; $try -le 5 -and (Test-Path $nested); $try++) {
+                Remove-Item $nested -Recurse -Force -ErrorAction SilentlyContinue
+                if (Test-Path $nested) { Start-Sleep -Milliseconds (100 * $try) }
+            }
+            if (Test-Path $nested) {
+                $stragglers = @(Get-ChildItem $nested -Recurse -File -Force -ErrorAction SilentlyContinue)
+                if ($stragglers.Count -gt 0) {
+                    throw ("could not clean $nested after flattening; {0} file(s) left, first: {1}" -f
+                           $stragglers.Count, $stragglers[0].FullName)
+                }
+                Write-Host "      note: left empty $($v.name) vendor_api directories behind (delete kept failing)"
+            }
         }
 
         # Overlay any assembly the build patched. Agilent's BaseCommon / BaseDataAccess are
