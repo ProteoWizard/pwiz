@@ -4,9 +4,9 @@
 # Mirrors the Windows pipeline and its two-variant split:
 #
 #   Windows                                         Linux
-#   ProteoWizard-Sharp-Setup-<ver>.exe              ProteoWizard-Sharp-linux-x64-<ver>.tar.gz
+#   ProteoWizard-Setup-<ver>.exe              ProteoWizard-linux-x64-<ver>.tar.gz
 #     bundles the .NET desktop runtime                self-contained: the runtime is IN the payload
-#   ProteoWizard-Sharp-NoNetRuntime-Setup-<ver>.exe ProteoWizard-Sharp-NoNetRuntime-linux-x64-<ver>.tar.gz
+#   ProteoWizard-NoNetRuntime-Setup-<ver>.exe ProteoWizard-NoNetRuntime-linux-x64-<ver>.tar.gz
 #     needs .NET 8 already installed                  framework-dependent: same requirement
 #
 # "Setup" is dropped for the runtime identifier because a tarball is not an installer; the
@@ -139,8 +139,8 @@ package() {
 }
 
 RC=0
-package self-contained      true  "ProteoWizard-Sharp-$RID-$APP_VERSION"              || RC=1
-package framework-dependent false "ProteoWizard-Sharp-NoNetRuntime-$RID-$APP_VERSION" || RC=1
+package self-contained      true  "ProteoWizard-$RID-$APP_VERSION"              || RC=1
+package framework-dependent false "ProteoWizard-NoNetRuntime-$RID-$APP_VERSION" || RC=1
 
 # Same side-car build.ps1 writes, so packaging tests can pin the version without re-deriving it
 # from a filename.

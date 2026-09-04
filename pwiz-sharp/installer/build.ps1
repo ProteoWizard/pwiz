@@ -13,7 +13,7 @@ End-to-end packaging pipeline:
   4. Download the .NET 10 desktop runtime installer EXE (cached under
      installer/cache/) so we can embed it in the Setup.exe
   5. Compile installer/Setup.iss with Inno Setup's ISCC → installer/build/
-     ProteoWizard-Sharp-Setup.exe (~58 MB, single self-contained installer)
+     ProteoWizard-Setup.exe (~58 MB, single self-contained installer)
 
 The Inno installer asks the user "Install for me / Install for everyone" at
 runtime — drops the dual-MSI complexity of the prior WiX build. .NET 10 prereq
@@ -27,7 +27,12 @@ missing.
 
 #requires -Version 7.0
 param(
-    [switch] $SkipBuild
+    [switch] $SkipBuild,
+    # Also produce ProteoWizard-WithVendorSdks-Setup-<ver>.exe: the bundled-runtime
+    # installer plus every Windows vendor SDK, pre-extracted into VendorSdkLoader's cache.
+    # That variant never contacts raw.githubusercontent.com, which is what makes it usable
+    # in an offline or containerised deployment (see ProteoWizard/container).
+    [switch] $WithVendorSdks
 )
 $ErrorActionPreference = 'Stop'
 
@@ -47,6 +52,7 @@ $msconvertGui    = Join-Path $pwizSharp "Tools/MsConvertGUI/src/MsConvertGUI.csp
 $seems           = Join-Path $pwizSharp "Tools/SeeMS/src/SeeMS.csproj"
 $msconvertGuiOut = Join-Path $pwizSharp "Tools/MsConvertGUI/src/bin/Release/net10.0-windows"
 $seemsOut        = Join-Path $pwizSharp "Tools/SeeMS/src/bin/Release/net10.0-windows"
+$msconvertOut    = Join-Path $pwizSharp "Tools/Commandline/MsConvert/src/bin/Release/net10.0"
 $outDir         = Join-Path $installerDir "build"
 $stagingDir     = Join-Path $outDir "stage"
 $cacheDir       = Join-Path $installerDir "cache"
@@ -122,12 +128,13 @@ function Should-Skip([string] $relName) {
     return $false
 }
 
-function Stage-From([string] $source) {
+function Stage-From([string] $source, [switch] $TopLevelOnly, [string] $DestRoot = $stagingDir) {
     $copied = 0; $bytesCopied = 0L; $bytesSkipped = 0L; $dups = 0
-    Get-ChildItem $source -Recurse -File | ForEach-Object {
+    $items = if ($TopLevelOnly) { Get-ChildItem $source -File } else { Get-ChildItem $source -Recurse -File }
+    $items | ForEach-Object {
         $rel = $_.FullName.Substring($source.Length + 1)
         if (Should-Skip $rel) { $bytesSkipped += $_.Length; return }
-        $dest = Join-Path $stagingDir $rel
+        $dest = Join-Path $DestRoot $rel
         if (Test-Path $dest) { $dups++; return }
         $destDir = Split-Path -Parent $dest
         if (-not (Test-Path $destDir)) { New-Item -ItemType Directory $destDir -Force | Out-Null }
@@ -137,8 +144,159 @@ function Stage-From([string] $source) {
     Write-Host "    from $((Split-Path -Leaf (Split-Path -Parent $source))): $copied new ($([math]::Round($bytesCopied/1MB, 2)) MB), $dups dup, $([math]::Round($bytesSkipped/1MB, 1)) MB skipped"
 }
 
-Stage-From $msconvertGuiOut
-Stage-From $seemsOut
+function Build-Payload([string] $DestRoot) {
+Stage-From $msconvertGuiOut -DestRoot $DestRoot
+Stage-From $seemsOut -DestRoot $DestRoot
+# msconvert's own bin, third: MSConvertGUI's chain builds msconvert.exe, but a referencing
+# project only inherits the referenced project's assemblies, not every transitive package
+# asset it resolved. MsConvert pulls five that MSConvertGUI does not -- notably
+# System.Configuration.ConfigurationManager, which Agilent's MHDAC needs to read
+# BaseDataAccess.dll.config. Staging the GUI alone shipped an msconvert.exe whose Agilent
+# reader died at the first spectrum with "Could not load ... ConfigurationManager".
+#
+# Top level only: this bin also holds a nested win-x64/ RID tree that is a second copy of
+# everything already staged above. Recursing it added 706 files / 238 MB and pushed the
+# installer from 68 MB to 113 MB for five assemblies that all sit in the root.
+Stage-From $msconvertOut -TopLevelOnly -DestRoot $DestRoot
+
+# ...plus msconvert's wiff2/ subdirectory, which MSConvertGUI's bin also lacks. Wiff2LoadContext
+# loads its Cecil-patched Unity.Abstractions and the SDK-matched System.Data.SQLite 1.0.109 from
+# AppContext.BaseDirectory\wiff2; without it the wiff2 ALC initialises against the wrong
+# dependency versions and the read fails later, reaching for SCIEX.Apis.Control.v1 through the
+# default ALC (which no archive supplies). Named explicitly rather than recursing $msconvertOut:
+# the only other subtree there is a win-x64/ RID copy of everything already staged.
+$wiff2Src = Join-Path $msconvertOut "wiff2"
+if (Test-Path $wiff2Src) {
+    $wiff2Dest = Join-Path $DestRoot "wiff2"
+    New-Item -ItemType Directory $wiff2Dest -Force | Out-Null
+    $n = 0
+    Get-ChildItem $wiff2Src -File | ForEach-Object {
+        if (Should-Skip "wiff2\$($_.Name)") { return }
+        Copy-Item $_.FullName (Join-Path $wiff2Dest $_.Name)
+        $n++
+    }
+    Write-Host "    from wiff2/: $n files"
+}
+}
+
+Build-Payload $stagingDir
+
+# 3b. Vendor SDK cache (only for -WithVendorSdks).
+#
+#     Produces one <Vendor>-<ShortSha> directory per Windows pin, laid out exactly as
+#     VendorSdkLoader.EnsureExtracted would have produced it on first use, each with the
+#     .ok marker that tells the loader not to download or extract. Mirrors that method
+#     and FlattenVendorArchiveLayout: 7za with the archive password, then hoist
+#     vendor_api/<Vendor>/** to the top level, dropping wrong-arch subtrees. Keep the two
+#     in step — a layout the loader disagrees with fails as a silent re-download, not an
+#     error. Verify-VendorCache below is the guard against exactly that drift.
+$vendorCacheDir = Join-Path $outDir "vendor-cache"
+
+function Build-VendorCache {
+    $sevenZa = Join-Path $msconvertGuiOut "7za.exe"
+    if (-not (Test-Path $sevenZa)) { throw "7za.exe not found at $sevenZa" }
+    # Same fixed licence-agreement password the runtime loader uses.
+    $pw = "i-agree-to-the-vendor-licenses"
+    $repoRoot = Split-Path -Parent $pwizSharp
+
+    # Versions come from the pin table the generator just rewrote (step 1), so the cache
+    # keys cannot disagree with the table the installed app resolves against.
+    $pinsCs = Join-Path $pwizSharp "pwiz/src/Vendor/Common/VendorSdkPins.generated.cs"
+    $pinsCsText = Get-Content -Raw $pinsCs
+    $versions = @{}
+    foreach ($m in [regex]::Matches($pinsCsText, 'Name:\s*"([^"]+)",\s*[\r\n]+\s*Version:\s*"([^"]+)"')) {
+        $versions[$m.Groups[1].Value] = $m.Groups[2].Value
+    }
+
+    if (Test-Path $vendorCacheDir) { Remove-Item $vendorCacheDir -Recurse -Force }
+    New-Item -ItemType Directory $vendorCacheDir -Force | Out-Null
+
+    $vendors = (Get-Content -Raw $pinsJson | ConvertFrom-Json).vendors
+    foreach ($v in $vendors) {
+        # Windows installer: skip pins that exist only for a non-Windows runtime.
+        if ($v.os -and $v.os -ne 'windows') {
+            Write-Host "    skip $($v.name) (os=$($v.os))"
+            continue
+        }
+        if (-not $versions.ContainsKey($v.name)) {
+            throw "no Version for '$($v.name)' in $pinsCs — did VendorPinsGenerator run?"
+        }
+        $archive = Join-Path $repoRoot $v.path
+        if (-not (Test-Path $archive)) { throw "vendor archive missing: $archive" }
+
+        $dest = Join-Path $vendorCacheDir "$($v.name)-$($versions[$v.name])"
+        New-Item -ItemType Directory $dest -Force | Out-Null
+        & $sevenZa x -y "-p$pw" "-o$dest" $archive | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "7za failed extracting $archive (exit $LASTEXITCODE)" }
+
+        # Flatten vendor_api/<Vendor>/** onto $dest, dropping x86/mips; first file wins.
+        $nested = Join-Path $dest "vendor_api"
+        if (Test-Path $nested) {
+            foreach ($vendorDir in Get-ChildItem $nested -Directory) {
+                foreach ($f in Get-ChildItem $vendorDir.FullName -Recurse -File) {
+                    $rel = $f.FullName.Substring($vendorDir.FullName.Length + 1)
+                    $first = ($rel -split '[\\/]')[0]
+                    if ($first -ieq 'x86' -or $first -ieq 'mips') { continue }
+                    $target = Join-Path $dest $f.Name
+                    if (-not (Test-Path $target)) { Move-Item $f.FullName $target }
+                }
+            }
+            Remove-Item $nested -Recurse -Force
+        }
+
+        # Overlay any assembly the build patched. Agilent's BaseCommon / BaseDataAccess are
+        # Cecil-rewritten by Agilent.csproj to strip Delegate.BeginInvoke, which .NET 5+ removed;
+        # the archive still holds the originals. Extracting straight from the archive therefore
+        # caches an unpatched SDK, and Agilent dies on open with "MassSpecDataReader uses
+        # delegate.BeginInvoke ... cannot open Agilent .d files" — but only for files that reach
+        # the async metadata path, which is why a single-scan fixture does not catch it.
+        foreach ($f in Get-ChildItem $dest -File -Filter *.dll) {
+            $built = Join-Path $msconvertOut $f.Name
+            if ((Test-Path $built) -and ((Get-Item $built).Length -ne $f.Length)) {
+                Copy-Item $built $f.FullName -Force
+                Write-Host "      overlaid build-patched $($f.Name)"
+            }
+        }
+
+        # Shimadzu's natives (IOModuleQTFL and friends) are loaded from this cache directory by
+        # full path, so the loader resolves THEIR imports from here first, not from the directory
+        # holding the executable. The VC++ 2015-2022 runtime they link therefore has to be here
+        # too: app-local is enough on a machine carrying the redistributable, but not in a wine
+        # container, where the reader instead returns a structurally valid mzML with no spectra
+        # at all. MFC140 is the one wine has no builtin for.
+        if ($v.name -eq 'Shimadzu') {
+            foreach ($dll in @('mfc140.dll','msvcp140.dll','concrt140.dll','vcruntime140.dll','vcruntime140_1.dll')) {
+                $src = Join-Path $msconvertOut $dll
+                if (Test-Path $src) { Copy-Item $src (Join-Path $dest $dll) -Force }
+            }
+            Write-Host "      staged VC140 runtime beside the Shimadzu natives"
+        }
+
+        Set-Content -Path (Join-Path $dest ".ok") -NoNewline `
+            -Value "staged by installer/build.ps1 -WithVendorSdks from $($v.path)"
+        $mb = [math]::Round((Get-ChildItem $dest -Recurse -File | Measure-Object Length -Sum).Sum / 1MB, 1)
+        Write-Host "    $($v.name)-$($versions[$v.name]): $mb MB"
+    }
+}
+
+function Verify-VendorCache {
+    # A cache the loader disagrees with degrades to a silent re-download, so assert the
+    # two invariants that would cause it: the .ok marker, and a flattened layout.
+    $dirs = Get-ChildItem $vendorCacheDir -Directory
+    if ($dirs.Count -eq 0) { throw "vendor cache is empty" }
+    foreach ($d in $dirs) {
+        if (-not (Test-Path (Join-Path $d.FullName ".ok"))) { throw "$($d.Name): no .ok marker" }
+        if (Test-Path (Join-Path $d.FullName "vendor_api")) { throw "$($d.Name): vendor_api not flattened" }
+        if (-not (Get-ChildItem $d.FullName -File -Filter *.dll)) { throw "$($d.Name): no DLLs at top level" }
+    }
+    Write-Host "    verified $($dirs.Count) cache directories"
+}
+
+if ($WithVendorSdks) {
+    Write-Host "`n==> vendor SDK cache (-WithVendorSdks)" -ForegroundColor Cyan
+    Build-VendorCache
+    Verify-VendorCache
+}
 
 # 4. Cache the .NET 10 desktop runtime EXE (bundled into Setup.exe). The filename carries
 #    the major version on purpose: the old version-agnostic name meant a machine holding a
@@ -203,12 +361,13 @@ $iss = Join-Path $installerDir "Setup.iss"
 function Invoke-Iscc {
     param(
         [string] $OutputBaseFilename,
-        [string[]] $ExtraDefines = @()
+        [string[]] $ExtraDefines = @(),
+        [string] $Staging = $stagingDir
     )
     Write-Host "`n==> ISCC compile: $OutputBaseFilename" -ForegroundColor Cyan
     $args = @(
         "/Q",
-        "/DStagingDir=$stagingDir",
+        "/DStagingDir=$Staging",
         "/DOutputDir=$outDir",
         "/DOutputBaseFilename=$OutputBaseFilename",
         "/DMyAppVersion=$appVersion"
@@ -221,10 +380,19 @@ function Invoke-Iscc {
 # without overwriting each other (releases, nightlies, cherry-pick verifications,
 # etc. all drop side-by-side into installer/build/ instead of clobbering the
 # previous run's artifact).
-$bundledName = "ProteoWizard-Sharp-Setup-$appVersion"
-$lightName   = "ProteoWizard-Sharp-NoNetRuntime-Setup-$appVersion"
+$bundledName = "ProteoWizard-Setup-$appVersion"
+$lightName   = "ProteoWizard-NoNetRuntime-Setup-$appVersion"
 Invoke-Iscc -OutputBaseFilename $bundledName
 Invoke-Iscc -OutputBaseFilename $lightName -ExtraDefines @("/DNoNetRuntime")
+
+# Pass 3 (opt-in): bundled runtime + the vendor SDK cache. Built on the bundled-runtime
+# variant rather than the light one because its whole reason to exist is deployments that
+# cannot reach the network, and those cannot fetch a .NET runtime either.
+$vendorName = "ProteoWizard-WithVendorSdks-Setup-$appVersion"
+if ($WithVendorSdks) {
+    Invoke-Iscc -OutputBaseFilename $vendorName -Staging $stagingDir `
+        -ExtraDefines @("/DWithVendorSdks", "/DVendorCacheDir=$vendorCacheDir")
+}
 
 # Write the resolved version next to the .exes so Installer.Tests can pin to it
 # without re-deriving from the filename (the date+sha format is build.ps1's
@@ -233,7 +401,9 @@ Set-Content -Path (Join-Path $outDir "installer-version.txt") -Value $appVersion
 
 # 7. Report.
 Write-Host ""
-foreach ($base in @($bundledName, $lightName)) {
+$reportNames = @($bundledName, $lightName)
+if ($WithVendorSdks) { $reportNames += $vendorName }
+foreach ($base in $reportNames) {
     $setupPath = Join-Path $outDir "$base.exe"
     if (-not (Test-Path $setupPath)) {
         Write-Host "MISSING: $setupPath" -ForegroundColor Red

@@ -8,7 +8,7 @@ REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
 REM #             [--require-vendor-support] [--without-mascot]
-REM #             [--automated] [--coverage]
+REM #             [--automated] [--coverage] [--with-vendor-sdks]
 REM #
 REM # Flags:
 REM #   --i-agree-to-the-vendor-licenses
@@ -22,6 +22,16 @@ REM #   --require-vendor-support
 REM #       Fail the build if vendor support isn't enabled. Use in CI to make
 REM #       sure --i-agree was passed, instead of silently building a stripped
 REM #       artifact.
+REM #
+REM #   --with-vendor-sdks
+REM #       Also produce ProteoWizard-WithVendorSdks-Setup-<ver>.exe: the
+REM #       bundled-runtime installer plus every Windows vendor SDK, extracted
+REM #       into VendorSdkLoader's cache. That build needs no network at run
+REM #       time (it carries the .NET runtime too), which is what the wine
+REM #       container needs. Costs ~30 s and ~26 MB over the default variants,
+REM #       so it is opt-in here and passed by tcbuild.bat on CI. No effect
+REM #       without --i-agree-to-the-vendor-licenses: the whole installer step
+REM #       is skipped in that case.
 REM #
 REM #   --without-mascot
 REM #       Disable Mascot (.dat) support in BiblioSpec. msparser is bundled
@@ -60,6 +70,7 @@ set REQUIRE_VENDOR=0
 set AUTOMATED=0
 set COVERAGE=0
 set WITHOUT_MASCOT=0
+set WITH_VENDOR_SDKS=0
 set ERROR_TEXT=
 
 REM # Parse args. First non-flag arg is the configuration (Debug|Release).
@@ -68,6 +79,7 @@ if "%~1"=="" goto endparse
 if /i "%~1"=="--i-agree-to-the-vendor-licenses" (set IAGREE=1) else ^
 if /i "%~1"=="--require-vendor-support" (set REQUIRE_VENDOR=1) else ^
 if /i "%~1"=="--without-mascot" (set WITHOUT_MASCOT=1) else ^
+if /i "%~1"=="--with-vendor-sdks" (set WITH_VENDOR_SDKS=1) else ^
 if /i "%~1"=="--automated" (set AUTOMATED=1) else ^
 if /i "%~1"=="--coverage" (set COVERAGE=1) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
@@ -136,8 +148,10 @@ if %IAGREE%==1 (
     if exist "%ProgramFiles%\Inno Setup 6\ISCC.exe"          set HAVE_ISCC=1
     if exist "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"     set HAVE_ISCC=1
     if !HAVE_ISCC!==1 (
-        echo ##teamcity[progressMessage 'installer/build.ps1 -SkipBuild ^(uses Release artifacts^)']
-        pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\installer\build.ps1" -SkipBuild
+        set INSTALLER_ARGS=-SkipBuild
+        if !WITH_VENDOR_SDKS!==1 set INSTALLER_ARGS=!INSTALLER_ARGS! -WithVendorSdks
+        echo ##teamcity[progressMessage 'installer/build.ps1 !INSTALLER_ARGS! ^(uses Release artifacts^)']
+        pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\installer\build.ps1" !INSTALLER_ARGS!
         if !ERRORLEVEL! NEQ 0 (
             echo ##teamcity[message text='installer build failed; Installer.Tests will skip' status='WARNING']
         )
