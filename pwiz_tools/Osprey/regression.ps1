@@ -581,7 +581,13 @@ function Invoke-OspreyRun {
           # Appends --task <name>. Exists so a leg that re-enters a COMPLETED run (mode 7)
           # replays this function's own argument list rather than a copy of it - a copy is
           # only a self-consistency oracle until the two drift, and the drift is silent.
-          [string]$TaskName)
+          [string]$TaskName,
+          # Return a non-zero exit instead of throwing. For the ONE leg that expects Osprey to
+          # refuse: a partial rescore under --model-diagnostics has no plan source, and the
+          # correct behaviour is a named error with a non-zero exit. Without this the harness
+          # treats that refusal as a crash and ABORTS the remaining legs, so the gate cannot
+          # assert the guard it exists to check.
+          [switch]$AllowNonZeroExit)
     New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
     $logPath = Join-Path $WorkDir $LogName
     $cliArgs = @()
@@ -607,8 +613,11 @@ function Invoke-OspreyRun {
         Pop-Location
         if ($DumpProteinFdr) { Remove-Item Env:OSPREY_DUMP_STAGE7_PROTEIN_FDR -ErrorAction SilentlyContinue }
     }
-    if ($exit -ne 0) { throw "Osprey exited $exit (see $logPath)" }
-    return @{ Wall = $sw.Elapsed; Log = $logPath }
+    if ($exit -ne 0 -and -not $AllowNonZeroExit) { throw "Osprey exited $exit (see $logPath)" }
+    # ExitCode is returned ALWAYS, not just under the switch: a caller that did not opt in never
+    # reaches here on a failure, so the field is unambiguous - it is 0 unless the caller asked to
+    # handle non-zero itself.
+    return @{ Wall = $sw.Elapsed; Log = $logPath; ExitCode = $exit }
 }
 
 # Resolve a dataset's inputs from the extracted read-only data folder.
@@ -2487,30 +2496,55 @@ foreach ($name in $selected) {
 
         $m8Inputs = @($inputs.Mzmls | ForEach-Object { Join-Path $straightDir (Split-Path $_ -Leaf) })
         $rPartial = Invoke-OspreyRun -Mzmls $m8Inputs -Library $inputs.Library -Resolution $cfg.Resolution `
-            -WorkDir $straightDir -LogName 'partial-resume.log' -Spec $cfg -Manifest $inputs.Manifest
+            -WorkDir $straightDir -LogName 'partial-resume.log' -Spec $cfg -Manifest $inputs.Manifest `
+            -AllowNonZeroExit
         $m8Issues = [System.Collections.Generic.List[string]]::new()
 
-        # COUNT. The assertion the defect failed outright: the broken build left the count at the
-        # untouched runs and still reported success.
-        $m8Recon = @(Get-ChildItem $straightDir -Filter '*.scores-reconciled.parquet' -File |
-                     Where-Object { $_.Name -notlike '*.osprey.task' }).Count
-        if ($m8Recon -ne $m8Cut.Runs) {
-            $m8Issues.Add("only $m8Recon of $($m8Cut.Runs) reconciled parquet(s) after the resume; the rescore did not finish the cohort")
+        if ($cfg.ModelDiagnostics) {
+            # This leg FAILS here, and that is the honest answer: under --model-diagnostics the
+            # per-run hydrate is off and no worker bundle exists, so a partial resume cannot
+            # finish the cohort. Reporting PASS because the refusal is well-worded would encode
+            # the limitation into the gate - the exact trap mode 6 is in with "release engaged",
+            # where the assertion checks that a MECHANISM ran rather than that a PROPERTY holds.
+            #
+            # What -AllowNonZeroExit buys is only that the refusal no longer ABORTS the run, so
+            # the legs after this one still execute. It does not make the outcome a pass.
+            #
+            # The guard IS asserted, because a refusal that is silent or unnamed is worse than
+            # one that is loud: before it existed this leg wrote a blib 236 RefSpectra keys short
+            # and reported success.
+            $m8Issues.Add(("cannot finish the cohort under --model-diagnostics: no per-run " +
+                           "hydrate and no worker bundle, so the amputated run has no plan " +
+                           "source. Tracked as the --model-diagnostics work; this leg goes green " +
+                           "when that lands, and needs no change here when it does"))
+            $m8Guard = Test-LogMarker -LogPath $rPartial.Log `
+                -Marker 'still need re-scoring, but this process has no plan to do it' `
+                -Description 'the rescore naming how many runs it cannot finish, and why'
+            foreach ($issue in $m8Guard.Issues) { $m8Issues.Add($issue) }
         }
+        else {
+            # COUNT. The assertion the defect failed outright: the broken build left the count at the
+            # untouched runs and still reported success.
+            $m8Recon = @(Get-ChildItem $straightDir -Filter '*.scores-reconciled.parquet' -File |
+                         Where-Object { $_.Name -notlike '*.osprey.task' }).Count
+            if ($m8Recon -ne $m8Cut.Runs) {
+                $m8Issues.Add("only $m8Recon of $($m8Cut.Runs) reconciled parquet(s) after the resume; the rescore did not finish the cohort")
+            }
 
-        # VISIBILITY. How much was reused has to be STATED, not inferred from what the run does
-        # next; a resume nobody can audit is one nobody can trust after an interruption.
-        $m8Marker = Test-LogMarker -LogPath $rPartial.Log `
-            -Marker 'Rescore resume:' `
-            -Description 'the rescore reporting how many runs it adopted and how many it re-scored'
-        foreach ($issue in $m8Marker.Issues) { $m8Issues.Add($issue) }
+            # VISIBILITY. How much was reused has to be STATED, not inferred from what the run does
+            # next; a resume nobody can audit is one nobody can trust after an interruption.
+            $m8Marker = Test-LogMarker -LogPath $rPartial.Log `
+                -Marker 'Rescore resume:' `
+                -Description 'the rescore reporting how many runs it adopted and how many it re-scored'
+            foreach ($issue in $m8Marker.Issues) { $m8Issues.Add($issue) }
 
-        # VALUE. Finishing is not finishing CORRECTLY. An interrupted run that completes to a
-        # different answer than an uninterrupted one is the failure that actually matters for the
-        # resume promise, and the COUNT check above cannot see it.
-        $m8 = Compare-BlibFull -BlibExpected $m8Expected `
-            -BlibActual (Join-Path $straightDir 'output.blib') -Tolerance $Tolerance
-        foreach ($issue in $m8.Issues) { $m8Issues.Add($issue) }
+            # VALUE. Finishing is not finishing CORRECTLY. An interrupted run that completes to a
+            # different answer than an uninterrupted one is the failure that actually matters for the
+            # resume promise, and the COUNT check above cannot see it.
+            $m8 = Compare-BlibFull -BlibExpected $m8Expected `
+                -BlibActual (Join-Path $straightDir 'output.blib') -Tolerance $Tolerance
+            foreach ($issue in $m8.Issues) { $m8Issues.Add($issue) }
+        }
         Remove-Item $m8Expected -Force -ErrorAction SilentlyContinue
 
         if ($m8Issues.Count -eq 0) {
