@@ -366,6 +366,30 @@ its own survey of the batch.
 matter how large the cohort, and a downstream task starting mid-pipeline finds each
 phase's product already on disk.
 
+**Killing the process is a SUPPORTED OPERATION, not an accident to be survived.** A
+500-file search runs for a day or more, on a machine its owner needs for other things.
+They must be able to stop it whenever they like, for any reason, without knowing which
+moment is safe and without losing more than the file in flight. "Do not interrupt between
+X and Y" is not a constraint this pipeline may impose, because nobody could honour it -
+and a user who believes stopping is risky will instead not run the analysis at all.
+
+That guarantee holds only if **a file's outputs become valid TOGETHER**. Where one file
+has several products, a resume must not be able to read one of them as done and another as
+outstanding, because a kill lands between the two writes eventually - and at 446 files it
+lands there roughly once per run.
+
+This is not hypothetical. On 2026-09-04 a native fault killed a 446-file run between a
+run's reconciled-parquet write and its 2nd-pass sidecar write. The resume then counted that
+file as outstanding (the cohort count reads the sidecar) and skipped it as complete (the
+per-file check read the parquet's stamp) four log lines later: 448 "skipping (outputs
+valid)" lines, zero re-scores, and a .blib silently missing a run. Two notions of "done"
+is the defect, so the fix is one predicate, not a second check.
+
+The gate leg for this is mode 9 in `regression.ps1`, which cuts ONLY the later product and
+asserts the file is re-scored. Note why the pre-existing mode 8 could not catch it: it
+amputates BOTH products, which puts the two checks back into agreement - an interruption
+test has to leave the state an interruption actually leaves, not a tidier one.
+
 ### Write discipline: what makes a file trustworthy
 
 **P8. Every durable artifact commits through `FileSaver`, so presence proves
