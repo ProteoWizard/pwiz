@@ -121,4 +121,24 @@
     </ItemGroup>
   </Target>
 
+  <!-- Visual C++ 2015-2022 runtime, deployed app-local.
+       The native half of the Shimadzu SDK (IOModuleQTFL, CompressedTLMRawDataReader, LSSMngTools
+       and the GCMS IoModules) imports VCRUNTIME140, MSVCP140, CONCRT140 and MFC140 by plain name,
+       so ordinary DLL search finds them beside the assemblies. When one is missing the module
+       fails to load and the reader yields a file with no spectra instead of an error, so a machine
+       that happens to have the redistributable installed hides the dependency; a Wine container
+       has no such install. Ship the copies pwiz already vendors, the same app-local treatment
+       Agilent.csproj gives VC120 and Bruker.csproj gives VC90. -->
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <Vc140CrtDir>$(PwizCppToolsRoot)\Shared\Lib\Microsoft.VC140.CRT\x64</Vc140CrtDir>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <Content Include="$(Vc140CrtDir)\vcruntime140.dll;$(Vc140CrtDir)\vcruntime140_1.dll;$(Vc140CrtDir)\msvcp140.dll;$(Vc140CrtDir)\concrt140.dll;$(Vc140CrtDir)\mfc140.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
 </Project>

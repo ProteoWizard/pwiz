@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.Loader;
+using Pwiz.Vendor.Common;
 
 #pragma warning disable CA1707
 
@@ -52,6 +53,27 @@ internal sealed class Wiff2LoadContext : AssemblyLoadContext
     private static readonly string s_wiff2NativeDir =
         Path.Combine(AppContext.BaseDirectory, "wiff2");
 
+    /// <summary>
+    /// Directory holding <c>SCIEX.Apis.Data.v1.dll</c>: beside the executable for a dev, CI or
+    /// zip build, otherwise the VendorSdkLoader cache.
+    /// </summary>
+    /// <remarks>
+    /// Loading it by an explicit path is what makes this lookup necessary. Everywhere else a
+    /// vendor assembly is bound by name, so VendorSdkLoader's resolver fires and supplies it
+    /// from the cache; <c>LoadFromAssemblyPath</c> never consults a resolver, so an installed
+    /// build — where the staging filter strips the vendor DLLs and the SDK lives only in the
+    /// cache — failed with "Could not load file or assembly '&lt;installdir&gt;\
+    /// SCIEX.Apis.Data.v1.dll'". Same shape as Bruker's CompassXtractActivationContext, which
+    /// calls EnsureExtracted explicitly for the same reason.
+    /// </remarks>
+    private static string ResolveSciexSdkDir()
+    {
+        string appLocal = Path.Combine(AppContext.BaseDirectory, "SCIEX.Apis.Data.v1.dll");
+        return File.Exists(appLocal)
+            ? AppContext.BaseDirectory
+            : VendorSdkLoader.EnsureExtracted("ABI");
+    }
+
     private Wiff2LoadContext() : base("Wiff2", isCollectible: false)
     {
         // Load SCIEX.Apis.Data.v1 into this ALC. The bundled SmartAssembly resources travel
@@ -59,7 +81,7 @@ internal sealed class Wiff2LoadContext : AssemblyLoadContext
         // Load() calls can serve them into this ALC (instead of letting them leak into default
         // ALC via SmartAssembly's AppDomain.AssemblyResolve hook).
         SciexAssembly = LoadFromAssemblyPath(
-            Path.Combine(AppContext.BaseDirectory, "SCIEX.Apis.Data.v1.dll"));
+            Path.Combine(ResolveSciexSdkDir(), "SCIEX.Apis.Data.v1.dll"));
         ExtractBundle();
         // Override Unity.Abstractions with our Cecil-patched copy if present (NOPs the
         // RegisterSerializationHandler that calls Exception.add_SerializeObjectState).
