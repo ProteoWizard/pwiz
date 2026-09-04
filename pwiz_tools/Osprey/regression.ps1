@@ -2483,7 +2483,31 @@ foreach ($name in $selected) {
     #
     # Runs LAST, after mode 7, because it invalidates and rewrites the blib in the
     # straight-through directory; every leg that reads that directory has already run.
-    if (-not $SkipResume) {
+    if (-not $SkipResume -and $cfg.ModelDiagnostics) {
+        # TODO(brendanx): re-enable on the mdiag datasets once --model-diagnostics has a plan
+        # source for a partial resume. The assertions are kept here, disabled, and deliberately
+        # NOT rewritten into something that passes: a leg asserting the well-worded refusal would
+        # encode the limitation as correct behaviour, the trap mode 6 is in with "release
+        # engaged". What they check is that a partial resume under mdiag refuses LOUDLY with a
+        # non-zero exit - correct for a run that cannot finish, and what replaced a silent blib
+        # 236 RefSpectra keys short. What is missing is the CAPABILITY, so no flag or token
+        # retires this; the mdiag work does. Re-enabling means running the resume above and:
+        #
+        #   $m8Issues.Add("cannot finish the cohort under --model-diagnostics: no per-run " +
+        #                 "hydrate and no worker bundle, so the amputated run has no plan source")
+        #   $m8Guard = Test-LogMarker -LogPath $rPartial.Log `
+        #       -Marker 'still need re-scoring, but this process has no plan to do it' `
+        #       -Description 'the rescore naming how many runs it cannot finish, and why'
+        #   foreach ($issue in $m8Guard.Issues) { $m8Issues.Add($issue) }
+        #
+        # Skipped HERE, before the work, not after it. The leg's cost is an invalidation plus a
+        # full Osprey resume, and running that on three of the four datasets only to discard the
+        # result is pure gate time - about 25 minutes across a -Dataset All, spent to learn
+        # nothing. A disabled test should cost nothing, or the next person shortens the gate by
+        # skipping it entirely.
+        $summaryLines.Add("$name mode8 (partial rescore resume): SKIP (TODO(brendanx): needs a --model-diagnostics plan source)")
+    }
+    elseif (-not $SkipResume) {
         Write-Progress-Tc "${name}: partial rescore resume (mode 8)"
         # Captured BEFORE the invalidation: the resume overwrites the blib in place. Mode 1 has
         # already proved this blib matches the committed golden, so comparing against it is
@@ -2499,63 +2523,30 @@ foreach ($name in $selected) {
             -WorkDir $straightDir -LogName 'partial-resume.log' -Spec $cfg -Manifest $inputs.Manifest `
             -AllowNonZeroExit
         $m8Issues = [System.Collections.Generic.List[string]]::new()
-        $m8Skipped = $false
-
-        if ($cfg.ModelDiagnostics) {
-            # TODO(brendanx): re-enable the assertions below once --model-diagnostics has a plan
-            # source for a partial resume. They are DISABLED, not deleted, and not rewritten into
-            # something that passes - a leg that asserted the well-worded refusal would encode
-            # the limitation as correct behaviour, which is the trap mode 6 is in with "release
-            # engaged". Commented out so what we push is green while the work to enable it stays
-            # visible here.
-            #
-            # What they assert: under --model-diagnostics the per-run hydrate is off and no
-            # worker bundle exists, so a partial resume cannot finish the cohort. It refuses,
-            # loudly, with a non-zero exit - which is correct behaviour for a run that cannot
-            # finish, and is what replaced a silent blib 236 RefSpectra keys short. What is
-            # missing is the CAPABILITY, so no flag or token retires this; the mdiag work does.
-            #
-            # $m8Issues.Add(("cannot finish the cohort under --model-diagnostics: no per-run " +
-            #                "hydrate and no worker bundle, so the amputated run has no plan " +
-            #                "source"))
-            # $m8Guard = Test-LogMarker -LogPath $rPartial.Log `
-            #     -Marker 'still need re-scoring, but this process has no plan to do it' `
-            #     -Description 'the rescore naming how many runs it cannot finish, and why'
-            # foreach ($issue in $m8Guard.Issues) { $m8Issues.Add($issue) }
-            $summaryLines.Add("$name mode8 (partial rescore resume): SKIP (TODO(brendanx): needs a --model-diagnostics plan source)")
-            $m8Skipped = $true
+        # COUNT. The assertion the defect failed outright: the broken build left the count at the
+        # untouched runs and still reported success.
+        $m8Recon = @(Get-ChildItem $straightDir -Filter '*.scores-reconciled.parquet' -File |
+                     Where-Object { $_.Name -notlike '*.osprey.task' }).Count
+        if ($m8Recon -ne $m8Cut.Runs) {
+            $m8Issues.Add("only $m8Recon of $($m8Cut.Runs) reconciled parquet(s) after the resume; the rescore did not finish the cohort")
         }
-        else {
-            # COUNT. The assertion the defect failed outright: the broken build left the count at the
-            # untouched runs and still reported success.
-            $m8Recon = @(Get-ChildItem $straightDir -Filter '*.scores-reconciled.parquet' -File |
-                         Where-Object { $_.Name -notlike '*.osprey.task' }).Count
-            if ($m8Recon -ne $m8Cut.Runs) {
-                $m8Issues.Add("only $m8Recon of $($m8Cut.Runs) reconciled parquet(s) after the resume; the rescore did not finish the cohort")
-            }
 
-            # VISIBILITY. How much was reused has to be STATED, not inferred from what the run does
-            # next; a resume nobody can audit is one nobody can trust after an interruption.
-            $m8Marker = Test-LogMarker -LogPath $rPartial.Log `
-                -Marker 'Rescore resume:' `
-                -Description 'the rescore reporting how many runs it adopted and how many it re-scored'
-            foreach ($issue in $m8Marker.Issues) { $m8Issues.Add($issue) }
+        # VISIBILITY. How much was reused has to be STATED, not inferred from what the run does
+        # next; a resume nobody can audit is one nobody can trust after an interruption.
+        $m8Marker = Test-LogMarker -LogPath $rPartial.Log `
+            -Marker 'Rescore resume:' `
+            -Description 'the rescore reporting how many runs it adopted and how many it re-scored'
+        foreach ($issue in $m8Marker.Issues) { $m8Issues.Add($issue) }
 
-            # VALUE. Finishing is not finishing CORRECTLY. An interrupted run that completes to a
-            # different answer than an uninterrupted one is the failure that actually matters for the
-            # resume promise, and the COUNT check above cannot see it.
-            $m8 = Compare-BlibFull -BlibExpected $m8Expected `
-                -BlibActual (Join-Path $straightDir 'output.blib') -Tolerance $Tolerance
-            foreach ($issue in $m8.Issues) { $m8Issues.Add($issue) }
-        }
+        # VALUE. Finishing is not finishing CORRECTLY. An interrupted run that completes to a
+        # different answer than an uninterrupted one is the failure that actually matters for the
+        # resume promise, and the COUNT check above cannot see it.
+        $m8 = Compare-BlibFull -BlibExpected $m8Expected `
+            -BlibActual (Join-Path $straightDir 'output.blib') -Tolerance $Tolerance
+        foreach ($issue in $m8.Issues) { $m8Issues.Add($issue) }
         Remove-Item $m8Expected -Force -ErrorAction SilentlyContinue
 
-        if ($m8Skipped) {
-            # The mdiag arm already recorded its own SKIP line above. Falling through would
-            # report PASS on an empty issue list, which is the "green over a real gap" the
-            # TODO(brendanx) block exists to avoid claiming.
-        }
-        elseif ($m8Issues.Count -eq 0) {
+        if ($m8Issues.Count -eq 0) {
             $summaryLines.Add("$name mode8 (partial rescore resume): PASS ($($m8Cut.Cut) of $($m8Cut.Runs) run(s) re-scored)")
         } else {
             $overallFail = $true
