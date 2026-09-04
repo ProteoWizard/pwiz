@@ -1559,6 +1559,52 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             }
 
             var hist = TallyRunCountHistogram(perRunSets, n);
+            int[] entHistOrNull = entRunSets == null ? null : TallyRunCountHistogram(entRunSets, n);
+            int[] cumUnionEntOrNull = null;
+            if (entRunSets != null)
+            {
+                cumUnionEntOrNull = new int[n];
+                var entUnionSet = new HashSet<string>(StringComparer.Ordinal);
+                for (int i = 0; i < n; i++)
+                {
+                    entUnionSet.UnionWith(entRunSets[i]);
+                    cumUnionEntOrNull[i] = entUnionSet.Count;
+                }
+            }
+            return AssembleCrossRunView(perRunCount, cumUnion, cumIntersection, hist,
+                entHistOrNull, cumUnionEntOrNull, n, r);
+        }
+
+        /// <summary>
+        /// Streamed counterpart of the set-based <see cref="ComputeCrossRunView(List{HashSet{string}}, List{HashSet{string}}, int, double)"/>:
+        /// same view, from state folded one run at a time instead of from N retained per-run sets.
+        ///
+        /// <para>The two overloads share <see cref="AssembleCrossRunView"/>, which is every line
+        /// of arithmetic in this view. They differ ONLY in how the four arrays and two histograms
+        /// are produced, so the equality that has to hold is "do the streams produce the same
+        /// arrays as the loop" - which is what
+        /// <c>ModelDiagnosticsDataTest.TestStreamingAccumulatorMatchesBatch</c> already asserts on
+        /// every build. The resident caller keeps the set-based overload deliberately: changing
+        /// both would leave two implementations that can agree with each other and disagree with
+        /// what they replaced.</para>
+        /// </summary>
+        private static CrossRunView ComputeCrossRunView(Accumulator.CrossRunStream main,
+            Accumulator.CrossRunStream ent, int n, double r)
+        {
+            return AssembleCrossRunView(main.PerRunCount, main.CumUnion, main.CumIntersection,
+                HistogramFromRunCounts(main.RunCount, n),
+                ent == null ? null : HistogramFromRunCounts(ent.RunCount, n),
+                ent?.CumUnion, n, r);
+        }
+
+        /// <summary>
+        /// Everything the cross-run view computes once its per-run arrays and run-count
+        /// histograms exist. Shared by the set-based and streamed producers so neither can drift
+        /// in the arithmetic - only in how it arrives at the inputs.
+        /// </summary>
+        private static CrossRunView AssembleCrossRunView(int[] perRunCount, int[] cumUnion,
+            int[] cumIntersection, int[] hist, int[] entHist, int[] cumUnionEnt, int n, double r)
+        {
             int half = (n + 1) / 2;                     // ceil(n/2)
             int atLeastHalf = 0;
             // Start at max(half, 1): hist is indexed k-1, so k must be >= 1. Guards the
@@ -1589,9 +1635,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // n_t = hist[k], entrapment n_p = entHist[k]). The k=1 entry on the
             // experiment view answers whether the exp-q-surviving singletons are real
             // rare biology (FDP ~ nominal) or over-admitted 1-hit-wonders (FDP >> nominal).
-            if (entRunSets != null)
+            if (entHist != null)
             {
-                var entHist = TallyRunCountHistogram(entRunSets, n);
                 var fdp = new double[n];
                 for (int k = 0; k < n; k++)
                 {
@@ -1611,13 +1656,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // the union accretes fresh FPs and this climbs with i; the experiment-wide
                 // gate bounds the dataset-wide error, so its curve stays far flatter. The
                 // gap at i = n is the empirical Collins/Rosenberger run-vs-global FDR effect.
-                var cumUnionEnt = new int[n];
                 var unionFdp = new double[n];
-                var entUnion = new HashSet<string>(StringComparer.Ordinal);
                 for (int i = 0; i < n; i++)
                 {
-                    entUnion.UnionWith(entRunSets[i]);
-                    cumUnionEnt[i] = entUnion.Count;
                     int ntU = cumUnion[i], npU = cumUnionEnt[i];
                     unionFdp[i] = ntU + npU > 0 ? (1.0 + 1.0 / r) * npU / (ntU + npU) : double.NaN;
                 }
@@ -1643,6 +1684,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     runCount[key] = c + 1;
                 }
             }
+            return HistogramFromRunCounts(runCount, n);
+        }
+
+        /// <summary>
+        /// The histogram step alone, over a key -> run-count map. Factored out so the streamed
+        /// producer - which maintains that map as it folds instead of building it from retained
+        /// sets - bins it with the identical code rather than a copy that can drift.
+        /// </summary>
+        private static int[] HistogramFromRunCounts(IReadOnlyDictionary<string, int> runCount, int n)
+        {
             var hist = new int[n];
             foreach (var c in runCount.Values)
             {

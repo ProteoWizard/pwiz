@@ -84,12 +84,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private readonly int[] _fileDecoys;
             private readonly int[] _fileEntrap;
 
-            // Per-file passing key-sets for the cross-run reproducibility view
-            // (== BuildCrossRunDetection): real targets (run/exp gate) + entrapment (run/exp gate).
-            private readonly List<HashSet<string>> _runSets;
-            private readonly List<HashSet<string>> _expSets;
-            private readonly List<HashSet<string>> _entRunSets;
-            private readonly List<HashSet<string>> _entExpSets;
+            // Cross-run reproducibility membership (== BuildCrossRunDetection): real targets
+            // (run/exp gate) + entrapment (run/exp gate).
+            //
+            // FOLDED per run, not RETAINED per run. These were four List<HashSet<string>> sized
+            // _nFiles - one passing-key set per run - which is the O(runs x entries) shape doc 00
+            // names as "the single failure mode this architecture exists to prevent". Measured on
+            // a 446-run CHS cohort: ~94 MB per run and still climbing at run 263, projecting
+            // ~72 GB against a 63.7 GB box, so --model-diagnostics could not describe the cohort
+            // it was asked about. Each stream now holds O(distinct) running state plus ONE run's
+            // keys, and the view it produces is unchanged.
+            private readonly CrossRunStream _runStream;
+            private readonly CrossRunStream _expStream;
+            private readonly CrossRunStream _entRunStream;
+            private readonly CrossRunStream _entExpStream;
             private bool _anyEntrapment;
 
             // Win fraction: base_id -> [best target score, best decoy score] + target-side class
@@ -136,10 +144,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 _fileTargets = new int[_nFiles];
                 _fileDecoys = new int[_nFiles];
                 _fileEntrap = new int[_nFiles];
-                _runSets = NewSets(_nFiles);
-                _expSets = NewSets(_nFiles);
-                _entRunSets = NewSets(_nFiles);
-                _entExpSets = NewSets(_nFiles);
+                _runStream = new CrossRunStream(_nFiles);
+                _expStream = new CrossRunStream(_nFiles);
+                _entRunStream = new CrossRunStream(_nFiles);
+                _entExpStream = new CrossRunStream(_nFiles);
             }
 
             /// <summary>
@@ -151,13 +159,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public IReadOnlyDictionary<uint, EntrapmentClass> ClassByBaseId => _classByBaseId;
 
-            private static List<HashSet<string>> NewSets(int n)
-            {
-                var list = new List<HashSet<string>>(n);
-                for (int i = 0; i < n; i++)
-                    list.Add(new HashSet<string>(StringComparer.Ordinal));
-                return list;
-            }
 
             /// <summary>
             /// Fold one scored, pre-compaction first-pass row into the reduced state, mirroring the
@@ -231,16 +232,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         bool expOk = q.EffectiveExperimentQvalue(_fdrLevel) <= _runFdr;
                         if (isEntrap)
                         {
-                            _entRunSets[fileIdx].Add(key);
+                            _entRunStream.Add(fileIdx, key);
                             if (expOk)
-                                _entExpSets[fileIdx].Add(key);
+                                _entExpStream.Add(fileIdx, key);
                             _anyEntrapment = true;
                         }
                         else
                         {
-                            _runSets[fileIdx].Add(key);
+                            _runStream.Add(fileIdx, key);
                             if (expOk)
-                                _expSets[fileIdx].Add(key);
+                                _expStream.Add(fileIdx, key);
                         }
                     }
                 }
@@ -338,11 +339,19 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 data.IdYield = BuildIdYield(precs);
 
                 double r = _entrapmentRatio > 0 ? _entrapmentRatio : 1.0;
+                // Close the run in progress and any trailing runs that contributed nothing, so
+                // every file index has its entry - the batch loop gives an empty set the same
+                // treatment. Same obligation as FrontierFlushFile below, for the same reason.
+                _runStream.Finish();
+                _expStream.Finish();
+                _entRunStream.Finish();
+                _entExpStream.Finish();
+
                 data.CrossRun = new CrossRunDetection
                 {
                     RunNames = _runNames,
-                    PerRun = ComputeCrossRunView(_runSets, _anyEntrapment ? _entRunSets : null, _nFiles, r),
-                    Experiment = ComputeCrossRunView(_expSets, _anyEntrapment ? _entExpSets : null, _nFiles, r),
+                    PerRun = ComputeCrossRunView(_runStream, _anyEntrapment ? _entRunStream : null, _nFiles, r),
+                    Experiment = ComputeCrossRunView(_expStream, _anyEntrapment ? _entExpStream : null, _nFiles, r),
                 };
 
                 data.WinFraction = BuildWinFractionFromReduced(_bt, _tClass);
@@ -358,6 +367,97 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
 
                 return data;
+            }
+
+            /// <summary>
+            /// One cross-run membership reduction, folded run by run instead of retained run by
+            /// run. Replaces a <c>List&lt;HashSet&lt;string&gt;&gt;</c> of N per-run key sets with
+            /// O(distinct) running state plus ONE run's keys.
+            ///
+            /// <para>The reductions are exactly the ones the set-based
+            /// <c>ComputeCrossRunView</c> loop performs, executed as each run completes rather
+            /// than over N retained sets at the end: the per-run passing count, the cumulative
+            /// union, the cumulative intersection, and the per-key run-count tally the histogram
+            /// is binned from. Nothing here is a different formula - only a different moment.</para>
+            ///
+            /// <para><b>A run that contributes no rows still gets its entry.</b> The batch loop
+            /// walks every index and hands an empty set to each, so a run whose rows were all
+            /// filtered - or which had none at all, and for which <see cref="Add"/> is therefore
+            /// never called - must still record its count, its union and its (empty) intersection.
+            /// <see cref="CloseThrough"/> is what closes those skipped indices, and it is the one
+            /// place a streamed reduction can silently disagree with the batch one.</para>
+            /// </summary>
+            internal sealed class CrossRunStream
+            {
+                private readonly int _nFiles;
+                private readonly HashSet<string> _current = new HashSet<string>(StringComparer.Ordinal);
+                private readonly HashSet<string> _union = new HashSet<string>(StringComparer.Ordinal);
+                private readonly Dictionary<string, int> _runCount =
+                    new Dictionary<string, int>(StringComparer.Ordinal);
+                // Null until the first run closes, mirroring the batch loop's `inter == null`
+                // seed: the intersection starts as run 0's set, not as the empty set.
+                private HashSet<string> _inter;
+                private int _curFile = -1;
+
+                internal CrossRunStream(int nFiles)
+                {
+                    _nFiles = nFiles;
+                    PerRunCount = new int[nFiles];
+                    CumUnion = new int[nFiles];
+                    CumIntersection = new int[nFiles];
+                }
+
+                internal int[] PerRunCount { get; }
+                internal int[] CumUnion { get; }
+                internal int[] CumIntersection { get; }
+                internal IReadOnlyDictionary<string, int> RunCount => _runCount;
+
+                /// <summary>Record <paramref name="key"/> as passing in run <paramref name="fileIdx"/>.
+                /// Rows arrive in file-major order, so a change of index closes the previous run.</summary>
+                internal void Add(int fileIdx, string key)
+                {
+                    if (fileIdx != _curFile)
+                    {
+                        CloseThrough(fileIdx);
+                        _curFile = fileIdx;
+                    }
+                    _current.Add(key);
+                }
+
+                /// <summary>Close the run in progress and every remaining run, so all
+                /// <see cref="_nFiles"/> entries are populated however few runs contributed.</summary>
+                internal void Finish()
+                {
+                    CloseThrough(_nFiles);
+                    _curFile = _nFiles;
+                }
+
+                /// <summary>
+                /// Close each file index from the one in progress up to (but excluding)
+                /// <paramref name="target"/>. The run in progress closes with the keys it
+                /// gathered; every index between it and the target closes EMPTY, which is what
+                /// the batch loop does for a run whose set holds nothing.
+                /// </summary>
+                private void CloseThrough(int target)
+                {
+                    for (int i = Math.Max(_curFile, 0); i < target && i < _nFiles; i++)
+                    {
+                        PerRunCount[i] = _current.Count;
+                        _union.UnionWith(_current);
+                        CumUnion[i] = _union.Count;
+                        if (_inter == null)
+                            _inter = new HashSet<string>(_current, StringComparer.Ordinal);
+                        else
+                            _inter.IntersectWith(_current);
+                        CumIntersection[i] = _inter.Count;
+                        foreach (var key in _current)
+                        {
+                            _runCount.TryGetValue(key, out int c);
+                            _runCount[key] = c + 1;
+                        }
+                        _current.Clear();
+                    }
+                }
             }
         }
     }
