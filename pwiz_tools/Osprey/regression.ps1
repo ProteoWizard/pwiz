@@ -2571,7 +2571,19 @@ foreach ($name in $selected) {
     #
     # Runs after mode 8 and rebuilds from the same directory, so it inherits a cohort mode 8
     # has already restored to whole.
-    if (-not $SkipResume) {
+    if (-not $SkipResume -and $cfg.ModelDiagnostics) {
+        # SKIP, not FAIL, and the distinction is deliberate. This leg's property - a half-done
+        # file is RE-SCORED rather than skipped - requires the resume to be able to rescore at
+        # all, and under --model-diagnostics it cannot: no per-run hydrate, no worker bundle, so
+        # no plan source. Mode 8 already asserts that exact gap on this dataset and fails on it.
+        # A second leg failing for the same reason adds a red without adding information, and
+        # three of the four datasets carry mdiag - so it would be three extra reds all saying
+        # what mode 8 already said. Same shape as mode 3's own mdiag skip.
+        #
+        # This goes green on its own when the mdiag work lands, with no edit here.
+        $summaryLines.Add("$name mode9 (crash-shaped half-done resume): SKIP (--model-diagnostics has no plan source; mode 8 asserts that gap)")
+    }
+    elseif (-not $SkipResume) {
         Write-Progress-Tc "${name}: crash-shaped half-done resume (mode 9)"
         $m9Expected = Join-Path $straightDir 'output.blib.premode9'
         Copy-Item (Join-Path $straightDir 'output.blib') $m9Expected -Force
