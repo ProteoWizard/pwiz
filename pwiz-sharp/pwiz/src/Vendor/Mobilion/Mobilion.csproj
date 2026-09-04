@@ -25,6 +25,11 @@
     <ProjectReference Include="..\..\Common\Common.csproj" />
     <ProjectReference Include="..\..\MsData\MsData.csproj" />
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
+    <!-- References Vendor.Common directly, as Bruker and Sciex do, and for the same reason:
+         MobilionShim's static import of MBI_SDK bypasses every resolver, so MobilionShimNative
+         has to fetch the archive itself via EnsureExtracted. Vendor.Common references only
+         Util, so this adds no cycle. -->
+    <ProjectReference Include="..\Common\Vendor.Common.csproj" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
