@@ -378,11 +378,8 @@ namespace pwiz.Osprey.Tasks
                     // sidecar left by a build before the v3 -> v4 record change satisfied this
                     // gate and made the WHOLE Stage 6 rescore a no-op - the run then finished
                     // green carrying 1st-pass q-values into the picked-protein FDR and the .blib.
-                    if (FdrScoresSidecar.IsCurrentFormat(FdrScoresSidecar.Pass2Path(inputFile),
-                                                         FdrScoresSidecar.Pass.SecondPass))
-                    {
+                    if (Pass2SidecarCurrent(inputFile))
                         pass2Present++;
-                    }
                 }
             }
             bool allPass2Present = pass2Expected > 0 && pass2Present == pass2Expected;
@@ -1591,6 +1588,25 @@ namespace pwiz.Osprey.Tasks
         /// completed. Otherwise clears any stale sidecar so a mid-Run crash
         /// leaves no false-positive, and returns false.
         /// </summary>
+        /// <summary>
+        /// Whether <paramref name="inputFile"/> carries a READABLE current 2nd-pass sidecar.
+        ///
+        /// <para>ONE definition, called by both the cohort-level count in <see cref="Run"/> and
+        /// the per-file skip in <see cref="TryResumeRescoredFile"/>. They used to ask different
+        /// questions - the count asked this, the skip asked whether the reconciled parquet was
+        /// stamped - and a crash between the two writes made them disagree about the same file
+        /// in the same run. Two notions of "done" is the defect; this is the fix.</para>
+        ///
+        /// <para>Presence is not readability: a bare File.Exists cannot see a version, and a
+        /// sidecar from before the v3 -> v4 record change once satisfied the count and made the
+        /// whole Stage 6 rescore a no-op.</para>
+        /// </summary>
+        private static bool Pass2SidecarCurrent(string inputFile)
+        {
+            return FdrScoresSidecar.IsCurrentFormat(
+                FdrScoresSidecar.Pass2Path(inputFile), FdrScoresSidecar.Pass.SecondPass);
+        }
+
         private bool TryResumeRescoredFile(
             int fileNum, int nTotalFiles, string fileName,
             List<FdrEntry> fdrEntries, RescorePassInputs inputs, PipelineContext ctx)
@@ -1603,8 +1619,29 @@ namespace pwiz.Osprey.Tasks
             string reconciledPath = hasParquetPath
                 ? ParquetScoreCache.ReconciledPathFromScoresPath(perFileParquetPath)
                 : null;
+            // A file is done when BOTH of its products are, not just the parquet. A crash
+            // between the reconciled-parquet write and the 2nd-pass sidecar write leaves a file
+            // whose parquet stamp is valid and whose sidecar does not exist, and this arm used
+            // to read only the stamp - so the same run would COUNT the file as outstanding
+            // ("445 of 446 run(s) already carry a current 2nd-pass sidecar; re-scoring the
+            // remaining 1") and then skip it as complete four lines later, rescoring nothing.
+            // Observed for real: a native AccessViolation killed a 446-file run mid-stamp at
+            // 02:00 on 2026-09-04, and the resume silently dropped that run's 2nd-pass data.
+            //
+            // Mode 8 cannot present this state - it amputates BOTH products, so the two notions
+            // agree. Only a crash between the two writes splits them.
+            //
+            // Gated on Pass2Worker because the sidecar only exists where the per-file half of
+            // the second pass runs; the retrain modes recompute over the whole pool and write
+            // none, and demanding one there would re-score every file forever.
+            bool pass2Done = inputs.Pass2Worker == null ||
+                             (inputs.FileNameToIdx.TryGetValue(fileName, out int inputIdx) &&
+                              inputs.Config.InputFiles != null &&
+                              inputIdx < inputs.Config.InputFiles.Count &&
+                              Pass2SidecarCurrent(inputs.Config.InputFiles[inputIdx]));
             if (hasParquetPath
-                && PerFileResumeDriver.IsCurrent(reconciledPath, Name, inputs.TaskValidityKey))
+                && PerFileResumeDriver.IsCurrent(reconciledPath, Name, inputs.TaskValidityKey)
+                && pass2Done)
             {
                 ctx.LogInfo(string.Format(
                     @"[file] {0}/{1} {2}: skipping (outputs valid)",
