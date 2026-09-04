@@ -2557,6 +2557,65 @@ foreach ($name in $selected) {
         }
     }
 
+    # ---- mode 9: a CRASH-shaped half-done file is re-scored, not skipped -----------
+    # The state mode 8 structurally cannot present. The rescore writes a run's reconciled
+    # parquet, stamps it, and only then writes the 2nd-pass sidecar; a process that dies
+    # between those two leaves a file the cohort count calls outstanding and the per-file
+    # skip calls complete. Mode 8 amputates BOTH products, so its two checks agree and the
+    # split never appears.
+    #
+    # It is not hypothetical: a native AccessViolation killed a 446-file run mid-stamp on
+    # 2026-09-04, and the resume then logged 448 "skipping (outputs valid)" lines and ZERO
+    # rescores - in a run whose own header said one file still needed re-scoring. The blib
+    # came out silently missing that run.
+    #
+    # Runs after mode 8 and rebuilds from the same directory, so it inherits a cohort mode 8
+    # has already restored to whole.
+    if (-not $SkipResume) {
+        Write-Progress-Tc "${name}: crash-shaped half-done resume (mode 9)"
+        $m9Expected = Join-Path $straightDir 'output.blib.premode9'
+        Copy-Item (Join-Path $straightDir 'output.blib') $m9Expected -Force
+        $m9Cut = Invoke-PartialRescoreInvalidation -WorkDir $straightDir -Pass2SidecarOnly
+        Write-Host ("  cut the 2nd-pass sidecar for {0} of {1} run(s), leaving their reconciled parquets stamped" -f
+            $m9Cut.Cut, $m9Cut.Runs)
+
+        $m9Inputs = @($inputs.Mzmls | ForEach-Object { Join-Path $straightDir (Split-Path $_ -Leaf) })
+        $r9 = Invoke-OspreyRun -Mzmls $m9Inputs -Library $inputs.Library -Resolution $cfg.Resolution `
+            -WorkDir $straightDir -LogName 'crash-shaped-resume.log' -Spec $cfg -Manifest $inputs.Manifest `
+            -AllowNonZeroExit
+        $m9Issues = [System.Collections.Generic.List[string]]::new()
+
+        # THE assertion. A run that skips the cut files re-scores nothing and still exits 0,
+        # which is exactly how this shipped: the count and the skip disagreed and nobody
+        # compared them. Requiring a rescore LINE is what makes the disagreement visible.
+        $m9Rescored = @(Select-String -Path $r9.Log -Pattern 'Re-scoring file ' -SimpleMatch `
+            -ErrorAction SilentlyContinue)
+        if ($m9Rescored.Count -lt $m9Cut.Cut) {
+            $m9Issues.Add((("only {0} file(s) were re-scored after cutting {1} run(s)' 2nd-pass " +
+                "sidecar - the resume treated a half-done file as complete, which is the " +
+                "silent-drop defect this leg exists for") -f $m9Rescored.Count, $m9Cut.Cut))
+        }
+        if ($r9.ExitCode -ne 0) {
+            $m9Issues.Add("the resume exited $($r9.ExitCode); a recoverable half-done file must not fail the run")
+        }
+
+        # VALUE. Finishing is not finishing correctly - the re-scored file has to land the
+        # same answer the uninterrupted run did.
+        $m9Blib = Compare-BlibFull -BlibExpected $m9Expected `
+            -BlibActual (Join-Path $straightDir 'output.blib') -Tolerance $Tolerance
+        foreach ($issue in $m9Blib.Issues) { $m9Issues.Add($issue) }
+        Remove-Item $m9Expected -Force -ErrorAction SilentlyContinue
+
+        if ($m9Issues.Count -eq 0) {
+            $summaryLines.Add("$name mode9 (crash-shaped half-done resume): PASS ($($m9Cut.Cut) of $($m9Cut.Runs) run(s) re-scored)")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode9 (crash-shaped half-done resume): FAIL - $($m9Issues.Count) issue(s)"
+            $m9Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode9 (crash-shaped half-done resume): FAIL ($($m9Issues.Count) issues)")
+        }
+    }
+
     # All legs for this dataset are done -- free its scratch now so peak disk stays
     # at ~one dataset (the next dataset / the perf-gate step gets the space back).
     Remove-Scratch (Join-Path $runRoot $name)

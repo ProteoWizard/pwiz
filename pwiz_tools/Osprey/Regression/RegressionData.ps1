@@ -298,19 +298,40 @@ function Invoke-ResumeInvalidation {
 function Invoke-PartialRescoreInvalidation {
     param(
         [Parameter(Mandatory=$true)][string]$WorkDir,
-        [int]$KeepRuns = -1
+        [int]$KeepRuns = -1,
+        # Cut ONLY the 2nd-pass sidecars, leaving each cut run's reconciled parquet AND its
+        # PerFileRescoring stamp in place. This is the state a CRASH leaves and the ordinary
+        # amputation cannot: the rescore writes the reconciled parquet, stamps it, and only then
+        # writes the 2nd-pass sidecar, so a process that dies between those two leaves a file
+        # that one resume check calls done and another calls outstanding.
+        #
+        # A real 446-file run died exactly there (native AccessViolation, 2026-09-04 02:00) and
+        # the resume then silently dropped that run: 448 "skipping (outputs valid)" lines, zero
+        # rescores, in a run whose own header said one file still needed re-scoring. Removing
+        # BOTH products - what this function does by default - makes the two checks agree again,
+        # which is precisely why the default could never have caught it.
+        [switch]$Pass2SidecarOnly
     )
 
     # Suffixes carry the producing task's Name, as Invoke-ResumeInvalidation's do, so a rename on
     # the C# side breaks this loudly rather than matching zero files.
-    $suffixes = @(
-        '.scores-reconciled.parquet',
-        '.scores-reconciled.parquet.PerFileRescoring.osprey.task',
-        '.2nd-pass.fdr_scores.bin',
-        '.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task',
-        '.2nd-pass.fdr_decoys.bin',
-        '.2nd-pass.fdr_decoys.bin.PerFileRescoring.osprey.task'
-    )
+    $suffixes = if ($Pass2SidecarOnly) {
+        @(
+            '.2nd-pass.fdr_scores.bin',
+            '.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task',
+            '.2nd-pass.fdr_decoys.bin',
+            '.2nd-pass.fdr_decoys.bin.PerFileRescoring.osprey.task'
+        )
+    } else {
+        @(
+            '.scores-reconciled.parquet',
+            '.scores-reconciled.parquet.PerFileRescoring.osprey.task',
+            '.2nd-pass.fdr_scores.bin',
+            '.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task',
+            '.2nd-pass.fdr_decoys.bin',
+            '.2nd-pass.fdr_decoys.bin.PerFileRescoring.osprey.task'
+        )
+    }
     $stems = @(Get-ChildItem -Path $WorkDir -File -Filter '*.scores-reconciled.parquet' |
                Where-Object { $_.Name -notlike '*.osprey.task' } |
                ForEach-Object { $_.Name -replace '\.scores-reconciled\.parquet$', '' } |
