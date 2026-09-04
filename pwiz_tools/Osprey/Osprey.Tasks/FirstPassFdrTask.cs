@@ -928,10 +928,31 @@ namespace pwiz.Osprey.Tasks
             // PerFileRescoring worker, which never rebuilds the pool, does not pay it at all.
             var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
-            RescoreHydration.ReadGapFillAndCalibrations(
-                perFileParquetPaths.Values, perFileGapFill, refinedCalibrations,
-                ctx.Get<SequencePool>().Value);
-            _perFileGapFillForRescore = perFileGapFill;
+            var sequencePool = ctx.Get<SequencePool>().Value;
+            // ONE read fills BOTH maps, so both byproducts share a single build guarded here
+            // rather than each carrying its own factory - two factories over the same two
+            // dictionaries would read every envelope twice for whoever asked second.
+            bool envelopesRead = false;
+            Action readEnvelopes = () =>
+            {
+                if (envelopesRead)
+                    return;
+                envelopesRead = true;
+                var sw = Stopwatch.StartNew();
+                RescoreHydration.ReadGapFillAndCalibrations(
+                    perFileParquetPaths.Values, perFileGapFill, refinedCalibrations, sequencePool);
+                ctx.LogInfo(string.Format(
+                    @"Read gap-fill and refined calibrations from {0} run envelope(s) in {1:F1}s",
+                    perFileGapFill.Count, sw.Elapsed.TotalSeconds));
+            };
+            // NOT assigned to _perFileGapFillForRescore. That field's only reader is the release
+            // below, and doing so would force the read right here - deferring it and then
+            // immediately demanding it. The release does not need it: see the note at its call
+            // site, which already says the analysis-wide retained set alone is the right
+            // predicate on THIS path because every run's gap-fill target is already inside the
+            // set the planner wrote. Leaving it null makes that stated reasoning the actual
+            // behaviour instead of a claim next to a redundant union.
+            _perFileGapFillForRescore = null;
 
             // Release on this path too, for the reason Rehydrate's own release block gives: this
             // is a RESUME, which is what an operator runs after the OOM the release exists to
@@ -961,8 +982,10 @@ namespace pwiz.Osprey.Tasks
             // contents do not. No compaction runs here: the lists are empty, and each run is
             // compacted against the retained set as it is hydrated.
             ctx.Publish(new ReconciliationActions(new Dictionary<(string, int), ReconcileAction>()));
-            ctx.Publish(new RefinedCalibrations(refinedCalibrations));
-            ctx.Publish(new PerFileGapFillForRescore(_perFileGapFillForRescore));
+            ctx.Publish(new RefinedCalibrations(
+                () => { readEnvelopes(); return refinedCalibrations; }));
+            ctx.Publish(new PerFileGapFillForRescore(
+                () => { readEnvelopes(); return perFileGapFill; }));
             ctx.Publish(new PerFileConsensusTargets(
                 new Dictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>>()));
             ctx.Publish(new CompactedEntries(perFileEntries));

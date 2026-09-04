@@ -503,10 +503,15 @@ namespace pwiz.Osprey.Tasks
             // Releasing it costs exactly those - measured as 94 missing RetentionTimes rows and
             // NRunsDetected 3 -> 2. It can follow the others once that rebuild reads gap-fill
             // from the envelopes instead (RescoreHydration.ReadGapFillAndCalibrations).
-            var gapFill = ctx.Get<PerFileGapFillForRescore>().Value;
+            // The HOLDERS, not .Value: these two are deferred, and dereferencing them here -
+            // before ExecuteRescore has decided whether this run hydrates per-run - would build
+            // the all-runs map every time and make the deferral pointless. Measured at 446 runs
+            // that read is 68-111 s, the largest gap in an otherwise flat rescore, and the
+            // per-run path never looks at the result.
+            var gapFill = ctx.Get<PerFileGapFillForRescore>();
             var consensusTargets = ctx.Consume<PerFileConsensusTargets>().Value;
             var reconciliationActions = ctx.Consume<ReconciliationActions>().Value;
-            var refinedCalibrations = ctx.Consume<RefinedCalibrations>().Value;
+            var refinedCalibrations = ctx.Consume<RefinedCalibrations>();
             var rescoreStats = ExecuteRescore(
                 _perFileEntries,
                 consensusTargets,
@@ -781,9 +786,9 @@ namespace pwiz.Osprey.Tasks
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> perFileConsensusTargets,
             IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> reconciliationActions,
-            IReadOnlyDictionary<string, RTCalibration> refinedCalibrations,
+            RefinedCalibrations refinedCalibrations,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
-            IReadOnlyDictionary<string, List<GapFillTarget>> perFileGapFill,
+            PerFileGapFillForRescore perFileGapFill,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             List<LibraryEntry> fullLibrary,
             OspreyConfig config,
@@ -1047,9 +1052,9 @@ namespace pwiz.Osprey.Tasks
         {
             public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> ConsensusTargets;
             public IReadOnlyDictionary<string, List<(int Index, double Apex, double Start, double End)>> ReconTargets;
-            public IReadOnlyDictionary<string, RTCalibration> RefinedCalibrations;
+            public RefinedCalibrations RefinedCalibrations;
             public IReadOnlyDictionary<string, RTCalibration> PerFileCalibrations;
-            public IReadOnlyDictionary<string, List<GapFillTarget>> GapFill;
+            public PerFileGapFillForRescore GapFill;
             public IReadOnlyDictionary<string, string> ParquetPaths;
             public List<LibraryEntry> FullLibrary;
             public IReadOnlyDictionary<uint, LibraryEntry> LibraryById;
@@ -1318,7 +1323,10 @@ namespace pwiz.Osprey.Tasks
             // not consulted at all; the first-pass fallback stays shared because it is this
             // run's own .calibration.json either way.
             RTCalibration rtCal = run?.RefinedCalibration;
-            if (rtCal == null && (run != null || !inputs.RefinedCalibrations.TryGetValue(fileName, out rtCal)))
+            // .Value is what BUILDS the all-runs map, so the short-circuit order matters: on the
+            // per-run path `run` is non-null and this never dereferences it, which is the whole
+            // point of the byproduct being deferred.
+            if (rtCal == null && (run != null || !inputs.RefinedCalibrations.Value.TryGetValue(fileName, out rtCal)))
                 inputs.PerFileCalibrations.TryGetValue(fileName, out rtCal);
 
             // Bisection seam DISABLED (paired with the per-candidate
@@ -1682,8 +1690,11 @@ namespace pwiz.Osprey.Tasks
                     reconTargets = new List<(int, double, double, double)>();
 
                 // PHASE 2 (gap-fill): per-file gap-fill targets land here.
-                if (inputs.GapFill == null ||
-                    !inputs.GapFill.TryGetValue(fileName, out gapFillTargets))
+                // Reached only when this run did NOT hydrate per-run (the branch above takes
+                // run.GapFill). .Value builds the all-runs map on first touch, so a per-run
+                // rescore never pays for it.
+                if (inputs.GapFill?.Value == null ||
+                    !inputs.GapFill.Value.TryGetValue(fileName, out gapFillTargets))
                 {
                     gapFillTargets = new List<GapFillTarget>();
                 }
@@ -2349,7 +2360,7 @@ namespace pwiz.Osprey.Tasks
                 FirstPassSurvivorLoader loader,
                 HashSet<string> rescoredFiles,
                 IReadOnlyDictionary<string, string> reconciledPaths,
-                IReadOnlyDictionary<string, List<GapFillTarget>> gapFill,
+                PerFileGapFillForRescore gapFill,
                 IReadOnlyDictionary<string, HashSet<uint>> resetEntryIds)
             {
                 Buffer = buffer;
@@ -2371,7 +2382,7 @@ namespace pwiz.Osprey.Tasks
             public FirstPassSurvivorLoader Loader { get; }
             public HashSet<string> RescoredFiles { get; }
             public IReadOnlyDictionary<string, string> ReconciledPaths { get; }
-            public IReadOnlyDictionary<string, List<GapFillTarget>> GapFill { get; }
+            public PerFileGapFillForRescore GapFill { get; }
             public IReadOnlyDictionary<string, HashSet<uint>> ResetEntryIds { get; }
         }
 
@@ -2445,7 +2456,7 @@ namespace pwiz.Osprey.Tasks
                     if (!loadedReconciled)
                     {
                         OverlayReconciledIntoFile(kv.Key, kv.Value, plan.ReconciledPaths,
-                            plan.GapFill, canonicalize: false);
+                            plan.GapFill?.Value, canonicalize: false);
                     }
                 }
             }
