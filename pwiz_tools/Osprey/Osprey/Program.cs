@@ -396,23 +396,20 @@ namespace pwiz.Osprey
         {
             if (ModelDiagnosticsReport.TryRenderFromProducts(config, LogInfo))
                 return 0;
-            if (!ModelDiagnosticsReport.HasCompletedFirstPass(config))
-            {
-                LogError("--task ModelDiagnostics found no completed first-pass FDR state to " +
-                         "describe (no analysis-wide 1st-pass experiment sidecar beside the " +
-                         "output). Run the analysis at least as far as FirstPassFDR first; this " +
-                         "task reports on completed work and never performs a search.");
-                return 1;
-            }
-            // The one case that still needs the pipeline: the first pass finished but was run
-            // without --model-diagnostics, so its report was never folded. Stopping after Stage 5
-            // keeps this to a rehydrate of the first pass's own artifacts - the same bounded,
-            // per-run streaming load --task FirstPassFDR does - and never reaches the rescore or
-            // Stage 7.
-            LogInfo("--task ModelDiagnostics: no diagnostics product on disk; folding the first " +
-                    "pass from its completed artifacts (no rescore, no second pass).");
-            config.StopAfterStage5 = true;
-            return -1;
+            // Nothing to render, and this task does not make it. It reports on completed work;
+            // producing the pass-1 product is FirstPassFDR's job, because that product is
+            // FirstPassFDR's declared OUTPUT. Naming the producer is the whole content of this
+            // message - an operator who is told "cannot" and not "run this" has to go read code.
+            LogError(ModelDiagnosticsReport.HasCompletedFirstPass(config)
+                ? "--task ModelDiagnostics: the first pass has completed but produced no " +
+                  "diagnostics product, so there is nothing to render. That analysis was run " +
+                  "without --model-diagnostics. Re-run it with --task FirstPassFDR " +
+                  "--model-diagnostics to produce the pass-1 product from the completed " +
+                  "first-pass artifacts, then run this task again."
+                : "--task ModelDiagnostics: no completed first-pass FDR state to describe (no " +
+                  "analysis-wide 1st-pass experiment sidecar beside the output). Run the " +
+                  "analysis at least as far as FirstPassFDR first.");
+            return 1;
         }
 
         /// <summary>

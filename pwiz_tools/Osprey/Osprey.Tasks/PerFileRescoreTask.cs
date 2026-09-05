@@ -161,7 +161,14 @@ namespace pwiz.Osprey.Tasks
         {
             var c = ctx.Config;
             bool inputs = c.InputScores != null && c.InputScores.Count > 0;
-            return (!inputs && !c.NoJoin)
+            // StopAfterStage5 is checked on BOTH input routes. It used to appear only in the
+            // --input-scores clause, which was enough while --task FirstPassFDR was the only
+            // thing that set it - that task rejects -i. --task ModelDiagnostics also stops
+            // after Stage 5 and takes -i, so this task ran anyway, demanded CompactedEntries
+            // that a diagnostics-only fold never publishes, and failed the run AFTER the report
+            // it was asked for had been written. A flag named for a stage boundary has to mean
+            // that boundary whatever the inputs look like.
+            return (!inputs && !c.NoJoin && !c.StopAfterStage5)
                 || (inputs && c.NoJoin)
                 || (inputs && !c.NoJoin && !c.StopAfterStage5 && !c.ExpectReconciledInput);
         }

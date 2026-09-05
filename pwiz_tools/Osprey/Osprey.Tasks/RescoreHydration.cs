@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -387,6 +387,91 @@ namespace pwiz.Osprey.Tasks
                 JoinFileStems = consistency.JoinFileStems ?? new List<string>(),
                 GlobalFirstPassBaseIds = consistency.GlobalBaseIds,
             };
+        }
+
+        /// <summary>
+        /// Fold each run's PRE-compaction rows and DISCARD them: load the run's stubs, overlay
+        /// its first-pass sidecar, hand them to <paramref name="onStubsHydrated"/>, drop them,
+        /// next run. Retains nothing across runs.
+        ///
+        /// <para>This exists because <c>--task ModelDiagnostics</c> was reaching its rows through
+        /// <see cref="HydrateCompactedStreaming"/>, whose product is Stage 6's bundle: that loop
+        /// streams one run's pre-compaction pool at a time - the log line is true - and then
+        /// KEEPS each run's survivors, because a bundle is what its caller wants. Measured on a
+        /// 446-run cohort at 0.15-0.22 GB per run, which is the whole-run survivor pool
+        /// <c>regression.ps1</c> already tracks at "0.197 GB/file live post-GC ... ~103 GB
+        /// projected at 500". A report has no use for the survivors; it needs only what the
+        /// callback takes.</para>
+        ///
+        /// <para>No envelope, no planning, no compaction, no calibration capture - a diagnostics
+        /// fold needs none of them, and reading a run's <c>reconciliation.json</c> here would
+        /// reintroduce a per-run cost for state nobody consumes.</para>
+        /// </summary>
+        public static void FoldPreCompactionPerRun(
+            IList<string> parquetPaths,
+            Func<int, string, string, List<FdrEntry>> loadStubs,
+            Action<int, string, List<FdrEntry>> onStubsHydrated,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            HashSet<uint> retainedBaseIds,
+            Action<string> logInfo = null)
+        {
+            if (parquetPaths == null)
+                throw new ArgumentNullException(nameof(parquetPaths));
+            if (loadStubs == null)
+                throw new ArgumentNullException(nameof(loadStubs));
+            if (onStubsHydrated == null)
+                throw new ArgumentNullException(nameof(onStubsHydrated));
+            if (retainedBaseIds == null)
+                throw new ArgumentNullException(nameof(retainedBaseIds));
+
+            using (var progress = new ProgressReporter(
+                       @"Folding first-pass diagnostics", parquetPaths.Count))
+            {
+                for (int i = 0; i < parquetPaths.Count; i++)
+                {
+                    progress.Report(i);
+                    string syntheticInput = SyntheticInputFromParquet(parquetPaths[i]);
+                    string fileName = Path.GetFileNameWithoutExtension(syntheticInput);
+                    if (string.IsNullOrEmpty(fileName))
+                    {
+                        throw new InvalidDataException(string.Format(
+                            "FoldPreCompactionPerRun: could not derive file_name from parquet path {0}",
+                            parquetPaths[i]));
+                    }
+
+                    var stubs = loadStubs(i, fileName, parquetPaths[i]);
+                    if (stubs == null)
+                    {
+                        throw new InvalidDataException(string.Format(
+                            "FoldPreCompactionPerRun: no stubs loaded for {0}", fileName));
+                    }
+
+                    // Same overlay, same drift predicate as the bundle-building twin: the
+                    // sidecar was written over the whole pre-compaction row set, so a record
+                    // whose base_id did not survive legitimately has no entry to land on while
+                    // any OTHER miss is real parquet drift.
+                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
+                        nameof(FoldPreCompactionPerRun), experimentRecords,
+                        id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
+
+                    onStubsHydrated(i, fileName, stubs);
+
+                    // The run's rows end here. Nothing references them afterwards, which is the
+                    // whole difference from the bundle path - stated as code rather than left
+                    // to the reader to infer from an absence.
+                    stubs.Clear();
+                    stubs.TrimExcess();
+
+                    // Post-GC live set per run, under OSPREY_LOG_MEMORY only. The claim this
+                    // method makes is that the floor does NOT rise with runs folded, and working
+                    // set with --memstamp carries uncollected garbage, so it can only show shape.
+                    // Reading shape as magnitude is what sent the previous fix after the wrong
+                    // structure; this probe is what settles it.
+                    ProfilerHooks.LogManagedHeapAfterGcIfEnabled(logInfo, @"mdiag-fold-live",
+                        string.Format(@"(post-GC, diagnostics fold, run {0} of {1})",
+                            i + 1, parquetPaths.Count));
+                }
+            }
         }
 
         /// <summary>

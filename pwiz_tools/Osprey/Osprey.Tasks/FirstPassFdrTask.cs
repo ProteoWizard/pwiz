@@ -262,6 +262,91 @@ namespace pwiz.Osprey.Tasks
         /// of a forgotten entry is then a redundant recompute rather than a wrongly-adopted
         /// first pass.</para>
         /// </summary>
+        /// <summary>
+        /// Produce the pass-1 diagnostics product and nothing else, from a first pass that is
+        /// already complete on disk. Streams each run's pre-compaction rows into the report
+        /// accumulator and discards them, so what is resident is the library, the accumulator's
+        /// O(distinct) reductions, and ONE run's rows.
+        ///
+        /// <para>The difference from <see cref="Rehydrate"/> is what is NOT built: no Stage 6
+        /// bundle, so no whole-run survivor pool, no reconciliation planning, no calibration
+        /// capture. Those are what a rescore needs; a report needs none of them, and retaining
+        /// the survivors is what put a 446-run fold over a 63.7 GB box at run 266.</para>
+        ///
+        /// <para>Reached from <c>--task FirstPassFDR --model-diagnostics</c>, which is the
+        /// supported way to give a completed analysis the pass-1 product it was run without.
+        /// NOT from <c>--task ModelDiagnostics</c>: that task renders and never processes, so
+        /// when this product is missing it names this one as the producer and stops.</para>
+        /// </summary>
+        private bool FoldDiagnosticsOnly(PipelineContext ctx)
+        {
+            var config = ctx.Config;
+            var perFileEntries = ctx.Get<ScoredEntries>().Value;
+            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+            var fileNames = perFileEntries.ConvertAll(kv => kv.Key);
+
+            var parquetPaths = new List<string>(fileNames.Count);
+            foreach (string fileName in fileNames)
+            {
+                if (!perFileParquetPaths.TryGetValue(fileName, out string path))
+                {
+                    ctx.LogError(string.Format(
+                        @"--task ModelDiagnostics: no scores parquet path published for {0}", fileName));
+                    ctx.ExitCode = 1;
+                    return false;
+                }
+                parquetPaths.Add(path);
+            }
+
+            var libraryById = ctx.Get<LibraryById>().Value;
+            ModelDiagnosticsData.Accumulator accumulator;
+            try
+            {
+                accumulator = BuildModelDiagnosticsAccumulator(fileNames, libraryById, config, ctx.LogInfo);
+            }
+            catch (Exception ex)
+            {
+                // Same policy as every other diagnostics builder: an opt-in report never takes
+                // down a run. Here the run IS the report, so there is nothing left to do.
+                ctx.LogError(string.Format(
+                    @"--task ModelDiagnostics: could not build the report accumulator: {0}", ex.Message));
+                ctx.ExitCode = 1;
+                return false;
+            }
+
+            var retainedBaseIds = ScoringTaskShared.ReadRetainedBaseIds(config, out string retainedError);
+            if (retainedBaseIds == null)
+            {
+                ctx.LogError(retainedError);
+                ctx.ExitCode = 1;
+                return false;
+            }
+
+            ctx.LogInfo(string.Format(
+                @"--task ModelDiagnostics: folding the first pass from {0} run(s), one run resident " +
+                @"at a time (no rescore bundle, no survivor pool).", parquetPaths.Count));
+            RescoreHydration.FoldPreCompactionPerRun(
+                parquetPaths,
+                (fileIdx, fileName, parquetPath) => LoadResumeStubs(fileName, parquetPath,
+                    ctx.Get<SequencePool>().Value),
+                (fileIdx, fileName, stubs) =>
+                    ScoringTaskShared.FeedModelDiagnostics(accumulator, fileIdx, stubs),
+                LoadFirstPassExperimentRecords(config, ctx),
+                retainedBaseIds,
+                ctx.LogInfo);
+
+            // The co-assignment panel reads the per-file FDR sidecars rather than the fold, so it
+            // is built the same way here as on every other path - reusing the accumulator's
+            // classification, which took minutes to compute over 6.2M library entries.
+            var coAssignment = PeakCoAssignmentSource.Build(
+                fileNames, perFileParquetPaths, config, accumulator.ClassByBaseId, libraryById,
+                LoadFirstPassExperimentRecords(config, ctx), ctx.LogInfo);
+            ModelDiagnosticsReport.WriteFromAccumulator(accumulator, null,
+                BuildCalibrationData(ctx, fileNames), config, ctx.LogInfo, coAssignment,
+                ValidityKey(ctx));
+            return true;
+        }
+
         private bool OnlyDiagnosticsProductOutstanding(PipelineContext ctx)
         {
             string diagnosticsPath = ModelDiagnosticsReport.Pass1SidecarPath(ctx.Config);
@@ -399,7 +484,16 @@ namespace pwiz.Osprey.Tasks
             {
                 ctx.LogInfo(@"FirstPassFDR: every output but the model-diagnostics product is " +
                             @"current; folding the report from the completed first pass.");
-                return Rehydrate(ctx);
+                // With nothing after Stage 5 in this process there is no consumer for Stage 6's
+                // bundle, so building one is pure cost: Rehydrate retains every run's survivors,
+                // measured at 0.15-0.22 GB per run and over a 63.7 GB box by run 266 of 446. The
+                // bounded fold produces the diagnostics product and keeps nothing.
+                //
+                // Keyed on StopAfterStage5 - "is there a downstream consumer" - rather than on
+                // which --task was named. `--task FirstPassFDR --model-diagnostics` is the
+                // supported way to produce a missing pass-1 product, and it wants the cheap path
+                // for exactly the same reason a diagnostics-only invocation would.
+                return config.StopAfterStage5 ? FoldDiagnosticsOnly(ctx) : Rehydrate(ctx);
             }
 
             // Stage 5: First-pass FDR. The Percolator framework (SVM or Gbdt) prints
