@@ -436,7 +436,19 @@ function Format-TcMessage([string]$s) {
     if ($null -eq $s) { return '' }
     return $s.Replace('|', '||').Replace("'", "|'").Replace("`n", '|n').Replace("`r", '|r').Replace('[', '|[').Replace(']', '|]')
 }
+# Every phase boundary the gate announces, stamped. A phase's cost is the gap to the NEXT
+# announcement, so timing rides on the message the gate already emits and no leg needs its
+# own stopwatch - which is what keeps this from rotting as legs are added.
+#
+# It exists because the gate had no cost signal at all: the log carries no timestamps, the
+# run dirs are pruned by -KeepRunDirs, and the summary lists only PASS/FAIL/SKIP. "Is this
+# leg worth its wall time" is asked every time the suite grows, and until now it could only
+# be answered with estimates written into comments - one of which claimed 25 minutes for a
+# leg nobody had ever timed.
+$script:phaseMarks = [System.Collections.Generic.List[object]]::new()
+
 function Write-Progress-Tc([string]$msg) {
+    $script:phaseMarks.Add([pscustomobject]@{ Msg = $msg; At = (Get-Date) })
     if ($TeamCity) { Write-Host ("##teamcity[progressMessage '{0}']" -f (Format-TcMessage $msg)) }
     else { Write-Host "==> $msg" -ForegroundColor Cyan }
 }
@@ -2530,31 +2542,13 @@ foreach ($name in $selected) {
     #
     # Runs LAST, after mode 7, because it invalidates and rewrites the blib in the
     # straight-through directory; every leg that reads that directory has already run.
-    if (-not $SkipResume -and $cfg.ModelDiagnostics) {
-        # TODO(brendanx): re-enable on the mdiag datasets once --model-diagnostics has a plan
-        # source for a partial resume. The assertions are kept here, disabled, and deliberately
-        # NOT rewritten into something that passes: a leg asserting the well-worded refusal would
-        # encode the limitation as correct behaviour, the trap mode 6 is in with "release
-        # engaged". What they check is that a partial resume under mdiag refuses LOUDLY with a
-        # non-zero exit - correct for a run that cannot finish, and what replaced a silent blib
-        # 236 RefSpectra keys short. What is missing is the CAPABILITY, so no flag or token
-        # retires this; the mdiag work does. Re-enabling means running the resume above and:
-        #
-        #   $m8Issues.Add("cannot finish the cohort under --model-diagnostics: no per-run " +
-        #                 "hydrate and no worker bundle, so the amputated run has no plan source")
-        #   $m8Guard = Test-LogMarker -LogPath $rPartial.Log `
-        #       -Marker 'still need re-scoring, but this process has no plan to do it' `
-        #       -Description 'the rescore naming how many runs it cannot finish, and why'
-        #   foreach ($issue in $m8Guard.Issues) { $m8Issues.Add($issue) }
-        #
-        # Skipped HERE, before the work, not after it. The leg's cost is an invalidation plus a
-        # full Osprey resume, and running that on three of the four datasets only to discard the
-        # result is pure gate time - about 25 minutes across a -Dataset All, spent to learn
-        # nothing. A disabled test should cost nothing, or the next person shortens the gate by
-        # skipping it entirely.
-        $summaryLines.Add("$name mode8 (partial rescore resume): SKIP (TODO(brendanx): needs a --model-diagnostics plan source)")
-    }
-    elseif (-not $SkipResume) {
+    # Runs on the mdiag datasets too. It was skipped on them while a partial resume under
+    # --model-diagnostics had no plan source - no per-run hydrate, no worker bundle - so the
+    # rescore could only refuse. Retiring the --model-diagnostics exclusion from
+    # ScoringTaskShared.CanHydratePerRun supplied that plan source, which is what
+    # PerFileRescoreTask's perRunPlanAvailable reads, so the leg now asserts the capability
+    # instead of the gap. The skip was written to need no edit but its own deletion.
+    if (-not $SkipResume) {
         Write-Progress-Tc "${name}: partial rescore resume (mode 8)"
         # Captured BEFORE the invalidation: the resume overwrites the blib in place. Mode 1 has
         # already proved this blib matches the committed golden, so comparing against it is
@@ -2617,21 +2611,11 @@ foreach ($name in $selected) {
     #
     # Runs after mode 8 and rebuilds from the same directory, so it inherits a cohort mode 8
     # has already restored to whole.
-    if (-not $SkipResume -and $cfg.ModelDiagnostics) {
-        # SKIP, not FAIL, and the distinction is deliberate. This leg's property - a half-done
-        # file is RE-SCORED rather than skipped - requires the resume to be able to rescore at
-        # all, and under --model-diagnostics it cannot: no per-run hydrate, no worker bundle, so
-        # no plan source. Mode 8 already asserts that exact gap on this dataset and fails on it.
-        # A second leg failing for the same reason adds a red without adding information, and
-        # three of the four datasets carry mdiag - so it would be three extra reds all saying
-        # what mode 8 already said. Same shape as mode 3's own mdiag skip.
-        #
-        # This goes green on its own when the mdiag work lands, with no edit here.
-        # TODO(brendanx): re-enable on the mdiag datasets once --model-diagnostics has a plan
-        # source. Nothing here needs editing to do it - deleting this branch is the whole change.
-        $summaryLines.Add("$name mode9 (crash-shaped half-done resume): SKIP (TODO(brendanx): --model-diagnostics has no plan source)")
-    }
-    elseif (-not $SkipResume) {
+    # Runs on the mdiag datasets too, for the reason mode 8 does: the per-run hydrate is the
+    # plan source a half-done run needs to be re-scored, and --model-diagnostics is no longer
+    # excluded from it. This leg's property - a half-done file is RE-SCORED rather than
+    # skipped - is now assertable on every dataset.
+    if (-not $SkipResume) {
         Write-Progress-Tc "${name}: crash-shaped half-done resume (mode 9)"
         $m9Expected = Join-Path $straightDir 'output.blib.premode9'
         Copy-Item (Join-Path $straightDir 'output.blib') $m9Expected -Force
@@ -2730,6 +2714,35 @@ foreach ($d in $watchedDirs) {
 Write-Host ""
 Write-Host "=== Osprey regression summary ===" -ForegroundColor Cyan
 $summaryLines | ForEach-Object { Write-Host "  $_" }
+
+# What each phase actually cost, most expensive first, so the question "is this leg worth
+# its wall time" has a measurement behind it. Printed on red runs too: a leg that got
+# expensive is worth seeing whether or not something failed.
+Write-Host ""
+Write-Host "=== Phase cost (most expensive first) ===" -ForegroundColor Cyan
+if ($phaseMarks.Count -eq 0) {
+    Write-Host "  no phases recorded"
+} else {
+    # The last phase has no following announcement to close it, so the summary closes it.
+    $nowStamp = Get-Date
+    $phaseCosts = @(for ($i = 0; $i -lt $phaseMarks.Count; $i++) {
+        $end = if ($i + 1 -lt $phaseMarks.Count) { $phaseMarks[$i + 1].At } else { $nowStamp }
+        [pscustomobject]@{
+            Msg     = $phaseMarks[$i].Msg
+            Seconds = ($end - $phaseMarks[$i].At).TotalSeconds
+        }
+    })
+    $phaseTotal = ($phaseCosts | Measure-Object -Property Seconds -Sum).Sum
+    foreach ($c in ($phaseCosts | Sort-Object Seconds -Descending)) {
+        $share = if ($phaseTotal -gt 0) { '{0,5:N1}%' -f (100 * $c.Seconds / $phaseTotal) } else { '    -' }
+        Write-Host ("  {0,8:N1}s  {1}  {2}" -f $c.Seconds, $share, $c.Msg)
+    }
+    # Parenthesise the concatenation: -f binds TIGHTER than +, so without the inner parens
+    # it formats only the second literal - which carries no placeholders - and the {0}/{1}
+    # in the first one print verbatim.
+    Write-Host (("  {0,8:N1}s  total across {1} phase(s); excludes the build and data " +
+                 "staging that precede the first phase") -f $phaseTotal, $phaseCosts.Count)
+}
 
 # The gaps this gate KNOWS it still traverses. Printed green-or-red runs alike: these
 # are not failures (the legs above passed), they are the O(files) paths a passing gate
