@@ -488,10 +488,35 @@ if ($dupGolden.Count -gt 0) {
 # has the reclaimed space. Keeps the most recent $KeepRunDirs (default 0 = keep
 # none). The dir names sort chronologically (regression-YYYYMMDD_HHMMSS), so a Name
 # sort orders oldest-first.
+function Test-RunDirLive([string]$Name) {
+    <#
+    True when this run dir belongs to a gate process that is still running.
+
+    The name ends _<pid> (see $runStamp), so ownership is EXACT. An age heuristic
+    would not do: a directory's own timestamp does not move while a run works deep
+    inside it, so "not written for an hour" calls a live run stale and deletes the
+    scratch it is standing on.
+    #>
+    # Anchor the WHOLE shape. A bare '_(\d+)$' also matches a pre-PID name, whose
+    # trailing group is the TIME - 'regression-20260905_120052' would be read as
+    # owned by pid 120052, and treated as live whenever some unrelated pwsh happened
+    # to hold that id. Three groups means PID-stamped; two means legacy, i.e. an
+    # orphan from before this naming and safe to prune.
+    if ($Name -notmatch '^regression-\d{8}_\d{6}_(\d+)$') { return $false }
+    $p = Get-Process -Id ([int]$Matches[1]) -ErrorAction SilentlyContinue
+    # Check the process NAME too, because PIDs are reused. Leaving one orphan behind
+    # for the next run to collect is a far cheaper mistake than deleting the scratch
+    # of a gate that is still running.
+    return ($null -ne $p -and $p.ProcessName -eq 'pwsh')
+}
+
 function Remove-StaleRunDirs([string]$TestResultsDir, [int]$Keep) {
     if (-not (Test-Path $TestResultsDir)) { return }
+    # Live dirs are excluded BEFORE $Keep is applied, so a concurrent lane's dir is
+    # never a prune candidate and never displaces a genuine orphan from the count.
     $runDirs = @(Get-ChildItem -Path $TestResultsDir -Directory -Filter 'regression-*' `
-        -ErrorAction SilentlyContinue | Sort-Object Name)
+        -ErrorAction SilentlyContinue | Sort-Object Name |
+        Where-Object { -not (Test-RunDirLive $_.Name) })
     if ($runDirs.Count -le $Keep) { return }
     $stale = $runDirs[0..($runDirs.Count - $Keep - 1)]
     Write-Progress-Tc ("Pruning {0} stale TestResults run dir(s), keeping the most recent {1}" -f $stale.Count, $Keep)
@@ -546,7 +571,16 @@ $extractedRoot = Get-RegressionData -Url $dataUrl -DownloadsPath $DownloadsPath 
 # -- which would otherwise make the next straight-through leg resume instead of
 # run clean. These dirs hold the multi-GB .spectra.bin caches (via --work-dir),
 # so the agent should treat TestResults as ephemeral and clean it periodically.
-$runStamp = (Get-Date).ToString('yyyyMMdd_HHmmss')
+#
+# The PID is part of the name, not decoration. Two gates started in the SAME SECOND
+# computed the same stamp and therefore shared one run root - and since a run deletes
+# its run root when it finishes, the first to finish deleted the other's working
+# directory out from under it. Measured 2026-09-05: two lanes launched together, the
+# short one finished at 12:20:18 and the long one died four seconds later on
+# "unable to open database file", having lost the blib it was mid-comparison on.
+# The timestamp still leads, so the Name sort in Remove-StaleRunDirs stays
+# chronological.
+$runStamp = '{0}_{1}' -f (Get-Date).ToString('yyyyMMdd_HHmmss'), $PID
 $runRoot  = Join-Path $scriptRoot ("TestResults\regression-$runStamp")
 New-Item -ItemType Directory -Path $runRoot -Force | Out-Null
 
