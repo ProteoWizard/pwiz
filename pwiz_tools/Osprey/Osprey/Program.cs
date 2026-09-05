@@ -341,6 +341,16 @@ namespace pwiz.Osprey
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
                 LogInfo("");
 
+                // --task ModelDiagnostics is a RENDER over completed analysis state, not a run.
+                // Settled before the pipeline is built, because the whole point is that most
+                // invocations never build one.
+                if (config.DiagnosticsOnly)
+                {
+                    int diagnosticsExit = RunModelDiagnosticsTask(config);
+                    if (diagnosticsExit >= 0)
+                        return diagnosticsExit;
+                }
+
                 // Single entry point. The rescore worker (--task
                 // PerFileRescore, with --input-scores) includes only
                 // PerFileRescoreTask (OspreyTask.IsIncluded); PerFileScoring's
@@ -363,6 +373,43 @@ namespace pwiz.Osprey
                     _out.Dispose();
                 }
             }
+        }
+
+        /// <summary>
+        /// <c>--task ModelDiagnostics</c>: produce the report from COMPLETED analysis state and
+        /// never process. Returns the process exit code when the task is finished, or -1 to fall
+        /// through to the one case that still needs the pipeline - folding a first pass that has
+        /// no diagnostics product yet.
+        ///
+        /// <para>The three states are the developer's contract. No first-pass state is an ERROR
+        /// rather than a partial page; a first pass with no second is the report it can honestly
+        /// give, with the incompleteness stated in the page; and everything present is a
+        /// re-render.</para>
+        ///
+        /// <para>What this replaces: the task used to fall straight through to
+        /// <see cref="AnalysisPipeline"/> and execute Stages 1-7 with every write suppressed by
+        /// <see cref="OspreyConfig.DiagnosticsOnly"/>. Suppressing the WRITES does not suppress
+        /// the WORK - it still built the whole-run survivor pool - so asking a 446-run analysis
+        /// to describe itself cost as much as running it, and met the same memory wall.</para>
+        /// </summary>
+        private static int RunModelDiagnosticsTask(OspreyConfig config)
+        {
+            if (ModelDiagnosticsReport.TryRenderFromProducts(config, LogInfo))
+                return 0;
+            // Nothing to render, and this task does not make it. It reports on completed work;
+            // producing the pass-1 product is FirstPassFDR's job, because that product is
+            // FirstPassFDR's declared OUTPUT. Naming the producer is the whole content of this
+            // message - an operator who is told "cannot" and not "run this" has to go read code.
+            LogError(ModelDiagnosticsReport.HasCompletedFirstPass(config)
+                ? "--task ModelDiagnostics: the first pass has completed but produced no " +
+                  "diagnostics product, so there is nothing to render. That analysis was run " +
+                  "without --model-diagnostics. Re-run it with --task FirstPassFDR " +
+                  "--model-diagnostics to produce the pass-1 product from the completed " +
+                  "first-pass artifacts, then run this task again."
+                : "--task ModelDiagnostics: no completed first-pass FDR state to describe (no " +
+                  "analysis-wide 1st-pass experiment sidecar beside the output). Run the " +
+                  "analysis at least as far as FirstPassFDR first.");
+            return 1;
         }
 
         /// <summary>

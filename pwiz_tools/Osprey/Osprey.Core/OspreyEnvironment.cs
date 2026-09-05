@@ -175,6 +175,14 @@ namespace pwiz.Osprey.Core
         public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
 
         /// <summary>
+        /// DIAGNOSTIC. <c>OSPREY_DROP_BETWEEN_TASKS=1</c> makes each task release every byproduct
+        /// but the library when it finishes, so the next task reloads what it needs from disk -
+        /// the dataflow an HPC chain gets for free from process boundaries. Default OFF; the
+        /// experiment reverts as a unit. See <c>PipelineContext.DropAllButLibrary</c>.
+        /// </summary>
+        public static bool DropBetweenTasks { get; set; } = IsSetAndNotZero(@"OSPREY_DROP_BETWEEN_TASKS");
+
+        /// <summary>
         /// Stage 6 rebuilds each file's post-compaction survivors from that file's
         /// <c>.scores.parquet</c> + 1st-pass sidecar just before rescoring it, and drops
         /// them again once its reconciled parquet is on disk - so the all-files survivor

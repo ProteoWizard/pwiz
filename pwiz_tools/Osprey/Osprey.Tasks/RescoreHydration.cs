@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -236,6 +236,59 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
+    /// ONE run's Stage-6 rescore inputs, produced by
+    /// <see cref="RescoreHydration.HydrateOneRun"/> from that run's own artifacts plus the
+    /// analysis-wide summaries. The per-run counterpart of <see cref="RescoreInputs"/>, which
+    /// holds the same things keyed by file for every run at once.
+    ///
+    /// <para>Every field here is a per-run quantity that <see cref="RescoreInputs"/> stores in a
+    /// file-keyed dictionary. That is the whole difference, and it is the difference between a
+    /// fan-out task and a join: an 86-run rescore built those dictionaries for all 86 runs
+    /// before touching one, and the rescore loop then read exactly one slice per iteration.</para>
+    /// </summary>
+    public sealed class RunRescoreInputs
+    {
+        /// <summary>The run's stem, as every per-file artifact path is derived from it.</summary>
+        public string FileName { get; set; }
+
+        /// <summary>
+        /// This run's POST-compaction survivors, already overlaid with its
+        /// <c>.1st-pass.fdr_scores.bin</c> and filtered to the analysis-wide retained set.
+        /// </summary>
+        public List<FdrEntry> Survivors { get; set; }
+
+        /// <summary>
+        /// This run's reconciliation actions, keyed <c>(file_name, vec_idx)</c> against
+        /// <see cref="Survivors"/>. Keyed the same way as
+        /// <see cref="RescoreInputs.ReconciliationActions"/> - with one file's entries in it -
+        /// so a consumer written for the all-runs map reads it unchanged.
+        /// </summary>
+        public Dictionary<(string FileName, int Index), ReconcileAction> ReconciliationActions { get; set; }
+
+        /// <summary>This run's gap-fill targets; null when its envelope carried none.</summary>
+        public List<GapFillTarget> GapFill { get; set; }
+
+        /// <summary>This run's refined RT calibration; null when its envelope carried none.</summary>
+        public RTCalibration RefinedCalibration { get; set; }
+
+        /// <summary>
+        /// The planner's full join file-stem set, carried in every run's envelope, for the
+        /// reconciled parquet's join-wide metadata hash. Analysis-wide by content, per-run by
+        /// storage - so reading it here costs no other run's file.
+        /// </summary>
+        public IReadOnlyList<string> JoinFileStems { get; set; }
+
+        /// <summary>
+        /// The join-wide first-pass passing base_ids off this run's envelope. Also analysis-wide
+        /// by content and identical in every envelope.
+        /// </summary>
+        public HashSet<uint> GlobalFirstPassBaseIds { get; set; }
+
+        /// <summary>This run's PRE-compaction tally, reduced while its full pool was resident.</summary>
+        public PreCompactionTally Tally { get; set; }
+    }
+
+    /// <summary>
     /// Hydrate the Stage 5 → Stage 6 boundary file pair into the
     /// in-memory state needed to drive a per-file rescore. Mirrors
     /// <c>hydrate_for_rescore</c> in
@@ -337,6 +390,91 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Fold each run's PRE-compaction rows and DISCARD them: load the run's stubs, overlay
+        /// its first-pass sidecar, hand them to <paramref name="onStubsHydrated"/>, drop them,
+        /// next run. Retains nothing across runs.
+        ///
+        /// <para>This exists because <c>--task ModelDiagnostics</c> was reaching its rows through
+        /// <see cref="HydrateCompactedStreaming"/>, whose product is Stage 6's bundle: that loop
+        /// streams one run's pre-compaction pool at a time - the log line is true - and then
+        /// KEEPS each run's survivors, because a bundle is what its caller wants. Measured on a
+        /// 446-run cohort at 0.15-0.22 GB per run, which is the whole-run survivor pool
+        /// <c>regression.ps1</c> already tracks at "0.197 GB/file live post-GC ... ~103 GB
+        /// projected at 500". A report has no use for the survivors; it needs only what the
+        /// callback takes.</para>
+        ///
+        /// <para>No envelope, no planning, no compaction, no calibration capture - a diagnostics
+        /// fold needs none of them, and reading a run's <c>reconciliation.json</c> here would
+        /// reintroduce a per-run cost for state nobody consumes.</para>
+        /// </summary>
+        public static void FoldPreCompactionPerRun(
+            IList<string> parquetPaths,
+            Func<int, string, string, List<FdrEntry>> loadStubs,
+            Action<int, string, List<FdrEntry>> onStubsHydrated,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            HashSet<uint> retainedBaseIds,
+            Action<string> logInfo = null)
+        {
+            if (parquetPaths == null)
+                throw new ArgumentNullException(nameof(parquetPaths));
+            if (loadStubs == null)
+                throw new ArgumentNullException(nameof(loadStubs));
+            if (onStubsHydrated == null)
+                throw new ArgumentNullException(nameof(onStubsHydrated));
+            if (retainedBaseIds == null)
+                throw new ArgumentNullException(nameof(retainedBaseIds));
+
+            using (var progress = new ProgressReporter(
+                       @"Folding first-pass diagnostics", parquetPaths.Count))
+            {
+                for (int i = 0; i < parquetPaths.Count; i++)
+                {
+                    progress.Report(i);
+                    string syntheticInput = SyntheticInputFromParquet(parquetPaths[i]);
+                    string fileName = Path.GetFileNameWithoutExtension(syntheticInput);
+                    if (string.IsNullOrEmpty(fileName))
+                    {
+                        throw new InvalidDataException(string.Format(
+                            "FoldPreCompactionPerRun: could not derive file_name from parquet path {0}",
+                            parquetPaths[i]));
+                    }
+
+                    var stubs = loadStubs(i, fileName, parquetPaths[i]);
+                    if (stubs == null)
+                    {
+                        throw new InvalidDataException(string.Format(
+                            "FoldPreCompactionPerRun: no stubs loaded for {0}", fileName));
+                    }
+
+                    // Same overlay, same drift predicate as the bundle-building twin: the
+                    // sidecar was written over the whole pre-compaction row set, so a record
+                    // whose base_id did not survive legitimately has no entry to land on while
+                    // any OTHER miss is real parquet drift.
+                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
+                        nameof(FoldPreCompactionPerRun), experimentRecords,
+                        id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
+
+                    onStubsHydrated(i, fileName, stubs);
+
+                    // The run's rows end here. Nothing references them afterwards, which is the
+                    // whole difference from the bundle path - stated as code rather than left
+                    // to the reader to infer from an absence.
+                    stubs.Clear();
+                    stubs.TrimExcess();
+
+                    // Post-GC live set per run, under OSPREY_LOG_MEMORY only. The claim this
+                    // method makes is that the floor does NOT rise with runs folded, and working
+                    // set with --memstamp carries uncollected garbage, so it can only show shape.
+                    // Reading shape as magnitude is what sent the previous fix after the wrong
+                    // structure; this probe is what settles it.
+                    ProfilerHooks.LogManagedHeapAfterGcIfEnabled(logInfo, @"mdiag-fold-live",
+                        string.Format(@"(post-GC, diagnostics fold, run {0} of {1})",
+                            i + 1, parquetPaths.Count));
+                }
+            }
+        }
+
+        /// <summary>
         /// File-count-bounded twin of <see cref="HydrateReconciliationOverlay"/>: produces
         /// the SAME post-compaction bundle without ever holding more than ONE file's
         /// pre-compaction stub pool. The batch twin materializes every file's full Stage-4
@@ -346,16 +484,25 @@ namespace pwiz.Osprey.Tasks
         ///
         /// This works because the compaction predicate does not depend on the loaded pool.
         /// <see cref="RescoreCompaction.Apply"/> retains (a) the join-wide
-        /// <c>first_pass_base_ids</c> the v3 envelope carries and (b) the base_ids of every
-        /// entry the planner emitted an action for, whose <c>entry_id</c>s the same envelope
-        /// carries. Both come off the SMALL on-disk envelopes, so a pre-pass over the
-        /// envelopes alone fixes the retained set before a single parquet row is read:
+        /// <c>first_pass_base_ids</c> and (b) the base_ids of every entry the planner emitted
+        /// an action for. <paramref name="retainedBaseIds"/> is that union, already complete:
+        /// the planner computed it with the whole analysis in hand and left it in the
+        /// analysis-wide <c>RetainedBaseIdSidecar</c>, so this method fixes its retain set
+        /// before reading anything and needs ONE pass:
         ///
-        ///   pass 1 - read every <c>reconciliation.json</c> (small), run the sibling
-        ///            consistency checks, and union the retain set;
-        ///   pass 2 - per file, in <paramref name="parquetPaths"/> order: load that file's
-        ///            stubs, overlay its <c>.1st-pass.fdr_scores.bin</c>, compact to the
-        ///            retain set, keep ONLY the survivors, move on.
+        ///   per run, in <paramref name="parquetPaths"/> order: read that run's
+        ///   <c>reconciliation.json</c>, load its stubs, overlay its
+        ///   <c>.1st-pass.fdr_scores.bin</c>, compact to the retain set, keep ONLY the
+        ///   survivors, map its actions, move on.
+        ///
+        /// <para>It used to take TWO passes, the first over every envelope, because term (b)
+        /// had to be unioned across all runs before any run could be filtered - run A can
+        /// retain a base_id only because run B has an action on it. That made this a join
+        /// wherever it was called with more than one run: on a 446-run cohort, 10.7 GB of
+        /// envelope JSON parsed and 30.8 M planned actions held before the first parquet row
+        /// was read. Supplying the union instead of rebuilding it is what removes the pre-pass;
+        /// see <c>RetainedBaseIdSidecar</c> for why the planner is the only component that can
+        /// compute it.</para>
         ///
         /// The result is the state <see cref="RescoreCompaction.Apply"/> would have produced,
         /// so the caller still runs <c>Apply</c> afterwards: it re-derives the identical
@@ -382,6 +529,7 @@ namespace pwiz.Osprey.Tasks
             Func<int, string, string, List<FdrEntry>> loadStubs,
             Action<int, string, List<FdrEntry>, PreCompactionTally> onStubsHydrated,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            HashSet<uint> retainedBaseIds,
             LibraryStringInterner sequencePool = null)
         {
             if (perFileEntries == null)
@@ -390,6 +538,8 @@ namespace pwiz.Osprey.Tasks
                 throw new ArgumentNullException(nameof(parquetPaths));
             if (loadStubs == null)
                 throw new ArgumentNullException(nameof(loadStubs));
+            if (retainedBaseIds == null)
+                throw new ArgumentNullException(nameof(retainedBaseIds));
             if (perFileEntries.Count != 0)
             {
                 throw new InvalidDataException(string.Format(
@@ -409,27 +559,23 @@ namespace pwiz.Osprey.Tasks
             var tallies = new List<PreCompactionTally>(nFiles);
             var consistency = new EnvelopeConsistency();
 
-            // Pass 1: envelopes only. Everything kept here is small and is retained by the
-            // returned bundle anyway (actions, gap-fill, refined calibrations) EXCEPT the
-            // per-file first_pass_base_ids array, which is dropped with its envelope as soon
-            // as the sibling check has consumed it - only the single shared set survives.
-            var fileNames = new List<string>(nFiles);
-            var syntheticInputs = new List<string>(nFiles);
-            var reconPaths = new List<string>(nFiles);
-            var plannedByFile = new List<List<PlannedAction>>(nFiles);
-            // The retained set: the join-wide first-pass base_ids UNION the base_ids of every
-            // planner action target, across ALL files. Both terms are what
-            // RescoreCompaction.Apply unions, and the union has to be complete before ANY
-            // file is filtered - file A can retain a base_id only because file B has an
-            // action on it.
-            var retainBaseIds = new HashSet<uint>();
-            // One reporter across BOTH passes, 2 * nFiles units. Pass 1 reads only the small
-            // on-disk envelopes and finishes in seconds, so a reporter scoped to it alone
-            // printed 100% before a single parquet row was read and then left pass 2 - the
-            // ~1.19 GB per-file load that runs for minutes a file - completely unreported.
-            // Spanning both keeps the heartbeat on the pass that actually takes the time.
+            // ONE pass over the runs, each iteration self-contained: read that run's envelope,
+            // load its stubs, overlay, compact, map its actions, hand it on. Nothing is carried
+            // between iterations except products the returned bundle owns anyway.
+            //
+            // There used to be a pass 1 over every envelope first, for one reason: the retained
+            // set is the join-wide first-pass base_ids UNION every run's action targets, and the
+            // union had to be complete before ANY run could be filtered - run A can retain a
+            // base_id only because run B has an action on it. That made this a join: 446
+            // envelopes at 24.6 MB each, 10.7 GB of JSON parsed and 30.8 M planned actions held,
+            // before a single parquet row was read.
+            //
+            // <paramref name="retainedBaseIds"/> is that union, computed once by the planner -
+            // the one component that legitimately holds the whole analysis - and read back from
+            // the analysis-wide RetainedBaseIdSidecar. With it supplied, a run's envelope is
+            // needed only by the run it belongs to, and is released with it.
             using (var hydrateProgress = new ProgressReporter(
-                       @"Hydrating reconciliation bundle", 2L * nFiles))
+                       @"Hydrating reconciliation bundle", nFiles))
             {
                 for (int i = 0; i < nFiles; i++)
                 {
@@ -447,24 +593,16 @@ namespace pwiz.Osprey.Tasks
                     consistency.Check(envelope, reconPath, nameof(HydrateCompactedStreaming));
 
                     var planned = PlanActions(envelope);
-                    foreach (var action in planned)
-                        retainBaseIds.Add(action.EntryId & ScoringTaskShared.BASE_ID_MASK);
                     CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
                         sequencePool);
 
-                    fileNames.Add(fileName);
-                    syntheticInputs.Add(syntheticInput);
-                    reconPaths.Add(reconPath);
-                    plannedByFile.Add(planned);
-                }
-                retainBaseIds.UnionWith(consistency.GlobalBaseIds);
-
-                // Pass 2: one file's pre-compaction pool resident at a time.
-                for (int i = 0; i < nFiles; i++)
-                {
-                    hydrateProgress.Report(nFiles + i);
-                    string fileName = fileNames[i];
                     var stubs = loadStubs(i, fileName, parquetPaths[i]);
+                    // NOTE: this loop is the ALL-RUNS builder, kept for the straight-through
+                    // pipeline whose Stage 7 consumes the whole-run pool in process. A caller
+                    // that rescores one run at a time must use HydrateOneRun instead - its
+                    // signature takes a single parquet path, so it cannot reach another run's
+                    // artifacts even by accident. See that method for why the distinction is
+                    // enforced by the type rather than by discipline.
                     if (stubs == null)
                     {
                         throw new InvalidDataException(string.Format(
@@ -486,9 +624,9 @@ namespace pwiz.Osprey.Tasks
                     // record, every survivor would keep Score = 0.0, and the un-q-gated decoy
                     // zeros would compete in the picked-protein null. Same shape as
                     // FirstPassSurvivorLoader's predicate, which asks the survivor test.
-                    OverlayFirstPassSidecar(syntheticInputs[i], fileName, stubs,
+                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
                         nameof(HydrateCompactedStreaming), experimentRecords,
-                        id => !retainBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
+                        id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
 
                     // The caller's one look at this file's full pre-compaction pool: it fills
                     // in whatever it used to reduce off the resident all-files pool.
@@ -496,7 +634,7 @@ namespace pwiz.Osprey.Tasks
                     onStubsHydrated?.Invoke(i, fileName, stubs, tally);
                     tallies.Add(tally);
 
-                    stubs.RemoveAll(e => !retainBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
+                    stubs.RemoveAll(e => !retainedBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
                     stubs.TrimExcess();
 
                     // Map the planner's actions onto POST-compaction vec_idx. Every action's
@@ -506,7 +644,7 @@ namespace pwiz.Osprey.Tasks
                     var idToIdx = new Dictionary<uint, int>(stubs.Count);
                     for (int idx = 0; idx < stubs.Count; idx++)
                         idToIdx[stubs[idx].EntryId] = idx;
-                    MapPlannedActions(plannedByFile[i], fileName, reconPaths[i], idToIdx,
+                    MapPlannedActions(planned, fileName, reconPath, idToIdx,
                         reconciliationActions, nameof(HydrateCompactedStreaming));
 
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
@@ -522,7 +660,154 @@ namespace pwiz.Osprey.Tasks
                 PerFileConsensusTargets = null,
                 JoinFileStems = consistency.JoinFileStems ?? new List<string>(),
                 GlobalFirstPassBaseIds = consistency.GlobalBaseIds,
+                // Already the completed union, so publish it rather than leaving
+                // RescoreCompaction.Apply to re-derive it. Apply stays the authority - it
+                // recomputes the same set and finds nothing to remove - but a consumer that
+                // needs the retained set before Apply runs now has it.
+                RetainedBaseIds = retainedBaseIds,
                 PreCompactionTallies = tallies,
+            };
+        }
+
+        /// <summary>
+        /// Read ONLY the gap-fill targets and refined calibrations out of each run's envelope -
+        /// no parquet rows, no stubs, no action mapping.
+        ///
+        /// <para>This exists for the one consumer that genuinely spans runs: the Stage 7 pool
+        /// rebuild in <c>PerFileRescoreTask.Rehydrate</c>, which overlays every run's reconciled
+        /// parquet and needs the gap-fill targets to restore the detections gap-fill transferred
+        /// into runs that did not find them independently. Publishing that map empty costs
+        /// exactly those detections - measured on Stellar as 94 missing <c>RetentionTimes</c>
+        /// rows and <c>NRunsDetected</c> falling 3 -> 2.</para>
+        ///
+        /// <para>It IS an all-runs read, and it is the honest scope of the remaining coupling:
+        /// gap-fill is a cross-run product, so a consumer that rebuilds a cross-run pool needs
+        /// all of it. It is far smaller than what it replaces - envelope JSON only, no parquet
+        /// pass and no stub materialisation - and a per-run rescore never calls it, because
+        /// nothing on that path rebuilds the pool.</para>
+        /// </summary>
+        public static void ReadGapFillAndCalibrations(
+            IEnumerable<string> parquetPaths,
+            Dictionary<string, List<GapFillTarget>> perFileGapFill,
+            Dictionary<string, RTCalibration> refinedCalibrations,
+            LibraryStringInterner sequencePool = null)
+        {
+            foreach (string parquetPath in parquetPaths)
+            {
+                string syntheticInput = SyntheticInputFromParquet(parquetPath);
+                string fileName = Path.GetFileNameWithoutExtension(syntheticInput);
+                if (string.IsNullOrEmpty(fileName))
+                    continue;
+                string reconPath = ReconciliationFile.PathForInput(syntheticInput);
+                if (!File.Exists(reconPath))
+                    continue;
+                var envelope = LoadEnvelope(reconPath, nameof(ReadGapFillAndCalibrations));
+                CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
+                    sequencePool);
+            }
+        }
+
+        /// <summary>
+        /// Hydrate the Stage-6 rescore inputs for ONE run, from that run's own artifacts and the
+        /// analysis-wide summaries - never from another run's.
+        ///
+        /// <para><b>The single <paramref name="parquetPath"/> is the point.</b> Its all-runs
+        /// sibling <see cref="HydrateCompactedStreaming"/> takes an <c>IList&lt;string&gt;</c> of
+        /// every run's parquet, and that signature is what let a per-run task become a join: on
+        /// an 86-run plate the caller spent 8m42s and 17.2 GB loading every run's stubs before
+        /// rescoring one, and the rescore loop then RE-READ each run's parquet through
+        /// <c>FirstPassSurvivorLoader</c> anyway and overwrote what had been loaded. The work
+        /// was discarded, not used. Only the loop's discipline had ever bounded it, and
+        /// discipline is what failed - so the fix is a signature that cannot express the
+        /// mistake, per CRITICAL-RULES' "strengthen the verifier rather than the wording".</para>
+        ///
+        /// <para>What makes this correct rather than merely cheaper: every input a rescore needs
+        /// is a per-run slice. <c>MultiChargeConsensus.SelectRescoreTargets</c> reads one run's
+        /// entries; the reconciliation actions, gap-fill targets and refined calibration all come
+        /// out of that run's own <c>reconciliation.json</c>; and the compaction predicate is the
+        /// analysis-wide retained base_id set, which is library-bounded and passed in. The
+        /// regression gate's mode 3 has always proved this by handing a node ONE run and getting
+        /// byte-identical output - this method is that path, used as the loop body.</para>
+        ///
+        /// <para><paramref name="loadStubs"/> must return the run's FULL pre-compaction stub
+        /// list; <paramref name="onStubsHydrated"/> is the caller's one look at it (per-run
+        /// tallies, the <c>--model-diagnostics</c> fold) before compaction drops the
+        /// non-survivors. Cross-run envelope agreement is deliberately NOT checked here: a node
+        /// holding one run has no sibling to compare against, so that check belongs to a caller
+        /// that legitimately has several.</para>
+        /// </summary>
+        public static RunRescoreInputs HydrateOneRun(
+            string parquetPath,
+            HashSet<uint> retainedBaseIds,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            Func<string, string, List<FdrEntry>> loadStubs,
+            Action<string, List<FdrEntry>, PreCompactionTally> onStubsHydrated = null,
+            LibraryStringInterner sequencePool = null)
+        {
+            if (parquetPath == null)
+                throw new ArgumentNullException(nameof(parquetPath));
+            if (retainedBaseIds == null)
+                throw new ArgumentNullException(nameof(retainedBaseIds));
+            if (loadStubs == null)
+                throw new ArgumentNullException(nameof(loadStubs));
+
+            string syntheticInput = SyntheticInputFromParquet(parquetPath);
+            string fileName = Path.GetFileNameWithoutExtension(syntheticInput);
+            if (string.IsNullOrEmpty(fileName))
+            {
+                throw new InvalidDataException(string.Format(
+                    "HydrateOneRun: could not derive file_name from parquet path {0}", parquetPath));
+            }
+
+            string reconPath = ReconciliationFile.PathForInput(syntheticInput);
+            var envelope = LoadEnvelope(reconPath, nameof(HydrateOneRun));
+            var planned = PlanActions(envelope);
+
+            var refinedCalibrations = new Dictionary<string, RTCalibration>();
+            var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
+            CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
+                sequencePool);
+
+            var stubs = loadStubs(fileName, parquetPath);
+            if (stubs == null)
+            {
+                throw new InvalidDataException(string.Format(
+                    "HydrateOneRun: no stubs loaded for {0}", fileName));
+            }
+
+            // Same order as the all-runs sibling: overlay, look, then compact. The
+            // expectedAbsent predicate states the FILTER for the same reason it does there -
+            // the sidecar was written over the whole pre-compaction row set, and a reconciled
+            // parquet holds only survivors, so most records legitimately have no entry to land
+            // on while any OTHER miss is real parquet drift.
+            OverlayFirstPassSidecar(syntheticInput, fileName, stubs, nameof(HydrateOneRun),
+                experimentRecords,
+                id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
+
+            var tally = new PreCompactionTally { Stubs = stubs.Count };
+            onStubsHydrated?.Invoke(fileName, stubs, tally);
+
+            stubs.RemoveAll(e => !retainedBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
+            stubs.TrimExcess();
+
+            var idToIdx = new Dictionary<uint, int>(stubs.Count);
+            for (int idx = 0; idx < stubs.Count; idx++)
+                idToIdx[stubs[idx].EntryId] = idx;
+            var actions = new Dictionary<(string, int), ReconcileAction>();
+            MapPlannedActions(planned, fileName, reconPath, idToIdx, actions, nameof(HydrateOneRun));
+
+            perFileGapFill.TryGetValue(fileName, out var gapFill);
+            refinedCalibrations.TryGetValue(fileName, out var refinedCalibration);
+            return new RunRescoreInputs
+            {
+                FileName = fileName,
+                Survivors = stubs,
+                ReconciliationActions = actions,
+                GapFill = gapFill,
+                RefinedCalibration = refinedCalibration,
+                JoinFileStems = NormalizeStems(envelope.FileStems),
+                GlobalFirstPassBaseIds = new HashSet<uint>(envelope.FirstPassBaseIds),
+                Tally = tally,
             };
         }
 
@@ -734,19 +1019,46 @@ namespace pwiz.Osprey.Tasks
             /// <summary>Full set of file stems participating in the planner's join (v2+).</summary>
             public List<string> JoinFileStems { get; private set; }
 
+            /// <summary>
+            /// The library and search hashes of the first envelope seen, against which every
+            /// sibling is checked. These are the O(1) provenance identity of the planner step
+            /// that wrote the envelope, and they replaced the whole-set first_pass_base_ids
+            /// comparison - see <see cref="Check"/>.
+            /// </summary>
+            private string LibraryHash { get; set; }
+            private string SearchHash { get; set; }
+
             public void Check(ReconciliationFile envelope, string reconPath, string context)
             {
-                var envelopeBaseIds = new HashSet<uint>(envelope.FirstPassBaseIds);
+                // Materialize the join-wide set from the FIRST envelope only, and do not compare
+                // the siblings' copies against it. The comparison used to be this class's main
+                // job; what retired it is that the set is no longer what compaction consumes -
+                // RetainedBaseIdSidecar carries the analysis-wide retained set, which is a
+                // superset of this one, and every arm compacts to THAT. Re-deriving a HashSet
+                // per envelope only to SetEquals it cost 446 x 744,943 inserts and probes on the
+                // CHS cohort to re-confirm a field nothing reads any more.
+                //
+                // The provenance guard it provided is kept below, moved onto library_hash /
+                // search_hash / file_stems: those are O(1) and O(stems) per envelope, they are
+                // what actually identify the planner step, and unlike the base_id array they
+                // stay meaningful for a worker holding a single run.
                 if (GlobalBaseIds == null)
+                    GlobalBaseIds = new HashSet<uint>(envelope.FirstPassBaseIds);
+
+                if (LibraryHash == null)
                 {
-                    GlobalBaseIds = envelopeBaseIds;
+                    LibraryHash = envelope.LibraryHash;
+                    SearchHash = envelope.SearchHash;
                 }
-                else if (!GlobalBaseIds.SetEquals(envelopeBaseIds))
+                else if (!string.Equals(LibraryHash, envelope.LibraryHash, StringComparison.Ordinal) ||
+                         !string.Equals(SearchHash, envelope.SearchHash, StringComparison.Ordinal))
                 {
                     throw new InvalidDataException(string.Format(
-                        "{0}: reconciliation.json {1} carries a different first_pass_base_ids " +
-                        "set than its siblings (planner inconsistency): {2} vs {3} base_ids.",
-                        context, reconPath, GlobalBaseIds.Count, envelopeBaseIds.Count));
+                        "{0}: reconciliation.json {1} was written against a different library or " +
+                        "search configuration than its siblings (planner inconsistency): " +
+                        "library {2} vs {3}, search {4} vs {5}.",
+                        context, reconPath, LibraryHash, envelope.LibraryHash,
+                        SearchHash, envelope.SearchHash));
                 }
 
                 // ReconciliationFile.Load already rejects any envelope whose format_version

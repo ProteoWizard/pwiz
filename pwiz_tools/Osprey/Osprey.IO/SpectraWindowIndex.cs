@@ -48,7 +48,7 @@ namespace pwiz.Osprey.IO
     /// Thread-safety: <see cref="LoadWindow"/> opens its own <see cref="FileStream"/>
     /// per call and shares no mutable state, so windows load concurrently (scoring
     /// runs one Parallel.For body per window). <see cref="AllMs2Rts"/> and the
-    /// offset map are immutable after <see cref="BuildFromCache"/>.
+    /// offset map are immutable after <see cref="BuildFromCache(string,string)"/>.
     /// </summary>
     public sealed class SpectraWindowIndex
     {
@@ -132,14 +132,29 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static SpectraWindowIndex BuildFromCache(string cachePath, string sourcePath = null)
         {
+            return BuildFromCache(cachePath, sourcePath, out _);
+        }
+
+        /// <summary>
+        /// Same, reporting WHICH validation rule refused the cache. A caller that recovers by
+        /// re-parsing the mzML has no use for the distinction and takes the overload above; a
+        /// caller that FAILS needs it, because the six refusals have different remedies.
+        /// </summary>
+        public static SpectraWindowIndex BuildFromCache(string cachePath, string sourcePath,
+            out SpectraCacheRejection reason)
+        {
+            reason = SpectraCacheRejection.None;
             if (string.IsNullOrEmpty(cachePath) || !File.Exists(cachePath))
+            {
+                reason = SpectraCacheRejection.Absent;
                 return null;
+            }
 
             using (var fs = new FileStream(cachePath, FileMode.Open, FileAccess.Read))
             using (var r = new BinaryReader(fs))
             {
                 // Validate + read counts identically to LoadSpectraCache.
-                if (!SpectraCache.TryReadHeader(r, sourcePath, out uint nMs2, out uint nMs1))
+                if (!SpectraCache.TryReadHeader(r, sourcePath, out uint nMs2, out uint nMs1, out reason))
                     return null;
 
                 // Read the acquisition-order index in one compact contiguous EOF
