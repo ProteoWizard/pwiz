@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Osprey overnight end-to-end regression. Self-contained entry point for
     the scheduled TeamCity "Osprey Windows .NET Regression" config (via
@@ -1919,23 +1919,18 @@ foreach ($name in $selected) {
         # Which PATH the phase-3 workers took, before comparing what they produced. One marker
         # per worker log; every phase-3 node must show it, because a single node quietly falling
         # back to the all-runs hydrate is invisible in the output at one file per node.
-        # Not asserted under --model-diagnostics, where the per-run path is DELIBERATELY off:
-        # the report is folded from the PRE-compaction rows during the all-runs hydrate, and a
-        # per-run worker sees those rows only after the point the report is written - so it would
-        # emit no report at all rather than a smaller one. CanHydratePerRun excludes the mode for
-        # that reason, and asserting the marker here would fail a leg for doing the right thing.
-        # The assertion stays live on every dataset that does NOT set the flag.
-        # $cfg, not $Spec: the dataset spec is $cfg in this loop ($cfg = $datasets[$name],
-        # above) and $Spec is a parameter of the helper FUNCTIONS. Written as $Spec, this read
-        # returned $null on every dataset, so the skip never fired and the assertion failed
-        # Astral for doing exactly what CanHydratePerRun asks of it under --model-diagnostics.
-        $ph3Logs = @()
-        if (-not $cfg.ModelDiagnostics) {
-            $ph3Logs = @(Get-ChildItem (Join-Path $chainRoot 'logs\phase3_*.log') -ErrorAction SilentlyContinue)
-        }
-        if ($cfg.ModelDiagnostics) {
-            $summaryLines.Add("$name mode3 (per-run hydrate): SKIP (--model-diagnostics keeps the all-runs hydrate)")
-        } elseif ($ph3Logs.Count -eq 0) {
+        # Asserted on EVERY dataset, --model-diagnostics included. It used to skip there, because
+        # the report was folded from pre-compaction rows during the all-runs hydrate and a per-run
+        # worker would have emitted no report at all - so CanHydratePerRun excluded the mode and
+        # this leg would have failed it for obeying that exclusion.
+        #
+        # The report is now FirstPassFDR's declared output, folded by FirstPassFdrTask's own
+        # bounded path rather than as a side effect of a hydrate, so the exclusion is gone and
+        # this assertion has to cover the mdiag datasets like any other. Deleting the skip IS the
+        # test that the capability landed: if the per-run marker is absent on an mdiag dataset,
+        # the exclusion is still in force somewhere and the O(runs) startup came back.
+        $ph3Logs = @(Get-ChildItem (Join-Path $chainRoot 'logs\phase3_*.log') -ErrorAction SilentlyContinue)
+        if ($ph3Logs.Count -eq 0) {
             $overallFail = $true
             Write-Problem-Tc "$name mode3 (per-run hydrate): FAIL - no phase3_*.log to read"
             $summaryLines.Add("$name mode3 (per-run hydrate): FAIL (no worker logs)")
@@ -2283,11 +2278,13 @@ foreach ($name in $selected) {
         # straight-through report against is what makes the two reports equivalent
         # rather than merely both present.
         #
-        # -NoTrainedModel because this run adopted its q-values instead of training
-        # Percolator, so featureCount is pinned at 0 rather than compared (see
-        # Compare-DiagnosticsGolden). That is pre-existing resume behavior, not a
-        # property of the streamed report: FirstPassFDR's rehydrate has always passed a
-        # null FeatureContributions, on the resident batch write too. Every metric
+        # NO -NoTrainedModel any more. That switch pinned featureCount at 0 because a
+        # rehydrate passed a null FeatureContributions and so reported no model - true while
+        # the pass-1 data sidecar was DELETED once consumed and the report had to be rebuilt
+        # from a modelless rehydrate. The pass-1 product is now retained, and it carries the
+        # model the training run put in it, so a resumed report is a full-fidelity render of
+        # the straight-through one and is held to the golden EXACTLY. Strictly stronger than
+        # the pin it replaces: featureCount is compared, not asserted to be zero. Every metric
         # the resume CAN reproduce - pool composition, the null-alignment density
         # ratio, the paired decoy-win fraction, and pass-1/pass-2 FDP at the reported
         # q - is still compared at $Tolerance, and those are exactly the reductions
@@ -2305,7 +2302,7 @@ foreach ($name in $selected) {
             try {
                 if (Test-Path -LiteralPath $diagHtml) {
                     $m5d = Compare-DiagnosticsGolden -HtmlPath $diagHtml -GoldenDir $goldenDir `
-                        -Tolerance $Tolerance -NoTrainedModel
+                        -Tolerance $Tolerance
                 } else {
                     $m5d = [pscustomobject]@{ Pass = $false; Issues = [System.Collections.Generic.List[string]]@(
                         "diagnostics: the rehydrate wrote no model-diagnostics report at $diagHtml") }
@@ -2475,8 +2472,8 @@ foreach ($name in $selected) {
     # leg that reads that directory has already run. Costs ~14 s per dataset against a
     # ~5 min straight-through leg, because it rehydrates Stages 1-5 and re-runs Stage 7 only.
     #
-    # -NoTrainedModel for mode 5's reason: a regeneration adopts q-values from the sidecars
-    # instead of training Percolator, so featureCount is pinned at 0 rather than compared.
+    # No -NoTrainedModel, for mode 5's reason: the retained pass-1 product carries the trained
+    # model, so a regeneration renders it too and is compared to the golden exactly.
     if ($cfg.ModelDiagnostics) {
         Write-Progress-Tc "${name}: diagnostics regeneration acceptance (mode 7)"
         $m7Issues = [System.Collections.Generic.List[string]]::new()
@@ -2503,7 +2500,7 @@ foreach ($name in $selected) {
         $m7d = $null
         try {
             $m7d = Compare-DiagnosticsGolden -HtmlPath $diagHtml -GoldenDir $goldenDir `
-                -Tolerance $Tolerance -NoTrainedModel
+                -Tolerance $Tolerance
         } catch {
             $m7Issues.Add(("the regenerated report at {0} could not be read: {1}" -f
                 $diagHtml, $_.Exception.Message))

@@ -412,23 +412,25 @@ namespace pwiz.Osprey.Tasks
                 return false;
             if (config.StopAfterStage5 || config.ExpectReconciledInput)
                 return false;
-            // --model-diagnostics keeps the OLD path. Its report is folded from the PRE-compaction
-            // rows during the all-runs hydrate, and the per-run hydrate sees those rows only
-            // later, inside the rescore loop - after the point where the report is written. So a
-            // per-run run does not produce a smaller report or a slower one; it produces NONE.
+            // --model-diagnostics is NOT excluded any more, and what changed is where the report
+            // comes from rather than anything about this predicate.
             //
-            // It did exactly that, unnoticed, on an 86-run plate: exit 0, 86/86 reconciled
-            // parquets, `mdiag=True` on the command line, and no out.model-diagnostics.html at
-            // all. A requested output vanished and nothing failed - which is the shape
-            // "never conditionally write an output artifact" exists to forbid.
+            // The exclusion was correct when written: the report was folded from pre-compaction
+            // rows DURING the all-runs hydrate, so a per-run hydrate produced no report at all -
+            // observed on an 86-run plate as exit 0, 86/86 reconciled parquets, `mdiag=True`, and
+            // no HTML. A requested output vanishing while nothing fails is what "never
+            // conditionally write an output artifact" forbids, so the mode was held on the old
+            // path deliberately, trading memory for correctness.
             //
-            // Excluding it trades memory for correctness on an OPT-IN diagnostic mode, which is
-            // the right way round and is the policy ResidentPaths already applied to this mode.
-            // The real fix is to fold the report per run through HydrateOneRun's onStubsHydrated
-            // hook and write it after the loop instead of before it; until then this must not
-            // silently win.
-            if (config.ModelDiagnostics)
-                return false;
+            // The report is now FirstPassFDR's DECLARED OUTPUT, produced by its own bounded fold
+            // (FoldDiagnosticsOnly) rather than as a side effect of whichever hydrate happened to
+            // run. A cold analysis folds it in the score pass before this predicate is ever
+            // consulted; a resume missing it enters Run and folds it there. Either way the report
+            // no longer depends on this answer, so the mode stops paying an O(runs) startup for a
+            // coupling that no longer exists.
+            //
+            // The gate check is mode 3's per-run-hydrate leg, which SKIPPED on all three
+            // --model-diagnostics datasets for exactly this reason and must now run and pass.
             string path = RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
             return !string.IsNullOrEmpty(path) && RetainedBaseIdSidecar.IsCurrentFormat(path);
         }

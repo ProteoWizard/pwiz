@@ -484,16 +484,20 @@ namespace pwiz.Osprey.Tasks
             {
                 ctx.LogInfo(@"FirstPassFDR: every output but the model-diagnostics product is " +
                             @"current; folding the report from the completed first pass.");
-                // With nothing after Stage 5 in this process there is no consumer for Stage 6's
-                // bundle, so building one is pure cost: Rehydrate retains every run's survivors,
-                // measured at 0.15-0.22 GB per run and over a 63.7 GB box by run 266 of 446. The
-                // bounded fold produces the diagnostics product and keeps nothing.
-                //
-                // Keyed on StopAfterStage5 - "is there a downstream consumer" - rather than on
-                // which --task was named. `--task FirstPassFDR --model-diagnostics` is the
-                // supported way to produce a missing pass-1 product, and it wants the cheap path
-                // for exactly the same reason a diagnostics-only invocation would.
-                return config.StopAfterStage5 ? FoldDiagnosticsOnly(ctx) : Rehydrate(ctx);
+                // Fold the product FIRST, always, and by the bounded route. Rehydrate cannot be
+                // relied on to do it: with the --model-diagnostics exclusion gone from
+                // CanHydratePerRun, Rehydrate takes RehydrateForPerRunRescore, which publishes
+                // the survivor loader and folds NOTHING - so leaving the fold to it would
+                // silently produce no report on exactly the resume this arm exists for.
+                if (!FoldDiagnosticsOnly(ctx))
+                    return false;
+
+                // The product exists now. Anything downstream still needs this task's state, and
+                // it gets it the ordinary way - cheaply, since that same exclusion removal lets
+                // the per-run arm serve it. With nothing after Stage 5 there is nothing to hand
+                // over, and building Stage 6's bundle there would retain every run's survivors:
+                // 0.15-0.22 GB per run measured, over a 63.7 GB box by run 266 of 446.
+                return config.StopAfterStage5 || Rehydrate(ctx);
             }
 
             // Stage 5: First-pass FDR. The Percolator framework (SVM or Gbdt) prints
