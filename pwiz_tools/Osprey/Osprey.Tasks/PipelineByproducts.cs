@@ -403,6 +403,28 @@ namespace pwiz.Osprey.Tasks
         public virtual List<KeyValuePair<string, List<FdrEntry>>> Value => _buffer;
 
         /// <summary>
+        /// The run's file names, in buffer order, WITHOUT pulling a deferred milestone.
+        ///
+        /// <para>The keys are present from the moment the buffer is built and never change:
+        /// a deferred build fills each file's list IN PLACE - <c>BuildRescoredPool</c> walks
+        /// the very pairs it materializes into - and adds no pair. So a consumer that needs
+        /// only names can have them without materializing every file's survivors, which at
+        /// 446 CHS runs meant building 289 M entries to answer a question about 446 strings.</para>
+        ///
+        /// <para>Unlike <see cref="BufferIdentity"/> this is safe to hand out. Names are
+        /// correct whether or not the entries are resident, so there is no state in which it
+        /// returns something that reads as valid and is not.</para>
+        /// </summary>
+        public IReadOnlyList<string> FileNames => _buffer.ConvertAll(kv => kv.Key);
+
+        /// <summary>
+        /// The number of files in the buffer, WITHOUT pulling a deferred milestone, for the
+        /// callers that were reading <see cref="Value"/> only to take its <c>Count</c>. Same
+        /// reasoning as <see cref="FileNames"/>.
+        /// </summary>
+        public int FileCount => _buffer.Count;
+
+        /// <summary>
         /// The backing list as an OPAQUE reference, for identity comparison only - the DEBUG
         /// milestone-ordering guard in <see cref="PipelineContext"/> keys on which milestone
         /// was last published over a given buffer, and reading <see cref="Value"/> to get it
@@ -502,19 +524,20 @@ namespace pwiz.Osprey.Tasks
     {
         private readonly Lazy<bool> _materialize;
 
-        /// <summary>The buffer already at its post-rescore state - nothing deferred.</summary>
-        public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
+        /// <summary>Brings ONE file's list to its post-rescore state; null when this run has
+        /// no per-file source and the whole-run buffer is the only way to read entries.</summary>
+        private readonly Action<string, List<FdrEntry>> _materializeFile;
 
         /// <summary>
-        /// The run's file names, in buffer order. Reading them builds the buffer when the
-        /// build is still deferred, exactly as <see cref="PerFileEntries.Value"/> does -
-        /// every consumer of this milestone runs after Stage 7's own pool build, so by the
-        /// time anyone asks there is nothing left to defer.
+        /// Set once <see cref="StreamFiles"/> has dropped a file it materialized. From that
+        /// point the buffer's lists are EMPTY rather than unbuilt, and <see cref="Value"/>
+        /// refuses rather than handing them back - see the throw for why that distinction is
+        /// worth an exception.
         /// </summary>
-        public IReadOnlyList<string> FileNames
-        {
-            get { return Value.ConvertAll(kv => kv.Key); }
-        }
+        private bool _streamed;
+
+        /// <summary>The buffer already at its post-rescore state - nothing deferred.</summary>
+        public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
 
         /// <summary>
         /// The run's files, one at a time, for a consumer that ITERATES and does not retain.
@@ -541,22 +564,80 @@ namespace pwiz.Osprey.Tasks
         /// state on the first <see cref="Value"/> read. Throws on failure - a deferred build
         /// has no return channel to the driver loop - and the throw is cached, so a second
         /// reader sees the same failure rather than a partially built pool.</param>
-        public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value, Action materialize)
+        /// <param name="materializeFile">Brings ONE file's list to its post-rescore state, for
+        /// <see cref="StreamFiles"/>. Optional: without it streaming falls back to the
+        /// whole-run build, which is what the resident A/B oracle wants.</param>
+        public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value, Action materialize,
+            Action<string, List<FdrEntry>> materializeFile = null)
             : base(value)
         {
             _materialize = new Lazy<bool>(() => { materialize(); return true; },
                 LazyThreadSafetyMode.ExecutionAndPublication);
+            _materializeFile = materializeFile;
         }
 
         public override List<KeyValuePair<string, List<FdrEntry>>> Value
         {
             get
             {
+                // A pull AFTER a stream would hand back the buffer's now-empty lists, which is
+                // the failure this type's base class calls out by name: no exception, no
+                // warning, and a blib with no precursors. The whole point of streaming is that
+                // those entries are gone on purpose, so there is no honest value to return and
+                // rebuilding silently would restore the very peak the stream exists to avoid.
+                if (_streamed)
+                {
+                    throw new InvalidOperationException(
+                        @"RescoredEntries.Value was read after StreamFiles dropped the survivor " +
+                        @"pool. A consumer that runs after a streamed Stage 7 must fold through " +
+                        @"StreamFiles too, or run before the stream starts.");
+                }
                 // Reading Lazy.Value IS the build - once however many readers arrive, and a
                 // failure cached and rethrown rather than retried. The bool it yields only
                 // exists because Lazy needs a value type to hand back; discard it.
                 _ = _materialize?.Value;
                 return base.Value;
+            }
+        }
+
+        /// <summary>
+        /// The run's files one at a time, each materialized on arrival and DROPPED once the
+        /// consumer has folded it - the streamed source <see cref="Files"/>'s comment has been
+        /// waiting for. Peak is one file's survivors plus whatever the consumer accumulates,
+        /// instead of every file's at once: at 446 CHS runs that is ~0.2 GB against ~79 GB.
+        ///
+        /// <para>Yields the buffer's own pairs, so a consumer that stamps entries stamps the
+        /// same objects it would have on the resident path. The stamps do not outlive the
+        /// yield, which is exactly why the per-file SIDECAR - not the entry - is what carries
+        /// Stage 7's results forward, as <c>ComputePass2TransferCompeteFull</c> documents.</para>
+        ///
+        /// <para>Re-enumerable: a second pass re-materializes each file from disk. Two passes
+        /// are the shape a fold-then-apply step needs (accumulate O(distinct) floors over every
+        /// file, then apply them), and paying a second read is the trade that removes the pool.
+        /// Falls back to the resident walk when this run has no per-file source, so the
+        /// oracle paths are unaffected.</para>
+        /// </summary>
+        public IEnumerable<KeyValuePair<string, List<FdrEntry>>> StreamFiles()
+        {
+            if (_materializeFile == null)
+            {
+                foreach (var kv in Files())
+                    yield return kv;
+                yield break;
+            }
+            // base.Value, not Value: the pairs and their (empty) lists are what we materialize
+            // INTO, so reaching them must not trigger the whole-run build this method exists
+            // to replace - nor trip the _streamed guard on a second pass.
+            foreach (var kv in base.Value)
+            {
+                _materializeFile(kv.Key, kv.Value);
+                yield return kv;
+                // Dropped as soon as the consumer's foreach body returns. TrimExcess too:
+                // Clear leaves the backing array at its high-water capacity, which for a CHS
+                // file is ~648 K references still committed per file.
+                _streamed = true;
+                kv.Value.Clear();
+                kv.Value.TrimExcess();
             }
         }
     }

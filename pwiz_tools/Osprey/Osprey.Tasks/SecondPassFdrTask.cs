@@ -295,13 +295,6 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-inherited",
                 string.Format(@"(post-GC, entering Stage 7, files={0})", nFiles));
 
-            var perFileEntries = rescored.Value;
-            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-pool",
-                string.Format(@"(post-GC, survivor pool built, files={0})", perFileEntries.Count));
-            // Beside the probe that measures the pool, because it explains part of it: a
-            // distinct count still equal to the seed means the survivors' sequences are the
-            // library's own instances rather than one string per observation (#4486).
-            ctx.Get<SequencePool>().LogSummary(ctx.LogInfo);
             var fullLibrary = ctx.Get<FullLibrary>().Value;
             var libraryById = ctx.Get<LibraryById>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
@@ -316,7 +309,13 @@ namespace pwiz.Osprey.Tasks
             // did not survive to be a feature the shipped Osprey needs, and keeping it meant
             // maintaining and testing a second read path onto a generation this branch
             // exists to retire.
-            var stale = StaleReconciledParquets(perFileEntries, perFileParquetPaths);
+            //
+            // Asked over the buffer's NAMES, and BEFORE the pool build below. The scan reads
+            // each file's parquet footer and needs no entries, so a directory this stage
+            // refuses outright no longer pays for 289 M survivors it is about to discard.
+            // Its own transients are footer metadata, which is why it can sit between the
+            // stage7-inherited and stage7-pool probes without distorting either.
+            var stale = StaleReconciledParquets(rescored.FileNames, perFileParquetPaths);
             if (stale.Count > 0)
             {
                 throw new InvalidOperationException(string.Format(
@@ -326,10 +325,18 @@ namespace pwiz.Osprey.Tasks
                     "unusable, so a parquet-only rewrite would leave the directory " +
                     "inconsistent. Re-run the analysis from Stage 5 over this directory. " +
                     "Stale: [{2}].",
-                    stale.Count, perFileEntries.Count, string.Join(", ", stale)));
+                    stale.Count, rescored.FileCount, string.Join(", ", stale)));
             }
 
-            ReleaseUnscorableLibraryFragments(rescored, perFileEntries.Count, fullLibrary, ctx);
+            var perFileEntries = rescored.Value;
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-pool",
+                string.Format(@"(post-GC, survivor pool built, files={0})", perFileEntries.Count));
+            // Beside the probe that measures the pool, because it explains part of it: a
+            // distinct count still equal to the seed means the survivors' sequences are the
+            // library's own instances rather than one string per observation (#4486).
+            ctx.Get<SequencePool>().LogSummary(ctx.LogInfo);
+
+            ReleaseUnscorableLibraryFragments(rescored, rescored.FileCount, fullLibrary, ctx);
 
             // The 2nd-pass Percolator model, captured for the model-diagnostics
             // pass-2 model view; null when no reconciliation rescore happened.
@@ -654,15 +661,15 @@ namespace pwiz.Osprey.Tasks
         /// convert toward and has to be re-run from Stage 5 (issue #4486).</para>
         /// </summary>
         private static List<string> StaleReconciledParquets(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyList<string> fileNames,
             IReadOnlyDictionary<string, string> perFileParquetPaths)
         {
             var stale = new List<string>();
             if (perFileParquetPaths == null)
                 return stale;
-            foreach (var kv in perFileEntries)
+            foreach (var fileName in fileNames)
             {
-                if (!perFileParquetPaths.TryGetValue(kv.Key, out string scoresPath))
+                if (!perFileParquetPaths.TryGetValue(fileName, out string scoresPath))
                     continue;
                 string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
                 if (!File.Exists(reconciledPath))
@@ -680,7 +687,7 @@ namespace pwiz.Osprey.Tasks
                         StringComparison.Ordinal) ||
                     ParquetScoreCache.IsSubsetWithoutScoreIndex(reconciledPath))
                 {
-                    stale.Add(kv.Key);
+                    stale.Add(fileName);
                 }
             }
             return stale;

@@ -437,12 +437,95 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1, milestone.Value[0].Value.Count);
         }
 
+        /// <summary>
+        /// <see cref="RescoredEntries.StreamFiles"/> is the per-file source that lets Stage 7
+        /// fold without holding the run: each file is materialized as the consumer reaches it
+        /// and DROPPED when the consumer moves on, so the peak is one file's survivors rather
+        /// than every file's at once.
+        ///
+        /// <para>The last assertion is why this is a test and not a comment. After a stream the
+        /// buffer's lists are EMPTY rather than unbuilt, so a consumer that then read
+        /// <c>Value</c> would receive one empty list per file with no exception and no warning
+        /// - the blib-with-no-precursors failure <see cref="PerFileEntries"/> warns about. It
+        /// has to throw instead, because there is no honest value to return and rebuilding
+        /// silently would restore the very peak the stream exists to avoid.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestStreamFilesDropsEachFileAndRefusesALaterValueRead()
+        {
+            // No per-file source - the resident A/B oracle, where the run kept its buffer and
+            // has nothing to rebuild a dropped file from. StreamFiles falls back to the
+            // whole-run build and drops nothing.
+            var resident = BufferWithFiles(@"file1", @"file2");
+            int residentBuilds = 0;
+            var residentMilestone = new RescoredEntries(resident, () =>
+            {
+                residentBuilds++;
+                foreach (var kv in resident)
+                    kv.Value.Add(new FdrEntry());
+            });
+            var residentWalk = new List<string>();
+            foreach (var kv in residentMilestone.StreamFiles())
+                residentWalk.Add(kv.Key);
+            Assert.AreEqual(1, residentBuilds);
+            CollectionAssert.AreEqual(new[] { @"file1", @"file2" }, residentWalk);
+            Assert.AreEqual(2, ResidentEntryCount(resident), @"The fallback walk must not drop");
+            Assert.AreSame(resident, residentMilestone.Value);
+
+            // With a per-file source: the whole-run build never runs, and exactly ONE file is
+            // resident at any point in the walk - the property the whole change exists for.
+            var streamed = BufferWithFiles(@"file1", @"file2");
+            int wholeRunBuilds = 0;
+            var materialized = new List<string>();
+            var milestone = new RescoredEntries(streamed, () => wholeRunBuilds++,
+                (fileName, entries) =>
+                {
+                    materialized.Add(fileName);
+                    entries.Add(new FdrEntry());
+                });
+            var residentDuringWalk = new List<int>();
+            foreach (var kv in milestone.StreamFiles())
+            {
+                Assert.AreEqual(1, kv.Value.Count, @"The current file must arrive materialized");
+                residentDuringWalk.Add(ResidentEntryCount(streamed));
+            }
+            Assert.AreEqual(0, wholeRunBuilds, @"A streamed walk must not build the whole-run pool");
+            CollectionAssert.AreEqual(new[] { @"file1", @"file2" }, materialized);
+            CollectionAssert.AreEqual(new[] { 1, 1 }, residentDuringWalk);
+            Assert.AreEqual(0, ResidentEntryCount(streamed), @"The last file is dropped too");
+
+            // Re-enumerable, because a fold-then-apply consumer needs two passes: accumulate
+            // O(distinct) floors over every file, then apply them to every file.
+            foreach (var kv in milestone.StreamFiles())
+                Assert.AreEqual(1, kv.Value.Count);
+            CollectionAssert.AreEqual(new[] { @"file1", @"file2", @"file1", @"file2" }, materialized);
+
+            Assert.ThrowsException<InvalidOperationException>(() => milestone.Value);
+        }
+
         private static List<KeyValuePair<string, List<FdrEntry>>> BufferWithOneFile()
         {
-            return new List<KeyValuePair<string, List<FdrEntry>>>
-            {
-                new KeyValuePair<string, List<FdrEntry>>(@"file1", new List<FdrEntry>())
-            };
+            return BufferWithFiles(@"file1");
+        }
+
+        private static List<KeyValuePair<string, List<FdrEntry>>> BufferWithFiles(
+            params string[] fileNames)
+        {
+            var buffer = new List<KeyValuePair<string, List<FdrEntry>>>();
+            foreach (string fileName in fileNames)
+                buffer.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>()));
+            return buffer;
+        }
+
+        /// <summary>Entries resident across the WHOLE buffer, which is what a streamed walk
+        /// must hold at one file's worth however many files the run has.</summary>
+        private static int ResidentEntryCount(
+            List<KeyValuePair<string, List<FdrEntry>>> buffer)
+        {
+            int count = 0;
+            foreach (var kv in buffer)
+                count += kv.Value.Count;
+            return count;
         }
     }
 }

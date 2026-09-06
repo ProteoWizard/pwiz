@@ -312,8 +312,31 @@ namespace pwiz.Osprey.Tasks
             // and parked in _poolPlan; deferring the decision as well as the work would
             // read state that is no longer true by the time the pull comes (see
             // RescoredPoolPlan).
-            var rescored = new RescoredEntries(_perFileEntries, () => BuildRescoredPool(ctx));
+            //
+            // The per-file source is handed over only when a loader exists, and that condition
+            // is not a detail: a run that kept the resident buffer has no way to rebuild a file
+            // it dropped, so streaming there would destroy the only copy of the survivors on
+            // its way past. Null leaves StreamFiles walking the resident buffer, which is what
+            // the OSPREY_STAGE6_STREAM_SURVIVORS=0 A/B oracle needs it to do.
+            Action<string, List<FdrEntry>> materializeOneFile = null;
+            if (survivorLoader != null)
+                materializeOneFile = MaterializeOneFile;
+            var rescored = new RescoredEntries(_perFileEntries, () => BuildRescoredPool(ctx),
+                materializeOneFile);
             ctx.Publish(rescored);
+
+            void MaterializeOneFile(string fileName, List<FdrEntry> entries)
+            {
+                // Same refusal as BuildRescoredPool, and for the same reason: every guess
+                // available before Run has decided produces a wrong reported set rather than
+                // an error.
+                if (_poolPlan == null)
+                {
+                    throw new InvalidOperationException(
+                        @"RescoredEntries was streamed before PerFileRescoring decided how to build the survivor pool.");
+                }
+                MaterializeRescoredFile(ctx, _poolPlan, fileName, entries);
+            }
 
             // Self-gate: rescore + reconciliation only run when there is
             // planning state to act on AND the rescore hasn't already been
@@ -2475,38 +2498,55 @@ namespace pwiz.Osprey.Tasks
                 foreach (var kv in plan.Buffer)
                 {
                     progress.Report(++done);
-                    // ONE parquet, not two. When this file's reconciled parquet was judged
-                    // current, it already holds the survivor subset with Stage 6's boundaries
-                    // applied and the gap-fill rows merged - so reading it makes both the
-                    // Stage 4 read and the overlay that put those values back unnecessary
-                    // (#4486). Stage 6 originally OVERWROTE the Stage 4 parquet, which is why
-                    // one read used to give both; splitting the files left Stage 7 reading one
-                    // for the rows and the other for the values.
-                    string reconciledPath = null;
-                    plan.ReconciledPaths?.TryGetValue(kv.Key, out reconciledPath);
-                    bool loadedReconciled = reconciledPath != null && kv.Value.Count == 0;
-                    MaterializeFileSurvivors(kv.Key, kv.Value, plan.Loader, ctx,
-                        loadedReconciled ? reconciledPath : null);
-                    if (plan.RescoredFiles == null)
-                        continue;
-                    // BEFORE the overlay, which appends gap-fill rows: the planner's indices
-                    // address the survivor list as loaded, and appending shifts nothing but
-                    // would be indexed if the reset ran after. The overlay preserves Score /
-                    // q-values, so the reset survives it.
-                    ResetRescoredTargetsForFile(plan, kv.Key, kv.Value);
-                    // Skipped when the rows CAME from the reconciled parquet: the overlay
-                    // would re-apply boundaries the rows already carry and append a second
-                    // copy of the gap-fill rows already merged into them.
-                    if (!loadedReconciled)
-                    {
-                        OverlayReconciledIntoFile(kv.Key, kv.Value, plan.ReconciledPaths,
-                            plan.GapFill?.Value, canonicalize: false);
-                    }
+                    MaterializeRescoredFile(ctx, plan, kv.Key, kv.Value);
                 }
             }
             sw.Stop();
             ctx.LogInfo(string.Format(@"[STAGE-WALL] survivor-pool {0:F1}s ({1} files)",
                 sw.Elapsed.TotalSeconds, plan.Buffer.Count));
+        }
+
+        /// <summary>
+        /// Bring ONE file's survivor list to its post-rescore state: load, reset the rescored
+        /// targets, overlay the reconciled values. The body of <see cref="BuildRescoredPool"/>'s
+        /// loop, extracted so a consumer can ask for one file at a time and DROP it - which is
+        /// the seam that loop's comment has described as needed since #4486.
+        ///
+        /// <para>Nothing here reads another file's entries, so calling it per file in buffer
+        /// order is the same work in the same order as the whole-run build. That equivalence is
+        /// the reason a streamed Stage 7 can produce byte-identical output: the difference is
+        /// only how long each file's list stays alive.</para>
+        /// </summary>
+        private void MaterializeRescoredFile(PipelineContext ctx, RescoredPoolPlan plan,
+            string fileName, List<FdrEntry> entries)
+        {
+            // ONE parquet, not two. When this file's reconciled parquet was judged
+            // current, it already holds the survivor subset with Stage 6's boundaries
+            // applied and the gap-fill rows merged - so reading it makes both the
+            // Stage 4 read and the overlay that put those values back unnecessary
+            // (#4486). Stage 6 originally OVERWROTE the Stage 4 parquet, which is why
+            // one read used to give both; splitting the files left Stage 7 reading one
+            // for the rows and the other for the values.
+            string reconciledPath = null;
+            plan.ReconciledPaths?.TryGetValue(fileName, out reconciledPath);
+            bool loadedReconciled = reconciledPath != null && entries.Count == 0;
+            MaterializeFileSurvivors(fileName, entries, plan.Loader, ctx,
+                loadedReconciled ? reconciledPath : null);
+            if (plan.RescoredFiles == null)
+                return;
+            // BEFORE the overlay, which appends gap-fill rows: the planner's indices
+            // address the survivor list as loaded, and appending shifts nothing but
+            // would be indexed if the reset ran after. The overlay preserves Score /
+            // q-values, so the reset survives it.
+            ResetRescoredTargetsForFile(plan, fileName, entries);
+            // Skipped when the rows CAME from the reconciled parquet: the overlay
+            // would re-apply boundaries the rows already carry and append a second
+            // copy of the gap-fill rows already merged into them.
+            if (!loadedReconciled)
+            {
+                OverlayReconciledIntoFile(fileName, entries, plan.ReconciledPaths,
+                    plan.GapFill?.Value, canonicalize: false);
+            }
         }
 
         /// <summary>
