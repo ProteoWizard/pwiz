@@ -4401,7 +4401,14 @@ namespace pwiz.Osprey.Test
                         seenPreCompactionCounts.Add(stubs.Count);
                         tally.PassingTargets = stubs.Count;
                     },
-                    new Dictionary<uint, FdrExperimentRecord>());
+                    new Dictionary<uint, FdrExperimentRecord>(),
+                    // The retained set the planner would have written to the analysis-wide
+                    // summary. Taking it from the resident arm's Apply is the point of the
+                    // comparison rather than a shortcut: Apply derives the union with every
+                    // file's actions in hand, so handing the streaming arm the same set asserts
+                    // that a run compacted against the summary keeps exactly what the join
+                    // keeps.
+                    resident.RetainedBaseIds);
                 var streamedStats = RescoreCompaction.Apply(streamed);
 
                 // The streaming hook saw the FULL pre-compaction pool for each file, and the

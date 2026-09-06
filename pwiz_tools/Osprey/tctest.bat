@@ -33,6 +33,11 @@ REM   * ##teamcity[buildProblem ...]                          (on any failure)
 REM   No artifacts are published: the run deletes its own scratch as it goes so a
 REM   shared agent is not starved, and a red gate's diagnosis lives in the build log.
 
+REM Runs the suite as two concurrent lanes (Astral in one, the three Stellar
+REM variants in the other). Same datasets, same modes, nothing skipped - only the
+REM scheduling changes. regression-parallel.ps1 sizes threads per lane from the
+REM agent's logical processor count, so this is correct on a 16-logical agent and
+REM on a 32-logical dev box without a per-machine setting here.
 setlocal
-pwsh -NoProfile -File "%~dp0regression.ps1" -TeamCity -Dataset All
+pwsh -NoProfile -File "%~dp0regression-parallel.ps1" -TeamCity -Dataset All
 exit /b %ERRORLEVEL%

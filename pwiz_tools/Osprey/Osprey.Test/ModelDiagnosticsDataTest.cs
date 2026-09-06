@@ -26,6 +26,7 @@ using Newtonsoft.Json.Serialization;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey.Test
 {
@@ -62,6 +63,54 @@ namespace pwiz.Osprey.Test
             TestCalibrationBuildCalFile();
             TestStreamingAccumulatorMatchesBatch();
             TestPeakCoAssignment();
+            TestCompletenessStatesTheRightReason();
+        }
+
+        /// <summary>
+        /// The page has to say what it does and does not represent, and the three partial states
+        /// are NOT interchangeable. The one worth pinning is the third: an analysis that finished
+        /// before the diagnostics products existed has a real second pass and no pass-2 product,
+        /// and calling that "the second pass has not completed" is a confident wrong answer about
+        /// a finished run - the failure this banner exists to prevent, inverted.
+        /// </summary>
+        private static void TestCompletenessStatesTheRightReason()
+        {
+            // Complete: both passes present, every run contributed. No banner at all.
+            var complete = ModelDiagnosticsReport.BuildCompleteness(
+                MakeCompletenessData(3, withPass2: true), -1, secondPassCompleted: true);
+            Assert.IsTrue(complete.Pass2Present);
+            Assert.IsNull(complete.Reason);
+            Assert.AreEqual(3, complete.RunsContributed);
+            Assert.AreEqual(3, complete.RunsExpected);
+
+            // Unfinished analysis: no pass-2 product AND no second pass on disk.
+            var unfinished = ModelDiagnosticsReport.BuildCompleteness(
+                MakeCompletenessData(3, withPass2: false), -1, secondPassCompleted: false);
+            Assert.IsFalse(unfinished.Pass2Present);
+            StringAssert.Contains(unfinished.Reason, "The second pass has not completed");
+
+            // Finished analysis, no pass-2 VIEWS: the second pass ran but left no product.
+            var viewsOnly = ModelDiagnosticsReport.BuildCompleteness(
+                MakeCompletenessData(3, withPass2: false), -1, secondPassCompleted: true);
+            Assert.IsFalse(viewsOnly.Pass2Present);
+            StringAssert.Contains(viewsOnly.Reason, "The second pass completed but left no diagnostics product");
+
+            // Partial cohort: fewer runs folded than the analysis was handed, stated as a count
+            // so the reader can see how much of the experiment the page covers.
+            var partialCohort = ModelDiagnosticsReport.BuildCompleteness(
+                MakeCompletenessData(446, withPass2: false), 141, secondPassCompleted: false);
+            Assert.AreEqual(141, partialCohort.RunsContributed);
+            Assert.AreEqual(446, partialCohort.RunsExpected);
+            StringAssert.Contains(partialCohort.Reason, "141 of 446 runs contributed to the first pass");
+        }
+
+        private static ModelDiagnosticsData MakeCompletenessData(int fileCount, bool withPass2)
+        {
+            return new ModelDiagnosticsData
+            {
+                FileCount = fileCount,
+                Pass2 = withPass2 ? new ModelDiagnosticsData.Pass2Data() : null,
+            };
         }
 
         // Single-peak multiple-ID co-assignment (issue #4522) on a fixture where every reported

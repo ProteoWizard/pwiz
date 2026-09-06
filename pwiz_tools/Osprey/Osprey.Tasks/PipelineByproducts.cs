@@ -264,15 +264,87 @@ namespace pwiz.Osprey.Tasks
     /// <summary>Per-file refined RT calibrations from the Stage 6 calibration refit.</summary>
     internal sealed class RefinedCalibrations
     {
-        public IReadOnlyDictionary<string, RTCalibration> Value { get; }
-        public RefinedCalibrations(IReadOnlyDictionary<string, RTCalibration> value) { Value = value; }
+        // DEFERRED, for the reason PerFileGapFillForRescore below gives at length: the two are
+        // filled by ONE read of every run's reconciliation.json, and the per-run rescore path
+        // never looks at either.
+        private readonly Func<IReadOnlyDictionary<string, RTCalibration>> _build;
+        private IReadOnlyDictionary<string, RTCalibration> _value;
+        private bool _built;
+
+        public RefinedCalibrations(IReadOnlyDictionary<string, RTCalibration> value)
+        {
+            _value = value;
+            _built = true;
+        }
+
+        /// <summary>Build on first read.</summary>
+        public RefinedCalibrations(Func<IReadOnlyDictionary<string, RTCalibration>> build)
+        {
+            _build = build;
+        }
+
+        public IReadOnlyDictionary<string, RTCalibration> Value
+        {
+            get
+            {
+                if (!_built)
+                {
+                    _value = _build?.Invoke();
+                    _built = true;
+                }
+                return _value;
+            }
+        }
     }
 
     /// <summary>Per-file gap-fill targets for the Stage 6 rescore.</summary>
     internal sealed class PerFileGapFillForRescore
     {
-        public IReadOnlyDictionary<string, List<GapFillTarget>> Value { get; }
-        public PerFileGapFillForRescore(IReadOnlyDictionary<string, List<GapFillTarget>> value) { Value = value; }
+        // DEFERRED. This and RefinedCalibrations are filled by a SINGLE read of every run's
+        // reconciliation.json (RescoreHydration.ReadGapFillAndCalibrations), and on the per-run
+        // rescore path NOTHING reads the result: RescoreOneFile takes run.GapFill and
+        // run.RefinedCalibration out of each run's OWN envelope inside its own iteration, and
+        // only falls back to these all-runs maps on the other path. A --task PerFileRescoring
+        // worker never touches them at all.
+        //
+        // Measured on the 446-run CHS cohort, three ways: dotTrace 69.7s total in
+        // ReadGapFillAndCalibrations (68.2s of it inside ReconciliationFile.Load, own time ~0,
+        // so it is all JSON deserialization); an in-code probe at 92.7s; and a night run's log
+        // gap at 111s. It varies with OS file-cache state because it is I/O bound over 446
+        // files - and it was the single largest time gap in an otherwise flat rescore.
+        //
+        // Their real consumer is Stage 7's pool rebuild (PerFileRescoreTask.Rehydrate ->
+        // OverlayReconciledIntoFiles), which runs much later and legitimately needs the whole-run
+        // form. Deferring moves the cost to that reader rather than removing it - which is the
+        // point: the work belongs to whoever needs the product, at the moment they need it.
+        private readonly Func<IReadOnlyDictionary<string, List<GapFillTarget>>> _build;
+        private IReadOnlyDictionary<string, List<GapFillTarget>> _value;
+        private bool _built;
+
+        public PerFileGapFillForRescore(IReadOnlyDictionary<string, List<GapFillTarget>> value)
+        {
+            _value = value;
+            _built = true;
+        }
+
+        /// <summary>Build on first read.</summary>
+        public PerFileGapFillForRescore(Func<IReadOnlyDictionary<string, List<GapFillTarget>>> build)
+        {
+            _build = build;
+        }
+
+        public IReadOnlyDictionary<string, List<GapFillTarget>> Value
+        {
+            get
+            {
+                if (!_built)
+                {
+                    _value = _build?.Invoke();
+                    _built = true;
+                }
+                return _value;
+            }
+        }
     }
 
     /// <summary>
@@ -360,8 +432,43 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal sealed class FdrProjections
     {
-        public FdrProjectionSet Value { get; }
-        public FdrProjections(FdrProjectionSet value) { Value = value; }
+        // DEFERRED, because on a resume this is usually built and never read. Its ONLY consumer
+        // is FirstPassFdrTask.Run (ctx.Consume<FdrProjections>()), and a resume whose 1st-pass
+        // outputs are already valid SKIPS that Run entirely - so PerFileScoring's rehydrate was
+        // streaming every row of every parquet to build a set nobody would ask for. Measured
+        // 2026-09-03 on the 446-file CHS cohort: 9m46s scanning 1,342,686,095 rows, discarded.
+        //
+        // Same shape as the RescoredEntries milestone, and for the same reason: the work belongs
+        // to whoever needs the product, at the moment they need it. Building it eagerly in a
+        // fan-out task is a pre-processing pass over all runs, which the target shape forbids.
+        private readonly Func<FdrProjectionSet> _build;
+        private FdrProjectionSet _value;
+        private bool _built;
+
+        public FdrProjections(FdrProjectionSet value)
+        {
+            _value = value;
+            _built = true;
+        }
+
+        /// <summary>Build on first read. A null factory means "no projection".</summary>
+        public FdrProjections(Func<FdrProjectionSet> build)
+        {
+            _build = build;
+        }
+
+        public FdrProjectionSet Value
+        {
+            get
+            {
+                if (!_built)
+                {
+                    _value = _build?.Invoke();
+                    _built = true;
+                }
+                return _value;
+            }
+        }
     }
 
     /// <summary>The buffer after FirstPassFDR's first-pass FDR + compaction.</summary>
