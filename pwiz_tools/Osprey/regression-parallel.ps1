@@ -29,7 +29,10 @@
     directory. Do not assume new shared state is safe; add it per-lane.
 
 .PARAMETER Threads
-    Threads per LANE, not for the machine. Two lanes at 16 saturate a 32-core box.
+    Threads per LANE, not for the machine. Defaults to logical processors divided
+    by the lane count, which is the only value that is right on more than one box:
+    this dev machine is 32 logical (2 lanes x 16) and MacCoss TeamCity Agent 1 is
+    16 (2 lanes x 8). Hardcoding 16 would oversubscribe the agent 2:1.
 
 .PARAMETER Dataset
     Which datasets to run, default all four. A single dataset runs serially, since
@@ -42,7 +45,7 @@
 param(
     [ValidateSet('Stellar', 'StellarLibDecoy', 'StellarGenDecoyEntrap', 'Astral', 'All')]
     [string[]]$Dataset = 'All',
-    [int]$Threads = 16,
+    [int]$Threads = 0,   # 0 = auto: logical processors / lane count
     [switch]$NoBuild,
     [switch]$TeamCity,
     [string]$LogDir
@@ -72,6 +75,15 @@ $laneB = @($selected | Where-Object { $_ -ne 'Astral' })
 $lanes = [System.Collections.Generic.List[object]]::new()
 if ($laneA.Count -gt 0) { $lanes.Add($laneA) }
 if ($laneB.Count -gt 0) { $lanes.Add($laneB) }
+
+# Size threads to the MACHINE, after the lane count is known. Two lanes each asking
+# for 16 threads is right on a 32-logical box and 2:1 oversubscription on a 16-logical
+# one - and the agent this has to run on is 16. Auto keeps one config correct on both.
+if ($Threads -le 0) {
+    $Threads = [Math]::Max(1, [int]([Environment]::ProcessorCount / $lanes.Count))
+}
+Write-Host ("==> {0} lane(s), {1} thread(s) each, {2} logical processor(s)" -f
+    $lanes.Count, $Threads, [Environment]::ProcessorCount) -ForegroundColor Cyan
 
 # --- Build ONCE, here, so the lanes cannot race each other's build output ---------
 if (-not $NoBuild) {
