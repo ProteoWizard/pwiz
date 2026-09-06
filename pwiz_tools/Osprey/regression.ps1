@@ -426,8 +426,23 @@ $datasets = [ordered]@{
     # ~0.25); the pre-fix code measured 1.408 with a real paired-win coin of 0.397,
     # i.e. decoys losing 60% of head-to-head pairs against their own targets. This
     # bound would have failed the old construction, which is the point.
+    # SkipModes is a DELIBERATE COVERAGE CUT, priced against the clock, not an
+    # oversight. Astral is the suite's critical path: it is 51.8% of the serial work
+    # and, under the two-lane runner, it alone sets the wall time because the other
+    # three datasets share the second lane and finish ~5 min earlier. So only Astral
+    # legs buy wall time, and the gate has to fit the ~85 min budget the config had
+    # before modes 8 and 9 were added.
+    #
+    # Mode 2 asserts "resume == straight-through". On Astral that property is the most
+    # redundantly covered of its expensive legs: mode 5 asserts rehydrate == straight,
+    # mode 3 asserts the HPC chain == straight, and modes 8 and 9 both drive partial
+    # resumes to completion on this same dataset. Mode 2 also still runs on all THREE
+    # Stellar datasets, so the leg is not lost - only its hram instance is.
+    #
+    # Measured cost of this cut: ~8.6 min of Astral's serial time, which is what took
+    # the TeamCity parallel run from 1:27:20 to inside the budget.
     Astral  = @{ Folder = 'astral';  Resolution = 'hram'; ModelDiagnostics = $true
-                 MaxAbsTilt = 0.5 }
+                 MaxAbsTilt = 0.5; SkipModes = @(2) }
 }
 $selected = if ($Dataset -eq 'All') { @($datasets.Keys) } else { @($Dataset) }
 
@@ -2106,7 +2121,16 @@ foreach ($name in $selected) {
     Copy-Item $straightBlib $coldBlib -Force
 
     # ---- mode 2: resume vs straight-through self-consistency ----
-    if (-not $SkipResume) {
+    # A dataset-level skip records itself in the summary rather than vanishing. A leg
+    # that silently stops running is indistinguishable from one that was never there,
+    # and the leg COUNT is what tells a truncated run from a clean one.
+    if (-not $SkipResume -and ($cfg.SkipModes -contains 2)) {
+        $summaryLines.Add(
+            "$name mode2 (resume self-consistency): SKIP (deliberate: budgeted out on the " +
+            "critical-path dataset; asserted on the three Stellar datasets, and rehydrate/" +
+            "chain/partial-resume equality to straight-through still asserted here by modes 5, 3, 8, 9)")
+    }
+    elseif (-not $SkipResume) {
         Write-Progress-Tc "${name}: resume self-consistency (mode 2)"
         Invoke-ResumeInvalidation -WorkDir $straightDir
         # No OSPREY_ALLOW_UNFIXED_RESIDENT opt-in, and this leg is the reason the variable is
