@@ -2431,7 +2431,12 @@ foreach ($name in $selected) {
         Scopes = @($releaseScopeRescore, $releaseScopeReported)
         Freed  = @($releaseScopeRescore)
     })
-    if (-not $SkipResume) {
+    # Gated on the SAME condition that decides whether mode 2 runs, not on whether
+    # resume.log happens to exist. This leg asserts the release fired on every leg that
+    # HOLDS the library, so a leg that never ran makes no claim to check - but "the log
+    # is missing" is also what a leg that ran and died looks like, and those must not be
+    # confused. The skip list is explicit; file presence is a guess.
+    if (-not $SkipResume -and -not ($cfg.SkipModes -contains 2)) {
         # The resume leg exercises FirstPassFdrTask.RUN, not its rehydrate arm: mode 2's
         # Invoke-ResumeInvalidation deletes the FirstPassFDR stamp, and mode 2 asserts
         # -ExpectRan @('FirstPassFDR', ...) on this very log to prove it. Worth checking
@@ -2517,7 +2522,10 @@ foreach ($name in $selected) {
             "every assertion above is reading nothing") -f $releaseLinePattern))
     }
     if ($m6Issues.Count -eq 0) {
-        $summaryLines.Add("$name mode6 (library-fragment release engaged): PASS")
+        # Report the leg COUNT. This leg's strength is how many library-holding legs it
+        # covers, and that set shrinks silently when a dataset skips one of them - a
+        # green "PASS" over three legs looks identical to a green one over five.
+        $summaryLines.Add("$name mode6 (library-fragment release engaged): PASS ($($releaseChecks.Count) leg(s))")
     } else {
         $overallFail = $true
         Write-Problem-Tc "$name mode6 (library-fragment release engaged): FAIL - $($m6Issues.Count) issue(s)"
