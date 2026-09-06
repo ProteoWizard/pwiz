@@ -2121,16 +2121,19 @@ foreach ($name in $selected) {
     Copy-Item $straightBlib $coldBlib -Force
 
     # ---- mode 2: resume vs straight-through self-consistency ----
-    # A dataset-level skip records itself in the summary rather than vanishing. A leg
-    # that silently stops running is indistinguishable from one that was never there,
-    # and the leg COUNT is what tells a truncated run from a clean one.
-    if (-not $SkipResume -and ($cfg.SkipModes -contains 2)) {
-        $summaryLines.Add(
-            "$name mode2 (resume self-consistency): SKIP (deliberate: budgeted out on the " +
-            "critical-path dataset; asserted on the three Stellar datasets, and rehydrate/" +
-            "chain/partial-resume equality to straight-through still asserted here by modes 5, 3, 8, 9)")
-    }
-    elseif (-not $SkipResume) {
+    # A dataset that does not run this mode reports NO line for it - deliberately, and not
+    # as a SKIP. Leg parity across datasets is not a goal and the suite is full of
+    # asymmetries that have never been announced at runtime: Astral is never searched
+    # against a library-decoy library at all, it carries no entrapment and so is gated on
+    # a different tier-2 bound, and Stellar omits six ModelDiagnostics legs. A lone SKIP
+    # line for this one would imply it is the only omission, which is the misleading half
+    # of a partial accounting.
+    #
+    # Truncation is still detectable, and better: the per-dataset leg COUNTS are fixed by
+    # configuration (Stellar 15, StellarLibDecoy 21, StellarGenDecoyEntrap 21, Astral 19)
+    # and are documented with the full asymmetry list in ai/docs/osprey-development-guide.md.
+    # A short count is what distinguishes an aborted run, not the presence of a SKIP line.
+    if (-not $SkipResume -and -not ($cfg.SkipModes -contains 2)) {
         Write-Progress-Tc "${name}: resume self-consistency (mode 2)"
         Invoke-ResumeInvalidation -WorkDir $straightDir
         # No OSPREY_ALLOW_UNFIXED_RESIDENT opt-in, and this leg is the reason the variable is
