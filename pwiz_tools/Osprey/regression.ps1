@@ -1974,6 +1974,33 @@ foreach ($name in $selected) {
             $summaryLines.Add("$name mode3 (shipped fold): PASS (worker answer folded for every file)")
         }
 
+        # Which SHAPE phase 4 folded in, asserted as a marker line rather than inferred from the
+        # output. A resident Stage 7 and a streamed one produce identical bytes by design - that
+        # is the whole claim - so nothing this gate compares can tell them apart, and doc 00's
+        # rule for exactly that situation is to assert the path the run reports rather than trust
+        # the bytes to reveal it. Without this, a change that silently disqualifies the streamed
+        # arm leaves every leg green while the O(runs x entries) peak comes back.
+        #
+        # Scoped to the datasets that can actually stream: CanStreamStage7Join declines under
+        # --model-diagnostics, which this suite sets on every dataset but plain Stellar, so
+        # demanding the line elsewhere would fail runs for a contract they cannot make. That
+        # narrowness is itself the finding - three of four datasets exercise only the resident
+        # arm - and it is recorded in the TODO rather than papered over here.
+        $chainCanStream = -not $cfg.ModelDiagnostics
+        $chainStreamed = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
+            -Pattern 'Second-pass join: folding over \d+ run\(s\)' -Quiet
+        if (-not $chainCanStream) {
+            $summaryLines.Add("$name mode3 (streamed join): SKIP (--model-diagnostics keeps the resident pool)")
+        } elseif (-not $chainStreamed) {
+            $overallFail = $true
+            Write-Problem-Tc ("$name mode3 (streamed join): FAIL - phase 4 did not report the " +
+                "per-run fold, so SecondPassFDR built the whole-run survivor pool. Output is " +
+                "unchanged either way; only this line distinguishes them.")
+            $summaryLines.Add("$name mode3 (streamed join): FAIL")
+        } else {
+            $summaryLines.Add("$name mode3 (streamed join): PASS (per-run fold, no all-runs pool)")
+        }
+
         # Scoped for the same reason as the shipped-fold check above: the verifier only exists on
         # the frozen-competition path, so OSPREY_PASS2_QVALUE=transfer and the retrain modes emit
         # NEITHER fold line and there is no split to assert. Detected from the straight leg having

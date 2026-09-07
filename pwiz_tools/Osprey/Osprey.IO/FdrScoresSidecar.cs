@@ -745,6 +745,10 @@ namespace pwiz.Osprey.IO
         private static bool TryWalkRecords(string path, Pass expectedPass,
             Func<byte[], int, bool> onRecord)
         {
+            // How many records the caller has already been handed. Decides whether a fault
+            // means "unusable file" (return false, nothing applied) or "partly applied"
+            // (throw) - see the catch below.
+            long delivered = 0;
             // NOT a bare catch: an OutOfMemoryException here is reported as a MISSING
             // sidecar, and a missing 1st-pass sidecar leaves those entries at Score 0.0.
             // The decoy side is not q-gated, so the zeros then compete in the picked-
@@ -793,21 +797,54 @@ namespace pwiz.Osprey.IO
                     {
                         int take = Math.Min(RECORDS_PER_CHUNK, remaining);
                         if (!ReadFully(fs, chunk, take * RecordLength))
-                            return false;
+                            return delivered == 0 ? false : ThrowPartialWalk(path, delivered);
                         remaining -= take;
                         for (int rec = 0; rec < take; rec++)
                         {
                             if (!onRecord(chunk, rec * RecordLength))
                                 return false;
+                            delivered++;
                         }
                     }
                 }
             }
             catch (Exception ex) when (!(ex is OutOfMemoryException))
             {
+                // A failure BEFORE the first record is "this file is unusable", which every
+                // caller handles: it leaves their entries exactly as they arrived. A failure
+                // AFTER records have already been applied is a different fact and must not
+                // share the same answer - the caller has half a file's values on its entries
+                // and no way to know, and OverlayPass2SidecarOntoFile's caller treats false as
+                // non-fatal ("protein FDR will use stale 1st-pass q-values"), which would ship
+                // a run that is half pass-1 and half pass-2.
+                //
+                // This distinction was free before the read was chunked: File.ReadAllBytes and
+                // the header checks all completed before any entry was touched, so the catch
+                // could only ever mean "nothing applied". Chunking moved the read inside the
+                // walk and quietly took that guarantee away.
+                if (delivered > 0)
+                    ThrowPartialWalk(path, delivered, ex);
                 return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Report a sidecar walk that failed AFTER handing records to its caller. Always
+        /// throws; the <c>bool</c> return type only exists so the mid-loop call site can be an
+        /// expression.
+        /// </summary>
+        private static bool ThrowPartialWalk(string path, long delivered, Exception inner = null)
+        {
+            string message = string.Format(
+                @"Reading the FDR sidecar '{0}' failed after {1} record(s) had already been " +
+                @"applied. Those entries now hold this file's values and the rest do not, which " +
+                @"no caller can detect or undo, so the run stops here rather than continuing " +
+                @"with a partly-overlaid pool.",
+                path, delivered);
+            if (inner != null)
+                throw new IOException(message, inner);
+            throw new IOException(message);
         }
 
         /// <summary>
