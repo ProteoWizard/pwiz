@@ -134,10 +134,20 @@ skipped first-pass training, or a present-but-corrupt first-pass sidecar),
 reporting looser FDR than a cold run under the same flag.
 
 Because `protein-compact` is now the DEFAULT, this fail-fast reaches ordinary
-runs, not just explicitly flagged ones. That is why the first-pass model sidecar
-also carries the protein stratum: a distributed `--task SecondPassFDR` node
+runs, not just explicitly flagged ones. A distributed `--task SecondPassFDR` node
 never trained pass 1 and cannot rebuild the stratum (that needs the full library
-plus the first-pass detected peptides), so both are reloaded from the sidecar.
+plus the first-pass detected peptides), so both the model and the stratum are
+reloaded from disk.
+
+They are **two files, not one**, because two different phases produce them:
+`<stem>.1st-pass.model.json` is written the moment first-pass training returns a
+model, and `<stem>.1st-pass.stratum.json` when first-pass protein FDR ends. On a
+446-file cohort those two moments are hours apart, and bundling them meant the
+model — a few hundred KB, fully computed at minute ~21 — existed only in RAM
+until the end of the task, so any interruption threw it away. `LoadFromAny`
+merges the two on read, so a consumer still sees one sidecar. **Both must ride
+the HPC relay**: an orchestrator that copies the model between phase directories
+and not the stratum reaches this fail-fast under the default mode.
 
 **Interaction with `mean-best-<N>`, worth knowing before a sweep**: a first pass
 run under `OSPREY_EXPERIMENT_AGG=mean-best-<N>` is REFUSED by the default mode,
