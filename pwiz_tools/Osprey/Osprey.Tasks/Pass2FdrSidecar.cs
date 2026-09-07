@@ -453,7 +453,26 @@ namespace pwiz.Osprey.Tasks
                 // (#4486) both wrote the .bin + validity sidecar per file as they went, so
                 // this loop is skipped for them - only the shared tallies they updated
                 // drive the summary log below.
-                if (pass2Projections == null && !pass2SidecarsWritten)
+                //
+                // NOT ON THE STREAMED POOL, and this is a correctness skip rather than a
+                // memory one. It is reachable there on the DEFAULT mode: with
+                // recomputed == false - a cohort with no rescore work, or a resume whose
+                // sidecars are all current and worker-owned - the frozen competition inside
+                // `if (recomputed)` never ran, so pass2SidecarsWritten is false and this block
+                // would write. What it would write is the problem: a streamed run that already
+                // has a worker answer is rebuilt WITHOUT the 1st-pass overlay, because that
+                // answer is where its scalars come from, so its entries carry only the
+                // reconciled parquet's columns until the pass-2 overlay is installed - which
+                // happens after this method returns. Serializing them here would overwrite
+                // every correct sidecar in the cohort with Score 0.0 and default experiment
+                // values.
+                //
+                // Skipping writes nothing that is missing. On this leg the per-run 2nd-pass
+                // sidecar is PerFileRescoring's output and this task's INPUT - Outputs() says
+                // so - and "not recomputed" means every one of them is already current on
+                // disk. P13's never-conditionally-write rule binds the artifact's OWNER, and
+                // that is not this task here.
+                if (pass2Projections == null && !pass2SidecarsWritten && !rescored.Streams)
                 {
                     // Per-file progress: this writes one .2nd-pass.fdr_scores.bin per file
                     // (~4.8 GB across 82) and was silent, which with the reload loop below is
@@ -815,7 +834,7 @@ namespace pwiz.Osprey.Tasks
         /// dependence in an artifact that is supposed to be route-independent is the exact class
         /// of defect mode 3 exists to catch, and it caught this one.</para>
         /// </summary>
-        private static HashSet<string> WorkerOwnedPass2Sidecars(PipelineContext ctx)
+        internal static HashSet<string> WorkerOwnedPass2Sidecars(PipelineContext ctx)
         {
             var owned = new HashSet<string>(StringComparer.Ordinal);
             if (ctx.Config?.InputFiles == null)

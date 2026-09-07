@@ -2097,13 +2097,33 @@ foreach ($name in $selected) {
             Write-Progress-Tc "${name}: $($arm.Tag) arm runs and produces (mode 10)"
             $altDir = Join-Path (Join-Path $runRoot $name) ("alt-" + $arm.Tag)
             $m10 = [pscustomobject]@{ Issues = [System.Collections.Generic.List[string]]::new() }
-            foreach ($k in $arm.Env.Keys) { Set-Item -Path "Env:$k" -Value $arm.Env[$k] }
+            # SAVE and RESTORE, not set-and-delete. Removing the variable does not put back a
+            # value the caller already had, and this mode sits BEFORE modes 4, 2, 5, 6, 7, 8
+            # and 9 and before every later dataset - so a developer who exported
+            # OSPREY_PASS2_QVALUE=transfer and ran the suite had it silently deleted here, and
+            # every remaining leg ran the default while the summary reported them as passing
+            # the arm under test. The file's own convention is save-and-restore
+            # ($priorVerifyWorker, $script:priorAllowResident); this had missed it.
+            $priorArmEnv = @{}
+            foreach ($k in $arm.Env.Keys) {
+                $priorArmEnv[$k] = [Environment]::GetEnvironmentVariable($k)
+                Set-Item -Path "Env:$k" -Value $arm.Env[$k]
+            }
             try {
                 $rAlt = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
                     -Resolution $cfg.Resolution -WorkDir $altDir -LogName "alt-$($arm.Tag).log" `
                     -Spec $cfg -Manifest $inputs.Manifest
+                if ($rAlt.ExitCode -ne 0) {
+                    $m10.Issues.Add("$($arm.Tag): Osprey exited $($rAlt.ExitCode) (see $($rAlt.Log))")
+                }
             } finally {
-                foreach ($k in $arm.Env.Keys) { Remove-Item -Path "Env:$k" -ErrorAction SilentlyContinue }
+                foreach ($k in $arm.Env.Keys) {
+                    if ($null -eq $priorArmEnv[$k]) {
+                        Remove-Item -Path "Env:$k" -ErrorAction SilentlyContinue
+                    } else {
+                        Set-Item -Path "Env:$k" -Value $priorArmEnv[$k]
+                    }
+                }
             }
             $altBlib = Join-Path $altDir 'output.blib'
             if (-not (Test-Path $altBlib) -or (Get-Item $altBlib).Length -eq 0) {

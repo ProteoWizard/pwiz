@@ -2085,37 +2085,29 @@ namespace pwiz.Osprey.Tasks
         {
             if (!ScoringTaskShared.CanStreamStage7Join(config))
                 return null;
-            var retainedBaseIds = ScoringTaskShared.ReadRetainedBaseIds(config, out _);
-            if (retainedBaseIds == null)
-                return null;
-            var experimentRecords = FdrExperimentSidecar.ReadMap(
-                FdrExperimentSidecar.PathFor(config.OutputBlib,
-                    ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
-                FdrScoresSidecar.Pass.FirstPass);
+            // THROWS rather than returning null. Returning null here would publish a
+            // source-less milestone over the empty per-run lists the loader has already
+            // created, and Stage 7 would fold 446 empty runs and write an empty .blib with
+            // exit 0. The two sites decide on different evidence - the loader header-probes,
+            // this reads the body, and they are minutes apart on a large cohort - so this is
+            // reachable without anything being wrong with the caller.
+            var retainedBaseIds = ScoringTaskShared.ReadRetainedBaseIdsOrFail(config);
             // Which runs already carry a second-pass answer, decided ONCE from the artifacts
-            // themselves (a header probe per run, no records read). A run in this set is
-            // rebuilt WITHOUT opening any first-pass file, which is the Boundary 3 -> 4
-            // contract: its .2nd-pass.fdr_scores.bin holds every scalar the join reads, and the
-            // experiment-scope columns come from the analysis-wide sidecar. Probed here rather
-            // than per refill because each run is rebuilt once per fold pass, and the answer
-            // cannot change while the stage runs.
-            var inputByName = new Dictionary<string, string>(StringComparer.Ordinal);
-            if (config.InputFiles != null)
-            {
-                foreach (string inputFile in config.InputFiles)
-                    inputByName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
-            }
-            var haveSecondPass = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var kv in perFileParquetPaths)
-            {
-                if (!inputByName.TryGetValue(kv.Key, out string inputFile))
-                    continue;
-                if (FdrScoresSidecar.IsCurrentFormat(
-                        FdrScoresSidecar.Pass2Path(inputFile), FdrScoresSidecar.Pass.SecondPass))
-                {
-                    haveSecondPass.Add(kv.Key);
-                }
-            }
+            // themselves. A run in this set is rebuilt WITHOUT opening any first-pass file,
+            // which is the Boundary 3 -> 4 contract: its .2nd-pass.fdr_scores.bin holds every
+            // scalar the join reads, and the experiment-scope columns come from the
+            // analysis-wide sidecar.
+            //
+            // THE SAME EVIDENCE the fold itself uses - a validity stamp naming PerFileRescoring
+            // - and not a format probe. The two disagree exactly where it hurts: a sidecar
+            // written by a PREVIOUS Stage 7 (the OSPREY_STAGE7_STREAM=0 arm, say) is
+            // format-current but carries a SecondPassFDR stamp, so a probe would say "skip the
+            // first-pass overlay" while the competition, reading the stamp, says "no worker
+            // answer, recompute" - and it would then recompute from rows that carry only the
+            // reconciled parquet's columns, serializing Score 0.0 and default experiment values
+            // into every run's new sidecar. One question, one answer, one source.
+            var haveSecondPass = Pass2FdrSidecar.WorkerOwnedPass2Sidecars(ctx)
+                                 ?? new HashSet<string>(StringComparer.Ordinal);
             // Says which shape Stage 7 took, for the reason its rescore sibling gives: without
             // it the only evidence is a memory profile, and "the gate is green so the new path
             // must have run" is the inference that lets a resident path pass as a streamed one.
@@ -2128,6 +2120,17 @@ namespace pwiz.Osprey.Tasks
                 @"{2} of {0} run(s) carry a current 2nd-pass sidecar and are rebuilt without " +
                 @"opening any 1st-pass file.",
                 perFileParquetPaths.Count, retainedBaseIds.Count, haveSecondPass.Count));
+            // LAZY, and deliberately so. On the default Boundary 3 -> 4 path every run carries a
+            // second-pass sidecar, RefillOneRunSurvivors dereferences this map only on the
+            // overlayFirstPass branch, and it is never read at all - while being ~400 MB
+            // resident for the whole of Stage 7 (6,044,771 records in the 446-run cohort's
+            // 266 MB sidecar), in the stage whose entire purpose is to stop holding things.
+            // Through LoadPass1ExperimentRecords, not FdrExperimentSidecar.ReadMap: the raw
+            // reader returns NULL on an unreadable file and the overlay then silently drops the
+            // experiment columns, where the wrapper stops. That is the same call this file
+            // already makes for the worker.
+            var experimentRecords = new Lazy<IReadOnlyDictionary<uint, FdrExperimentRecord>>(
+                () => Pass2FdrSidecar.LoadPass1ExperimentRecords(config));
             var sequencePool = ctx.Get<SequencePool>().Value;
             return (fileName, survivors) =>
             {
@@ -2137,10 +2140,21 @@ namespace pwiz.Osprey.Tasks
                         @"Second-pass join hydrate: no scores parquet path published for {0}",
                         fileName));
                 }
-                RescoreHydration.RefillOneRunSurvivors(fileName, parquetPath, survivors,
-                    retainedBaseIds, experimentRecords,
+                // Resolve to the RECONCILED sibling, exactly as every other reader on this leg
+                // does. perFileParquetPaths holds whatever --input-scores named, and the
+                // documented fallback form names <stem>.scores.parquet - so rebuilding from the
+                // path verbatim would give this arm the PRE-reconciliation rows (first-pass
+                // boundaries, no Stage-6 gap-fill) while the resident arm on the same command
+                // line reads the reconciled file. Two different .blib files from one command
+                // line is precisely what the byte-identity oracle exists to prevent, and it
+                // would not have caught it: both arms would be self-consistent.
+                string effectivePath =
+                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(parquetPath);
+                bool overlayFirstPass = !haveSecondPass.Contains(fileName);
+                RescoreHydration.RefillOneRunSurvivors(fileName, effectivePath, survivors,
+                    retainedBaseIds, overlayFirstPass ? experimentRecords.Value : null,
                     (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool),
-                    !haveSecondPass.Contains(fileName));
+                    overlayFirstPass);
             };
         }
 

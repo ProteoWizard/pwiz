@@ -701,13 +701,18 @@ namespace pwiz.Osprey.Tasks
                 foreach (var kv in base.Value)
                 {
                     progress?.Report(++done);
+                    // Marked BEFORE the yield, not after. A consumer that breaks out of the
+                    // walk - or an enumerator abandoned by an exception - would otherwise leave
+                    // this false with runs already materialized, and a later Value read would
+                    // sail past the guard and hand back one populated run plus N-1 empty lists:
+                    // the silent almost-empty pool the guard exists to make impossible.
+                    _streamed = true;
                     _materializeFile(kv.Key, kv.Value);
                     _postMaterialize?.Invoke(kv.Key, kv.Value);
                     yield return kv;
                     // Dropped as soon as the consumer's foreach body returns. TrimExcess too:
                     // Clear leaves the backing array at its high-water capacity, which for a CHS
                     // file is ~648 K references still committed per file.
-                    _streamed = true;
                     kv.Value.Clear();
                     kv.Value.TrimExcess();
                 }

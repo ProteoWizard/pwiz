@@ -629,7 +629,7 @@ namespace pwiz.Osprey.IO
                     // Otherwise the sidecar carries an entry the caller's stub list
                     // doesn't contain. The caller is expected to pass a SUPERSET of the
                     // sidecar's entries (the post-rescore parquet for the 1st-pass
-                    // sidecar, for example) — a record that fails to find its entry_id
+                    // sidecar, for example) - a record that fails to find its entry_id
                     // signals the sidecar was written from a different parquet (or from a
                     // different binary version with different entry_id assignment). That
                     // is corruption, not the gap-fill or post-compaction case we tolerate,
@@ -770,7 +770,7 @@ namespace pwiz.Osprey.IO
                     if (header[8] != FormatVersion)
                         return false;
                     // Reject mismatched pass bytes so a 2nd-pass sidecar can never
-                    // be silently loaded into 1st-pass stubs (or vice versa) — the
+                    // be silently loaded into 1st-pass stubs (or vice versa) - the
                     // q-values would scramble without any visible error.
                     if (header[9] != (byte)expectedPass)
                         return false;
@@ -778,7 +778,7 @@ namespace pwiz.Osprey.IO
                     ulong headerCount = BitConverter.ToUInt64(header, 16);
                     // Reject sidecars whose declared count exceeds physical
                     // record capacity. (headerCount can validly be < the caller's
-                    // entry count — see the remarks on the callers for the
+                    // entry count - see the remarks on the callers for the
                     // pre-gap-fill / post-compaction cases.) Use checked
                     // arithmetic so a corrupt or malicious sidecar with a huge
                     // headerCount is rejected loudly instead of wrapping int

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -473,8 +473,49 @@ namespace pwiz.Osprey.Tasks
             // by a longer route and with nothing in the log to say so.
             if (config.ModelDiagnostics)
                 return false;
-            string path = RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
-            return !string.IsNullOrEmpty(path) && RetainedBaseIdSidecar.IsCurrentFormat(path);
+            // And the pass-2 mode has to be the one whose per-run half already ran in the
+            // fan-out. protein-compact owns its whole per-file cycle in Stage 6 and Stage 7
+            // folds the written answers; every other mode still computes the per-file half HERE,
+            // over the whole pool - RestorePass1Scalars, the resident second pass and the
+            // projection sink's per-file protein-q map all index it. Streaming underneath them
+            // does not make them per-run, it just takes their input away: the fragment release
+            // streams first and drops the pool, and ComputeAndPersist then throws
+            // "Value was read after StreamFiles dropped the survivor pool" hours into Stage 7.
+            //
+            // Not a guess about which modes are safe - the same predicate ComputeAndPersist
+            // itself branches on for `frozenCompetition`. When transfer's per-run half moves to
+            // Pass2PerFileWorker this term becomes "any mode with a worker" and the two move
+            // together.
+            if (!OspreyEnvironment.Pass2ProteinCompact)
+                return false;
+            string retainedPath =
+                RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
+            return !string.IsNullOrEmpty(retainedPath) &&
+                   RetainedBaseIdSidecar.IsCurrentFormat(retainedPath);
+        }
+
+        /// <summary>
+        /// The retained base_id set for the streamed second-pass join, or a hard failure.
+        ///
+        /// <para>Separate from <see cref="ReadRetainedBaseIds"/>'s null-returning form because
+        /// the CALLER cannot degrade here. By the time Stage 7 asks, the <c>--input-scores</c>
+        /// load has already published one EMPTY list per run on the strength of
+        /// <see cref="CanStreamStage7Join"/> - which only header-probes the sidecar - so a null
+        /// leaves the stage folding over 446 empty runs, logging "No entries pass FDR threshold.
+        /// Creating empty blib." and exiting 0. An empty <c>.blib</c> from a successful-looking
+        /// run is the worst outcome this pipeline can produce, and the sidecar's own reader
+        /// documents its absence as FATAL.</para>
+        /// </summary>
+        internal static HashSet<uint> ReadRetainedBaseIdsOrFail(OspreyConfig config)
+        {
+            var retained = ReadRetainedBaseIds(config, out string error);
+            if (retained != null)
+                return retained;
+            throw new InvalidDataException(string.Format(
+                @"The second-pass join is streaming, which requires the analysis-wide retained " +
+                @"base_id summary, and it could not be read: {0} Continuing would fold every run " +
+                @"as empty and write an empty library.",
+                error ?? @"(no reason reported)"));
         }
 
         /// <summary>
