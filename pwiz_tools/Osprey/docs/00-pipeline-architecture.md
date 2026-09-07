@@ -917,12 +917,6 @@ case they are the data and must be preserved.
 
 ### Boundary 2 -> 3: `FirstPassFDR` to `PerFileRescoring`
 
-> **In flight** - this list is not yet one a single-run node can run on. The artifact that
-> lets a fan-out worker obtain the join-wide compaction set without surveying the batch,
-> `<blib-stem>.1st-pass.retained_base_ids.bin`, does not exist on master; a node staged
-> with exactly the list below derives a different survivor set rather than erroring. See
-> item 2 under `## In flight`. Stage the whole cohort's envelopes until it lands.
-
 Each rescore node needs its own runs' artifacts plus the experiment-wide set:
 
 Per run, for each run in the node's batch:
@@ -934,13 +928,20 @@ Per run, for each run in the node's batch:
 
 Experiment-wide, to **every** node:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`
+- `<blib-stem>.1st-pass.retained_base_ids.bin` - the join-wide compaction set, written when
+  Stage 6 planning ends. It is what makes this list one a single-run node can actually run
+  on: without it a node would rebuild the union from every run's `reconciliation.json`,
+  which is the O(runs) pre-pass P6 forbids. Its absence is FATAL rather than silently
+  rebuilt, deliberately - see `ScoringTaskShared.ReadRetainedBaseIds`
 - `<stem>.1st-pass.model.json` (any one copy) - **mandatory on an ordinary run**, because
   the default pass-2 mode is a frozen one (`protein-compact`); an unset
   `OSPREY_PASS2_QVALUE` is not an opt-out
+- `<stem>.1st-pass.stratum.json` (any one copy) - the protein-compact stratum, split out of
+  the model sidecar because a different phase produces it (P7)
 
 This is the boundary where a missing experiment-wide file does the most damage, because
 the node can often proceed without it and produce a plausible wrong answer rather than
-failing. Ship both experiment-wide artifacts together or neither.
+failing. Ship the experiment-wide artifacts together or none of them.
 
 ### Boundary 3 -> 4: `PerFileRescoring` to `SecondPassFDR`
 
@@ -958,6 +959,9 @@ Per run, for **every** run in the cohort:
 Experiment-wide:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`
 - `<stem>.1st-pass.model.json` (any one copy)
+- `<stem>.1st-pass.stratum.json` (any one copy) - the protein-compact stratum. The default
+  pass-2 mode reloads both this and the model here when neither was published in-process,
+  which is every distributed `SecondPassFDR` node
 - `<blib-stem>.1st-pass.model-diagnostics.json`, when `--model-diagnostics` is on - the
   pass-1 half of the report exists nowhere else by this point
 
@@ -1001,17 +1005,12 @@ the text says so rather than describing the current shape as though it were the 
    protein FDR ends. See "The protein-q split, and the rule behind it" in
    `ai/todos/active/TODO-20260901_osprey_firstpassfdr_resume.md`.
 
-2. **Two experiment-wide artifacts arrive with the fan-out fix**, and both are relay
-   obligations the checklist below will gain. `<blib-stem>.1st-pass.retained_base_ids.bin`
-   is written by `FirstPassFDR` when Stage 6 planning ends and carries the join-wide
-   first-pass base ids unioned with every planned action target - sorted `uint32`,
-   library-bounded (1.49 MB at 373,487 ids). It is what lets a fan-out worker obtain the
-   compaction set without surveying the batch (P6), and it is the artifact that makes the
-   single-run input contract executable: today's Boundary 2 -> 3 list is not one a
-   one-run node can actually run on. `<stem>.1st-pass.stratum.json` is the P12 split
-   described under "Rows that are not what they look like". Both are on
-   `Skyline/work/20260901_osprey_firstpass_resume`; when it lands, "two experiment-wide
-   artifacts that must relay together" becomes four.
+2. ~~**Two experiment-wide artifacts arrive with the fan-out fix.**~~ **LANDED** in
+   [#4633](https://github.com/ProteoWizard/pwiz/pull/4633) (`c4921f3d6c`, 2026-09-06).
+   `<blib-stem>.1st-pass.retained_base_ids.bin` and `<stem>.1st-pass.stratum.json` are both
+   written by `FirstPassFDR` at the end of the phase that computes them, and both are now
+   carried in the Boundary 2 -> 3 and 3 -> 4 lists above. The count of experiment-wide
+   artifacts that must relay together is four.
 
 3. **The bounded-loop shape of `PerFileRescoring`.** The task is still entered with a
    materialised all-runs entry list, and its baseline still carries maps keyed by run whose
