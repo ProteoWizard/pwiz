@@ -294,18 +294,22 @@ $knownResidentGaps = @(
 # process environment, so a developer running the gate in their interactive shell would
 # otherwise silently lose an exported token for the rest of the session.
 $script:priorAllowResident = $env:OSPREY_ALLOW_UNFIXED_RESIDENT
-# An operator running a deliberate A/B needs their token: OSPREY_STAGE6_STREAM_SURVIVORS=0
-# and OSPREY_FDR_PROJECTION=0 force resident paths ON PURPOSE, and clearing the token that
-# admits them would abort the gate on its first leg with a guard error - making the very
-# comparison this harness exists to support impossible to run. Ambient tokens are stripped
-# ONLY when no such switch is set, which is the case the clearing is aimed at.
-$abSwitchSet = ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or ($env:OSPREY_FDR_PROJECTION -eq '0')
+# An operator running a deliberate A/B needs their token: OSPREY_STAGE6_STREAM_SURVIVORS=0,
+# OSPREY_FDR_PROJECTION=0 and OSPREY_STAGE7_STREAM=0 force resident paths ON PURPOSE, and
+# clearing the token that admits them would abort the gate on its first leg with a guard
+# error - making the very comparison this harness exists to support impossible to run.
+# Ambient tokens are stripped ONLY when no such switch is set, which is the case the
+# clearing is aimed at.
+$abSwitchSet = ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
+               ($env:OSPREY_FDR_PROJECTION -eq '0') -or
+               ($env:OSPREY_STAGE7_STREAM -eq '0')
 if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
     if ($abSwitchSet) {
         # Extra parens: -f binds TIGHTER than +, so without them only the LAST fragment is
         # formatted and '{0}' survives verbatim into the output.
         Write-Host (("Keeping inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - an A/B switch " +
-            "(OSPREY_STAGE6_STREAM_SURVIVORS/OSPREY_FDR_PROJECTION=0) is set and needs it.") `
+            "(OSPREY_STAGE6_STREAM_SURVIVORS/OSPREY_FDR_PROJECTION/OSPREY_STAGE7_STREAM=0) " +
+            "is set and needs it.") `
             -f $env:OSPREY_ALLOW_UNFIXED_RESIDENT) -ForegroundColor Yellow
     } else {
         Write-Host (("Clearing inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - no leg of this " +
@@ -638,10 +642,12 @@ function Get-DatasetCliArgs {
     if ($null -eq $Spec) { return $extra }
     if ($Spec.DecoysInLibrary) { $extra += '--decoys-in-library' }
     if ($Manifest) { $extra += @('--decoy-pairing-manifest', $Manifest) }
-    # --model-diagnostics is verified output-neutral (it routes the 2nd pass down
-    # the resident path instead of the FDR projection, and the two agree
-    # byte-for-byte), so it can ride on the golden-compared run rather than
-    # needing a second invocation. It populates the Pass 1 AND Pass 2 FDP views on
+    # --model-diagnostics is verified output-neutral, so it can ride on the
+    # golden-compared run rather than needing a second invocation. It no longer
+    # forces the 2nd pass down the resident path either: the pass-2 report is
+    # folded run by run through ModelDiagnosticsData.Accumulator, so a run with
+    # this flag streams the Stage 7 join exactly as one without it does, and
+    # mode 3 asserts that on every dataset. It populates the Pass 1 AND Pass 2 FDP views on
     # its own: --fdrbench-pass selects which pass an FDRBench INPUT FILE is written
     # for and does nothing at all without --fdrbench (OspreyCommandArgs warns, and
     # FdrBenchInputWriter returns early on an empty output path), so passing it here
@@ -1922,6 +1928,20 @@ foreach ($name in $selected) {
             }
         }
 
+        # The pass-2 diagnostics product, chain vs straight-through - which on this suite is
+        # STREAMED vs RESIDENT, and is the only leg that compares the two shapes of the pass-2
+        # report against each other. Straight-through has no --input-scores, so it takes the
+        # resident join; the chain's phase 4 is --task SecondPassFDR and takes the streamed one.
+        # The claim the fold rests on is that those produce the same report, and until this leg
+        # existed nothing checked it: mode 3 compares the blib and the FDR sidecars, and every
+        # diagnostics leg (1b, 5, 7) compares only the RESIDENT arm against a golden.
+        #
+        # A byte compare is right here: Pass2Data carries no timestamp and no version - those
+        # live on the pass-1 object - so the file is a pure function of the reported pool. If a
+        # field that legitimately varies per run is ever added to it, this leg fails LOUDLY and
+        # names the offset, which is the outcome to want; do not soften it to a field compare.
+        # Absence on either side is a FAILURE, not a skip: a route that stopped writing the
+        # product would otherwise pass by having nothing to compare.
         # Liveness: a comparison that verified nothing is not a passing comparison. Empty or
         # absent sidecars satisfy every field check trivially while breaking every resume,
         # and the rest of this harness fails closed on the same shape (Invoke-ResumeInvalidation
@@ -1981,16 +2001,24 @@ foreach ($name in $selected) {
         # the bytes to reveal it. Without this, a change that silently disqualifies the streamed
         # arm leaves every leg green while the O(runs x entries) peak comes back.
         #
-        # Scoped to the datasets that can actually stream: CanStreamStage7Join declines under
-        # --model-diagnostics, which this suite sets on every dataset but plain Stellar, so
-        # demanding the line elsewhere would fail runs for a contract they cannot make. That
-        # narrowness is itself the finding - three of four datasets exercise only the resident
-        # arm - and it is recorded in the TODO rather than papered over here.
-        $chainCanStream = -not $cfg.ModelDiagnostics
+        # Demanded on EVERY dataset now. This used to be scoped to `-not $cfg.ModelDiagnostics`
+        # because CanStreamStage7Join declined under --model-diagnostics, which this suite sets
+        # on every dataset but plain Stellar - so three of the four exercised only the resident
+        # arm and a streamed-arm defect needing library decoys, entrapment or hram data passed
+        # the suite green. That term is gone from the predicate (the pass-2 report is folded run
+        # by run through ModelDiagnosticsData.Accumulator), so the scoping goes with it.
+        #
+        # Nothing else in the predicate varies across these datasets: --fdrbench is never passed
+        # here, so NeedsResidentPool is false, and protein-compact is the default pass-2 mode, so
+        # every mode-3 chain meets the remaining conditions structurally. A dataset that ever
+        # needs a narrower rule should name the condition rather than restore a blanket skip.
+        # ...unless the operator deliberately forced the resident arm for an A/B, in which case
+        # the run is doing exactly what it was asked to and demanding the marker would fail it
+        # for complying. This is the same allowance $abSwitchSet makes for the resident tokens.
         $chainStreamed = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
             -Pattern 'Second-pass join: folding over \d+ run\(s\)' -Quiet
-        if (-not $chainCanStream) {
-            $summaryLines.Add("$name mode3 (streamed join): SKIP (--model-diagnostics keeps the resident pool)")
+        if ($env:OSPREY_STAGE7_STREAM -eq '0') {
+            $summaryLines.Add("$name mode3 (streamed join): SKIP (OSPREY_STAGE7_STREAM=0 forces the resident arm)")
         } elseif (-not $chainStreamed) {
             $overallFail = $true
             Write-Problem-Tc ("$name mode3 (streamed join): FAIL - phase 4 did not report the " +

@@ -226,12 +226,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         {
             try
             {
-                var data = ReadJson<ModelDiagnosticsData>(ResolvePass1SidecarPath(config));
+                var data = ReadPass1ForEnrichment(config, logInfo);
                 if (data == null)
-                {
-                    logInfo(@"[MODEL-DIAGNOSTICS] pass-1 data sidecar not found; pass-2 enrichment skipped (pass-1 page stands).");
                     return;
-                }
 
                 Dictionary<uint, EntrapmentClass> classByBaseId;
                 Dictionary<uint, uint> pairByBaseId;
@@ -258,23 +255,95 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     entrapmentRatio, config.RunFdr, config.FdrLevel,
                     BuildPrecursorMzLookup(libraryById), stratumBaseIds);
 
-                // Pass 2's own product, written before the page for the same reason pass 1's is.
-                // NOTHING is deleted here and pass1.json is not rewritten: the two files are
-                // immutable products of different phases, and the page below is the only thing
-                // this method overwrites.
-                string pass2Path = ResolvePass2SidecarPath(config);
-                WriteJson(pass2Path, data.Pass2);
-                StampProduct(pass2Path, SecondPassTaskName, validityKey, logInfo);
-                string outPath = RenderAndWrite(data, config);
-                int pass2ViewCount = data.Pass2?.FdpViews?.Count ?? 0;
-                logInfo(string.Format(
-                    @"[MODEL-DIAGNOSTICS] finalized report ({0} pass-2 FDR view(s); pass-2 model {1}); re-wrote: {2}",
-                    pass2ViewCount, data.Pass2?.Model != null ? @"included" : @"n/a", outPath));
+                FinalizePass2(data, config, validityKey, logInfo);
             }
             catch (Exception ex)
             {
                 logInfo(string.Format(@"[MODEL-DIAGNOSTICS] pass-2 enrichment failed: {0}", ex.Message));
             }
+        }
+
+        /// <summary>
+        /// End-of-run enrichment from the STREAMED pass-2 fold, the accumulator sibling of
+        /// <see cref="WritePass2AndFinalize"/>. Same product, same page, same log line - the only
+        /// difference is that the pass-2 cards come from reductions folded run by run through
+        /// <see cref="ModelDiagnosticsData.Accumulator"/> instead of from the resident survivor
+        /// pool, which is what lets <c>CanStreamStage7Join</c> stop declining the streamed join
+        /// whenever <c>--model-diagnostics</c> is asked for.
+        ///
+        /// <para>Byte-identical to <see cref="WritePass2AndFinalize"/> on the same input for the
+        /// reason the pass-1 pair already is: every reduction the accumulator performs is
+        /// order-independent, and both paths enumerate the reduced best-per-precursor set in the
+        /// same nested (file, row) order. The classification / pairing / ratio are not rebuilt
+        /// here - the accumulator was constructed with them, and rebuilding runs for minutes at
+        /// 6.3M library entries.</para>
+        ///
+        /// <para><paramref name="coAssignment"/> is built by the caller from its own second
+        /// stream pass, because that panel's acceptance boundary is a reduction over every row
+        /// that its per-row verdicts are then compared against - it cannot be folded in the pass
+        /// that computes it. Null leaves the panel out, exactly as a null library lookup does on
+        /// the resident path.</para>
+        /// </summary>
+        public static void WritePass2AndFinalizeFromAccumulator(
+            ModelDiagnosticsData.Accumulator accumulator,
+            ModelDiagnosticsData.CoAssignmentData coAssignment,
+            FeatureContributions pass2Contributions,
+            OspreyConfig config,
+            Action<string> logInfo,
+            string validityKey = null)
+        {
+            try
+            {
+                var data = ReadPass1ForEnrichment(config, logInfo);
+                if (data == null)
+                    return;
+                data.Pass2 = accumulator.BuildPass2(pass2Contributions, coAssignment);
+                FinalizePass2(data, config, validityKey, logInfo);
+            }
+            catch (Exception ex)
+            {
+                logInfo(string.Format(@"[MODEL-DIAGNOSTICS] pass-2 enrichment failed: {0}", ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// The pass-1 data sidecar both enrichment paths append to, or null with the log line
+        /// explaining that the pass-1 page stands unchanged. Absence is a degrade, not a failure:
+        /// pass 1's page is a complete statement of the first pass on its own.
+        /// </summary>
+        private static ModelDiagnosticsData ReadPass1ForEnrichment(OspreyConfig config,
+            Action<string> logInfo)
+        {
+            var data = ReadJson<ModelDiagnosticsData>(ResolvePass1SidecarPath(config));
+            if (data == null)
+            {
+                logInfo(@"[MODEL-DIAGNOSTICS] pass-1 data sidecar not found; pass-2 enrichment skipped (pass-1 page stands).");
+                return null;
+            }
+            return data;
+        }
+
+        /// <summary>
+        /// Write pass 2's own product and re-render the page from the enriched graph, shared by
+        /// the resident and streamed enrichment paths so the two cannot drift in what they emit.
+        ///
+        /// <para>The product goes down before the page for the same reason pass 1's does: an
+        /// interruption between the two leaves the artifact that can rebuild the view rather than
+        /// a view with nothing behind it. NOTHING is deleted here and pass1.json is not
+        /// rewritten - the two files are immutable products of different phases, and the page is
+        /// the only thing this overwrites.</para>
+        /// </summary>
+        private static void FinalizePass2(ModelDiagnosticsData data, OspreyConfig config,
+            string validityKey, Action<string> logInfo)
+        {
+            string pass2Path = ResolvePass2SidecarPath(config);
+            WriteJson(pass2Path, data.Pass2);
+            StampProduct(pass2Path, SecondPassTaskName, validityKey, logInfo);
+            string outPath = RenderAndWrite(data, config);
+            int pass2ViewCount = data.Pass2?.FdpViews?.Count ?? 0;
+            logInfo(string.Format(
+                @"[MODEL-DIAGNOSTICS] finalized report ({0} pass-2 FDR view(s); pass-2 model {1}); re-wrote: {2}",
+                pass2ViewCount, data.Pass2?.Model != null ? @"included" : @"n/a", outPath));
         }
 
         /// <summary>

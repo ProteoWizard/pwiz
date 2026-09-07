@@ -1051,6 +1051,15 @@ the text says so rather than describing the current shape as though it were the 
    `.scores.parquet` and first-pass sidecar. The streamed path is the default; the switch
    goes when the resident one does.
 
+   `OSPREY_STAGE7_STREAM=0` is the Stage 7 sibling, and the same disposition applies. It
+   selects the resident second-pass join, where `RescoredEntries` holds every run's
+   survivors instead of rebuilding one run at a time through `StreamFiles`. Both arms are
+   required to produce identical bytes, which is what makes the switch an A/B ORACLE rather
+   than a fallback: it is the only way to compare the two, because nothing in the output
+   distinguishes them. That is also why `ScoringTaskShared.CanStreamStage7Join` is the one
+   place the choice is made, and why mode 3 asserts the marker line naming the shape that
+   actually ran rather than inferring it from the output.
+
 5. **Whether the 500-run / 64 GB target is met.** It is not yet, and which stage binds is
    itself moving as each is fixed. The two TODOs above carry the current measurements;
    deliberately not restated here, because a number in a contract document is stale the

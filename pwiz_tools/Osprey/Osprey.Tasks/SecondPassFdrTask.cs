@@ -27,6 +27,7 @@ using System.Diagnostics;
 using System.IO;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
 
@@ -501,21 +502,118 @@ namespace pwiz.Osprey.Tasks
                 if (OspreyEnvironment.Pass2ProteinCompact &&
                     ctx.TryGet<ProteinCompactStratum>(out var pcStratum))
                     stratumBaseIds = pcStratum.BaseIds;
-                // The ONE Stage 7 consumer still handed the whole pool, and the only one that
-                // cannot simply be re-pointed at the stream: the pass-2 data builders index
-                // their files BY POSITION and revisit a file across two loops
-                // (ModelDiagnosticsData.CoAssignment), so an enumerable that rebuilds a run per
-                // pass would rebuild the same run several times per view. The fold it wants is
-                // the one FirstPassFDR's pass-1 accumulator already is, and giving pass 2 the
-                // same accumulator is the fix - not a wider parameter type. Until then
-                // CanStreamStage7Join declines the report leg outright, so reaching this line
-                // means the pool is resident and .Value is what it has always been.
-                ModelDiagnosticsReport.WritePass2AndFinalize(
-                    rescored.Value, pass2Contributions, libraryById, config, ctx.LogInfo,
-                    stratumBaseIds, ValidityKey(ctx));
+                // Two shapes, one report. The streamed arm folds the run-by-run reductions the
+                // pass-2 cards are made of instead of holding every run's survivors, which is
+                // what removed the last O(runs x entries) structure in Stage 7 and let
+                // CanStreamStage7Join stop declining this leg outright. The resident arm is
+                // unchanged and is the A/B oracle the streamed one is verified against: same
+                // page, same 2nd-pass.model-diagnostics.json.
+                if (rescored.Streams)
+                {
+                    WritePass2DiagnosticsStreamed(ctx, rescored, pass2Contributions, libraryById,
+                        config, stratumBaseIds);
+                }
+                else
+                {
+                    ModelDiagnosticsReport.WritePass2AndFinalize(
+                        rescored.Value, pass2Contributions, libraryById, config, ctx.LogInfo,
+                        stratumBaseIds, ValidityKey(ctx));
+                }
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Build and write the pass-2 <c>--model-diagnostics</c> product from the STREAMED
+        /// survivor source, holding no more than one run's entries at a time.
+        ///
+        /// <para>Two passes over the stream, and the split between them is forced rather than
+        /// chosen. Eight of the nine pass-2 cards are reductions
+        /// <see cref="ModelDiagnosticsData.Accumulator"/> already folds per row, so they ride
+        /// along in the first pass for free. The ninth - peak co-assignment - draws an acceptance
+        /// boundary that is itself a reduction over every row, and then compares every row against
+        /// it, so its own phase 1 joins the first pass and only its phase 2 needs a second read.
+        /// Two passes, not three.</para>
+        ///
+        /// <para>Wall clock is the cost, and it is the axis this work is allowed to spend: each
+        /// pass rebuilds every run from its own artifacts. Stage 7 already re-streams several
+        /// times over (the experiment-q reclamp, the retained base_ids, protein FDR, the FDRBench
+        /// TSV and the blib gates), so this is the stage's existing idiom rather than a new cost
+        /// class - and it replaces a 78.3 GB resident pool.</para>
+        ///
+        /// <para>Guarded here rather than only inside the report writer, because the fold runs
+        /// OUTSIDE it: <see cref="ModelDiagnosticsReport.WritePass2AndFinalizeFromAccumulator"/>
+        /// catches its own work, but the two stream passes and the classification happen before
+        /// it is called, and the co-assignment order guards throw BY DESIGN. A diagnostics-only
+        /// artifact must never take down a ten-hour search - the same reason
+        /// <c>PeakCoAssignmentSource.Build</c> wraps itself for its pass-1 callers. Refusing the
+        /// panel and logging why is the intended outcome of those guards; losing the run is not.</para>
+        /// </summary>
+        private void WritePass2DiagnosticsStreamed(PipelineContext ctx, RescoredEntries rescored,
+            FeatureContributions pass2Contributions,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            OspreyConfig config, HashSet<uint> stratumBaseIds)
+        {
+            try
+            {
+                WritePass2DiagnosticsStreamedCore(ctx, rescored, pass2Contributions, libraryById,
+                    config, stratumBaseIds);
+            }
+            catch (Exception ex)
+            {
+                ctx.LogInfo(string.Format(
+                    @"[MODEL-DIAGNOSTICS] pass-2 enrichment failed: {0}", ex.Message));
+            }
+        }
+
+        private void WritePass2DiagnosticsStreamedCore(PipelineContext ctx, RescoredEntries rescored,
+            FeatureContributions pass2Contributions,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            OspreyConfig config, HashSet<uint> stratumBaseIds)
+        {
+            // Names, not entries: FileNames reads the buffer keys without pulling the deferred
+            // milestone, which is the whole point of asking it rather than Value here.
+            var fileNames = rescored.FileNames;
+            var runNames = new string[fileNames.Count];
+            for (int i = 0; i < runNames.Length; i++)
+                runNames[i] = fileNames[i];
+
+            // The classification is derived ONCE and then carried by the accumulator, because
+            // rebuilding it runs for minutes at 6.3M library entries. Same source and one-time
+            // logging as every other path.
+            ModelDiagnosticsReport.BuildClassificationFromLibrary(config, libraryById, ctx.LogInfo,
+                out var classByBaseId, out var pairByBaseId, out var entrapmentRatio);
+            var accumulator = new ModelDiagnosticsData.Accumulator(runNames, classByBaseId,
+                pairByBaseId, entrapmentRatio, config.RunFdr, config.FdrLevel, 2);
+
+            // Pass A: the accumulator's fold and co-assignment's cutoff phase, sharing one read.
+            // Both are per-row reductions over the same rows, so the second phase of the panel is
+            // the only thing that has to wait for a second pass.
+            var coAssign = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true,
+                stratumBaseIds);
+            int fileIdx = 0;
+            foreach (var kvp in rescored.StreamFiles(@"Folding pass-2 diagnostics"))
+            {
+                foreach (var e in kvp.Value)
+                {
+                    accumulator.Add(fileIdx, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy,
+                        e.Score, new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, e.Pep));
+                }
+                ModelDiagnosticsData.ObserveCoAssignmentRun(coAssign, fileIdx, kvp.Value,
+                    classByBaseId, config.RunFdr, config.FdrLevel);
+                fileIdx++;
+            }
+
+            // Pass B: the panel's detection phase, which needs the boundary pass A folded.
+            var coAssignment = ModelDiagnosticsData.BuildCoAssignmentDetection(
+                coAssign, runNames, rescored.StreamFiles(@"Building pass-2 co-assignment"),
+                classByBaseId, ModelDiagnosticsReport.BuildPrecursorMzLookup(libraryById),
+                config.RunFdr, config.FdrLevel);
+
+            ModelDiagnosticsReport.WritePass2AndFinalizeFromAccumulator(
+                accumulator, coAssignment, pass2Contributions, config, ctx.LogInfo, ValidityKey(ctx));
         }
 
         /// <summary>

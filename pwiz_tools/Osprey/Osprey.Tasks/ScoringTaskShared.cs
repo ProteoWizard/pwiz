@@ -464,16 +464,16 @@ namespace pwiz.Osprey.Tasks
                 return false;
             if (PerFileScoringTask.NeedsResidentPool(config, OspreyEnvironment.UseFdrProjection))
                 return false;
-            // --model-diagnostics is the fourth requirement, and it is a CURRENT limitation
-            // rather than a property of the leg. The pass-2 report builders index their files by
-            // position and revisit a file across two loops, so they need a list and not a
-            // stream; the fold that removes the need is the accumulator the pass-1 report
-            // already uses. Declining here rather than letting the report leg stream and then
-            // silently pull the whole pool back through .Value, which is the same peak reached
-            // by a longer route and with nothing in the log to say so.
-            if (config.ModelDiagnostics)
-                return false;
-            // And the pass-2 mode has to be the one whose per-run half already ran in the
+            // --model-diagnostics WAS the fourth requirement, and is no longer one. The pass-2
+            // report is now folded run by run through ModelDiagnosticsData.Accumulator - the
+            // same accumulator the pass-1 report uses - with the co-assignment panel's two
+            // phases driven from the join's own stream passes, so the report no longer needs a
+            // list it can index by position. Removing this term is also what lets the gate SEE
+            // the streamed arm: --model-diagnostics is set on StellarLibDecoy,
+            // StellarGenDecoyEntrap and Astral, so while it stood here mode 3's phase 4 took the
+            // resident path on three of the four datasets and a streamed-arm defect needing
+            // library decoys, entrapment or hram data passed the suite green.
+            // The pass-2 mode has to be the one whose per-run half already ran in the
             // fan-out. protein-compact owns its whole per-file cycle in Stage 6 and Stage 7
             // folds the written answers; every other mode still computes the per-file half HERE,
             // over the whole pool - RestorePass1Scalars, the resident second pass and the
