@@ -183,6 +183,10 @@ param(
     [switch]$SkipWarmRerun,
     [switch]$SkipRehydrate,
     [switch]$SkipHpcChain,
+    # Skip the mode-10 non-default pass-2 arms (transfer, mean-best-N). Fast local iteration
+    # only: these are the two ideas in competition with the shipped default, and leaving them
+    # unrun is how transfer reached production writing no experiment sidecar.
+    [switch]$SkipAltPass2,
     [string]$DownloadsPath,
     [int]$Threads = 16,
     [switch]$TeamCity,
@@ -386,8 +390,19 @@ $libDecoyV3Url = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perf
 #                    (default 0.05), same do-not-regenerate rule. Only bites on a
 #                    dataset that carries entrapment.
 $datasets = [ordered]@{
+    # AltPass2 opts ONE dataset into mode 10 (the non-default pass-2 arms), and picking one
+    # is the point. A new leg applied to every config inherits a 4x multiplier - four configs,
+    # not two acquisitions - which multiplies wall time without multiplying coverage. Choose the
+    # config the case actually belongs to.
+    #
+    # For these arms that is StellarLibDecoy: library-SUPPLIED decoys are what the pass-2
+    # comparison runs on real cohorts (SEA-AD is -DecoyMode libdecoy), so the arms get exercised
+    # against the decoy provenance they are actually used with, at Stellar speed. Not Astral,
+    # which is the suite's critical path and pays for an extra straight-through run in wall
+    # clock directly.
     Stellar = @{ Folder = 'stellar'; Resolution = 'unit' }
     StellarLibDecoy = @{
+        AltPass2         = $true
         Folder           = 'stellar'
         LibraryFolder    = 'stellar-libdecoy'
         GoldenFolder     = 'stellar-libdecoy'
@@ -2054,6 +2069,70 @@ foreach ($name in $selected) {
                         "not reach the SecondPassFDR node")
                     $summaryLines.Add("$name mode3 (chain report is two-pass): FAIL (pass-1 only)")
                 }
+            }
+        }
+    }
+
+    # ---- mode 10: the non-default pass-2 arms actually run ----
+    # transfer and mean-best-N are the two ideas in competition with the shipped default, and
+    # until now NOTHING here exercised either: every leg above runs with OSPREY_PASS2_QVALUE
+    # unset. The cost of that has already been paid once - `transfer` silently wrote no
+    # analysis-wide 2nd-pass experiment sidecar at all, while every other mode wrote one, and
+    # no leg could see it because the arm had never run under the gate.
+    #
+    # So this leg asserts the ARTIFACT CONTRACT rather than values: the arm completes, and it
+    # leaves the same set of files behind that the default does. That is deliberately not a
+    # golden - these arms are still moving (protein-compact has improvements pending, and the
+    # 82-file comparison wants re-running), and a golden would freeze a number nobody has
+    # agreed on yet. What must not change silently is that the arm RUNS and PRODUCES.
+    #
+    # The two arms pair as they must: protein-compact REFUSES a mean(best-N) first pass, so the
+    # mean-best leg necessarily runs transfer as its pass-2 mode.
+    if (-not $SkipAltPass2 -and $cfg.AltPass2) {
+        $altArms = @(
+            @{ Tag = 'transfer';  Env = @{ OSPREY_PASS2_QVALUE = 'transfer' } },
+            @{ Tag = 'meanbest2'; Env = @{ OSPREY_PASS2_QVALUE = 'transfer'
+                                           OSPREY_EXPERIMENT_AGG = 'mean-best-2' } })
+        foreach ($arm in $altArms) {
+            Write-Progress-Tc "${name}: $($arm.Tag) arm runs and produces (mode 10)"
+            $altDir = Join-Path (Join-Path $runRoot $name) ("alt-" + $arm.Tag)
+            $m10 = [pscustomobject]@{ Issues = [System.Collections.Generic.List[string]]::new() }
+            foreach ($k in $arm.Env.Keys) { Set-Item -Path "Env:$k" -Value $arm.Env[$k] }
+            try {
+                $rAlt = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                    -Resolution $cfg.Resolution -WorkDir $altDir -LogName "alt-$($arm.Tag).log" `
+                    -Spec $cfg -Manifest $inputs.Manifest
+            } finally {
+                foreach ($k in $arm.Env.Keys) { Remove-Item -Path "Env:$k" -ErrorAction SilentlyContinue }
+            }
+            $altBlib = Join-Path $altDir 'output.blib'
+            if (-not (Test-Path $altBlib) -or (Get-Item $altBlib).Length -eq 0) {
+                $m10.Issues.Add("$($arm.Tag): no output.blib written")
+            }
+            # The analysis-wide 2nd-pass experiment sidecar - the artifact whose absence went
+            # unnoticed. Named for the blib stem, one per analysis.
+            $altExp = Join-Path $altDir 'output.2nd-pass.fdr_experiment.bin'
+            if (-not (Test-Path $altExp)) {
+                $m10.Issues.Add(("$($arm.Tag): no output.2nd-pass.fdr_experiment.bin - the arm " +
+                                 "completed without writing the experiment-scope sidecar every " +
+                                 "other mode writes"))
+            }
+            # And one per-run 2nd-pass sidecar per input, the per-run half of the same contract.
+            foreach ($mz in $inputs.Mzmls) {
+                $stem = [IO.Path]::GetFileNameWithoutExtension($mz)
+                if (-not (Test-Path (Join-Path $altDir "$stem.2nd-pass.fdr_scores.bin"))) {
+                    $m10.Issues.Add("$($arm.Tag): no 2nd-pass FDR sidecar for $stem")
+                }
+            }
+            if ($m10.Issues.Count -eq 0) {
+                $summaryLines.Add("$name mode10 ($($arm.Tag) arm runs and produces): PASS")
+            } else {
+                $overallFail = $true
+                Write-Problem-Tc ("$name mode10 ($($arm.Tag) arm): FAIL -- " +
+                                  "$($m10.Issues.Count) issue(s)")
+                $summaryLines.Add(("$name mode10 ($($arm.Tag) arm runs and produces): FAIL " +
+                                   "($($m10.Issues.Count) issues)"))
+                foreach ($iss in $m10.Issues) { Write-Host "    $iss" -ForegroundColor Red }
             }
         }
     }
