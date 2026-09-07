@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
@@ -87,10 +86,14 @@ namespace pwiz.Osprey.Tasks
             string taskValidityKey)
         {
             var config = ctx.Config;
-            // The one buffer behind the milestone. Taken here rather than as a second
-            // parameter so the frozen-competition path (which reads the milestone) and
-            // every other path (which reads the buffer) cannot be handed different pools.
-            var perFileEntries = rescored.Value;
+            // The one buffer behind the milestone, and NOT read here (#4486). Taken through a
+            // local rather than as a second parameter so the frozen-competition path (which
+            // reads the milestone) and every other path (which reads the buffer) cannot be
+            // handed different pools - but read LAZILY, because on the frozen path nothing
+            // below asks for it and .Value is the O(runs x entries) build this stage exists to
+            // stop paying. The retrain-shaped paths (the resident 2nd pass, the projection
+            // sink's per-file protein-q map) genuinely index the whole pool and still get it.
+            List<KeyValuePair<string, List<FdrEntry>>> Pool() => rescored.Value;
             FeatureContributions pass2Contributions = null;
 
             // OSPREY_PASS2_QVALUE selects how this 2nd pass assigns reported q-values.
@@ -212,7 +215,7 @@ namespace pwiz.Osprey.Tasks
                 // hide a name-drift bug that the standard cross-impl gate
                 // (where keys always match) cannot catch.
                 var unmatchedKeys = pass2Writer.UnmatchedKeys(
-                    perFileEntries.Select(kvp => kvp.Key));
+                    rescored.FileNames);
                 if (unmatchedKeys.Count > 0)
                 {
                     ctx.LogWarning(string.Format(
@@ -225,14 +228,14 @@ namespace pwiz.Osprey.Tasks
 
                 int missingPass2 = 0;
                 int totalFiles = 0;
-                foreach (var kvp in perFileEntries)
+                foreach (string fileKey in rescored.FileNames)
                 {
                     totalFiles++;
                     // A key with no input file is not "missing" - it is unmatched, reported
                     // above, and gets no sidecar either way.
-                    if (pass2Writer.InputFor(kvp.Key) == null)
+                    if (pass2Writer.InputFor(fileKey) == null)
                         continue;
-                    if (!pass2Writer.IsCurrent(kvp.Key))
+                    if (!pass2Writer.IsCurrent(fileKey))
                         missingPass2++;
                 }
                 // The RECOMPUTE gate, and only that. Every file gets a sidecar written below
@@ -299,7 +302,7 @@ namespace pwiz.Osprey.Tasks
                     if (!frozenCompetition)
                     {
                         var swRestore = Stopwatch.StartNew();
-                        RestorePass1Scalars(ctx, perFileEntries, pass2Writer);
+                        RestorePass1Scalars(ctx, Pool(), pass2Writer);
                         swRestore.Stop();
                         ctx.LogVerbose(string.Format(
                             "[STAGE-WALL] pass-1 scalar restore: {0:F1}s", swRestore.Elapsed.TotalSeconds));
@@ -345,7 +348,7 @@ namespace pwiz.Osprey.Tasks
                         // hence a experiment_protein_qvalue), so the last-write map is exact.
                         var survivorsByFile =
                             new Dictionary<string, List<FdrEntry>>(StringComparer.Ordinal);
-                        foreach (var kvp in perFileEntries)
+                        foreach (var kvp in Pool())
                             survivorsByFile[kvp.Key] = kvp.Value;
 
                         IReadOnlyDictionary<uint, double> ResolveProteinQ(string fileName)
@@ -370,7 +373,7 @@ namespace pwiz.Osprey.Tasks
                         }
 
                         pass2Projections = ComputePass2Projection(
-                            ctx, perFileEntries, perFileParquetPaths, config,
+                            ctx, Pool(), perFileParquetPaths, config,
                             ResolveProteinQ, FlushPass2File);
                     }
                     else
@@ -378,7 +381,7 @@ namespace pwiz.Osprey.Tasks
                         // Resident 2nd pass (flag off): the byte-identity oracle. Reload
                         // every survivor's PIN features resident, then run the resident
                         // Percolator over the full FdrEntry survivor buffer.
-                        pass2Contributions = ComputePass2Resident(ctx, perFileEntries, perFileParquetPaths, config);
+                        pass2Contributions = ComputePass2Resident(ctx, Pool(), perFileParquetPaths, config);
                     }
                     swPass2.Stop();
                     ctx.LogInfo(string.Format(
@@ -393,8 +396,8 @@ namespace pwiz.Osprey.Tasks
             // back instead of quietly downgrading a resumed run's file to pass-1 values. A file
             // with no sidecar yet - a first run with no rescore work - simply has nothing to
             // load, and the write gives it the standing values, which are its answer.
-            if (!recomputed)
-                ReloadPass2Sidecars(ctx, pass2Writer, perFileEntries, @"pre-write");
+            if (!recomputed && !rescored.Streams)
+                ReloadPass2Sidecars(ctx, pass2Writer, Pool(), @"pre-write");
 
             // Persist post-Stage-6 per-file 2nd-pass FDR scores
             // BEFORE RunProteinFdr. The sidecar holds Score +
@@ -423,7 +426,7 @@ namespace pwiz.Osprey.Tasks
                 // .2nd-pass sidecar written and the next resume re-runs
                 // its second-pass FDR unnecessarily.
                 var unmatchedSidecarKeys = pass2Writer.UnmatchedKeys(
-                    perFileEntries.Select(kvp => kvp.Key));
+                    rescored.FileNames);
                 if (unmatchedSidecarKeys.Count > 0)
                 {
                     ctx.LogWarning(string.Format(
@@ -457,11 +460,11 @@ namespace pwiz.Osprey.Tasks
                     // the 38s gap perfviz reports between the competition's [STAGE-WALL] line
                     // and the next probe (#4486). IO-paced, like the other disk loops here.
                     using (var writeProgress = new ProgressReporter(
-                        string.Format(@"Writing 2nd-pass FDR scores for {0} file(s)", perFileEntries.Count),
-                        perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                        string.Format(@"Writing 2nd-pass FDR scores for {0} file(s)", rescored.FileCount),
+                        rescored.FileCount, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                     {
                         long nWrittenReported = 0;
-                        foreach (var kvp in perFileEntries)
+                        foreach (var kvp in Pool())
                         {
                             writeProgress.Report(++nWrittenReported);
                             pass2Writer.Write(kvp.Key, kvp.Value);
@@ -501,9 +504,19 @@ namespace pwiz.Osprey.Tasks
             // above already overlaid every sidecar onto these same entries and the
             // write put identical bytes back, so a second read of the whole sidecar
             // set (~4.8 GB at 82 files) applied values the entries already hold.
-            if (recomputed && perFileParquetPaths.Count > 0 && config.InputFiles != null)
-                ReloadPass2Sidecars(ctx, pass2Writer, perFileEntries, @"post-write");
-
+            // On the STREAMED pool neither reload runs, and the reason is that neither can: the
+            // entries they would overlay are dropped as each run is folded, so a pass over the
+            // whole cohort here would apply the sidecars to rows nothing reads and then throw
+            // them away. The same overlay is installed as a per-run hook instead
+            // (InstallStreamedPass2Overlay, called by the stage right after this method), so
+            // every later fold rebuilds a run and immediately gets its second-pass values.
+            // Same operation, same rows; applied when the row exists rather than in a pass of
+            // its own.
+            if (recomputed && !rescored.Streams &&
+                perFileParquetPaths.Count > 0 && config.InputFiles != null)
+            {
+                ReloadPass2Sidecars(ctx, pass2Writer, Pool(), @"post-write");
+            }
 
             return pass2Contributions;
         }
@@ -575,31 +588,14 @@ namespace pwiz.Osprey.Tasks
                 foreach (var kvp in perFileEntries)
                 {
                     reloadProgress.Report(++nReloadReported);
-                    string inputFile = writer.InputFor(kvp.Key);
-                    if (inputFile == null)
-                        continue;
-                    string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
-                    if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
-                    {
-                        filesMissing++;
-                        continue;
-                    }
-                    var byEntryId = new Dictionary<uint, FdrEntry>(kvp.Value.Count);
-                    foreach (var e in kvp.Value)
-                        byEntryId[e.EntryId] = e;
-                    if (FdrScoresSidecar.TryReadOverlay(
-                            pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass,
-                            experimentRecords))
+                    if (OverlayPass2SidecarOntoFile(
+                            writer, kvp.Key, kvp.Value, experimentRecords, ctx.LogWarning))
                     {
                         filesReloaded++;
                     }
                     else
                     {
                         filesMissing++;
-                        ctx.LogWarning(string.Format(
-                            "Failed to reload 2nd-pass FDR sidecar for {0} ({1}); " +
-                            "protein FDR will use stale 1st-pass q-values",
-                            kvp.Key, pass2Path));
                     }
                 }
             }
@@ -609,6 +605,77 @@ namespace pwiz.Osprey.Tasks
                     "Reloaded 2nd-pass FDR scores ({0}) for {1}/{2} file(s) post-compaction",
                     phase, filesReloaded, filesReloaded + filesMissing));
             }
+        }
+
+        /// <summary>
+        /// Overlay ONE run's <c>.2nd-pass.fdr_scores.bin</c> - plus the analysis-wide 2nd-pass
+        /// experiment records - onto that run's entries. The body of
+        /// <see cref="ReloadPass2Sidecars"/>' loop, extracted because a STREAMED Stage 7 has to
+        /// apply it once per run per pass rather than once per run in total: the entries are
+        /// rebuilt from disk carrying their 1st-pass values, so without this every fold after
+        /// the second pass would read pass-1 q-values off pass-2 rows.
+        ///
+        /// <para>Returns false when the run has no readable current sidecar - the caller decides
+        /// whether that is the legitimate absence (a first run with no rescore work) or the
+        /// failed write it is on the post-write pass, which is why the disposition is not taken
+        /// here.</para>
+        ///
+        /// <para>A missing sidecar leaves the entries EXACTLY as they arrived rather than
+        /// resetting them. On the resident path that is the standing first-pass state, which is
+        /// what the loop's own contract says such a run keeps; on the streamed path it is the
+        /// same state, freshly rebuilt. The two agree because neither invents a value.</para>
+        /// </summary>
+        private static bool OverlayPass2SidecarOntoFile(
+            Pass2SidecarWriter writer, string fileName, List<FdrEntry> entries,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            Action<string> logWarning)
+        {
+            string inputFile = writer.InputFor(fileName);
+            if (inputFile == null)
+                return false;
+            string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
+            if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
+                return false;
+            var byEntryId = new Dictionary<uint, FdrEntry>(entries.Count);
+            foreach (var e in entries)
+                byEntryId[e.EntryId] = e;
+            if (FdrScoresSidecar.TryReadOverlay(
+                    pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass, experimentRecords))
+            {
+                return true;
+            }
+            logWarning(string.Format(
+                "Failed to reload 2nd-pass FDR sidecar for {0} ({1}); " +
+                "protein FDR will use stale 1st-pass q-values", fileName, pass2Path));
+            return false;
+        }
+
+        /// <summary>
+        /// Make every fold that runs AFTER the second pass see the second pass's answer, on a
+        /// Stage 7 whose runs are rebuilt from disk one at a time (#4486).
+        ///
+        /// <para>On the resident pool <see cref="ReloadPass2Sidecars"/> stamps the entries once
+        /// and every later pass reads the stamps. A streamed pool has no entries to stamp
+        /// between passes, so the same overlay is installed as a per-run hook and re-applied to
+        /// each run as it is rebuilt. Same operation, same rows, same result - once per run per
+        /// pass instead of once per run, which is the price of not holding the pool.</para>
+        ///
+        /// <para>The experiment records are resolved PER CALL rather than captured once,
+        /// deliberately: <see cref="ResolvePass2ExperimentRecords"/> answers from the in-memory
+        /// accumulator once a pass-2 path has published one and from the on-disk sidecar
+        /// otherwise, and Stage 7 crosses that boundary partway through - protein FDR writes the
+        /// sidecar. Capturing the earlier answer would freeze the pre-competition values into
+        /// every later fold.</para>
+        /// </summary>
+        internal static void InstallStreamedPass2Overlay(
+            PipelineContext ctx, RescoredEntries rescored, string taskName, string taskValidityKey)
+        {
+            if (!rescored.Streams)
+                return;
+            var writer = new Pass2SidecarWriter(ctx, ctx.Config, taskName, taskValidityKey);
+            rescored.AddPostMaterialize((fileName, entries) =>
+                OverlayPass2SidecarOntoFile(
+                    writer, fileName, entries, ResolvePass2ExperimentRecords(ctx), ctx.LogWarning));
         }
 
         /// <summary>
@@ -1621,10 +1688,16 @@ namespace pwiz.Osprey.Tasks
                 fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int mergeIdx = 0;
-                foreach (var kvp in rescored.Files())
+                foreach (var kvp in rescored.StreamFiles())
                 {
                     mergeProgress.Report(++mergeIdx);
-                    residentByFile[kvp.Key] = kvp.Value;
+                    // Only where the pool is going to stay. On a streamed source these lists are
+                    // emptied the moment the fold moves on, so a map of references to them would
+                    // hand the competition 446 empty runs - the failure that looks like a
+                    // cohort with no survivors rather than like a bug. There LoadOneFile
+                    // rebuilds the run it is asked for instead.
+                    if (!rescored.Streams)
+                        residentByFile[kvp.Key] = kvp.Value;
                     survivorObservations += kvp.Value.Count;
                     foreach (var e in kvp.Value)
                         survivorEntryIds.Add(e.EntryId);
@@ -1846,6 +1919,12 @@ namespace pwiz.Osprey.Tasks
                 // results forward.
                 List<FdrEntry> LoadOneFile(string fileKey)
                 {
+                    // Rebuilt from this run's own artifacts on a streamed source, taken off the
+                    // resident buffer when there is one. Either way it is ONE run, which is what
+                    // this pass was already written to hold - the streamed source only makes
+                    // that true of the stage around it as well.
+                    if (rescored.Streams)
+                        return rescored.MaterializeFile(fileKey);
                     return residentByFile.TryGetValue(fileKey, out var resident)
                         ? resident
                         : new List<FdrEntry>();
@@ -1951,6 +2030,13 @@ namespace pwiz.Osprey.Tasks
                         sidecarsWritten.Add(fileKey);
                     else if (!ctx.Config.DiagnosticsOnly)
                         writeFailures.Add(fileKey);
+                    // DROP the run here, on a streamed source: its answer is on disk and step 4
+                    // patches the sidecar rather than the entries, so this is the last line that
+                    // reads them. Without it the pass would refill run after run and never let
+                    // one go - the whole-run pool rebuilt one run at a time, which is the shape
+                    // that looks like a fix in the code and like no fix at all in the profile.
+                    if (rescored.Streams)
+                        rescored.DropFile(fileKey);
                     currentKey = null;
                     currentEntries = null;
                 }
@@ -3060,9 +3146,12 @@ namespace pwiz.Osprey.Tasks
                 if (entry.Features == null || entry.Features.Length != nFeatures)
                 {
                     // No reconciled features resolved (a stub/parquet mismatch the reload
-                    // already warned about). Leave this entry's q as-is rather than guess.
+                    // already warned about). Leave this ENTRY's q as-is rather than guess, and
+                    // go on to the next one - a `return` here would abandon the rest of the
+                    // file's survivors at their Stage-6 q AND skip the FilesDone count below,
+                    // which is a whole run silently dropped for one entry's missing features.
                     tally.Skipped++;
-                    return;
+                    continue;
                 }
                 double newScore = ScoreWithFrozenModel(
                     entry.Features, standardizer, avgWeights, avgBias, scratch);

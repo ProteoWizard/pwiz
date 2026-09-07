@@ -1382,10 +1382,19 @@ namespace pwiz.Osprey.Tasks
             // the same whether the process was handed 1 run or 446, because an HPC node holding
             // one run cannot pay for the other 445 and must still produce identical output. The
             // all-runs path below stays for the tasks that genuinely join.
-            if (ScoringTaskShared.CanHydratePerRun(config))
+            // The SAME early return for the reconciled-input merge, whose consumer is Stage 7's
+            // fold rather than the rescore loop (issue #4486). Both legs want exactly this: the
+            // run names, their parquet paths and their calibrations, and no rows. What differs
+            // is only which downstream loop refills a run and drops it - so the predicate is a
+            // sibling rather than a widening of the one above, and the log line names the
+            // consumer so a reader of the run log can tell which leg took this path.
+            bool perRunRescore = ScoringTaskShared.CanHydratePerRun(config);
+            bool perRunJoin = !perRunRescore && ScoringTaskShared.CanStreamStage7Join(config);
+            if (perRunRescore || perRunJoin)
             {
                 LoadJoinOnlyPerRunNames(config, perFileEntries, perFileParquetPaths,
-                    perFileCalibrations, perFileIsolationMz, ctx);
+                    perFileCalibrations, perFileIsolationMz,
+                    perRunJoin ? @"the second-pass join" : @"the rescore", ctx);
                 if (ctx.Diagnostics?.CalibrationOnly ?? false)
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
                 return null;
@@ -1740,11 +1749,12 @@ namespace pwiz.Osprey.Tasks
             Dictionary<string, string> perFileParquetPaths,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
             ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
+            string consumer,
             PipelineContext ctx)
         {
             ctx.LogInfo(string.Format(
-                @"--input-scores: {0} run(s) will be hydrated one at a time by the rescore; " +
-                @"no all-runs pre-load.", config.InputScores.Count));
+                @"--input-scores: {0} run(s) will be hydrated one at a time by {1}; " +
+                @"no all-runs pre-load.", config.InputScores.Count, consumer));
             foreach (string parquetPath in config.InputScores)
             {
                 string fileName = Path.GetFileNameWithoutExtension(

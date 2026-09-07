@@ -536,8 +536,64 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private bool _streamed;
 
+        /// <summary>
+        /// Applied to each file right after the per-file source has filled it, so a consumer
+        /// that runs LATER in the stage sees the state the stage has reached rather than the
+        /// state on disk when the fold started.
+        ///
+        /// <para>This is what makes a re-enumerable stream equivalent to a resident pool that
+        /// is stamped in place. On the resident path a pass-2 overlay or an experiment-q floor
+        /// is written onto the entries and every later pass reads it; on the streamed path the
+        /// entries are gone, so the same fact has to be re-applied to each run as it is
+        /// rebuilt. Both arms end up applying the identical operation to the identical rows -
+        /// once per run either way - which is why the two produce the same bytes.</para>
+        ///
+        /// <para>Added to by the stage, in the order the stage computes the facts: the
+        /// second-pass sidecar overlay once the sidecars are final, then the experiment-q floors
+        /// once they have been folded. Order is the point - the floors raise a value the sidecar
+        /// overlay has just written - so they compose in call order rather than replacing one
+        /// another.</para>
+        /// </summary>
+        private Action<string, List<FdrEntry>> _postMaterialize;
+
+        /// <summary>
+        /// True when this milestone has a per-file source, so a consumer may fold through
+        /// <see cref="StreamFiles"/> without the buffer holding every file at once - and, the
+        /// half that callers actually branch on, so a stage knows whether a fact it computes
+        /// has to be re-applied per file (<see cref="AddPostMaterialize"/>) or can simply be
+        /// stamped onto a pool that is going to stay.
+        /// </summary>
+        public bool Streams => _materializeFile != null;
+
         /// <summary>The buffer already at its post-rescore state - nothing deferred.</summary>
         public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
+
+        /// <summary>
+        /// Append to the per-file overlay described on <see cref="_postMaterialize"/>, so it
+        /// runs after everything already installed.
+        ///
+        /// <para>REFUSED on a run with no per-file source, rather than ignored. There the
+        /// entries are the pool and the caller must stamp them in place as it always did; an
+        /// overlay installed and never invoked would leave a stage believing it had applied
+        /// something it had not, which is the class of defect this whole area keeps producing.
+        /// Callers branch on <see cref="Streams"/> and do one or the other.</para>
+        /// </summary>
+        public void AddPostMaterialize(Action<string, List<FdrEntry>> overlay)
+        {
+            if (overlay == null)
+                throw new ArgumentNullException(nameof(overlay));
+            if (_materializeFile == null)
+            {
+                throw new InvalidOperationException(
+                    @"RescoredEntries.AddPostMaterialize was called on a milestone with no per-file " +
+                    @"source, where nothing would ever invoke it. Apply the operation to the " +
+                    @"resident buffer instead; branch on Streams.");
+            }
+            var existing = _postMaterialize;
+            _postMaterialize = existing == null
+                ? overlay
+                : (name, entries) => { existing(name, entries); overlay(name, entries); };
+        }
 
         /// <summary>
         /// The run's files, one at a time, for a consumer that ITERATES and does not retain.
@@ -631,6 +687,7 @@ namespace pwiz.Osprey.Tasks
             foreach (var kv in base.Value)
             {
                 _materializeFile(kv.Key, kv.Value);
+                _postMaterialize?.Invoke(kv.Key, kv.Value);
                 yield return kv;
                 // Dropped as soon as the consumer's foreach body returns. TrimExcess too:
                 // Clear leaves the backing array at its high-water capacity, which for a CHS
@@ -638,6 +695,60 @@ namespace pwiz.Osprey.Tasks
                 _streamed = true;
                 kv.Value.Clear();
                 kv.Value.TrimExcess();
+            }
+        }
+
+        /// <summary>
+        /// ONE named file's post-rescore survivors, for a consumer that is driven by something
+        /// other than this buffer's order - the streamed pass-2 competition asks for the file
+        /// the FDR layer has just decided to read next, not for "the next one".
+        ///
+        /// <para>The list is the buffer's own, so a caller that stamps entries stamps what the
+        /// resident path would have. On the streamed source it has just been filled from disk
+        /// and the caller owns dropping it (<see cref="DropFile"/>); on the resident source it
+        /// is already filled and must NOT be dropped, which is why the two halves are separate
+        /// calls rather than one scoped helper - only the caller knows whether it is done with
+        /// the file or merely finished one of several passes over it.</para>
+        ///
+        /// <para>An unknown name returns an empty list rather than throwing: that is what the
+        /// resident lookup this replaces did for a file the buffer never held, and turning it
+        /// into a throw here would convert a tolerated input-naming drift (reported in its own
+        /// words upstream) into an abort hours into a run.</para>
+        /// </summary>
+        public List<FdrEntry> MaterializeFile(string fileName)
+        {
+            foreach (var kv in base.Value)
+            {
+                if (!string.Equals(kv.Key, fileName, StringComparison.Ordinal))
+                    continue;
+                if (_materializeFile != null)
+                {
+                    _materializeFile(kv.Key, kv.Value);
+                    _postMaterialize?.Invoke(kv.Key, kv.Value);
+                }
+                return kv.Value;
+            }
+            return new List<FdrEntry>();
+        }
+
+        /// <summary>
+        /// Release one file materialized by <see cref="MaterializeFile"/>. A no-op on the
+        /// resident source, where the buffer IS the pool and dropping it would destroy the only
+        /// copy - the same asymmetry <see cref="StreamFiles"/> encodes by falling back to
+        /// <see cref="Files"/>.
+        /// </summary>
+        public void DropFile(string fileName)
+        {
+            if (_materializeFile == null)
+                return;
+            foreach (var kv in base.Value)
+            {
+                if (!string.Equals(kv.Key, fileName, StringComparison.Ordinal))
+                    continue;
+                _streamed = true;
+                kv.Value.Clear();
+                kv.Value.TrimExcess();
+                return;
             }
         }
     }

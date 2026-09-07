@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -241,6 +241,11 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
+                // And the fold-versus-resident arm, on the argument its Stage 6 twin makes: the
+                // two are supposed to write byte-identical .blib and 2nd-pass sidecars, and an
+                // in-place A/B that adopted the other arm's outputs would report that identity
+                // without ever testing it.
+                + OspreyEnvironment.Stage7StreamValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx);
         }
 
@@ -327,9 +332,14 @@ namespace pwiz.Osprey.Tasks
                     stale.Count, rescored.FileCount, string.Join(", ", stale)));
             }
 
-            var perFileEntries = rescored.Value;
+            // NO .Value here any more (#4486). Every consumer below folds through
+            // RescoredEntries.StreamFiles, which on the per-run source rebuilds one run, hands
+            // it over and drops it - so the probe that used to measure "the survivor pool built"
+            // now measures a stage that never builds one. It is kept, and kept in place, because
+            // the whole #4486 series is quoted against it: on the streamed arm it should read
+            // flat against stage7-inherited, and a jump here is the pool coming back.
             ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-pool",
-                string.Format(@"(post-GC, survivor pool built, files={0})", perFileEntries.Count));
+                string.Format(@"(post-GC, entering the fold, files={0})", rescored.FileCount));
             // Beside the probe that measures the pool, because it explains part of it: a
             // distinct count still equal to the seed means the survivors' sequences are the
             // library's own instances rather than one string per observation (#4486).
@@ -361,6 +371,12 @@ namespace pwiz.Osprey.Tasks
             pass2Contributions = Pass2FdrSidecar.ComputeAndPersist(
                 ctx, AnyReconciledParquet(config), rescored, perFileParquetPaths,
                 Name, ValidityKey(ctx));
+            // From here on, every fold must see the SECOND pass's answer. On the resident pool
+            // ComputeAndPersist has just stamped it onto the entries; on the streamed one the
+            // entries it stamped are gone, so the same overlay is installed as a per-run hook
+            // and re-applied to each run as the folds below rebuild it. No-op on the resident
+            // arm, which is what keeps the two arms one code path rather than two.
+            Pass2FdrSidecar.InstallStreamedPass2Overlay(ctx, rescored, Name, ValidityKey(ctx));
             // The substep the 2026-07-31 characterization on #4486 located the churn in:
             // it reloads every file's reconciled features, so the pre-GC line carries the
             // transient reload peak and the post-GC line what survives it.
@@ -401,7 +417,7 @@ namespace pwiz.Osprey.Tasks
             // experiment q with no surviving run support -- reported with no run-level ID (the
             // blib ID-line artifact). Re-clamping here, against the run q's actually written to
             // the blib, restores "reported => some run genuinely passed" for the final output.
-            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+            ReclampExperimentQToBestRun(rescored);
 
             // Write output blib - unless this is a diagnostics-only regeneration, whose whole
             // contract is that it touches no artifact but the report.
@@ -446,7 +462,7 @@ namespace pwiz.Osprey.Tasks
                 var swFdrBench = Stopwatch.StartNew();
                 var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
                 var benchResult = FdrBenchInputWriter.WritePeptideInput(
-                    benchPath, perFileEntries, libraryById, config.FdrLevel,
+                    benchPath, rescored.StreamFiles(), libraryById, config.FdrLevel,
                     config.FdrBenchPerRun, pairing.ExcludedEntrapment);
                 // Emit the corrected pairing manifest from the same library so FDRBench
                 // classifies every reported peptide and drops nothing (feed FDRBench -pep with this).
@@ -485,12 +501,61 @@ namespace pwiz.Osprey.Tasks
                 if (OspreyEnvironment.Pass2ProteinCompact &&
                     ctx.TryGet<ProteinCompactStratum>(out var pcStratum))
                     stratumBaseIds = pcStratum.BaseIds;
+                // The ONE Stage 7 consumer still handed the whole pool, and the only one that
+                // cannot simply be re-pointed at the stream: the pass-2 data builders index
+                // their files BY POSITION and revisit a file across two loops
+                // (ModelDiagnosticsData.CoAssignment), so an enumerable that rebuilds a run per
+                // pass would rebuild the same run several times per view. The fold it wants is
+                // the one FirstPassFDR's pass-1 accumulator already is, and giving pass 2 the
+                // same accumulator is the fix - not a wider parameter type. Until then
+                // CanStreamStage7Join declines the report leg outright, so reaching this line
+                // means the pool is resident and .Value is what it has always been.
                 ModelDiagnosticsReport.WritePass2AndFinalize(
-                    perFileEntries, pass2Contributions, libraryById, config, ctx.LogInfo,
+                    rescored.Value, pass2Contributions, libraryById, config, ctx.LogInfo,
                     stratumBaseIds, ValidityKey(ctx));
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Re-clamp experiment q to each precursor's best run q, as a FOLD then an APPLY.
+        ///
+        /// <para>The floors are whole-experiment and the application is per row, which is why
+        /// <see cref="PercolatorEngine"/> exposes the two halves separately. Folding them over a
+        /// stream visits every run and holds two O(distinct) maps - 45,724 precursors at 257 CHS
+        /// runs, not 137 M entries - so this genuinely whole-experiment step is one of the folds
+        /// the architecture admits in a join, not a reason to hold the pool.</para>
+        ///
+        /// <para>The apply half differs by arm and cannot not. On the resident pool the floors
+        /// are stamped onto the entries once and every later gate reads them. On the streamed
+        /// one there are no entries between passes, so the apply is installed as a per-run
+        /// overlay and re-applied to each run as the blib gates rebuild it - after the pass-2
+        /// sidecar overlay, because a floor raises the value that overlay has just written.
+        /// Composition order is the correctness argument, and it is why these go in as two
+        /// AddPostMaterialize calls in this order rather than one.</para>
+        /// </summary>
+        private static void ReclampExperimentQToBestRun(RescoredEntries rescored)
+        {
+            var minRunBothByEntryId = new Dictionary<uint, double>();
+            var minRunBothByPeptide = new Dictionary<(string ModifiedSequence, bool IsDecoy), double>();
+            foreach (var kvp in rescored.StreamFiles())
+            {
+                PercolatorEngine.AccumulateExperimentQFloors(
+                    kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
+            }
+            if (rescored.Streams)
+            {
+                rescored.AddPostMaterialize((fileName, entries) =>
+                    PercolatorEngine.ApplyExperimentQFloors(
+                        entries, minRunBothByEntryId, minRunBothByPeptide));
+                return;
+            }
+            foreach (var kvp in rescored.Files())
+            {
+                PercolatorEngine.ApplyExperimentQFloors(
+                    kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
+            }
         }
 
         /// <summary>
@@ -523,7 +588,7 @@ namespace pwiz.Osprey.Tasks
             // the files one at a time and drop each. While something else still reads the
             // whole-run buffer, Files() yields from it and this costs nothing; once nothing
             // does, it is one file resident at a time (#4486).
-            var retained = LibraryFragmentRelease.BuildRetainedBaseIds(rescored.Files());
+            var retained = LibraryFragmentRelease.BuildRetainedBaseIds(rescored.StreamFiles());
             int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
             ctx.LogInfo(string.Format(
                 @"Released library fragments for {0} of {1} entries ({2} base_ids retained for the reported pool)",
@@ -556,7 +621,7 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             var result = ProteinFdrEngine.RunSecondPass(
-                rescored.Files(), fullLibrary, config, ctx.LogInfo);
+                rescored.StreamFiles(), fullLibrary, config, ctx.LogInfo);
 
             // The 2nd-pass sidecar was written BEFORE this protein FDR ran - it is one of its
             // inputs - so the protein column it carries is still the pass-1 value at this point.
@@ -723,10 +788,10 @@ namespace pwiz.Osprey.Tasks
             // charge state (lowest experiment_precursor_qvalue) as a
             // representative.
             // Streamed: both gates fold to O(distinct) and retain nothing.
-            var passingPeptides = ComputePassingPeptides(rescored.Files(), config, nFiles);
+            var passingPeptides = ComputePassingPeptides(rescored.StreamFiles(), config, nFiles);
 
             var passingPrecursors = ComputePassingPrecursors(
-                rescored.Files(), config, passingPeptides, nFiles, out int nFallback);
+                rescored.StreamFiles(), config, passingPeptides, nFiles, out int nFallback);
             if (nFallback > 0)
             {
                 ctx.LogInfo(string.Format(
@@ -739,7 +804,7 @@ namespace pwiz.Osprey.Tasks
             // everything after this line works on ~14 M values instead of holding 137 M
             // entries alive to read eight fields off them (#4486).
             var passingEntries = CollectPassingEntries(
-                rescored.Files(), passingPrecursors, nFiles, ctx.Get<SequencePool>().Value,
+                rescored.StreamFiles(), passingPrecursors, nFiles, ctx.Get<SequencePool>().Value,
                 out var bestByPrecursor);
 
             ctx.LogInfo(string.Format(

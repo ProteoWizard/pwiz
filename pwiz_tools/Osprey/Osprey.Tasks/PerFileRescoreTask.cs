@@ -687,7 +687,26 @@ namespace pwiz.Osprey.Tasks
 
             // Publish the RescoredEntries milestone over the shared backing list
             // (the reconciled-input path applies its own compaction below, in place).
-            ctx.Publish(new RescoredEntries(_perFileEntries));
+            //
+            // With a per-run source when this leg may stream (#4486): the --input-scores load
+            // then published one EMPTY list per run and read no rows, so the lists are filled
+            // by Stage 7's fold one run at a time and dropped again. The whole-run build is
+            // still supplied, and is what a consumer that reads .Value gets - it materializes
+            // every run through the same per-run source, so the two arms cannot disagree about
+            // what a run's post-compaction state is. It is the expensive answer, not a wrong
+            // one, which is the right disposition for a consumer this branch has not converted.
+            var stage7Source = BuildStage7PerRunSource(
+                ctx.Get<PerFileParquetPaths>().Value, ctx.Config, ctx);
+            if (stage7Source == null)
+            {
+                ctx.Publish(new RescoredEntries(_perFileEntries));
+            }
+            else
+            {
+                var buffer = _perFileEntries;
+                ctx.Publish(new RescoredEntries(buffer,
+                    () => MaterializeAllFromSource(buffer, stage7Source, ctx), stage7Source));
+            }
 
             var bundle = ctx.Get<RescoreBundle>().Value;
             if (bundle != null)
@@ -2008,6 +2027,92 @@ namespace pwiz.Osprey.Tasks
                     experimentRecords,
                     (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool),
                     sequencePool: sequencePool);
+            };
+        }
+
+        /// <summary>
+        /// The per-run source Stage 7 folds through on the <c>--task SecondPassFDR</c> merge:
+        /// refill ONE run's post-compaction survivors from its own reconciled parquet and
+        /// 1st-pass sidecar, so the join holds one run at a time instead of all of them
+        /// (issue #4486).
+        ///
+        /// <para>The sibling of <see cref="BuildPerRunHydrate"/>, one leg over. That one feeds
+        /// the rescore loop and returns a whole <c>RunRescoreInputs</c> - actions, gap-fill,
+        /// refined calibration - because a rescore needs them. A join runs no rescore, so this
+        /// one returns nothing and refills the caller's list in place; the only state it needs
+        /// is the pair every refill shares, the analysis-wide retained base_id set and the
+        /// 1st-pass experiment records, both read ONCE here rather than per run.</para>
+        ///
+        /// <para>Null when this leg may not stream, which is the same predicate the
+        /// <c>--input-scores</c> load consulted when it decided to publish empty per-run lists.
+        /// Reading it in both places rather than inferring from the lists' emptiness is
+        /// deliberate: an inference would turn a disagreement between the two sites into a run
+        /// that folds over 446 empty lists and writes an empty <c>.blib</c>, which is the
+        /// failure shape this codebase keeps paying for.</para>
+        /// </summary>
+        /// <summary>
+        /// Fill EVERY run's list through the per-run source - the whole-run build behind
+        /// <c>RescoredEntries.Value</c> on the streamed second-pass leg.
+        ///
+        /// <para>It exists so that a consumer this conversion has not reached still gets a
+        /// correct pool rather than 446 empty lists, and it is deliberately the same source the
+        /// fold uses, applied to every run instead of one at a time. Reported, and reported as
+        /// the expense it is: reaching this line means something asked for the whole pool on the
+        /// one leg that was arranged not to need it.</para>
+        /// </summary>
+        private static void MaterializeAllFromSource(
+            List<KeyValuePair<string, List<FdrEntry>>> buffer,
+            Action<string, List<FdrEntry>> source, PipelineContext ctx)
+        {
+            ctx.LogWarning(string.Format(
+                @"Second-pass join: a consumer asked for the whole-run survivor pool, so all " +
+                @"{0} run(s) are being materialized at once. This is the O(runs x entries) peak " +
+                @"the per-run fold exists to avoid.", buffer.Count));
+            using (var progress = new ProgressReporter(string.Format(
+                       @"Materializing survivors for {0} run(s)", buffer.Count), buffer.Count))
+            {
+                int done = 0;
+                foreach (var kv in buffer)
+                {
+                    progress.Report(++done);
+                    source(kv.Key, kv.Value);
+                }
+            }
+        }
+
+        private static Action<string, List<FdrEntry>> BuildStage7PerRunSource(
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            OspreyConfig config,
+            PipelineContext ctx)
+        {
+            if (!ScoringTaskShared.CanStreamStage7Join(config))
+                return null;
+            var retainedBaseIds = ScoringTaskShared.ReadRetainedBaseIds(config, out _);
+            if (retainedBaseIds == null)
+                return null;
+            var experimentRecords = FdrExperimentSidecar.ReadMap(
+                FdrExperimentSidecar.PathFor(config.OutputBlib,
+                    ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
+                FdrScoresSidecar.Pass.FirstPass);
+            // Says which shape Stage 7 took, for the reason its rescore sibling gives: without
+            // it the only evidence is a memory profile, and "the gate is green so the new path
+            // must have run" is the inference that lets a resident path pass as a streamed one.
+            ctx.LogInfo(string.Format(
+                @"Second-pass join: folding over {0} run(s), each rebuilt from its own artifacts " +
+                @"and dropped (no all-runs survivor pool; {1} retained base_id(s) read once).",
+                perFileParquetPaths.Count, retainedBaseIds.Count));
+            var sequencePool = ctx.Get<SequencePool>().Value;
+            return (fileName, survivors) =>
+            {
+                if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
+                {
+                    throw new InvalidDataException(string.Format(
+                        @"Second-pass join hydrate: no scores parquet path published for {0}",
+                        fileName));
+                }
+                RescoreHydration.RefillOneRunSurvivors(fileName, parquetPath, survivors,
+                    retainedBaseIds, experimentRecords,
+                    (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool));
             };
         }
 

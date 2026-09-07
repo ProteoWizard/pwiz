@@ -812,6 +812,63 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// ONE run's post-compaction survivors, refilled IN PLACE, for a join that folds over the
+        /// runs one at a time and drops each - the Stage 7 shape (issue #4486).
+        ///
+        /// <para>The same three steps <see cref="HydrateOneRun"/> takes - load the run's stubs,
+        /// overlay its 1st-pass sidecar, compact to the analysis-wide retained set - and NOT the
+        /// fourth. Stage 7 runs no rescore, so it needs neither the planned actions nor the
+        /// <c>reconciliation.json</c> they come from, and reading that envelope per run would put
+        /// ~6 MB of join-wide <c>first_pass_base_ids</c> through this call 446 times to answer a
+        /// question nobody asks. Sharing the whole of <c>HydrateOneRun</c> would have been the
+        /// tidier-looking choice and the more expensive one.</para>
+        ///
+        /// <para><b>Refills the caller's list rather than returning a new one.</b> That list is
+        /// the shared backing store every <c>PerFileEntries</c> milestone wraps, so replacing the
+        /// reference would leave the published milestones pointing at the old one - the same rule
+        /// the Stage 6 refill follows. Contents are transient; identity is not.</para>
+        ///
+        /// <para>Equivalence with the resident path is what makes a streamed Stage 7 produce the
+        /// same bytes: this is the state <c>HydrateCompactedStreaming</c> leaves a run in, reached
+        /// by the same calls in the same order. The difference is only how long the list lives.</para>
+        /// </summary>
+        public static void RefillOneRunSurvivors(
+            string fileName,
+            string parquetPath,
+            List<FdrEntry> survivors,
+            HashSet<uint> retainedBaseIds,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            Func<string, string, List<FdrEntry>> loadStubs)
+        {
+            if (survivors == null)
+                throw new ArgumentNullException(nameof(survivors));
+            if (retainedBaseIds == null)
+                throw new ArgumentNullException(nameof(retainedBaseIds));
+            if (loadStubs == null)
+                throw new ArgumentNullException(nameof(loadStubs));
+
+            var stubs = loadStubs(fileName, parquetPath);
+            if (stubs == null)
+            {
+                throw new InvalidDataException(string.Format(
+                    "RefillOneRunSurvivors: no stubs loaded for {0}", fileName));
+            }
+            string syntheticInput = SyntheticInputFromParquet(parquetPath);
+            // Overlay then compact, in that order, for the reason the two siblings state: the
+            // sidecar covers the whole PRE-compaction row set, so the filter has to name the
+            // records that legitimately have no entry to land on and leave every other miss
+            // reportable as the parquet drift it is.
+            OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
+                nameof(RefillOneRunSurvivors), experimentRecords,
+                id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
+            stubs.RemoveAll(e => !retainedBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
+
+            survivors.Clear();
+            survivors.AddRange(stubs);
+            survivors.TrimExcess();
+        }
+
+        /// <summary>
         /// Overlay the first-pass FDR statistics onto <paramref name="stubs"/>: the RUN-scope
         /// SVM score, run q-values and PEP from <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c>,
         /// and the EXPERIMENT-scope q-values from <paramref name="experimentRecords"/>, which

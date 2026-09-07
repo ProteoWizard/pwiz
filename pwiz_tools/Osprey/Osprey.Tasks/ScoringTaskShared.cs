@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -431,6 +431,48 @@ namespace pwiz.Osprey.Tasks
             //
             // The gate check is mode 3's per-run-hydrate leg, which SKIPPED on all three
             // --model-diagnostics datasets for exactly this reason and must now run and pass.
+            string path = RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
+            return !string.IsNullOrEmpty(path) && RetainedBaseIdSidecar.IsCurrentFormat(path);
+        }
+
+        /// <summary>
+        /// True when the <c>--task SecondPassFDR</c> merge may hand Stage 7 a per-run source
+        /// instead of every run's survivors at once.
+        ///
+        /// <para>This is <see cref="CanHydratePerRun"/>'s answer for the OTHER leg, and the two
+        /// are deliberately separate predicates rather than one with a wider admission. They
+        /// name different consumers: that one asks whether the RESCORE can hydrate a run at a
+        /// time, and excludes <c>ExpectReconciledInput</c> because a Stage 7 node runs no
+        /// rescore; this one asks whether the JOIN can fold a run at a time, and admits only
+        /// that leg. Widening the first would have told the rescore it may stream on a leg where
+        /// it does not run at all.</para>
+        ///
+        /// <para>Three requirements, and the third is the one that is easy to miss. The leg has
+        /// to be the reconciled-input merge, whose parquets already hold the survivor subset.
+        /// No consumer may read PIN features off these stubs
+        /// (<c>PerFileScoringTask.NeedsResidentPool</c>: <c>--fdrbench-pass 1</c>, a
+        /// non-Percolator FDR method, <c>OSPREY_FDR_PROJECTION=0</c>) - a streamed pool drops
+        /// the entries those consumers index. And the analysis-wide retained base_id summary has
+        /// to be on disk, because it IS the compaction predicate every refill applies; without
+        /// it a refilled run would carry the pre-compaction pool and the fold would run over a
+        /// set ~52x too large. Its absence returns false here rather than failing, for the
+        /// reason its sibling gives.</para>
+        /// </summary>
+        internal static bool CanStreamStage7Join(OspreyConfig config)
+        {
+            if (!config.ExpectReconciledInput || !OspreyEnvironment.Stage7Stream)
+                return false;
+            if (PerFileScoringTask.NeedsResidentPool(config, OspreyEnvironment.UseFdrProjection))
+                return false;
+            // --model-diagnostics is the fourth requirement, and it is a CURRENT limitation
+            // rather than a property of the leg. The pass-2 report builders index their files by
+            // position and revisit a file across two loops, so they need a list and not a
+            // stream; the fold that removes the need is the accumulator the pass-1 report
+            // already uses. Declining here rather than letting the report leg stream and then
+            // silently pull the whole pool back through .Value, which is the same peak reached
+            // by a longer route and with nothing in the log to say so.
+            if (config.ModelDiagnostics)
+                return false;
             string path = RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
             return !string.IsNullOrEmpty(path) && RetainedBaseIdSidecar.IsCurrentFormat(path);
         }
