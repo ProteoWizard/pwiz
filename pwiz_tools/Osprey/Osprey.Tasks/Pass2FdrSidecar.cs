@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -2953,7 +2953,7 @@ namespace pwiz.Osprey.Tasks
             }
 
             var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
-            int nUnchanged = 0, nMoved = 0, nGapFill = 0, nSkipped = 0, nMissingSidecar = 0, nFilesDone = 0;
+            var tally = new TransferTally();
             // Per-file progress: building each file's per-run tables + classifying its survivors ran
             // silently for minutes on an 82-file join (the gap between Stage 6 and the summary below).
             var transferProgress = new ProgressReporter(
@@ -2965,71 +2965,11 @@ namespace pwiz.Osprey.Tasks
                 transferProgress.Report(++transferIdx);
                 if (!inputByFileName.TryGetValue(kvp.Key, out string inputFile))
                 {
-                    nSkipped += kvp.Value.Count;
+                    tally.Skipped += kvp.Value.Count;
                     continue;
                 }
-                string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
-
-                // Build this file's per-run tables + record map from its own 1st-pass sidecar.
-                var firstPassByEntryId = new Dictionary<uint, FdrScoreRecord>();
-                var precScores = new List<double>();
-                var precQs = new List<double>();
-                var pepScores = new List<double>();
-                var pepQs = new List<double>();
-                bool ok = FdrScoresSidecar.ReadRecords(
-                    pass1Path, FdrScoresSidecar.Pass.FirstPass, rec =>
-                {
-                    firstPassByEntryId[rec.EntryId] = rec; // entry_id is unique per file (DeduplicatePairs)
-                    precScores.Add(rec.Score);
-                    precQs.Add(rec.RunPrecursorQvalue);
-                    pepScores.Add(rec.Score);
-                    pepQs.Add(rec.RunPeptideQvalue);
-                });
-                if (!ok || precScores.Count == 0)
-                {
-                    nMissingSidecar++;
-                    ctx.LogWarning(string.Format(
-                        "OSPREY_PASS2_QVALUE=transfer: could not read the 1st-pass sidecar for '{0}' " +
-                        "({1}); this file's per-run q is left unadjusted.", kvp.Key, pass1Path));
-                    continue;
-                }
-                BuildScoreToQTable(precScores, precQs, out double[] precScoresDesc, out double[] precQDesc);
-                BuildScoreToQTable(pepScores, pepQs, out double[] pepScoresDesc, out double[] pepQDesc);
-
-                foreach (var entry in kvp.Value)
-                {
-                    if (entry.Features == null || entry.Features.Length != nFeatures)
-                    {
-                        // No reconciled features resolved (a stub/parquet mismatch the reload
-                        // already warned about). Leave this entry's q as-is rather than guess.
-                        nSkipped++;
-                        continue;
-                    }
-                    double newScore = ScoreWithFrozenModel(
-                        entry.Features, standardizer, avgWeights, avgBias, scratch);
-
-                    FdrScoreRecord? rec1 = null;
-                    if (firstPassByEntryId.TryGetValue(entry.EntryId, out FdrScoreRecord recFound))
-                        rec1 = recFound;
-                    // The precursor's analysis-wide pass-1 experiment record, which supplies
-                    // every disposition: an UNCHANGED or MOVED peak carries these values through,
-                    // and a gap-fill peak (no 1st-pass run-scope record) takes them so
-                    // ClampExperimentQToBestRun - a floor that only raises - lands it at the
-                    // precursor's best-run q. A precursor with no record anywhere gets the
-                    // default 1.0 q-values and a 0.0 aggregate, which pair correctly: never
-                    // competed, never accepted, so nothing reads it.
-                    FdrExperimentRecord? exp1 = null;
-                    if (globalExperiment.TryGetValue(entry.EntryId, out var expFound))
-                        exp1 = expFound;
-                    switch (AssignPerRunQ(entry, newScore, rec1, exp1,
-                        precScoresDesc, precQDesc, pepScoresDesc, pepQDesc))
-                    {
-                        case PerRunClass.Unchanged: nUnchanged++; break;
-                        case PerRunClass.Moved: nMoved++; break;
-                        default: nGapFill++; break;
-                    }
-                }
-                nFilesDone++;
+                TransferOneFile(kvp.Key, inputFile, kvp.Value, standardizer, avgWeights,
+                    avgBias, nFeatures, scratch, globalExperiment, ctx.LogWarning, ref tally);
             }
             transferProgress.Dispose();
 
@@ -3037,12 +2977,12 @@ namespace pwiz.Osprey.Tasks
                 "OSPREY_PASS2_QVALUE=transfer: per-run q transfer over {0} file(s) -- {1} unchanged " +
                 "(pass-1 q carried), {2} moved (run q re-mapped, experiment q carried), {3} gap-fill " +
                 "(new run q + carried experiment q){4}{5}.",
-                nFilesDone, nUnchanged, nMoved, nGapFill,
-                nMissingSidecar > 0
-                    ? string.Format("; {0} file(s) had no readable 1st-pass sidecar", nMissingSidecar)
+                tally.FilesDone, tally.Unchanged, tally.Moved, tally.GapFill,
+                tally.MissingSidecar > 0
+                    ? string.Format("; {0} file(s) had no readable 1st-pass sidecar", tally.MissingSidecar)
                     : string.Empty,
-                nSkipped > 0
-                    ? string.Format("; {0} entr(y/ies) skipped for missing features", nSkipped)
+                tally.Skipped > 0
+                    ? string.Format("; {0} entr(y/ies) skipped for missing features", tally.Skipped)
                     : string.Empty));
 
             // PUBLISH THE EXPERIMENT SCOPE, exactly as the competition modes do. This mode writes
@@ -3059,6 +2999,99 @@ namespace pwiz.Osprey.Tasks
             // under the gate - measured against master, which does write the file.
             ctx.Publish(new Pass2ExperimentScope(BuildExperimentScope(perFileEntries)));
             return true;
+        }
+
+        /// <summary>Counts one <see cref="TransferOneFile"/> call adds to. A struct rather
+        /// than six ref parameters, so the per-file body could be lifted out of the whole-run
+        /// loop without its signature becoming the reason not to.</summary>
+        internal struct TransferTally
+        {
+            public int Unchanged, Moved, GapFill, Skipped, MissingSidecar, FilesDone;
+        }
+
+        /// <summary>
+        /// Transfer ONE run's per-run q-values: build that run's own score->q tables from its own
+        /// <c>.1st-pass.fdr_scores.bin</c>, then classify and re-map its survivors.
+        ///
+        /// <para>The body of <see cref="TransferPerRunQ"/>'s loop, extracted unchanged. Nothing
+        /// in it reads another run's state - the tables come from this run's sidecar and the
+        /// experiment records are the analysis-wide map every run shares - which is what makes
+        /// the mode a fan-out computation that happens to be running in the join. Moving the
+        /// CALLER is the point; this seam is what lets that happen without rewriting the
+        /// algorithm (#4438 established the per-run form; only its home is still wrong).</para>
+        /// </summary>
+        internal static void TransferOneFile(
+            string fileName, string inputFile, List<FdrEntry> survivors,
+            FeatureStandardizer standardizer, double[] avgWeights, double avgBias,
+            int nFeatures, double[] scratch,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> globalExperiment,
+            Action<string> logWarning, ref TransferTally tally)
+        {
+            string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
+
+            // Build this file's per-run tables + record map from its own 1st-pass sidecar.
+            var firstPassByEntryId = new Dictionary<uint, FdrScoreRecord>();
+            var precScores = new List<double>();
+            var precQs = new List<double>();
+            var pepScores = new List<double>();
+            var pepQs = new List<double>();
+            bool ok = FdrScoresSidecar.ReadRecords(
+                pass1Path, FdrScoresSidecar.Pass.FirstPass, rec =>
+            {
+                firstPassByEntryId[rec.EntryId] = rec; // entry_id is unique per file (DeduplicatePairs)
+                precScores.Add(rec.Score);
+                precQs.Add(rec.RunPrecursorQvalue);
+                pepScores.Add(rec.Score);
+                pepQs.Add(rec.RunPeptideQvalue);
+            });
+            if (!ok || precScores.Count == 0)
+            {
+                tally.MissingSidecar++;
+                logWarning(string.Format(
+                    "OSPREY_PASS2_QVALUE=transfer: could not read the 1st-pass sidecar for '{0}' " +
+                    "({1}); this file's per-run q is left unadjusted.", fileName, pass1Path));
+                return;
+            }
+            BuildScoreToQTable(precScores, precQs, out double[] precScoresDesc, out double[] precQDesc);
+            BuildScoreToQTable(pepScores, pepQs, out double[] pepScoresDesc, out double[] pepQDesc);
+
+            foreach (var entry in survivors)
+            {
+                if (entry.Features == null || entry.Features.Length != nFeatures)
+                {
+                    // No reconciled features resolved (a stub/parquet mismatch the reload
+                    // already warned about). Leave this entry's q as-is rather than guess.
+                    tally.Skipped++;
+                    return;
+                }
+                double newScore = ScoreWithFrozenModel(
+                    entry.Features, standardizer, avgWeights, avgBias, scratch);
+
+                FdrScoreRecord? rec1 = null;
+                if (firstPassByEntryId.TryGetValue(entry.EntryId, out FdrScoreRecord recFound))
+                    rec1 = recFound;
+                // The precursor's analysis-wide pass-1 experiment record, which supplies
+                // every disposition: an UNCHANGED or MOVED peak carries these values through,
+                // and a gap-fill peak (no 1st-pass run-scope record) takes them so
+                // ClampExperimentQToBestRun - a floor that only raises - lands it at the
+                // precursor's best-run q. A precursor with no record anywhere gets the
+                // default 1.0 q-values and a 0.0 aggregate, which pair correctly: never
+                // competed, never accepted, so nothing reads it.
+                FdrExperimentRecord? exp1 = null;
+                if (globalExperiment.TryGetValue(entry.EntryId, out var expFound))
+                    exp1 = expFound;
+                switch (AssignPerRunQ(entry, newScore, rec1, exp1,
+                    precScoresDesc, precQDesc, pepScoresDesc, pepQDesc))
+                {
+                    case PerRunClass.Unchanged: tally.Unchanged++; break;
+                    case PerRunClass.Moved: tally.Moved++; break;
+                    default: tally.GapFill++; break;
+                }
+            }
+            // Counted only HERE, where the whole-run loop counted it: the unreadable-sidecar
+            // path above returns first, so a run whose sidecar could not be read was never one
+            // this pass finished.
+            tally.FilesDone++;
         }
 
         /// <summary>
