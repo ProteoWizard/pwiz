@@ -318,25 +318,23 @@ namespace pwiz.Osprey.Tasks
             // it dropped, so streaming there would destroy the only copy of the survivors on
             // its way past. Null leaves StreamFiles walking the resident buffer, which is what
             // the OSPREY_STAGE6_STREAM_SURVIVORS=0 A/B oracle needs it to do.
-            Action<string, List<FdrEntry>> materializeOneFile = null;
-            if (survivorLoader != null)
-                materializeOneFile = MaterializeOneFile;
-            var rescored = new RescoredEntries(_perFileEntries, () => BuildRescoredPool(ctx),
-                materializeOneFile);
+            // NO per-file source on this path, and the reason is a property of the materializer
+            // rather than a preference. MaterializeRescoredFile is ONE-SHOT: it overlays the
+            // reconciled parquet and appends gap-fill rows, so calling it twice for one run
+            // duplicates them - which is the same "run-once, and a failed build stays failed"
+            // rule RescoredEntries' own remarks state for the whole-run build. A Stage 7 fold
+            // re-enumerates, so it needs a source that can rebuild a run from disk repeatedly
+            // and identically; this one cannot, and handing it over produced a straight-through
+            // Stellar run that exited 1 on AssertSidecarDescribesPool.
+            //
+            // The leg that has such a source is the reconciled-input merge, where
+            // BuildStage7PerRunSource supplies it (Rehydrate, below). Straight-through Stage 7
+            // therefore keeps its resident pool for now. That is the honest state and not a
+            // hidden one: making this materializer idempotent - or having it rebuild from the
+            // reconciled parquet alone, which already holds the merged gap-fill rows - is what
+            // extends the fold to this leg, and it is separate work.
+            var rescored = new RescoredEntries(_perFileEntries, () => BuildRescoredPool(ctx));
             ctx.Publish(rescored);
-
-            void MaterializeOneFile(string fileName, List<FdrEntry> entries)
-            {
-                // Same refusal as BuildRescoredPool, and for the same reason: every guess
-                // available before Run has decided produces a wrong reported set rather than
-                // an error.
-                if (_poolPlan == null)
-                {
-                    throw new InvalidOperationException(
-                        @"RescoredEntries was streamed before PerFileRescoring decided how to build the survivor pool.");
-                }
-                MaterializeRescoredFile(ctx, _poolPlan, fileName, entries);
-            }
 
             // Self-gate: rescore + reconciliation only run when there is
             // planning state to act on AND the rescore hasn't already been
@@ -2094,13 +2092,42 @@ namespace pwiz.Osprey.Tasks
                 FdrExperimentSidecar.PathFor(config.OutputBlib,
                     ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
                 FdrScoresSidecar.Pass.FirstPass);
+            // Which runs already carry a second-pass answer, decided ONCE from the artifacts
+            // themselves (a header probe per run, no records read). A run in this set is
+            // rebuilt WITHOUT opening any first-pass file, which is the Boundary 3 -> 4
+            // contract: its .2nd-pass.fdr_scores.bin holds every scalar the join reads, and the
+            // experiment-scope columns come from the analysis-wide sidecar. Probed here rather
+            // than per refill because each run is rebuilt once per fold pass, and the answer
+            // cannot change while the stage runs.
+            var inputByName = new Dictionary<string, string>(StringComparer.Ordinal);
+            if (config.InputFiles != null)
+            {
+                foreach (string inputFile in config.InputFiles)
+                    inputByName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+            }
+            var haveSecondPass = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kv in perFileParquetPaths)
+            {
+                if (!inputByName.TryGetValue(kv.Key, out string inputFile))
+                    continue;
+                if (FdrScoresSidecar.IsCurrentFormat(
+                        FdrScoresSidecar.Pass2Path(inputFile), FdrScoresSidecar.Pass.SecondPass))
+                {
+                    haveSecondPass.Add(kv.Key);
+                }
+            }
             // Says which shape Stage 7 took, for the reason its rescore sibling gives: without
             // it the only evidence is a memory profile, and "the gate is green so the new path
             // must have run" is the inference that lets a resident path pass as a streamed one.
+            // The second count is the boundary claim, said out loud: an orchestrator that
+            // trimmed the first-pass sidecars is entitled to know how many runs would have
+            // needed them.
             ctx.LogInfo(string.Format(
                 @"Second-pass join: folding over {0} run(s), each rebuilt from its own artifacts " +
-                @"and dropped (no all-runs survivor pool; {1} retained base_id(s) read once).",
-                perFileParquetPaths.Count, retainedBaseIds.Count));
+                @"and dropped (no all-runs survivor pool; {1} retained base_id(s) read once). " +
+                @"{2} of {0} run(s) carry a current 2nd-pass sidecar and are rebuilt without " +
+                @"opening any 1st-pass file.",
+                perFileParquetPaths.Count, retainedBaseIds.Count, haveSecondPass.Count));
             var sequencePool = ctx.Get<SequencePool>().Value;
             return (fileName, survivors) =>
             {
@@ -2112,7 +2139,8 @@ namespace pwiz.Osprey.Tasks
                 }
                 RescoreHydration.RefillOneRunSurvivors(fileName, parquetPath, survivors,
                     retainedBaseIds, experimentRecords,
-                    (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool));
+                    (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool),
+                    !haveSecondPass.Contains(fileName));
             };
         }
 

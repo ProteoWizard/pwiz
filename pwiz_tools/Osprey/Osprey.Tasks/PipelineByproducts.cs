@@ -673,7 +673,13 @@ namespace pwiz.Osprey.Tasks
         /// Falls back to the resident walk when this run has no per-file source, so the
         /// oracle paths are unaffected.</para>
         /// </summary>
-        public IEnumerable<KeyValuePair<string, List<FdrEntry>>> StreamFiles()
+        /// <param name="label">What this fold is doing, for the per-run progress line. Supply
+        /// it: on a streamed source each pass REBUILDS every run from disk, so a fold that used
+        /// to walk memory in seconds now runs for minutes, and an unreported one is a silence
+        /// in the middle of a multi-hour stage - the shape this codebase has repeatedly had to
+        /// go back and fix. Null suppresses the line, which is right only for a fold that
+        /// already reports its own progress.</param>
+        public IEnumerable<KeyValuePair<string, List<FdrEntry>>> StreamFiles(string label = null)
         {
             if (_materializeFile == null)
             {
@@ -681,20 +687,30 @@ namespace pwiz.Osprey.Tasks
                     yield return kv;
                 yield break;
             }
-            // base.Value, not Value: the pairs and their (empty) lists are what we materialize
-            // INTO, so reaching them must not trigger the whole-run build this method exists
-            // to replace - nor trip the _streamed guard on a second pass.
-            foreach (var kv in base.Value)
+            // Disposed by the enumerator's own finally, so an abandoned fold closes its
+            // reporter rather than leaving the heading as the last line in the log.
+            using (var progress = label == null
+                       ? null
+                       : new ProgressReporter(string.Format(@"{0} over {1} run(s)", label, FileCount),
+                           FileCount, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                _materializeFile(kv.Key, kv.Value);
-                _postMaterialize?.Invoke(kv.Key, kv.Value);
-                yield return kv;
-                // Dropped as soon as the consumer's foreach body returns. TrimExcess too:
-                // Clear leaves the backing array at its high-water capacity, which for a CHS
-                // file is ~648 K references still committed per file.
-                _streamed = true;
-                kv.Value.Clear();
-                kv.Value.TrimExcess();
+                int done = 0;
+                // base.Value, not Value: the pairs and their (empty) lists are what we
+                // materialize INTO, so reaching them must not trigger the whole-run build this
+                // method exists to replace - nor trip the _streamed guard on a second pass.
+                foreach (var kv in base.Value)
+                {
+                    progress?.Report(++done);
+                    _materializeFile(kv.Key, kv.Value);
+                    _postMaterialize?.Invoke(kv.Key, kv.Value);
+                    yield return kv;
+                    // Dropped as soon as the consumer's foreach body returns. TrimExcess too:
+                    // Clear leaves the backing array at its high-water capacity, which for a CHS
+                    // file is ~648 K references still committed per file.
+                    _streamed = true;
+                    kv.Value.Clear();
+                    kv.Value.TrimExcess();
+                }
             }
         }
 

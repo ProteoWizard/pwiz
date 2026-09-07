@@ -462,7 +462,7 @@ namespace pwiz.Osprey.Tasks
                 var swFdrBench = Stopwatch.StartNew();
                 var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
                 var benchResult = FdrBenchInputWriter.WritePeptideInput(
-                    benchPath, rescored.StreamFiles(), libraryById, config.FdrLevel,
+                    benchPath, rescored.StreamFiles(@"Writing FDRBench input"), libraryById, config.FdrLevel,
                     config.FdrBenchPerRun, pairing.ExcludedEntrapment);
                 // Emit the corrected pairing manifest from the same library so FDRBench
                 // classifies every reported peptide and drops nothing (feed FDRBench -pep with this).
@@ -539,7 +539,7 @@ namespace pwiz.Osprey.Tasks
         {
             var minRunBothByEntryId = new Dictionary<uint, double>();
             var minRunBothByPeptide = new Dictionary<(string ModifiedSequence, bool IsDecoy), double>();
-            foreach (var kvp in rescored.StreamFiles())
+            foreach (var kvp in rescored.StreamFiles(@"Folding experiment-q floors"))
             {
                 PercolatorEngine.AccumulateExperimentQFloors(
                     kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
@@ -588,7 +588,7 @@ namespace pwiz.Osprey.Tasks
             // the files one at a time and drop each. While something else still reads the
             // whole-run buffer, Files() yields from it and this costs nothing; once nothing
             // does, it is one file resident at a time (#4486).
-            var retained = LibraryFragmentRelease.BuildRetainedBaseIds(rescored.StreamFiles());
+            var retained = LibraryFragmentRelease.BuildRetainedBaseIds(rescored.StreamFiles(@"Collecting the reported base_ids"));
             int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
             ctx.LogInfo(string.Format(
                 @"Released library fragments for {0} of {1} entries ({2} base_ids retained for the reported pool)",
@@ -621,7 +621,7 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             var result = ProteinFdrEngine.RunSecondPass(
-                rescored.StreamFiles(), fullLibrary, config, ctx.LogInfo);
+                rescored.StreamFiles(@"Collecting best scores for protein FDR"), fullLibrary, config, ctx.LogInfo);
 
             // The 2nd-pass sidecar was written BEFORE this protein FDR ran - it is one of its
             // inputs - so the protein column it carries is still the pass-1 value at this point.

@@ -509,6 +509,7 @@
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores-reconciled.parquet</tspan> (via --input-scores; falls back to <tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan>), <tspan class="sc-run">.2nd-pass.fdr_scores.bin</tspan> (worker)</text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">&lt;stem&gt;.1st-pass.model.json</tspan>, <tspan class="sc-exp">.1st-pass.stratum.json</tspan>, <tspan class="sc-run">&lt;stem&gt;.reconciliation.json</tspan>, <tspan class="sc-run">.calibration.json</tspan></text>
   <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;output&gt;.blib</tspan>, <tspan class="sc-exp">&lt;blib-stem&gt;.2nd-pass.fdr_experiment.bin</tspan>, <tspan class="sc-run">&lt;stem&gt;.2nd-pass.fdr_scores.bin</tspan> (where no worker ran)   &#183;   validity  <tspan class="sc-exp">&lt;out&gt;.SecondPassFDR.osprey.task</tspan></text>
+  <text x="140" y="88" class="task-hdr-relay">holds O(distinct) &#183; folds the runs one at a time, rebuilding each from its own artifacts and dropping it</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: every run's reconciled set, with its .osprey.task stamps</text>
 </g>
 

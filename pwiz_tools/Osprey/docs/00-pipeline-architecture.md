@@ -145,6 +145,25 @@ so where it matters - "both maps are O(distinct) ... nothing here needs a whole-
 and `StreamingFdr.StreamingFirstPassQ` is the worked example, pinned against its resident
 twin by a test.
 
+`SecondPassFDR` is the largest one, and it is worth reading as the cautionary case as well
+as the worked one, because for a long time every step in it *was* a fold and the stage still
+held the pool. The fragment release, the pass-2 competition, protein parsimony, the
+experiment-q re-clamp and all three `.blib` gates each reduce to `O(distinct)` and each
+visits every run - but the stage was **handed** every run's survivors before the first of
+them started, by the `--input-scores` merge, so nothing they did could bring the peak down.
+At 446 CHS runs that load reached 68.0 GB and was killed at run 381 with 0.34 GB free,
+having computed nothing. **A fold does not bound anything unless its SOURCE is per-run
+too**: the runs are now rebuilt one at a time from their own
+`.scores-reconciled.parquet` and 1st-pass sidecar, folded, and dropped.
+
+Two consequences of that shape are worth stating, because they are what a reader will
+otherwise trip over. A stage that revisits its runs pays the rebuild once per pass, so
+wall-clock trades against memory here exactly as the "memory, not wall clock" target says it
+should. And a fact one pass computes and a later pass reads - the second-pass sidecar
+overlay, the experiment-q floor - cannot be left stamped on entries that no longer exist, so
+it is re-applied to each run as that run is rebuilt (`RescoredEntries.AddPostMaterialize`),
+in the order the stage computed it.
+
 Read the vocabulary this way:
 
 | | Visits | Holds |
@@ -172,7 +191,7 @@ The pipeline is a fixed, four-element list, always in this order
 | `PerFileScoring` | 1-4 | fan-out (split 1) | 1..N | library + one run |
 | `FirstPassFDR` | 5 | **join** (barrier 1) | 1 | O(distinct entries) |
 | `PerFileRescoring` | 6 | fan-out (split 2) | 1..N | baseline + one run |
-| `SecondPassFDR` | 7 | **join** (barrier 2) | 1 | O(survivors) |
+| `SecondPassFDR` | 7 | **join** (barrier 2) | 1 | O(distinct entries) |
 
 Stages 1-4 are library preparation, mzML processing, calibration, and the main
 first-pass search that computes the 21 PIN features. Stage 5 is first-pass FDR plus the
@@ -964,6 +983,13 @@ Experiment-wide:
   which is every distributed `SecondPassFDR` node
 - `<blib-stem>.1st-pass.model-diagnostics.json`, when `--model-diagnostics` is on - the
   pass-1 half of the report exists nowhere else by this point
+
+A `SecondPassFDR` node rebuilds each run from these artifacts one at a time and drops it, so
+it needs every run's files present but never holds more than one run's rows. The relay list
+is therefore the whole cohort's, as it always was; what changed is the node's peak, not its
+inputs. The run log says which shape it took - "folding over N run(s), each rebuilt from its
+own artifacts and dropped" - and that line is the evidence, because a resident pool and a
+fold produce identical output and differ only in a memory profile.
 
 Not needed on the default path: `<stem>.1st-pass.fdr_scores.bin`. Establishing that is
 what issue #4486 was for - an orchestrator hands a `SecondPassFDR` node the per-run

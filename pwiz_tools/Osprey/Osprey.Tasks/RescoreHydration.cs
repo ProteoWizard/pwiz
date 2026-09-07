@@ -831,6 +831,15 @@ namespace pwiz.Osprey.Tasks
         /// <para>Equivalence with the resident path is what makes a streamed Stage 7 produce the
         /// same bytes: this is the state <c>HydrateCompactedStreaming</c> leaves a run in, reached
         /// by the same calls in the same order. The difference is only how long the list lives.</para>
+        ///
+        /// <para><paramref name="overlayFirstPass"/> is the Boundary 3 -&gt; 4 contract made a
+        /// parameter. FALSE for a run that already carries a current
+        /// <c>.2nd-pass.fdr_scores.bin</c>: that file holds every scalar the join reads, so
+        /// opening the first-pass one would reach back across a boundary issue #4486 exists to
+        /// establish - and would do it for every run in the cohort, on precisely the leg where an
+        /// orchestrator is entitled not to have shipped them. TRUE where there is no second-pass
+        /// answer yet, which is a mode whose per-run half still runs in the join and is the
+        /// exception the boundary already documents rather than a new one.</para>
         /// </summary>
         public static void RefillOneRunSurvivors(
             string fileName,
@@ -838,7 +847,8 @@ namespace pwiz.Osprey.Tasks
             List<FdrEntry> survivors,
             HashSet<uint> retainedBaseIds,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
-            Func<string, string, List<FdrEntry>> loadStubs)
+            Func<string, string, List<FdrEntry>> loadStubs,
+            bool overlayFirstPass)
         {
             if (survivors == null)
                 throw new ArgumentNullException(nameof(survivors));
@@ -853,14 +863,22 @@ namespace pwiz.Osprey.Tasks
                 throw new InvalidDataException(string.Format(
                     "RefillOneRunSurvivors: no stubs loaded for {0}", fileName));
             }
-            string syntheticInput = SyntheticInputFromParquet(parquetPath);
-            // Overlay then compact, in that order, for the reason the two siblings state: the
-            // sidecar covers the whole PRE-compaction row set, so the filter has to name the
-            // records that legitimately have no entry to land on and leave every other miss
-            // reportable as the parquet drift it is.
-            OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
-                nameof(RefillOneRunSurvivors), experimentRecords,
-                id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
+            if (overlayFirstPass)
+            {
+                string syntheticInput = SyntheticInputFromParquet(parquetPath);
+                // Overlay then compact, in that order, for the reason the two siblings state:
+                // the sidecar covers the whole PRE-compaction row set, so the filter has to
+                // name the records that legitimately have no entry to land on and leave every
+                // other miss reportable as the parquet drift it is.
+                OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
+                    nameof(RefillOneRunSurvivors), experimentRecords,
+                    id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
+            }
+            // Kept even where the reconciled parquet is already the survivor subset and this
+            // removes nothing. It is the analysis-wide compaction predicate, it is the same
+            // one both siblings apply, and "the parquet is already subset so the filter is
+            // redundant" is a property of an artifact generation rather than of the format -
+            // exactly the kind of assumption that turns into a silently larger pool.
             stubs.RemoveAll(e => !retainedBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
 
             survivors.Clear();

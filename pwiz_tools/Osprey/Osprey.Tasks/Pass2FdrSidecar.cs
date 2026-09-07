@@ -1947,6 +1947,14 @@ namespace pwiz.Osprey.Tasks
                 // reads the file's 1st-pass population.
                 void BeginFile(string fileKey)
                 {
+                    // Reported HERE, not in ReadFile. ReadFile runs only where this pass has to
+                    // RECOMPUTE a file's competition, so on the path the move exists to produce -
+                    // every file answered by the worker - it never ran, the counter never moved,
+                    // and the phase was a single silent block: 654 s at 446 runs, immediately
+                    // after the line announcing that the fold was reading the worker's answers.
+                    // BeginFile is the call that always happens, once per file, which is what a
+                    // per-file progress signal has to be attached to.
+                    progress.Report(++nRead);
                     currentKey = fileKey;
                     currentEntries = LoadOneFile(fileKey);
                     currentWorkerRecords = null;
@@ -1976,8 +1984,6 @@ namespace pwiz.Osprey.Tasks
                         survivorIds, pass1Records,
                         out uint[] eids, out double[] scs, out var fileScores);
                     nScored += fileScores.Count;
-
-                    progress.Report(++nRead);
                     return (eids, scs, fileScores, survivorIds);
                 }
 

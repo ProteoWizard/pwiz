@@ -1886,6 +1886,18 @@ namespace pwiz.Osprey.Tasks
             bool hasReconSidecars,
             PipelineContext ctx)
         {
+            // NOTHING to hydrate when the runs are hydrated one at a time - by the rescore
+            // loop or, on the reconciled-input merge, by Stage 7's fold. The loader published
+            // one EMPTY list per run and read no rows, so the batch overlay below would read
+            // every run's 1st-pass sidecar and fail to place a single record: "failed to
+            // overlay .1st-pass.fdr_scores.bin", naming a file that is present and correct.
+            // The bundle it builds is the all-runs structure both per-run shapes exist not to
+            // build, and both leave _rescoreInputs null so their consumers hydrate per run.
+            if (ScoringTaskShared.CanHydratePerRun(config) ||
+                ScoringTaskShared.CanStreamStage7Join(config))
+            {
+                return true;
+            }
             if (hasReconSidecars)
             {
                 // Already hydrated when the loader took the file-count-bounded streaming
