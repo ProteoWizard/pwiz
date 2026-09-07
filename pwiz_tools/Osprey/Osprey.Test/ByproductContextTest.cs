@@ -503,6 +503,62 @@ namespace pwiz.Osprey.Test
             Assert.ThrowsException<InvalidOperationException>(() => milestone.Value);
         }
 
+        /// <summary>
+        /// The per-file overlays run after the source, in the order they were added, on every
+        /// pass - and a milestone with no per-file source REFUSES one rather than accepting an
+        /// overlay nothing would ever invoke.
+        ///
+        /// <para>Order is the correctness argument in Stage 7, not a detail: the second-pass
+        /// sidecar overlay writes an experiment q and the experiment-q floor then raises it, so
+        /// running them the other way round would apply a floor to a value about to be
+        /// overwritten and report q-values no run computed. Asserted by composing two overlays
+        /// that both append, and reading back the sequence.</para>
+        ///
+        /// <para>The refusal is the half that would otherwise fail silently. A resident run
+        /// stamps its entries in place and keeps them, so an overlay handed to it is simply
+        /// never called - the stage believes it applied something it did not, which is the
+        /// shape of defect this area has produced repeatedly.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestPostMaterializeOverlaysRunInOrderAndOnlyWithAPerFileSource()
+        {
+            var buffer = BufferWithFiles(@"file1", @"file2");
+            var applied = new List<string>();
+            var milestone = new RescoredEntries(buffer, () => { },
+                (fileName, entries) => applied.Add(fileName + @":source"));
+            milestone.AddPostMaterialize((fileName, entries) => applied.Add(fileName + @":first"));
+            milestone.AddPostMaterialize((fileName, entries) => applied.Add(fileName + @":second"));
+
+            foreach (var kv in milestone.StreamFiles())
+                Assert.IsNotNull(kv.Value);
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    @"file1:source", @"file1:first", @"file1:second",
+                    @"file2:source", @"file2:first", @"file2:second",
+                },
+                applied,
+                @"Source then overlays, in the order added, for each file in turn");
+
+            // A second pass re-applies both, because the entries it applied to are gone.
+            applied.Clear();
+            foreach (var kv in milestone.StreamFiles())
+                Assert.IsNotNull(kv.Value);
+            Assert.AreEqual(6, applied.Count, @"Every pass re-applies the whole overlay chain");
+
+            // MaterializeFile - the by-name accessor the streamed competition uses - runs the
+            // same chain, so a consumer driven by the FDR layer's file order is not a second
+            // path with its own overlay semantics.
+            applied.Clear();
+            milestone.MaterializeFile(@"file2");
+            CollectionAssert.AreEqual(
+                new[] { @"file2:source", @"file2:first", @"file2:second" }, applied);
+
+            var resident = new RescoredEntries(BufferWithFiles(@"file1"));
+            Assert.ThrowsException<InvalidOperationException>(
+                () => resident.AddPostMaterialize((fileName, entries) => { }));
+        }
+
         private static List<KeyValuePair<string, List<FdrEntry>>> BufferWithOneFile()
         {
             return BufferWithFiles(@"file1");
