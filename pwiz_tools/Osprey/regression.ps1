@@ -1549,7 +1549,7 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3Out "$s.1st-pass.fdr_scores.bin")
 
         # WITHHELD ONLY WHEN THE WORKER ANSWERED. The modes with a per-file half
-        # (protein-compact, transfer-compete) leave a 2nd-pass sidecar here, and phase 4 folds it
+        # (protein-compact) leaves a 2nd-pass sidecar here, and phase 4 folds it
         # without opening anything from the first pass - that is the contract issue #4486
         # establishes, and withholding is how it is proven. OSPREY_PASS2_QVALUE=transfer and the
         # retrain modes have NO per-file half, so Stage 7 legitimately recomputes and legitimately
@@ -1562,7 +1562,7 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
         Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
         # Ship the persisted 1st-pass model so SecondPassFDR can run the frozen 2nd-pass
-        # modes (transfer / transfer-compete / protein-compact) without re-training. Written
+        # modes (transfer / protein-compact) without re-training. Written
         # by the FirstPassFDR join node (phase 2) and relayed into $ph3 above ($ph2 is already
         # deleted by now). Present for the SVM/percolator framework, so guard with Test-Path.
         # protein-compact's stratum is its own artifact (protein FDR computes it, training does

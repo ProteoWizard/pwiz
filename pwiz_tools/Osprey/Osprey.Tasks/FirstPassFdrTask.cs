@@ -2527,8 +2527,7 @@ namespace pwiz.Osprey.Tasks
             // model instead of retraining. Null (a pure no-op in the engine) on the default
             // percolator path and on the 2nd-pass run, so scoring stays byte-identical.
             Action<PercolatorResults> captureModel = null;
-            if ((OspreyEnvironment.Pass2TransferQ || OspreyEnvironment.Pass2TransferCompete ||
-                 OspreyEnvironment.Pass2ProteinCompact) &&
+            if ((OspreyEnvironment.Pass2TransferQ || OspreyEnvironment.Pass2ProteinCompact) &&
                 string.Equals(passLabel, @"First-pass", StringComparison.Ordinal))
             {
                 // Publish is add-only (throws on a duplicate key); guard so a first pass
@@ -2954,8 +2953,7 @@ namespace pwiz.Osprey.Tasks
             var reloadedModel = LoadCurrentModelSidecar(perFileParquetPaths, sidecarValidityKey);
             Action<PercolatorResults> captureModel = results =>
             {
-                if ((OspreyEnvironment.Pass2TransferQ || OspreyEnvironment.Pass2TransferCompete ||
-                     OspreyEnvironment.Pass2ProteinCompact) &&
+                if ((OspreyEnvironment.Pass2TransferQ || OspreyEnvironment.Pass2ProteinCompact) &&
                     !ctx.TryGet<FirstPassPercolatorModel>(out _))
                 {
                     // Stamp the arm THIS pass ran under; the 2nd pass may be another process.

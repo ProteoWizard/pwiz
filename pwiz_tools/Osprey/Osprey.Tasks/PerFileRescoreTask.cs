@@ -234,7 +234,7 @@ namespace pwiz.Osprey.Tasks
             // output this task will not write would make the driver's IsTaskAlreadyDone - which
             // requires EVERY declared output to exist - permanently false, re-running Stage 6
             // on every resume.
-            if (!OspreyEnvironment.Pass2ProteinCompact && !OspreyEnvironment.Pass2TransferCompete)
+            if (!OspreyEnvironment.Pass2ProteinCompact)
                 yield break;
             foreach (var input in ctx.Config.InputFiles)
             {
@@ -996,7 +996,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<string, string> perFileParquetPaths, OspreyConfig config,
             PipelineContext ctx, string taskName, string taskValidityKey)
         {
-            if (!OspreyEnvironment.Pass2ProteinCompact && !OspreyEnvironment.Pass2TransferCompete)
+            if (!OspreyEnvironment.Pass2ProteinCompact)
                 return null;
             var sidecar = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
             if (sidecar?.Model == null)
@@ -1014,10 +1014,8 @@ namespace pwiz.Osprey.Tasks
                     "model/standardizer, so the per-file half stays in SecondPassFDR for this run.");
                 return null;
             }
-            // protein-compact competes within the stratum; transfer-compete over the full
-            // population. Mirrors ComputePass2TransferCompeteFull's own selector so the two
-            // cannot drift on which mode means which competition.
-            bool proteinCompact = OspreyEnvironment.Pass2ProteinCompact;
+            // protein-compact is the only competition mode - the guard above returned already
+            // if it was not selected - so the stratum is always the constraint.
             var inputByName = new Dictionary<string, string>(StringComparer.Ordinal);
             if (config.InputFiles != null)
             {
@@ -1062,8 +1060,8 @@ namespace pwiz.Osprey.Tasks
             }
             return new Pass2PerFileWorker(
                 scorer,
-                proteinCompact ? @"protein-compact" : @"transfer-compete",
-                proteinCompact ? sidecar.StratumBaseIds : null,
+                OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
+                sidecar.StratumBaseIds,
                 Pass2FdrSidecar.LoadPass1ExperimentRecords(config),
                 WriteAnswer,
                 ctx.LogWarning);

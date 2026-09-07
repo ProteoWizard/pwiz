@@ -112,9 +112,8 @@ namespace pwiz.Osprey.Tasks
             // when the model is already present, the mode is the default retrain, or the
             // sidecar is absent (the existing fail-fast then applies).
             // protein-compact needs the ProteinCompactStratum too; it rides in the same
-            // sidecar, so one reload serves all three frozen modes.
+            // sidecar, so one reload serves both surviving modes.
             bool wantsFrozenModel = OspreyEnvironment.Pass2TransferQ ||
-                                    OspreyEnvironment.Pass2TransferCompete ||
                                     OspreyEnvironment.Pass2ProteinCompact;
             if (wantsFrozenModel && !ctx.TryGet<FirstPassPercolatorModel>(out _))
             {
@@ -158,9 +157,7 @@ namespace pwiz.Osprey.Tasks
             // it was told to retrain. These own their whole per-file cycle (materialize, score,
             // compete, write the sidecar, drop the file), so they skip both the whole-pool
             // pass-1 scalar seed above and the resident sidecar write below.
-            bool frozenCompetition =
-                OspreyEnvironment.Pass2TransferCompete ||
-                (OspreyEnvironment.Pass2ProteinCompact && !OspreyEnvironment.Pass2ProteinCompactRetrain);
+            bool frozenCompetition = OspreyEnvironment.Pass2ProteinCompact;
 
             // True once a path has written every file's .2nd-pass.fdr_scores.bin itself, which
             // is what the resident write block below tests before repeating the work.
@@ -310,14 +307,10 @@ namespace pwiz.Osprey.Tasks
 
                     var swPass2 = Stopwatch.StartNew();
 
-                    // The frozen COMPETITION modes (transfer-compete, protein-compact) re-score
-                    // with the frozen 1st-pass model over the full pre-compaction population /
-                    // protein stratum - a competition the projection engine does not do (it
-                    // trains + competes over the survivor set only). They own the whole per-file
-                    // cycle: materialize, score, compete, write the sidecar, drop, so they need
-                    // neither the projection engine nor a resident pool.
-                    // protein-compact + OSPREY_PROTEIN_COMPACT_RETRAIN=1 is the exception: it
-                    // retrains, so it stays on the projection (streaming-retrain) path.
+                    // protein-compact re-scores with the frozen 1st-pass model over the
+                    // protein stratum. It owns the whole per-file cycle: materialize, score,
+                    // compete, write the sidecar, drop - so it needs neither the projection
+                    // engine nor a resident pool.
                     //
                     // --model-diagnostics needs the resident 2nd-pass model: its feature
                     // contributions feed the pass-2 model view, and the projection 2nd pass
@@ -1464,10 +1457,10 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Run the frozen-model COMPETITION second pass (transfer-compete / protein-compact):
-        /// resolve the frozen 1st-pass model and, for protein-compact, its stratum, then hand
-        /// them to <see cref="ComputePass2TransferCompeteFull"/>. Returns true when it ran and
-        /// wrote every file's 2nd-pass sidecar.
+        /// Run the frozen-model COMPETITION second pass (protein-compact): resolve the frozen
+        /// 1st-pass model and its stratum, then hand them to
+        /// <see cref="ComputePass2TransferCompeteFull"/>. Returns true when it ran and wrote
+        /// every file's 2nd-pass sidecar.
         ///
         /// <para>Fail-fast, because an explicitly requested frozen mode must NEVER silently
         /// degrade to the anti-conservative retrain. Absent inputs - the frozen 1st-pass model
@@ -1475,8 +1468,9 @@ namespace pwiz.Osprey.Tasks
         /// and skipped 1st-pass training, or a distributed SecondPassFDR node that never trained
         /// pass 1), or a missing / corrupt 1st-pass sidecar - mean the mode cannot be honored,
         /// so this aborts with actionable guidance rather than reporting looser FDR than a cold
-        /// straight-through run under the same mode. (protein-compact +
-        /// OSPREY_PROTEIN_COMPACT_RETRAIN=1 retrains by design and never reaches here.)</para>
+        /// straight-through run under the same mode. There is no longer a retrain to degrade
+        /// TO - second-pass retraining was removed with issue #4484 - so an absent input is a
+        /// hard stop rather than a quieter answer.</para>
         /// </summary>
         private static bool ComputePass2FrozenCompetition(
             PipelineContext ctx,
@@ -1506,17 +1500,13 @@ namespace pwiz.Osprey.Tasks
                 "model, 1st-pass scalar sidecars or protein stratum are absent, or a file's input " +
                 "path could not be resolved - e.g. a warm " +
                 "rerun or a distributed SecondPassFDR node that did not train pass 1 in-process). " +
-                "The warning above names which. Run the " +
-                "frozen modes on the straight-through path, rerun without the score cache, or unset " +
-                "OSPREY_PASS2_QVALUE for the default retrain{1}.",
-                OspreyEnvironment.Pass2QValue,
-                OspreyEnvironment.Pass2ProteinCompact
-                    ? ", or set OSPREY_PROTEIN_COMPACT_RETRAIN=1 to retrain over the stratum"
-                    : string.Empty));
+                "The warning above names which. Run this mode on the straight-through path, or " +
+                "rerun without the score cache so the 1st pass trains in-process.",
+                OspreyEnvironment.Pass2QValue));
         }
 
         /// <summary>
-        /// OSPREY_PASS2_QVALUE=transfer-compete (full-population form). Recompute the reported
+        /// OSPREY_PASS2_QVALUE=protein-compact. Recompute the reported
         /// precursor q-values + PEP by re-running the target-decoy competition over the ENTIRE
         /// 1st-pass population -- read as SCALARS from each file's persisted
         /// <c>.1st-pass.fdr_scores.bin</c> -- with ONLY the reconciled survivors' scores swapped
@@ -1554,22 +1544,27 @@ namespace pwiz.Osprey.Tasks
             PercolatorResults frozenModel,
             string pass1ExperimentAgg,
             Pass2SidecarWriter writer,
-            HashSet<uint> stratumBaseIds = null)
+            HashSet<uint> stratumBaseIds)
         {
-            // stratumBaseIds == null -> transfer-compete (full-population competition).
-            // non-null -> protein-compact: the competition is CONSTRAINED to the stratum
-            // (peptides of >=2-peptide 1st-pass proteins), and the map-back below leaves
-            // OFF-stratum survivors on their 1st-pass q (report = pass1 U stratum passers,
-            // so re-scoping only adds, never drops an already-passing peptide).
-            bool proteinCompact = stratumBaseIds != null;
-            string mode = proteinCompact ? "protein-compact" : "transfer-compete";
+            // The competition is CONSTRAINED to the stratum (peptides of >=2-peptide 1st-pass
+            // proteins), and the map-back below leaves OFF-stratum survivors on their 1st-pass q
+            // (report = pass1 U stratum passers, so re-scoping only adds, never drops an
+            // already-passing peptide). The full-population form this method also served was
+            // transfer-compete, removed because its competition ran over a target-conditioned
+            // subset - see the OspreyEnvironment.Pass2QValue remarks and issue #4581.
+            if (stratumBaseIds == null)
+            {
+                throw new ArgumentNullException(nameof(stratumBaseIds),
+                    @"protein-compact is the only competition mode; its stratum is required.");
+            }
+            string mode = OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT;
             // Works for whichever classifier the 1st pass trained (linear SVM or
-            // gradient-boosted trees) -- the scorer hides that choice, so transfer-compete
-            // stays the honest-FDR path under --fdr-method gbdt too.
+            // gradient-boosted trees) -- the scorer hides that choice, so this stays the
+            // honest-FDR path under --fdr-method gbdt too.
             var scorer = FrozenModelScorer.TryCreate(frozenModel);
             if (scorer == null)
             {
-                ctx.LogWarning("transfer-compete: frozen 1st-pass model has no usable model/standardizer.");
+                ctx.LogWarning(mode + ": frozen 1st-pass model has no usable model/standardizer.");
                 return false;
             }
             var sw = Stopwatch.StartNew();
@@ -1668,7 +1663,7 @@ namespace pwiz.Osprey.Tasks
             {
                 if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
                 {
-                    ctx.LogWarning("transfer-compete: no parquet path for '" + fileName +
+                    ctx.LogWarning(mode + ": no parquet path for '" + fileName +
                                    "'; cannot locate its 1st-pass scalar sidecar.");
                     return false;
                 }
@@ -1699,7 +1694,7 @@ namespace pwiz.Osprey.Tasks
                     fileName + ".1st-pass.fdr_scores.bin");
                 if (!File.Exists(sidecarPath))
                 {
-                    ctx.LogWarning("transfer-compete: 1st-pass scalar sidecar not found: " + sidecarPath);
+                    ctx.LogWarning(mode + ": 1st-pass scalar sidecar not found: " + sidecarPath);
                     return false;
                 }
                 // Existence was never enough. ReadScalars THROWS on bad magic, a stale version, a
@@ -1712,7 +1707,7 @@ namespace pwiz.Osprey.Tasks
                 if (!FdrScoresSidecar.IsCurrentFormat(sidecarPath, FdrScoresSidecar.Pass.FirstPass))
                 {
                     ctx.LogWarning(
-                        "transfer-compete: 1st-pass scalar sidecar is not a readable v" +
+                        mode + ": 1st-pass scalar sidecar is not a readable v" +
                         FdrScoresSidecar.FormatVersion + " first-pass file: " + sidecarPath);
                     return false;
                 }
@@ -1739,8 +1734,7 @@ namespace pwiz.Osprey.Tasks
                 "scores swapped in for up to {2} reconciled survivor observations - no retrain, one " +
                 "file resident at a time{3}.",
                 mode, fileKeys.Count, survivorObservations,
-                proteinCompact ? ", competition CONSTRAINED to the " + stratumBaseIds.Count + "-base_id protein stratum"
-                               : ", full-population null"));
+                ", competition CONSTRAINED to the " + stratumBaseIds.Count + "-base_id protein stratum"));
 
             // This competition reduces per base_id by MAX, and BOTH modes that reach it then
             // overwrite the reported experiment q from that reduction. Neither is compatible with
@@ -1782,19 +1776,14 @@ namespace pwiz.Osprey.Tasks
                     "from a MAX-aggregated competition, which {3}. Use OSPREY_PASS2_QVALUE={4}, " +
                     "which carries the 1st-pass mean(best-N) q through unchanged, for a " +
                     "mean(best-N) arm.",
-                    proteinCompact
-                        ? OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT
-                        : OspreyEnvironment.PASS2_QVALUE_TRANSFER_COMPETE,
+                    OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
                     pass1Arm,
                     armRecorded
                         ? " (recorded in the 1st-pass model sidecar)"
                         : " (INFERRED from this process's environment - the 1st-pass model sidecar " +
                           "predates arm recording and does not say which arm trained it)",
-                    proteinCompact
-                        ? "would leave on-stratum precursors max-aggregated and off-stratum " +
-                          "precursors on their 1st-pass mean(best-N) q - one column, two statistics"
-                        : "would replace every precursor's mean(best-N) q with a max q, making the " +
-                          "run indistinguishable from a default run in its own output",
+                    "would leave on-stratum precursors max-aggregated and off-stratum " +
+                    "precursors on their 1st-pass mean(best-N) q - one column, two statistics",
                     OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             }
 
@@ -2132,9 +2121,7 @@ namespace pwiz.Osprey.Tasks
             // on-stratum recompute and off-stratum carry-through - read side by side.
             FdrExperimentRecord FinishRecord(FdrScoreRecord rec)
             {
-                // stratumBaseIds != null IS proteinCompact - written as the null test the branch
-                // actually depends on, so the guard is local to the dereference it protects.
-                if (stratumBaseIds != null && !stratumBaseIds.Contains(rec.EntryId & 0x7FFFFFFFu))
+                if (!stratumBaseIds.Contains(rec.EntryId & 0x7FFFFFFFu))
                 {
                     // Off-stratum survivors keep their 1st-pass EXPERIMENT q (report = pass1 U
                     // stratum passers). That q is a pass-1 property anchored on the
@@ -2293,21 +2280,12 @@ namespace pwiz.Osprey.Tasks
                 // sequence (transfer-compete's frozen-model recompute, or a retrain)
                 // regardless of which classifier the 1st pass trained. The frozen model
                 // carried in ctx is whichever one that was, and the score passes select
-                // on it, so transfer-compete works unchanged for trees.
+                // on it, so the frozen competition works unchanged for trees.
                 case FdrMethod.Percolator:
                 case FdrMethod.Gbdt:
-                    // OSPREY_PASS2_QVALUE=transfer-compete / protein-compact (frozen) are handled
-                    // at the TOP of ComputePass2Resident (before the resident feature reload) so
-                    // their frozen score pass streams one file at a time -- see
-                    // ComputePass2TransferCompeteFull. Only the retrain A/B toggle and
-                    // OSPREY_PASS2_QVALUE=transfer reach here.
-                    if (OspreyEnvironment.Pass2ProteinCompact && OspreyEnvironment.Pass2ProteinCompactRetrain)
-                    {
-                        ctx.LogInfo(
-                            "OSPREY_PROTEIN_COMPACT_RETRAIN=1: skipping the frozen-model + stratum " +
-                            "competition; RETRAINING the 2nd-pass over the stratum-expanded compacted pool " +
-                            "(frozen-vs-retrain FDR A/B).");
-                    }
+                    // protein-compact is handled by the frozen competition before the resident
+                    // feature reload, so its score pass streams one file at a time. Only
+                    // OSPREY_PASS2_QVALUE=transfer reaches here.
                     // OSPREY_PASS2_QVALUE=transfer: instead of retraining a 2nd-pass SVM on
                     // the decoy-depleted reconciled+compacted set (which re-derives an
                     // anti-conservative experiment-scope q), carry the pass-1 q through and

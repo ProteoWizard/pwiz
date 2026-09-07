@@ -115,7 +115,7 @@ namespace pwiz.Osprey.Tasks
             if (!string.IsNullOrEmpty(pass1Experiment))
                 yield return pass1Experiment;
 
-            if (!OspreyEnvironment.Pass2ProteinCompact && !OspreyEnvironment.Pass2TransferCompete)
+            if (!OspreyEnvironment.Pass2ProteinCompact)
                 yield break;
             foreach (var input in ctx.Config.InputFiles)
             {
@@ -181,8 +181,7 @@ namespace pwiz.Osprey.Tasks
             // via AnalysisPipeline.WriteTaskSidecars) and, worse, lets the driver's
             // IsTaskAlreadyDone - which requires every declared output to exist - skip THIS task
             // the moment Stage 6 has written them, which is the join never running at all.
-            bool workerOwnsPerFileSidecars =
-                OspreyEnvironment.Pass2ProteinCompact || OspreyEnvironment.Pass2TransferCompete;
+            bool workerOwnsPerFileSidecars = OspreyEnvironment.Pass2ProteinCompact;
             if (ctx.Config.InputFiles != null && !workerOwnsPerFileSidecars)
             {
                 foreach (var input in ctx.Config.InputFiles)

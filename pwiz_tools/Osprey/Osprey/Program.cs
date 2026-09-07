@@ -303,12 +303,15 @@ namespace pwiz.Osprey
                 if (OspreyEnvironment.Pass2QValueUnrecognized)
                 {
                     LogError(string.Format(
-                        "OSPREY_PASS2_QVALUE is not a recognized mode. Recognized: '{0}', '{1}', " +
-                        "'{2}'. Unset it for the default ('{2}'). The 'percolator' mode was " +
-                        "REMOVED: it retrained the 2nd-pass SVM on a compaction-depleted decoy " +
-                        "pool, which reports anti-conservative q-values.",
+                        "OSPREY_PASS2_QVALUE is not a recognized mode. Recognized: '{0}', '{1}'. " +
+                        "Unset it for the default ('{1}'). 'percolator' was REMOVED: it retrained " +
+                        "the 2nd-pass SVM on a compaction-depleted decoy pool, which reports " +
+                        "anti-conservative q-values. 'transfer-compete' was REMOVED for a related " +
+                        "reason: it selected survivors by TARGET per-run q and admitted decoys only " +
+                        "by pairing, stripping decoys that won the 1st-pass competition, so its q " +
+                        "improved with no added evidence - 1.96% true FDP at a nominal 1% on 82-file " +
+                        "SEA-AD, against 1.53% for the default, and with FEWER ids.",
                         OspreyEnvironment.PASS2_QVALUE_TRANSFER,
-                        OspreyEnvironment.PASS2_QVALUE_TRANSFER_COMPETE,
                         OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
                     return 1;
                 }
