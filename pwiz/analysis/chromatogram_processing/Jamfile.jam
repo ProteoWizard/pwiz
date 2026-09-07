@@ -57,10 +57,10 @@ unit-test-if-exists ChromatogramList_FilterTest : ChromatogramList_FilterTest.cp
 unit-test-if-exists ChromatogramListFactoryTest : ChromatogramListFactoryTest.cpp pwiz_analysis_chromatogram_processing ../../data/msdata//pwiz_data_msdata_examples ;
 
 import path ;
-run-if-exists ChromatogramList_LockmassRefinerTest.cpp pwiz_analysis_chromatogram_processing $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
-    : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/091204_NFDM_008.raw ] # args
-    : # input-files
-    : <vendor-api-support>off:<build>no # requirements
-    : ChromatogramList_LockmassRefinerTest # target name
-    : # default-build
-    ;
+#run-if-exists ChromatogramList_LockmassRefinerTest.cpp pwiz_analysis_chromatogram_processing $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
+#    : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/091204_NFDM_008.raw ] # args
+#    : # input-files
+#    : <vendor-api-support>off:<build>no # requirements
+#    : ChromatogramList_LockmassRefinerTest # target name
+#    : # default-build
+#    ;

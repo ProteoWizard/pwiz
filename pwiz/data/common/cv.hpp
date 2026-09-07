@@ -92,6 +92,24 @@
 //   ontology: uo
 //   property_value: owl:versionInfo "2026-01-16" xsd:string
 //
+// [imagingMS.obo]
+#define _IMAGINGMS_OBO_
+//   format-version: 1.2
+//   data-version: 1.1.0
+//   date: 04:01:2018 15:52
+//   saved-by: Alan Race
+//   default-namespace: imagingMS.ontology
+//   remark: coverage: Imaging mass spectrometer output files
+//   remark: 090506 Matrix and Laser Attributes removed -> put into PSI-MS.OBO
+//   remark: 090506 "Attribute" in Term deleted and new entries: Scan Type, Line Scan Direction added
+//   remark: 091123 Added attributes for imaging laser shot method. Attribute "one way" (IMS:1000411) obsoleted -> replaced by new attribute "fly back"
+//   remark: 091207 Added attributes for SIMS experiments
+//   remark: "subimage positions" parameters added for images which are composed of several subimages!
+//   remark: creator: Thorsten Schramm <thorsten.schramm@anorg.chemie.uni-giessen.de>
+//   remark: creator: Alan Race <alan.race@uni-bayreuth.de>
+//   import: https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo
+//   ontology: ims
+//
 
 
 namespace pwiz {
@@ -19043,7 +19061,553 @@ enum PWIZ_API_DECL CVID
     UO_large_calorie_based_unit = 401010051,
 
     /// gray per minute based unit: 
-    UO_gray_per_minute_based_unit = 401010060
+    UO_gray_per_minute_based_unit = 401010060,
+
+    /// Imaging Mass Spectrometry Ontology: Imaging Mass Spectrometry Ontology.
+    IMS_Imaging_Mass_Spectrometry_Ontology = 500000000,
+
+    /// ibd offset handle: Information for the access and checking of the binary data arrays.
+    IMS_ibd_offset_handle = 501000001,
+
+    /// sample stage: Device that positions the imaging target.
+    IMS_sample_stage = 501000002,
+
+    /// ibd binary type: Describes type of the binary (ibd) file .
+    IMS_ibd_binary_type = 501000003,
+
+    /// image parameter: Sample properties only concerning imaging samples.
+    IMS_image_parameter = 501000004,
+
+    /// spectrum position: Attributes to describe the position of a spectrum in the image.
+    IMS_spectrum_position = 501000005,
+
+    /// ibd file: Attributes to describe the ibd file.
+    IMS_ibd_file = 501000007,
+
+    /// ibd identification: Attributes to doubtlessly identify the ibd file.
+    IMS_ibd_identification = 501000008,
+
+    /// ibd checksum: Checksum is a form of redundancy check, a simple way to protect the integrity of data by detecting errors in data of the ibd file.
+    IMS_ibd_checksum = 501000009,
+
+    /// scan: Describes the attributes of the generation of the image.
+    IMS_scan = 501000010,
+
+    /// probe scan mode: Describes the method how the probe was moved across the sample while acquiring data.
+    IMS_probe_scan_mode = 501000011,
+
+    /// imaging ion source: Parameters describing the imaging source, which is used to create the ions measured by the MS.
+    IMS_imaging_ion_source = 501000012,
+
+    /// unit: Terms to describe units
+    IMS_unit_OBSOLETE = 501000013,
+
+    /// ibd data type: Encoding type of binary data, e.g. 32-bit integer.
+    IMS_ibd_data_type_OBSOLETE = 501000014,
+
+    /// charge density: A measure of electric charge, the amount of electric charge per unit area
+    IMS_charge_density = 501000015,
+
+    /// continuous: Way of saving spectra in a imzML binary data file (ibd). The m/z values for all spectra are saved at the beginning of the ibd file. Then the spectral values follow.
+    IMS_continuous = 501000030,
+
+    /// processed: Way of saving spectra in a imzML binary data file (ibd). Every spectrum is saved with it's own m/z and intensity values.
+    IMS_processed = 501000031,
+
+    /// linescan sequence: Description of the direction of the succession of the assembling of the linescans.
+    IMS_linescan_sequence = 501000040,
+
+    /// scan pattern: Description of the pattern how the image was scanned.
+    IMS_scan_pattern = 501000041,
+
+    /// max count of pixels x: Maximum number of pixels of the x-axis of the image.
+    IMS_max_count_of_pixels_x = 501000042,
+
+    /// max count of pixels y: Maximum number of pixels of the y-axis of the image.
+    IMS_max_count_of_pixels_y = 501000043,
+
+    /// max dimension x: Maximum length of the image in x-axis.
+    IMS_max_dimension_x = 501000044,
+
+    /// max dimension y: Maximum length of the image in y-axis.
+    IMS_max_dimension_y = 501000045,
+
+    /// pixel size (x): Describes the length of a pixel in the x dimension. If no pixel size y (IMS:1000047) is explicitly specified, then this also describes the length of a pixel in the y dimension.
+    IMS_pixel_size__x_ = 501000046,
+
+    /// pixel size y: Describes the length of a pixel in the y dimension.
+    IMS_pixel_size_y = 501000047,
+
+    /// scan type: Shows the direction in which the lines were scanned.
+    IMS_scan_type = 501000048,
+
+    /// line scan direction: Description in wich direction the lines of the sample were scanned.
+    IMS_line_scan_direction = 501000049,
+
+    /// position x: Attribute to describe the position of a spectrum in the direction of the x-axis in the image.
+    IMS_position_x = 501000050,
+
+    /// position y: Attribute to describe the position of a spectrum in the direction of the y-axis in the image.
+    IMS_position_y = 501000051,
+
+    /// position z: Attribute to describe the position of a spectrum in the direction of the z-axis in the image.
+    IMS_position_z = 501000052,
+
+    /// absolute position offset x: Describes the position at the x-axis of the upper left point of the image on the target.
+    IMS_absolute_position_offset_x = 501000053,
+
+    /// absolute position offset y: Describes the position at the y-axis of the upper left point of the image on the target.
+    IMS_absolute_position_offset_y = 501000054,
+
+    /// subimage position x: Describes the position of a subimage in the direction of the x-axis of the complete image.
+    IMS_subimage_position_x = 501000055,
+
+    /// subimage position y: Describes the position of a subimage in the direction of the y-axis of the complete image.
+    IMS_subimage_position_y = 501000056,
+
+    /// subimage position z: Describes the position of a subimage in the direction of the z-axis of the complete image.
+    IMS_subimage_position_z = 501000057,
+
+    /// external binary uri: Location as an URI where to find the ibd file.
+    IMS_external_binary_uri = 501000070,
+
+    /// universally unique identifier: universally unique identifier is unique throughout the world and allows to doubtlessly identify the ibd file.
+    IMS_universally_unique_identifier = 501000080,
+
+    /// ibd MD5: MD5 (Message-Digest algorithm 5) is a (now deprecated) cryptographic hash function with a 128-bit hash value used to check the integrity of files.
+    IMS_ibd_MD5 = 501000090,
+
+    /// ibd SHA-1: SHA-1 (Secure Hash Algorithm-1) is a cryptographic hash function designed by the National Security Agency (NSA) and published by the NIST as a U. S. government standard. It is also used to verify file integrity. Since 2011 it has been deprecated by the NIST as a U. S. government standard.
+    IMS_ibd_SHA_1 = 501000091,
+
+    /// ibd SHA-256: SHA-256 (member of Secure Hash Algorithm-2 family) is a cryptographic hash function designed by the National Security Agency (NSA) and published by the NIST as a U. S. government standard. It is also used to verify file integrity.
+    IMS_ibd_SHA_256 = 501000092,
+
+    /// external data: Shows that there is no data in the <binary> section of the file.
+    IMS_external_data = 501000101,
+
+    /// external offset: The position where the data of an array of a mass spectrum begins.
+    IMS_external_offset = 501000102,
+
+    /// external array length: Describes how many fields an array contains.
+    IMS_external_array_length = 501000103,
+
+    /// external encoded length: Describes the length of the written data.
+    IMS_external_encoded_length = 501000104,
+
+    /// pixel mode: probe keeps the position while acquiring data at the same same spot one or several times.
+    IMS_pixel_mode = 501000110,
+
+    /// raster mode: probe is moved while continuously acquiring data from the sample.
+    IMS_raster_mode = 501000111,
+
+    /// stigmatic mode: probe is moved around one point acquiring data until moved to the next position (pixel).
+    IMS_stigmatic_mode = 501000112,
+
+    /// SIMS parameter: Parameters describing SIMS sources.
+    IMS_SIMS_parameter = 501000120,
+
+    /// DESI parameter: Parameters describing DESI sources.
+    IMS_DESI_parameter = 501000121,
+
+    /// ions per square centimeter: An area density unit which is equal to the count of ions divided by the area in centimeters squared.
+    IMS_ions_per_square_centimeter = 501000130,
+
+    /// milliliters per minute: A flow rate describes the throughput per time.
+    IMS_milliliters_per_minute = 501000131,
+
+    /// 32-bit integer: Signed 32 bit integer.
+    IMS_32_bit_integer_OBSOLETE = 501000141,
+
+    /// 64-bit integer: Signed 64 bit integer.
+    IMS_64_bit_integer_OBSOLETE = 501000142,
+
+    /// sample stage attribute: Properties related to and describing the sample stage.
+    IMS_sample_stage_attribute = 501000199,
+
+    /// position accuracy: Accuracy is the degree of conformity of a measured position to its actual value.
+    IMS_position_accuracy = 501000200,
+
+    /// step size: Specify the distance between two different messuring points on the sample.
+    IMS_step_size = 501000201,
+
+    /// target material: Describes the material the target is made of.
+    IMS_target_material = 501000202,
+
+    /// stage scan speed: Speed at which the stage moves.
+    IMS_stage_scan_speed = 501000203,
+
+    /// bottom up: The starting point is at the bottom of the sample and the scanning happens in up direction (parallel to the y-axis).
+    IMS_bottom_up = 501000400,
+
+    /// top down: The starting point is at the top of the sample and the scanning happens in bottom direction (parallel to the y-axis).
+    IMS_top_down = 501000401,
+
+    /// left right: The starting point is at the left of the sample and the scanning happens in right direction (parallel to the x-axis).
+    IMS_left_right = 501000402,
+
+    /// right left: The starting point is at the right of the sample and the scanning happens in left direction. (parallel to the x-axis).
+    IMS_right_left = 501000403,
+
+    /// no direction: The scanning points are randomly distributed on the sample.
+    IMS_no_direction = 501000404,
+
+    /// meandering: The scanning happens in nonstop way. As soon as the end of the sample is reached, the scanning direction will be switched and the scanning is continued. There is no new positioning neccessary.
+    IMS_meandering = 501000410,
+
+    /// one way: The scanning always happens in the same direction. As soon as the end of the sample is reached, the stage is positioned at the starting edge to begin the next run.
+    IMS_one_way_OBSOLETE = 501000411,
+
+    /// random access: The scanning points are randomly chosen and do not follow a pattern.
+    IMS_random_access = 501000412,
+
+    /// flyback: The scanning always happens in the same direction. As soon as the end of the sample is reached, the stage is positioned at the starting edge to begin the next run.
+    IMS_flyback = 501000413,
+
+    /// horizontal line scan: The scanning line is a horizontal one.
+    IMS_horizontal_line_scan = 501000480,
+
+    /// vertical line scan: The scanning line is a vertical one.
+    IMS_vertical_line_scan = 501000481,
+
+    /// linescan right left: The starting point is at the right of the sample and the scanning happens in left direction. (parallel to the x-axis).
+    IMS_linescan_right_left = 501000490,
+
+    /// linescan left right: The starting point is at the left of the sample and the scanning happens in right direction (parallel to the x-axis).
+    IMS_linescan_left_right = 501000491,
+
+    /// linescan bottom up: The starting point is at the bottom of the sample and the scanning happens in up direction (parallel to the y-axis).
+    IMS_linescan_bottom_up = 501000492,
+
+    /// linescan top down: The starting point is at the top of the sample and the scanning happens in bottom direction (parallel to the y-axis).
+    IMS_linescan_top_down = 501000493,
+
+    /// conversion to imzML: Conversion of a file format to Mass Spectrometry Imaging imzML file format.
+    IMS_conversion_to_imzML = 501000500,
+
+    /// imzMLParser: imzMLParser library for reading and writing imzML.
+    IMS_imzMLParser = 501000501,
+
+    /// imzMLConverter: imzMLConverter software for conversion from proprietary formats to imzML.
+    IMS_imzMLConverter = 501000502,
+
+    /// imzMLValidator: imzMLValidator software for validation of imzML.
+    IMS_imzMLValidator = 501000503,
+
+    /// SpectralAnalysis: SpectralAnalysis software for visualisation, processing and multivariate analysis of spectral imaging data.
+    IMS_SpectralAnalysis = 501000504,
+
+    /// primary ion gun species: Describes the species of ions used for ionizing the sample.
+    IMS_primary_ion_gun_species = 501001201,
+
+    /// beam energy: Energy of the shot of the primary ion gun species in electronvolt.
+    IMS_beam_energy = 501001202,
+
+    /// beam current: Number of charges per second shot at the surface of the analyte.
+    IMS_beam_current = 501001203,
+
+    /// cycle time: Inversion of the number of ions shot at the surface in one second. The maximum depends on the maximum time of flight in the mass spectrometer.
+    IMS_cycle_time = 501001204,
+
+    /// time resolution: Size of the bin of the time recorded by the time to digital converter measured in pico seconds
+    IMS_time_resolution = 501001205,
+
+    /// polarity: Polarity of the measured secondary ions (?)
+    IMS_polarity = 501001206,
+
+    /// primary ion dose density: Density of the primary ions.
+    IMS_primary_ion_dose_density = 501001207,
+
+    /// solvent: The solvent which was used to pick up the analyte from the surface of the imaging object.
+    IMS_solvent = 501001211,
+
+    /// spray voltage: Voltage applied to the DESI source to get ions moving into the direction of the inlet of the mass spectrometer.
+    IMS_spray_voltage = 501001212,
+
+    /// solvent flowrate: Rate with which the solvent is flowing on the surface of the imaging object.
+    IMS_solvent_flowrate = 501001213,
+
+    /// sample type: Broad category describing the sample.
+    IMS_sample_type = 501001500,
+
+    /// inorganic sample: A sample not consisting of or deriving from living matter.
+    IMS_inorganic_sample = 501001510,
+
+    /// organic sample: A sample related to or derived from living matter.
+    IMS_organic_sample = 501001520,
+
+    /// biological sample: A sample related to biology or living organisms.
+    IMS_biological_sample = 501001521,
+
+    /// clinical sample: A sample related to or deriving from actual patients.
+    IMS_clinical_sample = 501001522,
+
+    /// pathological sample: A sample related to pathology.
+    IMS_pathological_sample = 501001523,
+
+    /// food sample: A sample related to or deriving from any nutritious substance.
+    IMS_food_sample = 501001524,
+
+    /// bacteria sample: A sample consisting of or related to bacteria.
+    IMS_bacteria_sample = 501001525,
+
+    /// sample origin attribute: An attribute related to the origin of the sample.
+    IMS_sample_origin_attribute = 501001600,
+
+    /// sample ethical approval: Ethical approval required for experiments to be performed on the sample.
+    IMS_sample_ethical_approval = 501001601,
+
+    /// sample origin institution: Institution at which the sample originated.
+    IMS_sample_origin_institution = 501001602,
+
+    /// analysed sample portion: Description of how much of the sample was analysed.
+    IMS_analysed_sample_portion = 501002000,
+
+    /// sectioned sample: Analysis performed on a section of the sample.
+    IMS_sectioned_sample = 501002001,
+
+    /// whole sample: Analysis performed on entire sample.
+    IMS_whole_sample = 501002002,
+
+    /// blockface sample: Analysis performed on the blockface of a cut sample.
+    IMS_blockface_sample = 501002003,
+
+    /// sampling method: Method used to extract the sample from a larger encompassing object.
+    IMS_sampling_method = 501002005,
+
+    /// sample storage condition: Storage condition of the sample prior to analysis.
+    IMS_sample_storage_condition = 501002010,
+
+    /// fixed: Sample has undergone a fixation process.
+    IMS_fixed = 501002011,
+
+    /// fresh frozen: Sample has been frozen.
+    IMS_fresh_frozen = 501002012,
+
+    /// embedded: Sample has undergone an embedding procedure.
+    IMS_embedded = 501002013,
+
+    /// sample storage attribute: Attribute related to the storage of a sample.
+    IMS_sample_storage_attribute = 501002014,
+
+    /// sample storage time before sectioning: Duration of time between the sample being acquired and sectioning being performed.
+    IMS_sample_storage_time_before_sectioning = 501002015,
+
+    /// section storage time after sectioning and before analysis: Duration of time between sectioning having been performed and performing MSI analysis.
+    IMS_section_storage_time_after_sectioning_and_before_analysis = 501002016,
+
+    /// sample storage temperature: Temperature at which the sample was stored prior to analysis.
+    IMS_sample_storage_temperature = 501002017,
+
+    /// freezing method: Method used for freezing the sample.
+    IMS_freezing_method = 501002018,
+
+    /// flash frozen: Flash frozen by slow immersion in liquid nitrogen cooled isopentane.
+    IMS_flash_frozen = 501002019,
+
+    /// sample storage time before analysis: Duration of time between the sample being acquired and analysis being performed.
+    IMS_sample_storage_time_before_analysis = 501002020,
+
+    /// sample storage method: Method used for storing the sample prior to analysis.
+    IMS_sample_storage_method = 501002021,
+
+    /// stabilisation: Application of a process to make the sample more stable, stopping degradation and changes from occurring.
+    IMS_stabilisation = 501002050,
+
+    /// no stabilisation performed: No stabilisation was performed.
+    IMS_no_stabilisation_performed = 501002051,
+
+    /// stabilisation method: Method used to perform stabilisation.
+    IMS_stabilisation_method = 501002052,
+
+    /// rapid heating stabilisation: Stabilisation performed through rapid conductive heating.
+    IMS_rapid_heating_stabilisation = 501002053,
+
+    /// focused microwave irradiation stabilisation: Stabilisation performed through focused microwave irradiation.
+    IMS_focused_microwave_irradiation_stabilisation = 501002054,
+
+    /// sectioning method: Description of the method used to section the sample.
+    IMS_sectioning_method = 501002100,
+
+    /// microtome sectioning: Microtome used to perform sectioning.
+    IMS_microtome_sectioning = 501002101,
+
+    /// microtome model: Specific microtome model used to perform sectioning.
+    IMS_microtome_model = 501002102,
+
+    /// sectioning attribute: Properties of the microtome sectioning process with an associated value.
+    IMS_sectioning_attribute = 501002103,
+
+    /// cutting temperature: Temperature of the sample when the sectioning was performed.
+    IMS_cutting_temperature = 501002104,
+
+    /// cutting thickness: Thickness of the section as set on the microtome.
+    IMS_cutting_thickness = 501002105,
+
+    /// blade sectioning: Blade used to perform sectioning.
+    IMS_blade_sectioning = 501002106,
+
+    /// section thickness: Measured thickness of the sample after sectioning.
+    IMS_section_thickness = 501002107,
+
+    /// mounting method: Description of the method used to mount the sample onto the target.
+    IMS_mounting_method = 501002200,
+
+    /// thaw mounting: Mounting the sample onto the target by warming the reverse of the target.
+    IMS_thaw_mounting = 501002201,
+
+    /// tape mounting: Mounting the sample onto the target using tape.
+    IMS_tape_mounting = 501002202,
+
+    /// sample drying: Application of a process to dry the sample.
+    IMS_sample_drying = 501002300,
+
+    /// drying method attribute: Attribute related to the drying of a sample.
+    IMS_drying_method_attribute = 501002301,
+
+    /// drying time: Duration of time that the drying procedure was applied.
+    IMS_drying_time = 501002302,
+
+    /// no drying performed: No drying process performed.
+    IMS_no_drying_performed = 501002303,
+
+    /// sample drying method: Description of the method used to dry the sample.
+    IMS_sample_drying_method = 501002304,
+
+    /// sample washing: Application of a process to wash the sample.
+    IMS_sample_washing = 501002400,
+
+    /// no washing performed: No washing method performed.
+    IMS_no_washing_performed = 501002401,
+
+    /// sample washing method: Method used to perform washing of the sample.
+    IMS_sample_washing_method = 501002402,
+
+    /// on-sample chemistry: Additional treatment of the sample, such as enzymatic digestion or derivatisation.
+    IMS_on_sample_chemistry = 501002500,
+
+    /// no on-sample chemistry performed: No on-sample chemistry method performed.
+    IMS_no_on_sample_chemistry_performed = 501002501,
+
+    /// on-sample chemistry method: Method used to perform on-sample chemistry.
+    IMS_on_sample_chemistry_method = 501002502,
+
+    /// on-sample chemistry attribute: Attribute related to the on-sample chemistry.
+    IMS_on_sample_chemistry_attribute = 501002503,
+
+    /// on-sample chemistry reagent: Reagent used in the on-sample chemistry process.
+    IMS_on_sample_chemistry_reagent = 501002504,
+
+    /// in-experiment quantification: Quantification integrated into the experiment.
+    IMS_in_experiment_quantification = 501002600,
+
+    /// no in-experiment quantification performed: No in-experiment quantification method performed.
+    IMS_no_in_experiment_quantification_performed = 501002601,
+
+    /// in-experiment quantification method: Method used to perform in-experiment quantification.
+    IMS_in_experiment_quantification_method = 501002602,
+
+    /// internal standard quantification: Quantification performed through application of an internal standard.
+    IMS_internal_standard_quantification = 501002603,
+
+    /// adjacent dilution series quantification: Quantification performed through a dilution series adjacent to the sample.
+    IMS_adjacent_dilution_series_quantification = 501002604,
+
+    /// sprayed-on standard quantification: Quantification performed through application of a standard via spraying.
+    IMS_sprayed_on_standard_quantification = 501002605,
+
+    /// spraying method: Method used to perform spraying of a matrix.
+    IMS_spraying_method = 501003000,
+
+    /// automated spraying of matrix: Spraying performed using an automated method, such as a robotic system.
+    IMS_automated_spraying_of_matrix = 501003001,
+
+    /// manual spraying of matrix: Spraying performed manually by the user, such as with an artistic airbrush.
+    IMS_manual_spraying_of_matrix = 501003002,
+
+    /// automated spraying device: Robotic system for spraying a matrix.
+    IMS_automated_spraying_device = 501003003,
+
+    /// automated sprayer attribute: Attribute related to the automatic spraying device.
+    IMS_automated_sprayer_attribute = 501003004,
+
+    /// automated sprayer nozzle movement speed: Speed at which the spray head (including the nozzle) moves during spraying of the sample.
+    IMS_automated_sprayer_nozzle_movement_speed = 501003005,
+
+    /// automated sprayer flow-rate: Flow-rate used to dispense the solvent to the sprayer.
+    IMS_automated_sprayer_flow_rate = 501003006,
+
+    /// automated sprayer nozzle temperature: Temperature of the nozzle of the sprayer during spraying.
+    IMS_automated_sprayer_nozzle_temperature = 501003007,
+
+    /// xz compression: XZ compression.
+    IMS_xz_compression = 501005001,
+
+    /// lz4 compression: LZ4 compression.
+    IMS_lz4_compression = 501005002,
+
+    /// zstd compression: Zstandard compression.
+    IMS_zstd_compression = 501005003,
+
+    /// repetition rate: Describes the number of pulses per second when a laser is operating in pulsed mode.
+    IMS_repetition_rate = 501006000,
+
+    /// laser shots per spectrum: Describes the number of laser pulses interrogating the sample to generate a single spectrum.
+    IMS_laser_shots_per_spectrum = 501006001,
+
+    /// m/z at which resolution was measured: m/z at which the mass resolution was measured.
+    IMS_m_z_at_which_resolution_was_measured = 501006002,
+
+    /// postmortem time: Time after sacrifice and before sampling occurs.
+    IMS_postmortem_time = 501006003,
+
+    /// age: Age of the sample at time of analysis.
+    IMS_age = 501006004,
+
+    /// sample species: Species of the sample.
+    IMS_sample_species = 501006005,
+
+    /// sample organ: Analysed organ.
+    IMS_sample_organ = 501006006,
+
+    /// sample condition: Description of whether the sample is wildtype, diseased, control.
+    IMS_sample_condition = 501006007,
+
+    /// optical image location: Uniform resource identifier (URI) for the location of the optical image corresponding to the sample.
+    IMS_optical_image_location = 501006008,
+
+    /// optical image attribute: Attribute related to the optical image.
+    IMS_optical_image_attribute = 501006009,
+
+    /// optical image subject: Subject of the optical image.
+    IMS_optical_image_subject = 501006010,
+
+    /// optical image of analysed sample: Subject of the optical image is the exact sample that was analysed.
+    IMS_optical_image_of_analysed_sample = 501006011,
+
+    /// optical image of adjacent section of analysed sample: Subject of the optical image is an adjacent section to the analysed section.
+    IMS_optical_image_of_adjacent_section_of_analysed_sample = 501006012,
+
+    /// sample morphological classification: Morphological classification of the sample.
+    IMS_sample_morphological_classification = 501006013,
+
+    /// sampling location: Location at which the sample was taken from the specimen.
+    IMS_sampling_location_OBSOLETE = 501006014,
+
+    /// staining method used for optical image: Method used for staining the sample prior to optical imaging.
+    IMS_staining_method_used_for_optical_image = 501006015,
+
+    /// ion source model: Model name and number of the ion source used.
+    IMS_ion_source_model = 501006016,
+
+    /// method used to align optical image: method used to align optical image with MSI data
+    IMS_method_used_to_align_optical_image = 501006017,
+
+    /// 8-bit integer: Signed 8-bit integer.
+    IMS_8_bit_integer = 501100000,
+
+    /// 16-bit integer: Signed 16-bit integer.
+    IMS_16_bit_integer = 501100001
 }; // enum CVID
 
 

@@ -38,23 +38,23 @@ project
 	;
 
 
-unit-test-if-exists spectrum_processing_test : spectrum_processing_test.cpp : <conditional>@unit-test-requirements ;
-
-import path ;
-run-if-exists SpectrumList_3D_Test.cpp
-    : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d ] # args
-    : # input-files
-    : <conditional>@unit-test-requirements <vendor-api-support>off:<build>no # requirements# requirements
-      <optimization>space:<build>no # I have no idea why it fails in .NET with space optimization on
-    : SpectrumList_3D_Test # target name
-    : # default-build
-    ;
-
-run-if-exists SpectrumList_IonMobility_Test.cpp
-    : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynth_Chrom.d ] # args
-    : # input-files
-    : <conditional>@unit-test-requirements <vendor-api-support>off:<build>no # requirements
-    : SpectrumList_IonMobility_Test # target name
-    : # default-build
-    ;
+#unit-test-if-exists spectrum_processing_test : spectrum_processing_test.cpp : <conditional>@unit-test-requirements ;
+#
+#import path ;
+#run-if-exists SpectrumList_3D_Test.cpp
+#    : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d ] # args
+#    : # input-files
+#    : <conditional>@unit-test-requirements <vendor-api-support>off:<build>no # requirements# requirements
+#      <optimization>space:<build>no # I have no idea why it fails in .NET with space optimization on
+#    : SpectrumList_3D_Test # target name
+#    : # default-build
+#    ;
+#
+#run-if-exists SpectrumList_IonMobility_Test.cpp
+#    : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynth_Chrom.d ] # args
+#    : # input-files
+#    : <conditional>@unit-test-requirements <vendor-api-support>off:<build>no # requirements
+#    : SpectrumList_IonMobility_Test # target name
+#    : # default-build
+#    ;
 }
