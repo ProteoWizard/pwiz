@@ -2113,13 +2113,30 @@ foreach ($name in $selected) {
     # 82-file comparison wants re-running), and a golden would freeze a number nobody has
     # agreed on yet. What must not change silently is that the arm RUNS and PRODUCES.
     #
-    # The two arms pair as they must: protein-compact REFUSES a mean(best-N) first pass, so the
-    # mean-best leg necessarily runs transfer as its pass-2 mode.
+    # ONE arm, not two. protein-compact REFUSES a mean(best-N) first pass, so the mean-best arm
+    # necessarily runs transfer as its pass-2 mode - which means this single leg exercises both
+    # ideas, and a standalone transfer arm bought a second run of the same pass-2 code for the
+    # sake of varying the first-pass aggregation away from the one that needs covering.
+    #
+    # Measured, which is why it went: the two arms were 223.1 s and 223.7 s on StellarLibDecoy,
+    # 7.4 min together, against a Perf/Regression wall of 01:19:30 that has to come in under
+    # 75 minutes. The standalone arm is the half whose coverage is already implied.
+    #
+    # It stays reproducible by hand for diagnosis - that is its remaining value, and it is a
+    # one-line env var: OSPREY_PASS2_QVALUE=transfer with OSPREY_EXPERIMENT_AGG unset. Isolating
+    # transfer from mean-best-N is what you want when this leg goes red and you need to know
+    # which of the two moved; it is not what you want on every gate run.
     if (-not $SkipAltPass2 -and $cfg.AltPass2) {
+        # Markers are the banners Osprey prints for each arm - Program.cs's
+        # DescribeExperimentAgg, and ComputeAndPersist's OSPREY_PASS2_QVALUE line. Regexes, so
+        # the surrounding prose can change without breaking the gate; what they pin is the
+        # mode NAME and, for mean-best, the word ACTIVE that only the engaged path emits.
         $altArms = @(
-            @{ Tag = 'transfer';  Env = @{ OSPREY_PASS2_QVALUE = 'transfer' } },
-            @{ Tag = 'meanbest2'; Env = @{ OSPREY_PASS2_QVALUE = 'transfer'
-                                           OSPREY_EXPERIMENT_AGG = 'mean-best-2' } })
+            @{ Tag = 'meanbest2'
+               Env = @{ OSPREY_PASS2_QVALUE = 'transfer'
+                        OSPREY_EXPERIMENT_AGG = 'mean-best-2' }
+               Markers = @('OSPREY_PASS2_QVALUE=transfer:',
+                           'Experiment aggregation: mean-best-2 ACTIVE') })
         foreach ($arm in $altArms) {
             Write-Progress-Tc "${name}: $($arm.Tag) arm runs and produces (mode 10)"
             $altDir = Join-Path (Join-Path $runRoot $name) ("alt-" + $arm.Tag)
@@ -2150,6 +2167,25 @@ foreach ($name in $selected) {
                     } else {
                         Set-Item -Path "Env:$k" -Value $priorArmEnv[$k]
                     }
+                }
+            }
+            # THE ARM ACTUALLY RAN, asserted from the banner each mode prints, before anything
+            # about what it produced. Without this the leg is green for an arm that never
+            # engaged: every check below passes on a run with both variables ignored, because
+            # the DEFAULT mode writes the same set of files. That is not a hypothetical failure
+            # shape - it is this leg's own reason for existing, since `transfer` reached
+            # production writing no experiment sidecar precisely because nothing ran it.
+            #
+            # A marker line rather than a value comparison, per doc 00: where a contract cannot
+            # be distinguished by output, the gate must assert the path the run reports. Both
+            # halves are checked because the arm is the PAIR - a run that took `transfer` but
+            # ignored OSPREY_EXPERIMENT_AGG would satisfy a one-line check and cover only half
+            # of what this leg is here to protect.
+            foreach ($marker in $arm.Markers) {
+                if (-not (Select-String -Path $rAlt.Log -Pattern $marker -Quiet)) {
+                    $m10.Issues.Add(("$($arm.Tag): the run log does not report /$marker/, so the " +
+                                     "arm did not engage and every check below would pass on a " +
+                                     "default run"))
                 }
             }
             $altBlib = Join-Path $altDir 'output.blib'
