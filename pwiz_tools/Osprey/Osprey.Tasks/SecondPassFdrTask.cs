@@ -572,6 +572,20 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config, HashSet<uint> stratumBaseIds)
         {
+            // The pass-1 product is what pass 2 ENRICHES, so its absence means there is nothing
+            // for this fold to attach to - and the fold is two full passes over the stream,
+            // rebuilding every run from disk twice. Checked HERE rather than left to the report
+            // writer, which is where the resident path checks it: there the read is the first
+            // statement and costs nothing, but on this path the writer is called AFTER the
+            // folding, so leaving the check to it spends both passes and discards the result.
+            // Measured shape at 446 runs: two rebuilds of 446 runs for an artifact that is then
+            // not written. Same message the writer emits, so the log reads identically either way.
+            if (!File.Exists(ModelDiagnosticsReport.Pass1SidecarPath(config)))
+            {
+                ctx.LogInfo(@"[MODEL-DIAGNOSTICS] pass-1 data sidecar not found; pass-2 enrichment skipped (pass-1 page stands).");
+                return;
+            }
+
             // Names, not entries: FileNames reads the buffer keys without pulling the deferred
             // milestone, which is the whole point of asking it rather than Value here.
             var fileNames = rescored.FileNames;
