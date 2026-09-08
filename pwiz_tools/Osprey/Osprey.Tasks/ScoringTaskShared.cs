@@ -447,9 +447,18 @@ namespace pwiz.Osprey.Tasks
         /// that leg. Widening the first would have told the rescore it may stream on a leg where
         /// it does not run at all.</para>
         ///
-        /// <para>Three requirements, and the third is the one that is easy to miss. The leg has
-        /// to be the reconciled-input merge, whose parquets already hold the survivor subset.
-        /// No consumer may read PIN features off these stubs
+        /// <para>Three requirements, and the first is the one that is easy to miss. Every run's
+        /// <c>.scores-reconciled.parquet</c> has to be on disk in the survivor-subset shape,
+        /// because that parquet IS what a run is rebuilt from and dropped again. It used to be
+        /// asked as <c>config.ExpectReconciledInput</c>, a PROXY for it: only
+        /// <c>--task SecondPassFDR</c> sets that flag, so the one route the #4486 repro used
+        /// became the only route that could stream - while a straight-through run, whose
+        /// Stage 6 had just written those same parquets, met the requirement and was refused
+        /// anyway (91.1 GB private, measured on a 446-run resume). Asked of the disk it is
+        /// route-independent, which is also what lets <c>--input-scores</c> retire without
+        /// taking the streamed join with it.</para>
+        ///
+        /// <para>No consumer may read PIN features off these stubs
         /// (<c>PerFileScoringTask.NeedsResidentPool</c>: <c>--fdrbench-pass 1</c>, a
         /// non-Percolator FDR method, <c>OSPREY_FDR_PROJECTION=0</c>) - a streamed pool drops
         /// the entries those consumers index. And the analysis-wide retained base_id summary has
@@ -471,7 +480,34 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static bool CanStreamStage7Join(OspreyConfig config, bool stage7Stream)
         {
-            if (!config.ExpectReconciledInput || !stage7Stream)
+            // LAST, because AllReconciledParquetsCurrent is the only term that opens a file per
+            // run. Every cheaper disqualifier returns first, so a run that was never going to
+            // stream does not pay 446 footer reads to be told so.
+            return Stage7StreamAdmittedBeforeRescore(config, stage7Stream) &&
+                   AllReconciledParquetsCurrent(config);
+        }
+
+        /// <summary>
+        /// Every <c>CanStreamStage7Join</c> term EXCEPT the reconciled parquets, i.e. the half a
+        /// run can answer BEFORE Stage 6 has written them.
+        ///
+        /// <para>Split out for exactly one caller: the straight-through <c>Run</c> arm of
+        /// <c>PerFileRescoreTask</c>, which decides whether to publish a per-run source at the
+        /// TOP of Stage 6, hours before the rescore it is about to perform writes the parquets
+        /// the full predicate asks about. Asking the full question there answers "no" on every
+        /// cold run - not because the run cannot stream, but because it has not got there yet.
+        /// It does not need the term either: that arm rebuilds a run through
+        /// <see cref="FirstPassSurvivorLoader"/>, which falls back to the Stage 4 parquet plus
+        /// the 1st-pass sidecar for a run with no reconciled sibling, where the reconciled-input
+        /// merge has nothing else to read.</para>
+        ///
+        /// <para>The retained base_id summary IS in this half even though it is an artifact:
+        /// FirstPassFDR writes it before any caller of either form runs, so it is answerable on
+        /// every route at every point either question is asked.</para>
+        /// </summary>
+        internal static bool Stage7StreamAdmittedBeforeRescore(OspreyConfig config, bool stage7Stream)
+        {
+            if (!stage7Stream)
                 return false;
             if (PerFileScoringTask.NeedsResidentPool(config, OspreyEnvironment.UseFdrProjection))
                 return false;
@@ -503,6 +539,42 @@ namespace pwiz.Osprey.Tasks
                 RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
             return !string.IsNullOrEmpty(retainedPath) &&
                    RetainedBaseIdSidecar.IsCurrentFormat(retainedPath);
+        }
+
+        /// <summary>
+        /// True when EVERY input has a <c>.scores-reconciled.parquet</c> on disk that this build
+        /// can read in the survivor-subset shape - the disk-side question
+        /// <c>config.ExpectReconciledInput</c> used to stand in for.
+        ///
+        /// <para>ALL, not any. The fold rebuilds each run from its own reconciled parquet, so
+        /// one run without a readable one is a run the fold cannot produce - and admitting the
+        /// stage on "some run has one" would fail at that run, hours in. The sibling question
+        /// "did Stage 6 rescore anything", which decides whether a second Percolator pass is
+        /// owed, is <c>SecondPassFdrTask.AnyReconciledParquet</c> and is deliberately not this:
+        /// a file with no rescore work still gets a faithful copy written for it, which is what
+        /// makes "all present" reachable on any route.</para>
+        ///
+        /// <para>Empty or absent inputs return FALSE rather than vacuously true. There is no
+        /// pool to bound on a run with no inputs, so the streamed arm buys nothing there, and
+        /// vacuous truth would hand the fold an empty file set on a configuration nothing else
+        /// in this predicate examines.</para>
+        /// </summary>
+        internal static bool AllReconciledParquetsCurrent(OspreyConfig config)
+        {
+            if (config.InputFiles == null || config.InputFiles.Count == 0)
+                return false;
+            foreach (var input in config.InputFiles)
+            {
+                // From the INPUT stem, the same derivation AnyReconciledParquet uses, so this
+                // reads identically in the in-process pipeline (Stage 6 has just written the
+                // parquets) and on a --task SecondPassFDR node (a Stage 6 worker wrote them).
+                if (!ParquetScoreCache.IsCurrentReconciledSurvivorSubset(
+                        ParquetScoreCache.GetReconciledScoresPath(input)))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>

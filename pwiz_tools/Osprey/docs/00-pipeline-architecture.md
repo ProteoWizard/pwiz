@@ -1115,17 +1115,34 @@ the text says so rather than describing the current shape as though it were the 
    survivors instead of rebuilding one run at a time through `StreamFiles`. Both arms are
    required to produce identical bytes.
 
-   **It is NOT the in-place A/B its Stage 6 sibling is, and must not be described as one.**
-   `CanStreamStage7Join` short-circuits on `!config.ExpectReconciledInput` *before* it reads
-   the switch, and that flag is set only for `--task SecondPassFDR`. So on a straight-through
-   run the switch changes nothing - while `SecondPassFdrTask.ValidityKey` appends
-   `;stage7stream=0` unconditionally, invalidating the `.blib` and every 2nd-pass sidecar and
-   forcing a full Stage 7 re-run for a setting that cannot change the arm. Comparing the two
-   shapes means comparing two `--task SecondPassFDR` runs over the same linked bed.
+   **It IS the in-place A/B its Stage 6 sibling is, and it did not used to be.**
+   `CanStreamStage7Join` opened on `!config.ExpectReconciledInput`, a flag only
+   `--task SecondPassFDR` sets, so on a straight-through run the switch changed nothing -
+   while `SecondPassFdrTask.ValidityKey` appended `;stage7stream=0` regardless, forcing a
+   full Stage 7 re-run for a setting that could not change the arm. That term is now the
+   question it stood in for: does every run have a `.scores-reconciled.parquet` on disk in
+   the survivor-subset shape (`ScoringTaskShared.AllReconciledParquetsCurrent`). Asked of
+   the disk, it is route-independent - a straight-through run's Stage 6 has just written
+   those parquets - so the cold run, both resume arms and the `--task SecondPassFDR` merge
+   all fold run by run, and the switch compares two arms of whichever one you are running.
+
+   The per-run source is not one implementation reached four ways: each arm hands the fold
+   the per-file half of the whole-run loop it would otherwise have run
+   (`PerFileRescoreTask.BuildRunPerRunSource` / `BuildResumePerRunSource` /
+   `BuildStage7PerRunSource`), so run-at-a-time is the same work in the same order as
+   all-runs-at-once. That is why the arms are required to produce identical bytes, and why
+   an arm is a call-shape change rather than a second algorithm.
+
+   One route still cannot stream: a pass-2 mode whose per-file half has no worker
+   (`OSPREY_PASS2_QVALUE=transfer` still competes over the whole pool in Stage 7). Until
+   `TransferOneFile` moves into `Pass2PerFileWorker`, `Stage7ResidentGuardError` keeps its
+   `streamingAvailable` exemption - a run with no streamed alternative has no choice for a
+   token to record.
 
    Because nothing in the output distinguishes the arms, the shape that ran is asserted from
-   the marker line `Second-pass join: folding over N run(s)` rather than inferred - which is
-   what mode 3 does, scoped to the configurations that can actually stream.
+   the marker line `Second-pass join: folding over N run(s)` rather than inferred -
+   `regression.ps1` demands it per leg (the cold run, both resumes, and mode 3's phase 4),
+   scoped to the configurations that can actually stream.
 
 5. **Whether the 500-run / 64 GB target is met.** It is not yet, and which stage binds is
    itself moving as each is fixed. The two TODOs above carry the current measurements;

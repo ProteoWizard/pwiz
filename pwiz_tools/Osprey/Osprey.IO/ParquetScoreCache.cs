@@ -255,6 +255,35 @@ namespace pwiz.Osprey.IO
             return !HasColumn(path, FIELD_SCORE_INDEX.Name);
         }
 
+        /// <summary>
+        /// True when <paramref name="path"/> is a reconciled parquet THIS build can read in the
+        /// survivor-subset shape: it exists, carries the current
+        /// <see cref="RECONCILED_SURVIVORS"/> marker, and carries the <c>score_index</c> column
+        /// that ties each survivor row back to its Stage 4 ordinal.
+        ///
+        /// <para>The positive form of <see cref="IsSubsetWithoutScoreIndex"/> plus the marker
+        /// test, in one open, because two callers ask the same question about the same file and
+        /// asking it twice is what let them drift. One is the Stage 7 refusal that names the
+        /// stale files; the other is the admission a per-run fold consults BEFORE it commits to
+        /// rebuilding each run from these parquets - and that admission has to be the SAME
+        /// question the refusal asks, or a run is admitted to a fold it then aborts.</para>
+        ///
+        /// <para>Says nothing about whether Stage 6 did any rescore WORK on the file - that is
+        /// the <c>osprey.rescored</c> footer key and a different question, deciding whether a
+        /// second Percolator pass is owed. This one asks only whether the rows are readable in
+        /// the shape a survivor rebuild needs.</para>
+        /// </summary>
+        public static bool IsCurrentReconciledSurvivorSubset(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return false;
+            var footer = LoadFooterMetadata(path);
+            footer.TryGetValue(@"osprey.reconciled", out string marker);
+            if (!string.Equals(marker, RECONCILED_SURVIVORS, StringComparison.Ordinal))
+                return false;
+            return HasColumn(path, FIELD_SCORE_INDEX.Name);
+        }
+
         /// <summary>Whether a parquet's schema carries a column by this name.</summary>
         public static bool HasColumn(string path, string columnName)
         {

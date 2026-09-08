@@ -318,22 +318,19 @@ namespace pwiz.Osprey.Tasks
             // it dropped, so streaming there would destroy the only copy of the survivors on
             // its way past. Null leaves StreamFiles walking the resident buffer, which is what
             // the OSPREY_STAGE6_STREAM_SURVIVORS=0 A/B oracle needs it to do.
-            // NO per-file source on this path, and the reason is a property of the materializer
-            // rather than a preference. MaterializeRescoredFile is ONE-SHOT: it overlays the
-            // reconciled parquet and appends gap-fill rows, so calling it twice for one run
-            // duplicates them - which is the same "run-once, and a failed build stays failed"
-            // rule RescoredEntries' own remarks state for the whole-run build. A Stage 7 fold
-            // re-enumerates, so it needs a source that can rebuild a run from disk repeatedly
-            // and identically; this one cannot, and handing it over produced a straight-through
-            // Stellar run that exited 1 on AssertSidecarDescribesPool.
-            //
-            // The leg that has such a source is the reconciled-input merge, where
-            // BuildStage7PerRunSource supplies it (Rehydrate, below). Straight-through Stage 7
-            // therefore keeps its resident pool for now. That is the honest state and not a
-            // hidden one: making this materializer idempotent - or having it rebuild from the
-            // reconciled parquet alone, which already holds the merged gap-fill rows - is what
-            // extends the fold to this leg, and it is separate work.
-            var rescored = new RescoredEntries(_perFileEntries, () => BuildRescoredPool(ctx));
+            // WITH a per-file source when this run can supply a re-enumerable one, which is
+            // what makes the bounded join the DEFAULT rather than a property of
+            // --task SecondPassFDR. The paragraph that stood here said this leg could not have
+            // one because MaterializeRescoredFile is ONE-SHOT - it overlays the reconciled
+            // parquet and appends gap-fill rows, so a second call for one run duplicates them,
+            // which once exited a straight-through Stellar run 1 on AssertSidecarDescribesPool.
+            // True, and true of a NON-EMPTY list only: given an empty one it takes its
+            // rebuild-from-the-reconciled-parquet branch, where the gap-fill rows are already
+            // merged and no overlay runs, and that branch repeats identically. So the condition
+            // is not "make the materializer idempotent" but "hand it a list it can rebuild",
+            // which is what BuildRunPerRunSource establishes before offering the source at all.
+            var rescored = new RescoredEntries(_perFileEntries, () => BuildRescoredPool(ctx),
+                BuildRunPerRunSource(ctx, survivorLoader));
             ctx.Publish(rescored);
 
             // Self-gate: rescore + reconciliation only run when there is
@@ -653,6 +650,30 @@ namespace pwiz.Osprey.Tasks
             if (!ctx.Config.ExpectReconciledInput)
             {
                 _perFileEntries = ctx.Get<CompactedEntries>().Value;
+
+                // The SAME conversion the reconciled-input arm below already had, on the arm
+                // that carries every ordinary run. Both arms end with a milestone over the same
+                // shared buffer; what the source changes is that Stage 7 rebuilds one run, folds
+                // it and drops it, instead of the two whole-run loops beneath this block
+                // bringing all 446 to their post-rescore state and holding them - 91.1 GB
+                // private, measured on a 446-run resume, which is what admitting only
+                // --task SecondPassFDR to the fold left standing.
+                //
+                // Null when this run has no way to rebuild a dropped run, and then the resident
+                // loops below run exactly as they did. LAZY, unlike those loops: with a source
+                // in hand there is no reason to do the work before the consumer that folds asks
+                // for it, and a consumer that reads .Value instead still gets the whole pool
+                // through the same source (MaterializeAllFromSource), reported as the expense
+                // it is.
+                var resumeSource = BuildResumePerRunSource(ctx);
+                if (resumeSource != null)
+                {
+                    var resumeBuffer = _perFileEntries;
+                    ctx.Publish(new RescoredEntries(resumeBuffer,
+                        () => MaterializeAllFromSource(resumeBuffer, resumeSource, ctx),
+                        resumeSource));
+                    return true;
+                }
 
                 // PR-E: a fresh ExecuteRescore would overlay each file's reconciled
                 // boundaries/area/features onto its CompactedEntries rows + append
@@ -2082,6 +2103,67 @@ namespace pwiz.Osprey.Tasks
             }
         }
 
+        /// <summary>
+        /// The per-run source Stage 7 folds through on the STRAIGHT-THROUGH resume: bring ONE
+        /// run's list to the post-rescore state the two whole-run loops in <see cref="Rehydrate"/>
+        /// would have brought every run to, so the join holds one run at a time.
+        ///
+        /// <para>Its body is those loops' own per-file halves, called in the same order rather
+        /// than reimplemented: refill the released survivors, then overlay this run's reconciled
+        /// parquet. Nothing in either half reads another run's entries, so run-at-a-time is the
+        /// same work in the same order as all-runs-then-all-runs - which is why the streamed and
+        /// resident arms write byte-identical output, and why the fix is a call-shape change
+        /// rather than a second implementation.</para>
+        ///
+        /// <para>RE-ENUMERABLE, which is the property <see cref="RescoredEntries.StreamFiles"/>
+        /// needs: a fold pass drops each run's list, so a second pass finds it empty, and both
+        /// halves here rebuild an empty list from disk identically. Unconditionally so, unlike
+        /// <see cref="BuildRunPerRunSource"/>: a resume runs no rescore, so no run's list ever
+        /// holds state that is not already on disk, and there is nothing a drop can lose.</para>
+        ///
+        /// <para>Null when the run cannot stream. Two ways: the admission itself
+        /// (<see cref="ScoringTaskShared.CanStreamStage7Join(OspreyConfig)"/>, which is where
+        /// the reconciled parquets are required to be readable - asked in FULL here, unlike
+        /// <see cref="BuildRunPerRunSource"/>, because a resume enters after Stage 6 has
+        /// written them), or no published survivor loader - and the second is not a preference.
+        /// A run whose survivors were never released has nothing on disk to rebuild them from,
+        /// so folding would DROP the only copy on its way past. That is the same condition
+        /// <see cref="Run"/> states for its own deferred build; the difference is only that
+        /// this arm asks for the loader without the Stage-6 switch (see
+        /// <see cref="PublishedSurvivorLoader"/>). A null loader today means an empty join,
+        /// where there is no pool to bound and the resident loops cost nothing.</para>
+        /// </summary>
+        private Action<string, List<FdrEntry>> BuildResumePerRunSource(PipelineContext ctx)
+        {
+            if (!ScoringTaskShared.CanStreamStage7Join(ctx.Config))
+                return null;
+            var loader = PublishedSurvivorLoader(ctx);
+            if (loader == null)
+                return null;
+            // Both answers taken ONCE, here, for the reason RescoredPoolPlan gives: the
+            // reconciled-parquet judgement stops being true the moment this task returns, when
+            // the driver stamps a fresh validity sidecar onto every declared output that merely
+            // exists. The answer travels; the question does not.
+            var reconciledPaths = CurrentReconciledPaths(ctx);
+            var gapFill = ctx.Get<PerFileGapFillForRescore>().Value;
+            // Says which shape Stage 7 took, for the reason its --task SecondPassFDR sibling
+            // gives: without it the only evidence is a memory profile, and "the gate is green so
+            // the new path must have run" is the inference that lets a resident path pass as a
+            // streamed one.
+            ctx.LogInfo(string.Format(
+                @"Second-pass join: folding over {0} run(s), each rebuilt from its own first-pass " +
+                @"survivors and dropped (no all-runs survivor pool). {1} of {0} run(s) carry a " +
+                @"current reconciled parquet to overlay; the rest keep their 1st-pass boundaries, " +
+                @"as they would on a fresh run.",
+                _perFileEntries.Count, reconciledPaths.Count));
+            return (fileName, survivors) =>
+            {
+                MaterializeFileSurvivors(fileName, survivors, loader, ctx);
+                OverlayReconciledIntoFile(fileName, survivors, reconciledPaths, gapFill,
+                    canonicalize: true);
+            };
+        }
+
         private static Action<string, List<FdrEntry>> BuildStage7PerRunSource(
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
@@ -2531,6 +2613,23 @@ namespace pwiz.Osprey.Tasks
         {
             if (!OspreyEnvironment.Stage6StreamSurvivors)
                 return null;
+            return PublishedSurvivorLoader(ctx);
+        }
+
+        /// <summary>
+        /// The per-run survivor loader FirstPassFDR published, WITHOUT the Stage-6 switch
+        /// <see cref="StreamedSurvivorLoader"/> applies.
+        ///
+        /// <para>One switch per stage. <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c> is the A/B oracle
+        /// for the RESCORE window - it asks Stage 6 to keep the buffer it would have drained -
+        /// and it says nothing about how Stage 7 should fold. Reading it through the Stage-6
+        /// gate would have made that oracle silently decide the Stage-7 arm as well, so the
+        /// stage whose arm <c>OSPREY_STAGE7_STREAM</c> governs asks for the loader directly.
+        /// The object is the same one either way - the gate withholds it, it does not
+        /// unbuild it.</para>
+        /// </summary>
+        private static FirstPassSurvivorLoader PublishedSurvivorLoader(PipelineContext ctx)
+        {
             return ctx.TryGet<FirstPassSurvivorSource>(out var source) ? source?.Value : null;
         }
 
@@ -2618,17 +2717,120 @@ namespace pwiz.Osprey.Tasks
         /// and lands inside no other stage's, so without one a perf comparison reads a 16-minute
         /// Stage 6 saving with nothing anywhere absorbing it.</para>
         /// </summary>
-        private void BuildRescoredPool(PipelineContext ctx)
+        /// <summary>
+        /// The per-run source Stage 7 folds through on the straight-through COMPUTE path, or
+        /// null when this run cannot supply one and the whole-run
+        /// <see cref="BuildRescoredPool"/> stays the only route.
+        ///
+        /// <para>Its body is <see cref="MaterializeRescoredFile"/> - the per-file half the
+        /// whole-run build already loops over - so run-at-a-time is the same work in the same
+        /// order, which is why the two arms write byte-identical output.</para>
+        ///
+        /// <para>A third condition cannot be asked here, and is enforced at fold time instead:
+        /// a run whose reconciled parquet never reached disk keeps its re-scored entries in
+        /// memory, and a fold that drops them loses the only copy. Only the rescore this
+        /// method runs BEFORE can decide that, so the source raises it when asked.</para>
+        ///
+        /// <para>Two conditions here, and neither is a preference. A run with no survivor loader kept
+        /// its resident buffer and has nothing on disk to rebuild a run from, so folding would
+        /// DROP the only copy on its way past. And every list must ALREADY be empty: that is
+        /// what makes <see cref="MaterializeRescoredFile"/> repeatable, because an empty list
+        /// takes its rebuild-from-the-reconciled-parquet branch and skips the gap-fill-appending
+        /// overlay that a second call would apply twice. Both hold together exactly when
+        /// FirstPassFDR released the survivors, which is the default; the checked form is used
+        /// rather than that inference because the inference is the kind that stops being true
+        /// quietly.</para>
+        ///
+        /// <para>Asked WITHOUT the reconciled-parquet term
+        /// (<see cref="ScoringTaskShared.Stage7StreamAdmittedBeforeRescore"/>): this decision is
+        /// taken at the top of Stage 6, and the parquets the full predicate asks about are what
+        /// the rescore below is about to write. This arm does not need them - a run without a
+        /// reconciled sibling is rebuilt from its Stage 4 parquet plus its 1st-pass sidecar,
+        /// which is the no-work file's normal path here.</para>
+        /// </summary>
+        private Action<string, List<FdrEntry>> BuildRunPerRunSource(
+            PipelineContext ctx, FirstPassSurvivorLoader survivorLoader)
         {
-            // A pull before Run decided is a programming defect, not a case to guess at: every
-            // guess available here (refill-only, or an overlay against paths not yet judged)
-            // silently produces a wrong reported set rather than an error.
-            var plan = _poolPlan;
-            if (plan == null)
+            if (survivorLoader == null ||
+                !ScoringTaskShared.Stage7StreamAdmittedBeforeRescore(
+                    ctx.Config, OspreyEnvironment.Stage7Stream))
+            {
+                return null;
+            }
+            foreach (var kv in _perFileEntries)
+            {
+                if (kv.Value.Count > 0)
+                    return null;
+            }
+            // The SAME opening words as the other two arms' markers, deliberately: the gate
+            // asserts the per-run fold by that phrase, and an arm that streams under a different
+            // sentence is an arm no verifier can see. Said HERE, at the top of Stage 6, because
+            // this is where the decision is taken - a worker that exits before Stage 7 has still
+            // made it, and the alternative (report it when the fold starts) is a fact about the
+            // consumer rather than about this task.
+            ctx.LogInfo(string.Format(
+                @"Second-pass join: folding over {0} run(s), each rebuilt from its own artifacts " +
+                @"and dropped (no all-runs survivor pool). Decided at Stage 6, where the " +
+                @"survivors were released.", _perFileEntries.Count));
+            return (fileName, entries) =>
+            {
+                var plan = PoolPlanForBuild();
+                // THE ONE RUN THE FOLD CANNOT SERVE, and it fails rather than folding it.
+                // ExecuteRescore drops a run's entries only when its reconciled parquet reached
+                // disk, KEEPING them when the write no-opped or failed - because in that case
+                // those entries are the only copy of the rescore. A fold drops every run it
+                // hands over, so streaming such a run would discard that copy and the next pass
+                // would rebuild it from the Stage 4 parquet: a blib silently carrying 1st-pass
+                // boundaries for one run, from a run that exits 0. The resident build survives
+                // it by never dropping anything, which is why this is new here rather than a
+                // defect being uncovered.
+                //
+                // RescoredFiles null means no rescore ran at all (the self-gated refill-only
+                // plan), and then no run has - or needs - a reconciled parquet: every one is
+                // rebuilt from its Stage 4 parquet plus its 1st-pass sidecar, repeatably. It is
+                // only a run that WAS rescored and has no current reconciled parquet that has
+                // state nothing on disk holds.
+                if (plan.RescoredFiles != null &&
+                    (plan.ReconciledPaths == null || !plan.ReconciledPaths.ContainsKey(fileName)))
+                {
+                    throw new InvalidDataException(string.Format(
+                        @"Second-pass join: run '{0}' has no current .scores-reconciled.parquet, " +
+                        @"so its re-scored survivors exist only in memory and the per-run fold " +
+                        @"cannot rebuild them. Stage 6 did not persist this run - it logged a " +
+                        @"warning when the write no-opped or failed. Re-run Stage 6 for it.",
+                        fileName));
+                }
+                // CLEARED here rather than relying on the caller having dropped the run.
+                // StreamFiles does drop it, but MaterializeFile leaves that to its caller, and
+                // the whole repeatability argument above rests on the list being empty - so the
+                // source establishes that itself instead of inheriting it from a call site.
+                entries.Clear();
+                // plan.Loader is non-null by construction: both plan branches are built from
+                // the same survivorLoader this method already refused to proceed without.
+                MaterializeRescoredFile(ctx, plan, fileName, entries);
+            };
+        }
+
+        /// <summary>
+        /// The plan <see cref="Run"/> parked, or a hard failure.
+        ///
+        /// <para>A pull before Run decided is a programming defect, not a case to guess at:
+        /// every guess available here - refill-only, or an overlay against paths not yet judged -
+        /// silently produces a wrong reported set rather than an error.</para>
+        /// </summary>
+        private RescoredPoolPlan PoolPlanForBuild()
+        {
+            if (_poolPlan == null)
             {
                 throw new InvalidOperationException(
                     @"RescoredEntries was pulled before PerFileRescoring decided how to build the survivor pool.");
             }
+            return _poolPlan;
+        }
+
+        private void BuildRescoredPool(PipelineContext ctx)
+        {
+            var plan = PoolPlanForBuild();
             if (plan.Loader == null)
                 return;
             var sw = Stopwatch.StartNew();

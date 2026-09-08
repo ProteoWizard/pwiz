@@ -2808,6 +2808,66 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The survivor-subset currency predicate
+        /// (<see cref="ParquetScoreCache.IsCurrentReconciledSurvivorSubset"/>), against real
+        /// artifacts rather than a hand-built footer.
+        ///
+        /// <para>It answers whether a reconciled parquet can be READ in the shape a per-run
+        /// survivor rebuild needs, and two callers ask it: the Stage 7 refusal that names the
+        /// stale files, and the admission that decides whether the second-pass join may fold a
+        /// run at a time. Both of them turn a wrong answer into a whole-cohort outcome - a run
+        /// admitted to a fold it then aborts, or an O(files) pool nobody asked for - so the
+        /// three states are pinned here: absent, present-without-the-marker (the Stage 4
+        /// original, which is exactly the file a path-derivation slip would hand it), and
+        /// present-and-current.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestIsCurrentReconciledSurvivorSubset()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_recon_current_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string originalPath = Path.Combine(dir, "sample1.scores.parquet");
+                string reconciledPath = Path.Combine(dir, "sample1.scores-reconciled.parquet");
+
+                // Absent: false, and no throw. This is the no-work state on a cold cohort, so it
+                // has to be an answer rather than an error.
+                Assert.IsFalse(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciledPath));
+
+                var original = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 3, 1, 2 })
+                    original.Add(MakeStreamEntry(id, id * 10.0));
+                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML");
+
+                // The Stage 4 original is a well-formed parquet with neither the marker nor the
+                // score_index column, and it must not pass: it is the file a stem-derivation
+                // slip substitutes, and its rows are the PRE-reconciliation ones.
+                Assert.IsFalse(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(originalPath));
+
+                // Written the way Stage 6 writes it - the marker in the footer, score_index in
+                // the schema - which is the only combination that passes.
+                var metadata = new Dictionary<string, string>
+                {
+                    { "osprey.reconciled", ParquetScoreCache.RECONCILED_SURVIVORS }
+                };
+                ParquetScoreCache.StreamReconciledScoresParquet(
+                    originalPath, reconciledPath, null, null, metadata, null, "f.mzML", null,
+                    null, null);
+                Assert.IsTrue(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciledPath));
+
+                // And it is the POSITIVE form of the interim-shape refusal, not a second
+                // opinion: a file this accepts is one that one rejects.
+                Assert.IsFalse(ParquetScoreCache.IsSubsetWithoutScoreIndex(reconciledPath));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch { /* best-effort */ }
+            }
+        }
+
+        /// <summary>
         /// Stage-6 streaming reconciled transfer: streaming the original parquet
         /// group-by-group with an overlay map + gap-fill list
         /// (<see cref="ParquetScoreCache.StreamReconciledScoresParquet"/>) is logically
