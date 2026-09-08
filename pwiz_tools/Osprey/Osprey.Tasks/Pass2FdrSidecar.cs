@@ -813,9 +813,65 @@ namespace pwiz.Osprey.Tasks
         private static IReadOnlyDictionary<uint, FdrExperimentRecord> LoadExperimentRecords(
             OspreyConfig config, FdrScoresSidecar.Pass pass)
         {
-            return LoadExperimentRecordsFrom(
-                FdrExperimentSidecar.PathFor(config?.OutputBlib,
-                    ScoringTaskShared.ArtifactSiblingPath(config), pass), pass);
+            string path = FdrExperimentSidecar.PathFor(config?.OutputBlib,
+                ScoringTaskShared.ArtifactSiblingPath(config), pass);
+            return LoadExperimentRecordsCached(path, pass);
+        }
+
+        /// <summary>
+        /// One deserialization per GENERATION of the experiment sidecar, rather than one per
+        /// call, keyed on the file's identity (path, length, last write) so a rewrite invalidates
+        /// the cache on its own.
+        ///
+        /// <para>The caller that needs this is the streamed pass-2 overlay: it resolves the
+        /// records inside a per-run hook, deliberately (see
+        /// <see cref="InstallStreamedPass2Overlay"/> - Stage 7 crosses the
+        /// no-scope-to-scope boundary partway through, so capturing once would freeze
+        /// pre-competition values into every later fold). On a resume where the competition is
+        /// skipped and no <c>Pass2ExperimentScope</c> is ever published, that per-call resolution
+        /// falls through to disk for EVERY run of EVERY <c>StreamFiles</c> pass - and Stage 7
+        /// makes many. At 446 runs that is O(runs x sidecar) deserialization of a file with 1.24 M
+        /// records, which is the shape this whole area exists to eliminate.</para>
+        ///
+        /// <para>Caching on identity rather than hoisting the call is what keeps the documented
+        /// semantics intact: protein FDR REWRITES this sidecar mid-Stage-7, and a rewrite changes
+        /// length or write time, so the next resolve re-reads. A plain hoist would have frozen the
+        /// pre-competition answer, which is the bug the per-call resolution was written to avoid.
+        /// One <c>FileInfo</c> stat per call replaces one full deserialization per call.</para>
+        /// </summary>
+        private static readonly object EXPERIMENT_CACHE_LOCK = new object();
+        private static string _experimentCacheKey;
+        private static IReadOnlyDictionary<uint, FdrExperimentRecord> _experimentCacheValue;
+
+        private static IReadOnlyDictionary<uint, FdrExperimentRecord> LoadExperimentRecordsCached(
+            string path, FdrScoresSidecar.Pass pass)
+        {
+            string key = null;
+            if (!string.IsNullOrEmpty(path))
+            {
+                var info = new FileInfo(path);
+                // A missing file gets no cache entry: LoadExperimentRecordsFrom owns that
+                // degrade, and caching "absent" would outlive the write that fixes it.
+                if (info.Exists)
+                {
+                    key = string.Format(@"{0}|{1}|{2}|{3}", path, info.Length,
+                        info.LastWriteTimeUtc.Ticks, (int)pass);
+                }
+            }
+            if (key == null)
+                return LoadExperimentRecordsFrom(path, pass);
+            lock (EXPERIMENT_CACHE_LOCK)
+            {
+                if (string.Equals(_experimentCacheKey, key, StringComparison.Ordinal))
+                    return _experimentCacheValue;
+            }
+            var loaded = LoadExperimentRecordsFrom(path, pass);
+            lock (EXPERIMENT_CACHE_LOCK)
+            {
+                _experimentCacheKey = key;
+                _experimentCacheValue = loaded;
+            }
+            return loaded;
         }
 
         /// <summary>

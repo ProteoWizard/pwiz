@@ -801,8 +801,15 @@ namespace pwiz.Osprey.IO
                         remaining -= take;
                         for (int rec = 0; rec < take; rec++)
                         {
+                            // Same answer as the mid-read failure above and the catch below, and
+                            // for the same reason: this was the third exit from the walk and the
+                            // only one that still returned false with records already applied.
+                            // A callback that rejects record N has left N-1 records on the
+                            // caller's entries, which is the half-pass-1/half-pass-2 state the
+                            // remarks below describe - and TryRead rejects on a missing entry id,
+                            // so it is reachable from a real sidecar, not just a hostile callback.
                             if (!onRecord(chunk, rec * RecordLength))
-                                return false;
+                                return delivered == 0 ? false : ThrowPartialWalk(path, delivered);
                             delivered++;
                         }
                     }
