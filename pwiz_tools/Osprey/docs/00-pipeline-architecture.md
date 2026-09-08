@@ -533,6 +533,41 @@ somewhere else now. Restoring the original path with a junction is the cheap fix
 that adds a second path to a hash removes relocatability for every run, not just
 entrapment ones.
 
+**P16. A report is a DERIVED VIEW over the artifacts, never an output only its producing
+phase can make.** Everything the diagnostics report says about a pass is a reduction over
+that pass's own sidecars, so the report must be derivable from those sidecars ALONE, after
+the fact, by a task that runs no analysis. Concretely, this has to work and has to stay
+working:
+
+> Run an analysis WITHOUT `--model-diagnostics`. Then run `--task ModelDiagnostics` on the
+> finished output directory. It produces the full report - both passes - by reading the
+> sidecars for the pass in question, and **re-runs no analysis of any kind**.
+
+A pass task may fold its own half opportunistically while the data is already in hand, and
+should: it is free there. But that is an OPTIMIZATION, not the definition, and it must never
+become the only route. When a report can only be produced by the phase that computed the
+numbers, three costs follow:
+
+* **Asking for the report costs a re-analysis.** The request is a reduction over files that
+  are already on disk, but it is priced as the phase that produced them. A cohort that
+  finished without the flag then pays hours to be described.
+* **The report inherits the memory shape of the phase, not of the reduction.** A view over
+  sidecars is O(distinct) by construction; a report welded to a phase inherits whatever that
+  phase holds resident. That is how a page of summary statistics can put a cohort out of
+  reach on a fixed-memory box - the report's own footprint is not the binding constraint,
+  the phase it is attached to is.
+* **The report cannot be regenerated after a format or presentation change.** The page's
+  evolution becomes gated on compute nobody should have to spend, so it stops evolving.
+
+Because each half is a reduction over its OWN pass's sidecars, the two passes are
+independently derivable and must be independently derivable - a missing pass-1 product is
+not a reason to refuse the pass-2 half, or the reverse.
+
+The test that proves P16 is not "the report appears": a re-analysis produces the right
+report too, silently and slowly. It is that the run **does no analysis** - assert the marker
+line naming the path taken, and hold the wall clock and memory band to the reduction's
+O(distinct) shape rather than the phase's.
+
 ---
 
 ## The sidecar file contract
