@@ -326,5 +326,27 @@ namespace pwiz.Skyline.Model.Results.Scoring {
                 return ResourceManager.GetString("pwiz.Skyline.Model.Results.Scoring.NextGenStandardSignalNoiseCalc", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Sum of pairwise Pearson correlations between transition XICs within peak boundaries (DIA-NN coelution_sum).
+        ///With N transitions there are N*(N-1)/2 pairs, so the score ranges from -N*(N-1)/2 to +N*(N-1)/2.
+        ///Calculated using analyte precursors..
+        /// </summary>
+        internal static string pwiz_Skyline_Model_Results_Scoring_SumCoelutionScoreCalc {
+            get {
+                return ResourceManager.GetString("pwiz.Skyline.Model.Results.Scoring.SumCoelutionScoreCalc", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Sum of pairwise Pearson correlations between transition XICs within peak boundaries (DIA-NN coelution_sum).
+        ///With N transitions there are N*(N-1)/2 pairs, so the score ranges from -N*(N-1)/2 to +N*(N-1)/2.
+        ///Calculated using internal standard precursors if they exist, otherwise analyte precursors..
+        /// </summary>
+        internal static string pwiz_Skyline_Model_Results_Scoring_DefaultSumCoelutionScoreCalc {
+            get {
+                return ResourceManager.GetString("pwiz.Skyline.Model.Results.Scoring.DefaultSumCoelutionScoreCalc", resourceCulture);
+            }
+        }
     }
 }

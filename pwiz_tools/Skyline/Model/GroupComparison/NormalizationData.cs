@@ -52,11 +52,13 @@ namespace pwiz.Skyline.Model.GroupComparison
         public static NormalizationData GetNormalizationData(SrmDocument document, bool treatMissingValuesAsZero,
             double? qValueCutoff)
         {
-            return GetNormalizationData(CancellationToken.None, new Parameters(document, treatMissingValuesAsZero, qValueCutoff));
+            return GetNormalizationData(new ProductionMonitor(CancellationToken.None, null),
+                new Parameters(document, treatMissingValuesAsZero, qValueCutoff));
         }
 
-        public static NormalizationData GetNormalizationData(CancellationToken cancellationToken, Parameters parameters)
+        public static NormalizationData GetNormalizationData(ProductionMonitor productionMonitor, Parameters parameters)
         {
+            var cancellationToken = productionMonitor.CancellationToken;
             var document = parameters.Document;
             if (!document.Settings.HasResults)
             {
@@ -122,6 +124,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                 }
             });
+
             return new NormalizationData(allFileData);
         }
 
@@ -281,8 +284,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         public static readonly Producer<Parameters, NormalizationData> PRODUCER =
-            Producer.FromFunction<Parameters, NormalizationData>((progressCallback, parameters) =>
-                GetNormalizationData(progressCallback.CancellationToken, parameters));
+            Producer.FromFunction<Parameters, NormalizationData>(GetNormalizationData);
         /// <summary>
         /// For the MS2 transitions, returns all the Area values for each of the Transitions for each of the replicates.
         /// For the MS1 transitions, returns the sum of the MS1 Area values for each of the replicates.
@@ -336,9 +338,6 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public class Parameters
         {
-            public Parameters(SrmDocument document) : this(document, false, null)
-            {
-            }
             public Parameters(SrmDocument document, bool treatMissingAsZero, double? qValueCutoff)
             {
                 Document = document;

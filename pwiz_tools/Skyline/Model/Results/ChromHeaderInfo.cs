@@ -2629,13 +2629,15 @@ namespace pwiz.Skyline.Model.Results
     }
 
 // ReSharper disable InconsistentNaming
-    public enum TransformChrom { raw, interpolated, craw2d, craw1d, savitzky_golay }
+    public enum TransformChrom { raw, interpolated, craw2d, craw1d, savitzky_golay, cwt }
 
     public static class TransformChromExtension
     {
         public static bool IsDerivative(this TransformChrom transformChrom)
         {
-            return transformChrom == TransformChrom.craw1d || transformChrom == TransformChrom.craw2d;
+            return transformChrom == TransformChrom.craw1d
+                || transformChrom == TransformChrom.craw2d
+                || transformChrom == TransformChrom.cwt;
         }
     }
 // ReSharper restore InconsistentNaming
@@ -2803,6 +2805,10 @@ namespace pwiz.Skyline.Model.Results
             {
                 return timeIntensities;
             }
+            if (transformChrom == TransformChrom.cwt)
+            {
+                return ApplyCwt(timeIntensities);
+            }
             timeIntensities = InterpolateTimeIntensities(timeIntensities);
             return TransformInterpolatedTimeIntensities(timeIntensities, transformChrom);
         }
@@ -2817,6 +2823,22 @@ namespace pwiz.Skyline.Model.Results
 
             return timeIntensities.Interpolate(rawTimeIntensitiesGroup.GetInterpolatedTimes(),
                 rawTimeIntensitiesGroup.InferZeroes);
+        }
+
+        private static TimeIntensities ApplyCwt(TimeIntensities timeIntensities)
+        {
+            var times = timeIntensities.Times;
+            if (times.Count < 3)
+                return timeIntensities;
+            // Estimate sigma from median time spacing * 5
+            var deltas = new double[times.Count - 1];
+            for (int i = 0; i < deltas.Length; i++)
+                deltas[i] = times[i + 1] - times[i];
+            Array.Sort(deltas);
+            double medianDelta = deltas[deltas.Length / 2];
+            double sigma = medianDelta * 5;
+            return timeIntensities.ChangeIntensities(
+                MexicanHatCwt(times, timeIntensities.Intensities, sigma));
         }
 
         public static TimeIntensities TransformInterpolatedTimeIntensities(TimeIntensities interpolatedTimeIntensities, TransformChrom transformChrom)
@@ -2989,17 +3011,27 @@ namespace pwiz.Skyline.Model.Results
             var timeIntensities = _timeIntensities;
             if (timeIntensities != null)
             {
-                if (transformChrom == TransformChrom.raw || _transformChrom == TransformChrom.craw1d || _transformChrom == TransformChrom.craw2d || _transformChrom == TransformChrom.savitzky_golay)
+                if (transformChrom == TransformChrom.raw || _transformChrom == TransformChrom.craw1d
+                    || _transformChrom == TransformChrom.craw2d || _transformChrom == TransformChrom.savitzky_golay
+                    || _transformChrom == TransformChrom.cwt)
                 {
                     throw new InvalidOperationException(string.Format(@"Cannot go from {0} to {1}", _transformChrom, transformChrom));
                 }
 
-                if (_transformChrom == TransformChrom.raw)
+                if (transformChrom == TransformChrom.cwt)
                 {
-                    timeIntensities = InterpolateTimeIntensities(timeIntensities);
+                    // CWT operates on raw data directly
+                    timeIntensities = ApplyCwt(timeIntensities);
                 }
+                else
+                {
+                    if (_transformChrom == TransformChrom.raw)
+                    {
+                        timeIntensities = InterpolateTimeIntensities(timeIntensities);
+                    }
 
-                timeIntensities = TransformInterpolatedTimeIntensities(timeIntensities, transformChrom);
+                    timeIntensities = TransformInterpolatedTimeIntensities(timeIntensities, transformChrom);
+                }
             }
             _transformChrom = transformChrom;
             _timeIntensities = timeIntensities;
@@ -3035,6 +3067,61 @@ namespace pwiz.Skyline.Model.Results
             }
             Array.Copy(intRaw, intRaw.Length - 4, intSmooth, intSmooth.Length - 4, 4);
             return intSmooth;
+        }
+
+        /// <summary>
+        /// Computes the Continuous Wavelet Transform using the Mexican Hat (Ricker) wavelet
+        /// on non-uniformly spaced time/intensity data via numerical quadrature.
+        /// </summary>
+        public static float[] MexicanHatCwt(IList<float> times, IList<float> intensities, double sigma)
+        {
+            int n = times.Count;
+            if (n < 3 || sigma <= 0)
+                return intensities.ToArray();
+
+            var output = new float[n];
+            double cutoff = 5 * sigma;
+
+            // Precompute midpoint-rule quadrature weights (dt for each point)
+            var weights = new double[n];
+            weights[0] = (times[1] - times[0]) / 2.0;
+            for (int i = 1; i < n - 1; i++)
+            {
+                weights[i] = (times[i + 1] - times[i - 1]) / 2.0;
+            }
+            weights[n - 1] = (times[n - 1] - times[n - 2]) / 2.0;
+
+            for (int i = 0; i < n; i++)
+            {
+                double b = times[i];
+                double sum = 0;
+
+                // Search backward from i for points within cutoff
+                for (int j = i; j >= 0; j--)
+                {
+                    double dt = b - times[j];
+                    if (dt > cutoff)
+                        break;
+                    double t = dt / sigma;
+                    double psi = (1 - t * t) * Math.Exp(-t * t / 2);
+                    sum += intensities[j] * psi * weights[j];
+                }
+
+                // Search forward from i+1 for points within cutoff
+                for (int j = i + 1; j < n; j++)
+                {
+                    double dt = times[j] - b;
+                    if (dt > cutoff)
+                        break;
+                    double t = -dt / sigma;
+                    double psi = (1 - t * t) * Math.Exp(-t * t / 2);
+                    sum += intensities[j] * psi * weights[j];
+                }
+
+                output[i] = (float)sum;
+            }
+
+            return output;
         }
 
         public int IndexOfNearestTime(float time)

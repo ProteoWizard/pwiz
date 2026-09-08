@@ -187,6 +187,30 @@
   <data name="graphTypeToolStripMenuItem.Text" xml:space="preserve">
     <value>Graph Type</value>
   </data>
+  <data name="multiPeptideDisplayMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="multiPeptideDisplayMenuItem.Text" xml:space="preserve">
+    <value>Multi-Peptide Display</value>
+  </data>
+  <data name="lineMultiPeptideDisplayMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="lineMultiPeptideDisplayMenuItem.Text" xml:space="preserve">
+    <value>Line</value>
+  </data>
+  <data name="clusterMultiPeptideDisplayMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="clusterMultiPeptideDisplayMenuItem.Text" xml:space="preserve">
+    <value>Cluster</value>
+  </data>
+  <data name="aggregateMultiPeptideDisplayMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="aggregateMultiPeptideDisplayMenuItem.Text" xml:space="preserve">
+    <value>Aggregate</value>
+  </data>
   <data name="areaNormalizeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
@@ -448,6 +472,30 @@
   <data name="&gt;&gt;lineAreaGraphDisplayTypeMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;multiPeptideDisplayMenuItem.Name" xml:space="preserve">
+    <value>multiPeptideDisplayMenuItem</value>
+  </data>
+  <data name="&gt;&gt;multiPeptideDisplayMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lineMultiPeptideDisplayMenuItem.Name" xml:space="preserve">
+    <value>lineMultiPeptideDisplayMenuItem</value>
+  </data>
+  <data name="&gt;&gt;lineMultiPeptideDisplayMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;clusterMultiPeptideDisplayMenuItem.Name" xml:space="preserve">
+    <value>clusterMultiPeptideDisplayMenuItem</value>
+  </data>
+  <data name="&gt;&gt;clusterMultiPeptideDisplayMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;aggregateMultiPeptideDisplayMenuItem.Name" xml:space="preserve">
+    <value>aggregateMultiPeptideDisplayMenuItem</value>
+  </data>
+  <data name="&gt;&gt;aggregateMultiPeptideDisplayMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;areaNormalizeContextMenuItem.Name" xml:space="preserve">
     <value>areaNormalizeContextMenuItem</value>
   </data>
@@ -638,6 +686,111 @@
     <value>relativeAbundanceFormattingMenuItem</value>
   </data>
   <data name="&gt;&gt;relativeAbundanceFormattingMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="areaRtLoessContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaRtLoessContextMenuItem.Text" xml:space="preserve">
+    <value>RT LOESS Curves</value>
+  </data>
+  <data name="rtLoessShowValueContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="rtLoessShowValueContextMenuItem.Text" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="rtLoessShowMedianMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
+  </data>
+  <data name="rtLoessShowMedianMenuItem.Text" xml:space="preserve">
+    <value>Median</value>
+  </data>
+  <data name="rtLoessShowNormalizationFactorMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
+  </data>
+  <data name="rtLoessShowNormalizationFactorMenuItem.Text" xml:space="preserve">
+    <value>Normalization Factor</value>
+  </data>
+  <data name="rtLoessShowNormalizedMedianMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
+  </data>
+  <data name="rtLoessShowNormalizedMedianMenuItem.Text" xml:space="preserve">
+    <value>Normalized Median</value>
+  </data>
+  <data name="rtLoessShowSeparator.Size" type="System.Drawing.Size, System.Drawing">
+    <value>197, 6</value>
+  </data>
+  <data name="rtLoessShowLegendMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
+  </data>
+  <data name="rtLoessShowLegendMenuItem.Text" xml:space="preserve">
+    <value>Legend</value>
+  </data>
+  <data name="rtLoessShowPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
+  </data>
+  <data name="rtLoessShowPeptidesMenuItem.Text" xml:space="preserve">
+    <value>Peptides</value>
+  </data>
+  <data name="rtLoessShowAdaptiveAlphaMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
+  </data>
+  <data name="rtLoessShowAdaptiveAlphaMenuItem.Text" xml:space="preserve">
+    <value>Adaptive Alpha</value>
+  </data>
+  <data name="&gt;&gt;areaRtLoessContextMenuItem.Name" xml:space="preserve">
+    <value>areaRtLoessContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaRtLoessContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowValueContextMenuItem.Name" xml:space="preserve">
+    <value>rtLoessShowValueContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowValueContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowMedianMenuItem.Name" xml:space="preserve">
+    <value>rtLoessShowMedianMenuItem</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowMedianMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowNormalizationFactorMenuItem.Name" xml:space="preserve">
+    <value>rtLoessShowNormalizationFactorMenuItem</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowNormalizationFactorMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowNormalizedMedianMenuItem.Name" xml:space="preserve">
+    <value>rtLoessShowNormalizedMedianMenuItem</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowNormalizedMedianMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowSeparator.Name" xml:space="preserve">
+    <value>rtLoessShowSeparator</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowSeparator.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowLegendMenuItem.Name" xml:space="preserve">
+    <value>rtLoessShowLegendMenuItem</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowLegendMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowPeptidesMenuItem.Name" xml:space="preserve">
+    <value>rtLoessShowPeptidesMenuItem</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowPeptidesMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowAdaptiveAlphaMenuItem.Name" xml:space="preserve">
+    <value>rtLoessShowAdaptiveAlphaMenuItem</value>
+  </data>
+  <data name="&gt;&gt;rtLoessShowAdaptiveAlphaMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

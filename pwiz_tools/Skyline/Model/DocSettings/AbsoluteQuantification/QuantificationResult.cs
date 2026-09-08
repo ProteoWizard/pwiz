@@ -42,6 +42,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             });
         }
 
+        public string SummarizationMethod { get; private set; }
+
         [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         [ChildDisplayName("CalculatedConcentration{0}")]
         public AnnotatedDouble CalculatedConcentration { get; private set; }

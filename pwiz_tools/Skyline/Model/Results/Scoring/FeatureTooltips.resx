@@ -196,4 +196,14 @@ Calculated using analyte precursors.</value>
     <value>Log of the ratio of the peak height to the median intensity beyond the bounds of the peak.
 Calculated using internal standard precursors.</value>
   </data>
+  <data name="pwiz.Skyline.Model.Results.Scoring.SumCoelutionScoreCalc" xml:space="preserve">
+    <value>Sum of pairwise Pearson correlations between transition XICs within peak boundaries (DIA-NN coelution_sum).
+With N transitions there are N*(N-1)/2 pairs, so the score ranges from -N*(N-1)/2 to +N*(N-1)/2.
+Calculated using analyte precursors.</value>
+  </data>
+  <data name="pwiz.Skyline.Model.Results.Scoring.DefaultSumCoelutionScoreCalc" xml:space="preserve">
+    <value>Sum of pairwise Pearson correlations between transition XICs within peak boundaries (DIA-NN coelution_sum).
+With N transitions there are N*(N-1)/2 pairs, so the score ranges from -N*(N-1)/2 to +N*(N-1)/2.
+Calculated using internal standard precursors if they exist, otherwise analyte precursors.</value>
+  </data>
 </root>

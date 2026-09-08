@@ -294,6 +294,7 @@
           <xs:attribute name="max_loq_cv" type="xs:double" />
           <xs:attribute name="qualitative_ion_ratio_threshold" type="xs:double" />
           <xs:attribute name="simple_ratios" type="xs:boolean" />
+          <xs:attribute name="summarization_method" type="xs:string"/>
         </xs:complexType>
       </xs:element>
       <xs:element name="protein_association" minOccurs="0" maxOccurs="1">

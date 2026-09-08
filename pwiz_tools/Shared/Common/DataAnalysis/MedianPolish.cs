@@ -30,6 +30,13 @@ namespace pwiz.Common.DataAnalysis
     /// </summary>
     public class MedianPolish
     {
+        /// <summary>
+        /// Median polish using the legacy convergence criterion: stop once the sum of
+        /// absolute residuals changes by less than 1% between iterations, or after 10
+        /// iterations. This stopping rule can quit before the additive decomposition has
+        /// stabilized; prefer <see cref="GetConvergedMedianPolish(double?[,])"/> for new
+        /// code. Retained for the original MSstats-style group comparison summarization.
+        /// </summary>
         public static MedianPolish GetMedianPolish(double?[,] matrix)
         {
             return GetMedianPolish(matrix, 0.01, 10);
@@ -85,22 +92,92 @@ namespace pwiz.Common.DataAnalysis
             };
         }
 
+        /// <summary>
+        /// Median polish that iterates until the residuals stop changing, matching
+        /// R's stats::medpolish (and skyline-prism's tukey_median_polish): up to 20
+        /// iterations, stopping once no residual changes by more than 1e-4 between
+        /// iterations. The additive decomposition produced by median polish depends on
+        /// how many sweeps are performed, so the looser stopping rule in
+        /// <see cref="GetMedianPolish(double?[,])"/> can return a different
+        /// overall/row/column split for slowly-converging matrices.
+        /// </summary>
+        public static MedianPolish GetConvergedMedianPolish(double?[,] matrix)
+        {
+            return GetConvergedMedianPolish(matrix, 1e-4, 20);
+        }
+
+        public static MedianPolish GetConvergedMedianPolish(double?[,] matrix, double tolerance, int maxIterations)
+        {
+            int rowCount = matrix.GetLength(0);
+            int columnCount = matrix.GetLength(1);
+            double overallConstant = 0;
+            Vector<double> rowEffects = new DenseVector(rowCount);
+            Vector<double> columnEffects = new DenseVector(columnCount);
+            double?[,] residuals = (double?[,]) matrix.Clone();
+            for (int iteration = 0; iteration < maxIterations; iteration++)
+            {
+                double?[,] previousResiduals = (double?[,]) residuals.Clone();
+                for (int iRow = 0; iRow < rowCount; iRow++)
+                {
+                    double median = GetRow(residuals, iRow).Median();
+                    SetRow(residuals, iRow, GetRow(residuals, iRow).Select(value => value - median));
+                    rowEffects[iRow] += median;
+                }
+                double cDelta = columnEffects.Median();
+                columnEffects = columnEffects.Subtract(cDelta);
+                overallConstant += cDelta;
+                for (int iCol = 0; iCol < columnCount; iCol++)
+                {
+                    double median = GetColumn(residuals, iCol).Median();
+                    SetColumn(residuals, iCol, GetColumn(residuals, iCol).Select(value => value - median));
+                    columnEffects[iCol] += median;
+                }
+                double rDelta = rowEffects.Median();
+                rowEffects = rowEffects.Subtract(rDelta);
+                overallConstant += rDelta;
+                double maxChange = 0;
+                for (int iRow = 0; iRow < rowCount; iRow++)
+                {
+                    for (int iCol = 0; iCol < columnCount; iCol++)
+                    {
+                        double change = Math.Abs(residuals[iRow, iCol].GetValueOrDefault() -
+                                                 previousResiduals[iRow, iCol].GetValueOrDefault());
+                        if (change > maxChange)
+                        {
+                            maxChange = change;
+                        }
+                    }
+                }
+                if (maxChange < tolerance)
+                {
+                    break;
+                }
+            }
+            return new MedianPolish
+            {
+                ColumnEffects = columnEffects.ToArray(),
+                OverallConstant = overallConstant,
+                Residuals = residuals,
+                RowEffects = rowEffects.ToArray()
+            };
+        }
+
         public double OverallConstant { get; set; }
         public double[] RowEffects { get; set; }
         public double[] ColumnEffects { get; set; }
         public double?[,] Residuals { get; set; }
 
-        public static IEnumerable<double?> GetRow(double?[,] matrix, int rowIndex)
+        private static IEnumerable<double?> GetRow(double?[,] matrix, int rowIndex)
         {
             return Enumerable.Range(0, matrix.GetLength(1)).Select(colIndex => matrix[rowIndex, colIndex]);
         }
 
-        public static IEnumerable<double?> GetColumn(double?[,] matrix, int columnIndex)
+        private static IEnumerable<double?> GetColumn(double?[,] matrix, int columnIndex)
         {
             return Enumerable.Range(0, matrix.GetLength(0)).Select(rowIndex => matrix[rowIndex, columnIndex]);
         }
 
-        public static void SetRow(double?[,] matrix, int rowIndex, IEnumerable<double?> values)
+        private static void SetRow(double?[,] matrix, int rowIndex, IEnumerable<double?> values)
         {
             int iCol = 0;
             foreach (var value in values)
@@ -110,7 +187,7 @@ namespace pwiz.Common.DataAnalysis
             }
         }
 
-        public static void SetColumn(double?[,] matrix, int colIndex, IEnumerable<double?> values)
+        private static void SetColumn(double?[,] matrix, int colIndex, IEnumerable<double?> values)
         {
             int iRow = 0;
             foreach (var value in values)
