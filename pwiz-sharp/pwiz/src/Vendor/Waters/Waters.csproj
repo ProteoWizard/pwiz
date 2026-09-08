@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Vendor.Waters</RootNamespace>
     <AssemblyName>Pwiz.Vendor.Waters</AssemblyName>
     <Description>Waters MassLynx (.raw) reader. P/Invoke bindings for Waters' native MassLynxRaw.dll.</Description>

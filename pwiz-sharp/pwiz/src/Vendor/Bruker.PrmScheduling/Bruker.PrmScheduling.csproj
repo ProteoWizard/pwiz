@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Vendor.Bruker.PrmScheduling</RootNamespace>
     <AssemblyName>Pwiz.Vendor.Bruker.PrmScheduling</AssemblyName>
     <Description>Bruker timsTOF PRM scheduling. P/Invoke bindings for Bruker's native prmscheduler.dll (shipped with pwiz at pwiz/utility/bindings/CLI/timstof_prm_scheduler/x64/). Managed replacement for the legacy C++/CLI pwiz.CLI.Bruker.PrmScheduling assembly so Skyline can consume the same API on .NET 8.</Description>

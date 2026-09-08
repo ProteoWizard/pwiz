@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Vendor.Thermo</RootNamespace>
     <AssemblyName>Pwiz.Vendor.Thermo</AssemblyName>
     <Description>Thermo .raw reader. Uses ThermoFisher.CommonCore Net8 assemblies (cross-platform).</Description>

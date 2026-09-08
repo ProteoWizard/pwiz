@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Data.MsData</RootNamespace>
     <AssemblyName>Pwiz.Data.MsData</AssemblyName>
     <Description>MSData model, mzML/mzXML serialization, simple text formats. Port of pwiz/data/msdata.</Description>

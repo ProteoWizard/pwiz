@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Vendor.UIMF</RootNamespace>
     <AssemblyName>Pwiz.Vendor.UIMF</AssemblyName>
     <Description>PNNL Unified Ion Mobility File (.uimf) reader. References the open-source

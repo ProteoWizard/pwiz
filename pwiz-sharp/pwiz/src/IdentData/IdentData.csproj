@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Data.IdentData</RootNamespace>
     <AssemblyName>Pwiz.Data.IdentData</AssemblyName>
     <Description>mzIdentML / pepXML data model and serialization. Port of pwiz/data/identdata.</Description>

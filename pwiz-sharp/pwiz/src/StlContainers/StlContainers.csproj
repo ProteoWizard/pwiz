@@ -13,6 +13,9 @@
   -->
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
+    <PackageId>Pwiz.StlContainers</PackageId>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>System.Collections.Generic</RootNamespace>
     <AssemblyName>StlContainers</AssemblyName>

@@ -13,6 +13,11 @@
        Sciex.csproj. -->
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. Runtime-only: the assembly
+         travels as copy-to-output content, never as a compile reference (see build\PwizPack.targets). -->
+    <IsPackable>true</IsPackable>
+    <PackageId>Pwiz.Vendor.Sciex.OfxLoggingStub</PackageId>
+    <PwizPackRuntimeOnly>true</PwizPackRuntimeOnly>
     <TargetFramework>net10.0</TargetFramework>
     <!-- Critical: assembly name must be exactly "OFX.Logging" for OFX's
          Type.GetType("...,OFX.Logging") lookup to find it. -->

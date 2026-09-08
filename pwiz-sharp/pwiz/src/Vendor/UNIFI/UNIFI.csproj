@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Vendor.UNIFI</RootNamespace>
     <AssemblyName>Pwiz.Vendor.UNIFI</AssemblyName>
     <Description>Waters UNIFI / waters_connect HTTP-API reader. Speaks the

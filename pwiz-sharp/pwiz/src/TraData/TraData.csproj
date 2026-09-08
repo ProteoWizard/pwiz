@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Data.TraData</RootNamespace>
     <AssemblyName>Pwiz.Data.TraData</AssemblyName>
     <Description>TraML data model and serialization (SRM/MRM transition lists). Port of pwiz/data/tradata.</Description>

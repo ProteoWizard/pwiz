@@ -1,0 +1,120 @@
+<Project>
+
+  <!-- How a project consumes ProteoWizard.
+
+       The consumer lists the packages it wants and imports this file:
+
+         <PropertyGroup>
+           <PwizReferences>Pwiz.All;Pwiz.Vendor.Bruker.PrmScheduling</PwizReferences>
+         </PropertyGroup>
+         <Import Project="$(PwizSharpRoot)build\PwizConsumer.targets" />
+
+       Names are package ids from build\PwizPackageSet.props. Pwiz.All expands to the full data
+       layer plus every vendor reader. Each name becomes
+
+         * a PackageReference to the package this tree built (pwiz-sharp\build.bat packs them into
+           artifacts\nuget\feed; nuget.config at the repo root pins Pwiz.* to that feed), or
+         * a ProjectReference to the csproj when UsePwizSharpProjects=true - the escape hatch for
+           someone editing ProteoWizard and a consumer together, who wants F5 to rebuild both.
+           Put <UsePwizSharpProjects>true</UsePwizSharpProjects> in pwiz-sharp\Directory.Build.user.props
+           (gitignored) to make that the default on a machine. Switching modes changes the restore
+           graph, so the next build restores again.
+
+       Either way the consumer also gets:
+
+         * NO_VENDOR_SUPPORT when the ProteoWizard it links against was compiled without the
+           vendor SDKs (the packages record how they were built; the projects read
+           IAgreeToVendorLicenses), so code that touches SDK-only types compiles out the same
+           way pwiz-sharp's own does;
+         * a build error if the packages came from a different checkout than the consumer.
+           Every developer keeps several pwiz trees; a package from tree A must never build
+           tree B's Skyline. The packages carry the absolute path of the tree that produced
+           them (PwizSharpSourceTree, in Pwiz.Util's build props) and it must match this one.
+
+       Implementation note: everything below runs at evaluation time (ProjectReference and
+       PackageReference must exist before restore), where MSBuild allows no custom metadata in
+       conditions. Selection is therefore done with item functions and Include/Exclude set
+       arithmetic on item identities. -->
+
+  <Import Project="$(MSBuildThisFileDirectory)PwizPackageSet.props" />
+
+  <PropertyGroup>
+    <UsePwizSharpProjects Condition="'$(UsePwizSharpProjects)' == ''">false</UsePwizSharpProjects>
+    <!-- The feed holds exactly one version at a time (the pack step clears it), so a floating
+         version always resolves to the ProteoWizard this tree built last. Major.minor comes
+         from pwiz-sharp\Directory.Build.props when it is in scope. -->
+    <PwizPackageVersion Condition="'$(PwizPackageVersion)' == '' And '$(PwizSharpVersionMajor)' != ''">$(PwizSharpVersionMajor).$(PwizSharpVersionMinor).*</PwizPackageVersion>
+    <PwizPackageVersion Condition="'$(PwizPackageVersion)' == ''">*</PwizPackageVersion>
+    <!-- Tree root of the consumer, for the tripwire. Both pwiz-sharp\Directory.Build.props and
+         pwiz_tools\Directory.Build.props define PwizRepoRoot. -->
+    <PwizConsumerRepoRoot Condition="'$(PwizConsumerRepoRoot)' == ''">$(PwizRepoRoot)</PwizConsumerRepoRoot>
+    <!-- The request with all whitespace removed: a plain ;-separated list of ids. -->
+    <_PwizRefList>$([System.Text.RegularExpressions.Regex]::Replace('$(PwizReferences)', '\s+', ''))</_PwizRefList>
+    <_PwizWantAll>false</_PwizWantAll>
+    <_PwizWantAll Condition="$([System.String]::new(';$(_PwizRefList);').Contains(';Pwiz.All;'))">true</_PwizWantAll>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Requested ids: the list itself, plus the Pwiz.All members when Pwiz.All was named. -->
+    <_PwizRequested Include="$(_PwizRefList)" />
+    <_PwizRequested Include="@(PwizPackage->WithMetadataValue('InAll','true'))" Condition="'$(_PwizWantAll)' == 'true'" />
+    <_PwizRequested Remove="Pwiz.All" />
+    <!-- Names that are not packages (reported by PwizValidateReferences). -->
+    <_PwizUnknown Include="@(_PwizRequested)" Exclude="@(PwizPackage)" />
+    <!-- Selected = PwizPackage minus (PwizPackage minus requested): keeps the PwizPackage
+         metadata, dedupes, and ignores the unknown names. -->
+    <_PwizNotSelected Include="@(PwizPackage)" Exclude="@(_PwizRequested)" />
+    <_PwizSelected Include="@(PwizPackage)" Exclude="@(_PwizNotSelected)" />
+  </ItemGroup>
+
+  <!-- Package form -->
+  <ItemGroup Condition="'$(UsePwizSharpProjects)' != 'true'">
+    <PackageReference Include="@(_PwizSelected)" Version="$(PwizPackageVersion)" />
+  </ItemGroup>
+
+  <!-- Project form. Runtime-only plugins keep the shape their consumers use today:
+       built first, output copied, assembly never referenced. -->
+  <ItemGroup Condition="'$(UsePwizSharpProjects)' == 'true'">
+    <ProjectReference Include="@(_PwizSelected->WithMetadataValue('RuntimeOnly','false')->'%(ProjectPath)')" />
+    <ProjectReference Include="@(_PwizSelected->WithMetadataValue('RuntimeOnly','true')->'%(ProjectPath)')"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="Content"
+                      CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Vendor flavour, from whichever source is authoritative for the mode. -->
+  <PropertyGroup>
+    <PwizVendorSupport Condition="'$(UsePwizSharpProjects)' == 'true' And '$(IAgreeToVendorLicenses)' == 'true'">true</PwizVendorSupport>
+    <PwizVendorSupport Condition="'$(UsePwizSharpProjects)' != 'true'">$(PwizSharpVendorSupport)</PwizVendorSupport>
+    <PwizVendorSupport Condition="'$(PwizVendorSupport)' == ''">false</PwizVendorSupport>
+    <PwizNativeVendorSupport Condition="'$(UsePwizSharpProjects)' == 'true' And '$(NativeVendorsAvailable)' == 'true'">true</PwizNativeVendorSupport>
+    <PwizNativeVendorSupport Condition="'$(UsePwizSharpProjects)' != 'true'">$(PwizSharpNativeVendorSupport)</PwizNativeVendorSupport>
+    <PwizNativeVendorSupport Condition="'$(PwizNativeVendorSupport)' == ''">false</PwizNativeVendorSupport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(PwizVendorSupport)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Unknown names fail early, at restore, with the list of valid ones. -->
+  <Target Name="PwizValidateReferences" BeforeTargets="CollectPackageReferences;BeforeBuild">
+    <Error Condition="'@(_PwizUnknown)' != ''"
+           Text="PwizReferences names '@(_PwizUnknown)', which is not a ProteoWizard package. Valid names: @(PwizPackage, ', ')." />
+    <Error Condition="'@(_PwizSelected)' == ''"
+           Text="PwizReferences is empty. List the ProteoWizard packages this project needs before importing PwizConsumer.targets." />
+  </Target>
+
+  <!-- Tripwire: packages from another checkout. PwizSharpSourceTree arrives through Pwiz.Util's
+       build props once the packages are restored; before the first restore it is empty and the
+       check is skipped (restore itself will fail loudly if the feed is empty). -->
+  <Target Name="PwizCheckPackageSourceTree"
+          BeforeTargets="CoreCompile"
+          Condition="'$(UsePwizSharpProjects)' != 'true' And '$(PwizSharpSourceTree)' != '' And '$(PwizConsumerRepoRoot)' != ''">
+    <PropertyGroup>
+      <_PwizPackageTree>$([MSBuild]::NormalizeDirectory('$(PwizSharpSourceTree)').ToLowerInvariant())</_PwizPackageTree>
+      <_PwizThisTree>$([MSBuild]::NormalizeDirectory('$(PwizConsumerRepoRoot)').ToLowerInvariant())</_PwizThisTree>
+    </PropertyGroup>
+    <Error Condition="'$(_PwizPackageTree)' != '$(_PwizThisTree)'"
+           Text="The ProteoWizard packages restored for $(MSBuildProjectName) were built from '$(PwizSharpSourceTree)', not from this tree ('$(PwizConsumerRepoRoot)'). Run pwiz-sharp\build.bat in this tree to rebuild its feed, then build again." />
+  </Target>
+
+</Project>

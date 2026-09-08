@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Vendor.Mobilion</RootNamespace>
     <AssemblyName>Pwiz.Vendor.Mobilion</AssemblyName>
     <Description>MOBILion .mbi (HDF5) reader. P/Invokes a small C wrapper (MobilionShim.dll)

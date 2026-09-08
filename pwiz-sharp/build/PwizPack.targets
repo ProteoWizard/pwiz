@@ -1,0 +1,140 @@
+<Project>
+
+  <!-- Packaging for the ProteoWizard libraries (imported by pwiz-sharp\Directory.Build.targets
+       for every project with IsPackable=true; see build\PwizPackageSet.props for the set).
+
+       The goal is that a project consuming the package ends up with the SAME files in its output
+       directory as a project consuming the csproj through ProjectReference gets today. Three kinds
+       of file reach a consumer through ProjectReference, and each is mapped to a package asset:
+
+         1. The project's own assembly (+pdb, +xml)         -> lib\<tfm>\          (SDK default)
+         2. Copy-local <Reference> assemblies, i.e. the      -> contentFiles\any\<tfm>\<file>
+            vendor SDKs extracted from the encrypted archives    (copyToOutput, no compile reference)
+         3. Content/None items with CopyToOutputDirectory    -> contentFiles\any\<tfm>\<TargetPath>
+            (native DLLs, license.key, 7za.exe, the VC90       (copyToOutput, subfolders kept)
+            side-by-side folders, .config files, ...)
+
+       2 and 3 are collected AFTER the build from the same item lists MSBuild copies to bin\, so
+       nothing here has to be kept in sync with the per-vendor csproj: whatever a vendor project
+       stages next to its assembly today, its package delivers to consumers tomorrow. That is
+       deliberately more than ProjectReference propagates - a vendor project's copy-local
+       reference only reaches a consumer if the compiled assembly happens to reference it, which
+       is how Thermo's BackgroundSubtraction/MassPrecisionEstimator helper DLLs went missing
+       from Skyline's output (TODO-20260907_pwiz_local_nuget.md, Phase 1 findings).
+
+       contentFiles rather than runtimes\<rid>\native for the natives: consumers do not build
+       RID-specific, several vendor SDKs resolve their own files relative to the executable, and
+       Skyline already learned that files linked under runtimes\ do not deploy into consuming
+       bins. contentFiles land flat (or in their declared subfolder) next to the consumer's
+       exe, exactly where ProjectReference put them. Package assets flow transitively, so a
+       test project that references Skyline that references the wrapper still gets them. -->
+
+  <PropertyGroup>
+    <PackageOutputPath>$(PwizPackageFeedDir)</PackageOutputPath>
+    <!-- pdbs travel in lib\ next to the assembly so stepping into ProteoWizard source works
+         from a consumer: the source is in this same tree, at the paths the pdb records. -->
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <IncludeSymbols>false</IncludeSymbols>
+    <!-- Package ids are meaningful only inside this tree; nobody publishes them. -->
+    <PackageProjectUrl>https://proteowizard.sourceforge.io/</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <!-- NU5100: "assembly outside lib\" - intended, that is how the vendor SDKs and plugin
+         assemblies are shipped (see header). NU5128: a package with no lib\ for the TFM
+         (Pwiz.All, the runtime-only plugins). -->
+    <!-- The SDK would also pack every Content item on its own (into content AND contentFiles,
+         without copyToOutput). PwizCollectRuntimeAssets below is the one mechanism, so turn
+         that off; the duplicate-file warning that remains (NU5118) is the same vendor file
+         listed both as a copy-local Reference and as Content, e.g. Agilent's BaseTof.dll or
+         Sciex's Clearcore2.Data.dll - identical bytes, first one wins, harmless. -->
+    <IncludeContentInPack>false</IncludeContentInPack>
+    <NoWarn>$(NoWarn);NU5100;NU5118;NU5128</NoWarn>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PwizCollectRuntimeAssets</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <!-- Runtime-only plugins (PwizPackRuntimeOnly=true in the csproj): the assembly is content,
+       not lib, so a consumer copies it without referencing it. -->
+  <PropertyGroup Condition="'$(PwizPackRuntimeOnly)' == 'true'">
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <Target Name="PwizCollectRuntimeAssets" DependsOnTargets="ResolveReferences;AssignTargetPaths">
+    <PropertyGroup>
+      <_PwizContentRoot>contentFiles\any\$(TargetFramework)\</_PwizContentRoot>
+    </PropertyGroup>
+    <ItemGroup>
+      <!-- 2. Copy-local <Reference> assemblies. Package assets carry NuGetPackageId and arrive
+              through the consumer's own restore; ProjectReference outputs (and the files RAR
+              finds through them) are the other packages' business. What is left is this
+              project's own HintPath references and their dependencies. -->
+      <_PwizRefAsset Include="@(ReferenceCopyLocalPaths)"
+                     Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' == '' And '%(ReferenceCopyLocalPaths.ReferenceSourceTarget)' != 'ProjectReference'" />
+      <TfmSpecificPackageFile Include="@(_PwizRefAsset)">
+        <PackagePath>$(_PwizContentRoot)%(_PwizRefAsset.DestinationSubDirectory)%(Filename)%(Extension)</PackagePath>
+        <BuildAction>None</BuildAction>
+        <PackageCopyToOutput>true</PackageCopyToOutput>
+        <PackageFlatten>false</PackageFlatten>
+      </TfmSpecificPackageFile>
+
+      <!-- 3. Content and None items the project copies to its own output. TargetPath is the
+              Link (or the relative path), so subfolders such as Microsoft.VC90.CRT\ survive. -->
+      <_PwizCopyAsset Include="@(ContentWithTargetPath)"
+                      Condition="'%(ContentWithTargetPath.CopyToOutputDirectory)' == 'PreserveNewest' Or '%(ContentWithTargetPath.CopyToOutputDirectory)' == 'Always'" />
+      <_PwizCopyAsset Include="@(_NoneWithTargetPath)"
+                      Condition="'%(_NoneWithTargetPath.CopyToOutputDirectory)' == 'PreserveNewest' Or '%(_NoneWithTargetPath.CopyToOutputDirectory)' == 'Always'" />
+      <TfmSpecificPackageFile Include="@(_PwizCopyAsset)">
+        <PackagePath>$(_PwizContentRoot)%(_PwizCopyAsset.TargetPath)</PackagePath>
+        <BuildAction>None</BuildAction>
+        <PackageCopyToOutput>true</PackageCopyToOutput>
+        <PackageFlatten>false</PackageFlatten>
+      </TfmSpecificPackageFile>
+
+      <!-- Runtime-only plugin: the assembly itself as content. -->
+      <_PwizPluginAsset Include="$(TargetPath)" Condition="'$(PwizPackRuntimeOnly)' == 'true'" />
+      <_PwizPluginAsset Include="$(TargetDir)$(TargetName).pdb" Condition="'$(PwizPackRuntimeOnly)' == 'true' And Exists('$(TargetDir)$(TargetName).pdb')" />
+      <TfmSpecificPackageFile Include="@(_PwizPluginAsset)">
+        <PackagePath>$(_PwizContentRoot)%(Filename)%(Extension)</PackagePath>
+        <BuildAction>None</BuildAction>
+        <PackageCopyToOutput>true</PackageCopyToOutput>
+        <PackageFlatten>false</PackageFlatten>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+
+    <Message Importance="normal" Text="$(PackageId): packing @(_PwizRefAsset->Count()) reference assets, @(_PwizCopyAsset->Count()) content assets" />
+  </Target>
+
+  <!-- Facts about the build that produced the packages, delivered to every consumer as MSBuild
+       properties. They ride in Pwiz.Util because every other package depends on it and build\
+       props flow transitively through the package graph. PwizConsumer.targets reads them:
+         PwizSharpVendorSupport / PwizSharpNativeVendorSupport - which way the vendor projects
+             were compiled, so a consumer can mirror NO_VENDOR_SUPPORT instead of guessing
+         PwizSharpSourceTree - the tripwire: a consumer in a different checkout refuses the packages
+         PwizSharpPackageVersion - informational -->
+  <Target Name="PwizWriteConsumerProps"
+          Condition="'$(PackageId)' == 'Pwiz.Util'"
+          DependsOnTargets="SetPwizSharpVersion"
+          BeforeTargets="PwizCollectRuntimeAssets">
+    <PropertyGroup>
+      <_PwizPropsFile>$(IntermediateOutputPath)$(PackageId).props</_PwizPropsFile>
+      <_PwizVendor>false</_PwizVendor>
+      <_PwizVendor Condition="'$(IAgreeToVendorLicenses)' == 'true'">true</_PwizVendor>
+      <_PwizNativeVendor>false</_PwizNativeVendor>
+      <_PwizNativeVendor Condition="'$(NativeVendorsAvailable)' == 'true'">true</_PwizNativeVendor>
+    </PropertyGroup>
+    <ItemGroup>
+      <_PwizPropsLine Include="&lt;Project&gt;" />
+      <_PwizPropsLine Include="  &lt;!-- Generated by pwiz-sharp\build\PwizPack.targets when Pwiz.Util was packed. Read by build\PwizConsumer.targets. --&gt;" />
+      <_PwizPropsLine Include="  &lt;PropertyGroup&gt;" />
+      <_PwizPropsLine Include="    &lt;PwizSharpPackageVersion&gt;$(PackageVersion)&lt;/PwizSharpPackageVersion&gt;" />
+      <_PwizPropsLine Include="    &lt;PwizSharpVendorSupport&gt;$(_PwizVendor)&lt;/PwizSharpVendorSupport&gt;" />
+      <_PwizPropsLine Include="    &lt;PwizSharpNativeVendorSupport&gt;$(_PwizNativeVendor)&lt;/PwizSharpNativeVendorSupport&gt;" />
+      <_PwizPropsLine Include="    &lt;PwizSharpSourceTree&gt;$(PwizRepoRoot)&lt;/PwizSharpSourceTree&gt;" />
+      <_PwizPropsLine Include="  &lt;/PropertyGroup&gt;" />
+      <_PwizPropsLine Include="&lt;/Project&gt;" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(_PwizPropsFile)" Lines="@(_PwizPropsLine)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(_PwizPropsFile)" PackagePath="build\$(PackageId).props" />
+    </ItemGroup>
+  </Target>
+
+</Project>

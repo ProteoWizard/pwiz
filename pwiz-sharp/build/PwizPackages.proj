@@ -1,0 +1,61 @@
+<Project DefaultTargets="Pack">
+
+  <!-- Packs the ProteoWizard libraries into this tree's NuGet feed. Invoked by
+       pwiz-sharp\build.bat after the build:
+
+         dotnet msbuild build\PwizPackages.proj -t:Pack -p:Configuration=Release [-p:IAgreeToVendorLicenses=true]
+
+       What it does, in order:
+         1. Empties the feed (artifacts\nuget\feed\*.nupkg) and removes every extracted Pwiz.*
+            package from the tree-local restore folder (artifacts\nuget\packages\pwiz.*). NuGet's
+            no-op restore check verifies that the packages an assets file names still exist on
+            disk, so deleting them is what makes the next consumer build - Visual Studio included -
+            restore the packages this run is about to produce instead of keeping the old ones.
+            The feed holds one version at a time, which is what lets consumers float on it.
+         2. Restores and packs every project in build\PwizPackageSet.props (building whatever
+            the earlier build step did not cover - the no-vendor build only builds msconvert's
+            graph, and the Windows-only GUI helper libraries are skipped off-Windows).
+         3. Checks that every expected .nupkg exists, so a project that dropped IsPackable or
+            a set entry that points at a renamed csproj fails the build rather than producing a
+            feed with a hole in it.
+
+       This is a plain MSBuild project, not an SDK project: it imports Directory.Build.props
+       itself for $(PwizSharpRoot), $(PwizPackageFeedDir) and $(RestorePackagesPath). -->
+
+  <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props" />
+  <Import Project="$(MSBuildThisFileDirectory)PwizPackageSet.props" />
+
+  <!-- Item functions, not conditions: MSBuild does not allow custom metadata in a condition
+       outside a target, so the Windows-only split is done with WithMetadataValue. -->
+  <ItemGroup>
+    <_PwizPackProject Include="@(PwizPackage->WithMetadataValue('WindowsOnly','false')->'%(ProjectPath)')" />
+    <_PwizPackProject Include="@(PwizPackage->WithMetadataValue('WindowsOnly','true')->'%(ProjectPath)')" Condition="'$(OS)' == 'Windows_NT'" />
+  </ItemGroup>
+
+  <Target Name="CleanPwizFeed">
+    <ItemGroup>
+      <_PwizOldNupkg Include="$(PwizPackageFeedDir)*.nupkg" />
+      <_PwizOldExtracted Include="$([System.IO.Directory]::GetDirectories('$(RestorePackagesPath)', 'pwiz.*'))" Condition="Exists('$(RestorePackagesPath)')" />
+    </ItemGroup>
+    <Message Importance="high" Text="Clearing ProteoWizard feed $(PwizPackageFeedDir) (@(_PwizOldNupkg->Count()) packages) and @(_PwizOldExtracted->Count()) extracted Pwiz.* packages under $(RestorePackagesPath)" />
+    <Delete Files="@(_PwizOldNupkg)" />
+    <RemoveDir Directories="@(_PwizOldExtracted)" />
+    <MakeDir Directories="$(PwizPackageFeedDir);$(RestorePackagesPath)" />
+  </Target>
+
+  <Target Name="Pack" DependsOnTargets="CleanPwizFeed">
+    <!-- Restore in its own evaluation (a fresh MSBuildRestoreSessionId is what `-restore` does
+         internally) so the build/pack evaluation that follows sees the restore outputs. -->
+    <MSBuild Projects="@(_PwizPackProject)" Targets="Restore" BuildInParallel="true"
+             Properties="MSBuildRestoreSessionId=$([System.Guid]::NewGuid())" />
+    <MSBuild Projects="@(_PwizPackProject)" Targets="Pack" BuildInParallel="true" />
+
+    <ItemGroup>
+      <_PwizProduced Include="$(PwizPackageFeedDir)*.nupkg" />
+    </ItemGroup>
+    <Message Importance="high" Text="Packed @(_PwizProduced->Count()) ProteoWizard packages into $(PwizPackageFeedDir)" />
+    <Error Condition="'@(_PwizProduced->Count())' != '@(_PwizPackProject->Count())'"
+           Text="Expected @(_PwizPackProject->Count()) ProteoWizard packages in $(PwizPackageFeedDir) but found @(_PwizProduced->Count()): @(_PwizProduced->'%(Filename)', ', '). A project in build\PwizPackageSet.props is probably missing IsPackable=true, or its PackageId does not match." />
+  </Target>
+
+</Project>

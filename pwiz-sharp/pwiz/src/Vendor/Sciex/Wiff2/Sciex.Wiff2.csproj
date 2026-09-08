@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. Runtime-only: the assembly
+         travels as copy-to-output content, never as a compile reference (see build\PwizPack.targets). -->
+    <IsPackable>true</IsPackable>
+    <PwizPackRuntimeOnly>true</PwizPackRuntimeOnly>
     <RootNamespace>Pwiz.Vendor.Sciex.Wiff2</RootNamespace>
     <AssemblyName>Pwiz.Vendor.Sciex.Wiff2</AssemblyName>
     <Description>Wiff2 reader plugin. Loaded into Pwiz.Vendor.Sciex.Wiff2LoadContext at runtime so its bundled SCIEX.Apis.Data.v1 / Clearcore2 / OFX dependencies don't conflict with the legacy AnalystWiffDataProvider stack the .wiff path uses in the default ALC.</Description>

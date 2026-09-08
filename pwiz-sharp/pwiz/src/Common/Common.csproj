@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Data.Common</RootNamespace>
     <AssemblyName>Pwiz.Data.Common</AssemblyName>
     <Description>Controlled vocabulary, parameter containers, Unimod. Port of pwiz/data/common.</Description>

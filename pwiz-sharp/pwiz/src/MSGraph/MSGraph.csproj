@@ -8,6 +8,9 @@
   -->
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
+    <PackageId>Pwiz.MSGraph</PackageId>
     <TargetFramework>net10.0-windows</TargetFramework>
     <RootNamespace>pwiz.MSGraph</RootNamespace>
     <AssemblyName>MSGraph</AssemblyName>

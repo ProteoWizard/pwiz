@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Vendor.Bruker</RootNamespace>
     <AssemblyName>Pwiz.Vendor.Bruker</AssemblyName>
     <Description>Bruker timsTOF (.d) reader. P/Invoke bindings for Bruker's native timsdata.dll.</Description>

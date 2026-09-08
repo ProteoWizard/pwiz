@@ -4,15 +4,26 @@
   <Import Project="$(MSBuildThisFileDirectory)build\PwizVersion.targets" />
 
   <!-- Compose pwiz-sharp's version (major.minor.{YY}{DDD}) from the git date and
-       stamp it before the SDK reads Version for assembly-info generation. -->
+       stamp it before the SDK reads Version for assembly-info generation.
+
+       The same value has to become PackageVersion, and it has to be in place wherever
+       NuGet's pack pipeline reads it: GenerateNuspec writes this package's own version,
+       and _GetProjectVersion is what a REFERENCING project's pack calls on this project
+       (in a separate evaluation, where GetAssemblyVersion never runs) to learn the version
+       to record as a dependency. Without the third hook the packages would say 4.0.26250
+       while depending on 4.0.0, and restore would fail. -->
   <Target Name="SetPwizSharpVersion"
           DependsOnTargets="ComputePwizBuildVersion"
-          BeforeTargets="GetAssemblyVersion">
+          BeforeTargets="GetAssemblyVersion;GenerateNuspec;_GetProjectVersion">
     <PropertyGroup>
       <Version>$(PwizSharpVersionMajor).$(PwizSharpVersionMinor).$(PwizVersionYear2)$(PwizVersionDayOfYear)</Version>
+      <PackageVersion>$(Version)</PackageVersion>
       <InformationalVersion>$(Version)-$(PwizVersionGitHash) ($(_BuildKindSuffix))</InformationalVersion>
     </PropertyGroup>
   </Target>
+
+  <!-- NuGet packaging of the ProteoWizard libraries (IsPackable=true projects only). -->
+  <Import Project="$(MSBuildThisFileDirectory)build\PwizPack.targets" Condition="'$(IsPackable)' == 'true'" />
 
   <!-- Test-only PackageReferences, gated on $(IsTestProject). The project's own
        SDK sets IsTestProject=true via the Microsoft.NET.Test.Sdk reference; by

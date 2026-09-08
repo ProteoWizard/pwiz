@@ -113,6 +113,35 @@
     <Authors>ProteoWizard Contributors</Authors>
   </PropertyGroup>
 
+  <!-- ============================================================
+       NuGet: ProteoWizard is consumed as packages this tree builds.
+
+       build\PwizPackages.proj (run by build.bat after the build) packs the
+       libraries listed in build\PwizPackageSet.props into $(PwizPackageFeedDir),
+       and <repo>\nuget.config pins every Pwiz.* id to that folder. Consumers -
+       the Tools here, Skyline over in pwiz_tools - import build\PwizConsumer.targets.
+
+       RestorePackagesPath is the folder NuGet extracts packages into. It is set
+       here, tree-locally, because developers keep several pwiz checkouts and a
+       ProteoWizard package extracted from tree A must never be what tree B builds
+       against. An MSBuild property outranks the NUGET_PACKAGES environment variable
+       and any nuget.config globalPackagesFolder, so nothing on the machine can
+       redirect it back to %USERPROFILE%\.nuget\packages. Every package this tree
+       restores (not only Pwiz.*) lands here; that costs some disk per checkout and
+       buys a tree that is self-contained. artifacts\ is gitignored.
+       pwiz_tools\Directory.Build.props sets the same folder so both halves of the
+       tree share one extraction.
+       ============================================================ -->
+  <PropertyGroup>
+    <PwizArtifactsDir>$([MSBuild]::NormalizeDirectory('$(PwizRepoRoot)', 'artifacts', 'nuget'))</PwizArtifactsDir>
+    <PwizPackageFeedDir>$(PwizArtifactsDir)feed\</PwizPackageFeedDir>
+    <RestorePackagesPath>$(PwizArtifactsDir)packages\</RestorePackagesPath>
+    <!-- Only the projects in build\PwizPackageSet.props pack; each opts in with
+         IsPackable=true in its csproj. Everything else (tests, tools, plugins' hosts)
+         must not, or `dotnet pack` on the solution would produce stray packages. -->
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
   <!-- Assembly version, Jam-free. Scheme mirrors pwiz cpp's generate-version.jam:
        major.minor.{YY}{DDD}, where {YY}{DDD} is the two-digit year and 3-digit
        day-of-year of the git commit date. The actual date-stamped value is set by

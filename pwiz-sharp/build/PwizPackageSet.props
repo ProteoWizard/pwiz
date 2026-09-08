@@ -1,0 +1,60 @@
+<Project>
+
+  <!-- The ProteoWizard package set: every library under pwiz\src that ships as a NuGet package,
+       with the project that produces it. This is the single source of truth for
+
+         * what pwiz-sharp\build.bat packs (build\PwizPackages.proj),
+         * what the Pwiz.All meta package depends on (pwiz\src\Pwiz.All\Pwiz.All.csproj), and
+         * how a consumer's PwizReferences list is turned into PackageReferences, or into
+           ProjectReferences when UsePwizSharpProjects=true (build\PwizConsumer.targets).
+
+       Adding a package means: set IsPackable/PackageId in its csproj, add one line here. Removing
+       one means the reverse. The pack step fails if the two disagree.
+
+       Metadata:
+         ProjectPath  the csproj, absolute (needs $(PwizSharpRoot) from pwiz-sharp\Directory.Build.props)
+         InAll        member of Pwiz.All - the full data layer plus every vendor reader
+         RuntimeOnly  a plugin loaded by reflection (never a compile-time reference): the package
+                      carries the assembly as copy-to-output content instead of lib\, and the
+                      ProjectReference form uses ReferenceOutputAssembly=false so the assembly
+                      stays out of the consumer's deps.json and default load context
+         WindowsOnly  targets net10.0-windows; skipped when packing on Linux -->
+  <ItemGroup>
+    <!-- Core data layer -->
+    <PwizPackage Include="Pwiz.Util"            ProjectPath="$(PwizSharpRoot)pwiz\src\Util\Util.csproj"           InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Data.Common"     ProjectPath="$(PwizSharpRoot)pwiz\src\Common\Common.csproj"       InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Data.MsData"     ProjectPath="$(PwizSharpRoot)pwiz\src\MsData\MsData.csproj"       InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Data.IdentData"  ProjectPath="$(PwizSharpRoot)pwiz\src\IdentData\IdentData.csproj" InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Data.TraData"    ProjectPath="$(PwizSharpRoot)pwiz\src\TraData\TraData.csproj"     InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Analysis"        ProjectPath="$(PwizSharpRoot)pwiz\src\Analysis\Analysis.csproj"   InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+
+    <!-- Vendor readers -->
+    <PwizPackage Include="Pwiz.Vendor.Common"   ProjectPath="$(PwizSharpRoot)pwiz\src\Vendor\Common\Vendor.Common.csproj"  InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Vendor.Thermo"   ProjectPath="$(PwizSharpRoot)pwiz\src\Vendor\Thermo\Thermo.csproj"         InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Vendor.Waters"   ProjectPath="$(PwizSharpRoot)pwiz\src\Vendor\Waters\Waters.csproj"         InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Vendor.Sciex"    ProjectPath="$(PwizSharpRoot)pwiz\src\Vendor\Sciex\Sciex.csproj"           InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Vendor.Shimadzu" ProjectPath="$(PwizSharpRoot)pwiz\src\Vendor\Shimadzu\Shimadzu.csproj"     InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Vendor.Agilent"  ProjectPath="$(PwizSharpRoot)pwiz\src\Vendor\Agilent\Agilent.csproj"       InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Vendor.Bruker"   ProjectPath="$(PwizSharpRoot)pwiz\src\Vendor\Bruker\Bruker.csproj"         InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Vendor.UIMF"     ProjectPath="$(PwizSharpRoot)pwiz\src\Vendor\UIMF\UIMF.csproj"             InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Vendor.UNIFI"    ProjectPath="$(PwizSharpRoot)pwiz\src\Vendor\UNIFI\UNIFI.csproj"           InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Vendor.Mobilion" ProjectPath="$(PwizSharpRoot)pwiz\src\Vendor\Mobilion\Mobilion.csproj"     InAll="true" RuntimeOnly="false" WindowsOnly="false" />
+
+    <!-- Runtime-only plugins for the SCIEX wiff2 path. Sciex.Wiff2 is loaded into its own
+         AssemblyLoadContext by Pwiz.Vendor.Sciex; OFX.Logging is found by name through
+         Type.GetType. Neither may be a compile-time reference of a consumer. -->
+    <PwizPackage Include="Pwiz.Vendor.Sciex.Wiff2"          ProjectPath="$(PwizSharpRoot)pwiz\src\Vendor\Sciex\Wiff2\Sciex.Wiff2.csproj"                   InAll="true" RuntimeOnly="true" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.Vendor.Sciex.OfxLoggingStub" ProjectPath="$(PwizSharpRoot)pwiz\src\Vendor\Sciex\OfxLoggingStub\OfxLoggingStub.csproj"     InAll="true" RuntimeOnly="true" WindowsOnly="false" />
+
+    <!-- Consumer-specific extras, not part of Pwiz.All -->
+    <PwizPackage Include="Pwiz.Vendor.Bruker.PrmScheduling" ProjectPath="$(PwizSharpRoot)pwiz\src\Vendor\Bruker.PrmScheduling\Bruker.PrmScheduling.csproj" InAll="false" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.StlContainers"   ProjectPath="$(PwizSharpRoot)pwiz\src\StlContainers\StlContainers.csproj" InAll="false" RuntimeOnly="false" WindowsOnly="false" />
+    <PwizPackage Include="Pwiz.ZedGraph"        ProjectPath="$(PwizSharpRoot)pwiz\src\ZedGraph\ZedGraph.csproj"           InAll="false" RuntimeOnly="false" WindowsOnly="true" />
+    <PwizPackage Include="Pwiz.MSGraph"         ProjectPath="$(PwizSharpRoot)pwiz\src\MSGraph\MSGraph.csproj"             InAll="false" RuntimeOnly="false" WindowsOnly="true" />
+
+    <!-- The meta package itself. InAll=false so it never expands into itself; consumers that
+         ask for Pwiz.All get the InAll members (PwizConsumer.targets). -->
+    <PwizPackage Include="Pwiz.All"             ProjectPath="$(PwizSharpRoot)pwiz\src\Pwiz.All\Pwiz.All.csproj"           InAll="false" RuntimeOnly="false" WindowsOnly="false" />
+  </ItemGroup>
+
+</Project>

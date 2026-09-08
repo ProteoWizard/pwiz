@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Vendor.Agilent</RootNamespace>
     <AssemblyName>Pwiz.Vendor.Agilent</AssemblyName>
     <Description>Agilent MassHunter (.d) reader. References Agilent's managed MassSpecDataReader / BaseDataAccess / BaseTof / MIDAC assemblies.</Description>

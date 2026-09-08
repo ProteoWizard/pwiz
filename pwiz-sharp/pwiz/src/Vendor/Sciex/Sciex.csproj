@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Vendor.Sciex</RootNamespace>
     <AssemblyName>Pwiz.Vendor.Sciex</AssemblyName>
     <Description>Sciex / ABI WIFF reader. References Sciex's managed Clearcore2 + WiffReader assemblies.</Description>

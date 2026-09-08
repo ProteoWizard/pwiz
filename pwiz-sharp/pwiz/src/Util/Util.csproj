@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Util</RootNamespace>
     <AssemblyName>Pwiz.Util</AssemblyName>
     <Description>Foundation utilities for pwiz-sharp: chemistry, math, misc helpers. Port of pwiz/utility.</Description>

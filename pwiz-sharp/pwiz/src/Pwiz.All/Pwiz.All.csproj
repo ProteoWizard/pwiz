@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Pwiz.All - the meta package. No code: it exists so a consumer that wants "ProteoWizard,
+       every reader" has one thing to reference. Its dependencies are the InAll members of
+       build\PwizPackageSet.props (the data layer, the vendor readers, the two wiff2 runtime
+       plugins). A consumer that asks for Pwiz.All in the ProjectReference form (UsePwizSharpProjects)
+       never references this project; PwizConsumer.targets expands the request to the members. -->
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Pwiz.All</PackageId>
+    <Description>ProteoWizard data layer plus every vendor reader, as one reference.</Description>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- No sources of its own. The SDK's generated AssemblyInfo is the only compile input, which
+         keeps csc from warning about an empty compilation; the resulting empty assembly is
+         never shipped (IncludeBuildOutput=false) or referenced. -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <Import Project="$(PwizSharpRoot)build\PwizPackageSet.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="@(PwizPackage->WithMetadataValue('InAll','true')->'%(ProjectPath)')" />
+  </ItemGroup>
+
+</Project>

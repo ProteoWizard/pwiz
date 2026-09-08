@@ -8,7 +8,11 @@ REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
 REM #             [--require-vendor-support] [--without-mascot]
-REM #             [--automated] [--coverage]
+REM #             [--automated] [--coverage] [--no-tests]
+REM #
+REM # Steps: restore, build, pack the ProteoWizard NuGet packages into
+REM # <repo>\artifacts\nuget\feed (build\PwizPackages.proj; this is what the
+REM # Tools here and Skyline in pwiz_tools build against), installer, tests.
 REM #
 REM # Flags:
 REM #   --i-agree-to-the-vendor-licenses
@@ -46,6 +50,11 @@ REM #       wrapping only attaches to the built-in .NET runner, not Command
 REM #       Line steps, so the script has to invoke dotCover itself in CI;
 REM #       the importData service message hands the snapshot to TC's
 REM #       dotCover build feature for the report UI.
+REM #
+REM #   --no-tests
+REM #       Restore, build and pack, then stop. What a developer wants before
+REM #       opening Skyline.sln, or a consumer's solution here, against a fresh
+REM #       ProteoWizard: the packages are in the feed, the hour of tests is not.
 REM # ------------------------------------------------------------------------
 
 REM # Resolve to the directory this script lives in so we work from pwiz-sharp/
@@ -60,6 +69,7 @@ set REQUIRE_VENDOR=0
 set AUTOMATED=0
 set COVERAGE=0
 set WITHOUT_MASCOT=0
+set NOTESTS=0
 set ERROR_TEXT=
 
 REM # Parse args. First non-flag arg is the configuration (Debug|Release).
@@ -70,6 +80,7 @@ if /i "%~1"=="--require-vendor-support" (set REQUIRE_VENDOR=1) else ^
 if /i "%~1"=="--without-mascot" (set WITHOUT_MASCOT=1) else ^
 if /i "%~1"=="--automated" (set AUTOMATED=1) else ^
 if /i "%~1"=="--coverage" (set COVERAGE=1) else ^
+if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
 if /i "%~1"=="Release" (set CONFIG=Release) else (
     echo Unrecognized argument: %~1 1>&2
@@ -122,6 +133,18 @@ dotnet build %BUILD_TARGET% --no-restore -nologo %MSBUILD_PROPS%
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet build failed & goto error)
 
+REM # Pack the ProteoWizard libraries (build\PwizPackageSet.props) into this tree's
+REM # NuGet feed. build\PwizPackages.proj first empties the feed and evicts the
+REM # previously extracted Pwiz.* packages from the tree-local restore folder, so
+REM # every consumer - Visual Studio included - restores THESE packages on its next
+REM # build instead of the ones from the last run. It builds whatever the step above
+REM # did not (the no-vendor build only covers msconvert's graph). Same properties as
+REM # the build, so the packages record the same vendor-support flavour.
+echo ##teamcity[progressMessage 'dotnet msbuild build\PwizPackages.proj -t:Pack (%CONFIG%, vendor=%IAGREE%)']
+dotnet msbuild "%SCRIPT_DIR%\build\PwizPackages.proj" -t:Pack -m -nologo -v:minimal %MSBUILD_PROPS%
+set EXIT=%ERRORLEVEL%
+if %EXIT% NEQ 0 (set ERROR_TEXT=ProteoWizard package build failed & goto error)
+
 REM # Installer build. Only runs when vendor support is enabled (the installer
 REM # ships vendor-enabled binaries) AND Inno Setup's ISCC.exe is locatable.
 REM # If ISCC is missing, log a TC warning and continue — Installer.Tests will
@@ -144,6 +167,12 @@ if %IAGREE%==1 (
     ) else (
         echo ##teamcity[message text='Inno Setup ^(ISCC.exe^) not found; skipping installer build and Installer.Tests will skip' status='WARNING']
     )
+)
+
+if %NOTESTS%==1 (
+    echo ##teamcity[message text='--no-tests: build and pack complete, skipping the test step']
+    popd
+    exit /b 0
 )
 
 REM # Test discovery: every *.Tests.csproj found under pwiz\test\ and Tools\, taken

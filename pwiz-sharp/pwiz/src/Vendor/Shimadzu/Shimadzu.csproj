@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Ships as a NuGet package; see build\PwizPackageSet.props. -->
+    <IsPackable>true</IsPackable>
     <RootNamespace>Pwiz.Vendor.Shimadzu</RootNamespace>
     <AssemblyName>Pwiz.Vendor.Shimadzu</AssemblyName>
     <Description>Shimadzu LCD reader. References Shimadzu's managed LabSolutions IO module.</Description>
