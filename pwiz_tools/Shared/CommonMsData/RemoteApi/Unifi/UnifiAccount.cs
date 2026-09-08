@@ -171,6 +171,15 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
         public HttpClientWithProgress GetAuthenticatedHttpClient()
         {
             var tokenResponse = Authenticate();
+            if (tokenResponse.IsError)
+            {
+                // Without this the request goes out with an empty bearer token and the server
+                // answers 401, hiding what the identity server actually said. Matches what
+                // WatersConnectAccount.Authenticate does for the sibling server.
+                throw new RemoteServerException(string.Format(
+                    UnifiResources.UnifiAccount_GetAuthenticatedHttpClient_Failed_to_authenticate_UNIFI_account__0__with_error___1_,
+                    Username, tokenResponse.ErrorDescription ?? tokenResponse.Error), tokenResponse.Raw);
+            }
             var httpClient = new HttpClientWithProgress();
             httpClient.AddAuthorizationHeader(@"Bearer " + tokenResponse.AccessToken);
             httpClient.AddHeader(@"Accept", @"application/json;odata.metadata=minimal");

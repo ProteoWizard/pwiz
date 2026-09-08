@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -77,7 +78,20 @@ namespace pwiz.Common.SystemUtil
                 // HttpClientWithProgress throws on every non-2xx, so the OAuth error body arrives
                 // here rather than as a response. Hand the status and body to IdentityModel and let
                 // it decide protocol-error vs HTTP-error instead of restating those rules.
-                return ParseTokenResponse(ex.StatusCode ?? HttpStatusCode.ServiceUnavailable, ex.ResponseBody, ex.Message);
+                try
+                {
+                    return ParseTokenResponse(ex.StatusCode ?? HttpStatusCode.ServiceUnavailable, ex.ResponseBody, ex.Message);
+                }
+                catch (Exception parseEx)
+                {
+                    // Reconstituting the response is the one step outside the try above, and no
+                    // failure may escape this method - ReasonPhrase, for one, rejects a message
+                    // that contains a line break. Report the network failure rather than the
+                    // parse failure: it is the error the user needs, and passing a message to
+                    // FromException would replace it.
+                    Debug.WriteLine($@"Failed to rebuild the token response: {parseEx.Message}");
+                    return ProtocolResponse.FromException<TokenResponse>(ex);
+                }
             }
             catch (Exception ex)
             {
