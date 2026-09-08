@@ -18,8 +18,11 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.SkylineTestUtil;
@@ -98,6 +101,39 @@ namespace pwiz.SkylineTestFunctional
                 ionMobilityLibraryDlg.OkDialog();
             });
             OkDialog(transitionSettingsUi, transitionSettingsUi.OkDialog);
+
+            VerifyIonMobilityFilteringDisabledWarning();
+        }
+
+        // Issue 4150: when re-importing data while the IM filter window is disabled but IM values
+        // remain available (here from the IMSDB created earlier in this test), Skyline should
+        // emit a non-blocking informational message to the Immediate Window naming the specific
+        // fix - in this case, setting a filter window width.
+        private void VerifyIonMobilityFilteringDisabledWarning()
+        {
+            const string fileName = "CrosslinkImsTest.mzML";
+
+            RunUI(() => SkylineWindow.ModifyDocument("Disable IM filtering window", doc =>
+                doc.ChangeSettings(doc.Settings.ChangeTransitionSettings(
+                    doc.Settings.TransitionSettings.ChangeIonMobilityFiltering(
+                        doc.Settings.TransitionSettings.IonMobilityFiltering.ChangeFilterWindowWidthCalculator(
+                            IonMobilityWindowWidthCalculator.EMPTY))))));
+            RunUI(() => SkylineWindow.ModifyDocument("Remove results",
+                doc => doc.ChangeMeasuredResults(null)));
+            // Save so the existing .skyd is rewritten and re-import doesn't trigger a confirmation dialog
+            RunUI(() => SkylineWindow.SaveDocument());
+
+            ImportResultsFile(TestFilesDir.GetTestPath(fileName));
+
+            TryWaitForOpenForm<ImmediateWindow>();
+            var immediateWindow = FindOpenForm<ImmediateWindow>();
+            Assert.IsNotNull(immediateWindow, @"Immediate window should be shown");
+
+            // The IMSDB is populated at this point, so setting a filter window alone would enable
+            // filtering. The diagnostic should pick the SetWindow-specific message, not a generic one.
+            var expected = string.Format(
+                ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindow, fileName);
+            RunUI(() => StringAssert.Contains(immediateWindow.TextContent, expected));
         }
     }
 }
