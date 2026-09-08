@@ -535,13 +535,31 @@ entrapment ones.
 
 **P16. A report is a DERIVED VIEW over the artifacts, never an output only its producing
 phase can make.** Everything the diagnostics report says about a pass is a reduction over
-that pass's own sidecars, so the report must be derivable from those sidecars ALONE, after
-the fact, by a task that runs no analysis. Concretely, this has to work and has to stay
-working:
+that pass's own durable artifacts, so the report must be derivable from those artifacts
+ALONE, after the fact, without re-running the analysis that produced them. Concretely, this
+has to work and has to stay working:
 
-> Run an analysis WITHOUT `--model-diagnostics`. Then run `--task ModelDiagnostics` on the
-> finished output directory. It produces the full report - both passes - by reading the
-> sidecars for the pass in question, and **re-runs no analysis of any kind**.
+> Run an analysis WITHOUT `--model-diagnostics` - the streamlined run. Later, re-run the
+> same analysis WITH `--model-diagnostics`. The ONLY work performed is producing the
+> diagnostics artifacts and the HTML. No primary analysis re-runs, and **the report is
+> complete** - identical to the one the flag would have produced first time.
+
+This is the ordinary resume model (P15) applied to the diagnostics products: they are
+declared outputs like any other, so on a completed run they are the only outstanding ones
+and the forward scan produces just them. It is not a special mode, and it should not need a
+special task.
+
+**The corollary that is easy to miss: diagnostics work belongs in the FDR tasks, never in
+the fan-out tasks.** A fan-out task writes the per-run artifacts; the FDR task reduces them
+into the report. A diagnostic captured only in a fan-out task's memory is LOST to the
+pay-later path by construction, because that path's entire premise is that the fan-out does
+not re-run. The failure is silent and it degrades rather than fails: the artifact is on
+disk, nothing reads it back, and the page renders without that view and says nothing. A
+report that is quietly missing a panel is worse than one that is slow, because the reader
+cannot tell absence from emptiness.
+
+The completeness half of the requirement is therefore as binding as the no-re-analysis half.
+"It produced a report" is not the test; "it produced the SAME report" is.
 
 A pass task may fold its own half opportunistically while the data is already in hand, and
 should: it is free there. But that is an OPTIMIZATION, not the definition, and it must never
@@ -563,10 +581,16 @@ Because each half is a reduction over its OWN pass's sidecars, the two passes ar
 independently derivable and must be independently derivable - a missing pass-1 product is
 not a reason to refuse the pass-2 half, or the reverse.
 
-The test that proves P16 is not "the report appears": a re-analysis produces the right
-report too, silently and slowly. It is that the run **does no analysis** - assert the marker
-line naming the path taken, and hold the wall clock and memory band to the reduction's
-O(distinct) shape rather than the phase's.
+The test that proves P16 has two halves, and neither alone is sufficient:
+
+* **No analysis ran.** A re-analysis produces the right report too, silently and slowly, so
+  the artifact cannot distinguish them - assert the marker line naming the path taken, and
+  hold the memory band to the reduction's O(distinct) shape rather than the phase's. Note
+  that a compliant fold still READS every run's artifacts; "no analysis" means no
+  recomputation, not no I/O, so wall clock separates a fold from a join only by a factor.
+* **The report is complete.** Byte-compare it against the report the same analysis produces
+  when the flag is passed up front. Any view that is present in one and absent in the other
+  is a diagnostic that some phase is holding privately.
 
 ---
 
