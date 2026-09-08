@@ -525,6 +525,30 @@ namespace pwiz.Osprey.Tasks
                 : LoadExperimentRecords(ctx.Config, FdrScoresSidecar.Pass.SecondPass);
         }
 
+        /// <summary>
+        /// The RESIDENT sibling of <see cref="InstallStreamedPass2Overlay"/>: overlay every
+        /// file's second-pass sidecar onto a resident survivor pool. A no-op on the streamed
+        /// arm, where the installed per-run overlay already does it.
+        ///
+        /// <para>Needed by the pass-2 diagnostics fold and by nothing else. Every other caller
+        /// arrives here having just run <see cref="ComputeAndPersist"/>, which stamps the
+        /// second-pass values onto the resident entries as it computes them; the fold skips
+        /// that compute by definition, so on the resident arm its pool would otherwise still
+        /// carry the FIRST pass's q-values - and the report would describe pass 1 while
+        /// labelling it pass 2. That failure is invisible to every other check: the page is
+        /// complete, every card is populated, and the numbers are real, just from the wrong
+        /// pass. Only a byte-comparison against the flag-up-front report catches it, which is
+        /// why P16 makes that comparison half of the requirement.</para>
+        /// </summary>
+        internal static void OverlayPass2OntoResidentPool(
+            PipelineContext ctx, RescoredEntries rescored, string taskName, string taskValidityKey)
+        {
+            if (rescored.Streams)
+                return;
+            var writer = new Pass2SidecarWriter(ctx, ctx.Config, taskName, taskValidityKey);
+            ReloadPass2Sidecars(ctx, writer, rescored.Value, @"diagnostics-fold");
+        }
+
         private static void ReloadPass2Sidecars(
             PipelineContext ctx,
             Pass2SidecarWriter writer,

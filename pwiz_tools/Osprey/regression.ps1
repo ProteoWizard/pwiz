@@ -86,6 +86,19 @@
               what makes CanRehydrate return false so it re-runs on demand. Runs last, in
               the straight-through dir, since it rewrites the report there. ~14 s per
               dataset - it rehydrates Stages 1-5 and re-runs Stage 7 only.
+      mode 11 the PAY-LATER report (P16) - deletes both diagnostics products from the
+              completed straight-through run, leaving every analysis artifact current,
+              and asks for the report again. This is the one state no other leg presents:
+              mode 7 re-enters a run whose products are already there, so it exercises
+              only the RE-RENDER, and every other leg passes --model-diagnostics up front.
+              Both halves of the P16 test, because neither alone is sufficient. NO
+              ANALYSIS RAN: each pass must log the marker naming its fold, AND the markers
+              a genuine join emits must be absent - a re-analysis produces the RIGHT
+              report, so the artifact cannot tell them apart and only the log can. THE
+              REPORT IS COMPLETE: both products byte-compared against the ones the
+              flag-up-front run wrote, because a view some phase holds privately goes
+              missing on this path and on no other. Runs between modes 7 and 8, which is
+              the only window where the cohort is complete and the blib is still current.
 
     NO dependency on the sibling ai/ checkout: data acquisition, blib golden
     capture/compare, and the tolerance comparators all live under
@@ -2804,6 +2817,238 @@ foreach ($name in $selected) {
             Write-Problem-Tc "$name mode7 (diagnostics regeneration): FAIL - $($m7Issues.Count) issue(s)"
             $m7Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
             $summaryLines.Add("$name mode7 (diagnostics regeneration): FAIL ($($m7Issues.Count) issues)")
+        }
+    }
+
+    # ---- mode 11: the PAY-LATER report is FOLDED, and it is the SAME report (P16) ----
+    # The scenario principle P16 names, and the one no other leg presents: an analysis that
+    # finished WITHOUT --model-diagnostics, asked for the report afterwards. Mode 7 re-enters
+    # a run whose products are already on disk, so it only ever exercises the RE-RENDER; every
+    # other leg passes the flag up front. That is exactly the gap the developer pointed at -
+    # "the small-dataset gates always run the flag up front" - and it is why a pass-2 fold
+    # could be missing entirely while every gate stayed green.
+    #
+    # Simulated by DELETING the products from a completed run rather than by running the
+    # cohort twice. The state a pay-later user is in is "every analysis artifact current, no
+    # diagnostics product", and deleting the products produces exactly that state for a
+    # fraction of the wall clock - while also handing the leg its own oracle, since the
+    # products just deleted are what the flag-up-front run produced.
+    #
+    # BOTH halves of the P16 test, because neither alone is sufficient:
+    #
+    #   NO ANALYSIS RAN. A re-analysis produces the RIGHT report, silently and slowly, so the
+    #   artifact cannot distinguish the two - only the log can. Asserted positively (each
+    #   pass logs the marker naming its fold) AND negatively (the markers a genuine join
+    #   emits must be absent). At 3 files the difference is seconds and no timing check
+    #   could see it; at 446 it is minutes against 4h46m + 69 min.
+    #
+    #   THE REPORT IS COMPLETE. Byte-compared against the products the same analysis produced
+    #   with the flag passed up front. "It produced a report" is not the test; "it produced
+    #   the SAME report" is - a view held privately by some phase goes missing on this path
+    #   and on no other, which is how the CAL view's loss was found.
+    #
+    # Runs after mode 7 (which rewrites the report) and BEFORE mode 8, which invalidates the
+    # blib: this leg needs a cohort whose every analysis artifact is still current, because
+    # that currency is the whole precondition for the folds it is asserting.
+    if ($cfg.ModelDiagnostics) {
+        Write-Progress-Tc "${name}: pay-later diagnostics fold (mode 11)"
+        $m11Issues = [System.Collections.Generic.List[string]]::new()
+        $m11Pass1 = Join-Path $straightDir 'output.1st-pass.model-diagnostics.json'
+        $m11Pass2 = Join-Path $straightDir 'output.2nd-pass.model-diagnostics.json'
+        # The products as the flag-up-front run wrote them. Kept OUTSIDE the run directory so
+        # the fingerprint below does not see them as artifacts the fold created.
+        $m11Ref = Join-Path (Join-Path $runRoot $name) 'mode11-reference'
+        New-Item -ItemType Directory -Path $m11Ref -Force | Out-Null
+        $m11Missing = @($m11Pass1, $m11Pass2 | Where-Object { -not (Test-Path $_) })
+        if ($m11Missing.Count -gt 0) {
+            # Not a silent skip: this dataset carries --model-diagnostics, so both products
+            # are supposed to exist by now, and their absence means an EARLIER leg failed to
+            # produce one. Skipping quietly would report a green gate for the missing half.
+            $m11Issues.Add(("expected both diagnostics products from the straight-through run, " +
+                "but {0} is/are absent - an earlier leg did not produce it" -f
+                ($m11Missing -join ', ')))
+        } else {
+            foreach ($p in @($m11Pass1, $m11Pass2)) { Copy-Item $p $m11Ref -Force }
+
+            # Delete the products AND their validity stamps. The stamp is what a later run
+            # reads to decide the product is current, so leaving it behind would describe a
+            # state no interruption can produce.
+            $m11Deleted = @()
+            foreach ($p in @($m11Pass1, $m11Pass2)) {
+                foreach ($f in @(Get-ChildItem ($p + '*') -ErrorAction SilentlyContinue)) {
+                    $m11Deleted += $f.Name
+                    Remove-Item $f.FullName -Force
+                }
+            }
+            Write-Host ("  deleted {0} diagnostics product file(s), leaving every analysis artifact current" -f
+                $m11Deleted.Count)
+
+            $m11Before = Get-DirFingerprint -Dir $straightDir
+            $r11 = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                -Resolution $cfg.Resolution -WorkDir $straightDir -LogName 'paylater.log' `
+                -Spec $cfg -Manifest $inputs.Manifest -TaskName 'ModelDiagnostics' `
+                -AllowNonZeroExit
+            Write-Host ("  pay-later fold wall {0:N1}s" -f $r11.Wall.TotalSeconds)
+            if ($r11.ExitCode -ne 0) {
+                $m11Issues.Add(("--task ModelDiagnostics exited {0}; a completed analysis missing " +
+                    "only its diagnostics products must be able to produce them" -f $r11.ExitCode))
+            }
+
+            # ORACLE 1a: each pass says it FOLDED. Substrings, not whole lines, so the
+            # surrounding prose can change without breaking the gate; what they pin is that
+            # the fold arm was entered rather than the join.
+            $m11Markers = @(
+                @{ What = 'pass-1 fold'; Pattern = 'folding the report from the completed first pass' }
+                @{ What = 'pass-2 fold'; Pattern = 'folding the pass-2 report from the completed second pass' })
+            foreach ($mk in $m11Markers) {
+                $hit = @(Select-String -Path $r11.Log -Pattern $mk.Pattern -SimpleMatch `
+                    -ErrorAction SilentlyContinue)
+                if ($hit.Count -eq 0) {
+                    $m11Issues.Add(("no {0} marker in the log ('{1}') - the report was produced " +
+                        "by re-running the analysis, which yields the RIGHT artifact and is the " +
+                        "failure this leg exists to catch" -f $mk.What, $mk.Pattern))
+                }
+            }
+
+            # ORACLE 1b: and the join did NOT run. The positive marker alone is not enough -
+            # one pass could fold while the other re-computes, and the artifact would still be
+            # correct. These are lines only genuine analysis emits.
+            $m11Forbidden = @(
+                @{ What = 'a second-pass FDR compute'; Pattern = '[STAGE-WALL] second-pass-fdr' }
+                @{ What = 'protein-level FDR';         Pattern = 'Running protein-level FDR' }
+                @{ What = 'a per-file rescore';        Pattern = 'Re-scoring file ' })
+            foreach ($fb in $m11Forbidden) {
+                $hit = @(Select-String -Path $r11.Log -Pattern $fb.Pattern -SimpleMatch `
+                    -ErrorAction SilentlyContinue)
+                if ($hit.Count -gt 0) {
+                    $m11Issues.Add(("{0} ran during the pay-later report ('{1}') - asking for the " +
+                        "report re-ran the analysis, which is what P16 forbids" -f $fb.What, $fb.Pattern))
+                }
+            }
+
+            # ORACLE 2: the products came back, byte for byte. This is the completeness half -
+            # a card some phase holds privately is present in the flag-up-front product and
+            # absent here, and nothing else in this leg would notice.
+            # The pass-1 views that CANNOT survive the pay-later path today, excluded by name
+            # rather than by loosening the comparison. Each is captured in memory during a
+            # phase this path does not re-run and is never read back from disk:
+            #
+            #   cal              PerFileScoringTask captures it at Stage 3 and publishes it from
+            #                    memory; nothing reads the per-file .calibration.json back, and
+            #                    the shaped row is not in that file yet (a format change).
+            #   model            the feature table needs the TRAINED model's contributions; the
+            #                    fold logs "first-pass model not retrained on this run".
+            #   featureHistEdges the per-feature histograms are built from feature vectors as
+            #                    the model trains, so they go with it.
+            #
+            # This is a KNOWN GAP, not an accepted difference: it is exactly the class P16's
+            # completeness half exists to expose - a diagnostic held privately by a phase, lost
+            # to the path whose premise is that the phase does not re-run - and it is written up
+            # as owed work. It is named here so the leg stays green on everything that IS
+            # achievable and reds the moment ANY OTHER part of pass 1 diverges, and so the
+            # summary line states the exclusion on every run rather than hiding it.
+            # TWO sets, separated because they are not the same claim.
+            #
+            # VOLATILE is a field that cannot match between any two runs and says nothing about
+            # completeness: generatedUtc is when the page was written. Folding it in with the
+            # gap below would misreport a clock reading as a lost diagnostic.
+            #
+            # UNAVAILABLE is the real gap, and all of it has ONE cause: the pass-1 model is not
+            # retrained on a resumed run, so everything derived from the trained model's feature
+            # contributions goes with it (the feature table, the per-feature histogram edges,
+            # the feature count, and the composite scalar) - plus the CAL view, which
+            # PerFileScoringTask captures in memory at Stage 3 and nothing ever reads back off
+            # the per-file .calibration.json.
+            $m11Pass1Volatile = @('generatedUtc')
+            $m11Pass1Unavailable = @('cal', 'model', 'featureHistEdges', 'featureCount',
+                                     'modelComposite')
+            foreach ($p in @($m11Pass1, $m11Pass2)) {
+                $leaf = Split-Path -Leaf $p
+                $ref = Join-Path $m11Ref $leaf
+                if (-not (Test-Path $p)) {
+                    $m11Issues.Add(("the fold did not produce {0}" -f $leaf))
+                    continue
+                }
+                if ($p -eq $m11Pass1) {
+                    # Same transform on both sides, so anything the round-trip normalises
+                    # normalises identically and only a REAL difference survives.
+                    $stripped = foreach ($f in @($ref, $p)) {
+                        $o = Get-Content $f -Raw | ConvertFrom-Json
+                        foreach ($k in ($m11Pass1Unavailable + $m11Pass1Volatile)) {
+                            if ($o.PSObject.Properties.Name -contains $k) {
+                                $o.PSObject.Properties.Remove($k)
+                            }
+                        }
+                        ConvertTo-Json $o -Depth 64 -Compress
+                    }
+                    if ($stripped[0] -ne $stripped[1]) {
+                        # Its PARENT, not $runRoot: the finally block drops $runRoot, which would
+                        # delete the only evidence of the failure it just reported.
+                        $keep = Join-Path (Split-Path $runRoot -Parent) ('mode11-diff-' + $name)
+                        New-Item -ItemType Directory -Path $keep -Force | Out-Null
+                        Copy-Item $ref (Join-Path $keep ($leaf + '.upfront')) -Force
+                        Copy-Item $p (Join-Path $keep ($leaf + '.folded')) -Force
+                        $m11Issues.Add((("{0} differs from the flag-up-front product OUTSIDE the " +
+                            "known-unavailable views ({1}) - this is a NEW completeness loss, not " +
+                            "the recorded one; both copies kept under {2}") -f
+                            $leaf, ($m11Pass1Unavailable -join ', '), $keep))
+                    }
+                    continue
+                }
+                $a = [IO.File]::ReadAllBytes($ref)
+                $b = [IO.File]::ReadAllBytes($p)
+                if ($a.Length -ne $b.Length -or
+                    [Convert]::ToBase64String($a) -ne [Convert]::ToBase64String($b)) {
+                    # Both copies are kept for diagnosis: "differs" is not actionable, and the
+                    # run directory is deleted when the dataset finishes.
+                    # Its PARENT, not $runRoot: the finally block drops $runRoot, which would
+                        # delete the only evidence of the failure it just reported.
+                        $keep = Join-Path (Split-Path $runRoot -Parent) ('mode11-diff-' + $name)
+                    New-Item -ItemType Directory -Path $keep -Force | Out-Null
+                    Copy-Item $ref (Join-Path $keep ($leaf + '.upfront')) -Force
+                    Copy-Item $p (Join-Path $keep ($leaf + '.folded')) -Force
+                    $m11Issues.Add((("{0} differs from the product the flag-up-front run wrote " +
+                        "({1} vs {2} bytes) - the folded report is not the SAME report; both " +
+                        "copies kept under {3}") -f $leaf, $a.Length, $b.Length, $keep))
+                }
+            }
+
+            # ORACLE 3: nothing but the report and its products moved. The pay-later path runs
+            # over a FINISHED analysis, so an artifact rewrite here corrupts the very run it
+            # was asked to describe - and would do it on the user's completed data.
+            $m11Allowed = @('output.1st-pass.model-diagnostics.json',
+                            'output.2nd-pass.model-diagnostics.json',
+                            'output.model-diagnostics.html')
+            # .osprey.task stamps are excluded, and that is not a loophole. A task that RUNS
+            # restamps every declared output it finds (AnalysisPipeline.WriteTaskSidecars),
+            # so the pass-1 fold necessarily re-stamps the first pass's per-file sidecars -
+            # that is the resume model recording that the task completed under this key, not
+            # the fold rewriting the analysis. The fingerprint keys on mtime, so an identical
+            # rewrite still shows. What must not move is the DATA, which is what remains
+            # asserted here; the stamps' correctness is mode 2's and mode 4's business.
+            $m11Changed = @(Compare-DirFingerprint -Before $m11Before -Dir $straightDir |
+                Where-Object { $_ -notmatch '\.log$' -and $_ -notmatch '\.osprey\.task$' })
+            foreach ($c in $m11Changed) {
+                $leaf = ($c -replace '^[a-z]+: ', '')
+                # The products' own validity stamps travel with them.
+                $leaf = ($leaf -replace '\.(FirstPassFDR|SecondPassFDR)\.osprey\.task$', '')
+                if ($m11Allowed -notcontains $leaf) {
+                    $m11Issues.Add(("the pay-later fold touched an artifact other than the " +
+                        "report: {0}" -f $c))
+                }
+            }
+        }
+        Remove-Item $m11Ref -Recurse -Force -ErrorAction SilentlyContinue
+
+        if ($m11Issues.Count -eq 0) {
+            $summaryLines.Add(("$name mode11 (pay-later diagnostics: folded, no analysis, same " +
+                "report): PASS (pass-2 byte-exact; pass-1 exact except the views no pay-later " +
+                "path can rebuild today: {0})") -f ($m11Pass1Unavailable -join ', '))
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode11 (pay-later diagnostics): FAIL - $($m11Issues.Count) issue(s)"
+            $m11Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode11 (pay-later diagnostics): FAIL ($($m11Issues.Count) issues)")
         }
     }
 

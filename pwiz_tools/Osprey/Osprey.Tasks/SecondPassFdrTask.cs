@@ -633,11 +633,19 @@ namespace pwiz.Osprey.Tasks
                 stratumBaseIds = pcStratum.BaseIds;
             }
 
-            // The same two steps the join performs between its second pass and its report, in
-            // the same order, so the two routes describe the identical pool. Neither is
-            // analysis: the overlay applies values already on disk, and the reclamp is a fold
+            // The same steps the join performs between its second pass and its report, in the
+            // same order, so the two routes describe the identical pool. None of them is
+            // analysis: the overlays apply values already on disk, and the reclamp is a fold
             // over them plus a per-run apply.
+            //
+            // BOTH arms of the overlay, and each is a no-op on the other's arm. The join needs
+            // only the streamed one, because on a resident pool ComputeAndPersist has just
+            // stamped the second-pass values onto the entries as it computed them. This fold
+            // skips that compute, so on the resident arm nothing would carry pass 2 onto the
+            // pool and the report would describe the FIRST pass under a pass-2 heading -
+            // complete, plausible, every card populated, and wrong.
             Pass2FdrSidecar.InstallStreamedPass2Overlay(ctx, rescored, Name, ValidityKey(ctx));
+            Pass2FdrSidecar.OverlayPass2OntoResidentPool(ctx, rescored, Name, ValidityKey(ctx));
             ReclampExperimentQToBestRun(rescored);
 
             ctx.LogInfo(string.Format(
