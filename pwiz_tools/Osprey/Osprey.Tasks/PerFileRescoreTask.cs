@@ -151,26 +151,28 @@ namespace pwiz.Osprey.Tasks
         public override string Name => TASK_NAME;
 
         /// <summary>
-        /// Computes the Stage 6 rescore in straight-through, the rescore worker
-        /// (--task PerFileRescoring), and the --input-scores
-        /// full-pipeline. Excluded in --task PerFileScoring, --task FirstPassFDR (stops at Stage 5),
-        /// and the --task SecondPassFDR run (where it rehydrates rather than
-        /// re-scoring, SecondPassFDR having no mzMLs).
+        /// Computes the Stage 6 rescore in the straight-through run and in the rescore
+        /// worker (--task PerFileRescoring). Excluded in --task PerFileScoring,
+        /// --task FirstPassFDR (stops at Stage 5), --task ModelDiagnostics (a render, which
+        /// also stops there) and --task SecondPassFDR, where it rehydrates rather than
+        /// re-scoring - that node has no data files to score from.
         /// </summary>
         public override bool IsIncluded(PipelineContext ctx)
         {
             var c = ctx.Config;
-            bool inputs = c.InputScores != null && c.InputScores.Count > 0;
-            // StopAfterStage5 is checked on BOTH input routes. It used to appear only in the
-            // --input-scores clause, which was enough while --task FirstPassFDR was the only
-            // thing that set it - that task rejects -i. --task ModelDiagnostics also stops
-            // after Stage 5 and takes -i, so this task ran anyway, demanded CompactedEntries
-            // that a diagnostics-only fold never publishes, and failed the run AFTER the report
-            // it was asked for had been written. A flag named for a stage boundary has to mean
-            // that boundary whatever the inputs look like.
-            return (!inputs && !c.NoJoin && !c.StopAfterStage5)
-                || (inputs && c.NoJoin)
-                || (inputs && !c.NoJoin && !c.StopAfterStage5 && !c.ExpectReconciledInput);
+            // The rescore worker is the ONE task NoJoin does not distinguish - it is set by
+            // --task PerFileScoring too - and the input KIND is what used to tell them
+            // apart: mzML in meant Stage 1-4, parquets in meant Stage 6. Both are named by
+            // their data files now, so the task says which worker this is, which is the only
+            // thing that ever actually decided it.
+            //
+            // StopAfterStage5 means that boundary whatever the inputs look like: it used to
+            // be checked on one route only, which was enough while --task FirstPassFDR was
+            // its only setter, and --task ModelDiagnostics sets it too - so this task ran
+            // anyway, demanded CompactedEntries that a diagnostics fold never publishes, and
+            // failed the run AFTER the report it was asked for had been written.
+            return c.SelectedTask == HpcTask.PerFileRescore
+                || (!c.NoJoin && !c.StopAfterStage5 && !c.ExpectReconciledInput);
         }
 
         // The final milestone of the shared mutable entry buffer: this task
@@ -2021,12 +2023,10 @@ namespace pwiz.Osprey.Tasks
             // and "the gate is green so the new path must have run" is precisely the inference
             // that let an earlier resume fix report success while testing the old path (defect
             // (b2), TODO-20260901_osprey_firstpassfdr_resume). A test can assert this line.
-            // Count the runs from the published parquet paths, NOT from config.InputScores -
-            // that list is null on a straight-through run, where the inputs are mzMLs. It read
-            // InputScores while the predicate above still required it; dropping that term left
-            // this line behind, and it threw a NullReferenceException on the first
-            // straight-through run. The paths are the right source on both shapes anyway: they
-            // are what the loop iterates.
+            // Count the runs from the published parquet paths. It used to read InputScores,
+            // which was null on a straight-through run, and it threw a NullReferenceException
+            // on the first one after the predicate above stopped requiring that list. The
+            // paths are the right source regardless: they are what the loop iterates.
             ctx.LogInfo(string.Format(
                 @"Per-run rescore: hydrating each of {0} run(s) from its own artifacts " +
                 @"(no all-runs pre-load; {1} retained base_id(s) read once).",

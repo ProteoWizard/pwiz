@@ -126,7 +126,7 @@ namespace pwiz.Osprey.Tasks
         /// reproduce the same hash a straight-through invocation would
         /// stamp into its parquet footers. Pipeline-populated fields
         /// that do NOT feed those hashes (e.g. the worker-mode
-        /// synthesis of <c>InputFiles</c> from <c>InputScores</c>) may be
+        /// population of <c>InputFiles</c> from <c>--input-list</c>) may be
         /// written once at pipeline entry. Run-time state that is not parsed
         /// config (e.g. file parallelism) lives on <see cref="RunPlan"/>
         /// instead. For per-file scratch that

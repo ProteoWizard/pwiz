@@ -21,8 +21,6 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
@@ -45,11 +43,22 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class PipelineMembershipTest
     {
-        private static OspreyConfig WithInputScores(Action<OspreyConfig> set)
+        /// <summary>
+        /// One task's config, built the way <c>Program.Main</c> builds it: the task, and the
+        /// three membership flags DERIVED from it. Nothing else - which is the change these
+        /// rows record. Each row used to carry an input KIND too (a parquet list standing for
+        /// <c>--input-scores</c>), and every predicate read both; the kind is gone and the
+        /// expected memberships below are unchanged, which is the claim worth pinning.
+        /// </summary>
+        private static OspreyConfig ForTask(HpcTask task)
         {
-            var config = new OspreyConfig { InputScores = new List<string> { @"a.scores.parquet" } };
-            set(config);
-            return config;
+            return new OspreyConfig
+            {
+                SelectedTask = task,
+                NoJoin = task == HpcTask.PerFileScoring || task == HpcTask.PerFileRescore,
+                StopAfterStage5 = task == HpcTask.FirstPassFdr || task == HpcTask.ModelDiagnostics,
+                ExpectReconciledInput = task == HpcTask.SecondPassFdr,
+            };
         }
 
         [TestMethod]
@@ -61,20 +70,24 @@ namespace pwiz.Osprey.Test
             {
                 (@"straight-through",  new OspreyConfig(),
                     new[] { true,  true,  true,  true  }),
-                (@"PerFileScoring",    new OspreyConfig { NoJoin = true },
+                (@"PerFileScoring",    ForTask(HpcTask.PerFileScoring),
                     new[] { true,  false, false, false }),
-                (@"FirstPassFDR",      WithInputScores(c => c.StopAfterStage5 = true),
+                (@"FirstPassFDR",      ForTask(HpcTask.FirstPassFdr),
                     new[] { false, true,  false, false }),
-                (@"PerFileRescoring",  WithInputScores(c => c.NoJoin = true),
+                (@"PerFileRescoring",  ForTask(HpcTask.PerFileRescore),
                     new[] { false, false, true,  false }),
-                (@"SecondPassFDR",     WithInputScores(c => c.ExpectReconciledInput = true),
+                (@"SecondPassFDR",     ForTask(HpcTask.SecondPassFdr),
                     new[] { false, false, false, true  }),
-                // --input-scores with no --task: the single-node full pipeline.
-                // PerFileScoring lazy-rehydrates the supplied scores rather than
-                // computing them, so it is excluded; FirstPassFDR..SecondPassFDR compute
-                // Stages 5-8.
-                (@"input-scores-full", WithInputScores(_ => { }),
-                    new[] { false, true,  true,  true  }),
+                // --task ModelDiagnostics is a RENDER over retained products, not a stage.
+                // It needs the per-file load (so PerFileScoring is in) and first-pass state
+                // (so FirstPassFDR is), and nothing after: a diagnostics fold publishes
+                // neither CompactedEntries nor a second pass, and the two tasks that demand
+                // them used to join anyway and fail the run AFTER writing the report it was
+                // asked for. The row that stood here was `input-scores-full` - the
+                // single-node full pipeline started from parquets - and it retired with the
+                // flag; this is the mode that was actually at risk.
+                (@"ModelDiagnostics",  ForTask(HpcTask.ModelDiagnostics),
+                    new[] { true,  true,  false, false }),
             };
 
             foreach (var c in cases)

@@ -402,30 +402,24 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestFirstPassMembershipAcrossTasks()
         {
-            var scores = new[] { "a.scores.parquet" };
-
             // Straight-through (-i, no --task): FirstPassFDR runs.
             Assert.IsTrue(FirstPassFdrTask.IsIncludedFor(new OspreyConfig()));
 
             // --task PerFileScoring / PerFileRescoring set NoJoin: excluded, they stop before
-            // the join.
+            // the join. One row each is enough now: these used to be asserted twice, once
+            // with a parquet list and once without, because the predicate read the input KIND
+            // as well as the flags and the two could disagree.
             Assert.IsFalse(FirstPassFdrTask.IsIncludedFor(
                 new OspreyConfig { NoJoin = true }));
-            Assert.IsFalse(FirstPassFdrTask.IsIncludedFor(
-                new OspreyConfig { NoJoin = true, InputScores = scores.ToList() }));
 
             // --task FirstPassFDR sets StopAfterStage5: it IS the first-pass node.
             Assert.IsTrue(FirstPassFdrTask.IsIncludedFor(
-                new OspreyConfig { StopAfterStage5 = true, InputScores = scores.ToList() }));
-
-            // The full --input-scores pipeline (no --task): runs.
-            Assert.IsTrue(FirstPassFdrTask.IsIncludedFor(
-                new OspreyConfig { InputScores = scores.ToList() }));
+                new OspreyConfig { StopAfterStage5 = true }));
 
             // --task SecondPassFDR: NoJoin FALSE, so the old !NoJoin proxy said "runs" - but
             // ExpectReconciledInput excludes it. This single row is the whole change.
             Assert.IsFalse(FirstPassFdrTask.IsIncludedFor(
-                new OspreyConfig { ExpectReconciledInput = true, InputScores = scores.ToList() }),
+                new OspreyConfig { ExpectReconciledInput = true }),
                 "--task SecondPassFDR must not be treated as running first-pass Percolator");
 
             // And the consequence the loader draws from it: the merge no longer demands the
@@ -440,8 +434,7 @@ namespace pwiz.Osprey.Test
             // near-empty .blib with no error. Streaming hydrate and lean projection are
             // different routes; only the first is what this row unlocks.
             Assert.IsFalse(PerFileScoringTask.NeedsResidentPool(
-                new OspreyConfig { ExpectReconciledInput = true, InputScores = scores.ToList() },
-                useFdrProjection: true));
+                new OspreyConfig { ExpectReconciledInput = true }, useFdrProjection: true));
         }
     }
 }

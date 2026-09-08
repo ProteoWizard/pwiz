@@ -58,14 +58,10 @@ namespace pwiz.Osprey.Tasks
         public override bool IsIncluded(PipelineContext ctx)
         {
             var c = ctx.Config;
-            bool inputs = c.InputScores != null && c.InputScores.Count > 0;
-            // StopAfterStage5 on BOTH input routes, for the reason PerFileRescoreTask.IsIncluded
-            // states: it appeared only in the --input-scores clause because --task FirstPassFDR
-            // was the only setter and that task rejects -i. --task ModelDiagnostics sets it too
-            // and takes -i.
-            return (!inputs && !c.NoJoin && !c.StopAfterStage5)
-                || (inputs && c.ExpectReconciledInput)
-                || (inputs && !c.NoJoin && !c.StopAfterStage5 && !c.ExpectReconciledInput);
+            // Its own node always, and the full pipeline unless something stops earlier.
+            // StopAfterStage5 means that boundary whatever the inputs look like, for the
+            // reason PerFileRescoreTask.IsIncluded states.
+            return c.ExpectReconciledInput || (!c.NoJoin && !c.StopAfterStage5);
         }
 
         // Phase B resume surface. Reads each file's reconciled

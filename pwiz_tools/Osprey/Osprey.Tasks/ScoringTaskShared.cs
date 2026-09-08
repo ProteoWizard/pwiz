@@ -331,19 +331,18 @@ namespace pwiz.Osprey.Tasks
         /// to, for naming the analysis-wide experiment-scope FDR sidecar
         /// (<see cref="FdrExperimentSidecar.PathFor"/>).
         ///
-        /// <para>Prefers <c>InputScores</c> over <c>InputFiles</c> because a distributed
-        /// <c>--task</c> node is given its inputs as scores parquets and may have no mzML list
-        /// at all; both resolve to the same directory, since the parquets are written beside the
-        /// inputs. What matters is only that every phase of one analysis picks a path that
-        /// resolves the SAME way - the blib's own directory does not, which is the bug this
-        /// exists to avoid.</para>
+        /// <para>The FIRST input, on every route. It used to prefer <c>InputScores</c>,
+        /// because a distributed <c>--task</c> node was given its inputs as scores parquets
+        /// and might have had no data-file list at all; every node is given the same list
+        /// now, and both forms resolved to the same directory anyway since the parquets are
+        /// written beside the inputs. What matters is only that every phase of one analysis
+        /// picks a path that resolves the SAME way - the blib's own directory does not, which
+        /// is the bug this exists to avoid.</para>
         /// </summary>
         internal static string ArtifactSiblingPath(OspreyConfig config)
         {
             if (config == null)
                 return null;
-            if (config.InputScores != null && config.InputScores.Count > 0)
-                return config.InputScores[0];
             if (config.InputFiles != null && config.InputFiles.Count > 0)
                 return config.InputFiles[0];
             return null;
@@ -433,6 +432,63 @@ namespace pwiz.Osprey.Tasks
             // --model-diagnostics datasets for exactly this reason and must now run and pass.
             string path = RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
             return !string.IsNullOrEmpty(path) && RetainedBaseIdSidecar.IsCurrentFormat(path);
+        }
+
+        /// <summary>
+        /// Every task that starts AFTER Stage 4 - the two joins and the rescore worker. They
+        /// are handed a directory of per-run artifacts rather than spectra, so
+        /// <see cref="PerFileScoringTask"/> does not run for them; a consumer materializes
+        /// its state through <c>ctx.Demand</c>, which routes to its disk load.
+        ///
+        /// <para>This used to be asked as "were parquets supplied on the command line", which
+        /// is the INPUT KIND - the Rust pipeline's way of saying Stage 1-4 was done. The port
+        /// says it with <c>--task</c>, and the two seams disagreeing is what let
+        /// <c>--task ModelDiagnostics</c> join the pipeline and demand state a diagnostics
+        /// fold never publishes. One question, asked of the task.</para>
+        ///
+        /// <para><c>ModelDiagnostics</c> is deliberately NOT here. It is neither a fan-out nor
+        /// a join but a render over retained products, and it needs the per-file load to have
+        /// happened - which it did by taking <c>-i</c> even while the others took parquets.
+        /// That asymmetry was the first symptom of the two seams, and it survives the
+        /// retirement as an ordinary membership fact rather than as an input-kind accident.</para>
+        /// </summary>
+        internal static bool StartsAfterPerFileScoring(OspreyConfig config)
+        {
+            switch (config.SelectedTask)
+            {
+                case HpcTask.FirstPassFdr:
+                case HpcTask.PerFileRescore:
+                case HpcTask.SecondPassFdr:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Each input's scores parquet, in input order: the reconciled sibling where Stage 6
+        /// has written one, else the Stage 4 file.
+        ///
+        /// <para>The derivation <c>--input-scores</c> used to be handed ready-made. Its
+        /// directory form globbed a directory and preferred the reconciled sibling per stem;
+        /// this is that rule, applied to the runs the command line names instead of to
+        /// whatever a directory happened to hold. The difference matters twice: a directory
+        /// with a stray parquet no longer changes the cohort, and ORDER is now the caller's
+        /// (FirstPassFDR reconciliation is order-sensitive, so a chain must pass a
+        /// deterministically sorted list - which is what it already did to get a stable
+        /// directory sort).</para>
+        /// </summary>
+        internal static List<string> ScoresPathsForInputs(OspreyConfig config)
+        {
+            var paths = new List<string>(config.InputFiles?.Count ?? 0);
+            if (config.InputFiles == null)
+                return paths;
+            foreach (string input in config.InputFiles)
+            {
+                paths.Add(ParquetScoreCache.EffectiveScoresPathFromScoresPath(
+                    ParquetScoreCache.GetScoresPath(input)));
+            }
+            return paths;
         }
 
         /// <summary>

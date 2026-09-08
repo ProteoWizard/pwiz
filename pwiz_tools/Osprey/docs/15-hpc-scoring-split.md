@@ -6,7 +6,7 @@ For large experiments (hundreds to thousands of mzML files) the Osprey pipeline 
 
 The C# port implements this split as **four pipeline tasks** driven by a single `--task <Name>` CLI selector, rather than the Rust doc's `--no-join` / `--join-at-pass` / `--join-only` flag family. Each task is a subclass of `OspreyTask` (`Osprey.Tasks/OspreyTask.cs`), and the orchestration model is a per-task membership predicate walked by a driver loop (`Osprey/AnalysisPipeline.cs:99-112`) rather than a contiguous `[start..stop]` stage window.
 
-> **This document owns operations**: CLI flags, the membership truth table, `--input-scores` resolution and ordering, footer-hash validation, and concurrency. *Why* the split has this shape - the scope of each artifact, which task may read what, and the exact file list a node must be shipped at each boundary - is owned by [00-pipeline-architecture.md](00-pipeline-architecture.md), and the byte formats by [14-intermediate-files.md](14-intermediate-files.md). Read 00 before changing what any task writes.
+> **This document owns operations**: CLI flags, the membership truth table, how a task names its runs and in what order, footer-hash validation, and concurrency. *Why* the split has this shape - the scope of each artifact, which task may read what, and the exact file list a node must be shipped at each boundary - is owned by [00-pipeline-architecture.md](00-pipeline-architecture.md), and the byte formats by [14-intermediate-files.md](14-intermediate-files.md). Read 00 before changing what any task writes.
 
 > **In flight** - this document describes `--task PerFileRescoring` as rehydrating `FirstPassFdrTask` and reading an all-runs `CompactedEntries` buffer (the membership truth table below, and the Stage 6 section). That is what the branch `Skyline/work/20260901_osprey_firstpass_resume` replaces with a per-run hydrate, so both statements change when it lands. **Deviations from the target architecture are tracked in one place - 00's `## In flight` section - not per document**; this note exists so a reader of 15 alone knows to look there.
 
@@ -53,9 +53,9 @@ The exact per-task membership per mode is pinned by `Osprey.Test/PipelineMembers
 | straight-through (no `--task`, `-i mzML`) | run | run | run | run |
 | `--task PerFileScoring` (`NoJoin`) | run | – | – | – |
 | `--task FirstPassFDR` (`StopAfterStage5`) | rehydrate | run | – | – |
-| `--task PerFileRescoring` (`NoJoin`+`InputScores`) | rehydrate | rehydrate | run | – |
+| `--task PerFileRescoring` (`NoJoin`, `SelectedTask`) | rehydrate | rehydrate | run | – |
 | `--task SecondPassFDR` (`ExpectReconciledInput`) | rehydrate | (skipped) | rehydrate | run |
-| `--input-scores`, no `--task` (single-node full) | rehydrate | run | run | run |
+| `--task ModelDiagnostics` (`StopAfterStage5`) | rehydrate | rehydrate | – | – |
 
 ("rehydrate" = excluded from the driver loop but lazily materialized on demand from disk; "–" = never touched.) The predicates live in `PerFileScoringTask.IsIncluded` (`:84-88`), `FirstPassFdrTask.IsIncluded` (`:80-95`), `PerFileRescoreTask.IsIncluded` (`:123-130`), and `SecondPassFdrTask.IsIncluded` (`:57-64`).
 
@@ -67,9 +67,9 @@ The exact per-task membership per mode is pinned by `Osprey.Test/PipelineMembers
 - `<stem>.calibration.json` — RT + MS1/MS2 mass calibration (`CalibrationIO.CalibrationPathForInput`).
 - `<stem>.spectra.bin` — the decoded-spectrum cache. No *join* reads it, but Stage 6 rescore does, and it is what lets a search run at all once the input has been deleted (see 14-intermediate-files.md).
 
-The parquet footer is stamped once against the unmutated outer config (`:226-232`) with `osprey.version`, `osprey.search_hash`, `osprey.library_hash`, and `osprey.reconciled = "false"`. Under `--task PerFileScoring` (`config.NoJoin` with no `--input-scores`) the task stops after writing the parquets and returns false with `ExitCode = 0` (`FinalizeAndCheck`, `:649-658`) — Stage 5+ is skipped, no blib is written. `--output` is accepted but not used (`Osprey/Program.cs:228-232` reports the real per-file parquet output instead of warning).
+The parquet footer is stamped once against the unmutated outer config (`:226-232`) with `osprey.version`, `osprey.search_hash`, `osprey.library_hash`, and `osprey.reconciled = "false"`. Under `--task PerFileScoring` (`config.NoJoin`, `SelectedTask == PerFileScoring`) the task stops after writing the parquets and returns false with `ExitCode = 0` (`FinalizeAndCheck`, `:649-658`) — Stage 5+ is skipped, no blib is written. `--output` is accepted but not used (`Osprey/Program.cs:228-232` reports the real per-file parquet output instead of warning).
 
-Under `--task PerFileScoring` the task's `IsIncluded` requires **no** `--input-scores` (`:84-88`); `ValidateArgs` rejects `--task PerFileScoring --input-scores` (`Osprey/Program.cs:357-366`).
+Under `--task PerFileScoring` the task's `IsIncluded` is true because the task does not start after Stage 4 (`ScoringTaskShared.StartsAfterPerFileScoring`). The cross `ValidateArgs` used to reject here - `--task PerFileScoring --input-scores` - cannot be typed any more, which is the point of retiring the second seam rather than teaching a third predicate about it.
 
 `ProcessFile` always writes the parquet regardless of task, matching Rust's end-to-end behavior (the sidecar is needed by Stage 6 reconciliation to lazy-load CWT candidates).
 
@@ -86,7 +86,7 @@ Under `--task PerFileScoring` the task's `IsIncluded` requires **no** `--input-s
 
 The boundary file pair per file is thus `<stem>.1st-pass.fdr_scores.bin` + `<stem>.reconciliation.json`. Each reconciliation.json carries `search_hash`, `library_hash`, the sorted join-wide file-stem set, and the global first-pass passing base_id set (`:970-996`), so a single-file Stage 6 worker can reconstruct the join-wide compaction set.
 
-Under `--task FirstPassFDR` (`config.StopAfterStage5`), `PlanStage6` writes the boundary pair and returns true with `ExitCode = 0` before Stage 6 rescore (`:775-797`). `IsIncluded` requires `--input-scores` with 2+ parquets (`ValidateArgs`, `Osprey/Program.cs:379-399`) and `Reconciliation.Enabled = true`.
+Under `--task FirstPassFDR` (`config.StopAfterStage5`), `PlanStage6` writes the boundary pair and returns true with `ExitCode = 0` before Stage 6 rescore (`:775-797`). `ValidateArgs` requires `--input` with 2+ runs and `Reconciliation.Enabled = true`: the Stage 5 -> Stage 6 boundary pair is only meaningful for multi-file fan-back-in.
 
 ## Stage 6 — Per-file rescore (`--task PerFileRescoring`)
 
@@ -96,7 +96,7 @@ Under `--task FirstPassFDR` (`config.StopAfterStage5`), `PlanStage6` writes the 
 
 Reconciled output goes to a **separate** `<stem>.scores-reconciled.parquet` sibling, leaving the Stage 4 `<stem>.scores.parquet` intact (`ParquetScoreCache.GetReconciledScoresPath`; `WriteReconciledAndStamp`, `:944-987`). Its footer carries `osprey.reconciled = "true"` plus `osprey.reconciliation_hash` (`Osprey.Tasks/ReconciledParquetWriter.cs:198-205`). This differs from the Rust doc, which says Stage 6 "rewrites each `<stem>.scores.parquet`" in place (see Divergences).
 
-Under `--task PerFileRescoring` (`config.NoJoin` + `--input-scores`), `IsIncluded` (`:123-130`) includes only this task; `PerFileScoringTask` and `FirstPassFdrTask` lazy-rehydrate the upstream state from the boundary files via `ctx.Demand`. `RescoreWorker.Run` (`Osprey/RescoreWorker.cs:80-91`) is now a thin alias that just calls `new AnalysisPipeline().Run(config)` — the hand-rolled worker path was collapsed into the canonical driver. `ValidateArgs` forbids `-i` (mzML paths are derived from the parquet stems) and requires `--library` + `--output` (`Osprey/Program.cs:368-377`).
+Under `--task PerFileRescoring` (`config.NoJoin`, and `SelectedTask` is what distinguishes it from `PerFileScoring` - the input KIND used to), `IsIncluded` includes only this task; `PerFileScoringTask` and `FirstPassFdrTask` lazy-rehydrate the upstream state from the boundary files via `ctx.Demand`. `RescoreWorker.Run` (`Osprey/RescoreWorker.cs:80-91`) is now a thin alias that just calls `new AnalysisPipeline().Run(config)` — the hand-rolled worker path was collapsed into the canonical driver. `ValidateArgs` requires `--input` (the run this worker rescores, whose parquet and sidecars derive from its stem) plus `--library` + `--output`.
 
 ## Stages 7-8 — Second-pass FDR (`--task SecondPassFDR`)
 
@@ -107,25 +107,25 @@ Under `--task PerFileRescoring` (`config.NoJoin` + `--input-scores`), `IsInclude
 3. Re-clamp experiment q to best run q (`PercolatorEngine.ClampExperimentQToBestRun`, `:177`).
 4. Write the BiblioSpecLite `.blib` (`WriteBlibOutput`, `:299-370`; see 13-blib-output-schema.md).
 
-Under `--task SecondPassFDR` (`config.ExpectReconciledInput`), `Rehydrate` (`:317-455`) hydrates from the reconciled parquets + sidecars **without** materializing `FirstPassFdrTask` (which would wrongly re-run Stage 5 Percolator on the reconciled parquets), applies its own compaction, and lets `SecondPassFdrTask.Run` do 2nd-pass FDR + protein FDR + blib. The strict reconciled-input gate asserts every `--input-scores` parquet carries `osprey.reconciled = "true"` (`ParquetScoreCache.ValidateScoresParquetGroup`, `Osprey.IO/ParquetScoreCache.cs:1292-1305`). `ValidateArgs` forbids `-i` and requires `--library` + `--output` (`Osprey/Program.cs:401-408`).
+Under `--task SecondPassFDR` (`config.ExpectReconciledInput`), `Rehydrate` (`:317-455`) hydrates from the reconciled parquets + sidecars **without** materializing `FirstPassFdrTask` (which would wrongly re-run Stage 5 Percolator on the reconciled parquets), applies its own compaction, and lets `SecondPassFdrTask.Run` do 2nd-pass FDR + protein FDR + blib. The strict reconciled-input gate asserts every run's reconciled parquet carries `osprey.reconciled = "true"` (`ParquetScoreCache.ValidateScoresParquetGroup`). `ValidateArgs` requires `--input` plus `--library` + `--output`.
 
 `SecondPassFdrTask.Rehydrate` returns `true` as a no-op (`:113`): nothing consumes SecondPassFDR's state in-memory, so it is never demanded.
 
-## Full pipeline (default) and `--input-scores` full run
+## Full pipeline (default)
 
-With no `--task`, all four tasks run in one process (`straight-through` row of the truth table): output is identical to running the four workers in sequence over the same files. `--input-scores` with no `--task` (the `input-scores-full` row) runs Stages 5-8 in one process from existing per-file parquets — `PerFileScoringTask` is excluded (`IsIncluded` returns false when `InputScores` is non-empty, `:84-88`) and lazy-rehydrates the supplied scores instead of recomputing them.
+With no `--task`, all four tasks run in one process (`straight-through` row of the truth table): output is identical to running the four workers in sequence over the same files. A run whose per-file artifacts are already on disk resumes to whichever stage is outstanding - the per-task validity sidecars decide that, not the input kind.
 
-## `--input-scores` resolution and ordering
+The row that used to sit beside it, `--input-scores` with no `--task` (a single-node full run started from parquets), retired with the flag. It was the same run: the pipeline resumes from whatever is current in the output directory either way.
 
-`Program.ResolveInputScores` (`Osprey/Program.cs:446-483`), wired through `ARG_INPUT_SCORES` (`Osprey/OspreyCommandArgs.cs:208-220`):
+## How a task names its runs, and ordering
 
-- A single **directory** argument is globbed **non-recursively** for `*.parquet`, then classified by suffix: `*.scores-reconciled.parquet` vs `*.scores.parquet` (`:459-465`).
-- **Reconciled wins per stem**: a stem with both files returns only the reconciled parquet (the authoritative later pass); a stem with only the original returns the original (`:469-472`).
-- The resulting list is **sorted Ordinal** (`:473`), so the file order is deterministic and stable across nodes.
-- Explicit path lists are passed through unchanged after existence validation (`:477-482`); repeated `--input-scores` flags accumulate and re-resolve (`OspreyCommandArgs.cs:211-218`).
-- Empty directory or missing explicit path throws (`:466-468`, `:479-480`).
+Every task takes `-i` / `--input-list`, naming the **data files**, and derives each run's parquet and sidecars from the input stem plus `--output-dir`. The data file need not still exist: `Program.Main`'s input check accepts a run whose `.spectra.bin` is on disk (delete-the-sources-after-caching), and also one whose `.scores.parquet` - or its reconciled sibling - is on disk, which is the state a staged worker directory is in.
 
-At pipeline entry, `AnalysisPipeline.Run` synthesizes `config.InputFiles` from the parquet stems once (`:76-83`, via `RescoreHydration.SyntheticInputFromParquet`) so every per-task accessor sees a populated `InputFiles` regardless of which task the run starts at.
+- **Reconciled wins per stem**, as it always did: `ScoringTaskShared.ScoresPathsForInputs` resolves each input through `ParquetScoreCache.EffectiveScoresPathFromScoresPath`, so a run whose Stage 6 output exists is read from the reconciled parquet and one without it from the Stage 4 file.
+- **Order is the caller's.** FirstPassFDR reconciliation is order-sensitive, so a chain must pass a deterministically sorted list. `--input-scores` used to sort a globbed directory Ordinal on the caller's behalf; naming the runs explicitly means an orchestrator states the order rather than inheriting it from a directory listing, and a stray parquet in that directory can no longer change the cohort.
+- `--input-list` takes one path per line (blank lines and `#` comments ignored) and composes with `-i`. It is what a cohort past a few hundred runs needs: 446 `-i` paths measured ~28,600 characters against a 32,767 limit.
+
+**Why the flag went.** It named an input KIND - "you handed me parquets" - which is how the Rust pipeline said *Stage 1-4 is done*. The C# port says that with `--task` plus the per-run validity sidecars, and two seams answering one question is what let `--task ModelDiagnostics` (which sets `StopAfterStage5`, a C#-era signal, while its inputs were mzML stems, a Rust-era one) join the pipeline and demand state a diagnostics fold never publishes. The clearest evidence it was a round trip: the pipeline's first act was `RescoreHydration.SyntheticInputFromParquet`, rebuilding a synthetic `<stem>.mzML` that does not exist, purely so the sidecar path helpers could work.
 
 ## Parquet footer hash validation
 
@@ -183,7 +183,6 @@ a corrupt cache a downstream stage must reject. See principle P8 in
 | Flag / field | Default | Effect on this stage |
 |---|---|---|
 | `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | none (full pipeline in one process) | Selects one HPC worker; sets `NoJoin` / `StopAfterStage5` / `ExpectReconciledInput` (`Program.cs:126-128`). Resolved case-insensitively (`ResolveTask`). |
-| `--input-scores <paths\|dir>` | none | One or more `.scores.parquet` files or a single directory (globbed non-recursively, reconciled-wins-per-stem, Ordinal-sorted). Mutually exclusive with `-i/--input`. Consumed by `FirstPassFDR` / `PerFileRescoring` / `SecondPassFDR` and the `--input-scores`-only full run. |
 | `-i/--input <mzML...>` | none | Required by `PerFileScoring` and the default full pipeline; forbidden by `FirstPassFDR` / `PerFileRescoring` / `SecondPassFDR`. |
 | `-l/--library`, `-o/--output` | none | Required by `FirstPassFDR`, `PerFileRescoring`, and `SecondPassFDR`. `--output` is accepted-but-unused by `--task PerFileScoring` (writes per-file parquets, not a blib). |
 | `--reconciliation-compaction-fdr <v>` | 0.01 | Peptide-q gate for Stage 5 compaction (`FirstPassFdrTask.cs:689`). |
@@ -202,7 +201,7 @@ a corrupt cache a downstream stage must reject. See principle P8 in
 
 - **[INTENTIONAL-CSHARP-DESIGN] One name per task, describing the FDR pass** - The CLI name, the `HpcTask` member, the task class, the `[TASK]` log token, and the `.osprey.task` stamp are all one string per task, describing the FDR pass rather than the join topology. Two of them used to describe the topology instead (`FirstJoinTask`/`FirstPassFDR` and `MergeNodeTask`/`SecondPassFDR`), which cost a reader a mapping table and once produced a resume leg that keyed off the class names, matched zero sidecars, and passed green having resumed nothing; issue #4535 renamed them. The residual mapping is `PerFileRescoring` vs `PerFileRescore`, plus the `Fdr`/`FDR` casing that follows this codebase's type convention (`FdrEntry`, `FdrController`) rather than the all-caps `pwiz.Osprey.FDR` namespace. Folding those two in as well would let `ResolveTask` and `TaskCliName` be deleted outright. Evidence: the `HpcTask` enum in `Osprey.Core/OspreyConfig.cs`, `ResolveTask` / `TaskCliName` in `Osprey/Program.cs`. Severity: info.
 
-- **[INTENTIONAL-CSHARP-DESIGN] Stage 6 writes a separate `.scores-reconciled.parquet`, not an in-place rewrite** - Rust doc says Stage 6 "rewrites each `<stem>.scores.parquet`" with reconciled scores; C# writes a separate `<stem>.scores-reconciled.parquet` sibling and leaves the Stage 4 parquet intact (crash-safety: a partial Stage 6 crash cannot half-rewrite the Stage 4 output). `--input-scores` directory resolution then prefers the reconciled sibling per stem. Evidence: `Osprey.Tasks/PerFileRescoreTask.cs:163-177,944-954`, `Osprey/Program.cs:459-472`. Severity: minor.
+- **[INTENTIONAL-CSHARP-DESIGN] Stage 6 writes a separate `.scores-reconciled.parquet`, not an in-place rewrite** - Rust doc says Stage 6 "rewrites each `<stem>.scores.parquet`" with reconciled scores; C# writes a separate `<stem>.scores-reconciled.parquet` sibling and leaves the Stage 4 parquet intact (crash-safety: a partial Stage 6 crash cannot half-rewrite the Stage 4 output). Each run's effective parquet then prefers the reconciled sibling (`ParquetScoreCache.EffectiveScoresPathFromScoresPath`). Evidence: `Osprey.Tasks/PerFileRescoreTask.cs`, `Osprey.Tasks/ScoringTaskShared.ScoresPathsForInputs`. Severity: minor.
 
 - **[INTENTIONAL-CSHARP-DESIGN] Orchestration is membership-predicate + lazy-rehydrate, not a stage window** - Rust doc frames each mode as "run stages X through Y, load the rest from disk"; C# implements a fixed four-task canonical pipeline where each task's `IsIncluded` decides participation and excluded/valid tasks lazy-rehydrate their state on demand through the typed byproduct registry. Behavior/outputs match the Rust modes (pinned by the membership truth table). Evidence: `Osprey/AnalysisPipeline.cs:99-148`, `Osprey.Test/PipelineMembershipTest.cs:55-93`. Severity: info.
 
@@ -212,4 +211,4 @@ a corrupt cache a downstream stage must reject. See principle P8 in
 
 - **[STALE-RUST-DOC] Stage 4 parquet footer omits `osprey.reconciliation_hash`** - Rust doc's hash table lists `osprey.reconciliation_hash` as parquet footer metadata generally; in C# the Stage 4 `.scores.parquet` footer carries only `version` / `search_hash` / `library_hash` / `reconciled = "false"`, and `reconciliation_hash` is written **only** on the Stage 6 reconciled parquet. This matches the semantic intent (the hash is meaningful only post-reconciliation) but the field is not present on every parquet. Evidence: `Osprey.Tasks/PerFileScoringTask.cs:226-232` vs `Osprey.Tasks/ReconciledParquetWriter.cs:198-205`. Severity: info.
 
-Verified as matching the Rust doc: the four-phase split (per-file scoring / FirstPassFDR / per-file rescore / SecondPassFDR) and which stages run vs load-from-disk in each mode; the boundary file pair (`<stem>.1st-pass.fdr_scores.bin` + `<stem>.reconciliation.json`); the SHA-256 footer-hash validation (version / search_hash / library_hash / reconciled) aborting early with a file-named error; the `--task SecondPassFDR` strict `reconciled = "true"` gate; the `--input-scores` directory being scanned non-recursively; the mutual-exclusion validation errors (`Program.ValidateArgs`); the reconciliation.json carrying `search_hash`/`library_hash`; the copy-and-verify safe-write pattern; and the env-var-gated cross-impl bisection dumps.
+Verified as matching the Rust doc: the four-phase split (per-file scoring / FirstPassFDR / per-file rescore / SecondPassFDR) and which stages run vs load-from-disk in each mode; the boundary file pair (`<stem>.1st-pass.fdr_scores.bin` + `<stem>.reconciliation.json`); the SHA-256 footer-hash validation (version / search_hash / library_hash / reconciled) aborting early with a file-named error; the `--task SecondPassFDR` strict `reconciled = "true"` gate; the per-task input requirements (`Program.ValidateArgs`); the reconciliation.json carrying `search_hash`/`library_hash`; the copy-and-verify safe-write pattern; and the env-var-gated cross-impl bisection dumps.

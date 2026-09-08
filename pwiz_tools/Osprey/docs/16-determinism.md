@@ -134,8 +134,10 @@ is seeded and deterministic. There are **two**, structurally different:
    which run survives follows FILE ORDER. A cross-run maximum was commutative and did not.
    Re-running the same file list in the same order reproduces the same model; re-running it
    in a different order does not, and file order is not part of the task validity key.
-   `Program.ResolveInputScores` sorts the single-directory form but preserves caller order
-   for the explicit multi-path `--input-scores` form.
+   Order is the CALLER's: `--input-scores` used to sort a globbed directory on the caller's
+   behalf, and with it retired an orchestrator states the order explicitly (`--input-list`
+   takes a sorted file). A stray parquet in a directory can no longer change the cohort
+   either, which is the other half of the same trade.
 
 `XorShift64` (`Osprey.ML/LinearSvmClassifier.cs:266`)
 matches the Rust generator exactly (`x ^= x << 13; x ^= x >> 7; x ^= x << 17`).

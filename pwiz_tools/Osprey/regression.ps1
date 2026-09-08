@@ -1414,7 +1414,7 @@ function Invoke-HpcChain {
     # staged dir as CWD.
     $manifestName = if ($Manifest) { Split-Path -Leaf $Manifest } else { $null }
     $extraArgs = Get-DatasetCliArgs -Spec $Spec -Manifest $manifestName
-    # Stable, file-order stem list (NOT hashtable key order) so the --input-scores
+    # Stable, file-order stem list (NOT hashtable key order) so the -i
     # argument order matches the straight-through's file order deterministically.
     $stemList = @($Mzmls | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) })
     $mzmlByStem = @{}
@@ -1488,8 +1488,12 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph1Dirs[$s] "$s.calibration.json") (Join-Path $ph2 "$s.calibration.json")
     }
     Copy-LibraryInto -Library $Library -Dir $ph2 -Manifest $Manifest
+    # -i names the DATA files, exactly as phase 1 was given them, even though this
+    # directory holds no data file at all: Osprey accepts an absent input whose scores
+    # parquet is on disk, which is precisely the state a staged join node is in. That
+    # tolerance is what --input-scores used to express by naming a different input KIND.
     $a2 = @('--task', 'FirstPassFDR')
-    foreach ($s in $stemList) { $a2 += @('--input-scores', "$s.scores.parquet") }
+    foreach ($s in $stemList) { $a2 += @('-i', "$s.mzML") }
     $a2 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString())
     $a2 += $extraArgs
@@ -1558,7 +1562,7 @@ function Invoke-HpcChain {
         $ph2diag = Join-Path $ph2 'output.1st-pass.model-diagnostics.json'
         if (Test-Path $ph2diag) { Copy-Item $ph2diag (Join-Path $ph3 'output.1st-pass.model-diagnostics.json') }
         Copy-LibraryInto -Library $Library -Dir $ph3 -Manifest $Manifest
-        $a3 = @('--task', 'PerFileRescoring', '--input-scores', "$s.scores.parquet",
+        $a3 = @('--task', 'PerFileRescoring', '-i', "$s.mzML",
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
                 '--protein-fdr', '0.01', '--threads', $Threads.ToString())
         $a3 += $extraArgs
@@ -1697,8 +1701,12 @@ function Invoke-HpcChain {
     # worker dirs are done.
     foreach ($d in $ph3Dirs.Values) { Remove-Scratch $d }
     Copy-LibraryInto -Library $Library -Dir $ph4 -Manifest $Manifest
+    # -i again, and the RECONCILED parquet is what each run resolves to: this directory
+    # holds only the reconciled sibling, and EffectiveScoresPathFromScoresPath prefers it.
+    # Naming it explicitly is what --input-scores did; deriving it is what every other
+    # reader on this leg already did.
     $a4 = @('--task', 'SecondPassFDR')
-    foreach ($s in $stemList) { $a4 += @('--input-scores', "$s.scores-reconciled.parquet") }
+    foreach ($s in $stemList) { $a4 += @('-i', "$s.mzML") }
     $a4 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString())
     $a4 += $extraArgs
@@ -1913,7 +1921,7 @@ foreach ($name in $selected) {
         # pool, so no leg of this chain arms the guard at all. Keeping the opt-in would be
         # actively harmful:
         # it wrapped the whole chain and would mask a genuine guard regression on any
-        # --input-scores worker (--task PerFileScoring / PerFileRescoring), which is exactly
+        # per-file worker (--task PerFileScoring / PerFileRescoring), which is exactly
         # what mode 3 exists to exercise.
         $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
             -Resolution $cfg.Resolution -ChainRoot $chainRoot -Spec $cfg -Manifest $inputs.Manifest `

@@ -32,7 +32,7 @@ layer, and none repeats another:
 |---|---|---|
 | **00** (this doc) | Scope, contract, principles, relay | Which file, whose, when, and who may read it |
 | [14-intermediate-files](14-intermediate-files.md) | Bytes | Headers, versions, schemas, hashing, invalidation mechanics |
-| [15-hpc-scoring-split](15-hpc-scoring-split.md) | Operations | CLI flags, `--input-scores` ordering, orchestration recipes |
+| [15-hpc-scoring-split](15-hpc-scoring-split.md) | Operations | CLI flags, how a task names its runs and in what order, orchestration recipes |
 
 If you are asking "what does this file's header look like?", you want 14. "How do I
 launch the third worker?" is 15. "Is this task allowed to read that file?" is here.
@@ -150,7 +150,7 @@ as the worked one, because for a long time every step in it *was* a fold and the
 held the pool. The fragment release, the pass-2 competition, protein parsimony, the
 experiment-q re-clamp and all three `.blib` gates each reduce to `O(distinct)` and each
 visits every run - but the stage was **handed** every run's survivors before the first of
-them started, by the `--input-scores` merge, so nothing they did could bring the peak down.
+them started, by the `--task SecondPassFDR` merge, so nothing they did could bring the peak down.
 At 446 CHS runs that load reached 68.0 GB and was killed at run 381 with 0.34 GB free,
 having computed nothing. **A fold does not bound anything unless its SOURCE is per-run
 too**: the runs are now rebuilt one at a time from their own
@@ -852,7 +852,7 @@ regardless, and adding a third path to a hash would narrow it further.
 
 A warm resume across builds is a separate matter: the version stamp is compared for exact
 equality (`YEAR.ORDINAL.BRANCH.DOY`) - **but only where it is checked, which is narrower
-than it sounds.** That comparison guards the `--input-scores` parquet load. The
+than it sounds.** That comparison guards the per-run parquet load. The
 `.osprey.task` resume path does not do it: `TaskValiditySidecar.IsValid` compares the
 `validity_key` only, and the `version` field it records is provenance. No version component
 is in the base key either. So re-invoking the same straight-through command line the next
@@ -981,7 +981,7 @@ are functions of all runs:
 
 - `<stem>.scores.parquet` for **every** run in the cohort
 - `<stem>.calibration.json` for **every** run
-- the library, and `--input-scores` naming the parquets
+- the library, and `-i` naming the runs whose parquets it reads
 
 `.calibration.json` must travel, which is easy to get wrong because the join reads
 parquets rather than spectra. It supplies RT calibration and the isolation-scheme windows
