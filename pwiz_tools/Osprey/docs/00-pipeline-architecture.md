@@ -1051,14 +1051,22 @@ the text says so rather than describing the current shape as though it were the 
    `.scores.parquet` and first-pass sidecar. The streamed path is the default; the switch
    goes when the resident one does.
 
-   `OSPREY_STAGE7_STREAM=0` is the Stage 7 sibling, and the same disposition applies. It
+   `OSPREY_STAGE7_STREAM=0` is the Stage 7 sibling, and the same disposition applies - it
    selects the resident second-pass join, where `RescoredEntries` holds every run's
    survivors instead of rebuilding one run at a time through `StreamFiles`. Both arms are
-   required to produce identical bytes, which is what makes the switch an A/B ORACLE rather
-   than a fallback: it is the only way to compare the two, because nothing in the output
-   distinguishes them. That is also why `ScoringTaskShared.CanStreamStage7Join` is the one
-   place the choice is made, and why mode 3 asserts the marker line naming the shape that
-   actually ran rather than inferring it from the output.
+   required to produce identical bytes.
+
+   **It is NOT the in-place A/B its Stage 6 sibling is, and must not be described as one.**
+   `CanStreamStage7Join` short-circuits on `!config.ExpectReconciledInput` *before* it reads
+   the switch, and that flag is set only for `--task SecondPassFDR`. So on a straight-through
+   run the switch changes nothing - while `SecondPassFdrTask.ValidityKey` appends
+   `;stage7stream=0` unconditionally, invalidating the `.blib` and every 2nd-pass sidecar and
+   forcing a full Stage 7 re-run for a setting that cannot change the arm. Comparing the two
+   shapes means comparing two `--task SecondPassFDR` runs over the same linked bed.
+
+   Because nothing in the output distinguishes the arms, the shape that ran is asserted from
+   the marker line `Second-pass join: folding over N run(s)` rather than inferred - which is
+   what mode 3 does, scoped to the configurations that can actually stream.
 
 5. **Whether the 500-run / 64 GB target is met.** It is not yet, and which stage binds is
    itself moving as each is fixed. The two TODOs above carry the current measurements;

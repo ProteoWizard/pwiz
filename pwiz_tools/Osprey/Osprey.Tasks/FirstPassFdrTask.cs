@@ -1622,12 +1622,19 @@ namespace pwiz.Osprey.Tasks
         /// walks, which is what keeps the streamed report identical to the resident one.
         /// <paramref name="libraryById"/> is passed rather than pulled from the context because
         /// the rehydrate caller runs before <c>LibraryById</c> is published.
+        ///
+        /// <para><c>pass</c> selects which reductions the accumulator folds: 1 for the
+        /// pre-compaction first pass, 2 for SecondPassFdrTask's streamed fold over the final
+        /// reported pool. Everything else - the classification, the run-name seeding, the run FDR
+        /// and level - is derived identically for both, which is why the second pass shares this
+        /// helper rather than re-deriving them and letting the two drift.</para>
         /// </summary>
         internal static ModelDiagnosticsData.Accumulator BuildModelDiagnosticsAccumulator(
             IReadOnlyList<string> fileNames,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config,
-            Action<string> logInfo)
+            Action<string> logInfo,
+            int pass = 1)
         {
             ModelDiagnosticsReport.BuildClassificationFromLibrary(config, libraryById, logInfo,
                 out var classByBaseId, out var pairByBaseId, out var entrapmentRatio);
@@ -1635,7 +1642,8 @@ namespace pwiz.Osprey.Tasks
             for (int i = 0; i < runNames.Length; i++)
                 runNames[i] = fileNames[i];
             return new ModelDiagnosticsData.Accumulator(
-                runNames, classByBaseId, pairByBaseId, entrapmentRatio, config.RunFdr, config.FdrLevel);
+                runNames, classByBaseId, pairByBaseId, entrapmentRatio, config.RunFdr,
+                config.FdrLevel, pass);
         }
 
         /// <summary>

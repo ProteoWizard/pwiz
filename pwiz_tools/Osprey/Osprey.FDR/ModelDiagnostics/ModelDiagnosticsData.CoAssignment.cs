@@ -572,6 +572,23 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// another run's boundary and still produce a complete, plausible panel. Nothing
         /// downstream could detect it, which is why this throws rather than logs.
         /// </summary>
+        /// <summary>
+        /// <see cref="VerifyRunOrder"/> for a caller driving the phases itself. Public because
+        /// the streamed second-pass join indexes MORE than the panel by that position - the
+        /// diagnostics accumulator's per-file counts and cross-run streams share it - so the
+        /// same assertion has to be available outside this file.
+        /// </summary>
+        public static void VerifyStreamedRun(string[] runNames, int index, string runName)
+        {
+            VerifyRunOrder(runNames, index, runName);
+        }
+
+        /// <summary><see cref="VerifyRunCount"/> for the same caller, for the same reason.</summary>
+        public static void VerifyStreamedRunCount(string[] runNames, int seen)
+        {
+            VerifyRunCount(runNames, seen);
+        }
+
         private static void VerifyRunOrder(string[] runNames, int index, string runName)
         {
             if (index < runNames.Length && Equals(runNames[index], runName))
@@ -719,6 +736,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 double experimentAggregateScore,
                 double runQvalue, double experimentQvalue, double runFdr)
             {
+                // The forward misuse (judging before sealing) has always thrown; this is the
+                // REVERSE, which the public phase split newly admits. Observing after the seal
+                // mutates _experimentBest and lets SealRunCutoff overwrite a run's cutoff, moving
+                // the boundary that already-emitted verdicts were compared against - so the panel
+                // would mix two boundaries and still look complete.
+                if (_sealed)
+                {
+                    throw new InvalidOperationException(
+                        @"CoAssignmentPassBuilder.ObserveCutoff was called after SealCutoffs. The acceptance boundary is fixed once sealed, and moving it would leave verdicts already emitted against the old one.");
+                }
                 if (fileIdx != _fileIdx)
                 {
                     if (_fileIdx >= 0)
@@ -800,6 +827,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public void SealRunCutoff(int fileIdx)
             {
+                // Same reason as ObserveCutoff: this OVERWRITES _runCutoff[fileIdx] and
+                // _admittedRunDecoys[fileIdx] unconditionally, so after the seal it would move a
+                // per-run boundary out from under verdicts already compared against it.
+                if (_sealed)
+                {
+                    throw new InvalidOperationException(
+                        @"CoAssignmentPassBuilder.SealRunCutoff was called after SealCutoffs. A run's boundary cannot move once the detection phase has begun judging rows against it.");
+                }
                 double min = double.NaN;
                 foreach (uint id in _fileAccepted)
                 {
@@ -844,6 +879,17 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public void SealCutoffs()
             {
+                // Sealing twice is not idempotent and fails SILENTLY: the tail of this method
+                // records _acceptedForCutoff from _experimentAccepted and then CLEARS it, so a
+                // second call sets that count to 0 while _experimentCutoff keeps the boundary it
+                // already drew - and every row is then judged, added and flushed a second time,
+                // doubling the panel. Unreachable while both phases lived behind one private
+                // builder; reachable the moment they became a two-call public sequence.
+                if (_sealed)
+                {
+                    throw new InvalidOperationException(
+                        @"CoAssignmentPassBuilder.SealCutoffs was called twice. The detection phase seals the boundary itself, so driving it a second time would re-count the whole pool against a boundary already drawn.");
+                }
                 foreach (uint id in _experimentAccepted)
                 {
                     if (!_experimentBest.TryGetValue(id, out double v))

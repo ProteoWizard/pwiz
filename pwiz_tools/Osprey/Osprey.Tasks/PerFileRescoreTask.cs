@@ -447,15 +447,19 @@ namespace pwiz.Osprey.Tasks
             bool noRescorePossible = rescoreBundle == null && !perRunPlanAvailable;
             if (!didPlan && noRescorePossible && pass2Present < pass2Expected)
             {
+                // No --model-diagnostics clause. It used to append "because --model-diagnostics
+                // keeps the all-runs hydrate", which was true when that flag excluded the per-run
+                // hydrate and is now false on both counts: CanHydratePerRun stopped excluding it,
+                // and the Stage 7 join no longer declines under it either. An operator told that
+                // would drop the flag, re-run for hours and hit the identical refusal, because
+                // the actual cause is the one the sentence already names - no plan, no bundle,
+                // no per-run source.
                 ctx.LogError(string.Format(
                     @"Rescore resume: {0} of {1} run(s) still need re-scoring, but this process has " +
                     @"no plan to do it - FirstPassFDR did not plan here, no worker bundle was " +
-                    @"supplied, and the per-run hydrate is unavailable{2}. Continuing would write " +
+                    @"supplied, and the per-run hydrate is unavailable. Continuing would write " +
                     @"an output silently missing those runs.",
-                    pass2Expected - pass2Present, pass2Expected,
-                    ctx.Config.ModelDiagnostics
-                        ? @" because --model-diagnostics keeps the all-runs hydrate"
-                        : string.Empty));
+                    pass2Expected - pass2Present, pass2Expected));
                 ctx.ExitCode = 1;
                 return false;
             }

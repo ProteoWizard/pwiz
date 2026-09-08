@@ -574,17 +574,19 @@ namespace pwiz.Osprey.Tasks
         {
             // The pass-1 product is what pass 2 ENRICHES, so its absence means there is nothing
             // for this fold to attach to - and the fold is two full passes over the stream,
-            // rebuilding every run from disk twice. Checked HERE rather than left to the report
-            // writer, which is where the resident path checks it: there the read is the first
-            // statement and costs nothing, but on this path the writer is called AFTER the
-            // folding, so leaving the check to it spends both passes and discards the result.
-            // Measured shape at 446 runs: two rebuilds of 446 runs for an artifact that is then
-            // not written. Same message the writer emits, so the log reads identically either way.
-            if (!File.Exists(ModelDiagnosticsReport.Pass1SidecarPath(config)))
-            {
-                ctx.LogInfo(@"[MODEL-DIAGNOSTICS] pass-1 data sidecar not found; pass-2 enrichment skipped (pass-1 page stands).");
+            // rebuilding every run from disk twice. Read HERE rather than left to the report
+            // writer, which is where the resident path reads it: there the read is the first
+            // statement and costs nothing, but on this path the writer runs AFTER the folding,
+            // so leaving it there spends both passes and discards the result - two rebuilds of
+            // 446 runs for an artifact that is then not written.
+            //
+            // The READ, not File.Exists. The condition that actually matters is "can this be
+            // deserialized into something to enrich": an empty file deserializes to null and a
+            // truncated one throws, and both are exactly what an interrupted run leaves behind.
+            // A presence check would pass on either and spend everything anyway.
+            var pass1Data = ModelDiagnosticsReport.ReadPass1ForEnrichment(config, ctx.LogInfo);
+            if (pass1Data == null)
                 return;
-            }
 
             // Names, not entries: FileNames reads the buffer keys without pulling the deferred
             // milestone, which is the whole point of asking it rather than Value here.
@@ -593,13 +595,15 @@ namespace pwiz.Osprey.Tasks
             for (int i = 0; i < runNames.Length; i++)
                 runNames[i] = fileNames[i];
 
-            // The classification is derived ONCE and then carried by the accumulator, because
-            // rebuilding it runs for minutes at 6.3M library entries. Same source and one-time
-            // logging as every other path.
-            ModelDiagnosticsReport.BuildClassificationFromLibrary(config, libraryById, ctx.LogInfo,
-                out var classByBaseId, out var pairByBaseId, out var entrapmentRatio);
-            var accumulator = new ModelDiagnosticsData.Accumulator(runNames, classByBaseId,
-                pairByBaseId, entrapmentRatio, config.RunFdr, config.FdrLevel, 2);
+            // The SAME seeding the first pass uses, differing only in the pass argument. Built
+            // through the shared helper rather than re-derived here: the classification runs for
+            // minutes at 6.3M library entries, and a second copy of the FdrEntry-to-accumulator
+            // mapping is exactly how the two passes drift apart without anything noticing.
+            // ClassByBaseId is read back off the accumulator for the same reason - the panel and
+            // the fold must classify a row identically or they describe different pools.
+            var accumulator = FirstPassFdrTask.BuildModelDiagnosticsAccumulator(
+                fileNames, libraryById, config, ctx.LogInfo, 2);
+            var classByBaseId = accumulator.ClassByBaseId;
 
             // Pass A: the accumulator's fold and co-assignment's cutoff phase, sharing one read.
             // Both are per-row reductions over the same rows, so the second phase of the panel is
@@ -609,25 +613,50 @@ namespace pwiz.Osprey.Tasks
             int fileIdx = 0;
             foreach (var kvp in rescored.StreamFiles(@"Folding pass-2 diagnostics"))
             {
-                foreach (var e in kvp.Value)
-                {
-                    accumulator.Add(fileIdx, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy,
-                        e.Score, new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, e.Pep));
-                }
+                // Same assertion phase 2 makes, and for a WIDER reason: this index addresses the
+                // accumulator's per-file passing counts and its four cross-run streams as well as
+                // the panel's boundary, and every one of those is reported against _runNames[f].
+                // A stream that reordered or dropped a run would mis-attribute the PerFile and
+                // CrossRun cards and still produce a complete, plausible Pass2Data - and phase 2
+                // could not see it, because it re-derives its own indices from the same array.
+                ModelDiagnosticsData.VerifyStreamedRun(runNames, fileIdx, kvp.Key);
+                ScoringTaskShared.FeedModelDiagnostics(accumulator, fileIdx, kvp.Value);
                 ModelDiagnosticsData.ObserveCoAssignmentRun(coAssign, fileIdx, kvp.Value,
                     classByBaseId, config.RunFdr, config.FdrLevel);
                 fileIdx++;
             }
+            ModelDiagnosticsData.VerifyStreamedRunCount(runNames, fileIdx);
 
             // Pass B: the panel's detection phase, which needs the boundary pass A folded.
-            var coAssignment = ModelDiagnosticsData.BuildCoAssignmentDetection(
-                coAssign, runNames, rescored.StreamFiles(@"Building pass-2 co-assignment"),
-                classByBaseId, ModelDiagnosticsReport.BuildPrecursorMzLookup(libraryById),
-                config.RunFdr, config.FdrLevel);
+            //
+            // Caught HERE, around this call alone, and not by the method-wide guard. The
+            // co-assignment order/count checks throw BY DESIGN, and the intended outcome of one
+            // firing is that the PANEL is refused - not that the eight correctly folded cards go
+            // with it. Letting the throw reach the outer catch would unwind past the writer
+            // below and leave no 2nd-pass product at all, which is how the resident arm behaves
+            // when its panel cannot be built (it degrades to CoAssignment = null and still
+            // writes everything). The two arms have to fail the same way, or the byte-identity
+            // claim only holds on the happy path.
+            ModelDiagnosticsData.CoAssignmentData coAssignment = null;
+            try
+            {
+                coAssignment = ModelDiagnosticsData.BuildCoAssignmentDetection(
+                    coAssign, runNames, rescored.StreamFiles(@"Building pass-2 co-assignment"),
+                    classByBaseId, ModelDiagnosticsReport.BuildPrecursorMzLookup(libraryById),
+                    config.RunFdr, config.FdrLevel);
+            }
+            catch (Exception ex)
+            {
+                // Named separately from the outer handler: "the panel was refused" and "the
+                // whole enrichment failed" are different outcomes and used to log the same line.
+                ctx.LogInfo(string.Format(
+                    @"[MODEL-DIAGNOSTICS] peak co-assignment refused, so the panel is omitted; the rest of the pass-2 report is unaffected: {0}",
+                    ex.Message));
+            }
 
             ModelDiagnosticsReport.WritePass2AndFinalizeFromAccumulator(
-                accumulator, coAssignment, pass2Contributions, config, ctx.LogInfo, ValidityKey(ctx));
+                pass1Data, accumulator, coAssignment, pass2Contributions, config, ctx.LogInfo,
+                ValidityKey(ctx));
         }
 
         /// <summary>
@@ -911,7 +940,7 @@ namespace pwiz.Osprey.Tasks
                     nFallback));
             }
 
-            // Streamed, and the LAST walk of the pool in this phase: what comes back is a
+            // Streamed, and the last walk the BLIB path makes: what comes back is a
             // compact record per passing observation plus the best run per precursor, so
             // everything after this line works on ~14 M values instead of holding 137 M
             // entries alive to read eight fields off them (#4486).

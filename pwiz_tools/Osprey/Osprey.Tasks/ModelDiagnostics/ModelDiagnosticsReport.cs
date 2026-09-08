@@ -283,8 +283,14 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// that its per-row verdicts are then compared against - it cannot be folded in the pass
         /// that computes it. Null leaves the panel out, exactly as a null library lookup does on
         /// the resident path.</para>
+        ///
+        /// <para><c>data</c> is the pass-1 object the caller already read in order to decide
+        /// whether folding was worth doing at all. It is handed in rather than re-read here:
+        /// on this path that read is the PRECONDITION for two full stream passes, so it has to
+        /// happen before them, and reading it a second time would let the two reads disagree.</para>
         /// </summary>
         public static void WritePass2AndFinalizeFromAccumulator(
+            ModelDiagnosticsData data,
             ModelDiagnosticsData.Accumulator accumulator,
             ModelDiagnosticsData.CoAssignmentData coAssignment,
             FeatureContributions pass2Contributions,
@@ -294,7 +300,6 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         {
             try
             {
-                var data = ReadPass1ForEnrichment(config, logInfo);
                 if (data == null)
                     return;
                 data.Pass2 = accumulator.BuildPass2(pass2Contributions, coAssignment);
@@ -311,7 +316,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// explaining that the pass-1 page stands unchanged. Absence is a degrade, not a failure:
         /// pass 1's page is a complete statement of the first pass on its own.
         /// </summary>
-        private static ModelDiagnosticsData ReadPass1ForEnrichment(OspreyConfig config,
+        public static ModelDiagnosticsData ReadPass1ForEnrichment(OspreyConfig config,
             Action<string> logInfo)
         {
             var data = ReadJson<ModelDiagnosticsData>(ResolvePass1SidecarPath(config));

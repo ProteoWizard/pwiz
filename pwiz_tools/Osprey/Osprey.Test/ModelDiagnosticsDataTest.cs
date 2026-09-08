@@ -911,6 +911,47 @@ namespace pwiz.Osprey.Test
                 @"streamed pass-2 accumulator must byte-match the batch build in transfer mode");
             Assert.IsNull(batchT.Model, @"transfer mode -> no retrained model, structural half null");
             Assert.IsNull(batchT.WinFraction);
+
+            // STRATIFIED, which is the only shape the streamed arm ever runs in production:
+            // CanStreamStage7Join requires protein-compact, and under it SecondPassFdrTask always
+            // passes the ProteinCompactStratum to the panel. A non-null stratum SPLITS the
+            // experiment acceptance boundary in two (issue #4573), which is the most state- and
+            // position-sensitive part of the panel and the part the phase split newly drives -
+            // so comparing only the pooled-boundary path would leave the production
+            // configuration with no equivalence coverage at all. An EMPTY stratum is a real
+            // (degenerate) configuration and deliberately NOT the same as no stratum, so this
+            // uses a populated one.
+            var stratum = new HashSet<uint>();
+            for (int i = 0; i < 4; i++)
+                stratum.Add((uint)(100 + i));   // half the targets in, half out
+            var batchS = ModelDiagnosticsData.BuildPass2(perFileEntries, contrib, cls, pair, r,
+                runFdr, level, mzLookup, stratum);
+            var accS = new ModelDiagnosticsData.Accumulator(runNames, cls, pair, r, runFdr, level, 2);
+            var coAssignS = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true, stratum);
+            for (int fi = 0; fi < perFileEntries.Count; fi++)
+            {
+                foreach (var e in perFileEntries[fi].Value)
+                {
+                    accS.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
+                        new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                }
+                ModelDiagnosticsData.ObserveCoAssignmentRun(coAssignS, fi,
+                    perFileEntries[fi].Value, cls, runFdr, level);
+            }
+            var panelS = ModelDiagnosticsData.BuildCoAssignmentDetection(coAssignS, runNames,
+                perFileEntries, cls, mzLookup, runFdr, level);
+            Assert.AreEqual(
+                JsonConvert.SerializeObject(batchS, settings),
+                JsonConvert.SerializeObject(accS.BuildPass2(contrib, panelS), settings),
+                @"streamed pass-2 accumulator must byte-match the batch build under a protein-compact stratum");
+            // The stratum has to have actually split the boundary, or this arm passes vacuously
+            // by reproducing the pooled result twice.
+            Assert.IsNotNull(batchS.CoAssignment);
+            Assert.AreNotEqual(
+                JsonConvert.SerializeObject(batch.CoAssignment, settings),
+                JsonConvert.SerializeObject(batchS.CoAssignment, settings),
+                @"a populated stratum must move the panel, or this arm proves nothing");
         }
 
         // The accumulator folds different state for each pass, so building it for the pass it was
