@@ -29,6 +29,8 @@ using CustomProgressCell;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
 using pwiz.CLI.util;
+using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using System.Text.RegularExpressions;
 
 namespace MSConvertGUI
@@ -499,8 +501,24 @@ namespace MSConvertGUI
             }
         }
 
+        private static string ResolveRemoteFilename(string filename)
+        {
+            // A friendly path (waters_connect:<alias>/Path/To/Injection) or a serialized waters_connect URL
+            // without an injection id is navigated on the server (via the saved account) to a concrete
+            // injection; the authenticated URL is what the native reader consumes.
+            if (WatersConnectUrl.IsFriendlyUrl(filename))
+                return WatersConnectUrl.ParseFriendly(filename).ResolveInjection().GetAuthenticatedUrl();
+            if (filename.StartsWith(WatersConnectUrl.UrlPrefix, StringComparison.InvariantCultureIgnoreCase))
+                return ((WatersConnectUrl) MsDataFileUri.Parse(filename)).ResolveInjection().GetAuthenticatedUrl();
+            return filename;
+        }
+
         void processFile(string filename, Config config, ReaderList readers, Map<string, int> usedOutputFilenames)
         {
+            // A friendly or serialized waters_connect path is resolved here, on the worker thread, to the
+            // authenticated URL the native reader understands; all other paths pass through unchanged.
+            filename = ResolveRemoteFilename(filename);
+
             // read in data file
             using (var msdList = new MSDataList())
             {
