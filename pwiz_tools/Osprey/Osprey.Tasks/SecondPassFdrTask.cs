@@ -165,6 +165,27 @@ namespace pwiz.Osprey.Tasks
             if (ctx.Config.ModelDiagnostics && FirstPassFdrTask.IsIncludedFor(ctx.Config))
                 yield return ModelDiagnosticsReport.ReportPath(ctx.Config);
 
+            // The pass-2 diagnostics PRODUCT, declared whenever the flag is on and WITHOUT the
+            // IsIncludedFor term above - because on `--task SecondPassFDR` that term is false,
+            // so nothing this task owns was outstanding on a completed cohort, the driver
+            // skipped the task as already-done, and the pay-later fold could never run. Measured:
+            // a 10-file bed with every artifact current logged `SecondPassFDR: skipping (outputs
+            // valid)` and produced no pass-2 report at all.
+            //
+            // The reason it was NOT declared has expired, and that is what makes this safe now.
+            // The paragraph above records it: declaring a diagnostics output used to make the
+            // task permanently unskippable, because producing it meant re-running pass-2
+            // Percolator, protein FDR and the whole blib write. With the fold arm this task now
+            // has, an outstanding pass-2 product costs a bounded reduction over artifacts that
+            // are already on disk - minutes, against the 69 minutes that join takes at 446 - so
+            // "outstanding" is no longer a reason to fear declaring it.
+            if (ctx.Config.ModelDiagnostics)
+            {
+                string pass2Product = ModelDiagnosticsReport.Pass2SidecarPath(ctx.Config);
+                if (!string.IsNullOrEmpty(pass2Product))
+                    yield return pass2Product;
+            }
+
             // EVERY input file gets a 2nd-pass FDR sidecar, and they are declared here
             // unconditionally. This used to be gated on AnyReconciledParquet, so a run where
             // Stage 6 rescored nothing produced no 2nd-pass files at all - and a MISSING file
@@ -571,8 +592,17 @@ namespace pwiz.Osprey.Tasks
             string validityKey = ValidityKey(ctx);
             foreach (string output in Outputs(ctx))
             {
-                if (string.Equals(output, reportPath, StringComparison.OrdinalIgnoreCase))
+                // The page and the pass-2 product are what this arm EXISTS to write, so neither
+                // can be a reason to decline. A predicate asking "is every OTHER output current"
+                // has to exclude its own products - pass 1's version excludes its own for the
+                // same reason. Without the pass2Path term the arm reads its own missing product
+                // as an outstanding input and declines every time, which is a self-defeating
+                // condition that looks exactly like the fold not working.
+                if (string.Equals(output, reportPath, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(output, pass2Path, StringComparison.OrdinalIgnoreCase))
+                {
                     continue;
+                }
                 if (PerFileResumeDriver.IsCurrent(output, Name, validityKey))
                     continue;
                 // Name the first output that failed. Declining here is not an error - it means
