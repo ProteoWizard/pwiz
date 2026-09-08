@@ -58,7 +58,11 @@ namespace pwiz.Osprey.Tasks
         {
             var c = ctx.Config;
             bool inputs = c.InputScores != null && c.InputScores.Count > 0;
-            return (!inputs && !c.NoJoin)
+            // StopAfterStage5 on BOTH input routes, for the reason PerFileRescoreTask.IsIncluded
+            // states: it appeared only in the --input-scores clause because --task FirstPassFDR
+            // was the only setter and that task rejects -i. --task ModelDiagnostics sets it too
+            // and takes -i.
+            return (!inputs && !c.NoJoin && !c.StopAfterStage5)
                 || (inputs && c.ExpectReconciledInput)
                 || (inputs && !c.NoJoin && !c.StopAfterStage5 && !c.ExpectReconciledInput);
         }
@@ -477,7 +481,7 @@ namespace pwiz.Osprey.Tasks
                     stratumBaseIds = pcStratum.BaseIds;
                 ModelDiagnosticsReport.WritePass2AndFinalize(
                     perFileEntries, pass2Contributions, libraryById, config, ctx.LogInfo,
-                    stratumBaseIds);
+                    stratumBaseIds, ValidityKey(ctx));
             }
 
             return true;
