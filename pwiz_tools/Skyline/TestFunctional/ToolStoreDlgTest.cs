@@ -343,7 +343,7 @@ namespace pwiz.SkylineTestFunctional
                     continue;
 
                 string fileName = Path.GetFileNameWithoutExtension(toolDir.Name);
-                string path = Path.Combine(toolDir.DirectoryName, fileName);
+                string path = Path.Combine(toolDir.DirectoryName??string.Empty, fileName);
                 using (new TemporaryDirectory(path))
                 {
                     using (var zipFile = new ZipFile(toolDir.FullName))

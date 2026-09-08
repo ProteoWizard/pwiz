@@ -410,7 +410,34 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("Description_MzCount", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Per-peak collisional cross section observed for the current target in the active replicate, with percent error vs the target CCS.
+        /// </summary>
+        internal static string Description_ObservedCCS {
+            get {
+                return ResourceManager.GetString("Description_ObservedCCS", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Per-peak ion mobility observed for the current target in the active replicate, with percent error vs the target ion mobility.
+        /// </summary>
+        internal static string Description_ObservedIonMobility {
+            get {
+                return ResourceManager.GetString("Description_ObservedIonMobility", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Apex retention time of the current target's peak in the active replicate.
+        /// </summary>
+        internal static string Description_PeakRetentionTime {
+            get {
+                return ResourceManager.GetString("Description_PeakRetentionTime", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Parameters the data file reports that Skyline does not interpret into its own fields..
         /// </summary>
@@ -716,7 +743,34 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("MzCount", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Observed CCS.
+        /// </summary>
+        internal static string ObservedCCS {
+            get {
+                return ResourceManager.GetString("ObservedCCS", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Observed Ion Mobility.
+        /// </summary>
+        internal static string ObservedIonMobility {
+            get {
+                return ResourceManager.GetString("ObservedIonMobility", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Peak Retention Time.
+        /// </summary>
+        internal static string PeakRetentionTime {
+            get {
+                return ResourceManager.GetString("PeakRetentionTime", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Other Metadata.
         /// </summary>

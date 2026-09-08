@@ -86,6 +86,57 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
         public double? TotalBackgroundFragment { get { return ChromInfo.BackgroundAreaFragment; } }
 
+        // Observed ion mobility / CCS of the ion. IM (and the CCS derived from it) is a
+        // property of the precursor ion, so it is surfaced once here rather than per
+        // isotope or per fragment. Observed IM prefers the MS1 isotope transitions
+        // (combined as a mean weighted by predicted isotope abundance, so an
+        // interference-inflated minor channel cannot inflate its own influence) and falls
+        // back to the fragment transitions for MS2-only acquisitions (each fragment
+        // corrected back to the precursor by removing its high-energy IM offset). Observed
+        // CCS is MS1-only, matching IonMobilityFinder: a fragment's stored CCS was computed
+        // from its offset IM and cannot be corrected back to the precursor here.
+        [Format(Formats.IonMobility, NullValue = TextUtil.EXCEL_NA)]
+        public double? ObservedIonMobility
+        {
+            get { return ObservedImValues.IonMobility; }
+        }
+        [Format(Formats.CCS, NullValue = TextUtil.EXCEL_NA)]
+        public double? ObservedCcs
+        {
+            get { return ObservedImValues.Ccs; }
+        }
+        [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
+        public double? IonMobilityErrorPercent
+        {
+            get { return PercentError(ObservedImValues.IonMobility, ObservedImValues.Target?.IonMobility?.Mobility); }
+        }
+        [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
+        public double? CcsErrorPercent
+        {
+            get { return PercentError(ObservedImValues.Ccs, ObservedImValues.Target?.CollisionalCrossSectionSqA); }
+        }
+
+        // Observed IM, observed CCS, and the target IM filter, computed together in one pass
+        // over the transitions and cached per row (invalidated on document change).
+        private ObservedIonMobilityCalculator.Result ObservedImValues { get { return _cachedValues.GetValue3(this); } }
+
+        private static double? PercentError(double? observed, double? target)
+        {
+            if (!observed.HasValue || !target.HasValue || target.Value == 0)
+                return null;
+            return 100.0 * (observed.Value - target.Value) / target.Value;
+        }
+
+        // The per-ion observed IM/CCS aggregate for this replicate. The domain logic lives in
+        // the model (ObservedIonMobilityCalculator); this entity only resolves each transition's
+        // chrom info for its ResultFile and hands the (transition, chrom info) pairs over.
+        private ObservedIonMobilityCalculator.Result CalculateObservedIonMobility()
+        {
+            var resultFile = GetResultFile();
+            return ObservedIonMobilityCalculator.Calculate(
+                Precursor.DocNode.Transitions.Select(t => (t, resultFile.FindChromInfo(t.Results))));
+        }
+
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? TotalAreaRatio
         {
@@ -346,12 +397,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 Precursor.Peptide.DocNode, Precursor.DocNode, ChromInfo);
         }
 
-        private class CachedValues 
-            : CachedValues<PrecursorResult, TransitionGroupChromInfo, PrecursorQuantificationResult, Tuple<LcPeakIonMetrics, LcPeakIonMetrics>>
+        private class CachedValues
+            : CachedValues<PrecursorResult, TransitionGroupChromInfo, PrecursorQuantificationResult, Tuple<LcPeakIonMetrics, LcPeakIonMetrics>, ObservedIonMobilityCalculator.Result>
         {
             protected override SrmDocument GetDocument(PrecursorResult owner)
             {
                 return owner.SrmDocument;
+            }
+
+            protected override ObservedIonMobilityCalculator.Result CalculateValue3(PrecursorResult owner)
+            {
+                return owner.CalculateObservedIonMobility();
             }
 
             protected override TransitionGroupChromInfo CalculateValue(PrecursorResult owner)

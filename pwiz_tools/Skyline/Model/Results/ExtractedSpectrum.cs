@@ -33,7 +33,8 @@ namespace pwiz.Skyline.Model.Results
                                  int filterIndex,
                                  SpectrumProductFilter[] productFilters,
                                  float[] intensities,
-                                 float[] massErrors)
+                                 float[] massErrors,
+                                 float[] observedIonMobilities = null)
         {
             ChromatogramGroupId = chromatogramGroupId;
             PeptideColor = peptideColor;
@@ -44,6 +45,7 @@ namespace pwiz.Skyline.Model.Results
             ProductFilters = productFilters;
             Intensities = intensities;
             MassErrors = massErrors;
+            ObservedIonMobilities = observedIonMobilities;
         }
 
         public ChromatogramGroupId ChromatogramGroupId { get; private set; }
@@ -54,6 +56,10 @@ namespace pwiz.Skyline.Model.Results
         public SpectrumProductFilter[] ProductFilters { get; private set; }
         public float[] Intensities { get; private set; }
         public float[] MassErrors { get; private set; }
+        // Per-target intensity-weighted observed IM (center of gravity across the
+        // extraction band, in raw IM units). Null when there is no IM filter window
+        // or the source is FAIMS (CV is discrete).
+        public float[] ObservedIonMobilities { get; private set; }
         public ChromExtractor Extractor { get; private set; }
 
         /// <summary>

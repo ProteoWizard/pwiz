@@ -95,6 +95,11 @@ namespace pwiz.Skyline.Model.Results
 
         public abstract eIonMobilityUnits IonMobilityUnits { get; }
 
+        // Provides IM <-> CCS conversion for cache writers that need to compute
+        // CCS at peak detection. Null when no converter is available (e.g.
+        // SRM-style providers or recalc from cache).
+        public virtual IIonMobilityFunctionsProvider IonMobilityFunctionsProvider => null;
+
         public abstract bool IsProcessedScans { get; }
 
         public abstract bool IsSingleMzMatch { get; }
