@@ -62,6 +62,9 @@ namespace pwiz.Osprey.Test
             TestPassingSetHonorsFdrLevel();
             TestCalibrationBuildCalFile();
             TestStreamingAccumulatorMatchesBatch();
+            TestStreamingAccumulatorMatchesBatchPass2();
+            TestAccumulatorRefusesTheWrongPass();
+            TestCoAssignmentRefusesAMisorderedStream();
             TestPeakCoAssignment();
             TestCompletenessStatesTheRightReason();
         }
@@ -777,6 +780,241 @@ namespace pwiz.Osprey.Test
                 JsonConvert.SerializeObject(accNM.Build(contrib), settings),
                 @"streaming accumulator must byte-match the batch build on the no-manifest degrade path");
             Assert.IsFalse(batchNM.HasEntrapment, @"no manifest -> is_decoy-only split, no entrapment");
+        }
+
+        // The pass-2 half of the same claim, and the one that lets SecondPassFDR stream: the
+        // accumulator's BuildPass2 over folded reductions must byte-match the batch BuildPass2
+        // over the resident survivor pool. This pins BOTH halves of the streamed report in one
+        // comparison, because the batch path builds its co-assignment panel with the ONE-CALL
+        // BuildCoAssignment while the streamed side drives the same panel through the split
+        // ObserveCoAssignmentRun / BuildCoAssignmentDetection phases the join uses - so a
+        // divergence in either the fold or the phase split reds this assert.
+        //
+        // The fixture carries apex RTs and a precursor m/z lookup as well as entrapment, because
+        // a null CoAssignment would let the panel half of the comparison pass vacuously.
+        private static void TestStreamingAccumulatorMatchesBatchPass2()
+        {
+            var cls = new Dictionary<uint, EntrapmentClass>();
+            var pair = new Dictionary<uint, uint>();
+            var mz = new Dictionary<uint, double>();
+            var f1 = new List<FdrEntry>();
+            var f2 = new List<FdrEntry>();
+            for (int i = 0; i < 6; i++)
+            {
+                uint tid = (uint)(100 + i);
+                // Distinct apex RTs, and pairs of targets close enough in m/z to co-assign, so
+                // the panel has real shared peaks rather than an empty verdict.
+                int mzGroup = i / 2;   // deliberate integer division: consecutive pairs share an m/z
+                mz[tid] = 500.0 + 0.004 * mzGroup;
+                mz[tid | DECOY_BIT] = 500.0 + 0.004 * mzGroup;
+                f1.Add(CoEntry(tid, false, 8.0 - i, 0.001 * (i + 1), "T" + i, 2, 10.0 + 0.01 * i, 8.0 - i));
+                f1.Add(CoEntry(tid | DECOY_BIT, true, 1.0 + 0.1 * i, 0.5, "D" + i, 2, 12.0 + 0.01 * i, 1.0 + 0.1 * i));
+                f2.Add(CoEntry(tid, false, 7.5 - i, 0.002 * (i + 1), "T" + i, 2, 30.0 + 0.01 * i, 8.0 - i));
+                cls[tid] = EntrapmentClass.Target;
+                pair[tid] = (uint)i;
+            }
+            for (int i = 0; i < 4; i++)
+            {
+                uint pid = (uint)(200 + i);
+                int mzGroup = i / 2;   // as above: the entrapment rows share m/z with a target pair
+                mz[pid] = 500.0 + 0.004 * mzGroup;
+                f1.Add(CoEntry(pid, false, 5.5 - i, 0.003 + 0.001 * i, "P" + i, 2, 10.002 + 0.01 * i, 5.5 - i));
+                cls[pid] = EntrapmentClass.PTarget;
+                pair[pid] = (uint)i;
+            }
+
+            var perFileEntries = WrapFiles(f1, f2);
+            const double r = 1.0, runFdr = 0.01;
+            const FdrLevel level = FdrLevel.Precursor;
+            System.Func<uint, double> mzLookup = id => mz.TryGetValue(id, out double v) ? v : double.NaN;
+
+            var infos = new[]
+            {
+                new OspreyFeatureInfo("f0", "Feature Zero", false),
+                new OspreyFeatureInfo("f1", "Feature One", false),
+            };
+            var facc = new FeatureContributions.Accumulator(2, true);
+            for (int i = 0; i < 10; i++) facc.Add(new[] { 2.0, 0.5 }, false);
+            for (int i = 0; i < 10; i++) facc.Add(new[] { -1.0, 0.0 }, true);
+            var contrib = facc.Build(new List<double[]> { new[] { 2.0, -1.0 } }, infos);
+
+            // Batch build (the resident-path oracle), with contributions supplied.
+            //
+            // NOT a configuration production can reach: no surviving second-pass mode
+            // retrains, so the pipeline passes null here (issue #4484). This arm tests
+            // BuildPass2's CONTRACT - that a non-null contributions argument builds the
+            // structural half and that the streamed accumulator agrees with the batch build
+            // on it - which is what keeps the shape covered until its replacement source
+            // (frozen pass-1 coefficients plus per-feature running sums) is wired in. The
+            // transfer arm below is the one that mirrors what production actually runs.
+            var batch = ModelDiagnosticsData.BuildPass2(perFileEntries, contrib, cls, pair, r,
+                runFdr, level, mzLookup);
+
+            // Streamed build: one pass folding the accumulator AND the panel's cutoff phase
+            // together (what the join does), then a second pass for the panel's detection phase.
+            var runNames = perFileEntries.Select(kv => kv.Key).ToArray();
+            var acc = new ModelDiagnosticsData.Accumulator(runNames, cls, pair, r, runFdr, level, 2);
+            var coAssign = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true);
+            for (int fi = 0; fi < perFileEntries.Count; fi++)
+            {
+                foreach (var e in perFileEntries[fi].Value)
+                {
+                    acc.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
+                        new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                }
+                ModelDiagnosticsData.ObserveCoAssignmentRun(coAssign, fi,
+                    perFileEntries[fi].Value, cls, runFdr, level);
+            }
+            var panel = ModelDiagnosticsData.BuildCoAssignmentDetection(coAssign, runNames,
+                perFileEntries, cls, mzLookup, runFdr, level);
+            var streamed = acc.BuildPass2(contrib, panel);
+
+            var settings = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                FloatFormatHandling = FloatFormatHandling.Symbol,
+                FloatParseHandling = FloatParseHandling.Double,
+            };
+            Assert.AreEqual(
+                JsonConvert.SerializeObject(batch, settings),
+                JsonConvert.SerializeObject(streamed, settings),
+                @"streamed pass-2 accumulator must byte-match the resident batch BuildPass2");
+
+            // Guard against a vacuous all-null match: every card the comparison covers must
+            // actually be populated by this fixture.
+            Assert.IsNotNull(batch.CoAssignment);
+            Assert.IsNotNull(batch.FdpViews);
+            Assert.IsTrue(batch.FdpViews.Count > 0);
+            Assert.IsNotNull(batch.CrossRun);
+            Assert.IsNotNull(batch.IdYield);
+            Assert.IsNotNull(batch.PerFile);
+            Assert.IsNotNull(batch.Model);
+            Assert.IsNotNull(batch.DensityRatio);
+            Assert.IsNotNull(batch.WinFraction);
+
+            // Null contributions, which is EVERY production configuration: no surviving
+            // second-pass mode retrains, so the structural half stays null on BOTH arms. This
+            // is the representative arm, not a special case - a streamed build that invented a
+            // Model here would go unnoticed by the assert above, and this is the shape the
+            // pipeline actually renders.
+            var batchT = ModelDiagnosticsData.BuildPass2(perFileEntries, null, cls, pair, r,
+                runFdr, level, mzLookup);
+            var accT = new ModelDiagnosticsData.Accumulator(runNames, cls, pair, r, runFdr, level, 2);
+            var coAssignT = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true);
+            for (int fi = 0; fi < perFileEntries.Count; fi++)
+            {
+                foreach (var e in perFileEntries[fi].Value)
+                {
+                    accT.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
+                        new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                }
+                ModelDiagnosticsData.ObserveCoAssignmentRun(coAssignT, fi,
+                    perFileEntries[fi].Value, cls, runFdr, level);
+            }
+            var panelT = ModelDiagnosticsData.BuildCoAssignmentDetection(coAssignT, runNames,
+                perFileEntries, cls, mzLookup, runFdr, level);
+            Assert.AreEqual(
+                JsonConvert.SerializeObject(batchT, settings),
+                JsonConvert.SerializeObject(accT.BuildPass2(null, panelT), settings),
+                @"streamed pass-2 accumulator must byte-match the batch build with no contributions");
+            Assert.IsNull(batchT.Model, @"no retrained second pass -> structural half null");
+            Assert.IsNull(batchT.WinFraction);
+
+            // STRATIFIED, which is the only shape the streamed arm ever runs in production:
+            // CanStreamStage7Join requires protein-compact, and under it SecondPassFdrTask always
+            // passes the ProteinCompactStratum to the panel. A non-null stratum SPLITS the
+            // experiment acceptance boundary in two (issue #4573), which is the most state- and
+            // position-sensitive part of the panel and the part the phase split newly drives -
+            // so comparing only the pooled-boundary path would leave the production
+            // configuration with no equivalence coverage at all. An EMPTY stratum is a real
+            // (degenerate) configuration and deliberately NOT the same as no stratum, so this
+            // uses a populated one.
+            var stratum = new HashSet<uint>();
+            for (int i = 0; i < 4; i++)
+                stratum.Add((uint)(100 + i));   // half the targets in, half out
+            var batchS = ModelDiagnosticsData.BuildPass2(perFileEntries, contrib, cls, pair, r,
+                runFdr, level, mzLookup, stratum);
+            var accS = new ModelDiagnosticsData.Accumulator(runNames, cls, pair, r, runFdr, level, 2);
+            var coAssignS = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true, stratum);
+            for (int fi = 0; fi < perFileEntries.Count; fi++)
+            {
+                foreach (var e in perFileEntries[fi].Value)
+                {
+                    accS.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
+                        new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                }
+                ModelDiagnosticsData.ObserveCoAssignmentRun(coAssignS, fi,
+                    perFileEntries[fi].Value, cls, runFdr, level);
+            }
+            var panelS = ModelDiagnosticsData.BuildCoAssignmentDetection(coAssignS, runNames,
+                perFileEntries, cls, mzLookup, runFdr, level);
+            Assert.AreEqual(
+                JsonConvert.SerializeObject(batchS, settings),
+                JsonConvert.SerializeObject(accS.BuildPass2(contrib, panelS), settings),
+                @"streamed pass-2 accumulator must byte-match the batch build under a protein-compact stratum");
+            // The stratum has to have actually split the boundary, or this arm passes vacuously
+            // by reproducing the pooled result twice.
+            Assert.IsNotNull(batchS.CoAssignment);
+            Assert.AreNotEqual(
+                JsonConvert.SerializeObject(batch.CoAssignment, settings),
+                JsonConvert.SerializeObject(batchS.CoAssignment, settings),
+                @"a populated stratum must move the panel, or this arm proves nothing");
+        }
+
+        // The accumulator folds different state for each pass, so building it for the pass it was
+        // not constructed for would return a plausible object assembled from partly unfolded
+        // reductions. Both directions must refuse instead.
+        private static void TestAccumulatorRefusesTheWrongPass()
+        {
+            var runNames = new[] { @"f1" };
+            var pass1 = new ModelDiagnosticsData.Accumulator(runNames, null, null, 1.0, 0.01,
+                FdrLevel.Precursor);
+            Assert.ThrowsException<System.InvalidOperationException>(() => pass1.BuildPass2(null, null));
+            var pass2 = new ModelDiagnosticsData.Accumulator(runNames, null, null, 1.0, 0.01,
+                FdrLevel.Precursor, 2);
+            Assert.ThrowsException<System.InvalidOperationException>(() => pass2.Build(null));
+        }
+
+        // The co-assignment phases index the acceptance boundary BY RUN POSITION, so a second
+        // pass that yielded runs in a different order - or stopped short - would judge every row
+        // against another run's boundary and still produce a complete, plausible panel. Nothing
+        // downstream can detect that, so both guards must throw rather than degrade.
+        private static void TestCoAssignmentRefusesAMisorderedStream()
+        {
+            var mz = new Dictionary<uint, double> { { 1, 500.000 }, { 2, 500.004 } };
+            var f1 = new List<FdrEntry> { CoEntry(1, false, 9.0, 0.001, "A", 2, 10.000) };
+            var f2 = new List<FdrEntry> { CoEntry(2, false, 8.0, 0.001, "B", 2, 20.000) };
+            var inOrder = WrapFiles(f1, f2);
+            var runNames = inOrder.Select(kv => kv.Key).ToArray();
+            System.Func<uint, double> mzLookup = id => mz.TryGetValue(id, out double v) ? v : double.NaN;
+
+            var builder = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true);
+            for (int fi = 0; fi < inOrder.Count; fi++)
+            {
+                ModelDiagnosticsData.ObserveCoAssignmentRun(builder, fi, inOrder[fi].Value,
+                    null, 0.01, FdrLevel.Precursor);
+            }
+
+            // Same runs, swapped order on the detection pass.
+            var swapped = new List<KeyValuePair<string, List<FdrEntry>>> { inOrder[1], inOrder[0] };
+            Assert.ThrowsException<System.InvalidOperationException>(() =>
+                ModelDiagnosticsData.BuildCoAssignmentDetection(builder, runNames, swapped, null,
+                    mzLookup, 0.01, FdrLevel.Precursor));
+
+            // And a short read, which would otherwise report the missing run as having found nothing.
+            var truncated = new List<KeyValuePair<string, List<FdrEntry>>> { inOrder[0] };
+            var builder2 = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true);
+            for (int fi = 0; fi < inOrder.Count; fi++)
+            {
+                ModelDiagnosticsData.ObserveCoAssignmentRun(builder2, fi, inOrder[fi].Value,
+                    null, 0.01, FdrLevel.Precursor);
+            }
+            Assert.ThrowsException<System.InvalidOperationException>(() =>
+                ModelDiagnosticsData.BuildCoAssignmentDetection(builder2, runNames, truncated, null,
+                    mzLookup, 0.01, FdrLevel.Precursor));
         }
 
         /// <summary>

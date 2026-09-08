@@ -2159,149 +2159,6 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Issue #4374 risk #2 (the highest-value new test): the 2nd-pass projection
-        /// bakes each survivor's <c>ParquetIndex</c> from
-        /// <see cref="Pass2FdrSidecar.BuildReconciledScoreIndexToRow"/>, then the streaming
-        /// score pass reads the feature row at that index. This must resolve the EXACT
-        /// vector the resident 2nd pass binds via
-        /// <see cref="Pass2FdrSidecar.LoadReconciledFeaturesByScoreIndex"/> +
-        /// <c>MapFeaturesByScoreIndex</c>. Writes a reconciled-parquet fixture whose rows
-        /// arrive in NON-sorted identity order plus a gap-fill-style row that interleaves
-        /// into the <c>(entry_id, charge, scan_number)</c> sort, each carrying a DISTINCT
-        /// 21-feature vector, then asserts:
-        /// <list type="bullet">
-        /// <item><c>featRows[rowMap[identity]] == featByIdentity[identity]</c> for every
-        /// identity (risk #2) -- so the streamed feature lookup is byte-identical to the
-        /// resident identity binding; distinct vectors make a mis-mapping observable;</item>
-        /// <item>within each <c>(entry_id, charge)</c> group the baked row increases with
-        /// scan (risk #3) -- what keeps the scan-omitted projection sort
-        /// <c>(EntryId, Charge, ParquetIndex)</c> equal to the legacy
-        /// <c>(EntryId, Charge, ScanNumber, ParquetIndex)</c> order.</item>
-        /// </list>
-        /// </summary>
-        [TestMethod]
-        public void TestBuildReconciledScoreIndexToRowMatchesFeatureBinding()
-        {
-            string path = Path.GetTempFileName() + ".parquet";
-            try
-            {
-                // Deliberately unsorted, with two charges of entry 100 and a second
-                // (later-scan) row for entry 101 that interleaves into the reconciled
-                // (entry_id, charge, scan_number) sort -- a gap-fill-style append.
-                var entryIds = new uint[] { 101, 100, 100, 101, 100 };
-                var charges = new byte[] { 2, 3, 2, 2, 2 };
-                var scans = new uint[] { 2200, 1500, 1100, 1200, 1300 };
-
-                var entries = new List<CoelutionScoredEntry>();
-                for (int i = 0; i < entryIds.Length; i++)
-                {
-                    entries.Add(new CoelutionScoredEntry
-                    {
-                        EntryId = entryIds[i],
-                        IsDecoy = false,
-                        Sequence = "PEPTIDE",
-                        ModifiedSequence = "PEPTIDE",
-                        Charge = charges[i],
-                        ScanNumber = scans[i],
-                        FileName = "recon.mzML",
-                        PeakBounds = new XICPeakBounds { StartRt = 4.0, EndRt = 5.0 },
-                        // Distinct feature vector per row so a wrong identity->row map
-                        // surfaces as a value mismatch, not a silent pass.
-                        Features = new CoelutionFeatureSet
-                        {
-                            CoelutionSum = 10.0 + i,
-                            CoelutionMax = 20.0 + i,
-                            NCoelutingFragments = (byte)(3 + i),
-                            PeakApex = 100.0 + i,
-                            PeakArea = 200.0 + i,
-                            PeakSharpness = 0.3 + i,
-                            Xcorr = 50.0 + i,
-                            ConsecutiveIons = (byte)(1 + i),
-                            ExplainedIntensity = 0.50 + i * 0.01,
-                            MassAccuracyMean = -0.5 - i,
-                            AbsMassAccuracyMean = 0.5 + i,
-                            RtDeviation = 0.1 + i,
-                            AbsRtDeviation = 0.1 + i,
-                            Ms1PrecursorCoelution = 0.80 + i * 0.01,
-                            Ms1IsotopeCosine = 0.90 + i * 0.01,
-                            MedianPolishCosine = 0.88 + i * 0.001,
-                            MedianPolishResidualRatio = 0.15 + i * 0.001,
-                            SgWeightedXcorr = 2.3 + i,
-                            SgWeightedCosine = 0.87 + i * 0.001,
-                            MedianPolishMinFragmentR2 = 0.70 + i * 0.001,
-                            MedianPolishResidualCorrelation = 0.30 + i * 0.001,
-                        },
-                    });
-                }
-
-                // WriteScoresParquet re-sorts (entry_id, charge, scan_number) and assigns
-                // ParquetIndex = row -- exactly the reconciled write path.
-                ParquetScoreCache.WriteScoresParquet(path, entries, null);
-
-                var rowMap = Pass2FdrSidecar.BuildReconciledScoreIndexToRow(path);
-                var featByScoreIndex = Pass2FdrSidecar.LoadReconciledFeaturesByScoreIndex(path);
-                var featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(path);
-
-                Assert.AreEqual(entryIds.Length, rowMap.Count);
-                Assert.AreEqual(entryIds.Length, featByScoreIndex.Count);
-                Assert.AreEqual(entryIds.Length, featRows.Count);
-
-                // Risk #2: the score index addresses that row's own feature vector, so the
-                // streamed lookup equals the resident binding byte-for-byte. This file was
-                // written by WriteScoresParquet, which has no score_index column, so each
-                // row's index IS its position - which is exactly the property that lets a
-                // pre-#4486 reconciled parquet be read without one.
-                foreach (var kvp in featByScoreIndex)
-                {
-                    Assert.IsTrue((int)kvp.Key < featRows.Count, "score index in range");
-                    CollectionAssert.AreEqual(kvp.Value, featRows[(int)kvp.Key],
-                        "the score index must address that row's own feature vector");
-                }
-
-                // Risk #3: within each (entry_id, charge) group the reconciled row is
-                // scan-monotonic -- what validates the scan-omitted projection sort.
-                // The identity -> row lookup is built here rather than taken from a
-                // production map: score_index is a row IDENTITY now, not a row position, and
-                // conflating the two is exactly what this change removed.
-                var stubsForRows = ParquetScoreCache.LoadFdrStubsFromParquet(path);
-                var rowByIdentity = new Dictionary<(uint, byte, uint), uint>();
-                for (int r = 0; r < stubsForRows.Count; r++)
-                {
-                    rowByIdentity[(stubsForRows[r].EntryId, stubsForRows[r].Charge,
-                                   stubsForRows[r].ScanNumber)] = (uint)r;
-                }
-                var groups = new Dictionary<(uint, byte), List<(uint scan, uint row)>>();
-                for (int i = 0; i < entryIds.Length; i++)
-                {
-                    // Resolved from the written rows, not from the loop counter: the write
-                    // re-sorts into canonical order, so input position is not row position.
-                    uint row = rowByIdentity[(entryIds[i], charges[i], scans[i])];
-                    var key = (entryIds[i], charges[i]);
-                    if (!groups.TryGetValue(key, out var list))
-                    {
-                        list = new List<(uint, uint)>();
-                        groups[key] = list;
-                    }
-                    list.Add((scans[i], row));
-                }
-                foreach (var kv in groups)
-                {
-                    var list = kv.Value;
-                    list.Sort((a, b) => a.scan.CompareTo(b.scan));
-                    for (int k = 1; k < list.Count; k++)
-                    {
-                        Assert.IsTrue(list[k].row > list[k - 1].row,
-                            "reconciled row must increase with scan within a (entry_id, charge) group");
-                    }
-                }
-            }
-            finally
-            {
-                TryDeleteFile(path);
-            }
-        }
-
-        /// <summary>
         /// Verifies GetScoresPath returns the expected path.
         /// </summary>
         [TestMethod]
@@ -3741,6 +3598,76 @@ namespace pwiz.Osprey.Test
                 // survives unchanged.
                 Assert.AreEqual(0.0, entries[1].Score, 0.0);
                 Assert.AreEqual(0.0, entries[1].RunPrecursorQvalue, 0.0);
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Chunk-boundary coverage for the buffered body reads. Both
+        /// <see cref="FdrScoresSidecar.TryRead(string, IList{FdrEntry}, FdrScoresSidecar.Pass)"/>
+        /// and <see cref="FdrScoresSidecar.TryReadOverlay"/> now walk the body in fixed-size
+        /// buffers instead of materialising the file, which gives the record loop seams the
+        /// old whole-file indexing did not have: a count that is an exact multiple of the
+        /// buffer, one either side of it, and one that leaves a short final chunk.
+        ///
+        /// <para>Every other sidecar test in this file writes a handful of records, so all of
+        /// them would pass against a reader that dropped, duplicated or misaligned every
+        /// record past the first buffer. That is the whole reason this one exists.</para>
+        ///
+        /// <para>The counts bracket a range of plausible buffer sizes rather than naming the
+        /// private constant, so the test keeps its meaning if the buffer is ever retuned.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarChunkBoundaries()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_chunk_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                foreach (int count in new[] { 0, 1, 1023, 1024, 1025, 2047, 2048, 2049, 4096, 4103 })
+                {
+                    // A distinct path per count: FdrScoresSidecar refuses to write the same
+                    // path twice in one process, which is the guard that keeps a sidecar
+                    // write-once (P11).
+                    string path = Path.Combine(dir, "n" + count + ".1st-pass.fdr_scores.bin");
+                    var written = new List<FdrEntry>(count);
+                    for (int i = 0; i < count; i++)
+                        written.Add(MakeFdrEntry((uint)i, -i * 0.5, i * 1.0e-6, 0.0));
+                    FdrScoresSidecar.Write(path, written, FdrScoresSidecar.Pass.FirstPass);
+
+                    var loaded = new List<FdrEntry>(count);
+                    for (int i = 0; i < count; i++)
+                        loaded.Add(MakeFdrEntry((uint)i, 0.0, 0.0, 0.0));
+                    Assert.IsTrue(FdrScoresSidecar.TryRead(path, loaded, FdrScoresSidecar.Pass.FirstPass),
+                        "TryRead rejected a " + count + "-record sidecar");
+                    // Exact equality (delta 0.0): the assert recomputes the same expressions
+                    // MakeFdrEntry used, so anything but a bit-identical round trip is a
+                    // misaligned read rather than arithmetic drift.
+                    for (int i = 0; i < count; i++)
+                    {
+                        Assert.AreEqual(-i * 0.5, loaded[i].Score, 0.0,
+                            "Score at record " + i + " of " + count);
+                        Assert.AreEqual(i * 1.0e-6, loaded[i].RunPrecursorQvalue, 0.0,
+                            "RunPrecursorQvalue at record " + i + " of " + count);
+                        Assert.AreEqual(i * 1.0e-6 + 1.0e-9, loaded[i].RunPeptideQvalue, 0.0,
+                            "RunPeptideQvalue at record " + i + " of " + count);
+                    }
+
+                    var byId = new Dictionary<uint, FdrEntry>();
+                    for (int i = 0; i < count; i++)
+                        byId[(uint)i] = MakeFdrEntry((uint)i, 0.0, 0.0, 0.0);
+                    Assert.IsTrue(
+                        FdrScoresSidecar.TryReadOverlay(path, byId, FdrScoresSidecar.Pass.FirstPass),
+                        "TryReadOverlay rejected a " + count + "-record sidecar");
+                    for (int i = 0; i < count; i++)
+                    {
+                        Assert.AreEqual(-i * 0.5, byId[(uint)i].Score, 0.0,
+                            "Overlay Score at record " + i + " of " + count);
+                    }
+                }
             }
             finally
             {

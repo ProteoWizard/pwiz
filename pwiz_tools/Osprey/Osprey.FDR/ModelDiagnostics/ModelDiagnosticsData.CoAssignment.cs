@@ -388,29 +388,100 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         {
             if (perFileEntries == null || precursorMzByEntryId == null)
                 return null;
-            bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
             var runNames = new string[perFileEntries.Count];
             for (int f = 0; f < perFileEntries.Count; f++)
                 runNames[f] = perFileEntries[f].Key;
+            return BuildCoAssignmentCore(runNames, () => perFileEntries, classByBaseId,
+                precursorMzByEntryId, runFdr, fdrLevel, pass, postReconciliation, stratumBaseIds);
+        }
 
+        private static CoAssignmentData BuildCoAssignmentCore(
+            string[] runNames,
+            Func<IEnumerable<KeyValuePair<string, List<FdrEntry>>>> openStream,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
+            Func<uint, double> precursorMzByEntryId,
+            double runFdr,
+            FdrLevel fdrLevel,
+            int pass,
+            bool postReconciliation,
+            HashSet<uint> stratumBaseIds)
+        {
             var builder = new CoAssignmentPassBuilder(runNames, pass, postReconciliation, stratumBaseIds);
 
             // Phase 1: the decoy score cutoffs, over every row at every file. Cheap - no identity
             // string, no library lookup - so it can walk the whole pool.
-            for (int f = 0; f < perFileEntries.Count; f++)
+            int f1 = 0;
+            foreach (var kvp in openStream())
             {
-                foreach (var e in perFileEntries[f].Value)
-                {
-                    int wc0 = 0, woc0 = 0;
-                    builder.ObserveCutoff(f,
-                        Classify(e.IsDecoy, e.EntryId & BASE_ID_MASK, classByBaseId, haveManifest, ref wc0, ref woc0),
-                        e.EntryId, e.Score, e.ExperimentAggregateScore, e.EffectiveRunQvalue(fdrLevel),
-                        e.EffectiveExperimentQvalue(fdrLevel), runFdr);
-                }
-                // Reduce this file's bests to its cutoff before reading the next, so the
-                // builder never holds more than one file's worth.
-                builder.SealRunCutoff(f);
+                VerifyRunOrder(runNames, f1, kvp.Key);
+                ObserveCoAssignmentRun(builder, f1, kvp.Value, classByBaseId, runFdr, fdrLevel);
+                f1++;
             }
+            VerifyRunCount(runNames, f1);
+            return BuildCoAssignmentDetection(builder, runNames, openStream(), classByBaseId,
+                precursorMzByEntryId, runFdr, fdrLevel);
+        }
+
+        /// <summary>
+        /// Phase 1 of the co-assignment panel for ONE run: fold its rows into the acceptance
+        /// boundary and seal that run's cutoff. Public so a caller already streaming the pool for
+        /// another reason can fold this into the pass it is making rather than opening a third -
+        /// which is what the streamed second-pass join does, sharing this phase with the
+        /// diagnostics accumulator's fold.
+        ///
+        /// <para>Sealing per run is what keeps the builder holding one run's bests rather than
+        /// the pool's, and it is why the caller must present runs in input order and present all
+        /// of them: the boundary phase 2 compares against is indexed by run position.</para>
+        /// </summary>
+        public static void ObserveCoAssignmentRun(
+            CoAssignmentPassBuilder builder,
+            int fileIdx,
+            IEnumerable<FdrEntry> rows,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
+            double runFdr,
+            FdrLevel fdrLevel)
+        {
+            bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
+            foreach (var e in rows)
+            {
+                int wc0 = 0, woc0 = 0;
+                builder.ObserveCutoff(fileIdx,
+                    Classify(e.IsDecoy, e.EntryId & BASE_ID_MASK, classByBaseId, haveManifest, ref wc0, ref woc0),
+                    e.EntryId, e.Score, e.ExperimentAggregateScore, e.EffectiveRunQvalue(fdrLevel),
+                    e.EffectiveExperimentQvalue(fdrLevel), runFdr);
+            }
+            // Reduce this file's bests to its cutoff before reading the next, so the
+            // builder never holds more than one file's worth.
+            builder.SealRunCutoff(fileIdx);
+        }
+
+        /// <summary>
+        /// Phase 2 of the co-assignment panel: seal the boundary phase 1 folded, walk the pool a
+        /// second time judging each row against it, and build the panel. Public for the same
+        /// reason <see cref="ObserveCoAssignmentRun"/> is - the streamed second-pass join drives
+        /// the two phases from its own reads.
+        ///
+        /// <para>Two reads and not one because the boundary is a reduction over every row that
+        /// every row is then compared against; there is no fold that yields both in one walk.
+        /// That is what makes this the one pass-2 card the diagnostics accumulator cannot absorb.
+        /// The alternative - reconstructing the reported pool from the per-file sidecars, as the
+        /// pass-1 panel does - would put the definition of "the reported pool" in a second place,
+        /// and that pool is defined by the rebuild the stream performs: retained base_ids, the
+        /// pass-2 sidecar overlay and the experiment-q floors. One definition, two reads.</para>
+        /// </summary>
+        public static CoAssignmentData BuildCoAssignmentDetection(
+            CoAssignmentPassBuilder builder,
+            string[] runNames,
+            IEnumerable<KeyValuePair<string, List<FdrEntry>>> rows,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
+            Func<uint, double> precursorMzByEntryId,
+            double runFdr,
+            FdrLevel fdrLevel)
+        {
+            if (precursorMzByEntryId == null)
+                return null;
+            bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
+            int pass = builder.Pass;
             builder.SealCutoffs();
 
             // Phase 2: the detected rows.
@@ -433,9 +504,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // moves a count is answered here and nowhere upstream.
             using (var rowDump = FdrDiagnostics.CreateCoAssignRowDump(pass))
             {
-                for (int f = 0; f < perFileEntries.Count; f++)
+                int f = 0;
+                foreach (var kvp in rows)
                 {
-                    foreach (var e in perFileEntries[f].Value)
+                    VerifyRunOrder(runNames, f, kvp.Key);
+                    foreach (var e in kvp.Value)
                     {
                         double runQ = e.EffectiveRunQvalue(fdrLevel);
                         double expQ = e.EffectiveExperimentQvalue(fdrLevel);
@@ -448,7 +521,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         // Dumped for EVERY row, including the excluded ones. An entry that stopped
                         // being counted and one that never was are the same absence in the panel's
                         // output and different rows here, which is the distinction the A/B needs.
-                        rowDump?.WriteRow(f, perFileEntries[f].Key, e.EntryId, e.EntryId & BASE_ID_MASK,
+                        rowDump?.WriteRow(f, kvp.Key, e.EntryId, e.EntryId & BASE_ID_MASK,
                             e.IsDecoy, cls.ToString(), e.Score, e.ExperimentAggregateScore,
                             runQ, expQ, e.ApexRt, e.Charge, included, e.ModifiedSequence);
                         if (!included)
@@ -476,7 +549,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                             runQ, expQ, runFdr);
                     }
                     builder.FlushFile();
+                    f++;
                 }
+                VerifyRunCount(runNames, f);
                 // The boundaries every per-row verdict above was compared against. Written from
                 // the builder rather than recomputed, for the same reason the verdict is.
                 rowDump?.WriteCutoffs(builder.RunCutoff, runNames, builder.ExperimentCutoff,
@@ -487,6 +562,54 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // was absent or unreadable, and the panel would otherwise publish ~100% co-assignment
             // for every class as though it were a finding.
             return anyMz && anyDistinctApexRt ? builder.Build() : null;
+        }
+
+        /// <summary>
+        /// Assert that the run arriving at index <paramref name="index"/> is the run the panel
+        /// believes sits there. The two phases index the SAME builder state by position - phase 2
+        /// compares each row against the per-run cutoff phase 1 sealed at that index - so a source
+        /// that yielded runs in a different order on the second pass would judge every row against
+        /// another run's boundary and still produce a complete, plausible panel. Nothing
+        /// downstream could detect it, which is why this throws rather than logs.
+        /// </summary>
+        /// <summary>
+        /// <see cref="VerifyRunOrder"/> for a caller driving the phases itself. Public because
+        /// the streamed second-pass join indexes MORE than the panel by that position - the
+        /// diagnostics accumulator's per-file counts and cross-run streams share it - so the
+        /// same assertion has to be available outside this file.
+        /// </summary>
+        public static void VerifyStreamedRun(string[] runNames, int index, string runName)
+        {
+            VerifyRunOrder(runNames, index, runName);
+        }
+
+        /// <summary><see cref="VerifyRunCount"/> for the same caller, for the same reason.</summary>
+        public static void VerifyStreamedRunCount(string[] runNames, int seen)
+        {
+            VerifyRunCount(runNames, seen);
+        }
+
+        private static void VerifyRunOrder(string[] runNames, int index, string runName)
+        {
+            if (index < runNames.Length && Equals(runNames[index], runName))
+                return;
+            throw new InvalidOperationException(string.Format(
+                @"Peak co-assignment read run '{0}' at index {1}, where '{2}' was expected. The two phases index the acceptance boundary by run position, so the source must yield the same runs in the same order on both passes.",
+                runName, index, index < runNames.Length ? runNames[index] : @"(past the end)"));
+        }
+
+        /// <summary>
+        /// Assert that a phase saw every run. A stream that ended early leaves the trailing runs
+        /// with no cutoff and no rows, which reads as "those runs identified nothing" rather than
+        /// as a truncated read - the same silent-shrink failure the pass-1 sidecar walk refuses.
+        /// </summary>
+        private static void VerifyRunCount(string[] runNames, int seen)
+        {
+            if (seen == runNames.Length)
+                return;
+            throw new InvalidOperationException(string.Format(
+                @"Peak co-assignment walked {0} run(s) where {1} were expected. A short read would report the missing runs as having identified nothing.",
+                seen, runNames.Length));
         }
 
         /// <summary>
@@ -525,6 +648,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // fall back to the pooled boundary.
                 _stratumBaseIds = stratumBaseIds;
             }
+
+            /// <summary>1 = pre-compaction first-pass detection, 2 = final reported pool. Read by
+            /// the phase-2 driver, which tags the row dump with it.</summary>
+            public int Pass => _pass;
 
             private readonly HashSet<uint> _stratumBaseIds;
 
@@ -609,6 +736,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 double experimentAggregateScore,
                 double runQvalue, double experimentQvalue, double runFdr)
             {
+                // The forward misuse (judging before sealing) has always thrown; this is the
+                // REVERSE, which the public phase split newly admits. Observing after the seal
+                // mutates _experimentBest and lets SealRunCutoff overwrite a run's cutoff, moving
+                // the boundary that already-emitted verdicts were compared against - so the panel
+                // would mix two boundaries and still look complete.
+                if (_sealed)
+                {
+                    throw new InvalidOperationException(
+                        @"CoAssignmentPassBuilder.ObserveCutoff was called after SealCutoffs. The acceptance boundary is fixed once sealed, and moving it would leave verdicts already emitted against the old one.");
+                }
                 if (fileIdx != _fileIdx)
                 {
                     if (_fileIdx >= 0)
@@ -690,6 +827,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public void SealRunCutoff(int fileIdx)
             {
+                // Same reason as ObserveCutoff: this OVERWRITES _runCutoff[fileIdx] and
+                // _admittedRunDecoys[fileIdx] unconditionally, so after the seal it would move a
+                // per-run boundary out from under verdicts already compared against it.
+                if (_sealed)
+                {
+                    throw new InvalidOperationException(
+                        @"CoAssignmentPassBuilder.SealRunCutoff was called after SealCutoffs. A run's boundary cannot move once the detection phase has begun judging rows against it.");
+                }
                 double min = double.NaN;
                 foreach (uint id in _fileAccepted)
                 {
@@ -734,6 +879,17 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public void SealCutoffs()
             {
+                // Sealing twice is not idempotent and fails SILENTLY: the tail of this method
+                // records _acceptedForCutoff from _experimentAccepted and then CLEARS it, so a
+                // second call sets that count to 0 while _experimentCutoff keeps the boundary it
+                // already drew - and every row is then judged, added and flushed a second time,
+                // doubling the panel. Unreachable while both phases lived behind one private
+                // builder; reachable the moment they became a two-call public sequence.
+                if (_sealed)
+                {
+                    throw new InvalidOperationException(
+                        @"CoAssignmentPassBuilder.SealCutoffs was called twice. The detection phase seals the boundary itself, so driving it a second time would re-count the whole pool against a boundary already drawn.");
+                }
                 foreach (uint id in _experimentAccepted)
                 {
                     if (!_experimentBest.TryGetValue(id, out double v))

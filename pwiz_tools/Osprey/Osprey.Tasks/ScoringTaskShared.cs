@@ -436,6 +436,148 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// True when the <c>--task SecondPassFDR</c> merge may hand Stage 7 a per-run source
+        /// instead of every run's survivors at once.
+        ///
+        /// <para>This is <see cref="CanHydratePerRun"/>'s answer for the OTHER leg, and the two
+        /// are deliberately separate predicates rather than one with a wider admission. They
+        /// name different consumers: that one asks whether the RESCORE can hydrate a run at a
+        /// time, and excludes <c>ExpectReconciledInput</c> because a Stage 7 node runs no
+        /// rescore; this one asks whether the JOIN can fold a run at a time, and admits only
+        /// that leg. Widening the first would have told the rescore it may stream on a leg where
+        /// it does not run at all.</para>
+        ///
+        /// <para>Three requirements, and the third is the one that is easy to miss. The leg has
+        /// to be the reconciled-input merge, whose parquets already hold the survivor subset.
+        /// No consumer may read PIN features off these stubs
+        /// (<c>PerFileScoringTask.NeedsResidentPool</c>: <c>--fdrbench-pass 1</c>, a
+        /// non-Percolator FDR method, <c>OSPREY_FDR_PROJECTION=0</c>) - a streamed pool drops
+        /// the entries those consumers index. And the analysis-wide retained base_id summary has
+        /// to be on disk, because it IS the compaction predicate every refill applies; without
+        /// it a refilled run would carry the pre-compaction pool and the fold would run over a
+        /// set ~52x too large. Its absence returns false here rather than failing, for the
+        /// reason its sibling gives.</para>
+        /// </summary>
+        internal static bool CanStreamStage7Join(OspreyConfig config)
+        {
+            return CanStreamStage7Join(config, OspreyEnvironment.Stage7Stream);
+        }
+
+        /// <summary>
+        /// Pure core of the one-argument <c>CanStreamStage7Join</c>, with the env switch
+        /// passed in. Exists so <see cref="Stage7ResidentGuardError"/> can ask the question the
+        /// operator's choice hinges on - "would this run have streamed if the switch were on?" -
+        /// which is what separates a CHOSEN resident join from one that had no alternative.
+        /// </summary>
+        internal static bool CanStreamStage7Join(OspreyConfig config, bool stage7Stream)
+        {
+            if (!config.ExpectReconciledInput || !stage7Stream)
+                return false;
+            if (PerFileScoringTask.NeedsResidentPool(config, OspreyEnvironment.UseFdrProjection))
+                return false;
+            // --model-diagnostics WAS the fourth requirement, and is no longer one. The pass-2
+            // report is now folded run by run through ModelDiagnosticsData.Accumulator - the
+            // same accumulator the pass-1 report uses - with the co-assignment panel's two
+            // phases driven from the join's own stream passes, so the report no longer needs a
+            // list it can index by position. Removing this term is also what lets the gate SEE
+            // the streamed arm: --model-diagnostics is set on StellarLibDecoy,
+            // StellarGenDecoyEntrap and Astral, so while it stood here mode 3's phase 4 took the
+            // resident path on three of the four datasets and a streamed-arm defect needing
+            // library decoys, entrapment or hram data passed the suite green.
+            // The pass-2 mode has to be the one whose per-run half already ran in the
+            // fan-out. protein-compact owns its whole per-file cycle in Stage 6 and Stage 7
+            // folds the written answers; every other mode still computes the per-file half HERE,
+            // over the whole pool - RestorePass1Scalars, the resident second pass and the
+            // projection sink's per-file protein-q map all index it. Streaming underneath them
+            // does not make them per-run, it just takes their input away: the fragment release
+            // streams first and drops the pool, and ComputeAndPersist then throws
+            // "Value was read after StreamFiles dropped the survivor pool" hours into Stage 7.
+            //
+            // Not a guess about which modes are safe - the same predicate ComputeAndPersist
+            // itself branches on for `frozenCompetition`. When transfer's per-run half moves to
+            // Pass2PerFileWorker this term becomes "any mode with a worker" and the two move
+            // together.
+            if (!OspreyEnvironment.Pass2ProteinCompact)
+                return false;
+            string retainedPath =
+                RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
+            return !string.IsNullOrEmpty(retainedPath) &&
+                   RetainedBaseIdSidecar.IsCurrentFormat(retainedPath);
+        }
+
+        /// <summary>
+        /// Fail fast when the RESIDENT Stage-7 join was CHOSEN over an admissible streamed one,
+        /// unless the operator named <see cref="ResidentPaths.STAGE7_STREAM_OFF"/>. The Stage-7
+        /// sibling of <c>PerFileScoringTask.GuardResidentPool</c>, which stops at the
+        /// pre-compaction line and so never saw this pool.
+        ///
+        /// <para>Only the CHOSEN case. The question asked is "would this run have streamed with
+        /// the switch on", so a run that could not stream for any other reason - a
+        /// straight-through join, a non-protein-compact pass-2 mode, a missing retained-base_id
+        /// summary - is not refused, because there is no choice for a token to record. Those
+        /// remain disclosed rather than tokened until the streamed join is admissible for them
+        /// too; refusing them here would put a mandatory token on every ordinary run, which
+        /// grants nothing and is exactly the blanket amnesty the named-token ratchet replaced.</para>
+        ///
+        /// <para><c>streamingAvailable</c> - whether this run COULD stream the join, i.e.
+        /// the two-argument <c>CanStreamStage7Join</c> with the switch forced on - is
+        /// passed IN rather than computed here, so the guard is a pure function and its refusal
+        /// is unit-testable. Computing it internally makes every test process answer false (no
+        /// retained-base_id sidecar on disk), so the refusal branch would never be reached and
+        /// the test would pass vacuously. Its Stage-6 sibling takes the same parameter for the
+        /// same reason.</para>
+        /// </summary>
+        internal static string Stage7ResidentGuardError(
+            bool streamingAvailable, bool stage7Stream, string allowUnfixedResident)
+        {
+            if (stage7Stream || !streamingAvailable)
+                return null;
+            if (OspreyEnvironment.NamesResidentPath(allowUnfixedResident,
+                    ResidentPaths.STAGE7_STREAM_OFF))
+            {
+                return null;
+            }
+            // The SUPPLIED value is quoted, matching the two sibling guards: a stale or
+            // misspelled token otherwise reads exactly like an unset one, and the operator
+            // cannot tell "you named nothing" from "you named the wrong path".
+            return string.Format(
+                @"OSPREY_STAGE7_STREAM=0 forces the RESIDENT Stage-7 join, which rebuilds every " +
+                @"run's survivors at once and holds them for the whole stage - O(files), measured " +
+                @"at 91.1 GB on a 446-run cohort. This run CAN stream it, so residency here is a " +
+                @"choice and has to be named: set OSPREY_ALLOW_UNFIXED_RESIDENT={0} to run the " +
+                @"A/B deliberately, or unset OSPREY_STAGE7_STREAM to take the streamed join. " +
+                @"OSPREY_ALLOW_UNFIXED_RESIDENT is currently {1}.",
+                ResidentPaths.STAGE7_STREAM_OFF,
+                string.IsNullOrWhiteSpace(allowUnfixedResident)
+                    ? @"unset"
+                    : @"'" + allowUnfixedResident + @"'");
+        }
+
+        /// <summary>
+        /// The retained base_id set for the streamed second-pass join, or a hard failure.
+        ///
+        /// <para>Separate from <see cref="ReadRetainedBaseIds"/>'s null-returning form because
+        /// the CALLER cannot degrade here. By the time Stage 7 asks, the <c>--input-scores</c>
+        /// load has already published one EMPTY list per run on the strength of
+        /// <c>CanStreamStage7Join</c> - which only header-probes the sidecar - so a null
+        /// leaves the stage folding over 446 empty runs, logging "No entries pass FDR threshold.
+        /// Creating empty blib." and exiting 0. An empty <c>.blib</c> from a successful-looking
+        /// run is the worst outcome this pipeline can produce, and the sidecar's own reader
+        /// documents its absence as FATAL.</para>
+        /// </summary>
+        internal static HashSet<uint> ReadRetainedBaseIdsOrFail(OspreyConfig config)
+        {
+            var retained = ReadRetainedBaseIds(config, out string error);
+            if (retained != null)
+                return retained;
+            throw new InvalidDataException(string.Format(
+                @"The second-pass join is streaming, which requires the analysis-wide retained " +
+                @"base_id summary, and it could not be read: {0} Continuing would fold every run " +
+                @"as empty and write an empty library.",
+                error ?? @"(no reason reported)"));
+        }
+
+        /// <summary>
         /// Read the analysis-wide retained base_id summary FirstPassFDR left behind, or return
         /// null with <paramref name="error"/> set to an operator-facing message naming the
         /// producer.
