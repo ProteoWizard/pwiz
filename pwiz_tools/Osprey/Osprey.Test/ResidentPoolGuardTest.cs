@@ -183,11 +183,16 @@ namespace pwiz.Osprey.Test
             // 'mdiag-full-resume' is GONE (#4505), 'resume-survivor-handoff' is GONE (#4536,
             // the rehydrate got its own survivor loader), and 'hpc-merge' is GONE (#4486, the
             // reconciled-input merge streams its load) - the ratchet shrinking three times.
+            // 'stage7-stream-off' was ADDED once the streamed Stage-7 join existed: until then
+            // the resident join had no alternative, so a token could only have been mandatory
+            // on every run and would have granted nothing. See the constant's own remarks for
+            // why naming a previously UNNAMEABLE path is the ratchet reaching further rather
+            // than running backwards.
             CollectionAssert.AreEqual(
                 new[]
                 {
                     "fdrbench-pass1", "non-percolator-fdr",
-                    "projection-off", "compacted-entries-buffer"
+                    "projection-off", "compacted-entries-buffer", "stage7-stream-off"
                 },
                 ResidentPaths.KNOWN_UNFIXED.ToArray());
 
@@ -196,6 +201,11 @@ namespace pwiz.Osprey.Test
             // at 163 files, live for the whole rescore - was never named and no token could
             // refuse it. Streaming it is the default; the resident opt-out is a named path.
             AssertStage6HandoffGuard();
+
+            // The STAGE-7 join guard. Same shape one stage later: the pre-compaction guard
+            // stops at the compaction line and the Stage-6 one at the handoff, so the survivor
+            // buffer SecondPassFDR rebuilds was refused by neither and no token could name it.
+            AssertStage7JoinGuard();
 
             // The trigger SET itself, not just the message it produces. Each of these takes the
             // O(files) resident pool and so arms the guard above.
@@ -230,6 +240,49 @@ namespace pwiz.Osprey.Test
         /// in the first place is not asked for a second token on top of the one its own
         /// resident path already requires.
         /// </summary>
+        /// <summary>
+        /// The Stage-7 join guard: a RESIDENT join CHOSEN over an admissible streamed one must
+        /// be named. Only the chosen case - a run that could not have streamed anyway is not
+        /// refused, because there is nothing for a token to record and demanding one would put
+        /// a mandatory token on every ordinary run.
+        /// </summary>
+        private static void AssertStage7JoinGuard()
+        {
+            // Streaming on: no error, whatever the token says.
+            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
+                streamingAvailable: true, stage7Stream: true, allowUnfixedResident: null));
+            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
+                true, true, ResidentPaths.FDRBENCH_PASS1));
+
+            // OSPREY_STAGE7_STREAM=0 on a run that COULD stream: refused, and the message names
+            // the token to set rather than describing a symptom.
+            string err = ScoringTaskShared.Stage7ResidentGuardError(true, false, null);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err,
+                "OSPREY_ALLOW_UNFIXED_RESIDENT=" + ResidentPaths.STAGE7_STREAM_OFF);
+
+            // Naming THIS path admits it - that is the A/B byte-identity oracle. Case-
+            // insensitive, matching both sibling guards.
+            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
+                true, false, ResidentPaths.STAGE7_STREAM_OFF));
+            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
+                true, false, ResidentPaths.STAGE7_STREAM_OFF.ToUpperInvariant()));
+
+            // Naming a DIFFERENT path does not, and the message quotes the value supplied so a
+            // stale token does not read like an unset one.
+            string wrongToken = ScoringTaskShared.Stage7ResidentGuardError(
+                true, false, ResidentPaths.PROJECTION_OFF);
+            Assert.IsNotNull(wrongToken);
+            StringAssert.Contains(wrongToken, ResidentPaths.PROJECTION_OFF);
+
+            // A run that could not stream ANYWAY is NOT guarded here - there is no choice for a
+            // token to record. This is the straight-through join, and it is precisely the case
+            // that keeps the DEFAULT path usable without demanding a token: refusing it would
+            // put a mandatory token on every ordinary run, which grants nothing.
+            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
+                streamingAvailable: false, stage7Stream: false, allowUnfixedResident: null));
+        }
+
         private static void AssertStage6HandoffGuard()
         {
             // Streaming: no error, whatever the token says.

@@ -285,6 +285,39 @@ namespace pwiz.Osprey.Tasks
 
         public override bool Run(PipelineContext ctx)
         {
+            bool couldStream = ScoringTaskShared.CanStreamStage7Join(ctx.Config, stage7Stream: true);
+            string residentError = ScoringTaskShared.Stage7ResidentGuardError(
+                couldStream, OspreyEnvironment.Stage7Stream, OspreyEnvironment.AllowUnfixedResident);
+            if (residentError != null)
+                throw new InvalidOperationException(residentError);
+
+            // The run that CANNOT stream is not refused - there is no alternative to choose, and
+            // demanding a token would make the ordinary path unusable. But it must not be
+            // silent either. Until now the only statement of this deficiency lived in
+            // regression.ps1's end-of-run table, which prints for the developers who already
+            // know and never for the operator whose run is about to take it: what they get
+            // today is an OOM at a file count nothing warned them about.
+            //
+            // FIRST in Run, ahead of the diagnostics fold arm below. That arm returns early, and
+            // when the join cannot stream it is ITSELF a resident-pool path - it pulls the same
+            // survivor buffer, which is where 91.1 GB was measured at 446 files. Placing this
+            // after it silenced the warning on exactly the run that most needed it.
+            //
+            // One line, naming the shape, the issue and the cost model, so the ceiling is
+            // predictable from the run's own output rather than from a projection in a gate
+            // nobody outside this repo executes.
+            if (!couldStream)
+            {
+                ctx.LogWarning(string.Format(
+                    @"Stage 7 is taking the RESIDENT join: every run's survivors are rebuilt at " +
+                    @"once and held for the whole stage, which is O(files) (issue #4486). " +
+                    @"Measured cost is ~4.4 GB plus ~0.197 GB per file, so {0} file(s) needs " +
+                    @"~{1:F0} GB. The streamed join is admitted only for --task SecondPassFDR " +
+                    @"today; this run does not qualify, so there is nothing to switch on.",
+                    ctx.Config.InputFiles?.Count ?? 0,
+                    4.4 + 0.197 * (ctx.Config.InputFiles?.Count ?? 0)));
+            }
+
             // The pass-2 diagnostics product is the ONLY outstanding output: every
             // computational artifact this task produces is already on disk and key-current, and
             // the driver reached Run solely because the pass-2 diagnostics JSON is missing -
@@ -310,6 +343,11 @@ namespace pwiz.Osprey.Tasks
                 return FoldPass2DiagnosticsOnly(ctx);
             }
 
+            // Refuse a resident Stage-7 join that was CHOSEN over an admissible streamed one,
+            // before anything is written or any pool is pulled. The first-pass guard cannot see
+            // this pool - it stops at the compaction line - so without this the fat path was
+            // reachable with no token at all, which is the one shape the named-token ratchet is
+            // supposed to make impossible.
             // Mid-Run crash safety: see FirstPassFdrTask.Run for rationale.
             foreach (var output in Outputs(ctx))
                 TaskValiditySidecar.Delete(output, Name);

@@ -460,7 +460,18 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static bool CanStreamStage7Join(OspreyConfig config)
         {
-            if (!config.ExpectReconciledInput || !OspreyEnvironment.Stage7Stream)
+            return CanStreamStage7Join(config, OspreyEnvironment.Stage7Stream);
+        }
+
+        /// <summary>
+        /// Pure core of the one-argument <c>CanStreamStage7Join</c>, with the env switch
+        /// passed in. Exists so <see cref="Stage7ResidentGuardError"/> can ask the question the
+        /// operator's choice hinges on - "would this run have streamed if the switch were on?" -
+        /// which is what separates a CHOSEN resident join from one that had no alternative.
+        /// </summary>
+        internal static bool CanStreamStage7Join(OspreyConfig config, bool stage7Stream)
+        {
+            if (!config.ExpectReconciledInput || !stage7Stream)
                 return false;
             if (PerFileScoringTask.NeedsResidentPool(config, OspreyEnvironment.UseFdrProjection))
                 return false;
@@ -495,12 +506,60 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Fail fast when the RESIDENT Stage-7 join was CHOSEN over an admissible streamed one,
+        /// unless the operator named <see cref="ResidentPaths.STAGE7_STREAM_OFF"/>. The Stage-7
+        /// sibling of <c>PerFileScoringTask.GuardResidentPool</c>, which stops at the
+        /// pre-compaction line and so never saw this pool.
+        ///
+        /// <para>Only the CHOSEN case. The question asked is "would this run have streamed with
+        /// the switch on", so a run that could not stream for any other reason - a
+        /// straight-through join, a non-protein-compact pass-2 mode, a missing retained-base_id
+        /// summary - is not refused, because there is no choice for a token to record. Those
+        /// remain disclosed rather than tokened until the streamed join is admissible for them
+        /// too; refusing them here would put a mandatory token on every ordinary run, which
+        /// grants nothing and is exactly the blanket amnesty the named-token ratchet replaced.</para>
+        ///
+        /// <para><c>streamingAvailable</c> - whether this run COULD stream the join, i.e.
+        /// the two-argument <c>CanStreamStage7Join</c> with the switch forced on - is
+        /// passed IN rather than computed here, so the guard is a pure function and its refusal
+        /// is unit-testable. Computing it internally makes every test process answer false (no
+        /// retained-base_id sidecar on disk), so the refusal branch would never be reached and
+        /// the test would pass vacuously. Its Stage-6 sibling takes the same parameter for the
+        /// same reason.</para>
+        /// </summary>
+        internal static string Stage7ResidentGuardError(
+            bool streamingAvailable, bool stage7Stream, string allowUnfixedResident)
+        {
+            if (stage7Stream || !streamingAvailable)
+                return null;
+            if (OspreyEnvironment.NamesResidentPath(allowUnfixedResident,
+                    ResidentPaths.STAGE7_STREAM_OFF))
+            {
+                return null;
+            }
+            // The SUPPLIED value is quoted, matching the two sibling guards: a stale or
+            // misspelled token otherwise reads exactly like an unset one, and the operator
+            // cannot tell "you named nothing" from "you named the wrong path".
+            return string.Format(
+                @"OSPREY_STAGE7_STREAM=0 forces the RESIDENT Stage-7 join, which rebuilds every " +
+                @"run's survivors at once and holds them for the whole stage - O(files), measured " +
+                @"at 91.1 GB on a 446-run cohort. This run CAN stream it, so residency here is a " +
+                @"choice and has to be named: set OSPREY_ALLOW_UNFIXED_RESIDENT={0} to run the " +
+                @"A/B deliberately, or unset OSPREY_STAGE7_STREAM to take the streamed join. " +
+                @"OSPREY_ALLOW_UNFIXED_RESIDENT is currently {1}.",
+                ResidentPaths.STAGE7_STREAM_OFF,
+                string.IsNullOrWhiteSpace(allowUnfixedResident)
+                    ? @"unset"
+                    : @"'" + allowUnfixedResident + @"'");
+        }
+
+        /// <summary>
         /// The retained base_id set for the streamed second-pass join, or a hard failure.
         ///
         /// <para>Separate from <see cref="ReadRetainedBaseIds"/>'s null-returning form because
         /// the CALLER cannot degrade here. By the time Stage 7 asks, the <c>--input-scores</c>
         /// load has already published one EMPTY list per run on the strength of
-        /// <see cref="CanStreamStage7Join"/> - which only header-probes the sidecar - so a null
+        /// <c>CanStreamStage7Join</c> - which only header-probes the sidecar - so a null
         /// leaves the stage folding over 446 empty runs, logging "No entries pass FDR threshold.
         /// Creating empty blib." and exiting 0. An empty <c>.blib</c> from a successful-looking
         /// run is the worst outcome this pipeline can produce, and the sidecar's own reader
