@@ -1,4 +1,13 @@
-<Project> 
+<Project>
+ <!-- pwiz-sharp\ - the managed ProteoWizard port this tree builds against. Defined once here so
+      every project under pwiz_tools reaches it as $(PwizSharpRoot) (trailing slash; the same
+      name and shape pwiz-sharp's own Directory.Build.props gives its projects) instead of a
+      ..\..\..\ chain that breaks whenever a project moves. Binary references go through
+      Shared\PwizSharp.targets; this property is for the few non-binary borrowings (build
+      targets, test-data extraction). -->
+ <PropertyGroup>
+  <PwizSharpRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..', 'pwiz-sharp'))</PwizSharpRoot>
+ </PropertyGroup>
 <PropertyGroup>
  <!-- Suppress MSBuild errors: --> 
  <!-- MSB3178: Assembly xxx is incorrectly specified as a file. --> 
