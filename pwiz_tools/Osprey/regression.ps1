@@ -293,7 +293,16 @@ $knownResidentGaps = @(
         # the 4/8/16-file A/B. Quoting a straight-through 82-file endpoint next to that rig's
         # marginal slope produced three numbers no single model reproduced (24.43/82 = 0.298,
         # not 0.197), which is unreadable in a summary that prints on every CI run.
-        Legs  = 'Every leg of every dataset. ~4.4 GB library + 0.197 GB/file live post-GC: ~20 GB at 82 files, ~103 GB projected at 500.'
+        # NOT every leg any more, and saying so mattered: this gate's own mode-3 SecondPassFDR
+        # phase takes the streamed join, which is the fix for this gap being exercised rather
+        # than merely described. The note below about hpc-merge already said that; this line
+        # still said "every leg", so the summary printed the stale half on every CI run.
+        #
+        # The model is now CONFIRMED rather than projected: 4.4 + 0.197*446 = 92.3 GB predicts
+        # the 91.1 GB private measured on the 446-run CHS cohort (2026-09-08), which is the
+        # first endpoint past 82 files. Quoted as a check on the model, not as a second model -
+        # see the note above about three numbers no single model reproduced.
+        Legs  = 'Every leg EXCEPT the streamed Stage-7 join (mode 3''s SecondPassFDR phase, which sets ExpectReconciledInput). ~4.4 GB library + 0.197 GB/file live post-GC: ~20 GB at 82 files, ~103 GB projected at 500, and 92.3 GB predicted vs 91.1 GB measured at 446.'
     }
 )
 # Reachable only outside this gate, tokened, each with an open issue:
