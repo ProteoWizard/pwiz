@@ -109,6 +109,19 @@ New-Item -ItemType Directory $stagingDir -Force | Out-Null
 function Should-Skip([string] $relName) {
     if ($relName -match '\.(pdb|xml)$') { return $true }
     if ($relName -match '^runtimes[\\/](?!win-x64[\\/]|win[\\/])') { return $true }
+    # Non-Windows binaries. These projects publish for both RIDs, so their bin directories
+    # carry Linux and macOS natives beside the Windows ones: the vendors' own .so files
+    # (Waters libMassLynxRaw, Bruker libbaf2sql_c and libtimsdata), libhdf5's .so/.dylib set,
+    # the Linux 7zz, and the extension-less Linux apphosts. In a Windows installer they are
+    # dead weight -- 46 MB of a 97 MB payload -- and the three vendor ones are licensed SDK
+    # binaries that this very filter exists to keep out of the artifact.
+    #
+    # The vendor-prefix check below cannot catch them even in principle: it is gated on
+    # Windows extensions, and 'libtimsdata' does not begin with the 'timsdata' pin prefix
+    # anyway. Extension-less entries are listed by name rather than skipped as a class,
+    # because a data file without an extension would otherwise be dropped silently.
+    if ($relName -match '\.(so|dylib|a)(\.\d+)*$') { return $true }
+    if ((Split-Path -Leaf $relName) -in @('7zz', 'msconvert')) { return $true }
     if ($relName -match '^(cs|de|es|fr|it|ja|ko|pl|pt-BR|ru|tr|zh-Hans|zh-Hant)[\\/]') { return $true }
     # Bruker's CompassXtract runtime (YEP / FID) is fetched to the vendor cache and then copied
     # next to the executable on first use, so a developer bin that has converted a YEP holds ~25 MB
@@ -241,31 +254,32 @@ function Build-VendorCache {
                     if (-not (Test-Path $target)) { Move-Item $f.FullName $target }
                 }
             }
-            # By this point everything wanted has been moved out and $nested holds only the
-            # x86/mips subtrees and duplicates -- for Waters, two empty directories. Deleting
+            # By this point every wanted file has been moved out and $nested holds only what the
+            # flatten skipped on purpose: the x86/mips subtrees (18 files for Shimadzu, 8 for
+            # Agilent, 3 for ABI; none for Waters or Thermo) and same-name duplicates. Deleting
             # it is tidying, not part of building the cache.
             #
             # Recursive delete is not reliable enough to bet the build on: on a TeamCity EC2
-            # agent this threw "The directory is not empty" on exactly that two-empty-directory
-            # tree, while the same commit and step passed on the MacCoss agent. Whatever holds
-            # the handle for those milliseconds (the agents' checkout volume behaves unlike
+            # agent this threw "The directory is not empty" over a Waters tree holding two empty
+            # directories, while the same commit and step passed on the MacCoss agent. Whatever
+            # holds the handle for those milliseconds (the agents' checkout volume behaves unlike
             # local NTFS -- the same class of difference that makes std::filesystem::canonical
             # throw there), retrying clears it.
             #
-            # Leftover FILES would mean the flatten itself did not do its job, so those still
-            # throw. Leftover empty directories get packaged harmlessly, so they only warn:
-            # failing the installer build over them is what cost a CI run.
+            # A leftover is never fatal, whatever it contains. The runtime does exactly the same
+            # flatten in VendorSdkLoader.FlattenVendorArchiveLayout, deletes $nested inside a
+            # best-effort try/catch, and keys EnsureExtracted purely off the .ok marker -- so a
+            # directory that survives here is invisible to the loader and costs no re-download.
+            # Whether the flatten actually worked is asserted by Verify-VendorCache instead, on
+            # the thing that matters: the DLLs are at the top level.
             for ($try = 1; $try -le 5 -and (Test-Path $nested); $try++) {
                 Remove-Item $nested -Recurse -Force -ErrorAction SilentlyContinue
                 if (Test-Path $nested) { Start-Sleep -Milliseconds (100 * $try) }
             }
             if (Test-Path $nested) {
-                $stragglers = @(Get-ChildItem $nested -Recurse -File -Force -ErrorAction SilentlyContinue)
-                if ($stragglers.Count -gt 0) {
-                    throw ("could not clean $nested after flattening; {0} file(s) left, first: {1}" -f
-                           $stragglers.Count, $stragglers[0].FullName)
-                }
-                Write-Host "      note: left empty $($v.name) vendor_api directories behind (delete kept failing)"
+                $left = @(Get-ChildItem $nested -Recurse -File -Force -ErrorAction SilentlyContinue)
+                Write-Host ("      note: {0} vendor_api left behind ({1} skipped file(s)); harmless, the loader ignores it" -f
+                            $v.name, $left.Count)
             }
         }
 
@@ -306,12 +320,18 @@ function Build-VendorCache {
 
 function Verify-VendorCache {
     # A cache the loader disagrees with degrades to a silent re-download, so assert the
-    # two invariants that would cause it: the .ok marker, and a flattened layout.
+    # invariants that would actually cause it: the .ok marker EnsureExtracted keys off, and
+    # DLLs at the top level where the resolvers look.
+    #
+    # A surviving vendor_api directory is NOT one of them, though it used to throw here. The
+    # loader's own flatten deletes it inside a best-effort try/catch and never consults it
+    # again, so its presence changes nothing at run time -- and asserting on it made the
+    # tolerant retry in Build-VendorCache unreachable, turning a cosmetic leftover on one CI
+    # agent into a failed installer build.
     $dirs = Get-ChildItem $vendorCacheDir -Directory
     if ($dirs.Count -eq 0) { throw "vendor cache is empty" }
     foreach ($d in $dirs) {
         if (-not (Test-Path (Join-Path $d.FullName ".ok"))) { throw "$($d.Name): no .ok marker" }
-        if (Test-Path (Join-Path $d.FullName "vendor_api")) { throw "$($d.Name): vendor_api not flattened" }
         if (-not (Get-ChildItem $d.FullName -File -Filter *.dll)) { throw "$($d.Name): no DLLs at top level" }
     }
     Write-Host "    verified $($dirs.Count) cache directories"
