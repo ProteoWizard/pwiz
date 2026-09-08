@@ -253,16 +253,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// True when the pass-1 diagnostics product is the single declared output this task
-        /// still owes: it is absent, and every other declared output exists with a current
-        /// validity stamp. The condition Run's fold arm turns on.
-        ///
-        /// <para>Asked over <see cref="Outputs"/> rather than a hand-listed set, so a future
-        /// output is covered without anyone remembering to add it here - the failure direction
-        /// of a forgotten entry is then a redundant recompute rather than a wrongly-adopted
-        /// first pass.</para>
-        /// </summary>
-        /// <summary>
         /// Produce the pass-1 diagnostics product and nothing else, from a first pass that is
         /// already complete on disk. Streams each run's pre-compaction rows into the report
         /// accumulator and discards them, so what is resident is the library, the accumulator's
@@ -273,10 +263,10 @@ namespace pwiz.Osprey.Tasks
         /// capture. Those are what a rescore needs; a report needs none of them, and retaining
         /// the survivors is what put a 446-run fold over a 63.7 GB box at run 266.</para>
         ///
-        /// <para>Reached from <c>--task FirstPassFDR --model-diagnostics</c>, which is the
-        /// supported way to give a completed analysis the pass-1 product it was run without.
-        /// NOT from <c>--task ModelDiagnostics</c>: that task renders and never processes, so
-        /// when this product is missing it names this one as the producer and stops.</para>
+        /// <para>Reached from <c>--task FirstPassFDR --model-diagnostics</c>, and from
+        /// <c>--task ModelDiagnostics</c>, which no longer refuses a missing product and names
+        /// this task as its producer - it falls into the ordinary pipeline, where this arm is
+        /// what "run FirstPassFDR" means once the first pass is already complete (P16).</para>
         /// </summary>
         private bool FoldDiagnosticsOnly(PipelineContext ctx)
         {
@@ -347,6 +337,16 @@ namespace pwiz.Osprey.Tasks
             return true;
         }
 
+        /// <summary>
+        /// True when the pass-1 diagnostics product is the single declared output this task
+        /// still owes: it is absent, and every other declared output exists with a current
+        /// validity stamp. The condition Run's fold arm turns on.
+        ///
+        /// <para>Asked over <see cref="Outputs"/> rather than a hand-listed set, so a future
+        /// output is covered without anyone remembering to add it here - the failure direction
+        /// of a forgotten entry is then a redundant recompute rather than a wrongly-adopted
+        /// first pass.</para>
+        /// </summary>
         private bool OnlyDiagnosticsProductOutstanding(PipelineContext ctx)
         {
             string diagnosticsPath = ModelDiagnosticsReport.Pass1SidecarPath(ctx.Config);

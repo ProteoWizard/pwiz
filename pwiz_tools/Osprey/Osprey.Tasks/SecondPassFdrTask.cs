@@ -264,6 +264,31 @@ namespace pwiz.Osprey.Tasks
 
         public override bool Run(PipelineContext ctx)
         {
+            // The pass-2 diagnostics product is the ONLY outstanding output: every
+            // computational artifact this task produces is already on disk and key-current, and
+            // the driver reached Run solely because the pass-2 diagnostics JSON is missing -
+            // the state a cohort is in when it finished WITHOUT --model-diagnostics and the flag
+            // is added later. Fold the report from the completed second pass rather than
+            // re-running the join (P16: a report is a derived view over the artifacts).
+            //
+            // AHEAD OF THE MARKER WIPE BELOW, and that placement is the whole correctness
+            // argument. The wipe clears every declared output's validity stamp; running it
+            // first would destroy the record that this second pass is complete - which is the
+            // only evidence the fold is entitled to adopt it - and the next resume would then
+            // re-run the join it was just spared. Pass 1 has the same arm above its own writers
+            // for the same reason (FirstPassFdrTask.Run).
+            //
+            // The cost of getting this wrong is the pass-1 trap restated: a SecondPassFDR that
+            // genuinely re-ran produces the RIGHT report, in 69 minutes on a 446-run cohort
+            // instead of minutes, and no gate would ever report the difference. Only the log
+            // line below distinguishes them.
+            if (ctx.Config.ModelDiagnostics && OnlyDiagnosticsProductOutstanding(ctx))
+            {
+                ctx.LogInfo(@"SecondPassFDR: every output but the model-diagnostics product is " +
+                            @"current; folding the pass-2 report from the completed second pass.");
+                return FoldPass2DiagnosticsOnly(ctx);
+            }
+
             // Mid-Run crash safety: see FirstPassFdrTask.Run for rationale.
             foreach (var output in Outputs(ctx))
                 TaskValiditySidecar.Delete(output, Name);
@@ -348,10 +373,6 @@ namespace pwiz.Osprey.Tasks
 
             ReleaseUnscorableLibraryFragments(rescored, rescored.FileCount, fullLibrary, ctx);
 
-            // The 2nd-pass Percolator model, captured for the model-diagnostics
-            // pass-2 model view; null when no reconciliation rescore happened.
-            FeatureContributions pass2Contributions = null;
-
             // Second-pass FDR. ALWAYS runs, because it always has a file to write.
             //
             // What is conditional is the RECOMPUTE, not the artifact: the second Percolator
@@ -369,7 +390,7 @@ namespace pwiz.Osprey.Tasks
             // reconciled features, reruns Percolator, writes the .2nd-pass sidecars, and
             // reloads them onto the stubs so downstream protein FDR + blib see the 2nd-pass
             // q-values.
-            pass2Contributions = Pass2FdrSidecar.ComputeAndPersist(
+            Pass2FdrSidecar.ComputeAndPersist(
                 ctx, AnyReconciledParquet(config), rescored, perFileParquetPaths,
                 Name, ValidityKey(ctx));
             // From here on, every fold must see the SECOND pass's answer. On the resident pool
@@ -510,17 +531,132 @@ namespace pwiz.Osprey.Tasks
                 // page, same 2nd-pass.model-diagnostics.json.
                 if (rescored.Streams)
                 {
-                    WritePass2DiagnosticsStreamed(ctx, rescored, pass2Contributions, libraryById,
+                    WritePass2DiagnosticsStreamed(ctx, rescored, libraryById,
                         config, stratumBaseIds);
                 }
                 else
                 {
                     ModelDiagnosticsReport.WritePass2AndFinalize(
-                        rescored.Value, pass2Contributions, libraryById, config, ctx.LogInfo,
+                        rescored.Value, libraryById, config, ctx.LogInfo,
                         stratumBaseIds, ValidityKey(ctx));
                 }
             }
 
+            return true;
+        }
+
+        /// <summary>
+        /// True when the pass-2 diagnostics product is the single declared output this task
+        /// still owes: it is absent, and every other declared output exists with a current
+        /// validity stamp. The condition <see cref="Run"/>'s fold arm turns on.
+        ///
+        /// <para>Asked over <see cref="Outputs"/> rather than a hand-listed set, so a future
+        /// output is covered without anyone remembering to add it here - the failure direction
+        /// of a forgotten entry is then a redundant re-join rather than a wrongly-adopted
+        /// second pass. The HTML page is the one exception: it is co-produced with the pass-2
+        /// product by the same writer, so a stale or missing page is what this arm exists to
+        /// fix and cannot be a reason to decline.</para>
+        /// </summary>
+        private bool OnlyDiagnosticsProductOutstanding(PipelineContext ctx)
+        {
+            string pass2Path = ModelDiagnosticsReport.Pass2SidecarPath(ctx.Config);
+            if (string.IsNullOrEmpty(pass2Path) || File.Exists(pass2Path))
+                return false;
+            // A second pass that never completed has nothing to fold FROM, and adopting it
+            // would describe a partial cohort as a whole one. Asked of the analysis-wide
+            // 2nd-pass experiment sidecar, which is this task's own end-of-join output.
+            if (!ModelDiagnosticsReport.HasCompletedSecondPass(ctx.Config))
+                return false;
+            string reportPath = ModelDiagnosticsReport.ReportPath(ctx.Config);
+            string validityKey = ValidityKey(ctx);
+            foreach (string output in Outputs(ctx))
+            {
+                if (string.Equals(output, reportPath, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                if (PerFileResumeDriver.IsCurrent(output, Name, validityKey))
+                    continue;
+                // Name the first output that failed. Declining here is not an error - it means
+                // a genuine second pass is owed - but on a large cohort it is the difference
+                // between minutes and over an hour, and without this line the only symptom is
+                // that the run takes a very long time and still produces the right answer.
+                ctx.LogInfo(string.Format(
+                    @"SecondPassFDR: not folding diagnostics from completed work - {0} is {1}, " +
+                    @"so the second pass is re-run.",
+                    output, File.Exists(output) ? @"present but not current for this analysis"
+                        : @"missing"));
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Produce the pass-2 diagnostics product and nothing else, from a second pass that is
+        /// already complete on disk. The pass-2 sibling of
+        /// <c>FirstPassFdrTask.FoldDiagnosticsOnly</c>, and the implementation of P16 for this
+        /// half of the report.
+        ///
+        /// <para>What it does NOT do is the point: no second-pass FDR, no protein FDR, no blib,
+        /// no FDRBench, no reconciled-parquet rewrite. Those are the JOIN, and every one of
+        /// their outputs is already on disk and key-current - that is what
+        /// <see cref="OnlyDiagnosticsProductOutstanding"/> established before this ran.</para>
+        ///
+        /// <para>"No analysis" does not mean instant, and reading it that way makes a correct
+        /// fold look broken. The pass-2 cards are reductions over every run's 2nd-pass sidecar
+        /// and reconciled parquet, and the co-assignment panel needs two reads of the pool, so
+        /// this streams all N runs - what it never does is RECOMPUTE any of them. The
+        /// distinguishing evidence is the marker line and the O(distinct) memory band, not the
+        /// wall clock, which separates a fold from a join by a factor rather than a category.</para>
+        ///
+        /// <para>Three stream passes, each rebuilding one run at a time and dropping it: the
+        /// experiment-q reclamp, then the accumulator fold sharing a pass with the panel's
+        /// cutoff phase, then the panel's detection phase. The reclamp is here and not skipped
+        /// because it is NOT persisted - the join applies it to the reported pool after protein
+        /// FDR, so a fold that omitted it would describe a pool the analysis never reported, and
+        /// the byte-comparison against the flag-up-front report is what would catch it.</para>
+        /// </summary>
+        private bool FoldPass2DiagnosticsOnly(PipelineContext ctx)
+        {
+            var config = ctx.Config;
+            var rescored = ctx.Get<RescoredEntries>();
+            var libraryById = ctx.Get<LibraryById>().Value;
+            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+
+            // The stratum, from the same sidecar the join reloads it from. Under
+            // protein-compact it SPLITS the pass-2 acceptance boundary in two (#4573), so a
+            // fold without it would draw one boundary where the join drew two and produce a
+            // different - complete, plausible, wrong - co-assignment panel.
+            Pass2FdrSidecar.EnsureFrozenFirstPassPublished(ctx, perFileParquetPaths);
+            HashSet<uint> stratumBaseIds = null;
+            if (OspreyEnvironment.Pass2ProteinCompact &&
+                ctx.TryGet<ProteinCompactStratum>(out var pcStratum))
+            {
+                stratumBaseIds = pcStratum.BaseIds;
+            }
+
+            // The same two steps the join performs between its second pass and its report, in
+            // the same order, so the two routes describe the identical pool. Neither is
+            // analysis: the overlay applies values already on disk, and the reclamp is a fold
+            // over them plus a per-run apply.
+            Pass2FdrSidecar.InstallStreamedPass2Overlay(ctx, rescored, Name, ValidityKey(ctx));
+            ReclampExperimentQToBestRun(rescored);
+
+            ctx.LogInfo(string.Format(
+                @"SecondPassFDR: folding the second pass from {0} run(s), one run resident at a " +
+                @"time (no second-pass FDR, no protein FDR, no blib).", rescored.FileCount));
+
+            // One report, two survivor shapes, and the choice is the stage's existing one -
+            // taken here rather than re-decided, so the fold and the join cannot render from
+            // different arms of the same comparison.
+            if (rescored.Streams)
+            {
+                WritePass2DiagnosticsStreamed(ctx, rescored, libraryById, config, stratumBaseIds);
+            }
+            else
+            {
+                ModelDiagnosticsReport.WritePass2AndFinalize(
+                    rescored.Value, libraryById, config, ctx.LogInfo,
+                    stratumBaseIds, ValidityKey(ctx));
+            }
             return true;
         }
 
@@ -551,13 +687,12 @@ namespace pwiz.Osprey.Tasks
         /// panel and logging why is the intended outcome of those guards; losing the run is not.</para>
         /// </summary>
         private void WritePass2DiagnosticsStreamed(PipelineContext ctx, RescoredEntries rescored,
-            FeatureContributions pass2Contributions,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config, HashSet<uint> stratumBaseIds)
         {
             try
             {
-                WritePass2DiagnosticsStreamedCore(ctx, rescored, pass2Contributions, libraryById,
+                WritePass2DiagnosticsStreamedCore(ctx, rescored, libraryById,
                     config, stratumBaseIds);
             }
             catch (Exception ex)
@@ -568,7 +703,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         private void WritePass2DiagnosticsStreamedCore(PipelineContext ctx, RescoredEntries rescored,
-            FeatureContributions pass2Contributions,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config, HashSet<uint> stratumBaseIds)
         {
@@ -655,7 +789,7 @@ namespace pwiz.Osprey.Tasks
             }
 
             ModelDiagnosticsReport.WritePass2AndFinalizeFromAccumulator(
-                pass1Data, accumulator, coAssignment, pass2Contributions, config, ctx.LogInfo,
+                pass1Data, accumulator, coAssignment, config, ctx.LogInfo,
                 ValidityKey(ctx));
         }
 

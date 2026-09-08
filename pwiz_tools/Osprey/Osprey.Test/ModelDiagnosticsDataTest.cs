@@ -838,7 +838,15 @@ namespace pwiz.Osprey.Test
             for (int i = 0; i < 10; i++) facc.Add(new[] { -1.0, 0.0 }, true);
             var contrib = facc.Build(new List<double[]> { new[] { 2.0, -1.0 } }, infos);
 
-            // Batch build (the resident-path oracle).
+            // Batch build (the resident-path oracle), with contributions supplied.
+            //
+            // NOT a configuration production can reach: no surviving second-pass mode
+            // retrains, so the pipeline passes null here (issue #4484). This arm tests
+            // BuildPass2's CONTRACT - that a non-null contributions argument builds the
+            // structural half and that the streamed accumulator agrees with the batch build
+            // on it - which is what keeps the shape covered until its replacement source
+            // (frozen pass-1 coefficients plus per-feature running sums) is wired in. The
+            // transfer arm below is the one that mirrors what production actually runs.
             var batch = ModelDiagnosticsData.BuildPass2(perFileEntries, contrib, cls, pair, r,
                 runFdr, level, mzLookup);
 
@@ -885,9 +893,11 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(batch.DensityRatio);
             Assert.IsNotNull(batch.WinFraction);
 
-            // Transfer mode: no retrained model, so the structural half stays null on BOTH arms.
-            // Worth pinning separately because it is the arm protein-compact actually runs, and
-            // a streamed build that invented a Model there would go unnoticed by the assert above.
+            // Null contributions, which is EVERY production configuration: no surviving
+            // second-pass mode retrains, so the structural half stays null on BOTH arms. This
+            // is the representative arm, not a special case - a streamed build that invented a
+            // Model here would go unnoticed by the assert above, and this is the shape the
+            // pipeline actually renders.
             var batchT = ModelDiagnosticsData.BuildPass2(perFileEntries, null, cls, pair, r,
                 runFdr, level, mzLookup);
             var accT = new ModelDiagnosticsData.Accumulator(runNames, cls, pair, r, runFdr, level, 2);
@@ -908,8 +918,8 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(
                 JsonConvert.SerializeObject(batchT, settings),
                 JsonConvert.SerializeObject(accT.BuildPass2(null, panelT), settings),
-                @"streamed pass-2 accumulator must byte-match the batch build in transfer mode");
-            Assert.IsNull(batchT.Model, @"transfer mode -> no retrained model, structural half null");
+                @"streamed pass-2 accumulator must byte-match the batch build with no contributions");
+            Assert.IsNull(batchT.Model, @"no retrained second pass -> structural half null");
             Assert.IsNull(batchT.WinFraction);
 
             // STRATIFIED, which is the only shape the streamed arm ever runs in production:

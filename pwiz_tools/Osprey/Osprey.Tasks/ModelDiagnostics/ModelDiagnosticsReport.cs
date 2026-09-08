@@ -217,7 +217,6 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// </summary>
         public static void WritePass2AndFinalize(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            FeatureContributions pass2Contributions,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config,
             Action<string> logInfo,
@@ -239,9 +238,11 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // Build the complete pass-2 (final reported pool) bundle -- every
                 // pass-dependent card recomputed on this post-compaction, second-pass
                 // q-valued pool -- so the page's top-level Pass 1 / Pass 2 switch can
-                // re-source the whole page. The structural half is null under
-                // confidence-transfer mode (pass2Contributions == null); the q-driven
-                // half is always built (FdpViews empty without an entrapment pool).
+                // re-source the whole page. The structural half is null in every surviving
+                // mode: with the retrain removed (#4484) there is no retrained pass-2 model
+                // to describe, which is why null is passed as the contributions rather than
+                // sourced. The q-driven half is always built (FdpViews empty without an
+                // entrapment pool).
                 // These two steps shared a 71 s silence on the 82-file SEA-AD run of 2026-08-14,
                 // between the classification's [ENTRAPMENT] line and "finalized report" (#4571).
                 // BuildPass2 owns essentially all of it and carries its own per-card
@@ -251,7 +252,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // Measured 2026-08-15: the render that follows completes inside the same second
                 // it starts, so it gets no line at all.
                 data.Pass2 = ModelDiagnosticsData.BuildPass2(
-                    perFileEntries, pass2Contributions, classByBaseId, pairByBaseId,
+                    perFileEntries, null, classByBaseId, pairByBaseId,
                     entrapmentRatio, config.RunFdr, config.FdrLevel,
                     BuildPrecursorMzLookup(libraryById), stratumBaseIds);
 
@@ -293,7 +294,6 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             ModelDiagnosticsData data,
             ModelDiagnosticsData.Accumulator accumulator,
             ModelDiagnosticsData.CoAssignmentData coAssignment,
-            FeatureContributions pass2Contributions,
             OspreyConfig config,
             Action<string> logInfo,
             string validityKey = null)
@@ -302,7 +302,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             {
                 if (data == null)
                     return;
-                data.Pass2 = accumulator.BuildPass2(pass2Contributions, coAssignment);
+                // Null contributions for the reason the resident sibling passes null: no
+                // surviving pass-2 mode retrains, so there is no pass-2 model to describe.
+                data.Pass2 = accumulator.BuildPass2(null, coAssignment);
                 FinalizePass2(data, config, validityKey, logInfo);
             }
             catch (Exception ex)
@@ -416,6 +418,37 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         {
             string path = FirstPassExperimentSidecarPath(config);
             return !string.IsNullOrEmpty(path) && File.Exists(path);
+        }
+
+        /// <summary>
+        /// Whether every diagnostics product this analysis is CAPABLE of having is already on
+        /// disk - so the report can be re-rendered from products alone and nothing needs
+        /// folding. False means at least one half is outstanding and the pass that owns it has
+        /// to produce it.
+        ///
+        /// <para>"Capable of" is what keeps this from being a permanent false: an analysis that
+        /// has finished its first pass and not its second cannot have a pass-2 product, and
+        /// demanding one would send every such run into a fold that has nothing to fold. So the
+        /// pass-2 half is required only once <see cref="HasCompletedSecondPass"/> says there is
+        /// a second pass to describe.</para>
+        ///
+        /// <para>The pass-1 half is asked as "present AND describes THIS analysis", the same
+        /// two questions <see cref="TryRenderFromProducts"/> asks, because a product left over
+        /// from a different library or parameter set is not a product this run may render - it
+        /// has to be rebuilt, which is a fold.</para>
+        /// </summary>
+        public static bool AllProductsCurrent(OspreyConfig config)
+        {
+            string pass1Path = ResolvePass1SidecarPath(config);
+            if (string.IsNullOrEmpty(pass1Path) || !File.Exists(pass1Path) ||
+                !DescribesTheFirstPassOnDisk(config, pass1Path))
+            {
+                return false;
+            }
+            if (!HasCompletedSecondPass(config))
+                return true;
+            string pass2Path = ResolvePass2SidecarPath(config);
+            return !string.IsNullOrEmpty(pass2Path) && File.Exists(pass2Path);
         }
 
         /// <summary>

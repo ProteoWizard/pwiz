@@ -380,39 +380,51 @@ namespace pwiz.Osprey
 
         /// <summary>
         /// <c>--task ModelDiagnostics</c>: produce the report from COMPLETED analysis state and
-        /// never process. Returns the process exit code when the task is finished, or -1 to fall
-        /// through to the one case that still needs the pipeline - folding a first pass that has
-        /// no diagnostics product yet.
+        /// never re-run the analysis. Returns the process exit code when the task is finished,
+        /// or -1 to fall through to the pipeline when a diagnostics product still has to be
+        /// folded.
         ///
         /// <para>The three states are the developer's contract. No first-pass state is an ERROR
-        /// rather than a partial page; a first pass with no second is the report it can honestly
-        /// give, with the incompleteness stated in the page; and everything present is a
-        /// re-render.</para>
+        /// rather than a partial page; every product present is a re-render, in seconds; and a
+        /// missing product is FOLDED by the pass that owns it. It used to REFUSE that third
+        /// case and name the command the operator should run instead, which made the report an
+        /// output only its producing phase could make - the thing P16 forbids.</para>
         ///
-        /// <para>What this replaces: the task used to fall straight through to
+        /// <para>Falling through is not the old behavior returning. The task used to reach
         /// <see cref="AnalysisPipeline"/> and execute Stages 1-7 with every write suppressed by
-        /// <see cref="OspreyConfig.DiagnosticsOnly"/>. Suppressing the WRITES does not suppress
-        /// the WORK - it still built the whole-run survivor pool - so asking a 446-run analysis
-        /// to describe itself cost as much as running it, and met the same memory wall.</para>
+        /// <see cref="OspreyConfig.DiagnosticsOnly"/>; suppressing the WRITES does not suppress
+        /// the WORK, so asking a 446-run analysis to describe itself cost as much as running it
+        /// and met the same memory wall. What changed is the other end: both FDR tasks now
+        /// recognise "the diagnostics product is my only outstanding output" and fold it from
+        /// their own completed artifacts, so the pipeline this falls into runs two bounded
+        /// folds and skips everything else on its validity stamps. That is P15's ordinary
+        /// resume applied to the diagnostics outputs, which is what P16 says this should have
+        /// been all along - not a special mode, and not a special task.</para>
         /// </summary>
         private static int RunModelDiagnosticsTask(OspreyConfig config)
         {
-            if (ModelDiagnosticsReport.TryRenderFromProducts(config, LogInfo))
-                return 0;
-            // Nothing to render, and this task does not make it. It reports on completed work;
-            // producing the pass-1 product is FirstPassFDR's job, because that product is
-            // FirstPassFDR's declared OUTPUT. Naming the producer is the whole content of this
-            // message - an operator who is told "cannot" and not "run this" has to go read code.
-            LogError(ModelDiagnosticsReport.HasCompletedFirstPass(config)
-                ? "--task ModelDiagnostics: the first pass has completed but produced no " +
-                  "diagnostics product, so there is nothing to render. That analysis was run " +
-                  "without --model-diagnostics. Re-run it with --task FirstPassFDR " +
-                  "--model-diagnostics to produce the pass-1 product from the completed " +
-                  "first-pass artifacts, then run this task again."
-                : "--task ModelDiagnostics: no completed first-pass FDR state to describe (no " +
-                  "analysis-wide 1st-pass experiment sidecar beside the output). Run the " +
-                  "analysis at least as far as FirstPassFDR first.");
-            return 1;
+            // Nothing to describe. An ERROR rather than an empty page, and the doc-00 precedent
+            // for a missing relay input: fail with the reason, do not continue into a wrong
+            // answer that looks like a right one.
+            if (!ModelDiagnosticsReport.HasCompletedFirstPass(config))
+            {
+                LogError("--task ModelDiagnostics: no completed first-pass FDR state to " +
+                         "describe (no analysis-wide 1st-pass experiment sidecar beside the " +
+                         "output). Run the analysis at least as far as FirstPassFDR first.");
+                return 1;
+            }
+            // Everything this analysis can have is on disk: a pure render, seconds, no pipeline.
+            if (ModelDiagnosticsReport.AllProductsCurrent(config))
+                return ModelDiagnosticsReport.TryRenderFromProducts(config, LogInfo) ? 0 : 1;
+
+            // A product is outstanding. Say so before the pipeline banner, because the next
+            // thing the log shows is task machinery and an operator needs to know it is a fold
+            // rather than the re-analysis this task used to refuse to start.
+            LogInfo("--task ModelDiagnostics: a diagnostics product is missing for this " +
+                    "analysis; folding it from the completed artifacts. No analysis is re-run - " +
+                    "each pass produces its own report from its own sidecars, and every other " +
+                    "output is left as it stands.");
+            return -1;
         }
 
         /// <summary>
