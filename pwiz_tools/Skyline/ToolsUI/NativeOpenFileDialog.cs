@@ -27,16 +27,13 @@ using SkylineTool;
 namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
-    /// Drives the native Windows common Open/Save file dialog (such as the OpenFileDialog shown
-    /// by <c>SkylineWindow.ShowOpenFileDialog</c>), through its real Win32 child windows. See
-    /// <see cref="NativeDialog"/> for the threading contract and how to obtain an
-    /// instance.
+    /// Drives the native Windows common Open file dialog, the modern dialog shown by
+    /// <see cref="System.Windows.Forms.OpenFileDialog"/>. Its file-name field is the classic combo (cmb13 in
+    /// dlgs.h, control id 1148), which the Save dialog does not keep.
     /// </summary>
     public class NativeOpenFileDialog : NativeFileDialog
     {
-        // The control id the Windows common Open dialog gives its "File name" combo (cmb13) -- carried by the
-        // ComboBoxEx32, its ComboBox and the Edit inside it alike. Unlike the localized captions it is stable
-        // across Windows versions and locales, and its presence tells the Open dialog from every other "#32770".
+        // Carried by the ComboBoxEx32, its ComboBox and the Edit inside it alike.
         private const int FILE_NAME_COMBO_ID = 1148;
 
         public override string DialogTypeName => @"OpenFileDialog";
@@ -47,24 +44,16 @@ namespace pwiz.Skyline.ToolsUI
         {
         }
 
-        /// <summary>
-        /// Whether the "#32770" is the common Open dialog, identified by its classic file-name combo (control id
-        /// 1148). The whole combo -- the ComboBoxEx32, its ComboBox and the Edit inside it -- carries that id; the
-        /// Save dialog has no such control, so the two never both match.
-        /// </summary>
+        /// <summary>Whether the "#32770" is the common Open dialog, identified by its classic file-name combo.</summary>
         public static bool IsOpenFileDialog(IntPtr hwnd)
         {
             return new NativeOpenFileDialog(hwnd, CancellationToken.None)
                 .HasDescendantWithControlId(FILE_NAME_COMBO_ID);
         }
 
-        /// <summary>Accepts by clicking the Open button (BM_CLICK on IDOK). A posted Enter is NOT reliable here: on
-        /// the multiselect dialog a single typed file name raises the combo's autocomplete drop-down, which swallows
-        /// the Enter (it selects the drop-down item instead of committing) -- so the dialog never closes. Clicking
-        /// Open commits in one message. With a file name in the box the dialog opens THAT (not any file-list
-        /// selection), which is what the caller typed. OkDialog SENDS the click on the dialog's own thread and waits
-        /// for it to close -- so a click that raises a nested modal (an overwrite/error prompt) blocks there,
-        /// counted, rather than pinning the pipe thread.</summary>
+        /// <summary>Clicks Open rather than posting Enter: on the multiselect dialog a typed file name raises the
+        /// combo's autocomplete drop-down, which swallows the Enter, so the dialog never closes. With a file name
+        /// in the box the dialog opens that, not any file-list selection.</summary>
         public override ActionResult DismissWithAcceptButton()
         {
             return OkDialog(AcceptButton.ClickNow);
@@ -72,10 +61,8 @@ namespace pwiz.Skyline.ToolsUI
 
         protected override string CommitButtonDescription => @"Open";
 
-        // The file-name Edit. The classic combo's id (1148) rides the ComboBoxEx32, its ComboBox and (at least on
-        // current Windows, the multiselect "Add Input Files" dialog included) the Edit inside it. Take the Edit
-        // that carries the id when there is one; otherwise -- a flavour that keeps the id only on the combo -- take
-        // the Edit inside the combo that does, which is never the address-bar Edit (not a child of this combo).
+        // The Edit that carries the combo's id when there is one; otherwise, for a flavour that keeps the id only
+        // on the combo, the Edit inside the combo (never the address-bar Edit, which is not a child of it).
         protected override IntPtr FindFileNameEdit()
         {
             var edit = base.FindFileNameEdit();
