@@ -673,8 +673,13 @@ namespace pwiz.Osprey.Tasks
             // there is nothing to declare and nothing to test for null.
             // Captured for the DEFERRED projection build, and for the footer-only row total that
             // replaces the scan the lean branch used to perform. Both are O(files) in COUNT and
-            // O(1) in bytes per file - a file name, a path, and a long.
-            var deferredScanFiles = new List<KeyValuePair<string, string>>();
+            // O(1) in bytes per file - a file name and its row count.
+            //
+            // The COUNT rides along on the schema probe each file already opens, which is the
+            // whole reason the projection needs no scan: the deferred build below is
+            // counts-only, and a counts-only projection IS these two lists.
+            var deferredScanNames = new List<string>();
+            var deferredScanCounts = new List<int>();
             long leanRowCount = 0;
             Func<FdrProjectionSet> deferredProjections = null;
 
@@ -775,7 +780,14 @@ namespace pwiz.Osprey.Tasks
                             // costs nothing unless something asks for it.
                             // The row count rides along on the schema probe above - the footer
                             // was already open, so it is free. No second read, and no scan.
-                            deferredScanFiles.Add(new KeyValuePair<string, string>(fileName, scoresPath));
+                            //
+                            // Kept PER FILE, not just summed, because that is the whole of what
+                            // the deferred build produces: a counts-only projection is exactly
+                            // (file names, row counts). Declared NumRows is the same number a
+                            // scan would reach - ReadFdrStubScalars reads every row group with
+                            // no filter - so the two cannot disagree.
+                            deferredScanNames.Add(fileName);
+                            deferredScanCounts.Add(RowCountAsInt(probe.RowCount, scoresPath));
                             leanRowCount += probe.RowCount;
                             // Empty stub list on the lean path (mirrors Run), so the file-
                             // count guard + ScoredEntries consumers still see one entry per
@@ -786,26 +798,33 @@ namespace pwiz.Osprey.Tasks
                         loadProgress.Report(++fileIdx);
                     }
                 }
-                // The projection is a FACTORY, not a product. Nothing is scanned unless
-                // FirstPassFdrTask.Run asks for it - and on a resume whose 1st-pass outputs are
-                // valid that Run is skipped, so it never asks. Same files, same order, same
-                // rows: this rebuilds exactly what the eager loop used to, on first read.
+                // The projection is built from the FOOTER COUNTS collected above, and there is no
+                // scan on any path - deferred or not.
+                //
+                // It used to stream every row of every parquet through a counts-only builder,
+                // whose AddRow discards all five fields and increments a counter. At 446 files
+                // that read 1,342,686,095 rows - entry_id, charge, is_decoy, coelution_sum and a
+                // STRING modified_sequence, decoded row group by row group - to produce 446 file
+                // names and 446 counts, then threw every value away. Measured at 618 s and
+                // ~5.7 GB of allocation on the run that DOES ask for it (446-run CHS,
+                // 2026-09-09), immediately before first-pass FDR re-read the same columns from
+                // the same files to do the actual work.
+                //
+                // Deferring it made that cost CONDITIONAL - a rescore worker skips
+                // FirstPassFdrTask.Run and so never paid it - which is why the 9m46s the
+                // resume-startup work removed and the 618 s seen here are the same scan seen
+                // from the two sides of that condition. The count was always free: Parquet's
+                // footer declares NumRows, ProbeResumeSchemaAndRows returns it from the open
+                // this loop already performs for the PIN-schema check, and a counts-only
+                // projection is nothing but those counts paired with their file names.
+                //
+                // Kept as a factory rather than built here so a consumer that never asks still
+                // allocates nothing, and so the shape stays the same as RescoredEntries'.
                 if (builder != null)
                 {
-                    var scanFiles = deferredScanFiles;
-                    deferredProjections = () =>
-                    {
-                        var lazyBuilder = new FdrProjectionSet.Builder(countsOnly: true);
-                        foreach (var scan in scanFiles)
-                        {
-                            lazyBuilder.BeginFile(scan.Key);
-                            ParquetScoreCache.ReadFdrStubScalars(scan.Value,
-                                (entryId, charge, isDecoy, coelutionSum, modseq) =>
-                                    lazyBuilder.AddRow(entryId, charge, isDecoy, coelutionSum, modseq));
-                            lazyBuilder.EndFile();
-                        }
-                        return lazyBuilder.Build();
-                    };
+                    var scanNames = deferredScanNames;
+                    var scanCounts = deferredScanCounts;
+                    deferredProjections = () => FdrProjectionSet.CountsOnly(scanNames, scanCounts);
                 }
             }
             swAllFiles.Stop();
@@ -2309,6 +2328,30 @@ namespace pwiz.Osprey.Tasks
             if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
                 return ResidentPaths.FDRBENCH_PASS1;
             return null;
+        }
+
+        /// <summary>
+        /// One file's declared row count as the <c>int</c> a counts-only projection holds, or a
+        /// hard failure naming the file.
+        ///
+        /// <para>Refuses rather than casting. The COHORT total already outgrew <c>int</c> -
+        /// 1,342,686,095 at 446 files, which is why the running total beside this is a
+        /// <c>long</c> - so the per-file value is the next one to watch, and an unchecked cast
+        /// would wrap a large run's count negative and hand first-pass FDR a nonsense size with
+        /// nothing to catch it. A single run reaching 2.1 billion rows is a real artifact this
+        /// build cannot represent, and saying so beats computing on a wrapped number.</para>
+        /// </summary>
+        private static int RowCountAsInt(long rowCount, string scoresPath)
+        {
+            if (rowCount < 0 || rowCount > int.MaxValue)
+            {
+                throw new InvalidDataException(string.Format(
+                    @"'{0}' declares {1} rows, which this build cannot represent (limit {2}). " +
+                    @"The per-file projection count is an int; a run this large needs that " +
+                    @"widened rather than truncated.",
+                    scoresPath, rowCount, int.MaxValue));
+            }
+            return (int)rowCount;
         }
 
         /// <summary>
