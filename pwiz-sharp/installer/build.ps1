@@ -297,19 +297,28 @@ function Build-VendorCache {
             }
         }
 
-        # Shimadzu's natives (IOModuleQTFL and friends) are loaded from this cache directory by
-        # full path, so the loader resolves THEIR imports from here first, not from the directory
-        # holding the executable. The VC++ 2015-2022 runtime they link therefore has to be here
-        # too: app-local is enough on a machine carrying the redistributable, but not in a wine
-        # container, where the reader instead returns a structurally valid mzML with no spectra
-        # at all. MFC140 is the one wine has no builtin for.
-        if ($v.name -eq 'Shimadzu') {
-            foreach ($dll in @('mfc140.dll','msvcp140.dll','concrt140.dll','vcruntime140.dll','vcruntime140_1.dll')) {
-                $src = Join-Path $msconvertOut $dll
-                if (Test-Path $src) { Copy-Item $src (Join-Path $dest $dll) -Force }
-            }
-            Write-Host "      staged VC140 runtime beside the Shimadzu natives"
+        # Vendor natives are loaded from this cache directory by full path, which resolves THEIR
+        # imports from here rather than from the directory holding the executable, so the VC++
+        # runtime they link has to be here too. App-local is enough only on a machine that
+        # carries the redistributable.
+        #
+        # Every vendor, not just the ones known to need it. Shimadzu was the first found (its
+        # natives return a structurally valid mzML with no spectra when MFC140 is missing, which
+        # wine has no builtin for), and Agilent was the second: BaseTof.dll is mixed-mode and
+        # imports MSVCR120/MSVCP120, failing on a clean agent with "The specified module could
+        # not be found" - naming BaseTof, which is present, rather than the CRT, which is not.
+        #
+        # Deliberately the same prefix set VendorSdkLoader.StageNativeCrt uses at run time, so
+        # the bundled cache and a downloaded one agree. Without this the two disagree exactly
+        # where it is hardest to notice: the default installer would work and the offline one
+        # would not.
+        $crtStaged = 0
+        foreach ($src in Get-ChildItem $msconvertOut -File -Filter *.dll) {
+            if ($src.Name -notmatch '^(msvcr|msvcp|vcruntime|concrt|mfc)') { continue }
+            Copy-Item $src.FullName (Join-Path $dest $src.Name) -Force
+            $crtStaged++
         }
+        Write-Host "      staged $crtStaged VC runtime DLLs beside the $($v.name) natives"
 
         Set-Content -Path (Join-Path $dest ".ok") -NoNewline `
             -Value "staged by installer/build.ps1 -WithVendorSdks from $($v.path)"
