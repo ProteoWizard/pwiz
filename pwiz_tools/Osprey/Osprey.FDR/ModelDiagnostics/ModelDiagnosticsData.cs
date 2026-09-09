@@ -100,10 +100,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// once. Null on a single-pass run (no reconciliation), which hides the switch.
         /// Its structural half (<see cref="Pass2Data.Model"/> /
         /// <see cref="Pass2Data.DensityRatio"/> / <see cref="Pass2Data.WinFraction"/>)
-        /// is present only when the second pass RETRAINED Percolator; under
-        /// <c>OSPREY_PASS2_QVALUE=transfer</c> it is null and the report's structural
-        /// cards degrade to a "pass-2 model n/a" note, while the q-driven half still
-        /// renders. Built by the end-of-run writer (SecondPassFdrTask) via
+        /// needed a retrained second-pass model, and no surviving mode trains one
+        /// (issue #4484), so it is null and the report's structural cards degrade to a
+        /// "pass-2 model n/a" note while the q-driven half still renders. Built by the
+        /// end-of-run writer (SecondPassFdrTask) via
         /// <see cref="BuildPass2"/>. Shares <see cref="FeatureHistEdges"/> with pass 1
         /// (same standardized bins).
         /// </summary>
@@ -177,16 +177,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// The complete pass-2 (final reported pool) bundle behind the report's
         /// top-level Pass 1 / Pass 2 switch: every pass-dependent card recomputed on
         /// the post-compaction, second-pass-q-valued pool. Split into a STRUCTURAL half
-        /// (score/model-derived) and a Q-DRIVEN half (reported-pool q-derived), because
-        /// the two become available under different second-pass modes:
-        /// <list type="bullet">
-        /// <item>Retrain (<c>OSPREY_PASS2_QVALUE=percolator</c>): a second Percolator
-        /// model exists, so BOTH halves are built.</item>
-        /// <item>Confidence transfer (<c>OSPREY_PASS2_QVALUE=transfer</c>): no retrained
-        /// model, so the structural half is null (the report's Model / Density /
-        /// Competition cards show a "pass-2 model n/a" note) while the q-driven half --
-        /// which needs only the transferred q -- still renders.</item>
-        /// </list>
+        /// (score/model-derived) and a Q-DRIVEN half (reported-pool q-derived).
+        ///
+        /// <para>The Q-DRIVEN half is what every surviving second-pass mode produces:
+        /// <c>transfer</c> and <c>protein-compact</c> both yield reported q-values and
+        /// nothing else. The STRUCTURAL half needed a retrained second-pass model, and
+        /// there is no longer a mode that trains one - the retrain was removed because a
+        /// compacted pool is decoy-depleted and retraining on it mis-estimates the null
+        /// (issue #4484). So the structural half is null in production today and the
+        /// report's Model / Density / Competition cards show their "pass-2 model n/a"
+        /// note. It is kept as a shape rather than deleted because its replacement is
+        /// specified and sourced differently: the FROZEN pass-1 coefficients, already on
+        /// disk in <c>.1st-pass.model.json</c>, plus per-feature running sums folded per
+        /// run. <see cref="BuildPass2"/> still accepts contributions so that shape stays
+        /// covered and has somewhere to reconnect.</para>
         /// </summary>
         /// <summary>
         /// Which passes this page represents and how much of the cohort reached them, so the
@@ -703,10 +707,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// from the searched library exactly as pass 1 (see ModelDiagnosticsReport).
         ///
         /// The STRUCTURAL half (Model / DensityRatio / WinFraction) is built only when
-        /// the second pass RETRAINED Percolator (<paramref name="pass2Contributions"/>
-        /// non-null); under <c>OSPREY_PASS2_QVALUE=transfer</c> there is no retrained
-        /// model, so it stays null and the report's Model / Density / Competition cards
-        /// degrade to a "pass-2 model n/a" note. The Q-DRIVEN half (FdpViews / IdYield /
+        /// <paramref name="pass2Contributions"/> is non-null. Production passes null
+        /// today: it required a retrained second-pass model and no surviving mode trains
+        /// one (issue #4484), so those cards degrade to a "pass-2 model n/a" note. The
+        /// parameter and the cards are kept because their replacement is specified -
+        /// frozen pass-1 coefficients plus per-feature running sums - and because the
+        /// non-null contract stays under test. The Q-DRIVEN half (FdpViews / IdYield /
         /// CrossRun / PerFile) is always built from the reported pool (FdpViews is empty
         /// when the pool carries no entrapment).
         ///
@@ -789,10 +795,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 runFdr, fdrLevel, 2, true, stratumBaseIds);
             progress.Report(++cardIdx);
 
-            // Structural half: only when the second pass retrained on the reported pool. Null
-            // contributions (transfer mode) leave Model, DensityRatio and WinFraction null and
-            // the report's structural cards show their n/a note. Takes the reduction computed
-            // above; it used to recompute a bit-identical one from the same inputs.
+            // Structural half: only when contributions were supplied. Production supplies none
+            // (there is no retrained second pass any more, #4484), which leaves Model,
+            // DensityRatio and WinFraction null and shows the report's n/a note. Takes the
+            // reduction computed above; it used to recompute a bit-identical one from the
+            // same inputs.
             pass2.Model = BuildModelPass2(pass2Contributions, precs);
             if (pass2.Model != null)
             {

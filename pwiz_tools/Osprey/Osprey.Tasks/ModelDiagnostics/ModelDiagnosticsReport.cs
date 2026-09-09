@@ -217,7 +217,6 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// </summary>
         public static void WritePass2AndFinalize(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            FeatureContributions pass2Contributions,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config,
             Action<string> logInfo,
@@ -226,12 +225,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         {
             try
             {
-                var data = ReadJson<ModelDiagnosticsData>(ResolvePass1SidecarPath(config));
+                var data = ReadPass1ForEnrichment(config, logInfo);
                 if (data == null)
-                {
-                    logInfo(@"[MODEL-DIAGNOSTICS] pass-1 data sidecar not found; pass-2 enrichment skipped (pass-1 page stands).");
                     return;
-                }
 
                 Dictionary<uint, EntrapmentClass> classByBaseId;
                 Dictionary<uint, uint> pairByBaseId;
@@ -242,9 +238,11 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // Build the complete pass-2 (final reported pool) bundle -- every
                 // pass-dependent card recomputed on this post-compaction, second-pass
                 // q-valued pool -- so the page's top-level Pass 1 / Pass 2 switch can
-                // re-source the whole page. The structural half is null under
-                // confidence-transfer mode (pass2Contributions == null); the q-driven
-                // half is always built (FdpViews empty without an entrapment pool).
+                // re-source the whole page. The structural half is null in every surviving
+                // mode: with the retrain removed (#4484) there is no retrained pass-2 model
+                // to describe, which is why null is passed as the contributions rather than
+                // sourced. The q-driven half is always built (FdpViews empty without an
+                // entrapment pool).
                 // These two steps shared a 71 s silence on the 82-file SEA-AD run of 2026-08-14,
                 // between the classification's [ENTRAPMENT] line and "finalized report" (#4571).
                 // BuildPass2 owns essentially all of it and carries its own per-card
@@ -254,27 +252,105 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // Measured 2026-08-15: the render that follows completes inside the same second
                 // it starts, so it gets no line at all.
                 data.Pass2 = ModelDiagnosticsData.BuildPass2(
-                    perFileEntries, pass2Contributions, classByBaseId, pairByBaseId,
+                    perFileEntries, null, classByBaseId, pairByBaseId,
                     entrapmentRatio, config.RunFdr, config.FdrLevel,
                     BuildPrecursorMzLookup(libraryById), stratumBaseIds);
 
-                // Pass 2's own product, written before the page for the same reason pass 1's is.
-                // NOTHING is deleted here and pass1.json is not rewritten: the two files are
-                // immutable products of different phases, and the page below is the only thing
-                // this method overwrites.
-                string pass2Path = ResolvePass2SidecarPath(config);
-                WriteJson(pass2Path, data.Pass2);
-                StampProduct(pass2Path, SecondPassTaskName, validityKey, logInfo);
-                string outPath = RenderAndWrite(data, config);
-                int pass2ViewCount = data.Pass2?.FdpViews?.Count ?? 0;
-                logInfo(string.Format(
-                    @"[MODEL-DIAGNOSTICS] finalized report ({0} pass-2 FDR view(s); pass-2 model {1}); re-wrote: {2}",
-                    pass2ViewCount, data.Pass2?.Model != null ? @"included" : @"n/a", outPath));
+                FinalizePass2(data, config, validityKey, logInfo);
             }
             catch (Exception ex)
             {
                 logInfo(string.Format(@"[MODEL-DIAGNOSTICS] pass-2 enrichment failed: {0}", ex.Message));
             }
+        }
+
+        /// <summary>
+        /// End-of-run enrichment from the STREAMED pass-2 fold, the accumulator sibling of
+        /// <see cref="WritePass2AndFinalize"/>. Same product, same page, same log line - the only
+        /// difference is that the pass-2 cards come from reductions folded run by run through
+        /// <see cref="ModelDiagnosticsData.Accumulator"/> instead of from the resident survivor
+        /// pool, which is what lets <c>CanStreamStage7Join</c> stop declining the streamed join
+        /// whenever <c>--model-diagnostics</c> is asked for.
+        ///
+        /// <para>Byte-identical to <see cref="WritePass2AndFinalize"/> on the same input for the
+        /// reason the pass-1 pair already is: every reduction the accumulator performs is
+        /// order-independent, and both paths enumerate the reduced best-per-precursor set in the
+        /// same nested (file, row) order. The classification / pairing / ratio are not rebuilt
+        /// here - the accumulator was constructed with them, and rebuilding runs for minutes at
+        /// 6.3M library entries.</para>
+        ///
+        /// <para><paramref name="coAssignment"/> is built by the caller from its own second
+        /// stream pass, because that panel's acceptance boundary is a reduction over every row
+        /// that its per-row verdicts are then compared against - it cannot be folded in the pass
+        /// that computes it. Null leaves the panel out, exactly as a null library lookup does on
+        /// the resident path.</para>
+        ///
+        /// <para><c>data</c> is the pass-1 object the caller already read in order to decide
+        /// whether folding was worth doing at all. It is handed in rather than re-read here:
+        /// on this path that read is the PRECONDITION for two full stream passes, so it has to
+        /// happen before them, and reading it a second time would let the two reads disagree.</para>
+        /// </summary>
+        public static void WritePass2AndFinalizeFromAccumulator(
+            ModelDiagnosticsData data,
+            ModelDiagnosticsData.Accumulator accumulator,
+            ModelDiagnosticsData.CoAssignmentData coAssignment,
+            OspreyConfig config,
+            Action<string> logInfo,
+            string validityKey = null)
+        {
+            try
+            {
+                if (data == null)
+                    return;
+                // Null contributions for the reason the resident sibling passes null: no
+                // surviving pass-2 mode retrains, so there is no pass-2 model to describe.
+                data.Pass2 = accumulator.BuildPass2(null, coAssignment);
+                FinalizePass2(data, config, validityKey, logInfo);
+            }
+            catch (Exception ex)
+            {
+                logInfo(string.Format(@"[MODEL-DIAGNOSTICS] pass-2 enrichment failed: {0}", ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// The pass-1 data sidecar both enrichment paths append to, or null with the log line
+        /// explaining that the pass-1 page stands unchanged. Absence is a degrade, not a failure:
+        /// pass 1's page is a complete statement of the first pass on its own.
+        /// </summary>
+        public static ModelDiagnosticsData ReadPass1ForEnrichment(OspreyConfig config,
+            Action<string> logInfo)
+        {
+            var data = ReadJson<ModelDiagnosticsData>(ResolvePass1SidecarPath(config));
+            if (data == null)
+            {
+                logInfo(@"[MODEL-DIAGNOSTICS] pass-1 data sidecar not found; pass-2 enrichment skipped (pass-1 page stands).");
+                return null;
+            }
+            return data;
+        }
+
+        /// <summary>
+        /// Write pass 2's own product and re-render the page from the enriched graph, shared by
+        /// the resident and streamed enrichment paths so the two cannot drift in what they emit.
+        ///
+        /// <para>The product goes down before the page for the same reason pass 1's does: an
+        /// interruption between the two leaves the artifact that can rebuild the view rather than
+        /// a view with nothing behind it. NOTHING is deleted here and pass1.json is not
+        /// rewritten - the two files are immutable products of different phases, and the page is
+        /// the only thing this overwrites.</para>
+        /// </summary>
+        private static void FinalizePass2(ModelDiagnosticsData data, OspreyConfig config,
+            string validityKey, Action<string> logInfo)
+        {
+            string pass2Path = ResolvePass2SidecarPath(config);
+            WriteJson(pass2Path, data.Pass2);
+            StampProduct(pass2Path, SecondPassTaskName, validityKey, logInfo);
+            string outPath = RenderAndWrite(data, config);
+            int pass2ViewCount = data.Pass2?.FdpViews?.Count ?? 0;
+            logInfo(string.Format(
+                @"[MODEL-DIAGNOSTICS] finalized report ({0} pass-2 FDR view(s); pass-2 model {1}); re-wrote: {2}",
+                pass2ViewCount, data.Pass2?.Model != null ? @"included" : @"n/a", outPath));
         }
 
         /// <summary>
@@ -342,6 +418,37 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         {
             string path = FirstPassExperimentSidecarPath(config);
             return !string.IsNullOrEmpty(path) && File.Exists(path);
+        }
+
+        /// <summary>
+        /// Whether every diagnostics product this analysis is CAPABLE of having is already on
+        /// disk - so the report can be re-rendered from products alone and nothing needs
+        /// folding. False means at least one half is outstanding and the pass that owns it has
+        /// to produce it.
+        ///
+        /// <para>"Capable of" is what keeps this from being a permanent false: an analysis that
+        /// has finished its first pass and not its second cannot have a pass-2 product, and
+        /// demanding one would send every such run into a fold that has nothing to fold. So the
+        /// pass-2 half is required only once <see cref="HasCompletedSecondPass"/> says there is
+        /// a second pass to describe.</para>
+        ///
+        /// <para>The pass-1 half is asked as "present AND describes THIS analysis", the same
+        /// two questions <see cref="TryRenderFromProducts"/> asks, because a product left over
+        /// from a different library or parameter set is not a product this run may render - it
+        /// has to be rebuilt, which is a fold.</para>
+        /// </summary>
+        public static bool AllProductsCurrent(OspreyConfig config)
+        {
+            string pass1Path = ResolvePass1SidecarPath(config);
+            if (string.IsNullOrEmpty(pass1Path) || !File.Exists(pass1Path) ||
+                !DescribesTheFirstPassOnDisk(config, pass1Path))
+            {
+                return false;
+            }
+            if (!HasCompletedSecondPass(config))
+                return true;
+            string pass2Path = ResolvePass2SidecarPath(config);
+            return !string.IsNullOrEmpty(pass2Path) && File.Exists(pass2Path);
         }
 
         /// <summary>

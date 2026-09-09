@@ -812,6 +812,81 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// ONE run's post-compaction survivors, refilled IN PLACE, for a join that folds over the
+        /// runs one at a time and drops each - the Stage 7 shape (issue #4486).
+        ///
+        /// <para>The same three steps <see cref="HydrateOneRun"/> takes - load the run's stubs,
+        /// overlay its 1st-pass sidecar, compact to the analysis-wide retained set - and NOT the
+        /// fourth. Stage 7 runs no rescore, so it needs neither the planned actions nor the
+        /// <c>reconciliation.json</c> they come from, and reading that envelope per run would put
+        /// ~6 MB of join-wide <c>first_pass_base_ids</c> through this call 446 times to answer a
+        /// question nobody asks. Sharing the whole of <c>HydrateOneRun</c> would have been the
+        /// tidier-looking choice and the more expensive one.</para>
+        ///
+        /// <para><b>Refills the caller's list rather than returning a new one.</b> That list is
+        /// the shared backing store every <c>PerFileEntries</c> milestone wraps, so replacing the
+        /// reference would leave the published milestones pointing at the old one - the same rule
+        /// the Stage 6 refill follows. Contents are transient; identity is not.</para>
+        ///
+        /// <para>Equivalence with the resident path is what makes a streamed Stage 7 produce the
+        /// same bytes: this is the state <c>HydrateCompactedStreaming</c> leaves a run in, reached
+        /// by the same calls in the same order. The difference is only how long the list lives.</para>
+        ///
+        /// <para><paramref name="overlayFirstPass"/> is the Boundary 3 -&gt; 4 contract made a
+        /// parameter. FALSE for a run that already carries a current
+        /// <c>.2nd-pass.fdr_scores.bin</c>: that file holds every scalar the join reads, so
+        /// opening the first-pass one would reach back across a boundary issue #4486 exists to
+        /// establish - and would do it for every run in the cohort, on precisely the leg where an
+        /// orchestrator is entitled not to have shipped them. TRUE where there is no second-pass
+        /// answer yet, which is a mode whose per-run half still runs in the join and is the
+        /// exception the boundary already documents rather than a new one.</para>
+        /// </summary>
+        public static void RefillOneRunSurvivors(
+            string fileName,
+            string parquetPath,
+            List<FdrEntry> survivors,
+            HashSet<uint> retainedBaseIds,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            Func<string, string, List<FdrEntry>> loadStubs,
+            bool overlayFirstPass)
+        {
+            if (survivors == null)
+                throw new ArgumentNullException(nameof(survivors));
+            if (retainedBaseIds == null)
+                throw new ArgumentNullException(nameof(retainedBaseIds));
+            if (loadStubs == null)
+                throw new ArgumentNullException(nameof(loadStubs));
+
+            var stubs = loadStubs(fileName, parquetPath);
+            if (stubs == null)
+            {
+                throw new InvalidDataException(string.Format(
+                    "RefillOneRunSurvivors: no stubs loaded for {0}", fileName));
+            }
+            if (overlayFirstPass)
+            {
+                string syntheticInput = SyntheticInputFromParquet(parquetPath);
+                // Overlay then compact, in that order, for the reason the two siblings state:
+                // the sidecar covers the whole PRE-compaction row set, so the filter has to
+                // name the records that legitimately have no entry to land on and leave every
+                // other miss reportable as the parquet drift it is.
+                OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
+                    nameof(RefillOneRunSurvivors), experimentRecords,
+                    id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
+            }
+            // Kept even where the reconciled parquet is already the survivor subset and this
+            // removes nothing. It is the analysis-wide compaction predicate, it is the same
+            // one both siblings apply, and "the parquet is already subset so the filter is
+            // redundant" is a property of an artifact generation rather than of the format -
+            // exactly the kind of assumption that turns into a silently larger pool.
+            stubs.RemoveAll(e => !retainedBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
+
+            survivors.Clear();
+            survivors.AddRange(stubs);
+            survivors.TrimExcess();
+        }
+
+        /// <summary>
         /// Overlay the first-pass FDR statistics onto <paramref name="stubs"/>: the RUN-scope
         /// SVM score, run q-values and PEP from <c>&lt;stem&gt;.1st-pass.fdr_scores.bin</c>,
         /// and the EXPERIMENT-scope q-values from <paramref name="experimentRecords"/>, which
@@ -1133,6 +1208,20 @@ namespace pwiz.Osprey.Tasks
         /// reconciliation JSON) without duplicating them. The synthetic
         /// path is never opened — only its components are inspected.
         /// Mirrors Rust's <c>synthetic_input_from_parquet</c>.
+        ///
+        /// <para>Its REASON is gone. It existed because <c>--input-scores</c> named parquets
+        /// on the command line, so the pipeline's first act was to convert them back into
+        /// data-file names for the sidecar helpers - a round trip, and the clearest evidence
+        /// that the flag was a second way of saying what <c>--task</c> already said. That
+        /// flag has retired; every task is given the data-file names directly.</para>
+        ///
+        /// <para>What is left is internal: the hydrate methods below still take a PARQUET
+        /// path per run (from <c>PerFileParquetPaths</c>, which is how the pipeline carries
+        /// them), and derive the stem back from it. Inverting those signatures to take the
+        /// input and derive the parquet is the remaining half of the retirement - a
+        /// no-behaviour-change refactor, deliberately not folded into the CLI change so the
+        /// gate can attribute a failure to one of them. See
+        /// TODO-20260908_osprey_input_scores_retirement.md.</para>
         /// </summary>
         public static string SyntheticInputFromParquet(string parquetPath)
         {

@@ -32,7 +32,7 @@ layer, and none repeats another:
 |---|---|---|
 | **00** (this doc) | Scope, contract, principles, relay | Which file, whose, when, and who may read it |
 | [14-intermediate-files](14-intermediate-files.md) | Bytes | Headers, versions, schemas, hashing, invalidation mechanics |
-| [15-hpc-scoring-split](15-hpc-scoring-split.md) | Operations | CLI flags, `--input-scores` ordering, orchestration recipes |
+| [15-hpc-scoring-split](15-hpc-scoring-split.md) | Operations | CLI flags, how a task names its runs and in what order, orchestration recipes |
 
 If you are asking "what does this file's header look like?", you want 14. "How do I
 launch the third worker?" is 15. "Is this task allowed to read that file?" is here.
@@ -145,6 +145,25 @@ so where it matters - "both maps are O(distinct) ... nothing here needs a whole-
 and `StreamingFdr.StreamingFirstPassQ` is the worked example, pinned against its resident
 twin by a test.
 
+`SecondPassFDR` is the largest one, and it is worth reading as the cautionary case as well
+as the worked one, because for a long time every step in it *was* a fold and the stage still
+held the pool. The fragment release, the pass-2 competition, protein parsimony, the
+experiment-q re-clamp and all three `.blib` gates each reduce to `O(distinct)` and each
+visits every run - but the stage was **handed** every run's survivors before the first of
+them started, by the `--task SecondPassFDR` merge, so nothing they did could bring the peak down.
+At 446 CHS runs that load reached 68.0 GB and was killed at run 381 with 0.34 GB free,
+having computed nothing. **A fold does not bound anything unless its SOURCE is per-run
+too**: the runs are now rebuilt one at a time from their own
+`.scores-reconciled.parquet` and 1st-pass sidecar, folded, and dropped.
+
+Two consequences of that shape are worth stating, because they are what a reader will
+otherwise trip over. A stage that revisits its runs pays the rebuild once per pass, so
+wall-clock trades against memory here exactly as the "memory, not wall clock" target says it
+should. And a fact one pass computes and a later pass reads - the second-pass sidecar
+overlay, the experiment-q floor - cannot be left stamped on entries that no longer exist, so
+it is re-applied to each run as that run is rebuilt (`RescoredEntries.AddPostMaterialize`),
+in the order the stage computed it.
+
 Read the vocabulary this way:
 
 | | Visits | Holds |
@@ -172,7 +191,7 @@ The pipeline is a fixed, four-element list, always in this order
 | `PerFileScoring` | 1-4 | fan-out (split 1) | 1..N | library + one run |
 | `FirstPassFDR` | 5 | **join** (barrier 1) | 1 | O(distinct entries) |
 | `PerFileRescoring` | 6 | fan-out (split 2) | 1..N | baseline + one run |
-| `SecondPassFDR` | 7 | **join** (barrier 2) | 1 | O(survivors) |
+| `SecondPassFDR` | 7 | **join** (barrier 2) | 1 | O(distinct entries) |
 
 Stages 1-4 are library preparation, mzML processing, calibration, and the main
 first-pass search that computes the 21 PIN features. Stage 5 is first-pass FDR plus the
@@ -514,6 +533,65 @@ somewhere else now. Restoring the original path with a junction is the cheap fix
 that adds a second path to a hash removes relocatability for every run, not just
 entrapment ones.
 
+**P16. A report is a DERIVED VIEW over the artifacts, never an output only its producing
+phase can make.** Everything the diagnostics report says about a pass is a reduction over
+that pass's own durable artifacts, so the report must be derivable from those artifacts
+ALONE, after the fact, without re-running the analysis that produced them. Concretely, this
+has to work and has to stay working:
+
+> Run an analysis WITHOUT `--model-diagnostics` - the streamlined run. Later, re-run the
+> same analysis WITH `--model-diagnostics`. The ONLY work performed is producing the
+> diagnostics artifacts and the HTML. No primary analysis re-runs, and **the report is
+> complete** - identical to the one the flag would have produced first time.
+
+This is the ordinary resume model (P15) applied to the diagnostics products: they are
+declared outputs like any other, so on a completed run they are the only outstanding ones
+and the forward scan produces just them. It is not a special mode, and it should not need a
+special task.
+
+**The corollary that is easy to miss: diagnostics work belongs in the FDR tasks, never in
+the fan-out tasks.** A fan-out task writes the per-run artifacts; the FDR task reduces them
+into the report. A diagnostic captured only in a fan-out task's memory is LOST to the
+pay-later path by construction, because that path's entire premise is that the fan-out does
+not re-run. The failure is silent and it degrades rather than fails: the artifact is on
+disk, nothing reads it back, and the page renders without that view and says nothing. A
+report that is quietly missing a panel is worse than one that is slow, because the reader
+cannot tell absence from emptiness.
+
+The completeness half of the requirement is therefore as binding as the no-re-analysis half.
+"It produced a report" is not the test; "it produced the SAME report" is.
+
+A pass task may fold its own half opportunistically while the data is already in hand, and
+should: it is free there. But that is an OPTIMIZATION, not the definition, and it must never
+become the only route. When a report can only be produced by the phase that computed the
+numbers, three costs follow:
+
+* **Asking for the report costs a re-analysis.** The request is a reduction over files that
+  are already on disk, but it is priced as the phase that produced them. A cohort that
+  finished without the flag then pays hours to be described.
+* **The report inherits the memory shape of the phase, not of the reduction.** A view over
+  sidecars is O(distinct) by construction; a report welded to a phase inherits whatever that
+  phase holds resident. That is how a page of summary statistics can put a cohort out of
+  reach on a fixed-memory box - the report's own footprint is not the binding constraint,
+  the phase it is attached to is.
+* **The report cannot be regenerated after a format or presentation change.** The page's
+  evolution becomes gated on compute nobody should have to spend, so it stops evolving.
+
+Because each half is a reduction over its OWN pass's sidecars, the two passes are
+independently derivable and must be independently derivable - a missing pass-1 product is
+not a reason to refuse the pass-2 half, or the reverse.
+
+The test that proves P16 has two halves, and neither alone is sufficient:
+
+* **No analysis ran.** A re-analysis produces the right report too, silently and slowly, so
+  the artifact cannot distinguish them - assert the marker line naming the path taken, and
+  hold the memory band to the reduction's O(distinct) shape rather than the phase's. Note
+  that a compliant fold still READS every run's artifacts; "no analysis" means no
+  recomputation, not no I/O, so wall clock separates a fold from a join only by a factor.
+* **The report is complete.** Byte-compare it against the report the same analysis produces
+  when the flag is passed up front. Any view that is present in one and absent in the other
+  is a diagnostic that some phase is holding privately.
+
 ---
 
 ## The sidecar file contract
@@ -543,12 +621,12 @@ node running that task needs a copy, whatever batch it was handed.
 | `<library-leaf>.libcache` | experiment cache | library load, any task | all tasks | rebuild locally |
 | `<stem>.spectra.bin` | per-run cache | `PerFileScoring` (Stage 2), or `--task SpectraCache` | `PerFileScoring`, `PerFileRescoring` | with the run |
 | `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `PerFileRescoring`, `FirstPassFDR`, `SecondPassFDR` | with the run, on **every** leg |
-| `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring`, **`SecondPassFDR`** (fallback for runs with no reconciled sibling) | with the run |
+| `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring` | with the run |
 | `<stem>.1st-pass.fdr_scores.bin` | per-run product | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` or where no worker answer exists | with the run |
 | `<stem>.reconciliation.json` | per-run product | `FirstPassFDR` (Stage 6 planning) | `PerFileRescoring`, `SecondPassFDR` (gap-fill entry ids) | with the run |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | experiment product | `FirstPassFDR` | `PerFileRescoring`, `SecondPassFDR`, `PerFileScoring` (rehydrate) | **every node** |
 | `<stem>.1st-pass.model.json` | experiment product, replicated | `FirstPassFDR` (training) | `PerFileRescoring`, `SecondPassFDR` | **every node** (any one copy) |
-| `<stem>.scores-reconciled.parquet` | per-run product | `PerFileRescoring` (Stage 6) | `SecondPassFDR`, and `PerFileRescoring` itself on its per-run resume arm | with the run |
+| `<stem>.scores-reconciled.parquet` | per-run product, written for **every** run | `PerFileRescoring` (Stage 6) | `SecondPassFDR` - the join's only row source, one parquet per run; and `PerFileRescoring` itself on its per-run resume arm | with the run |
 | `<stem>.2nd-pass.fdr_decoys.bin` | per-run product | `PerFileRescoring` (pass-2 worker) | `SecondPassFDR` | with the run |
 | `<stem>.2nd-pass.fdr_scores.bin` | per-run product | `PerFileRescoring` (pass-2 worker), else `SecondPassFDR` | `SecondPassFDR` | with the run |
 | `<blib-stem>.2nd-pass.fdr_experiment.bin` | experiment product | `SecondPassFDR` | `SecondPassFDR` on a resume | n/a |
@@ -774,7 +852,7 @@ regardless, and adding a third path to a hash would narrow it further.
 
 A warm resume across builds is a separate matter: the version stamp is compared for exact
 equality (`YEAR.ORDINAL.BRANCH.DOY`) - **but only where it is checked, which is narrower
-than it sounds.** That comparison guards the `--input-scores` parquet load. The
+than it sounds.** That comparison guards the per-run parquet load. The
 `.osprey.task` resume path does not do it: `TaskValiditySidecar.IsValid` compares the
 `validity_key` only, and the `version` field it records is provenance. No version component
 is in the base key either. So re-invoking the same straight-through command line the next
@@ -903,7 +981,7 @@ are functions of all runs:
 
 - `<stem>.scores.parquet` for **every** run in the cohort
 - `<stem>.calibration.json` for **every** run
-- the library, and `--input-scores` naming the parquets
+- the library, and `-i` naming the runs whose parquets it reads
 
 `.calibration.json` must travel, which is easy to get wrong because the join reads
 parquets rather than spectra. It supplies RT calibration and the isolation-scheme windows
@@ -917,12 +995,6 @@ case they are the data and must be preserved.
 
 ### Boundary 2 -> 3: `FirstPassFDR` to `PerFileRescoring`
 
-> **In flight** - this list is not yet one a single-run node can run on. The artifact that
-> lets a fan-out worker obtain the join-wide compaction set without surveying the batch,
-> `<blib-stem>.1st-pass.retained_base_ids.bin`, does not exist on master; a node staged
-> with exactly the list below derives a different survivor set rather than erroring. See
-> item 2 under `## In flight`. Stage the whole cohort's envelopes until it lands.
-
 Each rescore node needs its own runs' artifacts plus the experiment-wide set:
 
 Per run, for each run in the node's batch:
@@ -934,13 +1006,20 @@ Per run, for each run in the node's batch:
 
 Experiment-wide, to **every** node:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`
+- `<blib-stem>.1st-pass.retained_base_ids.bin` - the join-wide compaction set, written when
+  Stage 6 planning ends. It is what makes this list one a single-run node can actually run
+  on: without it a node would rebuild the union from every run's `reconciliation.json`,
+  which is the O(runs) pre-pass P6 forbids. Its absence is FATAL rather than silently
+  rebuilt, deliberately - see `ScoringTaskShared.ReadRetainedBaseIds`
 - `<stem>.1st-pass.model.json` (any one copy) - **mandatory on an ordinary run**, because
   the default pass-2 mode is a frozen one (`protein-compact`); an unset
   `OSPREY_PASS2_QVALUE` is not an opt-out
+- `<stem>.1st-pass.stratum.json` (any one copy) - the protein-compact stratum, split out of
+  the model sidecar because a different phase produces it (P7)
 
 This is the boundary where a missing experiment-wide file does the most damage, because
 the node can often proceed without it and produce a plausible wrong answer rather than
-failing. Ship both experiment-wide artifacts together or neither.
+failing. Ship the experiment-wide artifacts together or none of them.
 
 ### Boundary 3 -> 4: `PerFileRescoring` to `SecondPassFDR`
 
@@ -958,8 +1037,28 @@ Per run, for **every** run in the cohort:
 Experiment-wide:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`
 - `<stem>.1st-pass.model.json` (any one copy)
+- `<stem>.1st-pass.stratum.json` (any one copy) - the protein-compact stratum. The default
+  pass-2 mode reloads both this and the model here when neither was published in-process,
+  which is every distributed `SecondPassFDR` node
 - `<blib-stem>.1st-pass.model-diagnostics.json`, when `--model-diagnostics` is on - the
   pass-1 half of the report exists nowhere else by this point
+
+A `SecondPassFDR` node rebuilds each run from these artifacts one at a time and drops it, so
+it needs every run's files present but never holds more than one run's rows. The relay list
+is therefore the whole cohort's, as it always was; what changed is the node's peak, not its
+inputs. The run log says which shape it took - "folding over N run(s), each rebuilt from its
+own artifacts and dropped" - and that line is the evidence, because a resident pool and a
+fold produce identical output and differ only in a memory profile.
+
+**One parquet per run, and it is the reconciled one.** `<stem>.scores.parquet` is not an
+input to this boundary in any form - not as a fallback, not for a run Stage 6 did no work on.
+Stage 6 writes a reconciled parquet for *every* run (P13; `WriteUnchangedReconciled` covers
+the no-work run), so a missing one means the write never landed and the run is not finished.
+Substituting the Stage 4 file would put 1st-pass boundaries and no gap-fill rows into the
+blib for that run from a process that exits 0, which is exactly the ambiguity P13 exists to
+remove - so every consumer here **fails** on absence instead. The rule survived one earlier
+round as "read the reconciled parquet, Stage 4's only as the per-file fallback"; the fallback
+half is retired, and the code carries no path to it.
 
 Not needed on the default path: `<stem>.1st-pass.fdr_scores.bin`. Establishing that is
 what issue #4486 was for - an orchestrator hands a `SecondPassFDR` node the per-run
@@ -1001,17 +1100,12 @@ the text says so rather than describing the current shape as though it were the 
    protein FDR ends. See "The protein-q split, and the rule behind it" in
    `ai/todos/active/TODO-20260901_osprey_firstpassfdr_resume.md`.
 
-2. **Two experiment-wide artifacts arrive with the fan-out fix**, and both are relay
-   obligations the checklist below will gain. `<blib-stem>.1st-pass.retained_base_ids.bin`
-   is written by `FirstPassFDR` when Stage 6 planning ends and carries the join-wide
-   first-pass base ids unioned with every planned action target - sorted `uint32`,
-   library-bounded (1.49 MB at 373,487 ids). It is what lets a fan-out worker obtain the
-   compaction set without surveying the batch (P6), and it is the artifact that makes the
-   single-run input contract executable: today's Boundary 2 -> 3 list is not one a
-   one-run node can actually run on. `<stem>.1st-pass.stratum.json` is the P12 split
-   described under "Rows that are not what they look like". Both are on
-   `Skyline/work/20260901_osprey_firstpass_resume`; when it lands, "two experiment-wide
-   artifacts that must relay together" becomes four.
+2. ~~**Two experiment-wide artifacts arrive with the fan-out fix.**~~ **LANDED** in
+   [#4633](https://github.com/ProteoWizard/pwiz/pull/4633) (`c4921f3d6c`, 2026-09-06).
+   `<blib-stem>.1st-pass.retained_base_ids.bin` and `<stem>.1st-pass.stratum.json` are both
+   written by `FirstPassFDR` at the end of the phase that computes them, and both are now
+   carried in the Boundary 2 -> 3 and 3 -> 4 lists above. The count of experiment-wide
+   artifacts that must relay together is four.
 
 3. **The bounded-loop shape of `PerFileRescoring`.** The task is still entered with a
    materialised all-runs entry list, and its baseline still carries maps keyed by run whose
@@ -1025,6 +1119,40 @@ the text says so rather than describing the current shape as though it were the 
    the whole Stage 6 rescore instead of being refilled one run at a time from each run's
    `.scores.parquet` and first-pass sidecar. The streamed path is the default; the switch
    goes when the resident one does.
+
+   `OSPREY_STAGE7_STREAM=0` is the Stage 7 sibling, and the same disposition applies - it
+   selects the resident second-pass join, where `RescoredEntries` holds every run's
+   survivors instead of rebuilding one run at a time through `StreamFiles`. Both arms are
+   required to produce identical bytes.
+
+   **It IS the in-place A/B its Stage 6 sibling is, and it did not used to be.**
+   `CanStreamStage7Join` opened on `!config.ExpectReconciledInput`, a flag only
+   `--task SecondPassFDR` sets, so on a straight-through run the switch changed nothing -
+   while `SecondPassFdrTask.ValidityKey` appended `;stage7stream=0` regardless, forcing a
+   full Stage 7 re-run for a setting that could not change the arm. That term is now the
+   question it stood in for: does every run have a `.scores-reconciled.parquet` on disk in
+   the survivor-subset shape (`ScoringTaskShared.AllReconciledParquetsCurrent`). Asked of
+   the disk, it is route-independent - a straight-through run's Stage 6 has just written
+   those parquets - so the cold run, both resume arms and the `--task SecondPassFDR` merge
+   all fold run by run, and the switch compares two arms of whichever one you are running.
+
+   The per-run source is not one implementation reached four ways: each arm hands the fold
+   the per-file half of the whole-run loop it would otherwise have run
+   (`PerFileRescoreTask.BuildRunPerRunSource` / `BuildResumePerRunSource` /
+   `BuildStage7PerRunSource`), so run-at-a-time is the same work in the same order as
+   all-runs-at-once. That is why the arms are required to produce identical bytes, and why
+   an arm is a call-shape change rather than a second algorithm.
+
+   One route still cannot stream: a pass-2 mode whose per-file half has no worker
+   (`OSPREY_PASS2_QVALUE=transfer` still competes over the whole pool in Stage 7). Until
+   `TransferOneFile` moves into `Pass2PerFileWorker`, `Stage7ResidentGuardError` keeps its
+   `streamingAvailable` exemption - a run with no streamed alternative has no choice for a
+   token to record.
+
+   Because nothing in the output distinguishes the arms, the shape that ran is asserted from
+   the marker line `Second-pass join: folding over N run(s)` rather than inferred -
+   `regression.ps1` demands it per leg (the cold run, both resumes, and mode 3's phase 4),
+   scoped to the configurations that can actually stream.
 
 5. **Whether the 500-run / 64 GB target is met.** It is not yet, and which stage binds is
    itself moving as each is fixed. The two TODOs above carry the current measurements;
