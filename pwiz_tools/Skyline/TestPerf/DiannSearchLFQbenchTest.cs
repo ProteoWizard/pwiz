@@ -268,7 +268,7 @@ namespace TestPerf
                 var candidate = Settings.Default.SearchToolList[SearchToolType.DIANN];
                 if (File.Exists(candidate.Path)) return candidate.Path;
             }
-            var progress = new pwiz.Common.SystemUtil.SilentProgressMonitor();
+            var progress = new SilentProgressMonitor();
             AssertEx.IsTrue(pwiz.Skyline.Util.SimpleFileDownloader.DownloadRequiredFiles(
                 DiannHelpers.FilesToDownload, progress));
             return DiannHelpers.DiannBinary;
