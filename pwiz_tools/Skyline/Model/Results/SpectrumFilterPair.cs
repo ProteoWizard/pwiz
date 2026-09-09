@@ -344,7 +344,11 @@ namespace pwiz.Skyline.Model.Results
                                 iPeak = ~iPeak;
                         }
                         if (iPeak >= mzArray.Length)
+                        {
+                            // The extracted intensities for the remaining targets will be zero so we can stop extracting
+                            // Consider: we probably still need to keep checking "hasScanWindowCoverage"
                             break; // No further overlap
+                        }
                     }
                     
                     // TODO:(bspratt) for full frame diaPASEF MS2, try not sorting - make IM the initial binary search range (and deal with mz that rolls over)

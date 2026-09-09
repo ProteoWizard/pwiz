@@ -839,6 +839,20 @@ namespace pwiz.Skyline.Model.Results
             return dataFile.SpectrumCount > 0;
         }
 
+        /// <summary>
+        /// Returns true if a spectrum has no m/z values and should be ignored.
+        /// A spectrum which measured no ions is a valid measurement of zero intensity, but only if
+        /// we know which m/z values it was measuring. That range comes from the scan window limits,
+        /// so a spectrum which declares them is not considered empty.
+        /// </summary>
+        public static bool IsEmptySpectrum(MsDataSpectrum spectrum)
+        {
+            if (spectrum.Mzs != null && spectrum.Mzs.Length != 0)
+                return false;
+            return spectrum.Metadata?.ScanWindowLowerLimit == null &&
+                   spectrum.Metadata?.ScanWindowUpperLimit == null;
+        }
+
         private class Spectra : IDisposable
         {
             private bool _runningAsync;
@@ -1218,7 +1232,7 @@ namespace pwiz.Skyline.Model.Results
                             // Assertion for testing ID to spectrum index support
                             //                        int iFromId = dataFile.GetSpectrumIndex(dataSpectrum.Id);
                             //                        Assume.IsTrue(i == iFromId);
-                            if (nextSpectrum.Mzs.Length == 0)
+                            if (IsEmptySpectrum(nextSpectrum))
                                 continue;
 
                             double? rt = nextSpectrum.RetentionTime;
@@ -1574,7 +1588,7 @@ namespace pwiz.Skyline.Model.Results
                     while (_lookAheadIndex++ < _lenSpectra)
                     {
                         _rt = dataSpectrum.RetentionTime;
-                        if (_rt.HasValue && dataSpectrum.Mzs.Length != 0)
+                        if (_rt.HasValue && !IsEmptySpectrum(dataSpectrum))
                         {
                             spectrumList.Add(dataSpectrum);
                             if (!rtReported.HasValue)
@@ -1630,7 +1644,7 @@ namespace pwiz.Skyline.Model.Results
                     while (_lookAheadIndex++ < _lenSpectra)
                     {
                         _rt = dataSpectrum.RetentionTime;
-                        if (_rt.HasValue && dataSpectrum.Mzs.Length != 0)
+                        if (_rt.HasValue && !IsEmptySpectrum(dataSpectrum))
                         {
                             spectrumList.Add(dataSpectrum);
                             rtTotal += dataSpectrum.RetentionTime.Value;
@@ -1649,7 +1663,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     // No need to search forward, this isn't IMS or Agilent ramped-CE data
                     rtReported = dataSpectrum.RetentionTime;
-                    if (rtReported.HasValue && dataSpectrum.Mzs.Length != 0)
+                    if (rtReported.HasValue && !IsEmptySpectrum(dataSpectrum))
                     {
                         spectrumList.Add(dataSpectrum);
                     }
