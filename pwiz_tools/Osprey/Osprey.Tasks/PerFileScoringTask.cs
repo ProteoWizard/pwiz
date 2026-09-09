@@ -1078,7 +1078,8 @@ namespace pwiz.Osprey.Tasks
                 config.FileParallelism, nFiles, OspreyEnvironment.MaxParallelFiles,
                 Environment.ProcessorCount,
                 SystemMemory.AvailablePhysicalBytes,
-                () => FileParallelismResolver.EstimatePerFileBytes(config.InputFiles),
+                () => FileParallelismResolver.EstimatePerFileBytes(
+                    config.InputFiles, SpectraCache.GetCachePath),
                 log);
         }
 

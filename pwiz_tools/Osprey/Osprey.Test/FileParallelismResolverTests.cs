@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 
@@ -95,6 +96,46 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0, FileParallelismResolver.EstimatePerFileBytes(new string[0]));
             Assert.AreEqual(0, FileParallelismResolver.EstimatePerFileBytes(
                 new[] { @"C:\does\not\exist\a.mzML", @"C:\does\not\exist\b.mzML" }));
+
+            // A staged cohort deletes its sources once cached (pwiz #4616), leaving
+            // only the .spectra.bin. Sizing has to reach the cache or the whole
+            // estimate is 0 and auto mode drops its memory budget on exactly the
+            // largest runs.
+            AssertCacheOnlySizing();
+        }
+
+        /// <summary>
+        /// A cache-only input - source deleted, <c>.spectra.bin</c> present - must be
+        /// sized from its cache, and auto mode must then produce a RAM-bounded answer
+        /// instead of falling through to the core count.
+        /// </summary>
+        private static void AssertCacheOnlySizing()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_fp_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // The source never exists: this is the post-staging state on disk.
+                string source = Path.Combine(dir, @"run1.mzML");
+                File.WriteAllBytes(Path.Combine(dir, @"run1.spectra.bin"), new byte[4096]);
+                var inputs = new[] { source };
+
+                // No resolver: the missing source sizes to 0, and so does the set.
+                Assert.AreEqual(0L, FileParallelismResolver.EstimatePerFileBytes(inputs));
+
+                // With a resolver: cache size x FOOTPRINT_MULTIPLIER (3).
+                Assert.AreEqual(4096L * 3, FileParallelismResolver.EstimatePerFileBytes(
+                    inputs, p => Path.Combine(dir, Path.GetFileNameWithoutExtension(p) + @".spectra.bin")));
+
+                // A resolver that resolves to nothing still reports the unknown 0,
+                // rather than inventing a size.
+                Assert.AreEqual(0L, FileParallelismResolver.EstimatePerFileBytes(
+                    inputs, p => Path.Combine(dir, @"absent.spectra.bin")));
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
         }
 
         /// <summary>

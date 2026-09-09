@@ -175,15 +175,26 @@ namespace pwiz.Osprey.Core
         /// <see cref="FOOTPRINT_MULTIPLIER"/>), or 0 when no file size can be
         /// read. Uses the max rather than the mean because the concurrent peak is
         /// bounded by the biggest files running together.
+        ///
+        /// <paramref name="cachePathResolver"/> maps an input path to its
+        /// <c>.spectra.bin</c> cache and is consulted only when the source itself
+        /// is gone. A staged cohort deletes its sources once cached (pwiz #4616),
+        /// so on exactly the large runs this budget exists to protect, every source
+        /// would otherwise size to 0, the whole estimate would come back 0, and
+        /// auto mode would drop its memory budget entirely and run at the core
+        /// count. Sizing from the cache keeps the budget real; it also errs safe,
+        /// since a cache-only run never pays the source parse the multiplier was
+        /// calibrated against.
         /// </summary>
-        public static long EstimatePerFileBytes(IEnumerable<string> inputFiles)
+        public static long EstimatePerFileBytes(IEnumerable<string> inputFiles,
+            Func<string, string> cachePathResolver = null)
         {
             long maxBytes = 0;
             if (inputFiles != null)
             {
                 foreach (var file in inputFiles)
                 {
-                    long len = SafeFileLength(file);
+                    long len = SafeFileLength(file, cachePathResolver);
                     if (len > maxBytes)
                         maxBytes = len;
                 }
@@ -221,7 +232,7 @@ namespace pwiz.Osprey.Core
             return chosen;
         }
 
-        private static long SafeFileLength(string path)
+        private static long SafeFileLength(string path, Func<string, string> cachePathResolver)
         {
             try
             {
@@ -235,12 +246,19 @@ namespace pwiz.Osprey.Core
                 // and runs at the full core count with NO memory budget at all. That is
                 // the opposite of conservative on exactly the largest inputs.
                 var dir = new DirectoryInfo(path);
-                if (!dir.Exists)
-                    return 0;
-                long total = 0;
-                foreach (var f in dir.EnumerateFiles(@"*", SearchOption.AllDirectories))
-                    total += f.Length;
-                return total;
+                if (dir.Exists)
+                {
+                    long total = 0;
+                    foreach (var f in dir.EnumerateFiles(@"*", SearchOption.AllDirectories))
+                        total += f.Length;
+                    return total;
+                }
+                // Neither a file nor a bundle: a staged cohort whose sources were
+                // deleted after caching. The cache IS the input here, so size from
+                // it rather than reporting the unknown that costs the memory budget.
+                string cachePath = cachePathResolver?.Invoke(path);
+                if (!string.IsNullOrEmpty(cachePath) && File.Exists(cachePath))
+                    return new FileInfo(cachePath).Length;
             }
             catch (Exception)
             {
