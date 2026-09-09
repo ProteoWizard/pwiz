@@ -46,6 +46,7 @@ namespace pwiz.Skyline.ToolsUI
         public const string EDIT_CLASS = @"Edit";
         public const string STATIC_CLASS = @"Static";
         public const string TREE_CLASS = @"SysTreeView32";
+        public const string LISTBOX_CLASS = @"ListBox";
 
         protected NativeControl(IntPtr hwnd, CancellationToken cancellationToken) : base(cancellationToken)
         {

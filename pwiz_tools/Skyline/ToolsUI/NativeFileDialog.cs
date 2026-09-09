@@ -44,8 +44,39 @@ namespace pwiz.Skyline.ToolsUI
         // The commit button's control id, so it is found without matching a localized caption.
         protected const int IDOK = 1;
 
+        // The classic template's file list: lst1 in dlgs.h, the control the common dialog hook API has keyed on
+        // since Windows 95. The modern dialog is built on that template and keeps this ListBox (hidden) for its
+        // whole life, from milliseconds after its window is created until the window is destroyed -- which the
+        // controls that say WHICH file dialog it is do not: the Save dialog carries the classic file-name combo
+        // (the Open dialog's mark, control id 1148) for its first ~50 ms, destroys it, and creates its own
+        // file-name field (Edit 1001, on the DirectUI surface) some 150 ms later. So this is what says "a file
+        // dialog" when nothing yet says which.
+        private const int CLASSIC_FILE_LIST_ID = 1120;
+
         protected NativeFileDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(windowHandle, cancellationToken)
         {
+        }
+
+        /// <summary>Whether the "#32770" is a common file dialog -- Open or Save, whichever it turns out to be --
+        /// by the classic file list it carries for its whole life (see <see cref="CLASSIC_FILE_LIST_ID"/>). A
+        /// message box has no such control, nor does the Browse-For-Folder dialog.</summary>
+        public static bool IsFileDialog(IntPtr hwnd)
+        {
+            return HasDescendant(hwnd, NativeControl.LISTBOX_CLASS, CLASSIC_FILE_LIST_ID);
+        }
+
+        /// <summary>The wrapper that drives the common file dialog at <paramref name="handle"/>: the Open dialog by
+        /// its classic file-name combo, the Save dialog by its own file-name field, and NULL while it has neither --
+        /// a file dialog the shell is still building (or tearing down), which is not reported as anything rather
+        /// than as the wrong thing. Open is checked first: the Save dialog starts out with the Open dialog's combo
+        /// and has destroyed it by the time it has a field of its own, so the two never both match.</summary>
+        internal static NativeFileDialog Classify(IntPtr handle, CancellationToken cancellationToken)
+        {
+            if (NativeOpenFileDialog.IsOpenFileDialog(handle))
+                return new NativeOpenFileDialog(handle, cancellationToken);
+            if (NativeSaveFileDialog.IsSaveFileDialog(handle))
+                return new NativeSaveFileDialog(handle, cancellationToken);
+            return null;
         }
 
         /// <summary>The dialog's controls: its Win32 children (the file-name field, the commit and cancel buttons)

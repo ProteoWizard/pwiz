@@ -103,13 +103,17 @@ namespace pwiz.Skyline.ToolsUI
         /// it -- they are created, then displayed -- which is the gap this closes. Every dialog classified by a
         /// control it later acts on has that gap and overrides this (<see cref="NativeFileDialog"/> by its commit
         /// button, <see cref="NativeFolderBrowserDialog"/> by its tree). The default is for the generic message
-        /// box, which is classified by nothing and driven through buttons the caller reads by caption -- so it has
-        /// no control whose appearance it could wait on, and is ready when its window is shown.</para>
+        /// box, which is classified by nothing and driven through buttons the caller reads by caption -- so it is
+        /// ready once it has a button that is shown. A message box's buttons are its first controls, shown with
+        /// it. A "#32770" with no button shown yet is one this class cannot drive: any dialog's window exists for
+        /// a moment with no controls at all, and a common file dialog's classic template is created a control at a
+        /// time, its file list (which says what it is) before its buttons -- so this also keeps a dialog the shell
+        /// has only just created from being reported as a message box.</para>
         ///
         /// <para>An override must key on something that, once true, stays true: this reports a dialog as NOT
         /// THERE.</para>
         /// </summary>
-        protected virtual bool IsOpenComplete => true;
+        protected virtual bool IsOpenComplete => FindDescendants(NativeControl.BUTTON_CLASS).Any(User32.IsWindowVisible);
 
         // The message body of a native dialog box (a Win32 #32770, e.g. a system message box), read from its child
         // controls, or null when none is found. The body is a "Static" control with text -- the icon's Static has
@@ -141,20 +145,25 @@ namespace pwiz.Skyline.ToolsUI
             return dialog?.IsOpenComplete == true ? dialog : null;
         }
 
-        // The subclass that drives the window, by what its controls say it is, or null when it is not a "#32770".
-        // Says only WHICH dialog it is -- whether it is ready to be driven is Create's separate question.
+        // The subclass that drives the window, by what its controls say it is: null when it is not a "#32770", and
+        // null for a common file dialog whose controls do not yet say WHICH file dialog it is (see
+        // NativeFileDialog.Classify). Says only which dialog it is -- whether it is ready to be driven is Create's
+        // separate question.
         private static NativeDialog Classify(IntPtr handle, CancellationToken cancellationToken)
         {
             if (handle == IntPtr.Zero || User32.GetClassName(handle) != DIALOG_CLASS_NAME)
                 return null;
-            if (NativeOpenFileDialog.IsOpenFileDialog(handle))
-                return new NativeOpenFileDialog(handle, cancellationToken);
-            // Check Save after Open: the modern Open dialog has the classic file-name combo (control id 1148) that
-            // IsOpenFileDialog keys on; the Save dialog does not, so the two never both match.
-            if (NativeSaveFileDialog.IsSaveFileDialog(handle))
-                return new NativeSaveFileDialog(handle, cancellationToken);
+            // A common file dialog is known FIRST, by a marker it carries for its whole life, and only then told
+            // apart as Open or Save by its file-name field -- which the shell creates well after the window, and
+            // (for the Save dialog) after destroying the classic field it started out with. Without the marker, a
+            // file dialog in that gap has no file-name field and no folder tree, so it fell through to the generic
+            // dialog below: ready the moment its window is shown, and refusing to take a file name. Whether the
+            // shell ever SHOWS a file dialog in that state depends on the machine -- it did on TeamCity, failing
+            // TestNativeMessageBox with "Setting values is not supported for native dialog Dialog:Save As".
+            if (NativeFileDialog.IsFileDialog(handle))
+                return NativeFileDialog.Classify(handle, cancellationToken);
             // The classic Browse-For-Folder dialog (a folder tree, no file-name field) -- checked after the file
-            // dialogs, whose navigation pane also has a tree but which match first on their file-name field.
+            // dialogs, whose navigation pane also has a tree.
             if (NativeFolderBrowserDialog.IsFolderBrowserDialog(handle))
                 return new NativeFolderBrowserDialog(handle, cancellationToken);
             // Any other "#32770" (a message box such as the Save dialog's "replace it?" confirm, or any other
@@ -217,6 +226,15 @@ namespace pwiz.Skyline.ToolsUI
         protected bool HasDescendant(string className, int controlId)
         {
             return FindDescendant(className, controlId) != IntPtr.Zero;
+        }
+
+        /// <summary>Whether the dialog at <paramref name="dialogHwnd"/> has a descendant of the given class AND
+        /// control id -- <see cref="HasDescendant(string,int)"/> for a window that has no wrapper yet, which is
+        /// how a dialog is classified before its wrapper is chosen.</summary>
+        protected static bool HasDescendant(IntPtr dialogHwnd, string className, int controlId)
+        {
+            return User32.EnumChildWindows(dialogHwnd).Any(hwnd =>
+                User32.GetClassName(hwnd) == className && User32.GetDlgCtrlID(hwnd) == controlId);
         }
 
         /// <summary>The dialog's descendant of the given class and control id, or a clear failure. Found by ID, not
@@ -354,9 +372,9 @@ namespace pwiz.Skyline.ToolsUI
         /// finds a dialog owned by a nested modal form (the "Add Input Files" dialog owned by the Import Peptide
         /// Search wizard).
         ///
-        /// <para>Only a SHOWN dialog counts: a common dialog's window exists for a moment before it is shown, and
-        /// has no controls yet -- so <see cref="Create"/> would find no file-name field and classify a file dialog
-        /// as a generic one, which cannot be typed into.</para>
+        /// <para>Only a SHOWN dialog counts: a dialog's window exists for a while before the shell shows it -- the
+        /// common file dialog's for hundreds of milliseconds, while its controls are built -- and nothing can be
+        /// driven until then.</para>
         /// </summary>
         private static IEnumerable<IntPtr> FindDialogHandles()
         {
