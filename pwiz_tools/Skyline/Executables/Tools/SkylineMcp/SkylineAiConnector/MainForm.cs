@@ -170,7 +170,12 @@ namespace SkylineAiConnector
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning);
                 if (result == DialogResult.Yes)
-                    Process.Start(McpServerDeployer.DotNetDownloadUrl);
+                {
+                    // UseShellExecute defaults to false on .NET Core and later, where the string
+                    // overload starts an executable and a URL throws Win32Exception. This prompt is
+                    // what a user sees when the runtime is missing, so the download page has to open.
+                    Process.Start(new ProcessStartInfo(McpServerDeployer.DotNetDownloadUrl) { UseShellExecute = true });
+                }
                 labelStatus.Text = ".NET 10.0 Desktop Runtime is required.";
                 return;
             }
