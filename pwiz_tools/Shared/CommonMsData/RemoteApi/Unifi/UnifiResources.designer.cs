@@ -61,6 +61,16 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to authenticate UNIFI account {0} with error: {1}.
+        /// </summary>
+        public static string UnifiAccount_GetAuthenticatedHttpClient_Failed_to_authenticate_UNIFI_account__0__with_error___1_ {
+            get {
+                return ResourceManager.GetString("UnifiAccount_GetAuthenticatedHttpClient_Failed_to_authenticate_UNIFI_account__0__" +
+                        "with_error___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot find account for username {0} and server {1}..
         /// </summary>
         public static string UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__ {

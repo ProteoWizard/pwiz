@@ -93,7 +93,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `-o`, `--output` | `<output.blib>` | Output `.blib` (see [13-blib-output-schema.md](13-blib-output-schema.md)). |
 | `--work-dir` | `<dir>` | Write derived artifacts **and** the spectra cache here, so the input data dir can be read-only. Default: beside the input. |
 | `--output-dir` | `<dir>` | Directory for derived artifacts (overrides `--work-dir`). |
-| `--cache-dir` | `<dir>` | Directory for the `.spectra.bin` cache (overrides `--work-dir`). |
+| `--cache-dir` | `<dir>` | Directory for the rebuildable caches - `.spectra.bin` and the `<library-leaf>.libcache` (overrides `--work-dir`). Required on a `--task` leg whose `--output-dir` differs from the data directory: such a leg has no raw input path to resolve the cache from. |
 | `--report` | `<report.tsv>` | Also write a TSV report. |
 
 ### Scoring & Tolerance
@@ -215,7 +215,7 @@ CLI; they are read once at process start. The ones most likely to matter:
 | `OSPREY_PICK_DUMP_CANDIDATES` | Dump per-candidate pick terms for offline model training | [peak-model-training.md](peak-model-training.md) |
 | `OSPREY_TRAIN_PICK_RUN` | First-pass training selection, **on by default**: each precursor is represented by one uniformly drawn run's best candidate peak. `OSPREY_TRAIN_PICK_RUN=0` restores the pre-26.1 cross-run maximum. C#-only — Rust still takes the maximum | [07](07-fdr-control.md) |
 | `OSPREY_MAX_TRAIN_SIZE` | Cap on training rows (default 300000). Unchanged by the 26.1 selection flip: at matched FDP, 300K and 1M are indistinguishable | [07](07-fdr-control.md) |
-| `OSPREY_PASS2_QVALUE` | Second-pass q-value mode: `protein-compact` (**default**) / `transfer-compete` / `transfer`. An unrecognized value is a startup ERROR - `percolator` was removed | [12](12-second-pass-fdr.md) |
+| `OSPREY_PASS2_QVALUE` | Second-pass q-value mode: `protein-compact` (**default**) / `transfer`. An unrecognized value is a startup ERROR - `percolator` and `transfer-compete` were removed | [12](12-second-pass-fdr.md) |
 | `OSPREY_GBT_*` | GBDT hyperparameters (with `--fdr-method gbdt`) | [07](07-fdr-control.md) |
 | `OSPREY_EXPERIMENT_AGG` | Experimental first-pass experiment-wide aggregation (`max` / `mean-best-<N>`) | [07](07-fdr-control.md) |
 | `OSPREY_MEANBEST2_FLOOR_MEAN` / `OSPREY_MEANBEST2_FLOOR_PCT` | Missing-run floor arm for `mean-best-<N>` (decoy mean / decoy percentile instead of the default median) | [07](07-fdr-control.md) |
