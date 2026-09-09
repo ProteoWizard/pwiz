@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
@@ -723,12 +723,13 @@ namespace pwiz.Osprey.Tasks
                     {
                         string fileName = Path.GetFileNameWithoutExtension(inputFile);
                         string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
-                        // Branch on the BUILDER, not on needsResidentPool. The two used to be
-                        // exact complements here; CanUseLeanProjection has a third term, so a
+                        // Branch on useLeanProjection, not on needsResidentPool. The two used to
+                        // be exact complements here; CanUseLeanProjection has a third term, so a
                         // config with needsResidentPool false that still may not go lean
-                        // (ExpectReconciledInput) would otherwise take the lean branch with a
-                        // the resident path and throw. Keying both off one value is what makes the
-                        // fat/lean choice a single decision rather than two that can disagree.
+                        // (ExpectReconciledInput) would otherwise take the lean branch when it
+                        // belongs on the resident path, and throw. Keying both off one value is
+                        // what makes the fat/lean choice a single decision rather than two that
+                        // can disagree.
                         if (!useLeanProjection)
                         {
                             // Fat path: an opt-in output reads every entry's resident

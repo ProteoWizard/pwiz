@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
