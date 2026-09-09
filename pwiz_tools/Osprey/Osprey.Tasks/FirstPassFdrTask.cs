@@ -94,18 +94,14 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static bool IsIncludedFor(OspreyConfig c)
         {
-            bool inputs = c.InputScores != null && c.InputScores.Count > 0;
-            // The (inputs && StopAfterStage5) clause leans on a CLI-enforced
-            // invariant: StopAfterStage5 is set by --task FirstPassFDR, which
-            // requires --input-scores, so StopAfterStage5 implies inputs at
-            // parse time -- a --task FirstPassFDR run can never reach here without
-            // InputScores.
-            // ProgramTests.TestValidateFirstPassFdrRequiresInputScores pins that
-            // rejection, since the membership truth table (PipelineMembershipTest)
-            // does not encode the cross-flag dependency on its own.
-            return (!inputs && !c.NoJoin)
-                || (inputs && c.StopAfterStage5)
-                || (inputs && !c.NoJoin && !c.ExpectReconciledInput);
+            // Three clauses over two seams collapsed to one over the task flags. The
+            // retired term was `inputs` - were parquets supplied - which the truth table
+            // above shows was never doing independent work: it tracked exactly the tasks
+            // whose flags already say so. Excluded for the two per-file workers (NoJoin)
+            // and for the Stage 7 node (ExpectReconciledInput); included for the full
+            // pipeline, for --task FirstPassFDR itself, and for --task ModelDiagnostics,
+            // which needs first-pass state to render.
+            return !c.NoJoin && !c.ExpectReconciledInput;
         }
 
         // Stage 5/6 planning byproducts this task publishes. The same four types
