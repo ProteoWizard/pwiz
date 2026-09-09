@@ -19,17 +19,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Globalization;
-using System.Net.Http;
 using System.Security.Authentication;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using IdentityModel.Client;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
-using pwiz.Common;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.CommonMsData.RemoteApi.WatersConnect
@@ -70,8 +67,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
     [XmlRoot("waters_connect_account")]
     public class WatersConnectAccount : RemoteAccount
     {
-        public static readonly string HANDLER_NAME = @"WatersConnect.Handler.Main";
-        public static readonly string AUTH_HANDLER_NAME = @"WatersConnect.Handler.Authentication";
         public static readonly string TOKEN_DATA = @"token";
         public static readonly string GET_FOLDERS = @"/waters_connect/v2.0/folders";
 
@@ -82,7 +77,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         }
 
         public static readonly Dictionary<WatersConnectAccount, TokenCacheEntry> _authenticationTokens = new Dictionary<WatersConnectAccount, TokenCacheEntry>();
-        public static IHttpClientFactory _httpClientFactory;
 
         public static readonly WatersConnectAccount DEFAULT
             = new WatersConnectAccount(@"https://localhost:48444", string.Empty, string.Empty)
@@ -100,24 +94,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 ClientSecret = @"secret",
                 ClientId = @"resourceownerclient_jwt"
             };
-
-        static WatersConnectAccount()
-        {
-            var services = new ServiceCollection();
-            var builder = services.AddHttpClient(@"customClient");
-            builder.ConfigurePrimaryHttpMessageHandler(() =>
-                // Get mock handler for testing purposes.
-                CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(
-                    HANDLER_NAME,
-                    // WebRequestHandler is not available on net8. HttpClientHandler.PreAuthenticate
-                    // is enough for the standard OAuth flow; the connection-sharing option is a
-                    // System.Net legacy toggle unnecessary for our .NET 8 usage.
-                    () => new HttpClientHandler { PreAuthenticate = true }
-                )
-            );
-            var provider = services.BuildServiceProvider();
-            _httpClientFactory = provider.GetService<IHttpClientFactory>();
-        }
 
         public WatersConnectAccount(string serverUrl, string username, string password)
         {
@@ -231,25 +207,14 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             {
                 return tokenCacheEntry.TokenResponse;
             }
-            // IdentityModel 7: TokenClient/TokenClientOptions were removed. Use the
-            // HttpClient.RequestPasswordTokenAsync / RequestRefreshTokenAsync extensions with
-            // PasswordTokenRequest / RefreshTokenRequest instead. Get mock handler for testing purposes.
-            var authHandler = CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(AUTH_HANDLER_NAME, () => new HttpClientHandler());
-            using var tokenClient = new HttpClient(authHandler, disposeHandler: false);
-            var tokenEndpoint = IdentityServer + IdentityConnectEndpoint;
             // Try to refresh the token if we have an expired one
             if (_authenticationTokens.TryGetValue(this, out var expiredTokenCacheEntry))
             {
-                // Offload the blocking token call to the thread pool. Authenticate() runs on the UI
-                // thread (e.g. via SupportsMethodDevelopment) and blocking on the HTTP call's result
-                // directly would deadlock the captured WinForms SynchronizationContext on net8.
-                var refreshedToken = Task.Run(() => tokenClient.RequestRefreshTokenAsync(new RefreshTokenRequest
+                var refreshedToken = RequestToken(new NameValueCollection
                 {
-                    Address = tokenEndpoint,
-                    ClientId = ClientId,
-                    ClientSecret = ClientSecret,
-                    RefreshToken = expiredTokenCacheEntry.TokenResponse.RefreshToken
-                })).Result;
+                    [@"grant_type"] = @"refresh_token",
+                    [@"refresh_token"] = expiredTokenCacheEntry.TokenResponse.RefreshToken
+                });
                 if (!refreshedToken.IsError)
                 {
                     // If the refresh token worked, update the cache with the new token
@@ -259,15 +224,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 }
             }
             // Otherwise, request a new token using the username and password
-            var newToken = Task.Run(() => tokenClient.RequestPasswordTokenAsync(new PasswordTokenRequest
-            {
-                Address = tokenEndpoint,
-                ClientId = ClientId,
-                ClientSecret = ClientSecret,
-                UserName = Username,
-                Password = Password,
-                Scope = ClientScope
-            })).Result;
+            var newToken = RequestToken(OAuthPasswordGrantClient.PasswordGrantForm(Username, Password, ClientScope));
             if (newToken.IsError)
             {
                 AuthenticationException ex;
@@ -285,6 +242,26 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             return newToken;
         }
 
+        /// <summary>
+        /// POSTs a token request to the identity server and returns the parsed response. Client
+        /// credentials go in an HTTP Basic authorization header with each half URL-escaped per
+        /// RFC 6749 section 2.3.1, matching the wire format of the IdentityModel TokenClient this
+        /// replaced. Every failure is returned as an error <see cref="TokenResponse"/> - the same
+        /// contract TokenClient had - so callers route all failures through the
+        /// authentication-error path: a 400 is an OAuth protocol error whose JSON body carries
+        /// error/error_description; any other HTTP failure becomes an HTTP-error response (IsError
+        /// true even when the body is a proxy's HTML page); a transport or URL-format exception
+        /// becomes an exception-type response.
+        /// </summary>
+        private TokenResponse RequestToken(NameValueCollection form)
+        {
+            // Shared with UnifiAccount.Authenticate, which authenticates against a sibling
+            // Waters-hosted identity server the same way - see OAuthPasswordGrantClient for the
+            // POST, response parsing, and why both needed to stop constructing TokenResponse
+            // directly once IdentityModel 7 removed its constructors.
+            return OAuthPasswordGrantClient.RequestToken(new Uri(IdentityServer + IdentityConnectEndpoint), ClientId, ClientSecret, form);
+        }
+
         public static AuthenticationErrorType HandleAuthenticationException(AuthenticationException ex, out string message)
         {
             message = null;
@@ -296,26 +273,30 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             try
             {
                 var tokenResponse = JObject.Parse((string)ex.Data[TOKEN_DATA]);
+                // error_description is frequently empty (e.g. Waters' invalid_scope response is just
+                // {"error":"invalid_scope"}), so fall back to the bare error code rather than leaving
+                // the caller with nothing to show - every classified branch below sets message for the
+                // same reason. Only EditRemoteAccountDlg's InvalidClientSecret case overrides this with
+                // a friendlier string; the others show this raw (deliberately non-L10N) server text.
                 string error = (tokenResponse[@"error_description"] ?? tokenResponse[@"error"] ?? "").ToString();
                 var errorType = (tokenResponse[@"error"] ?? "").ToString();
                 if (errorType == @"invalid_scope")
                 {
-                    // Surface the identity server's raw (non-localized) error detail so the user sees the
-                    // rejected scope. On net472 IdentityModel left TokenResponse.Raw empty, so this went
-                    // through the generic path below that showed the same detail; net8's IdentityModel 7
-                    // populates Raw and reaches this branch, which otherwise left the message blank.
+                    // Surface the identity server's raw (non-localized) detail so the user sees the
+                    // rejected scope. IdentityModel 7 populates TokenResponse.Raw and so reaches this
+                    // branch, which would otherwise leave the message blank.
                     message = error;
                     return AuthenticationErrorType.InvalidClientScope;
                 }
                 else if (errorType == @"invalid_client")
                 {
+                    message = error;
                     return AuthenticationErrorType.InvalidClientSecret;
                 }
                 else if (errorType == @"invalid_grant")
                 {
                     // As with invalid_scope, surface the identity server's raw (non-localized) detail
-                    // (e.g. "password entered for this user is incorrect") that net472 showed via the
-                    // generic path before net8's IdentityModel 7 started populating TokenResponse.Raw.
+                    // (e.g. "password entered for this user is incorrect") rather than leaving it blank.
                     message = error;
                     return AuthenticationErrorType.InvalidPassword;
                 }
@@ -326,6 +307,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 }
                 else
                 {
+                    message = ex.Message;
                     return AuthenticationErrorType.InvalidIdentityServer;
                 }
             }
@@ -336,51 +318,18 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             }
         }
 
-        /*public IEnumerable<WatersConnectFolderObject> GetFolders()
-        {
-            var httpClient = GetAuthenticatedHttpClient();
-            var response = httpClient.GetAsync(GetFoldersUrl()).Result;
-            string responseBody = response.Content.ReadAsStringAsync().Result;
-            var jsonObject = JObject.Parse(responseBody);
-
-            var foldersValue = jsonObject[@"value"] as JArray;
-            if (foldersValue == null)
-            {
-                return new WatersConnectFolderObject[0];
-            }
-            return foldersValue.OfType<JObject>().Select(f => new WatersConnectFolderObject(f));
-        }
-
-        public IEnumerable<WatersConnectFileObject> GetFiles(WatersConnectFolderObject folder)
-        {
-            var httpClient = GetAuthenticatedHttpClient();
-            string url = string.Format(@"/waters_connect/v2.0/sample-sets?folderId={0}", folder.Id);
-            var response = httpClient.GetAsync(ServerUrl + url).Result;
-            string responseBody = response.Content.ReadAsStringAsync().Result;
-            var jsonObject = JObject.Parse(responseBody);
-            var itemsValue = jsonObject[@"value"] as JArray;
-            if (itemsValue == null)
-            {
-                return new WatersConnectFileObject[0];
-            }
-            return itemsValue.OfType<JObject>().Select(f => new WatersConnectFileObject(f));
-        }*/
-
-        public HttpClient GetAuthenticatedHttpClient()
+        /// <summary>
+        /// Creates an <see cref="HttpClientWithProgress"/> carrying this account's bearer token,
+        /// authenticating first if no valid token is cached. Waits are bounded by
+        /// <see cref="HttpClientWithProgress.ResponseTimeoutMilliseconds"/>, which replaced the
+        /// 100-second default the removed IHttpClientFactory clients had, so a black-holed
+        /// connection surfaces as a timeout instead of hanging the UI thread indefinitely.
+        /// </summary>
+        public HttpClientWithProgress CreateAuthenticatedClient()
         {
             var tokenResponse = Authenticate();
-            // A registered mock handler must take effect immediately. IHttpClientFactory pools
-            // the primary handler pipeline for its default lifetime (2 minutes), so within that
-            // window CreateClient keeps serving a previously registered mock even after a test
-            // installs a replacement. Building the client directly on the registered handler
-            // avoids the pool; production requests (no registered handler) still use the factory.
-            var mockHandler = CommonApplicationSettings.HttpMessageHandlerFactory.GetRegisteredHandler(HANDLER_NAME);
-            var httpClient = mockHandler != null
-                ? new HttpClient(mockHandler, false)
-                : _httpClientFactory.CreateClient(@"customClient");
-            httpClient.SetBearerToken(tokenResponse.AccessToken);
-            //httpClient.DefaultRequestHeaders.Remove(@"Accept");
-            //httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");
+            var httpClient = new HttpClientWithProgress();
+            httpClient.AddAuthorizationHeader(@"Bearer " + tokenResponse.AccessToken);
             return httpClient;
         }
 

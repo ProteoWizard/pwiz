@@ -951,6 +951,14 @@ else
     .installer-vendor-files-location = $(PWIZ_BUILD_PATH)/without-cxt/$(PLATFORM) ;
 }
 
+# Assemblies that every installer already declares for itself. They reach the <assembly>
+# enumeration below because a vendor API references them, but listing them here as well would
+# declare the same file twice and fail the WiX link with LGHT0091 (duplicate symbol).
+# pwiz.CommonUtil.dll is ours rather than a vendor redistributable, and is named directly by
+# scripts/wix/pwiz-setup.wxs.template, pwiz_tools/Bumbershoot/idpicker/Deploy/Deploy.wxs.template
+# and pwiz_tools/Skyline/Executables/Installer/FileList64-template.txt.
+.installer-vendor-files-exclusions = pwiz.CommonUtil.dll ;
+
 rule make_INSTALLER_VENDOR_FILES ( targets * : sources * : properties * )
 {
     # enumerate .NET assemblies and their native DLL dependencies
@@ -961,7 +969,8 @@ rule make_INSTALLER_VENDOR_FILES ( targets * : sources * : properties * )
         for local assembly in $(assemblies)
         {
             local assembly-path = [ path.basename [ $(assembly).name ] ] ;
-            if ! $(assembly-path:L) in $(.unique-vendor-files:L)
+            if ! $(assembly-path:L) in $(.unique-vendor-files:L) &&
+               ! $(assembly-path:L) in $(.installer-vendor-files-exclusions:L)
             {
                 .unique-vendor-files += $(assembly-path) ;
             }

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Osprey overnight end-to-end regression. Self-contained entry point for
     the scheduled TeamCity "Osprey Windows .NET Regression" config (via
@@ -86,6 +86,19 @@
               what makes CanRehydrate return false so it re-runs on demand. Runs last, in
               the straight-through dir, since it rewrites the report there. ~14 s per
               dataset - it rehydrates Stages 1-5 and re-runs Stage 7 only.
+      mode 11 the PAY-LATER report (P16) - deletes both diagnostics products from the
+              completed straight-through run, leaving every analysis artifact current,
+              and asks for the report again. This is the one state no other leg presents:
+              mode 7 re-enters a run whose products are already there, so it exercises
+              only the RE-RENDER, and every other leg passes --model-diagnostics up front.
+              Both halves of the P16 test, because neither alone is sufficient. NO
+              ANALYSIS RAN: each pass must log the marker naming its fold, AND the markers
+              a genuine join emits must be absent - a re-analysis produces the RIGHT
+              report, so the artifact cannot tell them apart and only the log can. THE
+              REPORT IS COMPLETE: both products byte-compared against the ones the
+              flag-up-front run wrote, because a view some phase holds privately goes
+              missing on this path and on no other. Runs between modes 7 and 8, which is
+              the only window where the cohort is complete and the blib is still current.
 
     NO dependency on the sibling ai/ checkout: data acquisition, blib golden
     capture/compare, and the tolerance comparators all live under
@@ -183,6 +196,10 @@ param(
     [switch]$SkipWarmRerun,
     [switch]$SkipRehydrate,
     [switch]$SkipHpcChain,
+    # Skip the mode-10 non-default pass-2 arms (transfer, mean-best-N). Fast local iteration
+    # only: these are the two ideas in competition with the shipped default, and leaving them
+    # unrun is how transfer reached production writing no experiment sidecar.
+    [switch]$SkipAltPass2,
     [string]$DownloadsPath,
     [int]$Threads = 16,
     [switch]$TeamCity,
@@ -276,7 +293,16 @@ $knownResidentGaps = @(
         # the 4/8/16-file A/B. Quoting a straight-through 82-file endpoint next to that rig's
         # marginal slope produced three numbers no single model reproduced (24.43/82 = 0.298,
         # not 0.197), which is unreadable in a summary that prints on every CI run.
-        Legs  = 'Every leg of every dataset. ~4.4 GB library + 0.197 GB/file live post-GC: ~20 GB at 82 files, ~103 GB projected at 500.'
+        # NOT every leg any more, and saying so mattered: this gate's own mode-3 SecondPassFDR
+        # phase takes the streamed join, which is the fix for this gap being exercised rather
+        # than merely described. The note below about hpc-merge already said that; this line
+        # still said "every leg", so the summary printed the stale half on every CI run.
+        #
+        # The model is now CONFIRMED rather than projected: 4.4 + 0.197*446 = 92.3 GB predicts
+        # the 91.1 GB private measured on the 446-run CHS cohort (2026-09-08), which is the
+        # first endpoint past 82 files. Quoted as a check on the model, not as a second model -
+        # see the note above about three numbers no single model reproduced.
+        Legs  = 'Every leg EXCEPT the streamed Stage-7 join (mode 3''s SecondPassFDR phase, which sets ExpectReconciledInput). ~4.4 GB library + 0.197 GB/file live post-GC: ~20 GB at 82 files, ~103 GB projected at 500, and 92.3 GB predicted vs 91.1 GB measured at 446.'
     }
 )
 # Reachable only outside this gate, tokened, each with an open issue:
@@ -295,7 +321,22 @@ $script:priorAllowResident = $env:OSPREY_ALLOW_UNFIXED_RESIDENT
 # admits them would abort the gate on its first leg with a guard error - making the very
 # comparison this harness exists to support impossible to run. Ambient tokens are stripped
 # ONLY when no such switch is set, which is the case the clearing is aimed at.
-$abSwitchSet = ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or ($env:OSPREY_FDR_PROJECTION -eq '0')
+#
+# OSPREY_STAGE7_STREAM=0 IS in this set now. It was excluded while the reasoning was
+# circular - "the list is switches that arm a guard which refuses without a token, and
+# KNOWN_UNFIXED has no Stage-7 entry" says only that there was no token because there was no
+# token. There was no token because there was no ALTERNATIVE: until the streamed Stage-7 join
+# existed the resident one was a fact, and a token can only be demanded for a choice. The
+# alternative exists, so the switch is now exactly what OSPREY_FDR_PROJECTION=0 and
+# OSPREY_STAGE6_STREAM_SURVIVORS=0 already were - a deliberate A/B oracle forcing a fat path -
+# and it is tokened like them (ResidentPaths.STAGE7_STREAM_OFF).
+#
+# This costs the gate nothing: no leg sets OSPREY_STAGE7_STREAM, so no leg needs the token and
+# the required-token count below stays 0. It exists so an OPERATOR running the A/B is not
+# aborted on the first leg, which is what this whole block is for.
+$abSwitchSet = ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
+               ($env:OSPREY_FDR_PROJECTION -eq '0') -or
+               ($env:OSPREY_STAGE7_STREAM -eq '0')
 if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
     if ($abSwitchSet) {
         # Extra parens: -f binds TIGHTER than +, so without them only the LAST fragment is
@@ -386,8 +427,19 @@ $libDecoyV3Url = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perf
 #                    (default 0.05), same do-not-regenerate rule. Only bites on a
 #                    dataset that carries entrapment.
 $datasets = [ordered]@{
+    # AltPass2 opts ONE dataset into mode 10 (the non-default pass-2 arms), and picking one
+    # is the point. A new leg applied to every config inherits a 4x multiplier - four configs,
+    # not two acquisitions - which multiplies wall time without multiplying coverage. Choose the
+    # config the case actually belongs to.
+    #
+    # For these arms that is StellarLibDecoy: library-SUPPLIED decoys are what the pass-2
+    # comparison runs on real cohorts (SEA-AD is -DecoyMode libdecoy), so the arms get exercised
+    # against the decoy provenance they are actually used with, at Stellar speed. Not Astral,
+    # which is the suite's critical path and pays for an extra straight-through run in wall
+    # clock directly.
     Stellar = @{ Folder = 'stellar'; Resolution = 'unit' }
     StellarLibDecoy = @{
+        AltPass2         = $true
         Folder           = 'stellar'
         LibraryFolder    = 'stellar-libdecoy'
         GoldenFolder     = 'stellar-libdecoy'
@@ -426,8 +478,23 @@ $datasets = [ordered]@{
     # ~0.25); the pre-fix code measured 1.408 with a real paired-win coin of 0.397,
     # i.e. decoys losing 60% of head-to-head pairs against their own targets. This
     # bound would have failed the old construction, which is the point.
+    # SkipModes is a DELIBERATE COVERAGE CUT, priced against the clock, not an
+    # oversight. Astral is the suite's critical path: it is 51.8% of the serial work
+    # and, under the two-lane runner, it alone sets the wall time because the other
+    # three datasets share the second lane and finish ~5 min earlier. So only Astral
+    # legs buy wall time, and the gate has to fit the ~85 min budget the config had
+    # before modes 8 and 9 were added.
+    #
+    # Mode 2 asserts "resume == straight-through". On Astral that property is the most
+    # redundantly covered of its expensive legs: mode 5 asserts rehydrate == straight,
+    # mode 3 asserts the HPC chain == straight, and modes 8 and 9 both drive partial
+    # resumes to completion on this same dataset. Mode 2 also still runs on all THREE
+    # Stellar datasets, so the leg is not lost - only its hram instance is.
+    #
+    # Measured cost of this cut: ~8.6 min of Astral's serial time, which is what took
+    # the TeamCity parallel run from 1:27:20 to inside the budget.
     Astral  = @{ Folder = 'astral';  Resolution = 'hram'; ModelDiagnostics = $true
-                 MaxAbsTilt = 0.5 }
+                 MaxAbsTilt = 0.5; SkipModes = @(2) }
 }
 $selected = if ($Dataset -eq 'All') { @($datasets.Keys) } else { @($Dataset) }
 
@@ -436,7 +503,19 @@ function Format-TcMessage([string]$s) {
     if ($null -eq $s) { return '' }
     return $s.Replace('|', '||').Replace("'", "|'").Replace("`n", '|n').Replace("`r", '|r').Replace('[', '|[').Replace(']', '|]')
 }
+# Every phase boundary the gate announces, stamped. A phase's cost is the gap to the NEXT
+# announcement, so timing rides on the message the gate already emits and no leg needs its
+# own stopwatch - which is what keeps this from rotting as legs are added.
+#
+# It exists because the gate had no cost signal at all: the log carries no timestamps, the
+# run dirs are pruned by -KeepRunDirs, and the summary lists only PASS/FAIL/SKIP. "Is this
+# leg worth its wall time" is asked every time the suite grows, and until now it could only
+# be answered with estimates written into comments - one of which claimed 25 minutes for a
+# leg nobody had ever timed.
+$script:phaseMarks = [System.Collections.Generic.List[object]]::new()
+
 function Write-Progress-Tc([string]$msg) {
+    $script:phaseMarks.Add([pscustomobject]@{ Msg = $msg; At = (Get-Date) })
     if ($TeamCity) { Write-Host ("##teamcity[progressMessage '{0}']" -f (Format-TcMessage $msg)) }
     else { Write-Host "==> $msg" -ForegroundColor Cyan }
 }
@@ -476,10 +555,35 @@ if ($dupGolden.Count -gt 0) {
 # has the reclaimed space. Keeps the most recent $KeepRunDirs (default 0 = keep
 # none). The dir names sort chronologically (regression-YYYYMMDD_HHMMSS), so a Name
 # sort orders oldest-first.
+function Test-RunDirLive([string]$Name) {
+    <#
+    True when this run dir belongs to a gate process that is still running.
+
+    The name ends _<pid> (see $runStamp), so ownership is EXACT. An age heuristic
+    would not do: a directory's own timestamp does not move while a run works deep
+    inside it, so "not written for an hour" calls a live run stale and deletes the
+    scratch it is standing on.
+    #>
+    # Anchor the WHOLE shape. A bare '_(\d+)$' also matches a pre-PID name, whose
+    # trailing group is the TIME - 'regression-20260905_120052' would be read as
+    # owned by pid 120052, and treated as live whenever some unrelated pwsh happened
+    # to hold that id. Three groups means PID-stamped; two means legacy, i.e. an
+    # orphan from before this naming and safe to prune.
+    if ($Name -notmatch '^regression-\d{8}_\d{6}_(\d+)$') { return $false }
+    $p = Get-Process -Id ([int]$Matches[1]) -ErrorAction SilentlyContinue
+    # Check the process NAME too, because PIDs are reused. Leaving one orphan behind
+    # for the next run to collect is a far cheaper mistake than deleting the scratch
+    # of a gate that is still running.
+    return ($null -ne $p -and $p.ProcessName -eq 'pwsh')
+}
+
 function Remove-StaleRunDirs([string]$TestResultsDir, [int]$Keep) {
     if (-not (Test-Path $TestResultsDir)) { return }
+    # Live dirs are excluded BEFORE $Keep is applied, so a concurrent lane's dir is
+    # never a prune candidate and never displaces a genuine orphan from the count.
     $runDirs = @(Get-ChildItem -Path $TestResultsDir -Directory -Filter 'regression-*' `
-        -ErrorAction SilentlyContinue | Sort-Object Name)
+        -ErrorAction SilentlyContinue | Sort-Object Name |
+        Where-Object { -not (Test-RunDirLive $_.Name) })
     if ($runDirs.Count -le $Keep) { return }
     $stale = $runDirs[0..($runDirs.Count - $Keep - 1)]
     Write-Progress-Tc ("Pruning {0} stale TestResults run dir(s), keeping the most recent {1}" -f $stale.Count, $Keep)
@@ -534,7 +638,16 @@ $extractedRoot = Get-RegressionData -Url $dataUrl -DownloadsPath $DownloadsPath 
 # -- which would otherwise make the next straight-through leg resume instead of
 # run clean. These dirs hold the multi-GB .spectra.bin caches (via --work-dir),
 # so the agent should treat TestResults as ephemeral and clean it periodically.
-$runStamp = (Get-Date).ToString('yyyyMMdd_HHmmss')
+#
+# The PID is part of the name, not decoration. Two gates started in the SAME SECOND
+# computed the same stamp and therefore shared one run root - and since a run deletes
+# its run root when it finishes, the first to finish deleted the other's working
+# directory out from under it. Measured 2026-09-05: two lanes launched together, the
+# short one finished at 12:20:18 and the long one died four seconds later on
+# "unable to open database file", having lost the blib it was mid-comparison on.
+# The timestamp still leads, so the Name sort in Remove-StaleRunDirs stays
+# chronological.
+$runStamp = '{0}_{1}' -f (Get-Date).ToString('yyyyMMdd_HHmmss'), $PID
 $runRoot  = Join-Path $scriptRoot ("TestResults\regression-$runStamp")
 New-Item -ItemType Directory -Path $runRoot -Force | Out-Null
 
@@ -562,10 +675,12 @@ function Get-DatasetCliArgs {
     if ($null -eq $Spec) { return $extra }
     if ($Spec.DecoysInLibrary) { $extra += '--decoys-in-library' }
     if ($Manifest) { $extra += @('--decoy-pairing-manifest', $Manifest) }
-    # --model-diagnostics is verified output-neutral (it routes the 2nd pass down
-    # the resident path instead of the FDR projection, and the two agree
-    # byte-for-byte), so it can ride on the golden-compared run rather than
-    # needing a second invocation. It populates the Pass 1 AND Pass 2 FDP views on
+    # --model-diagnostics is verified output-neutral, so it can ride on the
+    # golden-compared run rather than needing a second invocation. It no longer
+    # forces the 2nd pass down the resident path either: the pass-2 report is
+    # folded run by run through ModelDiagnosticsData.Accumulator, so a run with
+    # this flag streams the Stage 7 join exactly as one without it does, and
+    # mode 3 asserts that on every dataset. It populates the Pass 1 AND Pass 2 FDP views on
     # its own: --fdrbench-pass selects which pass an FDRBench INPUT FILE is written
     # for and does nothing at all without --fdrbench (OspreyCommandArgs warns, and
     # FdrBenchInputWriter returns early on an empty output path), so passing it here
@@ -581,7 +696,13 @@ function Invoke-OspreyRun {
           # Appends --task <name>. Exists so a leg that re-enters a COMPLETED run (mode 7)
           # replays this function's own argument list rather than a copy of it - a copy is
           # only a self-consistency oracle until the two drift, and the drift is silent.
-          [string]$TaskName)
+          [string]$TaskName,
+          # Return a non-zero exit instead of throwing. For the ONE leg that expects Osprey to
+          # refuse: a partial rescore under --model-diagnostics has no plan source, and the
+          # correct behaviour is a named error with a non-zero exit. Without this the harness
+          # treats that refusal as a crash and ABORTS the remaining legs, so the gate cannot
+          # assert the guard it exists to check.
+          [switch]$AllowNonZeroExit)
     New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
     $logPath = Join-Path $WorkDir $LogName
     $cliArgs = @()
@@ -607,8 +728,11 @@ function Invoke-OspreyRun {
         Pop-Location
         if ($DumpProteinFdr) { Remove-Item Env:OSPREY_DUMP_STAGE7_PROTEIN_FDR -ErrorAction SilentlyContinue }
     }
-    if ($exit -ne 0) { throw "Osprey exited $exit (see $logPath)" }
-    return @{ Wall = $sw.Elapsed; Log = $logPath }
+    if ($exit -ne 0 -and -not $AllowNonZeroExit) { throw "Osprey exited $exit (see $logPath)" }
+    # ExitCode is returned ALWAYS, not just under the switch: a caller that did not opt in never
+    # reaches here on a failure, so the field is unambiguous - it is 0 unless the caller asked to
+    # handle non-zero itself.
+    return @{ Wall = $sw.Elapsed; Log = $logPath; ExitCode = $exit }
 }
 
 # Resolve a dataset's inputs from the extracted read-only data folder.
@@ -1022,6 +1146,22 @@ function Test-TaskCacheHits {
 # passing vacuously.
 $firstPassFdrRehydrateMarker = 'Resume rehydrate: streaming the first-pass bundle from'
 
+# Mode 3's phase-3 worker must take the PER-RUN hydrate - each run loaded from its own
+# artifacts - rather than the all-runs builder kept for the straight-through pipeline.
+#
+# The OUTCOME cannot tell those apart here, and that is the whole reason this marker exists: a
+# phase-3 node is given ONE run, where the all-runs path is O(1) and produces identical bytes.
+# So mode 3 would stay green if the per-run path silently stopped being selected, and the
+# regression would only surface as an O(runs) startup on a cohort nobody runs in the gate.
+# Asserting the outcome alone is exactly what let an earlier resume fix report success while
+# testing the old path (defect (b2), TODO-20260901_osprey_firstpassfdr_resume).
+$perRunHydrateMarker = 'Per-run rescore: hydrating each of'
+
+# FirstPassFDR's half of the same shape: on a rehydrate where the analysis-wide summary is on
+# disk it publishes the survivor loader and builds no experiment-wide bundle, so it emits this
+# instead of $firstPassFdrRehydrateMarker. Mode 5 accepts either.
+$firstPassFdrPerRunMarker = 'Per-run rescore: FirstPassFDR publishes the survivor loader only'
+
 function Test-LogMarker {
     <#
     Assert a run log contains a marker line proving a specific code path executed.
@@ -1368,6 +1508,12 @@ function Invoke-HpcChain {
         # the GBDT golden, so guard with Test-Path.
         $ph2model = Join-Path $ph2 "$s.1st-pass.model.json"
         if (Test-Path $ph2model) { Copy-Item $ph2model (Join-Path $ph3 "$s.1st-pass.model.json") }
+        # The protein-compact stratum is a SECOND artifact, not a field of the model sidecar:
+        # first-pass protein FDR computes it and training does not, so it is written when that
+        # later phase ends. It therefore needs its own hop on the same relay. Present only
+        # under OSPREY_PASS2_QVALUE=protein-compact, so guard with Test-Path.
+        $ph2stratum = Join-Path $ph2 "$s.1st-pass.stratum.json"
+        if (Test-Path $ph2stratum) { Copy-Item $ph2stratum (Join-Path $ph3 "$s.1st-pass.stratum.json") }
         # The analysis-wide EXPERIMENT-scope sidecar (format v5, issue #4486) rides the same
         # relay. It is a RUN-level file, not per-stem - one record per distinct entry_id for the
         # whole analysis - but it is copied inside this per-stem loop because each stem gets its
@@ -1376,6 +1522,26 @@ function Invoke-HpcChain {
         # worker that cannot see it computes a different survivor set than straight-through.
         $ph2exp = Join-Path $ph2 'output.1st-pass.fdr_experiment.bin'
         if (Test-Path $ph2exp) { Copy-Item $ph2exp (Join-Path $ph3 'output.1st-pass.fdr_experiment.bin') }
+        # The analysis-wide RETAINED BASE_ID summary rides the same relay, for the same reason
+        # and one step further: it is what lets this worker compact its single run without
+        # reading every other run's reconciliation.json. FirstPassFDR writes it when planning
+        # ends. Unlike the files above this one is NOT guarded with Test-Path - a worker that
+        # cannot see it fails rather than silently compacting to a per-run subset, so a missing
+        # copy here must surface as that failure and not as a skipped hop.
+        $ph2ret = Join-Path $ph2 'output.1st-pass.retained_base_ids.bin'
+        Copy-Item $ph2ret (Join-Path $ph3 'output.1st-pass.retained_base_ids.bin')
+        # The pass-1 diagnostics product rides the same relay. FirstPassFDR is the only task
+        # that can produce it - the pass-1 pool and trained model are gone by SecondPassFDR - so
+        # a node that cannot see it renders a page with no first-pass half at all.
+        #
+        # This hop did not exist for its predecessor either, which doc 00 names as a standing
+        # gap: "a relay obligation mode 3 does not stage is an obligation nothing is checking".
+        # It stayed invisible because mode 3 compares the blib and the FDR sidecars and never
+        # opens the report, so the chain's SecondPassFDR silently logged "pass-1 data sidecar
+        # not found; pass-2 enrichment skipped" and the leg passed anyway. Guarded with
+        # Test-Path: present only under --model-diagnostics.
+        $ph2diag = Join-Path $ph2 'output.1st-pass.model-diagnostics.json'
+        if (Test-Path $ph2diag) { Copy-Item $ph2diag (Join-Path $ph3 'output.1st-pass.model-diagnostics.json') }
         Copy-LibraryInto -Library $Library -Dir $ph3 -Manifest $Manifest
         $a3 = @('--task', 'PerFileRescoring', '--input-scores', "$s.scores.parquet",
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
@@ -1437,7 +1603,7 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3Out "$s.1st-pass.fdr_scores.bin")
 
         # WITHHELD ONLY WHEN THE WORKER ANSWERED. The modes with a per-file half
-        # (protein-compact, transfer-compete) leave a 2nd-pass sidecar here, and phase 4 folds it
+        # (protein-compact) leaves a 2nd-pass sidecar here, and phase 4 folds it
         # without opening anything from the first pass - that is the contract issue #4486
         # establishes, and withholding is how it is proven. OSPREY_PASS2_QVALUE=transfer and the
         # retrain modes have NO per-file half, so Stage 7 legitimately recomputes and legitimately
@@ -1450,12 +1616,15 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
         Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
         # Ship the persisted 1st-pass model so SecondPassFDR can run the frozen 2nd-pass
-        # modes (transfer / transfer-compete / protein-compact) without re-training. Written
+        # modes (transfer / protein-compact) without re-training. Written
         # by the FirstPassFDR join node (phase 2) and relayed into $ph3 above ($ph2 is already
         # deleted by now). Present for the SVM/percolator framework, so guard with Test-Path.
-        # protein-compact's stratum rides inside this same sidecar, so it needs no second hop.
+        # protein-compact's stratum is its own artifact (protein FDR computes it, training does
+        # not), so it takes the same second hop rather than riding inside the model sidecar.
         $modelSide = Join-Path $ph3 "$s.1st-pass.model.json"
         if (Test-Path $modelSide) { Copy-Item $modelSide (Join-Path $ph4 "$s.1st-pass.model.json") }
+        $stratumSide = Join-Path $ph3 "$s.1st-pass.stratum.json"
+        if (Test-Path $stratumSide) { Copy-Item $stratumSide (Join-Path $ph4 "$s.1st-pass.stratum.json") }
         # The per-run 2nd-pass sidecar is now an INPUT to phase 4, not its output (#4486): the
         # per-file half of the second pass runs in PerFileRescoring, so phase 3 produces this
         # file and phase 4 folds it. Its VALIDITY STAMP travels with it, because that stamp is
@@ -1493,6 +1662,15 @@ function Invoke-HpcChain {
         # scalars from it, and $ph2 is gone by now, so phase 3 is its only route here.
         $ph3exp = Join-Path $ph3 'output.1st-pass.fdr_experiment.bin'
         if (Test-Path $ph3exp) { Copy-Item $ph3exp (Join-Path $ph4 'output.1st-pass.fdr_experiment.bin') -Force }
+        # And the retained base_id summary, for the same reason: SecondPassFDR's reconciled-input
+        # load streams each run against it, so $ph2 being gone makes phase 3 its only route here.
+        $ph3ret = Join-Path $ph3 'output.1st-pass.retained_base_ids.bin'
+        Copy-Item $ph3ret (Join-Path $ph4 'output.1st-pass.retained_base_ids.bin') -Force
+        # The pass-1 diagnostics product takes its second hop for the same reason as the model
+        # sidecar: SecondPassFDR renders the page and $ph2 is gone by now, so phase 3 is its
+        # only route here. Without it the chain's report has no first-pass half.
+        $ph3diag = Join-Path $ph3 'output.1st-pass.model-diagnostics.json'
+        if (Test-Path $ph3diag) { Copy-Item $ph3diag (Join-Path $ph4 'output.1st-pass.model-diagnostics.json') -Force }
         # No 2nd-pass bin relay. There was a `if (Test-Path ...) { Copy-Item ... }` here, and
         # it could never fire: --task PerFileRescoring sets NoJoin, so SecondPassFdrTask is not
         # in a phase-3 worker's pipeline and no such file exists to copy. Worse than dead - had
@@ -1783,6 +1961,20 @@ foreach ($name in $selected) {
             }
         }
 
+        # NOTHING compares the pass-2 diagnostics product across routes, and that is deliberate
+        # rather than an omission. A chain-vs-straight byte compare was tried here and removed:
+        # mode 3 contracts its sidecar comparison at 1e-9, not byte identity, so demanding the
+        # latter of an artifact DERIVED from those sidecars asserts more than the mode promises.
+        # It also went red on a real but unrelated defect - the two routes disagree on the paired
+        # entrapment FDP curve on the generated-decoy dataset (ProteoWizard/pwiz#4645), which
+        # reproduces with the streamed fold forced off and so is not the fold's doing.
+        #
+        # The streamed pass-2 report is covered instead by the marker assertion below (which
+        # shape ran) plus ModelDiagnosticsDataTest's byte-identity oracle over the accumulator.
+        # A gate-level A/B keyed on OSPREY_STAGE7_STREAM was considered and rejected: the intent
+        # is to REMOVE the ability not to stream, so a leg built on that switch would be built to
+        # be deleted. See #4645 for what to assert instead - the panel's INPUTS, not its curve.
+
         # Liveness: a comparison that verified nothing is not a passing comparison. Empty or
         # absent sidecars satisfy every field check trivially while breaking every resume,
         # and the rest of this harness fails closed on the same shape (Invoke-ResumeInvalidation
@@ -1835,6 +2027,52 @@ foreach ($name in $selected) {
             $summaryLines.Add("$name mode3 (shipped fold): PASS (worker answer folded for every file)")
         }
 
+        # Which SHAPE phase 4 folded in, asserted as a marker line rather than inferred from the
+        # output. A resident Stage 7 and a streamed one produce identical bytes by design - that
+        # is the whole claim - so nothing this gate compares can tell them apart, and doc 00's
+        # rule for exactly that situation is to assert the path the run reports rather than trust
+        # the bytes to reveal it. Without this, a change that silently disqualifies the streamed
+        # arm leaves every leg green while the O(runs x entries) peak comes back.
+        #
+        # Demanded on EVERY dataset now. This used to be scoped to `-not $cfg.ModelDiagnostics`
+        # because CanStreamStage7Join declined under --model-diagnostics, which this suite sets
+        # on every dataset but plain Stellar - so three of the four exercised only the resident
+        # arm and a streamed-arm defect needing library decoys, entrapment or hram data passed
+        # the suite green. That term is gone from the predicate (the pass-2 report is folded run
+        # by run through ModelDiagnosticsData.Accumulator), so the scoping goes with it.
+        #
+        # Nothing else in the predicate varies across these datasets: --fdrbench is never passed
+        # here, so NeedsResidentPool is false, and protein-compact is the default pass-2 mode, so
+        # every mode-3 chain meets the remaining conditions structurally. A dataset that ever
+        # needs a narrower rule should name the condition rather than restore a blanket skip.
+        # ...unless the run was asked for a configuration that cannot stream, in which case it
+        # is doing exactly what it was told and demanding the marker would fail it for
+        # complying. These are CanStreamStage7Join's OWN terms, not a mode list: the switch that
+        # forces the resident join, the two that make NeedsResidentPool true, and any pass-2
+        # mode other than protein-compact (transfer still computes its per-file half in Stage 7).
+        # ExpectReconciledInput is not among them because phase 4 always sets it.
+        # Enumerated rather than inferred from the log, because a resident run says nothing
+        # about WHY it was resident - and a silent SKIP for the wrong reason is what this leg
+        # exists to prevent.
+        $chainCannotStream =
+            ($env:OSPREY_STAGE7_STREAM -eq '0') -or
+            ($env:OSPREY_FDR_PROJECTION -eq '0') -or
+            (-not [string]::IsNullOrWhiteSpace($env:OSPREY_PASS2_QVALUE) -and
+             $env:OSPREY_PASS2_QVALUE -ne 'protein-compact')
+        $chainStreamed = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
+            -Pattern 'Second-pass join: folding over \d+ run\(s\)' -Quiet
+        if ($chainCannotStream) {
+            $summaryLines.Add("$name mode3 (streamed join): SKIP (this configuration cannot stream the join)")
+        } elseif (-not $chainStreamed) {
+            $overallFail = $true
+            Write-Problem-Tc ("$name mode3 (streamed join): FAIL - phase 4 did not report the " +
+                "per-run fold, so SecondPassFDR built the whole-run survivor pool. Output is " +
+                "unchanged either way; only this line distinguishes them.")
+            $summaryLines.Add("$name mode3 (streamed join): FAIL")
+        } else {
+            $summaryLines.Add("$name mode3 (streamed join): PASS (per-run fold, no all-runs pool)")
+        }
+
         # Scoped for the same reason as the shipped-fold check above: the verifier only exists on
         # the frozen-competition path, so OSPREY_PASS2_QVALUE=transfer and the retrain modes emit
         # NEITHER fold line and there is no split to assert. Detected from the straight leg having
@@ -1853,6 +2091,43 @@ foreach ($name in $selected) {
             $summaryLines.Add("$name mode3 (verifier split): PASS (straight verified, chain shipped-path)")
         }
 
+        # Which PATH the phase-3 workers took, before comparing what they produced. One marker
+        # per worker log; every phase-3 node must show it, because a single node quietly falling
+        # back to the all-runs hydrate is invisible in the output at one file per node.
+        # Asserted on EVERY dataset, --model-diagnostics included. It used to skip there, because
+        # the report was folded from pre-compaction rows during the all-runs hydrate and a per-run
+        # worker would have emitted no report at all - so CanHydratePerRun excluded the mode and
+        # this leg would have failed it for obeying that exclusion.
+        #
+        # The report is now FirstPassFDR's declared output, folded by FirstPassFdrTask's own
+        # bounded path rather than as a side effect of a hydrate, so the exclusion is gone and
+        # this assertion has to cover the mdiag datasets like any other. Deleting the skip IS the
+        # test that the capability landed: if the per-run marker is absent on an mdiag dataset,
+        # the exclusion is still in force somewhere and the O(runs) startup came back.
+        $ph3Logs = @(Get-ChildItem (Join-Path $chainRoot 'logs\phase3_*.log') -ErrorAction SilentlyContinue)
+        if ($ph3Logs.Count -eq 0) {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode3 (per-run hydrate): FAIL - no phase3_*.log to read"
+            $summaryLines.Add("$name mode3 (per-run hydrate): FAIL (no worker logs)")
+        } else {
+            $m3path = @{ Pass = $true; Issues = [System.Collections.Generic.List[string]]::new() }
+            foreach ($lg in $ph3Logs) {
+                $one = Test-LogMarker -LogPath $lg.FullName -Marker $perRunHydrateMarker `
+                    -Description 'the phase-3 worker hydrating its run from that run''s own artifacts'
+                foreach ($issue in $one.Issues) { $m3path.Issues.Add($issue) }
+            }
+            $m3path.Pass = ($m3path.Issues.Count -eq 0)
+            if ($m3path.Pass) {
+                $summaryLines.Add(
+                    "$name mode3 (per-run hydrate): PASS ($($ph3Logs.Count) worker(s))")
+            } else {
+                $overallFail = $true
+                Write-Problem-Tc "$name mode3 (per-run hydrate): FAIL - $($m3path.Issues.Count) issue(s)"
+                $m3path.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+                $summaryLines.Add("$name mode3 (per-run hydrate): FAIL ($($m3path.Issues.Count) issues)")
+            }
+        }
+
         $m3 = Compare-BlibFull -BlibExpected $straightBlib -BlibActual $chainBlib -Tolerance $Tolerance
         if ($m3.Pass) {
             $summaryLines.Add("$name mode3 (HPC chain==straight): PASS")
@@ -1861,6 +2136,159 @@ foreach ($name in $selected) {
             Write-Problem-Tc "$name mode3 (HPC chain==straight): FAIL -- $($m3.Issues.Count) issue(s)"
             $m3.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
             $summaryLines.Add("$name mode3 (HPC chain==straight): FAIL ($($m3.Issues.Count) issues)")
+        }
+
+        # The chain's report must represent BOTH passes. Asserts the PROPERTY the pass-1
+        # diagnostics relay exists for, not that the copy happened - the distinction mode 6
+        # got wrong with "release engaged", and doc 00 states as a standing hazard: "a relay
+        # obligation mode 3 does not stage is an obligation nothing is checking."
+        #
+        # Nothing else here can see this. Every other mode-3 assertion compares the blib and
+        # the FDR sidecars, and none opens the report, so removing the phase2 -> phase3 -> phase4
+        # hop would silently turn the chain's page back into a pass-1-only one with every leg
+        # still green. That was the state before the hop existed.
+        #
+        # completeness.pass2Present is the right signal precisely because it is not a copy
+        # check: it is true only when pass-2 content was ATTACHED at render time, which on the
+        # chain requires the relayed pass-1 product AND the node's own pass-2 fold.
+        if ($cfg.ModelDiagnostics) {
+            $chainHtml = Join-Path (Split-Path $chainBlib -Parent) 'output.model-diagnostics.html'
+            if (-not (Test-Path $chainHtml)) {
+                $overallFail = $true
+                Write-Problem-Tc "$name mode3 (chain report is two-pass): FAIL - no report at $chainHtml"
+                $summaryLines.Add("$name mode3 (chain report is two-pass): FAIL (no report)")
+            } else {
+                $chainDiag = Get-DiagnosticsPayload -HtmlPath $chainHtml
+                if ($chainDiag.completeness.pass2Present) {
+                    $summaryLines.Add("$name mode3 (chain report is two-pass): PASS")
+                } else {
+                    $overallFail = $true
+                    Write-Problem-Tc ("$name mode3 (chain report is two-pass): FAIL - the chain's " +
+                        "report covers the first pass only, so the pass-1 diagnostics product did " +
+                        "not reach the SecondPassFDR node")
+                    $summaryLines.Add("$name mode3 (chain report is two-pass): FAIL (pass-1 only)")
+                }
+            }
+        }
+    }
+
+    # ---- mode 10: the non-default pass-2 arms actually run ----
+    # transfer and mean-best-N are the two ideas in competition with the shipped default, and
+    # until now NOTHING here exercised either: every leg above runs with OSPREY_PASS2_QVALUE
+    # unset. The cost of that has already been paid once - `transfer` silently wrote no
+    # analysis-wide 2nd-pass experiment sidecar at all, while every other mode wrote one, and
+    # no leg could see it because the arm had never run under the gate.
+    #
+    # So this leg asserts the ARTIFACT CONTRACT rather than values: the arm completes, and it
+    # leaves the same set of files behind that the default does. That is deliberately not a
+    # golden - these arms are still moving (protein-compact has improvements pending, and the
+    # 82-file comparison wants re-running), and a golden would freeze a number nobody has
+    # agreed on yet. What must not change silently is that the arm RUNS and PRODUCES.
+    #
+    # ONE arm, not two. protein-compact REFUSES a mean(best-N) first pass, so the mean-best arm
+    # necessarily runs transfer as its pass-2 mode - which means this single leg exercises both
+    # ideas, and a standalone transfer arm bought a second run of the same pass-2 code for the
+    # sake of varying the first-pass aggregation away from the one that needs covering.
+    #
+    # Measured, which is why it went: the two arms were 223.1 s and 223.7 s on StellarLibDecoy,
+    # 7.4 min together, against a Perf/Regression wall of 01:19:30 that has to come in under
+    # 75 minutes. The standalone arm is the half whose coverage is already implied.
+    #
+    # It stays reproducible by hand for diagnosis - that is its remaining value, and it is a
+    # one-line env var: OSPREY_PASS2_QVALUE=transfer with OSPREY_EXPERIMENT_AGG unset. Isolating
+    # transfer from mean-best-N is what you want when this leg goes red and you need to know
+    # which of the two moved; it is not what you want on every gate run.
+    if (-not $SkipAltPass2 -and $cfg.AltPass2) {
+        # Markers are the banners Osprey prints for each arm - Program.cs's
+        # DescribeExperimentAgg, and ComputeAndPersist's OSPREY_PASS2_QVALUE line. Regexes, so
+        # the surrounding prose can change without breaking the gate; what they pin is the
+        # mode NAME and, for mean-best, the word ACTIVE that only the engaged path emits.
+        $altArms = @(
+            @{ Tag = 'meanbest2'
+               Env = @{ OSPREY_PASS2_QVALUE = 'transfer'
+                        OSPREY_EXPERIMENT_AGG = 'mean-best-2' }
+               Markers = @('OSPREY_PASS2_QVALUE=transfer:',
+                           'Experiment aggregation: mean-best-2 ACTIVE') })
+        foreach ($arm in $altArms) {
+            Write-Progress-Tc "${name}: $($arm.Tag) arm runs and produces (mode 10)"
+            $altDir = Join-Path (Join-Path $runRoot $name) ("alt-" + $arm.Tag)
+            $m10 = [pscustomobject]@{ Issues = [System.Collections.Generic.List[string]]::new() }
+            # SAVE and RESTORE, not set-and-delete. Removing the variable does not put back a
+            # value the caller already had, and this mode sits BEFORE modes 4, 2, 5, 6, 7, 8
+            # and 9 and before every later dataset - so a developer who exported
+            # OSPREY_PASS2_QVALUE=transfer and ran the suite had it silently deleted here, and
+            # every remaining leg ran the default while the summary reported them as passing
+            # the arm under test. The file's own convention is save-and-restore
+            # ($priorVerifyWorker, $script:priorAllowResident); this had missed it.
+            $priorArmEnv = @{}
+            foreach ($k in $arm.Env.Keys) {
+                $priorArmEnv[$k] = [Environment]::GetEnvironmentVariable($k)
+                Set-Item -Path "Env:$k" -Value $arm.Env[$k]
+            }
+            try {
+                $rAlt = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                    -Resolution $cfg.Resolution -WorkDir $altDir -LogName "alt-$($arm.Tag).log" `
+                    -Spec $cfg -Manifest $inputs.Manifest
+                if ($rAlt.ExitCode -ne 0) {
+                    $m10.Issues.Add("$($arm.Tag): Osprey exited $($rAlt.ExitCode) (see $($rAlt.Log))")
+                }
+            } finally {
+                foreach ($k in $arm.Env.Keys) {
+                    if ($null -eq $priorArmEnv[$k]) {
+                        Remove-Item -Path "Env:$k" -ErrorAction SilentlyContinue
+                    } else {
+                        Set-Item -Path "Env:$k" -Value $priorArmEnv[$k]
+                    }
+                }
+            }
+            # THE ARM ACTUALLY RAN, asserted from the banner each mode prints, before anything
+            # about what it produced. Without this the leg is green for an arm that never
+            # engaged: every check below passes on a run with both variables ignored, because
+            # the DEFAULT mode writes the same set of files. That is not a hypothetical failure
+            # shape - it is this leg's own reason for existing, since `transfer` reached
+            # production writing no experiment sidecar precisely because nothing ran it.
+            #
+            # A marker line rather than a value comparison, per doc 00: where a contract cannot
+            # be distinguished by output, the gate must assert the path the run reports. Both
+            # halves are checked because the arm is the PAIR - a run that took `transfer` but
+            # ignored OSPREY_EXPERIMENT_AGG would satisfy a one-line check and cover only half
+            # of what this leg is here to protect.
+            foreach ($marker in $arm.Markers) {
+                if (-not (Select-String -Path $rAlt.Log -Pattern $marker -Quiet)) {
+                    $m10.Issues.Add(("$($arm.Tag): the run log does not report /$marker/, so the " +
+                                     "arm did not engage and every check below would pass on a " +
+                                     "default run"))
+                }
+            }
+            $altBlib = Join-Path $altDir 'output.blib'
+            if (-not (Test-Path $altBlib) -or (Get-Item $altBlib).Length -eq 0) {
+                $m10.Issues.Add("$($arm.Tag): no output.blib written")
+            }
+            # The analysis-wide 2nd-pass experiment sidecar - the artifact whose absence went
+            # unnoticed. Named for the blib stem, one per analysis.
+            $altExp = Join-Path $altDir 'output.2nd-pass.fdr_experiment.bin'
+            if (-not (Test-Path $altExp)) {
+                $m10.Issues.Add(("$($arm.Tag): no output.2nd-pass.fdr_experiment.bin - the arm " +
+                                 "completed without writing the experiment-scope sidecar every " +
+                                 "other mode writes"))
+            }
+            # And one per-run 2nd-pass sidecar per input, the per-run half of the same contract.
+            foreach ($mz in $inputs.Mzmls) {
+                $stem = [IO.Path]::GetFileNameWithoutExtension($mz)
+                if (-not (Test-Path (Join-Path $altDir "$stem.2nd-pass.fdr_scores.bin"))) {
+                    $m10.Issues.Add("$($arm.Tag): no 2nd-pass FDR sidecar for $stem")
+                }
+            }
+            if ($m10.Issues.Count -eq 0) {
+                $summaryLines.Add("$name mode10 ($($arm.Tag) arm runs and produces): PASS")
+            } else {
+                $overallFail = $true
+                Write-Problem-Tc ("$name mode10 ($($arm.Tag) arm): FAIL -- " +
+                                  "$($m10.Issues.Count) issue(s)")
+                $summaryLines.Add(("$name mode10 ($($arm.Tag) arm runs and produces): FAIL " +
+                                   "($($m10.Issues.Count) issues)"))
+                foreach ($iss in $m10.Issues) { Write-Host "    $iss" -ForegroundColor Red }
+            }
         }
     }
 
@@ -1927,7 +2355,19 @@ foreach ($name in $selected) {
     Copy-Item $straightBlib $coldBlib -Force
 
     # ---- mode 2: resume vs straight-through self-consistency ----
-    if (-not $SkipResume) {
+    # A dataset that does not run this mode reports NO line for it - deliberately, and not
+    # as a SKIP. Leg parity across datasets is not a goal and the suite is full of
+    # asymmetries that have never been announced at runtime: Astral is never searched
+    # against a library-decoy library at all, it carries no entrapment and so is gated on
+    # a different tier-2 bound, and Stellar omits six ModelDiagnostics legs. A lone SKIP
+    # line for this one would imply it is the only omission, which is the misleading half
+    # of a partial accounting.
+    #
+    # Truncation is still detectable, and better: the per-dataset leg COUNTS are fixed by
+    # configuration (Stellar 15, StellarLibDecoy 21, StellarGenDecoyEntrap 21, Astral 19)
+    # and are documented with the full asymmetry list in ai/docs/osprey-development-guide.md.
+    # A short count is what distinguishes an aborted run, not the presence of a SKIP line.
+    if (-not $SkipResume -and -not ($cfg.SkipModes -contains 2)) {
         Write-Progress-Tc "${name}: resume self-consistency (mode 2)"
         Invoke-ResumeInvalidation -WorkDir $straightDir
         # No OSPREY_ALLOW_UNFIXED_RESIDENT opt-in, and this leg is the reason the variable is
@@ -2095,8 +2535,24 @@ foreach ($name in $selected) {
         # ... and the FirstPassFDR cache hit above is NOT evidence the rehydrate arm
         # ran: a skipped task whose state nobody demands never enters Rehydrate at
         # all. This marker is the only thing that says it did.
+        # EITHER rehydrate shape proves the leg is not vacuous, and which one runs depends on
+        # whether the analysis-wide retained base_id summary is on disk. With it, FirstPassFDR
+        # publishes the survivor loader and builds no experiment-wide bundle at all, so the
+        # streaming-bundle line never appears - correctly. Accepting either is NOT loosening the
+        # assertion: the leg still fails if NEITHER appears, which is the vacuous case it exists
+        # to catch. Asserting only the old marker would have made this leg red for taking the
+        # better path.
         $m5marker = Test-LogMarker -LogPath $rRehydrate.Log -Marker $firstPassFdrRehydrateMarker `
             -Description 'FirstPassFDR streaming the post-Stage-5 bundle from its own sidecars'
+        if (-not $m5marker.Pass) {
+            $m5perRun = Test-LogMarker -LogPath $rRehydrate.Log -Marker $firstPassFdrPerRunMarker `
+                -Description 'FirstPassFDR publishing the survivor loader for a per-run rescore'
+            if ($m5perRun.Pass) {
+                $m5marker = $m5perRun
+            } else {
+                foreach ($issue in $m5perRun.Issues) { $m5marker.Issues.Add($issue) }
+            }
+        }
         foreach ($issue in $m5marker.Issues) { $m5cache.Issues.Add($issue) }
         # Repair Pass after mutating Issues. Test-TaskCacheHits computed it at return
         # time, so appending above leaves Pass $true with a non-empty Issues list. Every
@@ -2129,11 +2585,13 @@ foreach ($name in $selected) {
         # straight-through report against is what makes the two reports equivalent
         # rather than merely both present.
         #
-        # -NoTrainedModel because this run adopted its q-values instead of training
-        # Percolator, so featureCount is pinned at 0 rather than compared (see
-        # Compare-DiagnosticsGolden). That is pre-existing resume behavior, not a
-        # property of the streamed report: FirstPassFDR's rehydrate has always passed a
-        # null FeatureContributions, on the resident batch write too. Every metric
+        # NO -NoTrainedModel any more. That switch pinned featureCount at 0 because a
+        # rehydrate passed a null FeatureContributions and so reported no model - true while
+        # the pass-1 data sidecar was DELETED once consumed and the report had to be rebuilt
+        # from a modelless rehydrate. The pass-1 product is now retained, and it carries the
+        # model the training run put in it, so a resumed report is a full-fidelity render of
+        # the straight-through one and is held to the golden EXACTLY. Strictly stronger than
+        # the pin it replaces: featureCount is compared, not asserted to be zero. Every metric
         # the resume CAN reproduce - pool composition, the null-alignment density
         # ratio, the paired decoy-win fraction, and pass-1/pass-2 FDP at the reported
         # q - is still compared at $Tolerance, and those are exactly the reductions
@@ -2151,7 +2609,7 @@ foreach ($name in $selected) {
             try {
                 if (Test-Path -LiteralPath $diagHtml) {
                     $m5d = Compare-DiagnosticsGolden -HtmlPath $diagHtml -GoldenDir $goldenDir `
-                        -Tolerance $Tolerance -NoTrainedModel
+                        -Tolerance $Tolerance
                 } else {
                     $m5d = [pscustomobject]@{ Pass = $false; Issues = [System.Collections.Generic.List[string]]@(
                         "diagnostics: the rehydrate wrote no model-diagnostics report at $diagHtml") }
@@ -2210,7 +2668,12 @@ foreach ($name in $selected) {
         Scopes = @($releaseScopeRescore, $releaseScopeReported)
         Freed  = @($releaseScopeRescore)
     })
-    if (-not $SkipResume) {
+    # Gated on the SAME condition that decides whether mode 2 runs, not on whether
+    # resume.log happens to exist. This leg asserts the release fired on every leg that
+    # HOLDS the library, so a leg that never ran makes no claim to check - but "the log
+    # is missing" is also what a leg that ran and died looks like, and those must not be
+    # confused. The skip list is explicit; file presence is a guess.
+    if (-not $SkipResume -and -not ($cfg.SkipModes -contains 2)) {
         # The resume leg exercises FirstPassFdrTask.RUN, not its rehydrate arm: mode 2's
         # Invoke-ResumeInvalidation deletes the FirstPassFDR stamp, and mode 2 asserts
         # -ExpectRan @('FirstPassFDR', ...) on this very log to prove it. Worth checking
@@ -2296,7 +2759,10 @@ foreach ($name in $selected) {
             "every assertion above is reading nothing") -f $releaseLinePattern))
     }
     if ($m6Issues.Count -eq 0) {
-        $summaryLines.Add("$name mode6 (library-fragment release engaged): PASS")
+        # Report the leg COUNT. This leg's strength is how many library-holding legs it
+        # covers, and that set shrinks silently when a dataset skips one of them - a
+        # green "PASS" over three legs looks identical to a green one over five.
+        $summaryLines.Add("$name mode6 (library-fragment release engaged): PASS ($($releaseChecks.Count) leg(s))")
     } else {
         $overallFail = $true
         Write-Problem-Tc "$name mode6 (library-fragment release engaged): FAIL - $($m6Issues.Count) issue(s)"
@@ -2321,8 +2787,8 @@ foreach ($name in $selected) {
     # leg that reads that directory has already run. Costs ~14 s per dataset against a
     # ~5 min straight-through leg, because it rehydrates Stages 1-5 and re-runs Stage 7 only.
     #
-    # -NoTrainedModel for mode 5's reason: a regeneration adopts q-values from the sidecars
-    # instead of training Percolator, so featureCount is pinned at 0 rather than compared.
+    # No -NoTrainedModel, for mode 5's reason: the retained pass-1 product carries the trained
+    # model, so a regeneration renders it too and is compared to the golden exactly.
     if ($cfg.ModelDiagnostics) {
         Write-Progress-Tc "${name}: diagnostics regeneration acceptance (mode 7)"
         $m7Issues = [System.Collections.Generic.List[string]]::new()
@@ -2349,7 +2815,7 @@ foreach ($name in $selected) {
         $m7d = $null
         try {
             $m7d = Compare-DiagnosticsGolden -HtmlPath $diagHtml -GoldenDir $goldenDir `
-                -Tolerance $Tolerance -NoTrainedModel
+                -Tolerance $Tolerance
         } catch {
             $m7Issues.Add(("the regenerated report at {0} could not be read: {1}" -f
                 $diagHtml, $_.Exception.Message))
@@ -2365,6 +2831,367 @@ foreach ($name in $selected) {
             Write-Problem-Tc "$name mode7 (diagnostics regeneration): FAIL - $($m7Issues.Count) issue(s)"
             $m7Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
             $summaryLines.Add("$name mode7 (diagnostics regeneration): FAIL ($($m7Issues.Count) issues)")
+        }
+    }
+
+    # ---- mode 11: the PAY-LATER report is FOLDED, and it is the SAME report (P16) ----
+    # The scenario principle P16 names, and the one no other leg presents: an analysis that
+    # finished WITHOUT --model-diagnostics, asked for the report afterwards. Mode 7 re-enters
+    # a run whose products are already on disk, so it only ever exercises the RE-RENDER; every
+    # other leg passes the flag up front. That is exactly the gap the developer pointed at -
+    # "the small-dataset gates always run the flag up front" - and it is why a pass-2 fold
+    # could be missing entirely while every gate stayed green.
+    #
+    # Simulated by DELETING the products from a completed run rather than by running the
+    # cohort twice. The state a pay-later user is in is "every analysis artifact current, no
+    # diagnostics product", and deleting the products produces exactly that state for a
+    # fraction of the wall clock - while also handing the leg its own oracle, since the
+    # products just deleted are what the flag-up-front run produced.
+    #
+    # BOTH halves of the P16 test, because neither alone is sufficient:
+    #
+    #   NO ANALYSIS RAN. A re-analysis produces the RIGHT report, silently and slowly, so the
+    #   artifact cannot distinguish the two - only the log can. Asserted positively (each
+    #   pass logs the marker naming its fold) AND negatively (the markers a genuine join
+    #   emits must be absent). At 3 files the difference is seconds and no timing check
+    #   could see it; at 446 it is minutes against 4h46m + 69 min.
+    #
+    #   THE REPORT IS COMPLETE. Byte-compared against the products the same analysis produced
+    #   with the flag passed up front. "It produced a report" is not the test; "it produced
+    #   the SAME report" is - a view held privately by some phase goes missing on this path
+    #   and on no other, which is how the CAL view's loss was found.
+    #
+    # Runs after mode 7 (which rewrites the report) and BEFORE mode 8, which invalidates the
+    # blib: this leg needs a cohort whose every analysis artifact is still current, because
+    # that currency is the whole precondition for the folds it is asserting.
+    if ($cfg.ModelDiagnostics) {
+        Write-Progress-Tc "${name}: pay-later diagnostics fold (mode 11)"
+        $m11Issues = [System.Collections.Generic.List[string]]::new()
+        $m11Pass1 = Join-Path $straightDir 'output.1st-pass.model-diagnostics.json'
+        $m11Pass2 = Join-Path $straightDir 'output.2nd-pass.model-diagnostics.json'
+        # The products as the flag-up-front run wrote them. Kept OUTSIDE the run directory so
+        # the fingerprint below does not see them as artifacts the fold created.
+        $m11Ref = Join-Path (Join-Path $runRoot $name) 'mode11-reference'
+        New-Item -ItemType Directory -Path $m11Ref -Force | Out-Null
+        $m11Missing = @($m11Pass1, $m11Pass2 | Where-Object { -not (Test-Path $_) })
+        if ($m11Missing.Count -gt 0) {
+            # Not a silent skip: this dataset carries --model-diagnostics, so both products
+            # are supposed to exist by now, and their absence means an EARLIER leg failed to
+            # produce one. Skipping quietly would report a green gate for the missing half.
+            $m11Issues.Add(("expected both diagnostics products from the straight-through run, " +
+                "but {0} is/are absent - an earlier leg did not produce it" -f
+                ($m11Missing -join ', ')))
+        } else {
+            foreach ($p in @($m11Pass1, $m11Pass2)) { Copy-Item $p $m11Ref -Force }
+
+            # Delete the products AND their validity stamps. The stamp is what a later run
+            # reads to decide the product is current, so leaving it behind would describe a
+            # state no interruption can produce.
+            $m11Deleted = @()
+            foreach ($p in @($m11Pass1, $m11Pass2)) {
+                foreach ($f in @(Get-ChildItem ($p + '*') -ErrorAction SilentlyContinue)) {
+                    $m11Deleted += $f.Name
+                    Remove-Item $f.FullName -Force
+                }
+            }
+            Write-Host ("  deleted {0} diagnostics product file(s), leaving every analysis artifact current" -f
+                $m11Deleted.Count)
+
+            $m11Before = Get-DirFingerprint -Dir $straightDir
+            $r11 = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                -Resolution $cfg.Resolution -WorkDir $straightDir -LogName 'paylater.log' `
+                -Spec $cfg -Manifest $inputs.Manifest -TaskName 'ModelDiagnostics' `
+                -AllowNonZeroExit
+            Write-Host ("  pay-later fold wall {0:N1}s" -f $r11.Wall.TotalSeconds)
+            if ($r11.ExitCode -ne 0) {
+                $m11Issues.Add(("--task ModelDiagnostics exited {0}; a completed analysis missing " +
+                    "only its diagnostics products must be able to produce them" -f $r11.ExitCode))
+            }
+
+            # ORACLE 1a: each pass says it FOLDED. Substrings, not whole lines, so the
+            # surrounding prose can change without breaking the gate; what they pin is that
+            # the fold arm was entered rather than the join.
+            $m11Markers = @(
+                @{ What = 'pass-1 fold'; Pattern = 'folding the report from the completed first pass' }
+                @{ What = 'pass-2 fold'; Pattern = 'folding the pass-2 report from the completed second pass' })
+            foreach ($mk in $m11Markers) {
+                $hit = @(Select-String -Path $r11.Log -Pattern $mk.Pattern -SimpleMatch `
+                    -ErrorAction SilentlyContinue)
+                if ($hit.Count -eq 0) {
+                    $m11Issues.Add(("no {0} marker in the log ('{1}') - the report was produced " +
+                        "by re-running the analysis, which yields the RIGHT artifact and is the " +
+                        "failure this leg exists to catch" -f $mk.What, $mk.Pattern))
+                }
+            }
+
+            # ORACLE 1b: and the join did NOT run. The positive marker alone is not enough -
+            # one pass could fold while the other re-computes, and the artifact would still be
+            # correct. These are lines only genuine analysis emits.
+            $m11Forbidden = @(
+                @{ What = 'a second-pass FDR compute'; Pattern = '[STAGE-WALL] second-pass-fdr' }
+                @{ What = 'protein-level FDR';         Pattern = 'Running protein-level FDR' }
+                @{ What = 'a per-file rescore';        Pattern = 'Re-scoring file ' })
+            foreach ($fb in $m11Forbidden) {
+                $hit = @(Select-String -Path $r11.Log -Pattern $fb.Pattern -SimpleMatch `
+                    -ErrorAction SilentlyContinue)
+                if ($hit.Count -gt 0) {
+                    $m11Issues.Add(("{0} ran during the pay-later report ('{1}') - asking for the " +
+                        "report re-ran the analysis, which is what P16 forbids" -f $fb.What, $fb.Pattern))
+                }
+            }
+
+            # ORACLE 2: the products came back, byte for byte. This is the completeness half -
+            # a card some phase holds privately is present in the flag-up-front product and
+            # absent here, and nothing else in this leg would notice.
+            # The pass-1 views that CANNOT survive the pay-later path today, excluded by name
+            # rather than by loosening the comparison. Each is captured in memory during a
+            # phase this path does not re-run and is never read back from disk:
+            #
+            #   cal              PerFileScoringTask captures it at Stage 3 and publishes it from
+            #                    memory; nothing reads the per-file .calibration.json back, and
+            #                    the shaped row is not in that file yet (a format change).
+            #   model            the feature table needs the TRAINED model's contributions; the
+            #                    fold logs "first-pass model not retrained on this run".
+            #   featureHistEdges the per-feature histograms are built from feature vectors as
+            #                    the model trains, so they go with it.
+            #
+            # This is a KNOWN GAP, not an accepted difference: it is exactly the class P16's
+            # completeness half exists to expose - a diagnostic held privately by a phase, lost
+            # to the path whose premise is that the phase does not re-run - and it is written up
+            # as owed work. It is named here so the leg stays green on everything that IS
+            # achievable and reds the moment ANY OTHER part of pass 1 diverges, and so the
+            # summary line states the exclusion on every run rather than hiding it.
+            # TWO sets, separated because they are not the same claim.
+            #
+            # VOLATILE is a field that cannot match between any two runs and says nothing about
+            # completeness: generatedUtc is when the page was written. Folding it in with the
+            # gap below would misreport a clock reading as a lost diagnostic.
+            #
+            # UNAVAILABLE is the real gap, and all of it has ONE cause: the pass-1 model is not
+            # retrained on a resumed run, so everything derived from the trained model's feature
+            # contributions goes with it (the feature table, the per-feature histogram edges,
+            # the feature count, and the composite scalar) - plus the CAL view, which
+            # PerFileScoringTask captures in memory at Stage 3 and nothing ever reads back off
+            # the per-file .calibration.json.
+            $m11Pass1Volatile = @('generatedUtc')
+            $m11Pass1Unavailable = @('cal', 'model', 'featureHistEdges', 'featureCount',
+                                     'modelComposite')
+            foreach ($p in @($m11Pass1, $m11Pass2)) {
+                $leaf = Split-Path -Leaf $p
+                $ref = Join-Path $m11Ref $leaf
+                if (-not (Test-Path $p)) {
+                    $m11Issues.Add(("the fold did not produce {0}" -f $leaf))
+                    continue
+                }
+                if ($p -eq $m11Pass1) {
+                    # Same transform on both sides, so anything the round-trip normalises
+                    # normalises identically and only a REAL difference survives.
+                    $stripped = foreach ($f in @($ref, $p)) {
+                        $o = Get-Content $f -Raw | ConvertFrom-Json
+                        foreach ($k in ($m11Pass1Unavailable + $m11Pass1Volatile)) {
+                            if ($o.PSObject.Properties.Name -contains $k) {
+                                $o.PSObject.Properties.Remove($k)
+                            }
+                        }
+                        ConvertTo-Json $o -Depth 64 -Compress
+                    }
+                    if ($stripped[0] -ne $stripped[1]) {
+                        # Its PARENT, not $runRoot: the finally block drops $runRoot, which would
+                        # delete the only evidence of the failure it just reported.
+                        $keep = Join-Path (Split-Path $runRoot -Parent) ('mode11-diff-' + $name)
+                        New-Item -ItemType Directory -Path $keep -Force | Out-Null
+                        Copy-Item $ref (Join-Path $keep ($leaf + '.upfront')) -Force
+                        Copy-Item $p (Join-Path $keep ($leaf + '.folded')) -Force
+                        $m11Issues.Add((("{0} differs from the flag-up-front product OUTSIDE the " +
+                            "known-unavailable views ({1}) - this is a NEW completeness loss, not " +
+                            "the recorded one; both copies kept under {2}") -f
+                            $leaf, ($m11Pass1Unavailable -join ', '), $keep))
+                    }
+                    continue
+                }
+                $a = [IO.File]::ReadAllBytes($ref)
+                $b = [IO.File]::ReadAllBytes($p)
+                if ($a.Length -ne $b.Length -or
+                    [Convert]::ToBase64String($a) -ne [Convert]::ToBase64String($b)) {
+                    # Both copies are kept for diagnosis: "differs" is not actionable, and the
+                    # run directory is deleted when the dataset finishes.
+                    # Its PARENT, not $runRoot: the finally block drops $runRoot, which would
+                        # delete the only evidence of the failure it just reported.
+                        $keep = Join-Path (Split-Path $runRoot -Parent) ('mode11-diff-' + $name)
+                    New-Item -ItemType Directory -Path $keep -Force | Out-Null
+                    Copy-Item $ref (Join-Path $keep ($leaf + '.upfront')) -Force
+                    Copy-Item $p (Join-Path $keep ($leaf + '.folded')) -Force
+                    $m11Issues.Add((("{0} differs from the product the flag-up-front run wrote " +
+                        "({1} vs {2} bytes) - the folded report is not the SAME report; both " +
+                        "copies kept under {3}") -f $leaf, $a.Length, $b.Length, $keep))
+                }
+            }
+
+            # ORACLE 3: nothing but the report and its products moved. The pay-later path runs
+            # over a FINISHED analysis, so an artifact rewrite here corrupts the very run it
+            # was asked to describe - and would do it on the user's completed data.
+            $m11Allowed = @('output.1st-pass.model-diagnostics.json',
+                            'output.2nd-pass.model-diagnostics.json',
+                            'output.model-diagnostics.html')
+            # .osprey.task stamps are excluded, and that is not a loophole. A task that RUNS
+            # restamps every declared output it finds (AnalysisPipeline.WriteTaskSidecars),
+            # so the pass-1 fold necessarily re-stamps the first pass's per-file sidecars -
+            # that is the resume model recording that the task completed under this key, not
+            # the fold rewriting the analysis. The fingerprint keys on mtime, so an identical
+            # rewrite still shows. What must not move is the DATA, which is what remains
+            # asserted here; the stamps' correctness is mode 2's and mode 4's business.
+            $m11Changed = @(Compare-DirFingerprint -Before $m11Before -Dir $straightDir |
+                Where-Object { $_ -notmatch '\.log$' -and $_ -notmatch '\.osprey\.task$' })
+            foreach ($c in $m11Changed) {
+                $leaf = ($c -replace '^[a-z]+: ', '')
+                # The products' own validity stamps travel with them.
+                $leaf = ($leaf -replace '\.(FirstPassFDR|SecondPassFDR)\.osprey\.task$', '')
+                if ($m11Allowed -notcontains $leaf) {
+                    $m11Issues.Add(("the pay-later fold touched an artifact other than the " +
+                        "report: {0}" -f $c))
+                }
+            }
+        }
+        Remove-Item $m11Ref -Recurse -Force -ErrorAction SilentlyContinue
+
+        if ($m11Issues.Count -eq 0) {
+            $summaryLines.Add(("$name mode11 (pay-later diagnostics: folded, no analysis, same " +
+                "report): PASS (pass-2 byte-exact; pass-1 exact except the views no pay-later " +
+                "path can rebuild today: {0})") -f ($m11Pass1Unavailable -join ', '))
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode11 (pay-later diagnostics): FAIL - $($m11Issues.Count) issue(s)"
+            $m11Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode11 (pay-later diagnostics): FAIL ($($m11Issues.Count) issues)")
+        }
+    }
+
+    # ---- mode 8: a PARTIALLY completed rescore resumes and FINISHES ----------------
+    # The state no other leg produces, which is why a real defect shipped. Mode 2 resumes from a
+    # COMPLETE Stage-5 directory and mode 4 re-runs with EVERYTHING cached, so neither ever
+    # presents a per-file set that is part done - and part done is what every interruption
+    # leaves behind. PerFileRescoreTask read "ANY file has a current 2nd-pass sidecar" as "the
+    # rescore is finished": a 446-run cohort killed at 141 came back, skipped Stage 5 correctly,
+    # rescored NOTHING, and left 305 runs to carry 1st-pass q-values into the picked-protein FDR
+    # and the blib - then rebuilt the whole survivor pool toward ~86 GB (2026-09-03).
+    #
+    # Runs LAST, after mode 7, because it invalidates and rewrites the blib in the
+    # straight-through directory; every leg that reads that directory has already run.
+    # Runs on the mdiag datasets too. It was skipped on them while a partial resume under
+    # --model-diagnostics had no plan source - no per-run hydrate, no worker bundle - so the
+    # rescore could only refuse. Retiring the --model-diagnostics exclusion from
+    # ScoringTaskShared.CanHydratePerRun supplied that plan source, which is what
+    # PerFileRescoreTask's perRunPlanAvailable reads, so the leg now asserts the capability
+    # instead of the gap. The skip was written to need no edit but its own deletion.
+    if (-not $SkipResume) {
+        Write-Progress-Tc "${name}: partial rescore resume (mode 8)"
+        # Captured BEFORE the invalidation: the resume overwrites the blib in place. Mode 1 has
+        # already proved this blib matches the committed golden, so comparing against it is
+        # comparing against the golden one hop removed - and it stays correct if the golden is
+        # ever refreshed.
+        $m8Expected = Join-Path $straightDir 'output.blib.premode8'
+        Copy-Item (Join-Path $straightDir 'output.blib') $m8Expected -Force
+        $m8Cut = Invoke-PartialRescoreInvalidation -WorkDir $straightDir
+        Write-Host ("  invalidated the rescore for {0} of {1} run(s)" -f $m8Cut.Cut, $m8Cut.Runs)
+
+        $m8Inputs = @($inputs.Mzmls | ForEach-Object { Join-Path $straightDir (Split-Path $_ -Leaf) })
+        $rPartial = Invoke-OspreyRun -Mzmls $m8Inputs -Library $inputs.Library -Resolution $cfg.Resolution `
+            -WorkDir $straightDir -LogName 'partial-resume.log' -Spec $cfg -Manifest $inputs.Manifest `
+            -AllowNonZeroExit
+        $m8Issues = [System.Collections.Generic.List[string]]::new()
+        # COUNT. The assertion the defect failed outright: the broken build left the count at the
+        # untouched runs and still reported success.
+        $m8Recon = @(Get-ChildItem $straightDir -Filter '*.scores-reconciled.parquet' -File |
+                     Where-Object { $_.Name -notlike '*.osprey.task' }).Count
+        if ($m8Recon -ne $m8Cut.Runs) {
+            $m8Issues.Add("only $m8Recon of $($m8Cut.Runs) reconciled parquet(s) after the resume; the rescore did not finish the cohort")
+        }
+
+        # VISIBILITY. How much was reused has to be STATED, not inferred from what the run does
+        # next; a resume nobody can audit is one nobody can trust after an interruption.
+        $m8Marker = Test-LogMarker -LogPath $rPartial.Log `
+            -Marker 'Rescore resume:' `
+            -Description 'the rescore reporting how many runs it adopted and how many it re-scored'
+        foreach ($issue in $m8Marker.Issues) { $m8Issues.Add($issue) }
+
+        # VALUE. Finishing is not finishing CORRECTLY. An interrupted run that completes to a
+        # different answer than an uninterrupted one is the failure that actually matters for the
+        # resume promise, and the COUNT check above cannot see it.
+        $m8 = Compare-BlibFull -BlibExpected $m8Expected `
+            -BlibActual (Join-Path $straightDir 'output.blib') -Tolerance $Tolerance
+        foreach ($issue in $m8.Issues) { $m8Issues.Add($issue) }
+        Remove-Item $m8Expected -Force -ErrorAction SilentlyContinue
+
+        if ($m8Issues.Count -eq 0) {
+            $summaryLines.Add("$name mode8 (partial rescore resume): PASS ($($m8Cut.Cut) of $($m8Cut.Runs) run(s) re-scored)")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode8 (partial rescore resume): FAIL - $($m8Issues.Count) issue(s)"
+            $m8Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode8 (partial rescore resume): FAIL ($($m8Issues.Count) issues)")
+        }
+    }
+
+    # ---- mode 9: a CRASH-shaped half-done file is re-scored, not skipped -----------
+    # The state mode 8 structurally cannot present. The rescore writes a run's reconciled
+    # parquet, stamps it, and only then writes the 2nd-pass sidecar; a process that dies
+    # between those two leaves a file the cohort count calls outstanding and the per-file
+    # skip calls complete. Mode 8 amputates BOTH products, so its two checks agree and the
+    # split never appears.
+    #
+    # It is not hypothetical: a native AccessViolation killed a 446-file run mid-stamp on
+    # 2026-09-04, and the resume then logged 448 "skipping (outputs valid)" lines and ZERO
+    # rescores - in a run whose own header said one file still needed re-scoring. The blib
+    # came out silently missing that run.
+    #
+    # Runs after mode 8 and rebuilds from the same directory, so it inherits a cohort mode 8
+    # has already restored to whole.
+    # Runs on the mdiag datasets too, for the reason mode 8 does: the per-run hydrate is the
+    # plan source a half-done run needs to be re-scored, and --model-diagnostics is no longer
+    # excluded from it. This leg's property - a half-done file is RE-SCORED rather than
+    # skipped - is now assertable on every dataset.
+    if (-not $SkipResume) {
+        Write-Progress-Tc "${name}: crash-shaped half-done resume (mode 9)"
+        $m9Expected = Join-Path $straightDir 'output.blib.premode9'
+        Copy-Item (Join-Path $straightDir 'output.blib') $m9Expected -Force
+        $m9Cut = Invoke-PartialRescoreInvalidation -WorkDir $straightDir -Pass2SidecarOnly
+        Write-Host ("  cut the 2nd-pass sidecar for {0} of {1} run(s), leaving their reconciled parquets stamped" -f
+            $m9Cut.Cut, $m9Cut.Runs)
+
+        $m9Inputs = @($inputs.Mzmls | ForEach-Object { Join-Path $straightDir (Split-Path $_ -Leaf) })
+        $r9 = Invoke-OspreyRun -Mzmls $m9Inputs -Library $inputs.Library -Resolution $cfg.Resolution `
+            -WorkDir $straightDir -LogName 'crash-shaped-resume.log' -Spec $cfg -Manifest $inputs.Manifest `
+            -AllowNonZeroExit
+        $m9Issues = [System.Collections.Generic.List[string]]::new()
+
+        # THE assertion. A run that skips the cut files re-scores nothing and still exits 0,
+        # which is exactly how this shipped: the count and the skip disagreed and nobody
+        # compared them. Requiring a rescore LINE is what makes the disagreement visible.
+        $m9Rescored = @(Select-String -Path $r9.Log -Pattern 'Re-scoring file ' -SimpleMatch `
+            -ErrorAction SilentlyContinue)
+        if ($m9Rescored.Count -lt $m9Cut.Cut) {
+            $m9Issues.Add((("only {0} file(s) were re-scored after cutting {1} run(s)' 2nd-pass " +
+                "sidecar - the resume treated a half-done file as complete, which is the " +
+                "silent-drop defect this leg exists for") -f $m9Rescored.Count, $m9Cut.Cut))
+        }
+        if ($r9.ExitCode -ne 0) {
+            $m9Issues.Add("the resume exited $($r9.ExitCode); a recoverable half-done file must not fail the run")
+        }
+
+        # VALUE. Finishing is not finishing correctly - the re-scored file has to land the
+        # same answer the uninterrupted run did.
+        $m9Blib = Compare-BlibFull -BlibExpected $m9Expected `
+            -BlibActual (Join-Path $straightDir 'output.blib') -Tolerance $Tolerance
+        foreach ($issue in $m9Blib.Issues) { $m9Issues.Add($issue) }
+        Remove-Item $m9Expected -Force -ErrorAction SilentlyContinue
+
+        if ($m9Issues.Count -eq 0) {
+            $summaryLines.Add("$name mode9 (crash-shaped half-done resume): PASS ($($m9Cut.Cut) of $($m9Cut.Runs) run(s) re-scored)")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode9 (crash-shaped half-done resume): FAIL - $($m9Issues.Count) issue(s)"
+            $m9Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode9 (crash-shaped half-done resume): FAIL ($($m9Issues.Count) issues)")
         }
     }
 
@@ -2422,6 +3249,35 @@ foreach ($d in $watchedDirs) {
 Write-Host ""
 Write-Host "=== Osprey regression summary ===" -ForegroundColor Cyan
 $summaryLines | ForEach-Object { Write-Host "  $_" }
+
+# What each phase actually cost, most expensive first, so the question "is this leg worth
+# its wall time" has a measurement behind it. Printed on red runs too: a leg that got
+# expensive is worth seeing whether or not something failed.
+Write-Host ""
+Write-Host "=== Phase cost (most expensive first) ===" -ForegroundColor Cyan
+if ($phaseMarks.Count -eq 0) {
+    Write-Host "  no phases recorded"
+} else {
+    # The last phase has no following announcement to close it, so the summary closes it.
+    $nowStamp = Get-Date
+    $phaseCosts = @(for ($i = 0; $i -lt $phaseMarks.Count; $i++) {
+        $end = if ($i + 1 -lt $phaseMarks.Count) { $phaseMarks[$i + 1].At } else { $nowStamp }
+        [pscustomobject]@{
+            Msg     = $phaseMarks[$i].Msg
+            Seconds = ($end - $phaseMarks[$i].At).TotalSeconds
+        }
+    })
+    $phaseTotal = ($phaseCosts | Measure-Object -Property Seconds -Sum).Sum
+    foreach ($c in ($phaseCosts | Sort-Object Seconds -Descending)) {
+        $share = if ($phaseTotal -gt 0) { '{0,5:N1}%' -f (100 * $c.Seconds / $phaseTotal) } else { '    -' }
+        Write-Host ("  {0,8:N1}s  {1}  {2}" -f $c.Seconds, $share, $c.Msg)
+    }
+    # Parenthesise the concatenation: -f binds TIGHTER than +, so without the inner parens
+    # it formats only the second literal - which carries no placeholders - and the {0}/{1}
+    # in the first one print verbatim.
+    Write-Host (("  {0,8:N1}s  total across {1} phase(s); excludes the build and data " +
+                 "staging that precede the first phase") -f $phaseTotal, $phaseCosts.Count)
+}
 
 # The gaps this gate KNOWS it still traverses. Printed green-or-red runs alike: these
 # are not failures (the legs above passed), they are the O(files) paths a passing gate

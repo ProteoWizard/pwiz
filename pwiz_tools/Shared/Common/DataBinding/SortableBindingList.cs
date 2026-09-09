@@ -11,8 +11,34 @@ using System.Windows.Forms;
 namespace pwiz.Common.DataBinding
 {
     [Serializable]
-    public class SortableBindingList<T> : BindingList<T>, ITypedList
+    public class SortableBindingList<T> : BindingList<T>, ITypedList, IRaiseItemChangedEvents
     {
+        /// <summary>
+        /// Tells a binding BindingSource not to subscribe to every element individually.
+        ///
+        /// <para><see cref="BindingList{T}"/> answers false here whenever T does not implement
+        /// <see cref="INotifyPropertyChanged"/>, and a BindingSource that gets false calls
+        /// <c>PropertyDescriptor.AddValueChanged(item, handler)</c> for EVERY item in the list.
+        /// Those subscriptions are stored in <c>ReflectPropertyDescriptor._valueChangedHandlers</c>,
+        /// keyed by the item and reached from TypeDescriptor's static provider cache, so nothing
+        /// short of RemoveValueChanged ever releases them - not disposing the grid, not disposing
+        /// the BindingSource, not dropping the list. Every row every dialog ever bound stayed
+        /// reachable for the life of the process.</para>
+        ///
+        /// <para>Measured on IrtRedundantDbFunctionalTest, whose rows are DbIrtPeptide (which has
+        /// no <see cref="INotifyPropertyChanged"/>): 3 DbIrtPeptide, 3 BindingSource and 3
+        /// CurrencyManager retained per run, perfectly linear over 100 iterations.</para>
+        ///
+        /// <para><see cref="pwiz.Common.DataBinding.Internal.BindingListView"/> already answers
+        /// true here for exactly this reason; this is the same answer for the simpler list. The
+        /// contract being asserted is that the LIST raises ListChanged for item edits, which is
+        /// true of the grids that bind this: they edit through the grid, or repopulate wholesale.</para>
+        /// </summary>
+        bool IRaiseItemChangedEvents.RaisesItemChangedEvents
+        {
+            get { return true; }
+        }
+
         private ListSortDirection _dir = ListSortDirection.Ascending;
         private bool _isSorted;
         [NonSerialized] private PropertyDescriptorCollection _shape;

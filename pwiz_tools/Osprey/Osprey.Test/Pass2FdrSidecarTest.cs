@@ -23,11 +23,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
-using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
@@ -38,8 +35,8 @@ namespace pwiz.Osprey.Test
     /// sidecar step extracted from SecondPassFdrTask.Run. Covers the pure
     /// <see cref="Pass2FdrSidecar.MapFeaturesByScoreIndex"/> seam (the
     /// reconciled-feature overlay) that previously rode only the nightly
-    /// regression, plus the increment (A) scan-omitted 2nd-pass projection sort
-    /// equivalence (<see cref="TestScanOmittedProjectionSortMatchesLegacyOrder"/>).
+    /// regression, plus the OSPREY_PASS2_QVALUE=transfer score-to-q table and its
+    /// per-run q assignment.
     /// The reload/percolator/sidecar-IO orchestration itself stays parity-locked
     /// and is characterized by regression.ps1, not here.
     /// </summary>
@@ -94,183 +91,6 @@ namespace pwiz.Osprey.Test
                 new List<FdrEntry> { loneEntry }, new Dictionary<uint, double[]>());
             Assert.AreEqual(0, nMappedEmpty);
             Assert.AreSame(stale, loneEntry.Features);
-        }
-
-        /// <summary>
-        /// Guards the byte-identity invariant behind increment (A): the scan-omitted
-        /// 2nd-pass projection sort key <c>(EntryId, Charge, ParquetIndex)</c> -- where
-        /// <c>ParquetIndex</c> is the RECONCILED-parquet row baked by
-        /// <see cref="Pass2FdrSidecar.BuildReconciledScoreIndexToRow"/> - must produce
-        /// the SAME row order as the legacy/oracle resident sort key
-        /// <c>(EntryId, Charge, ScanNumber, original-ParquetIndex)</c> (the FdrEntry
-        /// overload of <c>PercolatorEngine.RunPercolatorFdr</c>). The two provably
-        /// coincide for distinct scans because the reconciled parquet is written
-        /// <c>(entry_id, charge, scan)</c>-sorted, so its row is scan-monotonic within
-        /// a <c>(entry_id, charge)</c> group. The never-asserted corner -- exercised
-        /// here -- is the scan-tie / gap-fill case: the reconciled re-sort is a STABLE
-        /// <c>OrderBy(EntryId).ThenBy(Charge).ThenBy(ScanNumber)</c> with NO ParquetIndex
-        /// tiebreak, which the streaming transfer reproduces by merging gap-fill rows into
-        /// canonical position (<c>ParquetScoreCache.StreamReconciledScoresParquet</c>). Two clean 8-file
-        /// Carafe runs were byte-identical end-to-end but never asserted this in
-        /// isolation.
-        ///
-        /// The fixture packs all three risk factors into one <c>(EntryId, Charge)</c>
-        /// group: multiple distinct scans, a scan-tie (two rows sharing
-        /// <c>(EntryId, Charge, ScanNumber)</c> with different original ParquetIndex),
-        /// and an appended gap-fill row (the <see cref="uint.MaxValue"/> sentinel). The
-        /// reconciled parquet is produced by the REAL Stage-6 path -- the gap-fill is
-        /// merged into canonical scan position by
-        /// <c>ParquetScoreCache.StreamReconciledScoresParquet</c> and read back through
-        /// <c>BuildReconciledScoreIndexToRow</c> - so the tie/gap-fill placement is
-        /// production's, not a mock. The projection itself is baked by the real
-        /// <see cref="FdrProjectionSet.BuildFromEntries"/> resolver path.
-        /// </summary>
-        [TestMethod]
-        public void TestScanOmittedProjectionSortMatchesLegacyOrder()
-        {
-            const string fileName = @"file1";
-
-            // Survivor buffer (the rows both sorts operate on), in a deliberately
-            // scrambled construction order so neither sort is a no-op. Each row carries
-            // a distinct CoelutionSum marker (10..70) used only as a stable per-row token
-            // to compare the two resulting orders -- BuildFromEntries copies CoelutionSum
-            // straight onto the FdrProjection. Group A = (EntryId 100, Charge 2):
-            // P(scan10), G(gap-fill scan15), Q(scan20), R(scan20 == scan-tie with Q),
-            // S(scan30). Group B = (EntryId 200, Charge 3, decoys): T(scan5), U(scan25).
-            // Original ParquetIndex is (entry,charge,scan)-monotonic across the real rows
-            // (0..5). The gap-fill row carries 6 - the score_index the Stage 6 write assigns
-            // it, one past the source row count - not the uint.MaxValue sentinel it holds
-            // before the write. That is the state the survivor buffer is in afterwards: the
-            // writer numbers gap-fill rows as it emits them and mutates the entries it was
-            // handed, and a buffer rebuilt from the reconciled parquet reads the same value
-            // out of the score_index column.
-            var rowP = MakeSurvivor(100, 2, 10, 0, 10.0, false);
-            var rowQ = MakeSurvivor(100, 2, 20, 1, 20.0, false);
-            var rowR = MakeSurvivor(100, 2, 20, 2, 30.0, false); // scan-tie with Q
-            var rowS = MakeSurvivor(100, 2, 30, 3, 40.0, false);
-            var rowT = MakeSurvivor(200, 3, 5, 4, 50.0, true);
-            var rowU = MakeSurvivor(200, 3, 25, 5, 60.0, true);
-            var rowG = MakeSurvivor(100, 2, 15, 6, 70.0, false); // gap-fill: 6 == source row count
-            var survivors = new List<FdrEntry> { rowS, rowR, rowT, rowG, rowP, rowU, rowQ };
-
-            // Build the reconciled parquet through the REAL Stage-6 streaming path: write
-            // the survivor rows as the original scores parquet, then stream-transfer them
-            // with the gap-fill row, whose scan (15) the merge interleaves between the
-            // scan-10 and scan-20 rows -- exactly where the former load-all + re-sort put it.
-            var reconEntries = new List<FdrEntry>
-            {
-                MakeSurvivor(100, 2, 10, 0, 10.0, false),
-                MakeSurvivor(100, 2, 20, 1, 20.0, false),
-                MakeSurvivor(100, 2, 20, 2, 30.0, false),
-                MakeSurvivor(100, 2, 30, 3, 40.0, false),
-                MakeSurvivor(200, 3, 5, 4, 50.0, true),
-                MakeSurvivor(200, 3, 25, 5, 60.0, true),
-            };
-            var reconGapFill = MakeSurvivor(100, 2, 15, uint.MaxValue, 70.0, false);
-
-            string tmpStem = @"osprey_pass2sort_" + Guid.NewGuid().ToString(@"N");
-            string originalPath = Path.Combine(Path.GetTempPath(), tmpStem + @".scores.parquet");
-            string reconciledPath = Path.Combine(Path.GetTempPath(), tmpStem + @".scores-reconciled.parquet");
-            try
-            {
-                ParquetScoreCache.WriteScoresParquet(originalPath, reconEntries, null, null, fileName);
-                var streamResult = ParquetScoreCache.StreamReconciledScoresParquet(
-                    originalPath, reconciledPath, new Dictionary<uint, FdrEntry>(),
-                    new List<FdrEntry> { reconGapFill }, null, null, fileName, null, null, s => { });
-                Assert.AreEqual(1, streamResult.NAppended, @"gap-fill row must append through the real Stage-6 path");
-
-                // REAL score_index -> reconciled-row map. No last-write-wins caveat any
-                // more: score_index is unique per row, gap-fill included.
-                var reconMap = Pass2FdrSidecar.BuildReconciledScoreIndexToRow(reconciledPath);
-
-                // Legacy/oracle order: sort a fresh copy by the resident FdrEntry key.
-                var legacyList = new List<FdrEntry>(survivors);
-                legacyList.Sort(LegacyResidentComparison);
-                var legacyOrder = legacyList.Select(e => e.CoelutionSum).ToList();
-
-                // Projection order, mirroring Pass2FdrSidecar.ComputePass2Projection:
-                // (1) canonicalize the survivor buffer with the SAME legacy key (the
-                // production pre-sort), (2) build the projection with each row's
-                // ParquetIndex baked to its reconciled row, (3) sort by the scan-omitted
-                // projection key.
-                var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
-                {
-                    new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>(survivors)),
-                };
-                perFileEntries[0].Value.Sort(LegacyResidentComparison); // ComputePass2Projection pre-sort
-
-                var projections = FdrProjectionSet.BuildFromEntries(perFileEntries, _ => reconMap);
-                Assert.AreEqual(1, projections.PerFile.Count);
-                var projRows = projections.PerFile[0].Value;
-                Assert.AreEqual(survivors.Count, projRows.Count);
-
-                // Sanity: confirm the corner is actually exercised. The gap-fill (marker
-                // 70) must have interleaved BY SCAN into the reconciled parquet -- its row
-                // falls between P's scan-10 row and Q's scan-20 row, not appended at the
-                // end -- and the scan-tied pair (markers 20 and 30) must collapse to the
-                // SAME reconciled row so the projection comparer genuinely ties on them.
-                var reconRowByMarker = new Dictionary<double, uint>();
-                foreach (var p in projRows)
-                    reconRowByMarker[p.CoelutionSum] = p.ParquetIndex;
-                Assert.IsTrue(
-                    reconRowByMarker[10.0] < reconRowByMarker[70.0] &&
-                    reconRowByMarker[70.0] < reconRowByMarker[20.0],
-                    @"gap-fill row must interleave by scan in the reconciled parquet");
-                // Scan-tied rows now bake DISTINCT reconciled rows. They used to collapse onto
-                // one, because the map keyed on (entry_id, charge, scan_number) and a tie made
-                // two rows indistinguishable; keyed on score_index they are two rows, which is
-                // what they always were. The projection comparer still ties on them - it omits
-                // scan - so this test's invariant below is unaffected, and it is exercised by a
-                // genuine comparer tie rather than by two entries sharing a baked row.
-                Assert.AreNotEqual(reconRowByMarker[20.0], reconRowByMarker[30.0],
-                    @"scan-tied rows are distinct rows and must bake distinct score indices");
-
-                projRows.Sort(ProjectionComparison);
-                var projectionOrder = projRows.Select(p => p.CoelutionSum).ToList();
-
-                // The guarded invariant: scan-omitted projection order == legacy order.
-                CollectionAssert.AreEqual(legacyOrder, projectionOrder,
-                    @"scan-omitted projection sort diverged from the legacy resident sort; legacy=[" +
-                    string.Join(@",", legacyOrder) + @"] projection=[" +
-                    string.Join(@",", projectionOrder) + @"]");
-            }
-            finally
-            {
-                if (File.Exists(originalPath))
-                    File.Delete(originalPath);
-                if (File.Exists(reconciledPath))
-                    File.Delete(reconciledPath);
-            }
-        }
-
-        private static FdrEntry MakeSurvivor(
-            uint entryId, byte charge, uint scanNumber, uint parquetIndex, double marker, bool isDecoy)
-        {
-            return new FdrEntry
-            {
-                EntryId = entryId,
-                Charge = charge,
-                ScanNumber = scanNumber,
-                ParquetIndex = parquetIndex,
-                CoelutionSum = marker,
-                IsDecoy = isDecoy,
-                ModifiedSequence = @"PEPTIDE" + entryId,
-            };
-        }
-
-        // Verbatim copy of the FdrEntry-overload comparer in
-        // PercolatorEngine.RunPercolatorFdr (the legacy/oracle resident sort). Inlined
-        // because the production comparer is a private lambda inside the SVM run and
-        // cannot be invoked in isolation.
-        private static int LegacyResidentComparison(FdrEntry a, FdrEntry b)
-        {
-            int c = a.EntryId.CompareTo(b.EntryId);
-            if (c != 0) return c;
-            c = a.Charge.CompareTo(b.Charge);
-            if (c != 0) return c;
-            c = a.ScanNumber.CompareTo(b.ScanNumber);
-            if (c != 0) return c;
-            return FdrEntry.CompareParquetIndex(a.ParquetIndex, b.ParquetIndex);
         }
 
         /// <summary>
@@ -433,18 +253,6 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1.0, orphan.ExperimentPrecursorQvalue, 1e-12);
             Assert.AreEqual(1.0, orphan.ExperimentPeptideQvalue, 1e-12);
             Assert.AreEqual(0.0, orphan.ExperimentAggregateScore, 1e-12);
-        }
-
-        // Verbatim copy of the FdrProjectionSet-overload comparer in
-        // PercolatorEngine.RunPercolatorFdr (the scan-omitted projection sort). Same
-        // isolation caveat as LegacyResidentComparison.
-        private static int ProjectionComparison(FdrProjection a, FdrProjection b)
-        {
-            int c = a.EntryId.CompareTo(b.EntryId);
-            if (c != 0) return c;
-            c = a.Charge.CompareTo(b.Charge);
-            if (c != 0) return c;
-            return FdrEntry.CompareParquetIndex(a.ParquetIndex, b.ParquetIndex);
         }
     }
 }

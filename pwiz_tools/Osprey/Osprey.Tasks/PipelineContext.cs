@@ -306,7 +306,67 @@ namespace pwiz.Osprey.Tasks
 #if DEBUG
             AssertMilestoneConsumedBeforeRepublish(info);
 #endif
-            _byproducts.Add(typeof(TInfo), info);
+            // Add, not upsert: publishing twice into one slot is a real defect and
+            // ByproductContextTest pins the throw. The ONLY case that legitimately republishes
+            // is the DropAllButLibrary diagnostic, where a producer re-materializes from disk
+            // and its Rehydrate republishes every slot it owns - so the guard is relaxed there
+            // and nowhere else. Relaxing it globally turned that test red, which is the test
+            // working: an invariant weakened for one experiment must not be weakened for the
+            // default path.
+            if (OspreyEnvironment.DropBetweenTasks)
+                _byproducts[typeof(TInfo)] = info;
+            else
+                _byproducts.Add(typeof(TInfo), info);
+        }
+
+        /// <summary>
+        /// DIAGNOSTIC. Drop every byproduct except the library, and forget which producers have
+        /// materialized, so the next task must reload whatever it needs from disk.
+        ///
+        /// <para>This exists to answer one question: can the in-process pipeline behave the way
+        /// the HPC split does - each task dropping what it held and the next picking up from
+        /// artifacts? <c>regression.ps1</c> gets that behaviour for free by running 8 separate
+        /// processes, each with a fresh context; the single-process path cannot, because the
+        /// context is built on materialize-once-hold-forever. That asymmetry is why
+        /// straight-through holds structures the HPC path never does.</para>
+        ///
+        /// <para>The library is kept because it is the one thing an HPC node also pays for, and
+        /// it is the term that would otherwise dominate any comparison: 8 processes each load it
+        /// (4.19 GB / ~2 min on the CHS library), so a naive process-count comparison measures
+        /// library loads rather than the handoff. Holding it isolates the variable under test.</para>
+        /// </summary>
+        public void DropAllButLibrary()
+        {
+            var keep = new HashSet<Type> { typeof(FullLibrary), typeof(LibraryById), typeof(SequencePool) };
+            var dropped = new List<Type>();
+            foreach (var type in _byproducts.Keys)
+            {
+                if (!keep.Contains(type))
+                    dropped.Add(type);
+            }
+            foreach (var type in dropped)
+                _byproducts.Remove(type);
+            // Forget materialization entirely so a later Get re-drives the producer's Rehydrate.
+            //
+            // FINDING: the first version of this kept the producers of the KEPT slots marked, so
+            // nothing would rebuild the library - and FirstPassFDR then died immediately on
+            // "ScoredEntries has no registered producer". FullLibrary and ScoredEntries are
+            // published by the SAME task (PerFileScoringTask:840-841 and :849), so "keep the
+            // library, drop the rest" is not expressible: marking that task materialized to
+            // protect the library also blocks re-materialization of everything else it owns.
+            //
+            // The library is not a separate concern in the byproduct graph; it is owned by a
+            // scoring task. An HPC node sidesteps this by loading the library itself, in its own
+            // process, with no shared producer to negotiate with.
+            _materialized.Clear();
+#if DEBUG
+            // The republish guard tracks milestones consumed before republish; after a drop
+            // every slot is legitimately republished, so its history no longer applies.
+            _consumedByproducts.Clear();
+#endif
+            LogInfo(string.Format(
+                @"[DROP] Released {0} byproduct(s) at the task boundary; the library stays resident.",
+                dropped.Count));
         }
 
         /// <summary>

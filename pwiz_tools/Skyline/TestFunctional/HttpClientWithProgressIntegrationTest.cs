@@ -22,9 +22,12 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using System;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 
 namespace pwiz.SkylineTestFunctional
@@ -44,6 +47,7 @@ namespace pwiz.SkylineTestFunctional
             TestDnsFailureHandling();
             TestConnectionFailureHandling();
             TestTimeoutHandling();
+            TestRequestTimeoutOnStalledServer();
             TestConnectionLossHandling();
             TestCancellationHandling();
             TestCancellationClickByException();
@@ -114,6 +118,56 @@ namespace pwiz.SkylineTestFunctional
         {
             using var helper = HttpClientTestHelper.SimulateTimeout();
             ValidateDownloadFailure(helper, "http://slow.example.com");
+        }
+
+        /// <summary>
+        /// A server that accepts the connection and then never answers must not block the caller
+        /// forever. The simulation helpers replace the transport, so only a real socket exercises
+        /// the wait for a response, which is the wait that has no timeout of its own.
+        /// </summary>
+        private static void TestRequestTimeoutOnStalledServer()
+        {
+            // This is the one case here that must reach the real transport, so no simulation may be
+            // installed - one left behind would answer before a socket was touched and pass green.
+            Assert.IsNull(HttpClientWithProgress.TestBehavior);
+
+            // A started listener completes the handshake from the kernel backlog, so the connection
+            // is accepted and then answered by nobody without any code accepting it.
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            var responseTimeout = HttpClientWithProgress.ResponseTimeoutMilliseconds;
+            HttpClientWithProgress.ResponseTimeoutMilliseconds = 2000; // No point waiting out the real one
+            try
+            {
+                var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+
+                // Run the request on its own thread and join with a deadline, so a regression is a
+                // failed assertion here rather than a test that never returns.
+                Exception thrown = null;
+                var requestThread = ActionUtil.RunAsync(() =>
+                {
+                    try
+                    {
+                        using var httpClient = new HttpClientWithProgress();
+                        httpClient.DownloadString(new Uri($@"http://127.0.0.1:{port}/stalled"));
+                    }
+                    catch (Exception x)
+                    {
+                        thrown = x;
+                    }
+                });
+
+                Assert.IsTrue(requestThread.Join(TimeSpan.FromSeconds(30)),
+                    "Request to a server that never answers did not return");
+                var networkException = thrown as NetworkRequestException;
+                Assert.IsNotNull(networkException, $"Expected a network failure, got {thrown}");
+                Assert.AreEqual(NetworkFailureType.Timeout, networkException.FailureType);
+            }
+            finally
+            {
+                HttpClientWithProgress.ResponseTimeoutMilliseconds = responseTimeout;
+                listener.Stop();
+            }
         }
 
         private static void TestConnectionLossHandling()
