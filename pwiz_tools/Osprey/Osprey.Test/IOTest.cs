@@ -3027,6 +3027,12 @@ namespace pwiz.Osprey.Test
                     ParquetScoreCache.RowGroupRowCapForTest = null;
                 }
 
+                // Assert the multi-group shape rather than assuming the cap took. If the writer
+                // is ever re-routed off WriteChunkedParquet the 5 rows land in ONE group and
+                // this test still passes 5 == 5 - now exercising exactly the degenerate case
+                // its own premise says cannot detect footer-vs-per-group drift.
+                Assert.AreEqual(3, CountRowGroups(path));
+
                 int scanned = 0;
                 ParquetScoreCache.ReadFdrStubScalars(path,
                     (entryId, charge, isDecoy, coelutionSum, modseq) => scanned++);

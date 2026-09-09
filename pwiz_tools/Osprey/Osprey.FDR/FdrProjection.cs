@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -232,12 +232,26 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public bool IsCountsOnly => _leanRowCounts != null;
 
-        /// <summary>Total projection rows across all files.</summary>
-        public int TotalRows
+        /// <summary>
+        /// Total projection rows across all files.
+        ///
+        /// <para><c>long</c>, and that is the quantity that was actually near the edge. Per-file
+        /// counts are ~3.0 M on the 446-file CHS cohort; their SUM is 1,342,686,095, already 62%
+        /// of <c>int.MaxValue</c>, and <c>PerFileScoringTask</c> records the wrap at ~505 files
+        /// for the 4.2 M-per-file shape - reachable by cohorts in
+        /// <c>ai/docs/osprey-large-datasets.md</c> today (TEIREX is 936 runs).</para>
+        ///
+        /// <para>It mattered because the wrap is SILENT and reads as "nothing to do":
+        /// <c>FirstPassFdrTask</c> gates first-pass protein FDR on <c>TotalRows &gt; 0</c>, so a
+        /// negative total skips it, every row keeps its placeholder
+        /// <c>experiment_protein_qvalue</c> of 1.0, no patch failure is counted, and the run
+        /// exits 0 reporting success.</para>
+        /// </summary>
+        public long TotalRows
         {
             get
             {
-                int n = 0;
+                long n = 0;
                 if (_leanRowCounts != null)
                 {
                     foreach (int c in _leanRowCounts)
@@ -395,28 +409,13 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public sealed class Builder
         {
-            private readonly bool _countsOnly;
             private readonly Dictionary<string, int> _insertionIdByPeptide =
                 new Dictionary<string, int>(StringComparer.Ordinal);
             private readonly List<string> _distinctByInsertion = new List<string>();
             private readonly List<KeyValuePair<string, List<FdrProjection>>> _perFile =
                 new List<KeyValuePair<string, List<FdrProjection>>>();
-            private readonly List<string> _countsOnlyFileNames = new List<string>();
-            private readonly List<int> _countsOnlyCounts = new List<int>();
             private List<FdrProjection> _rows;
-            private int _curFileCount;
             private ushort _fileIdx;
-
-            /// <summary>
-            /// <paramref name="countsOnly"/> builds a <see cref="CountsOnly"/> set -- per-file row
-            /// counts, no resident rows and no interned peptide table -- for the 1st-pass streaming
-            /// score path, which re-reads every row's identity + features from parquet (issue #4355
-            /// struct-shrink S3, Stage B). The default full-row build feeds the resident score path.
-            /// </summary>
-            public Builder(bool countsOnly = false)
-            {
-                _countsOnly = countsOnly;
-            }
 
             /// <summary>
             /// Open a file's row list. Files must be added in the same order FirstPassFDR
@@ -424,12 +423,6 @@ namespace pwiz.Osprey.FDR
             /// </summary>
             public void BeginFile(string fileName, int capacityHint = 0)
             {
-                if (_countsOnly)
-                {
-                    _countsOnlyFileNames.Add(fileName);
-                    _curFileCount = 0;
-                    return;
-                }
                 _rows = capacityHint > 0
                     ? new List<FdrProjection>(capacityHint)
                     : new List<FdrProjection>();
@@ -446,11 +439,6 @@ namespace pwiz.Osprey.FDR
             public void AddRow(uint entryId, byte charge, bool isDecoy, double coelutionSum,
                 string modifiedSequence)
             {
-                if (_countsOnly)
-                {
-                    _curFileCount++;
-                    return;
-                }
                 string modseq = modifiedSequence ?? string.Empty;
                 if (!_insertionIdByPeptide.TryGetValue(modseq, out int insertionId))
                 {
@@ -466,11 +454,6 @@ namespace pwiz.Osprey.FDR
             /// <summary>Close the open file and advance <see cref="FdrProjection.FileIdx"/>.</summary>
             public void EndFile()
             {
-                if (_countsOnly)
-                {
-                    _countsOnlyCounts.Add(_curFileCount);
-                    return;
-                }
                 _rows = null;
                 _fileIdx++;
             }
@@ -478,14 +461,10 @@ namespace pwiz.Osprey.FDR
             /// <summary>
             /// Sort the distinct peptides Ordinal, remap every row's insertion-order
             /// <see cref="FdrProjection.PeptideId"/> to its ordinal rank, and return the set.
-            /// The remap table is one int per distinct peptide (~9 MB at 2.3M peptides). In
-            /// counts-only mode returns a <see cref="CountsOnly"/> set (file names + counts).
+            /// The remap table is one int per distinct peptide (~9 MB at 2.3M peptides).
             /// </summary>
             public FdrProjectionSet Build()
             {
-                if (_countsOnly)
-                    return CountsOnly(_countsOnlyFileNames, _countsOnlyCounts);
-
                 var peptideById = _distinctByInsertion.ToArray();
                 Array.Sort(peptideById, StringComparer.Ordinal); // Array.Sort OK: _distinctByInsertion is de-duplicated (grow-only via _insertionIdByPeptide), no two strings are equal, so the Ordinal comparer never ties -- the same argument BuildFromEntries makes for its List.Sort.
 

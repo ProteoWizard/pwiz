@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
@@ -402,7 +402,13 @@ namespace pwiz.Osprey.Tasks
             GuardResidentPool(ctx.Config, needsResidentPool);
 
             FdrProjectionSet projections = null;
-            int totalScored = 0;
+            // long, matching the two rehydrate paths below and for the same reason: this is a
+            // COHORT total (1,342,686,095 at 446 files) and an int wraps past ~505 files on the
+            // 4.2 M-per-file shape. It reached here as an int while both resume paths were
+            // already long - the fresh-compute path carrying the exposure the resumes were
+            // widened to avoid - and a wrapped negative passes FinalizeAndCheck's
+            // "totalScored == 0" guard untouched.
+            long totalScored = 0;
 
             if (needsResidentPool)
             {
@@ -447,34 +453,32 @@ namespace pwiz.Osprey.Tasks
                 // no 32 B rows -- because the 1st-pass streaming score path re-reads every row's
                 // identity + features from parquet, so the resident FdrProjection[] buffer that
                 // grew O(files) is never allocated.
-                var builder = new FdrProjectionSet.Builder(countsOnly: true);
-                // Per-file progress: streaming 32 B projection rows from each parquet is
-                // the lean path, but reading 82 files still ran minutes silent. Console-only,
-                // never touches the streamed rows, so the projection is byte-identical.
-                using (var streamProgress = new ProgressReporter(
-                    string.Format(@"Streaming projection from {0} file(s)", scoredFileNames.Count),
-                    scoredFileNames.Count))
+                // FOOTER COUNTS, not a scan. A counts-only projection is (file names, row
+                // counts) and nothing else, so streaming every row through a builder whose
+                // AddRow discards all five fields to arrive at those counts was 1.34 billion
+                // rows of work for 446 numbers Parquet already declares in its footer.
+                var leanNames = new List<string>(scoredFileNames.Count);
+                var leanCounts = new List<int>(scoredFileNames.Count);
+                foreach (string fileName in scoredFileNames)
                 {
-                    int streamDone = 0;
-                    foreach (string fileName in scoredFileNames)
-                    {
-                        streamProgress.Report(++streamDone);
-                        string parquetPath = perFileParquetPaths[fileName];
-                        if (!File.Exists(parquetPath))
-                            continue;
-                        builder.BeginFile(fileName);
-                        ParquetScoreCache.ReadFdrStubScalars(parquetPath,
-                            (entryId, charge, isDecoy, coelutionSum, modseq) =>
-                                builder.AddRow(entryId, charge, isDecoy, coelutionSum, modseq));
-                        builder.EndFile();
-                        // Keep the per-file key and ordering so ScoredEntries consumers and
-                        // the file-count guard below still see one entry per scored file;
-                        // the stub lists themselves stay empty on this path.
-                        perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
-                            fileName, new List<FdrEntry>()));
-                    }
+                    string parquetPath = perFileParquetPaths[fileName];
+                    if (!File.Exists(parquetPath))
+                        continue;
+                    leanNames.Add(fileName);
+                    leanCounts.Add(RowCountAsInt(
+                        ParquetScoreCache.ProbeResumeSchemaAndRows(parquetPath).RowCount,
+                        parquetPath));
+                    // Keep the per-file key and ordering so ScoredEntries consumers and
+                    // the file-count guard below still see one entry per scored file;
+                    // the stub lists themselves stay empty on this path.
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
+                        fileName, new List<FdrEntry>()));
                 }
-                projections = builder.Build();
+                // No ProgressReporter here now. It existed because reading 82 files' rows ran
+                // minutes silent; a footer open per file is fast enough that a bar would be
+                // noise. If a cohort ever makes THIS visible, the bar comes back - but measure
+                // first, because a bar over work that should not exist is what hid the scan.
+                projections = FdrProjectionSet.CountsOnly(leanNames, leanCounts);
                 totalScored = projections.TotalRows;
             }
 
@@ -704,11 +708,14 @@ namespace pwiz.Osprey.Tasks
                 // the third reader of that choice and has to key off it too. Placed inside the
                 // InputFiles block because with no input files nothing loads and a guard here would
                 // only produce a false positive.
-                var builder = CanUseLeanProjection(config, hasReconSidecars: false,
-                                                   OspreyEnvironment.UseFdrProjection)
-                    ? new FdrProjectionSet.Builder(countsOnly: true)
-                    : null;
-                GuardResidentPool(config, needsResidentPool: builder == null);
+                // A bool, not a Builder. Once the scan went, the builder that stood here was
+                // allocated only to be null-tested - five empty collections held for the run,
+                // and worse, an invitation: a reader of "if (builder != null)" below assumes
+                // the factory draws on its state and restores a BeginFile/AddRow pair into the
+                // loop, reinstating the 1.34-billion-row scan with no test failing.
+                bool useLeanProjection = CanUseLeanProjection(config, hasReconSidecars: false,
+                    OspreyEnvironment.UseFdrProjection);
+                GuardResidentPool(config, needsResidentPool: !useLeanProjection);
 
                 // Per-file progress so this all-files load is not a silent multi-minute
                 // stall on a large resume (the phase that looked hung on the 82-file run).
@@ -725,9 +732,9 @@ namespace pwiz.Osprey.Tasks
                         // exact complements here; CanUseLeanProjection has a third term, so a
                         // config with needsResidentPool false that still may not go lean
                         // (ExpectReconciledInput) would otherwise take the lean branch with a
-                        // null builder and throw. Keying both off one value is what makes the
+                        // the resident path and throw. Keying both off one value is what makes the
                         // fat/lean choice a single decision rather than two that can disagree.
-                        if (builder == null)
+                        if (!useLeanProjection)
                         {
                             // Fat path: an opt-in output reads every entry's resident
                             // features. Strict load: CanRehydrate already certified these
@@ -744,10 +751,13 @@ namespace pwiz.Osprey.Tasks
                         }
                         else
                         {
-                            // Lean path: calibration + isolation still load (cheap); the
-                            // scores stream straight into the projection, no fat stub or
-                            // feature vector allocated. Byte-identical to the fat path
-                            // (TestFdrProjectionBuilderMatchesBuildFromEntries + mode2).
+                            // Lean path: calibration + isolation still load (cheap); nothing
+                            // streams into a projection here any more and no fat stub or
+                            // feature vector is allocated. This arm's projection is built from
+                            // the footer counts collected below, so the invariant that holds it
+                            // together is TestFooterRowCountMatchesScan - NOT
+                            // TestFdrProjectionBuilderMatchesBuildFromEntries, which covers the
+                            // builder path this arm no longer takes.
                             // Fail-fast corruption guard: the fat path threw on
                             // features.Count != stubs.Count; streaming scalars never loads
                             // features, so restore that check up front via a footer-only
@@ -776,16 +786,33 @@ namespace pwiz.Osprey.Tasks
                             // What survives here is only what a LATER consumer cannot get for
                             // itself: this run's calibration and isolation windows, and its row
                             // count - and the count comes from the footer, not a scan. The
-                            // projection is published as a factory (see the Build below) and
-                            // costs nothing unless something asks for it.
+                            // projection is published as a factory (see the CountsOnly build
+                            // below) and costs nothing unless something asks for it.
+                            //
+                            // A validation goes with that, and it is a deliberate trade: this
+                            // was the last thing to DECODE a scores parquet's column data
+                            // before Stage 6 on the all-sidecars-current shortcut. A parquet
+                            // deleted or made undecodable after this footer read is now first
+                            // noticed in Stage 6, hours later, rather than here.
                             // The row count rides along on the schema probe above - the footer
                             // was already open, so it is free. No second read, and no scan.
                             //
                             // Kept PER FILE, not just summed, because that is the whole of what
                             // the deferred build produces: a counts-only projection is exactly
-                            // (file names, row counts). Declared NumRows is the same number a
-                            // scan would reach - ReadFdrStubScalars reads every row group with
-                            // no filter - so the two cannot disagree.
+                            // (file names, row counts).
+                            //
+                            // Declared NumRows is what a scan reaches for any file this build can
+                            // read, but NOT unconditionally: ReadFdrStubScalars SKIPS a row group
+                            // whose entry_id or is_decoy column comes back null
+                            // (ParquetScoreCache.cs, "if (entryIdCol == null || isDecoyCol ==
+                            // null) continue"), which is all-or-nothing per file because the
+                            // lookup is over the file-level schema. Such a file would scan to 0
+                            // rows while its footer declares N - and the probe above does not
+                            // catch it, because it tests PIN_FEATURE_NAMES[0], not entry_id.
+                            // Before the scan went, both numbers came off the same reader and
+                            // could not diverge; now they can, and the divergence surfaces late,
+                            // as an inconsistent-row-count fault at the END of the Stage 5 score
+                            // pass rather than as the missing column it actually is.
                             deferredScanNames.Add(fileName);
                             deferredScanCounts.Add(RowCountAsInt(probe.RowCount, scoresPath));
                             leanRowCount += probe.RowCount;
@@ -820,7 +847,7 @@ namespace pwiz.Osprey.Tasks
                 //
                 // Kept as a factory rather than built here so a consumer that never asks still
                 // allocates nothing, and so the shape stays the same as RescoredEntries'.
-                if (builder != null)
+                if (useLeanProjection)
                 {
                     var scanNames = deferredScanNames;
                     var scanCounts = deferredScanCounts;
@@ -1350,9 +1377,12 @@ namespace pwiz.Osprey.Tasks
             // only per-file row counts; the 1st-pass streaming score path re-reads identity +
             // features from parquet, so the resident FdrProjection[] buffer is never allocated.
             bool needsResidentPool = NeedsResidentPool(config);
-            var builder = CanUseLeanProjection(config, hasReconSidecars, OspreyEnvironment.UseFdrProjection)
-                ? new FdrProjectionSet.Builder(countsOnly: true)
-                : null;
+            // A bool and two lists, not a Builder: this arm's projection is counts-only, which
+            // IS (file names, row counts). Same reason as the resume arm's useLeanProjection.
+            bool useLeanProjection =
+                CanUseLeanProjection(config, hasReconSidecars, OspreyEnvironment.UseFdrProjection);
+            var joinLeanNames = new List<string>();
+            var joinLeanCounts = new List<int>();
             // The reconciled-bundle hydration (hasReconSidecars) needs the STUBS but not
             // their PIN features, so only a genuine resident pool loads features. See the
             // stubs-only branch below for why that is safe.
@@ -1389,7 +1419,7 @@ namespace pwiz.Osprey.Tasks
             // false, so every term was false and the O(files) load happened SILENTLY. The
             // resident loop runs iff it neither streams nor takes the lean builder, so that
             // is what this asks.
-            if (!streamCompaction && builder == null)
+            if (!streamCompaction && !useLeanProjection)
                 WarnPreCompactionPool(config, hasReconSidecars, ctx);
 
             // The per-run rescore hydrates each run inside its own iteration, so building ANY
@@ -1492,32 +1522,34 @@ namespace pwiz.Osprey.Tasks
                     RescoreHydration.SyntheticInputFromParquet(parquetPath)) ?? string.Empty;
                 ctx.LogInfo(string.Format(@"Loading file {0}/{1}: {2} (from {3})",
                     fileIdx + 1, config.InputScores.Count, fileName, parquetPath));
-                if (builder != null)
+                if (useLeanProjection)
                 {
-                    // Lean: stream 32 B projection rows straight from the parquet; no
-                    // fat FdrEntry stub or 21-float feature vector is ever allocated.
+                    // Lean: no fat FdrEntry stub or 21-float feature vector is ever allocated,
+                    // and no column data is read at all.
                     // Fail-fast corruption guard: the fat branch below throws on
-                    // features.Count != stubs.Count; streaming scalars never loads
-                    // features, so restore that check up front via a footer-only probe
-                    // (no feature memory). A SecondPassFDR node pointed at a foreign/truncated
-                    // parquet missing the feature schema stops here rather than surfacing
-                    // downstream. The scores-group hash check above (ValidateScoresParquetGroup)
-                    // catches a wrong-library parquet; this catches a same-library corrupt one.
-                    if (!ParquetScoreCache.HasPinFeatureColumns(parquetPath))
+                    // features.Count != stubs.Count; this branch never loads features, so
+                    // restore that check up front via a footer-only probe (no feature memory).
+                    // A SecondPassFDR node pointed at a foreign/truncated parquet missing the
+                    // feature schema stops here rather than surfacing downstream. The
+                    // scores-group hash check above (ValidateScoresParquetGroup) catches a
+                    // wrong-library parquet; this catches a same-library corrupt one.
+                    // FOOTER COUNT, and nothing else. This branch produced a counts-only
+                    // projection, so the scan that used to sit here read every row of the file
+                    // to arrive at a number the footer declares - the same 1.34-billion-row
+                    // waste the resume path carried, on the node that can least afford it.
+                    //
+                    // It also read that footer TWICE and used neither count: HasPinFeatureColumns
+                    // above opened the file for the schema, ProbeCwtRowMetadata opened it again
+                    // for NumRows, and the resulting hint was handed to BeginFile - which
+                    // returns before touching capacityHint in counts-only mode, because there is
+                    // no row list to pre-size. ProbeResumeSchemaAndRows answers both in one open.
+                    var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(parquetPath);
+                    if (!probe.HasPinFeatures)
                         throw new InvalidDataException(string.Format(
                             @"--input-scores: parquet {0} is missing the PIN feature columns -- it is not a valid Osprey scores parquet. Delete it and re-run so it is regenerated.",
                             parquetPath));
-                    // Pre-size the per-file projection list to the parquet row count (footer
-                    // NumRows, no column data) so the 32 B rows fill one right-sized backing
-                    // array instead of the List's doubling growth -- byte-neutral, ~5.4 GB less
-                    // resident at 82 files (issue #4355 Part B; the pre-size was measured on the
-                    // memory branch). A 0/missing count just falls back to an un-hinted list.
-                    long rowCountHint = ParquetScoreCache.ProbeCwtRowMetadata(parquetPath).RowCount;
-                    builder.BeginFile(fileName, checked((int)rowCountHint));
-                    ParquetScoreCache.ReadFdrStubScalars(parquetPath,
-                        (entryId, charge, isDecoy, coelutionSum, modseq) =>
-                            builder.AddRow(entryId, charge, isDecoy, coelutionSum, modseq));
-                    builder.EndFile();
+                    joinLeanNames.Add(fileName);
+                    joinLeanCounts.Add(RowCountAsInt(probe.RowCount, parquetPath));
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>()));
                 }
                 else if (loadFeatures)
@@ -1578,7 +1610,7 @@ namespace pwiz.Osprey.Tasks
             }
             if (ctx.Diagnostics?.CalibrationOnly ?? false)
                 OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
-            return builder?.Build();
+            return useLeanProjection ? FdrProjectionSet.CountsOnly(joinLeanNames, joinLeanCounts) : null;
         }
 
         /// <summary>
@@ -2334,12 +2366,14 @@ namespace pwiz.Osprey.Tasks
         /// One file's declared row count as the <c>int</c> a counts-only projection holds, or a
         /// hard failure naming the file.
         ///
-        /// <para>Refuses rather than casting. The COHORT total already outgrew <c>int</c> -
-        /// 1,342,686,095 at 446 files, which is why the running total beside this is a
-        /// <c>long</c> - so the per-file value is the next one to watch, and an unchecked cast
-        /// would wrap a large run's count negative and hand first-pass FDR a nonsense size with
-        /// nothing to catch it. A single run reaching 2.1 billion rows is a real artifact this
-        /// build cannot represent, and saying so beats computing on a wrapped number.</para>
+        /// <para>Refuses rather than casting, but note which quantity is actually close to the
+        /// edge. A single run reaching 2.1 billion rows is remote - 446-file CHS averages
+        /// ~3.0 M per file, so this has ~700x headroom. The COHORT total is the tight one:
+        /// 1,342,686,095 across 446 files is already 62% of <c>int.MaxValue</c>, and the
+        /// comment beside <c>totalScored</c> puts the wrap at ~505 files for the 4.2 M-per-file
+        /// shape. That is why the totals here are <c>long</c>. This guard exists so the
+        /// narrowing that feeds them is stated rather than silent, NOT because it is the
+        /// likely failure.</para>
         /// </summary>
         private static int RowCountAsInt(long rowCount, string scoresPath)
         {
