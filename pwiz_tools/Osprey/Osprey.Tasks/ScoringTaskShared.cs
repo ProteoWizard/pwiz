@@ -287,8 +287,16 @@ namespace pwiz.Osprey.Tasks
                     }
                 }
             }
-            // Unreachable since --input-scores retired - see the remarks. Left in
-            // place rather than deleted mid-review-round.
+            // KEPT, and the "unreachable since --input-scores retired" note that stood here
+            // is not safe to act on. The argument for unreachability is that every task
+            // requires --input and the fileName keys are derived from those same inputs, so
+            // the loop above always matches. But PerFileRescoreTask documents a SUPPORTED
+            // state in which a run's file_name has no input_files stem (WriteUnchangedReconciled
+            // returns silently for it), and that is exactly the case this branch answers -
+            // deleting it would turn a synthesized sidecar path into null for the one shape
+            // that needs it. Establish which of the two is true before removing this; it is a
+            // behaviour change either way, and it belongs with the finding that owns that
+            // state rather than with the flag retirement that made it look dead.
             if (perFileParquetPaths != null
                 && perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
             {

@@ -125,7 +125,13 @@ Every task takes `-i` / `--input-list`, naming the **data files**, and derives e
 - **Order is the caller's.** FirstPassFDR reconciliation is order-sensitive, so a chain must pass a deterministically sorted list. `--input-scores` used to sort a globbed directory Ordinal on the caller's behalf; naming the runs explicitly means an orchestrator states the order rather than inheriting it from a directory listing, and a stray parquet in that directory can no longer change the cohort.
 - `--input-list` takes one path per line (blank lines and `#` comments ignored) and composes with `-i`. It is what a cohort past a few hundred runs needs: 446 `-i` paths measured ~28,600 characters against a 32,767 limit.
 
-**Why the flag went.** It named an input KIND - "you handed me parquets" - which is how the Rust pipeline said *Stage 1-4 is done*. The C# port says that with `--task` plus the per-run validity sidecars, and two seams answering one question is what let `--task ModelDiagnostics` (a C#-era signal, while its inputs were mzML stems, a Rust-era one) join the pipeline and demand state a diagnostics fold never publishes. The clearest evidence it was a round trip: the pipeline's first act was `RescoreHydration.SyntheticInputFromParquet`, rebuilding a synthetic `<stem>.mzML` that does not exist, purely so the sidecar path helpers could work.
+**Why the flag went.** The pipeline is a set of BASENAMES. Every per-run artifact is
+`<stem>.<suffix>` and every per-run map is keyed on the stem, so naming the runs names
+everything they own. `--input-scores` named that same set with a different extension - it was
+redundant by construction, not merely superseded, and the two spellings could disagree about
+which runs the cohort contained.
+
+It also named an input KIND - "you handed me parquets" - which is how the Rust pipeline said *Stage 1-4 is done*. The C# port says that with `--task` plus the per-run validity sidecars, and two seams answering one question is what let `--task ModelDiagnostics` (a C#-era signal, while its inputs were mzML stems, a Rust-era one) join the pipeline and demand state a diagnostics fold never publishes. The clearest evidence it was a round trip: the pipeline's first act was `RescoreHydration.SyntheticInputFromParquet`, rebuilding a synthetic `<stem>.mzML` that does not exist, purely so the sidecar path helpers could work.
 
 ## Parquet footer hash validation
 
