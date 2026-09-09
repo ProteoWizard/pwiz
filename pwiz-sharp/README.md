@@ -1,6 +1,6 @@
 # pwiz-sharp
 
-C# port of the ProteoWizard C++ core, targeting .NET 8.
+C# port of the ProteoWizard C++ core, targeting .NET 10.
 
 ## Status
 
@@ -21,4 +21,4 @@ dotnet build
 dotnet test
 ```
 
-Targets `net8.0` only. No Windows-specific TFMs at this layer.
+Targets `net10.0` only. No Windows-specific TFMs at this layer.
