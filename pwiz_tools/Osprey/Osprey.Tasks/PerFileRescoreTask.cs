@@ -2264,11 +2264,12 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Build the file_name -> input_files index map used to pick the
-        /// right mzML path for the spectra-cache load + sibling
-        /// .calibration.json. For the worker, config.InputFiles was
-        /// synthesized from --input-scores parquet stems by Program.Main;
-        /// for in-process it's the user's -i mzML list. Either way the
-        /// stem matches the file_name keys in perFileEntries.
+        /// right data-file path for the spectra-cache load + sibling
+        /// .calibration.json. One source on every route: the user's -i list.
+        /// A worker's used to be SYNTHESIZED from --input-scores parquet stems by
+        /// Program.Main, which is the round trip that flag forced; both routes now
+        /// name the data files, so the stem matches the file_name keys in
+        /// perFileEntries without a second derivation.
         /// </summary>
         private static Dictionary<string, int> BuildFileNameToIndex(IReadOnlyList<string> inputFiles)
         {

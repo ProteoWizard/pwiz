@@ -253,11 +253,14 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Resolve a path whose stem matches <paramref name="fileName"/>, used
         /// only as the base for sidecar file naming (the path itself need
-        /// not exist). In normal mode this is the input mzML; in
-        /// --task FirstPassFDR mode where InputFiles is empty we synthesize the
-        /// path from the matching .scores.parquet by replacing the
-        /// `.scores.parquet` suffix with `.mzML`. Mirrors the Rust
-        /// `synthetic_input_from_parquet` helper.
+        /// not exist). This is the input data file, on every route.
+        ///
+        /// <para>The parquet-derived fallback below is UNREACHABLE now and is kept
+        /// only because removing it is a behaviour change that belongs in its own
+        /// commit. It existed for <c>--task FirstPassFDR</c>, which took
+        /// <c>--input-scores</c> and so arrived with <c>InputFiles</c> empty; every
+        /// task now requires <c>--input</c>, and the <c>fileName</c> keys are
+        /// derived from those same inputs, so the loop always matches.</para>
         ///
         /// <para>Lives here rather than on <see cref="FirstPassFdrTask"/> because
         /// <see cref="FirstPassSurvivorLoader"/> needs the same resolution to find a
@@ -284,9 +287,8 @@ namespace pwiz.Osprey.Tasks
                     }
                 }
             }
-            // --task FirstPassFDR fallback: derive a synthetic mzML path from the
-            // matching parquet stem so all the existing sidecar path
-            // helpers keep working without conditional branches.
+            // Unreachable since --input-scores retired - see the remarks. Left in
+            // place rather than deleted mid-review-round.
             if (perFileParquetPaths != null
                 && perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
             {
