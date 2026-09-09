@@ -107,7 +107,8 @@ namespace pwiz.Osprey.IO
                     // OmitFragments has it read-and-discard the fragment blocks so
                     // the returned entries stay lean (no ~3.2 GB of peak arrays).
                     var cached = LibraryCache.LoadCache(
-                        cachePath, libraryHash, options.OmitFragments, logInfo, out status);
+                        cachePath, libraryHash, options.OmitFragments, logInfo, out status,
+                        options.RetainFragmentsFor);
                     if (cached != null && cached.Count > 0)
                     {
                         logInfo(string.Format(

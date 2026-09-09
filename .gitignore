@@ -441,6 +441,8 @@ Version.cpp
 # root the old entries were pinned to, so anchoring a path just moves the problem.
 SkylineTester test list.txt
 SkylineTester.log
+# Starting a run rolls the previous log aside to SkylineTester-<timestamp>.log beside it.
+SkylineTester-*.log
 SkylineTester Results
 TestRunner.log
 SearchControlLog.txt

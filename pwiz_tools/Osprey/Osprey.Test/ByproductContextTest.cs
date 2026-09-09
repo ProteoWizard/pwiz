@@ -437,12 +437,151 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1, milestone.Value[0].Value.Count);
         }
 
+        /// <summary>
+        /// <see cref="RescoredEntries.StreamFiles"/> is the per-file source that lets Stage 7
+        /// fold without holding the run: each file is materialized as the consumer reaches it
+        /// and DROPPED when the consumer moves on, so the peak is one file's survivors rather
+        /// than every file's at once.
+        ///
+        /// <para>The last assertion is why this is a test and not a comment. After a stream the
+        /// buffer's lists are EMPTY rather than unbuilt, so a consumer that then read
+        /// <c>Value</c> would receive one empty list per file with no exception and no warning
+        /// - the blib-with-no-precursors failure <see cref="PerFileEntries"/> warns about. It
+        /// has to throw instead, because there is no honest value to return and rebuilding
+        /// silently would restore the very peak the stream exists to avoid.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestStreamFilesDropsEachFileAndRefusesALaterValueRead()
+        {
+            // No per-file source - the resident A/B oracle, where the run kept its buffer and
+            // has nothing to rebuild a dropped file from. StreamFiles falls back to the
+            // whole-run build and drops nothing.
+            var resident = BufferWithFiles(@"file1", @"file2");
+            int residentBuilds = 0;
+            var residentMilestone = new RescoredEntries(resident, () =>
+            {
+                residentBuilds++;
+                foreach (var kv in resident)
+                    kv.Value.Add(new FdrEntry());
+            });
+            var residentWalk = new List<string>();
+            foreach (var kv in residentMilestone.StreamFiles())
+                residentWalk.Add(kv.Key);
+            Assert.AreEqual(1, residentBuilds);
+            CollectionAssert.AreEqual(new[] { @"file1", @"file2" }, residentWalk);
+            Assert.AreEqual(2, ResidentEntryCount(resident), @"The fallback walk must not drop");
+            Assert.AreSame(resident, residentMilestone.Value);
+
+            // With a per-file source: the whole-run build never runs, and exactly ONE file is
+            // resident at any point in the walk - the property the whole change exists for.
+            var streamed = BufferWithFiles(@"file1", @"file2");
+            int wholeRunBuilds = 0;
+            var materialized = new List<string>();
+            var milestone = new RescoredEntries(streamed, () => wholeRunBuilds++,
+                (fileName, entries) =>
+                {
+                    materialized.Add(fileName);
+                    entries.Add(new FdrEntry());
+                });
+            var residentDuringWalk = new List<int>();
+            foreach (var kv in milestone.StreamFiles())
+            {
+                Assert.AreEqual(1, kv.Value.Count, @"The current file must arrive materialized");
+                residentDuringWalk.Add(ResidentEntryCount(streamed));
+            }
+            Assert.AreEqual(0, wholeRunBuilds, @"A streamed walk must not build the whole-run pool");
+            CollectionAssert.AreEqual(new[] { @"file1", @"file2" }, materialized);
+            CollectionAssert.AreEqual(new[] { 1, 1 }, residentDuringWalk);
+            Assert.AreEqual(0, ResidentEntryCount(streamed), @"The last file is dropped too");
+
+            // Re-enumerable, because a fold-then-apply consumer needs two passes: accumulate
+            // O(distinct) floors over every file, then apply them to every file.
+            foreach (var kv in milestone.StreamFiles())
+                Assert.AreEqual(1, kv.Value.Count);
+            CollectionAssert.AreEqual(new[] { @"file1", @"file2", @"file1", @"file2" }, materialized);
+
+            Assert.ThrowsException<InvalidOperationException>(() => milestone.Value);
+        }
+
+        /// <summary>
+        /// The per-file overlays run after the source, in the order they were added, on every
+        /// pass - and a milestone with no per-file source REFUSES one rather than accepting an
+        /// overlay nothing would ever invoke.
+        ///
+        /// <para>Order is the correctness argument in Stage 7, not a detail: the second-pass
+        /// sidecar overlay writes an experiment q and the experiment-q floor then raises it, so
+        /// running them the other way round would apply a floor to a value about to be
+        /// overwritten and report q-values no run computed. Asserted by composing two overlays
+        /// that both append, and reading back the sequence.</para>
+        ///
+        /// <para>The refusal is the half that would otherwise fail silently. A resident run
+        /// stamps its entries in place and keeps them, so an overlay handed to it is simply
+        /// never called - the stage believes it applied something it did not, which is the
+        /// shape of defect this area has produced repeatedly.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestPostMaterializeOverlaysRunInOrderAndOnlyWithAPerFileSource()
+        {
+            var buffer = BufferWithFiles(@"file1", @"file2");
+            var applied = new List<string>();
+            var milestone = new RescoredEntries(buffer, () => { },
+                (fileName, entries) => applied.Add(fileName + @":source"));
+            milestone.AddPostMaterialize((fileName, entries) => applied.Add(fileName + @":first"));
+            milestone.AddPostMaterialize((fileName, entries) => applied.Add(fileName + @":second"));
+
+            foreach (var kv in milestone.StreamFiles())
+                Assert.IsNotNull(kv.Value);
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    @"file1:source", @"file1:first", @"file1:second",
+                    @"file2:source", @"file2:first", @"file2:second",
+                },
+                applied,
+                @"Source then overlays, in the order added, for each file in turn");
+
+            // A second pass re-applies both, because the entries it applied to are gone.
+            applied.Clear();
+            foreach (var kv in milestone.StreamFiles())
+                Assert.IsNotNull(kv.Value);
+            Assert.AreEqual(6, applied.Count, @"Every pass re-applies the whole overlay chain");
+
+            // MaterializeFile - the by-name accessor the streamed competition uses - runs the
+            // same chain, so a consumer driven by the FDR layer's file order is not a second
+            // path with its own overlay semantics.
+            applied.Clear();
+            milestone.MaterializeFile(@"file2");
+            CollectionAssert.AreEqual(
+                new[] { @"file2:source", @"file2:first", @"file2:second" }, applied);
+
+            var resident = new RescoredEntries(BufferWithFiles(@"file1"));
+            Assert.ThrowsException<InvalidOperationException>(
+                () => resident.AddPostMaterialize((fileName, entries) => { }));
+        }
+
         private static List<KeyValuePair<string, List<FdrEntry>>> BufferWithOneFile()
         {
-            return new List<KeyValuePair<string, List<FdrEntry>>>
-            {
-                new KeyValuePair<string, List<FdrEntry>>(@"file1", new List<FdrEntry>())
-            };
+            return BufferWithFiles(@"file1");
+        }
+
+        private static List<KeyValuePair<string, List<FdrEntry>>> BufferWithFiles(
+            params string[] fileNames)
+        {
+            var buffer = new List<KeyValuePair<string, List<FdrEntry>>>();
+            foreach (string fileName in fileNames)
+                buffer.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>()));
+            return buffer;
+        }
+
+        /// <summary>Entries resident across the WHOLE buffer, which is what a streamed walk
+        /// must hold at one file's worth however many files the run has.</summary>
+        private static int ResidentEntryCount(
+            List<KeyValuePair<string, List<FdrEntry>>> buffer)
+        {
+            int count = 0;
+            foreach (var kv in buffer)
+                count += kv.Value.Count;
+            return count;
         }
     }
 }

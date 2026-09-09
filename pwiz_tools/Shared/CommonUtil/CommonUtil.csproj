@@ -51,6 +51,12 @@
       <HintPath>..\Lib\JetBrains.Annotations.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <!-- OAuthPasswordGrantClient (shared with the native UNIFI/waters_connect
+         readers) builds its token request against IdentityModel 7. -->
+    <Reference Include="IdentityModel" Condition="'$(TargetFramework)' == 'net472'">
+      <HintPath>..\Lib\IdentityModel.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json" Condition="'$(TargetFramework)' == 'net472'">
       <HintPath>..\Lib\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -67,6 +73,7 @@
     <!-- net8 replacements via NuGet. Versions pinned to track the legacy
          bundled DLLs so behavior doesn't drift. -->
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
+    <PackageReference Include="IdentityModel" Version="7.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 

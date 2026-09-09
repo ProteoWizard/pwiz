@@ -46,6 +46,60 @@ namespace pwiz.Osprey.Test
             return OspreyCommandArgs.ParseArgs(args);
         }
 
+        /// <summary>
+        /// --input-list exists because the command line is a bounded resource: the 446-run CHS
+        /// invocation is 28,621 of the 32,767 characters CreateProcess accepts, so -i hits a
+        /// hard wall near 512 files. Everything here is one method because the parts are one
+        /// behaviour - a listed path must be indistinguishable from an -i path afterwards.
+        ///
+        /// The two throw cases carry the most weight. A missing or empty list resolving to an
+        /// empty input set would be a fast, successful-looking run that produces an empty blib,
+        /// with the operator's whole cohort named in the file that was not read.
+        /// </summary>
+        [TestMethod]
+        public void TestInputListExpansion()
+        {
+            string listPath = Path.Combine(Path.GetTempPath(),
+                @"osprey-input-list-" + Guid.NewGuid().ToString(@"N") + @".txt");
+            try
+            {
+                File.WriteAllLines(listPath, new[]
+                {
+                    @"# a comment line",
+                    @"a.mzML",
+                    string.Empty,
+                    @"   b.mzML   ",   // surrounding whitespace is trimmed
+                    @"# trailing comment"
+                });
+
+                // Listed paths land in InputFiles exactly as -i would have placed them.
+                CollectionAssert.AreEqual(new[] { @"a.mzML", @"b.mzML" },
+                    Parse(@"--input-list", listPath).InputFiles.ToArray());
+
+                // Composable with -i, and ORDER is preserved: -i first, then the list. Input
+                // order is not decorative - FirstJoin is order-sensitive and file indices
+                // follow this list.
+                CollectionAssert.AreEqual(new[] { @"z.mzML", @"a.mzML", @"b.mzML" },
+                    Parse(@"-i", @"z.mzML", @"--input-list", listPath).InputFiles.ToArray());
+
+                // Composable with itself, the same way repeated -i is.
+                CollectionAssert.AreEqual(new[] { @"a.mzML", @"b.mzML", @"a.mzML", @"b.mzML" },
+                    Parse(@"--input-list", listPath, @"--input-list", listPath).InputFiles.ToArray());
+
+                // A list that names nothing is fatal, not an empty cohort.
+                File.WriteAllLines(listPath, new[] { @"# nothing but a comment", string.Empty });
+                Assert.ThrowsException<InvalidDataException>(() => Parse(@"--input-list", listPath));
+            }
+            finally
+            {
+                File.Delete(listPath);
+            }
+
+            // A missing list is fatal too - the path is the operator's whole input set.
+            Assert.ThrowsException<FileNotFoundException>(
+                () => Parse(@"--input-list", Path.Combine(Path.GetTempPath(), @"osprey-no-such-list.txt")));
+        }
+
         [TestMethod]
         public void TestArgToConfigMapping()
         {

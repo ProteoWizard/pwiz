@@ -350,6 +350,272 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Whether this run's Stage-6 rescore hydrates each run from that run's own artifacts.
+        /// TRUE means the <c>--input-scores</c> load must NOT build the all-runs bundle: the
+        /// rescore loop hydrates per run, and anything the load pre-built would be discarded and
+        /// re-read - which is precisely the 8m42s / 17.2 GB an 86-run plate spent before
+        /// rescoring its first run.
+        ///
+        /// <para><b>ONE predicate, read by both sites.</b> The load
+        /// (<c>PerFileScoringTask.LoadJoinOnlyScores</c>) and the loop
+        /// (<c>PerFileRescoreTask.BuildPerRunHydrate</c>) must agree exactly: if the load skips
+        /// the bundle and the loop then takes the join path, the rescore runs against empty
+        /// per-file lists and silently produces nothing. Two copies of this test would be a
+        /// drift hazard with that as its failure mode, so there is one.</para>
+        ///
+        /// <para>Two terms exclude a task that reaches this code for a different purpose.
+        /// <c>StopAfterStage5</c> is <c>--task FirstPassFDR</c>, which computes rather than
+        /// rescores. <c>ExpectReconciledInput</c> is <c>--task SecondPassFDR</c>, whose Stage 7
+        /// consumes the whole-run pool. Everything else rescores per run - including the
+        /// straight-through pipeline.</para>
+        ///
+        /// <para><b>The <c>--input-scores</c> term is a KNOWN WART, and it is here for a measured
+        /// reason rather than a good one.</b> Keying a memory shape on how the run was invoked is
+        /// wrong in principle - the per-run artifacts exist either way, and straight-through
+        /// consequently still holds the planner's whole-experiment products (the reconciliation
+        /// action map, 30.8 M entries at 446 runs; gap-fill targets, 8.85 M; per-run consensus
+        /// targets and refined calibrations - order 13 GB) across the entire rescore.</para>
+        ///
+        /// <para>Removing the term was TRIED and reverted. Straight-through output stayed
+        /// byte-identical (mode 1 green), but the Stage-5 rehydrate leg lost 77 of 27,321
+        /// precursors a run apiece - <c>RefSpectra.copies</c> and <c>NRunsDetected</c> both
+        /// 3 -> 2, 94 <c>RetentionTimes</c> keys missing. Cause: mode 5 SKIPS PerFileRescoring,
+        /// so <c>PerFileRescoreTask.Rehydrate</c> runs and rebuilds the whole-run pool for
+        /// Stage 7 via <c>OverlayReconciledIntoFiles(..., ctx.Get&lt;PerFileGapFillForRescore&gt;())</c>.
+        /// That path needs gap-fill across ALL runs by design, and a per-run FirstPassFDR
+        /// rehydrate has none to give it.</para>
+        ///
+        /// <para>So extending this to straight-through is NOT independent of Stage 7's own
+        /// O(runs) pool - it is blocked behind the same lean-row work (#4486). The right signal
+        /// remains the SUMMARY'S EXISTENCE rather than an argument, since it is written when
+        /// planning ends and so answers "has the producing phase finished?" the way an artifact
+        /// should; the flag term is what has to go when Stage 7 stops needing the pool.</para>
+        ///
+        /// <para>The summary is probed by header rather than read, so this stays cheap enough to
+        /// call from either site. Its ABSENCE returns false rather than failing here: the run is
+        /// then already failing for a named reason at <see cref="ReadRetainedBaseIds"/>, and
+        /// duplicating that error at a second site would report it twice.</para>
+        /// </summary>
+        internal static bool CanHydratePerRun(OspreyConfig config)
+        {
+            // ADMIT, do not exclude. This listed the tasks to keep OUT and so admitted anything
+            // unlisted - which is how --task ModelDiagnostics ended up routed down the per-run
+            // rescore path and skipped its own regeneration (Astral mode 7: "regeneration
+            // changed nothing at all"). It sets none of NoJoin / StopAfterStage5 /
+            // ExpectReconciledInput, because it is neither a fan-out nor a join; it is a fifth
+            // thing, and an exclusion list cannot know about the fifth thing.
+            //
+            // Naming what is admitted fails CLOSED: a task added later is excluded until someone
+            // decides otherwise, which is the direction a predicate guarding a memory shape
+            // should fail in.
+            if (config.SelectedTask.HasValue && config.SelectedTask != HpcTask.PerFileRescore)
+                return false;
+            if (config.StopAfterStage5 || config.ExpectReconciledInput)
+                return false;
+            // --model-diagnostics is NOT excluded any more, and what changed is where the report
+            // comes from rather than anything about this predicate.
+            //
+            // The exclusion was correct when written: the report was folded from pre-compaction
+            // rows DURING the all-runs hydrate, so a per-run hydrate produced no report at all -
+            // observed on an 86-run plate as exit 0, 86/86 reconciled parquets, `mdiag=True`, and
+            // no HTML. A requested output vanishing while nothing fails is what "never
+            // conditionally write an output artifact" forbids, so the mode was held on the old
+            // path deliberately, trading memory for correctness.
+            //
+            // The report is now FirstPassFDR's DECLARED OUTPUT, produced by its own bounded fold
+            // (FoldDiagnosticsOnly) rather than as a side effect of whichever hydrate happened to
+            // run. A cold analysis folds it in the score pass before this predicate is ever
+            // consulted; a resume missing it enters Run and folds it there. Either way the report
+            // no longer depends on this answer, so the mode stops paying an O(runs) startup for a
+            // coupling that no longer exists.
+            //
+            // The gate check is mode 3's per-run-hydrate leg, which SKIPPED on all three
+            // --model-diagnostics datasets for exactly this reason and must now run and pass.
+            string path = RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
+            return !string.IsNullOrEmpty(path) && RetainedBaseIdSidecar.IsCurrentFormat(path);
+        }
+
+        /// <summary>
+        /// True when the <c>--task SecondPassFDR</c> merge may hand Stage 7 a per-run source
+        /// instead of every run's survivors at once.
+        ///
+        /// <para>This is <see cref="CanHydratePerRun"/>'s answer for the OTHER leg, and the two
+        /// are deliberately separate predicates rather than one with a wider admission. They
+        /// name different consumers: that one asks whether the RESCORE can hydrate a run at a
+        /// time, and excludes <c>ExpectReconciledInput</c> because a Stage 7 node runs no
+        /// rescore; this one asks whether the JOIN can fold a run at a time, and admits only
+        /// that leg. Widening the first would have told the rescore it may stream on a leg where
+        /// it does not run at all.</para>
+        ///
+        /// <para>Three requirements, and the third is the one that is easy to miss. The leg has
+        /// to be the reconciled-input merge, whose parquets already hold the survivor subset.
+        /// No consumer may read PIN features off these stubs
+        /// (<c>PerFileScoringTask.NeedsResidentPool</c>: <c>--fdrbench-pass 1</c>, a
+        /// non-Percolator FDR method, <c>OSPREY_FDR_PROJECTION=0</c>) - a streamed pool drops
+        /// the entries those consumers index. And the analysis-wide retained base_id summary has
+        /// to be on disk, because it IS the compaction predicate every refill applies; without
+        /// it a refilled run would carry the pre-compaction pool and the fold would run over a
+        /// set ~52x too large. Its absence returns false here rather than failing, for the
+        /// reason its sibling gives.</para>
+        /// </summary>
+        internal static bool CanStreamStage7Join(OspreyConfig config)
+        {
+            return CanStreamStage7Join(config, OspreyEnvironment.Stage7Stream);
+        }
+
+        /// <summary>
+        /// Pure core of the one-argument <c>CanStreamStage7Join</c>, with the env switch
+        /// passed in. Exists so <see cref="Stage7ResidentGuardError"/> can ask the question the
+        /// operator's choice hinges on - "would this run have streamed if the switch were on?" -
+        /// which is what separates a CHOSEN resident join from one that had no alternative.
+        /// </summary>
+        internal static bool CanStreamStage7Join(OspreyConfig config, bool stage7Stream)
+        {
+            if (!config.ExpectReconciledInput || !stage7Stream)
+                return false;
+            if (PerFileScoringTask.NeedsResidentPool(config, OspreyEnvironment.UseFdrProjection))
+                return false;
+            // --model-diagnostics WAS the fourth requirement, and is no longer one. The pass-2
+            // report is now folded run by run through ModelDiagnosticsData.Accumulator - the
+            // same accumulator the pass-1 report uses - with the co-assignment panel's two
+            // phases driven from the join's own stream passes, so the report no longer needs a
+            // list it can index by position. Removing this term is also what lets the gate SEE
+            // the streamed arm: --model-diagnostics is set on StellarLibDecoy,
+            // StellarGenDecoyEntrap and Astral, so while it stood here mode 3's phase 4 took the
+            // resident path on three of the four datasets and a streamed-arm defect needing
+            // library decoys, entrapment or hram data passed the suite green.
+            // The pass-2 mode has to be the one whose per-run half already ran in the
+            // fan-out. protein-compact owns its whole per-file cycle in Stage 6 and Stage 7
+            // folds the written answers; every other mode still computes the per-file half HERE,
+            // over the whole pool - RestorePass1Scalars, the resident second pass and the
+            // projection sink's per-file protein-q map all index it. Streaming underneath them
+            // does not make them per-run, it just takes their input away: the fragment release
+            // streams first and drops the pool, and ComputeAndPersist then throws
+            // "Value was read after StreamFiles dropped the survivor pool" hours into Stage 7.
+            //
+            // Not a guess about which modes are safe - the same predicate ComputeAndPersist
+            // itself branches on for `frozenCompetition`. When transfer's per-run half moves to
+            // Pass2PerFileWorker this term becomes "any mode with a worker" and the two move
+            // together.
+            if (!OspreyEnvironment.Pass2ProteinCompact)
+                return false;
+            string retainedPath =
+                RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
+            return !string.IsNullOrEmpty(retainedPath) &&
+                   RetainedBaseIdSidecar.IsCurrentFormat(retainedPath);
+        }
+
+        /// <summary>
+        /// Fail fast when the RESIDENT Stage-7 join was CHOSEN over an admissible streamed one,
+        /// unless the operator named <see cref="ResidentPaths.STAGE7_STREAM_OFF"/>. The Stage-7
+        /// sibling of <c>PerFileScoringTask.GuardResidentPool</c>, which stops at the
+        /// pre-compaction line and so never saw this pool.
+        ///
+        /// <para>Only the CHOSEN case. The question asked is "would this run have streamed with
+        /// the switch on", so a run that could not stream for any other reason - a
+        /// straight-through join, a non-protein-compact pass-2 mode, a missing retained-base_id
+        /// summary - is not refused, because there is no choice for a token to record. Those
+        /// remain disclosed rather than tokened until the streamed join is admissible for them
+        /// too; refusing them here would put a mandatory token on every ordinary run, which
+        /// grants nothing and is exactly the blanket amnesty the named-token ratchet replaced.</para>
+        ///
+        /// <para><c>streamingAvailable</c> - whether this run COULD stream the join, i.e.
+        /// the two-argument <c>CanStreamStage7Join</c> with the switch forced on - is
+        /// passed IN rather than computed here, so the guard is a pure function and its refusal
+        /// is unit-testable. Computing it internally makes every test process answer false (no
+        /// retained-base_id sidecar on disk), so the refusal branch would never be reached and
+        /// the test would pass vacuously. Its Stage-6 sibling takes the same parameter for the
+        /// same reason.</para>
+        /// </summary>
+        internal static string Stage7ResidentGuardError(
+            bool streamingAvailable, bool stage7Stream, string allowUnfixedResident)
+        {
+            if (stage7Stream || !streamingAvailable)
+                return null;
+            if (OspreyEnvironment.NamesResidentPath(allowUnfixedResident,
+                    ResidentPaths.STAGE7_STREAM_OFF))
+            {
+                return null;
+            }
+            // The SUPPLIED value is quoted, matching the two sibling guards: a stale or
+            // misspelled token otherwise reads exactly like an unset one, and the operator
+            // cannot tell "you named nothing" from "you named the wrong path".
+            return string.Format(
+                @"OSPREY_STAGE7_STREAM=0 forces the RESIDENT Stage-7 join, which rebuilds every " +
+                @"run's survivors at once and holds them for the whole stage - O(files), measured " +
+                @"at 91.1 GB on a 446-run cohort. This run CAN stream it, so residency here is a " +
+                @"choice and has to be named: set OSPREY_ALLOW_UNFIXED_RESIDENT={0} to run the " +
+                @"A/B deliberately, or unset OSPREY_STAGE7_STREAM to take the streamed join. " +
+                @"OSPREY_ALLOW_UNFIXED_RESIDENT is currently {1}.",
+                ResidentPaths.STAGE7_STREAM_OFF,
+                string.IsNullOrWhiteSpace(allowUnfixedResident)
+                    ? @"unset"
+                    : @"'" + allowUnfixedResident + @"'");
+        }
+
+        /// <summary>
+        /// The retained base_id set for the streamed second-pass join, or a hard failure.
+        ///
+        /// <para>Separate from <see cref="ReadRetainedBaseIds"/>'s null-returning form because
+        /// the CALLER cannot degrade here. By the time Stage 7 asks, the <c>--input-scores</c>
+        /// load has already published one EMPTY list per run on the strength of
+        /// <c>CanStreamStage7Join</c> - which only header-probes the sidecar - so a null
+        /// leaves the stage folding over 446 empty runs, logging "No entries pass FDR threshold.
+        /// Creating empty blib." and exiting 0. An empty <c>.blib</c> from a successful-looking
+        /// run is the worst outcome this pipeline can produce, and the sidecar's own reader
+        /// documents its absence as FATAL.</para>
+        /// </summary>
+        internal static HashSet<uint> ReadRetainedBaseIdsOrFail(OspreyConfig config)
+        {
+            var retained = ReadRetainedBaseIds(config, out string error);
+            if (retained != null)
+                return retained;
+            throw new InvalidDataException(string.Format(
+                @"The second-pass join is streaming, which requires the analysis-wide retained " +
+                @"base_id summary, and it could not be read: {0} Continuing would fold every run " +
+                @"as empty and write an empty library.",
+                error ?? @"(no reason reported)"));
+        }
+
+        /// <summary>
+        /// Read the analysis-wide retained base_id summary FirstPassFDR left behind, or return
+        /// null with <paramref name="error"/> set to an operator-facing message naming the
+        /// producer.
+        ///
+        /// <para>Absence is FATAL to the caller and must not fall back to rebuilding the union
+        /// from every run's <c>reconciliation.json</c>. That fallback is precisely the O(files)
+        /// pre-pass this artifact exists to delete - 10.7 GB of envelope JSON on a 446-run
+        /// cohort - so a quiet degradation to it would restore the behaviour without restoring
+        /// any signal that it had happened. A directory written before this artifact existed is
+        /// re-runnable, which costs a FirstPassFDR pass; a silent join is not detectable at
+        /// all.</para>
+        /// </summary>
+        internal static HashSet<uint> ReadRetainedBaseIds(OspreyConfig config, out string error)
+        {
+            error = null;
+            string path = RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
+            if (string.IsNullOrEmpty(path))
+            {
+                error =
+                    @"No output blib, so the analysis-wide retained base_id summary cannot be " +
+                    @"located. It is written by FirstPassFDR and names itself after the blib.";
+                return null;
+            }
+            var retained = RetainedBaseIdSidecar.Read(path);
+            if (retained == null)
+            {
+                error = string.Format(
+                    @"The analysis-wide retained base_id summary is missing or unreadable at {0}. " +
+                    @"It is written by FirstPassFDR when Stage 6 planning ends, and every run's " +
+                    @"compaction reads it; without it a run cannot be compacted without " +
+                    @"re-reading every other run's reconciliation.json. Re-run the FirstPassFDR " +
+                    @"phase for this analysis to produce it.", path);
+                return null;
+            }
+            return retained;
+        }
+
+        /// <summary>
         /// Fold one file's PRE-compaction stubs into the <c>--model-diagnostics</c> report
         /// accumulator, handing it exactly the scalars the batch
         /// <c>ModelDiagnosticsData.Build</c> reads off each <see cref="FdrEntry"/> - identity,
