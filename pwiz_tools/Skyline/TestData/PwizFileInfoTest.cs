@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Vagisha Sharma <vsharma .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestData
                 "Agilent 6546", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "microchannel plate detector");
 
             // Sciex .wiff2 file
-            string wiff2Ext = ExtensionTestContext.CanImportAbWiff2 ? ".wiff2" : "-sample-centroid.mzML";
+            string wiff2Ext = IsAbWiff2Safe ? ".wiff2" : "-sample-centroid.mzML";
             VerifyInstrumentInfo(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "swath.api" + wiff2Ext),
                 "X500R QTOF", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "electron multiplier");
 
@@ -350,7 +350,9 @@ namespace pwiz.SkylineTestData
             };
             var testFilesDir = TestFilesDirs[0];
 
-            if (ExtensionTestContext.CanImportAbWiff2)
+            // The empty-serial-number case only exists in the .wiff2 file, so it has no mzML
+            // equivalent and is simply not covered during leak detection. See IsAbWiff2Safe.
+            if (IsAbWiff2Safe)
                 VerifySerialNumber(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "swath.api.wiff2"), "CI231606PT"); // WIFF2 file with empty serial number
 
             if (ExtensionTestContext.CanImportAbWiff)
