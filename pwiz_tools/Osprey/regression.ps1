@@ -1701,10 +1701,11 @@ function Invoke-HpcChain {
     # worker dirs are done.
     foreach ($d in $ph3Dirs.Values) { Remove-Scratch $d }
     Copy-LibraryInto -Library $Library -Dir $ph4 -Manifest $Manifest
-    # -i again, and the RECONCILED parquet is what each run resolves to: this directory
-    # holds only the reconciled sibling, and EffectiveScoresPathFromScoresPath prefers it.
-    # Naming it explicitly is what --input-scores did; deriving it is what every other
-    # reader on this leg already did.
+    # -i again, and the RECONCILED parquet is what each run resolves to - because the TASK
+    # says so (ScoringTaskShared.ReadsReconciledScores), not because it is the only file
+    # here. That this directory also holds only the reconciled sibling is the enforcement
+    # above, and the two are deliberately independent: if the resolution ever regressed to
+    # a disk probe, the staging would hide it.
     $a4 = @('--task', 'SecondPassFDR')
     foreach ($s in $stemList) { $a4 += @('-i', "$s.mzML") }
     $a4 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
@@ -1772,8 +1773,22 @@ foreach ($name in $selected) {
     # CanStreamStage7Join's first term, and only --task SecondPassFDR sets it, so the ordinary
     # run could not stream by construction. Deriving the admission from the reconciled parquets
     # on disk is what puts every leg under one question.
+    #
+    # OSPREY_STAGE6_STREAM_SURVIVORS=0 belongs here too, and its absence made this list
+    # wrong rather than merely incomplete. Under that switch BuildRunPerRunSource returns
+    # null (no loader, and the per-run lists are never cleared), so no marker reaches
+    # straight.log and the mode1 leg FAILS a run behaving exactly as instructed - while
+    # mode2/mode5 PASS, because BuildResumePerRunSource reads the loader through
+    # PublishedSurvivorLoader, which deliberately bypasses the Stage-6 switch. A mode1-only
+    # red that reads like a genuine regression is the worst shape a gate can have.
+    #
+    # STILL INCOMPLETE, deliberately, and worth knowing: this reads env vars only, while two
+    # of the three NeedsResidentPool triggers are CLI/config (--fdrbench-pass 1, a
+    # non-Percolator --fdr-method). A dataset spec setting either would red all three legs.
+    # No spec does today; if one is added, this has to grow a $cfg term.
     $cannotStreamJoin =
         ($env:OSPREY_STAGE7_STREAM -eq '0') -or
+        ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
         ($env:OSPREY_FDR_PROJECTION -eq '0') -or
         (-not [string]::IsNullOrWhiteSpace($env:OSPREY_PASS2_QVALUE) -and
          $env:OSPREY_PASS2_QVALUE -ne 'protein-compact')
@@ -2711,7 +2726,24 @@ foreach ($name in $selected) {
             $legStream = Test-LogMarker -LogPath $legPath -Marker $stage7StreamMarker `
                 -Description ("$($streamLeg.What) folding Stage 7 one run at a time instead " +
                     'of rebuilding every run''s survivors at once')
-            if ($legStream.Pass) {
+            # PRESENCE OF THE MARKER IS NOT ENOUGH, and this is the hole it left. The marker is
+            # logged when the per-run source is BUILT, not when anything folds through it. A
+            # consumer that reads RescoredEntries.Value instead of streaming routes to
+            # MaterializeAllFromSource, which builds every run at once - the exact O(runs x
+            # entries) peak, 91.1 GB at 446 - while Streams stays true, so the marker is present,
+            # WarnResidentStage7Join stays silent, and this leg reported PASS on a resident run.
+            # MaterializeAllFromSource has always logged its own warning; nothing asserted its
+            # absence. Assert it here: the marker says a source was offered, this says nothing
+            # took the whole pool anyway.
+            $legPooled = Select-String -LiteralPath $legPath -SimpleMatch -Quiet `
+                -Pattern 'a consumer asked for the whole-run survivor pool'
+            if ($legPooled) {
+                $overallFail = $true
+                Write-Problem-Tc ("$name $($streamLeg.Mode) (streamed join): FAIL - a per-run " +
+                    'source was published AND a consumer then pulled the whole pool through it, ' +
+                    'so the fold did not bound anything. The marker alone cannot see this.')
+                $summaryLines.Add("$name $($streamLeg.Mode) (streamed join): FAIL")
+            } elseif ($legStream.Pass) {
                 $summaryLines.Add(("$name $($streamLeg.Mode) (streamed join): PASS " +
                     '(per-run fold, no all-runs pool)'))
             } else {

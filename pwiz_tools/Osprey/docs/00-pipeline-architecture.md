@@ -621,12 +621,12 @@ node running that task needs a copy, whatever batch it was handed.
 | `<library-leaf>.libcache` | experiment cache | library load, any task | all tasks | rebuild locally |
 | `<stem>.spectra.bin` | per-run cache | `PerFileScoring` (Stage 2), or `--task SpectraCache` | `PerFileScoring`, `PerFileRescoring` | with the run |
 | `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `PerFileRescoring`, `FirstPassFDR`, `SecondPassFDR` | with the run, on **every** leg |
-| `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring`, **`SecondPassFDR`** (fallback for runs with no reconciled sibling) | with the run |
+| `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring` | with the run |
 | `<stem>.1st-pass.fdr_scores.bin` | per-run product | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` or where no worker answer exists | with the run |
 | `<stem>.reconciliation.json` | per-run product | `FirstPassFDR` (Stage 6 planning) | `PerFileRescoring`, `SecondPassFDR` (gap-fill entry ids) | with the run |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | experiment product | `FirstPassFDR` | `PerFileRescoring`, `SecondPassFDR`, `PerFileScoring` (rehydrate) | **every node** |
 | `<stem>.1st-pass.model.json` | experiment product, replicated | `FirstPassFDR` (training) | `PerFileRescoring`, `SecondPassFDR` | **every node** (any one copy) |
-| `<stem>.scores-reconciled.parquet` | per-run product | `PerFileRescoring` (Stage 6) | `SecondPassFDR`, and `PerFileRescoring` itself on its per-run resume arm | with the run |
+| `<stem>.scores-reconciled.parquet` | per-run product, written for **every** run | `PerFileRescoring` (Stage 6) | `SecondPassFDR` - the join's only row source, one parquet per run; and `PerFileRescoring` itself on its per-run resume arm | with the run |
 | `<stem>.2nd-pass.fdr_decoys.bin` | per-run product | `PerFileRescoring` (pass-2 worker) | `SecondPassFDR` | with the run |
 | `<stem>.2nd-pass.fdr_scores.bin` | per-run product | `PerFileRescoring` (pass-2 worker), else `SecondPassFDR` | `SecondPassFDR` | with the run |
 | `<blib-stem>.2nd-pass.fdr_experiment.bin` | experiment product | `SecondPassFDR` | `SecondPassFDR` on a resume | n/a |
@@ -1049,6 +1049,16 @@ is therefore the whole cohort's, as it always was; what changed is the node's pe
 inputs. The run log says which shape it took - "folding over N run(s), each rebuilt from its
 own artifacts and dropped" - and that line is the evidence, because a resident pool and a
 fold produce identical output and differ only in a memory profile.
+
+**One parquet per run, and it is the reconciled one.** `<stem>.scores.parquet` is not an
+input to this boundary in any form - not as a fallback, not for a run Stage 6 did no work on.
+Stage 6 writes a reconciled parquet for *every* run (P13; `WriteUnchangedReconciled` covers
+the no-work run), so a missing one means the write never landed and the run is not finished.
+Substituting the Stage 4 file would put 1st-pass boundaries and no gap-fill rows into the
+blib for that run from a process that exits 0, which is exactly the ambiguity P13 exists to
+remove - so every consumer here **fails** on absence instead. The rule survived one earlier
+round as "read the reconciled parquet, Stage 4's only as the per-file fallback"; the fallback
+half is retired, and the code carries no path to it.
 
 Not needed on the default path: `<stem>.1st-pass.fdr_scores.bin`. Establishing that is
 what issue #4486 was for - an orchestrator hands a `SecondPassFDR` node the per-run

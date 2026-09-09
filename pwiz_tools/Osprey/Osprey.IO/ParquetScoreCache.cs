@@ -246,13 +246,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static bool IsSubsetWithoutScoreIndex(string path)
         {
-            if (!File.Exists(path))
-                return false;
-            var footer = LoadFooterMetadata(path);
-            footer.TryGetValue(@"osprey.reconciled", out string marker);
-            if (!string.Equals(marker, RECONCILED_SURVIVORS, StringComparison.Ordinal))
-                return false;
-            return !HasColumn(path, FIELD_SCORE_INDEX.Name);
+            return ProbeReconciledSurvivorShape(path, out bool hasScoreIndex) && !hasScoreIndex;
         }
 
         /// <summary>
@@ -275,13 +269,59 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static bool IsCurrentReconciledSurvivorSubset(string path)
         {
+            return ProbeReconciledSurvivorShape(path, out bool hasScoreIndex) && hasScoreIndex;
+        }
+
+        /// <summary>
+        /// The one open behind <see cref="IsCurrentReconciledSurvivorSubset"/> and
+        /// <see cref="IsSubsetWithoutScoreIndex"/>: does <paramref name="path"/> carry the
+        /// current <see cref="RECONCILED_SURVIVORS"/> marker, and does it have the
+        /// <c>score_index</c> column? Returns false for anything this build cannot read as a
+        /// reconciled survivor parquet, including a file that is absent, empty, half-written
+        /// or foreign.
+        ///
+        /// <para><b>Answers, never throws.</b> Both callers are boolean predicates whose
+        /// documented false covers "not readable in that shape", and five call sites branch on
+        /// them - so ONE zero-length or partially-written parquet turning a predicate into an
+        /// unhandled stack trace pre-empts <c>SecondPassFdrTask</c>'s named, file-listing
+        /// refusal, which is the message the operator is supposed to get.
+        /// <see cref="ValidateScoresParquetGroup"/> already wrapped the identical call, so the
+        /// convention existed before this did.</para>
+        ///
+        /// <para><b>One open, not two.</b> The footer and the schema come off the same reader.
+        /// Read separately they were two opens per file per call, uncached across five call
+        /// sites - order 4,460 parquet opens on a 446-run cohort before any work begins, and
+        /// typically on a network artifact directory.</para>
+        /// </summary>
+        private static bool ProbeReconciledSurvivorShape(string path, out bool hasScoreIndex)
+        {
+            hasScoreIndex = false;
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 return false;
-            var footer = LoadFooterMetadata(path);
-            footer.TryGetValue(@"osprey.reconciled", out string marker);
-            if (!string.Equals(marker, RECONCILED_SURVIVORS, StringComparison.Ordinal))
+            try
+            {
+                using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+                {
+                    reader.CustomMetadata.TryGetValue(@"osprey.reconciled", out string marker);
+                    if (!string.Equals(marker, RECONCILED_SURVIVORS, StringComparison.Ordinal))
+                        return false;
+                    foreach (var f in reader.Schema.GetDataFields())
+                    {
+                        if (!string.Equals(f.Name, FIELD_SCORE_INDEX.Name, StringComparison.Ordinal))
+                            continue;
+                        hasScoreIndex = true;
+                        break;
+                    }
+                    return true;
+                }
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                // Unreadable IS "not a current reconciled survivor parquet". The caller that
+                // cares which file it was names it; see SecondPassFdrTask.UnusableReconciledParquets.
                 return false;
-            return HasColumn(path, FIELD_SCORE_INDEX.Name);
+            }
         }
 
         /// <summary>Whether a parquet's schema carries a column by this name.</summary>
@@ -1872,24 +1912,6 @@ namespace pwiz.Osprey.IO
                 return scoresPath.Substring(0, scoresPath.Length - ScoresParquetSuffix.Length)
                     + ReconciledScoresParquetSuffix;
             return scoresPath;
-        }
-
-        /// <summary>
-        /// The path a post-Stage-6 reader (Stage 7 feature reload, resume /
-        /// <c>--task SecondPassFDR</c>) should consume for a given original
-        /// <c>.scores.parquet</c> path: the reconciled sibling when it exists
-        /// on disk, otherwise the original. This per-file selection is the
-        /// read-side contract that makes the separate-reconciled-file design
-        /// byte-equivalent to the former in-place overwrite: files that had
-        /// reconciliation work read the reconciled bytes (which used to be
-        /// written over the original), while files with no Stage 6 work -- which
-        /// <c>PerFileRescoreTask</c> deliberately skips, leaving no reconciled
-        /// file -- read the untouched original (which used to be left in place).
-        /// </summary>
-        public static string EffectiveScoresPathFromScoresPath(string scoresPath)
-        {
-            string reconciled = ReconciledPathFromScoresPath(scoresPath);
-            return File.Exists(reconciled) ? reconciled : scoresPath;
         }
 
         /// <summary>

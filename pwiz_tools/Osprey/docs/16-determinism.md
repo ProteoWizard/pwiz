@@ -194,11 +194,12 @@ on it. The scoring task orders entries and writes them to the per-file
 `PerFileRescoreTask.SortFileEntriesCanonical` (`Osprey.Tasks/PerFileRescoreTask.cs:1301`)
 re-imposes the exact `(EntryId, Charge, ScanNumber, ParquetIndex)` order a cold
 run establishes, with `ParquetIndex` as a unique terminal key so the sort never
-ties (`:1306-1315`). The comment at `:1287-1299` explains why this is applied to
-**every** file (even no-work files with no reconciled Parquet): otherwise
+ties (`:1306-1315`). Its comment explains why this is applied to **every** file the
+resume overlays, including a file with no reconciliation work: otherwise
 `SecondPassFDR`'s `BuildSharedBoundaries` could iterate a different order and, on a
 q-value tie between charge states, pick a different shared `(modseq, file)`
-boundary. Parquet preserves exact IEEE-754 values, so a rehydrated entry is
+boundary. A file the resume loads from its reconciled Parquet instead arrives in
+that order already, from `FirstPassSurvivorLoader`'s own canonical sort. Parquet preserves exact IEEE-754 values, so a rehydrated entry is
 bit-identical to the in-memory original (see 14-intermediate-files.md).
 
 The PEP estimator is fed a `base_id`-ascending-sorted union so its

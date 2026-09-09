@@ -21,6 +21,8 @@
  * limitations under the License.
  */
 
+using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
@@ -56,7 +58,14 @@ namespace pwiz.Osprey.Test
             {
                 SelectedTask = task,
                 NoJoin = task == HpcTask.PerFileScoring || task == HpcTask.PerFileRescore,
-                StopAfterStage5 = task == HpcTask.FirstPassFdr || task == HpcTask.ModelDiagnostics,
+                // EXACTLY Program.cs's assignment, which is the only one in the tree:
+                // `config.StopAfterStage5 = selectedTask == HpcTask.FirstPassFdr;`. This
+                // helper also named ModelDiagnostics, building a config the CLI cannot
+                // produce - so the row below asserted a membership no real run has, while
+                // ProgramTests pinned the real flags and stated the opposite design. Two
+                // tests in one assembly asserting incompatible things is worse than either
+                // being wrong alone, because whichever you read first looks corroborated.
+                StopAfterStage5 = task == HpcTask.FirstPassFdr,
                 ExpectReconciledInput = task == HpcTask.SecondPassFdr,
             };
         }
@@ -78,16 +87,15 @@ namespace pwiz.Osprey.Test
                     new[] { false, false, true,  false }),
                 (@"SecondPassFDR",     ForTask(HpcTask.SecondPassFdr),
                     new[] { false, false, false, true  }),
-                // --task ModelDiagnostics is a RENDER over retained products, not a stage.
-                // It needs the per-file load (so PerFileScoring is in) and first-pass state
-                // (so FirstPassFDR is), and nothing after: a diagnostics fold publishes
-                // neither CompactedEntries nor a second pass, and the two tasks that demand
-                // them used to join anyway and fail the run AFTER writing the report it was
-                // asked for. The row that stood here was `input-scores-full` - the
-                // single-node full pipeline started from parquets - and it retired with the
-                // flag; this is the mode that was actually at risk.
+                // --task ModelDiagnostics is a RENDER over retained products, and it reaches
+                // AnalysisPipeline with all three membership flags FALSE - it sets none of
+                // them (see ForTask, and Program.cs's single StopAfterStage5 assignment). So
+                // it is in every task, exactly like the straight-through run, and suppresses
+                // artifact writes rather than membership. The row here used to read
+                // {true,true,false,false}, which was the shape of a config the CLI cannot
+                // build; ProgramTests.cs pins the real flags and now agrees with this.
                 (@"ModelDiagnostics",  ForTask(HpcTask.ModelDiagnostics),
-                    new[] { true,  true,  false, false }),
+                    new[] { true,  true,  true,  true  }),
             };
 
             foreach (var c in cases)
@@ -103,6 +111,43 @@ namespace pwiz.Osprey.Test
                         @"{0}/{1}: IsIncluded must be {2}", c.Name, tasks[i].Name, c.Expected[i]));
                 }
             }
+        }
+
+        /// <summary>
+        /// Only a process that RUNS Stage 7's join may be admitted to the streamed one.
+        ///
+        /// <para>The case that matters is <c>--task FirstPassFDR</c>, and it is not
+        /// hypothetical: re-run over a directory a previous analysis COMPLETED, every
+        /// disk-side term of <c>CanStreamStage7Join</c> is satisfied by that previous run's
+        /// own output. <c>PerFileScoringTask</c> would then take its per-run-join branch,
+        /// publish one EMPTY list per run for a fold that never comes, and FirstPassFDR would
+        /// compute its pass over nothing - rewriting both boundary sidecars and the retained
+        /// base_id summary as empty, exit 0.</para>
+        ///
+        /// <para>Asserted with the switch passed as TRUE and against the two-argument form, so
+        /// this pins the membership term alone and cannot pass merely because the environment
+        /// happens to have streaming off.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestOnlyStage7JoinTasksAdmitTheStreamedJoin()
+        {
+            var admitted = new[] { HpcTask.SecondPassFdr, HpcTask.ModelDiagnostics };
+            foreach (HpcTask task in Enum.GetValues(typeof(HpcTask)))
+            {
+                bool expected = admitted.Contains(task);
+                Assert.AreEqual(expected, ScoringTaskShared.RunsStage7Join(ForTask(task)),
+                    string.Format(@"--task {0}: RunsStage7Join must be {1}", task, expected));
+                // A task that does not run the join must be refused BEFORE any disk term,
+                // which is what makes the refusal free and unconditional.
+                if (!expected)
+                {
+                    Assert.IsFalse(
+                        ScoringTaskShared.Stage7StreamAdmittedBeforeRescore(ForTask(task), true),
+                        string.Format(@"--task {0} must not be admitted to the streamed join", task));
+                }
+            }
+            // The straight-through pipeline runs every stage, so it is admitted.
+            Assert.IsTrue(ScoringTaskShared.RunsStage7Join(new OspreyConfig()));
         }
     }
 }

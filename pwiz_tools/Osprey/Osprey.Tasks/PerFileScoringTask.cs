@@ -1345,9 +1345,9 @@ namespace pwiz.Osprey.Tasks
             // go lean" additionally excludes the reconciled-input merge. Do not "fix" this by
             // copying the builder decision: the merge does not read Features off these stubs -
             // both pass-2 shapes reload them per file from the reconciled parquet
-            // (ComputePass2TransferCompeteFull's own read, or ComputePass2Resident's), and
-            // EffectiveScoresPathFromScoresPath falls back to the original parquet when no
-            // reconciled one exists, so the reload does not depend on hasReconSidecars either.
+            // (ComputePass2TransferCompeteFull's own read, or ComputePass2Resident's), which
+            // Stage 6 writes for every run, so the reload does not depend on hasReconSidecars
+            // either.
             bool loadFeatures = needsResidentPool;
 
             // The --input-files paths at :381 and :644 THROW on the same O(files) situation.

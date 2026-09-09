@@ -468,27 +468,88 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Each input's scores parquet, in input order: the reconciled sibling where Stage 6
-        /// has written one, else the Stage 4 file.
+        /// Which per-run parquet THIS task reads its rows from: the Stage 6
+        /// <c>.scores-reconciled.parquet</c> for <c>SecondPassFDR</c>, the Stage 4
+        /// <c>.scores.parquet</c> for the two tasks that run before Stage 6 has written one.
+        ///
+        /// <para>A property of the TASK, not of what happens to be on disk. It used to be
+        /// decided by probing for the reconciled sibling and taking it where it existed,
+        /// which gives the right answer only because the pipeline happens to run the stages
+        /// in order - the file is absent before Stage 6 and present after. Re-run
+        /// <c>--task FirstPassFDR</c> over a directory a previous run completed and the same
+        /// probe hands the FIRST pass the survivor SUBSET, roughly 1/52 of its rows, with
+        /// nothing to reject it: the version, search and library hashes all match. It then
+        /// writes cohort-wide boundary artifacts from that subset and exits 0.</para>
+        ///
+        /// <para>The two answers are also what an HPC node is SHIPPED. Boundary 3 -&gt; 4 sends
+        /// a <c>SecondPassFDR</c> node the reconciled parquets and not the Stage 4 originals -
+        /// <c>regression.ps1</c>'s mode-3 chain deletes them from the worker directory before
+        /// staging phase 4, so reaching for one fails on a missing file rather than passing
+        /// quietly. A <c>FirstPassFDR</c> or <c>PerFileRescoring</c> node gets the originals
+        /// and no reconciled sibling exists yet. So on a correct node each task has exactly
+        /// one of the two present, and asking the disk cannot distinguish "the artifact for
+        /// my pass" from "the only artifact here".</para>
+        /// </summary>
+        internal static bool ReadsReconciledScores(OspreyConfig config)
+        {
+            return config.SelectedTask == HpcTask.SecondPassFdr;
+        }
+
+        /// <summary>
+        /// True when THIS process runs Stage 7's join, i.e. when a per-run source published for
+        /// that join will actually be folded by something.
+        ///
+        /// <para>Names what is ADMITTED, so it fails closed: the straight-through pipeline (no
+        /// <c>--task</c>, which runs every stage), the <c>SecondPassFDR</c> node, and
+        /// <c>ModelDiagnostics</c> - which is not an HPC fan-out node but does let
+        /// <c>SecondPassFDR</c> compute the pass-2 view, so it folds the same join and must not
+        /// be pushed back onto the resident pool. A task added later is excluded until someone
+        /// decides otherwise, which is the direction a predicate guarding a memory shape - and,
+        /// since <see cref="Stage7StreamAdmittedBeforeRescore"/>, a correctness one - should
+        /// fail in.</para>
+        ///
+        /// <para>The excluded tasks each have a consumer that never arrives.
+        /// <c>PerFileScoring</c> and <c>SpectraCache</c> stop before Stage 5.
+        /// <c>FirstPassFDR</c> would publish empty per-run lists for a fold that never runs.
+        /// A <c>PerFileRescoring</c> worker exits after Stage 6, so a source built there is
+        /// never pulled - it only pays for a retained-sidecar read the "entering
+        /// PerFileRescoring must cost the same for 1 run as for 446" contract forbids, and
+        /// emits a streamed-join marker into a log for a join that did not happen.</para>
+        /// </summary>
+        internal static bool RunsStage7Join(OspreyConfig config)
+        {
+            if (!config.SelectedTask.HasValue)
+                return true;
+            return config.SelectedTask == HpcTask.SecondPassFdr ||
+                   config.SelectedTask == HpcTask.ModelDiagnostics;
+        }
+
+        /// <summary>
+        /// Each input's scores parquet for THIS task, in input order - see
+        /// <see cref="ReadsReconciledScores"/> for which one that is. Reached only by the
+        /// three tasks <see cref="StartsAfterPerFileScoring"/> names, so every case has an
+        /// answer.
         ///
         /// <para>The derivation <c>--input-scores</c> used to be handed ready-made. Its
         /// directory form globbed a directory and preferred the reconciled sibling per stem;
-        /// this is that rule, applied to the runs the command line names instead of to
-        /// whatever a directory happened to hold. The difference matters twice: a directory
-        /// with a stray parquet no longer changes the cohort, and ORDER is now the caller's
-        /// (FirstPassFDR reconciliation is order-sensitive, so a chain must pass a
+        /// this is the same list built from the runs the command line names instead of from
+        /// whatever a directory happened to hold. The difference matters three times: a
+        /// directory with a stray parquet no longer changes the cohort; ORDER is now the
+        /// caller's (FirstPassFDR reconciliation is order-sensitive, so a chain must pass a
         /// deterministically sorted list - which is what it already did to get a stable
-        /// directory sort).</para>
+        /// directory sort); and the per-stem preference is no longer part of it.</para>
         /// </summary>
         internal static List<string> ScoresPathsForInputs(OspreyConfig config)
         {
             var paths = new List<string>(config.InputFiles?.Count ?? 0);
             if (config.InputFiles == null)
                 return paths;
+            bool reconciled = ReadsReconciledScores(config);
             foreach (string input in config.InputFiles)
             {
-                paths.Add(ParquetScoreCache.EffectiveScoresPathFromScoresPath(
-                    ParquetScoreCache.GetScoresPath(input)));
+                paths.Add(reconciled
+                    ? ParquetScoreCache.GetReconciledScoresPath(input)
+                    : ParquetScoreCache.GetScoresPath(input));
             }
             return paths;
         }
@@ -554,10 +615,10 @@ namespace pwiz.Osprey.Tasks
         /// TOP of Stage 6, hours before the rescore it is about to perform writes the parquets
         /// the full predicate asks about. Asking the full question there answers "no" on every
         /// cold run - not because the run cannot stream, but because it has not got there yet.
-        /// It does not need the term either: that arm rebuilds a run through
-        /// <see cref="FirstPassSurvivorLoader"/>, which falls back to the Stage 4 parquet plus
-        /// the 1st-pass sidecar for a run with no reconciled sibling, where the reconciled-input
-        /// merge has nothing else to read.</para>
+        /// It does not need the term either: by the time that arm's source is pulled, Stage 6
+        /// has written a reconciled parquet for every run, so the question the full predicate
+        /// asks has an answer - and a run still missing one fails there rather than falling
+        /// back to its Stage 4 parquet.</para>
         ///
         /// <para>The retained base_id summary IS in this half even though it is an artifact:
         /// FirstPassFDR writes it before any caller of either form runs, so it is answerable on
@@ -565,6 +626,18 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static bool Stage7StreamAdmittedBeforeRescore(OspreyConfig config, bool stage7Stream)
         {
+            // FIRST, and it is a correctness term rather than an optimisation. Every other term
+            // here describes the SHAPE of a Stage 7 join; none of them asks whether this process
+            // runs one. Without this, `--task FirstPassFDR` re-run over a COMPLETED directory
+            // satisfies all of them - the reconciled parquets are present because a previous
+            // pass wrote them - and PerFileScoringTask's `perRunJoin` branch then publishes one
+            // EMPTY list per run for a fold that never comes. FirstPassFDR computes its pass over
+            // nothing and rewrites both boundary sidecars and the retained base_id summary as
+            // empty, exit 0. The `ExpectReconciledInput` term this predicate replaced made that
+            // unreachable for anything but `--task SecondPassFDR`, so the hole opened when the
+            // proxy went and nothing took over the question it had been answering incidentally.
+            if (!RunsStage7Join(config))
+                return false;
             if (!stage7Stream)
                 return false;
             if (PerFileScoringTask.NeedsResidentPool(config, OspreyEnvironment.UseFdrProjection))
@@ -667,6 +740,14 @@ namespace pwiz.Osprey.Tasks
             {
                 return null;
             }
+            // OSPREY_STAGE6_STREAM_SURVIVORS=0 withholds the survivor loader, so the cold arm
+            // publishes no per-run source however this run answers - which makes the remedy
+            // below ("unset OSPREY_STAGE7_STREAM") unachievable, and refusing on it would demand
+            // a token for a choice the operator does not have. The A/B oracle that switch exists
+            // to provide asks for BOTH stages resident; this is the one combination where
+            // `streamingAvailable` is true and streaming is nonetheless unreachable.
+            if (!OspreyEnvironment.Stage6StreamSurvivors)
+                return null;
             // The SUPPLIED value is quoted, matching the two sibling guards: a stale or
             // misspelled token otherwise reads exactly like an unset one, and the operator
             // cannot tell "you named nothing" from "you named the wrong path".

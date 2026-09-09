@@ -282,7 +282,9 @@ namespace pwiz.Osprey.Test
             {
                 SelectedTask = task,
                 NoJoin = task == HpcTask.PerFileScoring || task == HpcTask.PerFileRescore,
-                StopAfterStage5 = task == HpcTask.FirstPassFdr || task == HpcTask.ModelDiagnostics,
+                // EXACTLY Program.cs's single assignment. Naming ModelDiagnostics here built
+                // a config the CLI cannot produce - see PipelineMembershipTest.ForTask.
+                StopAfterStage5 = task == HpcTask.FirstPassFdr,
                 ExpectReconciledInput = task == HpcTask.SecondPassFdr,
             };
         }

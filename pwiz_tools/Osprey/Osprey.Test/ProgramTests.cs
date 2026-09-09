@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -66,6 +65,40 @@ namespace pwiz.Osprey.Test
         public void RestoreExperimentAgg()
         {
             OspreyEnvironment.MeanBestN = _savedMeanBestN;
+        }
+
+        /// <summary>
+        /// Two inputs sharing a file-name STEM are refused, whatever directories they sit in.
+        ///
+        /// <para>Every per-run artifact is <c>&lt;stem&gt;.&lt;suffix&gt;</c> and every per-run
+        /// map is keyed the same way, so a shared stem is two runs the pipeline cannot tell
+        /// apart. Left to be discovered downstream it takes two shapes and neither names the
+        /// cause: an <c>ArgumentException</c> about a duplicate key mid-Stage-6/7, or - with
+        /// <c>--output-dir</c>, where both stems resolve into one directory - two runs quietly
+        /// sharing one parquet, no error at all.</para>
+        ///
+        /// <para>Asserted with DIFFERENT directories, which is the case that matters and the
+        /// one <c>--input-list</c> makes routine at cohort scale; identical paths would be
+        /// caught by cruder means.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestValidateRejectsDuplicateInputStems()
+        {
+            var config = TaskConfig(HpcTask.PerFileScoring);
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.InputFiles = new List<string> { @"plateA\run1.mzML", @"plateB\run1.mzML" };
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err, "two inputs sharing a stem must be refused");
+            // The stem and BOTH colliding paths, so the operator can act without re-deriving
+            // which of several hundred inputs collided.
+            StringAssert.Contains(err, "run1");
+            StringAssert.Contains(err, @"plateA\run1.mzML");
+            StringAssert.Contains(err, @"plateB\run1.mzML");
+
+            // Distinct stems in one directory remain fine - the check is on the stem, not the
+            // directory, and a cohort in one folder is the ordinary case.
+            config.InputFiles = new List<string> { @"plateA\run1.mzML", @"plateA\run2.mzML" };
+            Assert.IsNull(Program.ValidateArgs(config));
         }
 
         // --- ValidateArgs: what each task requires -------------------------
@@ -837,14 +870,5 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(string.IsNullOrEmpty(config.DecoyPairingManifestPath));
         }
 
-        // --- helpers -------------------------------------------------------
-
-        private static string NewTempDir()
-        {
-            string dir = Path.Combine(Path.GetTempPath(),
-                "osprey_test_program_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            return dir;
-        }
     }
 }

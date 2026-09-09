@@ -22,10 +22,14 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.Tasks;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey
@@ -223,8 +227,23 @@ namespace pwiz.Osprey
                     // would refuse the configuration the HPC chain is built on. This is
                     // what --input-scores used to say by naming a different input KIND;
                     // said here it is one input kind and one question about it.
-                    if (File.Exists(ParquetScoreCache.EffectiveScoresPathFromScoresPath(
-                            ParquetScoreCache.GetScoresPath(inputFile))))
+                    // ...and only for a task that STARTS AFTER Stage 4. A scores parquet
+                    // stands an input in because such a task never opens the data file; it
+                    // stands in for nothing at all for --task SpectraCache or PerFileScoring,
+                    // whose whole product is decoded FROM that file. Without this term a
+                    // mistyped or moved input on those tasks proceeds on a leftover parquet
+                    // and logs that the run will be read from its scores parquet, "which is
+                    // what a task after Stage 4 needs" - false for exactly the two tasks that
+                    // could reach it. The old `if (!fromInputScores)` wrapper could not reach
+                    // them structurally; nothing re-established that scoping when it went.
+                    //
+                    // EITHER parquet, named. WHICH one a task reads is that task's question
+                    // (ScoringTaskShared.ReadsReconciledScores) and this runs before dispatch:
+                    // a FirstPassFDR node is shipped <stem>.scores.parquet, a SecondPassFDR
+                    // node only <stem>.scores-reconciled.parquet.
+                    if (ScoringTaskShared.StartsAfterPerFileScoring(config) &&
+                        (File.Exists(ParquetScoreCache.GetScoresPath(inputFile)) ||
+                         File.Exists(ParquetScoreCache.GetReconciledScoresPath(inputFile))))
                     {
                         artifactOnlyInputs++;
                         continue;
@@ -539,6 +558,38 @@ namespace pwiz.Osprey
         /// failure. Does not log warnings (those stay in <see cref="Main"/>). Internal so
         /// Osprey.Test can exercise it.
         /// </summary>
+        /// <summary>
+        /// An error naming every input stem that appears more than once, with the paths that
+        /// collide, or null when all stems are distinct. Ordinal comparison, matching the
+        /// per-run maps this protects.
+        /// </summary>
+        private static string DuplicateInputStemError(IReadOnlyList<string> inputFiles)
+        {
+            var byStem = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            foreach (string input in inputFiles)
+            {
+                string stem = Path.GetFileNameWithoutExtension(input) ?? string.Empty;
+                if (!byStem.TryGetValue(stem, out var paths))
+                {
+                    paths = new List<string>();
+                    byStem[stem] = paths;
+                }
+                paths.Add(input);
+            }
+            var collisions = byStem.Where(kv => kv.Value.Count > 1).ToList();
+            if (collisions.Count == 0)
+                return null;
+            var sb = new StringBuilder();
+            sb.AppendFormat(
+                "{0} input stem(s) appear more than once. Every per-run artifact is named " +
+                "<stem>.<suffix>, so runs sharing a stem cannot be told apart and would " +
+                "overwrite each other's parquets and sidecars. Rename or stage them so each " +
+                "run has a distinct file name:", collisions.Count);
+            foreach (var kv in collisions)
+                sb.AppendFormat("\n  '{0}': {1}", kv.Key, string.Join(", ", kv.Value));
+            return sb.ToString();
+        }
+
         internal static string ValidateArgs(OspreyConfig config)
         {
             bool hasInputFiles = config.InputFiles != null && config.InputFiles.Count > 0;
@@ -551,6 +602,27 @@ namespace pwiz.Osprey
                 ExperimentAggFileCount(config, hasInputFiles));
             if (aggErr != null)
                 return aggErr;
+
+            // Every run is keyed on its input STEM - the per-file artifacts are
+            // <stem>.<suffix>, and every per-run map in the pipeline is keyed the same way -
+            // so two inputs sharing a stem are two runs the pipeline cannot tell apart. It is
+            // not exotic: --input-list makes it routine at cohort scale, where the same
+            // acquisition name recurs under different directories.
+            //
+            // Refused here rather than surviving to be discovered downstream, where it takes
+            // two shapes and neither says what happened. Without --output-dir the join appends
+            // two rows under one key while the parquet map keeps only the second, and
+            // CurrentReconciledPaths dies with "An item with the same key has already been
+            // added" mid-Stage-6/7. WITH --output-dir it is worse and silent: both stems
+            // resolve into the same directory, so the two runs share one .scores.parquet and
+            // one .scores-reconciled.parquet, each overwriting the other, with no error at all.
+            // The retired --input-scores form made stems unique by construction.
+            if (hasInputFiles)
+            {
+                string dupErr = DuplicateInputStemError(config.InputFiles);
+                if (dupErr != null)
+                    return dupErr;
+            }
 
             if (config.SelectedTask.HasValue)
             {
