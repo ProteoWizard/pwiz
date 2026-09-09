@@ -519,9 +519,11 @@ namespace SkylineNightly
             // Install.cs does - Win32 version resources are padded, and stray characters would
             // ride into the branch name.
             var productVersion = FileVersionInfo.GetVersionInfo(testerDll).ProductVersion?.Trim();
+            if (string.IsNullOrEmpty(productVersion))
+                return null;
             // A branch name contains '/', so it cannot be the last dot-separated token of a
             // version string; ".branch." delimits it instead of a plain split.
-            var branchIndex = productVersion?.IndexOf(BRANCH_MARKER, StringComparison.Ordinal) ?? -1;
+            var branchIndex = productVersion.IndexOf(BRANCH_MARKER, StringComparison.Ordinal);
             return branchIndex < 0 ? null : productVersion.Substring(branchIndex + BRANCH_MARKER.Length);
         }
 
