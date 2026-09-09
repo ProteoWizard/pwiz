@@ -2227,40 +2227,61 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Verifies EffectiveScoresPathFromScoresPath returns the reconciled
-        /// sibling when it exists on disk, else the original -- the per-file
-        /// read contract that makes the separate-reconciled-file design
-        /// byte-equivalent to the former in-place overwrite.
+        /// Which parquet a task reads is decided by the TASK, and NOT by what is on disk.
+        ///
+        /// <para>The predecessor of this test pinned the opposite - a probe that took the
+        /// reconciled sibling wherever it existed. That gives the right answer only because
+        /// the pipeline runs the stages in order, and it silently gives the wrong one on a
+        /// re-run: <c>--task FirstPassFDR</c> over a directory a previous run completed found
+        /// the reconciled parquets and would have trained the FIRST pass on the survivor
+        /// SUBSET, with every version, search and library hash matching. So the assertion
+        /// that matters is the negative one - BOTH files present, and the task still decides.
+        /// A test that laid down only one file would pass against the probe as well.</para>
         /// </summary>
         [TestMethod]
-        public void TestEffectiveScoresPathFromScoresPath()
+        public void TestScoresPathsDependOnTaskNotDisk()
         {
             string dir = Path.Combine(Path.GetTempPath(),
                 "osprey_eff_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             try
             {
+                string input = Path.Combine(dir, "sample1.mzML");
                 string original = Path.Combine(dir, "sample1.scores.parquet");
                 string reconciled = Path.Combine(dir, "sample1.scores-reconciled.parquet");
+                // BOTH on disk, which is the state a completed run leaves behind.
+                File.WriteAllText(input, "x");
                 File.WriteAllText(original, "x");
-
-                // No reconciled sibling -> original (no-work file).
-                Assert.AreEqual(original,
-                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(original));
-
-                // Reconciled sibling present -> reconciled (rescored file).
                 File.WriteAllText(reconciled, "y");
-                Assert.AreEqual(reconciled,
-                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(original));
 
-                // An already-reconciled input that exists is returned as-is.
-                Assert.AreEqual(reconciled,
-                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(reconciled));
+                // The two passes that run BEFORE Stage 6 read the Stage 4 file even though
+                // the reconciled sibling is sitting beside it.
+                AssertScoresPathForTask(input, HpcTask.FirstPassFdr, original);
+                AssertScoresPathForTask(input, HpcTask.PerFileRescore, original);
+
+                // The join reads the reconciled one - the only artifact its node is shipped.
+                AssertScoresPathForTask(input, HpcTask.SecondPassFdr, reconciled);
             }
             finally
             {
                 try { Directory.Delete(dir, true); } catch { /* best-effort */ }
             }
+        }
+
+        /// <summary>
+        /// One input, one task, one expected parquet - through the same helper the pipeline
+        /// calls, so the test cannot agree with a rule the tasks do not use.
+        /// </summary>
+        private static void AssertScoresPathForTask(string input, HpcTask task, string expected)
+        {
+            var config = new OspreyConfig
+            {
+                SelectedTask = task,
+                InputFiles = new List<string> { input }
+            };
+            var paths = ScoringTaskShared.ScoresPathsForInputs(config);
+            Assert.AreEqual(1, paths.Count);
+            Assert.AreEqual(expected, paths[0]);
         }
 
         /// <summary>
@@ -2805,6 +2826,74 @@ namespace pwiz.Osprey.Test
         {
             Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected),
                 BitConverter.DoubleToInt64Bits(actual), label + " bit mismatch");
+        }
+
+        /// <summary>
+        /// The survivor-subset currency predicate
+        /// (<see cref="ParquetScoreCache.IsCurrentReconciledSurvivorSubset"/>), against real
+        /// artifacts rather than a hand-built footer.
+        ///
+        /// <para>It answers whether a reconciled parquet can be READ in the shape a per-run
+        /// survivor rebuild needs, and two callers ask it: the Stage 7 refusal that names the
+        /// stale files, and the admission that decides whether the second-pass join may fold a
+        /// run at a time. Both of them turn a wrong answer into a whole-cohort outcome - a run
+        /// admitted to a fold it then aborts, or an O(files) pool nobody asked for - so the
+        /// three states are pinned here: absent, present-without-the-marker (the Stage 4
+        /// original, which is exactly the file a path-derivation slip would hand it), and
+        /// present-and-current.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestIsCurrentReconciledSurvivorSubset()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_recon_current_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string originalPath = Path.Combine(dir, "sample1.scores.parquet");
+                string reconciledPath = Path.Combine(dir, "sample1.scores-reconciled.parquet");
+
+                // Absent: false, and no throw. This is the no-work state on a cold cohort, so it
+                // has to be an answer rather than an error.
+                Assert.IsFalse(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciledPath));
+
+                var original = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 3, 1, 2 })
+                    original.Add(MakeStreamEntry(id, id * 10.0));
+                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML");
+
+                // The Stage 4 original is a well-formed parquet with neither the marker nor the
+                // score_index column, and it must not pass: it is the file a stem-derivation
+                // slip substitutes, and its rows are the PRE-reconciliation ones.
+                Assert.IsFalse(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(originalPath));
+
+                // Written the way Stage 6 writes it - the marker in the footer, score_index in
+                // the schema - which is the only combination that passes.
+                //
+                // Metadata from the REAL producer, not hand-fed. StreamReconciledScoresParquet
+                // writes the caller's map verbatim, so a test that supplies the marker itself
+                // asserts only that the reader can read what the test wrote: let
+                // ReconciledParquetWriter stop stamping it and this would still pass while
+                // AllReconciledParquetsCurrent returned false for every real run and the whole
+                // cohort fell back to the resident join. Going through the producer is what
+                // makes the two sides able to disagree.
+                var metadata = ReconciledParquetWriter.BuildReconciliationMetadata(
+                    new OspreyConfig(), null);
+                Assert.AreEqual(ParquetScoreCache.RECONCILED_SURVIVORS,
+                    metadata["osprey.reconciled"]);
+                ParquetScoreCache.StreamReconciledScoresParquet(
+                    originalPath, reconciledPath, null, null, metadata, null, "f.mzML", null,
+                    null, null);
+                Assert.IsTrue(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciledPath));
+
+                // And it is the POSITIVE form of the interim-shape refusal, not a second
+                // opinion: a file this accepts is one that one rejects.
+                Assert.IsFalse(ParquetScoreCache.IsSubsetWithoutScoreIndex(reconciledPath));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch { /* best-effort */ }
+            }
         }
 
         /// <summary>
