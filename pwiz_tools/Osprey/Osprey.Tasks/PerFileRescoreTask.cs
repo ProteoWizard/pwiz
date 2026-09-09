@@ -2728,22 +2728,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Bring the shared buffer to the whole-run post-rescore state the
-        /// <see cref="RescoredEntries"/> milestone promises, on the first read of that
-        /// milestone (see the deferring constructor in <c>PipelineByproducts.cs</c>).
-        ///
-        /// <para>This is the join work that used to end <see cref="Run"/>. It is here
-        /// because the pool is global - the pass-2 protein-compact competition is over a
-        /// global stratum - while <see cref="Run"/> is a per-file HPC task that exits when
-        /// its one file is done. Running it on the pull puts the cost on the consumer that
-        /// needs the pool, and lets a <c>--task PerFileRescoring</c> worker skip it by never
-        /// pulling (issue #4597).</para>
-        ///
-        /// <para>Reports its own <c>[STAGE-WALL]</c> line. The work left Stage 6's stopwatch
-        /// and lands inside no other stage's, so without one a perf comparison reads a 16-minute
-        /// Stage 6 saving with nothing anywhere absorbing it.</para>
-        /// </summary>
-        /// <summary>
         /// The per-run source Stage 7 folds through on the straight-through COMPUTE path, or
         /// null when this run cannot supply one and the whole-run
         /// <see cref="BuildRescoredPool"/> stays the only route.
@@ -2839,6 +2823,22 @@ namespace pwiz.Osprey.Tasks
             return _poolPlan;
         }
 
+        /// <summary>
+        /// Bring the shared buffer to the whole-run post-rescore state the
+        /// <see cref="RescoredEntries"/> milestone promises, on the first read of that
+        /// milestone (see the deferring constructor in <c>PipelineByproducts.cs</c>).
+        ///
+        /// <para>This is the join work that used to end <see cref="Run"/>. It is here
+        /// because the pool is global - the pass-2 protein-compact competition is over a
+        /// global stratum - while <see cref="Run"/> is a per-file HPC task that exits when
+        /// its one file is done. Running it on the pull puts the cost on the consumer that
+        /// needs the pool, and lets a <c>--task PerFileRescoring</c> worker skip it by never
+        /// pulling (issue #4597).</para>
+        ///
+        /// <para>Reports its own <c>[STAGE-WALL]</c> line. The work left Stage 6's stopwatch
+        /// and lands inside no other stage's, so without one a perf comparison reads a 16-minute
+        /// Stage 6 saving with nothing anywhere absorbing it.</para>
+        /// </summary>
         private void BuildRescoredPool(PipelineContext ctx)
         {
             var plan = PoolPlanForBuild();
