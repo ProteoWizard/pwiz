@@ -275,6 +275,20 @@ namespace pwiz.Osprey.IO
         // round-trip is logically identical. Always null in production.
         internal static int? RowGroupRowCapForTest;
 
+        // Columns of a row group to compress concurrently. Output must be identical at
+        // any value - only the append is ordered - so this is purely a speed/memory
+        // trade. 0 lets Parquet.Net use the core count; 1 forces the sequential loop
+        // through the same code, which is how the A/B against the golden is taken.
+        private static readonly int ParquetWriteThreads = ResolveParquetWriteThreads();
+
+        private static int ResolveParquetWriteThreads()
+        {
+            string raw = Environment.GetEnvironmentVariable(@"OSPREY_PARQUET_WRITE_THREADS");
+            if (!string.IsNullOrEmpty(raw) && int.TryParse(raw, out int n) && n > 0)
+                return n;
+            return 0;
+        }
+
         /// <summary>
         /// Write scored entries to a Parquet file.
         /// Schema columns: entry_id, is_decoy, charge, scan_number, modified_sequence,
@@ -692,8 +706,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static void WriteRowGroupColumns(ParquetRowGroupWriter group, List<DataColumn> columns)
         {
-            foreach (var column in columns)
-                RunSync(group.WriteColumnAsync(column));
+            RunSync(group.WriteColumnsAsync(columns, null, ParquetWriteThreads));
         }
 
         /// <summary>

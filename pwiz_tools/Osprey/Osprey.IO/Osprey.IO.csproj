@@ -11,7 +11,10 @@
 
   <ItemGroup>
     <!-- ReSharper disable once VulnerablePackage -->
-    <PackageReference Include="Parquet.Net" Version="4.25.0" />
+    <PackageReference Include="Parquet.Net" Version="4.25.0" ExcludeAssets="compile" />
+    <Reference Include="Parquet">
+      <HintPath>..\..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
+    </Reference>
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
