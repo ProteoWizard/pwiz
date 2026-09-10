@@ -1241,12 +1241,19 @@ function Test-NoAllRunsBundle {
     # LIVENESS FIRST. A negative assertion passes on a log that says nothing at all - an empty
     # file, an unflushed buffer, a run that never started - so absence of the marker is only
     # evidence once the log is known to describe a real run. Test-Path alone cannot tell those
-    # apart. Every pipeline run banners each task it enters, so one [TASK] line is the cheapest
-    # proof this log has content to search.
-    if (@($lines | Where-Object { $_.Contains('[TASK] ') }).Count -eq 0) {
-        $issues.Add(("{0}: {1} line(s) and no '[TASK]' banner - the run did not start or the " +
-            "log was never flushed, so the route it took cannot be asserted either way" -f
-            $logName, $lines.Count))
+    # apart.
+    #
+    # The anchor is Program.cs's startup banner, which every invocation emits after parsing its
+    # arguments and BEFORE it chooses any route. The obvious anchor - a '[TASK]' banner - is
+    # wrong here and this leg proved it: `--task ModelDiagnostics` over a run whose products are
+    # all present returns from RunModelDiagnosticsTask before `new AnalysisPipeline()` is ever
+    # reached (Program.cs), so mode 7 emits no task banner at all while mode 11, which falls
+    # through to the pipeline, emits several. An anchor only one route reaches fails that route
+    # for being itself.
+    if (@($lines | Where-Object { $_.Contains('Threads:') }).Count -eq 0) {
+        $issues.Add((("{0}: {1} line(s) and no startup banner - the run did not get as far as " +
+            "choosing a route, or the log was never flushed, so the route it took cannot be " +
+            "asserted either way") -f $logName, $lines.Count))
         return @{ Pass = $false; Issues = $issues }
     }
     # ONE marker, emitted by the all-runs hydrate itself (RescoreHydration.

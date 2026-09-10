@@ -231,6 +231,16 @@ namespace pwiz.Osprey.Tasks
             if (!string.IsNullOrEmpty(experimentPath))
                 yield return experimentPath;
 
+            // The analysis-wide retained base_id summary is deliberately NOT declared here,
+            // unlike its experiment-sidecar sibling above. Declaring it would oblige
+            // WriteRetainedBaseIds to stamp it too, and until it has been stamped once,
+            // OnlyDiagnosticsProductOutstanding reads every completed analysis on disk as owing
+            // a first pass - so `--task ModelDiagnostics` on a finished 446-run cohort would
+            // re-run Stage 1-5 for hours instead of folding the report in seconds, which is the
+            // exact cost that arm exists to avoid. The absence is disclosed instead: Rehydrate
+            // warns and takes the all-runs bundle, the route master took. See the note on
+            // RetainedBaseIdSidecar.FormatVersion for what a version bump owes.
+
             // The pass-1 diagnostics product, when --model-diagnostics is on. Declaring it is
             // what puts the report inside the resume driver's forward scan instead of beside
             // it: a cohort that completed its first pass without the flag has every other
@@ -832,16 +842,21 @@ namespace pwiz.Osprey.Tasks
 
             // Null means this analysis has no retained base_id summary to build the per-run
             // loader from, so the bundle below is the only route left and refusing would fail a
-            // run master completes. Disclose it: the cost is real and the operator can act on
-            // it - a FirstPassFDR pass over this analysis writes the summary, after which the
-            // resume takes the bounded route.
+            // run master completes. Disclose it instead - and say what actually regenerates the
+            // summary, which is NOT "re-run --task FirstPassFDR": that task declares this file
+            // in neither Outputs nor ValidityKey (see RetainedBaseIdSidecar.FormatVersion), so
+            // a re-run over a complete analysis reports its outputs valid and writes nothing.
+            // Naming a remedy that quietly does nothing is the defect this guard's first
+            // version had.
             ctx.LogWarning(
                 @"No analysis-wide retained base_id summary for this analysis, so the " +
                 @"first-pass state is adopted through the ALL-RUNS reconciliation bundle, " +
                 @"which holds every run's survivors at once and grows O(files x entries) - " +
                 @"measured at 0.10 GB/file on a 446-run cohort. The bounded per-run survivor " +
-                @"loader is built from that summary; re-running the FirstPassFDR phase for " +
-                @"this analysis writes it.");
+                @"loader is built from that summary, which is written when Stage 6 planning " +
+                @"runs; an analysis whose first pass is already complete will not rewrite it, " +
+                @"so producing one means running the first pass again - a fresh output " +
+                @"directory, or this analysis with FirstPassFDR's validity stamps cleared.");
 
             // The bundle to adopt. In worker mode the upstream PerFileScoring
             // task hydrated it from sibling sidecars and published it. On a
