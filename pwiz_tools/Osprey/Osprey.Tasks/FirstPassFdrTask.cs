@@ -820,15 +820,28 @@ namespace pwiz.Osprey.Tasks
             // it rather than let a run discover the cost at file ~310 of 446: the failure this
             // replaces was silent, produced the RIGHT report, and only ran out of memory - so
             // nothing short of the box refused it. See AllRunsBundleGuardError for why it takes
-            // no token.
-            string bundleError =
-                ScoringTaskShared.AllRunsBundleGuardError(OspreyEnvironment.AllowUnfixedResident);
+            // no token, and why it refuses only the runs that HAD the bounded alternative.
+            string bundleError = ScoringTaskShared.AllRunsBundleGuardError(
+                config, OspreyEnvironment.AllowUnfixedResident);
             if (bundleError != null)
             {
                 ctx.LogError(bundleError);
                 ctx.ExitCode = 1;
                 return false;
             }
+
+            // Null means this analysis has no retained base_id summary to build the per-run
+            // loader from, so the bundle below is the only route left and refusing would fail a
+            // run master completes. Disclose it: the cost is real and the operator can act on
+            // it - a FirstPassFDR pass over this analysis writes the summary, after which the
+            // resume takes the bounded route.
+            ctx.LogWarning(
+                @"No analysis-wide retained base_id summary for this analysis, so the " +
+                @"first-pass state is adopted through the ALL-RUNS reconciliation bundle, " +
+                @"which holds every run's survivors at once and grows O(files x entries) - " +
+                @"measured at 0.10 GB/file on a 446-run cohort. The bounded per-run survivor " +
+                @"loader is built from that summary; re-running the FirstPassFDR phase for " +
+                @"this analysis writes it.");
 
             // The bundle to adopt. In worker mode the upstream PerFileScoring
             // task hydrated it from sibling sidecars and published it. On a
@@ -1226,7 +1239,7 @@ namespace pwiz.Osprey.Tasks
                     ? StreamOwnReconciliationBundle(ctx, perFileEntries, parquetPaths)
                     : RescoreHydration.HydrateReconciliationOverlay(perFileEntries, parquetPaths,
                         LoadFirstPassExperimentRecords(ctx.Config, ctx),
-                        ctx.Get<SequencePool>().Value);
+                        ctx.Get<SequencePool>().Value, ctx.LogInfo);
             }
             catch (InvalidDataException ex)
             {

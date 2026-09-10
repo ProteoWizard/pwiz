@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -289,29 +290,69 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The all-runs reconciliation bundle guard: always refuses, and refuses usefully.
+        /// The all-runs reconciliation bundle guard: refuses the run that HAD the bounded
+        /// alternative and declined it, and stays out of the way of the run that never had one.
         ///
-        /// <para>Unconditional by design - it takes no token, so there is no "named" case to
-        /// assert. What IS assertable, and what matters when this fires years from now, is that
-        /// the message tells the operator what happened and what to do: the shape
-        /// (O(files x entries)), the measured cost, the bounded alternative, and the fact that
-        /// no token can admit it - so nobody burns an afternoon looking for the environment
-        /// variable that would let it through.</para>
+        /// <para>That distinction is the test. The guard first refused unconditionally, which
+        /// reads as caution and is not: the arm it guards is also reached when this analysis has
+        /// no retained base_id summary at all - no <c>-o</c> blib, or one written by a build
+        /// with another <c>FormatVersion</c> - and those runs complete on master. An
+        /// unconditional refusal fails them, and tells them to use a loader that is built from
+        /// the very file whose absence sent them down this arm. So both halves are pinned here,
+        /// and the null half is the one that would otherwise regress silently.</para>
+        ///
+        /// <para>The refusing half also asserts the message says what happened and what to do -
+        /// the shape (O(files x entries)), the measured cost, the bounded alternative, and that
+        /// no token admits it, so nobody burns an afternoon hunting the environment variable
+        /// that would let it through.</para>
         /// </summary>
         private static void AssertAllRunsBundleGuard()
         {
-            string err = ScoringTaskShared.AllRunsBundleGuardError(null);
-            Assert.IsNotNull(err, "the all-runs bundle must never be admitted silently");
-            StringAssert.Contains(err, "O(files x entries)");
-            StringAssert.Contains(err, "per-run survivor loader");
-            StringAssert.Contains(err, "cannot admit this path");
+            // No output blib: nothing names the summary, so the per-run loader cannot exist and
+            // there is nothing to refuse. Master completes these.
+            Assert.IsNull(
+                ScoringTaskShared.AllRunsBundleGuardError(new OspreyConfig(), null),
+                "a run with no bounded alternative must not be refused");
 
-            // A supplied token changes the wording but not the answer. Naming the value back is
-            // what stops a stale or misspelled token reading exactly like an unset one, which is
-            // the property its two sibling guards are also pinned on.
-            string named = ScoringTaskShared.AllRunsBundleGuardError(ResidentPaths.PROJECTION_OFF);
-            Assert.IsNotNull(named, "no token admits the all-runs bundle");
-            StringAssert.Contains(named, ResidentPaths.PROJECTION_OFF);
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_bundle_guard_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var config = new OspreyConfig
+                {
+                    InputFiles = new List<string> { Path.Combine(dir, "a.mzML") },
+                    OutputBlib = Path.Combine(dir, "out.blib")
+                };
+
+                // Named but not written: the summary is what the loader is built from, so a
+                // path with no file behind it is still "no bounded alternative".
+                Assert.IsNull(ScoringTaskShared.AllRunsBundleGuardError(config, null),
+                    "a missing retained base_id summary is disk state, not a declined route");
+
+                // Written and current: the bounded route existed and this arm was reached
+                // anyway, which is the --task ModelDiagnostics defect shape.
+                RetainedBaseIdSidecar.Write(
+                    RetainedBaseIdSidecar.PathFor(config.OutputBlib, config.InputFiles[0]),
+                    new[] { 1u, 2u, 3u });
+                string err = ScoringTaskShared.AllRunsBundleGuardError(config, null);
+                Assert.IsNotNull(err, "the all-runs bundle must never be admitted silently");
+                StringAssert.Contains(err, "O(files x entries)");
+                StringAssert.Contains(err, "per-run survivor loader");
+                StringAssert.Contains(err, "cannot admit this path");
+
+                // A supplied token changes the wording but not the answer. Naming the value back
+                // is what stops a stale or misspelled token reading exactly like an unset one,
+                // which is the property its two sibling guards are also pinned on.
+                string named = ScoringTaskShared.AllRunsBundleGuardError(
+                    config, ResidentPaths.PROJECTION_OFF);
+                Assert.IsNotNull(named, "no token admits the all-runs bundle");
+                StringAssert.Contains(named, ResidentPaths.PROJECTION_OFF);
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
         }
 
         /// <summary>

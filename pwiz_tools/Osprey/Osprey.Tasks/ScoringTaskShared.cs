@@ -456,6 +456,26 @@ namespace pwiz.Osprey.Tasks
             //
             // The gate check is mode 3's per-run-hydrate leg, which SKIPPED on all three
             // --model-diagnostics datasets for exactly this reason and must now run and pass.
+            return PerRunSurvivorLoaderAvailable(config);
+        }
+
+        /// <summary>
+        /// Whether the per-run survivor loader can be BUILT at all: the analysis-wide retained
+        /// base_id summary is on disk in a shape this build reads. It is what the loader is
+        /// assembled from, so its absence means the bounded route does not exist here - no
+        /// output blib to name it after, or a summary written by a build with a different
+        /// <c>FormatVersion</c>.
+        ///
+        /// <para>Split out of <see cref="CanHydratePerRun"/> because the two halves of that
+        /// predicate answer different questions and one caller needs them apart. The terms above
+        /// it are about the ROUTE - which task this is, what it consumes - and a false there
+        /// means the run declined a bounded alternative that exists. This term is about DISK
+        /// state, and a false here means there was nothing to decline. Only the first is a
+        /// defect; see <see cref="AllRunsBundleGuardError"/>, which refuses one and not the
+        /// other.</para>
+        /// </summary>
+        internal static bool PerRunSurvivorLoaderAvailable(OspreyConfig config)
+        {
             string path = RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
             return !string.IsNullOrEmpty(path) && RetainedBaseIdSidecar.IsCurrentFormat(path);
         }
@@ -609,6 +629,17 @@ namespace pwiz.Osprey.Tasks
         /// it a refilled run would carry the pre-compaction pool and the fold would run over a
         /// set ~52x too large. Its absence returns false here rather than failing, for the
         /// reason its sibling gives.</para>
+        ///
+        /// <para><b>What the streamed join is worth</b>, kept here because this is where the
+        /// choice is made - it used to live on the <c>OSPREY_STAGE7_STREAM</c> switch and would
+        /// have been deleted with it. The all-runs survivor pool is what a
+        /// <c>--task SecondPassFDR</c> node spends its whole memory budget on before the join
+        /// computes anything: at 446 CHS runs it reached 68.0 GB managed / 70.5 GB private and
+        /// was killed at run 381 of 446 with 0.34 GB free, still inside the
+        /// <c>--input-scores</c> load. It is the <c>O(runs x entries)</c> shape the architecture
+        /// forbids a join to hold, and every consumer of it in Stage 7 - the fragment release,
+        /// the pass-2 competition, protein FDR, the experiment-q re-clamp and all three blib
+        /// gates - is a fold to <c>O(distinct)</c> that never needed the whole pool.</para>
         /// </summary>
         internal static bool CanStreamStage7Join(OspreyConfig config)
         {
@@ -682,10 +713,7 @@ namespace pwiz.Osprey.Tasks
             // together.
             if (!OspreyEnvironment.Pass2ProteinCompact)
                 return false;
-            string retainedPath =
-                RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
-            return !string.IsNullOrEmpty(retainedPath) &&
-                   RetainedBaseIdSidecar.IsCurrentFormat(retainedPath);
+            return PerRunSurvivorLoaderAvailable(config);
         }
 
         /// <summary>
@@ -725,18 +753,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The retained base_id set for the streamed second-pass join, or a hard failure.
-        ///
-        /// <para>Separate from <see cref="ReadRetainedBaseIds"/>'s null-returning form because
-        /// the CALLER cannot degrade here. By the time Stage 7 asks, the <c>--input-scores</c>
-        /// load has already published one EMPTY list per run on the strength of
-        /// <c>CanStreamStage7Join</c> - which only header-probes the sidecar - so a null
-        /// leaves the stage folding over 446 empty runs, logging "No entries pass FDR threshold.
-        /// Creating empty blib." and exiting 0. An empty <c>.blib</c> from a successful-looking
-        /// run is the worst outcome this pipeline can produce, and the sidecar's own reader
-        /// documents its absence as FATAL.</para>
-        /// </summary>
-        /// <summary>
         /// Refuse the ALL-RUNS reconciliation bundle, which retains every run's POST-compaction
         /// survivors at once and so grows O(files x entries) - 0.10 GB/file measured on a
         /// 446-run cohort, past a 63.7 GB box by file ~310.
@@ -751,13 +767,32 @@ namespace pwiz.Osprey.Tasks
         /// ratchet exists to make impossible.</para>
         ///
         /// <para>It takes NO token, deliberately. <see cref="ResidentPaths"/> may only shrink,
-        /// and the bounded alternative already exists on every route that reaches here - the
-        /// per-run survivor loader built from the analysis-wide retained base_id summary. A path
-        /// that CAN stream and does not is a defect to fix, not a path to name, which is the
+        /// and where this fires the bounded alternative is already on disk - the per-run
+        /// survivor loader built from the analysis-wide retained base_id summary. A path that
+        /// CAN stream and does not is a defect to fix, not a path to name, which is the
         /// disposition the hpc-merge and resume-survivor-handoff notes already record.</para>
+        ///
+        /// <para><b>Null where the bounded alternative does not exist</b>, which is the whole
+        /// content of this guard. It first read <c>!CanHydratePerRun</c> as "an operator chose a
+        /// resident route", and that predicate's false branch is half DISK STATE: no <c>-o</c>
+        /// blib to name the summary after, or a summary this build cannot read. Those runs
+        /// completed before the per-run loader existed and complete on master, so refusing them
+        /// is a regression - and the refusal names a remedy built FROM the very file whose
+        /// absence triggered it. <c>WarnPreCompactionPool</c> already records the disposition
+        /// for that shape: warn, because "every configuration that reaches here worked before
+        /// the bounded hydrate existed, so failing them would be a regression, not a guard".
+        /// What is left after the split is the route case - the loader is on disk and this run
+        /// declined it - which is the <c>--task ModelDiagnostics</c> defect this branch fixes
+        /// and is unreachable once it is fixed. That is the point: it fires only if a later
+        /// edit re-opens the arm, which is the one thing no gate at 3 files can see.</para>
         /// </summary>
-        internal static string AllRunsBundleGuardError(string allowUnfixedResident)
+        internal static string AllRunsBundleGuardError(OspreyConfig config, string allowUnfixedResident)
         {
+            // Disk state, not a choice: nothing to decline, so nothing to refuse. The caller
+            // discloses the cost instead - it is about to take the O(files x entries) route
+            // because this analysis has no bounded one, and that is worth saying out loud.
+            if (!PerRunSurvivorLoaderAvailable(config))
+                return null;
             // Named the same way the sibling guards name theirs, so a stale or misspelled token
             // cannot read as an unset one - even though no token can admit this path, an
             // operator who set one is owed the answer that it was not the problem.
@@ -776,6 +811,18 @@ namespace pwiz.Osprey.Tasks
                 supplied);
         }
 
+        /// <summary>
+        /// The retained base_id set for the streamed second-pass join, or a hard failure.
+        ///
+        /// <para>Separate from <see cref="ReadRetainedBaseIds"/>'s null-returning form because
+        /// the CALLER cannot degrade here. By the time Stage 7 asks, the <c>--input-scores</c>
+        /// load has already published one EMPTY list per run on the strength of
+        /// <c>CanStreamStage7Join</c> - which only header-probes the sidecar - so a null
+        /// leaves the stage folding over 446 empty runs, logging "No entries pass FDR threshold.
+        /// Creating empty blib." and exiting 0. An empty <c>.blib</c> from a successful-looking
+        /// run is the worst outcome this pipeline can produce, and the sidecar's own reader
+        /// documents its absence as FATAL.</para>
+        /// </summary>
         internal static HashSet<uint> ReadRetainedBaseIdsOrFail(OspreyConfig config)
         {
             var retained = ReadRetainedBaseIds(config, out string error);

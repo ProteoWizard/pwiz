@@ -1237,16 +1237,32 @@ function Test-NoAllRunsBundle {
         return @{ Pass = $false; Issues = $issues }
     }
     $logName = Split-Path -Leaf $LogPath
-    # Two markers: the progress heading the all-runs hydrate prints, and the guard's own refusal
-    # line. The guard SHOULD make this unreachable - asserting both means the leg still reds if
-    # the guard is ever weakened, rather than silently depending on it.
-    foreach ($marker in @('Hydrating reconciliation bundle',
-                          'ALL-RUNS reconciliation bundle')) {
-        if (@(Get-Content -LiteralPath $LogPath | Where-Object { $_.Contains($marker) }).Count -gt 0) {
-            $issues.Add((("{0}: '{1}' - this run built (or was refused for building) the " +
-                "ALL-RUNS bundle, which is O(files x entries); the per-run survivor loader is " +
-                "the bounded route") -f $logName, $marker))
-        }
+    $lines = @(Get-Content -LiteralPath $LogPath)
+    # LIVENESS FIRST. A negative assertion passes on a log that says nothing at all - an empty
+    # file, an unflushed buffer, a run that never started - so absence of the marker is only
+    # evidence once the log is known to describe a real run. Test-Path alone cannot tell those
+    # apart. Every pipeline run banners each task it enters, so one [TASK] line is the cheapest
+    # proof this log has content to search.
+    if (@($lines | Where-Object { $_.Contains('[TASK] ') }).Count -eq 0) {
+        $issues.Add(("{0}: {1} line(s) and no '[TASK]' banner - the run did not start or the " +
+            "log was never flushed, so the route it took cannot be asserted either way" -f
+            $logName, $lines.Count))
+        return @{ Pass = $false; Issues = $issues }
+    }
+    # ONE marker, emitted by the all-runs hydrate itself (RescoreHydration.
+    # HydrateReconciliationOverlay) and by the guard that refuses it - so this reds whether the
+    # bundle was built or merely attempted, and the guard is asserted rather than depended on.
+    #
+    # The progress heading 'Hydrating reconciliation bundle' was the other marker and was
+    # WORSE THAN USELESS: ProgressReporter defers its heading past LOG_WAIT_SECONDS, so a
+    # 3-file hydrate never prints it, and the BOUNDED HydrateCompactedStreaming prints exactly
+    # the same heading whenever it does run long enough. It could not fire at gate scale and
+    # would have fired on the bounded route at cohort scale.
+    $marker = 'ALL-RUNS reconciliation bundle'
+    if (@($lines | Where-Object { $_.Contains($marker) }).Count -gt 0) {
+        $issues.Add((("{0}: '{1}' - this run built (or was refused for building) the " +
+            "ALL-RUNS bundle, which is O(files x entries); the per-run survivor loader is " +
+            "the bounded route") -f $logName, $marker))
     }
     return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
 }
