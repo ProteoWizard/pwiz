@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -343,7 +343,7 @@ namespace SkylineTester
                 {
                     _updateTimer.Stop();
 
-                    MessageBox.Show(string.Format("Unexpected Error: {0}", x));
+                    MainWindow.ReportOrShow(string.Format("Unexpected Error: {0}", x));
 
                     Stop(false);
                 }

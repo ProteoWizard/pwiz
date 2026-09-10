@@ -484,7 +484,9 @@ namespace SkylineTester
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                // A .skytr auto-run starts just below, so a modal here blocks the whole pass
+                // before it begins, with nobody to dismiss it.
+                ReportOrShow(ex.Message);
             }
 
             if (_openFile != null && Path.GetExtension(_openFile) == ".skytr")
@@ -702,7 +704,7 @@ namespace SkylineTester
         /// dismiss it. The caller decides what to do next either way: this reports, it does not
         /// choose.
         /// </summary>
-        private void ReportOrShow(string message)
+        public void ReportOrShow(string message)
         {
             if (IsUnattended)
                 commandShell.AddImmediate("# {0}", message.Replace(Environment.NewLine, " "));
