@@ -31,6 +31,18 @@
        moves never invalidate them.
        ============================================================ -->
   <PropertyGroup>
+    <!-- $(PwizPrebuiltNativeShimDir) is the public knob; $(_PwizPrebuiltNativeShimDir) is the
+         same value guaranteed to end in a separator, so consumers can concatenate:
+         $(_PwizPrebuiltNativeShimDir)Foo.dll.
+
+         It has to be a SECOND property rather than a normalisation in place. A value that
+         arrives via -p: is a global property, and MSBuild silently ignores any PropertyGroup
+         that tries to redefine one - so normalising the public name looked correct and did
+         nothing. Callers also cannot simply pass the trailing separator themselves, because
+         a command-line value ending in a backslash makes MSBuild read the following quote
+         as escaped. Empty stays empty, so either name still doubles as the opt-in flag. -->
+    <_PwizPrebuiltNativeShimDir Condition="'$(PwizPrebuiltNativeShimDir)' != ''">$([MSBuild]::EnsureTrailingSlash('$(PwizPrebuiltNativeShimDir)'))</_PwizPrebuiltNativeShimDir>
+
     <!-- pwiz-sharp/ — root for every C# project, vendor csproj content paths,
          installer outputs, MascotShim CMake tree, example_data fixtures, etc. -->
     <PwizSharpRoot>$(MSBuildThisFileDirectory)</PwizSharpRoot>
