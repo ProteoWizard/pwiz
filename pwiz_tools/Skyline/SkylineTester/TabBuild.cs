@@ -1,6 +1,7 @@
-/*
+﻿/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2013 University of Washington - Seattle, WA
  * 
@@ -111,6 +112,15 @@ namespace SkylineTester
                 ? GetMasterUrl()
                 : MainWindow.BranchUrl.Text;
         }
+
+        /// <summary>
+        /// The configuration build.bat is told to build. A nightly's tests run from a staged
+        /// directory named after this configuration (GetNightlyStagingDir), so the two cannot be
+        /// allowed to drift: naming a configuration the build does not produce points the run at a
+        /// directory that never appears, and it fails as "nothing was built" rather than as
+        /// anything about the configuration.
+        /// </summary>
+        public const string BUILD_CONFIGURATION = "Release";
 
         public static bool CreateBuildCommands(
             string branchUrl, 
@@ -230,7 +240,7 @@ namespace SkylineTester
             // afterwards under their own duration budget and requeue logic, so letting build.bat
             // test as well would double the work.
             commandShell.Add("#@ Building Skyline...\n");
-            commandShell.Add("{0} Release --i-agree-to-the-vendor-licenses{1}",
+            commandShell.Add("{0} " + BUILD_CONFIGURATION + " --i-agree-to-the-vendor-licenses{1}",
                 Path.Combine(buildRoot, @"pwiz_tools\Skyline\build.bat").Quote(),
                 runBuildTests ? string.Empty : " --no-tests");
 

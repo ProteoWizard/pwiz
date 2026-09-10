@@ -1,6 +1,7 @@
-/*
+﻿/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2013 University of Washington - Seattle, WA
  * 
@@ -601,8 +602,7 @@ namespace SkylineTester
                 foreach (var dir in searched)
                     message.AppendLine("    " + dir);
             }
-            MessageBox.Show(this, message.ToString(), "SkylineTester",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            ReportOrShow(message.ToString());
         }
 
         public IEnumerable<TestInfo> GetTestInfos(string testDll, string filterAttribute = null, string filterName = null)
@@ -674,6 +674,41 @@ namespace SkylineTester
         }
 
         #endregion
+
+        /// <summary>
+        /// True when there is no one at the keyboard to answer a dialog.
+        /// <para>Covers every unattended entry point: SkylineNightly launching this program on a
+        /// .skytr, --autorun, a run that already told the command shell it is unattended (the
+        /// run-again timer and the restart after a failure both go through it), and running as a
+        /// child of SkylineNightly at all. A modal on any of them blocks the pass until someone
+        /// dismisses it, which is why a nightly that found no tests presented as an eight-minute
+        /// hang rather than as a message anyone could read. Report to the run log instead of
+        /// prompting whenever this is true.</para>
+        /// </summary>
+        private bool IsUnattended
+        {
+            get
+            {
+                return _autoRun ||
+                       commandShell.IsUnattended ||
+                       (_openFile != null &&
+                        Equals(Path.GetExtension(_openFile), ".skytr")) ||
+                       IsNightlyRun();
+            }
+        }
+
+        /// <summary>
+        /// Shows <paramref name="message"/>, or writes it to the run log when nobody is there to
+        /// dismiss it. The caller decides what to do next either way: this reports, it does not
+        /// choose.
+        /// </summary>
+        private void ReportOrShow(string message)
+        {
+            if (IsUnattended)
+                commandShell.AddImmediate("# {0}", message.Replace(Environment.NewLine, " "));
+            else
+                MessageBox.Show(this, message, "SkylineTester", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
 
         private static bool IsNightlyRun()
         {
@@ -827,9 +862,11 @@ namespace SkylineTester
             // net8 tests run from a *staged* directory assembled by Stage-Tests.ps1 that
             // co-locates TestRunner.exe, the test DLLs, and Skyline-daily (the net8 analogue of the
             // net472 single bin\x64\Release, which no longer exists because projects build to
-            // per-project bin\...\net8.0-windows dirs). net8 is x64-only, so only the 64-bit "bin"
-            // slot is populated with the most recent staging*\Release build in the checkout;
-            // the other slots are unused (hidden).
+            // per-project bin\...\net8.0-windows dirs). net8 is x64-only, so only the 64-bit
+            // slots are populated: the two "bin" slots from the most recent
+            // staging*\<Config> build in the developer's checkout, and the Nightly slot from
+            // the checkout a nightly just cloned and built. The 32-bit and zip slots are
+            // unused (hidden).
             // Offer BOTH staged configurations. Only one used to be listed, so a developer could
             // not run the other without rebuilding this program - and while Release was picked
             // unconditionally, that silently ran stale Release binaries against a fresh Debug build.
@@ -841,10 +878,10 @@ namespace SkylineTester
                 GetNet8StagingDir(preferred),     // bin (64 bit)   - staged, this build's configuration
                 null,                             // Build (32 bit)
                 GetNet8StagingDir(other),         // Build (64 bit) - staged, the other configuration
-                null,          // Nightly (32 bit)
-                null,          // Nightly (64 bit)
-                null,          // zip (32 bit)
-                null,          // zip (64 bit)
+                null,                             // Nightly (32 bit) - n/a on net8
+                GetNightlyStagingDir(),           // Nightly (64 bit) - staged, in the nightly checkout
+                null,                             // zip (32 bit)
+                null,                             // zip (64 bit)
             };
         }
 
@@ -925,6 +962,28 @@ namespace SkylineTester
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Where a nightly run's tests live: the staged directory inside the checkout the nightly
+        /// just cloned and built.
+        /// <para>Named whether or not it exists yet, which is the point of it. The nightly builds
+        /// with --no-tests, and that path in build.bat returns before the staging step, so nothing
+        /// is staged in that checkout when the test step is queued; <see cref="AddTestRunner"/>
+        /// stages it first, exactly as it does for a developer after a clean build. Requiring the
+        /// directory to exist here would leave the slot null forever, which is what left a nightly
+        /// building successfully and then running no tests at all.</para>
+        /// <para>Derived from the nightly build root rather than from <see cref="SkylineDirectory"/>
+        /// like the developer slots, because a nightly runs this program from the unzipped distro,
+        /// which is outside any checkout - SkylineDirectory() is null there. It must NOT fall back
+        /// to the distro: its "SkylineTester Files" folder holds a complete set of test DLLs from
+        /// TeamCity's build of the same branch, so tests would run and pass while saying nothing
+        /// about the checkout that was just built.</para>
+        /// </summary>
+        private string GetNightlyStagingDir()
+        {
+            var skylineDir = Path.Combine(GetNightlyBuildRoot(), @"pwiz\pwiz_tools\Skyline");
+            return Path.Combine(skylineDir, "bin", TestStager.STAGING_ROOT, TabBuild.BUILD_CONFIGURATION);
         }
 
         /// <summary>
@@ -1016,7 +1075,7 @@ namespace SkylineTester
             var stagerExe = FindStagerExe(skylineDir, configuration);
             if (stagerExe == null)
             {
-                MessageBox.Show(this, string.Join(Environment.NewLine,
+                ReportOrShow(string.Join(Environment.NewLine,
                     "Tests run from a staged directory, assembled by TestRunner.",
                     "It was not found, so the tests would run whatever was staged last rather than",
                     "what you just built.",
