@@ -22,10 +22,13 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Parquet;
 using Parquet.Data;
@@ -882,6 +885,200 @@ namespace pwiz.Osprey.IO
 
         #endregion
 
+        #region Pipelined Row-Group Reading
+
+        // Column-chunk decodes allowed to run concurrently across the WHOLE PROCESS.
+        // Read parallelism is per FILE, but callers already run files in parallel
+        // (--parallel-files, and Stage 6's Parallel.For over files), so a per-call
+        // ProcessorCount would multiply into files x threads. A worker holds one of these
+        // permits only while it is decoding, so no matter how many files are open at once
+        // the process never has more than this many decodes in flight.
+        private static readonly SemaphoreSlim ParquetDecodeGate =
+            new SemaphoreSlim(Environment.ProcessorCount, Environment.ProcessorCount);
+
+        // Row groups decoded AHEAD of the consuming row loop, per open file. Decoding
+        // produces typed arrays and touches nothing else, and the groups reach the consumer
+        // in file order, so the output is identical at any value - this is purely a
+        // speed/memory trade. 1 forces the sequential path THROUGH THE SAME CODE (the
+        // caller's own reader, one resident row group), which is how the A/B is taken.
+        //
+        // Deliberately modest rather than the core count: one in-flight row group is up to
+        // MAX_ROWS_PER_ROW_GROUP rows x ~25 columns, so the resident working set is this
+        // multiple of what the sequential read held, per file being read. A bounded working
+        // set outranks peak speed here - see pwiz_tools/Osprey/docs/00-pipeline-architecture.md.
+        private const int DEFAULT_PARQUET_READ_THREADS = 4;
+
+        private static readonly int ParquetReadThreads = ResolveParquetReadThreads();
+
+        private static int ResolveParquetReadThreads()
+        {
+            string raw = Environment.GetEnvironmentVariable(@"OSPREY_PARQUET_READ_THREADS");
+            if (!string.IsNullOrEmpty(raw) && int.TryParse(raw, out int n) && n > 0)
+                return n;
+            return Math.Min(DEFAULT_PARQUET_READ_THREADS, Environment.ProcessorCount);
+        }
+
+        // Test seam: when non-null, overrides OSPREY_PARQUET_READ_THREADS so a single test
+        // process can take the sequential-vs-parallel A/B. Always null in production.
+        internal static int? ReadThreadsForTest;
+
+        /// <summary>
+        /// Enumerate <paramref name="path"/>'s row groups with their column chunks already
+        /// DECODED into typed arrays, handed over strictly in file order.
+        ///
+        /// <para>The parallel axis is ROW GROUPS, not columns: every
+        /// <c>DataColumnReader</c> from one <see cref="ParquetRowGroupReader"/> seeks on that
+        /// reader's single stream, so columns within a group cannot be decoded concurrently
+        /// from one reader - but row groups are independently addressable, so each worker
+        /// owns its own <see cref="FileStream"/> + <see cref="ParquetReader"/> over the same
+        /// path and pulls disjoint groups.</para>
+        ///
+        /// <para>The parallel/serial cut line is BELOW the caller's row loop and that is
+        /// deliberate. Decode - decompress plus plain/RLE decode - is the CPU cost;
+        /// materializing objects is cheap next to it, and the row loop is where
+        /// <see cref="LibraryStringInterner"/> interning happens, which writes an
+        /// unsynchronized dictionary when the pool is not frozen. Keeping the row loop on the
+        /// consuming thread means no caller acquires a new freezing contract and the running
+        /// <c>ParquetIndex</c> counter is reproduced by construction rather than
+        /// precomputed.</para>
+        ///
+        /// <para><paramref name="leadReader"/> is the caller's already-open reader. At degree
+        /// 1 it IS the reader used, so the sequential path costs no extra handle and holds
+        /// exactly one row group resident - the same shape as before this pipeline existed.
+        /// <paramref name="decode"/> is handed the fields of whichever reader opened the
+        /// group, never the lead's, because Parquet.Net 4.x binds a <see cref="DataField"/>
+        /// to the schema it came from.</para>
+        /// </summary>
+        private static IEnumerable<(int GroupIndex, TGroup Columns)> ReadRowGroupsPipelined<TGroup>(
+            string path, ParquetReader leadReader,
+            IReadOnlyDictionary<string, DataField> leadFieldsByName,
+            Func<ParquetRowGroupReader, IReadOnlyDictionary<string, DataField>, TGroup> decode)
+        {
+            int rowGroupCount = leadReader.RowGroupCount;
+            int degree = Math.Min(Math.Max(1, ReadThreadsForTest ?? ParquetReadThreads), rowGroupCount);
+            if (degree <= 1)
+            {
+                for (int g = 0; g < rowGroupCount; g++)
+                {
+                    TGroup sequential;
+                    using (var groupReader = leadReader.OpenRowGroupReader(g))
+                        sequential = decode(groupReader, leadFieldsByName);
+                    yield return (g, sequential);
+                }
+                yield break;
+            }
+
+            var decoded = new ConcurrentDictionary<int, TGroup>();
+            // Bounds the working set. A worker takes a slot BEFORE it claims a group index
+            // and the consumer returns the slot only after the caller's row loop is done
+            // with that group, so at most `degree` groups are ever resident. Taking the slot
+            // first is also what makes the hand-off deadlock-free: group indices are claimed
+            // in ascending order under a slot, so the group the consumer is waiting for is
+            // always either already decoded or in flight.
+            var slots = new SemaphoreSlim(degree);
+            var completed = new SemaphoreSlim(0);
+            var cancel = new CancellationTokenSource();
+            int nextGroup = -1;
+            Exception failure = null;
+
+            void DecodeWorker()
+            {
+                try
+                {
+                    using (var stream = OpenParquetRead(path))
+                    using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+                    {
+                        var fieldsByName = BuildFieldLookup(reader);
+                        while (true)
+                        {
+                            slots.Wait(cancel.Token);
+                            int g = Interlocked.Increment(ref nextGroup);
+                            if (g >= rowGroupCount)
+                            {
+                                slots.Release();
+                                return;
+                            }
+                            TGroup columns;
+                            ParquetDecodeGate.Wait(cancel.Token);
+                            try
+                            {
+                                using (var groupReader = reader.OpenRowGroupReader(g))
+                                    columns = decode(groupReader, fieldsByName);
+                            }
+                            finally
+                            {
+                                ParquetDecodeGate.Release();
+                            }
+                            decoded[g] = columns;
+                            completed.Release();
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // The consumer abandoned the enumeration, or a sibling worker failed.
+                }
+                catch (Exception ex)
+                {
+                    Interlocked.CompareExchange(ref failure, ex, null);
+                    cancel.Cancel();
+                    completed.Release();
+                }
+            }
+
+            // LongRunning (a dedicated thread), not Task.Run. Callers already read files
+            // inside a Parallel.For - Stage 6 does - so the CONSUMER is often a thread-pool
+            // thread that then blocks waiting for these workers. Scheduling the workers on
+            // the same pool would make that a starvation stall until the pool's slow thread
+            // injection catches up; a dedicated thread per worker cannot be starved by the
+            // consumer that is waiting for it.
+            var workers = new Task[degree];
+            for (int w = 0; w < degree; w++)
+            {
+                workers[w] = Task.Factory.StartNew(DecodeWorker, CancellationToken.None,
+                    TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            }
+            try
+            {
+                for (int g = 0; g < rowGroupCount; g++)
+                {
+                    TGroup columns;
+                    // Each finished group posts one signal, but not necessarily for the group
+                    // wanted next; consume signals until this one turns up. Groups that
+                    // finish early simply wait in the map, costing no extra signal.
+                    while (!decoded.TryRemove(g, out columns))
+                    {
+                        completed.Wait();
+                        if (failure != null)
+                            ExceptionDispatchInfo.Capture(failure).Throw();
+                    }
+                    yield return (g, columns);
+                    slots.Release();
+                }
+            }
+            finally
+            {
+                // Runs on an abandoned enumeration too (break, or an exception in the
+                // caller's row loop), so no worker is left holding a reader on the file.
+                cancel.Cancel();
+                Task.WaitAll(workers);
+                cancel.Dispose();
+                slots.Dispose();
+                completed.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// The read-side <see cref="FileStream"/> for a parquet: shared read access, so a
+        /// pipelined read can hold several readers over one file at once.
+        /// </summary>
+        private static FileStream OpenParquetRead(string path)
+        {
+            return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        }
+
+        #endregion
+
         #region Load FDR Stubs
 
         /// <summary>
@@ -950,62 +1147,94 @@ namespace pwiz.Osprey.IO
             // produced.
             uint rowIndex = 0;
 
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = OpenParquetRead(path))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
                 var fieldsByName = BuildFieldLookup(reader);
-                for (int g = 0; g < reader.RowGroupCount; g++)
+                foreach (var group in ReadRowGroupsPipelined(path, reader, fieldsByName, DecodeStubColumns))
                 {
-                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    var cols = group.Columns;
+                    // The skip and the counter both stay on THIS thread, so a group without
+                    // the columns contributes nothing to rowIndex exactly as it did when the
+                    // decode was inline - no footer precompute has to re-derive the rule.
+                    if (cols.EntryId == null || cols.IsDecoy == null)
+                        continue;
+
+                    int rowCount = cols.EntryId.Length;
+                    for (int row = 0; row < rowCount; row++)
                     {
-                        var entryIdCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
-                        var isDecoyCol = ReadColumnByName<bool[]>(groupReader, fieldsByName, FIELD_IS_DECOY.Name);
-                        var chargeCol = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name);
-                        var scanCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_SCAN_NUMBER.Name);
-                        var modseqCol = ReadColumnByName<string[]>(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
-                        var apexCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name);
-                        var startCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_START_RT.Name);
-                        var endCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_END_RT.Name);
-                        var coelutionCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name);
-                        var boundsAreaCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_BOUNDS_AREA.Name);
-                        // Null on a .scores.parquet and on any pre-#4486 reconciled parquet,
-                        // where the row's own position IS its Stage 4 ordinal because the file
-                        // is row-parallel with its sibling by construction. Non-null on a
-                        // subsetted reconciled parquet, where position means nothing and only
-                        // this column can say which Stage 4 row each row came from.
-                        var scoreIndexCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_SCORE_INDEX.Name);
-
-                        if (entryIdCol == null || isDecoyCol == null)
+                        uint parquetIndex = cols.ScoreIndex != null ? cols.ScoreIndex[row] : rowIndex;
+                        rowIndex++;
+                        if (keepEntry != null && !keepEntry(cols.EntryId[row]))
                             continue;
-
-                        int rowCount = entryIdCol.Length;
-                        for (int row = 0; row < rowCount; row++)
+                        stubs.Add(new FdrEntry
                         {
-                            uint parquetIndex = scoreIndexCol != null ? scoreIndexCol[row] : rowIndex;
-                            rowIndex++;
-                            if (keepEntry != null && !keepEntry(entryIdCol[row]))
-                                continue;
-                            stubs.Add(new FdrEntry
-                            {
-                                EntryId = entryIdCol[row],
-                                ParquetIndex = parquetIndex,
-                                IsDecoy = isDecoyCol[row],
-                                Charge = chargeCol != null ? chargeCol[row] : (byte)0,
-                                ScanNumber = scanCol != null ? scanCol[row] : 0u,
-                                ApexRt = apexCol != null ? apexCol[row] : 0.0,
-                                StartRt = startCol != null ? startCol[row] : 0.0,
-                                EndRt = endCol != null ? endCol[row] : 0.0,
-                                CoelutionSum = coelutionCol != null ? coelutionCol[row] : 0.0,
-                                BoundsArea = boundsAreaCol != null ? boundsAreaCol[row] : 0.0,
-                                ModifiedSequence = Canonicalize(modseqCol != null ? modseqCol[row] : string.Empty,
-                                    sequencePool),
-                            });
-                        }
+                            EntryId = cols.EntryId[row],
+                            ParquetIndex = parquetIndex,
+                            IsDecoy = cols.IsDecoy[row],
+                            Charge = cols.Charge != null ? cols.Charge[row] : (byte)0,
+                            ScanNumber = cols.ScanNumber != null ? cols.ScanNumber[row] : 0u,
+                            ApexRt = cols.ApexRt != null ? cols.ApexRt[row] : 0.0,
+                            StartRt = cols.StartRt != null ? cols.StartRt[row] : 0.0,
+                            EndRt = cols.EndRt != null ? cols.EndRt[row] : 0.0,
+                            CoelutionSum = cols.CoelutionSum != null ? cols.CoelutionSum[row] : 0.0,
+                            BoundsArea = cols.BoundsArea != null ? cols.BoundsArea[row] : 0.0,
+                            ModifiedSequence = Canonicalize(
+                                cols.ModifiedSequence != null ? cols.ModifiedSequence[row] : string.Empty,
+                                sequencePool),
+                        });
                     }
                 }
             }
 
             return stubs;
+        }
+
+        /// <summary>
+        /// Decode one row group's stub column chunks into typed arrays. This is the whole
+        /// of the work <see cref="ReadRowGroupsPipelined{TGroup}"/> runs off the consuming
+        /// thread: it touches no interner, no running counter and no output list.
+        /// </summary>
+        private static FdrStubColumns DecodeStubColumns(ParquetRowGroupReader groupReader,
+            IReadOnlyDictionary<string, DataField> fieldsByName)
+        {
+            return new FdrStubColumns
+            {
+                EntryId = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name),
+                IsDecoy = ReadColumnByName<bool[]>(groupReader, fieldsByName, FIELD_IS_DECOY.Name),
+                Charge = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name),
+                ScanNumber = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_SCAN_NUMBER.Name),
+                ModifiedSequence = ReadColumnByName<string[]>(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name),
+                ApexRt = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name),
+                StartRt = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_START_RT.Name),
+                EndRt = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_END_RT.Name),
+                CoelutionSum = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name),
+                BoundsArea = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_BOUNDS_AREA.Name),
+                // Null on a .scores.parquet and on any pre-#4486 reconciled parquet, where the
+                // row's own position IS its Stage 4 ordinal because the file is row-parallel
+                // with its sibling by construction. Non-null on a subsetted reconciled parquet,
+                // where position means nothing and only this column can say which Stage 4 row
+                // each row came from.
+                ScoreIndex = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_SCORE_INDEX.Name),
+            };
+        }
+
+        /// <summary>One row group's decoded stub columns. Any member is null when the file
+        /// carries no readable column of that name; the consumer applies the same
+        /// substitutions the inline decode did.</summary>
+        private sealed class FdrStubColumns
+        {
+            public uint[] EntryId;
+            public bool[] IsDecoy;
+            public byte[] Charge;
+            public uint[] ScanNumber;
+            public string[] ModifiedSequence;
+            public double[] ApexRt;
+            public double[] StartRt;
+            public double[] EndRt;
+            public double[] CoelutionSum;
+            public double[] BoundsArea;
+            public uint[] ScoreIndex;
         }
 
         /// <summary>
@@ -1021,8 +1250,8 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Stream a scores parquet's <c>entry_id</c> column in physical row order, one row group
-        /// resident at a time.
+        /// Stream a scores parquet's <c>entry_id</c> column in physical row order, a bounded
+        /// number of row groups resident at a time (one at OSPREY_PARQUET_READ_THREADS=1).
         ///
         /// <para>Exists so the per-run 2nd-pass sidecar's record SEQUENCE can be asserted against
         /// the pool it claims to describe (issue #4486). The pool's population and order are
@@ -1038,31 +1267,34 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static IEnumerable<uint> StreamEntryIds(string path)
         {
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = OpenParquetRead(path))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
                 var fieldsByName = BuildFieldLookup(reader);
-                for (int g = 0; g < reader.RowGroupCount; g++)
+                foreach (var group in ReadRowGroupsPipelined(path, reader, fieldsByName, DecodeEntryIdColumn))
                 {
-                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    // Absence is a stop, not an early end. ReadColumnByName ends in an `as`
+                    // cast, so a missing column and one written at another width both land
+                    // here; yielding nothing would let the caller's positional comparison
+                    // pass vacuously on zero rows, which is the one outcome that must not
+                    // read as agreement.
+                    if (group.Columns == null)
                     {
-                        var col = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
-                        // Absence is a stop, not an early end. ReadColumnByName ends in an `as`
-                        // cast, so a missing column and one written at another width both land
-                        // here; yielding nothing would let the caller's positional comparison
-                        // pass vacuously on zero rows, which is the one outcome that must not
-                        // read as agreement.
-                        if (col == null)
-                        {
-                            throw new InvalidDataException(string.Format(
-                                @"Scores parquet '{0}' row group {1} has no readable uint entry_id " +
-                                @"column, so its row order cannot be established.", path, g));
-                        }
-                        foreach (uint id in col)
-                            yield return id;
+                        throw new InvalidDataException(string.Format(
+                            @"Scores parquet '{0}' row group {1} has no readable uint entry_id " +
+                            @"column, so its row order cannot be established.", path, group.GroupIndex));
                     }
+                    foreach (uint id in group.Columns)
+                        yield return id;
                 }
             }
+        }
+
+        /// <summary>Decode one row group's <c>entry_id</c> column chunk.</summary>
+        private static uint[] DecodeEntryIdColumn(ParquetRowGroupReader groupReader,
+            IReadOnlyDictionary<string, DataField> fieldsByName)
+        {
+            return ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
         }
 
         /// <summary>
@@ -1092,7 +1324,7 @@ namespace pwiz.Osprey.IO
         {
             entryIds = null;
             apexRts = null;
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = OpenParquetRead(path))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
                 var fieldsByName = BuildFieldLookup(reader);
@@ -1102,29 +1334,26 @@ namespace pwiz.Osprey.IO
                 var ids = new uint[total];
                 var rts = new double[total];
                 int n = 0;
-                for (int g = 0; g < reader.RowGroupCount; g++)
+                foreach (var group in ReadRowGroupsPipelined(path, reader, fieldsByName, DecodeEntryIdAndApexRt))
                 {
-                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    var entryIdCol = group.Columns.EntryId;
+                    var apexCol = group.Columns.ApexRt;
+                    if (entryIdCol == null)
+                        continue;
+                    // FAIL rather than substitute. The ContainsKey guard above only proves the
+                    // column is DECLARED; ReadColumnByName ends in an `as` cast, so a column
+                    // written as float or nullable double yields null here. Substituting 0.0
+                    // would give every row the same apex RT, so every same-m/z pair would
+                    // report |dRT| = 0 and the panel would claim ~100% co-assignment at the
+                    // tightest tolerance - a plausible page built from no data at all. Returning
+                    // false drops the panel with a log line, which is the documented contract.
+                    if (apexCol == null)
+                        return false;
+                    for (int row = 0; row < entryIdCol.Length && n < total; row++)
                     {
-                        var entryIdCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
-                        var apexCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name);
-                        if (entryIdCol == null)
-                            continue;
-                        // FAIL rather than substitute. The ContainsKey guard above only proves the
-                        // column is DECLARED; ReadColumnByName ends in an `as` cast, so a column
-                        // written as float or nullable double yields null here. Substituting 0.0
-                        // would give every row the same apex RT, so every same-m/z pair would
-                        // report |dRT| = 0 and the panel would claim ~100% co-assignment at the
-                        // tightest tolerance - a plausible page built from no data at all. Returning
-                        // false drops the panel with a log line, which is the documented contract.
-                        if (apexCol == null)
-                            return false;
-                        for (int row = 0; row < entryIdCol.Length && n < total; row++)
-                        {
-                            ids[n] = entryIdCol[row];
-                            rts[n] = apexCol[row];
-                            n++;
-                        }
+                        ids[n] = entryIdCol[row];
+                        rts[n] = apexCol[row];
+                        n++;
                     }
                 }
                 // A skipped row group (no entry_id) leaves the arrays long; trim so the caller's
@@ -1138,6 +1367,14 @@ namespace pwiz.Osprey.IO
                 apexRts = rts;
             }
             return true;
+        }
+
+        /// <summary>Decode one row group's <c>entry_id</c> and <c>apex_rt</c> column chunks.</summary>
+        private static (uint[] EntryId, double[] ApexRt) DecodeEntryIdAndApexRt(
+            ParquetRowGroupReader groupReader, IReadOnlyDictionary<string, DataField> fieldsByName)
+        {
+            return (ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name),
+                ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name));
         }
 
         /// <summary>
@@ -1160,36 +1397,46 @@ namespace pwiz.Osprey.IO
             if (onRow == null)
                 throw new ArgumentNullException(nameof(onRow));
 
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = OpenParquetRead(path))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
                 var fieldsByName = BuildFieldLookup(reader);
-                for (int g = 0; g < reader.RowGroupCount; g++)
+                foreach (var group in ReadRowGroupsPipelined(path, reader, fieldsByName, DecodeStubScalarColumns))
                 {
-                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    var cols = group.Columns;
+                    if (cols.EntryId == null || cols.IsDecoy == null)
+                        continue;
+
+                    int rowCount = cols.EntryId.Length;
+                    for (int row = 0; row < rowCount; row++)
                     {
-                        var entryIdCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
-                        var isDecoyCol = ReadColumnByName<bool[]>(groupReader, fieldsByName, FIELD_IS_DECOY.Name);
-                        var chargeCol = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name);
-                        var modseqCol = ReadColumnByName<string[]>(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
-                        var coelutionCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name);
-
-                        if (entryIdCol == null || isDecoyCol == null)
-                            continue;
-
-                        int rowCount = entryIdCol.Length;
-                        for (int row = 0; row < rowCount; row++)
-                        {
-                            onRow(
-                                entryIdCol[row],
-                                chargeCol != null ? chargeCol[row] : (byte)0,
-                                isDecoyCol[row],
-                                coelutionCol != null ? coelutionCol[row] : 0.0,
-                                modseqCol != null ? modseqCol[row] : string.Empty);
-                        }
+                        onRow(
+                            cols.EntryId[row],
+                            cols.Charge != null ? cols.Charge[row] : (byte)0,
+                            cols.IsDecoy[row],
+                            cols.CoelutionSum != null ? cols.CoelutionSum[row] : 0.0,
+                            cols.ModifiedSequence != null ? cols.ModifiedSequence[row] : string.Empty);
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Decode the five scalar column chunks <see cref="ReadFdrStubScalars"/> needs.
+        /// Reuses <see cref="FdrStubColumns"/> but fills only those five, so the read stays
+        /// the five columns the first-pass projection actually consumes.
+        /// </summary>
+        private static FdrStubColumns DecodeStubScalarColumns(ParquetRowGroupReader groupReader,
+            IReadOnlyDictionary<string, DataField> fieldsByName)
+        {
+            return new FdrStubColumns
+            {
+                EntryId = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name),
+                IsDecoy = ReadColumnByName<bool[]>(groupReader, fieldsByName, FIELD_IS_DECOY.Name),
+                Charge = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name),
+                ModifiedSequence = ReadColumnByName<string[]>(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name),
+                CoelutionSum = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name),
+            };
         }
 
         /// <summary>
@@ -1204,40 +1451,45 @@ namespace pwiz.Osprey.IO
         public static List<List<CwtCandidate>> LoadCwtCandidatesFromParquet(string path)
         {
             var allCandidates = new List<List<CwtCandidate>>();
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = OpenParquetRead(path))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
                 var fieldsByName = BuildFieldLookup(reader);
-                DataField cwtField;
-                if (!fieldsByName.TryGetValue(FIELD_CWT_CANDIDATES.Name, out cwtField))
+                if (!fieldsByName.ContainsKey(FIELD_CWT_CANDIDATES.Name))
                     return allCandidates;
-                for (int g = 0; g < reader.RowGroupCount; g++)
+                foreach (var group in ReadRowGroupsPipelined(path, reader, fieldsByName, DecodeCwtColumn))
                 {
-                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    // The cwt_candidates column is binary; if Parquet.Net hands back something
+                    // other than byte[][] the schema or write path is wrong upstream and any
+                    // silent fallback would desynchronize this list from
+                    // LoadFdrStubsFromParquet's row order. Throw with the offending file +
+                    // group so the caller sees a clear error rather than empty CWT lists.
+                    if (group.Columns.Blobs == null)
                     {
-                        var col = RunSync(groupReader.ReadColumnAsync(cwtField));
-                        // The cwt_candidates column is binary; if Parquet.Net
-                        // hands back something other than byte[][] the
-                        // schema or write path is wrong upstream and any
-                        // silent fallback would desynchronize this list
-                        // from LoadFdrStubsFromParquet's row order. Throw
-                        // with the offending file + group so the caller
-                        // sees a clear error rather than empty CWT lists.
-                        var blobs = col.Data as byte[][];
-                        if (blobs == null)
-                        {
-                            // Parquet.Net 4.x types col.Data as non-null IArray.
-                            throw new InvalidDataException(string.Format(
-                                "{0}: cwt_candidates column in row group {1} " +
-                                "decoded as {2}, expected byte[][] -- parquet schema mismatch",
-                                Path.GetFileName(path), g, col.Data.GetType().Name));
-                        }
-                        for (int row = 0; row < blobs.Length; row++)
-                            allCandidates.Add(CwtCandidateCodec.Decode(blobs[row]));
+                        throw new InvalidDataException(string.Format(
+                            "{0}: cwt_candidates column in row group {1} " +
+                            "decoded as {2}, expected byte[][] -- parquet schema mismatch",
+                            Path.GetFileName(path), group.GroupIndex, group.Columns.DecodedAs));
                     }
+                    var blobs = group.Columns.Blobs;
+                    for (int row = 0; row < blobs.Length; row++)
+                        allCandidates.Add(CwtCandidateCodec.Decode(blobs[row]));
                 }
             }
             return allCandidates;
+        }
+
+        /// <summary>
+        /// Decode one row group's <c>cwt_candidates</c> column chunk, carrying the decoded
+        /// CLR type name back for the consumer's mismatch message - the failing column is
+        /// gone by the time the consumer sees the group.
+        /// </summary>
+        private static (byte[][] Blobs, string DecodedAs) DecodeCwtColumn(
+            ParquetRowGroupReader groupReader, IReadOnlyDictionary<string, DataField> fieldsByName)
+        {
+            var col = RunSync(groupReader.ReadColumnAsync(fieldsByName[FIELD_CWT_CANDIDATES.Name]));
+            // Parquet.Net 4.x types col.Data as non-null IArray.
+            return (col.Data as byte[][], col.Data.GetType().Name);
         }
 
         /// <summary>
@@ -1372,12 +1624,15 @@ namespace pwiz.Osprey.IO
         {
             var entries = new List<FdrEntry>();
 
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = OpenParquetRead(path))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
                 var fieldsByName = BuildFieldLookup(reader);
-                for (int g = 0; g < reader.RowGroupCount; g++)
-                    entries.AddRange(ReadFdrEntryGroup(reader, g, fieldsByName, entries.Count, scalarsOnly));
+                foreach (var group in ReadRowGroupsPipelined(path, reader, fieldsByName,
+                    (gr, fields) => DecodeFdrEntryColumns(gr, fields, scalarsOnly)))
+                {
+                    entries.AddRange(MaterializeFdrEntryGroup(group.Columns, entries.Count));
+                }
             }
 
             return entries;
@@ -1385,14 +1640,15 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Stream the Stage-6 reconciled transfer: read <paramref name="originalPath"/>
-        /// one row group at a time, overlay the re-scored rows from
+        /// a row group at a time, overlay the re-scored rows from
         /// <paramref name="overlayByIndex"/> (keyed by the original row's
         /// <see cref="FdrEntry.ParquetIndex"/>), MERGE the <paramref name="gapFill"/> rows
         /// into their canonical (entry_id, charge, scan_number) sorted position, and write
         /// the result to <paramref name="reconciledPath"/> as bounded row groups. Peak
-        /// residency is one original row group being read + one output group being filled +
-        /// the small resident overlay map / gap-fill list -- it never materializes the whole
-        /// file's <see cref="FdrEntry"/> list the way LoadFullFdrEntries +
+        /// residency is the read pipeline's in-flight original row groups (one at
+        /// OSPREY_PARQUET_READ_THREADS=1, up to that many otherwise) + one output group being
+        /// filled + the small resident overlay map / gap-fill list -- it never materializes
+        /// the whole file's <see cref="FdrEntry"/> list the way LoadFullFdrEntries +
         /// <see cref="WriteScoresParquet(string,List{FdrEntry},Dictionary{string,string},IReadOnlyDictionary{uint,LibraryEntry},string)"/>
         /// did (the ~4.4 GB reload this replaces).
         ///
@@ -1546,9 +1802,10 @@ namespace pwiz.Osprey.IO
                             FlushGroup();
                     }
 
-                    for (int g = 0; g < reader.RowGroupCount; g++)
+                    foreach (var group in ReadRowGroupsPipelined(originalPath, reader, fieldsByName,
+                        (gr, fields) => DecodeFdrEntryColumns(gr, fields, false)))
                     {
-                        var groupEntries = ReadFdrEntryGroup(reader, g, fieldsByName, origRead);
+                        var groupEntries = MaterializeFdrEntryGroup(group.Columns, origRead);
                         for (int j = 0; j < groupEntries.Count; j++)
                         {
                             var row = groupEntries[j];
@@ -1638,110 +1895,146 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Read one row group's full <see cref="FdrEntry"/> rows -- the per-group body of
-        /// <see cref="LoadFullFdrEntries"/>, extracted so the Stage-6 streaming reconciled
-        /// transfer (<see cref="StreamReconciledScoresParquet"/>) can read the original
-        /// parquet one group at a time instead of materializing every row. Each row's
-        /// <see cref="FdrEntry.ParquetIndex"/> is the running global position
-        /// <paramref name="startParquetIndex"/> + row, matching the whole-file loader.
-        /// Returns an empty list when the group lacks the entry_id / is_decoy columns
-        /// (the same "skip this group" rule the whole-file loader applies).
+        /// Decode one row group's full <see cref="FdrEntry"/> column chunks into typed
+        /// arrays - the parallel half of the whole-entry read, run off the consuming thread
+        /// by <see cref="ReadRowGroupsPipelined{TGroup}"/>.
+        /// <paramref name="scalarsOnly"/> leaves the 21 feature columns and the five binary
+        /// blob columns unread, which is the dominant cost of a Stage 6 rebuild that drops
+        /// the payload again a few lines later.
         /// </summary>
-        private static List<FdrEntry> ReadFdrEntryGroup(ParquetReader reader, int g,
-            IReadOnlyDictionary<string, DataField> fieldsByName, int startParquetIndex,
-            bool scalarsOnly = false)
+        private static FdrEntryColumns DecodeFdrEntryColumns(ParquetRowGroupReader groupReader,
+            IReadOnlyDictionary<string, DataField> fieldsByName, bool scalarsOnly)
         {
-            var entries = new List<FdrEntry>();
-            using (var groupReader = reader.OpenRowGroupReader(g))
+            var cols = new FdrEntryColumns
             {
-                var entryIdCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
+                EntryId = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name),
                 // Same source of truth as LoadFdrStubsFromParquet: the STORED ordinal when the
                 // file carries the column, the row's position only when it does not. Reading it
                 // here is what stops two readers of one file disagreeing about what ParquetIndex
                 // means - position is the Stage 4 ordinal only while the two files are
                 // row-parallel, which a survivor subset is not (#4486).
-                var scoreIndexCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_SCORE_INDEX.Name);
-                var isDecoyCol = ReadColumnByName<bool[]>(groupReader, fieldsByName, FIELD_IS_DECOY.Name);
-                var chargeCol = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name);
-                var scanCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_SCAN_NUMBER.Name);
-                var modseqCol = ReadColumnByName<string[]>(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
-                var apexCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name);
-                var startCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_START_RT.Name);
-                var endCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_END_RT.Name);
-                var coelutionCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name);
-                var boundsAreaCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_BOUNDS_AREA.Name);
-                var boundsSnrCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_BOUNDS_SNR.Name);
-                // The heavy columns: read only when the caller wants the payload.
-                var cwtCol = scalarsOnly
-                    ? null
-                    : ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_CWT_CANDIDATES.Name);
-                var fragMzCol = scalarsOnly
-                    ? null
-                    : ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_FRAGMENT_MZS.Name);
-                var fragIntCol = scalarsOnly
-                    ? null
-                    : ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_FRAGMENT_INTENSITIES.Name);
-                var refXicRtsCol = scalarsOnly
-                    ? null
-                    : ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_REFERENCE_XIC_RTS.Name);
-                var refXicIntsCol = scalarsOnly
-                    ? null
-                    : ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_REFERENCE_XIC_INTENSITIES.Name);
+                ScoreIndex = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_SCORE_INDEX.Name),
+                IsDecoy = ReadColumnByName<bool[]>(groupReader, fieldsByName, FIELD_IS_DECOY.Name),
+                Charge = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name),
+                ScanNumber = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_SCAN_NUMBER.Name),
+                ModifiedSequence = ReadColumnByName<string[]>(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name),
+                ApexRt = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name),
+                StartRt = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_START_RT.Name),
+                EndRt = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_END_RT.Name),
+                CoelutionSum = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name),
+                BoundsArea = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_BOUNDS_AREA.Name),
+                BoundsSnr = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_BOUNDS_SNR.Name),
+                ScalarsOnly = scalarsOnly,
+                Features = new double[NUM_PIN_FEATURES][],
+            };
+            // The heavy columns: read only when the caller wants the payload.
+            if (scalarsOnly)
+                return cols;
+            cols.CwtCandidates = ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_CWT_CANDIDATES.Name);
+            cols.FragmentMzs = ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_FRAGMENT_MZS.Name);
+            cols.FragmentIntensities = ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_FRAGMENT_INTENSITIES.Name);
+            cols.ReferenceXicRts = ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_REFERENCE_XIC_RTS.Name);
+            cols.ReferenceXicIntensities =
+                ReadColumnByName<byte[][]>(groupReader, fieldsByName, FIELD_REFERENCE_XIC_INTENSITIES.Name);
+            // Matching the inline read this replaces, the feature columns are decoded only
+            // once entry_id / is_decoy have proved readable.
+            if (cols.EntryId == null || cols.IsDecoy == null)
+                return cols;
+            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                cols.Features[f] = ReadColumnByName<double[]>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
+            return cols;
+        }
 
-                if (entryIdCol == null || isDecoyCol == null)
-                    return entries;
+        /// <summary>
+        /// Materialize one decoded row group's <see cref="FdrEntry"/> rows -- the serial half
+        /// of the whole-entry read, and the per-group body of
+        /// <see cref="LoadFullFdrEntries"/> that the Stage-6 streaming reconciled transfer
+        /// (<see cref="StreamReconciledScoresParquet"/>) also uses so it never materializes
+        /// the whole file. Each row's <see cref="FdrEntry.ParquetIndex"/> is the running
+        /// global position <paramref name="startParquetIndex"/> + row, matching the
+        /// whole-file loader. Returns an empty list when the group lacks the entry_id /
+        /// is_decoy columns (the same "skip this group" rule the stub loader applies).
+        /// </summary>
+        private static List<FdrEntry> MaterializeFdrEntryGroup(FdrEntryColumns cols, int startParquetIndex)
+        {
+            var entries = new List<FdrEntry>();
+            if (cols.EntryId == null || cols.IsDecoy == null)
+                return entries;
 
-                var featureCols = new double[NUM_PIN_FEATURES][];
-                if (!scalarsOnly)
+            var cwtCol = cols.CwtCandidates;
+            var featureCols = cols.Features;
+            int rowCount = cols.EntryId.Length;
+            for (int row = 0; row < rowCount; row++)
+            {
+                double[] features = null;
+                if (!cols.ScalarsOnly)
                 {
+                    features = new double[NUM_PIN_FEATURES];
                     for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        featureCols[f] = ReadColumnByName<double[]>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
-                }
-
-                int rowCount = entryIdCol.Length;
-                for (int row = 0; row < rowCount; row++)
-                {
-                    double[] features = null;
-                    if (!scalarsOnly)
                     {
-                        features = new double[NUM_PIN_FEATURES];
-                        for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        {
-                            double v = featureCols[f] != null ? featureCols[f][row] : 0.0;
-                            features[f] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
-                        }
+                        double v = featureCols[f] != null ? featureCols[f][row] : 0.0;
+                        features[f] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
                     }
-
-                    List<CwtCandidate> cwt = null;
-                    if (cwtCol != null && cwtCol[row] != null && cwtCol[row].Length > 0)
-                        cwt = CwtCandidateCodec.Decode(cwtCol[row]);
-
-                    entries.Add(new FdrEntry
-                    {
-                        EntryId = entryIdCol[row],
-                        ParquetIndex = scoreIndexCol != null
-                            ? scoreIndexCol[row]
-                            : (uint)(startParquetIndex + entries.Count),
-                        IsDecoy = isDecoyCol[row],
-                        Charge = chargeCol != null ? chargeCol[row] : (byte)0,
-                        ScanNumber = scanCol != null ? scanCol[row] : 0u,
-                        ApexRt = apexCol != null ? apexCol[row] : 0.0,
-                        StartRt = startCol != null ? startCol[row] : 0.0,
-                        EndRt = endCol != null ? endCol[row] : 0.0,
-                        CoelutionSum = coelutionCol != null ? coelutionCol[row] : 0.0,
-                        ModifiedSequence = modseqCol != null ? modseqCol[row] : string.Empty,
-                        Features = features,
-                        CwtCandidates = cwt,
-                        BoundsArea = boundsAreaCol != null ? boundsAreaCol[row] : 0.0,
-                        BoundsSnr = boundsSnrCol != null ? boundsSnrCol[row] : 0.0,
-                        FragmentMzs = DecodeF64Blob(fragMzCol != null ? fragMzCol[row] : null),
-                        FragmentIntensities = DecodeF32Blob(fragIntCol != null ? fragIntCol[row] : null),
-                        ReferenceXicRts = DecodeF64Blob(refXicRtsCol != null ? refXicRtsCol[row] : null),
-                        ReferenceXicIntensities = DecodeF64Blob(refXicIntsCol != null ? refXicIntsCol[row] : null),
-                    });
                 }
+
+                List<CwtCandidate> cwt = null;
+                if (cwtCol != null && cwtCol[row] != null && cwtCol[row].Length > 0)
+                    cwt = CwtCandidateCodec.Decode(cwtCol[row]);
+
+                entries.Add(new FdrEntry
+                {
+                    EntryId = cols.EntryId[row],
+                    ParquetIndex = cols.ScoreIndex != null
+                        ? cols.ScoreIndex[row]
+                        : (uint)(startParquetIndex + entries.Count),
+                    IsDecoy = cols.IsDecoy[row],
+                    Charge = cols.Charge != null ? cols.Charge[row] : (byte)0,
+                    ScanNumber = cols.ScanNumber != null ? cols.ScanNumber[row] : 0u,
+                    ApexRt = cols.ApexRt != null ? cols.ApexRt[row] : 0.0,
+                    StartRt = cols.StartRt != null ? cols.StartRt[row] : 0.0,
+                    EndRt = cols.EndRt != null ? cols.EndRt[row] : 0.0,
+                    CoelutionSum = cols.CoelutionSum != null ? cols.CoelutionSum[row] : 0.0,
+                    ModifiedSequence = cols.ModifiedSequence != null ? cols.ModifiedSequence[row] : string.Empty,
+                    Features = features,
+                    CwtCandidates = cwt,
+                    BoundsArea = cols.BoundsArea != null ? cols.BoundsArea[row] : 0.0,
+                    BoundsSnr = cols.BoundsSnr != null ? cols.BoundsSnr[row] : 0.0,
+                    FragmentMzs = DecodeF64Blob(cols.FragmentMzs != null ? cols.FragmentMzs[row] : null),
+                    FragmentIntensities = DecodeF32Blob(
+                        cols.FragmentIntensities != null ? cols.FragmentIntensities[row] : null),
+                    ReferenceXicRts = DecodeF64Blob(
+                        cols.ReferenceXicRts != null ? cols.ReferenceXicRts[row] : null),
+                    ReferenceXicIntensities = DecodeF64Blob(
+                        cols.ReferenceXicIntensities != null ? cols.ReferenceXicIntensities[row] : null),
+                });
             }
             return entries;
+        }
+
+        /// <summary>One row group's decoded whole-entry columns. Any member is null when the
+        /// file carries no readable column of that name, or when
+        /// <see cref="ScalarsOnly"/> left the heavy columns unread.</summary>
+        private sealed class FdrEntryColumns
+        {
+            public bool ScalarsOnly;
+            public uint[] EntryId;
+            public uint[] ScoreIndex;
+            public bool[] IsDecoy;
+            public byte[] Charge;
+            public uint[] ScanNumber;
+            public string[] ModifiedSequence;
+            public double[] ApexRt;
+            public double[] StartRt;
+            public double[] EndRt;
+            public double[] CoelutionSum;
+            public double[] BoundsArea;
+            public double[] BoundsSnr;
+            public double[][] Features;
+            public byte[][] CwtCandidates;
+            public byte[][] FragmentMzs;
+            public byte[][] FragmentIntensities;
+            public byte[][] ReferenceXicRts;
+            public byte[][] ReferenceXicIntensities;
         }
 
         /// <summary>
@@ -1752,40 +2045,41 @@ namespace pwiz.Osprey.IO
         {
             var allFeatures = new List<double[]>();
 
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = OpenParquetRead(path))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
                 var fieldsByName = BuildFieldLookup(reader);
-                for (int g = 0; g < reader.RowGroupCount; g++)
+                foreach (var group in ReadRowGroupsPipelined(path, reader, fieldsByName, DecodePinFeatureColumns))
                 {
-                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    var featureCols = group.Columns;
+                    if (featureCols[0] == null)
+                        continue;
+
+                    int rowCount = featureCols[0].Length;
+                    for (int row = 0; row < rowCount; row++)
                     {
-                        // Read all feature columns
-                        var featureCols = new double[NUM_PIN_FEATURES][];
+                        var features = new double[NUM_PIN_FEATURES];
                         for (int f = 0; f < NUM_PIN_FEATURES; f++)
                         {
-                            featureCols[f] = ReadColumnByName<double[]>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
+                            double v = featureCols[f][row];
+                            features[f] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
                         }
-
-                        if (featureCols[0] == null)
-                            continue;
-
-                        int rowCount = featureCols[0].Length;
-                        for (int row = 0; row < rowCount; row++)
-                        {
-                            var features = new double[NUM_PIN_FEATURES];
-                            for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                            {
-                                double v = featureCols[f][row];
-                                features[f] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
-                            }
-                            allFeatures.Add(features);
-                        }
+                        allFeatures.Add(features);
                     }
                 }
             }
 
             return allFeatures;
+        }
+
+        /// <summary>Decode one row group's 21 PIN feature column chunks.</summary>
+        private static double[][] DecodePinFeatureColumns(ParquetRowGroupReader groupReader,
+            IReadOnlyDictionary<string, DataField> fieldsByName)
+        {
+            var featureCols = new double[NUM_PIN_FEATURES][];
+            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                featureCols[f] = ReadColumnByName<double[]>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
+            return featureCols;
         }
 
         #endregion

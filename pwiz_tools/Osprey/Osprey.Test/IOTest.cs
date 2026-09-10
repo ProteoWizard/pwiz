@@ -5008,5 +5008,323 @@ namespace pwiz.Osprey.Test
         }
 
         #endregion
+
+        #region Pipelined Parquet Read Tests
+
+        /// <summary>
+        /// The pipelined row-group read is IDENTICAL to the sequential one at every degree of
+        /// parallelism: same rows, same order, same <see cref="FdrEntry.ParquetIndex"/>, on
+        /// every reader in <see cref="ParquetScoreCache"/>. Degree 1 is the sequential path
+        /// through the same code, so it is the baseline the parallel degrees are compared to
+        /// and the A/B isolates concurrency and nothing else.
+        ///
+        /// <para>Covers the four shapes that can break the numbering:</para>
+        /// <list type="bullet">
+        /// <item>A multi-row-group file (forced with
+        /// <see cref="ParquetScoreCache.RowGroupRowCapForTest"/>), so the degree exceeds 1 and
+        /// groups genuinely complete out of order.</item>
+        /// <item>The <c>score_index</c>-ABSENT path, where <c>ParquetIndex</c> comes from a
+        /// running counter across row groups - checked against an explicit expected numbering,
+        /// not just against the other degree, and under a <c>keepEntry</c> filter that drops
+        /// most rows so the counter cannot be confused with a list position.</item>
+        /// <item>The <c>score_index</c>-PRESENT path (a reconciled parquet), where the stored
+        /// ordinal wins over position.</item>
+        /// <item>The skip case: a file whose <c>entry_id</c> / <c>is_decoy</c> columns are not
+        /// readable, which every loader <c>continue</c>s past. This is a file-level property
+        /// (a <see cref="DataField"/>'s CLR type comes from the schema, so a column is either
+        /// readable in every row group or in none), but the check and the counter both live on
+        /// the CONSUMING thread, so the parallel decode cannot renumber around it either way.
+        /// A malformed file also has to fail the same way at every degree, which is what pins
+        /// exception propagation out of a decode worker.</item>
+        /// </list>
+        /// </summary>
+        [TestMethod]
+        public void TestParquetPipelinedRowGroupRead()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_parqpipe_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // 11 rows at a cap of 2 -> 6 row groups, so degrees 2 and 4 both have more
+                // groups than workers and the completion order really does vary.
+                var entries = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8, 11, 4, 6, 10 })
+                {
+                    var entry = MakeStreamEntry(id, id * 1000.0);
+                    entry.CwtCandidates = new List<CwtCandidate>
+                    {
+                        NewCwtCandidate(id + 0.5, id + 0.1, id + 0.9, id * 2.0, id * 3.0, id * 4.0),
+                    };
+                    entries.Add(entry);
+                }
+
+                string scoresPath = Path.Combine(dir, "pipe.scores.parquet");
+                ParquetScoreCache.RowGroupRowCapForTest = 2;
+                ParquetScoreCache.WriteScoresParquet(scoresPath, entries, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                Assert.AreEqual(6, CountRowGroups(scoresPath));
+
+                // A .scores.parquet carries no score_index column, so ParquetIndex is the
+                // running row counter - the numbering the parallel decode has to reproduce.
+                Assert.IsFalse(ParquetScoreCache.HasColumn(scoresPath, "score_index"));
+                AssertPipelinedReadsMatchSequential(scoresPath);
+
+                // The counter is the FILE row position, not the surviving-list position:
+                // keeping only the odd entry_ids must leave 1, 3, 5, 7, 9, 11 at ParquetIndex
+                // 0, 2, 4, 6, 8, 10 (the write sorts ascending by entry_id).
+                var expectedKeptIndexes = new uint[] { 0, 2, 4, 6, 8, 10 };
+                foreach (int degree in PIPELINE_DEGREES)
+                {
+                    ParquetScoreCache.ReadThreadsForTest = degree;
+                    var kept = ParquetScoreCache.LoadFdrStubsFromParquet(scoresPath, id => (id & 1u) == 1u);
+                    ParquetScoreCache.ReadThreadsForTest = null;
+                    Assert.AreEqual(expectedKeptIndexes.Length, kept.Count);
+                    for (int i = 0; i < kept.Count; i++)
+                    {
+                        Assert.AreEqual(expectedKeptIndexes[i], kept[i].ParquetIndex,
+                            "filtered ParquetIndex must stay the file row position at degree " + degree);
+                        Assert.AreEqual((uint)(2 * i + 1), kept[i].EntryId);
+                    }
+                }
+
+                // score_index PRESENT: the reconciled parquet stores the Stage 4 ordinal, so
+                // ParquetIndex must come from the column rather than from the position, which
+                // a subset makes observable (the survivors below drop entry_id 1 and 2).
+                string reconciledPath = Path.Combine(dir, "pipe.scores-reconciled.parquet");
+                var survivors = new HashSet<(uint, byte, uint)>();
+                foreach (var e in entries)
+                {
+                    if (e.EntryId > 2)
+                        survivors.Add((e.EntryId, e.Charge, e.ScanNumber));
+                }
+                ParquetScoreCache.RowGroupRowCapForTest = 2;
+                var streamResult = ParquetScoreCache.StreamReconciledScoresParquet(
+                    scoresPath, reconciledPath, new Dictionary<uint, FdrEntry>(), new List<FdrEntry>(),
+                    null, null, "f.mzML", survivors, null, null);
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                Assert.AreEqual(entries.Count, streamResult.OrigRowCount);
+                Assert.AreEqual(survivors.Count, streamResult.NWritten);
+                Assert.IsTrue(ParquetScoreCache.HasColumn(reconciledPath, "score_index"));
+                Assert.IsTrue(CountRowGroups(reconciledPath) > 1);
+                AssertPipelinedReadsMatchSequential(reconciledPath);
+
+                // The stored ordinal, not the row's position in the subset: entry_id 3 is the
+                // first surviving row but the third Stage 4 row.
+                foreach (int degree in PIPELINE_DEGREES)
+                {
+                    ParquetScoreCache.ReadThreadsForTest = degree;
+                    var subset = ParquetScoreCache.LoadFdrStubsFromParquet(reconciledPath);
+                    ParquetScoreCache.ReadThreadsForTest = null;
+                    Assert.AreEqual(survivors.Count, subset.Count);
+                    for (int i = 0; i < subset.Count; i++)
+                        Assert.AreEqual(subset[i].EntryId - 1u, subset[i].ParquetIndex,
+                            "score_index must win over row position at degree " + degree);
+                }
+
+                // The skip case: entry_id absent from the schema entirely. Every loader has to
+                // report nothing, at every degree, and the row counter contributes nothing.
+                string noEntryIdPath = Path.Combine(dir, "no_entry_id.parquet");
+                WriteRawRowGroups(noEntryIdPath,
+                    new[]
+                    {
+                        (DataField)new DataField<string>("modified_sequence"),
+                        new DataField<double>("apex_rt"),
+                    },
+                    4,
+                    g => new Array[] { new[] { "PEP" + g, "TIDE" + g }, new[] { g + 0.5, g + 1.5 } });
+                Assert.AreEqual(4, CountRowGroups(noEntryIdPath));
+                AssertPipelinedReadsMatchSequential(noEntryIdPath);
+                foreach (int degree in PIPELINE_DEGREES)
+                {
+                    ParquetScoreCache.ReadThreadsForTest = degree;
+                    Assert.AreEqual(0, ParquetScoreCache.LoadFdrStubsFromParquet(noEntryIdPath).Count);
+                    Assert.AreEqual(0, ParquetScoreCache.LoadFullFdrEntries(noEntryIdPath).Count);
+                    int scalarRows = 0;
+                    ParquetScoreCache.ReadFdrStubScalars(noEntryIdPath, (a, b, c, d, e) => scalarRows++);
+                    ParquetScoreCache.ReadThreadsForTest = null;
+                    Assert.AreEqual(0, scalarRows,
+                        "a row group without entry_id must contribute no rows at degree " + degree);
+                }
+
+                // A file whose entry_id is the WRONG WIDTH reads as absent too, and
+                // StreamEntryIds refuses it rather than reporting a vacuous empty order. The
+                // refusal has to survive being raised on a decode worker.
+                //
+                // Int64 rather than Int32 deliberately: the CLR treats int[] and uint[] as
+                // cast-compatible, so an Int32 entry_id would decode straight through the
+                // `as uint[]` in ReadColumnByName and never reach the refusal at all.
+                string wideEntryIdPath = Path.Combine(dir, "wide_entry_id.parquet");
+                WriteRawRowGroups(wideEntryIdPath,
+                    new[]
+                    {
+                        (DataField)new DataField<long>("entry_id"),
+                        new DataField<bool>("is_decoy"),
+                    },
+                    4,
+                    g => new Array[] { new[] { g, g + 100L }, new[] { false, true } });
+                foreach (int degree in PIPELINE_DEGREES)
+                {
+                    ParquetScoreCache.ReadThreadsForTest = degree;
+                    try
+                    {
+                        Assert.AreEqual(0, ParquetScoreCache.LoadFdrStubsFromParquet(wideEntryIdPath).Count);
+                        AssertThrowsInvalidData(
+                            () => Assert.AreEqual(0, ParquetScoreCache.StreamEntryIds(wideEntryIdPath).Count()),
+                            degree);
+                    }
+                    finally
+                    {
+                        ParquetScoreCache.ReadThreadsForTest = null;
+                    }
+                }
+
+                // Abandoning the enumeration part-way must not leave a worker holding the file
+                // open - the next write to the same path would fail if it did.
+                ParquetScoreCache.ReadThreadsForTest = 4;
+                Assert.AreEqual(3, ParquetScoreCache.StreamEntryIds(scoresPath).Take(3).Count());
+                ParquetScoreCache.ReadThreadsForTest = null;
+                File.Delete(scoresPath);
+            }
+            finally
+            {
+                ParquetScoreCache.ReadThreadsForTest = null;
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        // Degree 1 is the sequential path (and the baseline every other degree is compared
+        // to); 2 and 4 are fewer workers than the 6 row groups these files carry, and 8 is
+        // more, which exercises the "no group left to claim" worker exit.
+        private static readonly int[] PIPELINE_DEGREES = { 1, 2, 4, 8 };
+
+        /// <summary>
+        /// Every <see cref="ParquetScoreCache"/> reader over <paramref name="path"/> returns
+        /// exactly what it returned at degree 1, at each of <see cref="PIPELINE_DEGREES"/>.
+        /// </summary>
+        private static void AssertPipelinedReadsMatchSequential(string path)
+        {
+            var expected = ReadEverything(path, 1);
+            foreach (int degree in PIPELINE_DEGREES)
+            {
+                var actual = ReadEverything(path, degree);
+                string at = " at degree " + degree;
+                AssertStreamRowsEqual(expected.Stubs, actual.Stubs);
+                AssertStreamRowsEqual(expected.Full, actual.Full);
+                AssertStreamRowsEqual(expected.Scalars, actual.Scalars);
+                for (int i = 0; i < expected.Stubs.Count; i++)
+                    Assert.AreEqual(expected.Stubs[i].ParquetIndex, actual.Stubs[i].ParquetIndex,
+                        "stub ParquetIndex" + at);
+                for (int i = 0; i < expected.Full.Count; i++)
+                    Assert.AreEqual(expected.Full[i].ParquetIndex, actual.Full[i].ParquetIndex,
+                        "full-entry ParquetIndex" + at);
+                CollectionAssert.AreEqual(expected.EntryIds, actual.EntryIds, "entry_id order" + at);
+                CollectionAssert.AreEqual(expected.ApexRts, actual.ApexRts, "apex_rt order" + at);
+                Assert.AreEqual(expected.HasApexRts, actual.HasApexRts, "apex_rt availability" + at);
+                Assert.AreEqual(expected.Features.Count, actual.Features.Count, "feature row count" + at);
+                for (int i = 0; i < expected.Features.Count; i++)
+                    CollectionAssert.AreEqual(expected.Features[i], actual.Features[i], "features" + at);
+                Assert.AreEqual(expected.CwtSignature, actual.CwtSignature, "cwt candidates" + at);
+            }
+        }
+
+        /// <summary>
+        /// Run every reader in <see cref="ParquetScoreCache"/> over one file at one degree of
+        /// read parallelism, so the whole surface is compared rather than the archetype alone.
+        /// </summary>
+        private static PipelinedReadResult ReadEverything(string path, int degree)
+        {
+            ParquetScoreCache.ReadThreadsForTest = degree;
+            try
+            {
+                var result = new PipelinedReadResult
+                {
+                    Stubs = ParquetScoreCache.LoadFdrStubsFromParquet(path),
+                    Full = ParquetScoreCache.LoadFullFdrEntries(path),
+                    Features = ParquetScoreCache.LoadPinFeaturesFromParquet(path),
+                    Scalars = new List<FdrEntry>(),
+                };
+                ParquetScoreCache.ReadFdrStubScalars(path, (entryId, charge, isDecoy, coelution, modSeq) =>
+                    result.Scalars.Add(new FdrEntry
+                    {
+                        EntryId = entryId,
+                        Charge = charge,
+                        IsDecoy = isDecoy,
+                        CoelutionSum = coelution,
+                        ModifiedSequence = modSeq,
+                    }));
+                result.HasApexRts = ParquetScoreCache.TryReadEntryIdsAndApexRts(
+                    path, out uint[] ids, out double[] rts);
+                result.EntryIds = result.HasApexRts ? ids : new uint[0];
+                result.ApexRts = result.HasApexRts ? rts : new double[0];
+                // A candidate list per row, flattened to one comparable string so a
+                // reordered or dropped row group shows up as a mismatch.
+                var cwt = ParquetScoreCache.LoadCwtCandidatesFromParquet(path);
+                result.CwtSignature = string.Join(";", cwt.Select(list =>
+                    string.Join(",", list.Select(c => c.ApexRt.ToString(CultureInfo.InvariantCulture)))));
+                return result;
+            }
+            finally
+            {
+                ParquetScoreCache.ReadThreadsForTest = null;
+            }
+        }
+
+        /// <summary>What one pass of <see cref="ReadEverything"/> saw, for comparison against
+        /// the degree-1 pass over the same file.</summary>
+        private sealed class PipelinedReadResult
+        {
+            public List<FdrEntry> Stubs;
+            public List<FdrEntry> Full;
+            public List<FdrEntry> Scalars;
+            public List<double[]> Features;
+            public bool HasApexRts;
+            public uint[] EntryIds;
+            public double[] ApexRts;
+            public string CwtSignature;
+        }
+
+        /// <summary>
+        /// Write a parquet of <paramref name="groupCount"/> row groups over
+        /// <paramref name="fields"/>, one value array per field per group from
+        /// <paramref name="buildGroup"/> - used to build the malformed shapes the real writer
+        /// cannot produce (a missing or wrong-width entry_id column).
+        /// </summary>
+        private static void WriteRawRowGroups(string path, DataField[] fields, int groupCount,
+            Func<int, Array[]> buildGroup)
+        {
+            // A DataField must be the instance the schema attached, not the one passed in.
+            var schema = new ParquetSchema(fields.Cast<Field>().ToArray());
+            var attached = schema.GetDataFields();
+            using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write))
+            using (var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult())
+            {
+                for (int g = 0; g < groupCount; g++)
+                {
+                    var data = buildGroup(g);
+                    using (var group = writer.CreateRowGroup())
+                    {
+                        for (int c = 0; c < attached.Length; c++)
+                            group.WriteColumnAsync(new DataColumn(attached[c], data[c])).GetAwaiter().GetResult();
+                    }
+                }
+            }
+        }
+
+        private static void AssertThrowsInvalidData(Action action, int degree)
+        {
+            try
+            {
+                action();
+            }
+            catch (InvalidDataException)
+            {
+                return;
+            }
+            Assert.Fail("expected InvalidDataException at degree " + degree);
+        }
+
+        #endregion
     }
 }
