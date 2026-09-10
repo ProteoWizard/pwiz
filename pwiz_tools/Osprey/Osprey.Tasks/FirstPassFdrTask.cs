@@ -2857,7 +2857,10 @@ namespace pwiz.Osprey.Tasks
             // buffer is published as CompactedEntries.
             var projections = prebuiltProjections ??
                 FdrProjectionSet.BuildFromEntries(perFileEntries, releaseStubs: true);
-            int beforeCount = projections.TotalRows;
+            // long with TotalRows: this is the PRE-compaction cohort total, 1,342,686,095 at
+            // 446 files. afterCount below is deliberately left int - it is the post-compaction
+            // survivor count, ~289 M, a different magnitude with room to spare.
+            long beforeCount = projections.TotalRows;
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, projections.IsCountsOnly
                 ? string.Format(
                     @"projection counts-only: {0} rows across {1} files (no resident rows); FdrEntry stubs released",
@@ -3172,8 +3175,14 @@ namespace pwiz.Osprey.Tasks
                 // is_decoy / coelution_sum / modseq) in parquet row order (== the resident sort
                 // order on the 1st pass, since the parquet is written (entry_id,charge,scan)-sorted),
                 // and loadFileFeatures loads that file's feature vectors by the running row ordinal.
-                // perFileParquetPaths has every projection file (the counts-only producer read the
-                // same parquet to count its rows), so the indexer cannot miss.
+                // perFileParquetPaths has every projection file, so the indexer cannot miss - but
+                // NOT for the reason this used to give ("the counts-only producer read the same
+                // parquet to count its rows"): the resume producer reads the footer now, not the
+                // rows. What holds is that PerFileScoringTask sets perFileParquetPaths[fileName]
+                // unconditionally, outside the fat/lean branch and outside any existence test,
+                // and Run seeds every path up front. Moving that assignment inside the lean
+                // branch - where it looks redundant, since that arm adds an empty entry list -
+                // would break this indexer deep inside the Stage-5 streaming pass.
                 Action<string, Action<uint, byte, bool, double, string>> streamFileRows =
                     (fileName, onRow) => ParquetScoreCache.ReadFdrStubScalars(perFileParquetPaths[fileName], onRow);
                 // Feeds the scorer a file's scores off its 1st-pass sidecar so the pass does not
@@ -3452,7 +3461,7 @@ namespace pwiz.Osprey.Tasks
         private List<KeyValuePair<string, List<FdrEntry>>> CompactFromSidecars(
             FdrProjectionSet projections,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
-            int beforeCount,
+            long beforeCount,
             OspreyConfig config,
             PipelineContext ctx)
         {
