@@ -333,7 +333,6 @@
     <Compile Include="ModificationPermuterTest.cs" />
     <Compile Include="ModifyMoleculeTest.cs" />
     <Compile Include="MultiSampleImportPeakBoundariesTest.cs" />
-    <Compile Include="NativeDialogClassificationTest.cs" />
     <Compile Include="NativeFileDialogTest.cs" />
     <Compile Include="McpConnectorDisconnectTest.cs" />
     <Compile Include="McpConnectorBackgroundDialogTest.cs" />
