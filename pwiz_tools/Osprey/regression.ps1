@@ -1205,6 +1205,41 @@ function Test-LogMarker {
     return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
 }
 
+function Test-NoAllRunsBundle {
+    <#
+    Assert a run did NOT build the ALL-RUNS reconciliation bundle, which retains every run's
+    survivors at once and grows O(files x entries). The NEGATIVE twin of Test-LogMarker, and
+    the same { Pass; Issues } shape.
+
+    This is a route assertion because at gate scale nothing else can see the defect: on a
+    3-file dataset an O(files x entries) bundle costs nothing and every value- and file-level
+    check passes. That is exactly how --task ModelDiagnostics reached a 446-run cohort still
+    building it, growing 0.10 GB/file until it died past a 63.7 GB box at file ~310
+    (2026-09-10). The bounded route is the per-run survivor loader.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$LogPath
+    )
+    $issues = [System.Collections.Generic.List[string]]::new()
+    if (-not (Test-Path -LiteralPath $LogPath)) {
+        $issues.Add("run log not found, so the route it took cannot be asserted: $LogPath")
+        return @{ Pass = $false; Issues = $issues }
+    }
+    $logName = Split-Path -Leaf $LogPath
+    # Two markers: the progress heading the all-runs hydrate prints, and the guard's own refusal
+    # line. The guard SHOULD make this unreachable - asserting both means the leg still reds if
+    # the guard is ever weakened, rather than silently depending on it.
+    foreach ($marker in @('Hydrating reconciliation bundle',
+                          'ALL-RUNS reconciliation bundle')) {
+        if (@(Get-Content -LiteralPath $LogPath | Where-Object { $_.Contains($marker) }).Count -gt 0) {
+            $issues.Add((("{0}: '{1}' - this run built (or was refused for building) the " +
+                "ALL-RUNS bundle, which is O(files x entries); the per-run survivor loader is " +
+                "the bounded route") -f $logName, $marker))
+        }
+    }
+    return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
+}
+
 function Get-ReleaseLogFacts {
     <#
     Parse every library-fragment release line out of one leg's log. Returns an
@@ -2923,6 +2958,20 @@ foreach ($name in $selected) {
                 "rewritten, so the task skipped itself instead of regenerating") -f $reportLeaf)
         }
 
+        # ROUTE-level, and NEGATIVE only. This leg re-enters a run whose diagnostics products are
+        # still on disk, so OnlyDiagnosticsProductOutstanding sees the file and declines the fold
+        # arm: the task re-RENDERS (0.2 s) and legitimately hydrates nothing. Asserting the
+        # per-run marker here would demand a route this scenario never takes - the positive half
+        # belongs to mode 11, which deletes the products and forces the fold.
+        #
+        # What IS assertable here is that a re-render hydrates NOTHING. The other two assertions
+        # cannot see it: both are satisfied by a regeneration that produced the right page at any
+        # memory cost, which is how an ALL-RUNS bundle on this task went unnoticed until a 446-run
+        # cohort died past the box at file ~310 (2026-09-10). At 3 files that bundle is free, so
+        # only the route is visible at gate scale.
+        $m7r = Test-NoAllRunsBundle -LogPath (Join-Path $straightDir 'mdtask.log')
+        $m7r.Issues | ForEach-Object { $m7Issues.Add($_) }
+
         $m7d = $null
         try {
             $m7d = Compare-DiagnosticsGolden -HtmlPath $diagHtml -GoldenDir $goldenDir `
@@ -3018,6 +3067,23 @@ foreach ($name in $selected) {
                 $m11Issues.Add(("--task ModelDiagnostics exited {0}; a completed analysis missing " +
                     "only its diagnostics products must be able to produce them" -f $r11.ExitCode))
             }
+
+            # ORACLE 1c: the fold took the BOUNDED route. This is the leg that can assert it -
+            # mode 7 re-renders products still on disk and hydrates nothing, so it has only the
+            # negative half. Here the products were deleted, so the fold really runs and the arm
+            # it picks is observable.
+            #
+            # Nothing else at gate scale can see this. Both of mode 7's assertions, and mode 11's
+            # own byte comparison below, are satisfied by a fold that produced the correct report
+            # off an ALL-RUNS bundle - which is what --task ModelDiagnostics did on a 446-run
+            # cohort until it died past a 63.7 GB box at file ~310 (2026-09-10). At 3 files that
+            # bundle is free, so the route is the only visible symptom.
+            $m11Route = Test-LogMarker -LogPath $r11.Log `
+                -Marker 'publishes the survivor loader only' `
+                -Description 'the pay-later fold took the bounded per-run survivor loader'
+            $m11Route.Issues | ForEach-Object { $m11Issues.Add($_) }
+            $m11NoBundle = Test-NoAllRunsBundle -LogPath $r11.Log
+            $m11NoBundle.Issues | ForEach-Object { $m11Issues.Add($_) }
 
             # ORACLE 1a: each pass says it FOLDED. Substrings, not whole lines, so the
             # surrounding prose can change without breaking the gate; what they pin is that

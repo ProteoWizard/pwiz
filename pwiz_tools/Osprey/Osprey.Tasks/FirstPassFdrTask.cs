@@ -816,6 +816,20 @@ namespace pwiz.Osprey.Tasks
             if (ScoringTaskShared.CanHydratePerRun(config))
                 return RehydrateForPerRunRescore(ctx, perFileEntries);
 
+            // Everything below builds the ALL-RUNS bundle, which is O(files x entries). Refuse
+            // it rather than let a run discover the cost at file ~310 of 446: the failure this
+            // replaces was silent, produced the RIGHT report, and only ran out of memory - so
+            // nothing short of the box refused it. See AllRunsBundleGuardError for why it takes
+            // no token.
+            string bundleError =
+                ScoringTaskShared.AllRunsBundleGuardError(OspreyEnvironment.AllowUnfixedResident);
+            if (bundleError != null)
+            {
+                ctx.LogError(bundleError);
+                ctx.ExitCode = 1;
+                return false;
+            }
+
             // The bundle to adopt. In worker mode the upstream PerFileScoring
             // task hydrated it from sibling sidecars and published it. On a
             // straight-through resume it published null (no bundle): the driver

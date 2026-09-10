@@ -417,8 +417,24 @@ namespace pwiz.Osprey.Tasks
             // Naming what is admitted fails CLOSED: a task added later is excluded until someone
             // decides otherwise, which is the direction a predicate guarding a memory shape
             // should fail in.
-            if (config.SelectedTask.HasValue && config.SelectedTask != HpcTask.PerFileRescore)
+            // ModelDiagnostics is admitted for the same reason PerFileRescore is: it consumes
+            // the per-run survivor loader and nothing else. Admitting it is what stops it
+            // falling to the all-runs bundle, which retains every run's survivors and grew
+            // 0.10 GB/file on a 446-run cohort - past a 63.7 GB box by file ~310, measured
+            // 2026-09-10. The report itself is unaffected either way, so the symptom was
+            // memory alone and no gate could see it: mode 7 covers this task but runs 3 files,
+            // where an O(files) bundle is free.
+            //
+            // Safe now for the reason the --model-diagnostics paragraph below gives: the report
+            // is FirstPassFDR's DECLARED OUTPUT, folded by FoldDiagnosticsOnly BEFORE Rehydrate
+            // is reached, so the per-run arm cannot skip a regeneration the way it did when the
+            // report was a side effect of whichever hydrate ran (Astral mode 7).
+            if (config.SelectedTask.HasValue &&
+                config.SelectedTask != HpcTask.PerFileRescore &&
+                config.SelectedTask != HpcTask.ModelDiagnostics)
+            {
                 return false;
+            }
             if (config.StopAfterStage5 || config.ExpectReconciledInput)
                 return false;
             // --model-diagnostics is NOT excluded any more, and what changed is where the report
@@ -784,6 +800,46 @@ namespace pwiz.Osprey.Tasks
         /// run is the worst outcome this pipeline can produce, and the sidecar's own reader
         /// documents its absence as FATAL.</para>
         /// </summary>
+        /// <summary>
+        /// Refuse the ALL-RUNS reconciliation bundle, which retains every run's POST-compaction
+        /// survivors at once and so grows O(files x entries) - 0.10 GB/file measured on a
+        /// 446-run cohort, past a 63.7 GB box by file ~310.
+        ///
+        /// <para>This is the guard's invariant reaching PAST THE COMPACTION LINE.
+        /// <see cref="PerFileScoringTask.ResidentPoolGuardError"/> enforces "no unnamed
+        /// PRE-compaction pool" and stops there, which is why
+        /// <see cref="ResidentPaths.COMPACTED_ENTRIES_BUFFER"/> had to be named rather than
+        /// refused - no token could reach it. The bundle guarded here is on the same far side of
+        /// that line, and it was reachable with no token and no disclosure at all: a run took an
+        /// O(files x entries) route without declaring it, which is the one shape the named-token
+        /// ratchet exists to make impossible.</para>
+        ///
+        /// <para>It takes NO token, deliberately. <see cref="ResidentPaths"/> may only shrink,
+        /// and the bounded alternative already exists on every route that reaches here - the
+        /// per-run survivor loader built from the analysis-wide retained base_id summary. A path
+        /// that CAN stream and does not is a defect to fix, not a path to name, which is the
+        /// disposition the hpc-merge and resume-survivor-handoff notes already record.</para>
+        /// </summary>
+        internal static string AllRunsBundleGuardError(string allowUnfixedResident)
+        {
+            // Named the same way the sibling guards name theirs, so a stale or misspelled token
+            // cannot read as an unset one - even though no token can admit this path, an
+            // operator who set one is owed the answer that it was not the problem.
+            string supplied = string.IsNullOrWhiteSpace(allowUnfixedResident)
+                ? string.Empty
+                : string.Format(@" OSPREY_ALLOW_UNFIXED_RESIDENT is currently '{0}'; no token " +
+                                @"admits this path.", allowUnfixedResident);
+            return string.Format(
+                @"This run is about to build the ALL-RUNS reconciliation bundle, which holds " +
+                @"every run's survivors at once and grows O(files x entries) - measured at " +
+                @"0.10 GB/file on a 446-run cohort, i.e. past a 63.7 GB box by file ~310. The " +
+                @"bounded alternative exists: the per-run survivor loader, built from the " +
+                @"analysis-wide retained base_id summary. Something that was streamed is " +
+                @"resident again - fix that rather than allowing it. OSPREY_ALLOW_UNFIXED_RESIDENT " +
+                @"cannot admit this path.{0}",
+                supplied);
+        }
+
         internal static HashSet<uint> ReadRetainedBaseIdsOrFail(OspreyConfig config)
         {
             var retained = ReadRetainedBaseIds(config, out string error);
