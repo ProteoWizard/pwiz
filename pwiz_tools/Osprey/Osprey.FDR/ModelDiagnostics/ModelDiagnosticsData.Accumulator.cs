@@ -73,6 +73,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private readonly string[] _runNames;
             private readonly int _nFiles;
 
+            // 1 = pre-compaction first pass, 2 = final reported pool. The reductions are the
+            // same either way; this decides which ones are folded at all and which Build method
+            // may be called. The Frontier is the one pass-1-only fold, and skipping it in pass 2
+            // is not a micro-optimisation: it is a dictionary lookup and update per target row
+            // over the whole reported pool, and nothing in Pass2Data reads the result.
+            private readonly int _pass;
+
             // Best-per-precursor, keyed modseq|charge (== ReduceToPrecs).
             private readonly Dictionary<string, Prec> _best =
                 new Dictionary<string, Prec>(StringComparer.Ordinal);
@@ -124,14 +131,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// <param name="entrapmentRatio">entrapment-to-target DB ratio r.</param>
             /// <param name="runFdr">configured run-level FDR.</param>
             /// <param name="fdrLevel">reported FDR control level (drives EffectiveRunQvalue).</param>
+            /// <param name="pass">1 for the pre-compaction first pass (<see cref="Build"/>),
+            /// 2 for the final reported pool (<see cref="BuildPass2"/>). Decides which folds run.</param>
             public Accumulator(
                 string[] runNames,
                 IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
                 IReadOnlyDictionary<uint, uint> pairByBaseId,
                 double entrapmentRatio,
                 double runFdr,
-                FdrLevel fdrLevel)
+                FdrLevel fdrLevel,
+                int pass = 1)
             {
+                if (pass != 1 && pass != 2)
+                    throw new ArgumentOutOfRangeException(nameof(pass));
+                _pass = pass;
                 _runNames = runNames ?? throw new ArgumentNullException(nameof(runNames));
                 _nFiles = runNames.Length;
                 _classByBaseId = classByBaseId;
@@ -248,8 +261,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
                 // Frontier: fold the UN-GATED first-pass row into the within-file run-q tally
                 // (target side only). On a new file, flush the previous file's per-precursor best
-                // run-q into the bins first (rows arrive in file-major order).
-                if (!isDecoy)
+                // run-q into the bins first (rows arrive in file-major order). Pass 1 only -
+                // Pass2Data has no Frontier card, so in pass 2 this is work with no reader.
+                if (_pass == 1 && !isDecoy)
                 {
                     if (fileIdx != _frontierCurFile)
                     {
@@ -288,6 +302,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public ModelDiagnosticsData Build(FeatureContributions contributions)
             {
+                if (_pass != 1)
+                    throw new InvalidOperationException(PassMismatch(1, nameof(BuildPass2)));
                 var precs = _best.Values.ToList();
                 var data = new ModelDiagnosticsData
                 {
@@ -367,6 +383,105 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
 
                 return data;
+            }
+
+            /// <summary>
+            /// Assemble the pass-2 <see cref="Pass2Data"/> from the accumulated reductions,
+            /// running the SAME downstream builders the batch <see cref="BuildPass2"/> uses over
+            /// the resident pool. This is the streamed half of the fix for the last
+            /// O(runs x entries) structure in Stage 7: the batch method takes
+            /// <c>IReadOnlyList&lt;KeyValuePair&lt;string, List&lt;FdrEntry&gt;&gt;&gt;</c> and
+            /// means it, so <c>--model-diagnostics</c> forced SecondPassFDR to hold every run's
+            /// survivors resident and <c>CanStreamStage7Join</c> declined the streamed join
+            /// outright whenever the report was asked for.
+            ///
+            /// <para>Eight of the nine pass-2 cards are reductions this accumulator already
+            /// holds - best-per-precursor, per-file passing counts, cross-run membership and the
+            /// per-base_id win-fraction maxima - so they cost a walk of the O(distinct) reduced
+            /// state here rather than a walk of the pool. The ninth,
+            /// <see cref="Pass2Data.CoAssignment"/>, is NOT foldable in one pass: its acceptance
+            /// boundary is a reduction over every row that its per-row verdicts are then compared
+            /// against, so it needs the pool twice. It is therefore built by the CALLER, from a
+            /// second stream pass, and passed in - the same division pass 1 makes, where the
+            /// panel comes from <c>PeakCoAssignmentSource</c> rather than from the fold.</para>
+            ///
+            /// <para>No <see cref="ProgressReporter"/> here, deliberately, where the batch
+            /// BuildPass2 carries one per card (#4571). There the cards WERE the expensive part -
+            /// six independent whole-pool walks. Here the pool walk has already happened in the
+            /// caller's stream, which reports per run, and what is left walks only the reduced
+            /// state. A card reporter would print six lines inside one second, on every run
+            /// forever.</para>
+            /// </summary>
+            /// <param name="contributions">The retrained second-pass model, or null under
+            /// confidence-transfer mode, which leaves the structural half null exactly as the
+            /// batch path does.</param>
+            /// <param name="coAssignment">The pass-2 co-assignment panel built from the caller's
+            /// second stream pass; null leaves the panel out.</param>
+            public Pass2Data BuildPass2(FeatureContributions contributions,
+                CoAssignmentData coAssignment)
+            {
+                if (_pass != 2)
+                    throw new InvalidOperationException(PassMismatch(2, nameof(Build)));
+                var precs = _best.Values.ToList();
+                var pass2 = new Pass2Data();
+
+                // Q-driven half: available whenever a second pass produced reported q-values
+                // (retrain OR confidence transfer). Entrapment-independent except FdpViews.
+                var perFile = new List<FileSummaryRow>(_nFiles);
+                for (int f = 0; f < _nFiles; f++)
+                {
+                    perFile.Add(new FileSummaryRow
+                    {
+                        File = _runNames[f],
+                        Targets = _fileTargets[f],
+                        Decoys = _fileDecoys[f],
+                        Entrapment = _fileEntrap[f],
+                    });
+                }
+                pass2.PerFile = perFile;
+                pass2.IdYield = BuildIdYield(precs);
+
+                double r = _entrapmentRatio > 0 ? _entrapmentRatio : 1.0;
+                // Close the run in progress and any trailing runs that contributed nothing, so
+                // every file index has its entry - the same obligation Build has, for the same
+                // reason, and the one place a streamed reduction can silently disagree with the
+                // batch one.
+                _runStream.Finish();
+                _expStream.Finish();
+                _entRunStream.Finish();
+                _entExpStream.Finish();
+                pass2.CrossRun = new CrossRunDetection
+                {
+                    RunNames = _runNames,
+                    PerRun = ComputeCrossRunView(_runStream, _anyEntrapment ? _entRunStream : null, _nFiles, r),
+                    Experiment = ComputeCrossRunView(_expStream, _anyEntrapment ? _entExpStream : null, _nFiles, r),
+                };
+
+                pass2.FdpViews = BuildPass2FdpViews(precs, _entrapmentRatio);
+                pass2.CoAssignment = coAssignment;
+
+                // Structural half: only when the second pass retrained on the reported pool.
+                // Null contributions (transfer mode) leave Model, DensityRatio and WinFraction
+                // null and the report's structural cards show their n/a note.
+                pass2.Model = BuildModelPass2(contributions, precs);
+                if (pass2.Model != null)
+                {
+                    bool hasEntrapment = precs.Any(p => p.Class == EntrapmentClass.PTarget);
+                    pass2.DensityRatio = BuildDensityRatio(pass2.Model.Scores, hasEntrapment);
+                    pass2.WinFraction = BuildWinFractionFromReduced(_bt, _tClass);
+                }
+                return pass2;
+            }
+
+            // Both Build methods read reductions that only their own pass folds, so calling the
+            // wrong one returns a plausible-looking object built from partly unfolded state
+            // rather than failing. Name the other method: the caller's mistake is always that
+            // the pass argument and the Build call disagree.
+            private string PassMismatch(int expected, string otherMethod)
+            {
+                return string.Format(
+                    @"ModelDiagnosticsData.Accumulator was constructed for pass {0} but built for pass {1}. Use {2} instead, or construct it with pass: {1}.",
+                    _pass, expected, otherMethod);
             }
 
             /// <summary>

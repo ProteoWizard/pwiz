@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
@@ -71,14 +70,7 @@ namespace pwiz.Osprey.Tasks
         /// <paramref name="taskValidityKey"/> are the owning task's identity,
         /// stamped into each inline per-file validity sidecar.
         /// </summary>
-        /// <returns>
-        /// The second-pass Percolator model's <see cref="FeatureContributions"/> when
-        /// this call actually retrained (feature histograms included if
-        /// <c>--model-diagnostics</c>), for the model-diagnostics pass-2 model view;
-        /// null when the 2nd-pass scores were rehydrated from sidecars (no retrain) or
-        /// the method is not Percolator.
-        /// </returns>
-        internal static FeatureContributions ComputeAndPersist(
+        internal static void ComputeAndPersist(
             PipelineContext ctx,
             bool anyRescoreWork,
             RescoredEntries rescored,
@@ -87,11 +79,14 @@ namespace pwiz.Osprey.Tasks
             string taskValidityKey)
         {
             var config = ctx.Config;
-            // The one buffer behind the milestone. Taken here rather than as a second
-            // parameter so the frozen-competition path (which reads the milestone) and
-            // every other path (which reads the buffer) cannot be handed different pools.
-            var perFileEntries = rescored.Value;
-            FeatureContributions pass2Contributions = null;
+            // The one buffer behind the milestone, and NOT read here (#4486). Taken through a
+            // local rather than as a second parameter so the frozen-competition path (which
+            // reads the milestone) and every other path (which reads the buffer) cannot be
+            // handed different pools - but read LAZILY, because on the frozen path nothing
+            // below asks for it and .Value is the O(runs x entries) build this stage exists to
+            // stop paying. The resident 2nd pass genuinely indexes the whole pool and still
+            // gets it.
+            List<KeyValuePair<string, List<FdrEntry>>> Pool() => rescored.Value;
 
             // OSPREY_PASS2_QVALUE selects how this 2nd pass assigns reported q-values.
             // Log the active mode once so a run's provenance is in the log. An unrecognized
@@ -105,62 +100,13 @@ namespace pwiz.Osprey.Tasks
                     OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             }
 
-            // Frozen 2nd-pass modes need the trained 1st-pass model. On a distributed
-            // --task SecondPassFDR node (or any resume that skipped 1st-pass training)
-            // it was never published in-process; reload it from the per-file sidecar and
-            // publish so the frozen dispatch below finds it instead of fail-fasting. No-op
-            // when the model is already present, the mode is the default retrain, or the
-            // sidecar is absent (the existing fail-fast then applies).
-            // protein-compact needs the ProteinCompactStratum too; it rides in the same
-            // sidecar, so one reload serves all three frozen modes.
-            bool wantsFrozenModel = OspreyEnvironment.Pass2TransferQ ||
-                                    OspreyEnvironment.Pass2TransferCompete ||
-                                    OspreyEnvironment.Pass2ProteinCompact;
-            if (wantsFrozenModel && !ctx.TryGet<FirstPassPercolatorModel>(out _))
-            {
-                var reloaded = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
-                if (reloaded != null)
-                {
-                    // ExperimentAgg is what the TRAINING process ran under (null on a sidecar
-                    // written before the field existed). This node's own OSPREY_EXPERIMENT_AGG
-                    // says nothing about it, so carry the recorded value rather than re-reading.
-                    ctx.Publish(new FirstPassPercolatorModel
-                        { Results = reloaded.Model, ExperimentAgg = reloaded.ExperimentAgg });
-                    ctx.LogInfo(string.Format(
-                        @"Reloaded persisted 1st-pass model sidecar for frozen 2nd-pass (pass-1 " +
-                        @"experiment aggregation: {0}).",
-                        reloaded.ExperimentAgg ?? @"not recorded"));
-
-                    // Only publish a stratum the sidecar actually carried. Leaving it absent
-                    // keeps the existing fail-fast, which is the honest outcome: an empty
-                    // stratum would silently constrain the competition to nothing.
-                    if (OspreyEnvironment.Pass2ProteinCompact && reloaded.StratumBaseIds != null &&
-                        !ctx.TryGet<ProteinCompactStratum>(out _))
-                    {
-                        ctx.Publish(new ProteinCompactStratum(reloaded.StratumBaseIds));
-                        ctx.LogInfo(string.Format(
-                            @"Reloaded the persisted protein-compact stratum ({0} base ids).",
-                            reloaded.StratumBaseIds.Count));
-                    }
-                }
-            }
-
-            // When the projection 2nd-pass compute ran (flag on), this holds the scored
-            // FdrProjectionSet -- non-null is the flag that the StreamingSink already
-            // wrote each file's .2nd-pass.fdr_scores.bin + validity sidecar DURING the
-            // score pass (issue #4355 struct-shrink S0 / C1: the q-values are never
-            // stored on the projection). The resident write block below is then only
-            // for the flag-off / resume path. Null on the resident path (flag off) and
-            // on the skip / resume path. (#4374)
-            FdrProjectionSet pass2Projections = null;
+            EnsureFrozenFirstPassPublished(ctx, perFileParquetPaths);
 
             // The frozen-model COMPETITION modes - transfer-compete, and protein-compact unless
             // it was told to retrain. These own their whole per-file cycle (materialize, score,
             // compete, write the sidecar, drop the file), so they skip both the whole-pool
             // pass-1 scalar seed above and the resident sidecar write below.
-            bool frozenCompetition =
-                OspreyEnvironment.Pass2TransferCompete ||
-                (OspreyEnvironment.Pass2ProteinCompact && !OspreyEnvironment.Pass2ProteinCompactRetrain);
+            bool frozenCompetition = OspreyEnvironment.Pass2ProteinCompact;
 
             // True once a path has written every file's .2nd-pass.fdr_scores.bin itself, which
             // is what the resident write block below tests before repeating the work.
@@ -215,7 +161,7 @@ namespace pwiz.Osprey.Tasks
                 // hide a name-drift bug that the standard cross-impl gate
                 // (where keys always match) cannot catch.
                 var unmatchedKeys = pass2Writer.UnmatchedKeys(
-                    perFileEntries.Select(kvp => kvp.Key));
+                    rescored.FileNames);
                 if (unmatchedKeys.Count > 0)
                 {
                     ctx.LogWarning(string.Format(
@@ -228,14 +174,14 @@ namespace pwiz.Osprey.Tasks
 
                 int missingPass2 = 0;
                 int totalFiles = 0;
-                foreach (var kvp in perFileEntries)
+                foreach (string fileKey in rescored.FileNames)
                 {
                     totalFiles++;
                     // A key with no input file is not "missing" - it is unmatched, reported
                     // above, and gets no sidecar either way.
-                    if (pass2Writer.InputFor(kvp.Key) == null)
+                    if (pass2Writer.InputFor(fileKey) == null)
                         continue;
-                    if (!pass2Writer.IsCurrent(kvp.Key))
+                    if (!pass2Writer.IsCurrent(fileKey))
                         missingPass2++;
                 }
                 // The RECOMPUTE gate, and only that. Every file gets a sidecar written below
@@ -302,7 +248,7 @@ namespace pwiz.Osprey.Tasks
                     if (!frozenCompetition)
                     {
                         var swRestore = Stopwatch.StartNew();
-                        RestorePass1Scalars(ctx, perFileEntries, pass2Writer);
+                        RestorePass1Scalars(ctx, Pool(), pass2Writer);
                         swRestore.Stop();
                         ctx.LogVerbose(string.Format(
                             "[STAGE-WALL] pass-1 scalar restore: {0:F1}s", swRestore.Elapsed.TotalSeconds));
@@ -310,82 +256,33 @@ namespace pwiz.Osprey.Tasks
 
                     var swPass2 = Stopwatch.StartNew();
 
-                    // The frozen COMPETITION modes (transfer-compete, protein-compact) re-score
-                    // with the frozen 1st-pass model over the full pre-compaction population /
-                    // protein stratum - a competition the projection engine does not do (it
-                    // trains + competes over the survivor set only). They own the whole per-file
-                    // cycle: materialize, score, compete, write the sidecar, drop, so they need
-                    // neither the projection engine nor a resident pool.
-                    // protein-compact + OSPREY_PROTEIN_COMPACT_RETRAIN=1 is the exception: it
-                    // retrains, so it stays on the projection (streaming-retrain) path.
+                    // Two modes, two shapes, and no third: OSPREY_PASS2_QVALUE normalizes to
+                    // protein-compact or transfer and nothing else.
                     //
-                    // --model-diagnostics needs the resident 2nd-pass model: its feature
-                    // contributions feed the pass-2 model view, and the projection 2nd pass
-                    // streams through a sink and produces none. Route --model-diagnostics to
-                    // the resident path so ComputePass2Resident can return the model. Off the
-                    // default output path, so byte-identity is unaffected (#4377).
-                    // transfer takes the resident path too: it needs each survivor's RECONCILED
+                    // protein-compact re-scores with the frozen 1st-pass model over the
+                    // protein stratum. It owns the whole per-file cycle: materialize, score,
+                    // compete, write the sidecar, drop - so it needs no resident pool.
+                    //
+                    // transfer takes the resident path: it needs each survivor's RECONCILED
                     // features on entry.Features, which ComputePass2Resident does.
+                    //
+                    // A projection 2nd pass stood between these two until the retrain was
+                    // removed. Its condition required !Pass2TransferQ, which only the retrain
+                    // modes could satisfy, so it had been unreachable since ad4ef8d106; the
+                    // condition also carried a !config.ModelDiagnostics term that read as
+                    // though the flag reroutes the analysis. It does not, and never did after
+                    // the retrain went - the term's only remaining effect was on the reader.
                     if (frozenCompetition)
                     {
                         pass2SidecarsWritten = ComputePass2FrozenCompetition(
                             ctx, rescored, perFileParquetPaths, config, pass2Writer);
                     }
-                    else if (OspreyEnvironment.UseFdrProjection && config.FdrMethod.UsesPercolatorFramework() &&
-                        !config.ModelDiagnostics && !OspreyEnvironment.Pass2TransferQ)
-                    {
-                        // Projection 2nd pass (issue #4374 + #4355 struct-shrink S0 / C1):
-                        // stream the reconciled PIN features through the SAME projection
-                        // engine the 1st pass uses, rather than loading every survivor's
-                        // 21-feature vector resident. The lean projection no longer stores
-                        // the q-values (2nd-pass peak 80 -> 32 B); a StreamingSink assembles
-                        // each .2nd-pass.fdr_scores.bin record DURING the score pass (from
-                        // the streamed q-values + the survivor's ExperimentProteinQvalue looked up
-                        // by entry_id) and flushes the per-file sidecar + validity sidecar
-                        // directly, so the resident write block below is skipped for this
-                        // path. The existing entry_id overlay still carries the 2nd-pass
-                        // q-values onto the resident survivor buffer afterward (unchanged).
-
-                        // Survivor ExperimentProteinQvalue by entry_id, per file: the value
-                        // BuildFromEntries used to carry onto the struct. All survivors
-                        // sharing an entry_id share a precursor (hence a ModifiedSequence,
-                        // hence a experiment_protein_qvalue), so the last-write map is exact.
-                        var survivorsByFile =
-                            new Dictionary<string, List<FdrEntry>>(StringComparer.Ordinal);
-                        foreach (var kvp in perFileEntries)
-                            survivorsByFile[kvp.Key] = kvp.Value;
-
-                        IReadOnlyDictionary<uint, double> ResolveProteinQ(string fileName)
-                        {
-                            var map = new Dictionary<uint, double>();
-                            if (survivorsByFile.TryGetValue(fileName, out var survivors))
-                            {
-                                foreach (var e in survivors)
-                                    map[e.EntryId] = e.ExperimentProteinQvalue;
-                            }
-                            return map;
-                        }
-
-                        // Per-file flush: write the .2nd-pass.fdr_scores.bin from the
-                        // assembled records, sourced from records instead of the resident
-                        // buffer. The write body itself - resume skip, validity sidecar,
-                        // tallies - is the writer's, shared with every other path that emits
-                        // one of these files.
-                        void FlushPass2File(string fileName, IReadOnlyList<FdrScoreRecord> records)
-                        {
-                            pass2Writer.Write(fileName, records);
-                        }
-
-                        pass2Projections = ComputePass2Projection(
-                            ctx, perFileEntries, perFileParquetPaths, config,
-                            ResolveProteinQ, FlushPass2File);
-                    }
                     else
                     {
-                        // Resident 2nd pass (flag off): the byte-identity oracle. Reload
-                        // every survivor's PIN features resident, then run the resident
-                        // Percolator over the full FdrEntry survivor buffer.
-                        pass2Contributions = ComputePass2Resident(ctx, perFileEntries, perFileParquetPaths, config);
+                        // Resident 2nd pass: reload every survivor's PIN features resident,
+                        // then transfer the first-pass confidence over the full FdrEntry
+                        // survivor buffer. Throws if the transfer cannot be made.
+                        ComputePass2Resident(ctx, Pool(), perFileParquetPaths, config);
                     }
                     swPass2.Stop();
                     ctx.LogInfo(string.Format(
@@ -400,8 +297,8 @@ namespace pwiz.Osprey.Tasks
             // back instead of quietly downgrading a resumed run's file to pass-1 values. A file
             // with no sidecar yet - a first run with no rescore work - simply has nothing to
             // load, and the write gives it the standing values, which are its answer.
-            if (!recomputed)
-                ReloadPass2Sidecars(ctx, pass2Writer, perFileEntries, @"pre-write");
+            if (!recomputed && !rescored.Streams)
+                ReloadPass2Sidecars(ctx, pass2Writer, Pool(), @"pre-write");
 
             // Persist post-Stage-6 per-file 2nd-pass FDR scores
             // BEFORE RunProteinFdr. The sidecar holds Score +
@@ -430,7 +327,7 @@ namespace pwiz.Osprey.Tasks
                 // .2nd-pass sidecar written and the next resume re-runs
                 // its second-pass FDR unnecessarily.
                 var unmatchedSidecarKeys = pass2Writer.UnmatchedKeys(
-                    perFileEntries.Select(kvp => kvp.Key));
+                    rescored.FileNames);
                 if (unmatchedSidecarKeys.Count > 0)
                 {
                     ctx.LogWarning(string.Format(
@@ -452,23 +349,40 @@ namespace pwiz.Osprey.Tasks
                 // sidecar) for every file that completed.
 
                 // Resident / resume path only: write each file's .2nd-pass sidecar from
-                // the resident survivor buffer. The projection path (pass2Projections
-                // != null, issue #4355 struct-shrink S0 / C1) and the frozen competition
-                // (#4486) both wrote the .bin + validity sidecar per file as they went, so
-                // this loop is skipped for them - only the shared tallies they updated
-                // drive the summary log below.
-                if (pass2Projections == null && !pass2SidecarsWritten)
+                // the resident survivor buffer. The frozen competition (#4486) wrote the
+                // .bin + validity sidecar per file as it went, so this loop is skipped
+                // for it - only the shared tallies it updated drive the summary log below.
+                //
+                // NOT ON THE STREAMED POOL, and this is a correctness skip rather than a
+                // memory one. It is reachable there on the DEFAULT mode: with
+                // recomputed == false - a cohort with no rescore work, or a resume whose
+                // sidecars are all current and worker-owned - the frozen competition inside
+                // `if (recomputed)` never ran, so pass2SidecarsWritten is false and this block
+                // would write. What it would write is the problem: a streamed run that already
+                // has a worker answer is rebuilt WITHOUT the 1st-pass overlay, because that
+                // answer is where its scalars come from, so its entries carry only the
+                // reconciled parquet's columns until the pass-2 overlay is installed - which
+                // happens after this method returns. Serializing them here would overwrite
+                // every correct sidecar in the cohort with Score 0.0 and default experiment
+                // values.
+                //
+                // Skipping writes nothing that is missing. On this leg the per-run 2nd-pass
+                // sidecar is PerFileRescoring's output and this task's INPUT - Outputs() says
+                // so - and "not recomputed" means every one of them is already current on
+                // disk. P13's never-conditionally-write rule binds the artifact's OWNER, and
+                // that is not this task here.
+                if (!pass2SidecarsWritten && !rescored.Streams)
                 {
                     // Per-file progress: this writes one .2nd-pass.fdr_scores.bin per file
                     // (~4.8 GB across 82) and was silent, which with the reload loop below is
                     // the 38s gap perfviz reports between the competition's [STAGE-WALL] line
                     // and the next probe (#4486). IO-paced, like the other disk loops here.
                     using (var writeProgress = new ProgressReporter(
-                        string.Format(@"Writing 2nd-pass FDR scores for {0} file(s)", perFileEntries.Count),
-                        perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                        string.Format(@"Writing 2nd-pass FDR scores for {0} file(s)", rescored.FileCount),
+                        rescored.FileCount, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                     {
                         long nWrittenReported = 0;
-                        foreach (var kvp in perFileEntries)
+                        foreach (var kvp in Pool())
                         {
                             writeProgress.Report(++nWrittenReported);
                             pass2Writer.Write(kvp.Key, kvp.Value);
@@ -508,11 +422,64 @@ namespace pwiz.Osprey.Tasks
             // above already overlaid every sidecar onto these same entries and the
             // write put identical bytes back, so a second read of the whole sidecar
             // set (~4.8 GB at 82 files) applied values the entries already hold.
-            if (recomputed && perFileParquetPaths.Count > 0 && config.InputFiles != null)
-                ReloadPass2Sidecars(ctx, pass2Writer, perFileEntries, @"post-write");
+            // On the STREAMED pool neither reload runs, and the reason is that neither can: the
+            // entries they would overlay are dropped as each run is folded, so a pass over the
+            // whole cohort here would apply the sidecars to rows nothing reads and then throw
+            // them away. The same overlay is installed as a per-run hook instead
+            // (InstallStreamedPass2Overlay, called by the stage right after this method), so
+            // every later fold rebuilds a run and immediately gets its second-pass values.
+            // Same operation, same rows; applied when the row exists rather than in a pass of
+            // its own.
+            if (recomputed && !rescored.Streams &&
+                perFileParquetPaths.Count > 0 && config.InputFiles != null)
+            {
+                ReloadPass2Sidecars(ctx, pass2Writer, Pool(), @"post-write");
+            }
+        }
 
+        /// <summary>
+        /// Publish the trained 1st-pass model - and, under protein-compact, the stratum that
+        /// rides in the same sidecar - from disk when this process did not train it.
+        ///
+        /// <para>Needed by every entry point that reads frozen 1st-pass state without having
+        /// run the first pass: a distributed <c>--task SecondPassFDR</c> node, any resume that
+        /// skipped training, and the pass-2 diagnostics-only fold, which runs no second pass at
+        /// all and still has to know the stratum in order to split the acceptance boundary the
+        /// same way the join did. Shared rather than repeated because a fold that resolved the
+        /// stratum differently from the join would describe a different pool while looking like
+        /// the same report.</para>
+        ///
+        /// <para>A no-op when the model is already published or the sidecar is absent; in the
+        /// latter case the caller's own fail-fast applies. Only a stratum the sidecar actually
+        /// carried is published - an empty one would silently constrain the competition to
+        /// nothing, which is worse than the honest absence.</para>
+        /// </summary>
+        internal static void EnsureFrozenFirstPassPublished(
+            PipelineContext ctx, IReadOnlyDictionary<string, string> perFileParquetPaths)
+        {
+            if (ctx.TryGet<FirstPassPercolatorModel>(out _))
+                return;
+            var reloaded = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
+            if (reloaded == null)
+                return;
+            // ExperimentAgg is what the TRAINING process ran under (null on a sidecar
+            // written before the field existed). This node's own OSPREY_EXPERIMENT_AGG
+            // says nothing about it, so carry the recorded value rather than re-reading.
+            ctx.Publish(new FirstPassPercolatorModel
+                { Results = reloaded.Model, ExperimentAgg = reloaded.ExperimentAgg });
+            ctx.LogInfo(string.Format(
+                @"Reloaded persisted 1st-pass model sidecar for frozen 2nd-pass (pass-1 " +
+                @"experiment aggregation: {0}).",
+                reloaded.ExperimentAgg ?? @"not recorded"));
 
-            return pass2Contributions;
+            if (OspreyEnvironment.Pass2ProteinCompact && reloaded.StratumBaseIds != null &&
+                !ctx.TryGet<ProteinCompactStratum>(out _))
+            {
+                ctx.Publish(new ProteinCompactStratum(reloaded.StratumBaseIds));
+                ctx.LogInfo(string.Format(
+                    @"Reloaded the persisted protein-compact stratum ({0} base ids).",
+                    reloaded.StratumBaseIds.Count));
+            }
         }
 
         /// <summary>
@@ -558,6 +525,30 @@ namespace pwiz.Osprey.Tasks
                 : LoadExperimentRecords(ctx.Config, FdrScoresSidecar.Pass.SecondPass);
         }
 
+        /// <summary>
+        /// The RESIDENT sibling of <see cref="InstallStreamedPass2Overlay"/>: overlay every
+        /// file's second-pass sidecar onto a resident survivor pool. A no-op on the streamed
+        /// arm, where the installed per-run overlay already does it.
+        ///
+        /// <para>Needed by the pass-2 diagnostics fold and by nothing else. Every other caller
+        /// arrives here having just run <see cref="ComputeAndPersist"/>, which stamps the
+        /// second-pass values onto the resident entries as it computes them; the fold skips
+        /// that compute by definition, so on the resident arm its pool would otherwise still
+        /// carry the FIRST pass's q-values - and the report would describe pass 1 while
+        /// labelling it pass 2. That failure is invisible to every other check: the page is
+        /// complete, every card is populated, and the numbers are real, just from the wrong
+        /// pass. Only a byte-comparison against the flag-up-front report catches it, which is
+        /// why P16 makes that comparison half of the requirement.</para>
+        /// </summary>
+        internal static void OverlayPass2OntoResidentPool(
+            PipelineContext ctx, RescoredEntries rescored, string taskName, string taskValidityKey)
+        {
+            if (rescored.Streams)
+                return;
+            var writer = new Pass2SidecarWriter(ctx, ctx.Config, taskName, taskValidityKey);
+            ReloadPass2Sidecars(ctx, writer, rescored.Value, @"diagnostics-fold");
+        }
+
         private static void ReloadPass2Sidecars(
             PipelineContext ctx,
             Pass2SidecarWriter writer,
@@ -582,31 +573,14 @@ namespace pwiz.Osprey.Tasks
                 foreach (var kvp in perFileEntries)
                 {
                     reloadProgress.Report(++nReloadReported);
-                    string inputFile = writer.InputFor(kvp.Key);
-                    if (inputFile == null)
-                        continue;
-                    string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
-                    if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
-                    {
-                        filesMissing++;
-                        continue;
-                    }
-                    var byEntryId = new Dictionary<uint, FdrEntry>(kvp.Value.Count);
-                    foreach (var e in kvp.Value)
-                        byEntryId[e.EntryId] = e;
-                    if (FdrScoresSidecar.TryReadOverlay(
-                            pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass,
-                            experimentRecords))
+                    if (OverlayPass2SidecarOntoFile(
+                            writer, kvp.Key, kvp.Value, experimentRecords, ctx.LogWarning))
                     {
                         filesReloaded++;
                     }
                     else
                     {
                         filesMissing++;
-                        ctx.LogWarning(string.Format(
-                            "Failed to reload 2nd-pass FDR sidecar for {0} ({1}); " +
-                            "protein FDR will use stale 1st-pass q-values",
-                            kvp.Key, pass2Path));
                     }
                 }
             }
@@ -616,6 +590,93 @@ namespace pwiz.Osprey.Tasks
                     "Reloaded 2nd-pass FDR scores ({0}) for {1}/{2} file(s) post-compaction",
                     phase, filesReloaded, filesReloaded + filesMissing));
             }
+        }
+
+        /// <summary>
+        /// Overlay ONE run's <c>.2nd-pass.fdr_scores.bin</c> - plus the analysis-wide 2nd-pass
+        /// experiment records - onto that run's entries. The body of
+        /// <see cref="ReloadPass2Sidecars"/>' loop, extracted because a STREAMED Stage 7 has to
+        /// apply it once per run per pass rather than once per run in total: the entries are
+        /// rebuilt from disk carrying their 1st-pass values, so without this every fold after
+        /// the second pass would read pass-1 q-values off pass-2 rows.
+        ///
+        /// <para>Returns false when the run has no readable current sidecar - the caller decides
+        /// whether that is the legitimate absence (a first run with no rescore work) or the
+        /// failed write it is on the post-write pass, which is why the disposition is not taken
+        /// here.</para>
+        ///
+        /// <para>A missing sidecar leaves the entries EXACTLY as they arrived rather than
+        /// resetting them. On the resident path that is the standing first-pass state, which is
+        /// what the loop's own contract says such a run keeps; on the streamed path it is the
+        /// same state, freshly rebuilt. The two agree because neither invents a value.</para>
+        /// </summary>
+        private static bool OverlayPass2SidecarOntoFile(
+            Pass2SidecarWriter writer, string fileName, List<FdrEntry> entries,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            Action<string> logWarning)
+        {
+            string inputFile = writer.InputFor(fileName);
+            if (inputFile == null)
+                return false;
+            string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
+            if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
+                return false;
+            var byEntryId = new Dictionary<uint, FdrEntry>(entries.Count);
+            foreach (var e in entries)
+                byEntryId[e.EntryId] = e;
+            if (FdrScoresSidecar.TryReadOverlay(
+                    pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass, experimentRecords))
+            {
+                return true;
+            }
+            logWarning(string.Format(
+                "Failed to reload 2nd-pass FDR sidecar for {0} ({1}); " +
+                "protein FDR will use stale 1st-pass q-values", fileName, pass2Path));
+            return false;
+        }
+
+        /// <summary>
+        /// Make every fold that runs AFTER the second pass see the second pass's answer, on a
+        /// Stage 7 whose runs are rebuilt from disk one at a time (#4486).
+        ///
+        /// <para>On the resident pool <see cref="ReloadPass2Sidecars"/> stamps the entries once
+        /// and every later pass reads the stamps. A streamed pool has no entries to stamp
+        /// between passes, so the same overlay is installed as a per-run hook and re-applied to
+        /// each run as it is rebuilt. Same operation, same rows, same result - once per run per
+        /// pass instead of once per run, which is the price of not holding the pool.</para>
+        ///
+        /// <para>The experiment records are resolved PER CALL rather than captured once,
+        /// deliberately: <see cref="ResolvePass2ExperimentRecords"/> answers from the in-memory
+        /// accumulator once a pass-2 path has published one and from the on-disk sidecar
+        /// otherwise, and Stage 7 crosses that boundary partway through - protein FDR writes the
+        /// sidecar. Capturing the earlier answer would freeze the pre-competition values into
+        /// every later fold.</para>
+        /// </summary>
+        internal static void InstallStreamedPass2Overlay(
+            PipelineContext ctx, RescoredEntries rescored, string taskName, string taskValidityKey)
+        {
+            if (!rescored.Streams)
+                return;
+            var writer = new Pass2SidecarWriter(ctx, ctx.Config, taskName, taskValidityKey);
+            // Resolved ONCE for the life of the overlay, and lazily.
+            //
+            // Once, because this ran per materialization: every run, every stream pass. Where
+            // the scope byproduct is published that is a cheap re-read of a field, but where it
+            // is not - a resume, and now the pass-2 diagnostics-only fold, which runs no
+            // competition to publish one - it deserializes the whole analysis-wide 2nd-pass
+            // experiment sidecar again for each run of each pass. That is O(runs x sidecar) on
+            // exactly the path a fold is supposed to make cheap.
+            //
+            // Lazily, because WHEN it resolves is a correctness question, not a performance
+            // one. Resolving at install time on the join path would capture the records before
+            // the second-pass competition publishes its scope; deferring to the first
+            // materialization puts the read after it. On the fold path there is no competition
+            // and the sidecar on disk is final, so either moment gives the same answer.
+            var experimentRecords = new Lazy<IReadOnlyDictionary<uint, FdrExperimentRecord>>(
+                () => ResolvePass2ExperimentRecords(ctx));
+            rescored.AddPostMaterialize((fileName, entries) =>
+                OverlayPass2SidecarOntoFile(
+                    writer, fileName, entries, experimentRecords.Value, ctx.LogWarning));
         }
 
         /// <summary>
@@ -734,9 +795,65 @@ namespace pwiz.Osprey.Tasks
         private static IReadOnlyDictionary<uint, FdrExperimentRecord> LoadExperimentRecords(
             OspreyConfig config, FdrScoresSidecar.Pass pass)
         {
-            return LoadExperimentRecordsFrom(
-                FdrExperimentSidecar.PathFor(config?.OutputBlib,
-                    ScoringTaskShared.ArtifactSiblingPath(config), pass), pass);
+            string path = FdrExperimentSidecar.PathFor(config?.OutputBlib,
+                ScoringTaskShared.ArtifactSiblingPath(config), pass);
+            return LoadExperimentRecordsCached(path, pass);
+        }
+
+        /// <summary>
+        /// One deserialization per GENERATION of the experiment sidecar, rather than one per
+        /// call, keyed on the file's identity (path, length, last write) so a rewrite invalidates
+        /// the cache on its own.
+        ///
+        /// <para>The caller that needs this is the streamed pass-2 overlay: it resolves the
+        /// records inside a per-run hook, deliberately (see
+        /// <see cref="InstallStreamedPass2Overlay"/> - Stage 7 crosses the
+        /// no-scope-to-scope boundary partway through, so capturing once would freeze
+        /// pre-competition values into every later fold). On a resume where the competition is
+        /// skipped and no <c>Pass2ExperimentScope</c> is ever published, that per-call resolution
+        /// falls through to disk for EVERY run of EVERY <c>StreamFiles</c> pass - and Stage 7
+        /// makes many. At 446 runs that is O(runs x sidecar) deserialization of a file with 1.24 M
+        /// records, which is the shape this whole area exists to eliminate.</para>
+        ///
+        /// <para>Caching on identity rather than hoisting the call is what keeps the documented
+        /// semantics intact: protein FDR REWRITES this sidecar mid-Stage-7, and a rewrite changes
+        /// length or write time, so the next resolve re-reads. A plain hoist would have frozen the
+        /// pre-competition answer, which is the bug the per-call resolution was written to avoid.
+        /// One <c>FileInfo</c> stat per call replaces one full deserialization per call.</para>
+        /// </summary>
+        private static readonly object EXPERIMENT_CACHE_LOCK = new object();
+        private static string _experimentCacheKey;
+        private static IReadOnlyDictionary<uint, FdrExperimentRecord> _experimentCacheValue;
+
+        private static IReadOnlyDictionary<uint, FdrExperimentRecord> LoadExperimentRecordsCached(
+            string path, FdrScoresSidecar.Pass pass)
+        {
+            string key = null;
+            if (!string.IsNullOrEmpty(path))
+            {
+                var info = new FileInfo(path);
+                // A missing file gets no cache entry: LoadExperimentRecordsFrom owns that
+                // degrade, and caching "absent" would outlive the write that fixes it.
+                if (info.Exists)
+                {
+                    key = string.Format(@"{0}|{1}|{2}|{3}", path, info.Length,
+                        info.LastWriteTimeUtc.Ticks, (int)pass);
+                }
+            }
+            if (key == null)
+                return LoadExperimentRecordsFrom(path, pass);
+            lock (EXPERIMENT_CACHE_LOCK)
+            {
+                if (string.Equals(_experimentCacheKey, key, StringComparison.Ordinal))
+                    return _experimentCacheValue;
+            }
+            var loaded = LoadExperimentRecordsFrom(path, pass);
+            lock (EXPERIMENT_CACHE_LOCK)
+            {
+                _experimentCacheKey = key;
+                _experimentCacheValue = loaded;
+            }
+            return loaded;
         }
 
         /// <summary>
@@ -755,7 +872,7 @@ namespace pwiz.Osprey.Tasks
         /// dependence in an artifact that is supposed to be route-independent is the exact class
         /// of defect mode 3 exists to catch, and it caught this one.</para>
         /// </summary>
-        private static HashSet<string> WorkerOwnedPass2Sidecars(PipelineContext ctx)
+        internal static HashSet<string> WorkerOwnedPass2Sidecars(PipelineContext ctx)
         {
             var owned = new HashSet<string>(StringComparer.Ordinal);
             if (ctx.Config?.InputFiles == null)
@@ -1369,9 +1486,13 @@ namespace pwiz.Osprey.Tasks
                     var byEntryId = new Dictionary<uint, double>();
                     try
                     {
-                        string parquetPath =
-                            ParquetScoreCache.EffectiveScoresPathFromScoresPath(
-                                perFileParquetPaths[fileName]);
+                        // The RECONCILED parquet, derived rather than probed. This runs both
+                        // in-process - where the published map holds Stage 4 paths, because
+                        // Stage 1-4 ran here - and on a --task SecondPassFDR node, where it
+                        // already holds reconciled ones; the derivation is idempotent, so one
+                        // expression states the same intent on both routes.
+                        string parquetPath = ParquetScoreCache.ReconciledPathFromScoresPath(
+                            perFileParquetPaths[fileName]);
                         ParquetScoreCache.ReadFdrStubScalars(parquetPath,
                             (entryId, charge, isDecoy, coelutionSum, modseq) =>
                             {
@@ -1464,10 +1585,10 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Run the frozen-model COMPETITION second pass (transfer-compete / protein-compact):
-        /// resolve the frozen 1st-pass model and, for protein-compact, its stratum, then hand
-        /// them to <see cref="ComputePass2TransferCompeteFull"/>. Returns true when it ran and
-        /// wrote every file's 2nd-pass sidecar.
+        /// Run the frozen-model COMPETITION second pass (protein-compact): resolve the frozen
+        /// 1st-pass model and its stratum, then hand them to
+        /// <see cref="ComputePass2TransferCompeteFull"/>. Returns true when it ran and wrote
+        /// every file's 2nd-pass sidecar.
         ///
         /// <para>Fail-fast, because an explicitly requested frozen mode must NEVER silently
         /// degrade to the anti-conservative retrain. Absent inputs - the frozen 1st-pass model
@@ -1475,8 +1596,9 @@ namespace pwiz.Osprey.Tasks
         /// and skipped 1st-pass training, or a distributed SecondPassFDR node that never trained
         /// pass 1), or a missing / corrupt 1st-pass sidecar - mean the mode cannot be honored,
         /// so this aborts with actionable guidance rather than reporting looser FDR than a cold
-        /// straight-through run under the same mode. (protein-compact +
-        /// OSPREY_PROTEIN_COMPACT_RETRAIN=1 retrains by design and never reaches here.)</para>
+        /// straight-through run under the same mode. There is no longer a retrain to degrade
+        /// TO - second-pass retraining was removed with issue #4484 - so an absent input is a
+        /// hard stop rather than a quieter answer.</para>
         /// </summary>
         private static bool ComputePass2FrozenCompetition(
             PipelineContext ctx,
@@ -1506,17 +1628,13 @@ namespace pwiz.Osprey.Tasks
                 "model, 1st-pass scalar sidecars or protein stratum are absent, or a file's input " +
                 "path could not be resolved - e.g. a warm " +
                 "rerun or a distributed SecondPassFDR node that did not train pass 1 in-process). " +
-                "The warning above names which. Run the " +
-                "frozen modes on the straight-through path, rerun without the score cache, or unset " +
-                "OSPREY_PASS2_QVALUE for the default retrain{1}.",
-                OspreyEnvironment.Pass2QValue,
-                OspreyEnvironment.Pass2ProteinCompact
-                    ? ", or set OSPREY_PROTEIN_COMPACT_RETRAIN=1 to retrain over the stratum"
-                    : string.Empty));
+                "The warning above names which. Run this mode on the straight-through path, or " +
+                "rerun without the score cache so the 1st pass trains in-process.",
+                OspreyEnvironment.Pass2QValue));
         }
 
         /// <summary>
-        /// OSPREY_PASS2_QVALUE=transfer-compete (full-population form). Recompute the reported
+        /// OSPREY_PASS2_QVALUE=protein-compact. Recompute the reported
         /// precursor q-values + PEP by re-running the target-decoy competition over the ENTIRE
         /// 1st-pass population -- read as SCALARS from each file's persisted
         /// <c>.1st-pass.fdr_scores.bin</c> -- with ONLY the reconciled survivors' scores swapped
@@ -1554,22 +1672,27 @@ namespace pwiz.Osprey.Tasks
             PercolatorResults frozenModel,
             string pass1ExperimentAgg,
             Pass2SidecarWriter writer,
-            HashSet<uint> stratumBaseIds = null)
+            HashSet<uint> stratumBaseIds)
         {
-            // stratumBaseIds == null -> transfer-compete (full-population competition).
-            // non-null -> protein-compact: the competition is CONSTRAINED to the stratum
-            // (peptides of >=2-peptide 1st-pass proteins), and the map-back below leaves
-            // OFF-stratum survivors on their 1st-pass q (report = pass1 U stratum passers,
-            // so re-scoping only adds, never drops an already-passing peptide).
-            bool proteinCompact = stratumBaseIds != null;
-            string mode = proteinCompact ? "protein-compact" : "transfer-compete";
+            // The competition is CONSTRAINED to the stratum (peptides of >=2-peptide 1st-pass
+            // proteins), and the map-back below leaves OFF-stratum survivors on their 1st-pass q
+            // (report = pass1 U stratum passers, so re-scoping only adds, never drops an
+            // already-passing peptide). The full-population form this method also served was
+            // transfer-compete, removed because its competition ran over a target-conditioned
+            // subset - see the OspreyEnvironment.Pass2QValue remarks and issue #4581.
+            if (stratumBaseIds == null)
+            {
+                throw new ArgumentNullException(nameof(stratumBaseIds),
+                    @"protein-compact is the only competition mode; its stratum is required.");
+            }
+            string mode = OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT;
             // Works for whichever classifier the 1st pass trained (linear SVM or
-            // gradient-boosted trees) -- the scorer hides that choice, so transfer-compete
-            // stays the honest-FDR path under --fdr-method gbdt too.
+            // gradient-boosted trees) -- the scorer hides that choice, so this stays the
+            // honest-FDR path under --fdr-method gbdt too.
             var scorer = FrozenModelScorer.TryCreate(frozenModel);
             if (scorer == null)
             {
-                ctx.LogWarning("transfer-compete: frozen 1st-pass model has no usable model/standardizer.");
+                ctx.LogWarning(mode + ": frozen 1st-pass model has no usable model/standardizer.");
                 return false;
             }
             var sw = Stopwatch.StartNew();
@@ -1626,10 +1749,16 @@ namespace pwiz.Osprey.Tasks
                 fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int mergeIdx = 0;
-                foreach (var kvp in rescored.Files())
+                foreach (var kvp in rescored.StreamFiles())
                 {
                     mergeProgress.Report(++mergeIdx);
-                    residentByFile[kvp.Key] = kvp.Value;
+                    // Only where the pool is going to stay. On a streamed source these lists are
+                    // emptied the moment the fold moves on, so a map of references to them would
+                    // hand the competition 446 empty runs - the failure that looks like a
+                    // cohort with no survivors rather than like a bug. There LoadOneFile
+                    // rebuilds the run it is asked for instead.
+                    if (!rescored.Streams)
+                        residentByFile[kvp.Key] = kvp.Value;
                     survivorObservations += kvp.Value.Count;
                     foreach (var e in kvp.Value)
                         survivorEntryIds.Add(e.EntryId);
@@ -1668,7 +1797,7 @@ namespace pwiz.Osprey.Tasks
             {
                 if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
                 {
-                    ctx.LogWarning("transfer-compete: no parquet path for '" + fileName +
+                    ctx.LogWarning(mode + ": no parquet path for '" + fileName +
                                    "'; cannot locate its 1st-pass scalar sidecar.");
                     return false;
                 }
@@ -1699,7 +1828,7 @@ namespace pwiz.Osprey.Tasks
                     fileName + ".1st-pass.fdr_scores.bin");
                 if (!File.Exists(sidecarPath))
                 {
-                    ctx.LogWarning("transfer-compete: 1st-pass scalar sidecar not found: " + sidecarPath);
+                    ctx.LogWarning(mode + ": 1st-pass scalar sidecar not found: " + sidecarPath);
                     return false;
                 }
                 // Existence was never enough. ReadScalars THROWS on bad magic, a stale version, a
@@ -1712,7 +1841,7 @@ namespace pwiz.Osprey.Tasks
                 if (!FdrScoresSidecar.IsCurrentFormat(sidecarPath, FdrScoresSidecar.Pass.FirstPass))
                 {
                     ctx.LogWarning(
-                        "transfer-compete: 1st-pass scalar sidecar is not a readable v" +
+                        mode + ": 1st-pass scalar sidecar is not a readable v" +
                         FdrScoresSidecar.FormatVersion + " first-pass file: " + sidecarPath);
                     return false;
                 }
@@ -1739,8 +1868,7 @@ namespace pwiz.Osprey.Tasks
                 "scores swapped in for up to {2} reconciled survivor observations - no retrain, one " +
                 "file resident at a time{3}.",
                 mode, fileKeys.Count, survivorObservations,
-                proteinCompact ? ", competition CONSTRAINED to the " + stratumBaseIds.Count + "-base_id protein stratum"
-                               : ", full-population null"));
+                ", competition CONSTRAINED to the " + stratumBaseIds.Count + "-base_id protein stratum"));
 
             // This competition reduces per base_id by MAX, and BOTH modes that reach it then
             // overwrite the reported experiment q from that reduction. Neither is compatible with
@@ -1782,19 +1910,14 @@ namespace pwiz.Osprey.Tasks
                     "from a MAX-aggregated competition, which {3}. Use OSPREY_PASS2_QVALUE={4}, " +
                     "which carries the 1st-pass mean(best-N) q through unchanged, for a " +
                     "mean(best-N) arm.",
-                    proteinCompact
-                        ? OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT
-                        : OspreyEnvironment.PASS2_QVALUE_TRANSFER_COMPETE,
+                    OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
                     pass1Arm,
                     armRecorded
                         ? " (recorded in the 1st-pass model sidecar)"
                         : " (INFERRED from this process's environment - the 1st-pass model sidecar " +
                           "predates arm recording and does not say which arm trained it)",
-                    proteinCompact
-                        ? "would leave on-stratum precursors max-aggregated and off-stratum " +
-                          "precursors on their 1st-pass mean(best-N) q - one column, two statistics"
-                        : "would replace every precursor's mean(best-N) q with a max q, making the " +
-                          "run indistinguishable from a default run in its own output",
+                    "would leave on-stratum precursors max-aggregated and off-stratum " +
+                    "precursors on their 1st-pass mean(best-N) q - one column, two statistics",
                     OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             }
 
@@ -1857,6 +1980,12 @@ namespace pwiz.Osprey.Tasks
                 // results forward.
                 List<FdrEntry> LoadOneFile(string fileKey)
                 {
+                    // Rebuilt from this run's own artifacts on a streamed source, taken off the
+                    // resident buffer when there is one. Either way it is ONE run, which is what
+                    // this pass was already written to hold - the streamed source only makes
+                    // that true of the stage around it as well.
+                    if (rescored.Streams)
+                        return rescored.MaterializeFile(fileKey);
                     return residentByFile.TryGetValue(fileKey, out var resident)
                         ? resident
                         : new List<FdrEntry>();
@@ -1879,6 +2008,14 @@ namespace pwiz.Osprey.Tasks
                 // reads the file's 1st-pass population.
                 void BeginFile(string fileKey)
                 {
+                    // Reported HERE, not in ReadFile. ReadFile runs only where this pass has to
+                    // RECOMPUTE a file's competition, so on the path the move exists to produce -
+                    // every file answered by the worker - it never ran, the counter never moved,
+                    // and the phase was a single silent block: 654 s at 446 runs, immediately
+                    // after the line announcing that the fold was reading the worker's answers.
+                    // BeginFile is the call that always happens, once per file, which is what a
+                    // per-file progress signal has to be attached to.
+                    progress.Report(++nRead);
                     currentKey = fileKey;
                     currentEntries = LoadOneFile(fileKey);
                     currentWorkerRecords = null;
@@ -1893,7 +2030,7 @@ namespace pwiz.Osprey.Tasks
                     // The parquet lookup is established by the validation loop above (every file
                     // has a parquet path or this method already returned false), and resolved
                     // HERE so a key miss cannot be reported as a parquet failure by the reader.
-                    string effectiveParquetPath = ParquetScoreCache.EffectiveScoresPathFromScoresPath(
+                    string effectiveParquetPath = ParquetScoreCache.ReconciledPathFromScoresPath(
                         perFileParquetPaths[fileKey]);
                     // currentKey/currentEntries are staged by BeginFile now, on every path.
                     // Read from the path the validation loop above checked with IsCurrentFormat,
@@ -1908,8 +2045,6 @@ namespace pwiz.Osprey.Tasks
                         survivorIds, pass1Records,
                         out uint[] eids, out double[] scs, out var fileScores);
                     nScored += fileScores.Count;
-
-                    progress.Report(++nRead);
                     return (eids, scs, fileScores, survivorIds);
                 }
 
@@ -1962,6 +2097,13 @@ namespace pwiz.Osprey.Tasks
                         sidecarsWritten.Add(fileKey);
                     else if (!ctx.Config.DiagnosticsOnly)
                         writeFailures.Add(fileKey);
+                    // DROP the run here, on a streamed source: its answer is on disk and step 4
+                    // patches the sidecar rather than the entries, so this is the last line that
+                    // reads them. Without it the pass would refill run after run and never let
+                    // one go - the whole-run pool rebuilt one run at a time, which is the shape
+                    // that looks like a fix in the code and like no fix at all in the profile.
+                    if (rescored.Streams)
+                        rescored.DropFile(fileKey);
                     currentKey = null;
                     currentEntries = null;
                 }
@@ -2132,9 +2274,7 @@ namespace pwiz.Osprey.Tasks
             // on-stratum recompute and off-stratum carry-through - read side by side.
             FdrExperimentRecord FinishRecord(FdrScoreRecord rec)
             {
-                // stratumBaseIds != null IS proteinCompact - written as the null test the branch
-                // actually depends on, so the guard is local to the dereference it protects.
-                if (stratumBaseIds != null && !stratumBaseIds.Contains(rec.EntryId & 0x7FFFFFFFu))
+                if (!stratumBaseIds.Contains(rec.EntryId & 0x7FFFFFFFu))
                 {
                     // Off-stratum survivors keep their 1st-pass EXPERIMENT q (report = pass1 U
                     // stratum passers). That q is a pass-1 property anchored on the
@@ -2191,13 +2331,18 @@ namespace pwiz.Osprey.Tasks
         /// <c>FirstPassFdrTask.RunPercolatorFdr</c> over the full survivor buffer, which
         /// scores it in place.
         ///
-        /// <para>Reached by the RETRAIN modes and by <c>transfer</c>, which needs each survivor's
-        /// reconciled features on <c>entry.Features</c>. The frozen COMPETITION modes used to
-        /// enter here and return early; they now have their own entry point
+        /// <para>Reached ONLY by <c>transfer</c>, which needs each survivor's reconciled
+        /// features on <c>entry.Features</c>. The frozen COMPETITION modes used to enter here
+        /// and return early; they now have their own entry point
         /// (<see cref="ComputePass2FrozenCompetition"/>), because nothing about them is resident
-        /// any more - they never see this buffer (#4486).</para>
+        /// any more - they never see this buffer (#4486). The retrain modes that were this
+        /// method's other caller no longer exist (#4484).</para>
+        ///
+        /// <para>Throws when the confidence transfer cannot be made. There is no second-pass
+        /// retrain to fall back on any more, and completing the run on first-pass q-values
+        /// would ship an analysis whose second pass silently did not happen.</para>
         /// </summary>
-        private static FeatureContributions ComputePass2Resident(
+        private static void ComputePass2Resident(
             PipelineContext ctx,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
@@ -2244,13 +2389,12 @@ namespace pwiz.Osprey.Tasks
                         kvp.Key, kvp.Value.Count));
                     continue;
                 }
-                // Read the RECONCILED parquet (Stage 6's rescored
-                // features) when it exists; fall back to the original
-                // Stage 4 parquet for files that had no reconciliation
-                // work (no reconciled sibling was written). The
-                // perFileParquetPaths map holds original paths.
+                // Read the RECONCILED parquet - Stage 6's rescored features - which it
+                // writes for every run, so this is a derivation and not a preference.
+                // The published map holds Stage 4 paths in-process and reconciled ones on
+                // a --task SecondPassFDR node; the derivation is idempotent over both.
                 string effectiveParquetPath =
-                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(parquetPath);
+                    ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
                 Dictionary<uint, double[]> featByScoreIndex;
                 try
                 {
@@ -2293,21 +2437,16 @@ namespace pwiz.Osprey.Tasks
                 // sequence (transfer-compete's frozen-model recompute, or a retrain)
                 // regardless of which classifier the 1st pass trained. The frozen model
                 // carried in ctx is whichever one that was, and the score passes select
-                // on it, so transfer-compete works unchanged for trees.
+                // on it, so the frozen competition works unchanged for trees.
                 case FdrMethod.Percolator:
                 case FdrMethod.Gbdt:
-                    // OSPREY_PASS2_QVALUE=transfer-compete / protein-compact (frozen) are handled
-                    // at the TOP of ComputePass2Resident (before the resident feature reload) so
-                    // their frozen score pass streams one file at a time -- see
-                    // ComputePass2TransferCompeteFull. Only the retrain A/B toggle and
-                    // OSPREY_PASS2_QVALUE=transfer reach here.
-                    if (OspreyEnvironment.Pass2ProteinCompact && OspreyEnvironment.Pass2ProteinCompactRetrain)
-                    {
-                        ctx.LogInfo(
-                            "OSPREY_PROTEIN_COMPACT_RETRAIN=1: skipping the frozen-model + stratum " +
-                            "competition; RETRAINING the 2nd-pass over the stratum-expanded compacted pool " +
-                            "(frozen-vs-retrain FDR A/B).");
-                    }
+                    // protein-compact is handled by the frozen competition before the resident
+                    // feature reload, so its score pass streams one file at a time. Only
+                    // OSPREY_PASS2_QVALUE=transfer reaches here, which is why this no longer
+                    // tests Pass2TransferQ: NormalizePass2QValue returns transfer or
+                    // protein-compact and nothing else, so on this path the test was always
+                    // true and reading it as a choice invited the conclusion that some other
+                    // mode lands here.
                     // OSPREY_PASS2_QVALUE=transfer: instead of retraining a 2nd-pass SVM on
                     // the decoy-depleted reconciled+compacted set (which re-derives an
                     // anti-conservative experiment-scope q), carry the pass-1 q through and
@@ -2315,31 +2454,39 @@ namespace pwiz.Osprey.Tasks
                     // Each moved/gap-filled peak is re-scored with the FROZEN 1st-pass model
                     // (its RECONCILED features are on entry.Features above) and mapped through
                     // THAT file's own (1st-pass score -> run q) table; experiment q is left as
-                    // the pass-1 carry. Falls through to the retrain if the flag is off or the
-                    // frozen model was not captured. See TODO-osprey_pass2_per_run_only_qvalue.
-                    if (OspreyEnvironment.Pass2TransferQ &&
-                        ctx.TryGet<FirstPassPercolatorModel>(out var frozenModel) &&
+                    // the pass-1 carry. See TODO-osprey_pass2_per_run_only_qvalue.
+                    if (ctx.TryGet<FirstPassPercolatorModel>(out var frozenModel) &&
                         frozenModel?.Results != null &&
                         TransferPerRunQ(perFileEntries, config, ctx, frozenModel.Results))
                     {
-                        // Transferred: no retrained 2nd-pass model in transfer mode -> no
-                        // pass-2 SVM model view for --model-diagnostics (the pass-2 FDR
-                        // calibration curve still renders from the transferred q-values;
-                        // the pass-1 model view still renders too).
-                        return null;
+                        // Transferred. There is no retrained 2nd-pass model in any surviving
+                        // mode, so --model-diagnostics gets no pass-2 SVM model view (the
+                        // pass-2 FDR calibration curve still renders from the transferred
+                        // q-values; the pass-1 model view still renders too).
+                        return;
                     }
-                    if (OspreyEnvironment.Pass2TransferQ)
-                    {
-                        ctx.LogWarning(
-                            "OSPREY_PASS2_QVALUE=transfer could not transfer (frozen 1st-pass " +
-                            "model byproduct absent); falling back to the 2nd-pass Percolator retrain.");
-                    }
-                    // Capture the 2nd-pass model for the --model-diagnostics pass-2 model
-                    // view (retrained on the post-reconciliation pool, #4377). Capturing
-                    // the return value does not change what RunPercolatorFdr does, so the
-                    // resident 2nd-pass scores stay byte-identical.
-                    return FirstPassFdrTask.RunPercolatorFdr(
-                        perFileEntries, config, ctx, "Second-pass");
+                    // The transfer could not be made, and the 2nd-pass Percolator retrain that
+                    // used to catch this case is GONE - not disabled, removed. It was cut for a
+                    // correctness reason: compaction leaves the reconciled pool decoy-depleted,
+                    // so a retrain on it mis-estimates the null and re-derives an
+                    // anti-conservative experiment-scope q (issue #4484, closed "do not
+                    // re-open the retrain"). Falling back to it produced output by the method
+                    // the project rejected, on a warning, which is warn-and-proceed where the
+                    // standing rule is hard-fail: the run would finish and its q-values would
+                    // be wrong in a direction no downstream gate looks for.
+                    //
+                    // Every reason the transfer declines has already been logged by the code
+                    // that declined it - an absent or unusable frozen model, no input-file
+                    // list, an unreadable 1st-pass experiment sidecar - so this states the
+                    // consequence and the remedy rather than re-deriving the cause.
+                    throw new InvalidOperationException(
+                        @"Second-pass FDR could not transfer the first-pass confidence, and " +
+                        @"there is no second-pass retrain to fall back on (removed for issue " +
+                        @"#4484: the compacted pool is decoy-depleted, so retraining on it " +
+                        @"mis-estimates the null). The preceding log line names which input " +
+                        @"was missing; the first pass must have completed and left its model " +
+                        @"and experiment-scope sidecars beside the analysis output. Re-run " +
+                        @"FirstPassFDR for this cohort, then SecondPassFDR again.");
                 // Simple / Mokapot 2nd-pass paths intentionally
                 // not implemented yet -- the in-process pipeline's
                 // FirstPassFdrTask.RunFdr already covers Simple, and
@@ -2351,186 +2498,8 @@ namespace pwiz.Osprey.Tasks
                         "Second-pass FDR: {0} is not supported in SecondPassFdrTask; " +
                         "skipping (protein FDR will run on first-pass scores)",
                         config.FdrMethod));
-                    return null;
+                    return;
             }
-        }
-
-        /// <summary>
-        /// Projection 2nd-pass compute (flag on, issue #4374 + #4355 struct-shrink S0):
-        /// build the thin <see cref="FdrProjectionSet"/> from the survivor buffer with
-        /// each row's <see cref="FdrProjection.ParquetIndex"/> baked to that survivor's
-        /// RECONCILED parquet row (via <see cref="BuildReconciledScoreIndexToRow"/>), then
-        /// run the projection <c>FirstPassFdrTask.RunPercolatorFdr</c> through an
-        /// <see cref="FdrStreamingSink"/>, which ALWAYS streams the reconciled features
-        /// per file and streams the q-value outputs straight to the per-file
-        /// <c>.2nd-pass.fdr_scores.bin</c> via <paramref name="flushFile"/> (the lean
-        /// projection never stores them -> 32 B). <paramref name="resolveProteinQ"/>
-        /// supplies each row's <c>ExperimentProteinQvalue</c> (looked up from the resident
-        /// survivor by entry_id, no longer carried on the struct). Returns the scored
-        /// projection as the flag that the sink wrote the sidecars; the survivor buffer
-        /// is intentionally left unscored (the entry_id overlay carries the q-values
-        /// back). No full-population PercolatorEntry/PercolatorResult stack is built.
-        /// </summary>
-        private static FdrProjectionSet ComputePass2Projection(
-            PipelineContext ctx,
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
-            OspreyConfig config,
-            Func<string, IReadOnlyDictionary<uint, double>> resolveProteinQ,
-            Action<string, IReadOnlyList<FdrScoreRecord>> flushFile)
-        {
-            // Canonicalize the survivor buffer order EXACTLY as the resident path does.
-            // The FdrEntry RunPercolatorFdr overload (the flag-off oracle) sorts
-            // perFileEntries in place by (EntryId, Charge, ScanNumber, ParquetIndex) as
-            // its first step (PercolatorEngine.cs) -- the post-rescore pool can carry
-            // gap-fill entries appended after the sorted pre-existing rows, and that
-            // re-sort moves them into place. Downstream Stage 7/8 (protein FDR, blib
-            // retention-time reporting) reads this buffer IN ORDER, so its ordering is
-            // byte-identity-critical even though the projection carries its own sorted
-            // copy. The projection path routes the buffer to the SVM as a thin copy and
-            // never sorts the buffer itself, so replicate the oracle's sort here or the
-            // gap-fill order diverges and file-level RT sums drift (issue #4374).
-            foreach (var kvp in perFileEntries)
-            {
-                kvp.Value.Sort(FdrEntry.CANONICAL_ORDER); // Array.Sort OK: CANONICAL_ORDER's terminal key ParquetIndex is unique per survivor here (reconciled-write numbering), so the comparison never ties
-            }
-
-            // Per-file reconciled scores path (Stage 6's rescored features when a
-            // reconciled sibling exists, else the original Stage 4 parquet), or null when
-            // no parquet was mapped -- mirrors the resident reload's effective-path pick.
-            string Recon(string fileName) =>
-                perFileParquetPaths.TryGetValue(fileName, out string parquetPath)
-                    ? ParquetScoreCache.EffectiveScoresPathFromScoresPath(parquetPath)
-                    : null;
-
-            // identity -> reconciled row, resolved one file at a time so no more than one
-            // file's map is resident. On a missing parquet or a read fault, return an
-            // empty map -> every entry resolves to uint.MaxValue -> basic-feature
-            // fallback, byte-identical to the resident path (null Features ->
-            // BuildBasicFeatures).
-            IReadOnlyDictionary<uint, uint> RowMap(string fileName)
-            {
-                string recon = Recon(fileName);
-                if (recon == null)
-                {
-                    ctx.LogWarning(string.Format(
-                        "Second-pass FDR: no parquet path mapped for file '{0}' " +
-                        "(entries will run with basic-feature fallback). " +
-                        "Check that each file's reconciled parquet is present.", fileName));
-                    return new Dictionary<uint, uint>();
-                }
-                try
-                {
-                    return BuildReconciledScoreIndexToRow(recon);
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        "Second-pass FDR: failed to read identity columns from {0}: {1}",
-                        recon, ex.Message));
-                    return new Dictionary<uint, uint>();
-                }
-            }
-
-            var swReloadRows = Stopwatch.StartNew();
-            var projections = FdrProjectionSet.BuildFromEntries(perFileEntries, RowMap);
-            swReloadRows.Stop();
-
-            // Preserve the resident path's nMapped < count visibility (risk #6): a
-            // survivor whose identity is absent from the reconciled parquet resolves to
-            // uint.MaxValue and runs on the basic-feature fallback. On the standard
-            // datasets every survivor maps (nMapped == count), so this warns only on a
-            // genuine stub/parquet mismatch.
-            int totalMapped = 0;
-            foreach (var kvp in projections.PerFile)
-            {
-                int total = kvp.Value.Count;
-                int nMapped = 0;
-                foreach (var proj in kvp.Value)
-                {
-                    if (proj.ParquetIndex != uint.MaxValue)
-                        nMapped++;
-                }
-                if (nMapped < total)
-                {
-                    ctx.LogWarning(string.Format(
-                        "Second-pass FDR: file '{0}' reconciled parquet is missing {1} of " +
-                        "{2} survivor identities; those entries run with basic-feature " +
-                        "fallback. Stub/parquet mismatch - check reconciled-parquet output integrity.",
-                        kvp.Key, total - nMapped, total));
-                }
-                totalMapped += nMapped;
-            }
-            ctx.LogInfo(string.Format(
-                "[TIMING] Baked reconciled rows for {0} survivor entries: {1:F1}s",
-                totalMapped, swReloadRows.Elapsed.TotalSeconds));
-
-            // Features streamed from the reconciled parquet by the baked (reconciled)
-            // ParquetIndex; NaN/Inf are clamped to 0 by LoadPinFeaturesFromParquet -- the
-            // same normalization the resident reload applied. A parquet-less file yields
-            // an empty row list, so ResolveFeatureRow falls back to basic features.
-            Func<string, IReadOnlyList<double[]>> load2 = fileName =>
-            {
-                string recon = Recon(fileName);
-                if (recon == null)
-                    return Array.Empty<double[]>();
-                return ParquetScoreCache.LoadPinFeaturesFromParquet(recon);
-            };
-
-            // The caller gates on FdrMethod.Percolator, so the projection path is only
-            // ever Percolator; the projection engine always streams via load2. The
-            // StreamingSink assembles + writes each file's .2nd-pass.fdr_scores.bin from
-            // the streamed q-values + the survivor's ExperimentProteinQvalue during the score
-            // pass, so the q-values are never stored on the projection (issue #4355 / C1).
-            // The EXPERIMENT-scope columns collapse into one record per entry_id, published for
-            // WritePass2ExperimentSidecar to finish and write after the protein FDR runs
-            // (format v5, issue #4486).
-            var experiment = new FdrExperimentAccumulator();
-            var sink = new FdrStreamingSink(
-                projections, config, "Second-pass", resolveProteinQ, flushFile, experiment);
-            FirstPassFdrTask.RunPercolatorFdr(
-                projections, config, ctx, "Second-pass", load2, sink);
-            ctx.Publish(new Pass2ExperimentScope(experiment));
-            return projections;
-        }
-
-        /// <summary>
-        /// Build the reconciled parquet's <c>(entry_id, charge, scan_number) -&gt; row</c>
-        /// map from its lean stub identity columns
-        /// (<see cref="ParquetScoreCache.LoadFdrStubsFromParquet(string)"/>, which assigns
-        /// <see cref="FdrEntry.ParquetIndex"/> = row). The mirror of
-        /// <see cref="LoadReconciledFeaturesByScoreIndex"/> that yields the ROW INDEX
-        /// instead of the feature vector: that loader keys <c>featRows[i]</c> by identity
-        /// and the streaming score pass reads <c>rows[row]</c> by the baked
-        /// <see cref="FdrProjection.ParquetIndex"/>, so
-        /// <c>rows[map[identity]] == featByScoreIndex[identity]</c> - the streamed feature
-        /// lookup is byte-identical to the resident identity binding (issue #4374 risk
-        /// #2). Because the reconciled parquet is written
-        /// <c>(entry_id, charge, scan_number)</c>-sorted, the row is scan-monotonic within
-        /// a <c>(entry_id, charge)</c> group, which is what keeps the scan-omitted
-        /// projection sort valid. Duplicate identities keep the last row (map overwrite),
-        /// matching the loader. Reads only the identity columns (no PIN feature / heavy
-        /// blob load), one file at a time.
-        /// </summary>
-        internal static Dictionary<uint, uint> BuildReconciledScoreIndexToRow(
-            string reconciledPath)
-        {
-            var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(reconciledPath);
-            var map = new Dictionary<uint, uint>(stubs.Count);
-            for (int i = 0; i < stubs.Count; i++)
-            {
-                // KEY is the row's score_index - its identity. VALUE is its position in THIS
-                // file, because that is what addresses LoadPinFeaturesFromParquet's positional
-                // feature array. The two were the same number before the reconciled parquet
-                // became a subset, which is why this used to be able to conflate them.
-                if (stubs[i].ParquetIndex.HasValue)
-                    map[stubs[i].ParquetIndex.Value] = (uint)i;
-            }
-            // No collision to reason about any more. This keyed on
-            // (entry_id, charge, scan_number) and needed a paragraph explaining why a
-            // duplicate identity was harmless; score_index is unique per row by construction,
-            // including for gap-fill rows, which are numbered past the source row count.
-            return map;
         }
 
         /// <summary>
@@ -2975,7 +2944,7 @@ namespace pwiz.Osprey.Tasks
             }
 
             var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
-            int nUnchanged = 0, nMoved = 0, nGapFill = 0, nSkipped = 0, nMissingSidecar = 0, nFilesDone = 0;
+            var tally = new TransferTally();
             // Per-file progress: building each file's per-run tables + classifying its survivors ran
             // silently for minutes on an 82-file join (the gap between Stage 6 and the summary below).
             var transferProgress = new ProgressReporter(
@@ -2987,71 +2956,11 @@ namespace pwiz.Osprey.Tasks
                 transferProgress.Report(++transferIdx);
                 if (!inputByFileName.TryGetValue(kvp.Key, out string inputFile))
                 {
-                    nSkipped += kvp.Value.Count;
+                    tally.Skipped += kvp.Value.Count;
                     continue;
                 }
-                string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
-
-                // Build this file's per-run tables + record map from its own 1st-pass sidecar.
-                var firstPassByEntryId = new Dictionary<uint, FdrScoreRecord>();
-                var precScores = new List<double>();
-                var precQs = new List<double>();
-                var pepScores = new List<double>();
-                var pepQs = new List<double>();
-                bool ok = FdrScoresSidecar.ReadRecords(
-                    pass1Path, FdrScoresSidecar.Pass.FirstPass, rec =>
-                {
-                    firstPassByEntryId[rec.EntryId] = rec; // entry_id is unique per file (DeduplicatePairs)
-                    precScores.Add(rec.Score);
-                    precQs.Add(rec.RunPrecursorQvalue);
-                    pepScores.Add(rec.Score);
-                    pepQs.Add(rec.RunPeptideQvalue);
-                });
-                if (!ok || precScores.Count == 0)
-                {
-                    nMissingSidecar++;
-                    ctx.LogWarning(string.Format(
-                        "OSPREY_PASS2_QVALUE=transfer: could not read the 1st-pass sidecar for '{0}' " +
-                        "({1}); this file's per-run q is left unadjusted.", kvp.Key, pass1Path));
-                    continue;
-                }
-                BuildScoreToQTable(precScores, precQs, out double[] precScoresDesc, out double[] precQDesc);
-                BuildScoreToQTable(pepScores, pepQs, out double[] pepScoresDesc, out double[] pepQDesc);
-
-                foreach (var entry in kvp.Value)
-                {
-                    if (entry.Features == null || entry.Features.Length != nFeatures)
-                    {
-                        // No reconciled features resolved (a stub/parquet mismatch the reload
-                        // already warned about). Leave this entry's q as-is rather than guess.
-                        nSkipped++;
-                        continue;
-                    }
-                    double newScore = ScoreWithFrozenModel(
-                        entry.Features, standardizer, avgWeights, avgBias, scratch);
-
-                    FdrScoreRecord? rec1 = null;
-                    if (firstPassByEntryId.TryGetValue(entry.EntryId, out FdrScoreRecord recFound))
-                        rec1 = recFound;
-                    // The precursor's analysis-wide pass-1 experiment record, which supplies
-                    // every disposition: an UNCHANGED or MOVED peak carries these values through,
-                    // and a gap-fill peak (no 1st-pass run-scope record) takes them so
-                    // ClampExperimentQToBestRun - a floor that only raises - lands it at the
-                    // precursor's best-run q. A precursor with no record anywhere gets the
-                    // default 1.0 q-values and a 0.0 aggregate, which pair correctly: never
-                    // competed, never accepted, so nothing reads it.
-                    FdrExperimentRecord? exp1 = null;
-                    if (globalExperiment.TryGetValue(entry.EntryId, out var expFound))
-                        exp1 = expFound;
-                    switch (AssignPerRunQ(entry, newScore, rec1, exp1,
-                        precScoresDesc, precQDesc, pepScoresDesc, pepQDesc))
-                    {
-                        case PerRunClass.Unchanged: nUnchanged++; break;
-                        case PerRunClass.Moved: nMoved++; break;
-                        default: nGapFill++; break;
-                    }
-                }
-                nFilesDone++;
+                TransferOneFile(kvp.Key, inputFile, kvp.Value, standardizer, avgWeights,
+                    avgBias, nFeatures, scratch, globalExperiment, ctx.LogWarning, ref tally);
             }
             transferProgress.Dispose();
 
@@ -3059,12 +2968,12 @@ namespace pwiz.Osprey.Tasks
                 "OSPREY_PASS2_QVALUE=transfer: per-run q transfer over {0} file(s) -- {1} unchanged " +
                 "(pass-1 q carried), {2} moved (run q re-mapped, experiment q carried), {3} gap-fill " +
                 "(new run q + carried experiment q){4}{5}.",
-                nFilesDone, nUnchanged, nMoved, nGapFill,
-                nMissingSidecar > 0
-                    ? string.Format("; {0} file(s) had no readable 1st-pass sidecar", nMissingSidecar)
+                tally.FilesDone, tally.Unchanged, tally.Moved, tally.GapFill,
+                tally.MissingSidecar > 0
+                    ? string.Format("; {0} file(s) had no readable 1st-pass sidecar", tally.MissingSidecar)
                     : string.Empty,
-                nSkipped > 0
-                    ? string.Format("; {0} entr(y/ies) skipped for missing features", nSkipped)
+                tally.Skipped > 0
+                    ? string.Format("; {0} entr(y/ies) skipped for missing features", tally.Skipped)
                     : string.Empty));
 
             // PUBLISH THE EXPERIMENT SCOPE, exactly as the competition modes do. This mode writes
@@ -3081,6 +2990,102 @@ namespace pwiz.Osprey.Tasks
             // under the gate - measured against master, which does write the file.
             ctx.Publish(new Pass2ExperimentScope(BuildExperimentScope(perFileEntries)));
             return true;
+        }
+
+        /// <summary>Counts one <see cref="TransferOneFile"/> call adds to. A struct rather
+        /// than six ref parameters, so the per-file body could be lifted out of the whole-run
+        /// loop without its signature becoming the reason not to.</summary>
+        internal struct TransferTally
+        {
+            public int Unchanged, Moved, GapFill, Skipped, MissingSidecar, FilesDone;
+        }
+
+        /// <summary>
+        /// Transfer ONE run's per-run q-values: build that run's own score->q tables from its own
+        /// <c>.1st-pass.fdr_scores.bin</c>, then classify and re-map its survivors.
+        ///
+        /// <para>The body of <see cref="TransferPerRunQ"/>'s loop, extracted unchanged. Nothing
+        /// in it reads another run's state - the tables come from this run's sidecar and the
+        /// experiment records are the analysis-wide map every run shares - which is what makes
+        /// the mode a fan-out computation that happens to be running in the join. Moving the
+        /// CALLER is the point; this seam is what lets that happen without rewriting the
+        /// algorithm (#4438 established the per-run form; only its home is still wrong).</para>
+        /// </summary>
+        internal static void TransferOneFile(
+            string fileName, string inputFile, List<FdrEntry> survivors,
+            FeatureStandardizer standardizer, double[] avgWeights, double avgBias,
+            int nFeatures, double[] scratch,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> globalExperiment,
+            Action<string> logWarning, ref TransferTally tally)
+        {
+            string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
+
+            // Build this file's per-run tables + record map from its own 1st-pass sidecar.
+            var firstPassByEntryId = new Dictionary<uint, FdrScoreRecord>();
+            var precScores = new List<double>();
+            var precQs = new List<double>();
+            var pepScores = new List<double>();
+            var pepQs = new List<double>();
+            bool ok = FdrScoresSidecar.ReadRecords(
+                pass1Path, FdrScoresSidecar.Pass.FirstPass, rec =>
+            {
+                firstPassByEntryId[rec.EntryId] = rec; // entry_id is unique per file (DeduplicatePairs)
+                precScores.Add(rec.Score);
+                precQs.Add(rec.RunPrecursorQvalue);
+                pepScores.Add(rec.Score);
+                pepQs.Add(rec.RunPeptideQvalue);
+            });
+            if (!ok || precScores.Count == 0)
+            {
+                tally.MissingSidecar++;
+                logWarning(string.Format(
+                    "OSPREY_PASS2_QVALUE=transfer: could not read the 1st-pass sidecar for '{0}' " +
+                    "({1}); this file's per-run q is left unadjusted.", fileName, pass1Path));
+                return;
+            }
+            BuildScoreToQTable(precScores, precQs, out double[] precScoresDesc, out double[] precQDesc);
+            BuildScoreToQTable(pepScores, pepQs, out double[] pepScoresDesc, out double[] pepQDesc);
+
+            foreach (var entry in survivors)
+            {
+                if (entry.Features == null || entry.Features.Length != nFeatures)
+                {
+                    // No reconciled features resolved (a stub/parquet mismatch the reload
+                    // already warned about). Leave this ENTRY's q as-is rather than guess, and
+                    // go on to the next one - a `return` here would abandon the rest of the
+                    // file's survivors at their Stage-6 q AND skip the FilesDone count below,
+                    // which is a whole run silently dropped for one entry's missing features.
+                    tally.Skipped++;
+                    continue;
+                }
+                double newScore = ScoreWithFrozenModel(
+                    entry.Features, standardizer, avgWeights, avgBias, scratch);
+
+                FdrScoreRecord? rec1 = null;
+                if (firstPassByEntryId.TryGetValue(entry.EntryId, out FdrScoreRecord recFound))
+                    rec1 = recFound;
+                // The precursor's analysis-wide pass-1 experiment record, which supplies
+                // every disposition: an UNCHANGED or MOVED peak carries these values through,
+                // and a gap-fill peak (no 1st-pass run-scope record) takes them so
+                // ClampExperimentQToBestRun - a floor that only raises - lands it at the
+                // precursor's best-run q. A precursor with no record anywhere gets the
+                // default 1.0 q-values and a 0.0 aggregate, which pair correctly: never
+                // competed, never accepted, so nothing reads it.
+                FdrExperimentRecord? exp1 = null;
+                if (globalExperiment.TryGetValue(entry.EntryId, out var expFound))
+                    exp1 = expFound;
+                switch (AssignPerRunQ(entry, newScore, rec1, exp1,
+                    precScoresDesc, precQDesc, pepScoresDesc, pepQDesc))
+                {
+                    case PerRunClass.Unchanged: tally.Unchanged++; break;
+                    case PerRunClass.Moved: tally.Moved++; break;
+                    default: tally.GapFill++; break;
+                }
+            }
+            // Counted only HERE, where the whole-run loop counted it: the unreadable-sidecar
+            // path above returns first, so a run whose sidecar could not be read was never one
+            // this pass finished.
+            tally.FilesDone++;
         }
 
         /// <summary>
@@ -3580,8 +3585,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     TaskValiditySidecar.Write(pass2Path, _taskName, OspreyVersion.Current,
                         _taskValidityKey,
-                        new[] { ParquetScoreCache.EffectiveScoresPathFromScoresPath(
-                            ParquetScoreCache.GetScoresPath(inputFile)) });
+                        new[] { ParquetScoreCache.GetReconciledScoresPath(inputFile) });
                 }
                 catch (Exception ex) when (!(ex is OutOfMemoryException))
                 {

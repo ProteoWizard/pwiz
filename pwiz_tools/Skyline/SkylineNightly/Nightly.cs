@@ -85,6 +85,8 @@ namespace SkylineNightly
 
         private const string GIT_MASTER_URL = "https://github.com/ProteoWizard/pwiz";
         private const string GIT_BRANCHES_URL = GIT_MASTER_URL + "/tree/";
+        private const string BRANCH_MARKER = ".branch.";
+        private const string SKYLINETESTER_FILES_DIR = "SkylineTester Files";
 
         private DateTime _startTime;
         public string LogFileName { get; private set; }
@@ -440,6 +442,92 @@ namespace SkylineNightly
         }
 
         /// <summary>
+        /// Figures out which branch the downloaded SkylineTester was built from.
+        /// </summary>
+        /// <remarks>
+        /// Two build systems answer this differently, and one SkylineNightly.exe has to cope with
+        /// both. The C++ build writes pwiz\Version.cpp (Jamroot's generate-version.cpp rule); a
+        /// .NET build never runs bjam, so SkylineTester.csproj stamps the same facts into
+        /// SkylineTester's own assembly metadata instead. Since SkylineNightlyShim always
+        /// downloads SkylineNightly.exe from master, this must understand both regardless of which
+        /// branch it happens to be testing - and one machine may test both kinds of branch.
+        /// </remarks>
+        /// <returns>Branch URL, or null if neither stamp names a branch</returns>
+        private string ResolveBranchUrl()
+        {
+            var testerFiles = Path.Combine(_skylineTesterDir, SKYLINETESTER_FILES_DIR);
+            var versionCpp = Path.Combine(testerFiles, "Version.cpp");
+            var testerDll = Path.Combine(testerFiles, "SkylineTester.dll");
+            var haveVersionCpp = File.Exists(versionCpp);
+            var haveTesterDll = File.Exists(testerDll);
+            if (!haveVersionCpp && !haveTesterDll)
+            {
+                // Neither build system's stamp is present, so this is not a complete
+                // SkylineTester. Throw rather than return, so the caller retries - it used to get
+                // this behavior from ReadAllLines failing on a missing Version.cpp.
+                throw new FileNotFoundException(
+                    "Downloaded SkylineTester contains neither Version.cpp nor SkylineTester.dll", versionCpp);
+            }
+
+            // Try each stamp that is present. Do not use ?? to chain these: the first reader can
+            // return an empty string, and it can throw on a malformed file, either of which would
+            // skip a perfectly good stamp from the other build system.
+            var branch = haveVersionCpp ? ReadBranchFromVersionCpp(versionCpp) : null;
+            var source = "Version.cpp";
+            if (string.IsNullOrEmpty(branch) && haveTesterDll)
+            {
+                branch = ReadBranchFromTesterAssembly(testerDll);
+                source = "SkylineTester.dll";
+            }
+
+            if (string.IsNullOrEmpty(branch))
+            {
+                // Not fatal - the caller treats null as "assume master" - but it means a nightly
+                // may test and report master while pointed at a branch, so say so in the log.
+                Log("WARNING: could not determine the branch from the downloaded SkylineTester" +
+                    " (Version.cpp present: " + haveVersionCpp + ", SkylineTester.dll present: " + haveTesterDll +
+                    "). This run will be treated as master.");
+                return null;
+            }
+
+            Log("Branch " + branch + " identified from " + source);
+            return branch.Equals("master")
+                ? GIT_MASTER_URL
+                : GIT_BRANCHES_URL + branch; // Looks like https://github.com/ProteoWizard/pwiz/tree/Skyline/skyline_9_7
+        }
+
+        /// <summary>The C++ build's answer, or null when Version.cpp names no branch.</summary>
+        private string ReadBranchFromVersionCpp(string versionCpp)
+        {
+            // Looks like std::string Version::Branch()   {return "Skyline/skyline_9_7";}
+            var branchLine = File.ReadAllLines(versionCpp).FirstOrDefault(l => l.Contains("Version::Branch"));
+            // Any line merely containing "Version::Branch" matches, including a comment or a
+            // reformatted body, so do not assume the quoted value is there to be indexed.
+            var quoted = branchLine?.Split(new[] { "\"" }, StringSplitOptions.None);
+            return quoted == null || quoted.Length < 2 ? null : quoted[1];
+        }
+
+        /// <summary>
+        /// The .NET build's answer, or null when the assembly carries no branch stamp.
+        /// SkylineTester.csproj stamps InformationalVersion as
+        /// "&lt;version&gt;+&lt;sha&gt;.branch.&lt;branch&gt;".
+        /// </summary>
+        private string ReadBranchFromTesterAssembly(string testerDll)
+        {
+            // Read through FileVersionInfo rather than loading the assembly: this runs against a
+            // build that may target a different framework than SkylineNightly itself. Trim as
+            // Install.cs does - Win32 version resources are padded, and stray characters would
+            // ride into the branch name.
+            var productVersion = FileVersionInfo.GetVersionInfo(testerDll).ProductVersion?.Trim();
+            if (string.IsNullOrEmpty(productVersion))
+                return null;
+            // A branch name contains '/', so it cannot be the last dot-separated token of a
+            // version string; ".branch." delimits it instead of a plain split.
+            var branchIndex = productVersion.IndexOf(BRANCH_MARKER, StringComparison.Ordinal);
+            return branchIndex < 0 ? null : productVersion.Substring(branchIndex + BRANCH_MARKER.Length);
+        }
+
+        /// <summary>
         /// Downloads and extracts SkylineTester ZIP file and determines the branch name.
         /// </summary>
         /// <param name="skylineTesterZipPath">Full local destination path for the downloaded zip. The remote artifact name is fixed by SKYLINETESTER_ZIP_NAME.</param>
@@ -496,28 +584,12 @@ namespace SkylineNightly
                     Log("Delete zip file " + skylineTesterZipPath);
                     File.Delete(skylineTesterZipPath);
 
-                    // Figure out which branch we're working in - there's a file in the downloaded SkylineTester zip that tells us.
-                    var branchLine = File.ReadAllLines(Path.Combine(_skylineTesterDir, "SkylineTester Files", "Version.cpp"))
-                        .FirstOrDefault(l => l.Contains("Version::Branch"));
-                    string branchUrl = null;
-                    if (!string.IsNullOrEmpty(branchLine))
-                    {
-                        // Looks like std::string Version::Branch()   {return "Skyline/skyline_9_7";}
-                        var branch = branchLine.Split(new[] { "\"" }, StringSplitOptions.None)[1];
-                        if (branch.Equals("master"))
-                        {
-                            branchUrl = GIT_MASTER_URL;
-                        }
-                        else
-                        {
-                            branchUrl = GIT_BRANCHES_URL + branch; // Looks like https://github.com/ProteoWizard/pwiz/tree/Skyline/skyline_9_7
-                        }
-                    }
-                    return branchUrl;   // success
+                    // Figure out which branch we're working in - the downloaded SkylineTester zip tells us.
+                    return ResolveBranchUrl();   // success
                 }
                 catch (Exception ex)
                 {
-                    failedReason = "Unable to identify branch from Version.cpp in SkylineTester";
+                    failedReason = "Unable to identify branch from the downloaded SkylineTester";
 
                     Log("Exception while unzipping SkylineTester: " + ex.Message +
                         " (Probably still being built, will retry every 60 seconds for 30 minutes.)");

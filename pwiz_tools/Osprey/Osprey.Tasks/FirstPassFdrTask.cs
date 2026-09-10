@@ -94,18 +94,14 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static bool IsIncludedFor(OspreyConfig c)
         {
-            bool inputs = c.InputScores != null && c.InputScores.Count > 0;
-            // The (inputs && StopAfterStage5) clause leans on a CLI-enforced
-            // invariant: StopAfterStage5 is set by --task FirstPassFDR, which
-            // requires --input-scores, so StopAfterStage5 implies inputs at
-            // parse time -- a --task FirstPassFDR run can never reach here without
-            // InputScores.
-            // ProgramTests.TestValidateFirstPassFdrRequiresInputScores pins that
-            // rejection, since the membership truth table (PipelineMembershipTest)
-            // does not encode the cross-flag dependency on its own.
-            return (!inputs && !c.NoJoin)
-                || (inputs && c.StopAfterStage5)
-                || (inputs && !c.NoJoin && !c.ExpectReconciledInput);
+            // Three clauses over two seams collapsed to one over the task flags. The
+            // retired term was `inputs` - were parquets supplied - which the truth table
+            // above shows was never doing independent work: it tracked exactly the tasks
+            // whose flags already say so. Excluded for the two per-file workers (NoJoin)
+            // and for the Stage 7 node (ExpectReconciledInput); included for the full
+            // pipeline, for --task FirstPassFDR itself, and for --task ModelDiagnostics,
+            // which needs first-pass state to render.
+            return !c.NoJoin && !c.ExpectReconciledInput;
         }
 
         // Stage 5/6 planning byproducts this task publishes. The same four types
@@ -253,16 +249,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// True when the pass-1 diagnostics product is the single declared output this task
-        /// still owes: it is absent, and every other declared output exists with a current
-        /// validity stamp. The condition Run's fold arm turns on.
-        ///
-        /// <para>Asked over <see cref="Outputs"/> rather than a hand-listed set, so a future
-        /// output is covered without anyone remembering to add it here - the failure direction
-        /// of a forgotten entry is then a redundant recompute rather than a wrongly-adopted
-        /// first pass.</para>
-        /// </summary>
-        /// <summary>
         /// Produce the pass-1 diagnostics product and nothing else, from a first pass that is
         /// already complete on disk. Streams each run's pre-compaction rows into the report
         /// accumulator and discards them, so what is resident is the library, the accumulator's
@@ -273,10 +259,10 @@ namespace pwiz.Osprey.Tasks
         /// capture. Those are what a rescore needs; a report needs none of them, and retaining
         /// the survivors is what put a 446-run fold over a 63.7 GB box at run 266.</para>
         ///
-        /// <para>Reached from <c>--task FirstPassFDR --model-diagnostics</c>, which is the
-        /// supported way to give a completed analysis the pass-1 product it was run without.
-        /// NOT from <c>--task ModelDiagnostics</c>: that task renders and never processes, so
-        /// when this product is missing it names this one as the producer and stops.</para>
+        /// <para>Reached from <c>--task FirstPassFDR --model-diagnostics</c>, and from
+        /// <c>--task ModelDiagnostics</c>, which no longer refuses a missing product and names
+        /// this task as its producer - it falls into the ordinary pipeline, where this arm is
+        /// what "run FirstPassFDR" means once the first pass is already complete (P16).</para>
         /// </summary>
         private bool FoldDiagnosticsOnly(PipelineContext ctx)
         {
@@ -347,6 +333,16 @@ namespace pwiz.Osprey.Tasks
             return true;
         }
 
+        /// <summary>
+        /// True when the pass-1 diagnostics product is the single declared output this task
+        /// still owes: it is absent, and every other declared output exists with a current
+        /// validity stamp. The condition Run's fold arm turns on.
+        ///
+        /// <para>Asked over <see cref="Outputs"/> rather than a hand-listed set, so a future
+        /// output is covered without anyone remembering to add it here - the failure direction
+        /// of a forgotten entry is then a redundant recompute rather than a wrongly-adopted
+        /// first pass.</para>
+        /// </summary>
         private bool OnlyDiagnosticsProductOutstanding(PipelineContext ctx)
         {
             string diagnosticsPath = ModelDiagnosticsReport.Pass1SidecarPath(ctx.Config);
@@ -1622,12 +1618,19 @@ namespace pwiz.Osprey.Tasks
         /// walks, which is what keeps the streamed report identical to the resident one.
         /// <paramref name="libraryById"/> is passed rather than pulled from the context because
         /// the rehydrate caller runs before <c>LibraryById</c> is published.
+        ///
+        /// <para><c>pass</c> selects which reductions the accumulator folds: 1 for the
+        /// pre-compaction first pass, 2 for SecondPassFdrTask's streamed fold over the final
+        /// reported pool. Everything else - the classification, the run-name seeding, the run FDR
+        /// and level - is derived identically for both, which is why the second pass shares this
+        /// helper rather than re-deriving them and letting the two drift.</para>
         /// </summary>
         internal static ModelDiagnosticsData.Accumulator BuildModelDiagnosticsAccumulator(
             IReadOnlyList<string> fileNames,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config,
-            Action<string> logInfo)
+            Action<string> logInfo,
+            int pass = 1)
         {
             ModelDiagnosticsReport.BuildClassificationFromLibrary(config, libraryById, logInfo,
                 out var classByBaseId, out var pairByBaseId, out var entrapmentRatio);
@@ -1635,7 +1638,8 @@ namespace pwiz.Osprey.Tasks
             for (int i = 0; i < runNames.Length; i++)
                 runNames[i] = fileNames[i];
             return new ModelDiagnosticsData.Accumulator(
-                runNames, classByBaseId, pairByBaseId, entrapmentRatio, config.RunFdr, config.FdrLevel);
+                runNames, classByBaseId, pairByBaseId, entrapmentRatio, config.RunFdr,
+                config.FdrLevel, pass);
         }
 
         /// <summary>
@@ -2527,8 +2531,7 @@ namespace pwiz.Osprey.Tasks
             // model instead of retraining. Null (a pure no-op in the engine) on the default
             // percolator path and on the 2nd-pass run, so scoring stays byte-identical.
             Action<PercolatorResults> captureModel = null;
-            if ((OspreyEnvironment.Pass2TransferQ || OspreyEnvironment.Pass2TransferCompete ||
-                 OspreyEnvironment.Pass2ProteinCompact) &&
+            if ((OspreyEnvironment.Pass2TransferQ || OspreyEnvironment.Pass2ProteinCompact) &&
                 string.Equals(passLabel, @"First-pass", StringComparison.Ordinal))
             {
                 // Publish is add-only (throws on a duplicate key); guard so a first pass
@@ -2854,7 +2857,10 @@ namespace pwiz.Osprey.Tasks
             // buffer is published as CompactedEntries.
             var projections = prebuiltProjections ??
                 FdrProjectionSet.BuildFromEntries(perFileEntries, releaseStubs: true);
-            int beforeCount = projections.TotalRows;
+            // long with TotalRows: this is the PRE-compaction cohort total, 1,342,686,095 at
+            // 446 files. afterCount below is deliberately left int - it is the post-compaction
+            // survivor count, ~289 M, a different magnitude with room to spare.
+            long beforeCount = projections.TotalRows;
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, projections.IsCountsOnly
                 ? string.Format(
                     @"projection counts-only: {0} rows across {1} files (no resident rows); FdrEntry stubs released",
@@ -2954,8 +2960,7 @@ namespace pwiz.Osprey.Tasks
             var reloadedModel = LoadCurrentModelSidecar(perFileParquetPaths, sidecarValidityKey);
             Action<PercolatorResults> captureModel = results =>
             {
-                if ((OspreyEnvironment.Pass2TransferQ || OspreyEnvironment.Pass2TransferCompete ||
-                     OspreyEnvironment.Pass2ProteinCompact) &&
+                if ((OspreyEnvironment.Pass2TransferQ || OspreyEnvironment.Pass2ProteinCompact) &&
                     !ctx.TryGet<FirstPassPercolatorModel>(out _))
                 {
                     // Stamp the arm THIS pass ran under; the 2nd pass may be another process.
@@ -3170,8 +3175,14 @@ namespace pwiz.Osprey.Tasks
                 // is_decoy / coelution_sum / modseq) in parquet row order (== the resident sort
                 // order on the 1st pass, since the parquet is written (entry_id,charge,scan)-sorted),
                 // and loadFileFeatures loads that file's feature vectors by the running row ordinal.
-                // perFileParquetPaths has every projection file (the counts-only producer read the
-                // same parquet to count its rows), so the indexer cannot miss.
+                // perFileParquetPaths has every projection file, so the indexer cannot miss - but
+                // NOT for the reason this used to give ("the counts-only producer read the same
+                // parquet to count its rows"): the resume producer reads the footer now, not the
+                // rows. What holds is that PerFileScoringTask sets perFileParquetPaths[fileName]
+                // unconditionally, outside the fat/lean branch and outside any existence test,
+                // and Run seeds every path up front. Moving that assignment inside the lean
+                // branch - where it looks redundant, since that arm adds an empty entry list -
+                // would break this indexer deep inside the Stage-5 streaming pass.
                 Action<string, Action<uint, byte, bool, double, string>> streamFileRows =
                     (fileName, onRow) => ParquetScoreCache.ReadFdrStubScalars(perFileParquetPaths[fileName], onRow);
                 // Feeds the scorer a file's scores off its 1st-pass sidecar so the pass does not
@@ -3450,7 +3461,7 @@ namespace pwiz.Osprey.Tasks
         private List<KeyValuePair<string, List<FdrEntry>>> CompactFromSidecars(
             FdrProjectionSet projections,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
-            int beforeCount,
+            long beforeCount,
             OspreyConfig config,
             PipelineContext ctx)
         {
