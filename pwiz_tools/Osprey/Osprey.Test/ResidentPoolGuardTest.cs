@@ -207,9 +207,19 @@ namespace pwiz.Osprey.Test
             // refuse it. Streaming it is the default; the resident opt-out is a named path.
             AssertStage6HandoffGuard();
 
-            // The STAGE-7 join guard. Same shape one stage later: the pre-compaction guard
-            // stops at the compaction line and the Stage-6 one at the handoff, so the survivor
-            // buffer SecondPassFDR rebuilds was refused by neither and no token could name it.
+            // The ALL-RUNS reconciliation bundle, refused outright. Reaches PAST the compaction
+            // line like the Stage 6 guard above, but takes NO token: the bounded alternative
+            // (the per-run survivor loader off the analysis-wide retained base_id summary)
+            // exists on every route that gets here, so residency is a defect to fix and not a
+            // path to name.
+            //
+            // Unit-tested rather than gate-tested BY NECESSITY, and that is the point. No
+            // regression leg reaches this guard - verified, the message appears on zero legs -
+            // because the routing fix left it with no caller. A guard nothing exercises is a
+            // guard that can rot unnoticed, so its message is pinned here: it must name the
+            // shape, the measured cost, and the bounded alternative, or the operator who trips
+            // it in a year gets a refusal with no way forward.
+            AssertAllRunsBundleGuard();
 
             // The Stage-7 join ADMISSION, which is what decides whether that guard has a
             // subject at all. It used to be config.ExpectReconciledInput - one CLI flag - and
@@ -276,6 +286,32 @@ namespace pwiz.Osprey.Test
                         Path.Combine(absent, "a.mzML"), Path.Combine(absent, "b.mzML")
                     }
                 }));
+        }
+
+        /// <summary>
+        /// The all-runs reconciliation bundle guard: always refuses, and refuses usefully.
+        ///
+        /// <para>Unconditional by design - it takes no token, so there is no "named" case to
+        /// assert. What IS assertable, and what matters when this fires years from now, is that
+        /// the message tells the operator what happened and what to do: the shape
+        /// (O(files x entries)), the measured cost, the bounded alternative, and the fact that
+        /// no token can admit it - so nobody burns an afternoon looking for the environment
+        /// variable that would let it through.</para>
+        /// </summary>
+        private static void AssertAllRunsBundleGuard()
+        {
+            string err = ScoringTaskShared.AllRunsBundleGuardError(null);
+            Assert.IsNotNull(err, "the all-runs bundle must never be admitted silently");
+            StringAssert.Contains(err, "O(files x entries)");
+            StringAssert.Contains(err, "per-run survivor loader");
+            StringAssert.Contains(err, "cannot admit this path");
+
+            // A supplied token changes the wording but not the answer. Naming the value back is
+            // what stops a stale or misspelled token reading exactly like an unset one, which is
+            // the property its two sibling guards are also pinned on.
+            string named = ScoringTaskShared.AllRunsBundleGuardError(ResidentPaths.PROJECTION_OFF);
+            Assert.IsNotNull(named, "no token admits the all-runs bundle");
+            StringAssert.Contains(named, ResidentPaths.PROJECTION_OFF);
         }
 
         /// <summary>
