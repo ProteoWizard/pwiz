@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Maven descriptor for the TeamCity Kotlin DSL in settings.kts.
+
+  SCOPE: this .teamcity/ directory describes the "VersionedConfigs" SUBPROJECT ONLY, not the
+  whole ProteoWizard project - see the header of settings.kts before changing anything here.
+
+  teamcity.dsl.version MUST match the TeamCity server version (teamcity.labkey.org). A mismatch
+  fails DSL compilation on the server with an unresolved-dependency error rather than anything
+  that names the version, so check here first if that happens.
+
+  If the server rejects this descriptor, let TeamCity produce the authoritative pair instead:
+  enable Versioned Settings on the subproject in "use settings from TeamCity" mode, which commits
+  a generated pom.xml + settings.kts correct for that exact server build, then re-apply the
+  buildType from settings.kts on top and switch to "use settings from VCS".
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>ProteoWizard</groupId>
+  <artifactId>ProteoWizard_VersionedConfigs_dsl</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <name>ProteoWizard VersionedConfigs Config DSL Script</name>
+  <packaging>jar</packaging>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <!-- Keep in step with the TeamCity server. -->
+    <teamcity.dsl.version>2025.03</teamcity.dsl.version>
+    <!-- The Kotlin compiler the DSL is built with; the JetBrains repo above supplies it. -->
+    <kotlin.version>1.9.25</kotlin.version>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>jetbrains-all</id>
+      <url>https://download.jetbrains.com/teamcity-repository</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>jetbrains-all</id>
+      <url>https://download.jetbrains.com/teamcity-repository</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.jetbrains.teamcity</groupId>
+      <artifactId>configs-dsl-kotlin-latest</artifactId>
+      <version>${teamcity.dsl.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.teamcity</groupId>
+      <artifactId>configs-dsl-kotlin-plugins-latest</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <sourceDirectory>${basedir}</sourceDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-maven-plugin</artifactId>
+        <version>${kotlin.version}</version>
+        <executions>
+          <execution>
+            <id>compile</id>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <args>
+            <arg>-jvm-target</arg>
+            <arg>1.8</arg>
+          </args>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.jetbrains.teamcity</groupId>
+        <artifactId>teamcity-configs-maven-plugin</artifactId>
+        <version>${teamcity.dsl.version}</version>
+        <configuration>
+          <format>kotlin</format>
+          <dstDir>target/generated-configs</dstDir>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

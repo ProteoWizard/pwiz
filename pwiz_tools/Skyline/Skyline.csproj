@@ -320,7 +320,34 @@
        Executables\Hardklor\Hardklor.vcxproj before this project (see pwiz_tools\Skyline\build.bat).
        This Content include deploys the pre-built exe when present. net8-only: the net472 build
        gets Hardklor.exe from the Jam toolchain. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('Executables\Hardklor\bin\x64\$(Configuration)\Hardklor.exe')">
+  <PropertyGroup>
+    <!-- $(PwizPrebuiltNativeShimDir) is the public knob; $(_PwizPrebuiltNativeShimDir) is the
+         same value guaranteed to end in a separator, so consumers can concatenate:
+         $(_PwizPrebuiltNativeShimDir)Foo.dll.
+
+         It has to be a SECOND property rather than a normalisation in place. A value that
+         arrives via -p: is a global property, and MSBuild silently ignores any PropertyGroup
+         that tries to redefine one - so normalising the public name looked correct and did
+         nothing. Callers also cannot simply pass the trailing separator themselves, because
+         a command-line value ending in a backslash makes MSBuild read the following quote
+         as escaped. Empty stays empty, so either name still doubles as the opt-in flag. -->
+    <_PwizPrebuiltNativeShimDir Condition="'$(PwizPrebuiltNativeShimDir)' != ''">$([MSBuild]::EnsureTrailingSlash('$(PwizPrebuiltNativeShimDir)'))</_PwizPrebuiltNativeShimDir>
+  </PropertyGroup>
+
+  <!-- $(PwizPrebuiltNativeShimDir) wins when set: it is the Native shims CI artifact
+       (scripts/misc/tcbuild-native-shims.bat), which is how a host without the VC++
+       toolchain gets Hardklor.exe at all. Unlike the two vendor shims, Hardklor has no
+       vendor SDK and so is cross-compilable in principle; it rides in the same bundle so
+       all three native binaries have one source of truth. The two ItemGroups are mutually
+       exclusive - both firing would duplicate the Content item. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And '$(PwizPrebuiltNativeShimDir)' != '' And Exists('$(_PwizPrebuiltNativeShimDir)Hardklor.exe')">
+    <Content Include="$(_PwizPrebuiltNativeShimDir)Hardklor.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Hardklor.exe</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And !Exists('$(_PwizPrebuiltNativeShimDir)Hardklor.exe') And Exists('Executables\Hardklor\bin\x64\$(Configuration)\Hardklor.exe')">
     <Content Include="Executables\Hardklor\bin\x64\$(Configuration)\Hardklor.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Hardklor.exe</Link>
