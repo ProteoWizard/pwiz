@@ -106,7 +106,7 @@ targets['OspreyWindowsNet'] = {'master': {"ProteoWizard_OspreyWindowsNet": "Ospr
 # container cannot produce them. This config builds them once and publishes them as artifacts;
 # see scripts/misc/tcbuild-native-shims.bat. Config id must match .teamcity/settings.kts, which
 # is what smartBuildTrigger POSTs to the build queue.
-targets['NativeShims'] = {'master': {"ProteoWizard_NativeShimsWindows": "Native shims (Windows x86_64)"}}
+targets['NativeShims'] = {'master': {"ProteoWizard_VersionedConfigs_NativeShimsWindows": "Native shims (Windows x86_64)"}}
 
 targets['BumbershootRelease'] = \
 {
