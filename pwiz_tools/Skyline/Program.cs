@@ -44,6 +44,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using ZedGraph;
 
 // Once-per-assembly initialization to perform logging with log4net.
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
@@ -717,6 +718,10 @@ namespace pwiz.Skyline
                 CommonActionUtil.ExceptionReporter = ReportException;
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
+
+                // ZedGraph sizes its fonts, symbols and pens in pixels, so without this every
+                // graph draws at 96-DPI size while the window chrome around it scales up.
+                PaneBase.DpiScaleFactor = DpiUtil.GetFactor(null);
                 Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
                 Application.ThreadException += ThreadExceptionEventHandler;
 
