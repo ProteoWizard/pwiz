@@ -29,8 +29,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <!-- Keep in step with the TeamCity server. -->
-    <teamcity.dsl.version>2025.03</teamcity.dsl.version>
+    <!-- Matches the TeamCity server (teamcity.labkey.org); bump with the server. -->
+    <teamcity.dsl.version>2026.1</teamcity.dsl.version>
     <!-- The Kotlin compiler the DSL is built with; the JetBrains repo above supplies it. -->
     <kotlin.version>1.9.25</kotlin.version>
   </properties>

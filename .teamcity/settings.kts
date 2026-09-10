@@ -36,14 +36,18 @@ import jetbrains.buildServer.configs.kotlin.buildSteps.script
  *    rebuild the shims on every commit, which is the exact cost this config
  *    exists to avoid.
  *
- * 4. DSL VERSION. `version` below and teamcity.dsl.version in pom.xml must both
- *    match the server. If the server rejects this file, let TeamCity generate
- *    the pom.xml/settings.kts pair itself (enable Versioned Settings in "use
- *    settings from TeamCity" mode), then re-apply the buildType below.
+ * 4. DSL VERSION. `version` below and teamcity.dsl.version in pom.xml both track the
+ *    server, currently 2026.1; bump them together when it is upgraded. The one
+ *    value here NOT taken from the server is kotlin.version in pom.xml - if the
+ *    DSL fails to compile with a Kotlin error rather than a TeamCity one, that is
+ *    the thing to check. If the server rejects this descriptor outright, let
+ *    TeamCity generate the pom.xml/settings.kts pair itself (enable Versioned
+ *    Settings in "use settings from TeamCity" mode), then re-apply the buildType
+ *    below on top of what it produces.
  * =============================================================================
  */
 
-version = "2025.03"
+version = "2026.1"
 
 project {
     description = "Build configs defined in-repo via Kotlin DSL, rather than in the TeamCity UI."
@@ -68,7 +72,10 @@ project {
  * directories triggers it.
  */
 object NativeShimsWindows : BuildType({
-    id = AbsoluteId("ProteoWizard_NativeShimsWindows")
+    // TeamCity requires a build config id to be prefixed with its parent project id,
+    // hence the ProteoWizard_VersionedConfigs_ prefix. Spelled out rather than left as a
+    // relative id so the value the trigger map has to match is greppable from here.
+    id = AbsoluteId("ProteoWizard_VersionedConfigs_NativeShimsWindows")
     name = "Native shims (Windows x86_64)"
     description = "MascotShim.dll, MobilionShim.dll and Hardklor.exe, prebuilt for consumers that cannot compile them (see scripts/misc/tcbuild-native-shims.bat)"
 
