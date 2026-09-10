@@ -8,10 +8,10 @@
     skylinedev/Parquet.Net - a SIBLING checkout under the same project root as
     pwiz, not a folder inside this repo. Full rationale lives in that folder's
     PATCH-NOTES.md. The binary checked in here is byte-identical to that repo's
-    BinariesForProteoWizard/ParquetNet.dll (sha256 b18bf41d4dcc7789...), built
-    from fork commit 932ade5.
+    BinariesForProteoWizard/ParquetNet.dll (sha256 2611b7d25c6050fa...), built
+    from fork commit 9d34f80.
 
-    The fork now carries FOUR deltas from stock 4.25.0, not just the original one:
+    The fork now carries THREE deltas from stock 4.25.0, not just the original one:
       1. ThriftCompactProtocolReader struct-skip fix - lets us read parquet
          written by parquet-rs >= 58 (the Rust crate maccoss/osprey uses). This
          was the original and, for a long time, the only reason for the fork.
@@ -23,11 +23,12 @@
       3. ParquetPlainEncoder bool fix - CHANGES WRITTEN BYTES. Bool column pages
          whose row count is a multiple of 8 lose a trailing uninitialised byte.
          Decoded values are unaffected; anything asserting on parquet BYTES is not.
-      4. Compressor ThreadLocal<Iron> - also rewrites the DECOMPRESSION path, which
-         Skyline exercises when reading parquet. Kept as a thread-safety precaution
-         only; it is NOT the determinism fix it was once documented as.
 
-    Deltas 3 and 4 reach Skyline, not just Osprey, because Skyline references the
+    A fourth delta, Compressor ThreadLocal<Iron>, was REVERTED on 2026-09-10: it
+    never fixed the byte drift it was introduced for and it rewrote the
+    DECOMPRESSION path Skyline uses. Do not reintroduce it.
+
+    Delta 3 reaches Skyline, not just Osprey, because Skyline references the
     same binary (see below). Keep this list current - a stale comment here is what
     makes a reviewer conclude the fork is undocumented or its source lost.
 
