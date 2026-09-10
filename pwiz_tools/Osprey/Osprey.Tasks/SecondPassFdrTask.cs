@@ -281,11 +281,21 @@ namespace pwiz.Osprey.Tasks
         public override bool Run(PipelineContext ctx)
         {
             // The guard that stood here refused a resident Stage-7 join CHOSEN over an
-            // admissible streamed one. It went with OSPREY_STAGE7_STREAM (2026-09-10): with the
-            // switch gone there is no choice left to refuse, and the resident arm is reachable
-            // only where NeedsResidentPool already forces it - which the first-pass guard names
-            // and tokens. Nothing here is unguarded as a result; the question simply has no
-            // subject any more.
+            // admissible streamed one. It went with OSPREY_STAGE7_STREAM (2026-09-10), which was
+            // the choice it existed to refuse.
+            //
+            // ONE operator-chosen route into the resident arm outlives it, and this comment is
+            // now the only code-level record of it, because deleting that guard deleted the
+            // other: OSPREY_PASS2_QVALUE=transfer leaves Pass2ProteinCompact false, and
+            // Stage7StreamAdmittedBeforeRescore declines on that term - with no token, since
+            // ResidentPaths names none for it. It is exempt for a stated reason rather than
+            // overlooked: transfer computes its per-file half HERE, over the whole pool, so
+            // streaming underneath it does not make it per-run, it takes its input away. The
+            // exemption ends when transfer's per-file half moves to Pass2PerFileWorker, and
+            // WarnResidentStage7Join is what discloses it in the meantime.
+            //
+            // Every other route in is NeedsResidentPool's, which the first-pass guard already
+            // names and tokens.
 
             // The pass-2 diagnostics product is the ONLY outstanding output: every
             // computational artifact this task produces is already on disk and key-current, and

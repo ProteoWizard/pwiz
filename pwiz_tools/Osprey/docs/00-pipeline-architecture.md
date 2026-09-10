@@ -1120,12 +1120,17 @@ the text says so rather than describing the current shape as though it were the 
    `.scores.parquet` and first-pass sidecar. The streamed path is the default; the switch
    goes when the resident one does.
 
-   `OSPREY_STAGE7_STREAM=0` is the Stage 7 sibling, and the same disposition applies - it
-   selects the resident second-pass join, where `RescoredEntries` holds every run's
-   survivors instead of rebuilding one run at a time through `StreamFiles`. Both arms are
-   required to produce identical bytes.
+   **Stage 7 had the same sibling switch and no longer does.** `OSPREY_STAGE7_STREAM=0`
+   selected the resident second-pass join, where `RescoredEntries` held every run's survivors
+   instead of rebuilding one run at a time through `StreamFiles`. It was removed on
+   2026-09-10 once its A/B was banked - the resident arm passed the whole regression against
+   the committed golden at 1e-9 and produced a byte-identical diagnostics report - and
+   `ResidentPaths.KNOWN_UNFIXED` shrank from 5 to 4 with it. Setting the name now fails at
+   startup. The streamed fold is the only arm the code can take, so "both arms produce
+   identical bytes" is history rather than a standing requirement, and the golden is what
+   answers "did streaming change results?" from here on.
 
-   **It IS the in-place A/B its Stage 6 sibling is, and it did not used to be.**
+   Its removal was earned by first making it a real A/B, which it had not been.
    `CanStreamStage7Join` opened on `!config.ExpectReconciledInput`, a flag only
    `--task SecondPassFDR` sets, so on a straight-through run the switch changed nothing -
    while `SecondPassFdrTask.ValidityKey` appended `;stage7stream=0` regardless, forcing a
@@ -1134,7 +1139,7 @@ the text says so rather than describing the current shape as though it were the 
    the survivor-subset shape (`ScoringTaskShared.AllReconciledParquetsCurrent`). Asked of
    the disk, it is route-independent - a straight-through run's Stage 6 has just written
    those parquets - so the cold run, both resume arms and the `--task SecondPassFDR` merge
-   all fold run by run, and the switch compares two arms of whichever one you are running.
+   all fold run by run.
 
    The per-run source is not one implementation reached four ways: each arm hands the fold
    the per-file half of the whole-run loop it would otherwise have run
@@ -1144,10 +1149,14 @@ the text says so rather than describing the current shape as though it were the 
    an arm is a call-shape change rather than a second algorithm.
 
    One route still cannot stream: a pass-2 mode whose per-file half has no worker
-   (`OSPREY_PASS2_QVALUE=transfer` still competes over the whole pool in Stage 7). Until
-   `TransferOneFile` moves into `Pass2PerFileWorker`, `Stage7ResidentGuardError` keeps its
-   `streamingAvailable` exemption - a run with no streamed alternative has no choice for a
-   token to record.
+   (`OSPREY_PASS2_QVALUE=transfer` still competes over the whole pool in Stage 7). It is
+   `ScoringTaskShared.Stage7StreamAdmittedBeforeRescore` that declines there, on
+   `!OspreyEnvironment.Pass2ProteinCompact`, and no token records it - a run with no streamed
+   alternative has nothing for a token to admit. That is the one operator-chosen route into
+   the resident fold left standing, and it ends when `TransferOneFile` moves into
+   `Pass2PerFileWorker`; `SecondPassFdrTask.WarnResidentStage7Join` discloses it meanwhile.
+   The other routes in are `NeedsResidentPool`'s, which the first-pass guard names and
+   tokens.
 
    Because nothing in the output distinguishes the arms, the shape that ran is asserted from
    the marker line `Second-pass join: folding over N run(s)` rather than inferred -

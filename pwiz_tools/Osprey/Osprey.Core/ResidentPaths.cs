@@ -120,9 +120,13 @@ namespace pwiz.Osprey.Core
         // regression against the committed golden at 1e-9, and the diagnostics HTML matched the
         // streamed arm byte for byte apart from generatedUtc. Not to be re-added - a second arm
         // kept alive only to keep it matching is a standing test cost, and every extra option
-        // raises the testing burden. The fold's resident consumer survives for now, but only
+        // raises the testing burden. The fold's resident consumer survives for now, reached
         // where NeedsResidentPool already forces it (projection-off, non-percolator-fdr,
-        // fdrbench-pass1), so it is reachable by declaration and never by choice.
+        // fdrbench-pass1) - and, NOT by any token here, under OSPREY_PASS2_QVALUE=transfer,
+        // which leaves Pass2ProteinCompact false so Stage7StreamAdmittedBeforeRescore declines.
+        // That last one is operator-chosen and untokened, exempt because transfer computes its
+        // per-file half inside Stage 7 over the whole pool; it ends when that half moves to
+        // Pass2PerFileWorker. So: mostly by declaration, and in exactly one place by choice.
 
 
         /// <summary>
