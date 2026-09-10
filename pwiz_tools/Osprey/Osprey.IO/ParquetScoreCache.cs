@@ -344,6 +344,12 @@ namespace pwiz.Osprey.IO
         // round-trip is logically identical. Always null in production.
         internal static int? RowGroupRowCapForTest;
 
+        // Columns of a row group to compress concurrently. Output must be identical at
+        // any value - only the append is ordered - so this is purely a speed/memory
+        // trade. 0 lets Parquet.Net use the core count; 1 forces the sequential loop
+        // through the same code, which is how the A/B against the golden is taken.
+        private static readonly int ParquetWriteThreads = ResolveParquetWriteThreads();
+
         /// <summary>
         /// Write scored entries to a Parquet file.
         /// Schema columns: entry_id, is_decoy, charge, scan_number, modified_sequence,
@@ -761,8 +767,15 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static void WriteRowGroupColumns(ParquetRowGroupWriter group, List<DataColumn> columns)
         {
-            foreach (var column in columns)
-                RunSync(group.WriteColumnAsync(column));
+            RunSync(group.WriteColumnsAsync(columns, null, ParquetWriteThreads));
+        }
+
+        private static int ResolveParquetWriteThreads()
+        {
+            string raw = Environment.GetEnvironmentVariable(@"OSPREY_PARQUET_WRITE_THREADS");
+            if (!string.IsNullOrEmpty(raw) && int.TryParse(raw, out int n) && n > 0)
+                return n;
+            return 0;
         }
 
         /// <summary>
@@ -1346,6 +1359,16 @@ namespace pwiz.Osprey.IO
         /// <para>The row count is a DECLARED count, not a scan. It exists so a caller can log
         /// the cohort size and answer "are there any rows at all" without paying the
         /// 1,342,686,095-row scalar scan that used to produce the same number.</para>
+        ///
+        /// <para><b>The schema test covers the columns that make the declared count TRUSTWORTHY,
+        /// not just the feature schema.</b> <see cref="ReadFdrStubScalars"/> skips a row group
+        /// whose <c>entry_id</c> or <c>is_decoy</c> comes back null, and because the lookup is
+        /// over the file-level schema that is all-or-nothing per file: such a parquet declares N
+        /// rows in its footer and yields 0 on a read. While the count came from a scan the two
+        /// could not disagree; taking it from the footer makes them independent, so this probe
+        /// has to reject the shape that separates them. Otherwise the mismatch surfaces at the
+        /// END of the Stage 5 score pass as an inconsistent-row-count fault, hours later and
+        /// naming the count rather than the missing column.</para>
         /// </summary>
         public static (bool HasPinFeatures, long RowCount) ProbeResumeSchemaAndRows(string path)
         {
@@ -1355,7 +1378,10 @@ namespace pwiz.Osprey.IO
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
                 var fieldsByName = BuildFieldLookup(reader);
-                return (fieldsByName.ContainsKey(PIN_FEATURE_NAMES[0]), reader.Metadata?.NumRows ?? 0L);
+                bool readable = fieldsByName.ContainsKey(PIN_FEATURE_NAMES[0]) &&
+                                fieldsByName.ContainsKey(FIELD_ENTRY_ID.Name) &&
+                                fieldsByName.ContainsKey(FIELD_IS_DECOY.Name);
+                return (readable, reader.Metadata?.NumRows ?? 0L);
             }
         }
 

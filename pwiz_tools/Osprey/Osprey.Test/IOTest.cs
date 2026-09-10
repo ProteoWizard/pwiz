@@ -3079,6 +3079,64 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>
+        /// The parquet footer's declared row count is the SAME number a full scan reaches.
+        ///
+        /// <para>This is the invariant the counts-only projection rests on. It used to read
+        /// every row of every file - 1,342,686,095 at 446 runs, ~10 minutes - through a builder
+        /// whose <c>AddRow</c> discards all five fields and increments a counter, to learn what
+        /// <c>ProbeResumeSchemaAndRows</c> returns from a footer the same loop had already
+        /// opened. The scan is gone; if these two ever disagreed, first-pass FDR would be sized
+        /// from a number no longer describing the file, so pin them together.</para>
+        ///
+        /// <para>Multiple row groups on purpose (cap 2 over 5 rows -> 3 groups): a footer count
+        /// and a per-group append loop are the two things that could drift apart, and a
+        /// single-group file cannot tell them apart.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestFooterRowCountMatchesScan()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_rowcount_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var entries = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7 })
+                    entries.Add(MakeStreamEntry(id, id * 100.0));
+
+                string path = Path.Combine(dir, "counts.scores.parquet");
+                ParquetScoreCache.RowGroupRowCapForTest = 2;
+                try
+                {
+                    ParquetScoreCache.WriteScoresParquet(path, entries, null, null, "f.mzML");
+                }
+                finally
+                {
+                    ParquetScoreCache.RowGroupRowCapForTest = null;
+                }
+
+                // Assert the multi-group shape rather than assuming the cap took. If the writer
+                // is ever re-routed off WriteChunkedParquet the 5 rows land in ONE group and
+                // this test still passes 5 == 5 - now exercising exactly the degenerate case
+                // its own premise says cannot detect footer-vs-per-group drift.
+                Assert.AreEqual(3, CountRowGroups(path));
+
+                int scanned = 0;
+                ParquetScoreCache.ReadFdrStubScalars(path,
+                    (entryId, charge, isDecoy, coelutionSum, modseq) => scanned++);
+
+                var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(path);
+                Assert.IsTrue(probe.HasPinFeatures);
+                Assert.AreEqual(entries.Count, scanned);
+                Assert.AreEqual(scanned, probe.RowCount);
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch { /* best-effort */ }
+            }
+        }
+
         // Build an FdrEntry with a per-row-distinct feature vector (feature[f] = baseValue + f)
         // and distinct fragment / XIC blobs derived from baseValue, so a chunk-boundary row
         // mismap -- or an overlay row silently keeping the ORIGINAL blobs -- surfaces as a
