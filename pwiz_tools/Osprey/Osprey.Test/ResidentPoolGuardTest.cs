@@ -21,6 +21,9 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
@@ -207,6 +210,12 @@ namespace pwiz.Osprey.Test
             // buffer SecondPassFDR rebuilds was refused by neither and no token could name it.
             AssertStage7JoinGuard();
 
+            // The Stage-7 join ADMISSION, which is what decides whether that guard has a
+            // subject at all. It used to be config.ExpectReconciledInput - one CLI flag - and
+            // is now the disk question that flag stood in for, so the rules it must not lose
+            // are pinned here rather than left to the end-to-end gate.
+            AssertStage7StreamAdmission();
+
             // The trigger SET itself, not just the message it produces. Each of these takes the
             // O(files) resident pool and so arms the guard above.
             AssertNeedsResidentPool(true, fdrbench1);
@@ -281,6 +290,40 @@ namespace pwiz.Osprey.Test
             // put a mandatory token on every ordinary run, which grants nothing.
             Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
                 streamingAvailable: false, stage7Stream: false, allowUnfixedResident: null));
+        }
+
+        /// <summary>
+        /// The all-runs reconciled-parquet admission: ALL, never any, and never vacuously
+        /// true.
+        ///
+        /// <para>The fold rebuilds each run from its own reconciled parquet, so one run without
+        /// a readable one is a run it cannot produce - and "some run has one" would fail at that
+        /// run, hours in. An empty or absent input list is refused for the opposite reason:
+        /// there is no pool to bound, so vacuous truth would admit a fold over nothing on a
+        /// configuration no other term in the predicate examines.</para>
+        ///
+        /// <para>Only the negative half is asserted here. The positive one needs real Stage 6
+        /// artifacts, which is <c>TestIsCurrentReconciledSurvivorSubset</c>'s job per file and
+        /// the regression gate's per cohort; what CANNOT be seen there is a predicate that says
+        /// yes when it has been handed nothing.</para>
+        /// </summary>
+        private static void AssertStage7StreamAdmission()
+        {
+            Assert.IsFalse(ScoringTaskShared.AllReconciledParquetsCurrent(new OspreyConfig()));
+            Assert.IsFalse(ScoringTaskShared.AllReconciledParquetsCurrent(
+                new OspreyConfig { InputFiles = new List<string>() }));
+            // Paths under a directory that does not exist: every run is missing its parquet,
+            // which is the cold cohort's state before Stage 6 has written any.
+            string absent = Path.Combine(Path.GetTempPath(),
+                "osprey_no_such_dir_" + Guid.NewGuid().ToString("N"));
+            Assert.IsFalse(ScoringTaskShared.AllReconciledParquetsCurrent(
+                new OspreyConfig
+                {
+                    InputFiles = new List<string>
+                    {
+                        Path.Combine(absent, "a.mzML"), Path.Combine(absent, "b.mzML")
+                    }
+                }));
         }
 
         private static void AssertStage6HandoffGuard()
@@ -359,30 +402,24 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestFirstPassMembershipAcrossTasks()
         {
-            var scores = new[] { "a.scores.parquet" };
-
             // Straight-through (-i, no --task): FirstPassFDR runs.
             Assert.IsTrue(FirstPassFdrTask.IsIncludedFor(new OspreyConfig()));
 
             // --task PerFileScoring / PerFileRescoring set NoJoin: excluded, they stop before
-            // the join.
+            // the join. One row each is enough now: these used to be asserted twice, once
+            // with a parquet list and once without, because the predicate read the input KIND
+            // as well as the flags and the two could disagree.
             Assert.IsFalse(FirstPassFdrTask.IsIncludedFor(
                 new OspreyConfig { NoJoin = true }));
-            Assert.IsFalse(FirstPassFdrTask.IsIncludedFor(
-                new OspreyConfig { NoJoin = true, InputScores = scores.ToList() }));
 
             // --task FirstPassFDR sets StopAfterStage5: it IS the first-pass node.
             Assert.IsTrue(FirstPassFdrTask.IsIncludedFor(
-                new OspreyConfig { StopAfterStage5 = true, InputScores = scores.ToList() }));
-
-            // The full --input-scores pipeline (no --task): runs.
-            Assert.IsTrue(FirstPassFdrTask.IsIncludedFor(
-                new OspreyConfig { InputScores = scores.ToList() }));
+                new OspreyConfig { StopAfterStage5 = true }));
 
             // --task SecondPassFDR: NoJoin FALSE, so the old !NoJoin proxy said "runs" - but
             // ExpectReconciledInput excludes it. This single row is the whole change.
             Assert.IsFalse(FirstPassFdrTask.IsIncludedFor(
-                new OspreyConfig { ExpectReconciledInput = true, InputScores = scores.ToList() }),
+                new OspreyConfig { ExpectReconciledInput = true }),
                 "--task SecondPassFDR must not be treated as running first-pass Percolator");
 
             // And the consequence the loader draws from it: the merge no longer demands the
@@ -397,8 +434,7 @@ namespace pwiz.Osprey.Test
             // near-empty .blib with no error. Streaming hydrate and lean projection are
             // different routes; only the first is what this row unlocks.
             Assert.IsFalse(PerFileScoringTask.NeedsResidentPool(
-                new OspreyConfig { ExpectReconciledInput = true, InputScores = scores.ToList() },
-                useFdrProjection: true));
+                new OspreyConfig { ExpectReconciledInput = true }, useFdrProjection: true));
         }
     }
 }

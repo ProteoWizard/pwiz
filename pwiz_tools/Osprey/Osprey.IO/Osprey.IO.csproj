@@ -11,7 +11,13 @@
 
   <ItemGroup>
     <!-- ReSharper disable once VulnerablePackage -->
-    <PackageReference Include="Parquet.Net" Version="4.25.0" />
+    <!-- ExcludeAssets="compile" + the local Reference: compile against pwiz's Parquet fork,
+         which exposes API the NuGet compile surface does not (the parallel column-compression
+         path), while still taking the package's runtime assets. -->
+    <PackageReference Include="Parquet.Net" Version="4.25.0" ExcludeAssets="compile" />
+    <Reference Include="Parquet">
+      <HintPath>..\..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
+    </Reference>
     <!-- Snappier arrives transitively (Parquet.Net -> IronCompress -> Snappier).
          Pinned to 1.3.1 because the range resolves to 1.1.6, which carries
          GHSA-pggp-6c3x-2xmx; 1.3.1 is the first clean release. Remove once

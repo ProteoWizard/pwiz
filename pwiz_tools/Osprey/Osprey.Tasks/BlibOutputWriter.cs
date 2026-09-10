@@ -117,9 +117,11 @@ namespace pwiz.Osprey.Tasks
         // Pre-create source file IDs once. SpectrumSourceFiles.fileName carries
         // the ABSOLUTE path of each spectrum source file, matching BiblioSpec's
         // BlibBuild (BuildParser.insertSpectrumFilename resolves every name it
-        // is given to a full path). On a from-scores run the acquisition itself
-        // is not among the inputs, so the path is synthesized beside the parquet
-        // - the same rule the rescore hydrate uses. The golden and cross-impl
+        // is given to a full path). Every route names the acquisition on -i, so the
+        // path comes from the input itself - it does not have to EXIST for that, and
+        // on a join node it usually does not. A from-scores run used to arrive with
+        // the acquisition absent from the inputs entirely, and the path was
+        // synthesized beside the parquet. The golden and cross-impl
         // comparators key these strings by BASENAME, which is what keeps the
         // committed goldens machine-independent. SpectrumSourceFiles.idFileName
         // carries the library filename (Skyline expects this - Rust
@@ -130,9 +132,10 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyList<string> fileNames, double fdrThreshold)
         {
             string libraryIdName = Path.GetFileName(config.LibrarySource.Path);
-            var inputs = config.InputScores != null && config.InputScores.Count > 0
-                ? config.InputScores.ConvertAll(RescoreHydration.SyntheticInputFromParquet)
-                : config.InputFiles;
+            // The data files, on every route. A Stage 7 node used to be handed parquets and
+            // had to convert them back into data-file names right here, to write the
+            // SpectrumSourceFiles rows Skyline reads; it is handed the names themselves now.
+            var inputs = config.InputFiles;
             var sourcePathByName = new Dictionary<string, string>();
             if (inputs != null)
             {

@@ -1486,9 +1486,13 @@ namespace pwiz.Osprey.Tasks
                     var byEntryId = new Dictionary<uint, double>();
                     try
                     {
-                        string parquetPath =
-                            ParquetScoreCache.EffectiveScoresPathFromScoresPath(
-                                perFileParquetPaths[fileName]);
+                        // The RECONCILED parquet, derived rather than probed. This runs both
+                        // in-process - where the published map holds Stage 4 paths, because
+                        // Stage 1-4 ran here - and on a --task SecondPassFDR node, where it
+                        // already holds reconciled ones; the derivation is idempotent, so one
+                        // expression states the same intent on both routes.
+                        string parquetPath = ParquetScoreCache.ReconciledPathFromScoresPath(
+                            perFileParquetPaths[fileName]);
                         ParquetScoreCache.ReadFdrStubScalars(parquetPath,
                             (entryId, charge, isDecoy, coelutionSum, modseq) =>
                             {
@@ -2026,7 +2030,7 @@ namespace pwiz.Osprey.Tasks
                     // The parquet lookup is established by the validation loop above (every file
                     // has a parquet path or this method already returned false), and resolved
                     // HERE so a key miss cannot be reported as a parquet failure by the reader.
-                    string effectiveParquetPath = ParquetScoreCache.EffectiveScoresPathFromScoresPath(
+                    string effectiveParquetPath = ParquetScoreCache.ReconciledPathFromScoresPath(
                         perFileParquetPaths[fileKey]);
                     // currentKey/currentEntries are staged by BeginFile now, on every path.
                     // Read from the path the validation loop above checked with IsCurrentFormat,
@@ -2385,13 +2389,12 @@ namespace pwiz.Osprey.Tasks
                         kvp.Key, kvp.Value.Count));
                     continue;
                 }
-                // Read the RECONCILED parquet (Stage 6's rescored
-                // features) when it exists; fall back to the original
-                // Stage 4 parquet for files that had no reconciliation
-                // work (no reconciled sibling was written). The
-                // perFileParquetPaths map holds original paths.
+                // Read the RECONCILED parquet - Stage 6's rescored features - which it
+                // writes for every run, so this is a derivation and not a preference.
+                // The published map holds Stage 4 paths in-process and reconciled ones on
+                // a --task SecondPassFDR node; the derivation is idempotent over both.
                 string effectiveParquetPath =
-                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(parquetPath);
+                    ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
                 Dictionary<uint, double[]> featByScoreIndex;
                 try
                 {
@@ -3582,8 +3585,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     TaskValiditySidecar.Write(pass2Path, _taskName, OspreyVersion.Current,
                         _taskValidityKey,
-                        new[] { ParquetScoreCache.EffectiveScoresPathFromScoresPath(
-                            ParquetScoreCache.GetScoresPath(inputFile)) });
+                        new[] { ParquetScoreCache.GetReconciledScoresPath(inputFile) });
                 }
                 catch (Exception ex) when (!(ex is OutOfMemoryException))
                 {

@@ -24,9 +24,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.Tasks;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey
@@ -76,7 +79,7 @@ namespace pwiz.Osprey
             try
             {
                 // Scan args for the HPC task selector up front so error
-                // messages fire before --input-scores resolution. A single
+                // messages name the task before any other argument is parsed. A single
                 // `--task <Name>` runs exactly one pipeline task (HPC: one
                 // node = one task) by setting the (NoJoin, StopAfterStage5,
                 // ExpectReconciledInput) config flags the four tasks'
@@ -120,10 +123,10 @@ namespace pwiz.Osprey
                 OspreyConfig config = ParseArgs(args);
                 // --task selects one pipeline task; derive the membership flags
                 // the tasks' IsIncluded methods read. ExpectReconciledInput also
-                // arms the strict-reconciled-input gate (every --input-scores
-                // parquet must carry osprey.reconciled = "true"). Mirrors Rust's
-                // main.rs wiring. SelectedTask is kept so ValidateArgs can enforce
-                // the task<->input-type contract and name the typed task.
+                // arms the strict-reconciled-input gate (every run's reconciled
+                // parquet must carry osprey.reconciled = "true"). All three are
+                // derived from --task and from nothing else, which is what let the
+                // input KIND retire: it was the OTHER seam saying the same thing.
                 config.SelectedTask = selectedTask;
                 // --task ModelDiagnostics IS the request for the report; without the flag the
                 // run would recompute the pass-2 view and write nothing, a silent no-op.
@@ -186,56 +189,84 @@ namespace pwiz.Osprey
                     Directory.CreateDirectory(config.OutputDir);
                 if (!string.IsNullOrEmpty(config.CacheDir))
                     Directory.CreateDirectory(config.CacheDir);
-                // Runs that consume --input-scores (FirstPassFDR, PerFileRescore,
-                // SecondPassFDR, or the default full pipeline started from scores)
-                // have no mzML inputs to validate and ignore --output handling
-                // differently from per-file scoring.
-                bool fromInputScores = config.InputScores != null && config.InputScores.Count > 0;
-
                 // --task PerFileScoring ignores --output (it writes per-file
                 // .scores.parquet, not a blib), but that is expected single-task /
                 // HPC-worker behavior -- wrapper scripts routinely pass a placeholder
                 // --output -- so it is NOT warned about. The settings block below
                 // reports the real per-file parquet output for this task instead.
 
-                // Validate input files exist on disk (skip when consuming
-                // --input-scores, where there are no mzML inputs; --input-scores
-                // paths were already validated by ResolveInputScores during parsing).
-                if (!fromInputScores)
+                // Validate input files exist on disk. EVERY run reaches this now: a task
+                // that starts after Stage 4 used to be handed parquets and skipped the
+                // check entirely, and it is handed the same data-file names as every other
+                // task instead.
+                int cacheOnlyInputs = 0;
+                int artifactOnlyInputs = 0;
+                foreach (string inputFile in config.InputFiles)
                 {
-                    int cacheOnlyInputs = 0;
-                    foreach (string inputFile in config.InputFiles)
+                    // A directory counts as present. Several vendor formats ARE
+                    // directories (Agilent .d, Bruker .d, Waters .raw), so testing
+                    // File.Exists alone rejected every one of them here, before any
+                    // reader was consulted, on builds with and without the vendor
+                    // reader. It also blocked reusing a raw-derived .spectra.bin,
+                    // which must work on a build that cannot read the raw itself.
+                    if (File.Exists(inputFile) || Directory.Exists(inputFile))
+                        continue;
+                    // An absent source is fine once its cache is built: Stage 1 is
+                    // the only stage that reads a source, and SpectraCache already
+                    // treats a missing one as "trust the cache". That makes
+                    // delete-the-sources-after-caching a supported way to halve the
+                    // disk a large cohort needs.
+                    if (File.Exists(SpectraCache.GetCachePath(inputFile)))
                     {
-                        // A directory counts as present. Several vendor formats ARE
-                        // directories (Agilent .d, Bruker .d, Waters .raw), so testing
-                        // File.Exists alone rejected every one of them here, before any
-                        // reader was consulted, on builds with and without the vendor
-                        // reader. It also blocked reusing a raw-derived .spectra.bin,
-                        // which must work on a build that cannot read the raw itself.
-                        if (!File.Exists(inputFile) && !Directory.Exists(inputFile))
-                        {
-                            // An absent source is fine once its cache is built: Stage 1 is
-                            // the only stage that reads a source, and SpectraCache already
-                            // treats a missing one as "trust the cache". That makes
-                            // delete-the-sources-after-caching a supported way to halve the
-                            // disk a large cohort needs.
-                            if (File.Exists(SpectraCache.GetCachePath(inputFile)))
-                            {
-                                cacheOnlyInputs++;
-                                continue;
-                            }
-                            LogError(string.Format("Input file not found: {0}", inputFile));
-                            return 1;
-                        }
+                        cacheOnlyInputs++;
+                        continue;
                     }
-                    // Announced, not silent: a run whose sources are gone cannot rebuild a
-                    // cache that turns out to be wrong, so the log is the only provenance.
-                    if (cacheOnlyInputs > 0)
+                    // ...and so is an absent source with no cache, once its SCORES exist.
+                    // A join node is shipped parquets and sidecars and nothing else - that
+                    // is the whole point of the split - so demanding the data file back
+                    // would refuse the configuration the HPC chain is built on. This is
+                    // what --input-scores used to say by naming a different input KIND;
+                    // said here it is one input kind and one question about it.
+                    // ...and only for a task that STARTS AFTER Stage 4. A scores parquet
+                    // stands an input in because such a task never opens the data file; it
+                    // stands in for nothing at all for --task SpectraCache or PerFileScoring,
+                    // whose whole product is decoded FROM that file. Without this term a
+                    // mistyped or moved input on those tasks proceeds on a leftover parquet
+                    // and logs that the run will be read from its scores parquet, "which is
+                    // what a task after Stage 4 needs" - false for exactly the two tasks that
+                    // could reach it. The old `if (!fromInputScores)` wrapper could not reach
+                    // them structurally; nothing re-established that scoping when it went.
+                    //
+                    // EITHER parquet, named. WHICH one a task reads is that task's question
+                    // (ScoringTaskShared.ReadsReconciledScores) and this runs before dispatch:
+                    // a FirstPassFDR node is shipped <stem>.scores.parquet, a SecondPassFDR
+                    // node only <stem>.scores-reconciled.parquet.
+                    if (ScoringTaskShared.StartsAfterPerFileScoring(config) &&
+                        (File.Exists(ParquetScoreCache.GetScoresPath(inputFile)) ||
+                         File.Exists(ParquetScoreCache.GetReconciledScoresPath(inputFile))))
                     {
-                        LogInfo(string.Format(
-                            "{0} of {1} input(s) are absent but have a spectra cache; reading those from the cache.",
-                            cacheOnlyInputs, config.InputFiles.Count));
+                        artifactOnlyInputs++;
+                        continue;
                     }
+                    LogError(string.Format(
+                        "Input file not found, and it has neither a spectra cache nor a scores " +
+                        "parquet to stand in for it: {0}", inputFile));
+                    return 1;
+                }
+                // Announced, not silent: a run whose sources are gone cannot rebuild a
+                // cache that turns out to be wrong, so the log is the only provenance.
+                if (cacheOnlyInputs > 0)
+                {
+                    LogInfo(string.Format(
+                        "{0} of {1} input(s) are absent but have a spectra cache; reading those from the cache.",
+                        cacheOnlyInputs, config.InputFiles.Count));
+                }
+                if (artifactOnlyInputs > 0)
+                {
+                    LogInfo(string.Format(
+                        "{0} of {1} input(s) are absent and have no spectra cache; reading those from " +
+                        "their scores parquet, which is what a task after Stage 4 needs.",
+                        artifactOnlyInputs, config.InputFiles.Count));
                 }
                 if (config.LibrarySource != null && !File.Exists(config.LibrarySource.Path))
                 {
@@ -262,7 +293,7 @@ namespace pwiz.Osprey
                 // writes --output.)
                 if (config.SelectedTask == HpcTask.SpectraCache)
                     LogInfo("Output: per-file .spectra.bin (no scoring; --output and --library are not used)");
-                else if (config.NoJoin && !fromInputScores)
+                else if (config.NoJoin && config.SelectedTask == HpcTask.PerFileScoring)
                     LogInfo("Output: per-file .scores.parquet (next to each input file)");
                 else if (config.DiagnosticsOnly)
                 {
@@ -355,7 +386,7 @@ namespace pwiz.Osprey
                 }
 
                 // Single entry point. The rescore worker (--task
-                // PerFileRescore, with --input-scores) includes only
+                // PerFileRescoring) includes only
                 // PerFileRescoreTask (OspreyTask.IsIncluded); PerFileScoring's
                 // lazy-rehydrate (via ctx.Demand) populates the upstream state
                 // from the boundary files on disk.
@@ -518,16 +549,49 @@ namespace pwiz.Osprey
         /// <summary>
         /// Validate the parsed config against the selected
         /// <see cref="OspreyConfig.SelectedTask"/> (or the default full pipeline
-        /// when none was given). When a <c>--task</c> is selected the task is
-        /// authoritative: it dictates the input type, and the cross
-        /// (e.g. <c>--task PerFileScoring --input-scores</c>) is rejected rather
-        /// than silently dispatching the other task. Returns null on success or
-        /// an error message string on failure. Does not log warnings (those stay
-        /// in <see cref="Main"/>). Internal so Osprey.Test can exercise it.
+        /// when none was given). Every task takes the SAME input kind now - the data
+        /// files, named with <c>-i</c> or <c>--input-list</c> - so what is validated is
+        /// presence and count, not kind. The cross this used to reject
+        /// (<c>--task PerFileScoring --input-scores</c>) cannot be expressed any more,
+        /// which is the point of retiring the second seam rather than teaching a third
+        /// predicate about it. Returns null on success or an error message string on
+        /// failure. Does not log warnings (those stay in <see cref="Main"/>). Internal so
+        /// Osprey.Test can exercise it.
         /// </summary>
+        /// <summary>
+        /// An error naming every input stem that appears more than once, with the paths that
+        /// collide, or null when all stems are distinct. Ordinal comparison, matching the
+        /// per-run maps this protects.
+        /// </summary>
+        private static string DuplicateInputStemError(IReadOnlyList<string> inputFiles)
+        {
+            var byStem = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            foreach (string input in inputFiles)
+            {
+                string stem = Path.GetFileNameWithoutExtension(input) ?? string.Empty;
+                if (!byStem.TryGetValue(stem, out var paths))
+                {
+                    paths = new List<string>();
+                    byStem[stem] = paths;
+                }
+                paths.Add(input);
+            }
+            var collisions = byStem.Where(kv => kv.Value.Count > 1).ToList();
+            if (collisions.Count == 0)
+                return null;
+            var sb = new StringBuilder();
+            sb.AppendFormat(
+                "{0} input stem(s) appear more than once. Every per-run artifact is named " +
+                "<stem>.<suffix>, so runs sharing a stem cannot be told apart and would " +
+                "overwrite each other's parquets and sidecars. Rename or stage them so each " +
+                "run has a distinct file name:", collisions.Count);
+            foreach (var kv in collisions)
+                sb.AppendFormat("\n  '{0}': {1}", kv.Key, string.Join(", ", kv.Value));
+            return sb.ToString();
+        }
+
         internal static string ValidateArgs(OspreyConfig config)
         {
-            bool hasInputScores = config.InputScores != null && config.InputScores.Count > 0;
             bool hasInputFiles = config.InputFiles != null && config.InputFiles.Count > 0;
 
             // OSPREY_EXPERIMENT_AGG family, before any I/O. Checked here rather than at the
@@ -535,9 +599,30 @@ namespace pwiz.Osprey
             // large run spends reaching FirstPassFDR, and so a warm resume - which skips
             // FirstPassFdrTask.Run entirely - is still checked.
             string aggErr = OspreyEnvironment.ValidateExperimentAggSettings(
-                ExperimentAggFileCount(config, hasInputScores, hasInputFiles));
+                ExperimentAggFileCount(config, hasInputFiles));
             if (aggErr != null)
                 return aggErr;
+
+            // Every run is keyed on its input STEM - the per-file artifacts are
+            // <stem>.<suffix>, and every per-run map in the pipeline is keyed the same way -
+            // so two inputs sharing a stem are two runs the pipeline cannot tell apart. It is
+            // not exotic: --input-list makes it routine at cohort scale, where the same
+            // acquisition name recurs under different directories.
+            //
+            // Refused here rather than surviving to be discovered downstream, where it takes
+            // two shapes and neither says what happened. Without --output-dir the join appends
+            // two rows under one key while the parquet map keeps only the second, and
+            // CurrentReconciledPaths dies with "An item with the same key has already been
+            // added" mid-Stage-6/7. WITH --output-dir it is worse and silent: both stems
+            // resolve into the same directory, so the two runs share one .scores.parquet and
+            // one .scores-reconciled.parquet, each overwriting the other, with no error at all.
+            // The retired --input-scores form made stems unique by construction.
+            if (hasInputFiles)
+            {
+                string dupErr = DuplicateInputStemError(config.InputFiles);
+                if (dupErr != null)
+                    return dupErr;
+            }
 
             if (config.SelectedTask.HasValue)
             {
@@ -548,20 +633,12 @@ namespace pwiz.Osprey
                         // does NOT require --library: caching depends only on the
                         // input file, and demanding one would make staging a dataset
                         // wait on a library that is often chosen later.
-                        if (hasInputScores)
-                        {
-                            return "--task SpectraCache takes -i <file>, not --input-scores " +
-                                   "(it builds spectra caches from raw inputs, not from scores).";
-                        }
                         if (!hasInputFiles)
                             return "--task SpectraCache requires --input <file...>.";
                         return null;
 
                     case HpcTask.PerFileScoring:
                         // Stage 1-4 worker: mzML in, per-file .scores.parquet out.
-                        if (hasInputScores)
-                            return "--task PerFileScoring takes -i <mzML>, not --input-scores " +
-                                   "(did you mean --task PerFileRescoring?).";
                         if (!hasInputFiles)
                             return "--task PerFileScoring requires --input <mzML...>.";
                         if (config.LibrarySource == null)
@@ -569,32 +646,31 @@ namespace pwiz.Osprey
                         return null;
 
                     case HpcTask.PerFileRescore:
-                        // Stage 6 worker: --input-scores in, reconciled per-file out.
-                        if (hasInputFiles)
-                            return "--task PerFileRescoring takes --input-scores, not -i <mzML> " +
-                                   "(mzML paths are derived from the parquet stems).";
-                        if (!hasInputScores)
-                            return "--task PerFileRescoring requires --input-scores <path...>.";
+                        // Stage 6 worker: one run's scores in, its reconciled parquet out.
+                        // Named by its DATA file like every other task; the parquet and
+                        // sidecars are derived from the stem, and the data file itself need
+                        // not exist (Main's input check accepts a run whose scores are on
+                        // disk).
+                        if (!hasInputFiles)
+                            return "--task PerFileRescoring requires --input <file...>.";
                         if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
                             return "--task PerFileRescoring requires --library and --output.";
                         return null;
 
                     case HpcTask.FirstPassFdr:
-                        if (hasInputFiles)
-                            return "--task FirstPassFDR cannot be combined with --input. Use --input-scores instead.";
-                        if (!hasInputScores)
-                            return "--task FirstPassFDR requires --input-scores <path...>.";
+                        if (!hasInputFiles)
+                            return "--task FirstPassFDR requires --input <file...>.";
                         if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
                             return "--task FirstPassFDR requires --library and --output.";
                         // FirstPassFDR writes the Stage 5 → Stage 6 boundary file
                         // pair, only meaningful with 2+ siblings to reconcile
                         // against and reconciliation enabled. Reject early.
-                        if (config.InputScores.Count < 2)
+                        if (config.InputFiles.Count < 2)
                             return string.Format(
-                                "--task FirstPassFDR requires --input-scores with 2+ parquet files " +
-                                "(got {0}). The Stage 5 → Stage 6 boundary file pair is only meaningful for " +
+                                "--task FirstPassFDR requires --input with 2+ files " +
+                                "(got {0}). The Stage 5 -> Stage 6 boundary file pair is only meaningful for " +
                                 "multi-file fan-back-in.",
-                                config.InputScores.Count);
+                                config.InputFiles.Count);
                         if (!config.Reconciliation.Enabled)
                             return "--task FirstPassFDR requires Reconciliation.Enabled = true " +
                                    "(got false from config). The Stage 5 → Stage 6 boundary file pair is " +
@@ -602,26 +678,17 @@ namespace pwiz.Osprey
                         return null;
 
                     case HpcTask.SecondPassFdr:
-                        if (hasInputFiles)
-                            return "--task SecondPassFDR cannot be combined with --input. Use --input-scores instead.";
-                        if (!hasInputScores)
-                            return "--task SecondPassFDR requires --input-scores <path...>.";
+                        if (!hasInputFiles)
+                            return "--task SecondPassFDR requires --input <file...>.";
                         if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
                             return "--task SecondPassFDR requires --library and --output.";
                         return null;
                 }
             }
 
-            // No --task: the full pipeline, started from either -i mzML or
-            // --input-scores (PerFileScoring lazy-rehydrates the supplied scores).
-            if (hasInputScores)
-            {
-                if (hasInputFiles)
-                    return "--input-scores cannot be combined with --input. Use one or the other.";
-                if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                    return "--input-scores requires --library and --output.";
-                return null;
-            }
+            // No --task: the full pipeline. A cold run scores from Stage 1; a resume over a
+            // directory that already holds each run's artifacts skips to whichever stage is
+            // outstanding, which the per-task validity sidecars decide - not the input kind.
             if (!hasInputFiles)
                 return "No input files specified. Use -i <file1.mzML> [file2.mzML ...]";
             if (config.LibrarySource == null)
@@ -638,8 +705,7 @@ namespace pwiz.Osprey
         /// never compute an experiment-wide score, so reporting their input count would refuse
         /// every worker of a legitimate distributed mean(best-N) run.
         /// </summary>
-        private static int ExperimentAggFileCount(
-            OspreyConfig config, bool hasInputScores, bool hasInputFiles)
+        private static int ExperimentAggFileCount(OspreyConfig config, bool hasInputFiles)
         {
             switch (config.SelectedTask)
             {
@@ -648,63 +714,7 @@ namespace pwiz.Osprey
                 case HpcTask.PerFileRescore:
                     return 0;
             }
-            if (hasInputScores)
-                return config.InputScores.Count;
             return hasInputFiles ? config.InputFiles.Count : 0;
-        }
-
-        /// <summary>
-        /// Expand --input-scores arguments: a single directory becomes the
-        /// non-recursive list of *.scores.parquet files in it; explicit file
-        /// paths are passed through unchanged. Throws if the directory is
-        /// empty or any explicit path doesn't exist.
-        ///
-        /// Directory mode collects both the Stage 4 <c>*.scores.parquet</c> files
-        /// and the Stage 6 <c>*.scores-reconciled.parquet</c> siblings, then
-        /// dedupes per stem: for any stem that has both, only the reconciled file
-        /// is returned (the authoritative later pass; the <c>--task SecondPassFDR</c>
-        /// reconciled-input gate expects reconciled parquets). A stem with only an
-        /// original is returned as-is. The two suffixes are unambiguous, so this
-        /// never returns both files for one stem (see
-        /// <see cref="ParquetScoreCache.ReconciledScoresParquetSuffix"/>).
-        /// </summary>
-        internal static List<string> ResolveInputScores(List<string> paths)
-        {
-            if (paths == null || paths.Count == 0)
-                throw new ArgumentException("--input-scores requires at least one path.");
-
-            if (paths.Count == 1 && Directory.Exists(paths[0]))
-            {
-                string dir = paths[0];
-                // Glob *.parquet and classify by suffix in code rather than
-                // relying on multi-dot search-pattern matching (which differs
-                // across platforms). Keep only the two known scores suffixes.
-                var originals = new List<string>();
-                var reconciledSet = new HashSet<string>(StringComparer.Ordinal);
-                foreach (string f in Directory.GetFiles(dir, "*.parquet", SearchOption.TopDirectoryOnly))
-                {
-                    if (ParquetScoreCache.IsReconciledScoresPath(f))
-                        reconciledSet.Add(f);
-                    else if (f.EndsWith(ParquetScoreCache.ScoresParquetSuffix, StringComparison.Ordinal))
-                        originals.Add(f);
-                }
-                if (originals.Count == 0 && reconciledSet.Count == 0)
-                    throw new ArgumentException(string.Format(
-                        "No *.scores.parquet files found in --input-scores directory: {0}", dir));
-                var result = new List<string>(reconciledSet);            // reconciled: authoritative
-                foreach (string f in originals)
-                    if (!reconciledSet.Contains(ParquetScoreCache.ReconciledPathFromScoresPath(f)))
-                        result.Add(f);                                   // original with no reconciled sibling
-                result.Sort(StringComparer.Ordinal); // Array.Sort OK: unique filenames, so the comparator never ties
-                return result;
-            }
-
-            foreach (string p in paths)
-            {
-                if (!File.Exists(p))
-                    throw new ArgumentException(string.Format("--input-scores path not found: {0}", p));
-            }
-            return paths;
         }
 
         internal static void LogInfo(string message)

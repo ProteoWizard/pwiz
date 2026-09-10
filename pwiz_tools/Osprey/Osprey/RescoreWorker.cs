@@ -73,15 +73,15 @@ namespace pwiz.Osprey
     public static class RescoreWorker
     {
         /// <summary>
-        /// Run the per-file rescore worker on the boundary files
-        /// referenced by <see cref="OspreyConfig.InputScores"/>.
+        /// Run the per-file rescore worker on the boundary files beside the run named by
+        /// <see cref="OspreyConfig.InputFiles"/>.
         /// Returns 0 on success, non-zero on failure.
         /// </summary>
         public static int Run(OspreyConfig config)
         {
             // Phase C: the worker is now an alias for the canonical
             // pipeline entry. The driver runs only the included tasks
-            // (OspreyTask.IsIncluded): a NoJoin+InputScores config includes
+            // (OspreyTask.IsIncluded): a --task PerFileRescoring config includes
             // PerFileRescoreTask, while PerFileScoringTask's probe-the-disk
             // joinOnly Rehydrate (reached via ctx.Demand) hydrates the upstream
             // state (stubs, 1st-pass overlay, reconciliation actions, refined

@@ -328,21 +328,14 @@ namespace pwiz.Osprey.Core
         /// Pipeline-membership flag (read by each task's <c>IsIncluded</c>):
         /// include only the per-file fan-out, not the joining tasks. Set by both
         /// <c>--task PerFileScoring</c> and <c>--task PerFileRescoring</c>; the
-        /// concrete behavior depends on the input type. With <c>-i</c> mzML it
-        /// is the Stage 1-4 worker — each input produces a
-        /// <c>{stem}.scores.parquet</c> next to it, no FDR, no blib. With
-        /// <see cref="InputScores"/> it is the Stage 6 rescore worker. The two
-        /// are told apart by input type (see <see cref="SelectedTask"/>).
+        /// concrete behavior depends on which of the two selected it.
+        /// <c>PerFileScoring</c> is the Stage 1-4 worker - each input produces a
+        /// <c>{stem}.scores.parquet</c> next to it, no FDR, no blib;
+        /// <c>PerFileRescoring</c> is the Stage 6 rescore worker. The two are told apart
+        /// by <see cref="SelectedTask"/>, which is the only thing that ever decided it -
+        /// they used to be told apart by input KIND as well, and that second seam is gone.
         /// </summary>
         public bool NoJoin { get; set; }
-
-        /// <summary>
-        /// HPC scoring split: when set (non-null, non-empty), skip Stages 1-4
-        /// entirely and load these per-file scoring caches as the starting
-        /// point for Stage 5+. Set by <c>--input-scores</c>. When set,
-        /// <see cref="InputFiles"/> is ignored.
-        /// </summary>
-        public List<string> InputScores { get; set; }
 
         /// <summary>
         /// HPC: when true, exit after Stage 5 + reconciliation planning,
@@ -371,10 +364,10 @@ namespace pwiz.Osprey.Core
         /// membership flags above (<see cref="NoJoin"/>,
         /// <see cref="StopAfterStage5"/>, <see cref="ExpectReconciledInput"/>)
         /// are derived from this and drive each task's <c>IsIncluded</c>; this
-        /// property additionally lets argument validation enforce the
-        /// task&#8596;input-type contract (e.g. PerFileScoring takes mzML,
-        /// PerFileRescore takes <see cref="InputScores"/>) and name the task the
-        /// user actually typed in error messages.
+        /// property additionally lets argument validation name the task the user actually
+        /// typed in error messages. It no longer has an input-KIND contract to enforce:
+        /// every task takes the same data files, and the second seam that said "you handed
+        /// me parquets, so Stage 1-4 is done" has retired into these flags.
         /// </summary>
         public HpcTask? SelectedTask { get; set; }
 
