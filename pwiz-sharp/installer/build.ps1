@@ -50,9 +50,11 @@ $installerDir = $PSScriptRoot
 $pwizSharp       = $PwizSharpRoot
 $msconvertGui    = Join-Path $pwizSharp "Tools/MsConvertGUI/src/MsConvertGUI.csproj"
 $seems           = Join-Path $pwizSharp "Tools/SeeMS/src/SeeMS.csproj"
+$msdiff          = Join-Path $pwizSharp "Tools/Commandline/MsDiff/src/MsDiff.csproj"
 $msconvertGuiOut = Join-Path $pwizSharp "Tools/MsConvertGUI/src/bin/Release/net10.0-windows"
 $seemsOut        = Join-Path $pwizSharp "Tools/SeeMS/src/bin/Release/net10.0-windows"
 $msconvertOut    = Join-Path $pwizSharp "Tools/Commandline/MsConvert/src/bin/Release/net10.0"
+$msdiffOut       = Join-Path $pwizSharp "Tools/Commandline/MsDiff/src/bin/Release/net10.0"
 $outDir         = Join-Path $installerDir "build"
 $stagingDir     = Join-Path $outDir "stage"
 $cacheDir       = Join-Path $installerDir "cache"
@@ -87,6 +89,10 @@ if (-not $SkipBuild) {
     if ($LASTEXITCODE -ne 0) { throw "MSConvertGUI build failed (exit $LASTEXITCODE)" }
     dotnet build $seems        -c Release "-p:IAgreeToVendorLicenses=true" --nologo
     if ($LASTEXITCODE -ne 0) { throw "SeeMS build failed (exit $LASTEXITCODE)" }
+    # Built on its own: msdiff is not in MSConvertGUI's or SeeMS's reference chain, so nothing
+    # above produces it.
+    dotnet build $msdiff       -c Release "-p:IAgreeToVendorLicenses=true" --nologo
+    if ($LASTEXITCODE -ne 0) { throw "MsDiff build failed (exit $LASTEXITCODE)" }
 }
 
 foreach ($exe in @("MSConvertGUI-sharp.exe", "msconvert.exe", "7za.exe")) {
@@ -96,6 +102,9 @@ foreach ($exe in @("MSConvertGUI-sharp.exe", "msconvert.exe", "7za.exe")) {
 }
 if (-not (Test-Path (Join-Path $seemsOut "seems-sharp.exe"))) {
     throw "expected seems-sharp.exe in $seemsOut but it's missing — did the SeeMS build succeed?"
+}
+if (-not (Test-Path (Join-Path $msdiffOut "msdiff.exe"))) {
+    throw "expected msdiff.exe in $msdiffOut but it's missing — did the MsDiff build succeed?"
 }
 
 # 3. Stage a filtered copy of the build output. We walk MSConvertGUI's bin
@@ -121,7 +130,7 @@ function Should-Skip([string] $relName) {
     # anyway. Extension-less entries are listed by name rather than skipped as a class,
     # because a data file without an extension would otherwise be dropped silently.
     if ($relName -match '\.(so|dylib|a)(\.\d+)*$') { return $true }
-    if ((Split-Path -Leaf $relName) -in @('7zz', 'msconvert')) { return $true }
+    if ((Split-Path -Leaf $relName) -in @('7zz', 'msconvert', 'msdiff')) { return $true }
     if ($relName -match '^(cs|de|es|fr|it|ja|ko|pl|pt-BR|ru|tr|zh-Hans|zh-Hant)[\\/]') { return $true }
     # Bruker's CompassXtract runtime (YEP / FID) is fetched to the vendor cache and then copied
     # next to the executable on first use, so a developer bin that has converted a YEP holds ~25 MB
@@ -171,6 +180,12 @@ Stage-From $seemsOut -DestRoot $DestRoot
 # everything already staged above. Recursing it added 706 files / 238 MB and pushed the
 # installer from 68 MB to 113 MB for five assemblies that all sit in the root.
 Stage-From $msconvertOut -TopLevelOnly -DestRoot $DestRoot
+
+# msdiff, likewise top-level only. Everything it needs is already staged by the three passes
+# above, so in practice this contributes msdiff.exe and its two json sidecars - but it is the
+# validation tool the container's vendor sweep shells out to, and an image without it reports
+# every conversion as failed while the conversions themselves were fine.
+Stage-From $msdiffOut -TopLevelOnly -DestRoot $DestRoot
 
 # ...plus msconvert's wiff2/ subdirectory, which MSConvertGUI's bin also lacks. Wiff2LoadContext
 # loads its Cecil-patched Unity.Abstractions and the SDK-matched System.Data.SQLite 1.0.109 from

@@ -28,7 +28,39 @@ public static class MSDataDiff
     /// Returns an empty string when <paramref name="a"/> and <paramref name="b"/> are logically
     /// equal under <paramref name="config"/>; otherwise a multi-line report of differences.
     /// </summary>
-    public static string Describe(MSData a, MSData b, DiffConfig? config = null)
+    public static string Describe(MSData a, MSData b, DiffConfig? config = null) =>
+        Compare(a, b, config).Report;
+
+    /// <summary>
+    /// Outcome of comparing two <see cref="MSData"/> documents: the same report
+    /// <see cref="Describe(MSData, MSData, DiffConfig?)"/> returns, plus how many spectra and
+    /// chromatograms it was spread across.
+    /// </summary>
+    /// <param name="Report">Empty when the two are logically equal under the config.</param>
+    /// <param name="SpectraDiffering">Spectra with at least one difference.</param>
+    /// <param name="ChromatogramsDiffering">Chromatograms with at least one difference.</param>
+    /// <remarks>
+    /// The counts exist so a caller does not have to parse locator paths back out of the
+    /// report to learn how much of the data differed - the distinction msdiff reports as
+    /// "spectrumList (N spectra)". When the two lists are of unequal length nothing is paired
+    /// up, and the count becomes the longer of the two rather than 0, so that a caller reading
+    /// it as "how much data differs" cannot mistake a length mismatch for equality.
+    ///
+    /// Both counts are a floor rather than an exact tally: the walk stops once the report hits
+    /// <see cref="DiffConfig.MaxDifferencesToReport"/>, so a file differing in every one of
+    /// 100 spectra reports 50. What they guarantee is the direction that matters - non-zero
+    /// whenever anything differed.
+    /// </remarks>
+    public sealed record Result(string Report, int SpectraDiffering, int ChromatogramsDiffering)
+    {
+        /// <summary>True when any difference was found.</summary>
+        public bool Differs => Report.Length > 0;
+    }
+
+    /// <summary>
+    /// Compares two documents, returning the report together with per-list difference counts.
+    /// </summary>
+    public static Result Compare(MSData a, MSData b, DiffConfig? config = null)
     {
         ArgumentNullException.ThrowIfNull(a);
         ArgumentNullException.ThrowIfNull(b);
@@ -37,7 +69,7 @@ public static class MSDataDiff
 
         DiffRoot(a, b, ctx);
 
-        return ctx.Format();
+        return new Result(ctx.Format(), ctx.SpectraDiffering, ctx.ChromatogramsDiffering);
     }
 
     /// <summary>
@@ -347,6 +379,11 @@ public static class MSDataDiff
         if (ca != cb)
         {
             ctx.Report($"spectrum count: {ca} vs {cb}");
+            // Every entry is implicated, because nothing was paired up. Reporting 0 here would
+            // be actively dangerous: a caller that reads the count as "how much data differs"
+            // would see 0 for two files with wildly different spectrum counts and call them
+            // equal.
+            ctx.SpectraDiffering = Math.Max(ca, cb);
             return; // don't compare spectra when lengths differ
         }
 
@@ -356,7 +393,9 @@ public static class MSDataDiff
             using var __ = ctx.Push("spectrum[" + i + "]");
             var sa = a.GetSpectrum(i, getBinaryData: true);
             var sb = b.GetSpectrum(i, getBinaryData: true);
+            int before = ctx.DiffCount;
             DiffSpectrum(sa, sb, ctx);
+            if (ctx.DiffCount > before) ctx.SpectraDiffering++;
         }
     }
 
@@ -369,6 +408,7 @@ public static class MSDataDiff
         if (ca != cb)
         {
             ctx.Report($"chromatogram count: {ca} vs {cb}");
+            ctx.ChromatogramsDiffering = Math.Max(ca, cb); // see the note in DiffSpectrumList
             return;
         }
         if (a is null || b is null) return;
@@ -377,7 +417,9 @@ public static class MSDataDiff
             using var __ = ctx.Push("chromatogram[" + i + "]");
             var ca2 = a.GetChromatogram(i, getBinaryData: true);
             var cb2 = b.GetChromatogram(i, getBinaryData: true);
+            int before = ctx.DiffCount;
             DiffChromatogram(ca2, cb2, ctx);
+            if (ctx.DiffCount > before) ctx.ChromatogramsDiffering++;
         }
     }
 
@@ -947,6 +989,15 @@ public static class MSDataDiff
         public string? RunDefaultIcB { get; set; }
 
         public bool Saturated => _diffs.Count >= Config.MaxDifferencesToReport;
+
+        /// <summary>Differences recorded so far; used to attribute them to a list entry.</summary>
+        public int DiffCount => _diffs.Count;
+
+        /// <summary>Spectra that differ, counted as the pass walks the list.</summary>
+        public int SpectraDiffering { get; set; }
+
+        /// <summary>Chromatograms that differ, counted as the pass walks the list.</summary>
+        public int ChromatogramsDiffering { get; set; }
 
         public Context(DiffConfig config) { Config = config; }
 
