@@ -570,11 +570,31 @@ function Test-RunDirLive([string]$Name) {
     # to hold that id. Three groups means PID-stamped; two means legacy, i.e. an
     # orphan from before this naming and safe to prune.
     if ($Name -notmatch '^regression-\d{8}_\d{6}_(\d+)$') { return $false }
-    $p = Get-Process -Id ([int]$Matches[1]) -ErrorAction SilentlyContinue
-    # Check the process NAME too, because PIDs are reused. Leaving one orphan behind
-    # for the next run to collect is a far cheaper mistake than deleting the scratch
-    # of a gate that is still running.
-    return ($null -ne $p -and $p.ProcessName -eq 'pwsh')
+    $processId = [int]$Matches[1]
+    $p = Get-Process -Id $processId -ErrorAction SilentlyContinue
+    if ($null -eq $p) { return $false }   # the pid is gone: a genuine orphan
+    # Check the IMAGE too, because PIDs are reused. Leaving one orphan behind for the
+    # next run to collect is a far cheaper mistake than deleting the scratch of a gate
+    # that is still running, so everything below fails toward "live".
+    #
+    # Win32_Process.Name, NOT Get-Process().ProcessName. ProcessName reads the running
+    # image's on-disk name, so REPLACING pwsh.exe underneath a live process changes what
+    # it reports: after a PowerShell update this box returned '5cc84f5d.rbf' (a Windows
+    # Installer rollback file) for four live pwsh.exe processes while two others still
+    # said 'pwsh'. Against the old `-eq 'pwsh'` test those four read as dead, and on
+    # 2026-09-10 that deleted the Astral lane's run root out from under it mid-mode-3:
+    # Remove-Item -Recurse had already destroyed chain\logs before it reached a locked
+    # file, so the prune "failed" with a warning and wrecked the run anyway.
+    #
+    # Any failure to identify the image is treated as LIVE. An unprunable orphan costs
+    # disk until the next run; a wrongly-pruned live gate costs the run.
+    try {
+        $ci = Get-CimInstance Win32_Process -Filter "ProcessId=$processId" -ErrorAction Stop
+        if ($null -eq $ci) { return $true }
+        return ($ci.Name -eq 'pwsh.exe')
+    } catch {
+        return $true
+    }
 }
 
 function Remove-StaleRunDirs([string]$TestResultsDir, [int]$Keep) {
