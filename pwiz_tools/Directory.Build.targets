@@ -31,4 +31,41 @@
       <Visible>false</Visible>
     </Content>
   </ItemGroup>
+
+  <!-- Project references that point OUTSIDE the solution being built (the pwiz-sharp
+       projects, SkylineProcessRunner) have no entry in the solution configuration, so
+       MSBuild's AssignProjectConfiguration leaves them unassigned and - because
+       ShouldUnsetParentConfigurationAndPlatform defaults to true inside Visual Studio and
+       in solution builds - strips Configuration and Platform from the reference. The
+       referenced project then answers with ITS OWN defaults: Debug, AnyCPU. A Release
+       build of Skyline.sln therefore resolves pwiz-sharp\...\bin\Debug\net10.0\*.dll:
+       it fails with CS0006 when no Debug build of pwiz-sharp exists, and silently links
+       the Debug binaries when one does (observed 2026-09-02: a VS Release build put the
+       267,776-byte Debug Pwiz.Data.MsData.dll next to Skyline-daily.exe while the
+       248,320-byte Release one sat unused). Give unassigned references the solution's
+       Configuration and AnyCPU - the platform build.bat builds pwiz-sharp with - so the
+       IDE uses the Debug or Release ProteoWizard binaries matching the configuration
+       chosen in the IDE.
+
+       The stripping repeats at every level: BlibBuild's reference to BiblioSpec, or
+       Thermo's to Vendor.Common, is just as absent from Skyline.sln, and pwiz-sharp does
+       not import this file. Fixing only the first level built BlibBuild as Release on top
+       of a Debug BiblioSpec, so msparserD.dll and the Debug MascotShim.dll landed in
+       BlibBuild's Release output and Skyline's msparser.dll copy failed (MSB3030). So
+       ShouldUnsetParentConfigurationAndPlatform=false rides along in SetPlatform: the
+       reference is invoked with that string as global properties, and global properties
+       flow down to the referenced project's own references, so the whole out-of-solution
+       subtree inherits Configuration and Platform the way a build.bat csproj build does.
+       Command-line csproj builds carry no solution configuration and are untouched. -->
+  <Target Name="AssignOutOfSolutionProjectReferenceConfiguration"
+          AfterTargets="AssignProjectConfiguration"
+          Condition="'$(CurrentSolutionConfigurationContents)' != ''">
+    <ItemGroup>
+      <ProjectReferenceWithConfiguration Condition="'%(ProjectReferenceWithConfiguration.SetConfiguration)' == ''">
+        <SetConfiguration>Configuration=$(Configuration)</SetConfiguration>
+        <SetPlatform>Platform=AnyCPU;ShouldUnsetParentConfigurationAndPlatform=false</SetPlatform>
+        <GlobalPropertiesToRemove />
+      </ProjectReferenceWithConfiguration>
+    </ItemGroup>
+  </Target>
 </Project>

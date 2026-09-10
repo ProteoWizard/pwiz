@@ -33,6 +33,14 @@ h1 .sub{color:var(--muted);font-weight:450;font-size:13px}
 .meta{color:var(--muted);font-size:12px;text-align:right;line-height:1.65}
 .meta b{color:var(--ink);font-weight:600}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 16px}
+/* Incompleteness banner. Deliberately loud and above the tabs: an absent pass-2
+   section is otherwise indistinguishable from a complete report of a run that
+   found nothing in pass 2. */
+.banner{display:none;margin:0 0 16px;padding:10px 14px;border-radius:8px;font-size:13px;
+  background:var(--panel);box-shadow:var(--shadow);
+  border:1px solid var(--line);border-left:4px solid var(--warn)}
+.banner b{font-weight:650}
+.banner .btitle{color:var(--warn);font-weight:650;margin-right:6px}
 .chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;
   padding:5px 12px;font-size:12px;box-shadow:var(--shadow)}
 .chip b{font-weight:650}
@@ -209,6 +217,7 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
   </div>
 </header>
 <div class="chips" id="chips"></div>
+<div class="banner" id="banner"></div>
 <div class="navbar">
   <nav id="nav"></nav>
   <div class="passsel" id="passSel"></div>
@@ -602,6 +611,17 @@ document.getElementById("hSub").textContent = D.outputName? "· "+D.outputName :
   l2.appendChild(t("Osprey ")); H(l2,"b",{},D.ospreyVersion||""); l2.appendChild(t(" · "+(D.generatedUtc||"")));
 })();
 function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+// ---------- incompleteness banner ----------
+// Says what the page represents when it does not represent everything. Built from
+// DOM nodes rather than innerHTML so the reason string is never reinterpreted as HTML.
+(function(){const C=D.completeness; if(!C||!C.reason) return;
+  const b=document.getElementById("banner"),t=s=>document.createTextNode(s);
+  H(b,"span",{class:"btitle"},C.pass2Present?"Partial analysis":"First-pass results only");
+  // The reason already carries what to do about it, and it differs by case - an unfinished
+  // analysis and a finished one with no pass-2 product need different advice.
+  b.appendChild(t(C.reason+"."));
+  b.style.display="block";
+})();
 (function(){const c=document.getElementById("chips");
   const rows=[["tgt","targets",D.nTarget],["dec","decoys",D.nDecoy]];
   if(D.hasEntrapment){rows.push(["pt","entrapment",D.npTarget]);rows.push(["pd","p-decoys",D.npDecoy]);}

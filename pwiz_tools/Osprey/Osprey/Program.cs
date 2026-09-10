@@ -303,12 +303,15 @@ namespace pwiz.Osprey
                 if (OspreyEnvironment.Pass2QValueUnrecognized)
                 {
                     LogError(string.Format(
-                        "OSPREY_PASS2_QVALUE is not a recognized mode. Recognized: '{0}', '{1}', " +
-                        "'{2}'. Unset it for the default ('{2}'). The 'percolator' mode was " +
-                        "REMOVED: it retrained the 2nd-pass SVM on a compaction-depleted decoy " +
-                        "pool, which reports anti-conservative q-values.",
+                        "OSPREY_PASS2_QVALUE is not a recognized mode. Recognized: '{0}', '{1}'. " +
+                        "Unset it for the default ('{1}'). 'percolator' was REMOVED: it retrained " +
+                        "the 2nd-pass SVM on a compaction-depleted decoy pool, which reports " +
+                        "anti-conservative q-values. 'transfer-compete' was REMOVED for a related " +
+                        "reason: it selected survivors by TARGET per-run q and admitted decoys only " +
+                        "by pairing, stripping decoys that won the 1st-pass competition, so its q " +
+                        "improved with no added evidence - 1.96% true FDP at a nominal 1% on 82-file " +
+                        "SEA-AD, against 1.53% for the default, and with FEWER ids.",
                         OspreyEnvironment.PASS2_QVALUE_TRANSFER,
-                        OspreyEnvironment.PASS2_QVALUE_TRANSFER_COMPETE,
                         OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
                     return 1;
                 }
@@ -341,6 +344,16 @@ namespace pwiz.Osprey
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
                 LogInfo("");
 
+                // --task ModelDiagnostics is a RENDER over completed analysis state, not a run.
+                // Settled before the pipeline is built, because the whole point is that most
+                // invocations never build one.
+                if (config.DiagnosticsOnly)
+                {
+                    int diagnosticsExit = RunModelDiagnosticsTask(config);
+                    if (diagnosticsExit >= 0)
+                        return diagnosticsExit;
+                }
+
                 // Single entry point. The rescore worker (--task
                 // PerFileRescore, with --input-scores) includes only
                 // PerFileRescoreTask (OspreyTask.IsIncluded); PerFileScoring's
@@ -363,6 +376,55 @@ namespace pwiz.Osprey
                     _out.Dispose();
                 }
             }
+        }
+
+        /// <summary>
+        /// <c>--task ModelDiagnostics</c>: produce the report from COMPLETED analysis state and
+        /// never re-run the analysis. Returns the process exit code when the task is finished,
+        /// or -1 to fall through to the pipeline when a diagnostics product still has to be
+        /// folded.
+        ///
+        /// <para>The three states are the developer's contract. No first-pass state is an ERROR
+        /// rather than a partial page; every product present is a re-render, in seconds; and a
+        /// missing product is FOLDED by the pass that owns it. It used to REFUSE that third
+        /// case and name the command the operator should run instead, which made the report an
+        /// output only its producing phase could make - the thing P16 forbids.</para>
+        ///
+        /// <para>Falling through is not the old behavior returning. The task used to reach
+        /// <see cref="AnalysisPipeline"/> and execute Stages 1-7 with every write suppressed by
+        /// <see cref="OspreyConfig.DiagnosticsOnly"/>; suppressing the WRITES does not suppress
+        /// the WORK, so asking a 446-run analysis to describe itself cost as much as running it
+        /// and met the same memory wall. What changed is the other end: both FDR tasks now
+        /// recognise "the diagnostics product is my only outstanding output" and fold it from
+        /// their own completed artifacts, so the pipeline this falls into runs two bounded
+        /// folds and skips everything else on its validity stamps. That is P15's ordinary
+        /// resume applied to the diagnostics outputs, which is what P16 says this should have
+        /// been all along - not a special mode, and not a special task.</para>
+        /// </summary>
+        private static int RunModelDiagnosticsTask(OspreyConfig config)
+        {
+            // Nothing to describe. An ERROR rather than an empty page, and the doc-00 precedent
+            // for a missing relay input: fail with the reason, do not continue into a wrong
+            // answer that looks like a right one.
+            if (!ModelDiagnosticsReport.HasCompletedFirstPass(config))
+            {
+                LogError("--task ModelDiagnostics: no completed first-pass FDR state to " +
+                         "describe (no analysis-wide 1st-pass experiment sidecar beside the " +
+                         "output). Run the analysis at least as far as FirstPassFDR first.");
+                return 1;
+            }
+            // Everything this analysis can have is on disk: a pure render, seconds, no pipeline.
+            if (ModelDiagnosticsReport.AllProductsCurrent(config))
+                return ModelDiagnosticsReport.TryRenderFromProducts(config, LogInfo) ? 0 : 1;
+
+            // A product is outstanding. Say so before the pipeline banner, because the next
+            // thing the log shows is task machinery and an operator needs to know it is a fold
+            // rather than the re-analysis this task used to refuse to start.
+            LogInfo("--task ModelDiagnostics: a diagnostics product is missing for this " +
+                    "analysis; folding it from the completed artifacts. No analysis is re-run - " +
+                    "each pass produces its own report from its own sidecars, and every other " +
+                    "output is left as it stands.");
+            return -1;
         }
 
         /// <summary>

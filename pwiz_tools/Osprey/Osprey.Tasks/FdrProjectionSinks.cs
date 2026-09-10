@@ -182,6 +182,7 @@ namespace pwiz.Osprey.Tasks
         private readonly Func<string, IReadOnlyList<FdrScoreRecord>, int> _flushPartial;
         private readonly FdrExperimentAccumulator _experiment;
         private readonly bool[] _flushed;
+        private readonly bool[] _writtenElsewhere;
         private readonly List<FdrScoreRecord> _buffer;
         private int _partialWriteFailures;
 
@@ -195,7 +196,26 @@ namespace pwiz.Osprey.Tasks
             _flushPartial = flushPartial;
             _experiment = experiment;
             _flushed = new bool[projections.PerFile.Count];
+            _writtenElsewhere = new bool[projections.PerFile.Count];
             _buffer = new List<FdrScoreRecord>();
+        }
+
+        /// <summary>
+        /// Record that this file's <c>.1st-pass.fdr_scores.bin</c> is already on disk, so this
+        /// sink neither buffers its records nor writes it. Two callers, one meaning:
+        /// pass 1 as it flushes each file it scored, and the resume gate for a file adopted
+        /// from an earlier run.
+        ///
+        /// <para>Not an optimization - a correctness requirement. These sidecars are write-once
+        /// (<c>FdrScoresSidecar</c> fails hard on a second write in one run), because a file
+        /// rewritten after it was stamped no longer matches the validity marker attesting it.
+        /// The rows still flow through <see cref="AcceptOutput"/>, which is what keeps the
+        /// experiment accumulator, the [COUNT] tally and the diagnostics report covering every
+        /// row whether its score was computed here or read back.</para>
+        /// </summary>
+        public void MarkSidecarWritten(int fileIdx)
+        {
+            _writtenElsewhere[fileIdx] = true;
         }
 
         /// <summary>
@@ -211,10 +231,16 @@ namespace pwiz.Osprey.Tasks
         {
             // Buffer this row's RUN-scope record in projection order and flush the per-file
             // .1st-pass.fdr_scores.bin at the file's last row. Every column of it is final
-            // here, so the file is written once and never revisited.
-            _buffer.Add(new FdrScoreRecord(
-                entryId, score,
-                q.RunPrecursorQvalue, q.RunPeptideQvalue));
+            // here, so the file is written once and never revisited. Skipped entirely for a
+            // file whose sidecar is already on disk - written by pass 1 or by an earlier run -
+            // which is the streaming path's normal case; the resident path still writes here.
+            bool ownsWrite = !_writtenElsewhere[fileIdx];
+            if (ownsWrite)
+            {
+                _buffer.Add(new FdrScoreRecord(
+                    entryId, score,
+                    q.RunPrecursorQvalue, q.RunPeptideQvalue));
+            }
 
             // The EXPERIMENT-scope values collapse to one record per distinct entry_id. The
             // protein q is the one that is not known yet - it needs the pooled parsimony +
@@ -231,7 +257,8 @@ namespace pwiz.Osprey.Tasks
             // S3 Stage B), so the last-row flush must key on the count, not an empty row list.
             if (rowIdx == Projections.RowCount(fileIdx) - 1)
             {
-                _partialWriteFailures += _flushPartial(Projections.PerFile[fileIdx].Key, _buffer);
+                if (ownsWrite)
+                    _partialWriteFailures += _flushPartial(Projections.PerFile[fileIdx].Key, _buffer);
                 _flushed[fileIdx] = true;
                 _buffer.Clear();
             }
@@ -247,20 +274,26 @@ namespace pwiz.Osprey.Tasks
             var empty = Array.Empty<FdrScoreRecord>();
             for (int f = 0; f < perFile.Count; f++)
             {
-                if (!_flushed[f])
-                {
-                    // A file with recorded rows that never reached its last-row flush means the
-                    // 1st-pass streaming score pass emitted fewer rows than the counts-only producer
-                    // recorded (the two independent parquet reads disagreed). Writing a 0-record
-                    // sidecar here would silently corrupt .1st-pass.fdr_scores.bin, so fail loud.
-                    if (Projections.RowCount(f) > 0)
-                        throw new InvalidOperationException(string.Format(
-                            @"First-pass sidecar flush for '{0}' never fired: {1} rows were recorded but " +
-                            @"the score pass emitted fewer -- the parquet row count is inconsistent.",
-                            perFile[f].Key, Projections.RowCount(f)));
-                    _partialWriteFailures += _flushPartial(perFile[f].Key, empty);
-                    _flushed[f] = true;
-                }
+                if (_flushed[f])
+                    continue;
+                // A file with recorded rows that never reached its last-row flush means the
+                // 1st-pass streaming score pass emitted fewer rows than the counts-only producer
+                // recorded (the two independent parquet reads disagreed). Writing a 0-record
+                // sidecar here would silently corrupt .1st-pass.fdr_scores.bin, so fail loud.
+                // Checked whoever owns the write: an emitted-row shortfall is a corrupt sidecar
+                // either way, and the row walk that detects it runs on every path.
+                if (Projections.RowCount(f) > 0)
+                    throw new InvalidOperationException(string.Format(
+                        @"First-pass sidecar flush for '{0}' never fired: {1} rows were recorded but " +
+                        @"the score pass emitted fewer -- the parquet row count is inconsistent.",
+                        perFile[f].Key, Projections.RowCount(f)));
+                // A 0-row file produces no Accept call at all, so pass 1 is the only thing that
+                // could have written its empty sidecar. Where it did, writing again would be the
+                // forbidden second write.
+                if (_writtenElsewhere[f])
+                    continue;
+                _partialWriteFailures += _flushPartial(perFile[f].Key, empty);
+                _flushed[f] = true;
             }
         }
     }
