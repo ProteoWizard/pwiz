@@ -15,6 +15,8 @@ setlocal EnableDelayedExpansion
 REM # Accept the same two normalized flags Skyline's build.bat takes, so the
 REM # top-level b.bat can route to either app without translating per-app:
 REM #   --no-tests                        -> -NoTests
+REM #   --build-only                      -> -NoTests (Osprey has no staging step,
+REM #                                        so the two mean the same thing here)
 REM #   --i-agree-to-the-vendor-licenses  -> see the warning below
 REM # Anything else is passed through to build.ps1 untouched.
 REM # Capture this before the loop: `shift` shifts %0 as well, so %~dp0 afterwards
@@ -24,6 +26,8 @@ set PSARGS=
 :parseargs
 if "%~1"=="" goto endparse
 if /i "%~1"=="--no-tests" (
+    set PSARGS=!PSARGS! -NoTests
+) else if /i "%~1"=="--build-only" (
     set PSARGS=!PSARGS! -NoTests
 ) else if /i "%~1"=="--i-agree-to-the-vendor-licenses" (
     REM # Deliberately a no-op ON THIS BRANCH, and it says so rather than pretending.

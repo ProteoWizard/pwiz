@@ -969,12 +969,12 @@ namespace SkylineTester
         /// <summary>
         /// Where a nightly run's tests live: the staged directory inside the checkout the nightly
         /// just cloned and built.
-        /// <para>Named whether or not it exists yet, which is the point of it. The nightly builds
-        /// with --no-tests, and that path in build.bat returns before the staging step, so nothing
-        /// is staged in that checkout when the test step is queued; <see cref="AddTestRunner"/>
-        /// stages it first, exactly as it does for a developer after a clean build. Requiring the
-        /// directory to exist here would leave the slot null forever, which is what left a nightly
-        /// building successfully and then running no tests at all.</para>
+        /// <para>Named whether or not it exists yet, which is the point of it. This slot is read
+        /// when the test step is QUEUED, and that happens before the build has run, so requiring
+        /// the directory to exist would leave the slot null forever - which is what left a nightly
+        /// building successfully and then running no tests at all. By the time it is used it does
+        /// exist, twice over: the nightly build stages into exactly this directory (--no-tests
+        /// skips only the test RUN), and <see cref="AddTestRunner"/> re-stages before running.</para>
         /// <para>Derived from the nightly build root rather than from <see cref="SkylineDirectory"/>
         /// like the developer slots, because a nightly runs this program from the unzipped distro,
         /// which is outside any checkout - SkylineDirectory() is null there. It must NOT fall back
@@ -989,15 +989,41 @@ namespace SkylineTester
         }
 
         /// <summary>
-        /// The configuration this program was built as, taken from its own location
-        /// (...\SkylineTester\bin\&lt;Config&gt;\&lt;tfm&gt;) rather than from conditional compilation,
-        /// so one rule covers however it was built. Defaults to Debug when the layout is not
-        /// recognized, which is the configuration a developer iterating in the IDE is running.
+        /// The configuration this program is running as, taken from its own location rather than
+        /// from conditional compilation, so one rule covers however it was built.
+        /// <para>The configuration sits at a different depth in each of the three layouts this
+        /// program runs from: a build output nests the target framework under it
+        /// (...\bin\[x64\]&lt;Config&gt;\&lt;tfm&gt;), the staged directory simply IS it
+        /// (...\bin\staging*\&lt;Config&gt;), and the unzipped nightly distro does not contain it at
+        /// all, being outside any checkout.</para>
+        /// <para>Reading only the parent folder answered "Debug" for the last two. That is how a
+        /// nightly which had just built Release came to report "Build the solution in Debug", and
+        /// how a Release staged run described itself as Debug. A nightly never builds anything but
+        /// <see cref="TabBuild.BUILD_CONFIGURATION"/>, so that is the answer when this is running
+        /// outside a checkout; Debug remains the fallback for an unrecognized developer layout,
+        /// which is what someone iterating in the IDE is running.</para>
         /// </summary>
         private string PreferredConfiguration()
         {
-            var config = Path.GetFileName(Path.GetDirectoryName(ExeDir) ?? string.Empty);
-            return Equals(config, "Release") ? "Release" : "Debug";
+            var config = AsConfigurationName(Path.GetFileName(ExeDir)) ??
+                         AsConfigurationName(Path.GetFileName(Path.GetDirectoryName(ExeDir) ?? string.Empty));
+            if (config != null)
+                return config;
+            return SkylineDirectory() == null ? TabBuild.BUILD_CONFIGURATION : "Debug";
+        }
+
+        /// <summary>
+        /// The canonical spelling of a build configuration folder name, or null when the name is
+        /// not one. Returns the canonical form rather than what was on disk so that callers which
+        /// compare configurations by value keep working whatever case the folder carries.
+        /// </summary>
+        private static string AsConfigurationName(string name)
+        {
+            if (string.Equals(name, "Release", StringComparison.OrdinalIgnoreCase))
+                return "Release";
+            if (string.Equals(name, "Debug", StringComparison.OrdinalIgnoreCase))
+                return "Debug";
+            return null;
         }
 #endif
 

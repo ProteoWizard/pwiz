@@ -18,6 +18,7 @@ REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
 REM #             [--require-vendor-support] [--automated] [--parallel] [--no-tests]
+REM #             [--build-only]
 REM #
 REM # Flags:
 REM #   --i-agree-to-the-vendor-licenses
@@ -31,20 +32,22 @@ REM #       a stripped, no-vendor artifact).
 REM #   --automated
 REM #       Tag InformationalVersion "(automated build)" (-p:AutomatedBuild=true).
 REM #   --no-tests
-REM #       Build only; skip staging and the whole test step. This is what the
-REM #       top-level bs.bat gives a developer: the same projects and properties
-REM #       TeamCity builds, without the hour of tests that follows.
+REM #       Build and stage, and produce any requested distro zips, but do not RUN
+REM #       the test suite. For callers that drive their own testing afterwards:
+REM #       SkylineTester's build step does this, because it then runs the tests
+REM #       itself under its own duration budget and per-test requeue logic. It
+REM #       needs the staged directory to exist, so staging is NOT skipped here.
 REM #   --parallel
 REM #       Run the tests in parallel across Docker workers (TestRunner
 REM #       parallelmode=server) instead of the default host-only sequential run.
 REM #       Needs Docker Desktop in Windows-container mode + the always_up_runner
 REM #       image. Much faster for the full functional suite. Also settable via
 REM #       SKYLINE_TEST_PARALLEL=1.
-REM #   --no-tests
-REM #       Build and stage (and produce any requested distro zips) but do not run
-REM #       the test suite. For callers that drive their own testing afterwards --
-REM #       SkylineTester's build step does this, because it then runs the tests
-REM #       itself under its own duration budget and per-test requeue logic.
+REM #   --build-only
+REM #       Compile only: skip staging, the distro zips and the whole test step.
+REM #       This is what the top-level bs.bat gives a developer - the same projects
+REM #       and properties TeamCity builds, without the staging copy or the hour of
+REM #       tests that follows. Implies --no-tests.
 REM #
 REM # Distro zips:
 REM #   Pass the artifact name as a bare argument -- SkylineTester.zip,
@@ -88,7 +91,7 @@ set REQUIRE_VENDOR=0
 set AUTOMATED=0
 set NOTESTS=0
 set SEQUENTIAL=1
-set NOTESTS=0
+set BUILDONLY=0
 set ERROR_TEXT=
 set ZIPS=
 
@@ -116,7 +119,7 @@ if /i "%~1"=="--require-vendor-support" (set REQUIRE_VENDOR=1) else ^
 if /i "%~1"=="--automated" (set AUTOMATED=1) else ^
 if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
 if /i "%~1"=="--parallel" (set SEQUENTIAL=0) else ^
-if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
+if /i "%~1"=="--build-only" (set BUILDONLY=1) else ^
 if /i "%~1"=="--coverage" (echo ##teamcity[message text='--coverage is temporarily disabled in build.bat; ignoring' status='WARNING']) else ^
 if /i "%~x1"==".zip" (set ZIPS=!ZIPS!%%3B%~1) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
@@ -129,6 +132,11 @@ if /i "%~1"=="Release" (set CONFIG=Release) else (
 shift
 goto parseargs
 :endparse
+
+REM # --build-only is the stronger of the two: it stops before staging, so it can
+REM # never reach the test step. Stating the implication keeps that true even if the
+REM # exits below are ever reordered.
+if %BUILDONLY%==1 set NOTESTS=1
 
 if %REQUIRE_VENDOR%==1 if %IAGREE%==0 (
     set EXIT=2
@@ -174,10 +182,16 @@ if %EXIT% NEQ 0 goto error
 for %%P in (%BUILD_TARGET%) do call :build_one "%%~P"
 if %EXIT% NEQ 0 goto error
 
-REM # --no-tests stops here. Note we have NOT pushd'd STAGE_DIR yet, so this needs
-REM # its own exit path rather than :tests_done, which pops it.
-if %NOTESTS%==1 (
-    echo Build succeeded; skipping tests ^(--no-tests^).
+REM # --build-only stops here, before staging and before the distro zips. Only this
+REM # flag may exit at this point: --no-tests still has to stage, because the caller
+REM # that passes it (SkylineTester) runs the staged tests itself afterwards. This
+REM # exit used to test NOTESTS, which shadowed the --no-tests exit further down and
+REM # left the nightly with no staged directory to run - and no zip when one was
+REM # asked for, since the zips are produced after staging too.
+REM # Note we have NOT pushd'd STAGE_DIR yet, so this needs its own exit path rather
+REM # than :tests_done, which pops it.
+if %BUILDONLY%==1 (
+    echo Build succeeded; skipping staging and tests ^(--build-only^).
     goto build_only_done
 )
 
@@ -231,10 +245,13 @@ if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=zip target(s) %ZIPS:~3% failed" & 
 
 :skipzips
 
-REM # --no-tests: build + stage (+ zips) only. Jumps before the STAGE_DIR pushd below so
+REM # --no-tests: build + stage (+ zips), no test run. Jumps before the STAGE_DIR pushd below so
 REM # the single popd at :tests_done still balances the pushd at the top of the script.
 REM # Also leaves any existing TestResults alone, since we are not producing new ones.
-if %NOTESTS%==1 goto tests_done
+if %NOTESTS%==1 (
+    echo Build and staging succeeded; skipping the test run ^(--no-tests^).
+    goto tests_done
+)
 
 set TC_TEST_RESULTS=%SCRIPT_DIR%\TestResults
 if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
