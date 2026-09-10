@@ -259,11 +259,10 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
-                // And the fold-versus-resident arm, on the argument its Stage 6 twin makes: the
-                // two are supposed to write byte-identical .blib and 2nd-pass sidecars, and an
-                // in-place A/B that adopted the other arm's outputs would report that identity
-                // without ever testing it.
-                + OspreyEnvironment.Stage7StreamValidityKeySuffix()
+                // The fold-versus-resident term is GONE with OSPREY_STAGE7_STREAM (2026-09-10):
+                // it distinguished two arms an operator could pick between, and only one arm
+                // remains. It was empty on the streamed default, so no existing output directory
+                // is invalidated by its removal.
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx);
         }
 
@@ -281,25 +280,12 @@ namespace pwiz.Osprey.Tasks
 
         public override bool Run(PipelineContext ctx)
         {
-            // Refuse a resident Stage-7 join that was CHOSEN over an admissible streamed one,
-            // before anything is written or any pool is pulled. The first-pass guard cannot see
-            // this pool - it stops at the compaction line - so without this the fat path was
-            // reachable with no token at all, which is the one shape the named-token ratchet is
-            // supposed to make impossible. (The paragraph sat above the marker wipe below, far
-            // from the call it describes.)
-            //
-            // The switch is tested FIRST because `couldStream` is not free: its
-            // AllReconciledParquetsCurrent term opens a footer per run, and the guard's own
-            // first line discards the answer whenever the switch is on - so on the default
-            // path that was an O(files) sweep of a network artifact directory computed only to
-            // be thrown away. Nothing else here needs it.
-            string residentError = OspreyEnvironment.Stage7Stream
-                ? null
-                : ScoringTaskShared.Stage7ResidentGuardError(
-                    ScoringTaskShared.CanStreamStage7Join(ctx.Config, stage7Stream: true),
-                    OspreyEnvironment.Stage7Stream, OspreyEnvironment.AllowUnfixedResident);
-            if (residentError != null)
-                throw new InvalidOperationException(residentError);
+            // The guard that stood here refused a resident Stage-7 join CHOSEN over an
+            // admissible streamed one. It went with OSPREY_STAGE7_STREAM (2026-09-10): with the
+            // switch gone there is no choice left to refuse, and the resident arm is reachable
+            // only where NeedsResidentPool already forces it - which the first-pass guard names
+            // and tokens. Nothing here is unguarded as a result; the question simply has no
+            // subject any more.
 
             // The pass-2 diagnostics product is the ONLY outstanding output: every
             // computational artifact this task produces is already on disk and key-current, and

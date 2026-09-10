@@ -2762,8 +2762,7 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx, FirstPassSurvivorLoader survivorLoader)
         {
             if (survivorLoader == null ||
-                !ScoringTaskShared.Stage7StreamAdmittedBeforeRescore(
-                    ctx.Config, OspreyEnvironment.Stage7Stream))
+                !ScoringTaskShared.Stage7StreamAdmittedBeforeRescore(ctx.Config))
             {
                 return null;
             }

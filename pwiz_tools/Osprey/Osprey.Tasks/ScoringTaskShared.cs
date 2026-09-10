@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -612,21 +612,10 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static bool CanStreamStage7Join(OspreyConfig config)
         {
-            return CanStreamStage7Join(config, OspreyEnvironment.Stage7Stream);
-        }
-
-        /// <summary>
-        /// Pure core of the one-argument <c>CanStreamStage7Join</c>, with the env switch
-        /// passed in. Exists so <see cref="Stage7ResidentGuardError"/> can ask the question the
-        /// operator's choice hinges on - "would this run have streamed if the switch were on?" -
-        /// which is what separates a CHOSEN resident join from one that had no alternative.
-        /// </summary>
-        internal static bool CanStreamStage7Join(OspreyConfig config, bool stage7Stream)
-        {
             // LAST, because AllReconciledParquetsCurrent is the only term that opens a file per
             // run. Every cheaper disqualifier returns first, so a run that was never going to
             // stream does not pay 446 footer reads to be told so.
-            return Stage7StreamAdmittedBeforeRescore(config, stage7Stream) &&
+            return Stage7StreamAdmittedBeforeRescore(config) &&
                    AllReconciledParquetsCurrent(config);
         }
 
@@ -648,7 +637,7 @@ namespace pwiz.Osprey.Tasks
         /// FirstPassFDR writes it before any caller of either form runs, so it is answerable on
         /// every route at every point either question is asked.</para>
         /// </summary>
-        internal static bool Stage7StreamAdmittedBeforeRescore(OspreyConfig config, bool stage7Stream)
+        internal static bool Stage7StreamAdmittedBeforeRescore(OspreyConfig config)
         {
             // FIRST, and it is a correctness term rather than an optimisation. Every other term
             // here describes the SHAPE of a Stage 7 join; none of them asks whether this process
@@ -662,8 +651,11 @@ namespace pwiz.Osprey.Tasks
             // proxy went and nothing took over the question it had been answering incidentally.
             if (!RunsStage7Join(config))
                 return false;
-            if (!stage7Stream)
-                return false;
+            // OSPREY_STAGE7_STREAM=0 was the second term and is GONE (2026-09-10). It let an
+            // operator force the resident join as an A/B oracle; that A/B is banked and the
+            // switch retired, so the streamed join is the only arm anyone can ask for. What is
+            // left below is not a choice - it is the set of configurations that already hold a
+            // resident pool for a declared reason, and they are named by token.
             if (PerFileScoringTask.NeedsResidentPool(config, OspreyEnvironment.UseFdrProjection))
                 return false;
             // --model-diagnostics WAS the fourth requirement, and is no longer one. The pass-2
@@ -730,62 +722,6 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             return true;
-        }
-
-        /// <summary>
-        /// Fail fast when the RESIDENT Stage-7 join was CHOSEN over an admissible streamed one,
-        /// unless the operator named <see cref="ResidentPaths.STAGE7_STREAM_OFF"/>. The Stage-7
-        /// sibling of <c>PerFileScoringTask.GuardResidentPool</c>, which stops at the
-        /// pre-compaction line and so never saw this pool.
-        ///
-        /// <para>Only the CHOSEN case. The question asked is "would this run have streamed with
-        /// the switch on", so a run that could not stream for any other reason - a
-        /// straight-through join, a non-protein-compact pass-2 mode, a missing retained-base_id
-        /// summary - is not refused, because there is no choice for a token to record. Those
-        /// remain disclosed rather than tokened until the streamed join is admissible for them
-        /// too; refusing them here would put a mandatory token on every ordinary run, which
-        /// grants nothing and is exactly the blanket amnesty the named-token ratchet replaced.</para>
-        ///
-        /// <para><c>streamingAvailable</c> - whether this run COULD stream the join, i.e.
-        /// the two-argument <c>CanStreamStage7Join</c> with the switch forced on - is
-        /// passed IN rather than computed here, so the guard is a pure function and its refusal
-        /// is unit-testable. Computing it internally makes every test process answer false (no
-        /// retained-base_id sidecar on disk), so the refusal branch would never be reached and
-        /// the test would pass vacuously. Its Stage-6 sibling takes the same parameter for the
-        /// same reason.</para>
-        /// </summary>
-        internal static string Stage7ResidentGuardError(
-            bool streamingAvailable, bool stage7Stream, string allowUnfixedResident)
-        {
-            if (stage7Stream || !streamingAvailable)
-                return null;
-            if (OspreyEnvironment.NamesResidentPath(allowUnfixedResident,
-                    ResidentPaths.STAGE7_STREAM_OFF))
-            {
-                return null;
-            }
-            // OSPREY_STAGE6_STREAM_SURVIVORS=0 withholds the survivor loader, so the cold arm
-            // publishes no per-run source however this run answers - which makes the remedy
-            // below ("unset OSPREY_STAGE7_STREAM") unachievable, and refusing on it would demand
-            // a token for a choice the operator does not have. The A/B oracle that switch exists
-            // to provide asks for BOTH stages resident; this is the one combination where
-            // `streamingAvailable` is true and streaming is nonetheless unreachable.
-            if (!OspreyEnvironment.Stage6StreamSurvivors)
-                return null;
-            // The SUPPLIED value is quoted, matching the two sibling guards: a stale or
-            // misspelled token otherwise reads exactly like an unset one, and the operator
-            // cannot tell "you named nothing" from "you named the wrong path".
-            return string.Format(
-                @"OSPREY_STAGE7_STREAM=0 forces the RESIDENT Stage-7 join, which rebuilds every " +
-                @"run's survivors at once and holds them for the whole stage - O(files), measured " +
-                @"at 91.1 GB on a 446-run cohort. This run CAN stream it, so residency here is a " +
-                @"choice and has to be named: set OSPREY_ALLOW_UNFIXED_RESIDENT={0} to run the " +
-                @"A/B deliberately, or unset OSPREY_STAGE7_STREAM to take the streamed join. " +
-                @"OSPREY_ALLOW_UNFIXED_RESIDENT is currently {1}.",
-                ResidentPaths.STAGE7_STREAM_OFF,
-                string.IsNullOrWhiteSpace(allowUnfixedResident)
-                    ? @"unset"
-                    : @"'" + allowUnfixedResident + @"'");
         }
 
         /// <summary>

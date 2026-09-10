@@ -142,7 +142,7 @@ namespace pwiz.Osprey.Test
                 if (!expected)
                 {
                     Assert.IsFalse(
-                        ScoringTaskShared.Stage7StreamAdmittedBeforeRescore(ForTask(task), true),
+                        ScoringTaskShared.Stage7StreamAdmittedBeforeRescore(ForTask(task)),
                         string.Format(@"--task {0} must not be admitted to the streamed join", task));
                 }
             }

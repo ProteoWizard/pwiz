@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Osprey overnight end-to-end regression. Self-contained entry point for
     the scheduled TeamCity "Osprey Windows .NET Regression" config (via
@@ -331,21 +331,12 @@ $script:priorAllowResident = $env:OSPREY_ALLOW_UNFIXED_RESIDENT
 # comparison this harness exists to support impossible to run. Ambient tokens are stripped
 # ONLY when no such switch is set, which is the case the clearing is aimed at.
 #
-# OSPREY_STAGE7_STREAM=0 IS in this set now. It was excluded while the reasoning was
-# circular - "the list is switches that arm a guard which refuses without a token, and
-# KNOWN_UNFIXED has no Stage-7 entry" says only that there was no token because there was no
-# token. There was no token because there was no ALTERNATIVE: until the streamed Stage-7 join
-# existed the resident one was a fact, and a token can only be demanded for a choice. The
-# alternative exists, so the switch is now exactly what OSPREY_FDR_PROJECTION=0 and
-# OSPREY_STAGE6_STREAM_SURVIVORS=0 already were - a deliberate A/B oracle forcing a fat path -
-# and it is tokened like them (ResidentPaths.STAGE7_STREAM_OFF).
+# OSPREY_STAGE7_STREAM=0 was in this set and is GONE (2026-09-10): the switch itself was
+# retired once its A/B was banked, so there is no Stage-7 arm left for an operator to
+# force and no token to keep. ResidentPaths.KNOWN_UNFIXED shrank from 5 to 4 with it.
 #
-# This costs the gate nothing: no leg sets OSPREY_STAGE7_STREAM, so no leg needs the token and
-# the required-token count below stays 0. It exists so an OPERATOR running the A/B is not
-# aborted on the first leg, which is what this whole block is for.
 $abSwitchSet = ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
-               ($env:OSPREY_FDR_PROJECTION -eq '0') -or
-               ($env:OSPREY_STAGE7_STREAM -eq '0')
+               ($env:OSPREY_FDR_PROJECTION -eq '0')
 if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
     if ($abSwitchSet) {
         # Extra parens: -f binds TIGHTER than +, so without them only the LAST fragment is
@@ -1822,7 +1813,6 @@ foreach ($name in $selected) {
     # non-Percolator --fdr-method). A dataset spec setting either would red all three legs.
     # No spec does today; if one is added, this has to grow a $cfg term.
     $cannotStreamJoin =
-        ($env:OSPREY_STAGE7_STREAM -eq '0') -or
         ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
         ($env:OSPREY_FDR_PROJECTION -eq '0') -or
         (-not [string]::IsNullOrWhiteSpace($env:OSPREY_PASS2_QVALUE) -and
@@ -2061,9 +2051,11 @@ foreach ($name in $selected) {
         #
         # The streamed pass-2 report is covered instead by the marker assertion below (which
         # shape ran) plus ModelDiagnosticsDataTest's byte-identity oracle over the accumulator.
-        # A gate-level A/B keyed on OSPREY_STAGE7_STREAM was considered and rejected: the intent
-        # is to REMOVE the ability not to stream, so a leg built on that switch would be built to
-        # be deleted. See #4645 for what to assert instead - the panel's INPUTS, not its curve.
+        # A gate-level A/B keyed on OSPREY_STAGE7_STREAM was considered and rejected here, on the
+        # grounds that the intent was to REMOVE the ability not to stream, so a leg built on that
+        # switch would be built to be deleted. That call held: the switch was retired on
+        # 2026-09-10 after its A/B was banked once, by hand, and a leg would indeed have gone
+        # with it. See #4645 for what to assert instead - the panel's INPUTS, not its curve.
 
         # Liveness: a comparison that verified nothing is not a passing comparison. Empty or
         # absent sidecars satisfy every field check trivially while breaking every resume,

@@ -213,11 +213,15 @@ namespace pwiz.Osprey.Core
         /// FDR, the experiment-q re-clamp and all three blib gates - is a fold to
         /// <c>O(distinct)</c> that never needed the whole pool.
         ///
-        /// Set OSPREY_STAGE7_STREAM=0 to keep the resident pool as the A/B byte-identity oracle,
-        /// the same role OSPREY_STAGE6_STREAM_SURVIVORS=0 plays for the Stage 6 handoff. A
-        /// settable property (not a readonly field) so unit tests can A/B both paths.
+        /// The streamed join is the ONLY arm. <c>OSPREY_STAGE7_STREAM=0</c> used to keep the
+        /// resident pool as an A/B byte-identity oracle, the role
+        /// <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c> still plays for the Stage 6 handoff. It was
+        /// retired once that A/B was banked: on 2026-09-10 the resident arm passed the whole
+        /// regression against the committed golden at 1e-9, and the diagnostics HTML was
+        /// byte-identical between the two arms apart from <c>generatedUtc</c>. A second arm kept
+        /// alive only to keep it matching is a standing test cost against a report that is
+        /// expected to keep moving.
         /// </summary>
-        public static bool Stage7Stream { get; set; } = IsNotZero(@"OSPREY_STAGE7_STREAM");
 
         /// <summary>
         /// At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library
@@ -274,18 +278,6 @@ namespace pwiz.Osprey.Core
         public static string Stage6StreamSurvivorsValidityKeySuffix()
         {
             return Stage6StreamSurvivors ? string.Empty : @";stage6stream=0";
-        }
-
-        /// <summary>
-        /// Cache-validity suffix for the Stage 7 fold arm, on exactly the argument its Stage 6
-        /// sibling above makes: empty on the streamed default so no existing output directory is
-        /// invalidated, and a term on the resident opt-out so an in-place A/B of the two arms
-        /// cannot satisfy itself by adopting the other arm's <c>.blib</c> and 2nd-pass sidecars
-        /// instead of recomputing them.
-        /// </summary>
-        public static string Stage7StreamValidityKeySuffix()
-        {
-            return Stage7Stream ? string.Empty : @";stage7stream=0";
         }
 
         /// <summary>
