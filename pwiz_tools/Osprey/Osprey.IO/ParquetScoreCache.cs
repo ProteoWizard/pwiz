@@ -1346,6 +1346,16 @@ namespace pwiz.Osprey.IO
         /// <para>The row count is a DECLARED count, not a scan. It exists so a caller can log
         /// the cohort size and answer "are there any rows at all" without paying the
         /// 1,342,686,095-row scalar scan that used to produce the same number.</para>
+        ///
+        /// <para><b>The schema test covers the columns that make the declared count TRUSTWORTHY,
+        /// not just the feature schema.</b> <see cref="ReadFdrStubScalars"/> skips a row group
+        /// whose <c>entry_id</c> or <c>is_decoy</c> comes back null, and because the lookup is
+        /// over the file-level schema that is all-or-nothing per file: such a parquet declares N
+        /// rows in its footer and yields 0 on a read. While the count came from a scan the two
+        /// could not disagree; taking it from the footer makes them independent, so this probe
+        /// has to reject the shape that separates them. Otherwise the mismatch surfaces at the
+        /// END of the Stage 5 score pass as an inconsistent-row-count fault, hours later and
+        /// naming the count rather than the missing column.</para>
         /// </summary>
         public static (bool HasPinFeatures, long RowCount) ProbeResumeSchemaAndRows(string path)
         {
@@ -1355,7 +1365,10 @@ namespace pwiz.Osprey.IO
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
                 var fieldsByName = BuildFieldLookup(reader);
-                return (fieldsByName.ContainsKey(PIN_FEATURE_NAMES[0]), reader.Metadata?.NumRows ?? 0L);
+                bool readable = fieldsByName.ContainsKey(PIN_FEATURE_NAMES[0]) &&
+                                fieldsByName.ContainsKey(FIELD_ENTRY_ID.Name) &&
+                                fieldsByName.ContainsKey(FIELD_IS_DECOY.Name);
+                return (readable, reader.Metadata?.NumRows ?? 0L);
             }
         }
 
