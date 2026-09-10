@@ -139,8 +139,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 
 | Option | Value | Effect |
 |--------|-------|--------|
-| `--task` | `PerFileScoring \| FirstPassFDR \| PerFileRescoring \| SecondPassFDR` | Run exactly one pipeline task (one node = one task). Omit for the whole pipeline. See [15-hpc-scoring-split.md](15-hpc-scoring-split.md). |
-| `--input-scores` | `<paths\|dir>` | One or more `.scores.parquet` files, or a single directory (non-recursive). Mutually exclusive with `--input`. |
+| `--task` | `PerFileScoring \| FirstPassFDR \| PerFileRescoring \| SecondPassFDR` | Run exactly one pipeline task (one node = one task). Omit for the whole pipeline. EVERY task takes `-i`/`--input-list` naming the data files; the parquets and sidecars are derived from their stems. See [15-hpc-scoring-split.md](15-hpc-scoring-split.md). |
 
 ### Logging
 
@@ -181,21 +180,26 @@ check rejects inputs whose search/library hash does not match.
 # split 1 — one process per mzML (writes <stem>.scores.parquet, <stem>.calibration.json beside each input)
 osprey --task PerFileScoring   -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 
-# join 1 — one process over ALL parquets (pass a DIRECTORY so order is deterministic)
-osprey --task FirstPassFDR     --input-scores ./scores_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+# join 1 — one process over ALL runs (pass a sorted list so order is deterministic)
+osprey --task FirstPassFDR     --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 #   writes beside each parquet: <stem>.1st-pass.fdr_scores.bin, <stem>.reconciliation.json
 
 # split 2 — one process per file (parquet + its two sidecars co-located)
-osprey --task PerFileRescoring --input-scores s1.scores.parquet -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 #   writes: <stem>.scores-reconciled.parquet
 
-# join 2 — one process over ALL reconciled parquets (writes out.blib)
-osprey --task SecondPassFDR     --input-scores ./reconciled_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+# join 2 — one process over ALL runs, reading their reconciled parquets (writes out.blib)
+osprey --task SecondPassFDR    --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 ```
 
-- `--input-scores` takes a **directory** (globbed and sorted internally) or an explicit
-  file list (consumed in the order given). FirstPassFDR reconciliation is order-sensitive,
-  so for `FirstPassFDR` and `SecondPassFDR` pass a directory or a deterministically sorted list.
+- Every task names its runs by their **data files**, and the data file itself need not
+  still exist: a task after Stage 4 is accepted when the run's `.scores.parquet` (or its
+  reconciled sibling) is on disk, which is the state a staged worker directory is in.
+  `--input-scores`, which named parquets instead, has retired - it was a second way of
+  saying what `--task` already says.
+- FirstPassFDR reconciliation is **order-sensitive**, so pass a deterministically sorted
+  list. `--input-list` (one path per line) is what a cohort past a few hundred runs needs:
+  446 `-i` paths is ~87% of the Windows command-line limit.
 - Rehydration sidecars must travel with their parquet into each worker's working
   directory. Let the scheduler fan out (one file per split process) rather than
   `--parallel-files`, which is the single-node multi-file mode.

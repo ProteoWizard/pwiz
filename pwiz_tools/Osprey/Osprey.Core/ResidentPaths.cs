@@ -132,11 +132,15 @@ namespace pwiz.Osprey.Core
         /// disclosure table had to be invented to see it at all.</para>
         ///
         /// <para>It admits ONLY the chosen case. A run that takes the resident join because no
-        /// streamed one was admissible - a straight-through run, where
-        /// <c>ExpectReconciledInput</c> is false - is not refused by this token, because there
-        /// is nothing for the operator to choose. That case goes when
-        /// <c>CanStreamStage7Join</c>'s admission stops being expressed as a CLI flag; then this
-        /// token is the only way to be resident, and it can be deleted with the switch.</para>
+        /// streamed one was admissible is not refused by this token, because there is nothing
+        /// for the operator to choose. That set has SHRUNK to one: the straight-through run
+        /// used to be in it - <c>CanStreamStage7Join</c>'s admission was the CLI flag
+        /// <c>ExpectReconciledInput</c>, so the ordinary run could not stream by construction -
+        /// and it is now derived from the reconciled parquets on disk, which every route
+        /// satisfies. What is left is a pass-2 mode whose per-file half has no worker
+        /// (<c>OSPREY_PASS2_QVALUE=transfer</c>), and when that half moves to
+        /// <c>Pass2PerFileWorker</c> this exemption has no subject, the guard can refuse
+        /// unconditionally, and this token becomes the only way to be resident.</para>
         /// </summary>
         public static readonly string STAGE7_STREAM_OFF = @"stage7-stream-off";
 

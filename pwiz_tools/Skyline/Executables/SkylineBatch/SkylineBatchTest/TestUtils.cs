@@ -363,10 +363,21 @@ namespace SkylineBatchTest
             return configList;
         }
 
+        /// <summary>
+        /// The directory of a Skyline build in this checkout, for the tests that need a real
+        /// SkylineCmd.exe to point a configuration at.
+        ///
+        /// Release comes first so a machine with both keeps the behaviour it had, but Debug is
+        /// probed too: the batch-tool build scripts default to Debug, and before that was
+        /// allowed for every one of these tests failed on a Debug tree with "Could not find a
+        /// Skyline installation at this location: ...\bin\x64\Release" - a directory that had
+        /// never been built.
+        /// </summary>
         public static string GetSkylineDir()
         {
-            // net8 Skyline builds to bin\Release\net8.0-windows (or a Stage-Tests staging dir)
-            // rather than the net472 bin\x64\Release. Return whichever holds SkylineCmd.exe.
+            // net10 Skyline builds to bin\Release\net10.0-windows (or a Stage-Tests
+            // staging dir) rather than the net472 bin\x64\Release. Return whichever holds
+            // SkylineCmd.exe.
             foreach (var rel in new[]
                      {
                          "bin\\Release\\net10.0-windows",
@@ -375,7 +386,7 @@ namespace SkylineBatchTest
                      })
             {
                 var dir = GetProjectDirectory(rel);
-                if (dir != null && File.Exists(Path.Combine(dir, "SkylineCmd.exe")))
+                if (dir != null && File.Exists(Path.Combine(dir, SkylineInstallations.SkylineCmdExe)))
                     return dir;
             }
             return GetProjectDirectory("bin\\Release\\net10.0-windows");
