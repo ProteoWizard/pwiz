@@ -63,6 +63,7 @@ namespace pwiz.Osprey
 
         // --- Raw parse sinks (applied to the config in ToConfig) ---------------------------
         private readonly List<string> _inputFiles = new List<string>();
+        private readonly List<string> _inputListPaths = new List<string>();
         private string _libraryPath;
         private string _outputPath;
         private string _workDir;
@@ -77,6 +78,18 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_INPUT = new OspreyArgument(@"input",
             () => @"<file1.mzML ...>", (c, p) => true) { ShortName = @"i", Variadic = true,
             ProcessVariadic = (c, toks) => { c._inputFiles.AddRange(toks); return true; } };
+        // The command line is a BOUNDED resource and -i consumes it at O(files). Measured on the
+        // 446-run CHS cohort: 28,621 characters of the 32,767 a Windows CreateProcess accepts -
+        // 87% of the limit, at ~62 characters per input path with a deliberately SHORT raw
+        // directory. That leaves room for about 66 more files, so the wall is near 512 and a
+        // deeper path tree reaches it sooner. Past it the failure is a CreateProcess error or a
+        // truncated argument list, neither of which says "too many inputs".
+        //
+        // --input-scores already avoids this by accepting a directory; -i had no equivalent.
+        // One path per line, blank lines and #-comments ignored, composable with -i and with
+        // itself (both append, exactly as repeated -i does).
+        public static readonly OspreyArgument ARG_INPUT_LIST = new OspreyArgument(@"input-list",
+            () => @"<list.txt>", (c, p) => c._inputListPaths.Add(p.Value));
         public static readonly OspreyArgument ARG_LIBRARY = new OspreyArgument(@"library",
             () => @"<library.tsv|.blib>", (c, p) => c._libraryPath = p.Value) { ShortName = @"l" };
         public static readonly OspreyArgument ARG_OUTPUT = new OspreyArgument(@"output",
@@ -92,7 +105,7 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_GENERAL_IO =
             new ArgumentGroup<OspreyCommandArgs>(() => @"General I/O", true,
-                ARG_INPUT, ARG_LIBRARY, ARG_OUTPUT, ARG_WORK_DIR, ARG_OUTPUT_DIR, ARG_CACHE_DIR, ARG_REPORT);
+                ARG_INPUT, ARG_INPUT_LIST, ARG_LIBRARY, ARG_OUTPUT, ARG_WORK_DIR, ARG_OUTPUT_DIR, ARG_CACHE_DIR, ARG_REPORT);
 
         // --- Scoring & Tolerance ----------------------------------------------------------
         public static readonly OspreyArgument ARG_RESOLUTION = new OspreyArgument(@"resolution",
@@ -456,6 +469,13 @@ namespace pwiz.Osprey
 
         private OspreyConfig ToConfig()
         {
+            // Expand --input-list BEFORE normalization, so a listed path is indistinguishable
+            // from one given with -i from here on. Appended in the order the lists were given,
+            // after any -i, because input ORDER is not decorative: FirstJoin is order-sensitive
+            // and the run's file indices follow this list.
+            foreach (string listPath in _inputListPaths)
+                _inputFiles.AddRange(ReadInputList(listPath));
+
             for (int i = 0; i < _inputFiles.Count; i++)
                 _inputFiles[i] = NormalizeInputPath(_inputFiles[i]);
             _config.InputFiles = _inputFiles;
@@ -556,6 +576,39 @@ namespace pwiz.Osprey
         /// then counts toward the bundle's own fingerprint, so the cache never matches
         /// the source it was built from and every run re-parses.
         /// </summary>
+        /// <summary>
+        /// Read one input path per line from <paramref name="listPath"/>, ignoring blank lines
+        /// and <c>#</c> comments. The bounded-command-line alternative to a 446-element
+        /// <c>-i</c>; see <see cref="ARG_INPUT_LIST"/>.
+        ///
+        /// <para>A missing or empty list is FATAL rather than an empty input set. Silently
+        /// searching zero files would look like a fast successful run and produce an empty
+        /// blib - the shape this codebase refuses everywhere else, and worse here because the
+        /// operator's whole cohort is named in the file that was not read.</para>
+        /// </summary>
+        private static IEnumerable<string> ReadInputList(string listPath)
+        {
+            if (string.IsNullOrEmpty(listPath) || !File.Exists(listPath))
+            {
+                throw new FileNotFoundException(string.Format(
+                    @"--input-list file not found: {0}", listPath), listPath);
+            }
+            var paths = new List<string>();
+            foreach (string rawLine in File.ReadAllLines(listPath))
+            {
+                string line = rawLine.Trim();
+                if (line.Length == 0 || line[0] == '#')
+                    continue;
+                paths.Add(line);
+            }
+            if (paths.Count == 0)
+            {
+                throw new InvalidDataException(string.Format(
+                    @"--input-list file names no inputs: {0}", listPath));
+            }
+            return paths;
+        }
+
         private static string NormalizeInputPath(string path)
         {
             if (string.IsNullOrEmpty(path))
@@ -782,6 +835,7 @@ namespace pwiz.Osprey
             private static readonly Dictionary<string, string> DESCRIPTIONS = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 { @"input", @"Input mzML file(s)" },
+                { @"input-list", @"File of input paths, one per line (# comments ignored). Bounded alternative to a long -i list." },
                 { @"library", @"Spectral library (.tsv, .blib)" },
                 { @"output", @"Output blib file" },
                 { @"work-dir", @"Write derived artifacts AND the spectra cache here (so input data can be read-only); default: beside input" },

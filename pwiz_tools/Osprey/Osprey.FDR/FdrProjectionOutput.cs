@@ -148,4 +148,31 @@ namespace pwiz.Osprey.FDR
         void Finish(Action<string> logInfo);
     }
 
+    /// <summary>
+    /// Hand one file's COMPLETE run-scope first-pass output to the caller, at the moment
+    /// pass 1 finishes that file. The four values are exactly what the per-file
+    /// <c>.1st-pass.fdr_scores.bin</c> stores, and pass 1 computes all four - the score from
+    /// the averaged fold model, the two run q-values from
+    /// <see cref="PercolatorQValues.ComputePerFileRunQvalues"/> over this file's own rows.
+    ///
+    /// <para><b>Why the write moved here.</b> The sidecar used to be assembled by the output
+    /// sink during pass 2, one whole phase after the values existed. On a 446-file cohort pass
+    /// 1 is 55 minutes and pass 2 another 82, and nothing durable was written until the second
+    /// of those - so a run interrupted anywhere in the first 137 minutes lost all of it,
+    /// including files that had been completely and correctly scored. Writing each file as pass
+    /// 1 completes it puts the exposure at ONE in-flight file, and that does not grow with
+    /// cohort size.</para>
+    ///
+    /// <para>Pass 2 is not thereby redundant: its unique product is the experiment-scope
+    /// values, which cannot exist before the barrier that turns pass 1's accumulated
+    /// competition into the experiment maps. What pass 2 stops doing is reloading features and
+    /// recomputing a score it can read back from the file pass 1 just wrote.</para>
+    ///
+    /// <para>Arrays are the pass's own scratch and are REUSED after this returns, so an
+    /// implementation must consume them synchronously rather than retaining them.
+    /// <paramref name="fileIndex"/> is the file's position in the score pass's file order,
+    /// which is the projection's file order.</para>
+    /// </summary>
+    public delegate void FileRunScopeSink(string fileName, int fileIndex, int rowCount,
+        uint[] entryIds, double[] scores, double[] runPrecursorQvalues, double[] runPeptideQvalues);
 }

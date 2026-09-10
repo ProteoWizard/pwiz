@@ -139,6 +139,14 @@ namespace pwiz.Osprey.IO
         public const int RecordLength = 28;
 
         /// <summary>
+        /// Records per buffered body read in <see cref="TryWalkRecords"/>. 2,048 x 28 B =
+        /// 57,344 B, comfortably under the 85,000-byte large-object threshold, so a reader
+        /// walks a 106 MB sidecar through one Gen0 buffer instead of allocating the whole
+        /// file on the LOH.
+        /// </summary>
+        private const int RECORDS_PER_CHUNK = 2048;
+
+        /// <summary>
         /// Pass identifier embedded in the header. Mirrors the Rust pass
         /// byte semantics: 1 = first-pass Percolator, 2 = second-pass
         /// Percolator.
@@ -600,84 +608,38 @@ namespace pwiz.Osprey.IO
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (entries == null) throw new ArgumentNullException(nameof(entries));
 
-            byte[] data;
-            try
-            {
-                data = File.ReadAllBytes(path);
-            }
-            // NOT a bare catch: an OutOfMemoryException here is reported as a MISSING
-            // sidecar, and a missing 1st-pass sidecar leaves those entries at Score 0.0.
-            // The decoy side is not q-gated, so the zeros then compete in the picked-
-            // protein null and the run exits 0 with corrupted protein numbers. Let it
-            // propagate and kill the run instead (#4615 review).
-            catch (Exception ex) when (!(ex is OutOfMemoryException))
-            {
-                return false;
-            }
-
-            if (data.Length < HeaderLength)
-                return false;
-            for (int i = 0; i < Magic.Length; i++)
-            {
-                if (data[i] != Magic[i])
-                    return false;
-            }
-            byte version = data[8];
-            if (version != FormatVersion)
-                return false;
-            // Reject mismatched pass bytes so a 2nd-pass sidecar can never
-            // be silently loaded into 1st-pass stubs (or vice versa) — the
-            // q-values would scramble without any visible error.
-            byte passByte = data[9];
-            if (passByte != (byte)expectedPass)
-                return false;
-            // bytes 10..16 reserved, ignored
-            ulong headerCount = BitConverter.ToUInt64(data, 16);
-            // Reject sidecars whose declared count exceeds physical
-            // record capacity. (headerCount can validly be < entries
-            // count — see comment above on pre-gap-fill / post-
-            // compaction sidecars.) Use checked arithmetic so a
-            // corrupt or malicious sidecar with a huge headerCount
-            // is rejected loudly instead of wrapping int silently.
-            if (!TryComputeExpectedLen(headerCount, out int expectedLen))
-                return false;
-            if (data.Length != expectedLen)
-                return false;
-
             // Build lookup so position-skewed entries align by entry_id.
             // Single-file degenerates to a 1:1 map (no perf cost vs the
-            // old positional walk).
+            // old positional walk). Built before the file is opened rather than after the
+            // header validates: on the happy path it is the same work, and the only path it
+            // is wasted on is one that returns false and fails the run anyway.
             var byEntryId = new Dictionary<uint, int>(entries.Count);
             for (int i = 0; i < entries.Count; i++)
                 byEntryId[entries[i].EntryId] = i;
 
-            for (int rec = 0; rec < (int)headerCount; rec++)
+            return TryWalkRecords(path, expectedPass, (chunk, off) =>
             {
-                int off = HeaderLength + rec * RecordLength;
-                uint recordEntryId = BitConverter.ToUInt32(data, off + 0);
+                uint recordEntryId = BitConverter.ToUInt32(chunk, off + 0);
                 if (!byEntryId.TryGetValue(recordEntryId, out int entryIdx))
                 {
                     // A caller that filtered its stub list says so by supplying the
                     // predicate that did the filtering; a record it dropped on purpose
                     // is expected to have no entry here.
-                    if (expectedAbsent != null && expectedAbsent(recordEntryId))
-                        continue;
-                    // Sidecar carries an entry the caller's stub list
-                    // doesn't contain. The caller is expected to pass
-                    // a SUPERSET of the sidecar's entries (the post-
-                    // rescore parquet for the 1st-pass sidecar, for
-                    // example) — a record that fails to find its
-                    // entry_id signals the sidecar was written from a
-                    // different parquet (or from a different binary
-                    // version with different entry_id assignment). That
-                    // is corruption, not the gap-fill or post-compaction
-                    // case we tolerate, and must be rejected.
-                    return false;
+                    //
+                    // Otherwise the sidecar carries an entry the caller's stub list
+                    // doesn't contain. The caller is expected to pass a SUPERSET of the
+                    // sidecar's entries (the post-rescore parquet for the 1st-pass
+                    // sidecar, for example) - a record that fails to find its entry_id
+                    // signals the sidecar was written from a different parquet (or from a
+                    // different binary version with different entry_id assignment). That
+                    // is corruption, not the gap-fill or post-compaction case we tolerate,
+                    // and must be rejected.
+                    return expectedAbsent != null && expectedAbsent(recordEntryId);
                 }
                 var e = entries[entryIdx];
-                e.Score                       = BitConverter.ToDouble(data, off + 4);
-                e.RunPrecursorQvalue          = BitConverter.ToDouble(data, off + 12);
-                e.RunPeptideQvalue            = BitConverter.ToDouble(data, off + 20);
+                e.Score                       = BitConverter.ToDouble(chunk, off + 4);
+                e.RunPrecursorQvalue          = BitConverter.ToDouble(chunk, off + 12);
+                e.RunPeptideQvalue            = BitConverter.ToDouble(chunk, off + 20);
                 // The EXPERIMENT-scope half, applied HERE so it reaches exactly the entries this
                 // sidecar has a record for and no others (format v5, issue #4486).
                 //
@@ -701,8 +663,8 @@ namespace pwiz.Osprey.IO
                     e.ExperimentProteinQvalue   = exp.ExperimentProteinQvalue;
                     e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
                 }
-            }
-            return true;
+                return true;
+            });
         }
 
         /// <summary>
@@ -721,55 +683,20 @@ namespace pwiz.Osprey.IO
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (entriesByEntryId == null) throw new ArgumentNullException(nameof(entriesByEntryId));
 
-            byte[] data;
-            try
+            return TryWalkRecords(path, expectedPass, (chunk, off) =>
             {
-                data = File.ReadAllBytes(path);
-            }
-            // NOT a bare catch: an OutOfMemoryException here is reported as a MISSING
-            // sidecar, and a missing 1st-pass sidecar leaves those entries at Score 0.0.
-            // The decoy side is not q-gated, so the zeros then compete in the picked-
-            // protein null and the run exits 0 with corrupted protein numbers. Let it
-            // propagate and kill the run instead (#4615 review).
-            catch (Exception ex) when (!(ex is OutOfMemoryException))
-            {
-                return false;
-            }
-
-            if (data.Length < HeaderLength)
-                return false;
-            for (int i = 0; i < Magic.Length; i++)
-            {
-                if (data[i] != Magic[i])
-                    return false;
-            }
-            byte version = data[8];
-            if (version != FormatVersion)
-                return false;
-            byte passByte = data[9];
-            if (passByte != (byte)expectedPass)
-                return false;
-            ulong headerCount = BitConverter.ToUInt64(data, 16);
-            if (!TryComputeExpectedLen(headerCount, out int expectedLen))
-                return false;
-            if (data.Length != expectedLen)
-                return false;
-
-            for (int rec = 0; rec < (int)headerCount; rec++)
-            {
-                int off = HeaderLength + rec * RecordLength;
-                uint recordEntryId = BitConverter.ToUInt32(data, off + 0);
+                uint recordEntryId = BitConverter.ToUInt32(chunk, off + 0);
                 if (!entriesByEntryId.TryGetValue(recordEntryId, out FdrEntry e))
                 {
                     // Sidecar can carry entries not in the (possibly
                     // compacted) caller dict — that's expected for
                     // --task SecondPassFDR where compaction has already
                     // dropped failing precursors. Skip silently.
-                    continue;
+                    return true;
                 }
-                e.Score                       = BitConverter.ToDouble(data, off + 4);
-                e.RunPrecursorQvalue          = BitConverter.ToDouble(data, off + 12);
-                e.RunPeptideQvalue            = BitConverter.ToDouble(data, off + 20);
+                e.Score                       = BitConverter.ToDouble(chunk, off + 4);
+                e.RunPrecursorQvalue          = BitConverter.ToDouble(chunk, off + 12);
+                e.RunPeptideQvalue            = BitConverter.ToDouble(chunk, off + 20);
                 // The EXPERIMENT-scope half, for the records THIS file's sidecar carries and no
                 // others (format v5, issue #4486). Scoping it to the matched records is the
                 // whole point: those columns are keyed by entry_id for the analysis, so applying
@@ -788,8 +715,143 @@ namespace pwiz.Osprey.IO
                     e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
                     e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
                 }
+                return true;
+            });
+        }
+
+        /// <summary>
+        /// Validate a per-file sidecar's 32-byte header and walk its body in bounded chunks,
+        /// handing each record to <paramref name="onRecord"/> as a (buffer, offset) pair.
+        /// Returns false on a missing or unreadable file, a header this build cannot consume,
+        /// a size that disagrees with the declared record count, a short read, or an
+        /// <paramref name="onRecord"/> that returns false.
+        ///
+        /// <para>The chunking is the point. Both callers used to take the body as one
+        /// <c>File.ReadAllBytes</c> array, and on a 446-run CHS analysis each run's 1st-pass
+        /// sidecar holds ~3.8 M records - 106 MB - which Stage 7's pool rebuild reads for every
+        /// run from inside a <c>Parallel.For</c>, several live at once, to land the ~648 K
+        /// records per run that survive compaction. Stage 7's memory band is Server-GC retained
+        /// COMMITTED memory rather than live data, so a parade of 106 MB large-object arrays
+        /// inflates it directly even though none of them is reachable for long. Reading the
+        /// same bytes in <see cref="RECORDS_PER_CHUNK"/>-record buffers gives the identical
+        /// result in the identical order with nothing on the large object heap.</para>
+        ///
+        /// <para>The per-record delegate is not a new cost of the same kind: every caller
+        /// already pays a dictionary probe per record, which dwarfs it, and
+        /// <see cref="ReadScalars"/> has always taken a per-record predicate. What was removed
+        /// is an allocation proportional to the FILE; what was added is proportional to
+        /// nothing.</para>
+        /// </summary>
+        private static bool TryWalkRecords(string path, Pass expectedPass,
+            Func<byte[], int, bool> onRecord)
+        {
+            // How many records the caller has already been handed. Decides whether a fault
+            // means "unusable file" (return false, nothing applied) or "partly applied"
+            // (throw) - see the catch below.
+            long delivered = 0;
+            // NOT a bare catch: an OutOfMemoryException here is reported as a MISSING
+            // sidecar, and a missing 1st-pass sidecar leaves those entries at Score 0.0.
+            // The decoy side is not q-gated, so the zeros then compete in the picked-
+            // protein null and the run exits 0 with corrupted protein numbers. Let it
+            // propagate and kill the run instead (#4615 review). The whole-file array that
+            // made an OOM plausible here is gone, but the filter stays: it is about what a
+            // false return MEANS to the caller, not about how large the allocation was.
+            try
+            {
+                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    long len = fs.Length;
+                    if (len < HeaderLength)
+                        return false;
+                    var header = new byte[HeaderLength];
+                    if (!ReadFully(fs, header, HeaderLength))
+                        return false;
+                    for (int i = 0; i < Magic.Length; i++)
+                    {
+                        if (header[i] != Magic[i])
+                            return false;
+                    }
+                    if (header[8] != FormatVersion)
+                        return false;
+                    // Reject mismatched pass bytes so a 2nd-pass sidecar can never
+                    // be silently loaded into 1st-pass stubs (or vice versa) - the
+                    // q-values would scramble without any visible error.
+                    if (header[9] != (byte)expectedPass)
+                        return false;
+                    // bytes 10..16 reserved, ignored
+                    ulong headerCount = BitConverter.ToUInt64(header, 16);
+                    // Reject sidecars whose declared count exceeds physical
+                    // record capacity. (headerCount can validly be < the caller's
+                    // entry count - see the remarks on the callers for the
+                    // pre-gap-fill / post-compaction cases.) Use checked
+                    // arithmetic so a corrupt or malicious sidecar with a huge
+                    // headerCount is rejected loudly instead of wrapping int
+                    // silently.
+                    if (!TryComputeExpectedLen(headerCount, out int expectedLen))
+                        return false;
+                    if (len != expectedLen)
+                        return false;
+                    var chunk = new byte[RECORDS_PER_CHUNK * RecordLength];
+                    int remaining = (int)headerCount;
+                    while (remaining > 0)
+                    {
+                        int take = Math.Min(RECORDS_PER_CHUNK, remaining);
+                        if (!ReadFully(fs, chunk, take * RecordLength))
+                            return delivered == 0 ? false : ThrowPartialWalk(path, delivered);
+                        remaining -= take;
+                        for (int rec = 0; rec < take; rec++)
+                        {
+                            // Same answer as the mid-read failure above and the catch below, and
+                            // for the same reason: this was the third exit from the walk and the
+                            // only one that still returned false with records already applied.
+                            // A callback that rejects record N has left N-1 records on the
+                            // caller's entries, which is the half-pass-1/half-pass-2 state the
+                            // remarks below describe - and TryRead rejects on a missing entry id,
+                            // so it is reachable from a real sidecar, not just a hostile callback.
+                            if (!onRecord(chunk, rec * RecordLength))
+                                return delivered == 0 ? false : ThrowPartialWalk(path, delivered);
+                            delivered++;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                // A failure BEFORE the first record is "this file is unusable", which every
+                // caller handles: it leaves their entries exactly as they arrived. A failure
+                // AFTER records have already been applied is a different fact and must not
+                // share the same answer - the caller has half a file's values on its entries
+                // and no way to know, and OverlayPass2SidecarOntoFile's caller treats false as
+                // non-fatal ("protein FDR will use stale 1st-pass q-values"), which would ship
+                // a run that is half pass-1 and half pass-2.
+                //
+                // This distinction was free before the read was chunked: File.ReadAllBytes and
+                // the header checks all completed before any entry was touched, so the catch
+                // could only ever mean "nothing applied". Chunking moved the read inside the
+                // walk and quietly took that guarantee away.
+                if (delivered > 0)
+                    ThrowPartialWalk(path, delivered, ex);
+                return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Report a sidecar walk that failed AFTER handing records to its caller. Always
+        /// throws; the <c>bool</c> return type only exists so the mid-loop call site can be an
+        /// expression.
+        /// </summary>
+        private static bool ThrowPartialWalk(string path, long delivered, Exception inner = null)
+        {
+            string message = string.Format(
+                @"Reading the FDR sidecar '{0}' failed after {1} record(s) had already been " +
+                @"applied. Those entries now hold this file's values and the rest do not, which " +
+                @"no caller can detect or undo, so the run stops here rather than continuing " +
+                @"with a partly-overlaid pool.",
+                path, delivered);
+            if (inner != null)
+                throw new IOException(message, inner);
+            throw new IOException(message);
         }
 
         /// <summary>

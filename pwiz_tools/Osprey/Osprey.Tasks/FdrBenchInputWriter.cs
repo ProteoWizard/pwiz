@@ -116,7 +116,7 @@ namespace pwiz.Osprey.Tasks
         /// <param name="skipEntrapmentSeqs">Entrapment sequences to exclude (unmatched orphans); null to write all.</param>
         public static Result WritePeptideInput(
             string path,
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IEnumerable<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             FdrLevel fdrLevel,
             bool perRun,

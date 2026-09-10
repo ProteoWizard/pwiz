@@ -321,7 +321,10 @@ namespace pwiz.Osprey.FDR
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = FIRST_PASS_LABEL,
             Action<FeatureContributions> captureContributions = null,
-            Action<PercolatorResults> captureModel = null)
+            Action<PercolatorResults> captureModel = null,
+            Func<string, Action<uint, double>, bool> tryStreamCompletedScores = null,
+            PercolatorResults pretrainedModel = null,
+            FileRunScopeSink flushFileRunScope = null)
         {
             if (sink == null)
                 throw new ArgumentNullException(nameof(sink));
@@ -332,7 +335,8 @@ namespace pwiz.Osprey.FDR
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
             return PercolatorScorer.RunStreamingFirstPass(
                 fileNames, streamFileRows, loadFileFeatures, percConfig, logInfo, passLabel, sink,
-                captureContributions, captureModel);
+                captureContributions, captureModel, tryStreamCompletedScores, pretrainedModel,
+                flushFileRunScope);
         }
 
         /// <summary>
