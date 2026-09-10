@@ -147,45 +147,59 @@ namespace pwiz.Skyline.Controls
                 TransparentColor = Color.Magenta,
                 ColorDepth = ColorDepth.Depth24Bit
             };
-            ImageList.Images.Add(Resources.Blank);      // 1bpp
-            ImageList.Images.Add(Resources.Protein);    // 16bpp
-            ImageList.Images.Add(Resources.Peptide);    // 4bpp
-            ImageList.Images.Add(Resources.TransitionGroup); // 8bpp
-            ImageList.Images.Add(Resources.Fragment);   // 8bpp
-            ImageList.Images.Add(Resources.PeptideLib); // 4bpp
-            ImageList.Images.Add(Resources.PeptideIrt); // 4bpp
-            ImageList.Images.Add(Resources.PeptideIrtLib); // 4bpp
-            ImageList.Images.Add(Resources.PeptideStandard); // 4bpp
-            ImageList.Images.Add(Resources.PeptideStandardLib); // 4bpp
-            ImageList.Images.Add(Resources.PeptideQc);  // 4bpp
-            ImageList.Images.Add(Resources.PeptideQcLib); // 4bpp
-            ImageList.Images.Add(Resources.TransitionGroupLib); // 8bpp
-            ImageList.Images.Add(Resources.FragmentLib); // 8bpp
-            ImageList.Images.Add(Resources.PeptideDecoy); // 4bpp
-            ImageList.Images.Add(Resources.TransitionGroupDecoy); // 8bpp
-            ImageList.Images.Add(Resources.FragmentDecoy); // 8bpp
-            ImageList.Images.Add(Resources.ProteinDecoy); // 24bpp
-            ImageList.Images.Add(Resources.PeptideDecoyLib); // 4bpp
-            ImageList.Images.Add(Resources.TransitionGroupLibDecoy); // 8bpp
-            ImageList.Images.Add(Resources.FragmentLibDecoy); // 8bpp
-            ImageList.Images.Add(Resources.Molecule);   // 24bpp
-            ImageList.Images.Add(Resources.MoleculeLib); // 24bpp
-            ImageList.Images.Add(Resources.MoleculeIrt); // 24bpp
-            ImageList.Images.Add(Resources.MoleculeIrtLib); // 24bpp
-            ImageList.Images.Add(Resources.MoleculeStandard); // 24bpp
-            ImageList.Images.Add(Resources.MoleculeStandardLib); // 24bpp
-            ImageList.Images.Add(Resources.MoleculeList); // 16bpp
-            ImageList.Images.Add(Resources.PeptideList); // 16bpp
-            ImageList.Images.Add(Resources.EmptyList);  // 16bpp
+            if (DpiUtil.GetFactor(this) > 1)
+            {
+                // AddNodeImage pre-scales each icon to the DPI size as 32-bit ARGB with the
+                // magenta key already applied, so the list must preserve alpha instead of
+                // color-keying (issue #4599).
+                ImageList.TransparentColor = Color.Transparent;
+                ImageList.ColorDepth = ColorDepth.Depth32Bit;
+                ImageList.ImageSize = DpiUtil.ScaleSize(this, ImageList.ImageSize);
+            }
+            AddNodeImage(Resources.Blank);      // 1bpp
+            AddNodeImage(Resources.Protein);    // 16bpp
+            AddNodeImage(Resources.Peptide);    // 4bpp
+            AddNodeImage(Resources.TransitionGroup); // 8bpp
+            AddNodeImage(Resources.Fragment);   // 8bpp
+            AddNodeImage(Resources.PeptideLib); // 4bpp
+            AddNodeImage(Resources.PeptideIrt); // 4bpp
+            AddNodeImage(Resources.PeptideIrtLib); // 4bpp
+            AddNodeImage(Resources.PeptideStandard); // 4bpp
+            AddNodeImage(Resources.PeptideStandardLib); // 4bpp
+            AddNodeImage(Resources.PeptideQc);  // 4bpp
+            AddNodeImage(Resources.PeptideQcLib); // 4bpp
+            AddNodeImage(Resources.TransitionGroupLib); // 8bpp
+            AddNodeImage(Resources.FragmentLib); // 8bpp
+            AddNodeImage(Resources.PeptideDecoy); // 4bpp
+            AddNodeImage(Resources.TransitionGroupDecoy); // 8bpp
+            AddNodeImage(Resources.FragmentDecoy); // 8bpp
+            AddNodeImage(Resources.ProteinDecoy); // 24bpp
+            AddNodeImage(Resources.PeptideDecoyLib); // 4bpp
+            AddNodeImage(Resources.TransitionGroupLibDecoy); // 8bpp
+            AddNodeImage(Resources.FragmentLibDecoy); // 8bpp
+            AddNodeImage(Resources.Molecule);   // 24bpp
+            AddNodeImage(Resources.MoleculeLib); // 24bpp
+            AddNodeImage(Resources.MoleculeIrt); // 24bpp
+            AddNodeImage(Resources.MoleculeIrtLib); // 24bpp
+            AddNodeImage(Resources.MoleculeStandard); // 24bpp
+            AddNodeImage(Resources.MoleculeStandardLib); // 24bpp
+            AddNodeImage(Resources.MoleculeList); // 16bpp
+            AddNodeImage(Resources.PeptideList); // 16bpp
+            AddNodeImage(Resources.EmptyList);  // 16bpp
 
             StateImageList = new ImageList
             {
                 ColorDepth = ColorDepth.Depth24Bit
             };
-            StateImageList.Images.Add(Resources.Peak);  // 8bpp
-            StateImageList.Images.Add(Resources.Keep);  // 24bpp
-            StateImageList.Images.Add(Resources.NoPeak); // 24bpp
-            StateImageList.Images.Add(Resources.PeakBlank); // 8bpp
+            if (DpiUtil.GetFactor(this) > 1)
+            {
+                StateImageList.ColorDepth = ColorDepth.Depth32Bit;
+                StateImageList.ImageSize = DpiUtil.ScaleSize(this, StateImageList.ImageSize);
+            }
+            AddStateImage(Resources.Peak);  // 8bpp
+            AddStateImage(Resources.Keep);  // 24bpp
+            AddStateImage(Resources.NoPeak); // 24bpp
+            AddStateImage(Resources.PeakBlank); // 8bpp
 
             // Add the editable node at the end
             Nodes.Add(new EmptyNode());
@@ -201,7 +215,17 @@ namespace pwiz.Skyline.Controls
             OnTextZoomChanged();
             OnDocumentChanged(this, new DocumentChangedEventArgs(null));
         }
-        
+
+        private void AddNodeImage(Image image)
+        {
+            ImageList.Images.Add(DpiUtil.ScaleImageForList(this, image, Color.Magenta));
+        }
+
+        private void AddStateImage(Image image)
+        {
+            StateImageList.Images.Add(DpiUtil.ScaleImageForList(this, image));
+        }
+
         protected override void  Dispose(bool disposing)
         {
             if (_pickTimer != null)
@@ -949,7 +973,7 @@ namespace pwiz.Skyline.Controls
         protected Point GetPickerLocation(Rectangle rectDrop)
         {
             var screen = Screen.FromControl(this);
-            Size size = PopupPickList.SizeAll;
+            Size size = DpiUtil.ScaleSize(this, PopupPickList.SizeAll);
             Point pt = PointToScreen(rectDrop.Location);
             int y = pt.Y + rectDrop.Height;
             if (y + size.Height > screen.WorkingArea.Height)
@@ -1301,7 +1325,7 @@ namespace pwiz.Skyline.Controls
             var bounds = ((TreeNodeMS) SelectedNode).BoundsMS;
             _editTextBox.TextBox.Location = new Point(bounds.Location.X + Location.X, 
                 bounds.Location.Y + Location.Y);
-            _editTextBox.MinimumWidth = 80;
+            _editTextBox.MinimumWidth = DpiUtil.Scale(this, 80);
             _editTextBox.MaximumWidth = Bounds.Width - 1 - bounds.Left;
             _editTextBox.AutoSizeWidth = true;
             _editTextBox.AutoResize();

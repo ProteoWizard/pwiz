@@ -35,10 +35,35 @@ namespace pwiz.Skyline.ToolsUI
         public ColorGrid()
         {
             InitializeComponent();
+            // A UserControl with its own AutoScaleMode.Font nested in a Font-autoscaling
+            // form does not get its bounds scaled by the parent; Inherit lets the parent
+            // form scale this control once, correctly (issue #4599).
+            AutoScaleMode = AutoScaleMode.Inherit;
 
             colorPickerDlg.FullOpen = true;
             colBtn.UseColumnTextForButtonValue = true;
             comboColorType.SelectedIndex = 0;
+            // Fixed-width columns and the row height are 96-DPI designs that neither
+            // AutoScaleMode.Font nor column auto-sizing scales (issue #4599).
+            colBtn.Width = colBtn.MinimumWidth = DpiUtil.Scale(this, colBtn.MinimumWidth);
+            colorCol.Width = DpiUtil.Scale(this, colorCol.Width);
+            rgbCol.MinimumWidth = DpiUtil.Scale(this, rgbCol.MinimumWidth);
+            hexCol.MinimumWidth = DpiUtil.Scale(this, hexCol.MinimumWidth);
+            dataGridViewColors.RowTemplate.Height = DpiUtil.Scale(this, dataGridViewColors.RowTemplate.Height);
+            if (DpiUtil.GetFactor(this) > 1)
+            {
+                // The anchored children do not follow this container's size when the
+                // parent dialog resizes it at high DPI (the same autoscale bookkeeping
+                // gap that skips the container's own size), so lay them out explicitly:
+                // the grid fills the width and leaves the designer's 35px (scaled) strip
+                // for the color-type combo pinned at the bottom (issue #4599).
+                SizeChanged += (sender, args) =>
+                {
+                    dataGridViewColors.Size = new Size(ClientSize.Width,
+                        ClientSize.Height - DpiUtil.Scale(this, 35));
+                    comboColorType.Top = ClientSize.Height - DpiUtil.Scale(this, 21);
+                };
+            }
         }
 
         public DataGridView DataGridView

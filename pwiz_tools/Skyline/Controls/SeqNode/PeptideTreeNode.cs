@@ -401,7 +401,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
                 var lastTextSequence = _textSequences[_textSequences.Length - 1];
                 return lastTextSequence.Position + lastTextSequence.Width +
-                    TreeViewMS.PADDING*2;
+                    TreeViewMS.TextPadding*2;
             }
         }
 
@@ -433,7 +433,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             Rectangle rectDraw = new Rectangle(0, bounds.Y, 0, bounds.Height);
             foreach (var textSequence in textSequences)
             {
-                rectDraw.X = textSequence.Position + bounds.X + TreeViewMS.PADDING;
+                rectDraw.X = textSequence.Position + bounds.X + DpiUtil.Scale(g, TreeViewMS.PADDING);
                 rectDraw.Width = textSequence.Width;
                 // Use selection highlight color, if the background is highlight.
                 if (backColor != SystemColors.Highlight)

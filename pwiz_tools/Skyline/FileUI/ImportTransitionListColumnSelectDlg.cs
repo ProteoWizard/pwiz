@@ -486,6 +486,13 @@ namespace pwiz.Skyline.FileUI
 
             // Set the table as the source for the DataGridView that the user sees.
             dataGrid.DataSource = table;
+            if (DpiUtil.GetFactor(this) > 1)
+            {
+                // Auto-generated columns default to 100 device px at any DPI, cropping the
+                // header-overlay dropdown text under the scaled font (issue #4599).
+                foreach (DataGridViewColumn column in dataGrid.Columns)
+                    column.Width = DpiUtil.Scale(this, column.Width);
+            }
 
             var headers = Importer.RowReader.Indices.Headers;
 
@@ -520,6 +527,12 @@ namespace pwiz.Skyline.FileUI
             for (var i = 0; i < columnCount; i++)
             {
                 var combo = new LiteDropDownList();
+                // Runtime-created controls get no AutoScaleMode.Font treatment: the combo
+                // inherits the form's DPI-scaled font but keeps the 96-DPI default Button
+                // height, clipping its text at high DPI; its dropdown-arrow glyph is a
+                // 96-DPI bitmap, pre-scaled here to keep pace (issue #4599).
+                combo.Height = DpiUtil.Scale(this, combo.Height);
+                combo.Image = DpiUtil.ScaleImageForList(this, combo.Image);
                 ComboBoxes.Add(combo);
                 comboPanelInner.Controls.Add(combo);
                 combo.BringToFront();
@@ -820,6 +833,16 @@ namespace pwiz.Skyline.FileUI
             comboPanelOuter.Size = new Size(gridWidth, height);
             comboPanelInner.Size = new Size(xOffset, height);
             comboPanelInner.Location = new Point(-dataGrid.HorizontalScrollingOffset, 0);
+            if (DpiUtil.GetFactor(this) > 1 && dataGrid.Rows.Count > 0 && height > 0)
+            {
+                // The first table row is a placeholder ("...") that this combo overlay is
+                // meant to cover exactly. At high DPI the overlay (one scaled combo tall)
+                // outgrows the auto-sized row and a sliver of the first REAL row showed
+                // through. MinimumHeight is respected by AllCells auto-sizing, so the
+                // placeholder row tracks the overlay height and the boundary stays on a
+                // row edge (issue #4599).
+                dataGrid.Rows[0].MinimumHeight = height;
+            }
         }
 
         /// <summary>

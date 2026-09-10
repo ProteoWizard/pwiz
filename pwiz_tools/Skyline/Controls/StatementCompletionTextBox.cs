@@ -59,8 +59,17 @@ namespace pwiz.Skyline.Controls
         {
             MatchTypes = ProteinMatchTypes.ALL;
             _documentUiContainer = documentUiContainer;
-            _imageList.Images.Add(Resources.Protein);   // 16bpp
-            _imageList.Images.Add(Resources.Peptide);   // 4bpp
+            if (DpiUtil.GetFactor(null) > 1)
+            {
+                // AddImage pre-scales each icon to the DPI size as 32-bit ARGB with the
+                // magenta key already applied, so the list must preserve alpha instead of
+                // color-keying (issue #4599).
+                _imageList.TransparentColor = Color.Transparent;
+                _imageList.ColorDepth = ColorDepth.Depth32Bit;
+                _imageList.ImageSize = DpiUtil.ScaleSize(null, _imageList.ImageSize);
+            }
+            AddImage(Resources.Protein);   // 16bpp
+            AddImage(Resources.Peptide);   // 4bpp
             _hideOnLoseFocus = hideOnLoseFocus;
         }
 
@@ -258,7 +267,9 @@ namespace pwiz.Skyline.Controls
 
         public void AutoResize()
         {
-            int dx = TextRenderer.MeasureText(TextBox.Text, TextBox.Font, new Size(TextBox.Height, MaximumWidth)).Width + 8;
+            // MeasureText's proposedSize is (width, height); the arguments were transposed,
+            // a latent bug even at 96 DPI (issue #4599).
+            int dx = TextRenderer.MeasureText(TextBox.Text, TextBox.Font, new Size(MaximumWidth, TextBox.Height)).Width + DpiUtil.Scale(TextBox, 8);
             dx = Math.Max(dx, MinimumWidth);
             dx = Math.Min(dx, MaximumWidth);
             TextBox.Width = dx;
@@ -707,6 +718,11 @@ namespace pwiz.Skyline.Controls
 
         public event Action<StatementCompletionItem> SelectionMade;
         public event Action TextBoxLoseFocus;
+
+        private void AddImage(Image image)
+        {
+            _imageList.Images.Add(DpiUtil.ScaleImageForList(null, image, Color.Magenta));
+        }
     }
 
     public class StatementCompletionItem
