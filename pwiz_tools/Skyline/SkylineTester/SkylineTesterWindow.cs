@@ -996,20 +996,21 @@ namespace SkylineTester
         /// (...\bin\[x64\]&lt;Config&gt;\&lt;tfm&gt;), the staged directory simply IS it
         /// (...\bin\staging*\&lt;Config&gt;), and the unzipped nightly distro does not contain it at
         /// all, being outside any checkout.</para>
-        /// <para>Reading only the parent folder answered "Debug" for the last two. That is how a
-        /// nightly which had just built Release came to report "Build the solution in Debug", and
-        /// how a Release staged run described itself as Debug. A nightly never builds anything but
-        /// <see cref="TabBuild.BUILD_CONFIGURATION"/>, so that is the answer when this is running
-        /// outside a checkout; Debug remains the fallback for an unrecognized developer layout,
-        /// which is what someone iterating in the IDE is running.</para>
+        /// <para>Those two are the ONLY shapes a run from inside a checkout takes, so anything
+        /// else is the unzipped distro, which is built as
+        /// <see cref="TabBuild.BUILD_CONFIGURATION"/> and only ever tests what a nightly built.</para>
+        /// <para>Reading only the parent folder answered "Debug" for both the staged and the distro
+        /// case. That is how a nightly which had just built Release came to report "Build the
+        /// solution in Debug", and how a Release staged run described itself as Debug. Do NOT
+        /// reintroduce a Debug fallback keyed on being outside a checkout:
+        /// <see cref="SkylineDirectory"/> matches any ancestor named "Skyline", so a nightly rooted
+        /// under one - D:\Skyline\Nightly\... - would silently answer Debug all over again.</para>
         /// </summary>
         private string PreferredConfiguration()
         {
-            var config = AsConfigurationName(Path.GetFileName(ExeDir)) ??
-                         AsConfigurationName(Path.GetFileName(Path.GetDirectoryName(ExeDir) ?? string.Empty));
-            if (config != null)
-                return config;
-            return SkylineDirectory() == null ? TabBuild.BUILD_CONFIGURATION : "Debug";
+            return AsConfigurationName(Path.GetFileName(ExeDir)) ??
+                   AsConfigurationName(Path.GetFileName(Path.GetDirectoryName(ExeDir) ?? string.Empty)) ??
+                   TabBuild.BUILD_CONFIGURATION;
         }
 
         /// <summary>
