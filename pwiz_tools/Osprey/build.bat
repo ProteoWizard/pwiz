@@ -17,6 +17,9 @@ REM # top-level b.bat can route to either app without translating per-app:
 REM #   --no-tests                        -> -NoTests
 REM #   --build-only                      -> -NoTests (Osprey has no staging step,
 REM #                                        so the two mean the same thing here)
+REM # Both spellings set one flag and -NoTests is appended once after the loop:
+REM # appending per match emitted it twice when both were passed, and PowerShell
+REM # refuses to bind a switch specified more than once, so the build never started.
 REM #   --i-agree-to-the-vendor-licenses  -> see the warning below
 REM # Anything else is passed through to build.ps1 untouched.
 REM # Capture this before the loop: `shift` shifts %0 as well, so %~dp0 afterwards
@@ -26,9 +29,9 @@ set PSARGS=
 :parseargs
 if "%~1"=="" goto endparse
 if /i "%~1"=="--no-tests" (
-    set PSARGS=!PSARGS! -NoTests
+    set NOTESTS=1
 ) else if /i "%~1"=="--build-only" (
-    set PSARGS=!PSARGS! -NoTests
+    set NOTESTS=1
 ) else if /i "%~1"=="--i-agree-to-the-vendor-licenses" (
     REM # Deliberately a no-op ON THIS BRANCH, and it says so rather than pretending.
     REM # Osprey has no managed vendor path here: Osprey.csproj references neither
@@ -50,6 +53,9 @@ if /i "%~1"=="--no-tests" (
 shift
 goto parseargs
 :endparse
+
+REM # Appended once, however many spellings arrived.
+if defined NOTESTS set PSARGS=!PSARGS! -NoTests
 
 pwsh -NoProfile -File "!SCRIPT_DIR!build.ps1" !PSARGS!
 exit /b %ERRORLEVEL%

@@ -138,6 +138,16 @@ REM # never reach the test step. Stating the implication keeps that true even if
 REM # exits below are ever reordered.
 if %BUILDONLY%==1 set NOTESTS=1
 
+REM # A zip is produced after staging, which --build-only skips, so the two together are
+REM # contradictory. Say so rather than exiting 0 having quietly built no zip - that silent
+REM # drop is the defect this flag was split out to fix, and the top-level b.bat injects
+REM # --build-only, so "bs.bat SkylineTester.zip" lands here. Use --no-tests for a zip.
+if %BUILDONLY%==1 if defined ZIPS (
+    set EXIT=2
+    set "ERROR_TEXT=--build-only skips the zip step, so %ZIPS:~3% cannot be produced. Use --no-tests instead, which stages and zips without running the tests."
+    goto error
+)
+
 if %REQUIRE_VENDOR%==1 if %IAGREE%==0 (
     set EXIT=2
     set ERROR_TEXT=--require-vendor-support set but --i-agree-to-the-vendor-licenses was not passed; refusing to build a stripped artifact.
