@@ -1,5 +1,11 @@
 <Project>
 
+  <!-- $(PwizTargetIsWindows) - the platform the output will RUN on. Imported here rather than
+       inherited from a Directory.Build.props because Skyline.csproj imports this file from its
+       own body: at that point net10.0-windows is in scope (so the TFM rule resolves the target
+       correctly even on a Linux host) but Directory.Build.targets has not run yet. -->
+  <Import Project="$(MSBuildThisFileDirectory)PwizTargetPlatform.props" Condition="'$(PwizTargetPlatformPropsImported)' != 'true'" />
+
   <!-- Native CRT for the vendor DLLs, the MSBuild counterpart of Jamroot.jam's .msvcrt-x64
        (pwiz_tools/Shared/Lib/$(.msvcrt-x64), fed to the C++ targets as <assembly-dependency>).
        The vendor readers are native and P/Invoked by name, and they import the VC++
@@ -28,7 +34,7 @@
        loaded fine; the wiff2 staging targets copy @(VendorNativeCrtFile) in beside it. Any
        future plugin subfolder holding a native DLL needs the same treatment. -->
 
-  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+  <ItemGroup Condition="'$(PwizTargetIsWindows)' == 'true'">
     <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC110.CRT\x64\msvcp110.dll" />
     <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC110.CRT\x64\msvcr110.dll" />
     <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC110.CRT\x64\vcomp110.dll" />
@@ -81,7 +87,7 @@
     <VendorNativeCrtFile Include="$(MSBuildThisFileDirectory)Microsoft.VC140.CRT\x64\vcruntime140_1.dll" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+  <ItemGroup Condition="'$(PwizTargetIsWindows)' == 'true'">
     <None Include="@(VendorNativeCrtFile)"
           Link="%(Filename)%(Extension)"
           CopyToOutputDirectory="PreserveNewest"
@@ -99,7 +105,7 @@
 
        Unconditional because every importer of this file transitively references pwiz-sharp's
        MsData.csproj, which is what brings HDF.PInvoke in - so all of them have the folder. -->
-  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+  <ItemGroup Condition="'$(PwizTargetIsWindows)' == 'true'">
     <None Include="@(VendorNativeCrtFile)"
           Link="runtimes\win-x64\native\%(Filename)%(Extension)"
           CopyToOutputDirectory="PreserveNewest"

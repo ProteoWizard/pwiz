@@ -16,6 +16,7 @@
     <MobilionArchive>$(PwizCppAuxRoot)\msrc\utility\vendor_api_Mobilion.7z</MobilionArchive>
     <MobilionAssembliesDir>$(PwizVendorAssembliesPath)\Mobilion</MobilionAssembliesDir>
     <MobilionShimDir>$(MSBuildThisFileDirectory)MobilionShim</MobilionShimDir>
+
     <!-- $(SevenZaExe) is deliberately NOT set here: Directory.Build.props picks 7za.exe or
          7zz per OS, and hardcoding the Windows PE breaks any non-Windows build. -->
   </PropertyGroup>
@@ -65,6 +66,20 @@
        publish it to this project's output dir as Content so consumers
        (msconvert-sharp, tests) get it alongside MBI_SDK.dll for runtime
        P/Invoke. -->
+  <!-- Like BiblioSpec's MascotShim, MobilionShim is native and COMPILED here rather than
+       vendored, so it cannot cross-compile: the .vcxproj needs Visual Studio's C++ toolchain.
+       Check before LocateVisualStudioMSBuild runs, because that target shells out to a hardcoded
+       Windows vswhere.exe path and off-Windows the Exec fails with a bare "exited
+       with code 127" - which reads as a broken install rather than as "this cannot be built
+       here". Only one direction needs checking: a Linux-targeted build leaves
+       $(NativeVendorsAvailable) false and skips this whole path. -->
+  <Target Name="VerifyMobilionShimPlatform"
+          Condition="'$(NativeVendorsAvailable)' == 'true' AND '$(OS)' != 'Windows_NT'"
+          BeforeTargets="LocateVisualStudioMSBuild;BuildMobilionShim">
+    <Error Code="PWIZ0005"
+           Text="Mobilion support targets Windows but this build is running on $(OS). MobilionShim.vcxproj is native C++ built by Visual Studio MSBuild, which cannot cross-compile here. Build it on Windows, or drop -p:IAgreeToVendorLicenses=true to compile every native vendor reader out (Identify() keeps working; Read() throws)." />
+  </Target>
+
   <Target Name="LocateVisualStudioMSBuild"
           Condition="'$(NativeVendorsAvailable)' == 'true' and '$(VsMSBuildExe)' == ''">
     <!-- vswhere.exe lives in the (x86) Program Files even on x64 machines (Installer is a

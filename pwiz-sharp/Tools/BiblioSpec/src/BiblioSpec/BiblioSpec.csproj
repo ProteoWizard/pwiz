@@ -57,10 +57,18 @@
          by default. Pass -p:MascotSupport=false (or build.bat 'without-mascot')
          to compile the Mascot reader out of BiblioSpec. -->
     <MascotSupport Condition="'$(MascotSupport)' == ''">true</MascotSupport>
-
     <!-- Same defaults the cpp Jamfile's msparser-path resolver uses
          (Jamroot.jam:1273 for Windows, :1287 for Linux). Override with
-         -p:MascotParserPath=PATH on the dotnet command line. -->
+         -p:MascotParserPath=PATH on the dotnet command line.
+
+         Everything Mascot below stays on $(OS) - the BUILD HOST - where the vendor csprojs moved
+         to $(PwizTargetIsWindows). That is not an oversight. The vendor SDKs are prebuilt
+         binaries picked off a shelf, so the shelf to reach for is the target's; MascotShim is
+         COMPILED here by cmake, and cmake without a cross-toolchain emits for the machine it runs
+         on. Host-shaped paths are therefore the truth about what appears in
+         $(MascotShimBuildDir), and pointing them at the target would name a file that is never
+         produced. VerifyMascotShimPlatform below turns the resulting cross-target build into an
+         explanation instead of an MSB3030 about a missing DLL. -->
     <MascotShimDir>$(MSBuildThisFileDirectory)..\..\native\MascotShim</MascotShimDir>
     <MascotShimBuildDir>$(MascotShimDir)\build</MascotShimBuildDir>
     <!-- The actual built artifact, per platform + config. Used as BuildMascotShim's
@@ -133,6 +141,22 @@
           StandardOutputImportance="low" />
   </Target>
 
+  <!-- MascotShim is native and built, not vendored, so it cannot cross-compile: a Linux cmake
+       produces libMascotShim.so and there is no Windows MascotShim.dll for the payload to carry
+       (nor the reverse). Catch that here rather than letting the Content items below fail with
+       MSB3030 on a file whose absence looks like a broken build. Mascot support is on by default,
+       so a cross-target build has to opt out of it deliberately. -->
+  <Target Name="VerifyMascotShimPlatform"
+          Condition="'$(MascotSupport)' == 'true'"
+          BeforeTargets="LocateCMake;BuildMascotShim">
+    <Error Condition="'$(PwizTargetIsWindows)' == 'true' AND '$(OS)' != 'Windows_NT'"
+           Code="PWIZ0004"
+           Text="Mascot support targets Windows but this build is running on $(OS). MascotShim is a native library compiled by cmake, which cannot cross-compile here. Build it on Windows, or pass --without-mascot (-p:MascotSupport=false) to compile the Mascot reader out." />
+    <Error Condition="'$(PwizTargetIsWindows)' != 'true' AND '$(OS)' == 'Windows_NT'"
+           Code="PWIZ0004"
+           Text="Mascot support targets Linux but this build is running on Windows. MascotShim is a native library compiled by cmake, which cannot cross-compile here. Build it on Linux, or pass --without-mascot (-p:MascotSupport=false) to compile the Mascot reader out." />
+  </Target>
+
   <!-- 3. Configure + build MascotShim. The VS multi-config generator emits
        MascotShim.dll under $(MascotShimBuildDir)\$(Configuration)\; Linux's
        single-config Makefile generator emits libMascotShim.so directly under
@@ -202,5 +226,6 @@
       <Visible>false</Visible>
     </Content>
   </ItemGroup>
+
 
 </Project>
