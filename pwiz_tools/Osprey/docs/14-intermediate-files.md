@@ -312,11 +312,18 @@ Stage 6 (`PerFileRescoreTask`) writes `<stem>.scores-reconciled.parquet`
 (`GetReconciledScoresPath`, `ParquetScoreCache.cs:1055`) rather than overwriting the Stage 4
 `.scores.parquet`. The `.scores-reconciled.parquet` suffix is appended **after** the `.scores`
 token so it is an unambiguous "Stage 6 output" signal (`ParquetScoreCache.cs:1036`).
-`EffectiveScoresPathFromScoresPath` (`ParquetScoreCache.cs:1103`) is the read-side contract: a
-post-Stage-6 reader consumes the reconciled sibling when it exists on disk, else the original —
-making the split-file design byte-equivalent to the former in-place overwrite while surviving a
-partial Stage 6 crash. This is a C# infrastructure refinement over the Rust doc's single-file
-model.
+The read-side contract is `ScoringTaskShared.ReadsReconciledScores`: which of the two a reader
+consumes is decided by the **task**, not by which file happens to be on disk. `SecondPassFDR`
+reads the reconciled parquet; `FirstPassFDR` and `PerFileRescoring` read the Stage 4 file.
+This is a C# infrastructure refinement over the Rust doc's single-file model, and it survives a
+partial Stage 6 crash.
+
+It was a disk probe until 2026-09-08 - take the reconciled sibling wherever it exists, else the
+original - which reads as equivalent and is not. It is right only while the stages run in order,
+because the artifact is absent before Stage 6 and present after; re-run `--task FirstPassFDR`
+over a completed directory and the same probe hands the FIRST pass the survivor SUBSET, with
+every version, search and library hash matching. The task always knew which artifact it wanted;
+the probe was inferring it from a side effect.
 
 ---
 
@@ -667,9 +674,9 @@ default resume mechanism.
 
 - **[INTENTIONAL-CSHARP-DESIGN] Reconciled parquet is a separate `.scores-reconciled.parquet`,
   not an in-place overwrite** - Rust doc's model rewrites `.scores.parquet` in place during Stage
-  6; C# writes a distinct sibling and selects it on read via
-  `EffectiveScoresPathFromScoresPath`, surviving a partial Stage 6 crash. Evidence:
-  `ParquetScoreCache.cs:1036,1055,1103`; `ReconciledParquetWriter.cs`. Severity: minor.
+  6; C# writes a distinct sibling and selects it on read by task membership
+  (`ScoringTaskShared.ReadsReconciledScores`), surviving a partial Stage 6 crash. Evidence:
+  `ParquetScoreCache.cs`; `ReconciledParquetWriter.cs`. Severity: minor.
 
 - **[INTENTIONAL-CSHARP-DESIGN] FDR sidecar loader matches records by `entry_id`, tolerating
   `count < entries.len()`** - Rust doc says `entry_count` must equal `entries.len()` and records

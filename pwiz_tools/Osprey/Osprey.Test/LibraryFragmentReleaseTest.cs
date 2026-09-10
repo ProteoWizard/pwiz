@@ -175,11 +175,11 @@ namespace pwiz.Osprey.Test
         private static void ValidateEveryLegThatHoldsTheLibraryReleasesIt()
         {
             AssertRunsOnLeg(true, @"straight-through", new OspreyConfig());
-            AssertRunsOnLeg(true, @"--task SecondPassFDR",
-                WithInputScores(c => c.ExpectReconciledInput = true));
-            AssertRunsOnLeg(true, @"--input-scores full pipeline", WithInputScores(_ => { }));
-            AssertRunsOnLeg(false, @"--task FirstPassFDR",
-                WithInputScores(c => c.StopAfterStage5 = true));
+            AssertRunsOnLeg(true, @"--task SecondPassFDR", ForTask(HpcTask.SecondPassFdr));
+            // The `--input-scores full pipeline` leg that stood here is gone with the flag:
+            // a single-node full pipeline started from parquets IS the straight-through leg
+            // above now, asserted once rather than twice under two input kinds.
+            AssertRunsOnLeg(false, @"--task FirstPassFDR", ForTask(HpcTask.FirstPassFdr));
 
             // --fdrbench-pass 1 forces the RESIDENT first-pass pool, which never computes a
             // surviving base_id set, so there is nothing to release against.
@@ -226,22 +226,22 @@ namespace pwiz.Osprey.Test
             {
                 AssertSuffix(true, @"straight-through, released", new OspreyConfig());
                 AssertSuffix(true, @"--task SecondPassFDR, released",
-                    WithInputScores(c => c.ExpectReconciledInput = true));
+                    ForTask(HpcTask.SecondPassFdr));
                 AssertSuffix(true, @"--task FirstPassFDR cannot release",
-                    WithInputScores(c => c.StopAfterStage5 = true));
+                    ForTask(HpcTask.FirstPassFdr));
 
                 OspreyEnvironment.UseFdrProjection = false;
                 AssertSuffix(false, @"could have released, Stage 5 went resident instead",
                     new OspreyConfig());
                 // SecondPassFDR's release is its own and does not ride the Stage 5 path.
                 AssertSuffix(true, @"--task SecondPassFDR ignores OSPREY_FDR_PROJECTION",
-                    WithInputScores(c => c.ExpectReconciledInput = true));
+                    ForTask(HpcTask.SecondPassFdr));
                 OspreyEnvironment.UseFdrProjection = savedProjection;
 
                 OspreyEnvironment.ReleaseLibraryFragments = false;
                 AssertSuffix(false, @"opted out where a release was possible", new OspreyConfig());
                 AssertSuffix(true, @"opted out where it was not possible anyway",
-                    WithInputScores(c => c.StopAfterStage5 = true));
+                    ForTask(HpcTask.FirstPassFdr));
             }
             finally
             {
@@ -270,11 +270,23 @@ namespace pwiz.Osprey.Test
             return new PipelineContext(config, AnalysisPipeline.CanonicalPipeline(), null, null, null);
         }
 
-        private static OspreyConfig WithInputScores(Action<OspreyConfig> set)
+        /// <summary>
+        /// One task's config, built the way <c>Program.Main</c> builds it: the task, and the
+        /// three membership flags DERIVED from it. It used to carry an input KIND as well - a
+        /// parquet list standing for <c>--input-scores</c> - which the release predicate read
+        /// alongside the flags; that seam has retired.
+        /// </summary>
+        private static OspreyConfig ForTask(HpcTask task)
         {
-            var config = new OspreyConfig { InputScores = new List<string> { @"a.scores.parquet" } };
-            set(config);
-            return config;
+            return new OspreyConfig
+            {
+                SelectedTask = task,
+                NoJoin = task == HpcTask.PerFileScoring || task == HpcTask.PerFileRescore,
+                // EXACTLY Program.cs's single assignment. Naming ModelDiagnostics here built
+                // a config the CLI cannot produce - see PipelineMembershipTest.ForTask.
+                StopAfterStage5 = task == HpcTask.FirstPassFdr,
+                ExpectReconciledInput = task == HpcTask.SecondPassFdr,
+            };
         }
 
         /// <summary>

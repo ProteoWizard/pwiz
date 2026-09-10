@@ -1208,6 +1208,20 @@ namespace pwiz.Osprey.Tasks
         /// reconciliation JSON) without duplicating them. The synthetic
         /// path is never opened — only its components are inspected.
         /// Mirrors Rust's <c>synthetic_input_from_parquet</c>.
+        ///
+        /// <para>Its REASON is gone. It existed because <c>--input-scores</c> named parquets
+        /// on the command line, so the pipeline's first act was to convert them back into
+        /// data-file names for the sidecar helpers - a round trip, and the clearest evidence
+        /// that the flag was a second way of saying what <c>--task</c> already said. That
+        /// flag has retired; every task is given the data-file names directly.</para>
+        ///
+        /// <para>What is left is internal: the hydrate methods below still take a PARQUET
+        /// path per run (from <c>PerFileParquetPaths</c>, which is how the pipeline carries
+        /// them), and derive the stem back from it. Inverting those signatures to take the
+        /// input and derive the parquet is the remaining half of the retirement - a
+        /// no-behaviour-change refactor, deliberately not folded into the CLI change so the
+        /// gate can attribute a failure to one of them. See
+        /// TODO-20260908_osprey_input_scores_retirement.md.</para>
         /// </summary>
         public static string SyntheticInputFromParquet(string parquetPath)
         {

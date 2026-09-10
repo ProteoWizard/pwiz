@@ -302,7 +302,16 @@ $knownResidentGaps = @(
         # the 91.1 GB private measured on the 446-run CHS cohort (2026-09-08), which is the
         # first endpoint past 82 files. Quoted as a check on the model, not as a second model -
         # see the note above about three numbers no single model reproduced.
-        Legs  = 'Every leg EXCEPT the streamed Stage-7 join (mode 3''s SecondPassFDR phase, which sets ExpectReconciledInput). ~4.4 GB library + 0.197 GB/file live post-GC: ~20 GB at 82 files, ~103 GB projected at 500, and 92.3 GB predicted vs 91.1 GB measured at 446.'
+        # The set has SHRUNK from "every leg except mode 3's join phase" to one pass-2 mode.
+        # CanStreamStage7Join's first term was config.ExpectReconciledInput, which only
+        # --task SecondPassFDR sets, so the ordinary run could not stream BY CONSTRUCTION;
+        # derived from the reconciled parquets on disk it is route-independent, and the cold
+        # run and both resume arms now fold run by run (asserted per leg, not projected).
+        # What is left is the pass-2 mode with no per-file worker: transfer still computes
+        # its per-file half in Stage 7, over the whole pool. Moving TransferOneFile into
+        # Pass2PerFileWorker is what empties this row - and then the guard's
+        # streamingAvailable exemption has no subject either, so the two go together.
+        Legs  = 'ONLY a pass-2 mode with no per-file worker (OSPREY_PASS2_QVALUE=transfer, i.e. mode 10''s transfer arm). Every default leg - cold straight-through, both resumes, and mode 3''s SecondPassFDR phase - folds run by run. ~4.4 GB library + 0.197 GB/file live post-GC where it is still taken: ~20 GB at 82 files, and 92.3 GB predicted vs 91.1 GB measured at 446.'
     }
 )
 # Reachable only outside this gate, tokened, each with an open issue:
@@ -1156,6 +1165,12 @@ $firstPassFdrRehydrateMarker = 'Resume rehydrate: streaming the first-pass bundl
 # Asserting the outcome alone is exactly what let an earlier resume fix report success while
 # testing the old path (defect (b2), TODO-20260901_osprey_firstpassfdr_resume).
 $perRunHydrateMarker = 'Per-run rescore: hydrating each of'
+# The line every arm of the streamed Stage-7 join logs - the reconciled-input merge, the
+# straight-through cold run and the straight-through resume all open with these words on
+# purpose. Output is IDENTICAL whichever arm runs, so this line is the only evidence the
+# bounded join happened at all; giving each arm its own wording would need three markers
+# and would let a fourth arm ship unwatched.
+$stage7StreamMarker = 'Second-pass join: folding over '
 
 # FirstPassFDR's half of the same shape: on a rehydrate where the analysis-wide summary is on
 # disk it publishes the survivor loader and builds no experiment-wide bundle, so it emits this
@@ -1399,7 +1414,7 @@ function Invoke-HpcChain {
     # staged dir as CWD.
     $manifestName = if ($Manifest) { Split-Path -Leaf $Manifest } else { $null }
     $extraArgs = Get-DatasetCliArgs -Spec $Spec -Manifest $manifestName
-    # Stable, file-order stem list (NOT hashtable key order) so the --input-scores
+    # Stable, file-order stem list (NOT hashtable key order) so the -i
     # argument order matches the straight-through's file order deterministically.
     $stemList = @($Mzmls | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) })
     $mzmlByStem = @{}
@@ -1473,8 +1488,12 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph1Dirs[$s] "$s.calibration.json") (Join-Path $ph2 "$s.calibration.json")
     }
     Copy-LibraryInto -Library $Library -Dir $ph2 -Manifest $Manifest
+    # -i names the DATA files, exactly as phase 1 was given them, even though this
+    # directory holds no data file at all: Osprey accepts an absent input whose scores
+    # parquet is on disk, which is precisely the state a staged join node is in. That
+    # tolerance is what --input-scores used to express by naming a different input KIND.
     $a2 = @('--task', 'FirstPassFDR')
-    foreach ($s in $stemList) { $a2 += @('--input-scores', "$s.scores.parquet") }
+    foreach ($s in $stemList) { $a2 += @('-i', "$s.mzML") }
     $a2 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString())
     $a2 += $extraArgs
@@ -1543,7 +1562,7 @@ function Invoke-HpcChain {
         $ph2diag = Join-Path $ph2 'output.1st-pass.model-diagnostics.json'
         if (Test-Path $ph2diag) { Copy-Item $ph2diag (Join-Path $ph3 'output.1st-pass.model-diagnostics.json') }
         Copy-LibraryInto -Library $Library -Dir $ph3 -Manifest $Manifest
-        $a3 = @('--task', 'PerFileRescoring', '--input-scores', "$s.scores.parquet",
+        $a3 = @('--task', 'PerFileRescoring', '-i', "$s.mzML",
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
                 '--protein-fdr', '0.01', '--threads', $Threads.ToString())
         $a3 += $extraArgs
@@ -1682,8 +1701,13 @@ function Invoke-HpcChain {
     # worker dirs are done.
     foreach ($d in $ph3Dirs.Values) { Remove-Scratch $d }
     Copy-LibraryInto -Library $Library -Dir $ph4 -Manifest $Manifest
+    # -i again, and the RECONCILED parquet is what each run resolves to - because the TASK
+    # says so (ScoringTaskShared.ReadsReconciledScores), not because it is the only file
+    # here. That this directory also holds only the reconciled sibling is the enforcement
+    # above, and the two are deliberately independent: if the resolution ever regressed to
+    # a disk probe, the staging would hide it.
     $a4 = @('--task', 'SecondPassFDR')
-    foreach ($s in $stemList) { $a4 += @('--input-scores', "$s.scores-reconciled.parquet") }
+    foreach ($s in $stemList) { $a4 += @('-i', "$s.mzML") }
     $a4 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString())
     $a4 += $extraArgs
@@ -1737,6 +1761,37 @@ foreach ($name in $selected) {
     $dataFp = Get-DirFingerprint -Dir $inputs.Dir
 
     $straightDir = Join-Path $runRoot "$name\straight"
+    # Whether this run was ASKED for a configuration that cannot stream the Stage-7 join, so
+    # the legs below can tell "took the resident join" from "was told to". These are
+    # CanStreamStage7Join's OWN terms, not a mode list: the switch that forces the resident
+    # join, the two that make NeedsResidentPool true, and any pass-2 mode other than
+    # protein-compact (transfer still computes its per-file half in Stage 7). Enumerated
+    # rather than inferred from the log, because a resident run says nothing about WHY it was
+    # resident - and a silent SKIP for the wrong reason is what these legs exist to prevent.
+    #
+    # ExpectReconciledInput is not among them, and used to be the whole answer: it was
+    # CanStreamStage7Join's first term, and only --task SecondPassFDR sets it, so the ordinary
+    # run could not stream by construction. Deriving the admission from the reconciled parquets
+    # on disk is what puts every leg under one question.
+    #
+    # OSPREY_STAGE6_STREAM_SURVIVORS=0 belongs here too, and its absence made this list
+    # wrong rather than merely incomplete. Under that switch BuildRunPerRunSource returns
+    # null (no loader, and the per-run lists are never cleared), so no marker reaches
+    # straight.log and the mode1 leg FAILS a run behaving exactly as instructed - while
+    # mode2/mode5 PASS, because BuildResumePerRunSource reads the loader through
+    # PublishedSurvivorLoader, which deliberately bypasses the Stage-6 switch. A mode1-only
+    # red that reads like a genuine regression is the worst shape a gate can have.
+    #
+    # STILL INCOMPLETE, deliberately, and worth knowing: this reads env vars only, while two
+    # of the three NeedsResidentPool triggers are CLI/config (--fdrbench-pass 1, a
+    # non-Percolator --fdr-method). A dataset spec setting either would red all three legs.
+    # No spec does today; if one is added, this has to grow a $cfg term.
+    $cannotStreamJoin =
+        ($env:OSPREY_STAGE7_STREAM -eq '0') -or
+        ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
+        ($env:OSPREY_FDR_PROJECTION -eq '0') -or
+        (-not [string]::IsNullOrWhiteSpace($env:OSPREY_PASS2_QVALUE) -and
+         $env:OSPREY_PASS2_QVALUE -ne 'protein-compact')
     $proteinDump = Join-Path $straightDir 'cs_stage7_protein_fdr.tsv'
     # GoldenFolder, not Folder: StellarLibDecoy shares the stellar mzML folder,
     # so keying the golden on Folder alone would collide with Stellar's.
@@ -1881,7 +1936,7 @@ foreach ($name in $selected) {
         # pool, so no leg of this chain arms the guard at all. Keeping the opt-in would be
         # actively harmful:
         # it wrapped the whole chain and would mask a genuine guard regression on any
-        # --input-scores worker (--task PerFileScoring / PerFileRescoring), which is exactly
+        # per-file worker (--task PerFileScoring / PerFileRescoring), which is exactly
         # what mode 3 exists to exercise.
         $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
             -Resolution $cfg.Resolution -ChainRoot $chainRoot -Spec $cfg -Manifest $inputs.Manifest `
@@ -2047,21 +2102,12 @@ foreach ($name in $selected) {
         # needs a narrower rule should name the condition rather than restore a blanket skip.
         # ...unless the run was asked for a configuration that cannot stream, in which case it
         # is doing exactly what it was told and demanding the marker would fail it for
-        # complying. These are CanStreamStage7Join's OWN terms, not a mode list: the switch that
-        # forces the resident join, the two that make NeedsResidentPool true, and any pass-2
-        # mode other than protein-compact (transfer still computes its per-file half in Stage 7).
-        # ExpectReconciledInput is not among them because phase 4 always sets it.
-        # Enumerated rather than inferred from the log, because a resident run says nothing
-        # about WHY it was resident - and a silent SKIP for the wrong reason is what this leg
-        # exists to prevent.
-        $chainCannotStream =
-            ($env:OSPREY_STAGE7_STREAM -eq '0') -or
-            ($env:OSPREY_FDR_PROJECTION -eq '0') -or
-            (-not [string]::IsNullOrWhiteSpace($env:OSPREY_PASS2_QVALUE) -and
-             $env:OSPREY_PASS2_QVALUE -ne 'protein-compact')
+        # complying. $cannotStreamJoin, computed once per dataset above, is that question; it
+        # governs every leg's copy of this assertion rather than each one enumerating the
+        # terms again.
         $chainStreamed = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
             -Pattern 'Second-pass join: folding over \d+ run\(s\)' -Quiet
-        if ($chainCannotStream) {
+        if ($cannotStreamJoin) {
             $summaryLines.Add("$name mode3 (streamed join): SKIP (this configuration cannot stream the join)")
         } elseif (-not $chainStreamed) {
             $overallFail = $true
@@ -2642,6 +2688,71 @@ foreach ($name in $selected) {
                 Write-Problem-Tc "$name mode5 (rehydrate FDR sanity bounds): FAIL - calibration is out of bounds"
                 $m5s.Issues | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
                 $summaryLines.Add("$name mode5 (rehydrate FDR sanity bounds): FAIL ($($m5s.Issues.Count) issues)")
+            }
+        }
+    }
+
+    # ---- mode 1/2/5: the IN-PROCESS legs took the streamed Stage-7 join ----
+    # Here, beside mode 6, for mode 6's own reason: it reads the logs of the legs above and
+    # they have to have been written. Mode 3's chain carries the same assertion inside its own
+    # block, where its phase-4 log lives.
+    #
+    # This could not be asserted before. CanStreamStage7Join's admission WAS
+    # config.ExpectReconciledInput, which only --task SecondPassFDR sets, so every in-process
+    # leg was resident by construction and demanding the marker would have failed each of them
+    # for behaving correctly. Derived from the reconciled parquets on disk the admission is
+    # route-independent, and these three legs - the cold run and the two resumes - are exactly
+    # the shapes an operator runs. The 91.1 GB measured on a 446-run cohort was an ORDINARY
+    # `-i ... --output-dir` resume, i.e. the third of them.
+    #
+    # Three separate arms, not one: the cold run publishes its source from
+    # PerFileRescoreTask.Run, and the two resumes from its Rehydrate, having arrived there by
+    # different routes (mode 2 re-runs FirstPassFDR, mode 5 rebuilds its bundle from its own
+    # sidecars, which leaves the survivor lists POPULATED where mode 2 leaves them released).
+    # A marker on one says nothing about the others.
+    #
+    # A leg that did not run is SKIP, not FAIL - -SkipResume / -SkipRehydrate are legitimate.
+    foreach ($streamLeg in @(
+        @{ Log = 'straight.log';  Mode = 'mode1'; What = 'the cold straight-through run' },
+        @{ Log = 'resume.log';    Mode = 'mode2'; What = 'the resume' },
+        @{ Log = 'rehydrate.log'; Mode = 'mode5'; What = 'the own-sidecar rehydrate' })) {
+        $legPath = Join-Path $straightDir $streamLeg.Log
+        if ($cannotStreamJoin) {
+            $summaryLines.Add(("$name $($streamLeg.Mode) (streamed join): SKIP " +
+                '(this configuration cannot stream the join)'))
+        } elseif (-not (Test-Path -LiteralPath $legPath)) {
+            $summaryLines.Add("$name $($streamLeg.Mode) (streamed join): SKIP (leg not run)")
+        } else {
+            $legStream = Test-LogMarker -LogPath $legPath -Marker $stage7StreamMarker `
+                -Description ("$($streamLeg.What) folding Stage 7 one run at a time instead " +
+                    'of rebuilding every run''s survivors at once')
+            # PRESENCE OF THE MARKER IS NOT ENOUGH, and this is the hole it left. The marker is
+            # logged when the per-run source is BUILT, not when anything folds through it. A
+            # consumer that reads RescoredEntries.Value instead of streaming routes to
+            # MaterializeAllFromSource, which builds every run at once - the exact O(runs x
+            # entries) peak, 91.1 GB at 446 - while Streams stays true, so the marker is present,
+            # WarnResidentStage7Join stays silent, and this leg reported PASS on a resident run.
+            # MaterializeAllFromSource has always logged its own warning; nothing asserted its
+            # absence. Assert it here: the marker says a source was offered, this says nothing
+            # took the whole pool anyway.
+            $legPooled = Select-String -LiteralPath $legPath -SimpleMatch -Quiet `
+                -Pattern 'a consumer asked for the whole-run survivor pool'
+            if ($legPooled) {
+                $overallFail = $true
+                Write-Problem-Tc ("$name $($streamLeg.Mode) (streamed join): FAIL - a per-run " +
+                    'source was published AND a consumer then pulled the whole pool through it, ' +
+                    'so the fold did not bound anything. The marker alone cannot see this.')
+                $summaryLines.Add("$name $($streamLeg.Mode) (streamed join): FAIL")
+            } elseif ($legStream.Pass) {
+                $summaryLines.Add(("$name $($streamLeg.Mode) (streamed join): PASS " +
+                    '(per-run fold, no all-runs pool)'))
+            } else {
+                $overallFail = $true
+                Write-Problem-Tc ("$name $($streamLeg.Mode) (streamed join): FAIL - Stage 7 " +
+                    'built the whole-run survivor pool. Output is unchanged either way; only ' +
+                    'this line distinguishes them.')
+                $legStream.Issues | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+                $summaryLines.Add("$name $($streamLeg.Mode) (streamed join): FAIL")
             }
         }
     }

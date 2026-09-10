@@ -265,7 +265,7 @@ namespace pwiz.Osprey.FDR
                     @"is a bug -- the resident build is the flag-off FdrEntry path.");
 
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
-            int n = projections.TotalRows;
+            long n = projections.TotalRows;
 
             // Streaming-only (cross-impl parity with the Rust streaming-only change):
             // ALWAYS run the projection-native streaming score + compete pass, regardless

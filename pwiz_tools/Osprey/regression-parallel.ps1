@@ -158,16 +158,28 @@ Write-Host '=== Parallel regression summary ===' -ForegroundColor Cyan
 $totalPass = 0; $totalFail = 0; $totalSkip = 0; $worst = 0
 foreach ($r in $running) {
     $text = if (Test-Path $r.Log) { Get-Content $r.Log } else { @() }
-    $pass = @($text | Select-String -Pattern ': PASS').Count
-    $fail = @($text | Select-String -Pattern ': FAIL').Count
-    $skip = @($text | Select-String -Pattern ': SKIP').Count
+    # -CaseSensitive, and it is not a nicety. Select-String is case-INSENSITIVE by default,
+    # so ': FAIL' matched the ': fail' inside any "WARN: failed to ..." line the lane emitted -
+    # and one of those (a prune racing a previous run's directory) turned a lane that exited 0,
+    # passed all 23 legs and printed "Osprey regression PASSED" into "1 FAIL" and an overall
+    # FAILED. A gate that cries wolf about its own warnings is worse than one that stays quiet:
+    # the next red gets read as this one. The leg lines these count are emitted in upper case by
+    # regression.ps1, so requiring that costs nothing.
+    $pass = @($text | Select-String -CaseSensitive -Pattern ': PASS').Count
+    $fail = @($text | Select-String -CaseSensitive -Pattern ': FAIL').Count
+    $skip = @($text | Select-String -CaseSensitive -Pattern ': SKIP').Count
     $totalPass += $pass; $totalFail += $fail; $totalSkip += $skip
     $code = $r.Proc.ExitCode
     if ($code -gt $worst) { $worst = $code }
     $colour = if ($code -eq 0 -and $fail -eq 0) { 'Green' } else { 'Red' }
     Write-Host ("  {0,-45} exit={1}  {2} PASS / {3} FAIL / {4} SKIP" -f $r.Name, $code, $pass, $fail, $skip) -ForegroundColor $colour
-    foreach ($line in ($text | Select-String -Pattern ': (PASS|FAIL|SKIP)')) {
+    foreach ($line in ($text | Select-String -CaseSensitive -Pattern ': (PASS|FAIL|SKIP)')) {
         Write-Host ("      " + $line.Line.Trim())
+    }
+    # Warnings still surface - they were only ever miscounted, not unwanted - but as
+    # warnings, in their own colour, where nothing tallies them as legs.
+    foreach ($line in ($text | Select-String -CaseSensitive -Pattern '^\s*WARN:')) {
+        Write-Host ("      " + $line.Line.Trim()) -ForegroundColor Yellow
     }
 }
 Write-Host ''
