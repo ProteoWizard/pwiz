@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
