@@ -181,9 +181,9 @@ create(DslContext.projectId, BuildType({
             name = "Save Docker tarball"
             id = "RUNNER_343"
             scriptContent = "/usr/bin/docker save chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64 | pigz -c > /tmp/pwiz-skyline-i-agree-to-the-vendor-licenses.tbz2"
+            param("org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource", "Job configuration")
             param("org.jfrog.artifactory.selectedDeployableServer.useSpecs", "false")
             param("org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource", "Job configuration")
-            param("org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource", "Job configuration")
         }
         script {
             name = "Convert Docker image to Singularity"
