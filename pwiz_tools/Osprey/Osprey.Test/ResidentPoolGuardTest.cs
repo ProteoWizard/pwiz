@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -186,16 +187,18 @@ namespace pwiz.Osprey.Test
             // 'mdiag-full-resume' is GONE (#4505), 'resume-survivor-handoff' is GONE (#4536,
             // the rehydrate got its own survivor loader), and 'hpc-merge' is GONE (#4486, the
             // reconciled-input merge streams its load) - the ratchet shrinking three times.
-            // 'stage7-stream-off' was ADDED once the streamed Stage-7 join existed: until then
-            // the resident join had no alternative, so a token could only have been mandatory
-            // on every run and would have granted nothing. See the constant's own remarks for
-            // why naming a previously UNNAMEABLE path is the ratchet reaching further rather
-            // than running backwards.
+            // 'stage7-stream-off' is GONE too (2026-09-10) - the ratchet shrinking a FOURTH
+            // time. It was added when the streamed Stage-7 join first existed, to name the
+            // resident arm an operator could still choose as an A/B byte-identity oracle. That
+            // A/B was banked before the switch was retired: the resident arm passed the whole
+            // regression against the committed golden at 1e-9, and the diagnostics HTML matched
+            // the streamed arm byte for byte apart from generatedUtc. With OSPREY_STAGE7_STREAM
+            // gone there is no choice left for a token to record.
             CollectionAssert.AreEqual(
                 new[]
                 {
                     "fdrbench-pass1", "non-percolator-fdr",
-                    "projection-off", "compacted-entries-buffer", "stage7-stream-off"
+                    "projection-off", "compacted-entries-buffer"
                 },
                 ResidentPaths.KNOWN_UNFIXED.ToArray());
 
@@ -205,10 +208,19 @@ namespace pwiz.Osprey.Test
             // refuse it. Streaming it is the default; the resident opt-out is a named path.
             AssertStage6HandoffGuard();
 
-            // The STAGE-7 join guard. Same shape one stage later: the pre-compaction guard
-            // stops at the compaction line and the Stage-6 one at the handoff, so the survivor
-            // buffer SecondPassFDR rebuilds was refused by neither and no token could name it.
-            AssertStage7JoinGuard();
+            // The ALL-RUNS reconciliation bundle, refused outright. Reaches PAST the compaction
+            // line like the Stage 6 guard above, but takes NO token: the bounded alternative
+            // (the per-run survivor loader off the analysis-wide retained base_id summary)
+            // exists on every route that gets here, so residency is a defect to fix and not a
+            // path to name.
+            //
+            // Unit-tested rather than gate-tested BY NECESSITY, and that is the point. No
+            // regression leg reaches this guard - verified, the message appears on zero legs -
+            // because the routing fix left it with no caller. A guard nothing exercises is a
+            // guard that can rot unnoticed, so its message is pinned here: it must name the
+            // shape, the measured cost, and the bounded alternative, or the operator who trips
+            // it in a year gets a refusal with no way forward.
+            AssertAllRunsBundleGuard();
 
             // The Stage-7 join ADMISSION, which is what decides whether that guard has a
             // subject at all. It used to be config.ExpectReconciledInput - one CLI flag - and
@@ -241,55 +253,6 @@ namespace pwiz.Osprey.Test
         {
             Assert.AreEqual(expected,
                 PerFileScoringTask.NeedsResidentPool(config, useFdrProjection: true));
-        }
-
-        /// <summary>
-        /// The Stage 6 post-compaction handoff guard: streaming (the default) is never guarded,
-        /// the resident opt-out is refused unless it is named, and a run that could not stream
-        /// in the first place is not asked for a second token on top of the one its own
-        /// resident path already requires.
-        /// </summary>
-        /// <summary>
-        /// The Stage-7 join guard: a RESIDENT join CHOSEN over an admissible streamed one must
-        /// be named. Only the chosen case - a run that could not have streamed anyway is not
-        /// refused, because there is nothing for a token to record and demanding one would put
-        /// a mandatory token on every ordinary run.
-        /// </summary>
-        private static void AssertStage7JoinGuard()
-        {
-            // Streaming on: no error, whatever the token says.
-            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
-                streamingAvailable: true, stage7Stream: true, allowUnfixedResident: null));
-            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
-                true, true, ResidentPaths.FDRBENCH_PASS1));
-
-            // OSPREY_STAGE7_STREAM=0 on a run that COULD stream: refused, and the message names
-            // the token to set rather than describing a symptom.
-            string err = ScoringTaskShared.Stage7ResidentGuardError(true, false, null);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err,
-                "OSPREY_ALLOW_UNFIXED_RESIDENT=" + ResidentPaths.STAGE7_STREAM_OFF);
-
-            // Naming THIS path admits it - that is the A/B byte-identity oracle. Case-
-            // insensitive, matching both sibling guards.
-            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
-                true, false, ResidentPaths.STAGE7_STREAM_OFF));
-            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
-                true, false, ResidentPaths.STAGE7_STREAM_OFF.ToUpperInvariant()));
-
-            // Naming a DIFFERENT path does not, and the message quotes the value supplied so a
-            // stale token does not read like an unset one.
-            string wrongToken = ScoringTaskShared.Stage7ResidentGuardError(
-                true, false, ResidentPaths.PROJECTION_OFF);
-            Assert.IsNotNull(wrongToken);
-            StringAssert.Contains(wrongToken, ResidentPaths.PROJECTION_OFF);
-
-            // A run that could not stream ANYWAY is NOT guarded here - there is no choice for a
-            // token to record. This is the straight-through join, and it is precisely the case
-            // that keeps the DEFAULT path usable without demanding a token: refusing it would
-            // put a mandatory token on every ordinary run, which grants nothing.
-            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
-                streamingAvailable: false, stage7Stream: false, allowUnfixedResident: null));
         }
 
         /// <summary>
@@ -326,6 +289,80 @@ namespace pwiz.Osprey.Test
                 }));
         }
 
+        /// <summary>
+        /// The all-runs reconciliation bundle guard: refuses the run that HAD the bounded
+        /// alternative and declined it, and stays out of the way of the run that never had one.
+        ///
+        /// <para>That distinction is the test. The guard first refused unconditionally, which
+        /// reads as caution and is not: the arm it guards is also reached when this analysis has
+        /// no retained base_id summary at all - no <c>-o</c> blib, or one written by a build
+        /// with another <c>FormatVersion</c>. Under a resident token master completes those runs
+        /// through the overlay, which needs no summary; on the default load the streamed bundle
+        /// fails one call later with its own remedy. Either way an unconditional refusal here
+        /// adds nothing but a wrong instruction - use a loader that is built from the very file
+        /// whose absence sent the run down this arm. So both halves are pinned, and the null
+        /// half is the one that would otherwise regress silently.</para>
+        ///
+        /// <para>The refusing half also asserts the message says what happened and what to do -
+        /// the shape (O(files x entries)), the measured cost, the bounded alternative, and that
+        /// no token admits it, so nobody burns an afternoon hunting the environment variable
+        /// that would let it through.</para>
+        /// </summary>
+        private static void AssertAllRunsBundleGuard()
+        {
+            // No output blib: nothing names the summary, so the per-run loader cannot exist and
+            // there is nothing to refuse - the load that follows decides the outcome.
+            Assert.IsNull(
+                ScoringTaskShared.AllRunsBundleGuardError(new OspreyConfig(), null),
+                "a run with no bounded alternative must not be refused");
+
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_bundle_guard_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var config = new OspreyConfig
+                {
+                    InputFiles = new List<string> { Path.Combine(dir, "a.mzML") },
+                    OutputBlib = Path.Combine(dir, "out.blib")
+                };
+
+                // Named but not written: the summary is what the loader is built from, so a
+                // path with no file behind it is still "no bounded alternative".
+                Assert.IsNull(ScoringTaskShared.AllRunsBundleGuardError(config, null),
+                    "a missing retained base_id summary is disk state, not a declined route");
+
+                // Written and current: the bounded route existed and this arm was reached
+                // anyway, which is the --task ModelDiagnostics defect shape.
+                RetainedBaseIdSidecar.Write(
+                    RetainedBaseIdSidecar.PathFor(config.OutputBlib, config.InputFiles[0]),
+                    new[] { 1u, 2u, 3u });
+                string err = ScoringTaskShared.AllRunsBundleGuardError(config, null);
+                Assert.IsNotNull(err, "the all-runs bundle must never be admitted silently");
+                StringAssert.Contains(err, "O(files x entries)");
+                StringAssert.Contains(err, "per-run survivor loader");
+                StringAssert.Contains(err, "cannot admit this path");
+
+                // A supplied token changes the wording but not the answer. Naming the value back
+                // is what stops a stale or misspelled token reading exactly like an unset one,
+                // which is the property its two sibling guards are also pinned on.
+                string named = ScoringTaskShared.AllRunsBundleGuardError(
+                    config, ResidentPaths.PROJECTION_OFF);
+                Assert.IsNotNull(named, "no token admits the all-runs bundle");
+                StringAssert.Contains(named, ResidentPaths.PROJECTION_OFF);
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        /// <summary>
+        /// The Stage 6 post-compaction handoff guard: streaming (the default) is never guarded,
+        /// the resident opt-out is refused unless it is named, and a run that could not stream
+        /// in the first place is not asked for a second token on top of the one its own
+        /// resident path already requires.
+        /// </summary>
         private static void AssertStage6HandoffGuard()
         {
             // Streaming: no error, whatever the token says.

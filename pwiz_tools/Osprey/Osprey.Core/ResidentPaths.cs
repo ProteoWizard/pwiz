@@ -113,36 +113,21 @@ namespace pwiz.Osprey.Core
         // the token had nothing left to admit. Not to be re-added - a resume that cannot stream
         // the Stage 6 handoff is a defect to fix, not a path to name.
 
-        /// <summary>
-        /// <c>OSPREY_STAGE7_STREAM=0</c>: the operator forced the RESIDENT Stage-7 join, where
-        /// SecondPassFDR rebuilds every run's survivors at once and holds them for the whole
-        /// stage - 4.4 GB library + 0.197 GB/file live post-GC, i.e. 91.1 GB measured on a
-        /// 446-run cohort. Like <see cref="PROJECTION_OFF"/> and
-        /// <see cref="COMPACTED_ENTRIES_BUFFER"/> this is the A/B byte-identity oracle for a
-        /// streamed default, and it is named for exactly the same reason those two are.
-        ///
-        /// <para>This entry ADDS to the list, which the class remarks say must only shrink, so
-        /// it owes the same justification <see cref="COMPACTED_ENTRIES_BUFFER"/> gave. It names
-        /// a path that was previously UNNAMEABLE rather than re-admitting one that had been
-        /// fixed: until the streamed join existed there was no alternative, so a token could
-        /// only have been mandatory on every run, granting nothing. The alternative now exists,
-        /// which turns the resident arm from a fact into a CHOICE - and a choice is precisely
-        /// what this mechanism is for. Leaving it untokened is what let a green gate print
-        /// "Tokens REQUIRED: 0" while the fat path ran, which is why a second, parallel
-        /// disclosure table had to be invented to see it at all.</para>
-        ///
-        /// <para>It admits ONLY the chosen case. A run that takes the resident join because no
-        /// streamed one was admissible is not refused by this token, because there is nothing
-        /// for the operator to choose. That set has SHRUNK to one: the straight-through run
-        /// used to be in it - <c>CanStreamStage7Join</c>'s admission was the CLI flag
-        /// <c>ExpectReconciledInput</c>, so the ordinary run could not stream by construction -
-        /// and it is now derived from the reconciled parquets on disk, which every route
-        /// satisfies. What is left is a pass-2 mode whose per-file half has no worker
-        /// (<c>OSPREY_PASS2_QVALUE=transfer</c>), and when that half moves to
-        /// <c>Pass2PerFileWorker</c> this exemption has no subject, the guard can refuse
-        /// unconditionally, and this token becomes the only way to be resident.</para>
-        /// </summary>
-        public static readonly string STAGE7_STREAM_OFF = @"stage7-stream-off";
+        // stage7-stream-off was removed here on 2026-09-10, and this note is the record of the
+        // ratchet shrinking rather than a gap. It named the operator-forced RESIDENT Stage-7
+        // join (OSPREY_STAGE7_STREAM=0), kept as the A/B byte-identity oracle for the streamed
+        // default. That A/B was banked before the switch went: the resident arm passed the whole
+        // regression against the committed golden at 1e-9, and the diagnostics HTML matched the
+        // streamed arm byte for byte apart from generatedUtc. Not to be re-added - a second arm
+        // kept alive only to keep it matching is a standing test cost, and every extra option
+        // raises the testing burden. The fold's resident consumer survives for now, reached
+        // where NeedsResidentPool already forces it (projection-off, non-percolator-fdr,
+        // fdrbench-pass1) - and, NOT by any token here, under OSPREY_PASS2_QVALUE=transfer,
+        // which leaves Pass2ProteinCompact false so Stage7StreamAdmittedBeforeRescore declines.
+        // That last one is operator-chosen and untokened, exempt because transfer computes its
+        // per-file half inside Stage 7 over the whole pool; it ends when that half moves to
+        // Pass2PerFileWorker. So: mostly by declaration, and in exactly one place by choice.
+
 
         /// <summary>
         /// Every legal <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c> value. Pinned by
@@ -150,8 +135,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly IReadOnlyList<string> KNOWN_UNFIXED = new[]
         {
-            FDRBENCH_PASS1, NON_PERCOLATOR_FDR, PROJECTION_OFF, COMPACTED_ENTRIES_BUFFER,
-            STAGE7_STREAM_OFF
+            FDRBENCH_PASS1, NON_PERCOLATOR_FDR, PROJECTION_OFF, COMPACTED_ENTRIES_BUFFER
         };
     }
 }

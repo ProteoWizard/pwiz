@@ -331,21 +331,12 @@ $script:priorAllowResident = $env:OSPREY_ALLOW_UNFIXED_RESIDENT
 # comparison this harness exists to support impossible to run. Ambient tokens are stripped
 # ONLY when no such switch is set, which is the case the clearing is aimed at.
 #
-# OSPREY_STAGE7_STREAM=0 IS in this set now. It was excluded while the reasoning was
-# circular - "the list is switches that arm a guard which refuses without a token, and
-# KNOWN_UNFIXED has no Stage-7 entry" says only that there was no token because there was no
-# token. There was no token because there was no ALTERNATIVE: until the streamed Stage-7 join
-# existed the resident one was a fact, and a token can only be demanded for a choice. The
-# alternative exists, so the switch is now exactly what OSPREY_FDR_PROJECTION=0 and
-# OSPREY_STAGE6_STREAM_SURVIVORS=0 already were - a deliberate A/B oracle forcing a fat path -
-# and it is tokened like them (ResidentPaths.STAGE7_STREAM_OFF).
+# OSPREY_STAGE7_STREAM=0 was in this set and is GONE (2026-09-10): the switch itself was
+# retired once its A/B was banked, so there is no Stage-7 arm left for an operator to
+# force and no token to keep. ResidentPaths.KNOWN_UNFIXED shrank from 5 to 4 with it.
 #
-# This costs the gate nothing: no leg sets OSPREY_STAGE7_STREAM, so no leg needs the token and
-# the required-token count below stays 0. It exists so an OPERATOR running the A/B is not
-# aborted on the first leg, which is what this whole block is for.
 $abSwitchSet = ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
-               ($env:OSPREY_FDR_PROJECTION -eq '0') -or
-               ($env:OSPREY_STAGE7_STREAM -eq '0')
+               ($env:OSPREY_FDR_PROJECTION -eq '0')
 if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
     if ($abSwitchSet) {
         # Extra parens: -f binds TIGHTER than +, so without them only the LAST fragment is
@@ -579,11 +570,31 @@ function Test-RunDirLive([string]$Name) {
     # to hold that id. Three groups means PID-stamped; two means legacy, i.e. an
     # orphan from before this naming and safe to prune.
     if ($Name -notmatch '^regression-\d{8}_\d{6}_(\d+)$') { return $false }
-    $p = Get-Process -Id ([int]$Matches[1]) -ErrorAction SilentlyContinue
-    # Check the process NAME too, because PIDs are reused. Leaving one orphan behind
-    # for the next run to collect is a far cheaper mistake than deleting the scratch
-    # of a gate that is still running.
-    return ($null -ne $p -and $p.ProcessName -eq 'pwsh')
+    $processId = [int]$Matches[1]
+    $p = Get-Process -Id $processId -ErrorAction SilentlyContinue
+    if ($null -eq $p) { return $false }   # the pid is gone: a genuine orphan
+    # Check the IMAGE too, because PIDs are reused. Leaving one orphan behind for the
+    # next run to collect is a far cheaper mistake than deleting the scratch of a gate
+    # that is still running, so everything below fails toward "live".
+    #
+    # Win32_Process.Name, NOT Get-Process().ProcessName. ProcessName reads the running
+    # image's on-disk name, so REPLACING pwsh.exe underneath a live process changes what
+    # it reports: after a PowerShell update this box returned '5cc84f5d.rbf' (a Windows
+    # Installer rollback file) for four live pwsh.exe processes while two others still
+    # said 'pwsh'. Against the old `-eq 'pwsh'` test those four read as dead, and on
+    # 2026-09-10 that deleted the Astral lane's run root out from under it mid-mode-3:
+    # Remove-Item -Recurse had already destroyed chain\logs before it reached a locked
+    # file, so the prune "failed" with a warning and wrecked the run anyway.
+    #
+    # Any failure to identify the image is treated as LIVE. An unprunable orphan costs
+    # disk until the next run; a wrongly-pruned live gate costs the run.
+    try {
+        $ci = Get-CimInstance Win32_Process -Filter "ProcessId=$processId" -ErrorAction Stop
+        if ($null -eq $ci) { return $true }
+        return ($ci.Name -eq 'pwsh.exe')
+    } catch {
+        return $true
+    }
 }
 
 function Remove-StaleRunDirs([string]$TestResultsDir, [int]$Keep) {
@@ -1176,6 +1187,14 @@ $stage7StreamMarker = 'Second-pass join: folding over '
 # disk it publishes the survivor loader and builds no experiment-wide bundle, so it emits this
 # instead of $firstPassFdrRehydrateMarker. Mode 5 accepts either.
 $firstPassFdrPerRunMarker = 'Per-run rescore: FirstPassFDR publishes the survivor loader only'
+# The NEGATIVE twin of the two above: the substring every disclosure of the O(files x entries)
+# all-runs reconciliation bundle carries. Three C# emitters must all contain it, and the
+# constant they share is RescoreHydration.ALL_RUNS_BUNDLE_MARKER: both hydrate twins log it
+# when they start building the bundle (HydrateCompactedStreaming, the one the 446-run
+# incident took, and HydrateReconciliationOverlay), and AllRunsBundleGuardError names it in the
+# refusal. A leg whose log contains it either built the bundle or was refused for trying, and
+# the route assertions in modes 7 and 11 red on both.
+$allRunsBundleMarker = 'ALL-RUNS reconciliation bundle'
 
 function Test-LogMarker {
     <#
@@ -1201,6 +1220,63 @@ function Test-LogMarker {
         $issues.Add((("{0}: no line containing '{1}' - {2} did not happen, or the C# log " +
             "wording has drifted and this assertion is no longer reading anything") -f
             $logName, $Marker, $Description))
+    }
+    return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
+}
+
+function Test-NoAllRunsBundle {
+    <#
+    Assert a run did NOT build the ALL-RUNS reconciliation bundle, which retains every run's
+    survivors at once and grows O(files x entries). The NEGATIVE twin of Test-LogMarker, and
+    the same { Pass; Issues } shape.
+
+    This is a route assertion because at gate scale nothing else can see the defect: on a
+    3-file dataset an O(files x entries) bundle costs nothing and every value- and file-level
+    check passes. That is exactly how --task ModelDiagnostics reached a 446-run cohort still
+    building it, growing 0.10 GB/file until it died past a 63.7 GB box at file ~310
+    (2026-09-10). The bounded route is the per-run survivor loader.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$LogPath
+    )
+    $issues = [System.Collections.Generic.List[string]]::new()
+    if (-not (Test-Path -LiteralPath $LogPath)) {
+        $issues.Add("run log not found, so the route it took cannot be asserted: $LogPath")
+        return @{ Pass = $false; Issues = $issues }
+    }
+    $logName = Split-Path -Leaf $LogPath
+    $lines = @(Get-Content -LiteralPath $LogPath)
+    # LIVENESS FIRST. A negative assertion passes on a log that says nothing at all - an empty
+    # file, an unflushed buffer, a run that never started - so absence of the marker is only
+    # evidence once the log is known to describe a real run. Test-Path alone cannot tell those
+    # apart.
+    #
+    # The anchor is Program.cs's startup banner, which every invocation emits after parsing its
+    # arguments and BEFORE it chooses any route. The obvious anchor - a '[TASK]' banner - is
+    # wrong here and this leg proved it: `--task ModelDiagnostics` over a run whose products are
+    # all present returns from RunModelDiagnosticsTask before `new AnalysisPipeline()` is ever
+    # reached (Program.cs), so mode 7 emits no task banner at all while mode 11, which falls
+    # through to the pipeline, emits several. An anchor only one route reaches fails that route
+    # for being itself.
+    if (@($lines | Where-Object { $_.Contains('Threads:') }).Count -eq 0) {
+        $issues.Add((("{0}: {1} line(s) and no startup banner - the run did not get as far as " +
+            "choosing a route, or the log was never flushed, so the route it took cannot be " +
+            "asserted either way") -f $logName, $lines.Count))
+        return @{ Pass = $false; Issues = $issues }
+    }
+    # ONE marker, $allRunsBundleMarker, emitted by BOTH all-runs hydrate twins when they start
+    # building the bundle and by the guard that refuses it - so this reds whether the bundle
+    # was built or merely attempted, and the guard is asserted rather than depended on.
+    #
+    # The progress heading 'Hydrating reconciliation bundle' was the other marker and was
+    # WORSE THAN USELESS: ProgressReporter defers its heading past LOG_WAIT_SECONDS, so a
+    # 3-file hydrate never prints it, and both twins print exactly the same heading whenever
+    # they do run long enough - it could not fire at gate scale and could not tell the twins
+    # apart at cohort scale.
+    if (@($lines | Where-Object { $_.Contains($allRunsBundleMarker) }).Count -gt 0) {
+        $issues.Add((("{0}: '{1}' - this run built (or was refused for building) the " +
+            "ALL-RUNS bundle, which is O(files x entries); the per-run survivor loader is " +
+            "the bounded route") -f $logName, $allRunsBundleMarker))
     }
     return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
 }
@@ -1787,7 +1863,6 @@ foreach ($name in $selected) {
     # non-Percolator --fdr-method). A dataset spec setting either would red all three legs.
     # No spec does today; if one is added, this has to grow a $cfg term.
     $cannotStreamJoin =
-        ($env:OSPREY_STAGE7_STREAM -eq '0') -or
         ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
         ($env:OSPREY_FDR_PROJECTION -eq '0') -or
         (-not [string]::IsNullOrWhiteSpace($env:OSPREY_PASS2_QVALUE) -and
@@ -2026,9 +2101,11 @@ foreach ($name in $selected) {
         #
         # The streamed pass-2 report is covered instead by the marker assertion below (which
         # shape ran) plus ModelDiagnosticsDataTest's byte-identity oracle over the accumulator.
-        # A gate-level A/B keyed on OSPREY_STAGE7_STREAM was considered and rejected: the intent
-        # is to REMOVE the ability not to stream, so a leg built on that switch would be built to
-        # be deleted. See #4645 for what to assert instead - the panel's INPUTS, not its curve.
+        # A gate-level A/B keyed on OSPREY_STAGE7_STREAM was considered and rejected here, on the
+        # grounds that the intent was to REMOVE the ability not to stream, so a leg built on that
+        # switch would be built to be deleted. That call held: the switch was retired on
+        # 2026-09-10 after its A/B was banked once, by hand, and a leg would indeed have gone
+        # with it. See #4645 for what to assert instead - the panel's INPUTS, not its curve.
 
         # Liveness: a comparison that verified nothing is not a passing comparison. Empty or
         # absent sidecars satisfy every field check trivially while breaking every resume,
@@ -2923,6 +3000,20 @@ foreach ($name in $selected) {
                 "rewritten, so the task skipped itself instead of regenerating") -f $reportLeaf)
         }
 
+        # ROUTE-level, and NEGATIVE only. This leg re-enters a run whose diagnostics products are
+        # still on disk, so OnlyDiagnosticsProductOutstanding sees the file and declines the fold
+        # arm: the task re-RENDERS (0.2 s) and legitimately hydrates nothing. Asserting the
+        # per-run marker here would demand a route this scenario never takes - the positive half
+        # belongs to mode 11, which deletes the products and forces the fold.
+        #
+        # What IS assertable here is that a re-render hydrates NOTHING. The other two assertions
+        # cannot see it: both are satisfied by a regeneration that produced the right page at any
+        # memory cost, which is how an ALL-RUNS bundle on this task went unnoticed until a 446-run
+        # cohort died past the box at file ~310 (2026-09-10). At 3 files that bundle is free, so
+        # only the route is visible at gate scale.
+        $m7r = Test-NoAllRunsBundle -LogPath (Join-Path $straightDir 'mdtask.log')
+        $m7r.Issues | ForEach-Object { $m7Issues.Add($_) }
+
         $m7d = $null
         try {
             $m7d = Compare-DiagnosticsGolden -HtmlPath $diagHtml -GoldenDir $goldenDir `
@@ -3018,6 +3109,23 @@ foreach ($name in $selected) {
                 $m11Issues.Add(("--task ModelDiagnostics exited {0}; a completed analysis missing " +
                     "only its diagnostics products must be able to produce them" -f $r11.ExitCode))
             }
+
+            # ORACLE 1c: the fold took the BOUNDED route. This is the leg that can assert it -
+            # mode 7 re-renders products still on disk and hydrates nothing, so it has only the
+            # negative half. Here the products were deleted, so the fold really runs and the arm
+            # it picks is observable.
+            #
+            # Nothing else at gate scale can see this. Both of mode 7's assertions, and mode 11's
+            # own byte comparison below, are satisfied by a fold that produced the correct report
+            # off an ALL-RUNS bundle - which is what --task ModelDiagnostics did on a 446-run
+            # cohort until it died past a 63.7 GB box at file ~310 (2026-09-10). At 3 files that
+            # bundle is free, so the route is the only visible symptom.
+            $m11Route = Test-LogMarker -LogPath $r11.Log `
+                -Marker $firstPassFdrPerRunMarker `
+                -Description 'the pay-later fold took the bounded per-run survivor loader'
+            $m11Route.Issues | ForEach-Object { $m11Issues.Add($_) }
+            $m11NoBundle = Test-NoAllRunsBundle -LogPath $r11.Log
+            $m11NoBundle.Issues | ForEach-Object { $m11Issues.Add($_) }
 
             # ORACLE 1a: each pass says it FOLDED. Substrings, not whole lines, so the
             # surrounding prose can change without breaking the gate; what they pin is that

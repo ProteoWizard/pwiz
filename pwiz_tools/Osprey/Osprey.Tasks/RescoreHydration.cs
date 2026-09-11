@@ -297,6 +297,15 @@ namespace pwiz.Osprey.Tasks
     public static class RescoreHydration
     {
         /// <summary>
+        /// The one substring every disclosure of the ALL-RUNS reconciliation bundle carries:
+        /// both hydrate twins log it when they start building the bundle, and the guard that
+        /// refuses the bundle names it in the refusal. The regression gate's negative route
+        /// assertion reads this constant's value, so a run that built the bundle, or was refused
+        /// for trying, is visible in its log by construction rather than by wording coincidence.
+        /// </summary>
+        public const string ALL_RUNS_BUNDLE_MARKER = @"ALL-RUNS reconciliation bundle";
+
+        /// <summary>
         /// Overlay the per-file 1st-pass FDR sidecars and parse the per-file
         /// <c>reconciliation.json</c> envelopes onto an already-loaded
         /// <paramref name="perFileEntries"/> list. The per-file element at
@@ -321,7 +330,8 @@ namespace pwiz.Osprey.Tasks
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IList<string> parquetPaths,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
-            LibraryStringInterner sequencePool = null)
+            LibraryStringInterner sequencePool = null,
+            Action<string> logInfo = null)
         {
             if (perFileEntries == null) throw new ArgumentNullException(nameof(perFileEntries));
             if (parquetPaths == null) throw new ArgumentNullException(nameof(parquetPaths));
@@ -331,6 +341,24 @@ namespace pwiz.Osprey.Tasks
                     "HydrateReconciliationOverlay: perFileEntries.Count ({0}) != parquetPaths.Count ({1})",
                     perFileEntries.Count, parquetPaths.Count));
             }
+
+            // The ROUTE, named once and unconditionally, because it is the only symptom this
+            // shape has at gate scale: every value and every artifact is identical to the
+            // bounded twin's, and 3 files make the memory difference free. The regression gate's
+            // negative route assertion reads this line, so it must not be a ProgressReporter
+            // heading - that is deferred by LOG_WAIT_SECONDS and never appears on a 3-file
+            // hydrate, and the bounded HydrateCompactedStreaming prints the identical heading
+            // when it IS slow enough. A marker that both routes emit, and neither emits quickly,
+            // cannot tell them apart; this one is emitted here and nowhere else.
+            //
+            // On the builder rather than at a caller so it covers every door into the all-runs
+            // bundle at once - the resume rehydrate, the --input-scores load, and any added
+            // later, which is the case a per-caller marker would silently miss. BOTH twins emit
+            // it: this overlay, and HydrateCompactedStreaming below, which streams the reading
+            // but accumulates the result and is the twin the 446-run incident actually took.
+            logInfo?.Invoke(string.Format(
+                @"Hydrating the {0}: {1} run(s) held at once, O(files x entries).",
+                ALL_RUNS_BUNDLE_MARKER, perFileEntries.Count));
 
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
             var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
@@ -530,7 +558,8 @@ namespace pwiz.Osprey.Tasks
             Action<int, string, List<FdrEntry>, PreCompactionTally> onStubsHydrated,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             HashSet<uint> retainedBaseIds,
-            LibraryStringInterner sequencePool = null)
+            LibraryStringInterner sequencePool = null,
+            Action<string> logInfo = null)
         {
             if (perFileEntries == null)
                 throw new ArgumentNullException(nameof(perFileEntries));
@@ -574,6 +603,16 @@ namespace pwiz.Osprey.Tasks
             // the one component that legitimately holds the whole analysis - and read back from
             // the analysis-wide RetainedBaseIdSidecar. With it supplied, a run's envelope is
             // needed only by the run it belongs to, and is released with it.
+            //
+            // Streamed READING, accumulated RESULT: every run's survivors are still appended to
+            // perFileEntries and held together, so this is the all-runs builder as much as the
+            // overlay twin is - it is the route the 446-run --task ModelDiagnostics incident
+            // took. Same marker as the overlay, for the same negative route assertion, and
+            // emitted here rather than through the ProgressReporter heading above, which is
+            // deferred and never appears on a small cohort.
+            logInfo?.Invoke(string.Format(
+                @"Hydrating the {0}: {1} run(s) held at once, O(files x entries).",
+                ALL_RUNS_BUNDLE_MARKER, nFiles));
             using (var hydrateProgress = new ProgressReporter(
                        @"Hydrating reconciliation bundle", nFiles))
             {

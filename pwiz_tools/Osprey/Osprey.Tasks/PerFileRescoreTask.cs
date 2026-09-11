@@ -438,8 +438,7 @@ namespace pwiz.Osprey.Tasks
             // "No rescore POSSIBLE because nobody supplied a bundle" and "no rescore NEEDED
             // because the outputs exist" are different answers, and only the second one may
             // no-op. With work OUTSTANDING and no plan to do it, returning success writes a blib
-            // that is silently missing those runs - measured 2026-09-03 on Astral, where
-            // --model-diagnostics makes perRunPlanAvailable false and the bundle is null, so this
+            // that is silently missing those runs - measured 2026-09-03 on Astral, where this
             // arm fired for a cohort with 1 of 3 runs still to re-score. The log even announced
             // "re-scoring the remaining 1" and the task ended in the same second.
             //
@@ -448,26 +447,50 @@ namespace pwiz.Osprey.Tasks
             // amount of counting reaches. Fail loudly instead - a resume that cannot finish is
             // exactly the case an operator must be told about, not one to paper over.
             bool noRescorePossible = rescoreBundle == null && !perRunPlanAvailable;
-            if (!didPlan && noRescorePossible && pass2Present < pass2Expected)
+            // A plan this process COULD execute is not a plan it WILL, and the gate has to ask
+            // the second question. --task ModelDiagnostics re-renders a COMPLETED analysis and
+            // writes no artifact but the report (DiagnosticsOnly), so it never re-scores whatever
+            // sources are available to it.
+            //
+            // That distinction is what carried the Astral incident above: --model-diagnostics
+            // made perRunPlanAvailable false back then, so "can" and "will" happened to agree and
+            // keying on the plan alone was enough. Admitting the task to CanHydratePerRun - the
+            // fix for its unbounded hydrate - made perRunPlanAvailable TRUE and silently disarmed
+            // this abort for the one task that can never satisfy it. The cohort would then fall
+            // through into a real Stage 6 rescore: hours of work, and .scores-reconciled.parquet
+            // writes on an analysis this command is documented not to disturb.
+            bool willRescoreHere = !ctx.Config.DiagnosticsOnly && (didPlan || !noRescorePossible);
+            if (!willRescoreHere && pass2Present < pass2Expected)
             {
-                // No --model-diagnostics clause. It used to append "because --model-diagnostics
-                // keeps the all-runs hydrate", which was true when that flag excluded the per-run
-                // hydrate and is now false on both counts: CanHydratePerRun stopped excluding it,
-                // and the Stage 7 join no longer declines under it either. An operator told that
-                // would drop the flag, re-run for hours and hit the identical refusal, because
-                // the actual cause is the one the sentence already names - no plan, no bundle,
-                // no per-run source.
+                // The --model-diagnostics FLAG is still not a clause here. It used to append
+                // "because --model-diagnostics keeps the all-runs hydrate", which was true when
+                // the flag excluded the per-run hydrate and is now false on both counts:
+                // CanHydratePerRun stopped excluding it, and the Stage 7 join no longer declines
+                // under it either. An operator told that would drop the flag, re-run for hours
+                // and hit the identical refusal. The TASK is a different matter: it is the whole
+                // reason this run will not re-score, so it is named.
+                string reason = ctx.Config.DiagnosticsOnly
+                    ? @"this process is --task ModelDiagnostics, which re-renders the report of a " +
+                      @"COMPLETED analysis and writes nothing else, so it will not re-score them. " +
+                      @"Finish the analysis first; the report can be regenerated afterwards."
+                    : @"this process has no plan to do it - FirstPassFDR did not plan here, no " +
+                      @"worker bundle was supplied, and the per-run hydrate is unavailable. " +
+                      @"Continuing would write an output silently missing those runs.";
                 ctx.LogError(string.Format(
-                    @"Rescore resume: {0} of {1} run(s) still need re-scoring, but this process has " +
-                    @"no plan to do it - FirstPassFDR did not plan here, no worker bundle was " +
-                    @"supplied, and the per-run hydrate is unavailable. Continuing would write " +
-                    @"an output silently missing those runs.",
-                    pass2Expected - pass2Present, pass2Expected));
+                    @"Rescore resume: {0} of {1} run(s) still need re-scoring, but {2}",
+                    pass2Expected - pass2Present, pass2Expected, reason));
                 ctx.ExitCode = 1;
                 return false;
             }
 
-            if (!didPlan && (noRescorePossible || allPass2Present))
+            // DiagnosticsOnly joins this arm whether or not FirstPassFDR planned: a plan it
+            // could execute is still not one it will (see willRescoreHere above), and with the
+            // incomplete-cohort abort already taken, everything left is a completed second pass
+            // to fold the report from. Without this term a diagnostics run whose first-pass
+            // ValidityKey had drifted (a changed OSPREY_* setting) planned, fell through to
+            // ExecuteRescore, and rewrote every reconciled parquet under a command documented
+            // to write nothing but the report.
+            if ((!didPlan || ctx.Config.DiagnosticsOnly) && (noRescorePossible || allPass2Present))
             {
                 // No rescore to run. The RESIDENT arm does nothing at all here - it leaves the
                 // buffer exactly as Stage 5 compacted it, and SecondPassFDR reloads the rescored
@@ -2201,7 +2224,8 @@ namespace pwiz.Osprey.Tasks
             //
             // THE SAME EVIDENCE the fold itself uses - a validity stamp naming PerFileRescoring
             // - and not a format probe. The two disagree exactly where it hurts: a sidecar
-            // written by a PREVIOUS Stage 7 (the OSPREY_STAGE7_STREAM=0 arm, say) is
+            // written by a PREVIOUS Stage 7 (a resident join, say - the arm reached under
+            // NeedsResidentPool, or an older build's) is
             // format-current but carries a SecondPassFDR stamp, so a probe would say "skip the
             // first-pass overlay" while the competition, reading the stamp, says "no worker
             // answer, recompute" - and it would then recompute from rows that carry only the
@@ -2644,13 +2668,15 @@ namespace pwiz.Osprey.Tasks
         /// The per-run survivor loader FirstPassFDR published, WITHOUT the Stage-6 switch
         /// <see cref="StreamedSurvivorLoader"/> applies.
         ///
-        /// <para>One switch per stage. <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c> is the A/B oracle
-        /// for the RESCORE window - it asks Stage 6 to keep the buffer it would have drained -
-        /// and it says nothing about how Stage 7 should fold. Reading it through the Stage-6
-        /// gate would have made that oracle silently decide the Stage-7 arm as well, so the
-        /// stage whose arm <c>OSPREY_STAGE7_STREAM</c> governs asks for the loader directly.
-        /// The object is the same one either way - the gate withholds it, it does not
-        /// unbuild it.</para>
+        /// <para>Each stage answers its own question. <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c> is
+        /// the A/B oracle for the RESCORE window - it asks Stage 6 to keep the buffer it would
+        /// have drained - and it says nothing about how Stage 7 should fold. Reading it through
+        /// the Stage-6 gate would make that oracle silently decide the Stage-7 arm as well, so
+        /// Stage 7 asks for the loader directly. That was the argument when Stage 7 had a switch
+        /// of its own (<c>OSPREY_STAGE7_STREAM</c>, removed 2026-09-10) and it does not depend on
+        /// one: the two stages still take their arms from different predicates, and routing
+        /// Stage 7's through Stage 6's oracle would couple them again. The object is the same one
+        /// either way - the gate withholds it, it does not unbuild it.</para>
         /// </summary>
         private static FirstPassSurvivorLoader PublishedSurvivorLoader(PipelineContext ctx)
         {
@@ -2762,8 +2788,7 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx, FirstPassSurvivorLoader survivorLoader)
         {
             if (survivorLoader == null ||
-                !ScoringTaskShared.Stage7StreamAdmittedBeforeRescore(
-                    ctx.Config, OspreyEnvironment.Stage7Stream))
+                !ScoringTaskShared.Stage7StreamAdmittedBeforeRescore(ctx.Config))
             {
                 return null;
             }

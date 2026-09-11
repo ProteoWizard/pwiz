@@ -198,26 +198,24 @@ namespace pwiz.Osprey.Core
         public static bool Stage6StreamSurvivors { get; set; } =
             IsNotZero(@"OSPREY_STAGE6_STREAM_SURVIVORS");
 
-        /// <summary>
-        /// Stage 7 folds over the runs one at a time - rebuilding each run's survivors from its
-        /// own <c>.scores-reconciled.parquet</c> and 1st-pass sidecar, and dropping them again
-        /// once the fold has visited them - instead of being handed every run's survivors at
-        /// once.
-        ///
-        /// DEFAULT ON. The all-runs survivor pool is what a <c>--task SecondPassFDR</c> node
-        /// spends its whole memory budget on before the join computes anything: at 446 CHS runs
-        /// it reached 68.0 GB managed / 70.5 GB private and was killed at run 381 of 446 with
-        /// 0.34 GB free, still inside the <c>--input-scores</c> load. It is the
-        /// <c>O(runs x entries)</c> shape the architecture forbids a join to hold, and every
-        /// consumer of it in Stage 7 - the fragment release, the pass-2 competition, protein
-        /// FDR, the experiment-q re-clamp and all three blib gates - is a fold to
-        /// <c>O(distinct)</c> that never needed the whole pool.
-        ///
-        /// Set OSPREY_STAGE7_STREAM=0 to keep the resident pool as the A/B byte-identity oracle,
-        /// the same role OSPREY_STAGE6_STREAM_SURVIVORS=0 plays for the Stage 6 handoff. A
-        /// settable property (not a readonly field) so unit tests can A/B both paths.
-        /// </summary>
-        public static bool Stage7Stream { get; set; } = IsNotZero(@"OSPREY_STAGE7_STREAM");
+        // OSPREY_STAGE7_STREAM was removed here on 2026-09-10 and the streamed join is the ONLY
+        // arm. It kept the resident Stage-7 join as an A/B byte-identity oracle - the role
+        // OSPREY_STAGE6_STREAM_SURVIVORS=0 still plays for the Stage 6 handoff - and went once
+        // that A/B was banked: the resident arm passed the whole regression against the
+        // committed golden at 1e-9, and the diagnostics HTML matched the streamed arm byte for
+        // byte apart from generatedUtc. A second arm kept alive only to keep it matching is a
+        // standing test cost against a report that is expected to keep moving. The measurement
+        // that argues for the streamed join moved with the decision, to
+        // ScoringTaskShared.CanStreamStage7Join, rather than being deleted along with the
+        // switch that no longer makes it.
+        //
+        // The NAME is still read, once, for the only thing a removed spelling owes: a caller who
+        // still sets it is refused at startup (Program.cs) rather than handed the streamed arm's
+        // numbers under the resident arm's name. That is the "reporting one arm's numbers as
+        // another's" case the env-var doctrine makes strict. IsSet, not a null test: an EMPTY
+        // value (a cleared `export`, a blanked CI parameter) reads as unset everywhere else in
+        // this class, and refusing it here would be the one predicate that disagrees.
+        public static readonly bool Stage7StreamRetiredSet = IsSet(@"OSPREY_STAGE7_STREAM");
 
         /// <summary>
         /// At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library
@@ -274,18 +272,6 @@ namespace pwiz.Osprey.Core
         public static string Stage6StreamSurvivorsValidityKeySuffix()
         {
             return Stage6StreamSurvivors ? string.Empty : @";stage6stream=0";
-        }
-
-        /// <summary>
-        /// Cache-validity suffix for the Stage 7 fold arm, on exactly the argument its Stage 6
-        /// sibling above makes: empty on the streamed default so no existing output directory is
-        /// invalidated, and a term on the resident opt-out so an in-place A/B of the two arms
-        /// cannot satisfy itself by adopting the other arm's <c>.blib</c> and 2nd-pass sidecars
-        /// instead of recomputing them.
-        /// </summary>
-        public static string Stage7StreamValidityKeySuffix()
-        {
-            return Stage7Stream ? string.Empty : @";stage7stream=0";
         }
 
         /// <summary>

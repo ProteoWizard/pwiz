@@ -346,6 +346,25 @@ namespace pwiz.Osprey
                         OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
                     return 1;
                 }
+                // OSPREY_STAGE7_STREAM was REMOVED (2026-09-10): the streamed Stage-7 join is the
+                // only arm there is. Setting it to 0 used to select the RESIDENT join, so a sweep
+                // script still passing it would measure the streamed arm and file the numbers
+                // under the resident one - the misattribution case these variables have to be
+                // strict about, and the reason this is an error rather than a warning. Checked at
+                // startup so a stale script dies in seconds instead of after Stage 1-5.
+                if (OspreyEnvironment.Stage7StreamRetiredSet)
+                {
+                    LogError(
+                        "OSPREY_STAGE7_STREAM was REMOVED and setting it does nothing. Unset it. " +
+                        "It kept the RESIDENT Stage-7 join as an A/B byte-identity oracle for the " +
+                        "streamed default; that A/B was banked (the resident arm matched the " +
+                        "committed golden at 1e-9 and produced a byte-identical diagnostics " +
+                        "report), and the switch went with it. Stage 7 streams by default and this " +
+                        "variable can no longer select the resident arm; the configurations that " +
+                        "still take it do so by their own declaration (see ResidentPaths), not " +
+                        "through this setting.");
+                    return 1;
+                }
                 // A token that names nothing admits nothing, so the run proceeds - but say so
                 // (#4486). 'hpc-merge' was retired when --task SecondPassFDR started streaming
                 // its reconciled-input load, making it the first previously-VALID token to
