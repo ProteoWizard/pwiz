@@ -64,13 +64,25 @@ dotnet --version || fail "dotnet --version failed"
 # clean.sh is optional: keep the build working on a checkout that only has the
 # Windows clean.bat, rather than failing the whole run over hygiene.
 if [ -x "$SCRIPT_DIR/clean.sh" ] || [ -f "$SCRIPT_DIR/clean.sh" ]; then
-    echo "##teamcity[progressMessage 'pwiz-sharp clean.sh']"
+    echo "##teamcity[progressMessage 'clean.sh']"
     bash "$SCRIPT_DIR/clean.sh" || fail "clean.sh failed"
 else
     echo "##teamcity[message text='clean.sh not found; skipping pre-build clean' status='WARNING']"
 fi
 
-echo "##teamcity[progressMessage 'pwiz-sharp build.sh $*']"
+# Directories the tree used to have tracked files in (pwiz-sharp/ before the C++ retirement,
+# installer/ and pwiz/src|test before the relayout). A persistent agent checkout that built
+# those revisions still carries their gitignored outputs, which the current .gitignore no
+# longer covers, and the hygiene check at the end would report them as files the build left
+# behind. Only a directory with no tracked files is swept.
+for d in pwiz-sharp installer pwiz/src pwiz/test; do
+    if [ -d "$SCRIPT_DIR/$d" ] && ! git -C "$SCRIPT_DIR" ls-files --error-unmatch "$d" >/dev/null 2>&1; then
+        echo "##teamcity[message text='Removing stale untracked directory $d left by an earlier layout']"
+        rm -rf "$SCRIPT_DIR/$d"
+    fi
+done
+
+echo "##teamcity[progressMessage 'build.sh $*']"
 bash "$SCRIPT_DIR/build.sh" "$@" || fail "build.sh failed"
 
 # Post-build hygiene checks. Run from the repo root so git sees the full

@@ -79,12 +79,27 @@ REM # ~2s for the vendor re-extract plus a ~56 MB runtime re-download from
 REM # aka.ms — putting an external endpoint on the critical path of every
 REM # build for no freshness gain. Use --all on a nightly if a periodic
 REM # paranoia reset is wanted.
-echo ##teamcity[progressMessage 'pwiz-sharp clean.bat']
+echo ##teamcity[progressMessage 'clean.bat']
 call "%SCRIPT_DIR%\clean.bat"
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set "ERROR_TEXT=clean.bat failed" & goto error)
 
-echo ##teamcity[progressMessage 'pwiz-sharp build.bat %*']
+REM # Directories the tree used to have tracked files in (pwiz-sharp/ before the C++
+REM # retirement, installer/ and pwiz/src|test before the relayout). A persistent agent
+REM # checkout that built those revisions still carries their gitignored outputs, which
+REM # the current .gitignore no longer covers, and the hygiene check at the end would
+REM # report them as files the build left behind. Only a directory with no tracked files
+REM # is swept, so this is a no-op on a fresh checkout and harmless on any branch.
+for %%d in (pwiz-sharp installer pwiz\src pwiz\test) do (
+    if exist "%SCRIPT_DIR%\%%d" (
+        git -C "%SCRIPT_DIR%" ls-files --error-unmatch "%%d" >nul 2>&1 || (
+            echo ##teamcity[message text='Removing stale untracked directory %%d left by an earlier layout']
+            rmdir /s /q "%SCRIPT_DIR%\%%d"
+        )
+    )
+)
+
+echo ##teamcity[progressMessage 'build.bat %*']
 call "%SCRIPT_DIR%\build.bat" %*
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set "ERROR_TEXT=build.bat failed" & goto error)
