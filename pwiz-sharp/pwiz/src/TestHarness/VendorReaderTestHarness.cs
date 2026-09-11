@@ -505,6 +505,7 @@ public static class VendorReaderTestHarness
             }
             orphanedSpectrumList = sl;
             msd.Run.SpectrumList = simple;
+            RecordIndexFilter(msd, start, end);
         }
 
         // 2. Mangle paths + checksums + pwiz software to match how the reference mzML was written.
@@ -927,6 +928,38 @@ public static class VendorReaderTestHarness
     }
 
     // ---------- helpers ported from VendorReaderTestHarness.cpp ----------
+
+    /// <summary>
+    /// Records the index subset in the document's dataProcessing, so a reference says on its
+    /// face which spectra it holds.
+    /// </summary>
+    /// <remarks>
+    /// Without this a subsetted reference is indistinguishable from a complete one: cpp's
+    /// SpectrumList_Filter contributes no processingMethod, and ReaderTestConfig.resultFilename
+    /// has a suffix for every other variant (-centroid, -combineIMS, -ignoreZeros, ...) but none
+    /// for indexRange. A reference holding 101 of 19570 spectra is therefore written under the
+    /// plain filename with nothing to indicate it, which is how the container's vendor sweep
+    /// came to compare full conversions against partial references and report them as matching.
+    ///
+    /// MS:1001486 "data filtering" is the nearest standard term — there is no CV accession for
+    /// an index subset specifically — so the range itself rides along as a userParam, mirroring
+    /// how SpectrumList_PeakPicker pairs MS_peak_picking with a userParam naming its mode.
+    /// </remarks>
+    public static void RecordIndexFilter(MSData msd, int start, int end)
+    {
+        ArgumentNullException.ThrowIfNull(msd);
+        var dp = msd.Run.SpectrumList?.DataProcessing;
+        if (dp is null) return;
+
+        var method = new ProcessingMethod
+        {
+            Order = dp.ProcessingMethods.Count,
+            Software = dp.ProcessingMethods.FirstOrDefault()?.Software,
+        };
+        method.Set(CVID.MS_data_filtering);
+        method.UserParams.Add(new UserParam("index filter", $"{start}-{end}"));
+        dp.ProcessingMethods.Add(method);
+    }
 
     /// <summary>
     /// Resolves which reference file this fixture+config pairs with, preferring a pwiz-sharp
