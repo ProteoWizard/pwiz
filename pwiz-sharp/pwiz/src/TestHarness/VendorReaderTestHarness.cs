@@ -3,6 +3,7 @@ using Pwiz.Data.Common.Diff;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Diff;
+using Pwiz.Data.MsData.Encoding;
 using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Mzml;
 using Pwiz.Data.MsData.Processing;
@@ -176,6 +177,26 @@ public sealed class FixtureRunContext
 /// </remarks>
 public static class VendorReaderTestHarness
 {
+    /// <summary>Environment variable that turns every fixture run into a reference write.</summary>
+    public const string GenerateReferencesVariable = "PWIZ_GENERATE_REFERENCE_MZML";
+
+    /// <summary>
+    /// When true, each fixture WRITES its reference mzML instead of comparing against one, and
+    /// the run reports success without having verified anything. Port of cpp's
+    /// <c>--generate-mzML</c>, which pwiz-sharp had no equivalent of — references could only be
+    /// produced by the cpp harness, so pwiz-sharp could never be the source of truth for them.
+    /// </summary>
+    /// <remarks>
+    /// Off unless <see cref="GenerateReferencesVariable"/> is set to 1/true, and deliberately
+    /// not a plain test flag: a generating run rewrites committed test data and every assertion
+    /// it would otherwise make passes vacuously, so it must be something a person opts into for
+    /// one invocation, never a state a normal run can drift into. Regenerate, then run the suite
+    /// again WITHOUT it — a generated reference that does not then compare equal means the
+    /// generate path and the compare path disagree, which is the one failure this mode can hide.
+    /// </remarks>
+    public static bool GenerateReferences =>
+        Environment.GetEnvironmentVariable(GenerateReferencesVariable) is "1" or "true" or "TRUE";
+
     /// <summary>
     /// Iterates immediate children of <paramref name="rootPath"/> and, for any matching
     /// <paramref name="predicate"/>, reads through <paramref name="reader"/> and compares to
@@ -488,6 +509,25 @@ public static class VendorReaderTestHarness
 
         // 2. Mangle paths + checksums + pwiz software to match how the reference mzML was written.
         CalculateSourceFileChecksums(msd.FileDescription.SourceFiles);
+
+        // GENERATE MODE writes the reference instead of comparing against it — see
+        // GenerateReferences.
+        //
+        // Position matters and is not obvious. cpp's generate() writes after
+        // calculateSourceFileChecksums and wrap() and before anything else, so a reference holds
+        // the REAL sourceFile location and the REAL reader software id. The two Mangle calls
+        // below exist only to let the in-memory comparison tolerate that a reference was written
+        // on another machine by another pwiz build; they are diff scaffolding, not file content.
+        // Writing after them bakes the scaffolding in — the first attempt here produced
+        // `<software id="current_x0020_pwiz">` in place of `pwiz_Reader_Mobilion`, and a
+        // `file:///` location, in every regenerated reference.
+        if (GenerateReferences)
+        {
+            WriteReference(msd, ReferencePath(config, msd, rootPath, out string generatedName),
+                           generatedName, config.DoublePrecision);
+            return;
+        }
+
         MangleSourceFileLocations(sourceName, msd.FileDescription.SourceFiles);
         ManglePwizSoftware(msd);
 
@@ -499,13 +539,11 @@ public static class VendorReaderTestHarness
         // cpp vendor TC config — pwiz-sharp/test/<Vendor>.Tests/Reference/ is opt-in
         // per test project (csproj copies Reference/*.mzML into bin). See
         // pwiz-sharp/test/UNIFI.Tests/Reference/README.md for the rationale.
-        string referenceFilename = config.ResultFilename(msd.Run.Id + ".mzML");
-        string overridePath = Path.Combine(AppContext.BaseDirectory, "Reference", referenceFilename);
-        string cppPath = Path.Combine(rootPath, referenceFilename);
-        string referencePath = File.Exists(overridePath) ? overridePath : cppPath;
+        string referencePath = ReferencePath(config, msd, rootPath, out string referenceFilename);
         if (!File.Exists(referencePath))
             throw new FileNotFoundException(
-                $"reference mzML not found at {cppPath} or override {overridePath}");
+                $"reference mzML not found at {referencePath} (set {GenerateReferencesVariable}=1 to write it)");
+
         MSData referenceMsd;
         using (var fs = File.OpenRead(referencePath))
             // RepairPeakOrder off: a golden file is compared as stored. A reference can hold peaks
@@ -889,6 +927,98 @@ public static class VendorReaderTestHarness
     }
 
     // ---------- helpers ported from VendorReaderTestHarness.cpp ----------
+
+    /// <summary>
+    /// Resolves which reference file this fixture+config pairs with, preferring a pwiz-sharp
+    /// override at <c>&lt;test-assembly-dir&gt;/Reference/&lt;filename&gt;</c> over the cpp tree
+    /// at <paramref name="rootPath"/>.
+    /// </summary>
+    /// <remarks>
+    /// Shared by the compare path and the generate path on purpose: if they resolved
+    /// independently, generating could write one file while the next ordinary run read another,
+    /// and the symptom would be a regenerated reference that "did not take".
+    ///
+    /// The override lets pwiz-sharp ship its own references (fixtures cpp does not carry, or
+    /// intermediate ones during alignment work) without retriggering every cpp vendor TC config
+    /// — it is opt-in per test project, whose csproj copies Reference/*.mzML into bin. See
+    /// pwiz-sharp/test/UNIFI.Tests/Reference/README.md.
+    /// </remarks>
+    public static string ReferencePath(ReaderTestConfig config, MSData msd, string rootPath,
+                                       out string referenceFilename)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNull(msd);
+        referenceFilename = config.ResultFilename(msd.Run.Id + ".mzML");
+        string overridePath = Path.Combine(AppContext.BaseDirectory, "Reference", referenceFilename);
+        return File.Exists(overridePath) ? overridePath : Path.Combine(rootPath, referenceFilename);
+    }
+
+    /// <summary>
+    /// Writes <paramref name="msd"/> out as the reference mzML at <paramref name="path"/>.
+    /// </summary>
+    /// <remarks>
+    /// Written unindexed, matching how the committed references were produced — an index would
+    /// add byte offsets that shift whenever anything upstream of them changes, making every
+    /// reference diff on content that carries no information.
+    ///
+    /// Writes via a temp file and then moves: a generating run walks dozens of fixtures, and a
+    /// crash partway through the largest ones (Mobilion's is ~19570 spectra) would otherwise
+    /// leave a truncated but plausible-looking mzML in the tree, which the next ordinary run
+    /// would compare against and report as a reader regression.
+    /// </remarks>
+    /// <param name="msd">The document to write.</param>
+    /// <param name="path">Destination reference path.</param>
+    /// <param name="referenceFilename">Bare filename, for the log line.</param>
+    /// <param name="doublePrecision">
+    /// <see cref="ReaderTestConfig.DoublePrecision"/>: 64-bit arrays for the vendors whose data
+    /// needs it (Bruker TDF), 32-bit otherwise — one precision for every array, as cpp does.
+    /// </param>
+    public static void WriteReference(MSData msd, string path, string referenceFilename,
+                                      bool doublePrecision)
+    {
+        ArgumentNullException.ThrowIfNull(msd);
+        string directory = Path.GetDirectoryName(path)
+                           ?? throw new ArgumentException($"no directory in reference path: {path}", nameof(path));
+        Directory.CreateDirectory(directory);
+
+        string temp = path + ".generating";
+        try
+        {
+            // Encoding has to match how the references were written, and that is neither
+            // MzmlWriter's default (uncompressed, 64-bit) nor msconvert's (zlib, 64-bit m/z with
+            // 32-bit intensities). cpp's generate() uses ONE precision for every array:
+            //
+            //   writeConfig.binaryDataEncoderConfig.precision =
+            //       config.doublePrecision ? Precision_64 : Precision_32;
+            //   writeConfig.binaryDataEncoderConfig.compression = Compression_Zlib;
+            //
+            // Getting this wrong is invisible to the tests - the values decode identically
+            // either way, so everything still passes - and shows up only as every reference
+            // swapping MS:1000521 (32-bit float) for MS:1000523 (64-bit) and roughly doubling
+            // in size.
+            var encoder = new BinaryEncoderConfig
+            {
+                Compression = BinaryCompression.Zlib,
+                Precision = doublePrecision ? BinaryPrecision.Bits64 : BinaryPrecision.Bits32,
+            };
+            using (var fs = File.Create(temp))
+                // Indexed defaults to true; the committed references are not indexed, and the
+                // envelope is 100+ lines of byte offsets plus a fileChecksum that change
+                // whenever anything above them shifts.
+                new MzmlWriter(encoder) { Indexed = false }.Write(msd, fs);
+            File.Move(temp, path, overwrite: true);
+        }
+        catch
+        {
+            if (File.Exists(temp)) { try { File.Delete(temp); } catch { /* best effort */ } }
+            throw;
+        }
+
+        int spectra = msd.Run.SpectrumList?.Count ?? 0;
+        int chromatograms = msd.Run.ChromatogramList?.Count ?? 0;
+        Console.WriteLine(
+            $"[generate] wrote {referenceFilename}: {spectra} spectra, {chromatograms} chromatograms -> {path}");
+    }
 
     /// <summary>
     /// Rewrites absolute <c>file://...</c> locations in <paramref name="sourceFiles"/> to be
