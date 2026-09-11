@@ -85,12 +85,13 @@ set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set "ERROR_TEXT=clean.bat failed" & goto error)
 
 REM # Directories the tree used to have tracked files in (pwiz-sharp/ before the C++
-REM # retirement, installer/ and pwiz/src|test before the relayout). A persistent agent
-REM # checkout that built those revisions still carries their gitignored outputs, which
-REM # the current .gitignore no longer covers, and the hygiene check at the end would
-REM # report them as files the build left behind. Only a directory with no tracked files
-REM # is swept, so this is a no-op on a fresh checkout and harmless on any branch.
-for %%d in (pwiz-sharp installer pwiz\src pwiz\test) do (
+REM # retirement, installer/ and pwiz/src|test before the relayout, the removed
+REM # BullseyeSharp submodule). A persistent agent checkout that built those revisions
+REM # still carries their gitignored outputs or the submodule's working tree, which the
+REM # current .gitignore no longer covers, and the hygiene check at the end would report
+REM # them as files the build left behind. Only a directory with no tracked files is
+REM # swept, so this is a no-op on a fresh checkout and harmless on any branch.
+for %%d in (pwiz-sharp installer pwiz\src pwiz\test pwiz_tools\Skyline\Executables\BullseyeSharp) do (
     if exist "%SCRIPT_DIR%\%%d" (
         git -C "%SCRIPT_DIR%" ls-files --error-unmatch "%%d" >nul 2>&1 || (
             echo ##teamcity[message text='Removing stale untracked directory %%d left by an earlier layout']

@@ -71,11 +71,12 @@ else
 fi
 
 # Directories the tree used to have tracked files in (pwiz-sharp/ before the C++ retirement,
-# installer/ and pwiz/src|test before the relayout). A persistent agent checkout that built
-# those revisions still carries their gitignored outputs, which the current .gitignore no
-# longer covers, and the hygiene check at the end would report them as files the build left
-# behind. Only a directory with no tracked files is swept.
-for d in pwiz-sharp installer pwiz/src pwiz/test; do
+# installer/ and pwiz/src|test before the relayout, the removed BullseyeSharp submodule). A
+# persistent agent checkout that built those revisions still carries their gitignored outputs
+# or the submodule's working tree, which the current .gitignore no longer covers, and the
+# hygiene check at the end would report them as files the build left behind. Only a directory
+# with no tracked files is swept.
+for d in pwiz-sharp installer pwiz/src pwiz/test pwiz_tools/Skyline/Executables/BullseyeSharp; do
     if [ -d "$SCRIPT_DIR/$d" ] && ! git -C "$SCRIPT_DIR" ls-files --error-unmatch "$d" >/dev/null 2>&1; then
         echo "##teamcity[message text='Removing stale untracked directory $d left by an earlier layout']"
         rm -rf "$SCRIPT_DIR/$d"
