@@ -33,15 +33,18 @@ using System.IO;
 using System.Collections.Specialized;
 using System.Xml;
 using System.Text.RegularExpressions;
-using pwiz.CLI;
-using pwiz.CLI.msdata;
+
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
 using JWC;
 using Microsoft.Win32;
 using DigitalRune.Windows.Docking;
-using SpyTools;
+// SpyTools (TraceWinListener.dll) was the cpp Skyline-debug helper; not ported.
 using CommandLine.Utility;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
 	public partial class seemsForm : Form
 	{
@@ -84,10 +87,10 @@ namespace seems
             browseToFileDialog = new OpenDataSourceDialog();
 			browseToFileDialog.InitialDirectory = "C:\\";
 
-            combineIonMobilitySpectraToolStripMenuItem.Checked = Properties.Settings.Default.CombineIonMobilitySpectra;
-            ignoreZeroIntensityPointsToolStripMenuItem.Checked = Properties.Settings.Default.IgnoreZeroIntensityPoints;
-            acceptZeroLengthSpectraToolStripMenuItem.Checked = Properties.Settings.Default.AcceptZeroLengthSpectra;
-            timeInMinutesToolStripMenuItem.Checked = Properties.Settings.Default.TimeInMinutes;
+            combineIonMobilitySpectraToolStripMenuItem.Checked = Pwiz.SeeMS.Settings.Default.CombineIonMobilitySpectra;
+            ignoreZeroIntensityPointsToolStripMenuItem.Checked = Pwiz.SeeMS.Settings.Default.IgnoreZeroIntensityPoints;
+            acceptZeroLengthSpectraToolStripMenuItem.Checked = Pwiz.SeeMS.Settings.Default.AcceptZeroLengthSpectra;
+            timeInMinutesToolStripMenuItem.Checked = Pwiz.SeeMS.Settings.Default.TimeInMinutes;
 
             DockPanelManager.RenderMode = DockPanelRenderMode.VisualStyles;
 
@@ -114,12 +117,12 @@ namespace seems
 		private void seems_Load( object sender, EventArgs e )
 		{
 			this.StartPosition = FormStartPosition.Manual;
-			this.Location = Properties.Settings.Default.MainFormLocation;
-			this.Size = Properties.Settings.Default.MainFormSize;
-			this.WindowState = Properties.Settings.Default.MainFormWindowState;
+			this.Location = Pwiz.SeeMS.Settings.Default.MainFormLocation;
+			this.Size = Pwiz.SeeMS.Settings.Default.MainFormSize;
+			this.WindowState = Pwiz.SeeMS.Settings.Default.MainFormWindowState;
 
-            if (Properties.Settings.Default.DefaultDecimalPlaces < decimalPlacesToolStripMenuItem.DropDownItems.Count)
-                (decimalPlacesToolStripMenuItem.DropDownItems[Properties.Settings.Default.DefaultDecimalPlaces] as ToolStripMenuItem).Checked = true;
+            if (Pwiz.SeeMS.Settings.Default.DefaultDecimalPlaces < decimalPlacesToolStripMenuItem.DropDownItems.Count)
+                (decimalPlacesToolStripMenuItem.DropDownItems[Pwiz.SeeMS.Settings.Default.DefaultDecimalPlaces] as ToolStripMenuItem).Checked = true;
 
 			isLoaded = true;
 		}
@@ -127,15 +130,15 @@ namespace seems
 		private void seems_LocationChanged( object sender, EventArgs e )
 		{
 			if( isLoaded && this.WindowState == FormWindowState.Normal )
-				Properties.Settings.Default.MainFormLocation = this.Location;
+				Pwiz.SeeMS.Settings.Default.MainFormLocation = this.Location;
 		}
 
 		private void seems_FormClosing( object sender, FormClosingEventArgs e )
 		{
-            Properties.Settings.Default.MainFormLocation = this.Location;
-            Properties.Settings.Default.MainFormSize = this.Size;
-            Properties.Settings.Default.MainFormWindowState = this.WindowState;
-			Properties.Settings.Default.Save();
+            Pwiz.SeeMS.Settings.Default.MainFormLocation = this.Location;
+            Pwiz.SeeMS.Settings.Default.MainFormSize = this.Size;
+            Pwiz.SeeMS.Settings.Default.MainFormWindowState = this.WindowState;
+			Pwiz.SeeMS.Settings.Default.Save();
 			/*foreach( DataSourceMap.MapPair sourceItr in dataSources )
 				if( sourceItr.Value != null &&
 					sourceItr.Value.first != null &&
@@ -309,14 +312,14 @@ namespace seems
 
 		private void openFile_Click( object sender, EventArgs e )
 		{
-		    browseToFileDialog.InitialDirectory = Properties.Settings.Default.LastBrowseToFileLocation;
+		    browseToFileDialog.InitialDirectory = Pwiz.SeeMS.Settings.Default.LastBrowseToFileLocation;
 			if( browseToFileDialog.ShowDialog() == DialogResult.OK )
 			{
                 foreach( var dataSource in browseToFileDialog.DataSources )
-                    openFile( dataSource );
+                    openFile( new OpenDataSourceDialog.MSDataRunPath(dataSource) );
 
-			    Properties.Settings.Default.LastBrowseToFileLocation = browseToFileDialog.CurrentDirectory;
-			    Properties.Settings.Default.Save();
+			    Pwiz.SeeMS.Settings.Default.LastBrowseToFileLocation = browseToFileDialog.CurrentDirectory;
+			    Pwiz.SeeMS.Settings.Default.Save();
             }
 		}
 
@@ -408,8 +411,8 @@ namespace seems
 			if( isLoaded && this.WindowState != FormWindowState.Minimized )
 			{
 				if( this.WindowState == FormWindowState.Normal )
-					Properties.Settings.Default.MainFormSize = this.Size;
-				Properties.Settings.Default.MainFormWindowState = this.WindowState;
+					Pwiz.SeeMS.Settings.Default.MainFormSize = this.Size;
+				Pwiz.SeeMS.Settings.Default.MainFormWindowState = this.WindowState;
 			}
 
             if (CurrentGraphForm != null && CurrentGraphForm.WindowState == FormWindowState.Maximized)
@@ -451,50 +454,50 @@ namespace seems
         private void decimalPlaces_Click(object sender, EventArgs e)
         {
             string decimalPlacesStr = (sender as ToolStripMenuItem)?.Text ?? throw new ArgumentException();
-            Properties.Settings.Default.DefaultDecimalPlaces = Int32.Parse(decimalPlacesStr);
-            Properties.Settings.Default.Save();
+            Pwiz.SeeMS.Settings.Default.DefaultDecimalPlaces = Int32.Parse(decimalPlacesStr);
+            Pwiz.SeeMS.Settings.Default.Save();
 
             foreach (ToolStripMenuItem item in decimalPlacesToolStripMenuItem.DropDownItems)
                 item.Checked = false;
-            (decimalPlacesToolStripMenuItem.DropDownItems[Properties.Settings.Default.DefaultDecimalPlaces] as ToolStripMenuItem).Checked = true;
+            (decimalPlacesToolStripMenuItem.DropDownItems[Pwiz.SeeMS.Settings.Default.DefaultDecimalPlaces] as ToolStripMenuItem).Checked = true;
 
             Refresh();
         }
 
         private void combineIonMobilitySpectraToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Properties.Settings.Default.CombineIonMobilitySpectra = combineIonMobilitySpectraToolStripMenuItem.Checked;
-            Properties.Settings.Default.Save();
+            Pwiz.SeeMS.Settings.Default.CombineIonMobilitySpectra = combineIonMobilitySpectraToolStripMenuItem.Checked;
+            Pwiz.SeeMS.Settings.Default.Save();
         }
 
         private void ignoreZeroIntensityPointsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Properties.Settings.Default.IgnoreZeroIntensityPoints = ignoreZeroIntensityPointsToolStripMenuItem.Checked;
-            Properties.Settings.Default.Save();
+            Pwiz.SeeMS.Settings.Default.IgnoreZeroIntensityPoints = ignoreZeroIntensityPointsToolStripMenuItem.Checked;
+            Pwiz.SeeMS.Settings.Default.Save();
         }
 
         private void acceptZeroLengthSpectraToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Properties.Settings.Default.AcceptZeroLengthSpectra = acceptZeroLengthSpectraToolStripMenuItem.Checked;
-            Properties.Settings.Default.Save();
+            Pwiz.SeeMS.Settings.Default.AcceptZeroLengthSpectra = acceptZeroLengthSpectraToolStripMenuItem.Checked;
+            Pwiz.SeeMS.Settings.Default.Save();
         }
 
         private void timeInMinutesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Properties.Settings.Default.TimeInMinutes = timeInMinutesToolStripMenuItem.Checked;
-            Properties.Settings.Default.Save();
+            Pwiz.SeeMS.Settings.Default.TimeInMinutes = timeInMinutesToolStripMenuItem.Checked;
+            Pwiz.SeeMS.Settings.Default.Save();
         }
 
         private void showSIMScansAsSpectraToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Properties.Settings.Default.SimAsSpectra = showSIMScansAsSpectraToolStripMenuItem.Checked;
-            Properties.Settings.Default.Save();
+            Pwiz.SeeMS.Settings.Default.SimAsSpectra = showSIMScansAsSpectraToolStripMenuItem.Checked;
+            Pwiz.SeeMS.Settings.Default.Save();
         }
 
         private void showSRMScansAsSpectraToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Properties.Settings.Default.SrmAsSpectra = showSRMScansAsSpectraToolStripMenuItem.Checked;
-            Properties.Settings.Default.Save();
+            Pwiz.SeeMS.Settings.Default.SrmAsSpectra = showSRMScansAsSpectraToolStripMenuItem.Checked;
+            Pwiz.SeeMS.Settings.Default.Save();
         }
     }
 }

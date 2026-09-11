@@ -118,6 +118,6 @@
       <Parent>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Thermo</Parent>
     </VendorTestArchives>
   </ItemGroup>
-  <Import Project="$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\build\ExtractTestData.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\build\ExtractTestData.targets" />
 
 </Project>

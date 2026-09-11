@@ -26,10 +26,6 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using CustomProgressCell;
-using pwiz.CommonMsData;
-using pwiz.CommonMsData.RemoteApi;
-using pwiz.CommonMsData.RemoteApi.Unifi;
-using pwiz.CommonMsData.RemoteApi.WatersConnect;
 
 namespace MSConvertGUI
 {
@@ -49,17 +45,19 @@ namespace MSConvertGUI
         private string _outputFolder;
         private string _options;
         private List<MainLogic> _tasksRunningList;
+        private Map<string, UnifiBrowserForm.Credentials> _unifiCredentialsByUrl;
         private Map<string, int> _usedOutputFilenames;
         private object _calculateSHA1Mutex = new object();
         private object _cancelMutex = new object();
 
-        public ProgressForm(IEnumerable<object> filesToProcess, string outputFolder, string options)
+        public ProgressForm(IEnumerable<object> filesToProcess, string outputFolder, string options, Map<string, UnifiBrowserForm.Credentials> unifiCredentialsByUrl)
         {
             InitializeComponent();
             _filesToProcess = filesToProcess;
             _outputFolder = outputFolder;
             _options = options;
             _tasksRunningList = new List<MainLogic>();
+            _unifiCredentialsByUrl = unifiCredentialsByUrl;
             _usedOutputFilenames = new Map<string, int>();
         }
 
@@ -191,18 +189,12 @@ namespace MSConvertGUI
                 _tasksRunningList.Add(runProgram);
                 info.workProcess = runProgram;
 
-                string workItem;
-                if (item is UnifiUrl unifiUrl)
-                    workItem = unifiUrl.GetAuthenticatedUrl();
-                else if (item is WatersConnectUrl wcUrl)
-                    workItem = wcUrl.GetAuthenticatedUrl();
-                else if (item is MsDataFilePath msDataFilePath)
-                    workItem = msDataFilePath.FilePath;
-                else
-                    workItem = item.ToString();
+                string workItem = (item as INetworkSource)?.Url ?? item.ToString();
+                if (MainForm.IsNetworkSource(item))
+                    workItem = _unifiCredentialsByUrl[workItem].GetUrlWithAuthentication(workItem);
 
                 var config = runProgram.ParseCommandLine(_outputFolder, (workItem + "|" + _options).Trim('|'));
-                config.WriteConfig.continueOnError = true;
+                config.WriteConfig.ContinueOnError = true;
                 runProgram.QueueWork(config);
             }
 

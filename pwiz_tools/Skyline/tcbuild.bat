@@ -69,6 +69,24 @@ call "%SCRIPT_DIR%\CleanSkyline.bat"
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set "ERROR_TEXT=CleanSkyline.bat failed" & goto error)
 
+REM # Directories the tree used to have tracked files in (pwiz-sharp/ before the C++
+REM # retirement, installer/ and pwiz/src|test before the relayout, the removed
+REM # BullseyeSharp submodule). A persistent agent checkout that built those revisions
+REM # still carries their gitignored outputs or the submodule's working tree, which the
+REM # current .gitignore no longer covers, and the hygiene check at the end would report
+REM # them as files the build left behind. Only a directory with no tracked files is
+REM # swept, so this is a no-op on a fresh checkout and harmless on any branch.
+REM # Mirrors the sweep in the root tcbuild.bat.
+set "REPO_ROOT=%SCRIPT_DIR%\..\.."
+for %%d in (pwiz-sharp installer pwiz\src pwiz\test pwiz_tools\Skyline\Executables\BullseyeSharp) do (
+    if exist "%REPO_ROOT%\%%d" (
+        git -C "%REPO_ROOT%" ls-files --error-unmatch "%%d" >nul 2>&1 || (
+            echo ##teamcity[message text='Removing stale untracked directory %%d left by an earlier layout']
+            rmdir /s /q "%REPO_ROOT%\%%d"
+        )
+    )
+)
+
 REM # The three distro zips the Jamfile used to produce. Appended here rather
 REM # than left to the caller so every TC configuration yields the same artifacts.
 set DISTRO_ZIPS=SkylineTester.zip SkylineNightly.zip BiblioSpec.zip

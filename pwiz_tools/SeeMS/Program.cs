@@ -33,7 +33,7 @@ using System.Runtime.InteropServices;
 //using EDAL;
 //using BDal.CxT.Lc;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
 	static class Program
 	{
@@ -52,6 +52,12 @@ namespace seems
 		[SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.ControlAppDomain)]
 		public static int Main( string[] args )
 		{
+		    // Hook the vendor SDK on-demand resolver before any Reader_* is touched.
+		    // Without this, opening a Thermo / Bruker / Waters / etc. file fails with
+		    // TypeLoadException because the SDK DLLs aren't shipped in the installer
+		    // (they're downloaded into %LOCALAPPDATA%\ProteoWizard\vendor\ on first use).
+		    Pwiz.Vendor.Common.VendorSdkLoader.RegisterAssemblyResolver();
+
 		    // redirect console output to parent process;
 		    // must be before any calls to Console.WriteLine()
 		    AttachConsole(ATTACH_PARENT_PROCESS);
@@ -72,6 +78,15 @@ namespace seems
             List<ISpectrumCollection> scList = new List<ISpectrumCollection>();
             foreach( ISpectrumSourceDeclaration ssd in ssdList )
                 scList.Add( a.GetSpectrumCollection( ssd.SpectrumCollectionId ) );*/
+
+            // Start a fresh log file each run (overwrite). Keeps it small and focused on the
+            // current session for easy paste-back.
+            try { File.WriteAllText(LogFilePath, string.Empty); } catch { }
+            Log(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "seems-sharp starting; args=[{0}]; pid={1}; cwd={2}",
+                string.Join(", ", args ?? Array.Empty<string>()),
+                Environment.ProcessId,
+                Environment.CurrentDirectory));
 
             // Add the event handler for handling UI thread exceptions to the event.
             Application.ThreadException += UIThread_UnhandledException;
@@ -113,17 +128,54 @@ namespace seems
             }
 		}
 
+	    /// <summary>Path of the rolling exception log seems-sharp writes to. Lives next to the
+	    /// .exe so it's discoverable from any working directory.</summary>
+	    public static string LogFilePath { get; } = Path.Combine(
+	        Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".",
+	        "seems-sharp.log");
+
+	    private static readonly object s_logLock = new();
+
+	    /// <summary>Append <paramref name="line"/> to <see cref="LogFilePath"/>. Used by exception
+	    /// handlers and any other code that wants to leave a breadcrumb the user can paste back.</summary>
+	    public static void Log(string line)
+	    {
+	        try
+	        {
+	            lock (s_logLock)
+	            {
+	                File.AppendAllText(LogFilePath,
+	                    string.Format(System.Globalization.CultureInfo.InvariantCulture,
+	                        "[{0:yyyy-MM-dd HH:mm:ss.fff}] {1}{2}",
+	                        DateTime.Now, line, Environment.NewLine));
+	            }
+	        }
+	        catch
+	        {
+	            // Logging must never throw — losing one log line is preferable to crashing the app.
+	        }
+	    }
+
 	    public static void HandleException(string title, Exception e)
 	    {
 	        string message = e?.ToString() ?? "Unknown exception.";
             if (e?.InnerException != null)
-	            message += "\n\nAdditional information: " + e.InnerException;
+	            message += Environment.NewLine + Environment.NewLine + "Additional information: " + e.InnerException;
+
+	        // Always write to the log file first — that's the durable record.
+	        Log(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+	            "{0}: {1}", title, message));
 
 	        if (!TestMode)
-	            MessageBox.Show(message,
+	        {
+	            // Append a hint about the log file so users can find / share it.
+	            string userMessage = message + Environment.NewLine + Environment.NewLine +
+	                "(Logged to " + LogFilePath + ")";
+	            MessageBox.Show(userMessage,
 	                title,
 	                MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
 	                0, false);
+	        }
 	        else
 	        {
 	            Console.Error.WriteLine(message);

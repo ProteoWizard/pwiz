@@ -26,12 +26,17 @@ using System.Drawing;
 using System.Data;
 using System.Text;
 using System.Windows.Forms;
-using pwiz.CLI.cv;
-using pwiz.CLI.data;
-using pwiz.CLI.msdata;
-using pwiz.CLI.analysis;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Params;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
+using Pwiz.Analysis;
+using Pwiz.Analysis.PeakPicking;
+using Pwiz.Data.MsData.Processing;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     public class ProcessingListView<ProcessableListType> : UserControl
     {
@@ -235,7 +240,7 @@ namespace seems
             {
                 DataProcessing dp = new DataProcessing();
                 foreach( ProcessingListViewItem<ProcessableListType> item in ListView.Items )
-                    dp.processingMethods.Add( item.ToProcessingMethod() );
+                    dp.ProcessingMethods.Add( item.ToProcessingMethod() );
                 return dp;
             }
         }
@@ -318,21 +323,21 @@ namespace seems
     }
 
     public class SpectrumList_Preexisting_ListViewItem
-        : ProcessingListViewItem<SpectrumList>
+        : ProcessingListViewItem<ISpectrumList>
     {
         private CVParam methodParam;
 
         public SpectrumList_Preexisting_ListViewItem( ProcessingMethod method )
-            : base( method.cvParamChild( CVID.MS_data_processing_action ).name )
+            : base( method.Params.CvParamChild( CVID.MS_data_processing_action ).Name )
         {
-            methodParam = method.cvParamChild( CVID.MS_data_processing_action );
+            methodParam = method.Params.CvParamChild( CVID.MS_data_processing_action );
         }
 
-        public override CVID CVID { get { return methodParam.cvid; } }
+        public override CVID CVID { get { return methodParam.Cvid; } }
     }
 
     public class SpectrumList_SavitzkyGolaySmoother_ListViewItem
-        : ProcessingListViewItem<SpectrumList>
+        : ProcessingListViewItem<ISpectrumList>
     {
         public SpectrumList_SavitzkyGolaySmoother_ListViewItem()
             : base("Savitzky-Golay Smoother")
@@ -343,7 +348,7 @@ namespace seems
 
         public override CVID CVID { get { return CVID.MS_smoothing; } }
 
-        public override SpectrumList ProcessList( SpectrumList list )
+        public override ISpectrumList ProcessList( ISpectrumList list )
         {
             return new SpectrumList_Smoother( list, null, new int[] { 1, 2, 3, 4, 5, 6 } );
         }
@@ -351,42 +356,42 @@ namespace seems
 
     public class SpectrumList_ECD_ETD_PrecursorFilter : SpectrumListWrapper
     {
-        public SpectrumList_ECD_ETD_PrecursorFilter( SpectrumList inner )
+        public SpectrumList_ECD_ETD_PrecursorFilter( ISpectrumList inner )
             : base(inner)
         {
             ProcessingMethod method = new ProcessingMethod();
-            method.order = this.dataProcessing().processingMethods.Count;
-            method.set( CVID.MS_charge_stripping );
-            this.dataProcessing().processingMethods.Add( method );
+            method.Order = this.dataProcessing().ProcessingMethods.Count;
+            method.Params.Set(CVID.MS_charge_stripping );
+            this.dataProcessing().ProcessingMethods.Add( method );
         }
 
-        public override Spectrum spectrum( int index, bool getBinaryData )
+        public override Spectrum GetSpectrum( int index, bool getBinaryData )
         {
-            Spectrum s = base.spectrum( index, true );
+            Spectrum s = base.GetSpectrum(index, getBinaryData: true);
 
-            if( s.cvParam( CVID.MS_MSn_spectrum ).empty() ||
-                (int) s.cvParam( CVID.MS_ms_level ).value == 1 )
+            if( s.Params.CvParam( CVID.MS_MSn_spectrum ).IsEmpty ||
+                s.Params.CvParam( CVID.MS_ms_level ).ValueAs<int>() == 1 )
             {
                 if( !getBinaryData )
-                    s.binaryDataArrays.Clear();
+                    s.BinaryDataArrays.Clear();
                 return s;
             }
 
-            PrecursorList pl = s.precursors;
+            PrecursorList pl = s.Precursors;
 
-            IList<double> mzArray = s.getMZArray().data.Storage();
-            IList<double> intensityArray = s.getIntensityArray().data.Storage();
+            IList<double> mzArray = s.GetMZArray().Data;
+            IList<double> intensityArray = s.GetIntensityArray().Data;
             PointDataMap<double> mziMap = new PointDataMap<double>();
-            for( int i = 0; i < (int) s.defaultArrayLength; ++i )
+            for( int i = 0; i < (int) s.DefaultArrayLength; ++i )
                 mziMap.Insert( mzArray[i], intensityArray[i] );
 
             Set<double> pointsToRemove = new Set<double>();
 
             foreach( Precursor p in pl )
             {
-                foreach( SelectedIon si in p.selectedIons )
+                foreach( SelectedIon si in p.SelectedIons )
                 {
-                    double mz = (double) si.cvParam( CVID.MS_selected_ion_m_z ).value;
+                    double mz = si.Params.CvParam( CVID.MS_selected_ion_m_z ).ValueAs<double>();
                     PointDataMap<double>.Enumerator itr = mziMap.LowerBound( mz - 4.0 );
                     if( itr != null && itr.IsValid )
                     {
@@ -397,10 +402,10 @@ namespace seems
                         }
                     }
 
-                    CVParam chargeParam = si.cvParam(CVID.MS_charge_state);
-                    if( !chargeParam.empty() )
+                    CVParam chargeParam = si.Params.CvParam(CVID.MS_charge_state);
+                    if( !chargeParam.IsEmpty )
                     {
-                        int z = (int) chargeParam.value;
+                        int z = chargeParam.ValueAs<int>();
                         for( int i = 1; i < z; ++i )
                         {
                             double strippedMz = ( mz * z ) / ( z - i );
@@ -430,11 +435,11 @@ namespace seems
                     mzArray.Add( pair.Key );
                     intensityArray.Add( pair.Value );
                 }
-                s.defaultArrayLength = (ulong) mzArray.Count;
+                s.DefaultArrayLength = (ulong) mzArray.Count;
             } else
             {
-                s.binaryDataArrays.Clear();
-                s.defaultArrayLength -= (ulong) pointsToRemove.Count;
+                s.BinaryDataArrays.Clear();
+                s.DefaultArrayLength -= (ulong) pointsToRemove.Count;
             }
 
             return s;
@@ -442,7 +447,7 @@ namespace seems
     }
 
     public class SpectrumList_ECD_ETD_PrecursorFilter_ListViewItem
-        : ProcessingListViewItem<SpectrumList>
+        : ProcessingListViewItem<ISpectrumList>
     {
         public SpectrumList_ECD_ETD_PrecursorFilter_ListViewItem()
             : base( "ECD/ETD Precursor Filter" )
@@ -453,14 +458,14 @@ namespace seems
 
         public override CVID CVID { get { return CVID.MS_charge_deconvolution; } }
 
-        public override SpectrumList ProcessList( SpectrumList list )
+        public override ISpectrumList ProcessList( ISpectrumList list )
         {
             return new SpectrumList_ECD_ETD_PrecursorFilter( list );
         }
     }
 
     public class SpectrumList_Thresholder_ListViewItem
-        : ProcessingListViewItem<SpectrumList>
+        : ProcessingListViewItem<ISpectrumList>
     {
         private ComboBox thresholdingTypeComboBox;
         private ComboBox thresholdingOrientationComboBox;
@@ -478,17 +483,17 @@ namespace seems
             initializeComponents();
 
             // parse type, orientation, and threshold from method
-            UserParam param = method.userParam( "threshold" );
-            if( param.type == "SeeMS" )
-                thresholdTextBox.Text = param.value;
+            UserParam param = method.Params.UserParam( "threshold" );
+            if( param.Type == "SeeMS" )
+                thresholdTextBox.Text = param.Value;
 
-            param = method.userParam( "type" );
-            if( param.type == "SeeMS" )
-                thresholdingTypeComboBox.SelectedIndex = (int) param.value;
+            param = method.Params.UserParam( "type" );
+            if( param.Type == "SeeMS" )
+                thresholdingTypeComboBox.SelectedIndex = param.ValueAs<int>();
 
-            param = method.userParam( "orientation" );
-            if( param.type == "SeeMS" )
-                thresholdingOrientationComboBox.SelectedIndex = (int) param.value;
+            param = method.Params.UserParam( "orientation" );
+            if( param.Type == "SeeMS" )
+                thresholdingOrientationComboBox.SelectedIndex = param.ValueAs<int>();
         }
 
         private void initializeComponents()
@@ -540,9 +545,9 @@ namespace seems
         public override ProcessingMethod ToProcessingMethod()
         {
             ProcessingMethod pm = base.ToProcessingMethod();
-            pm.userParams.Add( new UserParam( "threshold", thresholdTextBox.Text, "SeeMS" ) );
-            pm.userParams.Add( new UserParam( "type", thresholdingTypeComboBox.SelectedIndex.ToString(), "SeeMS" ) );
-            pm.userParams.Add( new UserParam( "orientation", thresholdingOrientationComboBox.SelectedIndex.ToString(), "SeeMS" ) );
+            pm.UserParams.Add( new UserParam( "threshold", thresholdTextBox.Text, "SeeMS" ) );
+            pm.UserParams.Add( new UserParam( "type", thresholdingTypeComboBox.SelectedIndex.ToString(), "SeeMS" ) );
+            pm.UserParams.Add( new UserParam( "orientation", thresholdingOrientationComboBox.SelectedIndex.ToString(), "SeeMS" ) );
             return pm;
         }
 
@@ -550,7 +555,7 @@ namespace seems
 
         public override CVID CVID { get { return CVID.MS_thresholding; } }
 
-        public override SpectrumList ProcessList( SpectrumList list )
+        public override ISpectrumList ProcessList( ISpectrumList list )
         {
             double threshold;
             if( !Double.TryParse( thresholdTextBox.Text, out threshold ) )
@@ -565,7 +570,7 @@ namespace seems
     }
 
     public class SpectrumList_ChargeStateCalculator_ListViewItem
-        : ProcessingListViewItem<SpectrumList>
+        : ProcessingListViewItem<ISpectrumList>
     {
         private CheckBox overrideExistingChargeStateCheckBox;
         private NumericUpDown maxMultipleChargeUpDown;
@@ -619,7 +624,7 @@ namespace seems
 
         public override CVID CVID { get { return CVID.MS_charge_deconvolution; } }
 
-        public override SpectrumList ProcessList( SpectrumList list )
+        public override ISpectrumList ProcessList( ISpectrumList list )
         {
             return new SpectrumList_ChargeStateCalculator(
                 list,

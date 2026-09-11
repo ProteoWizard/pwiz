@@ -1,4 +1,4 @@
-namespace seems.Misc
+namespace Pwiz.SeeMS.Misc
 {
     public partial class SpectrumDataSet
     {

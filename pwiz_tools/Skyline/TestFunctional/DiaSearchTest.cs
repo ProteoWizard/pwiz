@@ -181,7 +181,7 @@ namespace pwiz.SkylineTestFunctional
                 SearchFiles = new[]
                 {
                     // CONSIDER: test automatic fixed window as well as manually calculated?
-                    //Path.Combine(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI), "swath.api.wiff2")
+                    //Path.Combine(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Sciex), "swath.api.wiff2")
 
                     "Hoofnagle_10xDil_SWATH_01-20130327_Hoofnagle_10xDil_SWATH_1_01.mzXML"
                 },

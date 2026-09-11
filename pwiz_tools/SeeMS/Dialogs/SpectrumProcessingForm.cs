@@ -28,13 +28,17 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using pwiz.CLI;
-using pwiz.CLI.msdata;
-using pwiz.CLI.analysis;
-using ExtensionMethods;
-using pwiz.Common.Collections;
 
-namespace seems
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
+using Pwiz.Analysis;
+using Pwiz.Analysis.PeakPicking;
+using ExtensionMethods;
+
+
+namespace Pwiz.SeeMS
 {
     public partial class SpectrumProcessingForm : DockableForm
     {
@@ -151,7 +155,7 @@ namespace seems
             }
         }
 
-        public SpectrumList GetProcessingSpectrumList( MassSpectrum spectrum, SpectrumList spectrumList )
+        public ISpectrumList GetProcessingSpectrumList( MassSpectrum spectrum, ISpectrumList spectrumList )
         {
             IList<IProcessing> usedProcessingList = spectrum.ProcessingList.ToList();
             if (globalProcessingListOverride.Any())

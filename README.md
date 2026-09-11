@@ -11,68 +11,71 @@ Core code and libraries are under the Apache open source license; the vendor lib
 * reference implementation of HUPO-PSI mzML standard mass spectrometry data format
 * supports HUPO-PSI mzIdentML 1.1 standard mass spectrometry analysis format
 * supports reading directly from many vendor raw data formats (on Windows)
-* modern C++ techniques and design principles
-* cross-platform with native compilers (MSVC on Windows, gcc on Linux, darwin on OSX)
+* pure C# on .NET 10 (Windows and Linux), packaged as a library, `msconvert`, MSConvertGUI, SeeMS and BiblioSpec
 * modular design, for testability and extensibility
 * framework for rapid development of data analysis tools
 * open source license suitable for both academic and commercial projects (Apache v2)
 
+The original C++ implementation (libpwiz, the C++ `msconvert`, Bumbershoot, BiblioSpec-C++ and the
+Boost.Build tree) lives on with its full history in [ProteoWizard/pwiz-cpp](https://github.com/ProteoWizard/pwiz-cpp).
+
 ## Official build status
 
-| OS      | Status |
+| Build | Status |
 | ------- | ------ |
-| Windows | ![Windows status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/bt83.svg?label=VS%202022) |
-| Native Linux | ![Linux status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/bt17.svg?label=GCC%204.9) |
-| Wine Linux | ![Docker-Wine status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/ProteoWizardAndSkylineDockerContainerWineX8664.svg?label=Docker-Wine) |
+| Core Windows .NET | ![Windows status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/ProteoWizard_CoreWindowsNet.svg?label=Windows) |
+| Core Linux .NET | ![Linux status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/ProteoWizard_CoreLinuxNet.svg?label=Linux) |
+| Skyline Windows .NET | ![Skyline status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/ProteoWizard_SkylineWindowsNet.svg?label=Skyline) |
 
 Click [here](https://proteowizard.sourceforge.io/download.html) to visit the official download page.
 
-### Unofficial toolsets
-![Unofficial toolset build status](https://github.com/ProteoWizard/pwiz/actions/workflows/build_and_test.yml/badge.svg)
-| OS      | Toolset    |
-| ------- | -------    |
-| Linux   | GCC 13    |
-| ~~OS X~~    | ~~Clang 12~~   |
+## Developer quickstart
 
-## Developer quickstart (Cursor)
+Requirements: the .NET SDK pinned in `global.json` (`scripts/ensure-dotnet.sh` installs it on Linux),
+and on Windows the Visual Studio C++ toolset for the two remaining native pieces (Hardklor, MascotShim).
 
-This repository uses native builds (MSVC on Windows, GCC on Linux) and Boost.Build/Jamfiles. For a fast local build on Windows:
-
-- Open a PowerShell or Developer Command Prompt
-- Run: `quickbuild.bat`
+```bat
+i-agree-to-the-vendor-licenses.bat   REM once per machine; enables the vendor SDK readers
+build.bat                             REM restore + build Pwiz.sln + run the tests
+```
 
 Alternative entry points:
 
-- Open `pwiz.sln` in Visual Studio 2022 and build the solution
-- Use `quickbuild.sh` on Linux/macOS
+- Open `Pwiz.sln` in Visual Studio 2022 or Rider
+- `build.sh` on Linux (no native vendor SDKs; Thermo, mzML/mzXML/MGF and friends only)
+- `build.bat --help` lists the flags (`--without-mascot`, `--coverage`, `--automated`, ...)
 
 Key locations:
 
-- C++ libraries and tools: `pwiz/`, `pwiz_tools/`, `pwiz_aux/`
-- Command-line apps (e.g., msconvert): `pwiz_tools/commandline/`
-- MSVC build output (after quickbuild): `build-nt-x86/msvc-release-x86_64/`
-- Third-party deps and Boost.Build: `libraries/`
+- `pwiz/utility`, `pwiz/data/{common,msdata,identdata,tradata}`, `pwiz/analysis`: the library modules, each
+  with its tests in `test/` and its fixtures beside it (CV ontologies in `data/common`, `*.data` under `analysis`)
+- `pwiz/data/vendor_readers/<Vendor>`: one project per vendor SDK, next to `Reader_<Vendor>_Test.data`
+- `pwiz/utility/bindings`: the native-host / Native AOT exports and the Bruker PRM scheduler P/Invoke
+- `pwiz_tools/Commandline`: `msconvert`, `msbenchmark`
+- `pwiz_tools/MSConvertGUI`, `pwiz_tools/SeeMS`, `pwiz_tools/BiblioSpec`, `pwiz_tools/BullseyeSharp`: the tools
+- `pwiz_tools/Skyline`, `pwiz_tools/Shared`, `pwiz_tools/Osprey`: Skyline and its shared libraries
+- `build/`: MSBuild targets shared by pwiz and Skyline (versioning, test-data extraction, vendor SDK pins)
+- `vendor-archives/`: the encrypted vendor SDK archives the readers are built against
+- `scripts/installer/`: the Inno Setup installer for the pwiz tools
 
 Common tasks:
 
-- Clean build outputs: `clean.bat`
-- Build quickly with defaults: `quickbuild.bat`
-- Documentation entry point: `doc/index.html`
+- Clean build outputs: `clean.bat` (`clean.bat --all` also wipes the extracted vendor SDKs)
+- Run one test project: `dotnet test pwiz/test/MsData.Tests -c Release`
 
 ### Skyline development
 
-Skyline lives under `pwiz_tools/Skyline` and depends on `pwiz_tools/Shared` and the full ProteoWizard tree. Always work from a full checkout of this repository, not just the `Skyline` subtree.
+Skyline lives under `pwiz_tools/Skyline` and depends on `pwiz_tools/Shared` and the pwiz library
+projects under `pwiz/src`. Always work from a full checkout of this repository, not just the
+`Skyline` subtree.
 
-- Build entire repo (recommended first step):
+- Build Skyline and run its tests (recommended first step):
 
 ```bat
-bs.bat
+pwiz_tools\Skyline\build.bat
 ```
 
-This calls the app toolset build (e.g., `pwiz_tools\build-apps.bat 64 --i-agree-to-the-vendor-licenses toolset=msvc-14.3 %*`) to build ProteoWizard libraries, command-line tools, and Skyline.
-
 - Open Skyline in VS: `pwiz_tools/Skyline/Skyline.sln`
-- Ensure `.NET` Developer Pack is installed if prompted
 
 Full setup and troubleshooting guide: [How to Build Skyline](https://skyline.ms/wiki/home/software/Skyline/page.view?name=HowToBuildSkylineTip).
 
@@ -91,9 +94,8 @@ Executables note: Projects under `pwiz_tools/Skyline/Executables` are separate s
 
 EditorConfig: Repository-wide `.editorconfig` enforces core C# naming/formatting so separate solutions (including `pwiz_tools/Skyline/Executables`) inherit consistent style in Visual Studio.
 
-Notes for AI/code assistants (Cursor):
+Notes for AI/code assistants:
 
-- Prefer invoking `quickbuild.bat` on Windows; avoid ad-hoc compiler calls
+- Prefer invoking `build.bat` / `pwiz_tools\Skyline\build.bat`; avoid ad-hoc compiler calls
 - Do not reformat unrelated code; keep original indentation and spacing
-- Use existing Jamfiles/solution instead of introducing new build systems
-- When adding C++ files, update the appropriate Jamfile or Visual Studio project as needed
+- Use the existing solutions and `Directory.Build.props` chain instead of introducing new build systems

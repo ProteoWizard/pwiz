@@ -232,7 +232,7 @@ namespace pwiz.SkylineTestUtil
 
         public enum VendorDir
         {
-            ABI,
+            Sciex,
             Agilent,
             Bruker,
             Mobilion,

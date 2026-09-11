@@ -10,7 +10,7 @@
 
 #pragma warning disable 1591
 
-namespace seems.Misc {
+namespace Pwiz.SeeMS.Misc {
     
     
     /// <summary>

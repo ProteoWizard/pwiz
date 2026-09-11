@@ -61,11 +61,11 @@ call :locate_vs_msbuild
 if %EXIT% NEQ 0 goto error
 
 echo ##teamcity[progressMessage 'MascotShim.dll ^(cmake + MSVC^)']
-dotnet build "%ROOT%\pwiz-sharp\Tools\BiblioSpec\src\BiblioSpec\BiblioSpec.csproj" -t:BuildMascotShim -p:Configuration=%CONFIG% -p:IAgreeToVendorLicenses=true -p:MascotSupport=true -nologo -v:minimal
+dotnet build "%ROOT%\pwiz_tools\BiblioSpec\src\BiblioSpec\BiblioSpec.csproj" -t:BuildMascotShim -p:Configuration=%CONFIG% -p:IAgreeToVendorLicenses=true -p:MascotSupport=true -nologo -v:minimal
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=BuildMascotShim failed" & goto error)
 
 echo ##teamcity[progressMessage 'MobilionShim.dll ^(MobilionShim.vcxproj^)']
-dotnet build "%ROOT%\pwiz-sharp\pwiz\src\Vendor\Mobilion\Mobilion.csproj" -t:BuildMobilionShim -p:Configuration=%CONFIG% -p:IAgreeToVendorLicenses=true -nologo -v:minimal
+dotnet build "%ROOT%\pwiz\data\vendor_readers\Mobilion\Mobilion.csproj" -t:BuildMobilionShim -p:Configuration=%CONFIG% -p:IAgreeToVendorLicenses=true -nologo -v:minimal
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=BuildMobilionShim failed" & goto error)
 
 REM # -nodeReuse:false is load-bearing, not tidiness. This is VS MSBuild while
@@ -79,7 +79,7 @@ echo ##teamcity[progressMessage 'Hardklor.exe ^(Hardklor.vcxproj^)']
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=MSBuild Hardklor.vcxproj failed" & goto error)
 
 echo ##teamcity[progressMessage 'staging artifacts/native-shims']
-call :stage "%ROOT%\pwiz-sharp\Tools\BiblioSpec\native\MascotShim\build\%CONFIG%\MascotShim.dll"
+call :stage "%ROOT%\pwiz_tools\BiblioSpec\native\MascotShim\build\%CONFIG%\MascotShim.dll"
 if %EXIT% NEQ 0 goto error
 call :stage "%ROOT%\libraries\msparser_3_1_0_x86_win64\vs2015\lib\msparser.dll"
 if %EXIT% NEQ 0 goto error
@@ -94,9 +94,9 @@ call :stage_to "%ROOT%\libraries\msparser_3_1_0_x86_win64\config\quantitation_1.
 if %EXIT% NEQ 0 goto error
 call :stage_to "%ROOT%\libraries\msparser_3_1_0_x86_win64\config\quantitation_2.xsd" "%STAGE%\msparser-config"
 if %EXIT% NEQ 0 goto error
-call :stage "%ROOT%\pwiz-sharp\pwiz\src\Vendor\Mobilion\MobilionShim\bin\%CONFIG%\MobilionShim.dll"
+call :stage "%ROOT%\pwiz\data\vendor_readers\Mobilion\MobilionShim\bin\%CONFIG%\MobilionShim.dll"
 if %EXIT% NEQ 0 goto error
-call :stage "%ROOT%\pwiz-sharp\vendor-assemblies\Mobilion\MBI_SDK.dll"
+call :stage "%ROOT%\vendor-assemblies\Mobilion\MBI_SDK.dll"
 if %EXIT% NEQ 0 goto error
 call :stage "%ROOT%\pwiz_tools\Skyline\Executables\Hardklor\bin\x64\%CONFIG%\Hardklor.exe"
 if %EXIT% NEQ 0 goto error

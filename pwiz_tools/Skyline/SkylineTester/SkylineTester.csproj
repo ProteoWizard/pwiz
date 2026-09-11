@@ -118,7 +118,7 @@
          ProjectReference graph; BlibToMs2 does not, because nothing in Skyline uses it.
          It ships only in this distro (that is the point of BiblioSpec.zip: it carries
          BlibToMs2, which the Skyline installer does not). -->
-    <DistroZipPrereq Include="$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibToMs2\BlibToMs2.csproj">
+    <DistroZipPrereq Include="$(MSBuildThisFileDirectory)..\..\BiblioSpec\src\BlibToMs2\BlibToMs2.csproj">
       <Zip>BiblioSpec.zip</Zip>
       <Tfm>net10.0</Tfm>
     </DistroZipPrereq>

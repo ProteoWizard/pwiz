@@ -10,7 +10,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Threading;
 using Microsoft.Win32;
-using seems;
+using Pwiz.SeeMS;
 
 namespace JWC
 {

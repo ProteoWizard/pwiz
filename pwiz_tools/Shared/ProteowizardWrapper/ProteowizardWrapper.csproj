@@ -12,8 +12,8 @@
        Without this import the second route would leave pwiz-sharp compiling the lockmass
        refiners while this project believed they were absent, silently dropping Waters
        lockmass correction from a build that fully supports it. -->
-  <Import Project="$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\Directory.Build.user.props"
-          Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\Directory.Build.user.props')" />
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\Directory.Build.user.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\Directory.Build.user.props')" />
 
   <!-- ProteowizardWrapper — the Phase-2 chokepoint. Multi-target net472 (legacy
        pwiz.CLI bindings) + PLAIN net10.0 (pwiz-sharp managed port).
@@ -66,24 +66,24 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <!-- On net8 the data layer comes from pwiz-sharp. No pwiz.CLI, no
          C++/CLI bindings. -->
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\MsData\MsData.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Analysis\Analysis.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Common\Common.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Util\Util.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\data\msdata\MsData.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\analysis\Analysis.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\data\common\Common.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\utility\Util.csproj" />
     <!-- Vendor readers: pwiz-sharp's ReaderList.Default only has mzML/mzMLb/mzXML/MGF/MSn/BTDX.
          Reference the vendor projects so their Reader_X classes can be added to
          ReaderList.AdditionalReaders at MsDataFileImpl static-ctor time (see
          MsDataFileImpl.cs). Without these, Thermo/Waters/Sciex/etc. files fail
          with "No registered reader recognized the file". -->
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Thermo\Thermo.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Waters\Waters.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Sciex\Sciex.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Shimadzu\Shimadzu.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Agilent\Agilent.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Bruker\Bruker.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\UIMF\UIMF.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\UNIFI\UNIFI.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Mobilion\Mobilion.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\data\vendor_readers\Thermo\Thermo.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\data\vendor_readers\Waters\Waters.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\data\vendor_readers\Sciex\Sciex.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\data\vendor_readers\Shimadzu\Shimadzu.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\data\vendor_readers\Agilent\Agilent.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\data\vendor_readers\Bruker\Bruker.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\data\vendor_readers\UIMF\UIMF.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\data\vendor_readers\UNIFI\UNIFI.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\data\vendor_readers\Mobilion\Mobilion.csproj" />
   </ItemGroup>
 
   <ItemGroup>

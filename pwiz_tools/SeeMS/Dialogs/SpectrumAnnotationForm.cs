@@ -27,7 +27,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     public partial class SpectrumAnnotationForm : DigitalRune.Windows.Docking.DockableForm
     {

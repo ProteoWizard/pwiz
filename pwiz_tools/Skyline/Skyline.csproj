@@ -215,10 +215,10 @@
     <!-- BiblioSpec CLI tools (BlibBuild, BlibFilter). Skyline shells out to these via
          ProcessStartInfo expecting them to sit next to Skyline in the bin dir. Reference
          the projects so they build first; the Content include below deploys their outputs. -->
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\BlibBuild.csproj"
+    <ProjectReference Include="..\BiblioSpec\src\BlibBuild\BlibBuild.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false" />
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\BlibFilter.csproj"
+    <ProjectReference Include="..\BiblioSpec\src\BlibFilter\BlibFilter.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false" />
   </ItemGroup>
@@ -227,14 +227,14 @@
        Skyline's bin dir AND to any project that references Skyline via ProjectReference
        (test assemblies). Content items propagate through ProjectReference by default. -->
   <ItemGroup>
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\**\*"
-             Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0')">
+    <Content Include="..\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\**\*"
+             Condition="Exists('..\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
     </Content>
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\bin\$(Configuration)\net10.0\**\*"
-             Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\bin\$(Configuration)\net10.0')">
+    <Content Include="..\BiblioSpec\src\BlibFilter\bin\$(Configuration)\net10.0\**\*"
+             Condition="Exists('..\BiblioSpec\src\BlibFilter\bin\$(Configuration)\net10.0')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -248,8 +248,8 @@
        run time. Deploy the mascot natives flat next to BlibBuild.exe - as legacy Skyline shipped
        msparser.dll - so DllImport("MascotShim") and its msparser dependency resolve from the
        executable's own directory. -->
-  <ItemGroup Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native')">
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\MascotShim.dll">
+  <ItemGroup Condition="Exists('..\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native')">
+    <Content Include="..\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\MascotShim.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>MascotShim.dll</Link>
       <Visible>false</Visible>
@@ -259,17 +259,17 @@
          too. Copying the Release name unconditionally made every Debug build after
          the first one fail MSB3030 - the first build passes only because the native
          directory does not exist yet when this ItemGroup condition is evaluated. -->
-    <Content Condition="'$(Configuration)' == 'Debug'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparserD.dll">
+    <Content Condition="'$(Configuration)' == 'Debug'" Include="..\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparserD.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>msparserD.dll</Link>
       <Visible>false</Visible>
     </Content>
-    <Content Condition="'$(Configuration)' != 'Debug'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparser.dll">
+    <Content Condition="'$(Configuration)' != 'Debug'" Include="..\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparser.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>msparser.dll</Link>
       <Visible>false</Visible>
     </Content>
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparser-config\**\*">
+    <Content Include="..\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparser-config\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>msparser-config\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -282,12 +282,12 @@
        Content include below deploys its output. net8-only: the net472 build gets the native
        msconvert from the Jam toolchain. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\MsConvert.csproj"
+    <ProjectReference Include="..\Commandline\MsConvert\src\MsConvert.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0')">
-    <Content Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\**\*">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('..\Commandline\MsConvert\src\bin\$(Configuration)\net10.0')">
+    <Content Include="..\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -301,12 +301,12 @@
        include below deploys its output. net8-only: the net472 build gets the legacy BullseyeSharp.exe
        from pwiz_tools\Skyline\BullseyeSharp\BullseyeSharp.csproj via the Jam toolchain. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\BullseyeSharp\src\BullseyeSharp.csproj"
+    <ProjectReference Include="..\BullseyeSharp\src\BullseyeSharp.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('..\..\pwiz-sharp\Tools\BullseyeSharp\src\bin\$(Configuration)\net10.0')">
-    <Content Include="..\..\pwiz-sharp\Tools\BullseyeSharp\src\bin\$(Configuration)\net10.0\**\*">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('..\BullseyeSharp\src\bin\$(Configuration)\net10.0')">
+    <Content Include="..\BullseyeSharp\src\bin\$(Configuration)\net10.0\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -468,7 +468,7 @@
        pwiz.CLI.Bruker.PrmScheduling assembly. P/Invokes prmscheduler.dll shipped
        inside pwiz. Only wired for net8; net472 keeps the old C++/CLI reference. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <ProjectReference Include="..\..\pwiz-sharp\pwiz\src\Vendor\Bruker.PrmScheduling\Bruker.PrmScheduling.csproj" />
+    <ProjectReference Include="..\..\pwiz\utility\bindings\timstof_prm_scheduler\Bruker.PrmScheduling.csproj" />
   </ItemGroup>
 
   <!-- Build batch hooks (preserved from legacy) - PreBuildEvents.bat is what

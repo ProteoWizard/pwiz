@@ -198,7 +198,7 @@ namespace MSConvertGUI
             this.WriteIndexBox = new System.Windows.Forms.CheckBox();
             this.Precision32 = new System.Windows.Forms.RadioButton();
             this.Precision64 = new System.Windows.Forms.RadioButton();
-            this.PresetSaveButton = new MSConvertGUI.SplitButton();
+            this.PresetSaveButton = new CustomDataSourceDialog.SplitButton();
             this.presetSaveButtonMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.presetSaveAsButton = new System.Windows.Forms.ToolStripMenuItem();
             this.presetSetDefaultButton = new System.Windows.Forms.ToolStripMenuItem();
@@ -1879,7 +1879,9 @@ namespace MSConvertGUI
             this.networkResourceComboBox.Name = "networkResourceComboBox";
             this.networkResourceComboBox.Size = new System.Drawing.Size(167, 21);
             this.networkResourceComboBox.TabIndex = 34;
-            this.networkResourceComboBox.Visible = false; // Replaced by integrated remote browsing in file dialog
+            this.networkResourceComboBox.DropDown += new System.EventHandler(this.networkResourceComboBox_DropDown);
+            this.networkResourceComboBox.SelectedIndexChanged += new System.EventHandler(this.networkResourceComboBox_SelectedIndexChanged);
+            this.networkResourceComboBox.Leave += new System.EventHandler(this.networkResourceComboBox_Leave);
             // 
             // label3
             // 
@@ -1917,6 +1919,7 @@ namespace MSConvertGUI
             // FilesToConvertInParallelUpDown
             // 
             this.FilesToConvertInParallelUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            settings1.LastUsedUnifiUrl = "";
             settings1.NumFilesToConvertInParallel = new decimal(new int[] {
             1,
             0,
@@ -2127,7 +2130,7 @@ namespace MSConvertGUI
         private System.Windows.Forms.ListBox FileListBox;
         private System.Windows.Forms.Button RemoveFileButton;
         private System.Windows.Forms.Button StartButton;
-        private MSConvertGUI.SplitButton PresetSaveButton;
+        private CustomDataSourceDialog.SplitButton PresetSaveButton;
         private System.Windows.Forms.GroupBox FilterGB;
         private System.Windows.Forms.Button RemoveFilterButton;
         private System.Windows.Forms.Button AddFilterButton;

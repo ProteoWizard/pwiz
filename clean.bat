@@ -1,114 +1,131 @@
 @echo off
-setlocal
-@echo off
+setlocal enabledelayedexpansion
 
-set VERBOSE=1
-set CLEANCPP=0
+REM # ------------------------------------------------------------------------
+REM # clean.bat — wipe pwiz build artifacts.
+REM #
+REM # Removes everything the build
+REM # produces so the next build starts from a known-clean state.
+REM #
+REM # Default: wipe build outputs but KEEP the two caches (.NET runtime download
+REM # + extracted vendor SDK assemblies). This is the mode TC runs — tcbuild.bat
+REM # calls clean.bat with no arguments before every build, so CI already gets a
+REM # from-scratch compile on every commit.
+REM #
+REM # Pass --all (or -a) to clear the caches too. Measured cost of doing so:
+REM #   - vendor-assemblies/ re-extract (171 MB across 7 vendors): ~2 s. Cheap,
+REM #     because it's a local 7z unpack of checked-in archives.
+REM #   - installer/cache/: a ~56 MB re-download of the .NET desktop runtime from
+REM #     aka.ms, and only on builds that run the installer. That's the real cost
+REM #     of --all, and it's a reliability cost as much as a time one — it puts an
+REM #     external endpoint on the build's critical path.
+REM # Both caches are content-addressed (vendor archives by SHA-256 via the pins
+REM # table, the runtime by a fixed versioned URL), so neither can drift
+REM # commit-to-commit. --all is a paranoia reset: better suited to a nightly
+REM # than to every commit.
+REM #
+REM # The list below tracks .gitignore: everything the build writes is
+REM # gitignored, so that file is the spec for what belongs here. Two gitignored
+REM # entries are deliberately kept (see "NOT touched" below).
+REM #
+REM # What gets removed (always):
+REM #   - bin/ and obj/ under every project (dotnet build outputs, AOT publish
+REM #     output, AOT-generated link.lib / .exp)
+REM #   - TestResults/ at every level — the top-level one plus the per-project
+REM #     dirs `dotnet test` drops in pwiz/test/*/ (run logs + dotCover snapshots)
+REM #   - installer/build/ (Inno Setup .exe + the version.txt sidecar that
+REM #     Installer.Tests reads) and installer/staging/ (payload staging tree)
+REM #   - examples/**/build/ and pwiz_tools/BiblioSpec/native/**/build/ (cmake build
+REM #     trees — the AOT example, MascotShim, etc.)
+REM #   - pwiz/data/vendor_readers/Common/VendorSdkPins.generated.cs (regenerated on every
+REM #     build from the vendor 7z archives' SHA-256 + git history)
+REM #
+REM # What gets removed only with --all:
+REM #   - installer/cache/windowsdesktop-runtime-win-x64.exe (~56 MB .NET 8
+REM #     runtime installer; re-downloaded by installer/build.ps1 on the next
+REM #     run if missing)
+REM #   - vendor-assemblies/ (DLLs extracted from the vendor 7z archives by the
+REM #     .csproj ExtractVendorAssemblies targets — one top-level dir, per
+REM #     $(PwizVendorAssembliesPath); re-extracted on the next dotnet build)
+REM #
+REM # What is NOT touched, ever:
+REM #   - vendor-archives/ — looks like a cache, is NOT: those archives are
+REM #     TRACKED IN GIT and are build inputs. Deleting them is unrecoverable
+REM #     without a fresh checkout. Do not add it to the --all branch.
+REM #   - build/ at the top level — also tracked source (MSBuild .targets and the
+REM #     VendorPinsGenerator/AgilentPatcher projects). This is why the cmake
+REM #     sweep below is scoped to named subtrees instead of walking for any dir
+REM #     called "build".
+REM #   - Directory.Build.user.props (per-user "I agreed to vendor licenses"
+REM #     flag; wiping it would force the user to re-run
+REM #     i-agree-to-the-vendor-licenses.bat after every clean)
+REM #   - .vs/ and *.user/*.suo files (IDE local state; not build output)
+REM #
+REM # Usage:
+REM #   clean.bat            Wipe build outputs, keep caches (default).
+REM #   clean.bat --all      Wipe caches too (TC-equivalent full reset).
+REM #   clean.bat -a         Short alias.
+REM # ------------------------------------------------------------------------
 
-REM # By default this cleans only the .NET applications and leaves the C++ build alone.
-REM # Wiping the C++ tree means re-extracting and rebuilding boost and the vendor APIs,
-REM # which dominates the cost of a rebuild and is almost never what you want when the
-REM # thing you actually need cleaned is a managed bin/obj or a stale staging directory.
-REM # Pass -cpp (or -all) for the old full clean.
-:parseargs
-if "%~1"=="" goto endparse
-if /I "%~1"=="-quiet" set VERBOSE=0
-if /I "%~1"=="-q" set VERBOSE=0
-if /I "%~1"=="-cpp" set CLEANCPP=1
-if /I "%~1"=="-all" set CLEANCPP=1
-shift
-goto parseargs
-:endparse
+set SCRIPT_DIR=%~dp0
+set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
+pushd "%SCRIPT_DIR%"
 
-REM # Get the location of quickbuild.bat and drop trailing slash
-set PWIZ_ROOT=%~dp0
-set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
-pushd "%PWIZ_ROOT%"
+set CLEAN_CACHE=0
+if /I "%1"=="--all" set CLEAN_CACHE=1
+if /I "%1"=="-a"    set CLEAN_CACHE=1
 
-if %CLEANCPP%==1 goto CLEAN_CPP
-if %VERBOSE%==1 echo   Keeping C++ build ^(pass -cpp to clean it too^)...
-goto SKIP_CPP
+echo Cleaning pwiz build artifacts...
 
-:CLEAN_CPP
-if %VERBOSE%==1 echo   Cleaning build directories...
-IF EXIST build-nt-x86 rmdir /s /q build-nt-x86
-IF EXIST build-nt-x86_64 rmdir /s /q build-nt-x86_64
+REM # Walk the pwiz subtrees for any dir named bin, obj or TestResults. /d limits the
+REM # walk to directories; /r bounds it to the named subtree. No tracked pwiz file lives
+REM # under a dir with any of these names, so the sweep is safe. pwiz_tools\Skyline,
+REM # Shared and Osprey are NOT swept here — pwiz_tools\clean-apps.bat handles those with
+REM # its git-aware CleanBinaries (Shared\Lib keeps tracked binaries under bin-like dirs).
+for %%s in (pwiz build examples scripts pwiz_tools\BiblioSpec pwiz_tools\Commandline pwiz_tools\MSConvertGUI pwiz_tools\SeeMS pwiz_tools\BullseyeSharp) do (
+    for /d /r "%SCRIPT_DIR%\%%s" %%d in (bin obj TestResults) do (
+        if exist "%%d" rmdir /s /q "%%d" 2>nul
+    )
+)
+if exist "%SCRIPT_DIR%\TestResults" rmdir /s /q "%SCRIPT_DIR%\TestResults"
 
-if %VERBOSE%==1 echo   Cleaning libraries...
-git clean -f -x libraries/boost-build/src/engine > nul
-IF EXIST libraries\boost_1_43_0 rmdir /s /q libraries\boost_1_43_0
-IF EXIST libraries\boost_1_54_0 rmdir /s /q libraries\boost_1_54_0
-IF EXIST libraries\boost_1_56_0 rmdir /s /q libraries\boost_1_56_0
-IF EXIST libraries\boost_1_67_0 rmdir /s /q libraries\boost_1_67_0
-IF EXIST libraries\boost_1_76_0 rmdir /s /q libraries\boost_1_76_0
-IF EXIST libraries\boost_1_86_0 rmdir /s /q libraries\boost_1_86_0
-IF EXIST libraries\gd-2.0.33 rmdir /s /q libraries\gd-2.0.33
-IF EXIST libraries\zlib-1.2.3 rmdir /s /q libraries\zlib-1.2.3
-IF EXIST libraries\libgd-2.1.0alpha rmdir /s /q libraries\libgd-2.1.0alpha
-IF EXIST libraries\libpng-1.5.6 rmdir /s /q libraries\libpng-1.5.6
-IF EXIST libraries\freetype-VER-2-13-3 rmdir /s /q libraries\freetype-VER-2-13-3
-IF EXIST libraries\hdf5-1.8.7 rmdir /s /q libraries\hdf5-1.8.7
-IF EXIST libraries\fftw-3.1.2 rmdir /s /q libraries\fftw-3.1.2
-IF EXIST libraries\expat-2.0.1 rmdir /s /q libraries\expat-2.0.1
+REM # Top-level output trees.
+if exist scripts\installer\build   rmdir /s /q scripts\installer\build
+if exist scripts\installer\staging rmdir /s /q scripts\installer\staging
 
-del /f /q libraries\libfftw3-3.d* > nul 2>&1
-del /f /q libraries\msparser_*_win64 > nul 2>&1
-git clean -f -d -X libraries
+REM # CMake build trees. Scoped to these two subtrees on purpose: the top-level
+REM # build\ is tracked source, so a bare "walk for dirs named build" would
+REM # delete it.
+for /d /r "%SCRIPT_DIR%\examples" %%d in (build) do (
+    if exist "%%d" rmdir /s /q "%%d" 2>nul
+)
+if exist "%SCRIPT_DIR%\pwiz_tools\BiblioSpec\native" (
+    for /d /r "%SCRIPT_DIR%\pwiz_tools\BiblioSpec\native" %%d in (build) do (
+        if exist "%%d" rmdir /s /q "%%d" 2>nul
+    )
+)
 
-del /f /q pwiz\Version.cpp > nul 2>&1
-del /f /q pwiz\data\msdata\Version.cpp > nul 2>&1
-del /f /q pwiz\data\identdata\Version.cpp > nul 2>&1
-del /f /q pwiz\data\tradata\Version.cpp > nul 2>&1
-del /f /q pwiz\data\proteome\Version.cpp > nul 2>&1
-del /f /q pwiz\analysis\Version.cpp > nul 2>&1
+REM # Vendor SDK pins are regenerated on every build (build/VendorPinsGenerator
+REM # is invoked as a pre-CoreCompile target in Vendor.Common.csproj).
+if exist pwiz\data\vendor_readers\Common\VendorSdkPins.generated.cs (
+    del /q pwiz\data\vendor_readers\Common\VendorSdkPins.generated.cs
+)
 
-if %VERBOSE%==1 echo   Cleaning vendor dlls...
-del /f /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll > nul 2>&1
-del /f /q pwiz_aux\msrc\utility\vendor_api\ABI\LicenseKey.h > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\ABI\vc10 > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\ABI\vc9 > nul 2>&1
-git clean -f -d -X pwiz_aux\msrc\utility\vendor_api\ABI > nul 2>&1
+REM # Caches: preserved by default; wiped only with --all. NB vendor-assemblies is
+REM # a single top-level dir ($(PwizVendorAssembliesPath)), not a per-project one.
+if %CLEAN_CACHE%==1 (
+    if exist scripts\installer\cache     rmdir /s /q scripts\installer\cache
+    if exist vendor-assemblies   rmdir /s /q vendor-assemblies
+)
 
-del /f /q pwiz_aux\msrc\utility\vendor_api\Agilent\*.dll > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\x86 > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\x64 > nul 2>&1
-del /f /q pwiz_aux\msrc\utility\vendor_api\Agilent\EULA.MHDAC > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\Documents > nul 2>&1
-del /f /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.manifest > nul 2>&1
-del /f /q pwiz_aux\msrc\utility\vendor_api\Bruker\baf2sql_c.h > nul 2>&1
-del /f /q pwiz_aux\msrc\utility\vendor_api\Bruker\baf2sql_cpp.h > nul 2>&1
-del /f /q pwiz_aux\msrc\utility\vendor_api\Bruker\schema.h > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\install_pwiz_vendor_api_bruker_stub > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\x86 > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\x64 > nul 2>&1
-IF EXIST pwiz\data\vendor_api\Mobilion git clean -f -d -X pwiz\data\vendor_api\Mobilion > nul
-git clean -f -d -X pwiz_aux\msrc\utility\vendor_api\Mobilion > nul
-del /f /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\EULA.SFCS > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86 > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64 > nul 2>&1
-del /f /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\*.dll > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\ja-JP > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\zh-CN > nul 2>&1
-del /f /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.dll > nul 2>&1
-del /f /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.manifest > nul 2>&1
-git clean -f -d -X pwiz_aux\msrc\utility\vendor_api\Thermo\x86 > nul
-del /f /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.dll > nul 2>&1
-del /f /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.lib > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x86 > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x64 > nul 2>&1
-del /f /q pwiz_aux\msrc\utility\vendor_api\Waters\*.h > nul 2>&1
+REM # Skyline, Shared and Osprey outputs.
+if exist pwiz_tools\clean-apps.bat call pwiz_tools\clean-apps.bat
 
-if %VERBOSE%==1 echo   Cleaning vendor test data...
-git clean -f -d -X pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data > nul
-rmdir /s /q pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D_Test.data > nul 2>&1
-git clean -f -d -X pwiz\data\vendor_readers\UIMF\Reader_UIMF_Test.data > nul
-git clean -f -d -X pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data > nul
-git clean -f -d -X pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data > nul
-git clean -f -d -X pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data > nul
-git clean -f -d -X pwiz\data\vendor_readers\Mobilion\Reader_Mobilion_Test.data > nul
-git clean -f -d -X pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data > nul
-
-:SKIP_CPP
-IF EXIST pwiz_tools\clean-apps.bat call pwiz_tools\clean-apps.bat
+if %CLEAN_CACHE%==1 (
+    echo Clean complete ^(caches wiped too^).
+) else (
+    echo Clean complete ^(caches preserved^).
+)
 
 popd
+exit /b 0

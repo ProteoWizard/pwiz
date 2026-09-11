@@ -19,13 +19,17 @@
 // limitations under the License.
 //
 
-using pwiz.CLI.cv;
-using pwiz.CLI.data;
-using pwiz.CLI.msdata;
-using pwiz.Common.Collections;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Params;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
+
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using Pwiz.Data.MsData.Processing;
 
 public class Pair<T1, T2>
 {
@@ -71,9 +75,9 @@ public class RefPair<T1, T2>
 	public T2 second;
 }
 
-namespace seems
+namespace Pwiz.SeeMS
 {
-	public class PointDataMap<T> : Map< double, T >
+	public class PointDataMap<T> : Map<double, T >
 		where T: new()
 	{
         public Enumerator FindNear( double x, double tolerance )
@@ -184,7 +188,7 @@ namespace seems
 
         public int CompareTo( GraphItem other )
         {
-            return String.Compare( id, other.id, StringComparison.Ordinal );
+            return String.Compare( id, other.Id, StringComparison.Ordinal );
         }
 
         public override string ToString()
@@ -219,7 +223,7 @@ namespace seems
 
             if( IsChromatogram )
             {
-                axis.Title.Text = "Time " + (Properties.Settings.Default.TimeInMinutes ? "(min)" : "(sec)");
+                axis.Title.Text = "Time " + (Pwiz.SeeMS.Settings.Default.TimeInMinutes ? "(min)" : "(sec)");
             } else
             {
                 axis.Title.Text = "m/z";
@@ -241,31 +245,31 @@ namespace seems
                 Chromatogram chromatogram = this as Chromatogram;
                 if (chromatogram != null && chromatogram.Element != null)
                 {
-                    var intensityArray = chromatogram.Element.getIntensityArray();
-                    var type = chromatogram.Element.cvParamChild(CVID.MS_chromatogram_type);
-                    if (type.cvid == CVID.CVID_Unknown)
+                    var intensityArray = chromatogram.Element.GetIntensityArray();
+                    var type = chromatogram.Element.Params.CvParamChild(CVID.MS_chromatogram_type);
+                    if (type.Cvid == CVID.CVID_Unknown)
                     {
                         // Didn't find a particular kind of chromatogram, look for generic
-                        type = chromatogram.Element.cvParam(CVID.MS_chromatogram);
+                        type = chromatogram.Element.Params.CvParam(CVID.MS_chromatogram);
                     }
 
-                    if (type.cvid != CVID.MS_total_ion_current_chromatogram &&
-                             type.cvid != CVID.MS_basepeak_chromatogram &&
+                    if (type.Cvid != CVID.MS_total_ion_current_chromatogram &&
+                             type.Cvid != CVID.MS_basepeak_chromatogram &&
                              intensityArray != null)
                     {
                         // Get Y axis title - ideally the units for the intensity array
-                        var unitsParam = intensityArray.cvParamChild(CVID.MS_intensity_array);
-                        if (unitsParam.empty() ||
-                            unitsParam.units == CVID.MS_number_of_detector_counts ||
-                            unitsParam.units == CVID.CVID_Unknown)
+                        var unitsParam = intensityArray.Params.CvParamChild(CVID.MS_intensity_array);
+                        if (unitsParam.IsEmpty ||
+                            unitsParam.Units == CVID.MS_number_of_detector_counts ||
+                            unitsParam.Units == CVID.CVID_Unknown)
                         {
                             // Look for a userParam with name="units"
                             string unitsValue = null;
-                            foreach (var userParam in chromatogram.Element.userParams)
+                            foreach (var userParam in chromatogram.Element.Params.UserParams)
                             {
-                                if (userParam.name == "units")
+                                if (userParam.Name == "units")
                                 {
-                                    unitsValue = userParam.value;
+                                    unitsValue = userParam.Value;
                                     break;
                                 }
                             }
@@ -281,7 +285,7 @@ namespace seems
                         }
                         else
                         {
-                            var unitName = unitsParam.unitsName;
+                            var unitName = unitsParam.UnitsName;
                             if (!string.IsNullOrEmpty(unitName))
                             {
                                 // Remove " unit" suffix if present
@@ -341,29 +345,29 @@ namespace seems
 
 	public class Chromatogram : GraphItem
 	{
-		public Chromatogram( ManagedDataSource source, int index, ChromatogramList chromatogramList )
+		public Chromatogram( ManagedDataSource source, int index, IChromatogramList chromatogramList )
 		{
             this.source = source;
             this.chromatogramList = chromatogramList;
             this.index = index;
 			//element = chromatogram;
-			AbbreviatedId = id = Element.id;
-            //index = element.index;
+			AbbreviatedId = id = Element.Id;
+            //index = element.Index;
 		}
 
-        public Chromatogram( Chromatogram metaChromatogram, pwiz.CLI.msdata.Chromatogram chromatogram )
+        public Chromatogram( Chromatogram metaChromatogram, Pwiz.Data.MsData.Spectra.Chromatogram chromatogram )
         {
             source = metaChromatogram.source;
             this.chromatogramList = metaChromatogram.chromatogramList;
-            this.index = chromatogram.index;
+            this.index = chromatogram.Index;
             Tag = metaChromatogram.Tag;
             AnnotationSettings = metaChromatogram.AnnotationSettings;
             //element = chromatogram;
-            AbbreviatedId = id = Element.id;
+            AbbreviatedId = id = Element.Id;
         }
 
-        private ChromatogramList chromatogramList;
-        public ChromatogramList ChromatogramList
+        private IChromatogramList chromatogramList;
+        public IChromatogramList ChromatogramList
         {
             get { return chromatogramList; }
             set { chromatogramList = value; }
@@ -371,10 +375,10 @@ namespace seems
 
         // cache the most recently accessed element and the chromatogram list used to get it
         // note: this breaks if you access Element from a "using" block (but why?)
-        private static pwiz.CLI.msdata.ChromatogramList lastSpectrumListUsed = null;
-        private static pwiz.CLI.msdata.Chromatogram lastElementAccessed = null;
+        private static IChromatogramList lastSpectrumListUsed = null;
+        private static Pwiz.Data.MsData.Spectra.Chromatogram lastElementAccessed = null;
 
-        public pwiz.CLI.msdata.Chromatogram Element
+        public Pwiz.Data.MsData.Spectra.Chromatogram Element
         {
             get
             {
@@ -382,10 +386,10 @@ namespace seems
                 if( lastSpectrumListUsed == null ||
                     lastElementAccessed == null ||
                     !ReferenceEquals( chromatogramList, lastSpectrumListUsed ) ||
-                    index != lastElementAccessed.index )
+                    index != lastElementAccessed.Index )
                 {
                     lastSpectrumListUsed = chromatogramList;
-                    lastElementAccessed = chromatogramList.chromatogram( index );
+                    lastElementAccessed = chromatogramList.GetChromatogram(index);
                 }
                 return lastElementAccessed;
             }
@@ -402,20 +406,19 @@ namespace seems
 		{
             get
             {
-                using( pwiz.CLI.msdata.Chromatogram element = chromatogramList.chromatogram( index, true ) )
-                {
-                    var timeArray = element.getTimeArray();
-                    var timeArrayData = timeArray.data;
-                    var timeArrayUnits = timeArray.cvParam(CVID.MS_time_array).units;
-                    if (timeArrayUnits == CVID.UO_second && Properties.Settings.Default.TimeInMinutes)
-                        for (int i = 0; i < timeArrayData.Count; ++i)
-                            timeArrayData[i] /= 60;
-                    else if (timeArrayUnits == CVID.UO_minute && !Properties.Settings.Default.TimeInMinutes)
-                        for (int i = 0; i < timeArrayData.Count; ++i)
-                            timeArrayData[i] *= 60;
+                // pwiz-sharp Chromatogram is not IDisposable (memory-only); drop the cpp `using`.
+                var element = chromatogramList.GetChromatogram(index, getBinaryData: true);
+                var timeArray = element.GetTimeArray();
+                var timeArrayData = new List<double>(timeArray.Data);
+                var timeArrayUnits = timeArray.Params.CvParam(CVID.MS_time_array).Units;
+                if (timeArrayUnits == CVID.UO_second && Pwiz.SeeMS.Settings.Default.TimeInMinutes)
+                    for (int i = 0; i < timeArrayData.Count; ++i)
+                        timeArrayData[i] /= 60;
+                else if (timeArrayUnits == CVID.UO_minute && !Pwiz.SeeMS.Settings.Default.TimeInMinutes)
+                    for (int i = 0; i < timeArrayData.Count; ++i)
+                        timeArrayData[i] *= 60;
 
-                    return new ZedGraph.PointPairList(timeArrayData, element.binaryDataArrays[1].data );
-                }
+                return new ZedGraph.PointPairList(timeArrayData, new List<double>(element.BinaryDataArrays[1].Data));
             }
 		}
 
@@ -427,7 +430,7 @@ namespace seems
 
 	public class MassSpectrum : GraphItem
 	{
-        public MassSpectrum( ManagedDataSource source, int index, SpectrumList spectrumList )
+        public MassSpectrum( ManagedDataSource source, int index, ISpectrumList spectrumList )
         {
             this.source = source;
             this.spectrumList = spectrumList;
@@ -435,28 +438,28 @@ namespace seems
             //element = spectrum;
             //using( Spectrum element = Element )
             {
-                id = Element.id;
-                AbbreviatedId = pwiz.CLI.msdata.id.abbreviate(id);
+                id = Element.Id;
+                AbbreviatedId = Pwiz.Data.MsData.Spectra.Id.Abbreviate(id);
             }
         }
 
-        public MassSpectrum( MassSpectrum metaSpectrum, pwiz.CLI.msdata.Spectrum spectrum )
+        public MassSpectrum( MassSpectrum metaSpectrum, Pwiz.Data.MsData.Spectra.Spectrum spectrum )
         {
             source = metaSpectrum.source;
             spectrumList = metaSpectrum.spectrumList;
-            index = metaSpectrum.index;
+            index = metaSpectrum.Index;
             Tag = metaSpectrum.Tag;
             AnnotationSettings = metaSpectrum.AnnotationSettings;
             //element = spectrum;
-            id = metaSpectrum.id;
+            id = metaSpectrum.Id;
             AbbreviatedId = metaSpectrum.AbbreviatedId;
         }
 
         public override string Title { get { return AddSourceToId ? ToString() : AbbreviatedId; } }
         public override string ToString() { return String.Format("{0}/{1}", source.Source.Name, AbbreviatedId); }
 
-        private SpectrumList spectrumList;
-        public SpectrumList SpectrumList
+        private ISpectrumList spectrumList;
+        public ISpectrumList SpectrumList
         {
             get { return spectrumList; }
             set { spectrumList = value; }
@@ -464,10 +467,10 @@ namespace seems
 
         // cache the most recently accessed element and the spectrum list used to get it
         // note: this breaks if you access Element from a "using" block (but why?)
-        private static pwiz.CLI.msdata.SpectrumList lastSpectrumListUsed = null;
-		private static pwiz.CLI.msdata.Spectrum lastElementAccessed = null;
+        private static ISpectrumList lastSpectrumListUsed = null;
+		private static Pwiz.Data.MsData.Spectra.Spectrum lastElementAccessed = null;
 
-        public pwiz.CLI.msdata.Spectrum Element
+        public Pwiz.Data.MsData.Spectra.Spectrum Element
         {
             get
             {
@@ -475,10 +478,12 @@ namespace seems
                 if( lastSpectrumListUsed == null ||
                     lastElementAccessed == null ||
                     !ReferenceEquals( spectrumList, lastSpectrumListUsed ) ||
-                    index != lastElementAccessed.index )
+                    index != lastElementAccessed.Index )
                 {
                     lastSpectrumListUsed = spectrumList;
-                    lastElementAccessed = spectrumList.spectrum( index, DetailLevel.FullMetadata );
+                    // pwiz-sharp's ISpectrumList exposes a getBinaryData bool, not the cpp/CLI
+                    // DetailLevel enum. FullMetadata ≈ getBinaryData:false (skip the heavy peak arrays).
+                    lastElementAccessed = spectrumList.GetSpectrum( index, getBinaryData: false );
                 }
                 return lastElementAccessed;
             }
@@ -494,16 +499,16 @@ namespace seems
             base.AddAnnotations( graphPane, g, pointList, annotations );
             //using( Spectrum element = Element )
             {
-                foreach( Precursor p in Element.precursors )
-                    foreach( SelectedIon si in p.selectedIons )
+                foreach( Precursor p in Element.Precursors )
+                    foreach( SelectedIon si in p.SelectedIons )
                     {
-                        double precursorMz = (double) si.cvParam( CVID.MS_selected_ion_m_z ).value;
+                        double precursorMz = si.Params.CvParam( CVID.MS_selected_ion_m_z ).ValueAs<double>();
                         int precursorCharge = 0;
-                        CVParam precursorChargeParam = si.cvParam( CVID.MS_charge_state );
-                        if( precursorChargeParam.empty() )
-                            precursorChargeParam = si.cvParam( CVID.MS_possible_charge_state );
-                        if( !precursorChargeParam.empty() )
-                            precursorCharge = (int) precursorChargeParam.value;
+                        CVParam precursorChargeParam = si.Params.CvParam( CVID.MS_charge_state );
+                        if( precursorChargeParam.IsEmpty )
+                            precursorChargeParam = si.Params.CvParam( CVID.MS_possible_charge_state );
+                        if( !precursorChargeParam.IsEmpty )
+                            precursorCharge = precursorChargeParam.ValueAs<int>();
 
 
                         double stickLength = 0.1;
@@ -538,20 +543,26 @@ namespace seems
 
         public ZedGraph.IPointList GetPointList(bool sortAndMakeUnique)
         {
-            using( Spectrum element = spectrumList.spectrum( index, true ) )
+            // pwiz-sharp Spectrum is not IDisposable; drop the cpp `using`.
+            Spectrum element = spectrumList.GetSpectrum(index, getBinaryData: true);
             {
-                if (element.defaultArrayLength == 0)
+                if (element.DefaultArrayLength == 0)
                     return new ZedGraph.PointPairList();
 
-                IList<double> mzArray = element.getMZArray().data.Storage();
-                IList<double> intensityArray = element.getIntensityArray().data.Storage();
+                List<double> mzArray = new(element.GetMZArray().Data);
+                List<double> intensityArray = new(element.GetIntensityArray().Data);
 
                 // only sort centroid spectra; profile spectra are assumed to already be sorted
-                if (sortAndMakeUnique && (element.hasCVParam(CVID.MS_centroid_spectrum) || element.id.StartsWith("merged=")))
+                if (sortAndMakeUnique && (element.Params.HasCVParam(CVID.MS_centroid_spectrum) || element.Id.StartsWith("merged=")))
                 {
-                    mzArray.Sort(intensityArray);
+                    // Sort intensity in lockstep with mz (mz key, intensity value).
+                    var pairs = new List<(double mz, double intensity)>(mzArray.Count);
+                    for (int i = 0; i < mzArray.Count; i++) pairs.Add((mzArray[i], intensityArray[i]));
+                    pairs.Sort((a, b) => a.mz.CompareTo(b.mz));
+                    mzArray = pairs.ConvertAll(p => p.mz);
+                    intensityArray = pairs.ConvertAll(p => p.intensity);
 
-                    if (element.id.StartsWith("merged="))
+                    if (element.Id.StartsWith("merged="))
                     {
                         var uniqueMz = new List<double>(mzArray.Count);
                         var summedIntensity = new List<double>(mzArray.Count);
@@ -581,8 +592,8 @@ namespace seems
         {
             get
             {
-                CVParam representation = Element.cvParamChild(CVID.MS_spectrum_representation);
-                if( !representation.empty() && representation.cvid == CVID.MS_profile_spectrum )
+                CVParam representation = Element.Params.CvParamChild(CVID.MS_spectrum_representation);
+                if( !representation.IsEmpty && representation.Cvid == CVID.MS_profile_spectrum )
                     return pwiz.MSGraph.MSGraphItemDrawMethod.line;
                 else
                     return pwiz.MSGraph.MSGraphItemDrawMethod.stick;
@@ -647,7 +658,7 @@ namespace seems
     {
         public AnnotationSettings()
         {
-            labelToAliasAndColorMap = new Map<string, Pair<string, Color>>();
+            labelToAliasAndColorMap = new Dictionary<string, Pair<string, Color>>();
             pointAnnotations = new PointDataMap<SeemsPointAnnotation>();
             pointFontSpec = new ZedGraph.FontSpec( "Arial", 10, Color.Gray, false, false, false );
             pointFontSpec.Border.IsVisible = false;
@@ -658,11 +669,11 @@ namespace seems
         {
             string label = null;
             if( ShowXValues && ShowYValues )
-                label = String.Format( "{0}\n{1}", point.X.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces), point.Y.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
+                label = String.Format( "{0}\n{1}", point.X.ToString("f" + Pwiz.SeeMS.Settings.Default.DefaultDecimalPlaces), point.Y.ToString("f" + Pwiz.SeeMS.Settings.Default.DefaultDecimalPlaces));
             else if( ShowXValues )
-                label = String.Format( "{0}", point.X.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
+                label = String.Format( "{0}", point.X.ToString("f" + Pwiz.SeeMS.Settings.Default.DefaultDecimalPlaces));
             else if( ShowYValues )
-                label = String.Format( "{0}", point.Y.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
+                label = String.Format( "{0}", point.Y.ToString("f" + Pwiz.SeeMS.Settings.Default.DefaultDecimalPlaces));
 
             if( label != null )
                 return new pwiz.MSGraph.PointAnnotation( label, pointFontSpec );
@@ -718,8 +729,8 @@ namespace seems
             set { matchToleranceUnit = value; }
         }
 
-        private Map<string, Pair<string, Color>> labelToAliasAndColorMap;
-        public Map<string, Pair<string, Color>> LabelToAliasAndColorMap
+        private Dictionary<string, Pair<string, Color>> labelToAliasAndColorMap;
+        public Dictionary<string, Pair<string, Color>> LabelToAliasAndColorMap
         {
             get { return labelToAliasAndColorMap; }
         }

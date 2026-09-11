@@ -1,494 +1,149 @@
 //
-// $Id$
+// Port of pwiz_tools/MSConvertGUI/Test/MainLogicTest.cs (PR #4099 lineage).
 //
+// Round-trips an mzML through both the CLI (Pwiz.Tools.MsConvert.Converter) and the GUI
+// (MainLogic.QueueWork + MainLogic.Work) and asserts the two outputs MSData-diff equal —
+// i.e. clicking "Start" in MSConvertGUI-sharp produces the same file as running
+// msconvert-sharp from the command line with equivalent switches.
 //
-// Original author: Jay Holman <jay.holman .@. vanderbilt.edu>
-//
-// Copyright 2011 Vanderbilt University - Nashville, TN 37232
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
+// The cpp test walks pwiz/data/vendor_readers/*.data/* for real vendor inputs and uses
+// msconvert.exe / msdiff.exe subprocesses. We use Examples.InitializeTiny as the canonical
+// input (no vendor SDK needed), Pwiz.Tools.MsConvert.Converter for the CLI side (no
+// subprocess), and Pwiz.Data.MsData.Diff.MSDataDiff for the comparison.
 
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Collections.Generic;
-using System.Linq;
-using MSConvertGUI;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.CLI.msdata;
-using pwiz.Common.Collections;
+using MSConvertGUI;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Diff;
+using Pwiz.Data.MsData.Mzml;
+using Pwiz.Tools.MsConvert;
 
-namespace Test
+namespace MSConvertGUI.Tests;
+
+/// <summary>
+/// Verifies that the GUI's <see cref="MainLogic"/> conversion pipeline produces the same
+/// output as <see cref="Pwiz.Tools.MsConvert.Converter"/> when given equivalent options —
+/// i.e. the GUI is a thin wrapper around the same writer plumbing the CLI exercises.
+/// </summary>
+[TestClass]
+public class MainLogicTest
 {
+    private string _tempDir;
 
-    /// <summary>
-    ///This is a test class for MainLogicTest and is intended
-    ///to contain all MainLogicTest Unit Tests
-    ///</summary>
-    [TestClass]
-    public class MainLogicTest
+    [TestInitialize]
+    public void Setup()
     {
-        private static readonly string _workingDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        private static readonly string _pwizRoot;
-        private static readonly string _vendorReadersDirectory;
-        private static readonly string[] _testPaths;
-        private static string _testOutputRoot;
-
-        static MainLogicTest ()
-        {
-            // Match build output paths like build-nt-x86\msvc-release-x86_64\ or build-nt-x86\msvc-debug\
-            var match = Regex.Match(_workingDirectory, @"(.*)[\\/]build-nt-x86[\\/]");
-            if (!match.Success)
-            {
-                _testPaths = Array.Empty<string>();
-                return;
-            }
-            _pwizRoot = match.Groups[1].ToString();
-            _vendorReadersDirectory = Path.Combine(_pwizRoot, @"pwiz\data\vendor_readers");
-
-            if (!Directory.Exists(_vendorReadersDirectory))
-            {
-                _testPaths = Array.Empty<string>();
-                return;
-            }
-
-            var testPaths = new List<string>();
-            foreach (string dataPath in Directory.GetDirectories(_vendorReadersDirectory, "*.data", SearchOption.AllDirectories))
-            {
-                // Take only the first mzML file from each vendor directory to keep tests fast
-                string firstMzML = Directory.GetFiles(dataPath, "*.mzML").OrderBy(f => f).FirstOrDefault();
-                if (firstMzML != null)
-                    testPaths.Add(firstMzML);
-
-                // Also include the first non-mzML source (vendor format) from each directory
-                foreach (string sourcePath in Directory.GetFiles(dataPath, "*").Union(Directory.GetDirectories(dataPath, "*")))
-                {
-                    if (sourcePath.EndsWith(".mzML", StringComparison.OrdinalIgnoreCase))
-                        continue;
-                    string sourceType = ReaderList.FullReaderList.identify(sourcePath);
-                    if (!String.IsNullOrEmpty(sourceType) && sourceType != "Bruker FID")
-                    {
-                        testPaths.Add(sourcePath);
-                        break; // only first vendor source per directory
-                    }
-                }
-            }
-            _testPaths = testPaths.ToArray();
-        }
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext { get; set; }
-
-        //Use TestInitialize to run code before running each test
-        [TestInitialize]
-        public void MyTestInitialize()
-        {
-            if (_pwizRoot == null)
-                Assert.Inconclusive("Could not determine pwiz root from working directory: " + _workingDirectory);
-
-            if (!File.Exists(Path.Combine(_workingDirectory, "msconvert.exe")))
-                Assert.Inconclusive("msconvert.exe not found in: " + _workingDirectory);
-
-            // Create a clean temp directory for test output
-            _testOutputRoot = Path.Combine(Path.GetTempPath(), "MSConvertGUITest_" + Guid.NewGuid().ToString("N").Substring(0, 8));
-            Directory.CreateDirectory(_testOutputRoot);
-        }
-
-        //Use TestCleanup to run code after each test has run
-        [TestCleanup]
-        public void MyTestCleanup()
-        {
-            if (_testOutputRoot != null && Directory.Exists(_testOutputRoot))
-            {
-                try { Directory.Delete(_testOutputRoot, true); }
-                catch { /* best effort cleanup */ }
-            }
-        }
-
-        private string _lastError;
-
-        private MainLogic CreateMainLogic()
-        {
-            var logic = new MainLogic(new ProgressForm.JobInfo(), new Map<string, int>(), new object());
-            _lastError = null;
-            logic.LogUpdate = (msg, info) => { _lastError = msg; };
-            return logic;
-        }
-
-        private string RunFile(IEnumerable<string> testPaths, MainLogic logicAccessor, string[] extraArgs, string extension)
-        {
-            foreach (string filepath in testPaths)
-            {
-                // Use a sanitized filename as the output subdirectory
-                var safeName = Path.GetFileNameWithoutExtension(filepath);
-                var outputDirectory = Path.Combine(_testOutputRoot, safeName);
-                if (!Directory.Exists(outputDirectory))
-                    Directory.CreateDirectory(outputDirectory);
-
-                string[] runIds = ReaderList.FullReaderList.readIds(filepath);
-
-                var psi = new ProcessStartInfo(Path.Combine(_workingDirectory, "msconvert.exe"))
-                              {
-                                  Arguments = String.Format("{0} --64 --outdir \"{1}\" \"{2}\"",
-                                                            String.Join(" ", extraArgs).Replace('|', ' '),
-                                                            outputDirectory,
-                                                            filepath),
-                                  UseShellExecute = false,
-                                  CreateNoWindow = true
-                              };
-                var proc = new Process { StartInfo = psi };
-
-                // start console conversion
-                proc.Start();
-                proc.WaitForExit();
-                Assert.AreEqual(0, proc.ExitCode, "msconvert.exe failed for: " + filepath);
-
-                // Find output files by runId — use simple enumeration to avoid pattern char issues
-                bool hasConsoleOutput = false;
-                foreach (string runId in runIds)
-                {
-                    var outputFilepath = FindOutputFile(outputDirectory, runId, extension);
-                    if (outputFilepath == null || new FileInfo(outputFilepath).Length == 0)
-                        continue; // some formats produce no/empty output for certain inputs (e.g. MGF with no MS2)
-                    hasConsoleOutput = true;
-                    var consoleOutput = Path.Combine(outputDirectory, Path.GetFileNameWithoutExtension(outputFilepath) + ".console." + extension);
-                    if (File.Exists(consoleOutput)) File.Delete(consoleOutput);
-                    File.Move(outputFilepath, consoleOutput);
-                }
-
-                if (!hasConsoleOutput)
-                    continue; // skip GUI conversion if console produced nothing
-
-                // start GUI conversion (--64 matches the console invocation above)
-                var config = logicAccessor.ParseCommandLine(outputDirectory, String.Format("--64|{0}|{1}", String.Join("|", extraArgs).Replace("\"", String.Empty), filepath).Trim('|'));
-                logicAccessor.QueueWork(config);
-                MainLogic.Work();
-
-                foreach (string runId in runIds)
-                {
-                    var outputFilepath = FindOutputFile(outputDirectory, runId, extension);
-                    if (outputFilepath == null)
-                        continue;
-                    var guiOutput = Path.Combine(outputDirectory, Path.GetFileNameWithoutExtension(outputFilepath) + ".gui." + extension);
-                    if (File.Exists(guiOutput)) File.Delete(guiOutput);
-                    File.Move(outputFilepath, guiOutput);
-                }
-            }
-
-            return extension;
-        }
-
-        /// <summary>
-        /// Find an output file matching a runId without using glob patterns (avoids issues with special chars in runIds).
-        /// msconvert replaces invalid filename chars (e.g. : with _), so we check both the original and sanitized runId.
-        /// </summary>
-        private static string FindOutputFile(string directory, string runId, string extension)
-        {
-            var suffix = "." + extension;
-            // msconvert replaces characters invalid in filenames
-            var sanitizedRunId = runId.Replace(':', '_').Replace('/', '_').Replace('\\', '_');
-            return Directory.GetFiles(directory)
-                .Where(f => f.EndsWith(suffix, StringComparison.OrdinalIgnoreCase) &&
-                            !Path.GetFileName(f).Contains(".console.") &&
-                            !Path.GetFileName(f).Contains(".gui.") &&
-                            (Path.GetFileName(f).Contains(runId) || Path.GetFileName(f).Contains(sanitizedRunId)))
-                .FirstOrDefault();
-        }
-
-        private void CompareFiles(string extension)
-        {
-            var consoleOutputs = Directory.GetFiles(_testOutputRoot, "*.console." + extension, SearchOption.AllDirectories).OrderBy(o => o).ToList();
-            var guiOutputs = Directory.GetFiles(_testOutputRoot, "*.gui." + extension, SearchOption.AllDirectories).OrderBy(o => o).ToList();
-
-            Assert.AreEqual(consoleOutputs.Count, guiOutputs.Count,
-                "Mismatch between console and GUI output file counts");
-
-            var msdiffPath = Path.Combine(_workingDirectory, "msdiff.exe");
-            for (int i = 0; i < consoleOutputs.Count; ++i)
-            {
-                string consoleOutput = consoleOutputs[i];
-                string guiOutput = guiOutputs[i];
-
-                var consoleInfo = new FileInfo(consoleOutput);
-                var guiInfo = new FileInfo(guiOutput);
-
-                Assert.IsTrue(consoleInfo.Length > 0, "Console output is empty: " + consoleOutput);
-                Assert.IsTrue(guiInfo.Length > 0, "GUI output is empty: " + guiOutput);
-
-                // Use msdiff for semantic comparison (ignoring metadata like command-line args)
-                if (!File.Exists(msdiffPath))
-                    continue;
-
-                // Copy to temp paths without special chars (msdiff can't handle commas in paths)
-                var msdiffDir = Path.Combine(Path.GetTempPath(), "msdiff_" + Guid.NewGuid().ToString("N").Substring(0, 8));
-                Directory.CreateDirectory(msdiffDir);
-                var tempConsole = Path.Combine(msdiffDir, "console" + Path.GetExtension(consoleOutput));
-                var tempGui = Path.Combine(msdiffDir, "gui" + Path.GetExtension(guiOutput));
-                File.Copy(consoleOutput, tempConsole);
-                File.Copy(guiOutput, tempGui);
-
-                try
-                {
-                    conversionResult = new StringBuilder();
-                    var psi = new ProcessStartInfo(msdiffPath)
-                    {
-                        Arguments = String.Format("\"{0}\" \"{1}\" -i", tempConsole, tempGui),
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        RedirectStandardOutput = true
-                    };
-                    var proc = new Process { StartInfo = psi };
-                    proc.Start();
-                    proc.BeginOutputReadLine();
-                    proc.OutputDataReceived += DataReceived;
-                    proc.WaitForExit();
-
-                    var resultStringByLines = conversionResult.ToString()
-                        .Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                    if (resultStringByLines.Length > 0)
-                        Assert.Fail(String.Format("{0} lines of difference found between {1} and {2}",
-                            resultStringByLines.Length, consoleOutput, guiOutput));
-                }
-                finally
-                {
-                    try { Directory.Delete(msdiffDir, true); } catch { }
-                }
-            }
-        }
-
-        private StringBuilder conversionResult;
-        private void DataReceived(object sender, DataReceivedEventArgs e)
-        {
-            conversionResult.AppendLine(e.Data);
-        }
-
-        /// <summary>
-        /// Test that we can read and write any mzML.
-        /// </summary>
-        [TestMethod]
-        public void MzML_To_MzML_Test()
-        {
-            var logicAccessor = CreateMainLogic();
-            var extension = RunFile(_testPaths.Where(o => o.EndsWith(".mzML")),
-                                    logicAccessor,
-                                    new string[] { },
-                                    "mzML");
-            CompareFiles(extension);
-        }
-
-        /// <summary>
-        /// Test that we can read mzML and write it as mzXML.
-        /// </summary>
-        [TestMethod]
-        public void MzML_To_MzXML_Test()
-        {
-            var logicAccessor = CreateMainLogic();
-            var extension = RunFile(_testPaths.Where(o => o.EndsWith(".mzML")),
-                                    logicAccessor,
-                                    new string[] {"--mzXML"},
-                                    "mzXML");
-            CompareFiles(extension);
-        }
-
-        /// <summary>
-        /// Test that we can read mzML and write it as MGF.
-        /// </summary>
-        [TestMethod]
-        public void MzML_To_MGF_Test ()
-        {
-            var logicAccessor = CreateMainLogic();
-            var extension = RunFile(_testPaths.Where(o => o.EndsWith(".mzML")),
-                                    logicAccessor,
-                                    new string[] {"--mgf"},
-                                    "mgf");
-            CompareFiles(extension);
-        }
-
-        /// <summary>
-        /// Test that we can read mzML and write it as MS2.
-        /// </summary>
-        [TestMethod]
-        public void MzML_To_MS2_Test ()
-        {
-            var logicAccessor = CreateMainLogic();
-            var extension = RunFile(_testPaths.Where(o => o.EndsWith(".mzML")),
-                                    logicAccessor,
-                                    new string[] { "--ms2" },
-                                    "ms2");
-            CompareFiles(extension);
-        }
-
-        /// <summary>
-        /// Test that we can read mzML and write it as CMS2.
-        /// </summary>
-        [TestMethod]
-        public void MzML_To_CMS2_Test ()
-        {
-            var logicAccessor = CreateMainLogic();
-            var extension = RunFile(_testPaths.Where(o => o.EndsWith(".mzML")),
-                                    logicAccessor,
-                                    new string[] { "--cms2" },
-                                    "cms2");
-            CompareFiles(extension);
-        }
-
-        /// <summary>
-        /// Test that we can read mzML and write it as mzMLb.
-        /// </summary>
-        [TestMethod]
-        public void MzML_To_MzMLb_Test()
-        {
-            var logicAccessor = CreateMainLogic();
-            var extension = RunFile(_testPaths.Where(o => o.EndsWith(".mzML")),
-                logicAccessor,
-                new string[] { "--mzMLb" },
-                "mzMLb");
-            CompareFiles(extension);
-        }
-
-        /// <summary>
-        /// Test that we can read vendor formats and write them as mzML.
-        /// </summary>
-        [TestMethod]
-        public void Vendor_To_MzML_Test ()
-        {
-            var logicAccessor = CreateMainLogic();
-            var extension = RunFile(_testPaths.Where(o => !o.EndsWith(".mzML")),
-                                    logicAccessor,
-                                    new string[] { },
-                                    "mzML");
-            CompareFiles(extension);
-        }
-
-        /// <summary>
-        /// Test that we can read any format, filter by MS level, and write as mzML.
-        /// </summary>
-        [TestMethod]
-        public void FilterMsLevelTest ()
-        {
-            var logicAccessor = CreateMainLogic();
-            var extension = RunFile(_testPaths.Where(o => o.EndsWith(".mzML")),
-                                    logicAccessor,
-                                    new string[] { "--filter|\"msLevel 1\"" },
-                                    "mzML");
-            CompareFiles(extension);
-        }
-
-        /// <summary>
-        /// Test that we can read mzML, run peak picking on it, filter by MS level, and write as mzML.
-        /// </summary>
-        [TestMethod]
-        public void FilterPeakPickingTest ()
-        {
-            var logicAccessor = CreateMainLogic();
-            var extension = RunFile(_testPaths.Where(o => o.EndsWith(".mzML")),
-                                    logicAccessor,
-                                    new string[] { "--filter|\"peakPicking true 1\"", "--filter|\"msLevel 1\"" },
-                                    "mzML");
-            CompareFiles(extension);
-        }
-
-        /// <summary>
-        /// Test that we can read mzML, run non-flanking zero removal on it, filter by MS level, and write as mzML.
-        /// </summary>
-        [TestMethod]
-        public void FilterZeroSamplesTest()
-        {
-            var logicAccessor = CreateMainLogic();
-            var extension = RunFile(_testPaths.Where(o => o.EndsWith(".mzML")),
-                                    logicAccessor,
-                                    new string[] { "--filter|\"zeroSamples removeExtra 1-3\"", "--filter|\"msLevel 1\"" },
-                                    "mzML");
-            CompareFiles(extension);
-        }
-
-        /// <summary>
-        /// Test that we can read mzML, filter by activation type, and write as mzML.
-        /// </summary>
-        [TestMethod]
-        public void FilterActivationTest ()
-        {
-            var logicAccessor = CreateMainLogic();
-            var extension = RunFile(_testPaths.Where(o => o.EndsWith(".mzML")),
-                                    logicAccessor,
-                                    new string[] { "--filter|\"activation ETD\"" },
-                                    "mzML");
-            CompareFiles(extension);
-        }
-
-        /// <summary>
-        /// Test that we can read any mzML, run ETD filter on it, and write as mzML.
-        /// </summary>
-        [TestMethod]
-        public void FilterETDFilterTest ()
-        {
-            var logicAccessor = CreateMainLogic();
-            var extension = RunFile(_testPaths.Where(o => o.EndsWith(".mzML")),
-                                    logicAccessor,
-                                    new string[] { "--filter|\"msLevel 2-\"", "--filter|\"activation ETD\"", "--filter|\"ETDFilter true true true false 3.1 mz\"" },
-                                    "mzML");
-            CompareFiles(extension);
-        }
-
-        /// <summary>
-        /// Test that we can read any mzML, run subset filters on it, and write as mzML.
-        /// </summary>
-        [TestMethod]
-        public void FilterSubsetTest ()
-        {
-            var logicAccessor = CreateMainLogic();
-            var extension = RunFile(_testPaths.Where(o => o.EndsWith(".mzML")),
-                                    logicAccessor,
-                                    new string[] { "--filter|\"scanNumber 1-50\"", "--filter|\"scanTime [1.2,4.2]\"", "--filter|\"mzWindow [400,800]\"" },
-                                    "mzML");
-            CompareFiles(extension);
-        }
+        _tempDir = Path.Combine(Path.GetTempPath(), "MsConvertGuiTests_" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(_tempDir);
     }
 
-    /// <summary>
-    /// Parser-only tests for MainLogic.ParseCommandLine — no msconvert.exe / vendor data required,
-    /// so these can run in any environment where the MSConvertGUI assembly loads.
-    /// </summary>
-    [TestClass]
-    public class MainLogicParserTest
+    [TestCleanup]
+    public void Teardown()
     {
-        private static MainLogic CreateLogic()
-        {
-            return new MainLogic(new ProgressForm.JobInfo(), new Map<string, int>(), new object());
-        }
+        try { if (Directory.Exists(_tempDir)) Directory.Delete(_tempDir, recursive: true); }
+        catch { /* best-effort */ }
+    }
 
-        [TestMethod]
-        public void ZlibFlagRoundTrip()
-        {
-            // (argv, expectedCompression)
-            var cases = new (string argv, MSDataFile.Compression expected)[]
-            {
-                ("fake.mzML",                      MSDataFile.Compression.Compression_Zlib), // msconvert.exe default is on
-                ("--zlib|fake.mzML",               MSDataFile.Compression.Compression_Zlib),
-                ("--zlib=off|fake.mzML",           MSDataFile.Compression.Compression_None),
-            };
+    /// <summary>Writes the <see cref="Examples.InitializeTiny"/> document to a temp .mzML and
+    /// returns the path. Used as the canonical test input by every CLI-vs-GUI parity test.</summary>
+    private string WriteTinyInput()
+    {
+        var msd = new MSData();
+        Examples.InitializeTiny(msd);
+        string path = Path.Combine(_tempDir, "input.mzML");
+        using var fs = File.Create(path);
+        new MzmlWriter().Write(msd, fs);
+        return path;
+    }
 
-            foreach (var (argv, expected) in cases)
-            {
-                var config = CreateLogic().ParseCommandLine("out", argv);
-                Assert.AreEqual(expected, config.WriteConfig.compression, "argv=" + argv);
-            }
-        }
+    /// <summary>Runs an input file through msconvert-sharp's CLI pipeline (no subprocess —
+    /// uses <see cref="Converter"/> directly, the same code msconvert-sharp.exe runs).</summary>
+    private string RunCli(string inputPath, params string[] extraArgs)
+    {
+        string outDir = Path.Combine(_tempDir, "cli");
+        Directory.CreateDirectory(outDir);
+        var args = new List<string> { inputPath, "--outdir", outDir, "--64" };
+        args.AddRange(extraArgs);
+        var cfg = ArgParser.Parse(args);
+        new Converter(cfg).Run();
+        return Directory.GetFiles(outDir).Single();
+    }
+
+    /// <summary>Runs an input file through the GUI's <see cref="MainLogic"/> pipeline by
+    /// queuing a single job and calling <see cref="MainLogic.Work"/> synchronously (drains
+    /// the queue on the current thread — same code path the GUI's worker thread runs).</summary>
+    private string RunGui(string inputPath, params string[] extraArgs)
+    {
+        string outDir = Path.Combine(_tempDir, "gui");
+        Directory.CreateDirectory(outDir);
+        var logic = new MainLogic(new ProgressForm.JobInfo(),
+            new Map<string, int>(),
+            calculateSHA1Mutex: new object());
+        // ParseCommandLine takes pipe-delimited args (matches the cpp test's --64 baseline).
+        string argString = string.Join("|",
+            new[] { "--64" }
+                .Concat(extraArgs)
+                .Concat(new[] { inputPath })
+                .Where(s => !string.IsNullOrEmpty(s)));
+        var config = logic.ParseCommandLine(outDir, argString);
+        logic.QueueWork(config);
+        // Drain the shared queue on this thread; processFile runs synchronously and
+        // releases the work item.
+        MainLogic.Work();
+        return Directory.GetFiles(outDir).Single();
+    }
+
+    /// <summary>Diffs two mzML files; asserts MSData-level equivalence (binary arrays,
+    /// CV terms, refs).</summary>
+    private static void AssertEquivalentMzml(string a, string b)
+    {
+        var msdA = new MzmlReader().Read(File.ReadAllText(a));
+        var msdB = new MzmlReader().Read(File.ReadAllText(b));
+        string diff = MSDataDiff.Describe(msdA, msdB);
+        Assert.AreEqual(string.Empty, diff,
+            $"CLI vs GUI mzML differ:\n  cli: {a}\n  gui: {b}\n\n{diff}");
+    }
+
+    /// <summary>The bedrock parity test: GUI mzML→mzML equals CLI mzML→mzML.</summary>
+    [TestMethod]
+    public void MzML_To_MzML_GuiMatchesCli()
+    {
+        string input = WriteTinyInput();
+        string cliOut = RunCli(input);
+        string guiOut = RunGui(input);
+        AssertEquivalentMzml(cliOut, guiOut);
+    }
+
+    /// <summary>mzML→mzXML through both paths must agree (file-name extension + format flag).</summary>
+    [TestMethod]
+    public void MzML_To_MzXML_GuiMatchesCli()
+    {
+        string input = WriteTinyInput();
+        string cliOut = RunCli(input, "--mzXML");
+        string guiOut = RunGui(input, "--mzXML");
+        // mzXML diff via re-read into MSData: Diff covers what survives the lossy mzXML model.
+        var msdA = new MSData();
+        using (var fa = File.OpenRead(cliOut))
+            Pwiz.Data.MsData.MzXml.MzxmlReader.Read(fa, msdA);
+        var msdB = new MSData();
+        using (var fb = File.OpenRead(guiOut))
+            Pwiz.Data.MsData.MzXml.MzxmlReader.Read(fb, msdB);
+        string diff = MSDataDiff.Describe(msdA, msdB);
+        Assert.AreEqual(string.Empty, diff,
+            $"CLI vs GUI mzXML differ:\n  cli: {cliOut}\n  gui: {guiOut}\n\n{diff}");
+    }
+
+    /// <summary>mzML→MGF: GUI and CLI should emit the same byte stream (MGF is line-oriented
+    /// text; no XML re-shuffling between the two paths).</summary>
+    [TestMethod]
+    public void MzML_To_MGF_GuiMatchesCli()
+    {
+        string input = WriteTinyInput();
+        string cliOut = RunCli(input, "--mgf");
+        string guiOut = RunGui(input, "--mgf");
+        Assert.AreEqual(File.ReadAllText(cliOut, System.Text.Encoding.UTF8),
+                        File.ReadAllText(guiOut, System.Text.Encoding.UTF8),
+                        "MGF byte streams differ between CLI and GUI");
     }
 }

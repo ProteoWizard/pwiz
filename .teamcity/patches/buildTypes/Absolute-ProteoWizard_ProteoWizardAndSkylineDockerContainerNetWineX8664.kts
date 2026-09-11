@@ -88,7 +88,7 @@ create(DslContext.projectId, BuildType({
                 apt-get -qq update
                 apt-get -qq install bzip2 time
                 
-                declare -a arr=("ABI" "Agilent" "Bruker" "Mobilion" "Shimadzu" "Thermo" "UIMF" "Waters")
+                declare -a arr=("Sciex" "Agilent" "Bruker" "Mobilion" "Shimadzu" "Thermo" "UIMF" "Waters")
                 declare -a ext=(".d" ".lcd" ".mbi" ".raw" ".wiff" ".wiff2" ".uimf")
                 
                 TC=##teamcity

@@ -133,7 +133,7 @@ if ($Coverage) {
     # The script returns the resolved dotCover.exe. `dotnet dotcover` is not usable here: a
     # local tool is only on the command line when the working directory is at or under its
     # manifest, and TeamCity runs this build from the repo root.
-    $ensure = Join-Path $PSScriptRoot '../../pwiz-sharp/scripts/Ensure-DotCover.ps1'
+    $ensure = Join-Path $PSScriptRoot '../../scripts/Ensure-DotCover.ps1'
     $dotcover = if ($TeamCity) { & $ensure -ManifestDir $PSScriptRoot -TeamCity } else { & $ensure -ManifestDir $PSScriptRoot }
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     $dotcover = @($dotcover)[-1]

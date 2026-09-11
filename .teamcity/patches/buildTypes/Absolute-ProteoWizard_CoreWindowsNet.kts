@@ -19,14 +19,14 @@ create(DslContext.projectId, BuildType({
     name = "Core Windows .NET"
 
     artifactRules = """
-        pwiz-sharp/installer/build/ProteoWizard-*.exe
+        scripts/installer/build/ProteoWizard-*.exe
         **/*.blib.observed
     """.trimIndent()
 
     steps {
         exec {
             id = "RUNNER_simpleRunner_139"
-            path = "pwiz-sharp/tcbuild.bat"
+            path = "tcbuild.bat"
             arguments = "--i-agree-to-the-vendor-licenses --automated --require-vendor-support"
         }
         script {

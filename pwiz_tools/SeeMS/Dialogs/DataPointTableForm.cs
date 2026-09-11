@@ -29,10 +29,13 @@ using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using ZedGraph;
-using pwiz.CLI.cv;
-using pwiz.CLI.msdata;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     public partial class DataPointTableForm : DockableForm, IDataView
     {
@@ -79,7 +82,7 @@ namespace seems
             if (item.Id.StartsWith("merged="))
             {
                 pointList = spectrum.GetPointList(false);
-                var s = item.Source.Source.MSDataFile.run.spectrumList.spectrum(spectrum.Index, true);
+                var s = item.Source.Source.MSDataFile.Run.SpectrumList.GetSpectrum(spectrum.Index, getBinaryData: true);
                 mobilityArray = s.GetIonMobilityArray();
             }
             else
