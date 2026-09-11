@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -296,10 +296,12 @@ namespace pwiz.Osprey.Test
         /// <para>That distinction is the test. The guard first refused unconditionally, which
         /// reads as caution and is not: the arm it guards is also reached when this analysis has
         /// no retained base_id summary at all - no <c>-o</c> blib, or one written by a build
-        /// with another <c>FormatVersion</c> - and those runs complete on master. An
-        /// unconditional refusal fails them, and tells them to use a loader that is built from
-        /// the very file whose absence sent them down this arm. So both halves are pinned here,
-        /// and the null half is the one that would otherwise regress silently.</para>
+        /// with another <c>FormatVersion</c>. Under a resident token master completes those runs
+        /// through the overlay, which needs no summary; on the default load the streamed bundle
+        /// fails one call later with its own remedy. Either way an unconditional refusal here
+        /// adds nothing but a wrong instruction - use a loader that is built from the very file
+        /// whose absence sent the run down this arm. So both halves are pinned, and the null
+        /// half is the one that would otherwise regress silently.</para>
         ///
         /// <para>The refusing half also asserts the message says what happened and what to do -
         /// the shape (O(files x entries)), the measured cost, the bounded alternative, and that
@@ -309,7 +311,7 @@ namespace pwiz.Osprey.Test
         private static void AssertAllRunsBundleGuard()
         {
             // No output blib: nothing names the summary, so the per-run loader cannot exist and
-            // there is nothing to refuse. Master completes these.
+            // there is nothing to refuse - the load that follows decides the outcome.
             Assert.IsNull(
                 ScoringTaskShared.AllRunsBundleGuardError(new OspreyConfig(), null),
                 "a run with no bounded alternative must not be refused");

@@ -212,9 +212,10 @@ namespace pwiz.Osprey.Core
         // The NAME is still read, once, for the only thing a removed spelling owes: a caller who
         // still sets it is refused at startup (Program.cs) rather than handed the streamed arm's
         // numbers under the resident arm's name. That is the "reporting one arm's numbers as
-        // another's" case the env-var doctrine makes strict.
-        public static readonly bool Stage7StreamRetiredSet =
-            Environment.GetEnvironmentVariable(@"OSPREY_STAGE7_STREAM") != null;
+        // another's" case the env-var doctrine makes strict. IsSet, not a null test: an EMPTY
+        // value (a cleared `export`, a blanked CI parameter) reads as unset everywhere else in
+        // this class, and refusing it here would be the one predicate that disagrees.
+        public static readonly bool Stage7StreamRetiredSet = IsSet(@"OSPREY_STAGE7_STREAM");
 
         /// <summary>
         /// At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library

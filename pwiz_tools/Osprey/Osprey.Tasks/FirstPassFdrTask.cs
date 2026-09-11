@@ -841,22 +841,22 @@ namespace pwiz.Osprey.Tasks
             }
 
             // Null means this analysis has no retained base_id summary to build the per-run
-            // loader from, so the bundle below is the only route left and refusing would fail a
-            // run master completes. Disclose it instead - and say what actually regenerates the
-            // summary, which is NOT "re-run --task FirstPassFDR": that task declares this file
-            // in neither Outputs nor ValidityKey (see RetainedBaseIdSidecar.FormatVersion), so
-            // a re-run over a complete analysis reports its outputs valid and writes nothing.
-            // Naming a remedy that quietly does nothing is the defect this guard's first
-            // version had.
-            ctx.LogWarning(
-                @"No analysis-wide retained base_id summary for this analysis, so the " +
-                @"first-pass state is adopted through the ALL-RUNS reconciliation bundle, " +
-                @"which holds every run's survivors at once and grows O(files x entries) - " +
-                @"measured at 0.10 GB/file on a 446-run cohort. The bounded per-run survivor " +
-                @"loader is built from that summary, which is written when Stage 6 planning " +
-                @"runs; an analysis whose first pass is already complete will not rewrite it, " +
-                @"so producing one means running the first pass again - a fresh output " +
-                @"directory, or this analysis with FirstPassFDR's validity stamps cleared.");
+            // loader from. What happens next depends on which load ran, and the disclosure is
+            // made where that is decided (LoadOwnReconciliationBundle) rather than here:
+            //
+            //   * the default LEAN load left every list empty, so the bundle has to be streamed
+            //     from disk - and that stream needs the same summary, so it fails one call
+            //     later with its own error naming the producer. Warning here first that the
+            //     run is "taking the bundle route" would promise a route it cannot take and
+            //     put a second, contradictory remedy above the real one;
+            //   * a RESIDENT load (a NeedsResidentPool token) kept every stub in memory, and
+            //     the overlay builds the bundle from those without the summary. That arm
+            //     completes, at O(files x entries), and it is the one to disclose.
+            //
+            // No remedy is offered for the missing summary in either case that this task's own
+            // resume cannot deliver: FirstPassFDR declares the file in neither Outputs nor
+            // ValidityKey (see RetainedBaseIdSidecar.FormatVersion), so "re-run FirstPassFDR"
+            // over a complete analysis reports its outputs valid and writes nothing.
 
             // The bundle to adopt. In worker mode the upstream PerFileScoring
             // task hydrated it from sibling sidecars and published it. On a
@@ -1106,6 +1106,37 @@ namespace pwiz.Osprey.Tasks
         private bool RehydrateForPerRunRescore(
             PipelineContext ctx, List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
         {
+            // This arm's precondition, checked rather than assumed: the lists it republishes as
+            // CompactedEntries are EMPTY, because the lean load left them so and each run is
+            // compacted against the retained set as it is hydrated. A RESIDENT load (a
+            // NeedsResidentPool token - OSPREY_FDR_PROJECTION=0, a non-Percolator FDR method,
+            // --fdrbench-pass 1) leaves every run's PRE-compaction stubs in them, and
+            // CanHydratePerRun has no term for that: it would admit this arm, the full lists
+            // would be published uncompacted under a name that promises compaction, nothing
+            // downstream compacts them (MaterializeFileSurvivors is a no-op on a non-empty
+            // list), and Stage 7 - which declines to stream for the same token - would fold
+            // its report over the pre-compaction pool. A wrong report, silently, at MORE memory
+            // than the route this arm replaced. Fail loudly instead. Routing the tokened case
+            // to the overlay is the eventual answer; it waits on a gate that exercises a token.
+            int residentStubs = 0;
+            foreach (var kvp in perFileEntries)
+                residentStubs += kvp.Value.Count;
+            if (residentStubs > 0)
+            {
+                ctx.LogError(string.Format(
+                    @"The per-run rescore arm was reached with {0:N0} first-pass stub(s) still " +
+                    @"resident across {1} run(s). This configuration holds the resident " +
+                    @"first-pass pool (a NeedsResidentPool consumer - OSPREY_FDR_PROJECTION=0, " +
+                    @"a non-Percolator FDR method, or --fdrbench-pass 1), which the per-run " +
+                    @"survivor loader cannot serve: publishing these lists as compacted would " +
+                    @"fold the second pass over every pre-compaction row. Run this " +
+                    @"configuration straight through with the flag up front, or drop the " +
+                    @"resident consumer.",
+                    residentStubs, perFileEntries.Count));
+                ctx.ExitCode = 1;
+                return false;
+            }
+
             var retainedBaseIds = ScoringTaskShared.ReadRetainedBaseIds(ctx.Config, out string error);
             if (retainedBaseIds == null)
             {
@@ -1250,11 +1281,28 @@ namespace pwiz.Osprey.Tasks
             RescoreInputs bundle;
             try
             {
-                bundle = leanStubs
-                    ? StreamOwnReconciliationBundle(ctx, perFileEntries, parquetPaths)
-                    : RescoreHydration.HydrateReconciliationOverlay(perFileEntries, parquetPaths,
-                        LoadFirstPassExperimentRecords(ctx.Config, ctx),
+                if (leanStubs)
+                {
+                    bundle = StreamOwnReconciliationBundle(ctx, perFileEntries, parquetPaths);
+                }
+                else
+                {
+                    // The one arm of this resume that builds the all-runs bundle AND completes:
+                    // a resident load already holds every run's stubs, and the overlay needs no
+                    // retained summary to compact them. Disclosed here, on the arm that takes
+                    // the cost, because the lean arm above cannot - it streams from disk, needs
+                    // the summary, and fails with its own named remedy when that is missing.
+                    ctx.LogWarning(string.Format(
+                        @"This configuration holds every run's first-pass stubs resident, so " +
+                        @"the resume adopts them through the {0}, which retains every run's " +
+                        @"survivors at once and grows O(files x entries) - measured at " +
+                        @"0.10 GB/file on a 446-run cohort. The bounded per-run survivor " +
+                        @"loader cannot serve a consumer that reads the resident pool.",
+                        RescoreHydration.ALL_RUNS_BUNDLE_MARKER));
+                    bundle = RescoreHydration.HydrateReconciliationOverlay(perFileEntries,
+                        parquetPaths, LoadFirstPassExperimentRecords(ctx.Config, ctx),
                         ctx.Get<SequencePool>().Value, ctx.LogInfo);
+                }
             }
             catch (InvalidDataException ex)
             {
@@ -1390,7 +1438,7 @@ namespace pwiz.Osprey.Tasks
                 },
                 LoadFirstPassExperimentRecords(config, ctx),
                 resumeRetainedBaseIds,
-                ctx.Get<SequencePool>().Value);
+                ctx.Get<SequencePool>().Value, ctx.LogInfo);
 
             // The hydrate re-derived every key from its parquet stem, while the accumulator
             // above and the published PerFileParquetPaths map are keyed by the ORIGINAL

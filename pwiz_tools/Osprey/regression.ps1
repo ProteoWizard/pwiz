@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Osprey overnight end-to-end regression. Self-contained entry point for
     the scheduled TeamCity "Osprey Windows .NET Regression" config (via
@@ -1187,6 +1187,14 @@ $stage7StreamMarker = 'Second-pass join: folding over '
 # disk it publishes the survivor loader and builds no experiment-wide bundle, so it emits this
 # instead of $firstPassFdrRehydrateMarker. Mode 5 accepts either.
 $firstPassFdrPerRunMarker = 'Per-run rescore: FirstPassFDR publishes the survivor loader only'
+# The NEGATIVE twin of the two above: the substring every disclosure of the O(files x entries)
+# all-runs reconciliation bundle carries. Three C# emitters must all contain it, and the
+# constant they share is RescoreHydration.ALL_RUNS_BUNDLE_MARKER: both hydrate twins log it
+# when they start building the bundle (HydrateCompactedStreaming, the one the 446-run
+# incident took, and HydrateReconciliationOverlay), and AllRunsBundleGuardError names it in the
+# refusal. A leg whose log contains it either built the bundle or was refused for trying, and
+# the route assertions in modes 7 and 11 red on both.
+$allRunsBundleMarker = 'ALL-RUNS reconciliation bundle'
 
 function Test-LogMarker {
     <#
@@ -1256,20 +1264,19 @@ function Test-NoAllRunsBundle {
             "asserted either way") -f $logName, $lines.Count))
         return @{ Pass = $false; Issues = $issues }
     }
-    # ONE marker, emitted by the all-runs hydrate itself (RescoreHydration.
-    # HydrateReconciliationOverlay) and by the guard that refuses it - so this reds whether the
-    # bundle was built or merely attempted, and the guard is asserted rather than depended on.
+    # ONE marker, $allRunsBundleMarker, emitted by BOTH all-runs hydrate twins when they start
+    # building the bundle and by the guard that refuses it - so this reds whether the bundle
+    # was built or merely attempted, and the guard is asserted rather than depended on.
     #
     # The progress heading 'Hydrating reconciliation bundle' was the other marker and was
     # WORSE THAN USELESS: ProgressReporter defers its heading past LOG_WAIT_SECONDS, so a
-    # 3-file hydrate never prints it, and the BOUNDED HydrateCompactedStreaming prints exactly
-    # the same heading whenever it does run long enough. It could not fire at gate scale and
-    # would have fired on the bounded route at cohort scale.
-    $marker = 'ALL-RUNS reconciliation bundle'
-    if (@($lines | Where-Object { $_.Contains($marker) }).Count -gt 0) {
+    # 3-file hydrate never prints it, and both twins print exactly the same heading whenever
+    # they do run long enough - it could not fire at gate scale and could not tell the twins
+    # apart at cohort scale.
+    if (@($lines | Where-Object { $_.Contains($allRunsBundleMarker) }).Count -gt 0) {
         $issues.Add((("{0}: '{1}' - this run built (or was refused for building) the " +
             "ALL-RUNS bundle, which is O(files x entries); the per-run survivor loader is " +
-            "the bounded route") -f $logName, $marker))
+            "the bounded route") -f $logName, $allRunsBundleMarker))
     }
     return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
 }
@@ -3114,7 +3121,7 @@ foreach ($name in $selected) {
             # cohort until it died past a 63.7 GB box at file ~310 (2026-09-10). At 3 files that
             # bundle is free, so the route is the only visible symptom.
             $m11Route = Test-LogMarker -LogPath $r11.Log `
-                -Marker 'publishes the survivor loader only' `
+                -Marker $firstPassFdrPerRunMarker `
                 -Description 'the pay-later fold took the bounded per-run survivor loader'
             $m11Route.Issues | ForEach-Object { $m11Issues.Add($_) }
             $m11NoBundle = Test-NoAllRunsBundle -LogPath $r11.Log

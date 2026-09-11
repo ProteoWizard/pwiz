@@ -775,16 +775,20 @@ namespace pwiz.Osprey.Tasks
         /// <para><b>Null where the bounded alternative does not exist</b>, which is the whole
         /// content of this guard. It first read <c>!CanHydratePerRun</c> as "an operator chose a
         /// resident route", and that predicate's false branch is half DISK STATE: no <c>-o</c>
-        /// blib to name the summary after, or a summary this build cannot read. Those runs
-        /// completed before the per-run loader existed and complete on master, so refusing them
-        /// is a regression - and the refusal names a remedy built FROM the very file whose
-        /// absence triggered it. <c>WarnPreCompactionPool</c> already records the disposition
-        /// for that shape: warn, because "every configuration that reaches here worked before
-        /// the bounded hydrate existed, so failing them would be a regression, not a guard".
-        /// What is left after the split is the route case - the loader is on disk and this run
-        /// declined it - which is the <c>--task ModelDiagnostics</c> defect this branch fixes
-        /// and is unreachable once it is fixed. That is the point: it fires only if a later
-        /// edit re-opens the arm, which is the one thing no gate at 3 files can see.</para>
+        /// blib to name the summary after, or a summary this build cannot read. This guard has
+        /// nothing to add there, on either load. Under a resident token master completes those
+        /// runs through the overlay, which needs no summary, so refusing them is a regression;
+        /// on the default lean load the streamed bundle needs the same summary and fails one
+        /// call later with its own error naming the producer, so refusing first only puts a
+        /// second, contradictory remedy above the real one - and this one named a remedy built
+        /// FROM the very file whose absence triggered it. <c>WarnPreCompactionPool</c> records
+        /// the disposition for the first shape: warn, because "every configuration that reaches
+        /// here worked before the bounded hydrate existed, so failing them would be a
+        /// regression, not a guard". What is left after the split is the route case - the
+        /// loader is on disk and this run declined it - which is the
+        /// <c>--task ModelDiagnostics</c> defect this branch fixes and is unreachable once it
+        /// is fixed. That is the point: it fires only if a later edit re-opens the arm, which
+        /// is the one thing no gate at 3 files can see.</para>
         /// </summary>
         internal static string AllRunsBundleGuardError(OspreyConfig config, string allowUnfixedResident)
         {
@@ -801,14 +805,14 @@ namespace pwiz.Osprey.Tasks
                 : string.Format(@" OSPREY_ALLOW_UNFIXED_RESIDENT is currently '{0}'; no token " +
                                 @"admits this path.", allowUnfixedResident);
             return string.Format(
-                @"This run is about to build the ALL-RUNS reconciliation bundle, which holds " +
-                @"every run's survivors at once and grows O(files x entries) - measured at " +
-                @"0.10 GB/file on a 446-run cohort, i.e. past a 63.7 GB box by file ~310. The " +
-                @"bounded alternative exists: the per-run survivor loader, built from the " +
-                @"analysis-wide retained base_id summary. Something that was streamed is " +
-                @"resident again - fix that rather than allowing it. OSPREY_ALLOW_UNFIXED_RESIDENT " +
-                @"cannot admit this path.{0}",
-                supplied);
+                @"This run is about to build the {0}, which holds every run's survivors at " +
+                @"once and grows O(files x entries) - measured at 0.10 GB/file on a 446-run " +
+                @"cohort, i.e. past a 63.7 GB box by file ~310. The bounded alternative " +
+                @"exists: the per-run survivor loader, built from the analysis-wide retained " +
+                @"base_id summary. Something that was streamed is resident again - fix that " +
+                @"rather than allowing it. OSPREY_ALLOW_UNFIXED_RESIDENT cannot admit this " +
+                @"path.{1}",
+                RescoreHydration.ALL_RUNS_BUNDLE_MARKER, supplied);
         }
 
         /// <summary>

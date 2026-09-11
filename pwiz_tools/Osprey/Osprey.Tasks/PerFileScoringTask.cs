@@ -1499,7 +1499,7 @@ namespace pwiz.Osprey.Tasks
                                 ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
                             FdrScoresSidecar.Pass.FirstPass),
                         retainedBaseIds,
-                        _sequencePool.Value), ctx);
+                        _sequencePool.Value, ctx.LogInfo), ctx);
                 if (_rescoreInputs == null)
                 {
                     hydrationFailed = true;
