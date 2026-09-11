@@ -2,8 +2,6 @@ package patches.buildTypes
 
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.BuildType
-import jetbrains.buildServer.configs.kotlin.buildSteps.DotnetVsTestStep
-import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetVsTest
 import jetbrains.buildServer.configs.kotlin.buildSteps.exec
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 import jetbrains.buildServer.configs.kotlin.failureConditions.BuildFailureOnMetric
@@ -30,17 +28,6 @@ create(DslContext.projectId, BuildType({
             id = "RUNNER_simpleRunner_139"
             path = "pwiz-sharp/tcbuild.bat"
             arguments = "--i-agree-to-the-vendor-licenses --automated --require-vendor-support"
-        }
-        dotnetVsTest {
-            name = "Test"
-            id = "Test"
-            enabled = false
-            assemblies = "**/bin/**Tests.dll"
-            version = DotnetVsTestStep.VSTestVersion.CrossPlatform
-            platform = DotnetVsTestStep.Platform.Auto
-            sdk = "8.0"
-            coverage = dotcover {
-            }
         }
         script {
             name = "Set PWIZ_VERSION variable"
