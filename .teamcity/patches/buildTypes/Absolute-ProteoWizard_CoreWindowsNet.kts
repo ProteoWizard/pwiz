@@ -2,9 +2,7 @@ package patches.buildTypes
 
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.BuildType
-import jetbrains.buildServer.configs.kotlin.buildSteps.DotnetMsBuildStep
 import jetbrains.buildServer.configs.kotlin.buildSteps.DotnetVsTestStep
-import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetMsBuild
 import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetVsTest
 import jetbrains.buildServer.configs.kotlin.buildSteps.exec
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
@@ -32,15 +30,6 @@ create(DslContext.projectId, BuildType({
             id = "RUNNER_simpleRunner_139"
             path = "pwiz-sharp/tcbuild.bat"
             arguments = "--i-agree-to-the-vendor-licenses --automated --require-vendor-support"
-        }
-        dotnetMsBuild {
-            id = "dotnet"
-            enabled = false
-            projects = "pwiz-sharp/Pwiz.sln"
-            version = DotnetMsBuildStep.MSBuildVersion.CrossPlatform
-            configuration = "Release"
-            args = "/p:IAgreeToVendorLicenses=true -p:TestTfmsInParallel=false"
-            sdk = "8.0"
         }
         dotnetVsTest {
             name = "Test"
