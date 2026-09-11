@@ -75,7 +75,13 @@ targets['SkylineWithTestConnected'] = \
         # code inspection from the net8 port PR (the net8 build runs inspection in-build).
         #"ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests" # depends on "bt209",
         #,"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
-        "bt209": "Skyline master and PRs (Windows x86_64)"
+        # bt209 was the last cpp/MSVC config still reachable on master. Commented out with the
+        # rest of them: this branch builds Skyline through pwiz_tools/Skyline/build.bat, so a
+        # cpp Skyline build here only reports a status for work the branch does not do.
+        # The native shims are unaffected - MobilionShim and MascotShim live under pwiz-sharp/
+        # and are built by their own csproj/CMake inside Core Windows .NET, not by any cpp
+        # config, and the pwiz-sharp/.* rule already covers their sources.
+        #"bt209": "Skyline master and PRs (Windows x86_64)"
     },
     'release':
     {
@@ -89,8 +95,15 @@ targets['Container'] = \
 {
     'master':
     {
+        # The net10 container. It takes the payload from this chain: snapshot + artifact
+        # dependencies on Core Windows .NET (ProteoWizard-WithVendorSdks-Setup*.exe) and
+        # Skyline Windows .NET (SkylineTester.zip), so it validates the artifacts this branch
+        # actually produces. Note the id here carries the ProteoWizard_ prefix while the cpp
+        # one below does not - both are as TeamCity has them, and smartBuildTrigger.py POSTs
+        # the key verbatim as <buildType id="...">.
+        "ProteoWizard_ProteoWizardAndSkylineDockerContainerNetWineX8664": "ProteoWizard and Skyline Docker container .NET (Wine x86_64)"
         # NET8-PORT TEMP (restore before merge): don't trigger the Wine x86_64 container during net8 iteration
-        #"ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"
+        #,"ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"
     },
     'release':
     {
@@ -143,13 +156,27 @@ matchPaths = [
     ("pwiz-sharp/pwiz/src/Vendor/Mobilion/MobilionShim/.*", merge(targets['NativeShims'], targets['CoreNet'])),
     # pwiz-sharp: standalone .NET 8 port. Builds run via `pwiz-sharp/build.bat`. Match this
     # before the generic libraries/scripts/.bat patterns below so changes under pwiz-sharp/
-    # don't trigger the cpp Core/Skyline/Bumbershoot/Container chain.
-    ("pwiz-sharp/.*", targets['CoreNet']),
+    # don't trigger the cpp Core/Skyline/Bumbershoot chain.
+    #
+    # Container IS included: the net10 container's payload is pwiz-sharp's own installer, so a
+    # pwiz-sharp change is exactly what needs validating there. Only the net10 container is in
+    # targets['Container']['master'], so this does not pull in the cpp one.
+    ("pwiz-sharp/.*", merge(targets['CoreNet'], targets['Container'])),
     ("libraries/.*", targets['All']),
     ("pwiz/.*", targets['All']),
+    # Vendor SDK archives are pwiz-sharp inputs as well as cpp ones: build/vendor-sdk-pins.json
+    # points VendorSdkLoader at the Agilent and ABI archives in here, so an archive swap changes
+    # what every .NET install resolves at run time. targets['All'] alone carries no .NET config,
+    # which would leave that untested; merged rather than replaced so the cpp chain still fires
+    # if it is ever uncommented.
+    ("pwiz_aux/msrc/utility/vendor_api_.*\\.7z", merge(targets['All'], targets['CoreNet'])),
     ("pwiz_aux/.*", targets['All']),
     ("scripts/wix/.*", targets['CoreWindows']),
     ("scripts/misc/tcbuild-native-shims.bat", targets['NativeShims']),
+    # The container's msconvert sweep, which nothing else runs or builds. Must stay above the
+    # generic scripts/ pattern: that one is targets['All'], so without this a shell-script edit
+    # rebuilds the whole cpp + Skyline + Bumbershoot chain to exercise one container step.
+    ("scripts/container/.*", targets['Container']),
     ("scripts/.*", targets['All']),
     ("pwiz_tools/BiblioSpec/.*", merge(targets['Core'], targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),

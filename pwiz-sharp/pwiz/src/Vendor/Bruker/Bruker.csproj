@@ -51,12 +51,13 @@
     <ProjectReference Include="..\..\Common\Common.csproj" />
     <ProjectReference Include="..\..\MsData\MsData.csproj" />
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
-    <!-- The only vendor reader that references Vendor.Common directly. Every other vendor SDK
-         arrives through VendorSdkLoader's assembly/native-library resolvers, which the hosting
-         application installs, so the reader never names the loader. CompassXtract fits neither
-         resolver - it is a registration-free COM server, so nothing the CLR or the native
-         loader resolves by name - and has to ask for its archive explicitly via
-         EnsureExtracted. Vendor.Common references only Util, so this adds no cycle. -->
+    <!-- One of two vendor readers that reference Vendor.Common directly (Sciex is the other).
+         Every other vendor SDK arrives through VendorSdkLoader's assembly/native-library
+         resolvers, which the hosting application installs, so the reader never names the
+         loader. CompassXtract fits neither resolver - it is a registration-free COM server, so
+         nothing the CLR or the native loader resolves by name - and has to ask for its archive
+         explicitly via EnsureExtracted. Vendor.Common references only Util, so this adds no
+         cycle. -->
     <ProjectReference Include="..\Common\Vendor.Common.csproj" />
   </ItemGroup>
 
