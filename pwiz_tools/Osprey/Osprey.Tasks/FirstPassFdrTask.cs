@@ -233,7 +233,7 @@ namespace pwiz.Osprey.Tasks
 
             // The analysis-wide retained base_id summary is deliberately NOT declared here,
             // unlike its experiment-sidecar sibling above. Declaring it would oblige
-            // WriteRetainedBaseIds to stamp it too, and until it has been stamped once,
+            // WriteRetainedBaseIdSummary to stamp it too, and until it has been stamped once,
             // OnlyDiagnosticsProductOutstanding reads every completed analysis on disk as owing
             // a first pass - so `--task ModelDiagnostics` on a finished 446-run cohort would
             // re-run Stage 1-5 for hours instead of folding the report in seconds, which is the
@@ -1118,7 +1118,9 @@ namespace pwiz.Osprey.Tasks
             // its report over the pre-compaction pool. A wrong report, silently, at MORE memory
             // than the route this arm replaced. Fail loudly instead. Routing the tokened case
             // to the overlay is the eventual answer; it waits on a gate that exercises a token.
-            int residentStubs = 0;
+            // 64-bit like the sibling sum in LoadOwnReconciliationBundle: at ~4.2 M stubs a run
+            // an int wraps negative past ~505 runs, and a negative count would pass this check.
+            long residentStubs = 0;
             foreach (var kvp in perFileEntries)
                 residentStubs += kvp.Value.Count;
             if (residentStubs > 0)

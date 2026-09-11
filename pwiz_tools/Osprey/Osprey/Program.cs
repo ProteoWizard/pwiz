@@ -359,8 +359,10 @@ namespace pwiz.Osprey
                         "It kept the RESIDENT Stage-7 join as an A/B byte-identity oracle for the " +
                         "streamed default; that A/B was banked (the resident arm matched the " +
                         "committed golden at 1e-9 and produced a byte-identical diagnostics " +
-                        "report), and the resident arm went with it. Stage 7 now folds one run at " +
-                        "a time on every route, so there is no second arm to select.");
+                        "report), and the switch went with it. Stage 7 streams by default and this " +
+                        "variable can no longer select the resident arm; the configurations that " +
+                        "still take it do so by their own declaration (see ResidentPaths), not " +
+                        "through this setting.");
                     return 1;
                 }
                 // A token that names nothing admits nothing, so the run proceeds - but say so

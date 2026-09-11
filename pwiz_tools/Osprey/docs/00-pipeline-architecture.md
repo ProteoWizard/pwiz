@@ -1126,9 +1126,10 @@ the text says so rather than describing the current shape as though it were the 
    2026-09-10 once its A/B was banked - the resident arm passed the whole regression against
    the committed golden at 1e-9 and produced a byte-identical diagnostics report - and
    `ResidentPaths.KNOWN_UNFIXED` shrank from 5 to 4 with it. Setting the name now fails at
-   startup. The streamed fold is the only arm the code can take, so "both arms produce
-   identical bytes" is history rather than a standing requirement, and the golden is what
-   answers "did streaming change results?" from here on.
+   startup. The streamed fold is the only arm an operator can select - the configurations
+   that still take the resident fold are named below and do so by their own declaration -
+   so "both arms produce identical bytes" is history rather than a standing requirement,
+   and the golden is what answers "did streaming change results?" from here on.
 
    Its removal was earned by first making it a real A/B, which it had not been.
    `CanStreamStage7Join` opened on `!config.ExpectReconciledInput`, a flag only

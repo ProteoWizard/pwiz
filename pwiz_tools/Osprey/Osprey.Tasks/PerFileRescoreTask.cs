@@ -483,7 +483,14 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
-            if (!didPlan && (noRescorePossible || allPass2Present))
+            // DiagnosticsOnly joins this arm whether or not FirstPassFDR planned: a plan it
+            // could execute is still not one it will (see willRescoreHere above), and with the
+            // incomplete-cohort abort already taken, everything left is a completed second pass
+            // to fold the report from. Without this term a diagnostics run whose first-pass
+            // ValidityKey had drifted (a changed OSPREY_* setting) planned, fell through to
+            // ExecuteRescore, and rewrote every reconciled parquet under a command documented
+            // to write nothing but the report.
+            if ((!didPlan || ctx.Config.DiagnosticsOnly) && (noRescorePossible || allPass2Present))
             {
                 // No rescore to run. The RESIDENT arm does nothing at all here - it leaves the
                 // buffer exactly as Stage 5 compacted it, and SecondPassFDR reloads the rescored

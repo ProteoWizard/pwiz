@@ -78,12 +78,13 @@ namespace pwiz.Osprey.IO
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'R', (byte)'E', (byte)'T' };
 
-        // BUMPING THIS OWES TWO MORE EDITS, because nothing in the resume machinery regenerates
-        // this file today: declare it in FirstPassFdrTask.Outputs, stamp it in
-        // WriteRetainedBaseIds, and add the version to that task's ValidityKey. Without them a
-        // field summary written by the old build is present but unreadable, the task reads as
-        // done, nothing rewrites it, and the resume falls to the all-runs reconciliation bundle
-        // - O(files x entries), with a warning as its only symptom.
+        // BUMPING THIS OWES THREE MORE EDITS, because nothing in the resume machinery
+        // regenerates this file today: declare it in FirstPassFdrTask.Outputs, stamp it in
+        // FirstPassFdrTask.WriteRetainedBaseIdSummary, and add the version to that task's
+        // ValidityKey. Without them a field summary written by the old build is present but
+        // unreadable, the task reads as done, nothing rewrites it, and the resume falls to the
+        // all-runs reconciliation bundle - O(files x entries), with a warning as its only
+        // symptom.
         //
         // Deliberately not carried ahead of a bump. Declaring an output that has never been
         // stamped makes every completed analysis on disk read as owing a first pass, so
