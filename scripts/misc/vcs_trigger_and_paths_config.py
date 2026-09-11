@@ -75,7 +75,13 @@ targets['SkylineWithTestConnected'] = \
         # code inspection from the net8 port PR (the net8 build runs inspection in-build).
         #"ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests" # depends on "bt209",
         #,"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
-        "bt209": "Skyline master and PRs (Windows x86_64)"
+        # bt209 was the last cpp/MSVC config still reachable on master. Commented out with the
+        # rest of them: this branch builds Skyline through pwiz_tools/Skyline/build.bat, so a
+        # cpp Skyline build here only reports a status for work the branch does not do.
+        # The native shims are unaffected - MobilionShim and MascotShim live under pwiz-sharp/
+        # and are built by their own csproj/CMake inside Core Windows .NET, not by any cpp
+        # config, and the pwiz-sharp/.* rule already covers their sources.
+        #"bt209": "Skyline master and PRs (Windows x86_64)"
     },
     'release':
     {
