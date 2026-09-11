@@ -75,85 +75,10 @@ create(DslContext.projectId, BuildType({
             name = "Run ProteoWizard tests"
             id = "RUNNER_337"
             path = "scripts/container/tctest.sh"
+            arguments = "--install-deps --teamcity"
             dockerImage = "chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64"
             dockerImagePlatform = ExecBuildStep.ImagePlatform.Linux
             dockerRunParameters = "--rm -e WINEDEBUG=-all"
-            param("script.content", """
-                #!/bin/bash
-                
-                #set -x
-                #set -v
-                
-                export DEBIAN_FRONTEND="noninteractive"
-                apt-get -qq update
-                apt-get -qq install bzip2 time
-                
-                declare -a arr=("ABI" "Agilent" "Bruker" "Mobilion" "Shimadzu" "Thermo" "UIMF" "Waters")
-                declare -a ext=(".d" ".lcd" ".mbi" ".raw" ".wiff" ".wiff2" ".uimf")
-                
-                TC=##teamcity
-                
-                echo " ${'$'}{TC}[testSuiteStarted name='ProteoWizard msconvert']"
-                
-                for i in "${'$'}{arr[@]}"; do
-                  pushd pwiz/data/vendor_readers/"${'$'}i"
-                  if [ -e Reader_"${'$'}i"_Test.data.tar.bz2 ]; then
-                    tar xkjf Reader_"${'$'}i"_Test.data.tar.bz2
-                  fi
-                  cd Reader_"${'$'}i"_Test.data
-                  for j in "${'$'}{ext[@]}"; do
-                    if ls *"${'$'}j" > /dev/null 2>&1; then
-                      for k in *"${'$'}j"; do
-                        TESTNAME="Convert ${'$'}k"
-                        echo " ${'$'}{TC}[testStarted name='${'$'}TESTNAME' captureStandardOutput='true']"
-                        fn=${'$'}(basename "${'$'}k" "${'$'}j")
-                        if ! [ -e "${'$'}k/Analysis.yep" ] && [ "${'$'}k" != "diaPASEF.d" ]; then
-                          if [ "${'$'}fn" == "swath.api" ]; then
-                            /usr/bin/time -f '%E' -o duration.log mywine msconvert -z "${'$'}k" --noindex -o "output/${'$'}fn" --outfile "swath.api-sample-centroid.mzML" --filter "peakPicking true 1-"
-                          else
-                            /usr/bin/time -f '%E' -o duration.log mywine msconvert -z "${'$'}k" --noindex -o "output/${'$'}fn"
-                          fi
-                        fi
-                        if [ -e "output/${'$'}fn/${'$'}fn.mzML" ]; then
-                          mywine msdiff -p 1e-5 "${'$'}fn.mzML" "output/${'$'}fn/${'$'}fn.mzML" > "output/${'$'}fn/${'$'}fn.diff"
-                        elif [ "${'$'}fn" == "swath.api.wiff2" ]; then
-                          mywine msdiff "${'$'}fn-sample-centroid.mzML" "output/${'$'}fn/${'$'}fn.mzML" > "output/${'$'}fn/${'$'}fn.diff"
-                        elif ( [ "${'$'}j" == ".wiff" ] || [ "${'$'}j" == ".wiff2" ] ); then
-                          for mzml in output/${'$'}fn/*.mzML; do
-                            refMzML=${'$'}(basename "${'$'}mzml")
-                            if [ -e "${'$'}refMzML" ]; then
-                              mywine msdiff "${'$'}refMzML" "${'$'}mzml" >> "output/${'$'}fn/${'$'}fn.diff"
-                            elif [ -e ${'$'}(basename "${'$'}mzml" .mzML)-centroid.mzML ]; then
-                              mywine msdiff ${'$'}(basename "${'$'}mzml" .mzML)-centroid.mzML "${'$'}mzml" >> "output/${'$'}fn/${'$'}fn.diff"
-                            fi
-                          done
-                        elif ( [ "${'$'}k" == "diaPASEF.d" ] ); then
-                          echo " Skipping diaPASEF test because it is not tested in non-filtered mode (diaPASEF.mzML)."
-                        else
-                          #cat "output/${'$'}fn/${'$'}k.log"
-                          echo " ${'$'}{TC}[testFailed name='${'$'}TESTNAME' message='Expected output file |'output/${'$'}fn/${'$'}fn.mzML|' does not exist.']"
-                        fi
-                
-                        diffFile="output/${'$'}fn/${'$'}fn.diff"
-                        if [ -e "${'$'}diffFile" ]; then
-                          if grep -q "0 spectra" "${'$'}diffFile" && \
-                            grep -q "0 chromatograms" "${'$'}diffFile"; then
-                            duration=${'$'}(<duration.log)
-                            rm "output/${'$'}fn/${'$'}fn.diff"
-                          else
-                            #cat "output/${'$'}fn/${'$'}k.log"
-                            echo " ${'$'}{TC}[testFailed name='${'$'}TESTNAME']"
-                          fi
-                        fi
-                
-                        echo " ${'$'}{TC}[testFinished name='${'$'}TESTNAME' duration='${'$'}duration']"
-                      done
-                    fi
-                  done
-                  popd
-                done
-                echo " ${'$'}{TC}[testSuiteFinished name='ProteoWizard msconvert']"
-            """.trimIndent())
         }
         script {
             name = "Run Skyline tests"
