@@ -5,7 +5,6 @@ import jetbrains.buildServer.configs.kotlin.BuildType
 import jetbrains.buildServer.configs.kotlin.buildSteps.DotnetMsBuildStep
 import jetbrains.buildServer.configs.kotlin.buildSteps.DotnetVsTestStep
 import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetMsBuild
-import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetRestore
 import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetVsTest
 import jetbrains.buildServer.configs.kotlin.buildSteps.exec
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
@@ -33,14 +32,6 @@ create(DslContext.projectId, BuildType({
             id = "RUNNER_simpleRunner_139"
             path = "pwiz-sharp/tcbuild.bat"
             arguments = "--i-agree-to-the-vendor-licenses --automated --require-vendor-support"
-        }
-        dotnetRestore {
-            name = "Restore"
-            id = "dotnet_1"
-            enabled = false
-            projects = "pwiz-sharp/Pwiz.sln"
-            args = "/p:IAgreeToVendorLicenses=true"
-            sdk = "8.0"
         }
         dotnetMsBuild {
             id = "dotnet"
