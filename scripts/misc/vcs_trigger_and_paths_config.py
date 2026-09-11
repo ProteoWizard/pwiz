@@ -59,8 +59,16 @@ targets['Container'] = \
 
 targets['OspreyWindowsNet'] = {'master': {"ProteoWizard_OspreyWindowsNet": "Osprey Windows .NET"}}
 
-targets['All'] = merge(targets['CoreNet'], targets['SkylineWithTestConnected'], targets['OspreyWindowsNet'], targets['Container'])
-targets['Windows'] = merge(targets['CoreWindowsNet'], targets['SkylineWithTestConnected'], targets['OspreyWindowsNet'], targets['Container'])
+# MascotShim.dll / MobilionShim.dll / Hardklor.exe are native Windows binaries COMPILED during
+# the build rather than vendored, and the first two link vendor DLLs that export C++ classes
+# returning MSVC STL types by value - so they cannot be cross-compiled, and a Linux/Wine
+# container cannot produce them. This config builds them once and publishes them as artifacts;
+# see scripts/misc/tcbuild-native-shims.bat. Config id must match .teamcity/settings.kts, which
+# is what smartBuildTrigger POSTs to the build queue.
+targets['NativeShims'] = {'master': {"ProteoWizard_VersionedConfigs_NativeShimsWindows": "Native shims (Windows x86_64)"}}
+
+targets['All'] = merge(targets['CoreNet'], targets['SkylineWithTestConnected'], targets['OspreyWindowsNet'], targets['Container'])
+targets['Windows'] = merge(targets['CoreWindowsNet'], targets['SkylineWithTestConnected'], targets['OspreyWindowsNet'], targets['Container'])
 targets['Linux'] = targets['CoreLinuxNet']
 
 # Patterns are processed in order. If a path matches multiple patterns, only the first pattern will trigger. For example,
@@ -70,17 +78,26 @@ matchPaths = [
     (".*/smartBuildTrigger.py", {}),
     (".*/vcs_trigger_and_paths_config.py", {}),
     (".*/ai/.*", {}),
-    # pwiz library: pwiz/src + pwiz/test + the data fixtures beside them. Skyline consumes the
-    # library through ProjectReferences, but (as before the hoist) library-only edits trigger
-    # only the Core builds; the Skyline run happens on the next Skyline-side change.
-    ("pwiz/.*", targets['CoreNet']),
-    # MSBuild targets shared by pwiz and Skyline (PwizVersion, ExtractTestData, vendor SDK pins).
-    ("build/.*", merge(targets['CoreNet'], targets['Skyline'])),
-    ("vendor-archives/.*", targets['CoreNet']),
-    # 7za/bsdtar/msparser/zlib/expat: used by the pwiz build and by Skyline's Hardklor build.
-    ("libraries/.*", merge(targets['CoreNet'], targets['Skyline'])),
-    ("examples/.*", targets['CoreNet']),
-    ("example_data/.*", targets['CoreNet']),
+    # Native shims: these three dirs hold C++ that only a Windows agent with the VC++ toolchain
+    # can build, so they get their own config. Each entry ALSO triggers the config that actually
+    # tests the result, so a shim change still runs BiblioSpec's Mascot tests / Mobilion.Tests /
+    # Skyline's Hardklor-Bullseye tests rather than only producing a binary nobody exercised.
+    # These must stay ABOVE the broader pwiz/ and pwiz_tools/ patterns below: first match wins,
+    # so a later-but-broader pattern would swallow them.
+    ("pwiz_tools/BiblioSpec/native/MascotShim/.*", merge(targets['NativeShims'], targets['CoreNet'])),
+    ("pwiz/data/vendor_readers/Mobilion/MobilionShim/.*", merge(targets['NativeShims'], targets['CoreNet'])),
+    ("scripts/misc/tcbuild-native-shims.bat", targets['NativeShims']),
+    # pwiz library: pwiz/src + pwiz/test + the data fixtures beside them. Skyline consumes the
+    # library through ProjectReferences, but (as before the hoist) library-only edits trigger
+    # only the Core builds; the Skyline run happens on the next Skyline-side change.
+    ("pwiz/.*", targets['CoreNet']),
+    # MSBuild targets shared by pwiz and Skyline (PwizVersion, ExtractTestData, vendor SDK pins).
+    ("build/.*", merge(targets['CoreNet'], targets['Skyline'])),
+    ("vendor-archives/.*", targets['CoreNet']),
+    # 7za/bsdtar/msparser/zlib/expat: used by the pwiz build and by Skyline's Hardklor build.
+    ("libraries/.*", merge(targets['CoreNet'], targets['Skyline'])),
+    ("examples/.*", targets['CoreNet']),
+    ("example_data/.*", targets['CoreNet']),
     ("scripts/installer/.*", targets['CoreNet']),
     ("scripts/.*", targets['All']),
     ("Pwiz.sln", targets['CoreNet']),
@@ -99,6 +116,7 @@ matchPaths = [
     ("pwiz_tools/Skyline/.*Unifi.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*WatersConnect.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*DataSource.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
+    ("pwiz_tools/Skyline/Executables/Hardklor/.*", merge(targets['NativeShims'], targets['Skyline'])),
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Shared/CommonMsData/RemoteApi/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     # pwiz compiles Shared/zedgraph + Shared/MSGraph in place and links Shared/Lib binaries.

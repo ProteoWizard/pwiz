@@ -1,6 +1,7 @@
 /*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2013 University of Washington - Seattle, WA
  * 
@@ -496,7 +497,9 @@ namespace SkylineTester
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                // A .skytr auto-run starts just below, so a modal here blocks the whole pass
+                // before it begins, with nobody to dismiss it.
+                ReportOrShow(ex.Message);
             }
 
             if (_openFile != null && Path.GetExtension(_openFile) == ".skytr")
@@ -614,8 +617,7 @@ namespace SkylineTester
                 foreach (var dir in searched)
                     message.AppendLine("    " + dir);
             }
-            MessageBox.Show(this, message.ToString(), "SkylineTester",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            ReportOrShow(message.ToString());
         }
 
         public IEnumerable<TestInfo> GetTestInfos(string testDll, string filterAttribute = null, string filterName = null)
@@ -687,6 +689,44 @@ namespace SkylineTester
         }
 
         #endregion
+
+        /// <summary>
+        /// True when there is no one at the keyboard to answer a dialog.
+        /// <para>Covers the unattended entry points: SkylineNightly launching this program on a
+        /// .skytr, --autorun, and running as a child of SkylineNightly at all. A modal on any of
+        /// them blocks the pass until someone
+        /// dismisses it, which is why a nightly that found no tests presented as an eight-minute
+        /// hang rather than as a message anyone could read. Report to the run log instead of
+        /// prompting whenever this is true.</para>
+        /// </summary>
+        private bool IsUnattended
+        {
+            get
+            {
+                // Deliberately NOT commandShell.IsUnattended: TabBuild latches that true on any
+                // nuke build and nothing ever resets it, so keying off it made an attended
+                // developer lose every dialog below for the rest of the session. It is also not
+                // set by the run-again timer or the restart-after-failure paths, so it never
+                // covered what it appeared to.
+                return _autoRun ||
+                       (_openFile != null &&
+                        Equals(Path.GetExtension(_openFile), ".skytr")) ||
+                       IsNightlyRun();
+            }
+        }
+
+        /// <summary>
+        /// Shows <paramref name="message"/>, or writes it to the run log when nobody is there to
+        /// dismiss it. The caller decides what to do next either way: this reports, it does not
+        /// choose.
+        /// </summary>
+        public void ReportOrShow(string message)
+        {
+            if (IsUnattended)
+                commandShell.AddImmediate("# {0}", message.Replace(Environment.NewLine, " "));
+            else
+                MessageBox.Show(this, message, "SkylineTester", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
 
         private static bool IsNightlyRun()
         {
@@ -840,9 +880,16 @@ namespace SkylineTester
             // net8 tests run from a *staged* directory assembled by Stage-Tests.ps1 that
             // co-locates TestRunner.exe, the test DLLs, and Skyline-daily (the net8 analogue of the
             // net472 single bin\x64\Release, which no longer exists because projects build to
-            // per-project bin\...\net8.0-windows dirs). net8 is x64-only, so only the 64-bit "bin"
-            // slot is populated with the most recent staging*\Release build in the checkout;
-            // the other slots are unused (hidden).
+            // per-project bin\...\net8.0-windows dirs). net8 is x64-only, so only the 64-bit
+            // slots are populated: the two "bin" slots from the most recent
+            // staging*\<Config> build in the developer's checkout, and the Nightly slot from
+            // the checkout a nightly just cloned and built. The zip slots are unused (hidden).
+            // BOTH Nightly slots get that one directory, because the nightly build produces only
+            // an x64 staging dir but the UI still offers a 32-bit choice: nightlyBuildType's
+            // designer default is "32 bit", TabNightly.Enter forces index 0 when it is unset, and
+            // StartNightly then selects nightly32. Leaving that slot null reproduced the very bug
+            // this fixes for the DEFAULT selection - a .skytr saying nightlyBuildType=1 was all
+            // that hid it.
             // Offer BOTH staged configurations. Only one used to be listed, so a developer could
             // not run the other without rebuilding this program - and while Release was picked
             // unconditionally, that silently ran stale Release binaries against a fresh Debug build.
@@ -854,10 +901,10 @@ namespace SkylineTester
                 GetNet8StagingDir(preferred),     // bin (64 bit)   - staged, this build's configuration
                 null,                             // Build (32 bit)
                 GetNet8StagingDir(other),         // Build (64 bit) - staged, the other configuration
-                null,          // Nightly (32 bit)
-                null,          // Nightly (64 bit)
-                null,          // zip (32 bit)
-                null,          // zip (64 bit)
+                GetNightlyStagingDir(),           // Nightly (32 bit) - same dir; see below
+                GetNightlyStagingDir(),           // Nightly (64 bit) - staged, in the nightly checkout
+                null,                             // zip (32 bit)
+                null,                             // zip (64 bit)
             };
         }
 
@@ -941,15 +988,73 @@ namespace SkylineTester
         }
 
         /// <summary>
-        /// The configuration this program was built as, taken from its own location
-        /// (...\SkylineTester\bin\&lt;Config&gt;\&lt;tfm&gt;) rather than from conditional compilation,
-        /// so one rule covers however it was built. Defaults to Debug when the layout is not
-        /// recognized, which is the configuration a developer iterating in the IDE is running.
+        /// Where a nightly run's tests live: the staged directory inside the checkout the nightly
+        /// just cloned and built.
+        /// <para>Named whether or not it exists yet, which is the point of it. This slot is read
+        /// when the test step is QUEUED, and that happens before the build has run, so requiring
+        /// the directory to exist would leave the slot null forever - which is what left a nightly
+        /// building successfully and then running no tests at all. By the time it is used it does
+        /// exist, twice over: the nightly build stages into exactly this directory (--no-tests
+        /// skips only the test RUN), and <see cref="AddTestRunner"/> re-stages before running.</para>
+        /// <para>Derived from the nightly build root rather than from <see cref="SkylineDirectory"/>
+        /// like the developer slots, because a nightly runs this program from the unzipped distro,
+        /// which is outside any checkout - SkylineDirectory() is null there. It must NOT fall back
+        /// to the distro: its "SkylineTester Files" folder holds a complete set of test DLLs from
+        /// TeamCity's build of the same branch, so tests would run and pass while saying nothing
+        /// about the checkout that was just built.</para>
+        /// </summary>
+        private string GetNightlyStagingDir()
+        {
+            // GetNightlyBuildRoot reads Control.Text, which reaches the window handle and is not
+            // legal off the UI thread - and the test-tree load reaches this from a BackgroundWorker
+            // (BackgroundLoad -> FindTestAssembly -> GetSelectedBuildDir). Every slot used to
+            // resolve from ExeDir and touched no controls, so this path is new. The nightly always
+            // asks on the UI thread (TabNightly.Run -> AddTestRunner), and at startup the staged
+            // directory does not exist yet anyway, so answering null off-thread costs nothing and
+            // keeps the listing from throwing wherever cross-thread checking is on.
+            if (InvokeRequired)
+                return null;
+            var skylineDir = Path.Combine(GetNightlyBuildRoot(), @"pwiz\pwiz_tools\Skyline");
+            return Path.Combine(skylineDir, "bin", TestStager.STAGING_ROOT, TabBuild.BUILD_CONFIGURATION);
+        }
+
+        /// <summary>
+        /// The configuration this program is running as, taken from its own location rather than
+        /// from conditional compilation, so one rule covers however it was built.
+        /// <para>The configuration sits at a different depth in each of the three layouts this
+        /// program runs from: a build output nests the target framework under it
+        /// (...\bin\[x64\]&lt;Config&gt;\&lt;tfm&gt;), the staged directory simply IS it
+        /// (...\bin\staging*\&lt;Config&gt;), and the unzipped nightly distro does not contain it at
+        /// all, being outside any checkout.</para>
+        /// <para>Those two are the ONLY shapes a run from inside a checkout takes, so anything
+        /// else is the unzipped distro, which is built as
+        /// <see cref="TabBuild.BUILD_CONFIGURATION"/> and only ever tests what a nightly built.</para>
+        /// <para>Reading only the parent folder answered "Debug" for both the staged and the distro
+        /// case. That is how a nightly which had just built Release came to report "Build the
+        /// solution in Debug", and how a Release staged run described itself as Debug. Do NOT
+        /// reintroduce a Debug fallback keyed on being outside a checkout:
+        /// <see cref="SkylineDirectory"/> matches any ancestor named "Skyline", so a nightly rooted
+        /// under one - D:\Skyline\Nightly\... - would silently answer Debug all over again.</para>
         /// </summary>
         private string PreferredConfiguration()
         {
-            var config = Path.GetFileName(Path.GetDirectoryName(ExeDir) ?? string.Empty);
-            return Equals(config, "Release") ? "Release" : "Debug";
+            return AsConfigurationName(Path.GetFileName(ExeDir)) ??
+                   AsConfigurationName(Path.GetFileName(Path.GetDirectoryName(ExeDir) ?? string.Empty)) ??
+                   TabBuild.BUILD_CONFIGURATION;
+        }
+
+        /// <summary>
+        /// The canonical spelling of a build configuration folder name, or null when the name is
+        /// not one. Returns the canonical form rather than what was on disk so that callers which
+        /// compare configurations by value keep working whatever case the folder carries.
+        /// </summary>
+        private static string AsConfigurationName(string name)
+        {
+            if (string.Equals(name, "Release", StringComparison.OrdinalIgnoreCase))
+                return "Release";
+            if (string.Equals(name, "Debug", StringComparison.OrdinalIgnoreCase))
+                return "Debug";
+            return null;
         }
 #endif
 
@@ -1029,7 +1134,7 @@ namespace SkylineTester
             var stagerExe = FindStagerExe(skylineDir, configuration);
             if (stagerExe == null)
             {
-                MessageBox.Show(this, string.Join(Environment.NewLine,
+                ReportOrShow(string.Join(Environment.NewLine,
                     "Tests run from a staged directory, assembled by TestRunner.",
                     "It was not found, so the tests would run whatever was staged last rather than",
                     "what you just built.",

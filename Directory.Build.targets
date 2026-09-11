@@ -1,5 +1,8 @@
 <Project>
 
+  <!-- Post-build assertion that the native payload matches the target platform. -->
+  <Import Project="$(MSBuildThisFileDirectory)pwiz_tools\Shared\Lib\PwizTargetPlatform.targets" />
+
   <!-- git-commit-date -> version pieces (Jam-free generate-version replacement). -->
   <Import Project="$(MSBuildThisFileDirectory)build\PwizVersion.targets" />
 
