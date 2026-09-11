@@ -17,4 +17,4 @@
 # Fixtures copied verbatim out of the cpp tests are reference data, not source: the whole point
 # is that they are the same bytes pwiz C++ parses, so line endings must survive a checkout
 # unchanged on every platform.
-pwiz-sharp/pwiz/test/**/TestData/** -text
+pwiz/**/test/TestData/** -text

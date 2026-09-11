@@ -22,7 +22,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     partial class TreeViewForm
     {

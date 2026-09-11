@@ -162,19 +162,12 @@ namespace CustomDataSourceDialog
             // 
             // FolderListIcons
             // 
-            this.FolderListIcons.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("FolderListIcons.ImageStream")));
+            this.FolderListIcons.ImageSize = new System.Drawing.Size(16, 16);
+            this.FolderListIcons.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
             this.FolderListIcons.TransparentColor = System.Drawing.Color.Transparent;
-            this.FolderListIcons.Images.SetKeyName(0, "RecentDocuments.png");
-            this.FolderListIcons.Images.SetKeyName(1, "Desktop.png");
-            this.FolderListIcons.Images.SetKeyName(2, "MyDocuments.png");
-            this.FolderListIcons.Images.SetKeyName(3, "MyComputer.png");
-            this.FolderListIcons.Images.SetKeyName(4, "MyNetworkPlaces.png");
-            this.FolderListIcons.Images.SetKeyName(5, "LocalDrive.png");
-            this.FolderListIcons.Images.SetKeyName(6, "OpticalDrive.png");
-            this.FolderListIcons.Images.SetKeyName(7, "NetworkDrive.png");
-            this.FolderListIcons.Images.SetKeyName(8, "folder.png");
-            this.FolderListIcons.Images.SetKeyName(9, "DataProcessingFolder.png");
-            this.FolderListIcons.Images.SetKeyName(10, "DataProcessing.png");
+            // Populate from individual embedded PNG resources rather than a
+            // BinaryFormatter-serialized ImageListStreamer blob (MSB3825).
+            FolderListIcons_Load();
             // 
             // SearchBox
             // 

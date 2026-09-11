@@ -1,69 +1,37 @@
-
 targets = {}
-targets['CoreWindowsRelease'] = \
-{
-    'master':
-    {
-        # NET8-PORT TEMP (restore before merge): don't trigger the cpp Core x86_64
-        # builds during net8 iteration; they fan out from any pwiz_tools/ edit via All.
-        #"bt83": "Core Windows x86_64"
-        #,"bt36": "Core Windows x86"
-        #,"bt143": "Core Windows x86_64 (no vendor DLLs)"
-    },
-    'release':
-    {
-        # bt83 will be triggered by ProteoWizard_ProteoWizardAndSkylineReleaseBranchDockerContainerWineX8664
-    }
-}
-#targets['CoreWindowsDebug'] = \
-#{
-#    "bt84": "Core Windows x86_64 debug"
-#    ,"bt75": "Core Windows debug"
-#}
-#targets['CoreWindows'] = merge(targets['CoreWindowsRelease'], targets['CoreWindowsDebug'])
-targets['CoreWindows'] = targets['CoreWindowsRelease']
-# NET8-PORT TEMP (restore before merge): don't trigger cpp Core Linux x86_64 during net8 iteration
-#targets['CoreLinux'] = {'master': {"bt17": "Core Linux x86_64"}}
-targets['CoreLinux'] = {'master': {}}
 
-# pwiz-sharp is the .NET 8 C# port; the corresponding TeamCity builds run
-# `pwiz-sharp/build.bat` on Windows and `pwiz-sharp/build.sh` on Linux (dotnet restore +
-# build + test). Independent from the cpp build configs above — only files under
-# pwiz-sharp/ should trigger them.
+# Retired C++ build configurations. The C++ tree lives in ProteoWizard/pwiz-cpp now and these
+# configurations build from that repo; nothing in this repo may trigger them. Kept here,
+# commented out, so the ids stay findable when the TeamCity side is re-pointed.
+#targets['CoreWindows'] = {'master': {"bt83": "Core Windows x86_64", "bt36": "Core Windows x86", "bt143": "Core Windows x86_64 (no vendor DLLs)"}}
+#targets['CoreWindowsDebug'] = {'master': {"bt84": "Core Windows x86_64 debug", "bt75": "Core Windows debug"}}
+#targets['CoreLinux'] = {'master': {"bt17": "Core Linux x86_64"}}
+#targets['SkylineRelease'] = {'master': {"bt209": "Skyline master and PRs (Windows x86_64)",
+#                                        "ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection",
+#                                        "ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests"},
+#                             'release': {"ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86_64",
+#                                         "ProteoWizard_SkylineReleaseBranchCodeInspection": "Skyline release code inspection",
+#                                         "ProteoWizard_SkylineReleaseTestConnectedTests": "Skyline release TestConnected tests"}}
+#targets['SkylineDebug'] = {'master': {"bt210": "Skyline master and PRs (Windows x86_64 debug)"}}
+#targets['ContainerWine'] = {'master': {"ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"},
+#                            'release': {"ProteoWizard_ProteoWizardAndSkylineReleaseBranchDockerContainerWineX8664": "ProteoWizard and Skyline (release branch) Docker container (Wine x86_64)"}}
+#targets['Bumbershoot'] = {'master': {"Bumbershoot_Windows_X86_64": "Bumbershoot Windows x86_64",
+#                                     "ProteoWizard_Bumbershoot_Windows_X86": "Bumbershoot Windows x86",
+#                                     "ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}}
+
+# The pwiz library + tools (Pwiz.sln, built by build.bat on Windows and build.sh on Linux:
+# dotnet restore + build + test). Both platforms build the same C# sources from the same
+# tree, so any change that warrants a Windows .NET build warrants the Linux one too —
+# otherwise a cross-platform regression (a hardcoded 7za.exe, a backslash path, a
+# Windows-only vendor reference) only surfaces on the next unrelated Linux trigger.
 targets['CoreWindowsNet'] = {'master': {"ProteoWizard_CoreWindowsNet": "Core Windows .NET"}}
 targets['CoreLinuxNet'] = {'master': {"ProteoWizard_CoreLinuxNet": "Core Linux .NET"}}
-# Both platforms build the same C# sources from the same tree, so any change that warrants a
-# Windows .NET build warrants the Linux one too — otherwise a cross-platform regression (a
-# hardcoded 7za.exe, a backslash path, a Windows-only vendor reference) only surfaces on the
-# next unrelated Linux trigger.
 targets['CoreNet'] = merge(targets['CoreWindowsNet'], targets['CoreLinuxNet'])
 
-targets['SkylineRelease'] = \
-{
-    'master':
-    {
-        "ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
-        ,"bt209": "Skyline master and PRs (Windows x86_64)"
-        #,"bt19": "Skyline master and PRs (Windows x86)"
-    },
-    'release':
-    {
-        "ProteoWizard_SkylineReleaseBranchCodeInspection": "Skyline release code inspection" # depends on "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional",
-        ,"ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86_64"
-        #,"ProteoWizard_WindowsX86SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86"
-    }
-}
-
-#targets['SkylineDebug'] = \
-#{
-#    "bt210": "Skyline master and PRs (Windows x86_64 debug)"
-#    ,"bt87": "Skyline master and PRs (Windows x86 debug)"
-#}
-#targets['Skyline'] = merge(targets['SkylineRelease'], targets['SkylineDebug'])
-
-# On the .NET 8 port branch, Skyline builds and tests run via pwiz_tools/Skyline/build.bat
-# (dotnet restore + build + test; CodeInspection now runs inside Test.csproj), not the old
-# cpp/MSVC "bt209" config. Point plain Skyline triggers at the net8 build config instead.
+# Skyline builds and tests run via pwiz_tools/Skyline/build.bat (dotnet build + TestRunner;
+# CodeInspection runs inside Test.csproj). Skyline release branches that predate the .NET
+# port (skyline_26_1 and older) live in ProteoWizard/pwiz-cpp, so there is no 'release'
+# target here yet: add one when the first .NET-based release branch is cut.
 targets['SkylineWindowsNet'] = {'master': {"ProteoWizard_SkylineWindowsNet": "Skyline Windows .NET"}}
 targets['Skyline'] = targets['SkylineWindowsNet']
 
@@ -71,17 +39,11 @@ targets['SkylineWithTestConnected'] = \
 {
     'master':
     {
-        # NET8-PORT TEMP (restore before merge): don't trigger TestConnected or Skyline
-        # code inspection from the net8 port PR (the net8 build runs inspection in-build).
-        #"ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests" # depends on "bt209",
-        #,"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
-        "bt209": "Skyline master and PRs (Windows x86_64)"
-    },
-    'release':
-    {
-        "ProteoWizard_SkylineReleaseTestConnectedTests": "Skyline release TestConnected tests" # depends on "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional",
-        ,"ProteoWizard_SkylineReleaseBranchCodeInspection": "Skyline release code inspection" # depends on "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional",
-        ,"ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86_64"
+        # TestConnected tests still run through the retired cpp/MSVC chain
+        # (ProteoWizard_SkylineMasterAndPRsTestConnectedTests depends on bt209); re-enable
+        # once a .NET TestConnected config exists.
+        #"ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests"
+        "ProteoWizard_SkylineWindowsNet": "Skyline Windows .NET"
     }
 }
 
@@ -89,53 +51,47 @@ targets['Container'] = \
 {
     'master':
     {
-        # NET8-PORT TEMP (restore before merge): don't trigger the Wine x86_64 container during net8 iteration
-        #"ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"
-    },
-    'release':
-    {
-        "ProteoWizard_ProteoWizardAndSkylineReleaseBranchDockerContainerWineX8664": "ProteoWizard and Skyline (release branch) Docker container (Wine x86_64)"
+        # The Wine container is built from the .NET msconvert/Skyline now; enable once the
+        # config is green on master.
+        #"ProteoWizard_ProteoWizardAndSkylineDockerContainerNetWineX8664": "ProteoWizard and Skyline Docker container .NET (Wine x86_64)"
     }
 }
 
 targets['OspreyWindowsNet'] = {'master': {"ProteoWizard_OspreyWindowsNet": "Osprey Windows .NET"}}
 
-targets['BumbershootRelease'] = \
-{
-    'master':
-    {
-        # NET8-PORT TEMP (restore before merge): don't trigger Bumbershoot from the net8 port PR
-        #"Bumbershoot_Windows_X86_64": "Bumbershoot Windows x86_64"
-        #,"ProteoWizard_Bumbershoot_Windows_X86": "Bumbershoot Windows x86"
-    }
-}
-# NET8-PORT TEMP (restore before merge): don't trigger Bumbershoot from the net8 port PR
-#targets['BumbershootLinux'] = {'master': {"ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}}
-targets['BumbershootLinux'] = {'master': {}}
-targets['Bumbershoot'] = merge(targets['BumbershootRelease'], targets['BumbershootLinux'])
-
-targets['Core'] = merge(targets['CoreWindows'], targets['CoreLinux'])
-targets['All'] = merge(targets['Core'], targets['SkylineWithTestConnected'], targets['Bumbershoot'], targets['Container'])
-targets['Windows'] = merge(targets['CoreWindows'], targets['SkylineWithTestConnected'], targets['BumbershootRelease'], targets['Container'])
-targets['Linux'] = merge(targets['CoreLinux'], targets['BumbershootLinux'])
+targets['All'] = merge(targets['CoreNet'], targets['SkylineWithTestConnected'], targets['OspreyWindowsNet'], targets['Container'])
+targets['Windows'] = merge(targets['CoreWindowsNet'], targets['SkylineWithTestConnected'], targets['OspreyWindowsNet'], targets['Container'])
+targets['Linux'] = targets['CoreLinuxNet']
 
 # Patterns are processed in order. If a path matches multiple patterns, only the first pattern will trigger. For example,
-# "pwiz_tools/Bumbershoot/Jamfile.jam" matches both "pwiz_tools/Bumbershoot/.*" and "pwiz_tools/.*", but will only trigger "Bumbershoot" targets
+# "pwiz_tools/BiblioSpec/src/BlibBuild/BlibBuild.csproj" matches both "pwiz_tools/BiblioSpec/.*" and "pwiz_tools/.*", but
+# will only trigger the "pwiz_tools/BiblioSpec/.*" targets.
 matchPaths = [
     (".*/smartBuildTrigger.py", {}),
     (".*/vcs_trigger_and_paths_config.py", {}),
     (".*/ai/.*", {}),
-    # pwiz-sharp: standalone .NET 8 port. Builds run via `pwiz-sharp/build.bat`. Match this
-    # before the generic libraries/scripts/.bat patterns below so changes under pwiz-sharp/
-    # don't trigger the cpp Core/Skyline/Bumbershoot/Container chain.
-    ("pwiz-sharp/.*", targets['CoreNet']),
-    ("libraries/.*", targets['All']),
-    ("pwiz/.*", targets['All']),
-    ("pwiz_aux/.*", targets['All']),
-    ("scripts/wix/.*", targets['CoreWindows']),
+    # pwiz library: pwiz/src + pwiz/test + the data fixtures beside them. Skyline consumes the
+    # library through ProjectReferences, but (as before the hoist) library-only edits trigger
+    # only the Core builds; the Skyline run happens on the next Skyline-side change.
+    ("pwiz/.*", targets['CoreNet']),
+    # MSBuild targets shared by pwiz and Skyline (PwizVersion, ExtractTestData, vendor SDK pins).
+    ("build/.*", merge(targets['CoreNet'], targets['Skyline'])),
+    ("vendor-archives/.*", targets['CoreNet']),
+    # 7za/bsdtar/msparser/zlib/expat: used by the pwiz build and by Skyline's Hardklor build.
+    ("libraries/.*", merge(targets['CoreNet'], targets['Skyline'])),
+    ("examples/.*", targets['CoreNet']),
+    ("example_data/.*", targets['CoreNet']),
+    ("scripts/installer/.*", targets['CoreNet']),
     ("scripts/.*", targets['All']),
-    ("pwiz_tools/BiblioSpec/.*", merge(targets['Core'], targets['Skyline'], targets['Container'])),
-    ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),
+    ("Pwiz.sln", targets['CoreNet']),
+    ("Directory.Build.*", targets['CoreNet']),
+    ("global.json", targets['All']),
+    # pwiz tools that Skyline bundles (BlibBuild/BlibFilter, msconvert, bullseye-sharp).
+    ("pwiz_tools/BiblioSpec/.*", merge(targets['CoreNet'], targets['Skyline'], targets['Container'])),
+    ("pwiz_tools/Commandline/.*", merge(targets['CoreNet'], targets['Skyline'], targets['Container'])),
+    ("pwiz_tools/BullseyeSharp/.*", merge(targets['CoreNet'], targets['Skyline'])),
+    ("pwiz_tools/MSConvertGUI/.*", targets['CoreNet']),
+    ("pwiz_tools/SeeMS/.*", targets['CoreNet']),
     ("pwiz_tools/Skyline/TestConnected/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*Ardia.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*Koina.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
@@ -145,11 +101,10 @@ matchPaths = [
     ("pwiz_tools/Skyline/.*DataSource.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Shared/CommonMsData/RemoteApi/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
-    ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'], targets['Container'])),
+    # pwiz compiles Shared/zedgraph + Shared/MSGraph in place and links Shared/Lib binaries.
+    ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['CoreNet'], targets['Container'])),
     ("pwiz_tools/Osprey/.*", targets['OspreyWindowsNet']),
     ("pwiz_tools/.*", targets['All']),
-    ("Jamroot.jam", targets['All']),
     (".*\\.bat", targets['Windows']),
     (".*\\.sh", targets['Linux'])
 ]
-

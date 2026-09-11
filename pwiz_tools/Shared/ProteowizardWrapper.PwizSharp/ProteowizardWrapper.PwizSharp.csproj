@@ -11,10 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\MsData\MsData.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Util\Util.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Common\Common.csproj" />
-    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\data\msdata\MsData.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\utility\Util.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\data\common\Common.csproj" />
+    <ProjectReference Include="..\..\..\pwiz\analysis\Analysis.csproj" />
   </ItemGroup>
 
 </Project>

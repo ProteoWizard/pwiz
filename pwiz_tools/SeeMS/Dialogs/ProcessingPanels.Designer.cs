@@ -19,7 +19,7 @@
 // limitations under the License.
 //
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     partial class ProcessingPanels
     {

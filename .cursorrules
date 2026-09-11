@@ -26,39 +26,38 @@
 
 [project]
 name = "ProteoWizard (pwiz)"
-description = "C++ libraries and tools for proteomics; native builds via MSVC/GCC and Boost.Build"
-primary_languages = ["C++", "C#", "Jam", "Batch", "Shell"]
+description = "C# (.NET 10) libraries and tools for proteomics: the pwiz library, msconvert, BiblioSpec, Skyline"
+primary_languages = ["C#", "Batch", "Shell", "PowerShell"]
 
 [on_open]
-message = "Use quickbuild.bat on Windows to build. Do not introduce new build systems. Respect existing indentation and avoid unrelated reformatting."
+message = "Use build.bat (pwiz) or pwiz_tools\Skyline\build.bat (Skyline) to build. Do not introduce new build systems. Respect existing indentation and avoid unrelated reformatting."
 
 [paths]
 code_roots = [
   "pwiz/",
   "pwiz_tools/",
-  "pwiz_aux/",
 ]
-third_party = ["libraries/"]
+third_party = ["libraries/", "vendor-archives/"]
 outputs = [
-  "build-nt-x86/msvc-release-x86_64/",
+  "**/bin/",
+  "**/obj/",
 ]
 
 entry_points = [
-  "quickbuild.bat",
-  "quickbuild.sh",
-  "pwiz.sln",
+  "build.bat",
+  "build.sh",
+  "Pwiz.sln",
+  "pwiz_tools/Skyline/build.bat",
   "pwiz_tools/Skyline/Skyline.sln",
-  "bs.bat",
-  "doc/index.html",
 ]
 
 [rules]
-- Prefer `quickbuild.bat` on Windows; pass non-interactive flags where applicable.
+- Prefer `build.bat` / `pwiz_tools\Skyline\build.bat`; pass non-interactive flags where applicable.
 - Keep code style intact: do not reformat unrelated files; preserve tabs/spaces.
-- When adding sources, update the appropriate Jamfile or Visual Studio project.
+- SDK-style projects glob their sources; only edit a .csproj when a file needs non-default handling.
 - When reviewing a PR: if a new directory is added directly under `pwiz_tools/`, or if changes are made to a `pwiz_tools/` subdirectory that has no specific entry in `scripts/misc/vcs_trigger_and_paths_config.py` (i.e. it would only be matched by the generic `pwiz_tools/.*` catch-all), leave a review comment flagging this. The developer may choose to ignore the comment, but should consciously consider whether a specific build-trigger mapping is needed to avoid triggering all builds unnecessarily.
-- Use existing vendor libraries from `libraries/`; do not fetch replacements.
-- For documentation, add concise notes to `README.md` and `doc/`.
+- Use the existing vendor SDK archives from `vendor-archives/` and the tools in `libraries/`; do not fetch replacements.
+- For documentation, add concise notes to `README.md`.
 - Project conventions: See ai/MEMORY.md for essential project context and common gotchas.
 
 [skyline]
@@ -89,7 +88,7 @@ reference = "ai/STYLEGUIDE.md"
 - LLM agents CANNOT build or run this project directly.
 - Build and test operations must be performed by the developer using Visual Studio.
 - When code changes are made, request that the developer build and test the changes.
-- Do not attempt to run quickbuild.bat, bs.bat, or any build commands.
+- Do not attempt to run build.bat or any build commands.
 - Do not attempt to run tests or execute the application.
 
 [file_headers]

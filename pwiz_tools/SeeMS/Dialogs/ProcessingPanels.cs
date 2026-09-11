@@ -26,9 +26,10 @@ using System.Drawing;
 using System.Data;
 using System.Text;
 using System.Windows.Forms;
-using pwiz.CLI.analysis;
+using Pwiz.Analysis;
+using Pwiz.Analysis.PeakPicking;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     public partial class ProcessingPanels : UserControl
     {

@@ -19,7 +19,7 @@
 // limitations under the License.
 //
 
-namespace seems
+namespace Pwiz.SeeMS
 {
 	partial class seemsForm
 	{
@@ -447,7 +447,7 @@ namespace seems
             // 
             this.dataProcessingButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.dataProcessingButton.Enabled = false;
-            this.dataProcessingButton.Image = global::seems.Properties.Resources.DataProcessing;
+            // this.dataProcessingButton.Image = global::seems.Properties.Resources.DataProcessing; // Resources not ported
             this.dataProcessingButton.ImageTransparentColor = System.Drawing.Color.White;
             this.dataProcessingButton.Name = "dataProcessingButton";
             this.dataProcessingButton.Size = new System.Drawing.Size(23, 22);
@@ -458,7 +458,7 @@ namespace seems
             // 
             this.annotationButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.annotationButton.Enabled = false;
-            this.annotationButton.Image = global::seems.Properties.Resources.Annotation;
+            // this.annotationButton.Image = global::seems.Properties.Resources.Annotation; // Resources not ported
             this.annotationButton.ImageTransparentColor = System.Drawing.Color.White;
             this.annotationButton.Name = "annotationButton";
             this.annotationButton.Size = new System.Drawing.Size(23, 22);

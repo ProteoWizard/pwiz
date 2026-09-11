@@ -19,7 +19,7 @@
 // limitations under the License.
 //
 
-namespace seems
+namespace Pwiz.SeeMS
 {
 	partial class SpectrumListForm
 	{
@@ -67,7 +67,7 @@ namespace seems
             this.ScanInfo = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
             this.IonMobility = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
             this.spectraSource = new System.Windows.Forms.BindingSource( this.components );
-            this.spectrumDataSet = new seems.Misc.SpectrumDataSet();
+            this.spectrumDataSet = new Pwiz.SeeMS.Misc.SpectrumDataSet();
             this.selectColumnsMenuStrip = new System.Windows.Forms.ContextMenuStrip( this.components );
             this.selectColumnsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ( (System.ComponentModel.ISupportInitialize) ( this.gridView ) ).BeginInit();
@@ -285,7 +285,7 @@ namespace seems
         private System.Windows.Forms.ContextMenuStrip selectColumnsMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem selectColumnsToolStripMenuItem;
         private System.Windows.Forms.BindingSource spectraSource;
-        private global::seems.Misc.SpectrumDataSet spectrumDataSet;
+        private global::Pwiz.SeeMS.Misc.SpectrumDataSet spectrumDataSet;
         private DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn Id;
         private DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn SpotId;
         private DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn SpectrumType;

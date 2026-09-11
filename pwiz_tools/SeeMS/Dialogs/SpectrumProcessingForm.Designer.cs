@@ -19,7 +19,7 @@
 // limitations under the License.
 //
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     partial class SpectrumProcessingForm
     {
@@ -253,7 +253,7 @@ namespace seems
             this.removeProcessingButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.removeProcessingButton.Name = "removeProcessingButton";
             this.removeProcessingButton.Size = new System.Drawing.Size(23, 24);
-            this.removeProcessingButton.Text = "–";
+            this.removeProcessingButton.Text = "â€“";
             this.removeProcessingButton.ToolTipText = "Remove";
             this.removeProcessingButton.Click += new System.EventHandler(this.removeProcessingButton_Click);
             // 
@@ -266,7 +266,7 @@ namespace seems
             this.moveUpProcessingButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.moveUpProcessingButton.Name = "moveUpProcessingButton";
             this.moveUpProcessingButton.Size = new System.Drawing.Size(26, 24);
-            this.moveUpProcessingButton.Text = "é";
+            this.moveUpProcessingButton.Text = "Ã©";
             this.moveUpProcessingButton.Click += new System.EventHandler(this.moveUpProcessingButton_Click);
             // 
             // moveDownProcessingButton
@@ -278,7 +278,7 @@ namespace seems
             this.moveDownProcessingButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.moveDownProcessingButton.Name = "moveDownProcessingButton";
             this.moveDownProcessingButton.Size = new System.Drawing.Size(26, 24);
-            this.moveDownProcessingButton.Text = "ê";
+            this.moveDownProcessingButton.Text = "Ãª";
             this.moveDownProcessingButton.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
             this.moveDownProcessingButton.Click += new System.EventHandler(this.moveDownProcessingButton_Click);
             // 

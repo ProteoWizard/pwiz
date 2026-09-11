@@ -27,13 +27,19 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using pwiz.CLI.cv;
-using pwiz.CLI.data;
-using pwiz.CLI.msdata;
-using seems.Misc;
-using Spectrum = pwiz.CLI.msdata.Spectrum;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Params;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Sources;
+using Pwiz.Data.MsData.Instruments;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
+using Pwiz.SeeMS.Misc;
+using Spectrum = Pwiz.Data.MsData.Spectra.Spectrum;
+using Pwiz.Data.MsData.Processing;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
 	public delegate void SpectrumListCellClickHandler( object sender, SpectrumListCellClickEventArgs e );
 	public delegate void SpectrumListCellDoubleClickHandler( object sender, SpectrumListCellDoubleClickEventArgs e );
@@ -43,7 +49,7 @@ namespace seems
 	{
         Dictionary<int, MassSpectrum> spectrumList; // indexable by MassSpectrum.Index
         TreeViewForm treeViewTooltip;
-        Timer hoverTimer;
+        System.Windows.Forms.Timer hoverTimer;
 
         public DataGridView GridView { get { return gridView; } }
 
@@ -76,7 +82,7 @@ namespace seems
             initializeGridView( nativeIdFormat );
 
             treeViewTooltip = new TreeViewForm();
-            hoverTimer = new Timer { Interval = 3000 };
+            hoverTimer = new System.Windows.Forms.Timer { Interval = 3000 };
 
             hoverTimer.Tick += (sender, args) =>
             {
@@ -119,7 +125,7 @@ namespace seems
             this.nativeIdFormat = nativeIdFormat;
             if ((nativeIdFormat != CVID.CVID_Unknown) && (nativeIdFormat != CVID.MS_no_nativeID_format))
             {
-                string nativeIdDefinition = new CVTermInfo( nativeIdFormat ).def.Replace("Native format defined by ", "");
+                string nativeIdDefinition = new CVTermInfo( nativeIdFormat ).Def.Replace("Native format defined by ", "");
                 string[] nameValuePairs = nativeIdDefinition.Split( " ".ToCharArray() );
                 for( int i = 0; i < nameValuePairs.Length; ++i )
                 {
@@ -138,14 +144,14 @@ namespace seems
                 }
             }
 
-            gridView.Columns["SpectrumType"].ToolTipText = new CVTermInfo(CVID.MS_spectrum_type).def;
-            gridView.Columns["MsLevel"].ToolTipText = new CVTermInfo( CVID.MS_ms_level ).def;
-            gridView.Columns["ScanTime"].ToolTipText = new CVTermInfo( CVID.MS_scan_start_time ).def;
-            gridView.Columns["BasePeakMz"].ToolTipText = new CVTermInfo( CVID.MS_base_peak_m_z ).def;
-            gridView.Columns["BasePeakIntensity"].ToolTipText = new CVTermInfo( CVID.MS_base_peak_intensity ).def;
-            gridView.Columns["TotalIonCurrent"].ToolTipText = new CVTermInfo( CVID.MS_total_ion_current ).def;
+            gridView.Columns["SpectrumType"].ToolTipText = new CVTermInfo(CVID.MS_spectrum_type).Def;
+            gridView.Columns["MsLevel"].ToolTipText = new CVTermInfo( CVID.MS_ms_level ).Def;
+            gridView.Columns["ScanTime"].ToolTipText = new CVTermInfo( CVID.MS_scan_start_time ).Def;
+            gridView.Columns["BasePeakMz"].ToolTipText = new CVTermInfo( CVID.MS_base_peak_m_z ).Def;
+            gridView.Columns["BasePeakIntensity"].ToolTipText = new CVTermInfo( CVID.MS_base_peak_intensity ).Def;
+            gridView.Columns["TotalIonCurrent"].ToolTipText = new CVTermInfo( CVID.MS_total_ion_current ).Def;
 
-	        gridView.Columns["ScanTime"].HeaderText += Properties.Settings.Default.TimeInMinutes ? " (min)" : " (sec)";
+	        gridView.Columns["ScanTime"].HeaderText += Pwiz.SeeMS.Settings.Default.TimeInMinutes ? " (min)" : " (sec)";
 
             gridView.DataBindingComplete += new DataGridViewBindingCompleteEventHandler( gridView_DataBindingComplete );
         }
@@ -165,67 +171,67 @@ namespace seems
             Scan scan = null;
             InstrumentConfiguration ic = null;
 
-            if(s.scanList.scans.Count > 0)
+            if(s.ScanList.Scans.Count > 0)
             {
-                scan = s.scanList.scans[0];
-                ic = scan.instrumentConfiguration;
+                scan = s.ScanList.Scans[0];
+                ic = scan.InstrumentConfiguration;
             }
 
             if( dp == null )
-                dp = s.dataProcessing;
+                dp = s.DataProcessing;
 
             CVParam param;
 
-            param = s.cvParam( CVID.MS_ms_level );
-            row.MsLevel = !param.empty() ? (int) param.value : 0;
+            param = s.Params.CvParam( CVID.MS_ms_level );
+            row.MsLevel = !param.IsEmpty ? param.ValueAs<int>() : 0;
 
-            param = scan != null ? scan.cvParam( CVID.MS_scan_start_time ) : new CVParam();
-            row.ScanTime = !param.empty() ? param.timeInSeconds() : 0;
-            if (Properties.Settings.Default.TimeInMinutes)
+            param = scan != null ? scan.Params.CvParam( CVID.MS_scan_start_time ) : new CVParam();
+            row.ScanTime = !param.IsEmpty ? param.TimeInSeconds() : 0;
+            if (Pwiz.SeeMS.Settings.Default.TimeInMinutes)
                 row.ScanTime /= 60;
 
-            param = s.cvParam( CVID.MS_base_peak_m_z );
-            row.BasePeakMz = !param.empty() ? (double) param.value : 0;
+            param = s.Params.CvParam( CVID.MS_base_peak_m_z );
+            row.BasePeakMz = !param.IsEmpty ? param.ValueAs<double>() : 0;
 
-            param = s.cvParam( CVID.MS_base_peak_intensity );
-            row.BasePeakIntensity = !param.empty() ? (double) param.value : 0;
+            param = s.Params.CvParam( CVID.MS_base_peak_intensity );
+            row.BasePeakIntensity = !param.IsEmpty ? param.ValueAs<double>() : 0;
 
-            param = s.cvParam( CVID.MS_total_ion_current );
-            row.TotalIonCurrent = !param.empty() ? (double) param.value : 0;
+            param = s.Params.CvParam( CVID.MS_total_ion_current );
+            row.TotalIonCurrent = !param.IsEmpty ? param.ValueAs<double>() : 0;
 
             var precursorInfo = new StringBuilder();
             var isolationWindows = new StringBuilder();
-            if( row.MsLevel == 1 || s.precursors.Count == 0 )
+            if( row.MsLevel == 1 || s.Precursors.Count == 0 )
             {
                 precursorInfo.Append( "n/a" );
                 isolationWindows.Append( "n/a" );
             }
             else
             {
-                foreach( Precursor p in s.precursors )
+                foreach( Precursor p in s.Precursors )
                 {
-                    foreach( SelectedIon si in p.selectedIons )
+                    foreach( SelectedIon si in p.SelectedIons )
                     {
                         if( precursorInfo.Length > 0 )
                             precursorInfo.Append( "," );
-                        precursorInfo.AppendFormat("{0:G8}", (double) si.cvParam( CVID.MS_selected_ion_m_z ).value );
+                        precursorInfo.AppendFormat("{0:G8}", si.Params.CvParam( CVID.MS_selected_ion_m_z ).ValueAs<double>() );
                     }
 
-                    var iw = p.isolationWindow;
-                    CVParam isolationTarget = iw.cvParam(CVID.MS_isolation_window_target_m_z);
-                    if (!isolationTarget.empty())
+                    var iw = p.IsolationWindow;
+                    CVParam isolationTarget = iw.Params.CvParam(CVID.MS_isolation_window_target_m_z);
+                    if (!isolationTarget.IsEmpty)
                     {
-                        double iwMz = (double) isolationTarget.value;
+                        double iwMz = isolationTarget.ValueAs<double>();
 
                         if (isolationWindows.Length > 0)
                             isolationWindows.Append(",");
 
-                        CVParam lowerOffset = iw.cvParam(CVID.MS_isolation_window_lower_offset);
-                        CVParam upperOffset = iw.cvParam(CVID.MS_isolation_window_upper_offset);
-                        if (lowerOffset.empty() || upperOffset.empty())
+                        CVParam lowerOffset = iw.Params.CvParam(CVID.MS_isolation_window_lower_offset);
+                        CVParam upperOffset = iw.Params.CvParam(CVID.MS_isolation_window_upper_offset);
+                        if (lowerOffset.IsEmpty || upperOffset.IsEmpty)
                             isolationWindows.AppendFormat("{0:G8}", iwMz);
                         else
-                            isolationWindows.AppendFormat("[{0:G8}-{1:G8}]", iwMz - (double)lowerOffset.value, iwMz + (double)upperOffset.value);
+                            isolationWindows.AppendFormat("[{0:G8}-{1:G8}]", iwMz - lowerOffset.ValueAs<double>(), iwMz + upperOffset.ValueAs<double>());
                     }
                 }
             }
@@ -239,17 +245,17 @@ namespace seems
             row.IsolationWindows = isolationWindows.ToString();
 
             StringBuilder scanInfo = new StringBuilder();
-            foreach( Scan scan2 in s.scanList.scans )
+            foreach( Scan scan2 in s.ScanList.Scans )
             {
-                if( scan2.scanWindows.Count > 0 )
+                if( scan2.ScanWindows.Count > 0 )
                 {
-                    foreach( ScanWindow sw in scan2.scanWindows )
+                    foreach( ScanWindow sw in scan2.ScanWindows )
                     {
                         if( scanInfo.Length > 0 )
                             scanInfo.Append( "," );
                         scanInfo.AppendFormat( "[{0:G8}-{1:G8}]",
-                                              (double) sw.cvParam( CVID.MS_scan_window_lower_limit ).value,
-                                              (double) sw.cvParam( CVID.MS_scan_window_upper_limit ).value );
+                                              sw.Params.CvParam( CVID.MS_scan_window_lower_limit ).ValueAs<double>(),
+                                              sw.Params.CvParam( CVID.MS_scan_window_upper_limit ).ValueAs<double>() );
                     }
                 }
             }
@@ -258,38 +264,38 @@ namespace seems
                 scanInfo.Append( "unknown" );
             row.ScanInfo = scanInfo.ToString();
 
-            row.IonMobility = scan != null ? (double) scan.cvParam(CVID.MS_ion_mobility_drift_time).value : 0;
+            row.IonMobility = scan != null ? scan.Params.CvParam(CVID.MS_ion_mobility_drift_time).ValueAs<double>() : 0;
             if (row.IonMobility == 0 && scan != null)
             {
-                row.IonMobility = (double) scan.cvParam(CVID.MS_inverse_reduced_ion_mobility).value;
+                row.IonMobility = scan.Params.CvParam(CVID.MS_inverse_reduced_ion_mobility).ValueAs<double>();
                 if (row.IonMobility == 0)
                 {
                     // Early version of drift time info, before official CV params
-                    var userparam = scan.userParam("drift time");
-                    if (!userparam.empty())
-                        row.IonMobility = userparam.timeInSeconds() * 1000.0;
+                    var userparam = scan.Params.UserParam("drift time");
+                    if (!userparam.IsEmpty)
+                        row.IonMobility = userparam.TimeInSeconds() * 1000.0;
 
                 }
             }
 
             if (row.IonMobility == 0)
             {
-                row.IonMobility = (double) s.cvParam(CVID.MS_FAIMS_compensation_voltage).value;
+                row.IonMobility = s.Params.CvParam(CVID.MS_FAIMS_compensation_voltage).ValueAs<double>();
                 row.IonMobilityType = SpectrumDataSet.IonMobilityType_CompensationVoltage;
             }
 
             if (row.IonMobilityType == SpectrumDataSet.IonMobilityType_None && row.IonMobility != 0)
                 row.IonMobilityType = SpectrumDataSet.IonMobilityType_SingleValue;
-            else if ((s.id.Contains("frame=") && s.id.Contains("scan=")) ||
-                     s.id.Contains("block=") ||
+            else if ((s.Id.Contains("frame=") && s.Id.Contains("scan=")) ||
+                     s.Id.Contains("block=") ||
                      s.GetIonMobilityArray() != null)
                 row.IonMobilityType = SpectrumDataSet.IonMobilityType_Array;
 
-            row.SpotId = s.spotID;
-            row.SpectrumType = s.cvParamChild( CVID.MS_spectrum_type ).name;
-            row.DataPoints = s.defaultArrayLength;
-            row.IcId = ( ic == null || ic.id.Length == 0 ? "unknown" : ic.id );
-            row.DpId = ( dp == null || dp.id.Length == 0 ? "unknown" : dp.id );
+            row.SpotId = s.SpotId;
+            row.SpectrumType = s.Params.CvParamChild( CVID.MS_spectrum_type ).Name;
+            row.DataPoints = (ulong) s.DefaultArrayLength;
+            row.IcId = ( ic == null || ic.Id.Length == 0 ? "unknown" : ic.Id );
+            row.DpId = ( dp == null || dp.Id.Length == 0 ? "unknown" : dp.Id );
         }
 
         public IEnumerable<SpectrumDataSet.SpectrumTableRow> GetIonMobilityRows()
@@ -380,7 +386,7 @@ namespace seems
                     // mismatch between nativeID format and actual (probably mzXML) format
                     // better to show an ill-fit match - eg "scan" (mzXML) and "scanID" (Agilent)
                     // than no info at all
-                    string nativeIdDefinition = new CVTermInfo(nativeIdFormat).def;
+                    string nativeIdDefinition = new CVTermInfo(nativeIdFormat).Def;
                     string[] idPair = nativeIdDefinition.Split('=');
                     if (row.Table.Columns.Contains(idPair[0]))
                     {
@@ -403,7 +409,7 @@ namespace seems
             if (row.IonMobility != 0)
                 gridView.Columns["IonMobility"].Visible = true;
 
-            if( spectrum.Element.spotID.Length > 0 )
+            if( spectrum.Element.SpotId.Length > 0 )
                 gridView.Columns["SpotId"].Visible = true;
 
             //UpdateRow( rowIndex );
@@ -430,7 +436,7 @@ namespace seems
             UpdateRow( rowIndex, null );
         }
 
-        public void UpdateRow( int rowIndex, SpectrumList spectrumList )
+        public void UpdateRow( int rowIndex, ISpectrumList spectrumList )
         {
             SpectrumDataSet.SpectrumTableRow row = ( spectraSource[rowIndex] as DataRowView ).Row as SpectrumDataSet.SpectrumTableRow;
 
@@ -480,62 +486,62 @@ namespace seems
 
         private void addParamsToTreeNode( ParamContainer pc, TreeNode node)
         {
-            foreach( ParamGroup pg in pc.paramGroups )
+            foreach( ParamGroup pg in pc.ParamGroups )
                 addParamsToTreeNode( pg as ParamContainer, node);
 
-            foreach( CVParam param in pc.cvParams )
+            foreach( CVParam param in pc.CVParams )
             {
-                if( param.empty() )
+                if( param.IsEmpty )
                     continue;
 
                 string nodeText;
-                string paramValue = param.value.ToString();
+                string paramValue = param.Value.ToString();
                 if (paramValue.Length > 0 )
                 {
                     if (double.TryParse(paramValue, out double dblValue))
                         paramValue = dblValue.ToString("G6");
 
                     // has value
-                    if( param.units != CVID.CVID_Unknown )
+                    if( param.Units != CVID.CVID_Unknown )
                     {
                         // has value and units
-                        nodeText = String.Format( "{0}: {1} {2}", param.name, paramValue, param.unitsName);
+                        nodeText = String.Format( "{0}: {1} {2}", param.Name, paramValue, param.UnitsName);
                     } else
                     {
                         // has value but no units
-                        nodeText = String.Format( "{0}: {1}", param.name, paramValue);
+                        nodeText = String.Format( "{0}: {1}", param.Name, paramValue);
                     }
                 } else
                 {
                     // has controlled value, look up category in the CV
-                    nodeText = String.Format( "{0}: {1}", new CVTermInfo(new CVTermInfo(param.cvid).parentsIsA[0]).name, param.name);
+                    nodeText = String.Format( "{0}: {1}", new CVTermInfo(new CVTermInfo(param.Cvid).ParentsIsA[0]).Name, param.Name);
                 }
                 TreeNode childNode = node.Nodes.Add(nodeText);
-                childNode.ToolTipText = new CVTermInfo( param.cvid ).def;
+                childNode.ToolTipText = new CVTermInfo( param.Cvid ).Def;
             }
 
-            foreach( UserParam param in pc.userParams )
+            foreach( UserParam param in pc.UserParams )
             {
                 string nodeText;
-                if( param.value.ToString().Length > 0 )
+                if( param.Value.ToString().Length > 0 )
                 {
                     // has value
-                    if( param.units != CVID.CVID_Unknown )
+                    if( param.Units != CVID.CVID_Unknown )
                     {
                         // has value and units
-                        nodeText = String.Format( "{0}: {1} {2}", param.name, param.value, new CVTermInfo(param.units).name);
+                        nodeText = String.Format( "{0}: {1} {2}", param.Name, param.Value, new CVTermInfo(param.Units).Name);
                     } else
                     {
                         // has value but no units
-                        nodeText = String.Format( "{0}: {1}", param.name, param.value);
+                        nodeText = String.Format( "{0}: {1}", param.Name, param.Value);
                     }
                 } else
                 {
                     // has uncontrolled value
-                    nodeText = String.Format( "{0}", param.name);
+                    nodeText = String.Format( "{0}", param.Name);
                 }
                 TreeNode childNode = node.Nodes.Add(nodeText);
-                childNode.ToolTipText = param.type;
+                childNode.ToolTipText = param.Type;
             }
         }
 
@@ -554,26 +560,26 @@ namespace seems
             if (columnName == "PrecursorInfo" || columnName == "IsolationWindows")
             {
                 treeViewTooltip.Text = "Precursor Details";
-                if( s.precursors.Count == 0 )
+                if( s.Precursors.Count == 0 )
                     tv.Nodes.Add( "No precursor information available." );
                 else
                 {
-                    foreach( Precursor p in s.precursors )
+                    foreach( Precursor p in s.Precursors )
                     {
                         string pNodeText = "Precursor scan";
-                        if( p.sourceFile != null && p.externalSpectrumID.Length > 0 )
-                            pNodeText += String.Format( ": {0}:{1}", p.sourceFile.name, p.externalSpectrumID );
-                        else if( p.spectrumID.Length > 0 )
-                            pNodeText += String.Format( ": {0}", p.spectrumID );
+                        if( p.SourceFile != null && p.ExternalSpectrumId.Length > 0 )
+                            pNodeText += String.Format( ": {0}:{1}", p.SourceFile.Name, p.ExternalSpectrumId );
+                        else if( p.SpectrumId.Length > 0 )
+                            pNodeText += String.Format( ": {0}", p.SpectrumId );
 
                         TreeNode pNode = tv.Nodes.Add( pNodeText );
                         addParamsToTreeNode( p as ParamContainer, pNode );
 
-                        if( p.selectedIons.Count == 0 )
+                        if( p.SelectedIons.Count == 0 )
                             pNode.Nodes.Add( "No selected ion list available." );
                         else
                         {
-                            foreach( SelectedIon si in p.selectedIons )
+                            foreach( SelectedIon si in p.SelectedIons )
                             {
                                 TreeNode siNode = pNode.Nodes.Add( "Selected ion" );
                                 //siNode.ToolTipText = new CVTermInfo(CVID.MS_selected_ion); // not yet in CV
@@ -581,39 +587,39 @@ namespace seems
                             }
                         }
 
-                        if( p.activation.empty() )
+                        if( p.Activation.IsEmpty )
                             pNode.Nodes.Add( "No activation details available." );
                         else
                         {
                             TreeNode actNode = pNode.Nodes.Add( "Activation" );
-                            addParamsToTreeNode( p.activation as ParamContainer, actNode );
+                            addParamsToTreeNode( p.Activation as ParamContainer, actNode );
                         }
 
-                        if( p.isolationWindow.empty() )
+                        if( p.IsolationWindow.IsEmpty )
                             pNode.Nodes.Add( "No isolation window details available." );
                         else
                         {
                             TreeNode iwNode = pNode.Nodes.Add( "Isolation Window" );
-                            addParamsToTreeNode( p.isolationWindow as ParamContainer, iwNode );
+                            addParamsToTreeNode( p.IsolationWindow as ParamContainer, iwNode );
                         }
                     }
                 }
             } else if (columnName == "ScanInfo")
             {
                 treeViewTooltip.Text = "Scan Configuration Details";
-                if( s.scanList.empty() )
+                if( s.ScanList.IsEmpty )
                     tv.Nodes.Add( "No scan details available." );
                 else
                 {
                     TreeNode slNode = tv.Nodes.Add( "Scan List" );
-                    addParamsToTreeNode( s.scanList as ParamContainer, slNode );
+                    addParamsToTreeNode( s.ScanList as ParamContainer, slNode );
 
-                    foreach( Scan scan in s.scanList.scans )
+                    foreach( Scan scan in s.ScanList.Scans )
                     {
                         TreeNode scanNode = slNode.Nodes.Add( "Acquisition" );
                         addParamsToTreeNode( scan as ParamContainer, scanNode );
 
-                        foreach( ScanWindow sw in scan.scanWindows )
+                        foreach( ScanWindow sw in scan.ScanWindows )
                         {
                             TreeNode swNode = scanNode.Nodes.Add( "Scan Window" );
                             addParamsToTreeNode( sw as ParamContainer, swNode );
@@ -623,32 +629,32 @@ namespace seems
             } else if (columnName == "IcId")
             {
                 treeViewTooltip.Text = "Instrument Configuration Details";
-                InstrumentConfiguration ic = s.scanList.scans[0].instrumentConfiguration;
-                if( ic == null || ic.empty() )
+                InstrumentConfiguration ic = s.ScanList.Scans[0].InstrumentConfiguration;
+                if( ic == null || ic.IsEmpty )
                     tv.Nodes.Add( "No instrument configuration details available." );
                 else
                 {
-                    TreeNode icNode = tv.Nodes.Add( String.Format( "Instrument Configuration ({0})", ic.id ) );
+                    TreeNode icNode = tv.Nodes.Add( String.Format( "Instrument Configuration ({0})", ic.Id ) );
                     addParamsToTreeNode( ic as ParamContainer, icNode );
 
-                    if( ic.componentList.Count == 0 )
+                    if( ic.ComponentList.Count == 0 )
                         icNode.Nodes.Add( "No component list available." );
                     else
                     {
                         TreeNode clNode = icNode.Nodes.Add( "Component List" );
-                        foreach( pwiz.CLI.msdata.Component c in ic.componentList )
+                        foreach( Pwiz.Data.MsData.Instruments.Component c in ic.ComponentList )
                         {
                             string cNodeText;
-                            switch( c.type )
+                            switch( c.Type )
                             {
-                                case ComponentType.ComponentType_Source:
+                                case Pwiz.Data.MsData.Instruments.ComponentType.Source:
                                     cNodeText = "Source";
                                     break;
-                                case ComponentType.ComponentType_Analyzer:
+                                case Pwiz.Data.MsData.Instruments.ComponentType.Analyzer:
                                     cNodeText = "Analyzer";
                                     break;
                                 default:
-                                case ComponentType.ComponentType_Detector:
+                                case Pwiz.Data.MsData.Instruments.ComponentType.Detector:
                                     cNodeText = "Detector";
                                     break;
                             }
@@ -657,34 +663,34 @@ namespace seems
                         }
                     }
 
-                    Software sw = ic.software;
-                    if( sw == null || sw.empty() )
+                    Software sw = ic.Software;
+                    if( sw == null || sw.IsEmpty )
                         icNode.Nodes.Add( "No software details available." );
                     else
                     {
-                        TreeNode swNode = icNode.Nodes.Add( String.Format( "Software ({0})", sw.id ) );
-                        CVParam softwareParam = sw.cvParamChild( CVID.MS_software );
-                        TreeNode swNameNode = swNode.Nodes.Add( "Name: " + softwareParam.name );
-                        swNameNode.ToolTipText = new CVTermInfo( softwareParam.cvid ).def;
-                        swNode.Nodes.Add( "Version: " + sw.version );
+                        TreeNode swNode = icNode.Nodes.Add( String.Format( "Software ({0})", sw.Id ) );
+                        CVParam softwareParam = sw.Params.CvParamChild( CVID.MS_software );
+                        TreeNode swNameNode = swNode.Nodes.Add( "Name: " + softwareParam.Name );
+                        swNameNode.ToolTipText = new CVTermInfo( softwareParam.Cvid ).Def;
+                        swNode.Nodes.Add( "Version: " + sw.Version );
                     }
                 }
             } else if (columnName == "DpId")
             {
                 treeViewTooltip.Text = "Data Processing Details";
-                DataProcessing dp = s.dataProcessing;
-                if( dp == null || dp.empty() )
+                DataProcessing dp = s.DataProcessing;
+                if( dp == null || dp.IsEmpty )
                     tv.Nodes.Add( "No data processing details available." );
                 else
                 {
-                    TreeNode dpNode = tv.Nodes.Add( String.Format( "Data Processing ({0})", dp.id ) );
+                    TreeNode dpNode = tv.Nodes.Add( String.Format( "Data Processing ({0})", dp.Id ) );
 
-                    if( dp.processingMethods.Count == 0 )
+                    if( dp.ProcessingMethods.Count == 0 )
                         dpNode.Nodes.Add( "No component list available." );
                     else
                     {
                         TreeNode pmNode = dpNode.Nodes.Add( "Processing Methods" );
-                        foreach( ProcessingMethod pm in dp.processingMethods )
+                        foreach( ProcessingMethod pm in dp.ProcessingMethods )
                         {
                             addParamsToTreeNode( pm as ParamContainer, pmNode );
                         }

@@ -31,10 +31,9 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
-using pwiz.CLI.msdata;
-using pwiz.Common.Collections;
-using pwiz.CommonMsData;
-using pwiz.CommonMsData.RemoteApi;
+using CustomDataSourceDialog;
+// pwiz.CLI.msdata, pwiz.Common.Collections types (MSData, MSDataFile, ReaderList, ReaderConfig,
+// Map<,>, ...) are provided by Compat.cs in this namespace — no using needed.
 
 namespace MSConvertGUI
 {
@@ -127,12 +126,7 @@ namespace MSConvertGUI
             if ("" != text)
                 lastFileboxText = text; // for use in setting browse directory
 
-            if (item is MsDataFileUri msDataFileUri)
-            {
-                FileBox.Tag = msDataFileUri;
-                FileBox.Text = msDataFileUri.GetFileName();
-            }
-            else if (text.Count(o => "?*".Contains(o)) > 0)
+            if (text.Count(o => "?*".Contains(o)) > 0)
             {
                 string directory = Path.GetDirectoryName(text);
                 if (String.IsNullOrEmpty(directory))
@@ -146,8 +140,30 @@ namespace MSConvertGUI
             }
             else if (IsNetworkSource(text))
             {
-                FileBox.Tag = text;
-                FileBox.Text = text;
+                var credentialMatch = Regex.Match(text, "(http[s]?://)([^:]+):([^@]+)@(.*)");
+                if (credentialMatch.Success)
+                {
+                    string url = credentialMatch.Groups[1].Value + credentialMatch.Groups[4].Value;
+                    string[] urlParts = new Uri(url).GetLeftPart(UriPartial.Authority).Split(':');
+                    LastUsedUnifiCredentials = new UnifiBrowserForm.Credentials
+                    {
+                        Username = credentialMatch.Groups[2].Value,
+                        Password = credentialMatch.Groups[3].Value,
+                        IdentityServer = urlParts[0] + ":" + urlParts[1] + ":50333",
+                        ClientScope = "unifi",
+                        ClientSecret = "secret"
+                    };
+                    UnifiCredentialsByUrl[url] = LastUsedUnifiCredentials;
+
+                    // NB: set Tag first because setting Text triggers FileBox_TextChanged
+                    FileBox.Tag = url;
+                    FileBox.Text = url;
+                }
+                else
+                {
+                    FileBox.Tag = text;
+                    FileBox.Text = text;
+                }
             }
             else
             {
@@ -202,6 +218,20 @@ namespace MSConvertGUI
             AnalyzerTypeBox.Text = "Any";
             PolarityBox.Text = "Any";
 
+            if (Properties.Settings.Default.LastUsedUnifiUrl.Length > 0)
+            {
+                try
+                {
+                    var unifiSettings = UnifiBrowserForm.Credentials.ParseUrlWithAuthentication(Properties.Settings.Default.LastUsedUnifiUrl);
+                    LastUsedUnifiHost = unifiSettings.Item1;
+                    LastUsedUnifiCredentials = unifiSettings.Item2;
+                }
+                catch (Exception ex)
+                {
+                    Program.HandleException(ex);
+                }
+            }
+
             FilesToConvertInParallelUpDown.Value = Properties.Settings.Default.NumFilesToConvertInParallel;
 
             thresholdTypeComboBox.Items.AddRange(thresholdTypes.Select(o => o.Key).ToArray());
@@ -210,6 +240,10 @@ namespace MSConvertGUI
             thresholdValueTextBox.Text = "100";
 
             ValidateNumpress(); // make sure numpress settings are reasonable
+
+            networkResourceComboBox.DisplayMember = "DisplayName";
+            networkResourceComboBox.Items.Insert(0, placeholder);
+            networkResourceComboBox.SelectedItem = placeholder;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -218,6 +252,84 @@ namespace MSConvertGUI
             Process.GetCurrentProcess().Kill();
         }
 
+        class DummyComboBoxItem
+        {
+            public string DisplayName
+            {
+                get
+                {
+                    return "Browse network resource...";
+                }
+            }
+        }
+        private DummyComboBoxItem placeholder = new DummyComboBoxItem();
+
+        private Map<string, UnifiBrowserForm.Credentials> UnifiCredentialsByUrl = new Map<string, UnifiBrowserForm.Credentials>();
+        private string LastUsedUnifiHost;
+        private UnifiBrowserForm.Credentials LastUsedUnifiCredentials;
+
+        private void networkResourceComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (networkResourceComboBox.SelectedItem == null) return;
+            if (networkResourceComboBox.SelectedItem == placeholder) return;
+
+            if (networkResourceComboBox.SelectedItem.ToString() == "UNIFI")
+            {
+                var browser = new UnifiBrowserForm(LastUsedUnifiHost, LastUsedUnifiCredentials);
+                if (browser.ShowDialog() == DialogResult.OK)
+                {
+                    var selectedDataSources = browser.SelectedSampleResults.ToList();
+                    if (selectedDataSources.Count == 1)
+                    {
+                        setFileBoxText(selectedDataSources[0]);
+                        UnifiCredentialsByUrl[selectedDataSources[0].Url] = browser.SelectedCredentials;
+                    }
+                    else if (selectedDataSources.Count > 1)
+                    {
+                        foreach (var dataSource in selectedDataSources)
+                        {
+                            UnifiCredentialsByUrl[dataSource.Url] = browser.SelectedCredentials;
+                            FileListBox.Items.Add(dataSource);
+                        }
+
+                        /*if (String.IsNullOrEmpty(OutputBox.Text) ||
+                            !Directory.Exists(OutputBox.Text))
+                            OutputBox.Text = Path.GetDirectoryName(selectedDataSources[0]);*/
+
+                        RemoveFileButton.Enabled = FileListBox.Items.Count > 0;
+                    }
+                }
+
+                LastUsedUnifiHost = browser.SelectedHost;
+                if (browser.SelectedCredentials != null)
+                {
+                    LastUsedUnifiCredentials = browser.SelectedCredentials;
+                    Properties.Settings.Default.LastUsedUnifiUrl = LastUsedUnifiCredentials.GetUrlWithAuthentication(LastUsedUnifiHost);
+                }
+                else
+                    Properties.Settings.Default.LastUsedUnifiUrl = LastUsedUnifiHost;
+                Properties.Settings.Default.Save();
+            }
+
+            networkResourceComboBox.Items.Add(placeholder);
+            networkResourceComboBox.SelectedItem = placeholder;
+        }
+
+        private void networkResourceComboBox_DropDown(object sender, EventArgs e)
+        {
+            networkResourceComboBox.Items.Remove(placeholder);
+        }
+
+        private void networkResourceComboBox_Leave(object sender, EventArgs e)
+        {
+            //this covers user aborting the selection (by clicking away or choosing the system null drop down option)
+            //The control may not immedietly change, but if the user clicks anywhere else it will reset
+            if (networkResourceComboBox.SelectedItem != placeholder)
+            {
+                if (!networkResourceComboBox.Items.Contains(placeholder)) networkResourceComboBox.Items.Add(placeholder);
+                networkResourceComboBox.SelectedItem = placeholder;
+            }
+        }
 
         private void FilterBox_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -269,25 +381,22 @@ namespace MSConvertGUI
 
         public static string IdentifySource(object dataSource)
         {
-            if (dataSource is RemoteUrl)
-                return DataSourceUtil.TYPE_WATERS_RAW; // remote sources are Waters data
-            if (dataSource is MsDataFilePath msDataFilePath)
-                return ReaderList.FullReaderList.identify(msDataFilePath.FilePath);
-            return ReaderList.FullReaderList.identify(dataSource.ToString());
+            if (dataSource is INetworkSource networkSource)
+                return ReaderList.FullReaderList.identify(networkSource.Url);
+            else
+                return ReaderList.FullReaderList.identify(dataSource.ToString());
         }
 
         public static bool IsNetworkSource(object dataSource)
         {
-            return dataSource is RemoteUrl ||
+            return dataSource is INetworkSource ||
                    dataSource.ToString().StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
                    dataSource.ToString().StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
         }
 
         public bool IsValidSource(object dataSource)
         {
-            if (dataSource is RemoteUrl)
-                return !FileListBox.Items.Contains(dataSource);
-            string sourcePath = dataSource is MsDataFilePath fp ? fp.FilePath : dataSource.ToString();
+            string sourcePath = dataSource.ToString();
             return (IsNetworkSource(dataSource) || File.Exists(sourcePath) || Directory.Exists(sourcePath)) &&
                    !FileListBox.Items.Contains(dataSource) &&
                    !String.IsNullOrEmpty(IdentifySource(dataSource));
@@ -346,29 +455,54 @@ namespace MSConvertGUI
 
         private void BrowseFileButton_Click(object sender, EventArgs e)
         {
-            using (var browseToFileDialog = new MSConvertOpenDataSourceDialog())
+            var fileList = new List<string>();
+            foreach (var typeExtsPair in ReaderList.FullReaderList.getFileExtensionsByType())
+                if (typeExtsPair.Value.Count > 0) // e.g. exclude UNIFI
+                    fileList.Add(typeExtsPair.Key);
+            fileList.Sort();
+            fileList.Insert(0, "Any spectra format");
+
+            OpenDataSourceDialog browseToFileDialog;
+            browseToFileDialog = String.IsNullOrEmpty(FileBox.Text)
+                                     ? new OpenDataSourceDialog(fileList, lastFileboxText)
+                                     : new OpenDataSourceDialog(fileList, FileBox.Text);
+
+            #region Set up Delegates
+            browseToFileDialog.FolderType = x =>
+                                                {
+                                                    try
+                                                    {
+                                                        string type = ReaderList.FullReaderList.identify(x);
+                                                        if (type == String.Empty)
+                                                            return "File Folder";
+                                                        return type;
+                                                    }
+                                                    catch { return String.Empty; }
+                                                };
+            browseToFileDialog.FileType = x =>
+                                              {
+                                                  try
+                                                  {
+                                                      return ReaderList.FullReaderList.identify(x);
+                                                  }
+                                                  catch { return String.Empty; }
+                                              };
+            #endregion
+
+            if (browseToFileDialog.ShowDialog() == DialogResult.OK)
             {
-                string initialDir = String.IsNullOrEmpty(FileBox.Text) ? lastFileboxText : FileBox.Text;
-                if (!String.IsNullOrEmpty(initialDir) && (File.Exists(initialDir) || Directory.Exists(initialDir)))
-                    browseToFileDialog.InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(initialDir) ?? initialDir);
-
-                if (browseToFileDialog.ShowDialog(this) == DialogResult.OK)
+                if (browseToFileDialog.DataSources.Count == 1)
+                    setFileBoxText(browseToFileDialog.DataSources[0]);
+                else if (browseToFileDialog.DataSources.Count > 1)
                 {
-                    var dataSources = browseToFileDialog.FileNames;
-                    if (dataSources.Length == 1)
-                        setFileBoxText(dataSources[0]);
-                    else if (dataSources.Length > 1)
-                    {
-                        foreach (var dataSource in dataSources)
-                            FileListBox.Items.Add(dataSource);
+                    foreach (string dataSource in browseToFileDialog.DataSources)
+                        FileListBox.Items.Add(dataSource);
 
-                        var firstPath = dataSources[0] as MsDataFilePath;
-                        if (firstPath != null && (String.IsNullOrEmpty(OutputBox.Text) ||
-                            !Directory.Exists(OutputBox.Text)))
-                            OutputBox.Text = Path.GetDirectoryName(firstPath.FilePath);
+                    if (String.IsNullOrEmpty(OutputBox.Text) ||
+                        !Directory.Exists(OutputBox.Text))
+                        OutputBox.Text = Path.GetDirectoryName(browseToFileDialog.DataSources[0]);
 
-                        RemoveFileButton.Enabled = FileListBox.Items.Count > 0;
-                    }
+                    RemoveFileButton.Enabled = FileListBox.Items.Count > 0;
                 }
             }
         }
@@ -610,7 +744,7 @@ namespace MSConvertGUI
             var commandLine = new StringBuilder();
             //Get config settings
 
-            if (!OutputExtensionBox.Text.IsNullOrEmpty() && OutputFormatBox.Text != OutputExtensionBox.Text)
+            if (!string.IsNullOrEmpty(OutputExtensionBox.Text) && OutputFormatBox.Text != OutputExtensionBox.Text)
                 commandLine.AppendFormat("--ext|{0}|", OutputExtensionBox.Text);
             ValidateNumpress(); // make sure numpress settings are reasonable
             switch (OutputFormatBox.Text)
@@ -650,9 +784,8 @@ namespace MSConvertGUI
             if (!WriteIndexBox.Checked)
                 commandLine.Append("--noindex|");
 
-            // msconvert.exe defaults --zlib to true, so we must emit --zlib=off explicitly when unchecked --
-            // otherwise this command line would silently re-enable compression when handed back to msconvert.exe.
-            commandLine.Append(UseZlibBox.Checked ? "--zlib|" : "--zlib=off|");
+            if (UseZlibBox.Checked)
+                commandLine.Append("--zlib|");
 
             if (GzipBox.Checked)
                 commandLine.Append("--gzip|");
@@ -698,9 +831,7 @@ namespace MSConvertGUI
             Precision32.Checked = (commandLine.IndexOf("--32") >= 0);
             Precision64.Checked = !Precision32.Checked;
             WriteIndexBox.Checked = !(commandLine.IndexOf("--noindex") >= 0);
-            // Match the bare --zlib token (framed by | separators), so --zlib=off does not satisfy a
-            // substring check and incorrectly tick the box.
-            UseZlibBox.Checked = ("|" + commandLine + "|").IndexOf("|--zlib|") >= 0;
+            UseZlibBox.Checked = (commandLine.IndexOf("--zlib") >= 0);
             GzipBox.Checked = (commandLine.IndexOf("--gzip") >= 0);
             NumpressLinearBox.Checked = (commandLine.IndexOf("--numpressLinear") >= 0);
             NumpressSlofBox.Checked = (commandLine.IndexOf("--numpressSlof") >= 0);
@@ -743,7 +874,6 @@ namespace MSConvertGUI
                     case "--32":
                     case "--noindex":
                     case "--zlib":
-                    case "--zlib=off":
                     case "--gzip":
                     case "--numpressLinear":
                     case "--numpressSlof":
@@ -886,7 +1016,7 @@ namespace MSConvertGUI
             }
 
 
-            var pf = new ProgressForm(filesToProcess, outputFolder, commandLine);
+            var pf = new ProgressForm(filesToProcess, outputFolder, commandLine, UnifiCredentialsByUrl);
             pf.Text = "Conversion Progress";
             pf.ShowDialog();
 
@@ -990,9 +1120,9 @@ namespace MSConvertGUI
             setToolTip(this.AddFileButton, "Adds the current file to the conversion list. You can drag the rows to reorder them.");
             setToolTip(this.FilterDGV, "Use the controls above to add conversion filters. The order can be significant. You can drag the rows to reorder them.");
             setToolTip(this.MakeTPPCompatibleOutputButton, "Check this to use TPP-compatible output settings, e.g. an MGF TITLE format like <basename>.<scan>.<scan>.<charge>.");
-            MSDataFile.WriteConfig mwc = new MSDataFile.WriteConfig(); // for obtaining default numpress tolerance
-            setToolTip(this.NumpressLinearBox, String.Format("Check this to use numpress linear prediction lossy compression for binary mz and rt data in mzML output (relative accuracy loss will not exceed {0}).  Note that not all mzML readers recognize this format.", mwc.numpressLinearErrorTolerance));
-            setToolTip(this.NumpressSlofBox, String.Format("Check this to use numpress short logged float lossy compression for binary intensities in mzML output (relative accuracy loss will not exceed  {0}).  Note that not all mzML readers recognize this format.", mwc.numpressSlofErrorTolerance));
+            var encoderDefaults = new Pwiz.Data.MsData.Encoding.BinaryEncoderConfig(); // for default numpress tolerances
+            setToolTip(this.NumpressLinearBox, String.Format("Check this to use numpress linear prediction lossy compression for binary mz and rt data in mzML output (relative accuracy loss will not exceed {0}).  Note that not all mzML readers recognize this format.", encoderDefaults.NumpressLinearErrorTolerance));
+            setToolTip(this.NumpressSlofBox, String.Format("Check this to use numpress short logged float lossy compression for binary intensities in mzML output (relative accuracy loss will not exceed  {0}).  Note that not all mzML readers recognize this format.", encoderDefaults.NumpressSlofErrorTolerance));
             setToolTip(this.NumpressPicBox, "Check this to use numpress positive integer lossy compression for binary intensities in mzML output (absolute accuracy loss will not exceed 0.5).  Note that not all mzML readers recognize this format.");
             setToolTip(this.CombineIonMobilitySpectraBox, "Check this to collapse the ion mobility dimension by combining mobility spectra together. When combining Bruker TDF data in the mzML format, the mobility of each scan is preserved in a new mobility binary data array. For PASEF data, the MS2s are combined on a per-precursor basis rather than per-frame.");
             setToolTip(this.SimSpectraBox, "Check this to request that SIM mode data be represented as spectra instead of chromatograms. Not all vendor formats support this mode.");

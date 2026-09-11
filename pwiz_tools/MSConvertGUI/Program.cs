@@ -31,24 +31,13 @@ namespace MSConvertGUI
         public static MainForm MainWindow { get; private set; }
 
         public static event EventHandler<string> StderrCaptured;
-        private static void OnStderrCaptured(string e) => StderrCaptured?.Invoke(null, e);
+        internal static void OnStderrCaptured(string e) => StderrCaptured?.Invoke(null, e);
 
-        public static class LogCallbackWrapper
-        {
-            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-            private delegate void LogCallback([MarshalAs(UnmanagedType.LPWStr)] string info);
-
-            [DllImport("pwiz_bindings_cli.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
-            private static extern void SetCerrCallback([MarshalAs(UnmanagedType.FunctionPtr)] LogCallback callbackPointer);
-
-            private static LogCallback logCallback;
-
-            internal static void Init()
-            {
-                logCallback = OnStderrCaptured;
-                SetCerrCallback(logCallback);
-            }
-        }
+        // The cpp/CLI build registered a P/Invoke callback into pwiz_bindings_cli.dll's
+        // SetCerrCallback() so vendor SDK stderr lines (Thermo / Bruker errors) could
+        // bubble up to the GUI's log viewer. pwiz-sharp has no cpp/CLI bridge; vendor
+        // SDKs run inside the same .NET process and write to the standard Console.Error
+        // stream directly. Console output redirection happens at the MainForm level.
 
         /// <summary>
         /// The main entry point for the application.
@@ -56,7 +45,12 @@ namespace MSConvertGUI
         [STAThread]
         static void Main(string[] args)
         {
-            LogCallbackWrapper.Init();
+            // Hook the vendor SDK assembly resolver before any Reader_* type is touched.
+            // Without this, opening a Thermo / Bruker / Waters file fails with TypeLoadException
+            // because the SDK DLLs aren't shipped in the installer — they get downloaded into
+            // %LOCALAPPDATA%\ProteoWizard\vendor\<Vendor>-<Version>\ on first use.
+            Pwiz.Vendor.Common.VendorSdkLoader.RegisterAssemblyResolver();
+
 
             // single instance code taken from
             // http://forge.fenchurch.mc.vanderbilt.edu/scm/viewvc.php/branches/IDPicker-3/Program.cs?revision=431&root=idpicker&view=markup
@@ -67,7 +61,6 @@ namespace MSConvertGUI
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                MSConvertRemoteAccountServices.Initialize();
                 var singleInstanceArgs = e.Args.ToList();
                 MainWindow = new MainForm(singleInstanceArgs);
                 Application.Run(MainWindow);

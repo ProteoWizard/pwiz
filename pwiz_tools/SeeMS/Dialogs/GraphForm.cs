@@ -34,9 +34,10 @@ using ZedGraph;
 
 using System.Diagnostics;
 using System.Linq;
-using SpyTools;
+// SpyTools (TraceWinListener.dll) was the cpp Skyline-debug helper; not ported.
+using Pwiz.Data.MsData.Processing;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
 	public partial class GraphForm : DockableForm, IDataView
 	{
@@ -248,8 +249,9 @@ namespace seems
                 menuStrip.Items.Add( syncMenuItem );
             }
 
-            menuStrip.Items.Add(new ToolStripMenuItem("Show Data Processing", Properties.Resources.DataProcessing, GraphForm_ShowDataProcessing));
-            menuStrip.Items.Add(new ToolStripMenuItem("Show Annotation", Properties.Resources.Annotation, GraphForm_ShowAnnotation));
+            // Properties.Resources (image bundling) not yet ported; menu items run without icons.
+            menuStrip.Items.Add(new ToolStripMenuItem("Show Data Processing", null, GraphForm_ShowDataProcessing));
+            menuStrip.Items.Add(new ToolStripMenuItem("Show Annotation", null, GraphForm_ShowAnnotation));
         }
 
         void GraphForm_StackLayoutSingleColumn( object sender, EventArgs e )

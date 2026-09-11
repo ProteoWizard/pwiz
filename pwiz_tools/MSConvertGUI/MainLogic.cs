@@ -26,9 +26,14 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using CustomProgressCell;
-using pwiz.CLI.msdata;
-using pwiz.CLI.analysis;
-using pwiz.CLI.util;
+// pwiz.CLI.msdata / pwiz.CLI.analysis / pwiz.CLI.util types map to pwiz-sharp's equivalents:
+// MSData / MSDataFile / WriteConfig / WriteFormat / BinaryPrecision / BinaryCompression /
+// BinaryNumpress live in Pwiz.Data.MsData. ReaderConfig / ReaderList / IterationListener /
+// SpectrumListFactory are MSConvertGUI shims (Compat.cs) that wrap their pwiz-sharp
+// counterparts where the cpp-CLI surface needs a thin compatibility layer.
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Encoding;
 using System.Text.RegularExpressions;
 
 namespace MSConvertGUI
@@ -39,7 +44,7 @@ namespace MSConvertGUI
         public List<string> Filters;
         public string OutputPath;
         public string Extension;
-        public MSDataFile.WriteConfig WriteConfig;
+        public WriteConfig WriteConfig;
         public ReaderConfig ReaderConfig;
         public string ContactFilename;
 
@@ -50,13 +55,13 @@ namespace MSConvertGUI
             Filters = new List<string>();
             Extension = string.Empty;
             ContactFilename = string.Empty;
-            WriteConfig = new MSDataFile.WriteConfig();
+            WriteConfig = new WriteConfig();
             ReaderConfig = new ReaderConfig();
         }
 
-        public string outputFilename(string inputFilename, MSData inputMsData)
+        public string outputFilename(string inputFilename, Pwiz.Data.MsData.MSData inputMsData)
         {
-            string runId = inputMsData.run.id;
+            string runId = inputMsData.Run.Id;
 
             try
             {
@@ -141,7 +146,7 @@ namespace MSConvertGUI
             var precision32 = false;
             var precision64 = false;
             var noindex = false;
-            var zlib = true; // match msconvert.exe default
+            var zlib = false;
             var gzip = false;
 
             var commandList = argv.Split('|');
@@ -213,9 +218,6 @@ namespace MSConvertGUI
                     case "-z":
                         zlib = true;
                         break;
-                    case "--zlib=off":
-                        zlib = false;
-                        break;
                     case "--gzip":
                     case "-g":
                         gzip = true;
@@ -225,13 +227,15 @@ namespace MSConvertGUI
                         config.Filters.Add(commandList[x]);
                         break;
                     case "--numpressPic":
-                        config.WriteConfig.numpressPic = true;
+                        config.WriteConfig.EncoderConfig.NumpressOverrides[CVID.MS_intensity_array] = BinaryNumpress.Pic;
                         break;
                     case "--numpressLinear":
-                        config.WriteConfig.numpressLinear = true;
+                        config.WriteConfig.EncoderConfig.NumpressOverrides[CVID.MS_m_z_array] = BinaryNumpress.Linear;
                         break;
                     case "--numpressSlof":
-                        config.WriteConfig.numpressLinear = true;
+                        // cpp/CLI had a typo here that set numpressLinear; corrected for the
+                        // pwiz-sharp port (Slof maps to intensity, matching the cpp msconvert CLI).
+                        config.WriteConfig.EncoderConfig.NumpressOverrides[CVID.MS_intensity_array] = BinaryNumpress.Slof;
                         break;
                     case "--combineIonMobilitySpectra":
                         config.ReaderConfig.combineIonMobilitySpectra = true;
@@ -322,16 +326,7 @@ namespace MSConvertGUI
                             break;
                         case "--zlib":
                         case "-z":
-                            // This loop pre-replaces '=' with ' ', so --zlib=off arrives as two tokens
-                            // ["--zlib", "off"]; peek and consume an explicit off/false value.
-                            if (x + 1 < commandList.Length &&
-                                (commandList[x + 1] == "off" || commandList[x + 1] == "false"))
-                            {
-                                zlib = false;
-                                x++;
-                            }
-                            else
-                                zlib = true;
+                            zlib = true;
                             break;
                         case "--gzip":
                         case "-g":
@@ -379,57 +374,57 @@ namespace MSConvertGUI
                 + (formatMs2 ? 1 : 0)
                 + (formatCms2 ? 1 : 0);
             if (count > 1) throw new Exception("[msconvert] Multiple format flags specified.");
-            if (formatText) config.WriteConfig.format = MSDataFile.Format.Format_Text;
-            if (formatMzMl) config.WriteConfig.format = MSDataFile.Format.Format_mzML;
-            if (formatMzXml) config.WriteConfig.format = MSDataFile.Format.Format_mzXML;
-            if (formatMz5) config.WriteConfig.format = MSDataFile.Format.Format_MZ5;
-            if (formatMzMlB) config.WriteConfig.format = MSDataFile.Format.Format_mzMLb;
-            if (formatMgf) config.WriteConfig.format = MSDataFile.Format.Format_MGF;
-            if (formatMs1) config.WriteConfig.format = MSDataFile.Format.Format_MS1;
-            if (formatCms1) config.WriteConfig.format = MSDataFile.Format.Format_CMS1;
-            if (formatMs2) config.WriteConfig.format = MSDataFile.Format.Format_MS2;
-            if (formatCms2) config.WriteConfig.format = MSDataFile.Format.Format_CMS2;
+            if (formatText) config.WriteConfig.Format = WriteFormat.Text;
+            if (formatMzMl) config.WriteConfig.Format = WriteFormat.Mzml;
+            if (formatMzXml) config.WriteConfig.Format = WriteFormat.MzXml;
+            if (formatMz5) config.WriteConfig.Format = WriteFormat.Mz5;
+            if (formatMzMlB) config.WriteConfig.Format = WriteFormat.MzMLb;
+            if (formatMgf) config.WriteConfig.Format = WriteFormat.Mgf;
+            if (formatMs1) config.WriteConfig.Format = WriteFormat.Ms1;
+            if (formatCms1) config.WriteConfig.Format = WriteFormat.Cms1;
+            if (formatMs2) config.WriteConfig.Format = WriteFormat.Ms2;
+            if (formatCms2) config.WriteConfig.Format = WriteFormat.Cms2;
 
-            config.WriteConfig.gzipped = gzip; // if true, file is written as .gz
+            config.WriteConfig.Gzip = gzip; // if true, file is written as .gz
 
             if (String.IsNullOrEmpty(config.Extension))
             {
-                switch (config.WriteConfig.format)
+                switch (config.WriteConfig.Format)
                 {
-                    case MSDataFile.Format.Format_Text:
+                    case WriteFormat.Text:
                         config.Extension = ".txt";
                         break;
-                    case MSDataFile.Format.Format_mzML:
+                    case WriteFormat.Mzml:
                         config.Extension = ".mzML";
                         break;
-                    case MSDataFile.Format.Format_mzXML:
+                    case WriteFormat.MzXml:
                         config.Extension = ".mzXML";
                         break;
-                    case MSDataFile.Format.Format_MZ5:
+                    case WriteFormat.Mz5:
                         config.Extension = ".mz5";
                         break;
-                    case MSDataFile.Format.Format_mzMLb:
+                    case WriteFormat.MzMLb:
                         config.Extension = ".mzMLb";
                         break;    
-                    case MSDataFile.Format.Format_MGF:
+                    case WriteFormat.Mgf:
                         config.Extension = ".mgf";
                         break;
-                    case MSDataFile.Format.Format_MS1:
+                    case WriteFormat.Ms1:
                         config.Extension = ".ms1";
                         break;
-                    case MSDataFile.Format.Format_CMS1:
+                    case WriteFormat.Cms1:
                         config.Extension = ".cms1";
                         break;
-                    case MSDataFile.Format.Format_MS2:
+                    case WriteFormat.Ms2:
                         config.Extension = ".ms2";
                         break;
-                    case MSDataFile.Format.Format_CMS2:
+                    case WriteFormat.Cms2:
                         config.Extension = ".cms2";
                         break;
                     default:
                         throw new Exception("[msconvert] Unsupported format.");
                 }
-                if (config.WriteConfig.gzipped)
+                if (config.WriteConfig.Gzip)
                 {
                     config.Extension += ".gz";
                 }
@@ -437,7 +432,7 @@ namespace MSConvertGUI
 
             // precision defaults
 
-            config.WriteConfig.precision = MSDataFile.Precision.Precision_64;
+            config.WriteConfig.EncoderConfig.Precision = BinaryPrecision.Bits64;
 
             // handle precision flags
 
@@ -446,27 +441,27 @@ namespace MSConvertGUI
 
             if (precision32)
             {
-                config.WriteConfig.precision = MSDataFile.Precision.Precision_32;
+                config.WriteConfig.EncoderConfig.Precision = BinaryPrecision.Bits32;
             }
             else if (precision64)
             {
-                config.WriteConfig.precision = MSDataFile.Precision.Precision_64;
+                config.WriteConfig.EncoderConfig.Precision = BinaryPrecision.Bits64;
             }
 
             // other flags
 
             if (noindex)
-                config.WriteConfig.indexed = false;
+                config.WriteConfig.Indexed = false;
 
             if (zlib)
             {
-                config.WriteConfig.compression = MSDataFile.Compression.Compression_Zlib;
-                config.WriteConfig.mzMLb_compression_level = 4;
+                config.WriteConfig.EncoderConfig.Compression = BinaryCompression.Zlib;
+                config.WriteConfig.MzMLbCompressionLevel = 4;
             }
             else
             {
-                config.WriteConfig.compression = MSDataFile.Compression.Compression_None;
-                config.WriteConfig.mzMLb_compression_level = 0;
+                config.WriteConfig.EncoderConfig.Compression = BinaryCompression.None;
+                config.WriteConfig.MzMLbCompressionLevel = 0;
             }
 
             return config;
@@ -535,7 +530,7 @@ namespace MSConvertGUI
 
                             LogUpdate?.Invoke("Calculating SHA1 checksum...", JobInfo);
                             StatusUpdate?.Invoke("Calculating SHA1 checksum...", ProgressBarStyle.Marquee, JobInfo);
-                            MSDataFile.calculateSHA1Checksums(msd);
+                            MSDataFile.CalculateSha1Checksums(msd);
                         }
 
                         var ilr = new IterationListenerRegistry();
@@ -546,18 +541,20 @@ namespace MSConvertGUI
 
                         SpectrumListFactory.wrap(msd, config.Filters, ilr);
 
-                        config.WriteConfig.useWorkerThreads = msd.run.spectrumList.benefitsFromWorkerThreads();
+                        // pwiz-sharp writers are single-threaded today; cpp's useWorkerThreads
+                        // toggle has no equivalent. (The WriteConfig field doesn't exist on
+                        // pwiz-sharp's WriteConfig either — match the surface.)
 
-                        if ((msd.run.spectrumList == null) || msd.run.spectrumList.empty())
+                        if ((msd.Run.SpectrumList == null) || msd.Run.SpectrumList.Count == 0)
                         {
-                            if ((msd.run.chromatogramList != null) && !msd.run.chromatogramList.empty())
+                            if ((msd.Run.ChromatogramList != null) && msd.Run.ChromatogramList.Count > 0)
                             {
                                 msg = "Note: input contains only chromatogram data.";
-                                switch (config.WriteConfig.format)
+                                switch (config.WriteConfig.Format)
                                 {
-                                    case MSDataFile.Format.Format_MZ5:
-                                    case MSDataFile.Format.Format_mzMLb:
-                                    case MSDataFile.Format.Format_mzML:
+                                    case WriteFormat.Mz5:
+                                    case WriteFormat.MzMLb:
+                                    case WriteFormat.Mzml:
                                         break;
                                     default:
                                         msg += "  The selected output format can only represent spectra.  Consider using mzML instead.";
@@ -570,7 +567,7 @@ namespace MSConvertGUI
                             StatusUpdate?.Invoke(msg, ProgressBarStyle.Continuous, JobInfo);
                         }
 
-                        if (StatusUpdate != null && msd.run.spectrumList != null)
+                        if (StatusUpdate != null && msd.Run.SpectrumList != null)
                             StatusUpdate(String.Format("Processing ({0} of {1})", 
                                                        DataGridViewProgressCell.MessageSpecialValue.CurrentValue,
                                                        DataGridViewProgressCell.MessageSpecialValue.Maximum),
@@ -580,7 +577,7 @@ namespace MSConvertGUI
                         msg = String.Format("Writing \"{0}\"...", deduplicatedFilename);
                         LogUpdate?.Invoke(msg, JobInfo);
                         StatusUpdate?.Invoke(msg, ProgressBarStyle.Continuous, JobInfo);
-                        MSDataFile.write(msd, deduplicatedFilename, config.WriteConfig, ilr);
+                        MSDataFile.Write(msd, deduplicatedFilename, config.WriteConfig, ilr.Inner);
                         ilr.removeListener(this);
                     }
                     finally
@@ -594,7 +591,7 @@ namespace MSConvertGUI
 
         public static string[] ReadIds(string path)
         {
-            return ReaderList.FullReaderList.readIds(path);
+            return ReaderList.readIds(path);
         }
 
         /// <summary>

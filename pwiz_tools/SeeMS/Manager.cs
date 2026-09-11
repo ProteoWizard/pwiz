@@ -19,6 +19,7 @@
 // limitations under the License.
 //
 
+using System.Collections.Immutable;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -27,24 +28,31 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using DigitalRune.Windows.Docking;
-using pwiz.CLI.cv;
-using pwiz.CLI.data;
-using pwiz.CLI.msdata;
-using pwiz.CLI.analysis;
-using pwiz.Common.Collections;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Params;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Sources;
+using Pwiz.Data.MsData.Instruments;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
+using Pwiz.Analysis;
+using Pwiz.Analysis.PeakPicking;
+
 using pwiz.MSGraph;
 using ZedGraph;
 
 using System.Diagnostics;
-using SpyTools;
+// SpyTools (TraceWinListener.dll) was the cpp Skyline-debug helper; not ported.
+using Pwiz.Data.MsData.Processing;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
 	/// <summary>
 	/// Maps the filepath of a data source to its associated ManagedDataSource object
 	/// </summary>
 	using DataSourceMap = Dictionary<string, ManagedDataSource>;
-	using GraphInfoMap = Map<GraphItem, List<RefPair<DataGridViewRow, GraphForm>>>;
+	using GraphInfoMap = Dictionary<GraphItem, List<RefPair<DataGridViewRow, GraphForm>>>;
 	using GraphInfoList = List<RefPair<DataGridViewRow, GraphForm>>;
 	using GraphInfo = RefPair<DataGridViewRow, GraphForm>;
 
@@ -69,10 +77,10 @@ namespace seems
             chromatogramListForm.ShowIcon = false;
 
             CVID nativeIdFormat = CVID.MS_scan_number_only_nativeID_format;
-            foreach (SourceFile f in source.MSDataFile.fileDescription.sourceFiles)
+            foreach (SourceFile f in source.MSDataFile.FileDescription.SourceFiles)
             {
                 // the first one in the list isn't necessarily useful - could be Agilent MSCalibration.bin or the like
-                nativeIdFormat = f.cvParamChild(CVID.MS_native_spectrum_identifier_format).cvid;
+                nativeIdFormat = f.Params.CvParamChild(CVID.MS_native_spectrum_identifier_format).Cvid;
                 if (CVID.MS_no_nativeID_format != nativeIdFormat)
                     break;
             }
@@ -111,43 +119,43 @@ namespace seems
         }
 
         public Chromatogram GetChromatogram( int index )
-        { return GetChromatogram( index, source.MSDataFile.run.chromatogramList ); }
+        { return GetChromatogram( index, source.MSDataFile.Run.ChromatogramList ); }
 
-        public Chromatogram GetChromatogram( int index, ChromatogramList chromatogramList )
+        public Chromatogram GetChromatogram( int index, IChromatogramList chromatogramList )
         { return new Chromatogram( this, index, chromatogramList ); }
 
-        public Chromatogram GetChromatogram( Chromatogram metaChromatogram, ChromatogramList chromatogramList )
+        public Chromatogram GetChromatogram( Chromatogram metaChromatogram, IChromatogramList chromatogramList )
         {
-            Chromatogram chromatogram = new Chromatogram( metaChromatogram, chromatogramList.chromatogram( metaChromatogram.Index, true ) );
+            Chromatogram chromatogram = new Chromatogram( metaChromatogram, chromatogramList.GetChromatogram(metaChromatogram.Index, getBinaryData: true) );
             return chromatogram;
         }
 
         public MassSpectrum GetMassSpectrum( int index )
-        { return GetMassSpectrum( index, source.MSDataFile.run.spectrumList ); }
+        { return GetMassSpectrum( index, source.MSDataFile.Run.SpectrumList ); }
 
-        public MassSpectrum GetMassSpectrum( int index, SpectrumList spectrumList )
+        public MassSpectrum GetMassSpectrum( int index, ISpectrumList spectrumList )
         { return new MassSpectrum( this, index, spectrumList ); }
 
-        public MassSpectrum GetMassSpectrum( MassSpectrum metaSpectrum, SpectrumList spectrumList )
+        public MassSpectrum GetMassSpectrum( MassSpectrum metaSpectrum, ISpectrumList spectrumList )
         {
-            MassSpectrum spectrum = new MassSpectrum( metaSpectrum, spectrumList.spectrum( metaSpectrum.Index, true ) );
+            MassSpectrum spectrum = new MassSpectrum( metaSpectrum, spectrumList.GetSpectrum(metaSpectrum.Index, getBinaryData: true) );
             //MassSpectrum realMetaSpectrum = ( metaSpectrum.Tag as DataGridViewRow ).Tag as MassSpectrum;
-            //realMetaSpectrum.Element.dataProcessing = spectrum.Element.dataProcessing;
-            //realMetaSpectrum.Element.defaultArrayLength = spectrum.Element.defaultArrayLength;
+            //realMetaSpectrum.Element.DataProcessing = spectrum.Element.DataProcessing;
+            //realMetaSpectrum.Element.DefaultArrayLength = spectrum.Element.DefaultArrayLength;
             return spectrum;
         }
 
         public MassSpectrum GetMassSpectrum( MassSpectrum metaSpectrum, string[] spectrumListFilters )
         {
-            var tmp = source.MSDataFile.run.spectrumList;
+            var tmp = source.MSDataFile.Run.SpectrumList;
             try
             {
-                SpectrumListFactory.wrap(source.MSDataFile, spectrumListFilters);
-                return GetMassSpectrum(metaSpectrum, source.MSDataFile.run.spectrumList);
+                SpectrumListFactory.Wrap(source.MSDataFile, spectrumListFilters);
+                return GetMassSpectrum(metaSpectrum, source.MSDataFile.Run.SpectrumList);
             }
             finally
             {
-                source.MSDataFile.run.spectrumList = tmp;
+                source.MSDataFile.Run.SpectrumList = tmp;
             }
         }
 
@@ -188,10 +196,10 @@ namespace seems
         public bool OpenFileUsesCurrentGraphForm { get; set; }
         public bool OpenFileGivesFocus { get; set; }
 
-        public ImmutableDictionary<string, ManagedDataSource> DataSourceMap { get { return new ImmutableDictionary<string, ManagedDataSource>(dataSourceMap); } }
+        public ImmutableDictionary<string, ManagedDataSource> DataSourceMap { get { return dataSourceMap.ToImmutableDictionary(); } }
 
         private Dictionary<ManagedDataSource, bool> dataSourceFullyLoadedMap;
-        public ImmutableDictionary<ManagedDataSource, bool> IsFullyLoadedSource { get { return new ImmutableDictionary<ManagedDataSource, bool>(dataSourceFullyLoadedMap); } }
+        public ImmutableDictionary<ManagedDataSource, bool> IsFullyLoadedSource { get { return dataSourceFullyLoadedMap.ToImmutableDictionary(); } }
 
         public GraphForm CurrentGraphForm { get { return (DockPanel.ActiveDocument is GraphForm ? (GraphForm) DockPanel.ActiveDocument : null); } }
 
@@ -262,7 +270,7 @@ namespace seems
             spectrumProcessingForm.HideOnClose = true;
 
             spectrumAnnotationForm = new SpectrumAnnotationForm();
-            spectrumAnnotationForm.AnnotationChanged += new EventHandler( spectrumAnnotationForm_AnnotationChanged );
+            spectrumAnnotationForm.AnnotationChanged += (s, e) => spectrumAnnotationForm_AnnotationChanged(s, e);
             spectrumAnnotationForm.GotFocus += new EventHandler( form_GotFocus );
             spectrumAnnotationForm.HideOnClose = true;
 
@@ -335,7 +343,7 @@ namespace seems
                         form.SetPaneNames();
 
                     if (spectrumListFilters.Length > 0)
-                        SpectrumListFactory.wrap(newSource.Source.MSDataFile, spectrumListFilterList);
+                        SpectrumListFactory.Wrap(newSource.Source.MSDataFile, spectrumListFilterList);
 
                     initializeManagedDataSource( newSource, idOrIndexList, annotation, spectrumListFilterList );
 				} else
@@ -356,19 +364,19 @@ namespace seems
                             indexListByType[indexType].Add((int)idOrIndex);
                         else if (idOrIndex is string)
                         {
-                            SpectrumList sl = source.Source.MSDataFile.run.spectrumList;
+                            ISpectrumList sl = source.Source.MSDataFile.Run.SpectrumList;
 
-                            int findIndex = sl.find(idOrIndex as string);
-                            if (findIndex != sl.size())
+                            int findIndex = sl.Find(idOrIndex as string);
+                            if (findIndex != sl.Count)
                             {
                                 indexListByType[indexType].Add(findIndex);
                             }
                             else
                             {
-                                ChromatogramList cl = source.Source.MSDataFile.run.chromatogramList;
+                                IChromatogramList cl = source.Source.MSDataFile.Run.ChromatogramList;
                                 indexType = typeof(Chromatogram);
-                                findIndex = cl.find(idOrIndex as string);
-                                if (findIndex != cl.size())
+                                findIndex = cl.Find(idOrIndex as string);
+                                if (findIndex != cl.Count)
                                     indexListByType[indexType].Add(findIndex);
                                 else
                                     MessageBox.Show("This id does not exist in the spectrum or chromatogram list: " + idOrIndex, "Unable to find spectrum or chromatogram", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -384,14 +392,14 @@ namespace seems
                         MassSpectrum spectrum = source.GetMassSpectrum(index);
 
                         if (spectrumListFilters.Length > 0)
-                            SpectrumListFactory.wrap(source.Source.MSDataFile, spectrumListFilterList);
+                            SpectrumListFactory.Wrap(source.Source.MSDataFile, spectrumListFilterList);
 
                         spectrum.AnnotationSettings = defaultScanAnnotationSettings;
 
                         if (annotation != null)
                             spectrum.AnnotationList.Add(annotation);
 
-                        if (source.Source.Spectra.Count < source.Source.MSDataFile.run.spectrumList.size() &&
+                        if (source.Source.Spectra.Count < source.Source.MSDataFile.Run.SpectrumList.Count &&
                             source.SpectrumListForm.IndexOf(spectrum) < 0)
                         {
                             source.SpectrumListForm.Add(spectrum);
@@ -408,7 +416,7 @@ namespace seems
 
                         chromatogram.AnnotationSettings = defaultChromatogramAnnotationSettings;
 
-                        if (source.Source.Chromatograms.Count < source.Source.MSDataFile.run.chromatogramList.size() &&
+                        if (source.Source.Chromatograms.Count < source.Source.MSDataFile.Run.ChromatogramList.Count &&
                             source.ChromatogramListForm.IndexOf(chromatogram) < 0)
                         {
                             source.ChromatogramListForm.Add(chromatogram);
@@ -443,7 +451,7 @@ namespace seems
                 return;
 
             // for each name that isn't unique, first try making unique by filename without ext, then by filename, then by filepath
-            var sourcesGroupedByName = dataSourceMap.GroupBy(kvp => kvp.Value.Source.MSDataFile.run.id, kvp => kvp.Value).ToList();
+            var sourcesGroupedByName = dataSourceMap.GroupBy(kvp => kvp.Value.Source.MSDataFile.Run.Id, kvp => kvp.Value).ToList();
             foreach (var nameGroup in sourcesGroupedByName)
             {
                 if (nameGroup.Count() == 1)
@@ -583,11 +591,11 @@ namespace seems
 
 				GraphForm firstGraph = null;
 
-				ChromatogramList cl = msDataFile.run.chromatogramList;
-				SpectrumList sl = msDataFile.run.spectrumList;
+				IChromatogramList cl = msDataFile.Run.ChromatogramList;
+				ISpectrumList sl = msDataFile.Run.SpectrumList;
                 //sl = new SpectrumList_Filter( sl, new SpectrumList_FilterAcceptSpectrum( acceptSpectrum ) );
 
-                if (sl.size()+cl.size() == 0)
+                if (sl.Count+cl.Count == 0)
                     throw new Exception("Error loading metadata: no spectra or chromatograms");
 
                 var indexListByType = new Dictionary<Type, Set<int>>();
@@ -603,16 +611,16 @@ namespace seems
                             indexListByType[indexType].Add((int)idOrIndex);
                         else if (idOrIndex is string)
                         {
-                            int findIndex = sl.find(idOrIndex as string);
-                            if (findIndex != sl.size())
+                            int findIndex = sl.Find(idOrIndex as string);
+                            if (findIndex != sl.Count)
                             {
                                 indexListByType[indexType].Add(findIndex);
                             }
                             else
                             {
                                 indexType = typeof(Chromatogram);
-                                findIndex = cl.find(idOrIndex as string);
-                                if (findIndex != cl.size())
+                                findIndex = cl.Find(idOrIndex as string);
+                                if (findIndex != cl.Count)
                                     indexListByType[indexType].Add(findIndex);
                                 else
                                     MessageBox.Show("This id does not exist in the spectrum or chromatogram list: " + idOrIndex, "Unable to find spectrum or chromatogram", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -692,17 +700,17 @@ namespace seems
             var msDataFile = source.MSDataFile;
             var chromatogramListForm = managedDataSource.ChromatogramListForm;
             var spectrumListForm = managedDataSource.SpectrumListForm;
-            ChromatogramList cl = msDataFile.run.chromatogramList;
-            SpectrumList sl = msDataFile.run.spectrumList;
+            IChromatogramList cl = msDataFile.Run.ChromatogramList;
+            ISpectrumList sl = msDataFile.Run.SpectrumList;
 
             bool firstChromatogramLoaded = source.Chromatograms.Count > 0;
             bool firstSpectrumLoaded = source.Spectra.Count > 0;
             GraphForm firstGraph = null;
 
-            int ticIndex = cl.find("TIC");
-            if (ticIndex < cl.size())
+            int ticIndex = cl.Find("TIC");
+            if (ticIndex < cl.Count)
             {
-                pwiz.CLI.msdata.Chromatogram tic = cl.chromatogram(ticIndex);
+                Pwiz.Data.MsData.Spectra.Chromatogram tic = cl.GetChromatogram(ticIndex);
                 Chromatogram ticChromatogram = managedDataSource.GetChromatogram(ticIndex);
                 ticChromatogram.AnnotationSettings = defaultChromatogramAnnotationSettings;
                 chromatogramListForm.Add(ticChromatogram);
@@ -722,12 +730,12 @@ namespace seems
             }
 
             // get spectrum type from fileContent if possible, otherwise from first spectrum
-            CVParam spectrumType = msDataFile.fileDescription.fileContent.cvParamChild(CVID.MS_spectrum_type);
-            if (spectrumType.cvid == CVID.CVID_Unknown && sl.size() > 0)
-                spectrumType = sl.spectrum(0).cvParamChild(CVID.MS_spectrum_type);
+            CVParam spectrumType = msDataFile.FileDescription.FileContent.Params.CvParamChild(CVID.MS_spectrum_type);
+            if (spectrumType.Cvid == CVID.CVID_Unknown && sl.Count > 0)
+                spectrumType = sl.GetSpectrum(0).CvParamChild(CVID.MS_spectrum_type);
 
             // load the rest of the chromatograms
-            for (int i = 0; i < cl.size(); ++i)
+            for (int i = 0; i < cl.Count; ++i)
             {
                 if (i == ticIndex || source.Chromatograms.Any(o => o.Index == i))
                     continue;
@@ -735,8 +743,8 @@ namespace seems
                 Chromatogram chromatogram = managedDataSource.GetChromatogram(i);
 
                 if (OnLoadDataSourceProgress(String.Format("Loading chromatograms from {0} ({1} of {2})...",
-                                                       managedDataSource.Source.Name, (i + 1), cl.size()),
-                                             (i + 1) * 100 / cl.size()))
+                                                       managedDataSource.Source.Name, (i + 1), cl.Count),
+                                             (i + 1) * 100 / cl.Count))
                     return;
 
                 chromatogram.AnnotationSettings = defaultChromatogramAnnotationSettings;
@@ -766,7 +774,7 @@ namespace seems
 
             var preloadedSpectraIndices = new Set<int>(source.Spectra.Select(o => o.Index));
 
-            for (int i = 0; i < Math.Min(100, sl.size()); ++i)
+            for (int i = 0; i < Math.Min(100, sl.Count); ++i)
             {
                 if (preloadedSpectraIndices.Contains(i)) // skip preloaded spectra
                     continue;
@@ -795,21 +803,21 @@ namespace seems
             spectrumListForm.Show(DockPanel, DockState.DockBottom);
 
             // if no spectra, focus back on chromatograms
-            if (ShowChromatogramListForNewSources && sl.size() == 0)
+            if (ShowChromatogramListForNewSources && sl.Count == 0)
                 chromatogramListForm.Show();
 
             // get the rest of the scans by sequential access
             spectrumListForm.BeginBulkLoad();
-            for (int i = 100; i < sl.size(); ++i)
+            for (int i = 100; i < sl.Count; ++i)
             {
                 if (preloadedSpectraIndices.Contains(i)) // skip preloaded spectra
                     continue;
 
-                if (((i + 1) % 1000) == 0 || (i + 1) == sl.size())
+                if (((i + 1) % 1000) == 0 || (i + 1) == sl.Count)
                 {
                     if (OnLoadDataSourceProgress(String.Format("Loading spectra from {0} ({1} of {2})...",
-                                                           managedDataSource.Source.Name, (i + 1), sl.size()),
-                                                 (i + 1) * 100 / sl.size()))
+                                                           managedDataSource.Source.Name, (i + 1), sl.Count),
+                                                 (i + 1) * 100 / sl.Count))
                         return;
                 }
 
@@ -921,7 +929,7 @@ namespace seems
                 menu.Items[0].Font = new Font( menu.Items[0].Font, FontStyle.Bold );
                 menu.Tag = e.Spectrum;
 
-                if ((int)spectrumListForm.GridView["MsLevel", e.RowIndex].Value > 1 && e.Spectrum.Element.precursors.Count > 0)
+                if ((int)spectrumListForm.GridView["MsLevel", e.RowIndex].Value > 1 && e.Spectrum.Element.Precursors.Count > 0)
                 {
                     menu.Items.Add("Show Precursor Spectrum as New Graph", null, graphListForm_showPrecursorSpectrumOnNewGraph);
                     menu.Items.Add("Overlay Precursor Spectrum on Current Graph", null, graphListForm_showPrecursorSpectrumOverlayOnCurrentGraph);
@@ -1100,18 +1108,12 @@ namespace seems
         /// </summary>
         MassSpectrum getPrecursorSpectrum(MassSpectrum g)
         {
-            var precursor = g.Element.precursors[0];
-            string precursorId = precursor.spectrumID;
-            if (precursorId.IsNullOrEmpty())
-                throw new Exception("spectrum " + g.Id + " has a precursor but it does not have a spectrumID");
-            int precursorIndex = g.SpectrumList.find(precursorId);
-            if (precursorIndex == g.SpectrumList.size())
-                throw new Exception("spectrum " + g.Id + " has a precursor spectrumID (" + precursorId + ") but it is not present in the source file");
-
-            var filter = new IsolationWindowFilter(5, precursor.isolationWindow);
-            var filteredList = new SpectrumList_PeakFilter(g.SpectrumList, filter);
-
-            return g.Source.GetMassSpectrum(precursorIndex, filteredList);
+            // pwiz-sharp doesn't yet expose Pwiz.Analysis IsolationWindowFilter +
+            // SpectrumList_PeakFilter as a public API the way the cpp/CLI version did. Until
+            // those are surfaced, the "show precursor spectrum overlay" context-menu action
+            // throws — the rest of Manager.cs (open file / list / graph) doesn't depend on it.
+            throw new NotImplementedException(
+                "getPrecursorSpectrum: IsolationWindowFilter / SpectrumList_PeakFilter not yet ported to pwiz-sharp.");
         }
 
         void graphListForm_showPrecursorSpectrumOverlayOnCurrentGraph(object sender, EventArgs e)
@@ -1190,13 +1192,13 @@ namespace seems
         public void LoadDefaultAnnotationSettings()
         {
             defaultScanAnnotationSettings = new AnnotationSettings();
-            defaultScanAnnotationSettings.ShowXValues = Properties.Settings.Default.ShowScanMzLabels;
-            defaultScanAnnotationSettings.ShowYValues = Properties.Settings.Default.ShowScanIntensityLabels;
-            defaultScanAnnotationSettings.ShowMatchedAnnotations = Properties.Settings.Default.ShowScanMatchedAnnotations;
-            defaultScanAnnotationSettings.ShowUnmatchedAnnotations = Properties.Settings.Default.ShowScanUnmatchedAnnotations;
-            defaultScanAnnotationSettings.MatchTolerance = Properties.Settings.Default.MzMatchTolerance;
-            defaultScanAnnotationSettings.MatchToleranceOverride = Properties.Settings.Default.ScanMatchToleranceOverride;
-            defaultScanAnnotationSettings.MatchToleranceUnit = (MatchToleranceUnits) Properties.Settings.Default.MzMatchToleranceUnit;
+            defaultScanAnnotationSettings.ShowXValues = Pwiz.SeeMS.Settings.Default.ShowScanMzLabels;
+            defaultScanAnnotationSettings.ShowYValues = Pwiz.SeeMS.Settings.Default.ShowScanIntensityLabels;
+            defaultScanAnnotationSettings.ShowMatchedAnnotations = Pwiz.SeeMS.Settings.Default.ShowScanMatchedAnnotations;
+            defaultScanAnnotationSettings.ShowUnmatchedAnnotations = Pwiz.SeeMS.Settings.Default.ShowScanUnmatchedAnnotations;
+            defaultScanAnnotationSettings.MatchTolerance = Pwiz.SeeMS.Settings.Default.MzMatchTolerance;
+            defaultScanAnnotationSettings.MatchToleranceOverride = Pwiz.SeeMS.Settings.Default.ScanMatchToleranceOverride;
+            defaultScanAnnotationSettings.MatchToleranceUnit = (MatchToleranceUnits) Pwiz.SeeMS.Settings.Default.MzMatchToleranceUnit;
 
             // ms-product-label -> (label alias, known color)
             defaultScanAnnotationSettings.LabelToAliasAndColorMap["y"] = new Pair<string, Color>( "y", Color.Blue );
@@ -1207,13 +1209,13 @@ namespace seems
             defaultScanAnnotationSettings.LabelToAliasAndColorMap["b-H2O"] = new Pair<string, Color>( "b*", Color.Violet );
 
             defaultChromatogramAnnotationSettings = new AnnotationSettings();
-            defaultChromatogramAnnotationSettings.ShowXValues = Properties.Settings.Default.ShowChromatogramTimeLabels;
-            defaultChromatogramAnnotationSettings.ShowYValues = Properties.Settings.Default.ShowChromatogramIntensityLabels;
-            defaultChromatogramAnnotationSettings.ShowMatchedAnnotations = Properties.Settings.Default.ShowChromatogramMatchedAnnotations;
-            defaultChromatogramAnnotationSettings.ShowUnmatchedAnnotations = Properties.Settings.Default.ShowChromatogramUnmatchedAnnotations;
-            defaultChromatogramAnnotationSettings.MatchTolerance = Properties.Settings.Default.TimeMatchTolerance;
-            defaultChromatogramAnnotationSettings.MatchToleranceOverride = Properties.Settings.Default.ChromatogramMatchToleranceOverride;
-            defaultChromatogramAnnotationSettings.MatchToleranceUnit = (MatchToleranceUnits) Properties.Settings.Default.TimeMatchToleranceUnit;
+            defaultChromatogramAnnotationSettings.ShowXValues = Pwiz.SeeMS.Settings.Default.ShowChromatogramTimeLabels;
+            defaultChromatogramAnnotationSettings.ShowYValues = Pwiz.SeeMS.Settings.Default.ShowChromatogramIntensityLabels;
+            defaultChromatogramAnnotationSettings.ShowMatchedAnnotations = Pwiz.SeeMS.Settings.Default.ShowChromatogramMatchedAnnotations;
+            defaultChromatogramAnnotationSettings.ShowUnmatchedAnnotations = Pwiz.SeeMS.Settings.Default.ShowChromatogramUnmatchedAnnotations;
+            defaultChromatogramAnnotationSettings.MatchTolerance = Pwiz.SeeMS.Settings.Default.TimeMatchTolerance;
+            defaultChromatogramAnnotationSettings.MatchToleranceOverride = Pwiz.SeeMS.Settings.Default.ChromatogramMatchToleranceOverride;
+            defaultChromatogramAnnotationSettings.MatchToleranceUnit = (MatchToleranceUnits) Pwiz.SeeMS.Settings.Default.TimeMatchToleranceUnit;
         }
 
         public void ShowAnnotationForm()
@@ -1283,7 +1285,7 @@ namespace seems
                         if (e.ChangeScope == SpectrumProcessingForm.ProcessingChangedEventArgs.Scope.Run && paneSpectrum.Source != e.Spectrum.Source)
                             continue;
 
-                        paneSpectrum.SpectrumList = spectrumProcessingForm.GetProcessingSpectrumList(paneSpectrum, paneSpectrum.Source.Source.MSDataFile.run.spectrumList);
+                        paneSpectrum.SpectrumList = spectrumProcessingForm.GetProcessingSpectrumList(paneSpectrum, paneSpectrum.Source.Source.MSDataFile.Run.SpectrumList);
 
                         refresh = true;
 
@@ -1312,7 +1314,7 @@ namespace seems
                     if( item.IsMassSpectrum &&
                         item.Id == spf.CurrentSpectrum.Id )
                     {
-                        ( item as MassSpectrum ).SpectrumList = spectrumProcessingForm.GetProcessingSpectrumList(item as MassSpectrum, item.Source.Source.MSDataFile.run.spectrumList);
+                        ( item as MassSpectrum ).SpectrumList = spectrumProcessingForm.GetProcessingSpectrumList(item as MassSpectrum, item.Source.Source.MSDataFile.Run.SpectrumList);
                         refresh = true;
                         break;
                     }
@@ -1468,8 +1470,13 @@ namespace seems
 
         private void startWritePreviewMzML( object threadArg )
         {
-            KeyValuePair<string, MSDataFile> sourcePair = (KeyValuePair<string, MSDataFile>) threadArg;
-            sourcePair.Value.write( sourcePair.Key );
+            // pwiz-sharp doesn't have a static MSDataFile type yet; use MzmlWriter directly.
+            // The cpp/CLI MSDataFile.write was a thin wrapper that picked an output format
+            // by extension; mirroring that would mean adding an MSDataFile.Write helper to
+            // pwiz-sharp's MsData project. For now, write mzML.
+            var sourcePair = (KeyValuePair<string, Pwiz.Data.MsData.MSData>) threadArg;
+            using var output = System.IO.File.Create(sourcePair.Key);
+            new Pwiz.Data.MsData.Mzml.MzmlWriter().Write(sourcePair.Value, output);
         }
 	}
 }

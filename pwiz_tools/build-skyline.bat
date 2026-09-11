@@ -1,1 +1,0 @@
-%~dp0build-apps.bat 64 toolset=msvc-14.3 %* %~dp0Skyline//Skyline.exe

@@ -28,17 +28,17 @@ using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     public class SelectColumnsDialog : DockableForm
     {
         private DataGridView dataGridView;
-        private Map<string, CheckBox> columnToCheckboxMap;
+        private Dictionary<string, CheckBox> columnToCheckboxMap;
 
         public SelectColumnsDialog( DataGridView dgv )
         {
             dataGridView = dgv;
-            columnToCheckboxMap = new Map<string, CheckBox>();
+            columnToCheckboxMap = new Dictionary<string, CheckBox>();
 
             this.Name = "SelectColumnsDialog";
             this.Text = "Select Columns";
@@ -89,7 +89,7 @@ namespace seems
 
         void okButton_Click( object sender, EventArgs e )
         {
-            foreach( Map<string, CheckBox>.MapPair itr in columnToCheckboxMap )
+            foreach( Dictionary<string, CheckBox>.MapPair itr in columnToCheckboxMap )
             {
                 dataGridView.Columns[itr.Key].Visible = itr.Value.Checked;
             }

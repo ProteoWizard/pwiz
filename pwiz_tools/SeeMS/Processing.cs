@@ -24,12 +24,17 @@ using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
-using pwiz.CLI.cv;
-using pwiz.CLI.data;
-using pwiz.CLI.msdata;
-using pwiz.CLI.analysis;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Params;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
+using Pwiz.Analysis;
+using Pwiz.Analysis.PeakPicking;
+using Pwiz.Data.MsData.Processing;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     public interface IProcessing
     {
@@ -39,7 +44,7 @@ namespace seems
         string ToString();
 
         /// <summary>
-        /// Takes a inner SpectrumList/ChromatogramList and wraps it with a
+        /// Takes a inner ISpectrumList/IChromatogramList and wraps it with a
         /// SpectrumListWrapper to cause some processing to happen to any
         /// spectra/chromatograms that are retrieved through the returned list
         /// </summary>
@@ -178,9 +183,9 @@ namespace seems
         {
             ProcessingMethod pm = new ProcessingMethod();
             if( algorithm is SavitzkyGolaySmoother )
-                pm.userParams.Add( new UserParam( "algorithm", "Savitzky-Golay", "SeeMS" ) );
+                pm.UserParams.Add( new UserParam( "algorithm", "Savitzky-Golay", "SeeMS" ) );
             else if( algorithm is WhittakerSmoother )
-                pm.userParams.Add( new UserParam( "algorithm", "Whittaker", "SeeMS" ) );
+                pm.UserParams.Add( new UserParam( "algorithm", "Whittaker", "SeeMS" ) );
             return pm;
         }
 
@@ -188,9 +193,9 @@ namespace seems
 
         public override ProcessableListType ProcessList<ProcessableListType>( ProcessableListType innerList )
         {
-            if( innerList is SpectrumList )
-                return new SpectrumList_Smoother( innerList as SpectrumList, algorithm, new int[] { 1, 2, 3, 4, 5, 6 } ) as ProcessableListType;
-            else //if( innerList is ChromatogramList )
+            if( innerList is ISpectrumList )
+                return new SpectrumList_Smoother( innerList as ISpectrumList, algorithm, new int[] { 1, 2, 3, 4, 5, 6 } ) as ProcessableListType;
+            else //if( innerList is IChromatogramList )
                 return innerList;
         }
 
@@ -281,9 +286,9 @@ namespace seems
         {
             ProcessingMethod pm = new ProcessingMethod();
             if( algorithm is LocalMaximumPeakDetector )
-                pm.userParams.Add( new UserParam( "algorithm", "Local Maximum", "SeeMS" ) );
+                pm.UserParams.Add( new UserParam( "algorithm", "Local Maximum", "SeeMS" ) );
             else if( algorithm is CwtPeakDetector )
-                pm.userParams.Add( new UserParam( "algorithm", "CWT", "SeeMS" ) );
+                pm.UserParams.Add( new UserParam( "algorithm", "CWT", "SeeMS" ) );
             return pm;
         }
 
@@ -291,9 +296,9 @@ namespace seems
 
         public override ProcessableListType ProcessList<ProcessableListType>( ProcessableListType innerList )
         {
-            if( innerList is SpectrumList )
-                return new SpectrumList_PeakPicker( innerList as SpectrumList, algorithm, preferVendorPeakPicking, new int[] { 1, 2, 3, 4, 5, 6 } ) as ProcessableListType;
-            else //if( innerList is ChromatogramList )
+            if( innerList is ISpectrumList )
+                return new SpectrumList_PeakPicker( innerList as ISpectrumList, algorithm, preferVendorPeakPicking, new int[] { 1, 2, 3, 4, 5, 6 } ) as ProcessableListType;
+            else //if( innerList is IChromatogramList )
                 return innerList;
         }
 
@@ -351,7 +356,7 @@ namespace seems
 
         public ThresholdFilter.ThresholdingBy_Type Type
         {
-            get { return type; }
+            get { return Type; }
             set
             {
                 type = value;
@@ -380,7 +385,7 @@ namespace seems
 
         public ThresholdingProcessor()
         {
-            type = ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count;
+            Type = ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count;
             orientation = ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense;
             threshold = defaultThreshold(type);
 
@@ -392,17 +397,17 @@ namespace seems
         public ThresholdingProcessor( ProcessingMethod method )
         {
             // parse type, orientation, and threshold from method
-            UserParam param = method.userParam( "threshold" );
-            if( param.type == "SeeMS" )
-                threshold = (double) param.value;
+            UserParam param = method.Params.UserParam( "threshold" );
+            if( param.Type == "SeeMS" )
+                threshold = param.ValueAs<double>();
 
-            param = method.userParam( "type" );
-            if( param.type == "SeeMS" )
-                type = (ThresholdFilter.ThresholdingBy_Type) (int) param.value;
+            param = method.Params.UserParam( "type" );
+            if( param.Type == "SeeMS" )
+                type = (ThresholdFilter.ThresholdingBy_Type) param.ValueAs<int>();
 
-            param = method.userParam( "orientation" );
-            if( param.type == "SeeMS" )
-                orientation = (ThresholdFilter.ThresholdingOrientation) (int) param.value;
+            param = method.Params.UserParam( "orientation" );
+            if( param.Type == "SeeMS" )
+                orientation = (ThresholdFilter.ThresholdingOrientation) param.ValueAs<int>();
         }
 
         void optionsChanged( object sender, EventArgs e )
@@ -455,9 +460,9 @@ namespace seems
         public override ProcessingMethod ToProcessingMethod()
         {
             ProcessingMethod pm = new ProcessingMethod();
-            pm.userParams.Add( new UserParam( "threshold", threshold.ToString(), "SeeMS" ) );
-            pm.userParams.Add( new UserParam( "type", type.ToString(), "SeeMS" ) );
-            pm.userParams.Add( new UserParam( "orientation", orientation.ToString(), "SeeMS" ) );
+            pm.UserParams.Add( new UserParam( "threshold", threshold.ToString(), "SeeMS" ) );
+            pm.UserParams.Add( new UserParam( "type", type.ToString(), "SeeMS" ) );
+            pm.UserParams.Add( new UserParam( "orientation", orientation.ToString(), "SeeMS" ) );
             return pm;
         }
 
@@ -465,9 +470,9 @@ namespace seems
 
         public override ProcessableListType ProcessList<ProcessableListType>( ProcessableListType innerList )
         {
-            if( innerList is SpectrumList )
-                return new SpectrumList_PeakFilter( innerList as SpectrumList, new ThresholdFilter(type, threshold, orientation) ) as ProcessableListType;
-            else //if( innerList is ChromatogramList )
+            if( innerList is ISpectrumList )
+                return new SpectrumList_PeakFilter( innerList as ISpectrumList, new ThresholdFilter(type, threshold, orientation) ) as ProcessableListType;
+            else //if( innerList is IChromatogramList )
                 return innerList;
         }
 
@@ -516,8 +521,8 @@ namespace seems
                 threshold = 0.9;
 
             overrideExistingCharge = processingPanels.chargeStateCalculatorOverrideExistingCheckBox.Checked;
-            minCharge = (int) processingPanels.chargeStateCalculatorMinChargeUpDown.Value;
-            maxCharge = (int) processingPanels.chargeStateCalculatorMaxChargeUpDown.Value;
+            minCharge = processingPanels.chargeStateCalculatorMinChargeUpDown.ValueAs<int>();
+            maxCharge = processingPanels.chargeStateCalculatorMaxChargeUpDown.ValueAs<int>();
 
             OnOptionsChanged( sender, e );
         }
@@ -537,9 +542,9 @@ namespace seems
 
         public override ProcessableListType ProcessList<ProcessableListType>( ProcessableListType innerList )
         {
-            if( innerList is SpectrumList )
-                return new SpectrumList_ChargeStateCalculator( innerList as SpectrumList, overrideExistingCharge, maxCharge, minCharge, threshold ) as ProcessableListType;
-            else //if( innerList is ChromatogramList )
+            if( innerList is ISpectrumList )
+                return new SpectrumList_ChargeStateCalculator( innerList as ISpectrumList, overrideExistingCharge, maxCharge, minCharge, threshold ) as ProcessableListType;
+            else //if( innerList is IChromatogramList )
                 return innerList;
         }
 
@@ -592,8 +597,8 @@ namespace seems
         public override ProcessingMethod ToProcessingMethod()
         {
             ProcessingMethod pm = new ProcessingMethod();
-            pm.userParams.Add(new UserParam("mz", mz.ToString(), "SeeMS"));
-            pm.userParams.Add(new UserParam("tolerance", tolerance.ToString(), "SeeMS"));
+            pm.UserParams.Add(new UserParam("mz", mz.ToString(), "SeeMS"));
+            pm.UserParams.Add(new UserParam("tolerance", tolerance.ToString(), "SeeMS"));
             return pm;
         }
 
@@ -601,9 +606,9 @@ namespace seems
 
         public override ProcessableListType ProcessList<ProcessableListType>(ProcessableListType innerList)
         {
-            if (innerList is SpectrumList)
-                return new SpectrumList_LockmassRefiner(innerList as SpectrumList, mz, mz, tolerance) as ProcessableListType; // TODO - seperate value for negative scans
-            else //if( innerList is ChromatogramList )
+            if (innerList is ISpectrumList)
+                return new SpectrumList_LockmassRefiner(innerList as ISpectrumList, mz, mz, tolerance) as ProcessableListType; // TODO - seperate value for negative scans
+            else //if( innerList is IChromatogramList )
                 return innerList;
         }
 
