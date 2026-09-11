@@ -47,14 +47,14 @@ create(DslContext.projectId, BuildType({
             name = "Restore"
             id = "dotnet_1"
             enabled = false
-            projects = "pwiz-sharp/Pwiz.sln"
+            projects = "Pwiz.sln"
             args = "/p:IAgreeToVendorLicenses=true"
             sdk = "8.0"
         }
         dotnetMsBuild {
             id = "dotnet"
             enabled = false
-            projects = "pwiz-sharp/Pwiz.sln"
+            projects = "Pwiz.sln"
             version = DotnetMsBuildStep.MSBuildVersion.CrossPlatform
             configuration = "Release"
             args = "/p:IAgreeToVendorLicenses=true -p:TestTfmsInParallel=false"
