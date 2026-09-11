@@ -26,8 +26,6 @@ create(DslContext.projectId, BuildType({
 
     artifactRules = """
         pwiz-sharp/installer/build/ProteoWizard-*.exe
-        xxbuild-nt-x86/*.tar.bz2
-        xxbuild-nt-x86/VERSION
         **/*.blib.observed
     """.trimIndent()
 
@@ -85,9 +83,9 @@ create(DslContext.projectId, BuildType({
                 REM Pass the value to TeamCity
                 echo ##teamcity[setParameter name='env.PWIZ_VERSION' value='%%PWIZ_VERSION%%']
             """.trimIndent()
+            param("org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource", "Job configuration")
             param("org.jfrog.artifactory.selectedDeployableServer.useSpecs", "false")
             param("org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource", "Job configuration")
-            param("org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource", "Job configuration")
         }
         step {
             id = "RUNNER_73"
