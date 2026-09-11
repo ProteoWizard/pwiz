@@ -4,7 +4,6 @@ import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.BuildType
 import jetbrains.buildServer.configs.kotlin.buildSteps.DotnetMsBuildStep
 import jetbrains.buildServer.configs.kotlin.buildSteps.DotnetVsTestStep
-import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetCustom
 import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetMsBuild
 import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetRestore
 import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetVsTest
@@ -30,12 +29,6 @@ create(DslContext.projectId, BuildType({
     """.trimIndent()
 
     steps {
-        dotnetCustom {
-            name = "Install dotCover"
-            id = "Install_dotCover"
-            enabled = false
-            args = "tool install -g JetBrains.dotCover.CommandLineTools"
-        }
         exec {
             id = "RUNNER_simpleRunner_139"
             path = "pwiz-sharp/tcbuild.bat"
