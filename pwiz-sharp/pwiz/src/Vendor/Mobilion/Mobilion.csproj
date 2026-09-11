@@ -16,6 +16,17 @@
     <MobilionArchive>$(PwizCppAuxRoot)\msrc\utility\vendor_api_Mobilion.7z</MobilionArchive>
     <MobilionAssembliesDir>$(PwizVendorAssembliesPath)\Mobilion</MobilionAssembliesDir>
     <MobilionShimDir>$(MSBuildThisFileDirectory)MobilionShim</MobilionShimDir>
+
+    <!-- $(PwizPrebuiltNativeShimDir): a directory holding MobilionShim.dll and MBI_SDK.dll
+         already built for Windows - the artifact of the Native shims CI config
+         (scripts/misc/tcbuild-native-shims.bat). Set it and none of the targets below run:
+         no vswhere, no .vcxproj, no archive extraction, and PWIZ0005 stands down.
+
+         MBI_SDK.dll exports C++ classes (MBIFile returns std::shared_ptr<std::vector<double>>),
+         so the shim has to be built by an MSVC-ABI compiler; a prebuilt is the only way a
+         non-Windows host can put it in a Windows payload. Windows-targeted builds only.
+         -->
+    <_MobilionShimPrebuilt Condition="'$(NativeVendorsAvailable)' == 'true' AND '$(PwizPrebuiltNativeShimDir)' != '' AND '$(PwizTargetIsWindows)' == 'true'">true</_MobilionShimPrebuilt>
     <!-- $(SevenZaExe) is deliberately NOT set here: Directory.Build.props picks 7za.exe or
          7zz per OS, and hardcoding the Windows PE breaks any non-Windows build. -->
   </PropertyGroup>
@@ -47,7 +58,7 @@
 
   <!-- 1. Extract MBI_SDK.dll + headers + import library out of the encrypted 7z. -->
   <Target Name="ExtractMobilionAssemblies"
-          Condition="'$(NativeVendorsAvailable)' == 'true'"
+          Condition="'$(NativeVendorsAvailable)' == 'true' AND '$(_MobilionShimPrebuilt)' != 'true'"
           BeforeTargets="BuildMobilionShim;ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(MobilionArchive)"
           Outputs="$(MobilionAssembliesDir)\MBI_SDK.dll;$(MobilionAssembliesDir)\MBIFile.h">
@@ -70,8 +81,22 @@
        publish it to this project's output dir as Content so consumers
        (msconvert-sharp, tests) get it alongside MBI_SDK.dll for runtime
        P/Invoke. -->
+  <!-- Like BiblioSpec's MascotShim, MobilionShim is native and COMPILED here rather than
+       vendored, so it cannot cross-compile: the .vcxproj needs Visual Studio's C++ toolchain.
+       Check before LocateVisualStudioMSBuild runs, because that target shells out to a hardcoded
+       Windows vswhere.exe path and off-Windows the Exec fails with a bare "exited
+       with code 127" - which reads as a broken install rather than as "this cannot be built
+       here". Only one direction needs checking: a Linux-targeted build leaves
+       $(NativeVendorsAvailable) false and skips this whole path. -->
+  <Target Name="VerifyMobilionShimPlatform"
+          Condition="'$(NativeVendorsAvailable)' == 'true' AND '$(OS)' != 'Windows_NT' AND '$(_MobilionShimPrebuilt)' != 'true'"
+          BeforeTargets="LocateVisualStudioMSBuild;BuildMobilionShim">
+    <Error Code="PWIZ0005"
+           Text="Mobilion support targets Windows but this build is running on $(OS). MobilionShim.vcxproj is native C++ built by Visual Studio MSBuild, which cannot cross-compile here. Build it on Windows, or drop -p:IAgreeToVendorLicenses=true to compile every native vendor reader out (Identify() keeps working; Read() throws)." />
+  </Target>
+
   <Target Name="LocateVisualStudioMSBuild"
-          Condition="'$(NativeVendorsAvailable)' == 'true' and '$(VsMSBuildExe)' == ''">
+          Condition="'$(NativeVendorsAvailable)' == 'true' and '$(VsMSBuildExe)' == '' AND '$(_MobilionShimPrebuilt)' != 'true'">
     <!-- vswhere.exe lives in the (x86) Program Files even on x64 machines (Installer is a
          shared 32-bit component). $(ProgramFiles) on Win32 dotnet inherits the bitness of
          the parent process, so we hardcode the path to keep things deterministic. -->
@@ -84,7 +109,7 @@
   </Target>
 
   <Target Name="BuildMobilionShim"
-          Condition="'$(NativeVendorsAvailable)' == 'true'"
+          Condition="'$(NativeVendorsAvailable)' == 'true' AND '$(_MobilionShimPrebuilt)' != 'true'"
           DependsOnTargets="ExtractMobilionAssemblies;LocateVisualStudioMSBuild"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
           Inputs="$(MobilionShimDir)\MobilionShim.cpp;$(MobilionShimDir)\MobilionShim.h;$(MobilionAssembliesDir)\MBI_SDK.lib"
@@ -92,13 +117,28 @@
     <Exec Command="&quot;$(VsMSBuildExe)&quot; &quot;$(MobilionShimDir)\MobilionShim.vcxproj&quot; /p:Configuration=$(Configuration) /p:Platform=x64 /nologo /verbosity:minimal" />
   </Target>
 
-  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true' AND '$(_MobilionShimPrebuilt)' != 'true'">
     <Content Include="$(MobilionAssembliesDir)\MBI_SDK.dll">
       <Link>MBI_SDK.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>false</Visible>
     </Content>
     <Content Include="$(MobilionShimDir)\bin\$(Configuration)\MobilionShim.dll">
+      <Link>MobilionShim.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+  <!-- Prebuilt bundle: same output layout as the ItemGroup above, so nothing downstream
+       can tell which way the DLLs got there. -->
+  <ItemGroup Condition="'$(_MobilionShimPrebuilt)' == 'true'">
+    <Content Include="$(_PwizPrebuiltNativeShimDir)MBI_SDK.dll">
+      <Link>MBI_SDK.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(_PwizPrebuiltNativeShimDir)MobilionShim.dll">
       <Link>MobilionShim.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>false</Visible>

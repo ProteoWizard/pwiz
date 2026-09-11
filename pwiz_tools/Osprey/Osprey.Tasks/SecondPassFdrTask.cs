@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -58,14 +58,10 @@ namespace pwiz.Osprey.Tasks
         public override bool IsIncluded(PipelineContext ctx)
         {
             var c = ctx.Config;
-            bool inputs = c.InputScores != null && c.InputScores.Count > 0;
-            // StopAfterStage5 on BOTH input routes, for the reason PerFileRescoreTask.IsIncluded
-            // states: it appeared only in the --input-scores clause because --task FirstPassFDR
-            // was the only setter and that task rejects -i. --task ModelDiagnostics sets it too
-            // and takes -i.
-            return (!inputs && !c.NoJoin && !c.StopAfterStage5)
-                || (inputs && c.ExpectReconciledInput)
-                || (inputs && !c.NoJoin && !c.StopAfterStage5 && !c.ExpectReconciledInput);
+            // Its own node always, and the full pipeline unless something stops earlier.
+            // StopAfterStage5 means that boundary whatever the inputs look like, for the
+            // reason PerFileRescoreTask.IsIncluded states.
+            return c.ExpectReconciledInput || (!c.NoJoin && !c.StopAfterStage5);
         }
 
         // Phase B resume surface. Reads each file's reconciled
@@ -76,13 +72,13 @@ namespace pwiz.Osprey.Tasks
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
             if (ctx.Config.InputFiles == null) yield break;
-            // Stage 7 reads the reconciled parquet when Stage 6 produced one,
-            // else the original Stage 4 parquet (no-work files). Recorded for
-            // provenance only -- the driver validates tasks by output sidecar
+            // Stage 7 reads the reconciled parquet, which Stage 6 writes for every run -
+            // a run without one fails in UnusableReconciledParquets rather than being read
+            // from its Stage 4 file, which a SecondPassFDR node is not even shipped.
+            // Recorded for provenance only -- the driver validates tasks by output sidecar
             // key, never by re-checking Inputs() existence (TaskValiditySidecar).
             foreach (var input in ctx.Config.InputFiles)
-                yield return ParquetScoreCache.EffectiveScoresPathFromScoresPath(
-                    ParquetScoreCache.GetScoresPath(input));
+                yield return ParquetScoreCache.GetReconciledScoresPath(input);
 
             // Under the frozen modes the per-run 2nd-pass FDR sidecars are this task's INPUTS:
             // the rescore worker computed and wrote them, and the join folds the per-base_id
@@ -285,38 +281,25 @@ namespace pwiz.Osprey.Tasks
 
         public override bool Run(PipelineContext ctx)
         {
-            bool couldStream = ScoringTaskShared.CanStreamStage7Join(ctx.Config, stage7Stream: true);
-            string residentError = ScoringTaskShared.Stage7ResidentGuardError(
-                couldStream, OspreyEnvironment.Stage7Stream, OspreyEnvironment.AllowUnfixedResident);
+            // Refuse a resident Stage-7 join that was CHOSEN over an admissible streamed one,
+            // before anything is written or any pool is pulled. The first-pass guard cannot see
+            // this pool - it stops at the compaction line - so without this the fat path was
+            // reachable with no token at all, which is the one shape the named-token ratchet is
+            // supposed to make impossible. (The paragraph sat above the marker wipe below, far
+            // from the call it describes.)
+            //
+            // The switch is tested FIRST because `couldStream` is not free: its
+            // AllReconciledParquetsCurrent term opens a footer per run, and the guard's own
+            // first line discards the answer whenever the switch is on - so on the default
+            // path that was an O(files) sweep of a network artifact directory computed only to
+            // be thrown away. Nothing else here needs it.
+            string residentError = OspreyEnvironment.Stage7Stream
+                ? null
+                : ScoringTaskShared.Stage7ResidentGuardError(
+                    ScoringTaskShared.CanStreamStage7Join(ctx.Config, stage7Stream: true),
+                    OspreyEnvironment.Stage7Stream, OspreyEnvironment.AllowUnfixedResident);
             if (residentError != null)
                 throw new InvalidOperationException(residentError);
-
-            // The run that CANNOT stream is not refused - there is no alternative to choose, and
-            // demanding a token would make the ordinary path unusable. But it must not be
-            // silent either. Until now the only statement of this deficiency lived in
-            // regression.ps1's end-of-run table, which prints for the developers who already
-            // know and never for the operator whose run is about to take it: what they get
-            // today is an OOM at a file count nothing warned them about.
-            //
-            // FIRST in Run, ahead of the diagnostics fold arm below. That arm returns early, and
-            // when the join cannot stream it is ITSELF a resident-pool path - it pulls the same
-            // survivor buffer, which is where 91.1 GB was measured at 446 files. Placing this
-            // after it silenced the warning on exactly the run that most needed it.
-            //
-            // One line, naming the shape, the issue and the cost model, so the ceiling is
-            // predictable from the run's own output rather than from a projection in a gate
-            // nobody outside this repo executes.
-            if (!couldStream)
-            {
-                ctx.LogWarning(string.Format(
-                    @"Stage 7 is taking the RESIDENT join: every run's survivors are rebuilt at " +
-                    @"once and held for the whole stage, which is O(files) (issue #4486). " +
-                    @"Measured cost is ~4.4 GB plus ~0.197 GB per file, so {0} file(s) needs " +
-                    @"~{1:F0} GB. The streamed join is admitted only for --task SecondPassFDR " +
-                    @"today; this run does not qualify, so there is nothing to switch on.",
-                    ctx.Config.InputFiles?.Count ?? 0,
-                    4.4 + 0.197 * (ctx.Config.InputFiles?.Count ?? 0)));
-            }
 
             // The pass-2 diagnostics product is the ONLY outstanding output: every
             // computational artifact this task produces is already on disk and key-current, and
@@ -343,11 +326,6 @@ namespace pwiz.Osprey.Tasks
                 return FoldPass2DiagnosticsOnly(ctx);
             }
 
-            // Refuse a resident Stage-7 join that was CHOSEN over an admissible streamed one,
-            // before anything is written or any pool is pulled. The first-pass guard cannot see
-            // this pool - it stops at the compaction line - so without this the fat path was
-            // reachable with no token at all, which is the one shape the named-token ratchet is
-            // supposed to make impossible.
             // Mid-Run crash safety: see FirstPassFdrTask.Run for rationale.
             foreach (var output in Outputs(ctx))
                 TaskValiditySidecar.Delete(output, Name);
@@ -365,6 +343,7 @@ namespace pwiz.Osprey.Tasks
             // the work lands, and a worker that never reaches this line never pays it.
             // Taken as a TOKEN first, so the probes below can bracket that build.
             var rescored = ctx.Get<RescoredEntries>();
+            WarnResidentStage7Join(rescored, ctx);
 
             // Stage 7's INHERITED baseline, post-GC, before this stage does any work
             // (#4486). Every figure that issue has ever quoted came from --memstamp, i.e.
@@ -404,8 +383,19 @@ namespace pwiz.Osprey.Tasks
             // refuses outright no longer pays for 289 M survivors it is about to discard.
             // Its own transients are footer metadata, which is why it can sit between the
             // stage7-inherited and stage7-pool probes without distorting either.
-            var stale = StaleReconciledParquets(rescored.FileNames, perFileParquetPaths);
-            if (stale.Count > 0)
+            var unusable = UnusableReconciledParquets(rescored.FileNames, perFileParquetPaths);
+            if (unusable.Missing.Count > 0)
+            {
+                throw new InvalidOperationException(string.Format(
+                    "{0} of {1} run(s) have no .scores-reconciled.parquet. Stage 6 writes one " +
+                    "for every run, so these were not persisted - the write no-opped, failed, " +
+                    "or the artifacts were not shipped to this node. Their .scores.parquet is " +
+                    "not a substitute: it holds 1st-pass boundaries and none of the gap-fill " +
+                    "rows. Re-run Stage 6 for them. Missing: [{2}].",
+                    unusable.Missing.Count, rescored.FileCount,
+                    string.Join(", ", unusable.Missing)));
+            }
+            if (unusable.Stale.Count > 0)
             {
                 throw new InvalidOperationException(string.Format(
                     "{0} of {1} reconciled parquet(s) predate the survivor-subset format, so " +
@@ -414,7 +404,7 @@ namespace pwiz.Osprey.Tasks
                     "unusable, so a parquet-only rewrite would leave the directory " +
                     "inconsistent. Re-run the analysis from Stage 5 over this directory. " +
                     "Stale: [{2}].",
-                    stale.Count, rescored.FileCount, string.Join(", ", stale)));
+                    unusable.Stale.Count, rescored.FileCount, string.Join(", ", unusable.Stale)));
             }
 
             // NO .Value here any more (#4486). Every consumer below folds through
@@ -658,6 +648,39 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Say so when Stage 7 is about to build the whole-run survivor pool, naming the shape,
+        /// the issue and the cost model.
+        ///
+        /// <para>The run that CANNOT stream is not refused - there is no alternative to choose,
+        /// and demanding a token would make the ordinary path unusable. But it must not be
+        /// silent either: until #4642 the only statement of this deficiency lived in
+        /// regression.ps1's end-of-run table, which prints for the developers who already know
+        /// and never for the operator whose run is about to take it, and what they got instead
+        /// was an OOM at a file count nothing had warned them about.</para>
+        ///
+        /// <para>Keyed on the MILESTONE, not on <c>CanStreamStage7Join</c>. The predicate says
+        /// the run is ADMISSIBLE; only the milestone says a per-run source was actually built,
+        /// and the two stopped being the same statement once the admission was derived from disk
+        /// rather than named by one CLI flag. Reading the fact off the thing that decides it is
+        /// what keeps this line honest as each remaining arm is converted.</para>
+        ///
+        /// <para>Called from both arms that pull the milestone, each right after its pull. The
+        /// diagnostics-only fold returns before <see cref="Run"/> reaches its own call, so a
+        /// single site would go silent on exactly the run that most needs it.</para>
+        /// </summary>
+        private static void WarnResidentStage7Join(RescoredEntries rescored, PipelineContext ctx)
+        {
+            if (rescored.Streams)
+                return;
+            int nFiles = ctx.Config.InputFiles?.Count ?? 0;
+            ctx.LogWarning(string.Format(
+                @"Stage 7 is taking the RESIDENT join: every run's survivors are rebuilt at " +
+                @"once and held for the whole stage, which is O(files) (issue #4486). " +
+                @"Measured cost is ~4.4 GB plus ~0.197 GB per file, so {0} file(s) needs " +
+                @"~{1:F0} GB.", nFiles, 4.4 + 0.197 * nFiles));
+        }
+
+        /// <summary>
         /// Produce the pass-2 diagnostics product and nothing else, from a second pass that is
         /// already complete on disk. The pass-2 sibling of
         /// <c>FirstPassFdrTask.FoldDiagnosticsOnly</c>, and the implementation of P16 for this
@@ -686,6 +709,10 @@ namespace pwiz.Osprey.Tasks
         {
             var config = ctx.Config;
             var rescored = ctx.Get<RescoredEntries>();
+            // This arm is ITSELF a resident-pool path when the source is absent - it pulls the
+            // same survivor buffer, which is where 91.1 GB was measured at 446 files - and it
+            // returns before Run's own call, so it has to make the statement itself.
+            WarnResidentStage7Join(rescored, ctx);
             var libraryById = ctx.Get<LibraryById>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
 
@@ -1068,29 +1095,40 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The per-file keys whose <c>.scores-reconciled.parquet</c> is on disk but predates
-        /// the survivor-subset format, so Stage 7 cannot read it.
+        /// The per-file keys whose <c>.scores-reconciled.parquet</c> Stage 7 cannot read,
+        /// split by WHY, because the two have different remedies: <c>Missing</c> means Stage 6
+        /// never persisted the run, and <c>Stale</c> means what it wrote predates the
+        /// survivor-subset format.
         ///
-        /// <para>The run refuses rather than converting: this branch changed the FDR
-        /// sidecars too, so an old directory has no self-consistent artifact set to
+        /// <para>Absence is reported, not skipped. Stage 6 writes this artifact for every run -
+        /// <c>WriteUnchangedReconciled</c> covers the run it did no work on - so P13 makes
+        /// absence unambiguous at the producer, and this is the consumer end of the same
+        /// principle. Exempting a missing file here let a run whose write never landed pass
+        /// this gate and be silently rebuilt from its Stage 4 parquet, i.e. at 1st-pass
+        /// boundaries with no gap-fill rows, in a run that exits 0.</para>
+        ///
+        /// <para>The run refuses rather than converting a stale one: this branch changed the
+        /// FDR sidecars too, so an old directory has no self-consistent artifact set to
         /// convert toward and has to be re-run from Stage 5 (issue #4486).</para>
         /// </summary>
-        private static List<string> StaleReconciledParquets(
+        private static (List<string> Missing, List<string> Stale) UnusableReconciledParquets(
             IReadOnlyList<string> fileNames,
             IReadOnlyDictionary<string, string> perFileParquetPaths)
         {
+            var missing = new List<string>();
             var stale = new List<string>();
             if (perFileParquetPaths == null)
-                return stale;
+                return (missing, stale);
             foreach (var fileName in fileNames)
             {
                 if (!perFileParquetPaths.TryGetValue(fileName, out string scoresPath))
                     continue;
                 string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
                 if (!File.Exists(reconciledPath))
+                {
+                    missing.Add(fileName);
                     continue;
-                var metadata = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
-                metadata.TryGetValue(@"osprey.reconciled", out string marker);
+                }
                 // Stale is EITHER an older generation (marker mismatch) OR the interim
                 // #4486 shape - survivor subset with no score_index column - which the
                 // per-file loaders would otherwise read by POSITION, silently binding
@@ -1098,14 +1136,15 @@ namespace pwiz.Osprey.Tasks
                 // IsSubsetWithoutScoreIndex documents). Only FirstPassSurvivorLoader
                 // carried that refusal; the pass-2 feature loaders reach the same file
                 // through this gate, so it has to ask the same question.
-                if (!string.Equals(marker, ParquetScoreCache.RECONCILED_SURVIVORS,
-                        StringComparison.Ordinal) ||
-                    ParquetScoreCache.IsSubsetWithoutScoreIndex(reconciledPath))
-                {
+                //
+                // Through the shared predicate rather than re-testing the footer here:
+                // ScoringTaskShared.CanStreamStage7Join ADMITS a run to the per-run fold on
+                // exactly this question, and a second copy of it is the drift that admits a
+                // run to a fold this refusal then aborts.
+                if (!ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciledPath))
                     stale.Add(fileName);
-                }
             }
-            return stale;
+            return (missing, stale);
         }
         /// <summary>
         /// Write passing entries to a BiblioSpec blib file.

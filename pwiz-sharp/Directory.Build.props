@@ -5,6 +5,13 @@
   <Import Project="$(MSBuildThisFileDirectory)Directory.Build.user.props"
           Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.user.props')" />
 
+  <!-- $(PwizTargetIsWindows): the platform the OUTPUT will run on, as opposed to $(OS), the one
+       building it. Imported here rather than beside its consumers because every project under
+       pwiz-sharp/ that stages a native payload is single-TFM plain net10.0, so the TFM rule in
+       that file can never apply and an early import loses nothing. AFTER the user props, so a
+       cross-target pin dropped in there counts as explicit the same way -p: does. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\pwiz_tools\Shared\Lib\PwizTargetPlatform.props" Condition="'$(PwizTargetPlatformPropsImported)' != 'true'" />
+
   <!-- ============================================================
        Path anchors. MSBuild auto-discovers Directory.Build.props by
        walking up the directory tree from every project file, so the
@@ -24,6 +31,18 @@
        moves never invalidate them.
        ============================================================ -->
   <PropertyGroup>
+    <!-- $(PwizPrebuiltNativeShimDir) is the public knob; $(_PwizPrebuiltNativeShimDir) is the
+         same value guaranteed to end in a separator, so consumers can concatenate:
+         $(_PwizPrebuiltNativeShimDir)Foo.dll.
+
+         It has to be a SECOND property rather than a normalisation in place. A value that
+         arrives via -p: is a global property, and MSBuild silently ignores any PropertyGroup
+         that tries to redefine one - so normalising the public name looked correct and did
+         nothing. Callers also cannot simply pass the trailing separator themselves, because
+         a command-line value ending in a backslash makes MSBuild read the following quote
+         as escaped. Empty stays empty, so either name still doubles as the opt-in flag. -->
+    <_PwizPrebuiltNativeShimDir Condition="'$(PwizPrebuiltNativeShimDir)' != ''">$([MSBuild]::EnsureTrailingSlash('$(PwizPrebuiltNativeShimDir)'))</_PwizPrebuiltNativeShimDir>
+
     <!-- pwiz-sharp/ — root for every C# project, vendor csproj content paths,
          installer outputs, MascotShim CMake tree, example_data fixtures, etc. -->
     <PwizSharpRoot>$(MSBuildThisFileDirectory)</PwizSharpRoot>
@@ -59,8 +78,13 @@
          ThermoFisher.CommonCore (cross-platform), but Waters/Agilent/Bruker/Sciex/Shimadzu/
          Mobilion wrap native Windows DLLs and cannot load off-Windows at all. Projects that
          pull in a native-SDK vendor must gate on $(NativeVendorsAvailable); projects that
-         only need Thermo can keep using $(IAgreeToVendorLicenses). -->
-    <NativeVendorsAvailable Condition="'$(IAgreeToVendorLicenses)' == 'true' AND '$(OS)' == 'Windows_NT'">true</NativeVendorsAvailable>
+         only need Thermo can keep using $(IAgreeToVendorLicenses).
+
+         Gated on the TARGET, not the host: these SDKs are part of the shipped payload, so what
+         decides whether they can be there is the platform the build output will run on. A
+         Windows-targeted build from a Linux host still needs them compiled in, and a
+         Linux-targeted build from Windows still must not have them. -->
+    <NativeVendorsAvailable Condition="'$(IAgreeToVendorLicenses)' == 'true' AND '$(PwizTargetIsWindows)' == 'true'">true</NativeVendorsAvailable>
 
     <!-- pwiz-sharp/vendor-assemblies — destination of vendor SDK 7z extraction
          (Bruker.csproj / Sciex.csproj / etc. ExtractVendorAssemblies targets

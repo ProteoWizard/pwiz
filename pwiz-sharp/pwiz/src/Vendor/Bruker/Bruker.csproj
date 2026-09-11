@@ -22,22 +22,22 @@
       the shared libraries as long as THIRD-PARTY-LICENSE-README.txt accompanies them, so the
       Linux archive carries a copy of it.
       -->
-    <BrukerArchive Condition="'$(OS)' == 'Windows_NT'">$(PwizCppAuxRoot)\msrc\utility\vendor_api_Bruker.7z</BrukerArchive>
-    <BrukerArchive Condition="'$(OS)' != 'Windows_NT'">$(PwizCppAuxRoot)\msrc\utility\vendor_api_Bruker_linux.7z</BrukerArchive>
+    <BrukerArchive Condition="'$(PwizTargetIsWindows)' == 'true'">$(PwizCppAuxRoot)\msrc\utility\vendor_api_Bruker.7z</BrukerArchive>
+    <BrukerArchive Condition="'$(PwizTargetIsWindows)' != 'true'">$(PwizCppAuxRoot)\msrc\utility\vendor_api_Bruker_linux.7z</BrukerArchive>
     <BrukerAssembliesDir>$(PwizVendorAssembliesPath)\Bruker</BrukerAssembliesDir>
-    <BrukerArchiveDir Condition="'$(OS)' == 'Windows_NT'">x64</BrukerArchiveDir>
-    <BrukerArchiveDir Condition="'$(OS)' != 'Windows_NT'">linux_x64</BrukerArchiveDir>
-    <BrukerTimsLib Condition="'$(OS)' == 'Windows_NT'">timsdata.dll</BrukerTimsLib>
-    <BrukerTimsLib Condition="'$(OS)' != 'Windows_NT'">libtimsdata.so</BrukerTimsLib>
-    <BrukerBafLib Condition="'$(OS)' == 'Windows_NT'">baf2sql_c.dll</BrukerBafLib>
-    <BrukerBafLib Condition="'$(OS)' != 'Windows_NT'">libbaf2sql_c.so</BrukerBafLib>
+    <BrukerArchiveDir Condition="'$(PwizTargetIsWindows)' == 'true'">x64</BrukerArchiveDir>
+    <BrukerArchiveDir Condition="'$(PwizTargetIsWindows)' != 'true'">linux_x64</BrukerArchiveDir>
+    <BrukerTimsLib Condition="'$(PwizTargetIsWindows)' == 'true'">timsdata.dll</BrukerTimsLib>
+    <BrukerTimsLib Condition="'$(PwizTargetIsWindows)' != 'true'">libtimsdata.so</BrukerTimsLib>
+    <BrukerBafLib Condition="'$(PwizTargetIsWindows)' == 'true'">baf2sql_c.dll</BrukerBafLib>
+    <BrukerBafLib Condition="'$(PwizTargetIsWindows)' != 'true'">libbaf2sql_c.so</BrukerBafLib>
     <!-- libbaf2sql_c.so links libgomp.so.1 (libtimsdata.so does not) and not every distro or
          container ships it. The Linux archive carries a copy, which NativeInit preloads by
          absolute path - the vendor's RPATH has no $ORIGIN, so an app-local copy is otherwise
          never found. Note the bundled build needs GLIBC 2.34, higher than either Bruker library
          asks for; on an older distro the preload simply fails and the system libgomp is used
          instead, so bundling can only help. -->
-    <BrukerOpenMpLib Condition="'$(OS)' != 'Windows_NT'">libgomp.so.1</BrukerOpenMpLib>
+    <BrukerOpenMpLib Condition="'$(PwizTargetIsWindows)' != 'true'">libgomp.so.1</BrukerOpenMpLib>
     <!-- $(SevenZaExe) is deliberately NOT set here: Directory.Build.props picks 7za.exe or
          7zz per OS, and hardcoding the Windows PE breaks any non-Windows build. -->
   </PropertyGroup>
