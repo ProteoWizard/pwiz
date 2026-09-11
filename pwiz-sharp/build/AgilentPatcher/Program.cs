@@ -1,11 +1,32 @@
 // Cecil-patches Agilent SDK assemblies to remove uses of Delegate.BeginInvoke/EndInvoke,
-// which .NET 5+ throws PlatformNotSupportedException on. Run AFTER the SDK is extracted
-// from vendor_api_Agilent.7z. Patched DLLs are written in-place under
-// vendor-assemblies/Agilent/ (gitignored) — never committed.
+// which .NET 5+ throws PlatformNotSupportedException on.
 //
-// Wiring: Agilent.csproj's PatchAgilentBeginInvoke target invokes this tool with the
-// vendor-assemblies directory as the single argument, after ExtractAgilentAssemblies and
-// before the SDK is referenced.
+// This is an ARCHIVE-AUTHORING tool, not a build step. It runs once when the Agilent SDK is
+// updated, and its output is committed inside pwiz_aux/msrc/utility/vendor_api_Agilent.7z.
+// It used to run on every build against the extracted copy under vendor-assemblies/Agilent/,
+// which meant only app-local builds ever saw a patched SDK: an install resolves the SDK
+// through VendorSdkLoader's cache, which extracts the archive, which held the unpatched
+// assemblies. Half the shipped .d fixtures could not be opened that way.
+//
+// Procedure for a new SDK drop, from the repo root:
+//
+//   7za x -y -pi-agree-to-the-vendor-licenses -o<work> vendor_api_Agilent.7z
+//   rm -rf <work>/vendor_api/Agilent/x86          # pwiz-sharp is x64 only
+//   AgilentPatcher <work>/vendor_api/Agilent/x64
+//   rm -f <work>/vendor_api/Agilent/x64/*.prepatched
+//   7za a -t7z -mx=9 -pi-agree-to-the-vendor-licenses vendor_api_Agilent.7z vendor_api
+//
+// Commit the archive BEFORE building anything from it. VendorSdkPins.generated.cs is gitignored
+// and regenerated on every build from git history: VendorPinsGenerator takes the archive's last
+// commit for the URL and hashes the working-tree file. Build with the archive uncommitted and
+// that pin names the PREVIOUS archive while recording the new one's hash, so VerifyHash rejects
+// the download, deletes it, and re-fetches the same bytes forever. Push it too - the URL is a
+// raw.githubusercontent.com link to that commit, and an installer built against an unpushed one
+// resolves nothing.
+//
+// Nothing re-applies the patch at build time any more, so an SDK swapped in without running
+// this tool ships unpatched. Agilent.Tests is the guard: the fixtures it opens are exactly the
+// ones that fail without the patch.
 //
 // Patches:
 // - BaseDataAccess.dll: DataFileMgr.OpenDataFile / RefreshDataFile — replace
