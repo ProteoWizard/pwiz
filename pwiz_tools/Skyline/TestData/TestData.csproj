@@ -97,7 +97,7 @@
          also clean. Drop when ServiceModel depends on a clean Xml itself. -->
     <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.4" />
     <Reference Include="DigitalRune.Windows.Docking">
-      <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
+      <HintPath>..\..\Shared\Lib\DigitalRune\net10\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
   </ItemGroup>
 

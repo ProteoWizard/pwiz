@@ -72,7 +72,7 @@
          is the version SkylineNightly's net8 group already uses. -->
     <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="3.1.512801" />
     <Reference Include="DigitalRune.Windows.Docking">
-      <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
+      <HintPath>..\..\Shared\Lib\DigitalRune\net10\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
   </ItemGroup>
 

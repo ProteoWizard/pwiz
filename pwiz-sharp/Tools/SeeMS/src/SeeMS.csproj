@@ -29,13 +29,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- DigitalRune.Windows.Docking 1.3.5 is a .NET Framework 4.x WinForms library. We
-         reference the on-disk DLL the original SeeMS uses (pwiz_tools/Shared/Lib/) to
-         test whether it actually runs on .NET 8 — Microsoft explicitly supports running
-         unrecompiled .NET Framework WinForms libraries on .NET 8 if they don't hit the
-         API blocklist. -->
+    <!-- DigitalRune.Windows.Docking 1.3.5 ships as two binaries under
+         pwiz_tools/Shared/Lib/DigitalRune: net472/ is the .NET Framework original that
+         the legacy SeeMS uses, net10/ is rebuilt for .NET 10 with the GDI+ fix (on
+         .NET 10, Control.Region leaks ~976 bytes per assignment). This project targets
+         net10.0-windows, so it takes the net10 build. The earlier experiment of loading
+         the unrecompiled net472 DLL on .NET 8 is recorded in PORT-NOTES.md - it worked,
+         but it would carry the leak. -->
     <Reference Include="DigitalRune.Windows.Docking">
-      <HintPath>$(PwizCppToolsRoot)\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
+      <HintPath>$(PwizCppToolsRoot)\Shared\Lib\DigitalRune\net10\DigitalRune.Windows.Docking.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>

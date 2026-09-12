@@ -454,10 +454,18 @@
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
     <PackageReference Include="System.Management" Version="8.0.0" />
     <!-- DigitalRune.Windows.Docking is a legacy WinForms DLL with no NuGet
-         equivalent. WinForms-on-net8 compat usually loads it fine - reference
-         the same binary the legacy build uses. -->
+         equivalent, and it ships as two binaries under Shared\Lib\DigitalRune:
+         net472\ is the untouched original that SeeMS and IDPicker still build
+         against, and net10\ carries the GDI+ fix - on .NET 10, Control.Region
+         leaks ~976 bytes per non-null assignment and nothing reclaims it, so
+         the docking code clips through SetWindowRgn instead. That fix is
+         guarded #if NETCOREAPP, so it exists only in the net10 build, and a
+         net10 build cannot be referenced from net472. Every consumer has to
+         pick one; a reference that has not been updated fails to resolve, on
+         purpose, so the build reports what has not been ported yet. Rebuild
+         with ai/scripts/Skyline/DigitalRune/Build-DigitalRune.ps1. -->
     <Reference Include="DigitalRune.Windows.Docking">
-      <HintPath>..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
+      <HintPath>..\Shared\Lib\DigitalRune\net10\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
     <Reference Include="Kajabity Tools">
       <HintPath>..\Shared\Lib\Kajabity Tools.dll</HintPath>

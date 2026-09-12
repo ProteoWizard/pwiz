@@ -55,7 +55,7 @@
     <!-- Raw assembly references don't flow transitively through Skyline's ProjectReference, so
          reference DigitalRune here too (the Ardia/Unifi tests touch GraphChromatogram/GraphFullScan,
          which derive from DigitalRune's DockableForm). -->
-    <Reference Include="DigitalRune.Windows.Docking"><HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath></Reference>
+    <Reference Include="DigitalRune.Windows.Docking"><HintPath>..\..\Shared\Lib\DigitalRune\net10\DigitalRune.Windows.Docking.dll</HintPath></Reference>
   </ItemGroup>
 
   <!-- net472: legacy assembly references, kept verbatim so the existing build path is unchanged. -->
