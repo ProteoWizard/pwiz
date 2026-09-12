@@ -566,7 +566,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromTransition4(ChromTransition chromTransition) : this((float) chromTransition.Product)
         {
-            
+
         }
 
         public float Product { get; private set; }

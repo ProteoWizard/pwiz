@@ -24,6 +24,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Grpc.Core;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -126,7 +127,7 @@ namespace pwiz.Skyline.ToolsUI
         private class KoinaPingRequest : KoinaHelpers.KoinaRequest
         {
             private static KoinaConfig _koinaConfig;
-            private static Channel _channel;
+            private static ChannelBase _channel;
 
             static KoinaPingRequest()
             {
@@ -247,7 +248,7 @@ namespace pwiz.Skyline.ToolsUI
                 var pr = new KoinaPingRequest(KoinaIntensityModelCombo,
                     KoinaRetentionTimeModelCombo,
                     _settingsNoMod, nodePep, nodeGroup, _pingInput.NCE.Value,
-                    () => { CommonActionUtil.SafeBeginInvoke(this, UpdateServerStatus); });
+                    () => { ControlUtil.SafeBeginInvoke(this, UpdateServerStatus); });
                 if (_pingRequest == null || !_pingRequest.Equals(pr))
                 {
                     _pingRequest?.Cancel();

@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Model.AuditLog
     public class HashingStream : Stream
     {
         private readonly Stream _inner;
-        private readonly SHA1CryptoServiceProvider _sha1;
+        private readonly SHA1 _sha1;
         private readonly BlockHash _blockHash;
         private readonly bool _keepOpen;
 
@@ -118,7 +118,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             _inner = inner;
             _keepOpen = keepOpen;
-            _sha1 = new SHA1CryptoServiceProvider();
+            _sha1 = SHA1.Create();
             _blockHash = new BlockHash(_sha1);
         }
 

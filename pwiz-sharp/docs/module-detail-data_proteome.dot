@@ -1,0 +1,96 @@
+digraph pwiz_module_detail {
+  rankdir=TB;
+  labelloc=t;
+  label=<<b>pwiz/data/proteome — file-level port status</b><br/><font point-size="10">one node per .cpp/.hpp pair (test fixtures omitted); each group is its own row, top-to-bottom</font>>;
+  fontname="Segoe UI";
+  node [shape=box, style="filled,rounded", fontname="Segoe UI", fontsize=10];
+  edge [color="#444"];
+  ranksep=0.6; nodesep=0.2;
+  compound=true;
+  newrank=true;
+  splines=false;
+  subgraph cluster_data_proteome_Core_model {
+    label=<<b>Core model</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__proteome__AminoAcid [label="AminoAcid", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Per-AA residue masses + properties (composition, hydrophobicity, pKa). Ported as Util/Proteome/AminoAcid.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/AminoAcid.cpp", target="_blank"];
+    n_data__proteome__Modification [label="Modification", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="PTM record (name, mono/avg delta, formula, AA specificity). Ported as Util/Proteome/Modification.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/Modification.cpp", target="_blank"];
+    n_data__proteome__Peptide [label="Peptide", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Peptide sequence + mass model + Modifications list. Ported as Util/Proteome/Peptide.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/Peptide.cpp", target="_blank"];
+    n_data__proteome__ProteinListWrapper [label="ProteinListWrapper", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Pass-through ProteinList for subclassing. Ported as Common/Proteome/ProteinListWrapper.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/ProteinListWrapper.hpp", target="_blank"];
+    n_data__proteome__ProteomeData [label="ProteomeData", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Top-level ProteomeData document + Protein + ProteinList + ProteinListSimple. Ported as Common/Proteome/ProteomeData.cs. IDisposable so lazy-FASTA callers can scope ownership with `using var`.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/ProteomeData.cpp", target="_blank"];
+    n_data__proteome__ProteomeDataFile [label="ProteomeDataFile", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Format-detecting Read + format-selecting Write (FASTA by extension or content sniff). Ported as Common/Proteome/ProteomeDataFile.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/ProteomeDataFile.cpp", target="_blank"];
+    n_data__proteome__AminoAcid -> n_data__proteome__Modification -> n_data__proteome__Peptide -> n_data__proteome__ProteinListWrapper -> n_data__proteome__ProteomeData -> n_data__proteome__ProteomeDataFile [style=invis, constraint=false];
+  }
+  subgraph cluster_data_proteome_Digestion_Diff {
+    label=<<b>Digestion / Diff</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__proteome__Diff [label="Diff", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="ProteomeData equality with named-reason output. Ported as Common/Proteome/ProteomeDataDiff.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/Diff.cpp", target="_blank"];
+    n_data__proteome__Digestion [label="Digestion", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Enzyme cleavage rules + iterator. Ported as Common/Proteome/Digestion.cs (CVID-keyed so it lives in Common, not Util).", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/Digestion.cpp", target="_blank"];
+    n_data__proteome__Diff -> n_data__proteome__Digestion [style=invis, constraint=false];
+  }
+  subgraph cluster_data_proteome_FASTA_I_O {
+    label=<<b>FASTA I/O</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__proteome__ProteinListCache [label="ProteinListCache", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="MRU cache over a ProteinList — meta-only or meta-plus-sequence modes. Ported as Common/Proteome/ProteinListCache.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/ProteinListCache.cpp", target="_blank"];
+    n_data__proteome__Reader_FASTA [label="Reader_FASTA", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="FASTA defline + sequence parser; IPI-aware id regex. Ported as Common/Proteome/Fasta.Read / ReadFile / OpenLazy. Lazy path goes through FastaProteinList (per-protein seek via .index sidecar).", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/Reader_FASTA.cpp", target="_blank"];
+    n_data__proteome__Serializer_FASTA [label="Serializer_FASTA", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="FASTA writer + .index sidecar (BinaryIndexStream). Ported as Common/Proteome/Fasta.Write + FastaProteinList. The .index sidecar is byte-compatible with cpp pwiz (SHA-1-hashed ids, populated 48-byte file-size + SHA-1 prelude).", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/Serializer_FASTA.cpp", target="_blank"];
+    n_data__proteome__ProteinListCache -> n_data__proteome__Reader_FASTA -> n_data__proteome__Serializer_FASTA [style=invis, constraint=false];
+  }
+  subgraph cluster_data_proteome_Reader_dispatch {
+    label=<<b>Reader dispatch</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__proteome__DefaultReaderList [label="DefaultReaderList", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="Reader_FASTA registration into the IReader dispatcher. NOT PORTED — no dispatcher wired for proteome yet.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/DefaultReaderList.cpp", target="_blank"];
+    n_data__proteome__Reader [label="Reader", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="IReader interface for ProteomeData. NOT PORTED — only Reader_FASTA matters and Fasta.OpenLazy / ReadFile bypass the dispatcher.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/Reader.cpp", target="_blank"];
+    n_data__proteome__DefaultReaderList -> n_data__proteome__Reader [style=invis, constraint=false];
+  }
+  subgraph cluster_data_proteome_Misc {
+    label=<<b>Misc</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__proteome__TextWriter [label=<<s>TextWriter</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555", tooltip="Pretty-print text dump of ProteomeData. WON'T PORT — Format_Text output isn't wired in pwiz-sharp.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/TextWriter.hpp", target="_blank"];
+    n_data__proteome__examples [label=<<s>examples</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555", tooltip="Hard-coded ProteomeData fixtures for cpp tests. WON'T PORT — fixtures built inline in tests instead.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/proteome/examples.cpp", target="_blank"];
+    n_data__proteome__TextWriter -> n_data__proteome__examples [style=invis, constraint=false];
+  }
+  n_data__proteome__AminoAcid -> n_data__proteome__Diff [style=invis, minlen=1];
+  n_data__proteome__Diff -> n_data__proteome__ProteinListCache [style=invis, minlen=1];
+  n_data__proteome__ProteinListCache -> n_data__proteome__DefaultReaderList [style=invis, minlen=1];
+  n_data__proteome__DefaultReaderList -> n_data__proteome__TextWriter [style=invis, minlen=1];
+  subgraph cluster_legend {
+    label=<<b>Status</b>>;
+    style="rounded";
+    color="#444";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=8;
+    rank=same;
+    legend_full [label="ported", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    legend_partial [label="partial", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
+    legend_none [label="not yet ported", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    legend_skipped [label=<<s>won't port (BCL/legacy)</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555"];
+    legend_full -> legend_partial -> legend_none -> legend_skipped [style=invis, constraint=false];
+  }
+  n_data__proteome__TextWriter -> legend_full [style=invis, minlen=1];
+}

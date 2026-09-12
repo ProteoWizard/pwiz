@@ -286,6 +286,15 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Timed out after {0} minutes running: [{1}].
+        /// </summary>
+        public static string PythonInstaller_RunProcessOrThrow_Timed_out_after__0__minutes_running___1__ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_RunProcessOrThrow_Timed_out_after__0__minutes_running___1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Failed to parse package name and version from entry [{0}]..
         /// </summary>
         public static string PythonInstallerTaskValidator_ValidatePipInstallPackages_Failed_to_parse_package_name_and_version_from_entry___0__ {

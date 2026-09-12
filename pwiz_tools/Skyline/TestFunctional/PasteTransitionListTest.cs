@@ -136,7 +136,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var diffPeptideBoxes = peptideTransitionListDiffHeaders.CurrentColSelections();
                 // Checks that the program did not use the saved indices
-                Assert.AreNotEqual(diffPeptideBoxes[4], 1);
+                Assert.AreNotEqual((object)diffPeptideBoxes[4], 1);
             });
             OkDialog(peptideTransitionListDiffHeaders, peptideTransitionListDiffHeaders.CancelDialog);
 

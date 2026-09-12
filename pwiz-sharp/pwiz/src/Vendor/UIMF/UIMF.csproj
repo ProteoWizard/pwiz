@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.UIMF</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.UIMF</AssemblyName>
+    <Description>PNNL Unified Ion Mobility File (.uimf) reader. References the open-source
+      UIMFLibrary managed assembly (Apache 2.0) shipped under pwiz_aux/msrc/utility/vendor_api/UIMF/.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+  <!-- UIMFLibrary is open-source (Apache 2.0), bundled directly in pwiz_aux. No
+       IAgreeToVendorLicenses gate needed. The DLL targets net4.6.1 but loads cleanly
+       in net8 because its only external reference is System.Data.SQLite (handled below);
+       the rest is plain BCL. -->
+  <ItemGroup>
+    <Reference Include="UIMFLibrary">
+      <HintPath>$(PwizCppAuxRoot)\msrc\utility\vendor_api\UIMF\UIMFLibrary.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- System.Data.SQLite.Core supplies the managed System.Data.SQLite reference UIMFLibrary
+       resolves at runtime, plus the native SQLite.Interop.dll under runtimes/<rid>/native
+       so DllImport works on every supported platform. Same package version as Bruker uses,
+       so a combined Skyline + pwiz-sharp process ends up with one SQLite backend. -->
+  <ItemGroup>
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+  </ItemGroup>
+
+</Project>

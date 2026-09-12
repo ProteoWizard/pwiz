@@ -19,6 +19,9 @@
 
 using System;
 using System.ComponentModel;
+// On net8 this namespace resolves to the stubs in SkylineNet8Stubs.cs (ClickOnce's real
+// System.Deployment.Application is net472-only). We need TrustNotGrantedException on both
+// frameworks so the trust-exception path in updateCheck_Complete compiles and runs on net8.
 using System.Deployment.Application;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
@@ -36,7 +39,7 @@ namespace pwiz.Skyline
     {
         private static bool _checkedAtStartup;
 
-        public static IDeployment _appDeployment = new AppDeploymentWrapper();
+        public static IDeployment _appDeployment = new NullDeployment();
 
         public static IDeployment AppDeployment
         {
@@ -110,6 +113,11 @@ namespace pwiz.Skyline
 
         private void updateCheck_Complete(object sender, RunWorkerCompletedEventArgs e)
         {
+            // A trust exception means an update exists but ClickOnce won't auto-install it, so offer
+            // the manual install link instead of surfacing a generic error dialog. Runs on net8 too:
+            // in production AppDeployment is NullDeployment (IsNetworkDeployed=false, never throws this),
+            // so this path is only exercised by tests that inject a deployment. Leaving it net472-only
+            // let the trust case fall through to the error MessageDlg below, desyncing UpgradeErrorsTest.
             var exTrust = e.Result as TrustNotGrantedException;
             if (exTrust != null)
             {
@@ -313,98 +321,17 @@ namespace pwiz.Skyline
             public Exception Error { get; private set; }
         }
 
-        private sealed class AppDeploymentWrapper : IDeployment
+        private sealed class NullDeployment : IDeployment
         {
-            private readonly ApplicationDeployment _applicationDeployment;
-
-            public AppDeploymentWrapper()
-            {
-                if (ApplicationDeployment.IsNetworkDeployed)
-                    _applicationDeployment = ApplicationDeployment.CurrentDeployment;
-            }
-
-            public bool IsNetworkDeployed
-            {
-                get { return _applicationDeployment != null; }
-            }
-
-            public Version CurrentVersion { get { return _applicationDeployment.CurrentVersion; } }
-
-            public UpdateCheckDetails CheckForDetailedUpdate()
-            {
-                // CONSIDER: Some way to set trust to get this working? Below did not work
-                // https://stackoverflow.com/questions/14688282/clickonce-full-trust-app-update-failing-with-trustnotgrantedexception-on-windows
-//                var appId = new ApplicationIdentity(_applicationDeployment.UpdatedApplicationFullName);
-//                var unrestrictedPerms = new PermissionSet(PermissionState.Unrestricted);
-//                var appTrust = new ApplicationTrust(appId)
-//                {
-//                    DefaultGrantSet = new PolicyStatement(unrestrictedPerms),
-//                    IsApplicationTrustedToRun = true,
-//                    Persist = true
-//                };
-//                ApplicationSecurityManager.UserApplicationTrusts.Add(appTrust);
-                var info = _applicationDeployment.CheckForDetailedUpdate(false);
-
-                // Accessing version and size properties throw if no update is available
-                if (!info.UpdateAvailable)
-                    return new UpdateCheckDetails(false, null, null);
-
-                return new UpdateCheckDetails(info.UpdateAvailable, info.AvailableVersion, info.UpdateSizeBytes);
-            }
-
-            public void UpdateAsync(Action<UpdateProgress> updateProgress,
-                                    Action<UpdateCompletedDetails> updateComplete)
-            {
-                _applicationDeployment.UpdateProgressChanged += (s, e) =>
-                {
-                    updateProgress(new UpdateProgress(e.BytesCompleted, e.BytesTotal));
-                };
-                _applicationDeployment.UpdateCompleted += (s, e) =>
-                {
-                    updateComplete(new UpdateCompletedDetails(e.Cancelled, e.Error));
-                };
-                _applicationDeployment.UpdateAsync();
-            }
-
-            public void UpdateAsyncCancel()
-            {
-                _applicationDeployment.UpdateAsyncCancel();
-            }
-
-            public void Restart()
-            {
-                Application.Restart();
-            }
-
-            public Version GetVersionFromUpdateLocation()
-            {
-                try
-                {
-                    using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
-                    string applicationPage = httpClient.DownloadString(_applicationDeployment.UpdateLocation);
-                    // ReSharper disable once LocalizableElement
-                    Match match = Regex.Match(applicationPage, "<assemblyIdentity .*version=\"([^\"]*)\"");
-                    if (match.Success)
-                        return new Version(match.Groups[1].Value);
-                }
-                catch (Exception ex)
-                {
-                    // Ignore but log to debug console in debug builds
-                    // Detailed error from HttpClientWithProgress preserved for diagnostics
-                    Debug.WriteLine($@"Failed to check for updates: {ex.Message}");
-                }
-                return null;
-            }
-
-            public void OpenInstallLink(Control parentWindow)
-            {
-                bool is64 = Environment.Is64BitOperatingSystem;
-                string shorNameInstall = Install.Type == Install.InstallType.release
-                    ? (is64 ? @"skyline64" : @"skyline32")
-                    : (is64 ? @"skyline-daily64" : @"skyline-daily32"); // Keep -daily
-
-                WebHelpers.OpenSkylineShortLink(parentWindow, shorNameInstall);
-            }
+            public bool IsNetworkDeployed => false;
+            public Version CurrentVersion => null;
+            public UpdateCheckDetails CheckForDetailedUpdate() => new UpdateCheckDetails(false, null, null);
+            public void UpdateAsync(Action<UpdateProgress> updateProgress, Action<UpdateCompletedDetails> updateComplete) { }
+            public void UpdateAsyncCancel() { }
+            public void Restart() { Application.Restart(); }
+            public Version GetVersionFromUpdateLocation() => null;
+            public void OpenInstallLink(Control parentWindow) { }
         }
+
     }
 }

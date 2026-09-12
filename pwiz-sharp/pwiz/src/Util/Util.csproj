@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Util</RootNamespace>
+    <AssemblyName>Pwiz.Util</AssemblyName>
+    <Description>Foundation utilities for pwiz-sharp: chemistry, math, misc helpers. Port of pwiz/utility.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+  </ItemGroup>
+
+</Project>

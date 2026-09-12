@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model
                             extractorName,
                             TextUtil.EXCEL_NA,
                             TextUtil.EXCEL_NA,
-                            System.Convert.ToString(tic, cultureInfo)
+                            FormatFloat(tic, cultureInfo)
                         };
                         FormatChromLine(writer, fieldArray, times, intensities, cultureInfo);
 
@@ -219,11 +219,11 @@ namespace pwiz.Skyline.Model
                         fileName,
                         peptideModifiedSequence,
                         System.Convert.ToString(precursorCharge, cultureInfo),
-                        System.Convert.ToString(productMz, cultureInfo),
+                        FormatFloat(productMz, cultureInfo),
                         nodeTran.GetFragmentIonName(CultureInfo.InvariantCulture),
                         System.Convert.ToString(productCharge, cultureInfo),
                         labelType,
-                        System.Convert.ToString(tic, cultureInfo)
+                        FormatFloat(tic, cultureInfo)
                     };
                     FormatChromLine(writer, fieldArray, times, intensities, cultureInfo);
                 }
@@ -240,6 +240,15 @@ namespace pwiz.Skyline.Model
                 tic += ((double)times[i + 1] - times[i]) * 60.0 * ((double)intensities[i + 1] + intensities[i]) / 2.0;
             }
             return (float)tic;
+        }
+
+        // Preserve .NET Framework float formatting (~7 significant digits). .NET Core+ changed
+        // float.ToString() to shortest-round-trippable, which appends an 8th (noise) digit that
+        // diverges from the recorded reference files. "G7" pins the output on both frameworks;
+        // a float only carries ~7 significant digits, so nothing meaningful is lost.
+        private static string FormatFloat(float value, CultureInfo cultureInfo)
+        {
+            return value.ToString(@"G7", cultureInfo);
         }
 
         private static void FormatHeader(TextWriter writer, IList<string> fieldNames)
@@ -260,7 +269,7 @@ namespace pwiz.Skyline.Model
             {
                 if (i > 0)
                     writer.Write(intensitySeparator);
-                writer.WriteDsvField(System.Convert.ToString(floatArray[i], cultureInfo), intensitySeparator);
+                writer.WriteDsvField(FormatFloat(floatArray[i], cultureInfo), intensitySeparator);
             }
         }
 

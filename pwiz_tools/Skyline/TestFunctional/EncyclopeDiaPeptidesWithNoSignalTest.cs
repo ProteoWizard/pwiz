@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestFunctional
             CollectionAssert.DoesNotContain(noSignalPeakBounds, null);
 
             var goodPeptideRetentionTimes = GetAllRetentionTimes(quantLibrary, goodPeptideInQuantLibrary);
-            Assert.AreNotEqual(0, goodPeptideRetentionTimes);
+            Assert.AreNotEqual((object)0, goodPeptideRetentionTimes);
             var goodPeptidePeakBounds = GetAllExplicitPeakBounds(quantLibrary, goodPeptideInQuantLibrary.Target);
             Assert.AreNotEqual(0, goodPeptidePeakBounds.Count);
             CollectionAssert.DoesNotContain(goodPeptidePeakBounds, null);
@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(chromLibName, chromLib.Name);
 
             var noSignalRetentionTimesInChromLib = GetAllRetentionTimes(chromLib, noSignalPeptide);
-            Assert.AreNotEqual(0, noSignalRetentionTimesInChromLib);
+            Assert.AreNotEqual((object)0, noSignalRetentionTimesInChromLib);
 
             // The peptide "AGYAHFLNVQGR" was detected in chromlib.elib, so it should now appear when we import the FASTA file
             RunUI(()=>SkylineWindow.ImportFastaFile(fastaFilePath));

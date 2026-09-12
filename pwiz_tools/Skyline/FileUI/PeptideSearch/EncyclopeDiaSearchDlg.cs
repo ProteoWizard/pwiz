@@ -634,7 +634,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 status = status.NextSegment();
 
                 // hash Koina CSV input to generate blib filename (so if blib file already exists there's no need to go to Koina)
-                var hasher = new BlockHash(new MD5CryptoServiceProvider());
+                var hasher = new BlockHash(MD5.Create());
                 var hashBytes = hasher.HashFile(koinaCsvFilepath);
                 var hashString = string.Join("", hashBytes.Select(b => b.ToString(@"X")));
                 string modelSuffix = Properties.Settings.Default.KoinaIntensityModel + @"-" +

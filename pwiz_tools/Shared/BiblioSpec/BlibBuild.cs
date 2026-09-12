@@ -357,7 +357,22 @@ namespace pwiz.BiblioSpec
 
     public sealed class BlibBuild
     {
-        private const string EXE_BLIB_BUILD = "BlibBuild";
+        // Resolve BlibBuild.exe next to the caller's assembly. .NET 8's Process.Start
+        // no longer searches the current directory when the FileName has no path - it
+        // only looks on PATH - so passing bare "BlibBuild" fails to find the tool even
+        // when it sits next to Skyline.exe. AppContext.BaseDirectory is the folder
+        // Skyline (or the test host) is running from, which is where our csproj's
+        // CopyBiblioSpecTools target lands BlibBuild.exe.
+        private static readonly string EXE_BLIB_BUILD = ResolveBlibBuildPath();
+
+        private static string ResolveBlibBuildPath()
+        {
+            string baseDir = System.AppContext.BaseDirectory;
+            string exeName = System.OperatingSystem.IsWindows() ? "BlibBuild.exe" : "BlibBuild";
+            string candidate = System.IO.Path.Combine(baseDir, exeName);
+            return System.IO.File.Exists(candidate) ? candidate : "BlibBuild";
+        }
+
         public const string EXT_SQLITE_JOURNAL = "-journal";
 
         private ReadOnlyCollection<string> _inputFiles;

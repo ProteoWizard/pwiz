@@ -851,8 +851,10 @@ namespace pwiz.Skyline.EditUI
 
         private void zedGraphFiles_Resize(object sender, EventArgs e)
         {
-            _axisLabelScaler.ScaleAxisLabels();
-    }
+            // Resize fires from InitializeComponent(), before the scaler is constructed below it.
+            // Nothing to scale that early -- UpdateGraph() scales the labels once there is data.
+            _axisLabelScaler?.ScaleAxisLabels();
+        }
 
         private void checkObserved_CheckedChanged(object sender, EventArgs e)
         {

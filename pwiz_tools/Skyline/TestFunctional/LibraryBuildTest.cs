@@ -731,6 +731,14 @@ namespace pwiz.SkylineTestFunctional
                 dlg.SetValue(@"Folder", inputDir);
                 dlg.DismissWithAcceptButton();
             });
+            // A folder browser that ignores the selection gesture returns the folder it opened on instead, and
+            // the build then quietly uses whatever inputs happen to live there. Fail on the directory, rather
+            // than several minutes later on a spectrum count that is merely surprising.
+            RunUI(() => AssertEx.IsTrue(
+                buildLibraryDlg.Grid.FilePaths.Any() && buildLibraryDlg.Grid.FilePaths.All(
+                    path => path.StartsWith(inputDir, System.StringComparison.OrdinalIgnoreCase)),
+                string.Format("Expected input files under {0}, got {1}", inputDir,
+                    string.Join(", ", buildLibraryDlg.Grid.FilePaths))));
         }
 
         private void BuildLibrary(string inputDir, IEnumerable<string> inputFiles, string libraryPath,

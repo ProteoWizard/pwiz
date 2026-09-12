@@ -22,7 +22,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
-using pwiz.CLI.Bruker.PrmScheduling;
+using Pwiz.Vendor.Bruker.PrmScheduling;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;

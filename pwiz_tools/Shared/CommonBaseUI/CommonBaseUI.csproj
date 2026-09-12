@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- CommonBaseUI - the WinForms half of the old CommonUtil, split out so that
+       CommonUtil itself can be WinForms-free (and eventually plain net10.0, which
+       is what lets ProteowizardWrapper drop net10.0-windows).
+
+       Namespaces are DELIBERATELY unchanged (pwiz.Common.GUI, pwiz.Common.SystemUtil,
+       pwiz.Common.CommonResources, ...). Common and CommonUtil have shared the
+       pwiz.Common.* root since Nick's original split, so moving types between these
+       assemblies costs no call-site changes - only project references.
+
+       Kept SMALL on purpose. The consumers are the WinForms projects that need
+       CommonAlertDlg / CommonFormEx / FormUtil and nothing else: PanoramaClient,
+       CommonFileDialogs, and the standalone tools under Skyline/Executables
+       (AutoQC, SharedBatch, SkylineBatch). Folding these types into Common instead
+       would have forced NHibernate, SQLite, WebView2 and ZedGraph onto all of them. -->
+  <PropertyGroup>
+    <ProjectGuid>{6C0B2B6E-4C39-4F5A-9E2D-7A1B3C8D5E40}</ProjectGuid>
+    <TargetFrameworks>net10.0-windows</TargetFrameworks>
+    <Platforms>AnyCPU;x64</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>pwiz.Common</RootNamespace>
+    <AssemblyName>pwiz.CommonBaseUI</AssemblyName>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Company>University of Washington</Company>
+    <Product>CommonBaseUI</Product>
+    <AssemblyTitle>CommonBaseUI</AssemblyTitle>
+    <Copyright>Copyright (c) University of Washington 2026</Copyright>
+    <!-- Match the sibling Shared assemblies. CommonUtil and ProteowizardWrapper set
+         GenerateAssemblyInfo=false and report a plain 1.0.0.0; without this the SDK
+         appends "+<full sha>" to InformationalVersion here and this one assembly in the
+         deploy directory reports a different version shape than everything beside it,
+         which reads as a build mix-up during an incident. pwiz-sharp suppresses the same
+         thing in its Directory.Build.props for the same reason. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <!-- Images.resx embeds Bitmaps; non-string .resx resources need both the
+         System.Resources.Extensions package and this flag to serialize on net472
+         (otherwise MSB3822/MSB3823). Same pattern as CommonUtil.csproj. -->
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommonUtil\CommonUtil.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ConcurrencyVisualizer.cs is #if NET472 against this VS-tooling-only assembly;
+         on net8 its methods compile to no-ops. Same conditional reference CommonUtil
+         carried before the file moved here. -->
+    <Reference Include="Microsoft.ConcurrencyVisualizer.Markers, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+              Condition="'$(TargetFramework)' == 'net472'">
+      <HintPath>..\Lib\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

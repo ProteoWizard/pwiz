@@ -321,7 +321,7 @@ namespace pwiz.Skyline.Util
                         MultiButtonMsgDlg.BUTTON_NO, false)
                     == DialogResult.Yes)
                 {
-                    Process.Start(result.ToString());
+                    ProcessEx.OpenInShell(result.ToString());
                 }
             }
             catch (Exception x)
@@ -361,7 +361,7 @@ namespace pwiz.Skyline.Util
                             MultiButtonMsgDlg.BUTTON_NO, false)
                         == DialogResult.Yes)
                     {
-                        Process.Start(panoramaEx.JobUrl.ToString());
+                        ProcessEx.OpenInShell(panoramaEx.JobUrl.ToString());
                     }
                 }
                 

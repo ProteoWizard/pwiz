@@ -581,6 +581,8 @@ namespace ImageComparer
         private string GetOpenFolder()
         {
             using var chooseFolder = new FolderBrowserDialog();
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            chooseFolder.AutoUpgradeEnabled = false;
             chooseFolder.SelectedPath = Settings.Default.LastOpenFolder;
             if (chooseFolder.ShowDialog(this) == DialogResult.OK)
             {

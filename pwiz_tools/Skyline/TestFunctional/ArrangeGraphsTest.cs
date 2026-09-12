@@ -53,8 +53,9 @@ namespace pwiz.SkylineTestFunctional
                 beginningHeight = graphChromatograms.First().Parent.Parent.Parent.Height;
                 // Need to set dimensions of panel containing chromatograms so dimensions get set the same each run.
                 // Dimension are set to those I had in my settings when I build the test. (Yuval)
-                graphChromatograms.First().Parent.Parent.Parent.Height = 443;
-                graphChromatograms.First().Parent.Parent.Parent.Width = 736;
+                // The panel fills the main window, so resize the window by the difference rather than
+                // assigning to the panel, which a Dock=Fill layout would immediately undo.
+                SetGraphAreaSize(graphChromatograms, 736, 443);
             });
             Assert.IsTrue(graphChromatograms.Count == 27);
             var dictGraphPositions = GetDictionaryGraphChromatogram();
@@ -154,10 +155,19 @@ namespace pwiz.SkylineTestFunctional
             }
             RunUI(() =>
             {
-                // Sets dimesnions back to what they were at the beginning;
-                graphChromatograms.First().Parent.Parent.Parent.Height = beginningHeight;
-                graphChromatograms.First().Parent.Parent.Parent.Width = beginningWidth;
+                // Sets dimensions back to what they were at the beginning;
+                SetGraphAreaSize(graphChromatograms, beginningWidth, beginningHeight);
             });
+        }
+
+        // Resizes the main window so that the panel holding the chromatogram graphs ends up exactly
+        // width x height. That panel fills the window, so it cannot be sized directly. Must be called
+        // on the UI thread.
+        private void SetGraphAreaSize(List<GraphChromatogram> graphChromatograms, int width, int height)
+        {
+            var graphArea = graphChromatograms.First().Parent.Parent.Parent;
+            SkylineWindow.Size = new Size(SkylineWindow.Size.Width + width - graphArea.Width,
+                SkylineWindow.Size.Height + height - graphArea.Height);
         }
 
         // Returns a dictionary of all groups and their containing chromatograms.  Key is top-left point of window.

@@ -85,15 +85,18 @@ namespace pwiz.Skyline.Util
         public static bool IsAutomatedBuild { get; private set; }
         public static bool IsRunningOnWine { get; }
 
+        /// <summary>
+        /// Whether this is a 64-bit process. Read the process, not the assembly: this used to ask whether
+        /// our own assembly was AnyCPU, which .NET 8 cannot answer at all - AssemblyName.ProcessorArchitecture
+        /// is obsolete there and always reports None, so every net8 build called itself 32-bit. That silently
+        /// cut <see cref="pwiz.Skyline.Model.SrmDocument.MAX_TRANSITION_COUNT"/> to a fifth, dropped the
+        /// "(64-Bit)" marker from audit logs, and reported "32bit" in error reports. An AnyCPU assembly also
+        /// says nothing about how the process was actually launched, so this is the more truthful question
+        /// on both frameworks.
+        /// </summary>
         public static bool Is64Bit
         {
-            get
-            {
-                var myAssemblyLocation = Assembly.GetExecutingAssembly().Location;
-                // ReSharper disable once AssignNullToNotNullAttribute
-                var myAssemblyName = AssemblyName.GetAssemblyName(myAssemblyLocation);
-                return ProcessorArchitecture.MSIL == myAssemblyName.ProcessorArchitecture;
-            }
+            get { return Environment.Is64BitProcess; }
         }
 
         public static string BitsText

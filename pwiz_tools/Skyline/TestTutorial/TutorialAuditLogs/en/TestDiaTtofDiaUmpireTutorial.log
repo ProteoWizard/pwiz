@@ -8,8 +8,8 @@ Undo Redo : Added spectral library "DIA-TTOF-tutorial"
 Summary   : Added spectral library "DIA-TTOF-tutorial"
 All Info  :
 Added spectral library "DIA-TTOF-tutorial"
-Build Spectral Library > Search files : contains { File = "collinsb_I180316_001_SW-A-diaumpire.mzid.gz", Score type = "q-value", Score threshold = "0.05" }
-Build Spectral Library > Search files : contains { File = "collinsb_I180316_002_SW-B-diaumpire.mzid.gz", Score type = "q-value", Score threshold = "0.05" }
+Build Spectral Library > Search files : contains { File = "collinsb_I180316_001_SW-A-diaumpire-percolator.pepXML", Score type = "q-value", Score threshold = "0.05" }
+Build Spectral Library > Search files : contains { File = "collinsb_I180316_002_SW-B-diaumpire-percolator.pepXML", Score type = "q-value", Score threshold = "0.05" }
 Build Spectral Library > iRT standard peptides is "Biognosys-11 (iRT-C18)"
 Build Spectral Library > Include ambiguous matches is True
 Build Spectral Library > Filter for document peptides is False
@@ -18,12 +18,12 @@ Build Spectral Library > Input File Type is "DIA raw (search and build library)"
 Extra Info: Search files = 
 [
     {
-        File = "collinsb_I180316_001_SW-A-diaumpire.mzid.gz",
+        File = "collinsb_I180316_001_SW-A-diaumpire-percolator.pepXML",
         Score type = "q-value",
         Score threshold = "0.05"
     },
     {
-        File = "collinsb_I180316_002_SW-B-diaumpire.mzid.gz",
+        File = "collinsb_I180316_002_SW-B-diaumpire-percolator.pepXML",
         Score type = "q-value",
         Score threshold = "0.05"
     }
@@ -55,14 +55,16 @@ Import Peptide Search > Associate Proteins > Remove subset proteins is False
 Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
 Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
 Import Peptide Search > Associate Proteins > Proteins mapped is "9"
-Import Peptide Search > Associate Proteins > Peptides mapped is "101"
+Import Peptide Search > Associate Proteins > Peptides mapped is "100"
 Import Peptide Search > Associate Proteins > Proteins unmapped is "24709"
 Import Peptide Search > Associate Proteins > Protein targets is "9"
-Import Peptide Search > Associate Proteins > Peptide targets is "102"
+Import Peptide Search > Associate Proteins > Peptide targets is "101"
+Import Peptide Search > DDA search settings > Search Engine is "Comet"
 Import Peptide Search > DDA search settings > Precursor tolerance is "30" ppm
-Import Peptide Search > DDA search settings > Fragment tolerance is "40" ppm
+Import Peptide Search > DDA search settings > Fragment tolerance is "0" m/z
 Import Peptide Search > DDA search settings > Max variable mods per peptide is "3"
-Import Peptide Search > DDA search settings > Fragment ion types is "b, y"
+Import Peptide Search > DDA search settings > Fragment ion types is "b,y"
+Import Peptide Search > DDA search settings > MS2 analyzer is "High resolution"
 Import Peptide Search > DDA search settings > Score type is "Max q-value"
 Import Peptide Search > DDA search settings > Score threshold is "0.05"
 Import Peptide Search > DDA converter settings > DDA conversion protocol is "DIA-Umpire"
@@ -102,17 +104,19 @@ Associate Proteins =
     Shared peptides option = "Duplicated between proteins",
     Min peptides per protein = "1",
     Proteins mapped = "9",
-    Peptides mapped = "101",
+    Peptides mapped = "100",
     Proteins unmapped = "24709",
     Protein targets = "9",
-    Peptide targets = "102"
+    Peptide targets = "101"
 },
 DDA search settings = 
 {
+    Search Engine = "Comet",
     Precursor tolerance = "30" ppm,
-    Fragment tolerance = "40" ppm,
+    Fragment tolerance = "0" m/z,
     Max variable mods per peptide = "3",
-    Fragment ion types = "b, y",
+    Fragment ion types = "b,y",
+    MS2 analyzer = "High resolution",
     Score type = "Max q-value",
     Score threshold = "0.05"
 },

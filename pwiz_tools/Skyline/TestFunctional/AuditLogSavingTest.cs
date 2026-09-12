@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
         {
             OpenDocument("Rat_plasma.sky");
 
-            var blockHash = new BlockHash(new SHA1CryptoServiceProvider());
+            var blockHash = new BlockHash(SHA1.Create());
             var fileHashBytes = blockHash.HashFile(TestFilesDir.GetTestPath("Rat_plasma.sky"));
             var fileHashB64 = BlockHash.SafeToBase64(fileHashBytes);
 
@@ -203,7 +203,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static string Hash(byte[] bytes)
         {
-            using (var sha1 = new SHA1CryptoServiceProvider())
+            using (var sha1 = SHA1.Create())
             {
                 return BlockHash.SafeToBase64(sha1.ComputeHash(bytes));
             }

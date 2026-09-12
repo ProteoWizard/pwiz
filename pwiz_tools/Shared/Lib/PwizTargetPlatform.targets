@@ -1,0 +1,79 @@
+<Project>
+
+  <!-- The other half of PwizTargetPlatform.props: having made the native-staging gates key off
+       the TARGET rather than the build host, verify after every build that the two agree about
+       what was produced. The gates are spread across nine vendor csprojs, VendorNativeCrt.targets
+       and BiblioSpec.csproj, and each one independently resolves $(PwizTargetIsWindows) - a
+       project that resolves it differently from its parent (say a plain net10.0 vendor project
+       referenced by a net10.0-windows Skyline) stages the wrong payload and reports success.
+       That silent-success mode is the whole reason this file exists; neither check below is
+       expected to fire on a same-platform build.
+
+       Imported from pwiz-sharp/Directory.Build.targets and pwiz_tools/Directory.Build.targets, so
+       every project in both trees is covered without a per-project opt-in. -->
+
+  <Import Project="$(MSBuildThisFileDirectory)PwizTargetPlatform.props" Condition="'$(PwizTargetPlatformPropsImported)' != 'true'" />
+
+  <Target Name="VerifyPwizTargetPlatform" AfterTargets="Build"
+          Condition="'$(PwizSkipTargetPlatformCheck)' != 'true'">
+
+    <!-- CHECK 1: the props-time answer against the fully-resolved one.
+         PwizTargetPlatform.props is imported before the SDK has parsed the TFM, so rule 3 (a
+         -windows platform in the TFM) can only apply where the import is late enough to see it.
+         Here in a .targets everything is resolved, so re-deriving the answer and comparing catches
+         an import that happened too early - which presents as a net10.0-windows project quietly
+         staging a Linux payload. Skipped when the caller pinned the property, because then the
+         disagreement is the deliberate point of a cross-target build. -->
+    <PropertyGroup Condition="'$(PwizTargetPlatformExplicit)' != 'true'">
+      <_PwizResolvedIsWindows Condition="'$(RuntimeIdentifier)' != '' AND $(RuntimeIdentifier.StartsWith('win'))">true</_PwizResolvedIsWindows>
+      <_PwizResolvedIsWindows Condition="'$(_PwizResolvedIsWindows)' == '' AND '$(RuntimeIdentifier)' != ''">false</_PwizResolvedIsWindows>
+      <_PwizResolvedIsWindows Condition="'$(_PwizResolvedIsWindows)' == '' AND '$(TargetPlatformIdentifier)' == 'Windows'">true</_PwizResolvedIsWindows>
+      <_PwizResolvedIsWindows Condition="'$(_PwizResolvedIsWindows)' == '' AND '$(OS)' == 'Windows_NT'">true</_PwizResolvedIsWindows>
+      <_PwizResolvedIsWindows Condition="'$(_PwizResolvedIsWindows)' == ''">false</_PwizResolvedIsWindows>
+      <_PwizResolvedOSName Condition="'$(_PwizResolvedIsWindows)' == 'true'">Windows</_PwizResolvedOSName>
+      <_PwizResolvedOSName Condition="'$(_PwizResolvedIsWindows)' != 'true'">Linux</_PwizResolvedOSName>
+    </PropertyGroup>
+
+    <Error Condition="'$(PwizTargetPlatformExplicit)' != 'true' AND '$(_PwizResolvedIsWindows)' != '$(PwizTargetIsWindows)'"
+           Code="PWIZ0001"
+           Text="$(MSBuildProjectFile) staged its native payload for $(PwizTargetOSName), but the resolved target is $(_PwizResolvedOSName) (TargetFramework=$(TargetFramework), RuntimeIdentifier=$(RuntimeIdentifier), host=$(OS)). PwizTargetPlatform.props was imported before the target framework was known. Import it next to the ItemGroups that consume it, or pass -p:PwizTargetIsWindows=true|false to pin the target explicitly." />
+
+    <!-- CHECK 2: what actually landed in the output, against what the target should have.
+         Scoped to the output ROOT on purpose. Vendor natives are flattened into it (Waters'
+         MassLynxRaw, Bruker's timsdata/baf2sql, the VC++ redistributable, the bundled 7-Zip), so
+         that is where a mismatch shows up - while runtimes/<rid>/native/ legitimately holds EVERY
+         rid's assets in a rid-agnostic build, because NuGet copies them all. HDF.PInvoke puts
+         both hdf5.dll and libhdf5.so there in the same build; flagging that subtree would fail
+         every build on both platforms. The two MascotShim paths are listed individually since
+         those we stage ourselves. Skipped when $(TargetDir) is empty, which is what the outer
+         pass of a multi-targeting project looks like - it dispatches to the inner builds and
+         stages nothing itself, and an empty TargetDir would silently reroot the globs at the
+         project directory. -->
+    <!-- Every Include below MUST contain a wildcard. MSBuild materialises a LITERAL path as an
+         item whether or not the file is actually there, so Include="$(TargetDir)7za.exe" reports a
+         hit on every build and the check fires constantly; only a wildcard is expanded against the
+         file system. Hence the trailing * before each extension - it widens nothing that matters
+         and keeps the list uniform instead of half globs and half Exists() conditions. -->
+    <ItemGroup Condition="'$(TargetDir)' != ''">
+      <_PwizStagedLinuxNative Include="$(TargetDir)*.so;$(TargetDir)*.so.*" />
+      <_PwizStagedLinuxNative Include="$(TargetDir)runtimes/linux-x64/native/libMascotShim*.so" />
+
+      <_PwizStagedWindowsNative Include="$(TargetDir)api-ms-win-*.dll" />
+      <_PwizStagedWindowsNative Include="$(TargetDir)msvcp*.dll;$(TargetDir)msvcr*.dll" />
+      <_PwizStagedWindowsNative Include="$(TargetDir)vcruntime*.dll;$(TargetDir)vcomp*.dll;$(TargetDir)ucrtbase*.dll" />
+      <_PwizStagedWindowsNative Include="$(TargetDir)MassLynxRaw*.dll;$(TargetDir)timsdata*.dll;$(TargetDir)baf2sql*.dll" />
+      <_PwizStagedWindowsNative Include="$(TargetDir)7za*.exe" />
+      <_PwizStagedWindowsNative Include="$(TargetDir)runtimes\win-x64\native\MascotShim*.dll;$(TargetDir)runtimes\win-x64\native\msparser*.dll" />
+    </ItemGroup>
+
+    <Error Condition="'$(PwizTargetIsWindows)' == 'true' AND '@(_PwizStagedLinuxNative)' != '' AND '$(TargetDir)' != ''"
+           Code="PWIZ0002"
+           Text="$(MSBuildProjectFile) targets Windows, but $(TargetDir) holds Linux native libraries: @(_PwizStagedLinuxNative->'%(Filename)%(Extension)', ', '). Either a project in the reference graph resolved a different target - pass -p:PwizTargetIsWindows=true so all of them agree - or these are leftovers from an earlier build for another platform, which an incremental build does not remove. Delete them or rebuild after a Clean." />
+
+    <Error Condition="'$(PwizTargetIsWindows)' != 'true' AND '@(_PwizStagedWindowsNative)' != '' AND '$(TargetDir)' != ''"
+           Code="PWIZ0003"
+           Text="$(MSBuildProjectFile) targets Linux, but $(TargetDir) holds Windows native libraries: @(_PwizStagedWindowsNative->'%(Filename)%(Extension)', ', '). Either a project in the reference graph resolved a different target - pass -p:PwizTargetIsWindows=false so all of them agree - or these are leftovers from an earlier build for another platform, which an incremental build does not remove. Delete them or rebuild after a Clean." />
+
+  </Target>
+
+</Project>

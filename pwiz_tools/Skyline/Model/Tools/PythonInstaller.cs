@@ -491,7 +491,8 @@ namespace pwiz.Skyline.Model.Tools
             RunProcessOrThrow(processRunner, cmd, cmdLine, true, false, cancelToken);
         }
 
-        internal void PipInstall(string pythonExecutablePath, IEnumerable<PythonPackage> packages, ILongWaitBroker broker = null)
+        internal void PipInstall(string pythonExecutablePath, IEnumerable<PythonPackage> packages,
+            ILongWaitBroker broker = null, TimeSpan? timeout = null)
         {
             try
             {
@@ -527,13 +528,24 @@ namespace pwiz.Skyline.Model.Tools
 
                     var cancelToken = broker.GetSafeCancellationToken();
 
-                    RunProcessOrThrow(pipedProcessRunner, cmd, cmdLine, false, true, cancelToken);
+                    RunProcessOrThrow(pipedProcessRunner, cmd, cmdLine, false, true, cancelToken, timeout);
 
                     if (cancelToken.IsCancellationRequested)
                         break;
                 }
             }
-            catch 
+            catch (PythonBootstrapTimeoutException x)
+            {
+                // Record why the step gave up, but do not rethrow. The caller runs this inside
+                // LongWaitDlg.PerformWork, which sits after PythonInstallerUI's only catch, and
+                // BuildLibraryDlg wraps the whole setup in try/finally with no catch - so an escaping
+                // exception both wipes the partial install in that finally and reaches the user as an
+                // unexpected-error report. Returning leaves the designed path: the task reports
+                // incomplete and the caller shows "Failed to set up Python virtual environment".
+                Messages.WriteAsyncDebugMessage(@"Python bootstrap step gave up: {0}", x.Message);
+                return;
+            }
+            catch
             {
                 return;
             }
@@ -578,14 +590,55 @@ namespace pwiz.Skyline.Model.Tools
         // installs can produce megabytes of output; we only need the recent tail for diagnostics.
         private const int MAX_CAPTURED_PROCESS_OUTPUT_CHARS = 32 * 1024;
 
+        // Bootstrap steps that fetch from the network can stall rather than fail, leaving the caller
+        // with no progress and nothing to report. Only the small, predictable steps get a cap -
+        // installing the real analysis packages legitimately takes much longer, and a wall clock
+        // limit there would break slow but working connections.
+        //
+        // Well clear of the "This sometimes could take 3-5 minutes" the same command echoes to the
+        // user: a cap at 5 would kill a bootstrap the product has just promised may take 5, and a
+        // proxied link or per-wheel AV scanning pushes a working install past that. This is a
+        // backstop for a connection that has stopped moving, not a performance budget.
+        public static TimeSpan BootstrapProcessTimeout { get; set; } = TimeSpan.FromMinutes(20);
+
         internal static void RunProcessOrThrow(ISkylineProcessRunnerWrapper runner, string cmd,
             string cmdLineForError, bool runAsAdministrator, bool createNoWindow,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             var capture = new RollingTextWriter(MAX_CAPTURED_PROCESS_OUTPUT_CHARS);
             var tee = new TeeTextWriter(Writer, capture);
-            if (runner.RunProcess(cmd, runAsAdministrator, tee, createNoWindow, cancellationToken) == 0)
+
+            if (timeout.HasValue)
+            {
+                using (var timeoutSource = new CancellationTokenSource(timeout.Value))
+                using (var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token))
+                {
+                    int exitCode;
+                    try
+                    {
+                        exitCode = runner.RunProcess(cmd, runAsAdministrator, tee, createNoWindow, linked.Token);
+                    }
+                    catch (OperationCanceledException) when (timeoutSource.IsCancellationRequested &&
+                                                             !cancellationToken.IsCancellationRequested)
+                    {
+                        throw TimedOutMessage(timeout.Value, cmdLineForError);
+                    }
+
+                    // Success first: the process can exit cleanly a moment before the timer ticks,
+                    // and reporting that as a timeout would fail a step that actually worked.
+                    if (exitCode == 0)
+                        return;
+
+                    // The runner reports cancellation as a non-zero exit rather than a throw, so the
+                    // timeout has to be distinguished from a genuine failure here as well.
+                    if (timeoutSource.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+                        throw TimedOutMessage(timeout.Value, cmdLineForError);
+                }
+            }
+            else if (runner.RunProcess(cmd, runAsAdministrator, tee, createNoWindow, cancellationToken) == 0)
+            {
                 return;
+            }
 
             var captured = capture.ToString().Trim();
             var message = string.IsNullOrEmpty(captured)
@@ -593,6 +646,13 @@ namespace pwiz.Skyline.Model.Tools
                 : string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0____Output____1__,
                     cmdLineForError, captured);
             throw new ToolExecutionException(message);
+        }
+
+        private static PythonBootstrapTimeoutException TimedOutMessage(TimeSpan timeout, string cmdLineForError)
+        {
+            return new PythonBootstrapTimeoutException(
+                string.Format(ToolsResources.PythonInstaller_RunProcessOrThrow_Timed_out_after__0__minutes_running___1__,
+                    (int) timeout.TotalMinutes, cmdLineForError));
         }
 
         /// <summary>
@@ -1144,7 +1204,10 @@ namespace pwiz.Skyline.Model.Tools
 
             var cancelToken = broker.GetSafeCancellationToken();
 
-            PythonInstaller.RunProcessOrThrow(pipedProcessRunner, cmd, cmdLine, false, true, cancelToken);
+            // get-pip bootstraps pip itself and reaches the network to do it - same stall risk,
+            // same small predictable size, so the same cap applies.
+            PythonInstaller.RunProcessOrThrow(pipedProcessRunner, cmd, cmdLine, false, true, cancelToken,
+                PythonInstaller.BootstrapProcessTimeout);
 
             var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.PIP_EXE);
             PythonInstallerUtil.SignFile(filePath);
@@ -1172,7 +1235,10 @@ namespace pwiz.Skyline.Model.Tools
         public override void DoAction(ILongWaitBroker broker)
         {
             var virtualEnvPackage = new PythonPackage { Name = PythonInstaller.VIRTUALENV, Version = null };
-            PythonInstaller.PipInstall(PythonInstaller.BasePythonExecutablePath.Quote(), new [] {virtualEnvPackage}, broker);
+            // virtualenv is a small pure-Python wheel, so a stall here is a hung connection rather
+            // than a slow download. Capped; the analysis packages installed later are not.
+            PythonInstaller.PipInstall(PythonInstaller.BasePythonExecutablePath.Quote(), new [] {virtualEnvPackage},
+                broker, PythonInstaller.BootstrapProcessTimeout);
         }
     }
 
@@ -1315,6 +1381,18 @@ namespace pwiz.Skyline.Model.Tools
 
         public override bool IsRequiredForPythonEnvironment => false;
         public override bool IsNvidiaTask => true;
+    }
+
+    /// <summary>
+    /// A bootstrap step gave up waiting on a process that never finished. Distinct from a
+    /// plain <see cref="ToolExecutionException"/> so that PipInstall, which deliberately
+    /// swallows ordinary install failures, can let this one through.
+    /// </summary>
+    public class PythonBootstrapTimeoutException : ToolExecutionException
+    {
+        public PythonBootstrapTimeoutException(string message) : base(message)
+        {
+        }
     }
 }
 

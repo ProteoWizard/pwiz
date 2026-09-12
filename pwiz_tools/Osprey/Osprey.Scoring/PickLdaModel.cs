@@ -149,7 +149,11 @@ namespace pwiz.Osprey.Scoring
             // whose features are in a different order -- or absent -- would silently score the wrong
             // term. Require the names and the exact expected order rather than trusting array position.
             if (dto.Features == null || dto.Features.Length != N ||
-                !dto.Features.SequenceEqual(ExpectedFeatures))
+                // Enumerable.SequenceEqual spelled out rather than reached through a
+                // using: the ordinary build resolves System.Linq here but the publish
+                // compile does not, and a using that satisfies publish is reported as
+                // redundant by the inspection. Qualifying it satisfies both.
+                !System.Linq.Enumerable.SequenceEqual(dto.Features, ExpectedFeatures))
             {
                 throw new FormatException(string.Format(
                     @"OSPREY_PICK_LDA_MODEL: pick model JSON at '{0}' must list features as [{1}] in " +

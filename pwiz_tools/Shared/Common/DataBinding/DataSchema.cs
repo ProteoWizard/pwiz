@@ -506,7 +506,12 @@ namespace pwiz.Common.DataBinding
                 return new EnumFilterHandler(type);
             }
 
-            if (typeof(IFormattable).IsAssignableFrom(type))
+            // Value types that format themselves (numbers, dates, etc.) do not support substring
+            // text operations like CONTAINS / STARTS_WITH, so they get the no-contains handler.
+            // Require IsValueType: on net8 some reference types (e.g. System.Uri) newly implement
+            // IFormattable but still want text matching - on net472 Uri was not IFormattable and
+            // used WITH_CONTAINS, so gating on value type restores that behavior.
+            if (type.IsValueType && typeof(IFormattable).IsAssignableFrom(type))
             {
                 return TextFilterHandler.WITHOUT_CONTAINS;
             }

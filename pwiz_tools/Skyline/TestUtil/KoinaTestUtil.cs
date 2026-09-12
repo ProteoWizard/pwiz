@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestUtil
         public readonly HashSet<KoinaQuery> ExpectedQueries;
         private bool _recordData;
 
-        public FakeKoinaPredictionClient(Channel channel, HashSet<KoinaQuery> expectedQueries) :
+        public FakeKoinaPredictionClient(ChannelBase channel, HashSet<KoinaQuery> expectedQueries) :
             base(channel, KoinaConfig.GetKoinaConfig().Server)
         {
             _recordData = expectedQueries == null;
@@ -142,7 +142,7 @@ namespace pwiz.SkylineTestUtil
     {
         private readonly bool _recordData;
         private readonly string _expectedQueriesJsonFilepath;
-        private Channel _channel;
+        private ChannelBase _channel;
         private FakeKoinaPredictionClient _fakeClient;
         private int _maxThreads;
 

@@ -129,7 +129,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void findResultsFilesButton_Click(object sender, EventArgs e)
         {
             // Ask the user for the directory to search
-            using (var dlg = new FolderBrowserDialog())
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            using (var dlg = FormUtil.CreateFolderBrowserDialog())
             {
                 dlg.Description = PeptideSearchResources.ImportResultsControl_findResultsFilesButton_Click_Results_Directory;
                 dlg.ShowNewFolderButton = false;

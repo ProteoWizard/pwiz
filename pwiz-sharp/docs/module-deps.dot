@@ -1,0 +1,121 @@
+digraph pwiz_modules {
+  rankdir=TB;
+  labelloc=t;
+  label=<<b>pwiz module dependencies</b><br/><font point-size="10">arrows aggregate at the directory level; foundations on top, consumers on the bottom</font>>;
+  fontname="Segoe UI";
+  node [shape=box, style="filled,rounded", fontname="Segoe UI", fontsize=11];
+  edge [color="#444", penwidth=1.4, arrowsize=0.9];
+  splines=spline;
+  ranksep=0.8; nodesep=0.3;
+  compound=true;
+
+  subgraph cluster_analysis {
+    label="analysis";
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=12;
+    margin=12;
+    n_analysis__calibration [label="calibration", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_analysis__chromatogram_processing [label="chromatogram_processing", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
+    n_analysis__common [label="common", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
+    n_analysis__demux [label="demux", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_analysis__dia_umpire [label="dia_umpire", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_analysis__eharmony [label="eharmony", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_analysis__frequency [label="frequency", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_analysis__passive [label="passive", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_analysis__peakdetect [label="peakdetect", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_analysis__peptideid [label="peptideid", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_analysis__proteome_processing [label="proteome_processing", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_analysis__spectrum_processing [label="spectrum_processing", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
+  }
+
+  subgraph cluster_data {
+    label="data";
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=12;
+    margin=12;
+    n_data__identdata [label="identdata", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_data__misc [label="misc", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
+    n_data__proteome [label="proteome", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_data__tradata [label="tradata", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+  }
+
+  subgraph cluster_data_common {
+    label="data/common";
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=12;
+    margin=12;
+    n_data__common [label="common", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+  }
+
+  subgraph cluster_data_msdata {
+    label="data/msdata";
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=12;
+    margin=12;
+    n_data__msdata [label="msdata", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
+    n_data__msdata__mz5 [label="mz5", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
+    n_data__msdata__mzmlb [label="mzmlb", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+  }
+
+  subgraph cluster_data_vendor_readers {
+    label="data/vendor_readers";
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=12;
+    margin=12;
+    n_data__vendor_readers__ABI [label="ABI", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_data__vendor_readers__ABI__T2D [label=<<s>T2D</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555"];
+    n_data__vendor_readers__Agilent [label="Agilent", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_data__vendor_readers__Bruker [label="Bruker", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_data__vendor_readers__Mobilion [label="Mobilion", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_data__vendor_readers__Shimadzu [label="Shimadzu", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_data__vendor_readers__Thermo [label="Thermo", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_data__vendor_readers__UIMF [label="UIMF", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_data__vendor_readers__UNIFI [label="UNIFI", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_data__vendor_readers__Waters [label="Waters", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+  }
+
+  subgraph cluster_pwiz_tools {
+    label="pwiz_tools";
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=12;
+    margin=12;
+    n_pwiz_tools__MSConvertGUI [label="MSConvertGUI", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_pwiz_tools__SeeMS [label="SeeMS", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_pwiz_tools__commandline [label="commandline", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+  }
+
+  subgraph cluster_utility {
+    label="utility";
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=12;
+    margin=12;
+    n_utility__chemistry [label="chemistry", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_utility__findmf [label=<<s>findmf</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555"];
+    n_utility__math [label="math", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    n_utility__minimxml [label="minimxml", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    n_utility__misc [label="misc", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
+    n_utility__proteome [label="proteome", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
+  }
+
+  n_data__identdata -> n_analysis__calibration [ltail=cluster_data, lhead=cluster_analysis, minlen=2];
+  n_data__vendor_readers__ABI -> n_analysis__calibration [ltail=cluster_data_vendor_readers, lhead=cluster_analysis, minlen=2];
+  n_data__msdata -> n_data__identdata [ltail=cluster_data_msdata, lhead=cluster_data, minlen=2];
+  n_utility__chemistry -> n_data__common [ltail=cluster_utility, lhead=cluster_data_common, minlen=2];
+  n_data__common -> n_data__msdata [ltail=cluster_data_common, lhead=cluster_data_msdata, minlen=2];
+  n_data__msdata -> n_data__vendor_readers__ABI [ltail=cluster_data_msdata, lhead=cluster_data_vendor_readers, minlen=2];
+  n_analysis__calibration -> n_pwiz_tools__MSConvertGUI [ltail=cluster_analysis, lhead=cluster_pwiz_tools, minlen=2];
+}

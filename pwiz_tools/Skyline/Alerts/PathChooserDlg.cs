@@ -20,6 +20,7 @@
 using System;
 using System.IO;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using Environment = System.Environment;
 
@@ -48,7 +49,8 @@ namespace pwiz.Skyline.Alerts
         public String SkylineFileLocation { get; set; }
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            using (var choseDirectoryDialog = new FolderBrowserDialog())
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            using (var choseDirectoryDialog = FormUtil.CreateFolderBrowserDialog())
             {
                 choseDirectoryDialog.SelectedPath = ExtractionPath;
                 if (choseDirectoryDialog.ShowDialog() == DialogResult.OK)

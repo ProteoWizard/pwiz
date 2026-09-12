@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using IWshRuntimeLibrary;
 using SharedBatch;
 using File = System.IO.File;
 
@@ -128,10 +127,13 @@ namespace AutoQC
                 ProgramLog.Info($"Adding {AUTOQCSTARTEREXE} shortcut to Startup folder.");
 
                 // http://softvernow.com/2018/07/30/create-shortcut-using-c/
-                WshShell wsh = new WshShell();
-                var shortcut =
-                    wsh.CreateShortcut(shortcutInfo.ShortcutPath) as IWshShortcut;
-             
+                // Late-bound COM (WScript.Shell) rather than a compile-time IWshRuntimeLibrary COM
+                // reference: dotnet build's .NET Core MSBuild can't run the tlbimp ResolveComReference
+                // task, so bind the shell via ProgID + dynamic instead. Works on both net472 and net8.
+                var wshType = Type.GetTypeFromProgID(@"WScript.Shell");
+                dynamic wsh = wshType != null ? Activator.CreateInstance(wshType) : null;
+                dynamic shortcut = wsh?.CreateShortcut(shortcutInfo.ShortcutPath);
+
                 if (shortcut != null)
                 {
                     shortcut.Description = $"Shortcut to {AUTOQCSTARTEREXE}";
@@ -151,16 +153,11 @@ namespace AutoQC
 
         private static ShortCutInfo GetShortcut()
         {
-            var exeLocation = System.Reflection.Assembly.GetExecutingAssembly().CodeBase;
-            if (exeLocation.StartsWith(@"file:"))
-            {
-                exeLocation = exeLocation.Substring(5);
-            }
-            while (exeLocation.StartsWith(@"/"))
-            {
-                exeLocation = exeLocation.Substring(1);
-            }
-           
+            // Location, not CodeBase: CodeBase is obsolete on .NET 8, and it returns a file:// URL that
+            // the hand-rolled trimming below never percent-decoded - an install under "C:\Program Files"
+            // came back as "C:/Program%20Files". Location is the path already.
+            var exeLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+
             var exeDirInfo = Directory.GetParent(exeLocation);
             if (exeDirInfo == null)
             {

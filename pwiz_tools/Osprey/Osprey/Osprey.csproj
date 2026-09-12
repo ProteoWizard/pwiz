@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\PortableUtil\PortableUtil.csproj" />
+    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
     <ProjectReference Include="..\Osprey.Diagnostics\Osprey.Diagnostics.csproj" />
     <ProjectReference Include="..\Osprey.ML\Osprey.ML.csproj" />

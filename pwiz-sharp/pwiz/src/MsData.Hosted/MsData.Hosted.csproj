@@ -1,0 +1,87 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.MsData.NativeAot</RootNamespace>
+    <AssemblyName>Pwiz.MsData.Hosted</AssemblyName>
+    <Description>Vendor-enabled sibling of MsData.NativeAot. Exposes the SAME flat C API (the identical UnmanagedCallersOnly exports, compiled from the same sources), but as an ordinary managed library loaded by a native application through nethost/hostfxr instead of AOT-compiled. Hosting costs a .NET runtime in-process; it buys the vendor readers, which cannot be AOT-compiled. Consumers use examples/cpp-nethost-reader.</Description>
+
+    <!-- Emits Pwiz.MsData.Hosted.runtimeconfig.json + .deps.json next to the assembly.
+         hostfxr_initialize_for_runtime_config() needs the former to know which runtime to
+         boot; without this property a class library emits neither and hosting cannot start. -->
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+
+    <!-- Same reason as the AOT project: every export marshals UTF-8 through byte*. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- The two runtime switches every vendor-enabled entry point needs; both land in the
+         generated runtimeconfig.json, which is exactly what hostfxr reads when it boots the
+         runtime for us. Neither has an escape hatch at hosting time, so getting them wrong
+         here surfaces as a reader failure deep inside Open().
+
+         Root Directory.Build.props turns InvariantGlobalization ON for core libraries; the
+         Thermo SDK needs real en-US culture data and throws "Only the invariant culture is
+         supported in globalization-invariant mode" without this opt-out. Same reason
+         MsConvert.csproj, BullseyeSharp and MsBenchmark all opt out. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+
+    <!-- The wiff2 SDK (SCIEX.Apis.Data.v1) uses BinaryFormatter via SmartAssembly's resolver
+         and Microsoft.Practices.Unity's serialization paths; .NET 8 disables it by default. -->
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+
+    <!-- CA1707: pwiz_msdata_* entry-point names are C-conventional snake_case.
+         CA1711: ExportsImpl's suffix is deliberate (see its docstring).
+         CS1591: the thin [UnmanagedCallersOnly] wrappers inherit docs from the impl methods. -->
+    <NoWarn>$(NoWarn);CA1707;CA1711;CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!-- ONE copy of the C API, compiled twice. Linking the sources rather than referencing the
+       AOT project is deliberate: a Native AOT project produces a native shared library, not a
+       referenceable managed assembly, so there is nothing to reference. Sharing the files keeps
+       the two backends from drifting — a new export lands in both by construction. -->
+  <ItemGroup>
+    <Compile Include="..\MsData.NativeAot\Exports.cs" Link="Exports.cs" />
+    <Compile Include="..\MsData.NativeAot\VendorBootstrap.cs" Link="VendorBootstrap.cs" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Selects the vendor half of VendorBootstrap. The AOT project leaves this undefined. -->
+    <DefineConstants>$(DefineConstants);PWIZ_VENDOR_READERS</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Util\Util.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\Vendor\Common\Vendor.Common.csproj" />
+  </ItemGroup>
+
+  <!-- Vendor projects always build so Reader.Identify() works in every configuration. Built
+       without -p:IAgreeToVendorLicenses=true they compile with NO_VENDOR_SUPPORT and
+       Reader.Read() throws a clear "vendor support not enabled" error instead of silently
+       mis-identifying. Mirrors the msconvert-sharp reference set. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Vendor\Thermo\Thermo.csproj" />
+    <ProjectReference Include="..\Vendor\Bruker\Bruker.csproj" />
+    <ProjectReference Include="..\Vendor\Waters\Waters.csproj" />
+    <ProjectReference Include="..\Vendor\Agilent\Agilent.csproj" />
+    <ProjectReference Include="..\Vendor\Sciex\Sciex.csproj" />
+    <ProjectReference Include="..\Vendor\Shimadzu\Shimadzu.csproj" />
+    <ProjectReference Include="..\Vendor\UNIFI\UNIFI.csproj" />
+    <ProjectReference Include="..\Vendor\UIMF\UIMF.csproj" />
+    <ProjectReference Include="..\Vendor\Mobilion\Mobilion.csproj" />
+    <!-- Runtime-only plugin: built, staged as Content, but deliberately NOT referenced so it
+         stays out of deps.json/TPA. Wiff2LoadContext loads it into a side-by-side ALC. -->
+    <ProjectReference Include="..\Vendor\Sciex\Wiff2\Sciex.Wiff2.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="..\Vendor\Sciex\OfxLoggingStub\OfxLoggingStub.csproj"
+                      Condition="'$(NativeVendorsAvailable)' == 'true'">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>

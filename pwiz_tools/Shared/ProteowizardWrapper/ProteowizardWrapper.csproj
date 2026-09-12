@@ -1,145 +1,108 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Vendor-license opt-in, read the SAME two ways pwiz-sharp reads it, because the net8
+       target compiles against types pwiz-sharp drops in a no-vendor build.
+
+       There are two ways to agree, and they do NOT have the same reach:
+         * -p:IAgreeToVendorLicenses=true (build.bat / build.ps1 / Build-Skyline -VendorLicenses)
+           is a GLOBAL property, so it arrives here on its own.
+         * pwiz-sharp\i-agree-to-the-vendor-licenses.bat writes pwiz-sharp\Directory.Build.user.props,
+           which only pwiz-sharp\Directory.Build.props imports - projects outside
+           pwiz-sharp\ never see it.
+       Without this import the second route would leave pwiz-sharp compiling the lockmass
+       refiners while this project believed they were absent, silently dropping Waters
+       lockmass correction from a build that fully supports it. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\Directory.Build.user.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\Directory.Build.user.props')" />
+
+  <!-- ProteowizardWrapper — the Phase-2 chokepoint. Multi-target net472 (legacy
+       pwiz.CLI bindings) + PLAIN net10.0 (pwiz-sharp managed port).
+
+       The net8 target is deliberately net10.0 and NOT net10.0-windows: it was only
+       -windows because pwiz.CommonUtil set UseWindowsForms, and CommonUtil has now
+       been split (its WinForms types live in CommonBaseUI). A plain net10.0 wrapper is
+       what lets Osprey consume it on Linux instead of reading pwiz-sharp directly.
+
+       Same MsDataFileImpl class name and public surface in both targets. The
+       net472 legacy MsDataFileImpl.cs is excluded on net10.0 - instead
+       we pull the parallel implementation from the
+       ../ProteowizardWrapper.PwizSharp/ sandbox directory, which has the same
+       public API but uses pwiz-sharp internally. Eventually the sandbox file
+       gets merged in-place but for now this lets Skyline link against pwiz-sharp
+       on net8 with zero call-site changes. -->
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <Platforms>AnyCPU;x64</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>pwiz.ProteowizardWrapper</RootNamespace>
     <AssemblyName>ProteowizardWrapper</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <RuntimeIdentifiers>win;win-x64;win-x86</RuntimeIdentifiers>
-    <FileAlignment>512</FileAlignment>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation />
-    <TargetFrameworkProfile />
+    <Company>University of Washington</Company>
+    <Product>ProteowizardWrapper</Product>
+    <AssemblyTitle>ProteowizardWrapper</AssemblyTitle>
+    <Copyright>Copyright © University of Washington 2026</Copyright>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="MassSpecDataReader, Version=3.0.318.0, Culture=neutral, processorArchitecture=AnyCPU">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>obj\$(Platform)\MassSpecDataReader.dll</HintPath>
-    </Reference>
-    <Reference Include="SCIEX.Apis.Data.v1">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>obj\$(Platform)\SCIEX.Apis.Data.v1.dll</HintPath>
-    </Reference>
-    <Reference Include="$(PwizCliAssembly)" Condition="'$(PwizCliAssembly)' != ''">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(PwizCliHintPath)</HintPath>
-    </Reference>
-    <Reference Include="pwiz_data_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU" Condition="'$(PwizCliAssembly)' == ''">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>obj\$(Platform)\pwiz_data_cli.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
   </ItemGroup>
+
+
+  <!-- Mirrors Analysis.csproj: when the licenses are not agreed, pwiz-sharp Compile-Removes
+       SpectrumList_LockmassRefiner / ChromatogramListLockmassRefiner and defines
+       NO_VENDOR_SUPPORT. This project consumes those types, so it has to be told the same
+       thing or it fails to compile in exactly the configuration CI and the shipped zips
+       build. net8 only - the net472 target reaches pwiz through pwiz.CLI, where the
+       refiners are always present. -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0' AND '$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <!-- On net8 the data layer comes from pwiz-sharp. No pwiz.CLI, no
+         C++/CLI bindings. -->
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Common\Common.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Util\Util.csproj" />
+    <!-- Vendor readers: pwiz-sharp's ReaderList.Default only has mzML/mzMLb/mzXML/MGF/MSn/BTDX.
+         Reference the vendor projects so their Reader_X classes can be added to
+         ReaderList.AdditionalReaders at MsDataFileImpl static-ctor time (see
+         MsDataFileImpl.cs). Without these, Thermo/Waters/Sciex/etc. files fail
+         with "No registered reader recognized the file". -->
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Thermo\Thermo.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Waters\Waters.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Sciex\Sciex.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Shimadzu\Shimadzu.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Agilent\Agilent.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Bruker\Bruker.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\UIMF\UIMF.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\UNIFI\UNIFI.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Mobilion\Mobilion.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="Centroider.cs" />
-    <Compile Include="DiaUmpire.cs" />
-    <Compile Include="IterationListenerToMonitor.cs" />
-    <Compile Include="LockMassParameters.cs" />
-    <Compile Include="MsDataFileImpl.cs" />
-    <Compile Include="MsDataFileInfo.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <ProjectReference Include="..\CommonUtil\CommonUtil.csproj" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(Platform)' == 'x64' ">
-    <Reference Include="ThermoFisher.CommonCore.Data">
-      <HintPath>obj\$(Platform)\ThermoFisher.CommonCore.Data.dll</HintPath>
-    </Reference>
-    <Reference Include="ThermoFisher.CommonCore.RawFileReader">
-      <HintPath>obj\$(Platform)\ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup Condition=" '$(Platform)' == 'x86' ">
-    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=3.0.13.0, Type=AnyCPU">
-      <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
-      <HintPath>obj\$(Platform)\MSFileReader.XRawfile2.SxS.manifest</HintPath>
-    </NativeReference>
-  </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\CommonUtil\CommonUtil.csproj">
-      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
-      <Name>CommonUtil</Name>
-    </ProjectReference>
+    <!-- On net8 swap legacy MsDataFileImpl + siblings for the pwiz-sharp-backed
+         sandbox implementation (same public surface, different internals). -->
+    <Compile Remove="MsDataFileImpl.cs" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <Compile Remove="MsDataFileInfo.cs" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <Compile Remove="IterationListenerToMonitor.cs" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <!-- DiaUmpire.cs now compiles on net8 too: the pwiz.CLI dependency was only two
+         enum-discriminator values, replaced with plain literals. The wrapper's job
+         (write msconvert-compatible .params + parse DIA-Umpire userParams back out of mzML)
+         doesn't touch the engine - msconvert runs DIA-Umpire out of process. -->
+    <Compile Include="..\ProteowizardWrapper.PwizSharp\MsDataFileImpl.cs" Condition="'$(TargetFramework)' == 'net10.0'" Link="MsDataFileImpl.cs" />
+    <Compile Include="..\ProteowizardWrapper.PwizSharp\MsDataFileImpl.Vendors.cs" Condition="'$(TargetFramework)' == 'net10.0'" Link="MsDataFileImpl.Vendors.cs" />
+    <Compile Include="..\ProteowizardWrapper.PwizSharp\MsDataFileInfo.cs" Condition="'$(TargetFramework)' == 'net10.0'" Link="MsDataFileInfo.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>

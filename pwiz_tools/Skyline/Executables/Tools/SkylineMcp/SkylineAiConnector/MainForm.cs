@@ -161,17 +161,22 @@ namespace SkylineAiConnector
 
         private void DeployMcpServer()
         {
-            if (!McpServerDeployer.IsDotNet8Installed())
+            if (!McpServerDeployer.IsDotNetDesktopRuntimeInstalled())
             {
                 var result = MessageBox.Show(this,
-                    "The AI Connector requires the .NET 8.0 Desktop Runtime, which was not found on this computer.\n\n" +
+                    "The AI Connector requires the .NET 10.0 Desktop Runtime, which was not found on this computer.\n\n" +
                     "Would you like to open the download page?",
-                    ".NET 8.0 Required",
+                    ".NET 10.0 Required",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning);
                 if (result == DialogResult.Yes)
-                    Process.Start(McpServerDeployer.DotNetDownloadUrl);
-                labelStatus.Text = ".NET 8.0 Desktop Runtime is required.";
+                {
+                    // UseShellExecute defaults to false on .NET Core and later, where the string
+                    // overload starts an executable and a URL throws Win32Exception. This prompt is
+                    // what a user sees when the runtime is missing, so the download page has to open.
+                    Process.Start(new ProcessStartInfo(McpServerDeployer.DotNetDownloadUrl) { UseShellExecute = true });
+                }
+                labelStatus.Text = ".NET 10.0 Desktop Runtime is required.";
                 return;
             }
 
