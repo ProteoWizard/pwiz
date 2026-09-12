@@ -1,7 +1,7 @@
 ﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -1390,8 +1390,8 @@ namespace pwiz.Osprey.Tasks
             // This one KEEPS NeedsResidentPool deliberately, where the fat/lean choice above
             // moved to the builder. They answer different questions and the predicates diverged
             // when ExpectReconciledInput left NeedsResidentPool (#4486): "does a consumer read
-            // Features off THESE stubs" (fdrbench-pass1, a non-Percolator FdrMethod,
-            // OSPREY_FDR_PROJECTION=0) is still exactly NeedsResidentPool, while "may this load
+            // Features off THESE stubs" (a non-Percolator FdrMethod, OSPREY_FDR_PROJECTION=0)
+            // is still exactly NeedsResidentPool, while "may this load
             // go lean" additionally excludes the reconciled-input merge. Do not "fix" this by
             // copying the builder decision: the merge does not read Features off these stubs -
             // both pass-2 shapes reload them per file from the reconciled parquet
@@ -1638,8 +1638,9 @@ namespace pwiz.Osprey.Tasks
         /// What the resident-pool terms still filter that <c>NoJoin</c> does not: the
         /// OSPREY_DUMP_PERCOLATOR bisection dump (emitted by FirstPassFDR's rehydrate before it
         /// compacts, so it genuinely needs the all-files pre-compaction pool rather than a
-        /// silently post-compaction one), OSPREY_FDR_PROJECTION=0, a non-Percolator
-        /// FdrMethod, and --fdrbench-pass 1. OSPREY_PASS2_QVALUE=transfer is NOT among them:
+        /// silently post-compaction one), OSPREY_FDR_PROJECTION=0 and a non-Percolator
+        /// FdrMethod. --fdrbench-pass 1 left the list with #4507: the pass-1 emitter streams
+        /// off the per-file sidecars now. OSPREY_PASS2_QVALUE=transfer is NOT among them:
         /// the per-run-only redesign (#4438) resolves each adjusted peak against that file's
         /// own on-disk sidecar. <c>--task SecondPassFDR</c> is not among them either, and
         /// since #4486 that is the point rather than an aside: it is the one task that
@@ -1692,8 +1693,8 @@ namespace pwiz.Osprey.Tasks
         {
             if (ctx.Diagnostics?.DumpPercolator ?? false)
                 return @"OSPREY_DUMP_PERCOLATOR";
-            if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
-                return @"--fdrbench-pass 1";
+            // --fdrbench-pass 1 was a reason here until #4507; the pass-1 emitter now streams
+            // off the per-file sidecars, so no FDRBench selection needs the pool.
             // OSPREY_PASS2_QVALUE=transfer is deliberately NOT a reason here, and must not
             // become one again: the per-run-only redesign maps each adjusted peak through
             // that file's own 1st-pass (score -> run q) sidecar, one file at a time, so it
@@ -2173,9 +2174,13 @@ namespace pwiz.Osprey.Tasks
             // reconciled parquet. It forced the fat load whose features
             // HydrateRescoreBundleIfPresent then nulls unread, so the node paid ~800 MB per
             // file to throw it away, on top of holding every file's pre-compaction stubs.
+            // --fdrbench-pass 1 was the third term until #4507. It read the full pre-compaction
+            // pool resident, and because this predicate tested the bitmask with ==, `both`
+            // never matched: memory-safe by a type confusion, and silently pass-2-only. The
+            // pass-1 emitter now streams off the per-file sidecars, so the term is gone and
+            // the ratchet token with it.
             return !useFdrProjection ||
-                   !config.FdrMethod.UsesPercolatorFramework() ||
-                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
+                   !config.FdrMethod.UsesPercolatorFramework();
         }
 
         /// <summary>
@@ -2210,10 +2215,11 @@ namespace pwiz.Osprey.Tasks
         /// path (the fat <see cref="FdrEntry"/> stub buffer, and the <c>FirstPassFdrTask.Rehydrate</c>
         /// pre-compaction load it feeds) that does not scale to large file counts. Unless the
         /// operator named THIS path via <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c>, throw with the token
-        /// named so the failure is actionable rather than an opaque OOM at scale. Triggers: the
-        /// HPC reconciled-input merge (#4486), <c>--fdrbench-pass 1</c> (#4507), a non-Percolator
-        /// FdrMethod, and <c>OSPREY_FDR_PROJECTION=0</c>, which requests the legacy resident
-        /// implementation outright and so must be named like any other.
+        /// named so the failure is actionable rather than an opaque OOM at scale. Triggers: a
+        /// non-Percolator FdrMethod, and <c>OSPREY_FDR_PROJECTION=0</c>, which requests the
+        /// legacy resident implementation outright and so must be named like any other. The
+        /// HPC reconciled-input merge (#4486) and <c>--fdrbench-pass 1</c> (#4507) were
+        /// triggers and are streamed now.
         /// </summary>
         private static void GuardResidentPool(OspreyConfig config, bool needsResidentPool)
         {
@@ -2359,8 +2365,8 @@ namespace pwiz.Osprey.Tasks
             // all. See NeedsResidentPool for why nothing on that node reads the pool.
             if (!config.FdrMethod.UsesPercolatorFramework())
                 return ResidentPaths.NON_PERCOLATOR_FDR;
-            if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
-                return ResidentPaths.FDRBENCH_PASS1;
+            // FDRBENCH_PASS1 was here and is GONE with the token (#4507): the pass-1 emitter
+            // streams off the per-file sidecars, so no FDRBench selection reaches this method.
             return null;
         }
 

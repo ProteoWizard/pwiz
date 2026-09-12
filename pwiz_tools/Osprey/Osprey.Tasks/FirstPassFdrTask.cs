@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -558,11 +558,12 @@ namespace pwiz.Osprey.Tasks
             // legacy compacted buffer does -- the blast radius is confined to this
             // pre-compaction span. Falls back to the legacy FdrEntry-buffer path
             // (the byte-identity oracle) when the flag is off or FdrMethod != Percolator.
-            // FDRBench pass-1 (#4377) reads the full pre-compaction first-pass pool resident
-            // (decoys + entrapment, with scores) -- exactly what the projection path drops to
-            // bound memory -- so when it is requested, take the resident (legacy) path so that
-            // report still emits. Off the default output path, so byte-identity is unaffected
-            // (the regression gate never sets it).
+            // FDRBench pass-1 (#4377) is NOT here any more (#4507): it used to read the full
+            // pre-compaction pool resident and so forced this whole run onto the legacy path,
+            // which is why `--fdrbench-pass both` silently wrote only pass 2 for as long as the
+            // gate below tested the bitmask with ==. It now streams off the per-file sidecars
+            // and the experiment map (WriteFdrBenchPass1FromSidecarsIfRequested), so no pass
+            // selection reaches the resident path.
             // OSPREY_PASS2_QVALUE=transfer takes the SAME lean projection first-pass path as the
             // default: it no longer forces the resident pool. The per-run-only redesign (see
             // TODO-osprey_pass2_per_run_only_qvalue) drops the FULL pre-compaction score->q table
@@ -577,14 +578,11 @@ namespace pwiz.Osprey.Tasks
             // OOM'd an 82-file run at FirstPassFDR. The reductions are order-independent, so the
             // streamed report is byte-identical to the resident build, and it stays off the
             // default output path.
-            bool needsResidentFirstPassPool =
-                !string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1;
             // NOTE: transfer-compete does NOT force the resident pool -- it only needs the
             // trained 1st-pass MODEL (not the full-population score->q table), which the
             // streaming projection path publishes cheaply via captureModel below. Forcing
             // resident here OOMs on large (entrapment) libraries.
-            if (OspreyEnvironment.UseFdrProjection && config.FdrMethod.UsesPercolatorFramework() &&
-                !needsResidentFirstPassPool)
+            if (OspreyEnvironment.UseFdrProjection && config.FdrMethod.UsesPercolatorFramework())
             {
                 // Null unless PerFileScoring took the lean path and streamed the rows
                 // straight from parquet (issue #4397); RunFirstPassProjection then builds
@@ -675,10 +673,10 @@ namespace pwiz.Osprey.Tasks
                 // first-pass run + experiment q-values and raw SVM discriminant -- BEFORE
                 // compaction drops the non-surviving entries. Mirrors Rust
                 // pipeline.rs write_fdrbench_peptide_input (#4377). Pass 2 (the
-                // post-compaction reported set) is emitted from SecondPassFdrTask; the two
-                // are mutually exclusive per run (--fdrbench-pass). Reached only on the
-                // resident (legacy) first-pass path -- --fdrbench pass 1 routes here via
-                // the projection gate above.
+                // post-compaction reported set) is emitted from SecondPassFdrTask; `both`
+                // writes each to its own .pass1 / .pass2 file. Reached only on the resident
+                // (legacy) first-pass path, i.e. OSPREY_FDR_PROJECTION=0; the projection
+                // path streams the same file (WriteFdrBenchPass1FromSidecarsIfRequested).
                 WriteFdrBenchPass1IfRequested(perFileEntries, config, ctx);
 
                 // Compaction: drop entries whose base_id (entry_id with the
@@ -1793,16 +1791,18 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Write the pass-1 FDRBench input TSV from the pre-compaction first-pass
+        /// Write the pass-1 FDRBench input TSV from the RESIDENT pre-compaction first-pass
         /// pool when <c>--fdrbench</c> is set with a pass mask that includes pass 1
         /// (<c>--fdrbench-pass 1</c> or <c>both</c>). Emits every scored non-decoy
         /// target (regardless of q-value) with its first-pass run + experiment
         /// q-values and raw SVM discriminant -- the assumption the second-pass
         /// reported set rests on. No-op for the default pass-2 (emitted
         /// post-compaction by <see cref="SecondPassFdrTask"/>) and when no FDRBench
-        /// output was requested. Called on the straight-through Run path only: the
-        /// pre-compaction pool exists solely here, mirroring Rust osprey, which
-        /// emits at the same point in its single pipeline.
+        /// output was requested. Reached only on the legacy resident path
+        /// (<c>OSPREY_FDR_PROJECTION=0</c>, the byte-identity oracle); the production
+        /// projection path emits the identical file through
+        /// <see cref="WriteFdrBenchPass1FromSidecarsIfRequested"/>, and this one is what
+        /// that is checked against.
         /// </summary>
         private void WriteFdrBenchPass1IfRequested(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
@@ -1841,6 +1841,109 @@ namespace pwiz.Osprey.Tasks
                     benchResult.TruncatedProtein));
             ctx.LogInfo(string.Format(@"[STAGE-WALL] fdrbench-pass1: {0:F1}s",
                 swFdrBench.Elapsed.TotalSeconds));
+        }
+
+        /// <summary>
+        /// The projection-path twin of <see cref="WriteFdrBenchPass1IfRequested"/>: the same
+        /// pass-1 FDRBench input, the same pairing manifest and the same log lines, but read
+        /// off the persisted per-file <c>.1st-pass.fdr_scores.bin</c> joined to the parquet
+        /// scalars and the experiment-scope map, one file at a time, instead of walking a
+        /// resident <see cref="FdrEntry"/> pool. This is what lets <c>--fdrbench-pass 1</c> (and
+        /// so <c>both</c>) run without forcing the O(files) resident path (issue #4507): every
+        /// value the TSV needs is on disk or in an O(distinct entries) map by the time the
+        /// experiment sidecar has been written, and nothing here retains a row past its file.
+        ///
+        /// <para>Byte-identical to the resident emitter by construction: both feed
+        /// <see cref="FdrBenchInputWriter.PeptideInputSink"/>, which owns the dedup, ordering
+        /// and formatting, and both walk files in run order and rows in parquet-row order, which
+        /// is the only order the sink is sensitive to (an exact q-value tie keeps the row seen
+        /// first). Runs BEFORE compaction, as the resident one does, so the pool it emits is the
+        /// full pre-compaction first pass. Returns <c>false</c> (ExitCode set) on a sidecar or
+        /// parquet read fault - a requested oracle file that cannot be written is a failed run,
+        /// not a warning.</para>
+        /// </summary>
+        private bool WriteFdrBenchPass1FromSidecarsIfRequested(
+            FdrProjectionSet projections,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentById,
+            OspreyConfig config,
+            PipelineContext ctx)
+        {
+            var benchPath = FdrBenchInputWriter.PathForPass(config, OspreyConfig.FDRBENCH_PASS_1);
+            if (benchPath == null)
+                return true;
+
+            var libraryById = ctx.Get<LibraryById>().Value;
+            var swFdrBench = Stopwatch.StartNew();
+            // Reconcile the library against the external manifest: reconstruct the
+            // extras' pairing and drop unmatched entrapment (Met-clip artifacts) so the
+            // TSV and the emitted manifest stay consistent and stock FDRBench works.
+            var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
+            FdrBenchInputWriter.Result benchResult;
+            using (var sink = new FdrBenchInputWriter.PeptideInputSink(
+                       benchPath, libraryById, config.FdrLevel, config.FdrBenchPerRun,
+                       pairing.ExcludedEntrapment))
+            {
+                // The sink has already collapsed the level to Precursor or Peptide, so the
+                // two-way choice below is exactly what the IFdrRow effective-q helpers
+                // return for those levels on the resident entries.
+                bool peptideLevel = sink.EffectiveLevel == FdrLevel.Peptide;
+                int files = 0;
+                using (var progress = new ProgressReporter(string.Format(
+                           @"Writing FDRBench input (pass 1) over {0} file(s)", projections.PerFile.Count),
+                           projections.PerFile.Count))
+                {
+                    foreach (var kvp in projections.PerFile)
+                    {
+                        progress.Report(++files);
+                        string runName = kvp.Key;
+                        if (!StreamFirstPassFileScores(runName, perFileParquetPaths, config, ctx,
+                                @"FDRBench pass 1",
+                                (modseq, charge, isDecoy, record) =>
+                                {
+                                    if (isDecoy)
+                                        return;
+                                    if (!experimentById.TryGetValue(record.EntryId, out var exp))
+                                    {
+                                        // Every observation the score pass wrote a sidecar record
+                                        // for was folded into the experiment map in the same pass,
+                                        // so a miss is a defect in that contract, not a data case.
+                                        throw new InvalidOperationException(string.Format(
+                                            @"FDRBench pass 1: entry {0} in {1} has a 1st-pass sidecar " +
+                                            @"record but no experiment-scope record", record.EntryId, runName));
+                                    }
+                                    sink.Add(runName, new FdrBenchInputWriter.Row(
+                                        record.EntryId, modseq, charge, record.Score,
+                                        peptideLevel ? record.RunPeptideQvalue : record.RunPrecursorQvalue,
+                                        peptideLevel ? exp.ExperimentPeptideQvalue : exp.ExperimentPrecursorQvalue));
+                                }))
+                        {
+                            return false;  // ExitCode set in the helper
+                        }
+                    }
+                }
+                benchResult = sink.Commit();
+            }
+            string manifestPath = benchPath + @".pairing.tsv";
+            int manifestRows = FdrBenchInputWriter.WritePairingManifest(manifestPath, libraryById, pairing);
+            swFdrBench.Stop();
+            ctx.LogInfo(string.Format(@"Wrote FDRBench input (pass 1, {0}) to {1}: {2} rows",
+                config.FdrBenchPerRun ? @"per-run" : @"per-precursor",
+                benchPath, benchResult.Rows));
+            ctx.LogInfo(string.Format(@"Wrote FDRBench pairing manifest (from the searched library) to {0}: {1} peptides",
+                manifestPath, manifestRows));
+            pairing.LogSummary(ctx.LogInfo);
+            if (benchResult.MissingLibrary > 0)
+                ctx.LogInfo(string.Format(
+                    @"{0} FDRBench rows had no library entry; peptide and protein columns left blank",
+                    benchResult.MissingLibrary));
+            if (benchResult.TruncatedProtein > 0)
+                ctx.LogInfo(string.Format(
+                    @"{0} FDRBench rows had oversize protein-ID lists; truncated with ';...+N_more'",
+                    benchResult.TruncatedProtein));
+            ctx.LogInfo(string.Format(@"[STAGE-WALL] fdrbench-pass1: {0:F1}s",
+                swFdrBench.Elapsed.TotalSeconds));
+            return true;
         }
 
         /// <summary>
@@ -3205,6 +3308,21 @@ namespace pwiz.Osprey.Tasks
                         @"Resume: reloaded the persisted protein-compact stratum ({0} base ids).",
                         _proteinCompactStratum.Count));
                 }
+                // A resumed run owes the same pass-1 FDRBench file a cold one writes. Everything
+                // the emitter reads is what made the gate entry legal - current per-file
+                // sidecars and a current experiment sidecar - so it costs one streamed pass,
+                // not the score passes this entry skips. Only loaded when the file was asked for.
+                if (FdrBenchInputWriter.PathForPass(config, OspreyConfig.FDRBENCH_PASS_1) != null)
+                {
+                    var experimentById = LoadFirstPassExperimentRecords(config, ctx);
+                    if (experimentById == null)
+                        return null;  // ExitCode set in the helper
+                    if (!WriteFdrBenchPass1FromSidecarsIfRequested(
+                            projections, perFileParquetPaths, experimentById, config, ctx))
+                    {
+                        return null;  // ExitCode set in the helper
+                    }
+                }
                 return CompactFromSidecars(projections, perFileParquetPaths, beforeCount, config, ctx);
             }
 
@@ -3457,6 +3575,15 @@ namespace pwiz.Osprey.Tasks
                     sidecarFailures, projections.PerFile.Count));
                 ctx.ExitCode = 1;
                 return null;
+            }
+
+            // FDRBench input TSV (pass 1): the full pre-compaction first pass, streamed off the
+            // sidecars the score pass just finalized and the experiment map just written - the
+            // same point the resident path emits at, BEFORE compaction drops the non-survivors.
+            if (!WriteFdrBenchPass1FromSidecarsIfRequested(
+                    projections, perFileParquetPaths, experiment.Records, config, ctx))
+            {
+                return null;  // ExitCode set in the helper
             }
 
             // Compaction predicate streamed over the finalized per-file sidecar -> passing
@@ -3725,7 +3852,8 @@ namespace pwiz.Osprey.Tasks
             {
                 reduceProgress.Report(++proteinReduceFiles);
                 if (!StreamFirstPassFileScores(kvp.Key, perFileParquetPaths, config, ctx,
-                        (modseq, isDecoy, record) =>
+                        @"First-pass protein FDR",
+                        (modseq, charge, isDecoy, record) =>
                             accumulator.Add(modseq, isDecoy, record.Score, record.RunPeptideQvalue)))
                 {
                     return null;  // ExitCode set in the helper
@@ -3780,27 +3908,32 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Stream one file's first-pass rows to <paramref name="onRow"/> as
-        /// <c>(modseq, isDecoy, FdrScoreRecord)</c>: read the file's
+        /// <c>(modseq, charge, isDecoy, FdrScoreRecord)</c>: read the file's
         /// <c>.1st-pass.fdr_scores.bin</c> into an entry_id -> record map (one file resident;
         /// bounded), then stream the parquet scalars (the modseq source PeptideById was
-        /// interned from + IsDecoy) in parquet-row order, joining each row to its sidecar
-        /// record by entry_id. Returns <c>false</c> (ExitCode set) on a missing parquet path, a
-        /// missing sidecar base path, or an unreadable / size-mismatched sidecar. A parquet row
-        /// whose entry_id is absent from the sidecar is SKIPPED, not a fault: the sidecar is a
-        /// SUBSET of the parquet rows, so a row with no record is simply not a first-pass row
+        /// interned from + charge + IsDecoy) in parquet-row order, joining each row to its
+        /// sidecar record by entry_id. Returns <c>false</c> (ExitCode set) on a missing parquet
+        /// path, a missing sidecar base path, or an unreadable / size-mismatched sidecar, with
+        /// <paramref name="caller"/> naming the consumer in the message. A parquet row whose
+        /// entry_id is absent from the sidecar is SKIPPED, not a fault: the sidecar is a SUBSET
+        /// of the parquet rows, so a row with no record is simply not a first-pass row
         /// (superset tolerance mirroring the survivor reload -- see the inline note below).
+        /// Shared by the first-pass protein FDR and the pass-1 FDRBench emitter, which is why
+        /// the walk is in parquet-row order: both consumers depend on seeing rows in the order
+        /// the resident path listed them.
         /// </summary>
         private bool StreamFirstPassFileScores(
             string fileName,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
             PipelineContext ctx,
-            Action<string, bool, FdrScoreRecord> onRow)
+            string caller,
+            Action<string, byte, bool, FdrScoreRecord> onRow)
         {
             if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
             {
                 ctx.LogError(string.Format(
-                    @"First-pass protein FDR: no scores parquet path for {0}", fileName));
+                    @"{0}: no scores parquet path for {1}", caller, fileName));
                 ctx.ExitCode = 1;
                 return false;
             }
@@ -3808,7 +3941,7 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(sidecarBase))
             {
                 ctx.LogError(string.Format(
-                    @"First-pass protein FDR: no sidecar base path for {0}", fileName));
+                    @"{0}: no sidecar base path for {1}", caller, fileName));
                 ctx.ExitCode = 1;
                 return false;
             }
@@ -3819,8 +3952,8 @@ namespace pwiz.Osprey.Tasks
                     record => recordByEntryId[record.EntryId] = record))
             {
                 ctx.LogError(string.Format(
-                    @"First-pass protein FDR: failed to read .1st-pass.fdr_scores.bin for {0} " +
-                    @"(expected at {1})", fileName, fdrPath));
+                    @"{0}: failed to read .1st-pass.fdr_scores.bin for {1} " +
+                    @"(expected at {2})", caller, fileName, fdrPath));
                 ctx.ExitCode = 1;
                 return false;
             }
@@ -3840,7 +3973,7 @@ namespace pwiz.Osprey.Tasks
                     // Dictionary<string,...> key never sees null (which would throw); matches the
                     // resident path, where FdrProjectionSet.Builder interned null modseqs as "".
                     if (recordByEntryId.TryGetValue(entryId, out FdrScoreRecord record))
-                        onRow(modseq ?? string.Empty, isDecoy, record);
+                        onRow(modseq ?? string.Empty, charge, isDecoy, record);
                 });
             return true;
         }

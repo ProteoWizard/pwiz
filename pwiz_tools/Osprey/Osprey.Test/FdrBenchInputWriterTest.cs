@@ -1,7 +1,7 @@
 /*
  * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/maccoss/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -60,6 +60,89 @@ namespace pwiz.Osprey.Test
             MissingLibraryEntryEmitsBlankRowAndCounts();
             EmptyProteinListYieldsBlankProtein();
             SingleOversizeProteinIdHardTruncated();
+            SinkMatchesEntryOverloadByteForByte();
+            AbandonedSinkLeavesNoFile();
+        }
+
+        /// <summary>
+        /// The streamed pass-1 emitter feeds <see cref="FdrBenchInputWriter.PeptideInputSink"/>
+        /// directly with <see cref="FdrBenchInputWriter.Row"/>s built off the per-file sidecar,
+        /// while the resident path goes through the <c>FdrEntry</c> overload. The two must be
+        /// byte-identical for every mode and level, on data that can tell them apart: an entry
+        /// whose peptide q differs from its precursor q (so a level mix-up shows), and an exact
+        /// (q, score) tie between two library entries sharing a modseq / charge (so the
+        /// first-seen rule shows, through the protein column).
+        /// </summary>
+        private static void SinkMatchesEntryOverloadByteForByte()
+        {
+            var lib = new List<LibraryEntry>
+            {
+                MakeLib(1, @"PEPTIDEK", @"PEPTIDEK", 2, @"P1"),
+                MakeLib(2, @"PEPTIDEK", @"PEPTIDEK", 3, @"P1"),
+                MakeLib(3, @"ANCHORR", @"ANCHORR", 2, @"P2"),
+                MakeLib(4, @"ANCHORR", @"ANCHORR", 2, @"P2_ISOFORM"),
+            };
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                Run(@"run_b",
+                    MakeEntry(1, false, @"PEPTIDEK", 2, 0.03, 0.02, 1.5),
+                    // Peptide q differs from precursor q: Peptide and Precursor levels must
+                    // pick different columns (Both collapses to Precursor before the lookup).
+                    new FdrEntry
+                    {
+                        EntryId = 2, ModifiedSequence = @"PEPTIDEK", Charge = 3, Score = 2.5,
+                        RunPrecursorQvalue = 0.01, RunPeptideQvalue = 0.04,
+                        ExperimentPrecursorQvalue = 0.02, ExperimentPeptideQvalue = 0.05,
+                    },
+                    MakeEntry(1 | LibraryEntry.DECOY_ID_BIT, true, @"KEDITPEP", 2, 0.5, 0.5, -1.0),
+                    // Exact tie on (q, score) with entry 3 below across runs: same modseq and
+                    // charge, different library entry, so which one the dedup keeps is visible
+                    // only as the protein column, and only the first seen may win.
+                    MakeEntry(4, false, @"ANCHORR", 2, 0.02, 0.02, 1.0)),
+                Run(@"run_a",
+                    MakeEntry(3, false, @"ANCHORR", 2, 0.02, 0.02, 1.0),
+                    MakeEntry(1, false, @"PEPTIDEK", 2, 0.01, 0.02, 1.5)),
+            };
+            foreach (bool perRun in new[] { false, true })
+            {
+                foreach (var level in new[] { FdrLevel.Precursor, FdrLevel.Peptide, FdrLevel.Both })
+                {
+                    byte[] viaEntries = RunWriterBytes(perFile, lib, level, perRun);
+                    byte[] viaSink = RunSinkBytes(perFile, lib, level, perRun);
+                    CollectionAssert.AreEqual(viaEntries, viaSink,
+                        string.Format(@"sink output differs from the entry overload (perRun={0}, level={1})",
+                            perRun, level));
+                }
+            }
+            // And the tie really was decided by order: the isoform seen first (run_b) wins.
+            var lines = RunWriter(perFile, lib, FdrLevel.Precursor, false);
+            var anchor = lines.Skip(1).Select(l => l.Split('\t')).Single(c => c[COL_MOD_PEPTIDE] == @"ANCHORR");
+            Assert.AreEqual(@"P2_ISOFORM", anchor[COL_PROTEIN], @"an exact tie must keep the row seen first");
+        }
+
+        /// <summary>
+        /// A producer that throws mid-stream must not leave a half-written TSV behind: disposing
+        /// the sink without <c>Commit</c> discards the temporary and the destination is absent.
+        /// </summary>
+        private static void AbandonedSinkLeavesNoFile()
+        {
+            var lib = new List<LibraryEntry> { MakeLib(1, @"PEPTIDE", @"PEPTIDE", 2, @"P1") };
+            var byId = lib.ToDictionary(e => e.Id, e => e);
+            string path = Path.Combine(Path.GetTempPath(), @"fdrbench_test_" + Guid.NewGuid().ToString(@"N") + @".tsv");
+            try
+            {
+                using (var sink = new FdrBenchInputWriter.PeptideInputSink(path, byId, FdrLevel.Precursor, true, null))
+                {
+                    sink.Add(@"run_a", new FdrBenchInputWriter.Row(1, @"PEPTIDE", 2, 1.0, 0.01, 0.01));
+                    // No Commit: the producer gave up.
+                }
+                Assert.IsFalse(File.Exists(path), @"an uncommitted sink must not leave the destination behind");
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
         }
 
         private static void PrecursorDedupKeepsBestScore()
@@ -287,6 +370,62 @@ namespace pwiz.Osprey.Test
             {
                 result = FdrBenchInputWriter.WritePeptideInput(path, perFile, byId, level, perRun);
                 return File.ReadAllLines(path).ToList();
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+        }
+
+        /// <summary>The entry overload's output, whole, for a byte comparison.</summary>
+        private static byte[] RunWriterBytes(List<KeyValuePair<string, List<FdrEntry>>> perFile,
+            List<LibraryEntry> lib, FdrLevel level, bool perRun)
+        {
+            var byId = lib.ToDictionary(e => e.Id, e => e);
+            string path = Path.Combine(Path.GetTempPath(), @"fdrbench_test_" + Guid.NewGuid().ToString(@"N") + @".tsv");
+            try
+            {
+                FdrBenchInputWriter.WritePeptideInput(path, perFile, byId, level, perRun);
+                return File.ReadAllBytes(path);
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+        }
+
+        /// <summary>
+        /// The same data pushed through the sink the way the streamed pass-1 emitter does it:
+        /// decoys skipped by the producer, both q-values reduced with the sink's effective
+        /// level (Peptide takes the peptide column, anything else the precursor column).
+        /// </summary>
+        private static byte[] RunSinkBytes(List<KeyValuePair<string, List<FdrEntry>>> perFile,
+            List<LibraryEntry> lib, FdrLevel level, bool perRun)
+        {
+            var byId = lib.ToDictionary(e => e.Id, e => e);
+            string path = Path.Combine(Path.GetTempPath(), @"fdrbench_test_" + Guid.NewGuid().ToString(@"N") + @".tsv");
+            try
+            {
+                using (var sink = new FdrBenchInputWriter.PeptideInputSink(path, byId, level, perRun, null))
+                {
+                    bool peptideLevel = sink.EffectiveLevel == FdrLevel.Peptide;
+                    foreach (var run in perFile)
+                    {
+                        foreach (var entry in run.Value)
+                        {
+                            if (entry.IsDecoy)
+                                continue;
+                            sink.Add(run.Key, new FdrBenchInputWriter.Row(
+                                entry.EntryId, entry.ModifiedSequence, entry.Charge, entry.Score,
+                                peptideLevel ? entry.RunPeptideQvalue : entry.RunPrecursorQvalue,
+                                peptideLevel ? entry.ExperimentPeptideQvalue : entry.ExperimentPrecursorQvalue));
+                        }
+                    }
+                    sink.Commit();
+                }
+                return File.ReadAllBytes(path);
             }
             finally
             {

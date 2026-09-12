@@ -99,6 +99,20 @@
               flag-up-front run wrote, because a view some phase holds privately goes
               missing on this path and on no other. Runs between modes 7 and 8, which is
               the only window where the cohort is complete and the blib is still current.
+      mode 12 --fdrbench-pass both writes BOTH FDRBench input files (issue #4507). The
+              straight-through, warm and resume legs all ask for `--fdrbench bench.tsv
+              --fdrbench-pass both`. Half one, after the cold run: bench.pass1.tsv and
+              bench.pass2.tsv both exist with rows, each beside its pairing manifest, and
+              pass 1 (the pre-compaction pool) is strictly larger than pass 2 (the
+              reported set). Half two, after mode 2: the resume re-ran both emitters, and
+              the files it wrote are byte-identical to the cold run's. `both` is a
+              bitmask, and for a month the gate that used to route pass 1 onto the
+              resident pool tested it with ==, so `both` silently wrote pass 2 only; the
+              pass-1 emitter now streams off the per-file sidecars, and this is the leg
+              that goes red if a selection stops reaching it. Not asserted here: the
+              streamed file against the RESIDENT emitter's - that A/B was banked on
+              2026-09-12 (SHA-256 identical on StellarLibDecoy and Stellar, per-precursor
+              and per-run) and would cost a full resident run per dataset to repeat.
 
     NO dependency on the sibling ai/ checkout: data acquisition, blib golden
     capture/compare, and the tolerance comparators all live under
@@ -701,10 +715,10 @@ function Get-DatasetCliArgs {
     # folded run by run through ModelDiagnosticsData.Accumulator, so a run with
     # this flag streams the Stage 7 join exactly as one without it does, and
     # mode 3 asserts that on every dataset. It populates the Pass 1 AND Pass 2 FDP views on
-    # its own: --fdrbench-pass selects which pass an FDRBench INPUT FILE is written
-    # for and does nothing at all without --fdrbench (OspreyCommandArgs warns, and
-    # FdrBenchInputWriter returns early on an empty output path), so passing it here
-    # only produced a warning on every invocation.
+    # its own. The FDRBench INPUT FILES are a separate request - Invoke-OspreyRun's
+    # -FdrBench switch, on the legs mode 12 covers - and --fdrbench-pass without
+    # --fdrbench does nothing at all (OspreyCommandArgs warns), which is why it is not
+    # a dataset arg.
     if ($Spec.ModelDiagnostics) { $extra += '--model-diagnostics' }
     return $extra
 }
@@ -722,7 +736,12 @@ function Invoke-OspreyRun {
           # correct behaviour is a named error with a non-zero exit. Without this the harness
           # treats that refusal as a crash and ABORTS the remaining legs, so the gate cannot
           # assert the guard it exists to check.
-          [switch]$AllowNonZeroExit)
+          [switch]$AllowNonZeroExit,
+          # Ask for BOTH FDRBench input files (mode 12). CWD-relative like output.blib, so
+          # they land in the work dir as bench.pass1.tsv / bench.pass2.tsv. Only the
+          # straight-through, warm and resume legs pass this: those three share one work
+          # dir and one command, which is what lets mode 12 compare the files across them.
+          [switch]$FdrBench)
     New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
     $logPath = Join-Path $WorkDir $LogName
     $cliArgs = @()
@@ -733,6 +752,7 @@ function Invoke-OspreyRun {
     $cliArgs += Get-DatasetCliArgs -Spec $Spec -Manifest $Manifest
     $cliArgs += $memStampArgs
     if ($TaskName) { $cliArgs += @('--task', $TaskName) }
+    if ($FdrBench) { $cliArgs += @('--fdrbench', 'bench.tsv', '--fdrbench-pass', 'both') }
     if ($DumpProteinFdr) { $env:OSPREY_DUMP_STAGE7_PROTEIN_FDR = '1' }
     # Run with CWD = work dir so the -o blib and the Stage 7 protein-FDR dump
     # (both CWD-relative, NOT --work-dir-relative -- only derived artifacts +
@@ -1301,6 +1321,69 @@ function Get-ReleaseLogFacts {
         }
     }
     return $facts
+}
+
+
+function Test-FdrBenchBothFiles {
+    <#
+    Mode 12, first half: a run that asked for --fdrbench bench.tsv --fdrbench-pass both
+    wrote BOTH bench.pass1.tsv and bench.pass2.tsv into -Dir, each with rows past its
+    header, and pass 1 (the pre-compaction pool) carries strictly more rows than pass 2
+    (the reported set). Returns the { Pass; Issues } shape every other comparator returns.
+    #>
+    param([Parameter(Mandatory = $true)][string]$Dir)
+    $issues = [System.Collections.Generic.List[string]]::new()
+    $rows = @{}
+    foreach ($pass in 1, 2) {
+        $path = Join-Path $Dir "bench.pass$pass.tsv"
+        if (-not (Test-Path -LiteralPath $path)) {
+            $issues.Add("bench.pass$pass.tsv was not written (--fdrbench-pass both must emit both files)")
+            continue
+        }
+        # Header + rows; the writer emits '\n' line endings, which Get-Content splits fine.
+        $count = (Get-Content -LiteralPath $path | Measure-Object -Line).Lines - 1
+        $rows[$pass] = $count
+        if ($count -lt 1) { $issues.Add("bench.pass$pass.tsv has a header and no rows") }
+        $manifest = "$path.pairing.tsv"
+        if (-not (Test-Path -LiteralPath $manifest)) {
+            $issues.Add("bench.pass$pass.tsv.pairing.tsv was not written beside its TSV")
+        }
+    }
+    if ($rows.ContainsKey(1) -and $rows.ContainsKey(2) -and $rows[1] -le $rows[2]) {
+        $issues.Add(("pass 1 has {0} rows and pass 2 has {1}: the pre-compaction pool must be " +
+            "strictly larger than the reported set") -f $rows[1], $rows[2])
+    }
+    if ($issues.Count -eq 0) {
+        Write-Host ("  fdrbench: pass1 {0:N0} rows, pass2 {1:N0} rows" -f $rows[1], $rows[2])
+    }
+    return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
+}
+
+function Test-FdrBenchResumeIdentity {
+    <#
+    Mode 12, second half: after a resume re-ran both emitters in -Dir, bench.pass1.tsv and
+    bench.pass2.tsv are byte-identical to the bench_cold.* copies taken from the
+    straight-through run. Bytes, not a tolerance: the TSV is fully formatted and sorted on
+    a total order, so any difference is a real one.
+    #>
+    param([Parameter(Mandatory = $true)][string]$Dir)
+    $issues = [System.Collections.Generic.List[string]]::new()
+    foreach ($pass in 1, 2) {
+        $cold = Join-Path $Dir "bench_cold.pass$pass.tsv"
+        $resumed = Join-Path $Dir "bench.pass$pass.tsv"
+        foreach ($p in $cold, $resumed) {
+            if (-not (Test-Path -LiteralPath $p)) { $issues.Add("missing: $p") }
+        }
+        if ((Test-Path -LiteralPath $cold) -and (Test-Path -LiteralPath $resumed)) {
+            $hc = (Get-FileHash -LiteralPath $cold -Algorithm SHA256).Hash
+            $hr = (Get-FileHash -LiteralPath $resumed -Algorithm SHA256).Hash
+            if ($hc -ne $hr) {
+                $issues.Add(("bench.pass{0}.tsv differs after resume: {1:N0} bytes cold vs {2:N0} " +
+                    "bytes resumed") -f $pass, (Get-Item $cold).Length, (Get-Item $resumed).Length)
+            }
+        }
+    }
+    return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
 }
 
 function Test-LibraryFragmentRelease {
@@ -1878,9 +1961,28 @@ foreach ($name in $selected) {
     # straight-through leg always runs clean -- no prior-run state to inherit.)
     Write-Progress-Tc "${name}: straight-through run ($($inputs.Mzmls.Count) files, $($cfg.Resolution))"
     $rStraight = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
-        -WorkDir $straightDir -LogName 'straight.log' -DumpProteinFdr -Spec $cfg -Manifest $inputs.Manifest
+        -WorkDir $straightDir -LogName 'straight.log' -DumpProteinFdr -Spec $cfg -Manifest $inputs.Manifest -FdrBench
     $straightBlib = Join-Path $straightDir 'output.blib'
     Write-Host ("  straight-through wall {0:mm\:ss}; blib {1:N0} bytes" -f $rStraight.Wall, (Get-Item $straightBlib).Length)
+
+    # ---- mode 12: --fdrbench-pass both writes BOTH files (issue #4507) ----
+    # `both` is a bitmask (1 | 2), and for as long as the pass-1 emitter needed the
+    # resident pool the gate that selected it tested that mask with ==, so `both`
+    # matched nothing and silently wrote pass 2 only - every SEA-AD run for a month asked
+    # for both and got one. The pass-1 file now streams off the per-file 1st-pass sidecars,
+    # and this is the leg that would go red if the selection ever stopped reaching it. The
+    # shape check is deliberate: pass 1 is the pre-compaction pool and pass 2 the reported
+    # set, so pass 1 must carry strictly more rows, and a file that exists but is empty
+    # past its header is the failure mode the old sink produced.
+    $m12 = Test-FdrBenchBothFiles -Dir $straightDir
+    if ($m12.Pass) {
+        $summaryLines.Add("$name mode12 (fdrbench both files): PASS")
+    } else {
+        $overallFail = $true
+        Write-Problem-Tc "$name mode12 (fdrbench both files): FAIL - $($m12.Issues.Count) issue(s)"
+        $m12.Issues | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+        $summaryLines.Add("$name mode12 (fdrbench both files): FAIL ($($m12.Issues.Count) issues)")
+    }
 
     # ---- No-copy assertion: read-only data dir unchanged ----
     $changed = Compare-DirFingerprint -Before $dataFp -Dir $inputs.Dir
@@ -2436,7 +2538,7 @@ foreach ($name in $selected) {
         # re-run runs NO task, so it can reach no resident path, and pre-setting the
         # opt-in could only mask the regression this leg exists to catch.
         $rWarm = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
-            -WorkDir $straightDir -LogName 'warm.log' -Spec $cfg -Manifest $inputs.Manifest
+            -WorkDir $straightDir -LogName 'warm.log' -Spec $cfg -Manifest $inputs.Manifest -FdrBench
         $warmAfter = (Get-FileHash $straightBlib -Algorithm SHA256).Hash
         Write-Host ("  warm re-run wall {0:N1}s (a fully cached run does no work)" -f $rWarm.Wall.TotalSeconds)
         $m4 = Test-TaskCacheHits -LogPath $rWarm.Log -ExpectSkipped $pipelineTaskNames `
@@ -2476,6 +2578,12 @@ foreach ($name in $selected) {
     # byte-identity assertion needs the dir untouched.
     $coldBlib = Join-Path $straightDir 'output_cold.blib'
     Copy-Item $straightBlib $coldBlib -Force
+    # The FDRBench files too, for the same reason: mode 2's resume re-runs FirstPassFDR and
+    # SecondPassFDR in this dir, so both get rewritten, and mode 12 compares the rewrite
+    # against what the cold run wrote.
+    foreach ($pass in 1, 2) {
+        Copy-Item (Join-Path $straightDir "bench.pass$pass.tsv") (Join-Path $straightDir "bench_cold.pass$pass.tsv") -Force
+    }
 
     # ---- mode 2: resume vs straight-through self-consistency ----
     # A dataset that does not run this mode reports NO line for it - deliberately, and not
@@ -2520,7 +2628,7 @@ foreach ($name in $selected) {
             if (Test-Path $p) { throw "regression: work dir unexpectedly holds a source input ($p); the resume leg's cache-only premise is broken." }
         }
         $rResume = Invoke-OspreyRun -Mzmls $resumeInputs -Library $inputs.Library -Resolution $cfg.Resolution `
-            -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest
+            -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest -FdrBench
         $resumeBlib = Join-Path $straightDir 'output.blib'
         Write-Host ("  resume wall {0:mm\:ss}; blib {1:N0} bytes" -f $rResume.Wall, (Get-Item $resumeBlib).Length)
 
@@ -2568,6 +2676,20 @@ foreach ($name in $selected) {
             Write-Problem-Tc "$name mode2 (resume==straight): FAIL -- $($m2.Issues.Count) issue(s)"
             $m2.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
             $summaryLines.Add("$name mode2 (resume==straight): FAIL ($($m2.Issues.Count) issues)")
+        }
+
+        # mode 12, second half: the resume re-ran both emitters (FirstPassFDR and
+        # SecondPassFDR both recomputed above), so the files it wrote must be BYTE-identical
+        # to the cold run's. Bytes, not 1e-9: the TSV formats every number with a fixed
+        # E10 pattern and sorts on a total order, so any difference is a real one.
+        $m12r = Test-FdrBenchResumeIdentity -Dir $straightDir
+        if ($m12r.Pass) {
+            $summaryLines.Add("$name mode12 (resume fdrbench==straight): PASS")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode12 (resume fdrbench==straight): FAIL - $($m12r.Issues.Count) issue(s)"
+            $m12r.Issues | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode12 (resume fdrbench==straight): FAIL ($($m12r.Issues.Count) issues)")
         }
     }
 
