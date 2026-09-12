@@ -378,10 +378,10 @@ namespace pwiz.Osprey.Tasks
             // the live objects harvested during scoring.
             // The lean path is valid only where FirstPassFdrTask actually consumes a
             // projection. It must mirror that task's dispatch exactly (FirstPassFdrTask.cs:
-            // UseFdrProjection && Percolator && !needsResidentFirstPassPool): any other
-            // combination -- a non-Percolator FdrMethod, OSPREY_FDR_PROJECTION=0, or the
-            // resident-pool consumer FDRBench pass 1, which walks the full pre-compaction
-            // FdrEntry pool -- still needs the fat stubs here. --model-diagnostics is NOT
+            // !PerFileScoringTask.NeedsResidentPool): any other
+            // combination - a non-Percolator FdrMethod or OSPREY_FDR_PROJECTION=0 - still
+            // needs the fat stubs here. FDRBench pass 1 is NOT one of them any more (#4507):
+            // it streams off the per-file sidecars. --model-diagnostics is NOT
             // one of them any more (#4505): it streams its report on every path.
             // The fat/lean decision, and the guard that checks it, key off CanUseLeanProjection -
             // the same predicate the two sibling sites use. Bare NeedsResidentPool no longer
@@ -936,8 +936,8 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new PerFileIsolationMz(_perFileIsolationMz));
             ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
             ctx.Publish(new ScoredEntries(_perFileEntries));
-            // Lean first-pass rows (issue #4397). Null on the resident paths and on FDRBench
-            // pass 1, which publish fat stubs above; FirstPassFdrTask falls back to ScoredEntries
+            // Lean first-pass rows (issue #4397). Null on the resident paths, which publish fat
+            // stubs above; FirstPassFdrTask falls back to ScoredEntries
             // whenever this is null. A --model-diagnostics resume publishes a NON-null
             // projection since #4505 - it no longer needs resident entries, because
             // FirstPassFDR's rehydrate streams the report off its own per-file load.
@@ -2124,10 +2124,10 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Whether Stage 5 needs the resident fat-stub first-pass pool rather than the
-        /// lean streamed <see cref="FdrProjection"/> set (#4400). True when an opt-in
-        /// output reads every entry's in-memory features/scores (FDRBench pass 1),
-        /// or when the projection path is off (OSPREY_FDR_PROJECTION=0 / non-Percolator
-        /// FDR). The reconciled-input worker join is NO LONGER one of them (#4486): it
+        /// lean streamed <see cref="FdrProjection"/> set (#4400). True when the projection
+        /// path is off (OSPREY_FDR_PROJECTION=0 / non-Percolator FDR) - and nothing else since
+        /// #4507 streamed FDRBench pass 1, the last opt-in output that read every entry
+        /// in memory. The reconciled-input worker join is NO LONGER one of them (#4486): it
         /// takes the streaming compacted hydrate, one file's pool resident at a time.
         /// OSPREY_PASS2_QVALUE=transfer no longer
         /// forces the resident pool -- the per-run-only redesign maps each adjusted peak

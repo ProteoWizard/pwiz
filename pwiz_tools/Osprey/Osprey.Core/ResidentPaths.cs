@@ -90,9 +90,12 @@ namespace pwiz.Osprey.Core
         /// <para>It still has to be named. The previous blanket bypass let this switch silently
         /// exempt every OTHER resident trigger too, which is the same masking property that hid
         /// the transfer regression. This entry leaves the list last: it can only go when the
-        /// legacy path itself does. #4507 (FDRBench pass 1) was the last consumer that needed
-        /// that path for a production run; with it streamed, nothing but this oracle reaches
-        /// the legacy implementation, and deleting it is now a choice rather than blocked.</para>
+        /// legacy path itself does. #4507 (FDRBench pass 1) was the last PERCOLATOR-framework
+        /// consumer that needed that path; with it streamed, the legacy implementation is
+        /// reached by this oracle and by a non-Percolator <c>FdrMethod</c>
+        /// (<see cref="NON_PERCOLATOR_FDR"/>), which has no projection path at all. Deleting
+        /// the legacy path therefore still means porting Simple / Mokapot onto the projection
+        /// framework first, or retiring them.</para>
         /// </summary>
         public static readonly string PROJECTION_OFF = @"projection-off";
 

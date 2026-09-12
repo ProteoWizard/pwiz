@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -398,8 +399,11 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// The same data pushed through the sink the way the streamed pass-1 emitter does it:
-        /// decoys skipped by the producer, both q-values reduced with the sink's effective
-        /// level (Peptide takes the peptide column, anything else the precursor column).
+        /// each entry split into the per-file sidecar record and the experiment-scope record it
+        /// would have been persisted as, decoys skipped by the producer, and the row built by
+        /// the PRODUCTION factory (<see cref="FdrBenchInputWriter.Row.FromSidecar"/>) - so the
+        /// level ternaries being pinned against <see cref="FdrBenchInputWriter.Row.FromEntry"/>
+        /// are the ones the emitter runs, not a copy of them.
         /// </summary>
         private static byte[] RunSinkBytes(List<KeyValuePair<string, List<FdrEntry>>> perFile,
             List<LibraryEntry> lib, FdrLevel level, bool perRun)
@@ -410,17 +414,20 @@ namespace pwiz.Osprey.Test
             {
                 using (var sink = new FdrBenchInputWriter.PeptideInputSink(path, byId, level, perRun, null))
                 {
-                    bool peptideLevel = sink.EffectiveLevel == FdrLevel.Peptide;
                     foreach (var run in perFile)
                     {
                         foreach (var entry in run.Value)
                         {
                             if (entry.IsDecoy)
                                 continue;
-                            sink.Add(run.Key, new FdrBenchInputWriter.Row(
-                                entry.EntryId, entry.ModifiedSequence, entry.Charge, entry.Score,
-                                peptideLevel ? entry.RunPeptideQvalue : entry.RunPrecursorQvalue,
-                                peptideLevel ? entry.ExperimentPeptideQvalue : entry.ExperimentPrecursorQvalue));
+                            var record = new FdrScoreRecord(entry.EntryId, entry.Score,
+                                entry.RunPrecursorQvalue, entry.RunPeptideQvalue);
+                            var experiment = new FdrExperimentRecord(entry.EntryId,
+                                entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue,
+                                1.0, 0.0, 1.0);
+                            sink.Add(run.Key, FdrBenchInputWriter.Row.FromSidecar(
+                                entry.ModifiedSequence, entry.Charge, in record, in experiment,
+                                sink.EffectiveLevel));
                         }
                     }
                     sink.Commit();

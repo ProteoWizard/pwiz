@@ -328,10 +328,11 @@ $knownResidentGaps = @(
         Legs  = 'ONLY a pass-2 mode with no per-file worker (OSPREY_PASS2_QVALUE=transfer, i.e. mode 10''s transfer arm). Every default leg - cold straight-through, both resumes, and mode 3''s SecondPassFDR phase - folds run by run. ~4.4 GB library + 0.197 GB/file live post-GC where it is still taken: ~20 GB at 82 files, and 92.3 GB predicted vs 91.1 GB measured at 446.'
     }
 )
-# Reachable only outside this gate, tokened, each with an open issue:
-#   #4507  fdrbench-pass1 -- --fdrbench-pass 1 walks the pre-compaction pool
-# hpc-merge is GONE (#4486): --task SecondPassFDR takes the bounded streaming hydrate, so
-# mode 3's join node needs no token. That is the ratchet shrinking a third time.
+# Reachable only outside this gate, tokened, each with an open issue: NONE. The last one,
+# fdrbench-pass1 (#4507), is GONE: the pass-1 emitter streams off the per-file sidecars and
+# mode 12 covers it - the ratchet shrinking a fifth time. hpc-merge went with #4486 (the
+# --task SecondPassFDR reconciled-input load takes the bounded streaming hydrate, so
+# mode 3's join node needs no token).
 # By design rather than unfinished, so no issue: projection-off and
 # compacted-entries-buffer (the A/B byte-identity oracles) and non-percolator-fdr.
 
@@ -1364,23 +1365,34 @@ function Test-FdrBenchResumeIdentity {
     Mode 12, second half: after a resume re-ran both emitters in -Dir, bench.pass1.tsv and
     bench.pass2.tsv are byte-identical to the bench_cold.* copies taken from the
     straight-through run. Bytes, not a tolerance: the TSV is fully formatted and sorted on
-    a total order, so any difference is a real one.
+    a total order, so any difference is a real one - and the first differing offset names
+    the row, because every number is fixed-width E10 and the rows are sorted, so a red here
+    reads as "which precursor", not "which file". The cold files are DELETED before the
+    resume by the caller, so a resume whose emitters silently did not fire reports a
+    missing file, not a stale copy hashing equal.
     #>
     param([Parameter(Mandatory = $true)][string]$Dir)
     $issues = [System.Collections.Generic.List[string]]::new()
     foreach ($pass in 1, 2) {
         $cold = Join-Path $Dir "bench_cold.pass$pass.tsv"
         $resumed = Join-Path $Dir "bench.pass$pass.tsv"
-        foreach ($p in $cold, $resumed) {
-            if (-not (Test-Path -LiteralPath $p)) { $issues.Add("missing: $p") }
+        if (-not (Test-Path -LiteralPath $cold)) {
+            $issues.Add("bench_cold.pass$pass.tsv is missing: the straight-through run did not write bench.pass$pass.tsv")
+            continue
         }
-        if ((Test-Path -LiteralPath $cold) -and (Test-Path -LiteralPath $resumed)) {
-            $hc = (Get-FileHash -LiteralPath $cold -Algorithm SHA256).Hash
-            $hr = (Get-FileHash -LiteralPath $resumed -Algorithm SHA256).Hash
-            if ($hc -ne $hr) {
-                $issues.Add(("bench.pass{0}.tsv differs after resume: {1:N0} bytes cold vs {2:N0} " +
-                    "bytes resumed") -f $pass, (Get-Item $cold).Length, (Get-Item $resumed).Length)
-            }
+        if (-not (Test-Path -LiteralPath $resumed)) {
+            $issues.Add("bench.pass$pass.tsv was not rewritten by the resume (the cold copy was removed before it ran)")
+            continue
+        }
+        $diff = [OspreyFdrSidecarComparer]::CompareBytes($cold, $resumed, 1000)
+        if (-not $diff.Readable) {
+            $issues.Add("bench.pass$pass.tsv : $($diff.Problem)")
+        } elseif (-not $diff.Equal) {
+            # DOUBLE parens: -f binds tighter than the ',' between method arguments (see the
+            # mode 3 sidecar compare for the full note).
+            $issues.Add((("bench.pass{0}.tsv differs after resume - lengths {1} vs {2}, first " +
+                "difference at byte {3}, {4}+ differing byte(s)") -f $pass,
+                $diff.LengthExpected, $diff.LengthActual, $diff.FirstDiffOffset, $diff.DiffCount))
         }
     }
     return @{ Pass = ($issues.Count -eq 0); Issues = $issues }
@@ -1941,9 +1953,9 @@ foreach ($name in $selected) {
     # PublishedSurvivorLoader, which deliberately bypasses the Stage-6 switch. A mode1-only
     # red that reads like a genuine regression is the worst shape a gate can have.
     #
-    # STILL INCOMPLETE, deliberately, and worth knowing: this reads env vars only, while two
-    # of the three NeedsResidentPool triggers are CLI/config (--fdrbench-pass 1, a
-    # non-Percolator --fdr-method). A dataset spec setting either would red all three legs.
+    # STILL INCOMPLETE, deliberately, and worth knowing: this reads env vars only, while one
+    # of the two NeedsResidentPool triggers is CLI/config (a non-Percolator --fdr-method;
+    # --fdrbench-pass 1 stopped being one with #4507). A spec setting it would red all three legs.
     # No spec does today; if one is added, this has to grow a $cfg term.
     $cannotStreamJoin =
         ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
@@ -1972,8 +1984,8 @@ foreach ($name in $selected) {
     # for both and got one. The pass-1 file now streams off the per-file 1st-pass sidecars,
     # and this is the leg that would go red if the selection ever stopped reaching it. The
     # shape check is deliberate: pass 1 is the pre-compaction pool and pass 2 the reported
-    # set, so pass 1 must carry strictly more rows, and a file that exists but is empty
-    # past its header is the failure mode the old sink produced.
+    # set, so pass 1 must carry strictly more rows. (The defect this guards against wrote NO
+    # pass-1 file at all; the row check is for the next way it could go wrong.)
     $m12 = Test-FdrBenchBothFiles -Dir $straightDir
     if ($m12.Pass) {
         $summaryLines.Add("$name mode12 (fdrbench both files): PASS")
@@ -2578,11 +2590,20 @@ foreach ($name in $selected) {
     # byte-identity assertion needs the dir untouched.
     $coldBlib = Join-Path $straightDir 'output_cold.blib'
     Copy-Item $straightBlib $coldBlib -Force
-    # The FDRBench files too, for the same reason: mode 2's resume re-runs FirstPassFDR and
-    # SecondPassFDR in this dir, so both get rewritten, and mode 12 compares the rewrite
-    # against what the cold run wrote.
+    # The FDRBench files too, for the same reason - MOVED, not copied: mode 2's resume re-runs
+    # FirstPassFDR and SecondPassFDR in this dir, and mode 12 asserts that the resume WROTE
+    # both files again, byte-identical to these. A copy left in place would let an emitter
+    # that silently no-ops on the resume hash equal against itself. Guarded, because a
+    # straight run that wrote no pass-1 file is exactly what mode 12's first half reports,
+    # and an unguarded Move-Item under $ErrorActionPreference = 'Stop' would abort every
+    # remaining leg on that FAIL instead of reporting it.
     foreach ($pass in 1, 2) {
-        Copy-Item (Join-Path $straightDir "bench.pass$pass.tsv") (Join-Path $straightDir "bench_cold.pass$pass.tsv") -Force
+        $bench = Join-Path $straightDir "bench.pass$pass.tsv"
+        if (Test-Path -LiteralPath $bench) {
+            Move-Item -LiteralPath $bench (Join-Path $straightDir "bench_cold.pass$pass.tsv") -Force
+        }
+        $manifest = "$bench.pairing.tsv"
+        if (Test-Path -LiteralPath $manifest) { Remove-Item -LiteralPath $manifest -Force }
     }
 
     # ---- mode 2: resume vs straight-through self-consistency ----
@@ -2595,7 +2616,8 @@ foreach ($name in $selected) {
     # of a partial accounting.
     #
     # Truncation is still detectable, and better: the per-dataset leg COUNTS are fixed by
-    # configuration (Stellar 15, StellarLibDecoy 21, StellarGenDecoyEntrap 21, Astral 19)
+    # configuration (measured 2026-09-12: Stellar 21, StellarLibDecoy 29, StellarGenDecoyEntrap 28,
+    # Astral 25 - mode 12 is two of each except on Astral, which has no mode 2 and so no second half)
     # and are documented with the full asymmetry list in ai/docs/osprey-development-guide.md.
     # A short count is what distinguishes an aborted run, not the presence of a SKIP line.
     if (-not $SkipResume -and -not ($cfg.SkipModes -contains 2)) {

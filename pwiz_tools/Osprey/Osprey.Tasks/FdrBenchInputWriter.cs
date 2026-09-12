@@ -27,6 +27,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -132,6 +133,24 @@ namespace pwiz.Osprey.Tasks
                 return new Row(entry.EntryId, entry.ModifiedSequence, entry.Charge, entry.Score,
                     entry.EffectiveRunQvalue(effectiveLevel), entry.EffectiveExperimentQvalue(effectiveLevel));
             }
+
+            /// <summary>
+            /// The streamed view of the same observation: the per-file sidecar record joined to
+            /// the parquet scalars (<paramref name="modifiedSequence"/>, <paramref name="charge"/>)
+            /// and the experiment-scope record. <paramref name="effectiveLevel"/> has already been
+            /// collapsed by the sink to Precursor or Peptide, so the two-way choice here is
+            /// exactly what the <c>IFdrRow</c> effective-q helpers return for those levels on a
+            /// resident entry - which is what <see cref="FromEntry"/> goes through, so the two
+            /// factories are the pair a test can hold against each other.
+            /// </summary>
+            public static Row FromSidecar(string modifiedSequence, byte charge,
+                in FdrScoreRecord record, in FdrExperimentRecord experiment, FdrLevel effectiveLevel)
+            {
+                bool peptideLevel = effectiveLevel == FdrLevel.Peptide;
+                return new Row(record.EntryId, modifiedSequence, charge, record.Score,
+                    peptideLevel ? record.RunPeptideQvalue : record.RunPrecursorQvalue,
+                    peptideLevel ? experiment.ExperimentPeptideQvalue : experiment.ExperimentPrecursorQvalue);
+            }
         }
 
         /// <summary>
@@ -201,8 +220,10 @@ namespace pwiz.Osprey.Tasks
             private readonly ICollection<string> _skipEntrapmentSeqs;
             private readonly FileSaver _saver;
             private readonly StreamWriter _writer;
-            // Per-precursor mode only: best (min q, then max score) row per dedup key.
-            private readonly Dictionary<string, BestRow> _best;
+            // Per-precursor mode only: the best (min experiment q, then max score) row per
+            // dedup key. The row carries both keys of that comparison, so nothing is cached
+            // beside it.
+            private readonly Dictionary<string, Row> _best;
             private Result _result;
 
             /// <param name="path">Destination TSV path; parent directories are created.</param>
@@ -224,23 +245,35 @@ namespace pwiz.Osprey.Tasks
                 // Protein and Both collapse to precursor-level for this peptide-level writer.
                 EffectiveLevel = fdrLevel == FdrLevel.Peptide ? FdrLevel.Peptide : FdrLevel.Precursor;
                 if (!perRun)
-                    _best = new Dictionary<string, BestRow>();
+                    _best = new Dictionary<string, Row>();
 
                 string dir = Path.GetDirectoryName(path);
                 if (!string.IsNullOrEmpty(dir))
                     Directory.CreateDirectory(dir);
+                // The FileSaver has created its temp file by the time the writer is opened, so a
+                // failure opening the writer (a scanner holding the fresh temp, a full disk on
+                // the header) must release the saver here: no instance reaches the caller's
+                // using for Dispose to do it.
                 _saver = new FileSaver(path);
-                _writer = new StreamWriter(_saver.SafeName, false);
-                _writer.NewLine = "\n"; // emit '\n' line endings for the TSV body
-                _writer.WriteLine(perRun
-                    ? "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein\trun"
-                    : "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein");
+                try
+                {
+                    _writer = new StreamWriter(_saver.SafeName, false);
+                    _writer.NewLine = "\n"; // emit '\n' line endings for the TSV body
+                    _writer.WriteLine(perRun
+                        ? "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein\trun"
+                        : "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein");
+                }
+                catch
+                {
+                    _writer?.Dispose();
+                    _saver.Dispose();
+                    throw;
+                }
             }
 
             /// <summary>
             /// The level the q-values must be reduced to before they reach <see cref="Add"/>:
-            /// what <see cref="Row.FromEntry"/> and the streamed producer both pass to the
-            /// effective-q helpers.
+            /// what <see cref="Row.FromEntry"/> and <see cref="Row.FromSidecar"/> take.
             /// </summary>
             public FdrLevel EffectiveLevel { get; }
 
@@ -260,19 +293,19 @@ namespace pwiz.Osprey.Tasks
 
                 // Dedup across files: keep best (min q-value, ties by max score) per dedup key.
                 string key = DedupKey(row, EffectiveLevel);
-                BestRow cur;
+                Row cur;
                 if (!_best.TryGetValue(key, out cur)
-                    || row.ExperimentQvalue < cur.QValue
-                    || (row.ExperimentQvalue == cur.QValue && row.Score > cur.Score))
+                    || row.ExperimentQvalue < cur.ExperimentQvalue
+                    || (row.ExperimentQvalue == cur.ExperimentQvalue && row.Score > cur.Score))
                 {
-                    _best[key] = new BestRow { QValue = row.ExperimentQvalue, Score = row.Score, Row = row };
+                    _best[key] = row;
                 }
             }
 
             /// <summary>Write the per-precursor rows (if any), commit the file and return the counts.</summary>
             public Result Commit()
             {
-                if (_best != null)
+                if (!_perRun)
                 {
                     // Dictionary enumeration order is not guaranteed stable across runs / runtimes,
                     // so sort by the dedup-key components (modified sequence, then charge) before
@@ -280,14 +313,14 @@ namespace pwiz.Osprey.Tasks
                     // ties - deterministic, diff-friendly output. Ordinal compare avoids any
                     // culture-dependent sequence ordering.
                     foreach (var best in _best.Values
-                        .OrderBy(r => r.Row.ModifiedSequence, StringComparer.Ordinal)
-                        .ThenBy(r => r.Row.Charge))
+                        .OrderBy(r => r.ModifiedSequence, StringComparer.Ordinal)
+                        .ThenBy(r => r.Charge))
                     {
-                        var lookup = ResolveLibrary(_libraryById, best.Row.EntryId, ref _result);
+                        var lookup = ResolveLibrary(_libraryById, best.EntryId, ref _result);
                         if (_skipEntrapmentSeqs != null && _skipEntrapmentSeqs.Contains(lookup.Peptide))
                             continue; // excluded orphan entrapment (kept consistent with the manifest)
-                        _writer.WriteLine(FormatRow(lookup.Peptide, best.Row.ModifiedSequence,
-                            best.Row.Charge, best.QValue, best.Row.Score, lookup.Protein, null));
+                        _writer.WriteLine(FormatRow(lookup.Peptide, best.ModifiedSequence,
+                            best.Charge, best.ExperimentQvalue, best.Score, lookup.Protein, null));
                         _result.Rows++;
                     }
                 }
@@ -299,9 +332,18 @@ namespace pwiz.Osprey.Tasks
             public void Dispose()
             {
                 // Both idempotent: after Commit the writer is already closed and the saver's
-                // temp is gone, so this only does work on the abandoned-producer path.
-                _writer.Dispose();
-                _saver.Dispose();
+                // temp is gone, so this only does work on the abandoned-producer path. The
+                // saver goes in a finally because a writer whose last flush failed (a full
+                // disk) throws again here, and the temp it would leave behind is the very
+                // artifact this method exists to remove.
+                try
+                {
+                    _writer.Dispose();
+                }
+                finally
+                {
+                    _saver.Dispose();
+                }
             }
         }
 
@@ -463,13 +505,6 @@ namespace pwiz.Osprey.Tasks
         {
             public string Peptide;
             public string Protein;
-        }
-
-        private class BestRow
-        {
-            public double QValue;
-            public double Score;
-            public Row Row;
         }
     }
 }
