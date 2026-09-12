@@ -15,6 +15,15 @@ implementation is being retired to a parity oracle; Osprey ships as a
 standalone .NET 8 executable (Windows + Linux) and will move onto the
 Skyline release/versioning scheme.
 
+## Documentation
+
+| Start here | For |
+|---|---|
+| [`docs/00-pipeline-architecture.md`](docs/00-pipeline-architecture.md) | The pipeline's architecture and sidecar file contract. **Read before changing what any task reads, writes, or keeps.** |
+| [`docs/README.md`](docs/README.md) | Ordered index of docs 00-20, numbered by pipeline execution order |
+| [`Osprey-workflow.html`](Osprey-workflow.html) | The annotated end-to-end diagram: stages, HPC task boundaries, per-task inputs and outputs |
+| [`docs/20-command-line.md`](docs/20-command-line.md) | Every CLI flag with defaults, plus copy-paste examples |
+
 ## Why a C# implementation?
 
 Osprey is a well-documented, test-backed DIA search pipeline that does
@@ -100,9 +109,16 @@ fan-out boundaries into four single-task workers — one node = one
 | `--task` | shape | reads | writes (next to the input) |
 |----------|-------|-------|-----------------------------|
 | `PerFileScoring`   | split 1 — per file | mzML (`-i`) + library (`-l`) | `<stem>.scores.parquet`, `<stem>.calibration.json` |
-| `FirstPassFDR`     | join 1 — all files | every `<stem>.scores.parquet` (`--input-scores`) | `<stem>.1st-pass.fdr_scores.bin`, `<stem>.reconciliation.json` |
+| `FirstPassFDR`     | join 1 — all files | every `<stem>.scores.parquet` | `<stem>.1st-pass.fdr_scores.bin`, `<stem>.reconciliation.json` |
 | `PerFileRescoring` | split 2 — per file | `<stem>.scores.parquet` + co-located `.1st-pass.fdr_scores.bin`, `.reconciliation.json` | `<stem>.scores-reconciled.parquet` |
-| `SecondPassFDR`    | join 2 — all files | every `<stem>.scores-reconciled.parquet` (`--input-scores`) | `<output>.blib` (+ `<stem>.2nd-pass.fdr_scores.bin` when protein FDR is on) |
+| `SecondPassFDR`    | join 2 — all files | every `<stem>.scores-reconciled.parquet` | `<output>.blib` (+ `<stem>.2nd-pass.fdr_scores.bin` when protein FDR is on) |
+
+Every task names its runs with `-i` / `--input-list`, giving the **data files**, and derives
+each run's parquet and sidecars from the input stem plus `--output-dir`. Which parquet a task
+reads is a property of the task — `FirstPassFDR` and `PerFileRescoring` read `<stem>.scores.parquet`,
+`SecondPassFDR` reads `<stem>.scores-reconciled.parquet` — not of what happens to be in the
+directory. The data file itself need not still exist: a node whose `.spectra.bin` or scores
+parquet is staged is accepted without it.
 
 The driver also writes a `<output>.<TaskName>.osprey.task` validity
 sidecar next to each output; re-running a task whose outputs already exist
@@ -119,32 +135,44 @@ Osprey -i *.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 #   -> s1.scores.parquet, s1.calibration.json   (next to s1.mzML; -o is ignored here)
 
-# Join 1 — FirstPassFDR, one process over ALL parquets (pass a DIRECTORY so order is fixed):
-Osprey --task FirstPassFDR --input-scores ./scores_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+# Join 1 — FirstPassFDR, one process over ALL runs (name them in a fixed order):
+Osprey --task FirstPassFDR -i s1.mzML -i s2.mzML -i s3.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+#   reads s1.scores.parquet, s2..., s3...
 #   -> <stem>.1st-pass.fdr_scores.bin, <stem>.reconciliation.json   (next to each parquet)
 
 # Split 2 — PerFileRescoring, one process per file (parquet + its two sidecars co-located):
-Osprey --task PerFileRescoring --input-scores s1.scores.parquet -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 #   -> s1.scores-reconciled.parquet
 
-# Join 2 — SecondPassFDR, one process over ALL reconciled parquets (DIRECTORY again):
-Osprey --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
-#   -> out.blib
+# Join 2 — SecondPassFDR, one process over ALL runs (same order):
+Osprey --task SecondPassFDR -i s1.mzML -i s2.mzML -i s3.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+#   reads s1.scores-reconciled.parquet, s2..., s3...   -> out.blib
+
+# Past a few hundred runs, --input-list takes one path per line and composes with -i
+# (446 -i paths measured ~28,600 characters against a 32,767 command-line limit):
+Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 ```
+
+The example above shows the *commands*. What each node must actually be **shipped** at each
+boundary - including the experiment-wide artifacts that are easy to miss because a node can
+often proceed without them and produce a plausible wrong answer - is the relay checklist in
+[`docs/00-pipeline-architecture.md`](docs/00-pipeline-architecture.md).
 
 ### Notes that matter for a workflow engine (NextFlow, etc.)
 
 - **Same parameters on every task.** Pass an identical `-l <library>` and
   identical search flags (`--resolution`, `--protein-fdr`, ...) to all
   four tasks. The parquet integrity check (`osprey.search_hash` footer
-  metadata) rejects `--input-scores` files whose search/library hash does
-  not match the current invocation.
-- **`--input-scores` ordering is significant.** A *directory* argument is
-  globbed and sorted internally (deterministic). An explicit *file list*
-  is consumed in the order given. FirstPassFDR reconciliation is
-  order-sensitive, so for `FirstPassFDR` and `SecondPassFDR` pass a directory or a
+  metadata) rejects parquets whose search/library hash does not match the
+  current invocation.
+- **Input ORDER is significant, and it is now yours.** Runs are consumed in
+  the order given to `-i` / `--input-list`. FirstPassFDR reconciliation is
+  order-sensitive, so for `FirstPassFDR` and `SecondPassFDR` pass a
   deterministically sorted list — a workflow engine's channel order is
-  otherwise nondeterministic and would cause run-to-run drift.
+  otherwise nondeterministic and would cause run-to-run drift. The retired
+  `--input-scores` sorted a globbed directory on your behalf; naming the runs
+  means the order is stated rather than inherited from a directory listing,
+  and a stray parquet in that directory can no longer change the cohort.
 - **Outputs land next to inputs; sidecars travel with the parquet.** Each
   task writes its outputs and sidecars beside the input file (not into
   cwd or a separate output dir). `PerFileRescoring` rehydrates from
@@ -157,7 +185,7 @@ Osprey --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.b
   several files concurrently in one process) and would double-parallelize
   under a scheduler.
 - **`--help` is the authoritative flag reference** (`Osprey --help`),
-  with a Distributed / HPC group covering `--task` and `--input-scores`.
+  with a Distributed / HPC group covering `--task`, `-i` and `--input-list`.
 - **Exit codes**: a failing task returns a non-zero process exit code, so
   a workflow engine can gate on it normally.
 

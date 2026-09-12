@@ -21,6 +21,8 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+
 namespace pwiz.Osprey.IO
 {
     /// <summary>
@@ -53,5 +55,25 @@ namespace pwiz.Osprey.IO
         /// omission separately so it skips its own fragment-count gate.
         /// </summary>
         public bool OmitFragments { get; set; }
+
+        /// <summary>
+        /// Retain fragment peaks ONLY for these base_ids; every other entry's peaks are skipped
+        /// during the cache read exactly as <see cref="OmitFragments"/> skips all of them. Null
+        /// (the default) retains everything.
+        ///
+        /// <para>The alternative is to build every entry's peaks and then hand them back:
+        /// <c>LibraryFragmentRelease</c> walks the whole library to release the ones no later
+        /// stage will score - ~1m54s over 6,175,389 entries on the CHS cohort, releasing
+        /// 4,924,513 of them. That cost is O(library), so it is the same two minutes whether the
+        /// analysis has 3 runs or 4,000, and after the 2026-09-03 resume work it was 66% of the
+        /// entire resume startup.</para>
+        ///
+        /// <para>Set this only where the retained set is already KNOWN before the library is
+        /// read - the rescore and SecondPassFDR paths, where FirstPassFDR has already written
+        /// <c>&lt;blib-stem&gt;.1st-pass.retained_base_ids.bin</c> (2.98 MB at 446 runs). A fresh
+        /// run must leave it null: it needs every entry's peaks to score against, and the
+        /// retained set does not exist yet.</para>
+        /// </summary>
+        public HashSet<uint> RetainFragmentsFor { get; set; }
     }
 }

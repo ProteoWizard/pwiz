@@ -209,7 +209,7 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Wrapper around <see cref="Path.GetDirectoryName"/> which, if an error occurs, adds
+        /// Wrapper around <see cref="Path.GetDirectoryName(string)"/> which, if an error occurs, adds
         /// the path to the exception message.
         /// Eventually, this method might catch the exception and try to return something reasonable,
         /// but, for now, we are trying to figure out the source of invalid paths.

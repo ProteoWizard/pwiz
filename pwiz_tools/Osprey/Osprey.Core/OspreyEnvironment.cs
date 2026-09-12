@@ -152,6 +152,14 @@ namespace pwiz.Osprey.Core
         public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
 
         /// <summary>
+        /// DIAGNOSTIC. <c>OSPREY_DROP_BETWEEN_TASKS=1</c> makes each task release every byproduct
+        /// but the library when it finishes, so the next task reloads what it needs from disk -
+        /// the dataflow an HPC chain gets for free from process boundaries. Default OFF; the
+        /// experiment reverts as a unit. See <c>PipelineContext.DropAllButLibrary</c>.
+        /// </summary>
+        public static bool DropBetweenTasks { get; set; } = IsSetAndNotZero(@"OSPREY_DROP_BETWEEN_TASKS");
+
+        /// <summary>
         /// Stage 6 rebuilds each file's post-compaction survivors from that file's
         /// <c>.scores.parquet</c> + 1st-pass sidecar just before rescoring it, and drops
         /// them again once its reconciled parquet is on disk - so the all-files survivor
@@ -166,6 +174,27 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static bool Stage6StreamSurvivors { get; set; } =
             IsNotZero(@"OSPREY_STAGE6_STREAM_SURVIVORS");
+
+        /// <summary>
+        /// Stage 7 folds over the runs one at a time - rebuilding each run's survivors from its
+        /// own <c>.scores-reconciled.parquet</c> and 1st-pass sidecar, and dropping them again
+        /// once the fold has visited them - instead of being handed every run's survivors at
+        /// once.
+        ///
+        /// DEFAULT ON. The all-runs survivor pool is what a <c>--task SecondPassFDR</c> node
+        /// spends its whole memory budget on before the join computes anything: at 446 CHS runs
+        /// it reached 68.0 GB managed / 70.5 GB private and was killed at run 381 of 446 with
+        /// 0.34 GB free, still inside the <c>--input-scores</c> load. It is the
+        /// <c>O(runs x entries)</c> shape the architecture forbids a join to hold, and every
+        /// consumer of it in Stage 7 - the fragment release, the pass-2 competition, protein
+        /// FDR, the experiment-q re-clamp and all three blib gates - is a fold to
+        /// <c>O(distinct)</c> that never needed the whole pool.
+        ///
+        /// Set OSPREY_STAGE7_STREAM=0 to keep the resident pool as the A/B byte-identity oracle,
+        /// the same role OSPREY_STAGE6_STREAM_SURVIVORS=0 plays for the Stage 6 handoff. A
+        /// settable property (not a readonly field) so unit tests can A/B both paths.
+        /// </summary>
+        public static bool Stage7Stream { get; set; } = IsNotZero(@"OSPREY_STAGE7_STREAM");
 
         /// <summary>
         /// At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library
@@ -222,6 +251,18 @@ namespace pwiz.Osprey.Core
         public static string Stage6StreamSurvivorsValidityKeySuffix()
         {
             return Stage6StreamSurvivors ? string.Empty : @";stage6stream=0";
+        }
+
+        /// <summary>
+        /// Cache-validity suffix for the Stage 7 fold arm, on exactly the argument its Stage 6
+        /// sibling above makes: empty on the streamed default so no existing output directory is
+        /// invalidated, and a term on the resident opt-out so an in-place A/B of the two arms
+        /// cannot satisfy itself by adopting the other arm's <c>.blib</c> and 2nd-pass sidecars
+        /// instead of recomputing them.
+        /// </summary>
+        public static string Stage7StreamValidityKeySuffix()
+        {
+            return Stage7Stream ? string.Empty : @";stage7stream=0";
         }
 
         /// <summary>
@@ -383,16 +424,9 @@ namespace pwiz.Osprey.Core
         /// and map it to a q via the full pre-compaction 1st-pass score-&gt;q table.</summary>
         public const string PASS2_QVALUE_TRANSFER = @"transfer";
 
-        /// <summary>The <see cref="Pass2QValue"/> transfer-with-competition mode: score the
-        /// reconciled targets+decoys with the FROZEN 1st-pass model (no retrain), then
-        /// recompute q + PEP by a fresh target-decoy competition over that full reconciled
-        /// population (a non-depleted null) -- i.e. the frozen weights feed the standard
-        /// competition q/PEP math instead of a co-monotone score->q table lookup.</summary>
-        public const string PASS2_QVALUE_TRANSFER_COMPETE = @"transfer-compete";
-
-        /// <summary>The <see cref="Pass2QValue"/> protein-anchored constrained mode: like
-        /// <see cref="PASS2_QVALUE_TRANSFER_COMPETE"/> (frozen 1st-pass model, no retrain),
-        /// but the target-decoy competition is CONSTRAINED to the peptides of proteins
+        /// <summary>The <see cref="Pass2QValue"/> protein-anchored constrained mode: the FROZEN
+        /// 1st-pass model (no retrain), with the target-decoy competition CONSTRAINED to the
+        /// peptides of proteins
         /// detected in the 1st pass -- included as target+decoy PAIRS so the stratum's null
         /// stays fair. Removing off-stratum decoys from the null lowers q for stratum
         /// members (reduced multiple testing / independent filtering; Bourgon 2010), which
@@ -454,14 +488,26 @@ namespace pwiz.Osprey.Core
         /// Unset normalizes to the default; an unrecognized value is a startup ERROR (see
         /// <see cref="Pass2QValueUnrecognized"/>). Read once at process start.
         ///
-        /// The former default <c>percolator</c> - retrain the 2nd-pass Percolator SVM and
-        /// recompute a target/decoy null on the reconciled + COMPACTED pool - was REMOVED, not
-        /// merely demoted. Compaction strips most decoys from that pool, so the retrained null
-        /// is thin and the reported q anti-conservative: 1.57% true FDP at a nominal 1% on
-        /// Stellar libdecoy entrapment (vs 0.92% for the 1st-pass q), and ~9% on an 82-file
-        /// SEA-AD set. The linear model trained by the 1st-pass SVM is now the model for pass 2
-        /// in every mode; only the <see cref="Pass2ProteinCompactRetrain"/> diagnostic A/B still
-        /// retrains. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
+        /// SECOND-PASS RETRAINING IS GONE, and these two modes are what remain. The former
+        /// default <c>percolator</c> - retrain the 2nd-pass Percolator SVM and recompute a
+        /// target/decoy null on the reconciled + COMPACTED pool - was REMOVED, not merely
+        /// demoted. Compaction strips most decoys from that pool, so the retrained null is thin
+        /// and the reported q anti-conservative: 1.57% true FDP at a nominal 1% on Stellar
+        /// libdecoy entrapment (vs 0.92% for the 1st-pass q), and ~9% on an 82-file SEA-AD set.
+        /// The <c>OSPREY_PROTEIN_COMPACT_RETRAIN</c> A/B toggle that reached it followed. So did
+        /// <c>transfer-compete</c>, for a related but distinct reason: its competition ran over a
+        /// TARGET-CONDITIONED subset - survivors chosen by target per-run q, decoys admitted only
+        /// by base_id pairing - which strips decoys that WON the 1st-pass competition and so
+        /// improves pass-2 q with no added evidence. Measured 1.96% true FDP at a nominal 1% on
+        /// 82-file SEA-AD against 1.53% for the default, with fewer ids: dominated on both axes.
+        /// See issues #4484 (closed) and #4581 (open, the same bias in the surviving default), and
+        /// docs/12-second-pass-fdr.md, "Why a second-pass null is a problem".
+        ///
+        /// The consequence worth naming, because it simplifies everything downstream: THERE IS
+        /// NO SECOND-PASS MODEL. The linear model the 1st-pass SVM trained is the model for
+        /// pass 2, unchanged - only the score DISTRIBUTIONS differ, because pass 2 runs on a
+        /// subset. Anything that used to ask a retrained pass-2 model for its weights can read
+        /// the frozen ones instead.
         ///
         /// Switching modes within one output directory is now SAFE: the mode participates in
         /// the resume validity key through <see cref="Pass2QValueValidityKeySuffix()"/>, so a
@@ -487,24 +533,10 @@ namespace pwiz.Osprey.Core
         public static readonly bool Pass2TransferQ =
             string.Equals(Pass2QValue, PASS2_QVALUE_TRANSFER, StringComparison.Ordinal);
 
-        /// <summary>True when <see cref="Pass2QValue"/> selects the frozen-model +
-        /// target-decoy competition path (OSPREY_PASS2_QVALUE=transfer-compete).</summary>
-        public static readonly bool Pass2TransferCompete =
-            string.Equals(Pass2QValue, PASS2_QVALUE_TRANSFER_COMPETE, StringComparison.Ordinal);
-
         /// <summary>True when <see cref="Pass2QValue"/> selects the protein-anchored
         /// constrained competition (OSPREY_PASS2_QVALUE=protein-compact).</summary>
         public static readonly bool Pass2ProteinCompact =
             string.Equals(Pass2QValue, PASS2_QVALUE_PROTEIN_COMPACT, StringComparison.Ordinal);
-
-        /// <summary>Diagnostic A/B toggle (OSPREY_PROTEIN_COMPACT_RETRAIN): when set with
-        /// OSPREY_PASS2_QVALUE=protein-compact, SKIP the frozen 1st-pass model + stratum
-        /// competition and instead RETRAIN the 2nd-pass Percolator over the same
-        /// stratum-expanded compacted pool. Isolates the frozen-vs-retrain FDR-calibration
-        /// difference (same reported set, only the 2nd-pass scoring changes) for the
-        /// FDRBench/entrapment oracle. Off (frozen) by default.</summary>
-        public static readonly bool Pass2ProteinCompactRetrain =
-            IsSetAndNotZero(@"OSPREY_PROTEIN_COMPACT_RETRAIN");
 
         /// <summary>
         /// OSPREY_PASS2_VERIFY_WORKER: re-run the per-file second-pass competition inside Stage 7
@@ -964,8 +996,6 @@ namespace pwiz.Osprey.Core
             string v = raw.Trim().ToLowerInvariant();
             if (v == PASS2_QVALUE_TRANSFER)
                 return PASS2_QVALUE_TRANSFER;
-            if (v == PASS2_QVALUE_TRANSFER_COMPETE)
-                return PASS2_QVALUE_TRANSFER_COMPETE;
             if (v == PASS2_QVALUE_PROTEIN_COMPACT)
                 return PASS2_QVALUE_PROTEIN_COMPACT;
             // An unrecognized token normalizes to the default only so the other statics are
@@ -979,8 +1009,7 @@ namespace pwiz.Osprey.Core
             if (string.IsNullOrWhiteSpace(raw))
                 return false;
             string v = raw.Trim().ToLowerInvariant();
-            return v != PASS2_QVALUE_TRANSFER &&
-                   v != PASS2_QVALUE_TRANSFER_COMPETE && v != PASS2_QVALUE_PROTEIN_COMPACT;
+            return v != PASS2_QVALUE_TRANSFER && v != PASS2_QVALUE_PROTEIN_COMPACT;
         }
 
         private static int ParseIntOrZero(string name)

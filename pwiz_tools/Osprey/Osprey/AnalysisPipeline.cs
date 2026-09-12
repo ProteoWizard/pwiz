@@ -61,26 +61,13 @@ namespace pwiz.Osprey
                 // OSPREY_DUMP_* / OSPREY_DIAG_* env var is set.
                 OspreyDiagnostics.Initialize(config.Diagnostics);
 
-                // Worker-mode entry normalization: in --input-scores modes
-                // without explicit -i, synthesize InputFiles from the parquet
-                // stems ONCE here, at pipeline entry, so the driver's
-                // Outputs/IsTaskAlreadyDone skip checks and every per-task
-                // accessor see a populated InputFiles regardless of which task
-                // the run starts at. (Mutation-contract: InputFiles is a
-                // pipeline-populated field that does NOT feed any identity
-                // hash, so it may be written once at entry -- see
-                // PipelineContext.Config. Previously this lived inside
-                // PerFileScoringTask's join-only load, which the driver never
-                // reached when PerFileScoring was the StartAt task, e.g.
-                // `--task PerFileScoring --input-scores`.)
-                if (config.InputScores != null && config.InputScores.Count > 0
-                    && (config.InputFiles == null || config.InputFiles.Count == 0))
-                {
-                    var synthetic = new List<string>(config.InputScores.Count);
-                    foreach (var p in config.InputScores)
-                        synthetic.Add(RescoreHydration.SyntheticInputFromParquet(p));
-                    config.InputFiles = synthetic;
-                }
+                // No worker-mode entry normalization any more, and its absence is the
+                // point. A --input-scores run arrived here with parquet paths and no
+                // InputFiles, so the pipeline's FIRST act was to convert them back into
+                // data-file names - a round trip through a synthetic <stem>.mzML that does
+                // not exist, purely so the sidecar helpers could derive from a stem. Every
+                // task now receives the stems it needs on -i, which is the direction the
+                // derivation was always going.
 
                 // --task SpectraCache stages data rather than analyzing it: it runs
                 // its own one-task pipeline instead of the canonical four. Selecting
@@ -203,6 +190,12 @@ namespace pwiz.Osprey
             sw.Stop();
             ctx.LogInfo(string.Format(@"[TASK] {0}:done ({1:F1}s)",
                 task.Name, sw.Elapsed.TotalSeconds));
+            // DIAGNOSTIC (OSPREY_DROP_BETWEEN_TASKS=1): make the in-process pipeline behave like
+            // the HPC split - this task drops everything but the library, and the next reloads
+            // what it needs from artifacts. Off by default; the whole experiment reverts
+            // together. See PipelineContext.DropAllButLibrary.
+            if (OspreyEnvironment.DropBetweenTasks)
+                ctx.DropAllButLibrary();
 
             // [STAGE-WALL] one line per task->stage with parseable format
             // for Measure-Pipeline.ps1 / Osprey-workflow.html perf tables.

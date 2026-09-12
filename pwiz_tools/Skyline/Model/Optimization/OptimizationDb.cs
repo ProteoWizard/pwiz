@@ -56,16 +56,14 @@ namespace pwiz.Skyline.Model.Optimization
                                                      // No special code needed for reading V2, SQLite is happy to present int as string
 
         private readonly string _path;
-        private readonly ISessionFactory _sessionFactory;
         private readonly ReaderWriterLock _databaseLock;
 
         private DateTime _modifiedTime;
         private OptimizationDictionary _dictLibrary;
 
-        public OptimizationDb(string path, ISessionFactory sessionFactory)
+        public OptimizationDb(string path)
         {
             _path = path;
-            _sessionFactory = sessionFactory;
             _databaseLock = new ReaderWriterLock();
         }
 
@@ -84,12 +82,34 @@ namespace pwiz.Skyline.Model.Optimization
 
         private ISession OpenWriteSession()
         {
-            return new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, true);
+            // Each session owns the factory it was opened from, so nothing retains one. NHibernate
+            // roots every SessionFactory in the static SessionFactoryObjectFactory.Instances
+            // dictionary until Dispose() removes it, so a retained factory never becomes
+            // collectible - which is what leaked once the NHibernate upgrade stopped these two
+            // disposing after Load. (IrtDb closes the same hole differently, passing a
+            // caller-scoped factory into OpenWriteSession; that shape cannot leak here at all.)
+            //
+            // Ownership does not transfer until the constructor RETURNS, so the window between
+            // has to be guarded: OpenSession() throws if SQLite cannot open the file, and
+            // AbstractSessionWithLock's constructor throws by design when this thread already
+            // holds a read lock. Without the catch the factory is registered, owned by nobody,
+            // and the leak comes back on exactly the error paths no test looks at.
+            var sessionFactory = GetSessionFactory(_path);
+            try
+            {
+                return new SessionWithLock(sessionFactory.OpenSession(), _databaseLock, true, sessionFactory);
+            }
+            catch
+            {
+                sessionFactory.Dispose();
+                throw;
+            }
         }
 
         public IEnumerable<DbOptimization> GetOptimizations()
         {
-            using (var session = new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, false))
+            using (var sessionFactory = GetSessionFactory(_path))
+            using (var session = new SessionWithLock(sessionFactory.OpenSession(), _databaseLock, false))
             {
                 return session.CreateCriteria(typeof(DbOptimization)).List<DbOptimization>();
             }
@@ -236,11 +256,7 @@ namespace pwiz.Skyline.Model.Optimization
                     // NOTE: sessionFactory ownership transfers to OptimizationDb - do
                     // NOT `using` it. See IonMobilityDb.GetIonMobilityDb for the same
                     // net472→net8 NHibernate lifecycle fix.
-                    var sessionFactory = GetSessionFactory(path);
-                    lock (sessionFactory)
-                    {
-                        return new OptimizationDb(path, sessionFactory).Load(loadMonitor, status);
-                    }
+                    return new OptimizationDb(path).Load(loadMonitor, status);
                 }
                 catch (UnauthorizedAccessException)
                 {

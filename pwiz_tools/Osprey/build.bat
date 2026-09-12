@@ -14,6 +14,11 @@ setlocal EnableDelayedExpansion
 REM # Accept the same two normalized flags Skyline's build.bat takes, so the
 REM # top-level b.bat can route to either app without translating per-app:
 REM #   --no-tests                        -> -NoTests
+REM #   --build-only                      -> -NoTests (Osprey has no staging step,
+REM #                                        so the two mean the same thing here)
+REM # Both spellings set one flag and -NoTests is appended once after the loop:
+REM # appending per match emitted it twice when both were passed, and PowerShell
+REM # refuses to bind a switch specified more than once, so the build never started.
 REM #   --i-agree-to-the-vendor-licenses  -> -IAgreeToVendorLicenses
 REM # Anything else is passed through to build.ps1 untouched.
 REM # Capture this before the loop: `shift` shifts %0 as well, so %~dp0 afterwards
@@ -23,7 +28,9 @@ set PSARGS=
 :parseargs
 if "%~1"=="" goto endparse
 if /i "%~1"=="--no-tests" (
-    set PSARGS=!PSARGS! -NoTests
+    set NOTESTS=1
+) else if /i "%~1"=="--build-only" (
+    set NOTESTS=1
 ) else if /i "%~1"=="--i-agree-to-the-vendor-licenses" (
     REM # Real on this branch: Osprey reads vendor formats through pwiz-sharp, which
     REM # gates them on IAgreeToVendorLicenses. Without it the vendor readers build in
@@ -35,6 +42,9 @@ if /i "%~1"=="--no-tests" (
 shift
 goto parseargs
 :endparse
+
+REM # Appended once, however many spellings arrived.
+if defined NOTESTS set PSARGS=!PSARGS! -NoTests
 
 pwsh -NoProfile -File "!SCRIPT_DIR!build.ps1" !PSARGS!
 exit /b %ERRORLEVEL%

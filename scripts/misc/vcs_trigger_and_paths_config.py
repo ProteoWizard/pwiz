@@ -100,6 +100,14 @@ targets['Container'] = \
 
 targets['OspreyWindowsNet'] = {'master': {"ProteoWizard_OspreyWindowsNet": "Osprey Windows .NET"}}
 
+# MascotShim.dll / MobilionShim.dll / Hardklor.exe are native Windows binaries COMPILED during
+# the build rather than vendored, and the first two link vendor DLLs that export C++ classes
+# returning MSVC STL types by value - so they cannot be cross-compiled, and a Linux/Wine
+# container cannot produce them. This config builds them once and publishes them as artifacts;
+# see scripts/misc/tcbuild-native-shims.bat. Config id must match .teamcity/settings.kts, which
+# is what smartBuildTrigger POSTs to the build queue.
+targets['NativeShims'] = {'master': {"ProteoWizard_VersionedConfigs_NativeShimsWindows": "Native shims (Windows x86_64)"}}
+
 targets['BumbershootRelease'] = \
 {
     'master':
@@ -125,6 +133,14 @@ matchPaths = [
     (".*/smartBuildTrigger.py", {}),
     (".*/vcs_trigger_and_paths_config.py", {}),
     (".*/ai/.*", {}),
+    # Native shims: these three dirs hold C++ that only a Windows agent with the VC++ toolchain
+    # can build, so they get their own config. Each entry ALSO triggers the config that actually
+    # tests the result, so a shim change still runs BiblioSpec's Mascot tests / Mobilion.Tests /
+    # Skyline's Hardklor-Bullseye tests rather than only producing a binary nobody exercised.
+    # These must stay ABOVE the broader pwiz-sharp/ and pwiz_tools/Skyline/ patterns below:
+    # first match wins, so a later-but-broader pattern would swallow them.
+    ("pwiz-sharp/Tools/BiblioSpec/native/MascotShim/.*", merge(targets['NativeShims'], targets['CoreNet'])),
+    ("pwiz-sharp/pwiz/src/Vendor/Mobilion/MobilionShim/.*", merge(targets['NativeShims'], targets['CoreNet'])),
     # pwiz-sharp: standalone .NET 8 port. Builds run via `pwiz-sharp/build.bat`. Match this
     # before the generic libraries/scripts/.bat patterns below so changes under pwiz-sharp/
     # don't trigger the cpp Core/Skyline/Bumbershoot/Container chain.
@@ -133,16 +149,20 @@ matchPaths = [
     ("pwiz/.*", targets['All']),
     ("pwiz_aux/.*", targets['All']),
     ("scripts/wix/.*", targets['CoreWindows']),
+    ("scripts/misc/tcbuild-native-shims.bat", targets['NativeShims']),
     ("scripts/.*", targets['All']),
     ("pwiz_tools/BiblioSpec/.*", merge(targets['Core'], targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),
-    ("pwiz_tools/Skyline/Model/Results/RemoteApi/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
+    ("pwiz_tools/Skyline/TestConnected/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*Ardia.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*Koina.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*Panorama.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*Unifi.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
+    ("pwiz_tools/Skyline/.*WatersConnect.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*DataSource.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
+    ("pwiz_tools/Skyline/Executables/Hardklor/.*", merge(targets['NativeShims'], targets['Skyline'])),
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
+    ("pwiz_tools/Shared/CommonMsData/RemoteApi/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'], targets['Container'])),
     ("pwiz_tools/Osprey/.*", targets['OspreyWindowsNet']),
     ("pwiz_tools/.*", targets['All']),

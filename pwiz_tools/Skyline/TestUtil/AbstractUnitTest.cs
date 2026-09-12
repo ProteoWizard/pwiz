@@ -452,6 +452,11 @@ namespace pwiz.SkylineTestUtil
             Program.TestName = TestContext.TestName;
             Program.DoNotTestUnicodeHandling = TestContext.Properties["UnicodeDecoration"]==null;
 
+            // The loader trace ring is static and this process runs test after test, so anything
+            // left in it belongs to a previous test and would be presented as evidence for this
+            // one's failure.
+            Skyline.Model.BackgroundLoader.ClearLoaderTrace();
+
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
 

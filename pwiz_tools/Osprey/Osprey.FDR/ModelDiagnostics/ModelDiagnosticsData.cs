@@ -65,6 +65,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         public string FdrLevel { get; set; }
         public bool HasEntrapment { get; set; }
 
+        /// <summary>
+        /// What this page does and does not represent, stated in the page itself. Set by the
+        /// render step (never by a fold), because it describes which products existed at render
+        /// time rather than anything pass 1 computed.
+        ///
+        /// <para>A report whose pass-2 sections are merely ABSENT is indistinguishable, to
+        /// someone opening the file a week later with no console scrollback, from a complete
+        /// report of a run that found nothing in pass 2. That is the silently-invalid-output
+        /// shape, so the incompleteness is an artifact-level statement and not only a log line.</para>
+        /// </summary>
+        public CompletenessInfo Completeness { get; set; }
+
         // ----- population counts (best-per-precursor) -----
         public int NTarget { get; set; }
         public int NDecoy { get; set; }
@@ -88,10 +100,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// once. Null on a single-pass run (no reconciliation), which hides the switch.
         /// Its structural half (<see cref="Pass2Data.Model"/> /
         /// <see cref="Pass2Data.DensityRatio"/> / <see cref="Pass2Data.WinFraction"/>)
-        /// is present only when the second pass RETRAINED Percolator; under
-        /// <c>OSPREY_PASS2_QVALUE=transfer</c> it is null and the report's structural
-        /// cards degrade to a "pass-2 model n/a" note, while the q-driven half still
-        /// renders. Built by the end-of-run writer (SecondPassFdrTask) via
+        /// needed a retrained second-pass model, and no surviving mode trains one
+        /// (issue #4484), so it is null and the report's structural cards degrade to a
+        /// "pass-2 model n/a" note while the q-driven half still renders. Built by the
+        /// end-of-run writer (SecondPassFdrTask) via
         /// <see cref="BuildPass2"/>. Shares <see cref="FeatureHistEdges"/> with pass 1
         /// (same standardized bins).
         /// </summary>
@@ -165,17 +177,39 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// The complete pass-2 (final reported pool) bundle behind the report's
         /// top-level Pass 1 / Pass 2 switch: every pass-dependent card recomputed on
         /// the post-compaction, second-pass-q-valued pool. Split into a STRUCTURAL half
-        /// (score/model-derived) and a Q-DRIVEN half (reported-pool q-derived), because
-        /// the two become available under different second-pass modes:
-        /// <list type="bullet">
-        /// <item>Retrain (<c>OSPREY_PASS2_QVALUE=percolator</c>): a second Percolator
-        /// model exists, so BOTH halves are built.</item>
-        /// <item>Confidence transfer (<c>OSPREY_PASS2_QVALUE=transfer</c>): no retrained
-        /// model, so the structural half is null (the report's Model / Density /
-        /// Competition cards show a "pass-2 model n/a" note) while the q-driven half --
-        /// which needs only the transferred q -- still renders.</item>
-        /// </list>
+        /// (score/model-derived) and a Q-DRIVEN half (reported-pool q-derived).
+        ///
+        /// <para>The Q-DRIVEN half is what every surviving second-pass mode produces:
+        /// <c>transfer</c> and <c>protein-compact</c> both yield reported q-values and
+        /// nothing else. The STRUCTURAL half needed a retrained second-pass model, and
+        /// there is no longer a mode that trains one - the retrain was removed because a
+        /// compacted pool is decoy-depleted and retraining on it mis-estimates the null
+        /// (issue #4484). So the structural half is null in production today and the
+        /// report's Model / Density / Competition cards show their "pass-2 model n/a"
+        /// note. It is kept as a shape rather than deleted because its replacement is
+        /// specified and sourced differently: the FROZEN pass-1 coefficients, already on
+        /// disk in <c>.1st-pass.model.json</c>, plus per-feature running sums folded per
+        /// run. <see cref="BuildPass2"/> still accepts contributions so that shape stays
+        /// covered and has somewhere to reconnect.</para>
         /// </summary>
+        /// <summary>
+        /// Which passes this page represents and how much of the cohort reached them, so the
+        /// page can say what it is rather than leaving the reader to infer it from an absent
+        /// section. Rendered as a banner whenever <see cref="Pass2Present"/> is false.
+        /// </summary>
+        public sealed class CompletenessInfo
+        {
+            /// <summary>True when the pass-2 product was on disk at render time.</summary>
+            public bool Pass2Present { get; set; }
+            /// <summary>Runs that contributed rows to the pass-1 fold.</summary>
+            public int RunsContributed { get; set; }
+            /// <summary>Runs the analysis was asked for; equal to <see cref="RunsContributed"/>
+            /// once every run's first pass has completed.</summary>
+            public int RunsExpected { get; set; }
+            /// <summary>Operator-facing reason the page is partial, or null when it is not.</summary>
+            public string Reason { get; set; }
+        }
+
         public sealed class Pass2Data
         {
             // ----- structural half (null under confidence-transfer mode) -----
@@ -673,10 +707,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// from the searched library exactly as pass 1 (see ModelDiagnosticsReport).
         ///
         /// The STRUCTURAL half (Model / DensityRatio / WinFraction) is built only when
-        /// the second pass RETRAINED Percolator (<paramref name="pass2Contributions"/>
-        /// non-null); under <c>OSPREY_PASS2_QVALUE=transfer</c> there is no retrained
-        /// model, so it stays null and the report's Model / Density / Competition cards
-        /// degrade to a "pass-2 model n/a" note. The Q-DRIVEN half (FdpViews / IdYield /
+        /// <paramref name="pass2Contributions"/> is non-null. Production passes null
+        /// today: it required a retrained second-pass model and no surviving mode trains
+        /// one (issue #4484), so those cards degrade to a "pass-2 model n/a" note. The
+        /// parameter and the cards are kept because their replacement is specified -
+        /// frozen pass-1 coefficients plus per-feature running sums - and because the
+        /// non-null contract stays under test. The Q-DRIVEN half (FdpViews / IdYield /
         /// CrossRun / PerFile) is always built from the reported pool (FdpViews is empty
         /// when the pool carries no entrapment).
         ///
@@ -759,10 +795,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 runFdr, fdrLevel, 2, true, stratumBaseIds);
             progress.Report(++cardIdx);
 
-            // Structural half: only when the second pass retrained on the reported pool. Null
-            // contributions (transfer mode) leave Model, DensityRatio and WinFraction null and
-            // the report's structural cards show their n/a note. Takes the reduction computed
-            // above; it used to recompute a bit-identical one from the same inputs.
+            // Structural half: only when contributions were supplied. Production supplies none
+            // (there is no retrained second pass any more, #4484), which leaves Model,
+            // DensityRatio and WinFraction null and shows the report's n/a note. Takes the
+            // reduction computed above; it used to recompute a bit-identical one from the
+            // same inputs.
             pass2.Model = BuildModelPass2(pass2Contributions, precs);
             if (pass2.Model != null)
             {
@@ -1529,6 +1566,52 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             }
 
             var hist = TallyRunCountHistogram(perRunSets, n);
+            int[] entHistOrNull = entRunSets == null ? null : TallyRunCountHistogram(entRunSets, n);
+            int[] cumUnionEntOrNull = null;
+            if (entRunSets != null)
+            {
+                cumUnionEntOrNull = new int[n];
+                var entUnionSet = new HashSet<string>(StringComparer.Ordinal);
+                for (int i = 0; i < n; i++)
+                {
+                    entUnionSet.UnionWith(entRunSets[i]);
+                    cumUnionEntOrNull[i] = entUnionSet.Count;
+                }
+            }
+            return AssembleCrossRunView(perRunCount, cumUnion, cumIntersection, hist,
+                entHistOrNull, cumUnionEntOrNull, n, r);
+        }
+
+        /// <summary>
+        /// Streamed counterpart of the set-based <see cref="ComputeCrossRunView(List{HashSet{string}}, List{HashSet{string}}, int, double)"/>:
+        /// same view, from state folded one run at a time instead of from N retained per-run sets.
+        ///
+        /// <para>The two overloads share <see cref="AssembleCrossRunView"/>, which is every line
+        /// of arithmetic in this view. They differ ONLY in how the four arrays and two histograms
+        /// are produced, so the equality that has to hold is "do the streams produce the same
+        /// arrays as the loop" - which is what
+        /// <c>ModelDiagnosticsDataTest.TestStreamingAccumulatorMatchesBatch</c> already asserts on
+        /// every build. The resident caller keeps the set-based overload deliberately: changing
+        /// both would leave two implementations that can agree with each other and disagree with
+        /// what they replaced.</para>
+        /// </summary>
+        private static CrossRunView ComputeCrossRunView(Accumulator.CrossRunStream main,
+            Accumulator.CrossRunStream ent, int n, double r)
+        {
+            return AssembleCrossRunView(main.PerRunCount, main.CumUnion, main.CumIntersection,
+                HistogramFromRunCounts(main.RunCount, n),
+                ent == null ? null : HistogramFromRunCounts(ent.RunCount, n),
+                ent?.CumUnion, n, r);
+        }
+
+        /// <summary>
+        /// Everything the cross-run view computes once its per-run arrays and run-count
+        /// histograms exist. Shared by the set-based and streamed producers so neither can drift
+        /// in the arithmetic - only in how it arrives at the inputs.
+        /// </summary>
+        private static CrossRunView AssembleCrossRunView(int[] perRunCount, int[] cumUnion,
+            int[] cumIntersection, int[] hist, int[] entHist, int[] cumUnionEnt, int n, double r)
+        {
             int half = (n + 1) / 2;                     // ceil(n/2)
             int atLeastHalf = 0;
             // Start at max(half, 1): hist is indexed k-1, so k must be >= 1. Guards the
@@ -1559,9 +1642,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // n_t = hist[k], entrapment n_p = entHist[k]). The k=1 entry on the
             // experiment view answers whether the exp-q-surviving singletons are real
             // rare biology (FDP ~ nominal) or over-admitted 1-hit-wonders (FDP >> nominal).
-            if (entRunSets != null)
+            if (entHist != null)
             {
-                var entHist = TallyRunCountHistogram(entRunSets, n);
                 var fdp = new double[n];
                 for (int k = 0; k < n; k++)
                 {
@@ -1581,13 +1663,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // the union accretes fresh FPs and this climbs with i; the experiment-wide
                 // gate bounds the dataset-wide error, so its curve stays far flatter. The
                 // gap at i = n is the empirical Collins/Rosenberger run-vs-global FDR effect.
-                var cumUnionEnt = new int[n];
                 var unionFdp = new double[n];
-                var entUnion = new HashSet<string>(StringComparer.Ordinal);
                 for (int i = 0; i < n; i++)
                 {
-                    entUnion.UnionWith(entRunSets[i]);
-                    cumUnionEnt[i] = entUnion.Count;
                     int ntU = cumUnion[i], npU = cumUnionEnt[i];
                     unionFdp[i] = ntU + npU > 0 ? (1.0 + 1.0 / r) * npU / (ntU + npU) : double.NaN;
                 }
@@ -1613,6 +1691,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     runCount[key] = c + 1;
                 }
             }
+            return HistogramFromRunCounts(runCount, n);
+        }
+
+        /// <summary>
+        /// The histogram step alone, over a key -> run-count map. Factored out so the streamed
+        /// producer - which maintains that map as it folds instead of building it from retained
+        /// sets - bins it with the identical code rather than a copy that can drift.
+        /// </summary>
+        private static int[] HistogramFromRunCounts(IReadOnlyDictionary<string, int> runCount, int n)
+        {
             var hist = new int[n];
             foreach (var c in runCount.Values)
             {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -472,9 +472,9 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// <see cref="FrozenModelScorer"/> must accept BOTH classifiers. This guards the
-        /// 2nd-pass transfer paths (OSPREY_PASS2_QVALUE=transfer / transfer-compete),
-        /// which decline when handed a model they cannot read and fall back to the
-        /// anti-conservative retrain. Before the scorer existed they read FoldWeights
+        /// 2nd-pass frozen paths (OSPREY_PASS2_QVALUE=transfer / protein-compact),
+        /// which decline when handed a model they cannot read - and since the retrain was
+        /// removed, declining is now a hard stop. Before the scorer existed they read FoldWeights
         /// directly, so a gbdt run would have silently taken that fallback -- honest
         /// FDR lost, with nothing failing.
         /// </summary>
@@ -495,8 +495,8 @@ namespace pwiz.Osprey.Test
             var treeModel = PercolatorTrainer.RunPercolator(entries, treeConfig);
             var treeScorer = FrozenModelScorer.TryCreate(treeModel);
             Assert.IsNotNull(treeScorer,
-                "frozen tree model must be scorable -- a null here silently drops " +
-                "transfer-compete back to the 2nd-pass retrain");
+                "frozen tree model must be scorable -- a null here fails the frozen " +
+                "competition, which has no retrain left to fall back to");
             Assert.IsTrue(treeScorer.IsGradientBoostedTrees);
             Assert.AreEqual(2, treeScorer.NumFeatures);
 
