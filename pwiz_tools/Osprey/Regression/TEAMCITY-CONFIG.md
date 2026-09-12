@@ -75,7 +75,8 @@ Handled entirely by the harness (no manual staging):
 `panoramaweb.org/.../perftests/osprey-testfiles-mzML.zip` → extracted into
 `<Downloads>\Perftests\osprey-testfiles-mzML\` (`stellar\` + `astral\`
 subfolders), referenced read-only. The raw-data zip (`osprey-testfiles.zip`) is
-future work (reads `.raw` directly once `pwiz_data_cli` is wired in).
+future work; Osprey reads `.raw` directly through ProteoWizard now, so what is
+left is staging the raw fixtures and deciding what the gate asserts on them.
 
 ## Outputs / artifacts
 
