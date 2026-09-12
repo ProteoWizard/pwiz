@@ -499,6 +499,295 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(double.IsNaN(s) || double.IsInfinity(s));
         }
 
+        /// <summary>
+        /// The squared-error objective: it must fit a continuous target, be invariant to
+        /// the histogram thread count, and, the part that protects the FDR path, leave
+        /// the logistic objective producing exactly the scores it produced before
+        /// regression existed. Everything but the base score and the per-round gradient is
+        /// shared between the two objectives, so a change to split finding, binning, or row
+        /// partitioning made for the benefit of regression would silently move every
+        /// Percolator-replacement q-value.
+        /// </summary>
+        [TestMethod]
+        public void TestGbtSquaredErrorObjective()
+        {
+            AssertLogisticGoldenUnchanged(1);
+
+            // The class documents bit-identity "at any MaxDegreeOfParallelism", and the FDR
+            // path is what that promise protects. Asserting it only under squared error
+            // would leave the logistic path unverified against the parallel branch.
+            AssertLogisticGoldenUnchanged(4);
+
+            AssertRegressionFitsContinuousTarget();
+            AssertRegressionThreadInvariant();
+        }
+
+        // Owned by the golden assertion rather than shared with the other GBT tests: these
+        // constants were captured under exactly these parameters, so a future tweak to
+        // FastGbt to speed the suite up must not fail here blaming the boosting code.
+        private static GbtParams GoldenGbt()
+        {
+            return new GbtParams { NTrees = 40, MaxDepth = 4, Seed = 42 };
+        }
+
+        /// <summary>
+        /// Golden logistic scores, captured from the implementation that predates the
+        /// objective switch (pwiz commit dd9e84581). Exact equality, not a tolerance: the
+        /// guarantee being protected is bit-identity, and a tolerance would let real
+        /// numerical drift through.
+        /// </summary>
+        private static void AssertLogisticGoldenUnchanged(int threads)
+        {
+            double[][] x = GoldenFeatures();
+            var isDecoy = new bool[x.Length];
+            for (int i = 0; i < x.Length; i++)
+                isDecoy[i] = x[i][0] + x[i][3] < 2.5;
+
+            var parameters = GoldenGbt();
+            parameters.MaxDegreeOfParallelism = threads;
+            var model = GradientBoostedTrees.Train(x, isDecoy, parameters);
+
+            var expected = new[]
+            {
+                -2.4677282578605486,
+                4.097252275267094,
+                -0.8225901814943258,
+                3.5439334614396674,
+                2.610757110470939,
+                2.677520123143121,
+                2.2090870478970692,
+                1.7584981803881718,
+                1.7584981803881718,
+                1.4031884801190766
+            };
+            double[][] probes = GoldenProbes();
+            for (int k = 0; k < probes.Length; k++)
+            {
+                Assert.AreEqual(expected[k], model.ScoreSingle(probes[k]), string.Format(
+                    @"logistic score for probe {0} at {1} thread(s) moved: the shared boosting code is no longer bit-identical",
+                    k, threads));
+            }
+        }
+
+        /// <summary>
+        /// Regression must actually reduce error against the weighted-mean baseline the
+        /// model starts from. A model that returned its base score everywhere would land
+        /// exactly on that baseline, so the margin here is the capacity check.
+        /// </summary>
+        private static void AssertRegressionFitsContinuousTarget()
+        {
+            double[][] x = GoldenFeatures();
+            double[] y = RegressionTarget(x);
+
+            var model = GradientBoostedTrees.Train(x, y, RegressionGbt());
+
+            double mean = 0;
+            for (int i = 0; i < y.Length; i++)
+                mean += y[i];
+            mean /= y.Length;
+
+            double sse = 0, sseBaseline = 0;
+            for (int i = 0; i < x.Length; i++)
+            {
+                double residual = y[i] - model.ScoreSingle(x[i]);
+                sse += residual * residual;
+                sseBaseline += (y[i] - mean) * (y[i] - mean);
+            }
+
+            Assert.IsFalse(double.IsNaN(sse) || double.IsInfinity(sse), @"regression residuals must be finite");
+            Assert.IsTrue(sse < 0.05 * sseBaseline, string.Format(
+                @"squared error {0} must be well below the weighted-mean baseline {1}", sse, sseBaseline));
+        }
+
+        /// <summary>
+        /// Histogram accumulation may be spread across threads, but only across features,
+        /// so the model must not depend on how many are used. This is the property that
+        /// makes the parallel path safe to turn on for large training sets.
+        /// </summary>
+        private static void AssertRegressionThreadInvariant()
+        {
+            double[][] x = GoldenFeatures();
+            double[] y = RegressionTarget(x);
+
+            var sequential = GradientBoostedTrees.Train(x, y, RegressionGbt());
+            var parallelParams = RegressionGbt();
+            parallelParams.MaxDegreeOfParallelism = 4;
+            var concurrent = GradientBoostedTrees.Train(x, y, parallelParams);
+
+            double[][] probes = GoldenProbes();
+            for (int k = 0; k < probes.Length; k++)
+            {
+                Assert.AreEqual(sequential.ScoreSingle(probes[k]), concurrent.ScoreSingle(probes[k]), string.Format(
+                    @"regression score for probe {0} depends on the histogram thread count", k));
+            }
+        }
+
+        // Carries hyper-parameters from a reference XGBoost regression run rather than the
+        // logistic defaults: under squared error the hessian is the sample weight, so a
+        // MinChildWeight of 1.0 means one sample, not the several it means under logistic.
+        private static GbtParams RegressionGbt()
+        {
+            return new GbtParams
+            {
+                Objective = GbtObjective.SquaredError,
+                NTrees = 60,
+                MaxDepth = 6,
+                LearningRate = 0.1,
+                MinChildWeight = 1.0,
+                Subsample = 1.0,
+                ColSample = 1.0,
+                MaxBins = 256,
+                RegLambda = 1.0,
+                Seed = 42
+            };
+        }
+
+        private static double[] RegressionTarget(double[][] x)
+        {
+            var y = new double[x.Length];
+            for (int i = 0; i < x.Length; i++)
+                y[i] = (0.31 * x[i][0]) - (0.12 * x[i][3]) + (0.02 * x[i][2] * x[i][2]);
+            return y;
+        }
+
+        private static double[][] GoldenFeatures()
+        {
+            var x = new double[96][];
+            for (int i = 0; i < x.Length; i++)
+                x[i] = new[] { (i % 7) * 0.5, (i % 3) * 1.3, i * 0.1, ((i * 13) % 11) * 0.4 };
+            return x;
+        }
+
+        /// <summary>
+        /// A model flattened to <see cref="GbtModelData"/> and rebuilt must score
+        /// identically. Persistence that changed a margin would move q-values on reload.
+        /// The validation on the way back in matters just as much: a truncated or
+        /// hand-edited model file must fail at load rather than score silently wrong.
+        /// </summary>
+        [TestMethod]
+        public void TestGbtModelDataRoundTrip()
+        {
+            double[][] x = GoldenFeatures();
+            var isDecoy = new bool[x.Length];
+            for (int i = 0; i < x.Length; i++)
+                isDecoy[i] = x[i][0] + x[i][3] < 2.5;
+
+            var model = GradientBoostedTrees.Train(x, isDecoy, FastGbt());
+            var reloaded = GradientBoostedTrees.FromModelData(model.ToModelData());
+
+            double[][] probes = GoldenProbes();
+            for (int k = 0; k < probes.Length; k++)
+            {
+                Assert.AreEqual(model.ScoreSingle(probes[k]), reloaded.ScoreSingle(probes[k]), string.Format(
+                    @"round-tripped model scores differ at probe {0}", k));
+            }
+
+            // Mutating the snapshot must not reach back into the model it came from. The
+            // reference score has to be taken BEFORE the mutation: comparing two values that
+            // are both recomputed afterwards passes even when ToModelData hands out the live
+            // internal arrays, which is the bug this is here to catch.
+            double beforeMutation = model.ScoreSingle(probes[0]);
+            var data = model.ToModelData();
+            data.Leaf[0] = 12345.0;
+            data.Feature[0] = 0;
+            Assert.AreEqual(beforeMutation, model.ScoreSingle(probes[0]));
+
+            var truncated = model.ToModelData();
+            truncated.Leaf = new double[truncated.Leaf.Length - 1];
+            Assert.ThrowsException<ArgumentException>(() => GradientBoostedTrees.FromModelData(truncated));
+
+            var dangling = model.ToModelData();
+            for (int i = 0; i < dangling.Feature.Length; i++)
+            {
+                if (dangling.Feature[i] < 0)
+                    continue;
+                dangling.Left[i] = dangling.Feature.Length + 10;
+                break;
+            }
+            Assert.ThrowsException<ArgumentException>(() => GradientBoostedTrees.FromModelData(dangling));
+
+            var noTrees = model.ToModelData();
+            noTrees.TreeRoot = new int[0];
+            Assert.ThrowsException<ArgumentException>(() => GradientBoostedTrees.FromModelData(noTrees));
+
+            // A child index that does not increase is a cycle. Range checks alone let it
+            // through, and ScoreSingle would then spin forever rather than fail.
+            var cycle = model.ToModelData();
+            for (int i = 0; i < cycle.Feature.Length; i++)
+            {
+                if (cycle.Feature[i] < 0)
+                    continue;
+                cycle.Left[i] = i;
+                break;
+            }
+            Assert.ThrowsException<ArgumentException>(() => GradientBoostedTrees.FromModelData(cycle));
+
+            var leafWithChild = model.ToModelData();
+            for (int i = 0; i < leafWithChild.Feature.Length; i++)
+            {
+                if (leafWithChild.Feature[i] >= 0)
+                    continue;
+                leafWithChild.Left[i] = 0;
+                break;
+            }
+            Assert.ThrowsException<ArgumentException>(() => GradientBoostedTrees.FromModelData(leafWithChild));
+        }
+
+        /// <summary>
+        /// Argument validation on both Train overloads. Every case here would otherwise
+        /// surface as a NullReferenceException or an index-out-of-range partway through
+        /// boosting, pointing at boosting internals rather than at the bad argument.
+        /// </summary>
+        [TestMethod]
+        public void TestGbtTrainArgumentValidation()
+        {
+            double[][] x = GoldenFeatures();
+            var isDecoy = new bool[x.Length];
+            double[] y = RegressionTarget(x);
+
+            Assert.ThrowsException<ArgumentNullException>(
+                () => GradientBoostedTrees.Train(null, y, RegressionGbt()));
+            Assert.ThrowsException<ArgumentNullException>(
+                () => GradientBoostedTrees.Train(x, y, null));
+            Assert.ThrowsException<ArgumentNullException>(
+                () => GradientBoostedTrees.Train(x, (bool[])null, FastGbt()));
+            Assert.ThrowsException<ArgumentNullException>(
+                () => GradientBoostedTrees.Train(x, isDecoy, null));
+
+            Assert.ThrowsException<ArgumentException>(
+                () => GradientBoostedTrees.Train(x, new double[x.Length - 1], RegressionGbt()));
+            Assert.ThrowsException<ArgumentException>(
+                () => GradientBoostedTrees.Train(x, y, RegressionGbt(), new double[x.Length - 1]));
+
+            // The binary-label overload returns a log-odds margin that callers rank by, so it
+            // must refuse a params instance carried over from a regression call rather than
+            // silently fitting squared error to 0/1 labels.
+            var regressionParams = RegressionGbt();
+            Assert.ThrowsException<ArgumentException>(
+                () => GradientBoostedTrees.Train(x, isDecoy, regressionParams));
+
+            // The same instance is fine once the objective matches the entry point.
+            regressionParams.Objective = GbtObjective.LogisticBinary;
+            Assert.IsNotNull(GradientBoostedTrees.Train(x, isDecoy, regressionParams));
+        }
+
+        private static double[][] GoldenProbes()
+        {
+            return new[]
+            {
+                new[] { 0.0, 0.0, 0.0, 0.0 },
+                new[] { 3.0, 2.6, 9.5, 4.0 },
+                new[] { 1.5, 1.3, 6.3, 0.8 },
+                new[] { 2.5, 0.0, 1.1, 2.4 },
+                new[] { 0.5, 2.6, 5.0, 3.2 },
+                new[] { 2.0, 1.3, 2.2, 1.6 },
+                new[] { 1.0, 0.0, 7.7, 2.0 },
+                new[] { 3.0, 1.3, 0.4, 0.4 },
+                new[] { 100.0, -100.0, 0.0, 0.0 },
+                new[] { -5.0, 5.0, 50.0, 12.0 }
+            };
+        }
+
         #endregion
 
         #region FeatureStandardizer Tests
