@@ -1020,6 +1020,32 @@ namespace pwiz.Osprey.FDR
         /// per (peptide, isDecoy). Both maps are O(distinct), so a caller can walk the run one
         /// file at a time and drop each as it goes; nothing here needs a whole-run view.
         /// </summary>
+        /// <summary>
+        /// One row's contribution to both floors. Public so a caller that has the row's four
+        /// fields WITHOUT an <see cref="FdrEntry"/> - the artifact-driven fold in
+        /// <c>Pass2FdrSidecar</c>, which reads them from the per-file sidecar and the parquet's
+        /// identity columns - reduces by exactly this rule rather than a copy of it.
+        /// </summary>
+        public static void AccumulateExperimentQFloorRow(
+            uint entryId, bool isDecoy, string modifiedSequence, double runBoth,
+            Dictionary<uint, double> minRunBothByEntryId,
+            Dictionary<(string ModifiedSequence, bool IsDecoy), double> minRunBothByPeptide)
+        {
+            double curPrec;
+            if (!minRunBothByEntryId.TryGetValue(entryId, out curPrec) || runBoth < curPrec)
+                minRunBothByEntryId[entryId] = runBoth;
+
+            // Treat a null/empty ModifiedSequence as missing, for the reason the entry overload
+            // gives: it has no peptide identity, so it must not bucket unrelated entries under an
+            // empty key.
+            if (string.IsNullOrEmpty(modifiedSequence))
+                return;
+            var key = (modifiedSequence, isDecoy);
+            double curPept;
+            if (!minRunBothByPeptide.TryGetValue(key, out curPept) || runBoth < curPept)
+                minRunBothByPeptide[key] = runBoth;
+        }
+
         public static void AccumulateExperimentQFloors(
             IReadOnlyList<FdrEntry> entries,
             Dictionary<uint, double> minRunBothByEntryId,
