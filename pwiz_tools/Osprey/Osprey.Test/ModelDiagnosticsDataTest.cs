@@ -299,6 +299,39 @@ namespace pwiz.Osprey.Test
             TestCoAssignmentExactTieGoesToTheDecoy();
             TestCoAssignmentReportsInheritedQDivergence();
             TestCoAssignmentDecoysUseTheirOwnStratumBoundary();
+            TestCoAssignmentRunScopeGrowsGeometrically();
+        }
+
+        // The builder's per-file working set is three flat arrays indexed by base id (issue
+        // #4657). Rows arrive in parquet row order - ascending entry id - so a builder nobody
+        // reserved sees a new maximum on almost every row. Growing to exactly that id copied
+        // the arrays once per distinct base id: O(n^2) per file, measured as a 30x slower pass-2
+        // fold (StellarLibDecoy pay-later 15.7 s -> 492 s). Pin the policy, not the timing: a
+        // reserve allocates once and lands exactly, and an unreserved ascending stream grows
+        // O(log n) times to a capacity under twice its final size.
+        private static void TestCoAssignmentRunScopeGrowsGeometrically()
+        {
+            const int n = 100_000;
+            var runNames = new[] { @"run1" };
+
+            var reserved = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true);
+            reserved.ReserveRunScope(n - 1);
+            for (uint id = 0; id < n; id++)
+                reserved.ObserveCutoff(0, EntrapmentClass.Target, id, 1.0, 1.0, 0.001, 0.001, 0.01);
+            reserved.SealRunCutoff(0);
+            Assert.AreEqual(1, reserved.RunScopeGrowths, @"a reserved builder allocates its run scope once");
+            Assert.AreEqual(n, reserved.RunScopeCapacity, @"a reserve from empty lands exactly on maxBaseId + 1");
+
+            var unreserved = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true);
+            for (uint id = 0; id < n; id++)
+                unreserved.ObserveCutoff(0, EntrapmentClass.Target, id, 1.0, 1.0, 0.001, 0.001, 0.01);
+            unreserved.SealRunCutoff(0);
+            int maxGrowths = (int)System.Math.Ceiling(System.Math.Log(n, 2)) + 1;
+            Assert.IsTrue(unreserved.RunScopeGrowths <= maxGrowths,
+                string.Format(@"ascending ids grew the run scope {0} times; geometric growth allows at most {1}",
+                    unreserved.RunScopeGrowths, maxGrowths));
+            Assert.IsTrue(unreserved.RunScopeCapacity >= n && unreserved.RunScopeCapacity < 2 * n,
+                string.Format(@"capacity {0} after {1} ascending ids", unreserved.RunScopeCapacity, n));
         }
 
         // A row still carrying the ResetScores 0.0 default must NOT outrank the entry's real

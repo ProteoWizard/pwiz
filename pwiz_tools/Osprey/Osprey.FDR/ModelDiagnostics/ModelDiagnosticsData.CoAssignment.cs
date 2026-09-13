@@ -902,7 +902,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// that reaches <see cref="ObserveCutoff"/> has an experiment-scope record, and the
             /// largest base id in that map is the bound - while this class deliberately does
             /// not hold the library. Optional: an unreserved or under-reserved builder grows on
-            /// demand in <see cref="ObserveCutoff"/>, which costs one copy per growth rather
+            /// demand in <see cref="ObserveCutoff"/>, which costs a handful of copies rather
             /// than a wrong answer, but a reserve makes the whole panel allocate these once.
             /// </summary>
             public void ReserveRunScope(uint maxBaseId)
@@ -910,18 +910,33 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 EnsureRunScopeCapacity(maxBaseId);
             }
 
-            /// <summary>Grow the run-scope arrays to hold <paramref name="baseId"/>, preserving the current file's state.</summary>
+            /// <summary>The run-scope arrays' length, and how many times they have been (re)allocated. For the test that pins the growth policy.</summary>
+            internal int RunScopeCapacity { get { return _fileBestTarget.Length; } }
+            internal int RunScopeGrowths { get; private set; }
+
+            /// <summary>
+            /// Grow the run-scope arrays to hold <paramref name="baseId"/>, preserving the current
+            /// file's state. GEOMETRIC, never to the id itself: rows reach <see cref="ObserveCutoff"/>
+            /// in parquet row order, which is ascending entry id, so an unreserved builder that
+            /// grew to exactly baseId + 1 copied all three arrays once per distinct base id -
+            /// O(n^2) over the file, and the whole pass-2 fold with it. Measured on StellarLibDecoy
+            /// before this doubled: the pay-later diagnostics fold went from 15.7 s to 492 s and
+            /// every leg with a pass-2 report gained 4-8 minutes; the 446-run cohort would have
+            /// spent hours here. Doubling bounds the copying at twice the final size in any order.
+            /// A reserve from empty still lands exactly on maxBaseId + 1.
+            /// </summary>
             private void EnsureRunScopeCapacity(uint baseId)
             {
                 if (baseId < (uint)_fileBestTarget.Length)
                     return;
-                int newLength = checked((int)baseId + 1);
                 int oldLength = _fileBestTarget.Length;
+                int newLength = (int)Math.Min(int.MaxValue, Math.Max((long)baseId + 1, 2L * oldLength));
                 Array.Resize(ref _fileBestTarget, newLength);
                 Array.Resize(ref _fileBestDecoy, newLength);
                 Array.Resize(ref _fileAccepted, newLength);
                 FillNaN(_fileBestTarget, oldLength);
                 FillNaN(_fileBestDecoy, oldLength);
+                RunScopeGrowths++;
             }
 
             /// <summary>Forget the current file: every best back to "not seen", every accepted flag off.</summary>
