@@ -48,6 +48,12 @@ REM #       Compile only: skip staging, the distro zips and the whole test step.
 REM #       This is what the top-level bs.bat gives a developer - the same projects
 REM #       and properties TeamCity builds, without the staging copy or the hour of
 REM #       tests that follows. Implies --no-tests.
+REM #   --with-tutorial-perf
+REM #       Also build TestTutorial and TestPerf, which the default set leaves out to
+REM #       mirror the TeamCity split between bt209 and the Perf/Tutorial configuration.
+REM #       SkylineNightly passes this: a nightly runs the tutorial tests as part of an
+REM #       ordinary run and gates only perf behind its own option, so both have to be
+REM #       staged for the run to select from.
 REM #
 REM # Distro zips:
 REM #   Pass the artifact name as a bare argument -- SkylineTester.zip,
@@ -73,8 +79,9 @@ REM # Scope:
 REM #   Builds + tests Skyline.csproj and the net8-ported test projects CommonTest,
 REM #   Test, TestData, TestFunctional, TestConnected (plus the TestRunner harness).
 REM #   TestConnected's network-service tests self-skip when their credentials
-REM #   aren't configured. TestPerf and TestTutorial are intentionally EXCLUDED
-REM #   from the standard build -- run those separately when needed.
+REM #   aren't configured. TestPerf and TestTutorial are EXCLUDED from the default
+REM #   set, mirroring the TeamCity split between bt209 and the Perf/Tutorial
+REM #   configuration; pass --with-tutorial-perf to build them too.
 REM #
 REM # NOTE: dotCover coverage (--coverage) is temporarily removed while the
 REM #   TestRunner path beds in; re-add it as a separate step once proven in CI.
@@ -92,6 +99,7 @@ set AUTOMATED=0
 set NOTESTS=0
 set SEQUENTIAL=1
 set BUILDONLY=0
+set WITHTUTORIALPERF=0
 set ERROR_TEXT=
 set ZIPS=
 
@@ -120,6 +128,7 @@ if /i "%~1"=="--automated" (set AUTOMATED=1) else ^
 if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
 if /i "%~1"=="--parallel" (set SEQUENTIAL=0) else ^
 if /i "%~1"=="--build-only" (set BUILDONLY=1) else ^
+if /i "%~1"=="--with-tutorial-perf" (set WITHTUTORIALPERF=1) else ^
 if /i "%~1"=="--coverage" (echo ##teamcity[message text='--coverage is temporarily disabled in build.bat; ignoring' status='WARNING']) else ^
 if /i "%~x1"==".zip" (set ZIPS=!ZIPS!%%3B%~1) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
@@ -170,10 +179,41 @@ REM # vendor + BiblioSpec tool projects, ...). The test projects add the suites,
 REM # and TestRunner is the harness that stages + runs them.
 set BUILD_TARGET=Skyline.csproj CommonTest\CommonTest.csproj Test\Test.csproj TestData\TestData.csproj TestFunctional\TestFunctional.csproj TestConnected\TestConnected.csproj TestRunner\TestRunner.csproj
 
+REM # TestTutorial and TestPerf are left out of the default set to mirror the TeamCity
+REM # split - bt209 ("Skyline master and PRs") and ProteoWizard_SkylinePrPerfAndTutorial-
+REM # TestsWindowsX8664 ("Skyline PR Perf and Tutorial tests") are separate configurations.
+REM # A nightly is the case that split does not serve: SkylineNightly runs the tutorial
+REM # tests as part of an ordinary nightly and gates only perf behind its own option, so it
+REM # needs both staged and selects at run time. Without this flag TestRunner's stager just
+REM # logs "Skipping TestTutorial - no output ... (build it first)", the build still reports
+REM # 0 Error(s), and 26 tutorial tests plus the whole perf suite silently never run.
+if %WITHTUTORIALPERF%==1 set BUILD_TARGET=%BUILD_TARGET% TestTutorial\TestTutorial.csproj TestPerf\TestPerf.csproj
+
 echo ##teamcity[progressMessage 'dotnet --version']
 dotnet --version
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet not on PATH & goto error)
+
+REM # ------------------------------------------------------------------------
+REM # ProteoWizard version banner. SkylineNightly scrapes the run log for
+REM # "ProteoWizard 3.0.<revision>.<hash> ..." to fill the revision and git_hash it posts
+REM # to skyline.ms. The bjam build printed it; this build does not run bjam, so emit it
+REM # here or LabKey rejects every posted run (it parses revision as an integer, and the
+REM # GetRevision() fallback in Nightly.cs yields "unknownDate.<hash>").
+REM #
+REM # The scrape needs the line at column 0, and MSBuild indents Message output, so the
+REM # target writes the line to a file and we emit it with `type`. obj\ is gitignored, so
+REM # an interrupted build leaves nothing behind in `git status`.
+REM # ------------------------------------------------------------------------
+if not exist obj mkdir obj
+set PWIZ_BANNER_FILE=%SCRIPT_DIR%\obj\pwiz-version-banner.txt
+dotnet msbuild SkylineVersion.targets -t:PrintPwizVersionBanner -nologo -v:q -p:PwizVersionBannerFile="%PWIZ_BANNER_FILE%"
+if exist "%PWIZ_BANNER_FILE%" (
+    type "%PWIZ_BANNER_FILE%"
+    del "%PWIZ_BANNER_FILE%"
+) else (
+    echo ##teamcity[message text='Version banner could not be generated; SkylineNightly will not be able to scrape a revision' status='WARNING']
+)
 
 REM # ------------------------------------------------------------------------
 REM # Native Hardklor.exe (C++). `dotnet build` (the .NET SDK MSBuild) cannot

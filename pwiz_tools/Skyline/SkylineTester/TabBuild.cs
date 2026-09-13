@@ -239,8 +239,14 @@ namespace SkylineTester
             // "run build verification tests" option wants that -- the nightly and quality runs test
             // afterwards under their own duration budget and requeue logic, so letting build.bat
             // test as well would double the work.
+            // --with-tutorial-perf because build.bat's default project set leaves TestTutorial
+            // and TestPerf out, mirroring the TeamCity split. Every SkylineTester run selects
+            // its tests at run time - the nightly runs the tutorial tests as part of an ordinary
+            // pass and gates perf behind its own option - so both suites have to be staged to be
+            // selectable. Without it TestRunner silently stages neither and the tutorial tests
+            // just never run.
             commandShell.Add("#@ Building Skyline...\n");
-            commandShell.Add("{0} " + BUILD_CONFIGURATION + " --i-agree-to-the-vendor-licenses{1}",
+            commandShell.Add("{0} " + BUILD_CONFIGURATION + " --i-agree-to-the-vendor-licenses --with-tutorial-perf{1}",
                 Path.Combine(buildRoot, @"pwiz_tools\Skyline\build.bat").Quote(),
                 runBuildTests ? string.Empty : " --no-tests");
 

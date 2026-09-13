@@ -41,4 +41,45 @@
     </PropertyGroup>
   </Target>
 
+  <!--
+    Prints the ProteoWizard build banner the bjam build used to emit, in the exact shape
+    SkylineNightly scrapes for a run's revision and git hash (the reRevision regex in
+    SkylineNightly\Nightly.cs). The net8 build never runs bjam, so without this the scrape
+    finds nothing, Nightly.cs falls back to GetRevision() and reports the revision as
+    "unknownDate.<hash>". LabKey parses that field as an integer, so every posted run is
+    rejected into the Posting Errors tab and nightly reporting stops with no visible error.
+
+    pwiz's revision is {YY}{DDD} - the same git-date pieces the assembly version is stamped
+    from, so the banner cannot drift from the build it describes. The regex needs a space
+    after the hash, and reads the revision from group 1, so both must stay unpadded and
+    space-free. Run standalone (no restore, no ProjectReference graph) with:
+      dotnet msbuild SkylineVersion.targets -t:PrintPwizVersionBanner
+
+    The regex also anchors on a newline immediately followed by "ProteoWizard", and MSBuild
+    indents Message output by two spaces, which would never match. So the caller that needs
+    the scrapable form passes PwizVersionBannerFile and emits the file itself at column 0;
+    the Message is for a human reading the build output.
+  -->
+  <Target Name="PrintPwizVersionBanner" DependsOnTargets="ComputePwizBuildVersion">
+    <Exec Command="git rev-parse --abbrev-ref HEAD"
+          ConsoleToMSBuild="true"
+          EchoOff="true"
+          StandardOutputImportance="low"
+          ContinueOnError="true"
+          WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_PwizBannerBranchRaw" />
+    </Exec>
+    <PropertyGroup>
+      <_PwizBannerBranch>$(_PwizBannerBranchRaw.Trim())</_PwizBannerBranch>
+      <_PwizBannerBranch Condition="'$(_PwizBannerBranch)' == ''">unknown</_PwizBannerBranch>
+      <PwizVersionBanner>ProteoWizard 3.0.$(PwizVersionYear2)$(PwizVersionDayOfYear).$(PwizVersionGitHash) $(_PwizBannerBranch) x64 AMD64 NT</PwizVersionBanner>
+    </PropertyGroup>
+    <Message Importance="high" Text="$(PwizVersionBanner)" />
+    <WriteLinesToFile Condition="'$(PwizVersionBannerFile)' != ''"
+                      File="$(PwizVersionBannerFile)"
+                      Lines="$(PwizVersionBanner)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="false" />
+  </Target>
+
 </Project>
