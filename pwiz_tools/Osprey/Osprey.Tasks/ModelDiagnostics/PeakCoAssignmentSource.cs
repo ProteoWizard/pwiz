@@ -143,6 +143,13 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             for (int f = 0; f < fileNames.Count; f++)
                 runNames[f] = fileNames[f];
             var builder = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 1, false);
+            // Size the builder's per-file working set once, for the whole panel. Every record
+            // phase 1 folds is gated on having an experiment-scope record, so the largest base
+            // id in that map bounds every index the builder will see (issue #4657).
+            uint maxBaseId = 0;
+            foreach (uint entryId in experimentRecords.Keys)
+                maxBaseId = Math.Max(maxBaseId, entryId & BASE_ID_MASK);
+            builder.ReserveRunScope(maxBaseId);
 
             // Phase 1: the decoy score cutoffs, from the sidecars alone (score + q + entry id -
             // no parquet, no library, no allocation per row). Decoys have no meaningful q of
@@ -239,6 +246,13 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // completion summary with nothing in between, which reads as a hung run - the same
             // shape as the unreported spectra-cache write. The per-run boundary lines above are
             // one-per-file and cheap; this pass is where the time actually goes.
+            // The two parquet columns are read into buffers that OUTLIVE the loop: sized to the
+            // largest file seen so far and reused, so the cohort allocates them a handful of
+            // times instead of ~50 MB of large-object arrays per file (issue #4657 - that churn,
+            // not any live set, was what took committed memory from 35 to 42 GB over this loop
+            // at 446 runs).
+            uint[] entryIds = null;
+            double[] apexRts = null;
             using (var progress = new ProgressReporter(
                 string.Format(@"Peak co-assignment: joining apex RT over {0} file(s)", fileNames.Count),
                 fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
@@ -249,8 +263,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     string reason;
                     int fileUnresolved;
                     int detected = AddFile(builder, f, fileNames[f], perFileParquetPaths, config,
-                        classByBaseId, libraryById, experimentRecords, out reason,
-                        out fileUnresolved);
+                        classByBaseId, libraryById, experimentRecords, ref entryIds, ref apexRts,
+                        out reason, out fileUnresolved);
                     totalUnresolved += fileUnresolved;
                     if (reason != null)
                     {
@@ -308,6 +322,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// added. <paramref name="reason"/> is non-null when the file could not be read or its
         /// sidecar did not align with its parquet, which abandons the whole panel: a panel built
         /// from the files that happened to work would silently under-report.
+        /// <paramref name="entryIds"/> / <paramref name="apexRts"/> are the caller's reusable
+        /// column buffers (see <see cref="ParquetScoreCache.TryReadEntryIdsAndApexRts"/>); only
+        /// the first <c>count</c> rows the read reports are this file's.
         /// </summary>
         private static int AddFile(
             ModelDiagnosticsData.CoAssignmentPassBuilder builder,
@@ -318,6 +335,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            ref uint[] entryIds,
+            ref double[] apexRts,
             out string reason,
             out int unresolved)
         {
@@ -345,11 +364,10 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 return 0;
             }
 
-            uint[] entryIds;
-            double[] apexRts;
+            int rowCount;
             try
             {
-                if (!ParquetScoreCache.TryReadEntryIdsAndApexRts(parquetPath, out entryIds, out apexRts))
+                if (!ParquetScoreCache.TryReadEntryIdsAndApexRts(parquetPath, ref entryIds, ref apexRts, out rowCount))
                 {
                     reason = string.Format(@"no apex_rt column in {0}", Path.GetFileName(parquetPath));
                     return 0;
@@ -361,6 +379,10 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 return 0;
             }
 
+            // Locals, because a ref parameter cannot be captured by the callback below; the
+            // read above may have replaced the caller's arrays, and these are those arrays.
+            uint[] ids = entryIds;
+            double[] rts = apexRts;
             int row = 0;
             int added = 0;
             int nUnresolved = 0;
@@ -373,7 +395,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // parquet row order by the score-pass sink, but nothing in either format records
                 // that contract, so a future change to either side would otherwise silently
                 // attach one row's apex RT to another row's score.
-                if (row >= entryIds.Length || entryIds[row] != rec.EntryId)
+                if (row >= rowCount || ids[row] != rec.EntryId)
                 {
                     misaligned = true;
                     return;
@@ -414,7 +436,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     ? modSeq + "|" + lib.Charge + "|decoy"
                     : modSeq + "|" + lib.Charge;
                 builder.AddRow(fileIdx, new ModelDiagnosticsData.CoAssignmentRow(
-                        key, rec.EntryId, modSeq, lib.Charge, lib.PrecursorMz, apexRts[current], rec.Score, cls),
+                        key, rec.EntryId, modSeq, lib.Charge, lib.PrecursorMz, rts[current], rec.Score, cls),
                     runQ, experimentQ, config.RunFdr);
                 added++;
             });
@@ -424,7 +446,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 reason = string.Format(@"could not read {0}", Path.GetFileName(sidecarPath));
                 return 0;
             }
-            if (misaligned || row != entryIds.Length)
+            if (misaligned || row != rowCount)
             {
                 reason = string.Format(@"{0}: sidecar/parquet row misalignment", fileName);
                 return 0;

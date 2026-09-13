@@ -1,7 +1,7 @@
 ﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -1149,18 +1149,22 @@ namespace pwiz.Osprey.IO
         ///
         /// <para>Two columns and no strings, so one file's arrays are exactly 12 bytes per row -
         /// the modified sequence and charge behind the precursor identity are resolved from the
-        /// library by entry id instead. Both arrays are sized up front from the file's row count,
-        /// so this never pays the doubling-plus-copy an accumulating list would (which would
-        /// briefly triple the resident cost at the largest file).</para>
+        /// library by entry id instead. The arrays are the CALLER's and are reused across files:
+        /// they are grown (to the file's row count, never in doubling steps) only when a file is
+        /// larger than any before it, so a 446-file cohort allocates them a handful of times
+        /// rather than once per file. That per-file allocation - ~50 MB of large-object arrays
+        /// x 446 in nine minutes - was most of the co-assignment panel's committed-memory
+        /// excursion (issue #4657); the panel's live set was never the problem. <paramref
+        /// name="count"/> is the number of rows filled; the arrays may be longer.</para>
         ///
-        /// <para>Returns false when the file carries no <c>apex_rt</c> column, leaving the outputs
-        /// null - the panel then degrades with a log line rather than reporting zeros.</para>
+        /// <para>Returns false when the file carries no <c>apex_rt</c> column, leaving
+        /// <paramref name="count"/> 0 - the panel then degrades with a log line rather than
+        /// reporting zeros.</para>
         /// </summary>
         public static bool TryReadEntryIdsAndApexRts(string path,
-            out uint[] entryIds, out double[] apexRts)
+            ref uint[] entryIds, ref double[] apexRts, out int count)
         {
-            entryIds = null;
-            apexRts = null;
+            count = 0;
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
@@ -1168,8 +1172,10 @@ namespace pwiz.Osprey.IO
                 if (!fieldsByName.ContainsKey(FIELD_APEX_RT.Name))
                     return false;
                 int total = checked((int)(reader.Metadata?.NumRows ?? 0L));
-                var ids = new uint[total];
-                var rts = new double[total];
+                if (entryIds == null || entryIds.Length < total)
+                    entryIds = new uint[total];
+                if (apexRts == null || apexRts.Length < total)
+                    apexRts = new double[total];
                 int n = 0;
                 for (int g = 0; g < reader.RowGroupCount; g++)
                 {
@@ -1188,23 +1194,15 @@ namespace pwiz.Osprey.IO
                         // false drops the panel with a log line, which is the documented contract.
                         if (apexCol == null)
                             return false;
-                        for (int row = 0; row < entryIdCol.Length && n < total; row++)
-                        {
-                            ids[n] = entryIdCol[row];
-                            rts[n] = apexCol[row];
-                            n++;
-                        }
+                        int take = Math.Min(entryIdCol.Length, total - n);
+                        Array.Copy(entryIdCol, 0, entryIds, n, take);
+                        Array.Copy(apexCol, 0, apexRts, n, take);
+                        n += take;
                     }
                 }
-                // A skipped row group (no entry_id) leaves the arrays long; trim so the caller's
-                // length check against the sidecar record count stays a real alignment assert.
-                if (n != total)
-                {
-                    Array.Resize(ref ids, n);
-                    Array.Resize(ref rts, n);
-                }
-                entryIds = ids;
-                apexRts = rts;
+                // A skipped row group (no entry_id) leaves n short of the declared total; the
+                // caller's alignment assert reads count, not the array length.
+                count = n;
             }
             return true;
         }

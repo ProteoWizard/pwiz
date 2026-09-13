@@ -704,8 +704,21 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // 500 files on a 64 GB machine, so the panel alone exceeded the entire budget.
             // Nothing about the answer needed it: the per-file bests are read exactly twice,
             // both times for this file, and never again once the cutoff is known.
-            private Dictionary<uint, double> _fileBest = new Dictionary<uint, double>();
-            private HashSet<uint> _fileAccepted = new HashSet<uint>();
+            //
+            // And they are flat arrays indexed by BASE id, not a Dictionary<uint, double> keyed
+            // by entry id (issue #4657). The dictionary was allocated fresh per file and grew
+            // from empty to ~4.18 M entries through ~22 prime-doubling resizes, each a new bucket
+            // and entry array on the large-object heap: ~230 MB of garbage per file, 446 times in
+            // 3.5 minutes, ~30 GB/min that Server GC answered by committing another 25 GB. The
+            // live information was one number per file. Two double[] (target and decoy sides of
+            // a base id) plus a bool[] for the accepted targets are allocated ONCE, sized by the
+            // largest base id the caller declares (ReserveRunScope), and reset by a fill between
+            // files - ~100 MB for the 6.2 M-entry library, no per-file allocation, and O(1) per
+            // record without hashing. NaN means "not seen this file"; the dictionary's missing
+            // key meant the same, so the reduction rules below are unchanged.
+            private double[] _fileBestTarget = new double[0];
+            private double[] _fileBestDecoy = new double[0];
+            private bool[] _fileAccepted = new bool[0];
             private int _fileIdx = -1;
 
             // What survives a seal, per file: the boundary itself, and the DECOY entry ids that
@@ -774,10 +787,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // experiment reduction below and both acceptance-set additions, so a NaN row
                 // would silently remove its precursor from the accepted counts that set the
                 // experiment boundary - a worse fault than the one being guarded against.
+                uint baseId = entryId & BASE_ID_MASK;
+                EnsureRunScopeCapacity(baseId);
+                double[] fileBest = (entryId & ~BASE_ID_MASK) != 0 ? _fileBestDecoy : _fileBestTarget;
+                double cur = fileBest[baseId];
                 if (!double.IsNaN(score) &&
-                    (!_fileBest.TryGetValue(entryId, out double cur) || double.IsNaN(cur) || cur == 0.0 ||
-                     (score != 0.0 && score > cur)))
-                    _fileBest[entryId] = score;
+                    (double.IsNaN(cur) || cur == 0.0 || (score != 0.0 && score > cur)))
+                    fileBest[baseId] = score;
                 // Every row of an entry carries the same persisted aggregate, so this is a read,
                 // not a reduction. The only real decision is which row wins when one of them never
                 // went through an experiment competition and still holds the 0.0 default left by
@@ -798,8 +814,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     _experimentBest[entryId] = experimentAggregateScore;
                 if (IsDecoyClass(cls))
                     return;   // decoys define the boundary; they do not set it
+                // A non-decoy class never carries the decoy bit, so its entry id IS its base id
+                // and the accepted flag indexes the target side.
                 if (runQvalue <= runFdr)
-                    _fileAccepted.Add(entryId);
+                    _fileAccepted[baseId] = true;
                 if (experimentQvalue <= runFdr)
                     _experimentAccepted.Add(entryId);
             }
@@ -836,18 +854,23 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         @"CoAssignmentPassBuilder.SealRunCutoff was called after SealCutoffs. A run's boundary cannot move once the detection phase has begun judging rows against it.");
                 }
                 double min = double.NaN;
-                foreach (uint id in _fileAccepted)
+                int n = _fileBestTarget.Length;
+                for (int i = 0; i < n; i++)
                 {
-                    if (_fileBest.TryGetValue(id, out double v) && (double.IsNaN(min) || v < min))
+                    if (!_fileAccepted[i])
+                        continue;
+                    double v = _fileBestTarget[i];
+                    if (!double.IsNaN(v) && (double.IsNaN(min) || v < min))
                         min = v;
                 }
                 if (!double.IsNaN(min))
                 {
                     _runCutoff[fileIdx] = min;
                     var admitted = new HashSet<uint>();
-                    foreach (var kv in _fileBest)
+                    for (int i = 0; i < n; i++)
                     {
-                        if ((kv.Key & ~BASE_ID_MASK) == 0 || kv.Value < min)
+                        double d = _fileBestDecoy[i];
+                        if (double.IsNaN(d) || d < min)
                             continue;
                         // Only decoys that WON their own target/decoy competition. TDC ranks
                         // the winner of each pair and discards the loser, so q counts decoy
@@ -861,16 +884,59 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         // decoy IS inside the q estimate that set this bar. Excluding it here
                         // would drop it from the row the bar is meant to admit, which is the
                         // under-reporting this rule exists to prevent, in the other direction.
-                        if (_fileBest.TryGetValue(kv.Key & BASE_ID_MASK, out double tgt) &&
-                            tgt > kv.Value)
+                        double tgt = _fileBestTarget[i];
+                        if (!double.IsNaN(tgt) && tgt > d)
                             continue;
-                        admitted.Add(kv.Key);
+                        admitted.Add((uint)i | ~BASE_ID_MASK);
                     }
                     _admittedRunDecoys[fileIdx] = admitted;
                 }
-                _fileBest = new Dictionary<uint, double>();
-                _fileAccepted = new HashSet<uint>();
+                // Reset in place for the next file: a fill over ~100 MB, not a fresh allocation.
+                ResetRunScope();
                 _fileIdx = -1;
+            }
+
+            /// <summary>
+            /// Size the run-scope working set for base ids up to <paramref name="maxBaseId"/>
+            /// before phase 1, so no file grows it. The caller knows the range - every entry
+            /// that reaches <see cref="ObserveCutoff"/> has an experiment-scope record, and the
+            /// largest base id in that map is the bound - while this class deliberately does
+            /// not hold the library. Optional: an unreserved or under-reserved builder grows on
+            /// demand in <see cref="ObserveCutoff"/>, which costs one copy per growth rather
+            /// than a wrong answer, but a reserve makes the whole panel allocate these once.
+            /// </summary>
+            public void ReserveRunScope(uint maxBaseId)
+            {
+                EnsureRunScopeCapacity(maxBaseId);
+            }
+
+            /// <summary>Grow the run-scope arrays to hold <paramref name="baseId"/>, preserving the current file's state.</summary>
+            private void EnsureRunScopeCapacity(uint baseId)
+            {
+                if (baseId < (uint)_fileBestTarget.Length)
+                    return;
+                int newLength = checked((int)baseId + 1);
+                int oldLength = _fileBestTarget.Length;
+                Array.Resize(ref _fileBestTarget, newLength);
+                Array.Resize(ref _fileBestDecoy, newLength);
+                Array.Resize(ref _fileAccepted, newLength);
+                FillNaN(_fileBestTarget, oldLength);
+                FillNaN(_fileBestDecoy, oldLength);
+            }
+
+            /// <summary>Forget the current file: every best back to "not seen", every accepted flag off.</summary>
+            private void ResetRunScope()
+            {
+                FillNaN(_fileBestTarget, 0);
+                FillNaN(_fileBestDecoy, 0);
+                Array.Clear(_fileAccepted, 0, _fileAccepted.Length);
+            }
+
+            // Array.Fill is not in .NET Framework 4.7.2, which Osprey still targets.
+            private static void FillNaN(double[] values, int from)
+            {
+                for (int i = from; i < values.Length; i++)
+                    values[i] = double.NaN;
             }
 
             /// <summary>
