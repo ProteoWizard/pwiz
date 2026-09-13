@@ -99,8 +99,10 @@
               flag-up-front run wrote, because a view some phase holds privately goes
               missing on this path and on no other. Runs between modes 7 and 8, which is
               the only window where the cohort is complete and the blib is still current.
-      mode 12 --fdrbench-pass both writes BOTH FDRBench input files (issue #4507). The
-              straight-through, warm and resume legs all ask for `--fdrbench bench.tsv
+      mode 12 --fdrbench-pass both writes BOTH FDRBench input files (issue #4507). ONE
+              dataset runs it - StellarGenDecoyEntrap, the only one with generated decoys AND
+              entrapment AND a pairing manifest, so every branch of the writer runs once - on
+              its straight-through, warm and resume legs, which ask for `--fdrbench bench.tsv
               --fdrbench-pass both`. Half one, after the cold run: bench.pass1.tsv and
               bench.pass2.tsv both exist with rows, each beside its pairing manifest, and
               pass 1 (the pre-compaction pool) is strictly larger than pass 2 (the
@@ -113,6 +115,12 @@
               streamed file against the RESIDENT emitter's - that A/B was banked on
               2026-09-12 (SHA-256 identical on StellarLibDecoy and Stellar, per-precursor
               and per-run) and would cost a full resident run per dataset to repeat.
+
+    Which mode emits which summary line on which dataset, with what gates it and the
+    seconds each leg cost on the last full run, is rendered as regression.html beside
+    this script by Regression\Write-RegressionMatrix.ps1 (read it before adding a leg
+    or a check - the default is ONE dataset, not all four; it is regenerated from this
+    script's dataset table and verified against a green log with -VerifyAgainst).
 
     NO dependency on the sibling ai/ checkout: data acquisition, blib golden
     capture/compare, and the tolerance comparators all live under
@@ -487,6 +495,14 @@ $datasets = [ordered]@{
         Resolution       = 'unit'
         ModelDiagnostics = $true
         MaxPass1Fdp      = 0.02
+        # Mode 12 runs HERE and nowhere else. The FDRBench emitter's code path is the same
+        # on every dataset; what varies is generated vs library decoys, entrapment present or
+        # not, and a pairing manifest or not - and this is the one dataset with generated
+        # decoys AND entrapment AND a manifest, so every branch of the writer (orphan-entrapment
+        # exclusion included) runs once. Adding the same assertion to the other three would
+        # cost a second full sidecar + parquet-scalar walk per straight and resume leg on each
+        # of them, most of it on Astral, for no property the gate does not already hold here.
+        FdrBench         = $true
     }
     # Astral carries no entrapment, so its tier-2 bound is the null-alignment tilt.
     # 0.5 is an honest ceiling with the b<->y swap removed (this branch measures
@@ -740,8 +756,9 @@ function Invoke-OspreyRun {
           [switch]$AllowNonZeroExit,
           # Ask for BOTH FDRBench input files (mode 12). CWD-relative like output.blib, so
           # they land in the work dir as bench.pass1.tsv / bench.pass2.tsv. Only the
-          # straight-through, warm and resume legs pass this: those three share one work
-          # dir and one command, which is what lets mode 12 compare the files across them.
+          # straight-through, warm and resume legs pass this, and only on the one dataset whose
+          # spec sets FdrBench: those three share one work dir and one command, which is what
+          # lets mode 12 compare the files across them.
           [switch]$FdrBench)
     New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
     $logPath = Join-Path $WorkDir $LogName
@@ -1341,8 +1358,10 @@ function Test-FdrBenchBothFiles {
             $issues.Add("bench.pass$pass.tsv was not written (--fdrbench-pass both must emit both files)")
             continue
         }
-        # Header + rows; the writer emits '\n' line endings, which Get-Content splits fine.
-        $count = (Get-Content -LiteralPath $path | Measure-Object -Line).Lines - 1
+        # Header + rows. ReadLines rather than Get-Content: the latter boxes every line into a
+        # PSObject and takes ~6 s on a 130 MB Astral-sized file; this is ~0.1 s.
+        $count = -1
+        foreach ($line in [System.IO.File]::ReadLines($path)) { $count++ }
         $rows[$pass] = $count
         if ($count -lt 1) { $issues.Add("bench.pass$pass.tsv has a header and no rows") }
         $manifest = "$path.pairing.tsv"
@@ -1973,7 +1992,7 @@ foreach ($name in $selected) {
     # straight-through leg always runs clean -- no prior-run state to inherit.)
     Write-Progress-Tc "${name}: straight-through run ($($inputs.Mzmls.Count) files, $($cfg.Resolution))"
     $rStraight = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
-        -WorkDir $straightDir -LogName 'straight.log' -DumpProteinFdr -Spec $cfg -Manifest $inputs.Manifest -FdrBench
+        -WorkDir $straightDir -LogName 'straight.log' -DumpProteinFdr -Spec $cfg -Manifest $inputs.Manifest -FdrBench:([bool]$cfg.FdrBench)
     $straightBlib = Join-Path $straightDir 'output.blib'
     Write-Host ("  straight-through wall {0:mm\:ss}; blib {1:N0} bytes" -f $rStraight.Wall, (Get-Item $straightBlib).Length)
 
@@ -1986,14 +2005,18 @@ foreach ($name in $selected) {
     # shape check is deliberate: pass 1 is the pre-compaction pool and pass 2 the reported
     # set, so pass 1 must carry strictly more rows. (The defect this guards against wrote NO
     # pass-1 file at all; the row check is for the next way it could go wrong.)
-    $m12 = Test-FdrBenchBothFiles -Dir $straightDir
-    if ($m12.Pass) {
-        $summaryLines.Add("$name mode12 (fdrbench both files): PASS")
-    } else {
-        $overallFail = $true
-        Write-Problem-Tc "$name mode12 (fdrbench both files): FAIL - $($m12.Issues.Count) issue(s)"
-        $m12.Issues | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
-        $summaryLines.Add("$name mode12 (fdrbench both files): FAIL ($($m12.Issues.Count) issues)")
+    # ONE dataset carries it (see the FdrBench spec key): the datasets that do not run it
+    # report no line for it, deliberately - the same rule as every other designed omission.
+    if ($cfg.FdrBench) {
+        $m12 = Test-FdrBenchBothFiles -Dir $straightDir
+        if ($m12.Pass) {
+            $summaryLines.Add("$name mode12 (fdrbench both files): PASS")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode12 (fdrbench both files): FAIL - $($m12.Issues.Count) issue(s)"
+            $m12.Issues | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode12 (fdrbench both files): FAIL ($($m12.Issues.Count) issues)")
+        }
     }
 
     # ---- No-copy assertion: read-only data dir unchanged ----
@@ -2550,7 +2573,7 @@ foreach ($name in $selected) {
         # re-run runs NO task, so it can reach no resident path, and pre-setting the
         # opt-in could only mask the regression this leg exists to catch.
         $rWarm = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
-            -WorkDir $straightDir -LogName 'warm.log' -Spec $cfg -Manifest $inputs.Manifest -FdrBench
+            -WorkDir $straightDir -LogName 'warm.log' -Spec $cfg -Manifest $inputs.Manifest -FdrBench:([bool]$cfg.FdrBench)
         $warmAfter = (Get-FileHash $straightBlib -Algorithm SHA256).Hash
         Write-Host ("  warm re-run wall {0:N1}s (a fully cached run does no work)" -f $rWarm.Wall.TotalSeconds)
         $m4 = Test-TaskCacheHits -LogPath $rWarm.Log -ExpectSkipped $pipelineTaskNames `
@@ -2616,8 +2639,8 @@ foreach ($name in $selected) {
     # of a partial accounting.
     #
     # Truncation is still detectable, and better: the per-dataset leg COUNTS are fixed by
-    # configuration (measured 2026-09-12: Stellar 21, StellarLibDecoy 29, StellarGenDecoyEntrap 28,
-    # Astral 25 - mode 12 is two of each except on Astral, which has no mode 2 and so no second half)
+    # configuration (measured 2026-09-12: Stellar 19, StellarLibDecoy 27, StellarGenDecoyEntrap 28,
+    # Astral 24 - mode 12 is two of StellarGenDecoyEntrap's and runs on no other dataset)
     # and are documented with the full asymmetry list in ai/docs/osprey-development-guide.md.
     # A short count is what distinguishes an aborted run, not the presence of a SKIP line.
     if (-not $SkipResume -and -not ($cfg.SkipModes -contains 2)) {
@@ -2650,7 +2673,7 @@ foreach ($name in $selected) {
             if (Test-Path $p) { throw "regression: work dir unexpectedly holds a source input ($p); the resume leg's cache-only premise is broken." }
         }
         $rResume = Invoke-OspreyRun -Mzmls $resumeInputs -Library $inputs.Library -Resolution $cfg.Resolution `
-            -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest -FdrBench
+            -WorkDir $straightDir -LogName 'resume.log' -Spec $cfg -Manifest $inputs.Manifest -FdrBench:([bool]$cfg.FdrBench)
         $resumeBlib = Join-Path $straightDir 'output.blib'
         Write-Host ("  resume wall {0:mm\:ss}; blib {1:N0} bytes" -f $rResume.Wall, (Get-Item $resumeBlib).Length)
 
@@ -2704,14 +2727,16 @@ foreach ($name in $selected) {
         # SecondPassFDR both recomputed above), so the files it wrote must be BYTE-identical
         # to the cold run's. Bytes, not 1e-9: the TSV formats every number with a fixed
         # E10 pattern and sorts on a total order, so any difference is a real one.
-        $m12r = Test-FdrBenchResumeIdentity -Dir $straightDir
-        if ($m12r.Pass) {
-            $summaryLines.Add("$name mode12 (resume fdrbench==straight): PASS")
-        } else {
-            $overallFail = $true
-            Write-Problem-Tc "$name mode12 (resume fdrbench==straight): FAIL - $($m12r.Issues.Count) issue(s)"
-            $m12r.Issues | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
-            $summaryLines.Add("$name mode12 (resume fdrbench==straight): FAIL ($($m12r.Issues.Count) issues)")
+        if ($cfg.FdrBench) {
+            $m12r = Test-FdrBenchResumeIdentity -Dir $straightDir
+            if ($m12r.Pass) {
+                $summaryLines.Add("$name mode12 (resume fdrbench==straight): PASS")
+            } else {
+                $overallFail = $true
+                Write-Problem-Tc "$name mode12 (resume fdrbench==straight): FAIL - $($m12r.Issues.Count) issue(s)"
+                $m12r.Issues | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+                $summaryLines.Add("$name mode12 (resume fdrbench==straight): FAIL ($($m12r.Issues.Count) issues)")
+            }
         }
     }
 
