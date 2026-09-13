@@ -18,7 +18,7 @@ REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
 REM #             [--require-vendor-support] [--automated] [--parallel] [--no-tests]
-REM #             [--build-only]
+REM #             [--build-only] [--with-tutorial-perf]
 REM #
 REM # Flags:
 REM #   --i-agree-to-the-vendor-licenses
@@ -204,15 +204,30 @@ REM #
 REM # The scrape needs the line at column 0, and MSBuild indents Message output, so the
 REM # target writes the line to a file and we emit it with `type`. obj\ is gitignored, so
 REM # an interrupted build leaves nothing behind in `git status`.
+REM #
+REM # Delete the file FIRST and check the exit code. A build killed between the write and
+REM # the del leaves the file behind; without both guards a later run whose msbuild failed
+REM # would `type` the PREVIOUS commit's banner, and SkylineNightly would post that stale
+REM # revision and hash as this run's - silently wrong data, which is the failure class this
+REM # whole block exists to remove.
+REM #
+REM # Skipped for --build-only: nothing scrapes a developer compile, and the step costs an
+REM # SDK MSBuild start plus three git subprocesses.
 REM # ------------------------------------------------------------------------
-if not exist obj mkdir obj
 set PWIZ_BANNER_FILE=%SCRIPT_DIR%\obj\pwiz-version-banner.txt
-dotnet msbuild SkylineVersion.targets -t:PrintPwizVersionBanner -nologo -v:q -p:PwizVersionBannerFile="%PWIZ_BANNER_FILE%"
-if exist "%PWIZ_BANNER_FILE%" (
-    type "%PWIZ_BANNER_FILE%"
-    del "%PWIZ_BANNER_FILE%"
-) else (
-    echo ##teamcity[message text='Version banner could not be generated; SkylineNightly will not be able to scrape a revision' status='WARNING']
+if %BUILDONLY%==0 (
+    if not exist obj mkdir obj
+    if exist "%PWIZ_BANNER_FILE%" del "%PWIZ_BANNER_FILE%"
+    dotnet msbuild SkylineVersion.targets -t:PrintPwizVersionBanner -nologo -v:q -p:PwizVersionBannerFile="%PWIZ_BANNER_FILE%"
+    if !ERRORLEVEL! NEQ 0 (
+        echo ##teamcity[message text='Version banner generation failed; SkylineNightly cannot scrape a revision from this log' status='WARNING']
+    )
+    if exist "%PWIZ_BANNER_FILE%" (
+        type "%PWIZ_BANNER_FILE%"
+        del "%PWIZ_BANNER_FILE%"
+    ) else (
+        echo ##teamcity[message text='No version banner was produced; SkylineNightly cannot scrape a revision from this log' status='WARNING']
+    )
 )
 
 REM # ------------------------------------------------------------------------
