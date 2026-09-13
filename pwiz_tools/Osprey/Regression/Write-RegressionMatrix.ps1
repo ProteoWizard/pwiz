@@ -63,7 +63,7 @@ param(
     [string]$OutPath,
     [string[]]$VerifyAgainst,
     [string[]]$CostsFrom,
-    [string[]]$Lanes = @('Astral', 'Stellar,StellarLibDecoy,StellarGenDecoyEntrap'),
+    [string[]]$Lanes = @('Astral,StellarGenDecoyEntrap', 'Stellar,StellarLibDecoy'),
     [hashtable]$SkipModesOverride,
     [string]$Title = 'Osprey regression gate: which assertion runs on which dataset'
 )
@@ -127,10 +127,10 @@ if ($SkipModesOverride) {
 
 # ---- The modes and what gates them (maintained HERE; verified by -VerifyAgainst) -----
 # Lines = the summary labels the mode emits, minus the "<Dataset> " prefix. When = the spec
-# predicate. Skip = labels that appear as an explicit SKIP line when When is false (mode 2's
-# streamed-join assertion is the one case: it announces the leg it could not run). Cost = the
-# mode number the "Phase cost" table files the leg's seconds under (a sub-row shares its
-# parent's leg and has no cost of its own).
+# predicate. Extra = labels with their own predicate, present only when it holds (the
+# streamed-join lines of modes 2 and 5 follow those modes). Cost = the mode number the "Phase
+# cost" table files the leg's seconds under (a sub-row shares its parent's leg and has no cost
+# of its own). A -Skip* switch prints SKIP lines this map does not model: verify full runs.
 function Skipped($s, [int]$mode) { return (@($s.SkipModes) -contains $mode) }
 $modes = @(
     @{ Id = '1';  Cost = '1'; Title = 'straight-through vs committed golden'
@@ -173,8 +173,8 @@ $modes = @(
     @{ Id = 'S7'; Title = 'streamed Stage-7 join on every leg (modes 1, 2, 5)'
        Proves = 'Each leg''s log shows the per-run fold and no all-runs survivor pool - the O(files) resident join must not come back silently. Free: log checks on legs that ran.'
        Lines = @('mode1 (streamed join)'); When = { param($s) $true }; Gate = 'every dataset; the mode-2 and mode-5 lines follow those modes'
-       Skip = @{ 'mode2 (streamed join)' = { param($s) -not (Skipped $s 2) } }
-       Extra = @{ 'mode5 (streamed join)' = { param($s) -not (Skipped $s 5) } } }
+       Extra = @{ 'mode2 (streamed join)' = { param($s) -not (Skipped $s 2) }
+                  'mode5 (streamed join)' = { param($s) -not (Skipped $s 5) } } }
     @{ Id = '6';  Title = 'library-fragment release engaged'
        Proves = 'The release RAN on every leg that holds the library and did NOT run on --task FirstPassFDR; output-neutral by design, so only the logs can see it. Free.'
        Lines = @('mode6 (library-fragment release engaged)'); When = { param($s) $true }; Gate = 'every dataset' }
@@ -197,7 +197,6 @@ function Expected-Lines($m, $spec) {
     $e = @{}
     $on = & $m.When $spec
     foreach ($l in $m.Lines) { $e[$l] = if ($on) { 'RUN' } else { 'ABSENT' } }
-    if ($m.Skip) { foreach ($k in $m.Skip.Keys) { $e[$k] = if (& $m.Skip[$k] $spec) { 'RUN' } else { 'SKIP' } } }
     if ($m.Extra) { foreach ($k in $m.Extra.Keys) { $e[$k] = if (& $m.Extra[$k] $spec) { 'RUN' } else { 'ABSENT' } } }
     return $e
 }
@@ -354,7 +353,7 @@ if ($CostsFrom) {
     [void]$sb.AppendLine('</tr>')
 }
 [void]$sb.AppendLine('</table>')
-[void]$sb.AppendLine('<p class="muted">&#10003; = the mode''s summary line(s) appear for that dataset; &mdash; = a designed omission, no line at all. Hover a cell for the exact summary labels. Mode 2''s streamed-join assertion is the one that prints an explicit SKIP where mode 2 does not run (Astral), because it names a leg that exists elsewhere. Seconds are the leg''s phase cost from the named run; free checks ride a leg that is already counted.</p>')
+[void]$sb.AppendLine('<p class="muted">&#10003; = the mode''s summary line(s) appear for that dataset; &mdash; = a designed omission, no line at all. Hover a cell for the exact summary labels. A SKIP line never comes from this table: it means a -Skip* switch was passed, so the run was not a full one. Seconds are the leg''s phase cost from the named run; free checks ride a leg that is already counted.</p>')
 
 # Lanes
 if ($CostsFrom) {
@@ -377,7 +376,7 @@ if ($CostsFrom) {
 }
 
 # Counts per dataset
-[void]$sb.AppendLine('<h2>Summary lines per dataset</h2><p>A green <code>-Dataset All</code> prints exactly these many <code>&lt;Dataset&gt; modeN (...): PASS</code> lines (SKIP counted). A short count is what distinguishes an aborted run.</p><table><tr>')
+[void]$sb.AppendLine('<h2>Summary lines per dataset</h2><p>A green <code>-Dataset All</code> prints exactly these many <code>&lt;Dataset&gt; modeN (...): PASS</code> lines and no SKIP. A short count is what distinguishes an aborted run.</p><table><tr>')
 foreach ($n in $names) { [void]$sb.Append("<th>$(Esc $n)</th>") }
 [void]$sb.AppendLine('</tr><tr>')
 foreach ($n in $names) {
