@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -622,8 +622,8 @@ namespace pwiz.Osprey.Tasks
         /// taking the streamed join with it.</para>
         ///
         /// <para>No consumer may read PIN features off these stubs
-        /// (<c>PerFileScoringTask.NeedsResidentPool</c>: <c>--fdrbench-pass 1</c>, a
-        /// non-Percolator FDR method, <c>OSPREY_FDR_PROJECTION=0</c>) - a streamed pool drops
+        /// (<c>PerFileScoringTask.NeedsResidentPool</c>: a non-Percolator FDR method,
+        /// <c>OSPREY_FDR_PROJECTION=0</c>) - a streamed pool drops
         /// the entries those consumers index. And the analysis-wide retained base_id summary has
         /// to be on disk, because it IS the compaction predicate every refill applies; without
         /// it a refilled run would carry the pre-compaction pool and the fold would run over a

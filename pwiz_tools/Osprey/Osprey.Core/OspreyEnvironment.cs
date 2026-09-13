@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -167,10 +167,12 @@ namespace pwiz.Osprey.Core
         /// the legacy resident path OOMs -- so streaming is the production default and
         /// byte-identical to the legacy path (Stellar regression mode1/2/3). Set
         /// OSPREY_FDR_PROJECTION=0 ONLY to force the legacy <see cref="FdrEntry"/>-buffer
-        /// path as a transitional A/B / byte-identity oracle; that path (and this flag)
-        /// are slated for removal once model-diagnostics + FDRBench stream from the
-        /// persisted per-file scores. A settable property (not a readonly field) so
-        /// unit tests can A/B both paths.
+        /// path as a transitional A/B / byte-identity oracle. Model-diagnostics (#4505)
+        /// and FDRBench pass 1 (#4507) both stream from the persisted per-file scores
+        /// now, so no Percolator-framework run needs the legacy path; it still serves the
+        /// non-Percolator FdrMethods (Simple / Mokapot), which is what stands between it
+        /// and removal. A settable property (not a readonly field) so unit tests can A/B
+        /// both paths.
         /// </summary>
         public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
 
@@ -564,7 +566,7 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the known-unfixed resident path(s) this run may
-        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=fdrbench-pass1</c>. Legal values are
+        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=projection-off</c>. Legal values are
         /// exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>; anything else, and any resident path
         /// that is not on that list, is refused no matter what this is set to.
         ///

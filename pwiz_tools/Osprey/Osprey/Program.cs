@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -384,8 +384,8 @@ namespace pwiz.Osprey
                     // warning said was not engaged.
                     LogWarning(string.Format(
                         "OSPREY_ALLOW_UNFIXED_RESIDENT contains unrecognized token(s) that grant " +
-                        "nothing: {0}. Recognized: {1}. ('hpc-merge' was retired - the " +
-                        "--task SecondPassFDR reconciled-input load streams and needs no allowance.) " +
+                        "nothing: {0}. Recognized: {1}. ('hpc-merge' and 'fdrbench-pass1' were retired - the " +
+                        "--task SecondPassFDR reconciled-input load and the pass-1 FDRBench emitter both stream and need no allowance.) " +
                         "Any recognized token in the same value is still honored.",
                         OspreyEnvironment.UnrecognizedResidentTokens,
                         string.Join(", ", ResidentPaths.KNOWN_UNFIXED)));
