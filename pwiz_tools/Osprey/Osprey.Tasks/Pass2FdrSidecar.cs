@@ -570,11 +570,12 @@ namespace pwiz.Osprey.Tasks
                 perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 long nReloadReported = 0;
+                var byEntryId = new Dictionary<uint, FdrEntry>();
                 foreach (var kvp in perFileEntries)
                 {
                     reloadProgress.Report(++nReloadReported);
                     if (OverlayPass2SidecarOntoFile(
-                            writer, kvp.Key, kvp.Value, experimentRecords, ctx.LogWarning))
+                            writer, kvp.Key, kvp.Value, experimentRecords, ctx.LogWarning, byEntryId))
                     {
                         filesReloaded++;
                     }
@@ -610,10 +611,22 @@ namespace pwiz.Osprey.Tasks
         /// what the loop's own contract says such a run keeps; on the streamed path it is the
         /// same state, freshly rebuilt. The two agree because neither invents a value.</para>
         /// </summary>
+        /// <summary>
+        /// Overlay one file's 2nd-pass FDR sidecar onto its entries, returning false when the file
+        /// has no current sidecar (the caller reports it and the run keeps 1st-pass q-values).
+        ///
+        /// <para>The join index is the CALLER's, reused across files and cleared here. It used to be allocated
+        /// per call and sized to the file (<c>new Dictionary&lt;uint, FdrEntry&gt;(entries.Count)</c>),
+        /// which at cohort scale is a ~4.2 M-entry bucket and entry array on the large-object heap
+        /// per file - and this overlay is a post-materialize hook, so it runs once per file per
+        /// STREAMED PASS: three times over a 446-run cohort in SecondPassFDR alone. Clearing keeps
+        /// the capacity of the largest file seen and allocates nothing after it, which is the
+        /// answer <see cref="Pass1ScalarSeeder"/> already gives for its own per-file buffers.</para>
+        /// </summary>
         private static bool OverlayPass2SidecarOntoFile(
             Pass2SidecarWriter writer, string fileName, List<FdrEntry> entries,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
-            Action<string> logWarning)
+            Action<string> logWarning, Dictionary<uint, FdrEntry> byEntryId)
         {
             string inputFile = writer.InputFor(fileName);
             if (inputFile == null)
@@ -621,7 +634,7 @@ namespace pwiz.Osprey.Tasks
             string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
             if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
                 return false;
-            var byEntryId = new Dictionary<uint, FdrEntry>(entries.Count);
+            byEntryId.Clear();
             foreach (var e in entries)
                 byEntryId[e.EntryId] = e;
             if (FdrScoresSidecar.TryReadOverlay(
@@ -674,9 +687,13 @@ namespace pwiz.Osprey.Tasks
             // and the sidecar on disk is final, so either moment gives the same answer.
             var experimentRecords = new Lazy<IReadOnlyDictionary<uint, FdrExperimentRecord>>(
                 () => ResolvePass2ExperimentRecords(ctx));
+            // ONE join index for every file of every pass this overlay serves. StreamFiles and
+            // MaterializeAllFromSource both walk files sequentially, so a single instance is safe,
+            // and the cohort stops paying a large-object dictionary per file per pass.
+            var byEntryId = new Dictionary<uint, FdrEntry>();
             rescored.AddPostMaterialize((fileName, entries) =>
                 OverlayPass2SidecarOntoFile(
-                    writer, fileName, entries, experimentRecords.Value, ctx.LogWarning));
+                    writer, fileName, entries, experimentRecords.Value, ctx.LogWarning, byEntryId));
         }
 
         /// <summary>
