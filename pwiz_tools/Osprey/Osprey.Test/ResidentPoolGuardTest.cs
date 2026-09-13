@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -60,41 +61,55 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(lean, needsResidentPool: false,
                 allowUnfixedResident: null, useFdrProjection: true));
 
-            // --fdrbench-pass 1 trips the fat pool: guarded (armed), and the message is
+            // A non-Percolator FdrMethod trips the fat pool: guarded (armed), and the message is
             // actionable - it names the token the operator would set, not just a symptom.
-            // This was the HPC reconciled-input merge until #4486 streamed it; the properties
-            // being pinned are the guard's, so any still-listed trigger exercises them.
-            var fdrbench1 = new OspreyConfig { OutputFdrBench = "bench.tsv", FdrBenchPass = 1 };
-            string benchErr = PerFileScoringTask.ResidentPoolGuardError(fdrbench1, needsResidentPool: true,
+            // This exemplar was the HPC reconciled-input merge until #4486 streamed it, and
+            // --fdrbench-pass 1 until #4507 did; the properties being pinned are the guard's,
+            // so any still-listed trigger exercises them.
+            var simple = new OspreyConfig { FdrMethod = FdrMethod.Simple };
+            string simpleErr = PerFileScoringTask.ResidentPoolGuardError(simple, needsResidentPool: true,
                 allowUnfixedResident: null, useFdrProjection: true);
-            Assert.IsNotNull(benchErr);
-            StringAssert.Contains(benchErr, "OSPREY_ALLOW_UNFIXED_RESIDENT=" + ResidentPaths.FDRBENCH_PASS1);
+            Assert.IsNotNull(simpleErr);
+            StringAssert.Contains(simpleErr, "OSPREY_ALLOW_UNFIXED_RESIDENT=" + ResidentPaths.NON_PERCOLATOR_FDR);
 
             // Naming THIS path exempts it (no error):
-            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(fdrbench1, needsResidentPool: true,
-                allowUnfixedResident: ResidentPaths.FDRBENCH_PASS1, useFdrProjection: true));
+            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(simple, needsResidentPool: true,
+                allowUnfixedResident: ResidentPaths.NON_PERCOLATOR_FDR, useFdrProjection: true));
             // OSPREY_FDR_PROJECTION=0 (the A/B byte-identity oracle) is NOT an automatic
             // exemption any more - it is its own token. Unnamed it is refused like anything
             // else, which closes the last route to a resident pool nobody had to ask for.
-            Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(fdrbench1, needsResidentPool: true,
+            Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(simple, needsResidentPool: true,
                 allowUnfixedResident: null, useFdrProjection: false));
-            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(fdrbench1, needsResidentPool: true,
+            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(simple, needsResidentPool: true,
                 allowUnfixedResident: ResidentPaths.PROJECTION_OFF, useFdrProjection: false));
             // It outranks a config-driven trigger, because it selects the legacy implementation
             // for the whole run: naming the other reason is not enough.
-            Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(fdrbench1, needsResidentPool: true,
-                allowUnfixedResident: ResidentPaths.FDRBENCH_PASS1, useFdrProjection: false));
+            Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(simple, needsResidentPool: true,
+                allowUnfixedResident: ResidentPaths.NON_PERCOLATOR_FDR, useFdrProjection: false));
 
             // Naming a DIFFERENT path does not: the token grants one exemption, not amnesty.
             // This is the property the former blanket boolean lacked.
-            Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(fdrbench1, needsResidentPool: true,
-                allowUnfixedResident: ResidentPaths.NON_PERCOLATOR_FDR, useFdrProjection: true));
+            Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(simple, needsResidentPool: true,
+                allowUnfixedResident: ResidentPaths.COMPACTED_ENTRIES_BUFFER, useFdrProjection: true));
 
             // Capitalization does not defeat it - the error names the exact token to set, so
             // rejecting the operator's own value for case would read as the guard ignoring them.
-            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(fdrbench1, needsResidentPool: true,
-                allowUnfixedResident: ResidentPaths.FDRBENCH_PASS1.ToUpperInvariant(),
+            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(simple, needsResidentPool: true,
+                allowUnfixedResident: ResidentPaths.NON_PERCOLATOR_FDR.ToUpperInvariant(),
                 useFdrProjection: true));
+
+            // --fdrbench-pass 1 no longer arms the pool at all (#4507): the pass-1 emitter
+            // streams off the per-file sidecars. Pinned as a config, not just as the token's
+            // absence from KNOWN_UNFIXED below, because the predicate and the list are
+            // separate code and the bitmask defect this fixed lived in the predicate: `both`
+            // (1 | 2) never matched the old `== 1`, so the resident path was skipped and the
+            // pass-1 file silently never written. Both selections must stream now.
+            var fdrbench1 = new OspreyConfig { OutputFdrBench = "bench.tsv", FdrBenchPass = OspreyConfig.FDRBENCH_PASS_1 };
+            var fdrbenchBoth = new OspreyConfig
+            {
+                OutputFdrBench = "bench.tsv",
+                FdrBenchPass = OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2
+            };
 
             // --task SecondPassFDR takes NO resident pool since #4486: FirstPassFdrTask is
             // excluded on that node, so nothing trains off the pre-compaction pool, and every
@@ -128,7 +143,11 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(PerFileScoringTask.CanUseLeanProjection(lean, hasReconSidecars: true, useFdrProjection: true));
             Assert.IsTrue(PerFileScoringTask.CanUseLeanProjection(lean, hasReconSidecars: false, useFdrProjection: true));
             // A resident-pool consumer keeps the fat load, so the lean path stays off there too.
-            Assert.IsFalse(PerFileScoringTask.CanUseLeanProjection(fdrbench1, hasReconSidecars: false, useFdrProjection: true));
+            Assert.IsFalse(PerFileScoringTask.CanUseLeanProjection(simple, hasReconSidecars: false, useFdrProjection: true));
+            // FDRBench pass 1 is not such a consumer any more, so it takes the lean load like
+            // the default run does.
+            Assert.IsTrue(PerFileScoringTask.CanUseLeanProjection(fdrbench1, hasReconSidecars: false, useFdrProjection: true));
+            Assert.IsTrue(PerFileScoringTask.CanUseLeanProjection(fdrbenchBoth, hasReconSidecars: false, useFdrProjection: true));
 
             // Each user-reachable trigger names its own token so the failure is diagnosable.
             // --model-diagnostics is NOT among them any more (#4505): it armed the pool on a
@@ -161,10 +180,6 @@ namespace pwiz.Osprey.Test
                     string.Format("--model-diagnostics changed disposition under token '{0}'", token));
             }
 
-            var simple = new OspreyConfig { FdrMethod = FdrMethod.Simple };
-            StringAssert.Contains(PerFileScoringTask.ResidentPoolGuardError(simple, true, null, true),
-                ResidentPaths.NON_PERCOLATOR_FDR);
-
             // A resident path with NO token is refused unconditionally - no value admits it.
             // This is the ratchet: when something we streamed goes resident again, as transfer
             // did, it cannot be waved through. It has to be fixed, or deliberately listed.
@@ -186,16 +201,21 @@ namespace pwiz.Osprey.Test
             // 'mdiag-full-resume' is GONE (#4505), 'resume-survivor-handoff' is GONE (#4536,
             // the rehydrate got its own survivor loader), and 'hpc-merge' is GONE (#4486, the
             // reconciled-input merge streams its load) - the ratchet shrinking three times.
-            // 'stage7-stream-off' was ADDED once the streamed Stage-7 join existed: until then
-            // the resident join had no alternative, so a token could only have been mandatory
-            // on every run and would have granted nothing. See the constant's own remarks for
-            // why naming a previously UNNAMEABLE path is the ratchet reaching further rather
-            // than running backwards.
+            // 'stage7-stream-off' is GONE too (2026-09-10) - the ratchet shrinking a FOURTH
+            // time. It was added when the streamed Stage-7 join first existed, to name the
+            // resident arm an operator could still choose as an A/B byte-identity oracle. That
+            // A/B was banked before the switch was retired: the resident arm passed the whole
+            // regression against the committed golden at 1e-9, and the diagnostics HTML matched
+            // the streamed arm byte for byte apart from generatedUtc. With OSPREY_STAGE7_STREAM
+            // gone there is no choice left for a token to record.
+            // 'fdrbench-pass1' is GONE (#4507) - the FIFTH shrink. The pass-1 FDRBench emitter
+            // streams off the per-file sidecars and the experiment map, byte-identical to the
+            // resident one, so no FDRBench selection reaches the resident path and the token
+            // had nothing left to admit.
             CollectionAssert.AreEqual(
                 new[]
                 {
-                    "fdrbench-pass1", "non-percolator-fdr",
-                    "projection-off", "compacted-entries-buffer", "stage7-stream-off"
+                    "non-percolator-fdr", "projection-off", "compacted-entries-buffer"
                 },
                 ResidentPaths.KNOWN_UNFIXED.ToArray());
 
@@ -205,10 +225,19 @@ namespace pwiz.Osprey.Test
             // refuse it. Streaming it is the default; the resident opt-out is a named path.
             AssertStage6HandoffGuard();
 
-            // The STAGE-7 join guard. Same shape one stage later: the pre-compaction guard
-            // stops at the compaction line and the Stage-6 one at the handoff, so the survivor
-            // buffer SecondPassFDR rebuilds was refused by neither and no token could name it.
-            AssertStage7JoinGuard();
+            // The ALL-RUNS reconciliation bundle, refused outright. Reaches PAST the compaction
+            // line like the Stage 6 guard above, but takes NO token: the bounded alternative
+            // (the per-run survivor loader off the analysis-wide retained base_id summary)
+            // exists on every route that gets here, so residency is a defect to fix and not a
+            // path to name.
+            //
+            // Unit-tested rather than gate-tested BY NECESSITY, and that is the point. No
+            // regression leg reaches this guard - verified, the message appears on zero legs -
+            // because the routing fix left it with no caller. A guard nothing exercises is a
+            // guard that can rot unnoticed, so its message is pinned here: it must name the
+            // shape, the measured cost, and the bounded alternative, or the operator who trips
+            // it in a year gets a refusal with no way forward.
+            AssertAllRunsBundleGuard();
 
             // The Stage-7 join ADMISSION, which is what decides whether that guard has a
             // subject at all. It used to be config.ExpectReconciledInput - one CLI flag - and
@@ -218,17 +247,21 @@ namespace pwiz.Osprey.Test
 
             // The trigger SET itself, not just the message it produces. Each of these takes the
             // O(files) resident pool and so arms the guard above.
-            AssertNeedsResidentPool(true, fdrbench1);
             AssertNeedsResidentPool(true, simple);
             // OSPREY_FDR_PROJECTION=0 is itself an explicit resident opt-in.
             Assert.IsTrue(PerFileScoringTask.NeedsResidentPool(lean, useFdrProjection: false));
+            // FDRBench pass 1 left the set with #4507, and so did `both` - which had never been
+            // IN it (the old `== 1` test could not match a mask of 3), the defect that made
+            // `both` emit pass 2 only.
+            AssertNeedsResidentPool(false, fdrbench1);
+            AssertNeedsResidentPool(false, fdrbenchBoth);
 
             // Nothing else does. Context for OSPREY_PASS2_QVALUE=transfer, which #4438 took off
             // the list (the per-run-only redesign maps each adjusted peak through that file's
             // own 1st-pass score to run-q sidecar, one file at a time) and a #4446 merge
             // artifact silently put back, killing an 82-file transfer run on the guard in ~25 s:
             // the predicate is now env-free apart from the projection switch, so the triggers
-            // are exactly the four above. That is what these two assertions pin.
+            // are exactly the two above plus the projection switch. That is what these two assertions pin.
             AssertNeedsResidentPool(false, lean);
             AssertNeedsResidentPool(false, mdiag);
         }
@@ -241,55 +274,6 @@ namespace pwiz.Osprey.Test
         {
             Assert.AreEqual(expected,
                 PerFileScoringTask.NeedsResidentPool(config, useFdrProjection: true));
-        }
-
-        /// <summary>
-        /// The Stage 6 post-compaction handoff guard: streaming (the default) is never guarded,
-        /// the resident opt-out is refused unless it is named, and a run that could not stream
-        /// in the first place is not asked for a second token on top of the one its own
-        /// resident path already requires.
-        /// </summary>
-        /// <summary>
-        /// The Stage-7 join guard: a RESIDENT join CHOSEN over an admissible streamed one must
-        /// be named. Only the chosen case - a run that could not have streamed anyway is not
-        /// refused, because there is nothing for a token to record and demanding one would put
-        /// a mandatory token on every ordinary run.
-        /// </summary>
-        private static void AssertStage7JoinGuard()
-        {
-            // Streaming on: no error, whatever the token says.
-            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
-                streamingAvailable: true, stage7Stream: true, allowUnfixedResident: null));
-            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
-                true, true, ResidentPaths.FDRBENCH_PASS1));
-
-            // OSPREY_STAGE7_STREAM=0 on a run that COULD stream: refused, and the message names
-            // the token to set rather than describing a symptom.
-            string err = ScoringTaskShared.Stage7ResidentGuardError(true, false, null);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err,
-                "OSPREY_ALLOW_UNFIXED_RESIDENT=" + ResidentPaths.STAGE7_STREAM_OFF);
-
-            // Naming THIS path admits it - that is the A/B byte-identity oracle. Case-
-            // insensitive, matching both sibling guards.
-            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
-                true, false, ResidentPaths.STAGE7_STREAM_OFF));
-            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
-                true, false, ResidentPaths.STAGE7_STREAM_OFF.ToUpperInvariant()));
-
-            // Naming a DIFFERENT path does not, and the message quotes the value supplied so a
-            // stale token does not read like an unset one.
-            string wrongToken = ScoringTaskShared.Stage7ResidentGuardError(
-                true, false, ResidentPaths.PROJECTION_OFF);
-            Assert.IsNotNull(wrongToken);
-            StringAssert.Contains(wrongToken, ResidentPaths.PROJECTION_OFF);
-
-            // A run that could not stream ANYWAY is NOT guarded here - there is no choice for a
-            // token to record. This is the straight-through join, and it is precisely the case
-            // that keeps the DEFAULT path usable without demanding a token: refusing it would
-            // put a mandatory token on every ordinary run, which grants nothing.
-            Assert.IsNull(ScoringTaskShared.Stage7ResidentGuardError(
-                streamingAvailable: false, stage7Stream: false, allowUnfixedResident: null));
         }
 
         /// <summary>
@@ -326,13 +310,87 @@ namespace pwiz.Osprey.Test
                 }));
         }
 
+        /// <summary>
+        /// The all-runs reconciliation bundle guard: refuses the run that HAD the bounded
+        /// alternative and declined it, and stays out of the way of the run that never had one.
+        ///
+        /// <para>That distinction is the test. The guard first refused unconditionally, which
+        /// reads as caution and is not: the arm it guards is also reached when this analysis has
+        /// no retained base_id summary at all - no <c>-o</c> blib, or one written by a build
+        /// with another <c>FormatVersion</c>. Under a resident token master completes those runs
+        /// through the overlay, which needs no summary; on the default load the streamed bundle
+        /// fails one call later with its own remedy. Either way an unconditional refusal here
+        /// adds nothing but a wrong instruction - use a loader that is built from the very file
+        /// whose absence sent the run down this arm. So both halves are pinned, and the null
+        /// half is the one that would otherwise regress silently.</para>
+        ///
+        /// <para>The refusing half also asserts the message says what happened and what to do -
+        /// the shape (O(files x entries)), the measured cost, the bounded alternative, and that
+        /// no token admits it, so nobody burns an afternoon hunting the environment variable
+        /// that would let it through.</para>
+        /// </summary>
+        private static void AssertAllRunsBundleGuard()
+        {
+            // No output blib: nothing names the summary, so the per-run loader cannot exist and
+            // there is nothing to refuse - the load that follows decides the outcome.
+            Assert.IsNull(
+                ScoringTaskShared.AllRunsBundleGuardError(new OspreyConfig(), null),
+                "a run with no bounded alternative must not be refused");
+
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_bundle_guard_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var config = new OspreyConfig
+                {
+                    InputFiles = new List<string> { Path.Combine(dir, "a.mzML") },
+                    OutputBlib = Path.Combine(dir, "out.blib")
+                };
+
+                // Named but not written: the summary is what the loader is built from, so a
+                // path with no file behind it is still "no bounded alternative".
+                Assert.IsNull(ScoringTaskShared.AllRunsBundleGuardError(config, null),
+                    "a missing retained base_id summary is disk state, not a declined route");
+
+                // Written and current: the bounded route existed and this arm was reached
+                // anyway, which is the --task ModelDiagnostics defect shape.
+                RetainedBaseIdSidecar.Write(
+                    RetainedBaseIdSidecar.PathFor(config.OutputBlib, config.InputFiles[0]),
+                    new[] { 1u, 2u, 3u });
+                string err = ScoringTaskShared.AllRunsBundleGuardError(config, null);
+                Assert.IsNotNull(err, "the all-runs bundle must never be admitted silently");
+                StringAssert.Contains(err, "O(files x entries)");
+                StringAssert.Contains(err, "per-run survivor loader");
+                StringAssert.Contains(err, "cannot admit this path");
+
+                // A supplied token changes the wording but not the answer. Naming the value back
+                // is what stops a stale or misspelled token reading exactly like an unset one,
+                // which is the property its two sibling guards are also pinned on.
+                string named = ScoringTaskShared.AllRunsBundleGuardError(
+                    config, ResidentPaths.PROJECTION_OFF);
+                Assert.IsNotNull(named, "no token admits the all-runs bundle");
+                StringAssert.Contains(named, ResidentPaths.PROJECTION_OFF);
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        /// <summary>
+        /// The Stage 6 post-compaction handoff guard: streaming (the default) is never guarded,
+        /// the resident opt-out is refused unless it is named, and a run that could not stream
+        /// in the first place is not asked for a second token on top of the one its own
+        /// resident path already requires.
+        /// </summary>
         private static void AssertStage6HandoffGuard()
         {
             // Streaming: no error, whatever the token says.
             Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
                 streamingAvailable: true, streamingEnabled: true, allowUnfixedResident: null));
             Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
-                true, true, ResidentPaths.FDRBENCH_PASS1));
+                true, true, ResidentPaths.NON_PERCOLATOR_FDR));
 
             // OSPREY_STAGE6_STREAM_SURVIVORS=0 on a run that COULD stream: refused, and the
             // message names the token to set rather than describing a symptom.
@@ -374,17 +432,17 @@ namespace pwiz.Osprey.Test
             // its own reason needs that run's token AND compacted-entries-buffer, so the very
             // A/B that establishes the bound aborted on its own guard. Both guards read the
             // list, and every admitted path is still named individually.
-            string both = ResidentPaths.FDRBENCH_PASS1 + "," + ResidentPaths.COMPACTED_ENTRIES_BUFFER;
+            string both = ResidentPaths.NON_PERCOLATOR_FDR + "," + ResidentPaths.COMPACTED_ENTRIES_BUFFER;
             Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(true, false, both));
-            var benchCfg = new OspreyConfig { OutputFdrBench = "bench.tsv", FdrBenchPass = 1 };
-            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(benchCfg, true, both, true));
+            var simpleCfg = new OspreyConfig { FdrMethod = FdrMethod.Simple };
+            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(simpleCfg, true, both, true));
             // Separators are interchangeable and surrounding whitespace is tolerated - an
             // operator composing the value in a shell should not have to match a spelling.
             Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
                 true, false, " projection-off ; compacted-entries-buffer "));
             // A list still admits ONLY what it names: an unnamed path is refused as before.
             Assert.IsNotNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
-                true, false, ResidentPaths.PROJECTION_OFF + "," + ResidentPaths.FDRBENCH_PASS1));
+                true, false, ResidentPaths.PROJECTION_OFF + "," + ResidentPaths.NON_PERCOLATOR_FDR));
         }
 
         /// <summary>

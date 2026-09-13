@@ -109,9 +109,10 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="BuildRetainedBaseIds(IEnumerable{KeyValuePair{string, List{FdrEntry}}})"/>.</para>
         ///
         /// <para>Everywhere else the release rides <c>FirstPassFdrTask</c>'s projection path and
-        /// inherits its config conditions. <c>--fdrbench-pass 1</c> is the one that bites: it
-        /// forces the RESIDENT first-pass pool, which computes no surviving base_id set to
-        /// release against.</para>
+        /// inherits its config conditions - today only the Percolator framework, since
+        /// <c>--fdrbench-pass 1</c> stopped forcing the resident pool (#4507; the pass-1 TSV is
+        /// emitted before compaction from the sidecars, so the release, which runs after, never
+        /// touches what it reads).</para>
         /// </summary>
         private static bool LegAdmitsRelease(OspreyConfig config)
         {
@@ -119,11 +120,7 @@ namespace pwiz.Osprey.Tasks
                 return false;
             if (config.ExpectReconciledInput)
                 return true;
-
-            bool needsResidentFirstPassPool =
-                !string.IsNullOrEmpty(config.OutputFdrBench) &&
-                config.FdrBenchPass == OspreyConfig.FDRBENCH_PASS_1;
-            return config.FdrMethod.UsesPercolatorFramework() && !needsResidentFirstPassPool;
+            return config.FdrMethod.UsesPercolatorFramework();
         }
 
         /// <summary>
