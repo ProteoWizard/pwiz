@@ -1232,54 +1232,6 @@ namespace pwiz.Osprey.IO
         /// not depend on Osprey.FDR, so the projection row is assembled by the caller from
         /// these scalars rather than returned from here.
         /// </summary>
-        /// <summary>
-        /// Stream one file's ROW IDENTITY - entry id, decoy flag and modified sequence - a row
-        /// group at a time, without building an <see cref="FdrEntry"/> for any of it.
-        ///
-        /// <para>For a consumer that needs only what identifies a row, not what scores it. The
-        /// experiment-q floor fold is the case this was written for: it reduces a cohort to two
-        /// minima keyed by entry id and by (sequence, decoy), and its q-values come from the
-        /// per-file FDR sidecars, so the only thing it needed the parquet for was these three
-        /// columns. Materializing the pool to read them cost ~4.2 M objects and two
-        /// whole-file dictionaries per file, 446 times (issue #4664).</para>
-        ///
-        /// <para>Sequences are interned through <paramref name="sequencePool"/> exactly as
-        /// <see cref="LoadFdrStubsFromParquet(string,Func{uint,bool},LibraryStringInterner)"/>
-        /// interns them, so a caller comparing strings from the two paths compares the same
-        /// references. Rows arrive in file order, which is the canonical
-        /// (entry id, charge, scan) order the writer emits.</para>
-        /// </summary>
-        public static void StreamRowIdentity(string path, LibraryStringInterner sequencePool,
-            Action<uint, bool, string> onRow)
-        {
-            if (onRow == null)
-                throw new ArgumentNullException(nameof(onRow));
-
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
-            {
-                var fieldsByName = BuildFieldLookup(reader);
-                for (int g = 0; g < reader.RowGroupCount; g++)
-                {
-                    using (var groupReader = reader.OpenRowGroupReader(g))
-                    {
-                        var entryIdCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
-                        var isDecoyCol = ReadColumnByName<bool[]>(groupReader, fieldsByName, FIELD_IS_DECOY.Name);
-                        var modseqCol = ReadColumnByName<string[]>(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
-                        if (entryIdCol == null || isDecoyCol == null)
-                            continue;
-                        for (int row = 0; row < entryIdCol.Length; row++)
-                        {
-                            string modSeq = modseqCol == null
-                                ? string.Empty
-                                : Canonicalize(modseqCol[row], sequencePool);
-                            onRow(entryIdCol[row], isDecoyCol[row], modSeq);
-                        }
-                    }
-                }
-            }
-        }
-
         public static void ReadFdrStubScalars(string path,
             Action<uint, byte, bool, double, string> onRow)
         {

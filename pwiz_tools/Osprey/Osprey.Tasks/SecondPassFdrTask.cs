@@ -484,7 +484,7 @@ namespace pwiz.Osprey.Tasks
             // experiment q with no surviving run support -- reported with no run-level ID (the
             // blib ID-line artifact). Re-clamping here, against the run q's actually written to
             // the blib, restores "reported => some run genuinely passed" for the final output.
-            ReclampExperimentQToBestRun(rescored, ctx);
+            ReclampExperimentQToBestRun(rescored);
 
             // Write output blib - unless this is a diagnostics-only regeneration, whose whole
             // contract is that it touches no artifact but the report.
@@ -737,7 +737,7 @@ namespace pwiz.Osprey.Tasks
             // complete, plausible, every card populated, and wrong.
             Pass2FdrSidecar.InstallStreamedPass2Overlay(ctx, rescored, Name, ValidityKey(ctx));
             Pass2FdrSidecar.OverlayPass2OntoResidentPool(ctx, rescored, Name, ValidityKey(ctx));
-            ReclampExperimentQToBestRun(rescored, ctx);
+            ReclampExperimentQToBestRun(rescored);
 
             ctx.LogInfo(string.Format(
                 @"SecondPassFDR: folding the second pass from {0} run(s), one run resident at a " +
@@ -915,32 +915,12 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private static void ReclampExperimentQToBestRun(RescoredEntries rescored)
         {
-            ReclampExperimentQToBestRun(rescored, null);
-        }
-
-        /// <summary>
-        /// The floors, and then the clamp. <paramref name="ctx"/> is optional and enables only the
-        /// ARTIFACT-DRIVEN fold: with it, the floors are reduced from each run's 2nd-pass FDR
-        /// sidecar joined to its reconciled parquet's identity columns, rather than materializing
-        /// every run's survivor pool to read four fields off each row (issue #4664). It is
-        /// all-or-nothing and checks every run's artifacts before folding any of them; without it,
-        /// or if one run cannot supply them, the pool fold below runs unchanged. Folding twice
-        /// would be harmless anyway - both reduce the same values by MIN - which is what makes the
-        /// fallback safe to take at any point.
-        /// </summary>
-        private static void ReclampExperimentQToBestRun(RescoredEntries rescored, PipelineContext ctx)
-        {
             var minRunBothByEntryId = new Dictionary<uint, double>();
             var minRunBothByPeptide = new Dictionary<(string ModifiedSequence, bool IsDecoy), double>();
-            if (ctx == null ||
-                !Pass2FdrSidecar.TryFoldExperimentQFloorsFromArtifacts(
-                    ctx, rescored, minRunBothByEntryId, minRunBothByPeptide))
+            foreach (var kvp in rescored.StreamFiles(@"Folding experiment-q floors"))
             {
-                foreach (var kvp in rescored.StreamFiles(@"Folding experiment-q floors"))
-                {
-                    PercolatorEngine.AccumulateExperimentQFloors(
-                        kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
-                }
+                PercolatorEngine.AccumulateExperimentQFloors(
+                    kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
             }
             if (rescored.Streams)
             {
