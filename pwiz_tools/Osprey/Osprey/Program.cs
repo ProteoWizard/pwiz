@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -120,7 +120,30 @@ namespace pwiz.Osprey
                     selectedTask = resolved;
                 }
 
-                OspreyConfig config = ParseArgs(args);
+                OspreyConfig config;
+                try
+                {
+                    config = ParseArgs(args);
+                }
+                catch (Exception ex) when (ex is ArgumentException || ex is FileNotFoundException || ex is InvalidDataException)
+                {
+                    // A usage error, not a failure: the parser threw it to name the argument,
+                    // so the message IS the diagnosis, and a type name plus a stack through
+                    // the parser would only bury it. Reported the way the ValidateArgs errors
+                    // below are. Anything else the parser throws is a defect and falls through
+                    // to the sink at the bottom of Main with its frames intact.
+                    //
+                    // These three are what the parser raises ON PURPOSE, and the list is
+                    // deliberately narrower than it reads: FileNotFoundException, not
+                    // IOException, because --input-list throws the former for the missing-file
+                    // case a user can fix, while File.ReadAllLines can throw a sharing or
+                    // device IOException that is NOT a usage error and needs its type, inner
+                    // exception and stack. Numeric values reach ParseInt / ParseDouble, which
+                    // convert FormatException into an ArgumentException naming the flag, so
+                    // no parse failure needs an entry of its own here.
+                    LogError(ex.Message);
+                    return 1;
+                }
                 // --task selects one pipeline task; derive the membership flags
                 // the tasks' IsIncluded methods read. ExpectReconciledInput also
                 // arms the strict-reconciled-input gate (every run's reconciled
@@ -414,7 +437,13 @@ namespace pwiz.Osprey
             }
             catch (Exception ex)
             {
-                LogError(string.Format("Fatal error: {0}", ex.Message));
+                // As in AnalysisPipeline.Run: the whole exception, so an empty message or a
+                // wrapper's InnerException cannot hide the cause. This sink had no stack
+                // trace at all, so a failure before the pipeline started - creating the
+                // output directories, the input checks, the model-diagnostics render -
+                // reported one line and no frames. Usage errors do not reach here; the
+                // parser's catch above reports them as the one-line messages they are.
+                LogError(string.Format("Fatal error: {0}", ex));
                 return 1;
             }
             finally
