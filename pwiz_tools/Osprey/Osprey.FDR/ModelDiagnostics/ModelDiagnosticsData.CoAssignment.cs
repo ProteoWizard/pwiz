@@ -844,8 +844,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     _experimentBest[entryId] = experimentAggregateScore;
                 if (IsDecoyClass(cls))
                     return;   // decoys define the boundary; they do not set it
-                // A non-decoy class never carries the decoy bit, so its entry id IS its base id
-                // and the accepted flag indexes the target side.
+                // The FULL entry id, so the seal reads this entry's best off the side its own id
+                // selects. A non-decoy class normally carries no decoy bit and the two agree, but
+                // the class comes from a persisted is_decoy column on the pass-2 path while the
+                // side comes from the id, and storing the base id here would read the wrong side's
+                // NaN if they ever disagreed - silently dropping the entry from the minimum.
                 if (runQvalue <= runFdr)
                     _fileAccepted.Add(entryId);
                 if (experimentQvalue <= runFdr)
