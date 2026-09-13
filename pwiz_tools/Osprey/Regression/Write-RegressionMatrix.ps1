@@ -178,6 +178,9 @@ $modes = @(
     @{ Id = '6';  Title = 'library-fragment release engaged'
        Proves = 'The release RAN on every leg that holds the library and did NOT run on --task FirstPassFDR; output-neutral by design, so only the logs can see it. Free.'
        Lines = @('mode6 (library-fragment release engaged)'); When = { param($s) $true }; Gate = 'every dataset' }
+    @{ Id = '13'; Title = 'both experiment-q floor routes'
+       Proves = 'The floors came from each run''s 2nd-pass FDR sidecar where those exist, and from the materialized pool where they do not - the transfer arm, which has no per-file pass-2 worker (#4665). Output-neutral by construction (both reduce the same values by MIN), so only the log can tell which ran, and the pool route was a 446-run cohort''s tallest memory excursion (#4664). ONE dataset, because AltPass2 is the only one that runs both routes. Free: log checks on legs that ran.'
+       Lines = @('mode13 (experiment-q floor routes)'); When = { param($s) [bool]$s.AltPass2 }; Gate = 'AltPass2' }
     @{ Id = '7';  Cost = '7'; Title = '--task ModelDiagnostics regeneration'
        Proves = 'Re-entering a completed run changes exactly one artifact (the report) and it still matches the golden.'
        Lines = @('mode7 (diagnostics regeneration: report only, vs golden)'); When = { param($s) [bool]$s.ModelDiagnostics -and -not (Skipped $s 7) }; Gate = 'ModelDiagnostics, not in SkipModes' }

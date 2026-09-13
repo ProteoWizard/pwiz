@@ -122,6 +122,15 @@
     or a check - the default is ONE dataset, not all four; it is regenerated from this
     script's dataset table and verified against a green log with -VerifyAgainst).
 
+      mode 13 BOTH experiment-q floor routes, on the one dataset that runs both (AltPass2).
+              The floors are folded from the per-file 2nd-pass FDR sidecars where they exist,
+              and from the materialized pool where they do not - the transfer arm, which has
+              no per-file pass-2 worker (#4665). Output-neutral by construction, since both
+              reduce the same values by MIN, so only the log can tell which ran, and the pool
+              route cost a 446-run cohort its tallest memory excursion (#4664). Every leg must
+              announce its route; the straight-through leg must have folded from artifacts and
+              the transfer arm must report the resident pool.
+
     NO dependency on the sibling ai/ checkout: data acquisition, blib golden
     capture/compare, and the tolerance comparators all live under
     pwiz_tools/Osprey/Regression. Mirrors build.ps1's TeamCity service
@@ -1246,6 +1255,11 @@ $stage7StreamMarker = 'Second-pass join: folding over '
 # disk it publishes the survivor loader and builds no experiment-wide bundle, so it emits this
 # instead of $firstPassFdrRehydrateMarker. Mode 5 accepts either.
 $firstPassFdrPerRunMarker = 'Per-run rescore: FirstPassFDR publishes the survivor loader only'
+# The experiment-q floor fold announces its route on every leg: either it folded from the
+# per-file artifacts, or it says which run made it fall back to materializing the pools.
+$floorFoldMarker = 'Experiment-q floors: folded '
+$floorRouteMarker = 'Experiment-q floors: '
+$floorResidentMarker = 'Experiment-q floors: the survivor pool is resident'
 # The NEGATIVE twin of the two above: the substring every disclosure of the O(files x entries)
 # all-runs reconciliation bundle carries. Three C# emitters must all contain it, and the
 # constant they share is RescoreHydration.ALL_RUNS_BUNDLE_MARKER: both hydrate twins log it
@@ -3156,6 +3170,83 @@ foreach ($name in $selected) {
         Write-Problem-Tc "$name mode6 (library-fragment release engaged): FAIL - $($m6Issues.Count) issue(s)"
         $m6Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
         $summaryLines.Add("$name mode6 (library-fragment release engaged): FAIL ($($m6Issues.Count) issues)")
+    }
+
+    # ---- mode 13: the experiment-q floors came from the ARTIFACTS, not the pool -----
+    # The floors are two minima over one number per row. Every one of those numbers is in the
+    # run's 2nd-pass FDR sidecar, so folding them does not need the survivor pool - and
+    # materializing the pool for them was the tallest committed-memory excursion in a 446-run
+    # `--task ModelDiagnostics` process (issue #4664), taller than the co-assignment panel
+    # #4657 rebuilt.
+    #
+    # Asserted from the log because it is OUTPUT-NEUTRAL by construction: both routes reduce
+    # the same values by MIN, so every value comparison in this gate passes either way. That is
+    # exactly the shape of defect a route assertion exists for - the fast path can stop
+    # engaging (a renamed artifact, a validity key that stops matching, a new pass-2 mode that
+    # writes no per-file sidecar) and nothing else in the suite would notice, while a 446-run
+    # cohort quietly goes back to 38 GB.
+    #
+    # Two levels, because a bare "did it fold" would fail honestly-resident legs. EVERY leg
+    # must ANNOUNCE its route - silence means the fold ran with no idea which path it took, or
+    # the C# wording drifted and this assertion reads nothing. The straight-through leg must
+    # additionally have FOLDED from artifacts: it streams its pool by default, and if it stops
+    # doing that the announcement says which run and why.
+    # ONE dataset, and it has to be this one: the property is which ROUTE the fold takes, and
+    # AltPass2 is the only dataset that runs both. Everything else streams, so it could only ever
+    # assert the fast half - and a fast path proven on four datasets while the fallback is proven
+    # on none is the asymmetry this mode exists to close.
+    if ($cfg.AltPass2) {
+    $m13Issues = [System.Collections.Generic.List[string]]::new()
+    $m13Legs = 0
+    foreach ($floorLeg in @(
+        @{ Log = 'straight.log';  What = 'the cold straight-through run'; MustFold = $true },
+        @{ Log = 'resume.log';    What = 'the resume'; MustFold = $false; Mode = 2 },
+        @{ Log = 'rehydrate.log'; What = 'the own-sidecar rehydrate'; MustFold = $false; Mode = 5 })) {
+        if ($floorLeg.Mode -and (Test-ModeCut $cfg $floorLeg.Mode)) { continue }
+        $floorPath = Join-Path $straightDir $floorLeg.Log
+        if (-not (Test-Path -LiteralPath $floorPath)) { continue }
+        $m13Legs++
+        $announced = Test-LogMarker -LogPath $floorPath -Marker $floorRouteMarker `
+            -Description ("$($floorLeg.What) saying which route the experiment-q floor fold took")
+        if (-not $announced.Pass) {
+            $announced.Issues | ForEach-Object { $m13Issues.Add($_) }
+            continue
+        }
+        if (-not $floorLeg.MustFold) { continue }
+        $foldedFromArtifacts = Test-LogMarker -LogPath $floorPath -Marker $floorFoldMarker `
+            -Description ("$($floorLeg.What) folding the experiment-q floors from the per-file " +
+                '2nd-pass sidecars instead of materializing every run''s survivor pool')
+        if (-not $foldedFromArtifacts.Pass) {
+            $foldedFromArtifacts.Issues | ForEach-Object { $m13Issues.Add($_) }
+            $fellBack = @(Select-String -LiteralPath $floorPath -SimpleMatch -Pattern $floorRouteMarker |
+                ForEach-Object { $_.Line.Trim() })
+            $fellBack | Select-Object -First 3 | ForEach-Object { $m13Issues.Add("  it said: $_") }
+        }
+    }
+    # The FALLBACK, on the only leg that takes it. OSPREY_PASS2_QVALUE=transfer has no per-file
+    # pass-2 worker, so it writes no per-file sidecars and the fold has nothing to read - it must
+    # say so and fold the resident pool instead (issue #4665 is the move that would end this).
+    # Asserting it here is what keeps the slow path from rotting while the fast one carries every
+    # other leg: nothing else in the suite can tell the two apart, since both reduce the same
+    # values by MIN.
+    $altFloorLog = Join-Path (Join-Path $runRoot $name) 'alt-meanbest2\alt-meanbest2.log'
+    if (Test-Path -LiteralPath $altFloorLog) {
+        $m13Legs++
+        $altAnnounced = Test-LogMarker -LogPath $altFloorLog -Marker $floorResidentMarker `
+            -Description ('the transfer arm reporting that its survivor pool is resident, so the ' +
+                'experiment-q floors are folded from the pool rather than from per-file sidecars')
+        if (-not $altAnnounced.Pass) { $altAnnounced.Issues | ForEach-Object { $m13Issues.Add($_) } }
+    }
+    if ($m13Legs -eq 0) {
+        $summaryLines.Add("$name mode13 (experiment-q floor routes): SKIP (no leg ran)")
+    } elseif ($m13Issues.Count -eq 0) {
+        $summaryLines.Add("$name mode13 (experiment-q floor routes): PASS ($m13Legs leg(s), both routes)")
+    } else {
+        $overallFail = $true
+        Write-Problem-Tc "$name mode13 (experiment-q floor routes): FAIL - $($m13Issues.Count) issue(s)"
+        $m13Issues | Select-Object -First 10 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+        $summaryLines.Add("$name mode13 (experiment-q floor routes): FAIL ($($m13Issues.Count) issues)")
+    }
     }
 
     # ---- mode 7: --task ModelDiagnostics regeneration acceptance ----------------
