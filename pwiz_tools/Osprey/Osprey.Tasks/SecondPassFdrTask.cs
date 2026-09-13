@@ -843,6 +843,10 @@ namespace pwiz.Osprey.Tasks
             // the only thing that has to wait for a second pass.
             var coAssign = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true,
                 stratumBaseIds);
+            // Reserve the run scope from the classification map, as the 1st-pass panel does. Not
+            // an optimisation of the fold: it is what keeps this builder off the doubling ladder,
+            // which it would otherwise climb once per pass-2 report.
+            coAssign.ReserveRunScope(ModelDiagnosticsData.MaxBaseId(classByBaseId));
             int fileIdx = 0;
             foreach (var kvp in rescored.StreamFiles(@"Folding pass-2 diagnostics"))
             {

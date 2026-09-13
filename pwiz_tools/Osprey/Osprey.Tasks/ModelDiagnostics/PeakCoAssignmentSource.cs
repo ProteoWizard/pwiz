@@ -146,6 +146,13 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // Size the builder's per-file working set once, for the whole panel. Every record
             // phase 1 folds is gated on having an experiment-scope record, so the largest base
             // id in that map bounds every index the builder will see (issue #4657).
+            // Logged because it is not instant and nothing else speaks until the reporter below
+            // opens: this walks every experiment-scope key (6.2 M on the 446-run cohort) and then
+            // NaN-fills ~100 MB. The two loops under it carry reporters for exactly this reason -
+            // a silent stretch here reads as a hung run.
+            logInfo(string.Format(
+                @"[MODEL-DIAGNOSTICS] peak co-assignment: sizing the run scope from {0} experiment-scope record(s)...",
+                experimentRecords.Count));
             uint maxBaseId = 0;
             foreach (uint entryId in experimentRecords.Keys)
                 maxBaseId = Math.Max(maxBaseId, entryId & BASE_ID_MASK);

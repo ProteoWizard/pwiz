@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -300,6 +300,48 @@ namespace pwiz.Osprey.Test
             TestCoAssignmentReportsInheritedQDivergence();
             TestCoAssignmentDecoysUseTheirOwnStratumBoundary();
             TestCoAssignmentRunScopeGrowsGeometrically();
+            TestCoAssignmentRunScopeForgetsThePreviousFile();
+        }
+
+        // Two properties the flat-array run scope rests on, neither of which any other test can
+        // see (issue #4657). Both are about the SEAL, which is where the per-file state ends:
+        //
+        //   1. The seal must forget the file it sealed. File 1 here accepts a target scoring 9.0
+        //      and file 2 accepts one scoring 2.0; if file 1's best survived, file 2's boundary
+        //      would stay at 9.0 and its decoy at 3.0 would stop being admitted. The old container
+        //      was replaced wholesale at each seal, so this could not fail; the arrays are reset in
+        //      place, and a reset that is skipped or scoped wrongly is invisible in the output -
+        //      the panel is complete and plausible, just drawn against another file's boundary.
+        //
+        //   2. "Not seen this file" must be NaN, not 0.0. Scores here are NEGATIVE, which is the
+        //      operating regime the class documents for pass 2 (boundaries near -2.33, 93.2% of
+        //      aggregates negative). Under a zero-filled scope every untouched slot reads 0.0,
+        //      which is above a negative boundary and has no target to lose to, so EVERY id in the
+        //      capacity is admitted as a decoy - the unbounded per-file set this rewrite exists to
+        //      remove. With NaN the two decoys that really cleared the bar are the only ones.
+        private static void TestCoAssignmentRunScopeForgetsThePreviousFile()
+        {
+            var builder = new ModelDiagnosticsData.CoAssignmentPassBuilder(
+                new[] { @"file1", @"file2" }, 1, false);
+            builder.ReserveRunScope(64);
+
+            // File 1: one accepted target at -1.0 sets the boundary; the decoy at -0.5 clears it.
+            builder.ObserveCutoff(0, EntrapmentClass.Target, 1, -1.0, -1.0, 0.001, 0.001, 0.01);
+            builder.ObserveCutoff(0, EntrapmentClass.Decoy, 1 | DECOY_BIT, -0.5, -0.5, 1.0, 1.0, 0.01);
+            builder.SealRunCutoff(0);
+
+            // File 2: a WORSE accepted target, so its boundary is lower and admits a decoy that
+            // file 1's boundary would have excluded. Entry 1 is not observed at all here - if the
+            // seal above left its -1.0 behind, this file's minimum is -1.0 and decoy 3 is out.
+            builder.ObserveCutoff(1, EntrapmentClass.Target, 2, -3.0, -3.0, 0.001, 0.001, 0.01);
+            builder.ObserveCutoff(1, EntrapmentClass.Decoy, 3 | DECOY_BIT, -2.0, -2.0, 1.0, 1.0, 0.01);
+            builder.SealRunCutoff(1);
+
+            Assert.AreEqual(-1.0, builder.RunCutoff(0), 1e-12, @"file 1 boundary");
+            Assert.AreEqual(-3.0, builder.RunCutoff(1), 1e-12, @"file 2 boundary: file 1's bests must not survive the seal");
+            Assert.AreEqual(1, builder.AdmittedRunDecoyCount(0), @"file 1 admits its own decoy and nothing else");
+            Assert.AreEqual(1, builder.AdmittedRunDecoyCount(1),
+                @"file 2 admits only the decoy that cleared ITS boundary - a zero-filled scope admits the whole capacity");
         }
 
         // The builder's per-file working set is three flat arrays indexed by base id (issue
@@ -326,11 +368,15 @@ namespace pwiz.Osprey.Test
             for (uint id = 0; id < n; id++)
                 unreserved.ObserveCutoff(0, EntrapmentClass.Target, id, 1.0, 1.0, 0.001, 0.001, 0.01);
             unreserved.SealRunCutoff(0);
-            int maxGrowths = (int)System.Math.Ceiling(System.Math.Log(n, 2)) + 1;
-            Assert.IsTrue(unreserved.RunScopeGrowths <= maxGrowths,
-                string.Format(@"ascending ids grew the run scope {0} times; geometric growth allows at most {1}",
-                    unreserved.RunScopeGrowths, maxGrowths));
-            Assert.IsTrue(unreserved.RunScopeCapacity >= n && unreserved.RunScopeCapacity < 2 * n,
+            // A generous ceiling on purpose. What this has to separate is O(log n) from O(n):
+            // the per-id growth it pins against took 100,000 steps, and any geometric factor down
+            // to 1.1 stays under 128. A tight bound would pin the factor at exactly 2, which is an
+            // implementation detail. The capacity assertion cannot stand in for this one - exact
+            // -fit growth also ends at capacity == n.
+            Assert.IsTrue(unreserved.RunScopeGrowths <= 128,
+                string.Format(@"ascending ids grew the run scope {0} times; geometric growth needs O(log n)",
+                    unreserved.RunScopeGrowths));
+            Assert.IsTrue(unreserved.RunScopeCapacity >= n,
                 string.Format(@"capacity {0} after {1} ascending ids", unreserved.RunScopeCapacity, n));
         }
 

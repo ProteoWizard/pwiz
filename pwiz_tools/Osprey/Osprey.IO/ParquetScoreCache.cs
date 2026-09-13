@@ -1103,7 +1103,8 @@ namespace pwiz.Osprey.IO
         ///
         /// <para>Deliberately a full column read rather than a footer probe: the whole point is
         /// the ORDER, which no metadata carries. One <c>uint</c> per row - 4.7 MB on the largest
-        /// Astral file - and nothing else is decoded.</para>
+        /// Astral file (1.18 M rows; the CHS cohort's largest is 4.18 M rows, i.e. ~17 MB of entry
+        /// ids and ~33 MB of apex RTs) - and nothing else is decoded.</para>
         /// </summary>
         public static IEnumerable<uint> StreamEntryIds(string path)
         {
@@ -1153,9 +1154,14 @@ namespace pwiz.Osprey.IO
         /// they are grown (to the file's row count, never in doubling steps) only when a file is
         /// larger than any before it, so a 446-file cohort allocates them a handful of times
         /// rather than once per file. That per-file allocation - ~50 MB of large-object arrays
-        /// x 446 in nine minutes - was most of the co-assignment panel's committed-memory
-        /// excursion (issue #4657); the panel's live set was never the problem. <paramref
-        /// name="count"/> is the number of rows filled; the arrays may be longer.</para>
+        /// x 446 in nine minutes - was about half of the co-assignment panel's committed-memory
+        /// excursion (issue #4657); the panel's live set was never the problem. The other half is
+        /// still here and is not the caller's to fix: Parquet.Net hands back a fresh array per
+        /// column per row group (<see cref="MAX_ROWS_PER_ROW_GROUP"/> rows each), so a 4.2 M-row
+        /// file allocates ~50 MB of large-object arrays inside the read whatever the caller does.
+        /// Removing that means handing the caller one row group at a time, the shape
+        /// <see cref="ReadFdrStubScalars"/> already uses. <paramref name="count"/> is the number of
+        /// rows filled; the arrays are longer, so nothing may read their Length as a row count.</para>
         ///
         /// <para>Returns false when the file carries no <c>apex_rt</c> column, leaving
         /// <paramref name="count"/> 0 - the panel then degrades with a log line rather than
@@ -1172,10 +1178,15 @@ namespace pwiz.Osprey.IO
                 if (!fieldsByName.ContainsKey(FIELD_APEX_RT.Name))
                     return false;
                 int total = checked((int)(reader.Metadata?.NumRows ?? 0L));
+                // Geometric, for the reason the co-assignment builder's run scope is: a cohort
+                // whose files ascend in row count - acquisition order, a gradient series, an HPC
+                // manifest sorted by input size - grows an exact-fit buffer on EVERY file, which
+                // is the per-file large-object allocation this reuse exists to remove. An
+                // over-long array costs nothing here because the row count is returned separately.
                 if (entryIds == null || entryIds.Length < total)
-                    entryIds = new uint[total];
+                    entryIds = new uint[Math.Max(total, 2 * (entryIds?.Length ?? 0))];
                 if (apexRts == null || apexRts.Length < total)
-                    apexRts = new double[total];
+                    apexRts = new double[Math.Max(total, 2 * (apexRts?.Length ?? 0))];
                 int n = 0;
                 for (int g = 0; g < reader.RowGroupCount; g++)
                 {
