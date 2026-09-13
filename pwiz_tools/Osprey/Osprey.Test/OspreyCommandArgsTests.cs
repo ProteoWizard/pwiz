@@ -195,6 +195,40 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(@"run.log", Parse(@"--log-file", @"run.log").LogFilePath);
         }
 
+        /// <summary>
+        /// Every value a user can mistype must arrive at Main's parse sink as one of the three
+        /// types it treats as a usage error, so the operator gets the flag's name and no stack.
+        /// Numeric options used to reach int.Parse directly: `--threads bad` threw
+        /// FormatException, which that filter does not name, so a typo was reported as an
+        /// unhandled fatal error - "Input string was not in a correct format." over a stack
+        /// through the parser. The assertions below are the contract Program.Main's
+        /// `when (ex is ArgumentException || ex is FileNotFoundException || ex is InvalidDataException)`
+        /// filter reads; adding a numeric option without ParseInt / ParseDouble breaks it.
+        /// </summary>
+        [TestMethod]
+        public void TestBadOptionValuesAreUsageErrors()
+        {
+            foreach (var badValue in new[] { @"bad", @"1.5", @"99999999999999999999", string.Empty })
+            {
+                var threads = Assert.ThrowsException<ArgumentException>(
+                    () => Parse(@"--threads", badValue),
+                    string.Format(@"--threads {0}", badValue));
+                StringAssert.Contains(threads.Message, @"--threads");
+            }
+
+            // --parallel-files cannot reach that path with a bad value and must not: its value is
+            // OPTIONAL, so the lookahead consumes only a digits-only token that fits an int and
+            // otherwise leaves the token alone (auto mode). Its ParseInt is the belt to that
+            // lookahead's braces, which is why only --threads is swept above.
+            Assert.AreEqual(FileParallelismMode.Auto, Parse(@"--parallel-files", @"bad", @"-i", @"a.mzML").FileParallelism.Mode);
+
+            // The good values still parse, including the two --parallel-files spellings.
+            Assert.AreEqual(8, Parse(@"--threads", @"8").NThreads);
+            Assert.AreEqual(FileParallelismMode.Sequential, Parse(@"--parallel-files", @"0").FileParallelism.Mode);
+            Assert.AreEqual(FileParallelismMode.Auto, Parse(@"--parallel-files").FileParallelism.Mode);
+            Assert.AreEqual(4, Parse(@"--parallel-files", @"4").FileParallelism.Count);
+        }
+
         [TestMethod]
         public void TestVariadicInputAccumulates()
         {

@@ -125,13 +125,22 @@ namespace pwiz.Osprey
                 {
                     config = ParseArgs(args);
                 }
-                catch (Exception ex) when (ex is ArgumentException || ex is IOException || ex is InvalidDataException)
+                catch (Exception ex) when (ex is ArgumentException || ex is FileNotFoundException || ex is InvalidDataException)
                 {
                     // A usage error, not a failure: the parser threw it to name the argument,
                     // so the message IS the diagnosis, and a type name plus a stack through
                     // the parser would only bury it. Reported the way the ValidateArgs errors
                     // below are. Anything else the parser throws is a defect and falls through
                     // to the sink at the bottom of Main with its frames intact.
+                    //
+                    // These three are what the parser raises ON PURPOSE, and the list is
+                    // deliberately narrower than it reads: FileNotFoundException, not
+                    // IOException, because --input-list throws the former for the missing-file
+                    // case a user can fix, while File.ReadAllLines can throw a sharing or
+                    // device IOException that is NOT a usage error and needs its type, inner
+                    // exception and stack. Numeric values reach ParseInt / ParseDouble, which
+                    // convert FormatException into an ArgumentException naming the flag, so
+                    // no parse failure needs an entry of its own here.
                     LogError(ex.Message);
                     return 1;
                 }
