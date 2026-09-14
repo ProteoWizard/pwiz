@@ -493,18 +493,37 @@ namespace TestRunnerLib
                     for (int i = 0; i < heapCounts.Length; i++)
                     {
                         var heapCount = heapCounts[i];
-                        allSizes.AddRange(heapCount.CommittedSizes.Take(sizeOutputs).Select(p =>
-                            new Tuple<int, long, int>(i, p.Key, p.Value)));
-                        allStrings.AddRange(heapCount.StringCounts.Take(stringOutputs).Select(p =>
-                            new Tuple<int, string, int>(i, p.Key, p.Value)));
+                        // CommittedSizes and StringCounts are filled in by a HeapWalk, which
+                        // GetProcessHeapSizes() does not perform on net8 - HeapLock/HeapWalk fault
+                        // with a non-catchable AccessViolation on a Windows Segment Heap - so both
+                        // stay null there and only the Committed/Reserved totals are available.
+                        if (heapCount.CommittedSizes != null)
+                        {
+                            allSizes.AddRange(heapCount.CommittedSizes.Take(sizeOutputs).Select(p =>
+                                new Tuple<int, long, int>(i, p.Key, p.Value)));
+                        }
+                        if (heapCount.StringCounts != null)
+                        {
+                            allStrings.AddRange(heapCount.StringCounts.Take(stringOutputs).Select(p =>
+                                new Tuple<int, string, int>(i, p.Key, p.Value)));
+                        }
                     }
 
-                    var sizeText = allSizes.OrderByDescending(s => s.Item3).Take(sizeOutputs)
-                        .Select(s => string.Format("{0}:{1}:{2}", s.Item1, s.Item2, s.Item3));
-                    Log("# HEAP SIZES (top {0}) - {1}\r\n", sizeOutputs, string.Join(", ", sizeText));
-                    var stringText = allStrings.OrderByDescending(s => s.Item3).Take(stringOutputs)
-                        .Select(s => string.Format("{0}:\"{1}\":{2}", s.Item1, s.Item2, s.Item3));
-                    Log("# HEAP STRINGS (top {0}) - {1}\r\n", stringOutputs, string.Join(", ", stringText));
+                    if (allSizes.Count == 0 && allStrings.Count == 0)
+                    {
+                        // Say so rather than logging two empty lists. Silence here previously
+                        // arrived as an ArgumentNullException that killed the whole run.
+                        Log("# HEAP DETAIL unavailable - per-block heap walking is net472-only\r\n");
+                    }
+                    else
+                    {
+                        var sizeText = allSizes.OrderByDescending(s => s.Item3).Take(sizeOutputs)
+                            .Select(s => string.Format("{0}:{1}:{2}", s.Item1, s.Item2, s.Item3));
+                        Log("# HEAP SIZES (top {0}) - {1}\r\n", sizeOutputs, string.Join(", ", sizeText));
+                        var stringText = allStrings.OrderByDescending(s => s.Item3).Take(stringOutputs)
+                            .Select(s => string.Format("{0}:\"{1}\":{2}", s.Item1, s.Item2, s.Item3));
+                        Log("# HEAP STRINGS (top {0}) - {1}\r\n", stringOutputs, string.Join(", ", stringText));
+                    }
                 }
 
                 TeamCityFinishTest(test, pass);

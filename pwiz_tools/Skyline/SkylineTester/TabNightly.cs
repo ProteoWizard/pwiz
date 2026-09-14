@@ -373,8 +373,10 @@ namespace SkylineTester
             // --reuse-checkout writes updateBuild into the .skytr so an existing tree is synced with
             // "git pull" instead of deleted and re-cloned. Defaults are unchanged - nukeBuild is the
             // designer default, and a .skytr that says nothing still nukes.
+            // withTutorialPerf: a nightly selects its tests at run time, so TestTutorial and
+            // TestPerf have to be staged even though build.bat leaves them out by default.
             if (!TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList,
-                    MainWindow.NukeBuild.Checked, MainWindow.UpdateBuild.Checked, false))
+                    MainWindow.NukeBuild.Checked, MainWindow.UpdateBuild.Checked, false, true))
                 MainWindow.CommandShell.Add("# Nightly cancelled.");
             else
             {
