@@ -101,11 +101,61 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public readonly double Pep;
 
+        /// <summary>
+        /// The best-of-runs FLOOR for this entry - the min-over-runs combined run q
+        /// (<c>max(runPrecursorQ, runPeptideQ)</c>) for this <see cref="EntryId"/> - or
+        /// <see cref="double.NaN"/> when the file predates format v3 and the floor is unknown.
+        ///
+        /// <para>Stored because the pipeline OVERRIDES the q-values above it and the override was
+        /// never written down. Experiment-scope FDR competes each precursor's single best
+        /// observation against a thinner de-duplicated decoy null, so the raw experiment q can
+        /// fall below every per-run q - a peptide reported with no run-level ID line. The clamp
+        /// floors it back up (<c>docs/07-fdr-control.md</c> 3j), and it has to be RE-applied after
+        /// Stage 6 because reconciliation resets the run q of moved and gap-filled peaks
+        /// (issue #4390). That re-clamp updates the entries that feed the .blib; it does not
+        /// update the accumulator behind this sidecar, so what was persisted here was the
+        /// PRE-clamp value - a number the pipeline itself considers wrong, with the corrected one
+        /// living only inside the .blib. Measured on the 446-run CHS cohort: 1,125,526 values
+        /// raised, 0.19% of rows, uniformly (issue #4522 validation).</para>
+        ///
+        /// <para>The floor rather than the floored value, and the raw q kept beside it, so BOTH
+        /// numbers are on disk: a consumer takes <c>max(raw, floor)</c> to get what the user was
+        /// shown, an analyst can still see the un-floored competition result, and the invariant
+        /// <c>floored &gt;= raw</c> becomes checkable instead of needing a re-derivation.</para>
+        ///
+        /// <para>NaN is "unknown", never "no floor". A 0.0 default would read as a floor that
+        /// raises nothing, silently leaving experiment q more confident than its own best run -
+        /// exactly the state this field exists to record.</para>
+        /// </summary>
+        public readonly double MinRunQByEntry;
+
+        /// <summary>
+        /// The same floor keyed by this entry's <c>(ModifiedSequence, IsDecoy)</c> rather than by
+        /// entry id, or <see cref="double.NaN"/> when unknown. Both are needed because the two
+        /// q-values floor against differently-keyed minima - precursor q by entry id, peptide q
+        /// by the target/decoy-specific peptide identity - and neither can be derived from the
+        /// other. Denormalized onto this record because every entry id has exactly one peptide
+        /// identity, so the per-entry row can carry it without a second file.
+        /// </summary>
+        public readonly double MinRunQByPeptide;
+
         public FdrExperimentRecord(
             uint entryId,
             double experimentPrecursorQvalue, double experimentPeptideQvalue,
             double experimentProteinQvalue, double experimentAggregateScore,
             double pep)
+            : this(entryId, experimentPrecursorQvalue, experimentPeptideQvalue,
+                   experimentProteinQvalue, experimentAggregateScore, pep,
+                   double.NaN, double.NaN)
+        {
+        }
+
+        public FdrExperimentRecord(
+            uint entryId,
+            double experimentPrecursorQvalue, double experimentPeptideQvalue,
+            double experimentProteinQvalue, double experimentAggregateScore,
+            double pep,
+            double minRunQByEntry, double minRunQByPeptide)
         {
             EntryId = entryId;
             ExperimentPrecursorQvalue = experimentPrecursorQvalue;
@@ -113,6 +163,31 @@ namespace pwiz.Osprey.IO
             ExperimentProteinQvalue = experimentProteinQvalue;
             ExperimentAggregateScore = experimentAggregateScore;
             Pep = pep;
+            MinRunQByEntry = minRunQByEntry;
+            MinRunQByPeptide = minRunQByPeptide;
         }
+
+        /// <summary>
+        /// This entry's experiment precursor q as the user sees it: the persisted competition
+        /// result floored to its own best run. Returns the raw value unchanged when the floor is
+        /// unknown (a pre-v3 file), which is what the caller would have had anyway.
+        /// </summary>
+        public double FlooredPrecursorQvalue =>
+            double.IsNaN(MinRunQByEntry) || MinRunQByEntry <= ExperimentPrecursorQvalue
+                ? ExperimentPrecursorQvalue
+                : MinRunQByEntry;
+
+        /// <summary>Peptide-scope counterpart of <see cref="FlooredPrecursorQvalue"/>.</summary>
+        public double FlooredPeptideQvalue =>
+            double.IsNaN(MinRunQByPeptide) || MinRunQByPeptide <= ExperimentPeptideQvalue
+                ? ExperimentPeptideQvalue
+                : MinRunQByPeptide;
+
+        /// <summary>
+        /// Whether this record carries the best-of-runs floors at all. False for a pre-v3 file,
+        /// where a consumer that needs the floored value must re-derive it the expensive way -
+        /// folding every run - rather than assume the persisted q is final.
+        /// </summary>
+        public bool HasRunQFloors => !double.IsNaN(MinRunQByEntry);
     }
 }
