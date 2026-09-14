@@ -104,6 +104,31 @@ namespace pwiz.Osprey.Tasks
             return !c.NoJoin && !c.ExpectReconciledInput;
         }
 
+        /// <summary>
+        /// True when a FirstPassFDR in this configuration would produce nothing but the pass-1
+        /// diagnostics product, folded from a first pass that is already complete on disk.
+        ///
+        /// <para>Asked by <see cref="PerFileScoringTask"/> BEFORE it chooses how to hydrate
+        /// <c>ScoredEntries</c>. That choice used to turn on membership alone - "FirstPassFDR is
+        /// in this pipeline, so it will train Percolator" - which is false in exactly this case:
+        /// the task is present and trains nothing, because the only output it owes is a report it
+        /// folds one run at a time. Under <c>--task FirstPassFDR --model-diagnostics</c> that
+        /// bought the RESIDENT pre-compaction pool - 109 GB at file 165 of a 446-run cohort -
+        /// before <see cref="Run"/> reached the arm that would have said no analysis was owed.</para>
+        ///
+        /// <para><see cref="Run"/>'s arm asks through this same method, so the hydrate decision
+        /// and the fold decision cannot drift apart. A bare instance can answer for the one the
+        /// pipeline holds because every term is derived from <paramref name="ctx"/> and its
+        /// config; the task carries no state until <see cref="Run"/> is under way.</para>
+        /// </summary>
+        internal static bool WillOnlyFoldDiagnostics(PipelineContext ctx)
+        {
+            // Short-circuits before any file probe on the overwhelmingly common path, where the
+            // flag is off and no diagnostics product is owed at all.
+            return ctx.Config.ModelDiagnostics &&
+                   new FirstPassFdrTask().OnlyDiagnosticsProductOutstanding(ctx);
+        }
+
         // Stage 5/6 planning byproducts this task publishes. The same four types
         // are published from Run (Stage-5 computed values) and from the
         // bundle-adopt Rehydrate path -- publishing into one typed slot from
@@ -486,7 +511,7 @@ namespace pwiz.Osprey.Tasks
             // and SILENT: a FirstPassFDR that genuinely re-ran would clear the stamps of outputs
             // that are already correct and spend 4h46m on a 446-run cohort to produce a report -
             // and it would produce the RIGHT report, so no gate would ever report the cost.
-            if (config.ModelDiagnostics && OnlyDiagnosticsProductOutstanding(ctx))
+            if (WillOnlyFoldDiagnostics(ctx))
             {
                 ctx.LogInfo(@"FirstPassFDR: every output but the model-diagnostics product is " +
                             @"current; folding the report from the completed first pass.");

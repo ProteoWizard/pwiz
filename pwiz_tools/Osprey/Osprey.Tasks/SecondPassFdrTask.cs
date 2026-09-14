@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -317,6 +317,25 @@ namespace pwiz.Osprey.Tasks
             // line below distinguishes them.
             if (ctx.Config.ModelDiagnostics && OnlyDiagnosticsProductOutstanding(ctx))
             {
+                // The pass-2 page is an ENRICHMENT of the pass-1 page: it appends to that graph
+                // and has nothing to append to without it. Everywhere else that absence is a
+                // deliberate degrade - ReadPass1ForEnrichment logs it and lets pass 1's page
+                // stand, because a run merely carrying --model-diagnostics should not die for a
+                // view it did not ask for. Here it is the whole request. Degrading meant logging
+                // "folding the pass-2 report", returning true and exiting 0 having written
+                // nothing, which an operator cannot tell from success - so this refuses instead,
+                // and names the command that produces the missing half.
+                string pass1Path = ModelDiagnosticsReport.Pass1SidecarPath(ctx.Config);
+                if (!File.Exists(pass1Path))
+                {
+                    throw new InvalidOperationException(string.Format(
+                        @"--task SecondPassFDR --model-diagnostics: the pass-2 report is an " +
+                        @"enrichment of the pass-1 report, and {0} is absent, so there is no " +
+                        @"page to enrich. Produce the pass-1 report first - `--task " +
+                        @"FirstPassFDR --model-diagnostics`, or the whole pipeline with " +
+                        @"--model-diagnostics - then re-run this task.",
+                        pass1Path));
+                }
                 ctx.LogInfo(@"SecondPassFDR: every output but the model-diagnostics product is " +
                             @"current; folding the pass-2 report from the completed second pass.");
                 return FoldPass2DiagnosticsOnly(ctx);

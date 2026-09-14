@@ -3470,13 +3470,237 @@ foreach ($name in $selected) {
                         "report: {0}" -f $c))
                 }
             }
+
+            # ---- the same fold, asked for the four OTHER ways --------------------------
+            # Everything above asserts ONE entry point: `--task ModelDiagnostics`. It is the
+            # only one any leg has ever asserted, and an operator reaches the same intent by
+            # four others against this exact state - every analysis artifact current, the
+            # diagnostics products the only thing outstanding. They share this leg's setup,
+            # so each costs a few seconds on top of it:
+            #
+            #   cell C  the whole pipeline, --model-diagnostics, both products PRESENT - a
+            #           no-op; every task including SecondPassFDR must find nothing to do
+            #   cell D  the same command with both products ABSENT - this leg's fold reached
+            #           the ordinary way, with the PerFile tasks interrogated and skipped on
+            #           the way past, which is what --task ModelDiagnostics never exercises
+            #   cell A  --task FirstPassFDR  --model-diagnostics - the pass-1 fold alone
+            #   cell B  --task SecondPassFDR --model-diagnostics - the pass-2 fold alone
+            #
+            # Measured on the 446-run CHS cohort, 2026-09-13, and two did not hold. Cell A
+            # re-ran the entire first pass including Percolator training, which forces the
+            # RESIDENT pre-compaction pool - 109 GB at file 165 of 446 - because Run
+            # materializes that pool before it can ask whether it owes any analysis at all.
+            # Cell C re-entered SecondPassFDR and reloaded the scored pool with every product
+            # already on disk and current, while the three tasks ahead of it reported hits.
+            #
+            # Asserted from the LOG, like everything else in this leg: a re-analysis produces
+            # the RIGHT artifact, so no comparison of bytes can separate it from a fold.
+
+            # The products AND their validity stamps, dropped before each cell that wants them
+            # absent. The stamp is what a later run reads to decide the product is current, so
+            # leaving one behind describes a state no interruption produces. Dropping per cell
+            # rather than once keeps a red cell from cascading into a later failure that means
+            # something else.
+            $m11Drop = {
+                foreach ($p in @($m11Pass1, $m11Pass2)) {
+                    foreach ($f in @(Get-ChildItem ($p + '*') -ErrorAction SilentlyContinue)) {
+                        Remove-Item $f.FullName -Force
+                    }
+                }
+            }
+
+            # Everything the fold above produced, validity stamps included, so whatever the
+            # cells leave behind can be put back exactly. $m11Ref holds only the JSON, and a
+            # product restored without its stamp is not the state the legs after this expect.
+            $m11CellsRef = Join-Path (Join-Path $runRoot $name) 'mode11-cells-reference'
+            if (Test-Path $m11CellsRef) { Remove-Item $m11CellsRef -Recurse -Force }
+            New-Item -ItemType Directory -Path $m11CellsRef -Force | Out-Null
+            foreach ($p in @($m11Pass1, $m11Pass2)) {
+                foreach ($f in @(Get-ChildItem ($p + '*') -ErrorAction SilentlyContinue)) {
+                    Copy-Item $f.FullName $m11CellsRef -Force
+                }
+            }
+
+            # The precise symptoms measured at 446 files. The first group is the O(files)
+            # resident pre-compaction pool the first pass materializes before it can ask
+            # whether it owes any analysis; the second is the scored-entry pool the second
+            # pass loads. Substrings, so surrounding prose can change without breaking this.
+            # NOT 'Loading N per-file score parquet(s)': cell B emits that line and follows it
+            # with "no all-runs pre-load", so it appears on the bounded per-run route as well.
+            # The line that names the O(files) pool is the warning that announces it.
+            $m11NoFirstPass = @(
+                'requires the RESIDENT pre-compaction first-pass pool',
+                'Re-scoring file ')
+            $m11NoSecondPass = @(
+                'Loading scored entries',
+                '[STAGE-WALL] second-pass-fdr',
+                'Running protein-level FDR')
+            # O(files x entries), and the reason this set is not just about analysis: after the
+            # resident pre-compaction pool was removed from the fold-only leg, cell A still built
+            # THIS - a whole-cohort structure to render a page that reads none of it. Mode 11's
+            # own leg asserts it through Test-NoAllRunsBundle; the cells assert it here.
+            $m11NoBundle = @('ALL-RUNS reconciliation bundle')
+            $m11NoAnalysis = $m11NoFirstPass + $m11NoSecondPass + $m11NoBundle
+            $m11Fold1 = 'folding the report from the completed first pass'
+            $m11Fold2 = 'folding the pass-2 report from the completed second pass'
+
+            # One shape for all four cells. LIVENESS FIRST, for Test-NoAllRunsBundle's reason:
+            # a negative assertion passes on a log that says nothing at all, so the absence of
+            # a marker is evidence only once the log is known to describe a real run. The
+            # anchor is the startup banner every invocation emits after parsing its arguments
+            # and BEFORE it chooses any route.
+            $m11CellCheck = {
+                param($Label, $LogPath, $ExitCode, $Required, $Forbidden, $ExpectExitCode)
+                $out = [System.Collections.Generic.List[string]]::new()
+                if (-not (Test-Path -LiteralPath $LogPath)) {
+                    $out.Add("${Label}: run log not found: $LogPath")
+                    return $out
+                }
+                $text = @(Get-Content -LiteralPath $LogPath)
+                if (@($text | Where-Object { $_.Contains('Threads:') }).Count -eq 0) {
+                    $out.Add((("{0}: the log carries no startup banner, so neither what it says " +
+                        "nor what it omits is evidence") -f $Label))
+                    return $out
+                }
+                if ($null -eq $ExpectExitCode) { $ExpectExitCode = 0 }
+                if ($ExitCode -ne $ExpectExitCode) {
+                    $out.Add((("{0}: Osprey exited {1}, expected {2} - a fold that can run must " +
+                        "produce its product, and one that cannot must refuse; neither may be " +
+                        "reported as the other") -f $Label, $ExitCode, $ExpectExitCode))
+                }
+                foreach ($m in $Required) {
+                    if (@($text | Where-Object { $_.Contains($m) }).Count -eq 0) {
+                        $out.Add((("{0}: no '{1}' marker in the log - the report was produced by " +
+                            "re-running the analysis, which yields the RIGHT artifact and is " +
+                            "exactly what this leg exists to catch") -f $Label, $m))
+                    }
+                }
+                foreach ($m in $Forbidden) {
+                    if (@($text | Where-Object { $_.Contains($m) }).Count -gt 0) {
+                        $out.Add((("{0}: '{1}' appears in the log - asking for the report re-ran " +
+                            "the analysis") -f $Label, $m))
+                    }
+                }
+                return $out
+            }
+
+            # ---- cell C: the whole pipeline, both products PRESENT --------------------
+            # Runs first: the fold above has just written both products, so this cell's
+            # precondition is the state this leg is already in. Mode 4 asserts the same no-op
+            # from the post-straight-through state and is green, so a red here is specifically
+            # about re-entering a run whose diagnostics products were produced by a FOLD.
+            $m11LC = 'cell C (whole pipeline, products present)'
+            $rC = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                -Resolution $cfg.Resolution -WorkDir $straightDir -LogName 'paylater-c.log' `
+                -Spec $cfg -Manifest $inputs.Manifest -FdrBench:([bool]$cfg.FdrBench) `
+                -AllowNonZeroExit
+            Write-Host ("  {0} wall {1:N1}s" -f $m11LC, $rC.Wall.TotalSeconds)
+            @(& $m11CellCheck $m11LC $rC.Log $rC.ExitCode @() $m11NoAnalysis) |
+                ForEach-Object { $m11Issues.Add($_) }
+            $m11TasksC = Test-TaskCacheHits -LogPath $rC.Log -ExpectSkipped $pipelineTaskNames `
+                -NoColdScoring -NoColdRescoring
+            $m11TasksC.Issues | ForEach-Object { $m11Issues.Add("${m11LC}: $_") }
+
+            # ---- cell D: the whole pipeline, both products ABSENT ---------------------
+            $m11LD = 'cell D (whole pipeline, products absent)'
+            & $m11Drop
+            $rD = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                -Resolution $cfg.Resolution -WorkDir $straightDir -LogName 'paylater-d.log' `
+                -Spec $cfg -Manifest $inputs.Manifest -FdrBench:([bool]$cfg.FdrBench) `
+                -AllowNonZeroExit
+            Write-Host ("  {0} wall {1:N1}s" -f $m11LD, $rD.Wall.TotalSeconds)
+            @(& $m11CellCheck $m11LD $rD.Log $rD.ExitCode @($m11Fold1, $m11Fold2) $m11NoAnalysis) |
+                ForEach-Object { $m11Issues.Add($_) }
+            $m11TasksD = Test-TaskCacheHits -LogPath $rD.Log `
+                -ExpectSkipped @('PerFileScoring', 'PerFileRescoring') `
+                -NoColdScoring -NoColdRescoring
+            $m11TasksD.Issues | ForEach-Object { $m11Issues.Add("${m11LD}: $_") }
+            foreach ($p in @($m11Pass1, $m11Pass2)) {
+                if (-not (Test-Path $p)) {
+                    $m11Issues.Add(("{0}: {1} was not produced - the entry point folded nothing" -f
+                        $m11LD, (Split-Path -Leaf $p)))
+                }
+            }
+
+            # ---- cell A: --task FirstPassFDR --model-diagnostics ----------------------
+            $m11LA = 'cell A (--task FirstPassFDR, products absent)'
+            & $m11Drop
+            $rA = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                -Resolution $cfg.Resolution -WorkDir $straightDir -LogName 'paylater-a.log' `
+                -Spec $cfg -Manifest $inputs.Manifest -TaskName 'FirstPassFDR' `
+                -FdrBench:([bool]$cfg.FdrBench) -AllowNonZeroExit
+            Write-Host ("  {0} wall {1:N1}s" -f $m11LA, $rA.Wall.TotalSeconds)
+            @(& $m11CellCheck $m11LA $rA.Log $rA.ExitCode @($m11Fold1) $m11NoAnalysis) |
+                ForEach-Object { $m11Issues.Add($_) }
+            if (-not (Test-Path $m11Pass1)) {
+                $m11Issues.Add((("{0}: the pass-1 product was not produced - the entry point " +
+                    "folded nothing") -f $m11LA))
+            }
+
+            # ---- cell B: --task SecondPassFDR, BOTH products absent -------------------
+            # The pass-2 page is an ENRICHMENT of the pass-1 page, so from this state there is
+            # nothing to enrich and the only correct answer is a refusal. What must not happen is
+            # what this cell caught on 2026-09-13: "folding the pass-2 report from the completed
+            # second pass", SecondPassFDR:done, exit 0, and no product - success reported for
+            # nothing, which an operator cannot tell from the real thing.
+            $m11LB = 'cell B (--task SecondPassFDR, both products absent)'
+            & $m11Drop
+            $rB = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                -Resolution $cfg.Resolution -WorkDir $straightDir -LogName 'paylater-b.log' `
+                -Spec $cfg -Manifest $inputs.Manifest -TaskName 'SecondPassFDR' `
+                -FdrBench:([bool]$cfg.FdrBench) -AllowNonZeroExit
+            Write-Host ("  {0} wall {1:N1}s" -f $m11LB, $rB.Wall.TotalSeconds)
+            @(& $m11CellCheck $m11LB $rB.Log $rB.ExitCode @() $m11NoAnalysis 1) |
+                ForEach-Object { $m11Issues.Add($_) }
+            # A refusal that does not say WHICH half is missing sends the operator to the logs of
+            # a run that did nothing, so the message is part of the contract, not decoration.
+            if (@(Select-String -Path $rB.Log -Pattern 'enrichment of the pass-1 report' `
+                    -SimpleMatch -ErrorAction SilentlyContinue).Count -eq 0) {
+                $m11Issues.Add((("{0}: the refusal does not name the pass-1 report as the missing " +
+                    "half, so it does not tell the operator what to run") -f $m11LB))
+            }
+            if (Test-Path $m11Pass2) {
+                $m11Issues.Add((("{0}: a pass-2 product exists after a run that refused to " +
+                    "produce one") -f $m11LB))
+            }
+
+            # ---- cell B2: --task SecondPassFDR, ONLY the pass-2 product absent --------
+            # The state cell B's refusal tells the operator to reach, so the refusal is only
+            # sound if this one works. Withholds pass 2 alone, leaving pass 1 to enrich.
+            $m11LB2 = 'cell B2 (--task SecondPassFDR, pass-2 product absent)'
+            & $m11Drop
+            foreach ($f in @(Get-ChildItem -LiteralPath $m11CellsRef -File |
+                    Where-Object { $_.Name -like '*1st-pass*' })) {
+                Copy-Item $f.FullName (Join-Path $straightDir $f.Name) -Force
+            }
+            $rB2 = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                -Resolution $cfg.Resolution -WorkDir $straightDir -LogName 'paylater-b2.log' `
+                -Spec $cfg -Manifest $inputs.Manifest -TaskName 'SecondPassFDR' `
+                -FdrBench:([bool]$cfg.FdrBench) -AllowNonZeroExit
+            Write-Host ("  {0} wall {1:N1}s" -f $m11LB2, $rB2.Wall.TotalSeconds)
+            @(& $m11CellCheck $m11LB2 $rB2.Log $rB2.ExitCode @($m11Fold2) `
+                ($m11NoSecondPass + $m11NoBundle) 0) | ForEach-Object { $m11Issues.Add($_) }
+            if (-not (Test-Path $m11Pass2)) {
+                $m11Issues.Add((("{0}: the pass-2 product was not produced - the entry point " +
+                    "folded nothing") -f $m11LB2))
+            }
+
+            # Restored to exactly what the fold above produced, stamps included, whatever the
+            # cells left behind. Mode 8 follows and needs a cohort that is complete, and a
+            # product a red cell failed to produce must not read as this run's output.
+            & $m11Drop
+            foreach ($f in @(Get-ChildItem -LiteralPath $m11CellsRef -File)) {
+                Copy-Item $f.FullName (Join-Path $straightDir $f.Name) -Force
+            }
+            Remove-Item $m11CellsRef -Recurse -Force -ErrorAction SilentlyContinue
         }
         Remove-Item $m11Ref -Recurse -Force -ErrorAction SilentlyContinue
 
         if ($m11Issues.Count -eq 0) {
-            $summaryLines.Add(("$name mode11 (pay-later diagnostics: folded, no analysis, same " +
-                "report): PASS (pass-2 byte-exact; pass-1 exact except the views no pay-later " +
-                "path can rebuild today: {0})") -f ($m11Pass1Unavailable -join ', '))
+            $summaryLines.Add(("$name mode11 (pay-later diagnostics: folded, no analysis, " +
+                "same report, from every entry point): PASS (pass-2 byte-exact; pass-1 " +
+                "exact except the views no pay-later path can rebuild today: {0})") -f
+                ($m11Pass1Unavailable -join ', '))
         } else {
             $overallFail = $true
             Write-Problem-Tc "$name mode11 (pay-later diagnostics): FAIL - $($m11Issues.Count) issue(s)"
