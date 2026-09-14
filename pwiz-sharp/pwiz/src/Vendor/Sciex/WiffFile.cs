@@ -15,6 +15,7 @@ namespace Pwiz.Vendor.Sciex;
 /// </summary>
 internal sealed class WiffFile : AbstractWiffFile
 {
+    private readonly ProviderLease _lease;
     private readonly AnalystWiffDataProvider _provider;
     private readonly Sample _sample;
     private readonly MassSpectrometerSample _msSample;
@@ -112,22 +113,23 @@ internal sealed class WiffFile : AbstractWiffFile
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(wiffPath);
         if (!File.Exists(wiffPath)) throw new FileNotFoundException("WIFF not found", wiffPath);
-        // AnalystWiffDataProvider holds native SDK resources that keep the .wiff file
-        // locked. It exposes .Close() (not IDisposable) to release those. Also force
-        // a GC + finalizer pass - the Sciex SDK sometimes enqueues finalizers rather
-        // than closing the file synchronously (see WiffFile.Dispose comments).
+        // Shares the file's provider with any reader already holding it - see ProviderLease.
+        // The provider keeps the .wiff locked and exposes .Close() (not IDisposable) to release
+        // it, which the lease does once the last holder lets go. The GC + finalizer pass stays
+        // here: the Sciex SDK sometimes enqueues finalizers rather than closing the file
+        // synchronously (see WiffFile.Dispose comments).
         // Sample names are passed through EXACTLY as the SDK reports them, commas and all, as
         // cpp does - see the note on the ctor's name resolution below.
-        var provider = new AnalystWiffDataProvider();
+        var lease = ProviderLease.Acquire(wiffPath);
         var names = new List<string>();
         try
         {
-            foreach (var info in provider.GetBasicSampleInfos(wiffPath))
+            foreach (var info in lease.Provider.GetBasicSampleInfos(wiffPath))
                 names.Add(info.SampleName ?? string.Empty);
         }
         finally
         {
-            try { provider.Close(); } catch { /* best-effort */ }
+            lease.Release();
             System.GC.Collect();
             System.GC.WaitForPendingFinalizers();
         }
@@ -143,7 +145,10 @@ internal sealed class WiffFile : AbstractWiffFile
         if (!File.Exists(wiffPath)) throw new FileNotFoundException("WIFF not found", wiffPath);
         WiffPath = wiffPath;
 
-        _provider = new AnalystWiffDataProvider();
+        // Assigned before anything below can throw: a ctor that fails part-way still gets its
+        // finalizer, and Dispose(false) releases the lease from there.
+        _lease = ProviderLease.Acquire(wiffPath);
+        _provider = _lease.Provider;
         SampleCount = _provider.GetNumberOfSamples(wiffPath);
         if (SampleCount == 0) throw new InvalidDataException($"WIFF reports zero samples: {wiffPath}");
         if (sampleIndex0 < 0 || sampleIndex0 >= SampleCount)
@@ -363,7 +368,70 @@ internal sealed class WiffFile : AbstractWiffFile
         }
         try { _msSample.Dispose(); } catch { /* best-effort */ }
         try { _sample.Dispose(); } catch { /* best-effort */ }
-        try { _provider.Close(); } catch { /* best-effort */ }
+        // Closes the provider only once the last reader of this .wiff has let go.
+        try { _lease?.Release(); } catch { /* best-effort */ }
+    }
+
+    /// <summary>
+    /// One <see cref="AnalystWiffDataProvider"/> per .wiff path, shared by every reader of that
+    /// file and closed when the last of them lets go.
+    /// </summary>
+    /// <remarks>
+    /// A provider holds the .wiff open, and the SDK refuses to open a file a second time while
+    /// one already has it - reporting the refusal as "open for writing by another application",
+    /// naming a writer that does not exist. Windows grants that second open so nothing shows
+    /// there; Wine refuses it, which takes out every path reading two samples of one file at
+    /// once, and any caller holding one reader open across a second read of the same file.
+    ///
+    /// pwiz cpp never hits this: its <c>WiffFileImpl</c> is per FILE and switches samples in
+    /// place, so <c>Reader_ABI::read</c> hands one <c>WiffFilePtr</c> to every sample's list
+    /// (Reader_ABI.cpp:241). pwiz-sharp's <see cref="WiffFile"/> is per SAMPLE, so the sharing
+    /// cpp gets from its shape has to be explicit here.
+    /// </remarks>
+    private sealed class ProviderLease
+    {
+        private static readonly Dictionary<string, ProviderLease> s_leases =
+            new(StringComparer.OrdinalIgnoreCase);
+
+        private readonly string _key;
+        private int _refCount;
+
+        public AnalystWiffDataProvider Provider { get; }
+
+        private ProviderLease(string key)
+        {
+            _key = key;
+            Provider = new AnalystWiffDataProvider();
+        }
+
+        public static ProviderLease Acquire(string wiffPath)
+        {
+            // Keyed on the full path so two spellings of one file share a provider rather than
+            // racing for it. Case-insensitive because this SDK is Windows-only.
+            string key = Path.GetFullPath(wiffPath);
+            lock (s_leases)
+            {
+                if (!s_leases.TryGetValue(key, out var lease))
+                {
+                    lease = new ProviderLease(key);
+                    s_leases.Add(key, lease);
+                }
+                lease._refCount++;
+                return lease;
+            }
+        }
+
+        public void Release()
+        {
+            lock (s_leases)
+            {
+                if (--_refCount > 0) return;
+                // Drop it from the table before closing, so a reader arriving next gets a fresh
+                // provider rather than one that is being torn down.
+                s_leases.Remove(_key);
+            }
+            try { Provider.Close(); } catch { /* best-effort */ }
+        }
     }
 }
 
