@@ -3124,7 +3124,8 @@ namespace pwiz.Osprey.Test
 
                 int scanned = 0;
                 ParquetScoreCache.ReadFdrStubScalars(path,
-                    (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) => scanned++);
+                    (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) => scanned++,
+                    StubColumns.Core);
 
                 var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(path);
                 Assert.IsTrue(probe.HasPinFeatures);

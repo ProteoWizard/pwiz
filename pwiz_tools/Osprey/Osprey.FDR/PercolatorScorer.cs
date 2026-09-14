@@ -662,7 +662,7 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         internal static bool RunStreamingFirstPass(
             IReadOnlyList<string> fileNames,
-            Action<string, Action<uint, byte, bool, double, string, double>> streamFileRows,
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             PercolatorConfig percConfig,
             Action<string> logInfo,
@@ -721,7 +721,9 @@ namespace pwiz.Osprey.FDR
             {
                 string file = fileNames[f];
                 buffer.Clear();
-                streamFileRows(file, buffer.Add);
+                // Core only: this pass reduces to a best-per-precursor training subset and never
+                // looks at RowBuffer.ApexRts, so decoding apex_rt here is pure waste.
+                streamFileRows(file, StubColumns.Core, buffer.Add);
                 int count = buffer.Count;
                 for (int r = 0; r < count; r++)
                 {
@@ -996,7 +998,9 @@ namespace pwiz.Osprey.FDR
                 // cheap, and needed either way. The FEATURE vectors are what cost, so they are
                 // loaded only when this file actually has to be scored.
                 buffer.Clear();
-                streamFileRows(fileNames[f], buffer.Add);
+                // The ONE walk that needs it: this pass hands the file's finished run-scope
+                // output to flushFileRunScope, which writes the v7 sidecar.
+                streamFileRows(fileNames[f], StubColumns.ApexRt, buffer.Add);
                 int count = buffer.Count;
                 if (count > 0)
                     nonEmptyFiles++;
@@ -1082,7 +1086,16 @@ namespace pwiz.Osprey.FDR
             for (int f = 0; f < nFiles; f++)
             {
                 buffer.Clear();
-                streamFileRows(fileNames[f], buffer.Add);
+                // Still asks, though on this path nothing consumes it: the value goes to
+                // sink.Accept, and FdrStoringSink writes a record from it whenever it owns the
+                // write. It never does here - pass 1 marks every file it writes and the resume
+                // gate marks the rest - but that is an invariant maintained in another file, and
+                // the cost of being wrong is a fabricated retention time in a persisted artifact
+                // that no reader could distinguish from a measured one. Recovering this third
+                // walk needs the sink to be able to REFUSE a write it has no apex RT for, which
+                // is an interface change; until then the ~7% is the price of not relying on a
+                // distant invariant.
+                streamFileRows(fileNames[f], StubColumns.ApexRt, buffer.Add);
                 int count = buffer.Count;
                 double[] doneScores2 = TryLoadCompletedScores(tryStreamCompletedScores, fileNames[f], count, buffer.EntryIds);
                 IReadOnlyList<double[]> rows = doneScores2 == null ? loadFileFeatures(fileNames[f]) : null;

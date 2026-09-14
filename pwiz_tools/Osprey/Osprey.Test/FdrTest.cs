@@ -1298,8 +1298,12 @@ namespace pwiz.Osprey.Test
             // Streaming-from-row-source path (the change under test): identity streamed straight
             // from the fixture (== parquet), features by fileName, no resident projection.
             var fileNames = fixtureStr.ConvertAll(kv => kv.Key);
-            Action<string, Action<uint, byte, bool, double, string, double>> streamFileRows =
-                (name, onRow) =>
+            // Supplies apex RT whatever the pass asks for. The scorer's Core/ApexRt choice is
+            // about what the PARQUET reader decodes, not about what a fixture can hand over, and
+            // this test's job is to prove the streamed path matches the resident one on every
+            // value - which it cannot do if the fixture withholds one of them.
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows =
+                (name, columns, onRow) =>
                 {
                     var list = fixtureStr.Find(kv => kv.Key == name).Value;
                     foreach (var e in list)

@@ -313,7 +313,7 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public static bool RunFirstPassStreaming(
             IReadOnlyList<string> fileNames,
-            Action<string, Action<uint, byte, bool, double, string, double>> streamFileRows,
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,

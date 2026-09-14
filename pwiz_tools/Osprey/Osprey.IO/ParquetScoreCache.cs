@@ -1154,7 +1154,8 @@ namespace pwiz.Osprey.IO
         {
             var apexRts = new List<double>();
             ReadFdrStubScalars(path,
-                (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) => apexRts.Add(apexRt));
+                (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) => apexRts.Add(apexRt),
+                StubColumns.ApexRt);
             return apexRts.ToArray();
         }
 
@@ -1167,13 +1168,15 @@ namespace pwiz.Osprey.IO
         /// "skip this row group when entry_id/is_decoy are absent" rule. The caller's
         /// running row count therefore equals that method's <c>ParquetIndex</c>.
         ///
-        /// <para><c>apex_rt</c> is the sixth column and the only one the SCORER does not use:
-        /// it is read so the per-file <c>.1st-pass.fdr_scores.bin</c> can carry it (format v7,
-        /// issue #4522). It rides this read rather than getting one of its own, which is the
-        /// whole point - the model-diagnostics co-assignment panel used to open every
-        /// <c>.scores.parquet</c> a second time for exactly this column. A file whose parquet
-        /// predates the column yields <c>double.NaN</c>, which reaches the sidecar as NaN
-        /// rather than as a plausible retention time.</para>
+        /// <para><c>apex_rt</c> is the sixth column and the only OPTIONAL one: it is read so the
+        /// per-file <c>.1st-pass.fdr_scores.bin</c> can carry it (format v7, issue #4522), and it
+        /// rides this read rather than getting one of its own - the model-diagnostics
+        /// co-assignment panel used to open every <c>.scores.parquet</c> a second time for
+        /// exactly this column. <paramref name="columns"/> has no default ON PURPOSE: every call
+        /// site states whether it consumes the value, so a caller that wants it and forgets to
+        /// ask fails to COMPILE rather than receiving NaN for every row. A file whose parquet
+        /// genuinely predates the column also yields <c>double.NaN</c> - the two cases are
+        /// indistinguishable here, which is precisely why asking is mandatory.</para>
         ///
         /// Exists because rematerializing the whole 191M-row stub buffer just to convert it
         /// into 32 B projection rows cost ~53 GB on an 82-file Astral run. Osprey.IO must
@@ -1181,10 +1184,11 @@ namespace pwiz.Osprey.IO
         /// these scalars rather than returned from here.
         /// </summary>
         public static void ReadFdrStubScalars(string path,
-            Action<uint, byte, bool, double, string, double> onRow)
+            Action<uint, byte, bool, double, string, double> onRow, StubColumns columns)
         {
             if (onRow == null)
                 throw new ArgumentNullException(nameof(onRow));
+            bool wantApexRt = (columns & StubColumns.ApexRt) != 0;
 
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
@@ -1199,7 +1203,14 @@ namespace pwiz.Osprey.IO
                         var chargeCol = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name);
                         var modseqCol = ReadColumnByName<string[]>(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
                         var coelutionCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name);
-                        var apexRtCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name);
+                        // Decoded only when the caller says it consumes the value. The parquet is
+                        // Zstd-compressed, so a column is not 8 bytes per row of IO - it is a
+                        // decompress, a page decode and a fresh large-object array per row group.
+                        // Measured on the 446-run cohort: one column is ~7% of the whole pass, and
+                        // three of the four passes that walk these scalars never look at apex RT.
+                        var apexRtCol = wantApexRt
+                            ? ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name)
+                            : null;
 
                         if (entryIdCol == null || isDecoyCol == null)
                             continue;

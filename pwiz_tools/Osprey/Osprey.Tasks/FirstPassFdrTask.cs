@@ -343,29 +343,91 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
-            ctx.LogInfo(string.Format(
-                @"--task ModelDiagnostics: folding the first pass from {0} run(s), one run resident " +
-                @"at a time (no rescore bundle, no survivor pool).", parquetPaths.Count));
-            RescoreHydration.FoldPreCompactionPerRun(
-                parquetPaths,
-                (fileIdx, fileName, parquetPath) => LoadResumeStubs(fileName, parquetPath,
-                    ctx.Get<SequencePool>().Value),
-                (fileIdx, fileName, stubs) =>
-                    ScoringTaskShared.FeedModelDiagnostics(accumulator, fileIdx, stubs),
-                LoadFirstPassExperimentRecords(config, ctx),
-                retainedBaseIds,
-                ctx.LogInfo);
+            // The co-assignment panel is built from the per-file FDR sidecars and the
+            // experiment-scope sidecar, NOT from the fold - so the fold can be skipped without
+            // taking the panel with it. That separation is what
+            // <see cref="OspreyEnvironment.CoAssignmentPanelOnly"/> exploits: on the 446-run
+            // cohort the fold is 54 of this task's 63 minutes and the panel is 8.
+            bool coAssignOnly = OspreyEnvironment.CoAssignmentPanelOnly;
+            if (coAssignOnly)
+            {
+                ctx.LogInfo(string.Format(
+                    @"--task ModelDiagnostics: OSPREY_MDIAG_COASSIGN_ONLY is set - SKIPPING the " +
+                    @"per-run fold over {0} run(s). The report will carry the peak co-assignment " +
+                    @"panel and NOTHING else, and it will be written unstamped so nothing can " +
+                    @"adopt it. This is a measurement harness, not a product.", parquetPaths.Count));
+            }
+            else
+            {
+                ctx.LogInfo(string.Format(
+                    @"--task ModelDiagnostics: folding the first pass from {0} run(s), one run resident " +
+                    @"at a time (no rescore bundle, no survivor pool).", parquetPaths.Count));
+                RescoreHydration.FoldPreCompactionPerRun(
+                    parquetPaths,
+                    (fileIdx, fileName, parquetPath) => LoadResumeStubs(fileName, parquetPath,
+                        ctx.Get<SequencePool>().Value),
+                    (fileIdx, fileName, stubs) =>
+                        ScoringTaskShared.FeedModelDiagnostics(accumulator, fileIdx, stubs),
+                    LoadFirstPassExperimentRecords(config, ctx),
+                    retainedBaseIds,
+                    ctx.LogInfo);
+            }
 
-            // The co-assignment panel reads the per-file FDR sidecars rather than the fold, so it
-            // is built the same way here as on every other path - reusing the accumulator's
-            // classification, which took minutes to compute over 6.2M library entries.
+            // Reuses the accumulator's classification, which took minutes to compute over 6.2M
+            // library entries - and which is built BEFORE the fold, so it is available on the
+            // harness path too.
             var coAssignment = PeakCoAssignmentSource.Build(
                 fileNames, perFileParquetPaths, config, accumulator.ClassByBaseId, libraryById,
                 LoadFirstPassExperimentRecords(config, ctx), ctx.LogInfo);
+            // No validity key on the harness path. The stamp is what lets a later render trust a
+            // product, and this one describes a single panel over an accumulator that was never
+            // fed; stamping it would let a ten-minute measurement stand in for the hour-long
+            // answer, silently and permanently.
             ModelDiagnosticsReport.WriteFromAccumulator(accumulator, null,
                 BuildCalibrationData(ctx, fileNames), config, ctx.LogInfo, coAssignment,
-                ValidityKey(ctx));
+                coAssignOnly ? null : ValidityKey(ctx));
+            if (coAssignOnly)
+                MoveHarnessProductAside(ctx, config);
             return true;
+        }
+
+        /// <summary>
+        /// Move the harness run's report off the DECLARED output path, to a sibling nothing
+        /// declares or reads.
+        ///
+        /// <para>Withholding the validity key is not enough on its own, and the first harness run
+        /// proved it: <c>AnalysisPipeline.WriteTaskSidecars</c> stamps every declared output that
+        /// EXISTS once the task returns, so a nine-minute measurement left a bed carrying a
+        /// full-looking stamp over a report with one panel in it. That same method skips an
+        /// output a task did not write - "A task may not have written every declared output ...
+        /// Skip those rather than failing" - so leaving the path EMPTY is the framework's own way
+        /// of saying "nothing durable here", and the next real run rebuilds it.</para>
+        /// </summary>
+        private static void MoveHarnessProductAside(PipelineContext ctx, OspreyConfig config)
+        {
+            string declared = ModelDiagnosticsReport.Pass1SidecarPath(config);
+            if (string.IsNullOrEmpty(declared) || !File.Exists(declared))
+                return;
+            string aside = Path.ChangeExtension(declared, null) + @".coassign-only.json";
+            try
+            {
+                if (File.Exists(aside))
+                    File.Delete(aside);
+                File.Move(declared, aside);
+                ctx.LogInfo(string.Format(
+                    @"--task ModelDiagnostics: harness report moved to {0}. The declared product " +
+                    @"path is left EMPTY on purpose, so nothing stamps or adopts it.", aside));
+            }
+            catch (Exception ex)
+            {
+                // Loud, because the failure mode is the one this method exists to prevent: a
+                // partial report sitting at the declared path, about to be stamped as if it
+                // described the cohort.
+                ctx.LogWarning(string.Format(
+                    @"--task ModelDiagnostics: could not move the harness report off the declared " +
+                    @"output path ({0}). DELETE {1} by hand before trusting this directory.",
+                    ex.Message, declared));
+            }
         }
 
         /// <summary>
@@ -3430,8 +3492,9 @@ namespace pwiz.Osprey.Tasks
                 // and Run seeds every path up front. Moving that assignment inside the lean
                 // branch - where it looks redundant, since that arm adds an empty entry list -
                 // would break this indexer deep inside the Stage-5 streaming pass.
-                Action<string, Action<uint, byte, bool, double, string, double>> streamFileRows =
-                    (fileName, onRow) => ParquetScoreCache.ReadFdrStubScalars(perFileParquetPaths[fileName], onRow);
+                Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows =
+                    (fileName, columns, onRow) =>
+                        ParquetScoreCache.ReadFdrStubScalars(perFileParquetPaths[fileName], onRow, columns);
                 // Feeds the scorer a file's scores off its 1st-pass sidecar so the pass does not
                 // load that file's feature vectors or re-run the dot product. Consulted by BOTH
                 // passes, and the set grows during pass 1 - so on a cold run this is what stops
@@ -3934,7 +3997,8 @@ namespace pwiz.Osprey.Tasks
                             if (!peptideQvalues.TryGetValue(modseq ?? string.Empty, out q))
                                 q = 1.0;
                             experiment.SetProteinQvalue(entryId, q);
-                        });
+                        },
+                        StubColumns.Core);
                 }
                 catch (Exception ex)
                 {
@@ -4014,7 +4078,8 @@ namespace pwiz.Osprey.Tasks
                     // resident path, where FdrProjectionSet.Builder interned null modseqs as "".
                     if (recordByEntryId.TryGetValue(entryId, out FdrScoreRecord record))
                         onRow(modseq ?? string.Empty, charge, isDecoy, record);
-                });
+                },
+                StubColumns.Core);
             return true;
         }
 

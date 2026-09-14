@@ -81,11 +81,27 @@ namespace pwiz.Osprey.Core
         public static readonly bool ExitAfterCalibration = IsSet(@"OSPREY_EXIT_AFTER_CALIBRATION");
 
         /// <summary>
-        /// Attribute the model-diagnostics co-assignment join's allocation by call site - the
-        /// per-file parquet column read against the sidecar stream - and report the totals when
-        /// the join finishes. Diagnostic only; it changes nothing the run produces.
+        /// Attribute the model-diagnostics co-assignment fold's allocation by call site and
+        /// report the totals when it finishes. Diagnostic only; it changes nothing the run
+        /// produces.
         /// </summary>
         public static readonly bool LogCoAssignmentAllocation = IsSet(@"OSPREY_LOG_COASSIGN_ALLOC");
+
+        /// <summary>
+        /// OSPREY_MDIAG_COASSIGN_ONLY=1: on <c>--task ModelDiagnostics</c>, skip the per-run fold
+        /// and build ONLY the peak co-assignment panel.
+        ///
+        /// <para>A measurement harness, not a product. On the 446-run CHS cohort the task takes
+        /// 63 minutes, of which the per-run fold is 54 and this panel is 8; skipping the fold
+        /// turns a one-hour iteration into about ten minutes, which is what makes questions
+        /// about the panel's memory answerable in a morning rather than a night.</para>
+        ///
+        /// <para>The report it leaves has every OTHER section empty, so it is written with no
+        /// validity key. An unstamped diagnostics product is refused by the render rather than
+        /// trusted, and the next real run regenerates it - which is what keeps a harness run
+        /// from being mistaken for, or overwriting, an answer.</para>
+        /// </summary>
+        public static readonly bool CoAssignmentPanelOnly = IsSet(@"OSPREY_MDIAG_COASSIGN_ONLY");
 
         /// <summary>
         /// OSPREY_MZML_VIA_MZMLREADER=1: read mzML with the hand-written

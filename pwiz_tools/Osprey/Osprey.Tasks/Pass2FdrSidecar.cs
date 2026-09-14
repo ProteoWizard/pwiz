@@ -1517,7 +1517,8 @@ namespace pwiz.Osprey.Tasks
                                 if (!peptideQvalues.TryGetValue(modseq ?? string.Empty, out q))
                                     q = 1.0;
                                 byEntryId[entryId] = q;
-                            });
+                            },
+                            StubColumns.Core);
                     }
                     catch (Exception ex)
                     {
