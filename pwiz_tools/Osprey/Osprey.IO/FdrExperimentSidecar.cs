@@ -102,8 +102,13 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public const byte FormatVersion = 3;
 
-        /// <summary>The v2 record width, still read. See <see cref="FormatVersion"/>.</summary>
-        public const int RecordLengthV2 = 44;
+        // NO v2 read path. The version now rides the owning tasks' validity keys
+        // (";expsidecar="), so a v2 file invalidates its task's output and is regenerated, which
+        // is what every other format here does. Before that term existed, refusing v2 would have
+        // stranded a file the task still believed current - which is why an earlier cut of this
+        // change grew a v2 reader instead. The term is the right fix and the reader was the
+        // workaround; this is pre-release software and a stale bed costs a re-run, not a wrong
+        // answer (issue #4522 validation).
         public const int HeaderLength = 32;
         public const int RecordLength = 60;
 
@@ -275,10 +280,6 @@ namespace pwiz.Osprey.IO
                         return false;
                     }
 
-                    // Width by VERSION, not by the current constant: a v2 file's records are 44 B
-                    // and its floors are unknown. Sizing the buffer from RecordLength and reading
-                    // a v2 file through it would consume the next record's bytes as this one's
-                    // floors - a misread that produces plausible numbers rather than an error.
                     int recordLength = RecordLengthFor(version);
                     var record = new byte[recordLength];
                     for (ulong rec = 0; rec < headerCount; rec++)
@@ -292,8 +293,8 @@ namespace pwiz.Osprey.IO
                             BitConverter.ToDouble(record, 20),
                             BitConverter.ToDouble(record, 28),
                             BitConverter.ToDouble(record, 36),
-                            recordLength >= RecordLength ? BitConverter.ToDouble(record, 44) : double.NaN,
-                            recordLength >= RecordLength ? BitConverter.ToDouble(record, 52) : double.NaN));
+                            BitConverter.ToDouble(record, 44),
+                            BitConverter.ToDouble(record, 52)));
                     }
                 }
             }
@@ -332,8 +333,8 @@ namespace pwiz.Osprey.IO
         /// </summary>
         /// <summary>
         /// Validate the header and report BOTH the record count and the version that wrote it.
-        /// The version is an output because every length computation and every record read below
-        /// depends on it - v2 records are <see cref="RecordLengthV2"/> and carry no floors.
+        /// The version is an output because the length arithmetic and the record read below are
+        /// version-dependent by nature, even while exactly one version is readable.
         /// </summary>
         private static bool HeaderOk(byte[] header, FdrScoresSidecar.Pass expectedPass,
             out ulong headerCount, out byte version)
@@ -345,9 +346,7 @@ namespace pwiz.Osprey.IO
                 if (header[i] != Magic[i])
                     return false;
             }
-            // v2 is READ, not merely tolerated - see the remarks on FormatVersion. A version this
-            // build does not know is still refused: the layout would be a guess.
-            if (header[8] != FormatVersion && header[8] != 2)
+            if (header[8] != FormatVersion)
                 return false;
             if (header[9] != (byte)expectedPass)
                 return false;
@@ -356,10 +355,14 @@ namespace pwiz.Osprey.IO
             return true;
         }
 
-        /// <summary>On-disk width of one record written by <paramref name="version"/>.</summary>
+        /// <summary>
+        /// On-disk width of one record written by <paramref name="version"/>. One version is
+        /// readable today - see <see cref="FormatVersion"/> - and this exists so the length
+        /// arithmetic names its dependency rather than assuming it.
+        /// </summary>
         private static int RecordLengthFor(byte version)
         {
-            return version >= 3 ? RecordLength : RecordLengthV2;
+            return RecordLength;
         }
 
         /// <summary>

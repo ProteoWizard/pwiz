@@ -497,6 +497,12 @@ namespace pwiz.Osprey.Tasks
             return base.ValidityKey(ctx)
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
+                // The experiment-scope sidecar's version belongs here for the same reason its
+                // per-file sibling's does, and its absence was a gap rather than a decision: this
+                // artifact is recent (issue #4486 split it out of the per-run files, which were
+                // ~50% redundant with it) and was created without the term. Without it a format
+                // bump leaves a file the task still believes current and cannot read.
+                + @";expsidecar=" + FdrExperimentSidecar.FormatVersion
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
