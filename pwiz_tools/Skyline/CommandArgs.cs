@@ -1563,10 +1563,12 @@ namespace pwiz.Skyline
             (c, p) => c.FilterProductTypes = ParseIonTypes(p)) { WrapValue = true };
         public static readonly Argument ARG_TRAN_PRODUCT_START_ION = new DocArgument(@"tran-product-start-ion",
             () => TransitionFilter.GetStartFragmentFinderLabels().ToArray(),
-            (c, p) => c.FilterStartProductIon = TransitionFilter.GetStartFragmentFinder(TransitionFilter.GetStartFragmentNameFromLabel(p.Value))) { WrapValue = true };
+            (c, p) => c.FilterStartProductIon = TransitionFilter.GetStartFragmentFinder(
+                ParseFragmentFinderName(p, TransitionFilter.GetStartFragmentNameFromLabel))) { WrapValue = true, HasValueChecking = true };
         public static readonly Argument ARG_TRAN_PRODUCT_END_ION = new DocArgument(@"tran-product-end-ion",
             () => TransitionFilter.GetEndFragmentFinderLabels().ToArray(),
-            (c, p) => c.FilterEndProductIon = TransitionFilter.GetEndFragmentFinder(TransitionFilter.GetEndFragmentNameFromLabel(p.Value))) { WrapValue = true };
+            (c, p) => c.FilterEndProductIon = TransitionFilter.GetEndFragmentFinder(
+                ParseFragmentFinderName(p, TransitionFilter.GetEndFragmentNameFromLabel))) { WrapValue = true, HasValueChecking = true };
         public static readonly Argument ARG_TRAN_PRODUCT_SPECIAL_IONS_CLEAR = new DocArgument(@"tran-product-clear-special-ions",
                 (c, p) => c.FilterSpecialIons = Array.Empty<string>());
         public static readonly Argument ARG_TRAN_PRODUCT_SPECIAL_IONS_ADD = new DocArgument(@"tran-product-add-special-ion",
@@ -1780,6 +1782,19 @@ namespace pwiz.Skyline
                     throw new ValueOutOfRangeIntException(p.Match, charge.AdductCharge, min, max);
             }
             return charges;
+        }
+
+        private static string ParseFragmentFinderName(NameValuePair p, Func<string, string> getNameFromText)
+        {
+            Assume.IsNotNull(p.Match); // Must be matched before accessing this
+            try
+            {
+                return getNameFromText(p.Value);
+            }
+            catch (ArgumentException)
+            {
+                throw new ValueInvalidException(p.Match, p.Value, p.Match.Values);
+            }
         }
 
         private static IonType[] ParseIonTypes(NameValuePair p)

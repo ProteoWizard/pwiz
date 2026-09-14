@@ -490,8 +490,9 @@ namespace pwiz.SkylineTestData
                 "--full-scan-rt-filter-tolerance=5",
                 "--tran-precursor-ion-charges=2,3,4",
                 "--tran-product-ion-charges=1,2",
-                "--tran-product-start-ion=" + TransitionFilter.StartFragmentFinder.ION_1.Label,
-                "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label,
+                // Invariant names, as sent by external tools (e.g. FragPipe), must work in any UI language
+                "--tran-product-start-ion=" + TransitionFilter.StartFragmentFinder.ION_1.Name,
+                "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Name,
                 "--tran-product-clear-special-ions",
                 "--tran-use-dia-window-exclusion",
                 "--pep-digest-enzyme=Chymotrypsin",
@@ -636,6 +637,9 @@ namespace pwiz.SkylineTestData
                 "--full-scan-precursor-res=5",
                 "--full-scan-precursor-analyzer=centroided",
                 "--full-scan-precursor-isotopes=Count",
+                // Localized labels must also continue to work
+                "--tran-product-start-ion=" + TransitionFilter.StartFragmentFinder.ION_3.Label,
+                "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.IONS_4.Label,
                 "--tran-product-clear-special-ions",
                 "--tran-product-add-special-ion=TMT-127L",
                 "--tran-product-add-special-ion=TMT-127H"
@@ -644,6 +648,8 @@ namespace pwiz.SkylineTestData
             output = RunCommand(settings);
             StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_Deleting_existing_file___0__, docPath));
             doc = ResultsUtil.DeserializeDocument(docPath);
+            AssertEx.AreEqual(TransitionFilter.StartFragmentFinder.ION_3.Name, doc.Settings.TransitionSettings.Filter.StartFragmentFinderLabel.Name);
+            AssertEx.AreEqual(TransitionFilter.EndFragmentFinder.IONS_4.Name, doc.Settings.TransitionSettings.Filter.EndFragmentFinderLabel.Name);
             Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.PrecursorRes);

@@ -1270,9 +1270,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             for (int i = 0; i < FragmentStartFinders.SafeLength(); i++)
             {
-                if (string.Equals(FragmentStartFinders[i].Label, label))
+                var finder = FragmentStartFinders[i];
+                // Accept the invariant name as well as the localized label, so command-line
+                // arguments from external tools work in any UI language
+                if (string.Equals(finder.Label, label, StringComparison.CurrentCultureIgnoreCase) ||
+                    string.Equals(finder.Name, label, StringComparison.OrdinalIgnoreCase))
                 {
-                    return FragmentStartFinders[i].Name;
+                    return finder.Name;
                 }
             }
             throw new ArgumentException(string.Format(DocSettingsResources.TransitionFilter_GetStartFragmentNameFromLabel_The_label__0__is_not_a_valid_start_fragment_filter_, label));
@@ -1331,9 +1335,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             for (int i = 0; i < FragmentEndFinders.SafeLength(); i++)
             {
-                if (string.Equals(FragmentEndFinders[i].Label, label))
+                var finder = FragmentEndFinders[i];
+                // Accept the invariant name as well as the localized label, so command-line
+                // arguments from external tools work in any UI language
+                if (string.Equals(finder.Label, label, StringComparison.CurrentCultureIgnoreCase) ||
+                    string.Equals(finder.Name, label, StringComparison.OrdinalIgnoreCase))
                 {
-                    return FragmentEndFinders[i].Name;
+                    return finder.Name;
                 }
             }
             throw new ArgumentException(string.Format(DocSettingsResources.TransitionFilter_GetEndFragmentNameFromLabel_The_label__0__is_not_a_valid_end_fragment_filter_, label));
