@@ -416,17 +416,31 @@ namespace pwiz.SkylineTestData
             output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue(ceNoneText));
             AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", AuditLogStrings.None);
             IsDocumentUnchanged(output);
+            // Invariant names, as sent by external tools, must work in any UI language
+            output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue(CollisionEnergyList.NONE.GetKey()));
+            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", AuditLogStrings.None);
+            IsDocumentUnchanged(output);
             string dpNoneText = Settings.Default.DeclusterPotentialList.GetDisplayName(DeclusterPotentialList.NONE);
             output = Run(CommandArgs.ARG_TRAN_PREDICT_DP.GetArgumentTextWithValue("SCIEX"));
             AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullDeclusteringPotential, AuditLogStrings.None, "SCIEX");
             IsDocumentUnchanged(output);
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_DP, dpNoneText);
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_DP, DeclusterPotentialList.NONE.GetKey());
             string covNoneText = Settings.Default.CompensationVoltageList.GetDisplayName(CompensationVoltageList.NONE);
             output = Run(CommandArgs.ARG_TRAN_PREDICT_COV.GetArgumentTextWithValue("SCIEX"));
             AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCompensationVoltage, AuditLogStrings.None, "SCIEX");
             IsDocumentUnchanged(output);
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_COV, covNoneText);
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_COV, CompensationVoltageList.NONE.GetKey());
             // Only None is possible for optimization libraries without setting one up
             string optLibNoneText = Settings.Default.OptimizationLibraryList.GetDisplayName(OptimizationLibrary.NONE);
-            output = Run(CommandArgs.ARG_TRAN_PREDICT_OPTDB.GetArgumentTextWithValue(optLibNoneText));
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_OPTDB, optLibNoneText);
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_OPTDB, OptimizationLibrary.NONE.GetKey());
+        }
+
+        private void RunPredictNoneUnchanged(Argument arg, string noneText)
+        {
+            string output = Run(arg.GetArgumentTextWithValue(noneText));
             AssertEx.Contains(output, "test2", Resources.CommandLine_LogNewEntries_Document_unchanged);
             IsDocumentUnchanged(output);
         }

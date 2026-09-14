@@ -1588,14 +1588,14 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_TRAN_LIBRARY_PICK_PRODUCT_IONS = DocArgument.FromEnumType<TransitionLibraryPick>(@"library-pick-product-ions",
             (c, p) => c.LibraryPickIons = p);
 
-        public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", () => GetDisplayNames(Settings.Default.CollisionEnergyList),
-            (c, p) => c.PredictCEName = p.Value) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", () => GetDisplayNames(Settings.Default.DeclusterPotentialList),
-            (c, p) => c.PredictDPName = p.Value) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_COV = new DocArgument(@"tran-predict-cov", () => GetDisplayNames(Settings.Default.CompensationVoltageList),
-            (c, p) => c.PredictCoVName = p.Value) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", () => GetDisplayNames(Settings.Default.OptimizationLibraryList),
-            (c, p) => c.PredictOpimizationLibraryName = p.Value) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", () => GetDisplayNamesAndKeys(Settings.Default.CollisionEnergyList),
+            (c, p) => c.PredictCEName = ParseSettingsListKey(p, Settings.Default.CollisionEnergyList)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", () => GetDisplayNamesAndKeys(Settings.Default.DeclusterPotentialList),
+            (c, p) => c.PredictDPName = ParseSettingsListKey(p, Settings.Default.DeclusterPotentialList)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PREDICT_COV = new DocArgument(@"tran-predict-cov", () => GetDisplayNamesAndKeys(Settings.Default.CompensationVoltageList),
+            (c, p) => c.PredictCoVName = ParseSettingsListKey(p, Settings.Default.CompensationVoltageList)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", () => GetDisplayNamesAndKeys(Settings.Default.OptimizationLibraryList),
+            (c, p) => c.PredictOpimizationLibraryName = ParseSettingsListKey(p, Settings.Default.OptimizationLibraryList)) { WrapValue = true };
 
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ISOTOPES = DocArgument.FromEnumType<FullScanPrecursorIsotopes>(@"full-scan-precursor-isotopes",
             (c, p) => c.FullScanPrecursorIsotopes = p);
@@ -1604,8 +1604,8 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_THRESHOLD = new DocArgument(@"full-scan-precursor-threshold", NUM_VALUE,
             (c, p) => c.FullScanPrecursorThreshold = p.GetValueDouble(0, 100)) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ISOTOPE_ENRICHMENT = new DocArgument(@"full-scan-precursor-isotope-enrichment",
-                () => GetDisplayNames(Settings.Default.IsotopeEnrichmentsList),
-                (c, p) => c.FullScanPrecursorIsotopeEnrichment = p.Value)
+                () => GetDisplayNamesAndKeys(Settings.Default.IsotopeEnrichmentsList),
+                (c, p) => c.FullScanPrecursorIsotopeEnrichment = ParseSettingsListKey(p, Settings.Default.IsotopeEnrichmentsList))
             { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_IGNORE_SIM = new DocArgument(@"full-scan-precursor-ignore-sim",
                 (c, p) => c.FullScanPrecursorIgnoreSimScans = p.IsNameOnly || bool.Parse(p.Value))
@@ -1769,6 +1769,18 @@ namespace pwiz.Skyline
             return list.Select(list.GetDisplayName).ToArray();
         }
 
+        /// <summary>
+        /// Display names followed by any invariant keys and default display names not already listed,
+        /// so that both the localized and the invariant forms are valid values.
+        /// </summary>
+        public static string[] GetDisplayNamesAndKeys<TItem>(SettingsListBase<TItem> list) where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            var items = list.Concat(list.GetDefaults(list.RevisionIndexCurrent));
+            return list.Select(list.GetDisplayName)
+                .Concat(items.SelectMany(item => new[] { item.GetKey(), list.GetDisplayName(item) }))
+                .Distinct().ToArray();
+        }
+
         private static Adduct[] ParseIonCharges(NameValuePair p, int min, int max)
         {
             Assume.IsNotNull(p.Match); // Must be matched before accessing this
@@ -1795,6 +1807,24 @@ namespace pwiz.Skyline
             {
                 throw new ValueInvalidException(p.Match, p.Value, p.Match.Values);
             }
+        }
+
+        private static string ParseSettingsListKey<TItem>(NameValuePair p, SettingsListBase<TItem> list) where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            Assume.IsNotNull(p.Match); // Must be matched before accessing this
+            // Accept the invariant key as well as the localized display name, so command-line
+            // arguments from external tools work in any UI language. Also check the display names
+            // of the defaults, which are only localized for the default instances themselves.
+            var items = list.Concat(list.GetDefaults(list.RevisionIndexCurrent));
+            foreach (var item in items)
+            {
+                if (string.Equals(item.GetKey(), p.Value, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(list.GetDisplayName(item), p.Value, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    return item.GetKey();
+                }
+            }
+            throw new ValueInvalidException(p.Match, p.Value, p.Match.Values);
         }
 
         private static IonType[] ParseIonTypes(NameValuePair p)

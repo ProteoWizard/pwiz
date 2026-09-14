@@ -480,6 +480,7 @@ namespace pwiz.SkylineTestData
             {
                 "--new=" + docPath,
                 "--full-scan-precursor-isotopes=Count",
+                "--full-scan-precursor-isotope-enrichment=" + IsotopeEnrichmentsList.DEFAULT.Name,
                 "--full-scan-precursor-analyzer=centroided",
                 "--full-scan-precursor-res=5",
                 "--full-scan-acquisition-method=DIA",
@@ -524,6 +525,7 @@ namespace pwiz.SkylineTestData
 
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
+            AssertEx.AreEqual(IsotopeEnrichmentsList.DEFAULT.Name, doc.Settings.TransitionSettings.FullScan.IsotopeEnrichments?.Name);
             Assert.AreEqual(FullScanAcquisitionMethod.DIA, doc.Settings.TransitionSettings.FullScan.AcquisitionMethod);
             Assert.AreEqual("All Ions", doc.Settings.TransitionSettings.FullScan.IsolationScheme.Name);
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
@@ -638,6 +640,7 @@ namespace pwiz.SkylineTestData
                 "--full-scan-precursor-analyzer=centroided",
                 "--full-scan-precursor-isotopes=Count",
                 // Localized labels must also continue to work
+                "--full-scan-precursor-isotope-enrichment=" + Settings.Default.IsotopeEnrichmentsList.GetDisplayName(IsotopeEnrichmentsList.DEFAULT),
                 "--tran-product-start-ion=" + TransitionFilter.StartFragmentFinder.ION_3.Label,
                 "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.IONS_4.Label,
                 "--tran-product-clear-special-ions",
@@ -650,6 +653,7 @@ namespace pwiz.SkylineTestData
             doc = ResultsUtil.DeserializeDocument(docPath);
             AssertEx.AreEqual(TransitionFilter.StartFragmentFinder.ION_3.Name, doc.Settings.TransitionSettings.Filter.StartFragmentFinderLabel.Name);
             AssertEx.AreEqual(TransitionFilter.EndFragmentFinder.IONS_4.Name, doc.Settings.TransitionSettings.Filter.EndFragmentFinderLabel.Name);
+            AssertEx.AreEqual(IsotopeEnrichmentsList.DEFAULT.Name, doc.Settings.TransitionSettings.FullScan.IsotopeEnrichments?.Name);
             Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.PrecursorRes);
