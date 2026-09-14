@@ -380,6 +380,13 @@ sweep_fixture()  # <fixture filename> <extension>
         done
     elif [ "$fixture" = "diaPASEF.d" ]; then
         echo " Skipping diaPASEF test because it is not tested in non-filtered mode (diaPASEF.mzML)."
+    elif [ -e "$fixture/Analysis.yep" ]; then
+        # Deliberately not converted above - YEP is Bruker's Esquire/HCT ion-trap format, read
+        # through the CompassXtract COM server rather than the TDF/TSF/BAF stack the other
+        # fixtures use. Without this branch the skip fell through to the "expected output does
+        # not exist" failure below, so Sample_1-A,1_01_985.d had been reported as a failing
+        # conversion - in the cpp sweep too - when it was never converted in the first place.
+        echo " Skipping $fixture because YEP data is not converted by this sweep."
     else
         failed=1
         test_failed "$testname" "Expected output file '$outdir/$name.mzML' does not exist."
