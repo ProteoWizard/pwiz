@@ -723,7 +723,18 @@ namespace pwiz.Osprey.Tasks
         private bool FoldPass2DiagnosticsOnly(PipelineContext ctx)
         {
             var config = ctx.Config;
+            // Three probes bracketing the second-pass join, because the 446-run profile of
+            // 2026-09-14 put 9.0 of this task's 22.6 GB inside it and nothing outside it - the
+            // diagnostics fold and the co-assignment panel both END where they START. The
+            // figures that matter are gc_heap_last_gc (LIVE) against gc_committed_last_gc: a
+            // committed-but-free 9 GB is an allocation-rate story and a live 9 GB is a
+            // retention story, and they have opposite fixes. Unconditional, matching the
+            // Stage-5 boundary probes, because three lines in a twenty-minute task is not a
+            // cost and the alternative is re-running to get them.
+            ProfilerHooks.LogMemoryStats(ctx.LogInfo, @"pass2-fold: before the second-pass join");
+            ProfilerHooks.CaptureRetentionSnapshot(@"pass2-join-start");
             var rescored = ctx.Get<RescoredEntries>();
+            ProfilerHooks.LogMemoryStats(ctx.LogInfo, @"pass2-fold: after RescoredEntries (join done)");
             // This arm is ITSELF a resident-pool path when the source is absent - it pulls the
             // same survivor buffer, which is where 91.1 GB was measured at 446 files - and it
             // returns before Run's own call, so it has to make the statement itself.
@@ -757,6 +768,11 @@ namespace pwiz.Osprey.Tasks
             Pass2FdrSidecar.InstallStreamedPass2Overlay(ctx, rescored, Name, ValidityKey(ctx));
             Pass2FdrSidecar.OverlayPass2OntoResidentPool(ctx, rescored, Name, ValidityKey(ctx));
             ReclampExperimentQToBestRun(rescored);
+            // The other end of the bracket: everything between this and the probe above is the
+            // experiment-wide pass-2 state, which is where the library-vs-cohort sizing question
+            // lives (625,620 retained base_ids against 6,175,389 library entries on this cohort).
+            ProfilerHooks.LogMemoryStats(ctx.LogInfo, @"pass2-fold: after the pass-2 overlays");
+            ProfilerHooks.CaptureRetentionSnapshot(@"pass2-join-end");
 
             ctx.LogInfo(string.Format(
                 @"SecondPassFDR: folding the second pass from {0} run(s), one run resident at a " +
