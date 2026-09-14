@@ -503,7 +503,7 @@ namespace pwiz.Osprey.Tasks
             // experiment q with no surviving run support -- reported with no run-level ID (the
             // blib ID-line artifact). Re-clamping here, against the run q's actually written to
             // the blib, restores "reported => some run genuinely passed" for the final output.
-            ReclampExperimentQToBestRun(rescored);
+            ReclampExperimentQToBestRun(rescored, ctx.LogInfo);
 
             // Write output blib - unless this is a diagnostics-only regeneration, whose whole
             // contract is that it touches no artifact but the report.
@@ -767,7 +767,7 @@ namespace pwiz.Osprey.Tasks
             // complete, plausible, every card populated, and wrong.
             Pass2FdrSidecar.InstallStreamedPass2Overlay(ctx, rescored, Name, ValidityKey(ctx));
             Pass2FdrSidecar.OverlayPass2OntoResidentPool(ctx, rescored, Name, ValidityKey(ctx));
-            ReclampExperimentQToBestRun(rescored);
+            ReclampExperimentQToBestRun(rescored, ctx.LogInfo);
             // The other end of the bracket: everything between this and the probe above is the
             // experiment-wide pass-2 state, which is where the library-vs-cohort sizing question
             // lives (625,620 retained base_ids against 6,175,389 library entries on this cohort).
@@ -948,7 +948,7 @@ namespace pwiz.Osprey.Tasks
         /// Composition order is the correctness argument, and it is why these go in as two
         /// AddPostMaterialize calls in this order rather than one.</para>
         /// </summary>
-        private static void ReclampExperimentQToBestRun(RescoredEntries rescored)
+        private static void ReclampExperimentQToBestRun(RescoredEntries rescored, Action<string> logInfo)
         {
             var minRunBothByEntryId = new Dictionary<uint, double>();
             var minRunBothByPeptide = new Dictionary<(string ModifiedSequence, bool IsDecoy), double>();
@@ -957,18 +957,48 @@ namespace pwiz.Osprey.Tasks
                 PercolatorEngine.AccumulateExperimentQFloors(
                     kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
             }
+            // How many values the re-apply actually RAISES, said out loud. The score pass floors
+            // these same values before it writes them (PercolatorScorer's clamp), so a pool
+            // rebuilt from the persisted q should already satisfy the invariant and this should
+            // raise NOTHING. If it reports zero, this whole fold - a full traversal of every run
+            // on the 446-run cohort, 8 minutes and 9.9 GB of working set - is re-deriving floors
+            // that change no value, and the question becomes whether to persist the floor or
+            // delete the step. If it reports a non-zero count, the persisted q is NOT floored
+            // and that is a much more serious finding, because those are the q-values the user
+            // is shown.
+            logInfo(string.Format(
+                @"[FDR] experiment-q floors: folded {0} entry_id and {1} peptide floor(s) over the " +
+                @"second pass.", minRunBothByEntryId.Count, minRunBothByPeptide.Count));
             if (rescored.Streams)
             {
+                // Per-run counts summed into one line at the end would need a barrier this arm
+                // does not have - the applies happen as later gates rebuild each run - so the
+                // count is reported per run and only when it is NON-ZERO. Silence is the
+                // expected, interesting answer.
                 rescored.AddPostMaterialize((fileName, entries) =>
-                    PercolatorEngine.ApplyExperimentQFloors(
-                        entries, minRunBothByEntryId, minRunBothByPeptide));
+                {
+                    int raised = PercolatorEngine.ApplyExperimentQFloors(
+                        entries, minRunBothByEntryId, minRunBothByPeptide);
+                    if (raised > 0)
+                    {
+                        logInfo(string.Format(
+                            @"[FDR] experiment-q floors RAISED {0} of {1} value(s) rebuilding {2} - " +
+                            @"the persisted experiment q was below its own best run q.",
+                            raised, entries.Count, fileName));
+                    }
+                });
                 return;
             }
+            int totalRaised = 0, totalRows = 0;
             foreach (var kvp in rescored.Files())
             {
-                PercolatorEngine.ApplyExperimentQFloors(
+                totalRaised += PercolatorEngine.ApplyExperimentQFloors(
                     kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
+                totalRows += kvp.Value.Count;
             }
+            logInfo(string.Format(
+                @"[FDR] experiment-q floors raised {0} of {1} value(s) on the resident pool.",
+                totalRaised, totalRows));
         }
 
         /// <summary>

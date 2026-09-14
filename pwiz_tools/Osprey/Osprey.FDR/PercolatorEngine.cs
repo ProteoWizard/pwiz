@@ -1057,28 +1057,45 @@ namespace pwiz.Osprey.FDR
         /// separated so a streamed consumer can fold over every file first and then apply as it
         /// revisits them - the floors are whole-run, the application is per row.
         /// </summary>
-        public static void ApplyExperimentQFloors(
+        /// <summary>
+        /// Returns how many q-values this call actually RAISED. Zero is the interesting answer:
+        /// the score pass applies the same floor before it writes (see the clamp in
+        /// <c>PercolatorScorer.ScoreProjectionAndComputeFdrInPlace</c>), so a pool rebuilt from
+        /// those persisted values should already satisfy the invariant and a re-apply should
+        /// change nothing. A caller that folds every run purely to re-derive floors that raise
+        /// no value is doing a whole traversal for a no-op, and the count is what tells it so
+        /// rather than leaving the question to argument.
+        /// </summary>
+        public static int ApplyExperimentQFloors(
             IReadOnlyList<FdrEntry> entries,
             IReadOnlyDictionary<uint, double> minRunBothByEntryId,
             IReadOnlyDictionary<(string ModifiedSequence, bool IsDecoy), double> minRunBothByPeptide)
         {
+            int raised = 0;
             {
                 foreach (var e in entries)
                 {
                     double floorPrec;
                     if (minRunBothByEntryId.TryGetValue(e.EntryId, out floorPrec) &&
                         floorPrec > e.ExperimentPrecursorQvalue)
+                    {
                         e.ExperimentPrecursorQvalue = floorPrec;
+                        raised++;
+                    }
 
                     if (!string.IsNullOrEmpty(e.ModifiedSequence))
                     {
                         double floorPept;
                         if (minRunBothByPeptide.TryGetValue((e.ModifiedSequence, e.IsDecoy), out floorPept) &&
                             floorPept > e.ExperimentPeptideQvalue)
+                        {
                             e.ExperimentPeptideQvalue = floorPept;
+                            raised++;
+                        }
                     }
                 }
             }
+            return raised;
         }
     }
 }
