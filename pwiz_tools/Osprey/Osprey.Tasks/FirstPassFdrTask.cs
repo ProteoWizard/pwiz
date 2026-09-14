@@ -3383,11 +3383,12 @@ namespace pwiz.Osprey.Tasks
             // moment that file's rows have been walked, and no later phase revises them.
             int pass1WriteFailures = 0;
             FileRunScopeSink flushFileRunScope =
-                (fileName, fileIndex, rowCount, entryIds, scores, runPrecQ, runPeptQ) =>
+                (fileName, fileIndex, rowCount, entryIds, scores, runPrecQ, runPeptQ, apexRts) =>
                 {
                     var records = new List<FdrScoreRecord>(rowCount);
                     for (int r = 0; r < rowCount; r++)
-                        records.Add(new FdrScoreRecord(entryIds[r], scores[r], runPrecQ[r], runPeptQ[r]));
+                        records.Add(new FdrScoreRecord(
+                            entryIds[r], scores[r], runPrecQ[r], runPeptQ[r], apexRts[r]));
                     // Marked before the result is known: a failed write must not be retried by
                     // the sink either, because FdrScoresSidecar registers the path on the way in
                     // and would refuse the second attempt as a double write.
@@ -3429,7 +3430,7 @@ namespace pwiz.Osprey.Tasks
                 // and Run seeds every path up front. Moving that assignment inside the lean
                 // branch - where it looks redundant, since that arm adds an empty entry list -
                 // would break this indexer deep inside the Stage-5 streaming pass.
-                Action<string, Action<uint, byte, bool, double, string>> streamFileRows =
+                Action<string, Action<uint, byte, bool, double, string, double>> streamFileRows =
                     (fileName, onRow) => ParquetScoreCache.ReadFdrStubScalars(perFileParquetPaths[fileName], onRow);
                 // Feeds the scorer a file's scores off its 1st-pass sidecar so the pass does not
                 // load that file's feature vectors or re-run the dot product. Consulted by BOTH
@@ -3505,7 +3506,9 @@ namespace pwiz.Osprey.Tasks
                 aborted = PercolatorEngine.RunPercolatorFdr(
                     projections, config, featureInfos,
                     ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
-                    @"First-pass", loadFileFeatures, captureContributions, captureModel);
+                    @"First-pass", loadFileFeatures,
+                    fileName => ParquetScoreCache.ReadApexRtsByParquetIndex(perFileParquetPaths[fileName]),
+                    captureContributions, captureModel);
             }
             swFdr.Stop();
             if (aborted)
@@ -3922,7 +3925,7 @@ namespace pwiz.Osprey.Tasks
                 try
                 {
                     ParquetScoreCache.ReadFdrStubScalars(parquetPath,
-                        (entryId, charge, isDecoy, coelutionSum, modseq) =>
+                        (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) =>
                         {
                             double q;
                             // Normalize a present-but-null modseq to "" so the lookup matches the
@@ -3996,7 +3999,7 @@ namespace pwiz.Osprey.Tasks
             }
 
             ParquetScoreCache.ReadFdrStubScalars(parquetPath,
-                (entryId, charge, isDecoy, coelutionSum, modseq) =>
+                (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) =>
                 {
                     // Mirror the survivor reload's superset tolerance (FdrScoresSidecar.TryRead):
                     // the sidecar is written from the projection, a SUBSET of the parquet rows, so

@@ -308,27 +308,125 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// <c>.1st-pass.fdr_scores.bin</c> sidecar joined to its <c>.scores.parquet</c> apex RT,
         /// pass 2 from the resident reported pool.
         /// </summary>
-        public readonly struct CoAssignmentRow
+        /// <summary>
+        /// Precursor identity for the co-assignment panel: modified sequence, charge, and whether
+        /// the row is a decoy.
+        ///
+        /// <para>Decoys MUST key separately from their targets. A decoy carries its target's
+        /// modified sequence, so without <see cref="IsDecoy"/> the precursor registry keeps the
+        /// first arrival and absorbs the other - measured at 396 of 468 admitted decoys never
+        /// counted, and a reported decoy rate 30x too low.</para>
+        ///
+        /// <para><see cref="CompareTo"/> is the ONE total order over precursors. There were two
+        /// before: an ordinal compare of the composite string, and a by-sequence-then-charge
+        /// compare elsewhere in this file. They disagree wherever one sequence is a prefix of
+        /// another - "ABC" vs "ABCD" puts the separator against a residue - so which rows tied on
+        /// m/z came first depended on which comparer the caller happened to use.</para>
+        /// </summary>
+        public readonly struct PrecursorKey : IEquatable<PrecursorKey>, IComparable<PrecursorKey>
         {
-            /// <summary>Precursor identity, <c>modified sequence + "|" + charge</c>.</summary>
-            public readonly string Key;
-            /// <summary>Full library entry id (decoy bit included) - the score-aggregation key.</summary>
-            public readonly uint EntryId;
+            /// <summary>Separated sequence from charge in the composite string this key replaced.
+            /// Still named because <see cref="CompareTo"/> reproduces that string's order.</summary>
+            private const char SEPARATOR = '|';
+
             public readonly string ModifiedSequence;
             public readonly byte Charge;
+            public readonly bool IsDecoy;
+
+            public PrecursorKey(string modifiedSequence, byte charge, bool isDecoy)
+            {
+                ModifiedSequence = modifiedSequence;
+                Charge = charge;
+                IsDecoy = isDecoy;
+            }
+
+            public bool Equals(PrecursorKey other)
+            {
+                return Charge == other.Charge && IsDecoy == other.IsDecoy &&
+                       string.Equals(ModifiedSequence, other.ModifiedSequence, StringComparison.Ordinal);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is PrecursorKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hash = ModifiedSequence == null
+                        ? 0
+                        : StringComparer.Ordinal.GetHashCode(ModifiedSequence);
+                    hash = (hash * 397) ^ Charge;
+                    return (hash * 397) ^ (IsDecoy ? 1 : 0);
+                }
+            }
+
+            /// <summary>
+            /// Tie-break order for the m/z scan. Arbitrary - it exists only to make the scan
+            /// reproducible - but it reproduces the order of the composite string this key
+            /// replaced, so no committed golden moves for a change that is otherwise pure
+            /// performance.
+            ///
+            /// <para>The prefix case is the one to get right: where one sequence is a prefix of
+            /// another the shorter key's string continued with the separator and the longer's with
+            /// a residue, so <c>ABCD|2</c> sorts before <c>ABC|2</c>. Comparing against
+            /// <see cref="SEPARATOR"/> rather than assuming which side wins keeps that true for
+            /// any residue alphabet. Charge compares numerically where the string compared decimal
+            /// text, which differs only at charge 10 and above - no precursor here carries one.</para>
+            /// </summary>
+            public int CompareTo(PrecursorKey other)
+            {
+                string seq = ModifiedSequence ?? string.Empty;
+                string otherSeq = other.ModifiedSequence ?? string.Empty;
+                int shared = Math.Min(seq.Length, otherSeq.Length);
+                for (int i = 0; i < shared; i++)
+                {
+                    if (seq[i] != otherSeq[i])
+                        return seq[i] - otherSeq[i];
+                }
+                if (seq.Length != otherSeq.Length)
+                {
+                    return seq.Length < otherSeq.Length
+                        ? SEPARATOR - otherSeq[shared]
+                        : seq[shared] - SEPARATOR;
+                }
+                int c = Charge.CompareTo(other.Charge);
+                if (c != 0)
+                    return c;
+                return IsDecoy.CompareTo(other.IsDecoy);
+            }
+
+            // Text for debugging only.
+            public override string ToString()
+            {
+                return $@"{ModifiedSequence}|{Charge}{(IsDecoy ? @"|decoy" : string.Empty)}";
+            }
+        }
+
+        public readonly struct CoAssignmentRow
+        {
+            /// <summary>Precursor identity - sequence, charge and decoy flag in one value.</summary>
+            public readonly PrecursorKey Key;
+            /// <summary>Full library entry id (decoy bit included) - the score-aggregation key.</summary>
+            public readonly uint EntryId;
             /// <summary>Library precursor m/z - exact, so no residue-mass table is involved.</summary>
             public readonly double PrecursorMz;
             public readonly double ApexRt;
             public readonly double Score;
             public readonly EntrapmentClass Class;
 
-            public CoAssignmentRow(string key, uint entryId, string modifiedSequence, byte charge,
+            /// <summary>The identity's own fields, so readers that want one need not go through
+            /// the key. They are stored ONCE, on the key.</summary>
+            public string ModifiedSequence => Key.ModifiedSequence;
+            public byte Charge => Key.Charge;
+
+            public CoAssignmentRow(PrecursorKey key, uint entryId,
                 double precursorMz, double apexRt, double score, EntrapmentClass entrapmentClass)
             {
                 Key = key;
                 EntryId = entryId;
-                ModifiedSequence = modifiedSequence;
-                Charge = charge;
                 PrecursorMz = precursorMz;
                 ApexRt = apexRt;
                 Score = score;
@@ -554,15 +652,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                             else if (e.ApexRt != firstApexRt)
                                 anyDistinctApexRt = true;
                         }
-                        // Tag decoy keys. A decoy carries its target's modified sequence, so an
-                        // untagged decoy key equals its target's and the precursor registry merges
-                        // the two, dropping the decoy. Same rule as the pass-1 source builds.
-                        string key = e.IsDecoy
-                            ? e.ModifiedSequence + "|" + e.Charge + "|decoy"
-                            : e.ModifiedSequence + "|" + e.Charge;
+                        // The decoy flag is part of the identity, for the reason PrecursorKey
+                        // documents: a decoy carries its target's modified sequence, so without it
+                        // the registry merges the two and drops the decoy.
                         builder.AddRow(f,
-                            new CoAssignmentRow(key, e.EntryId,
-                                e.ModifiedSequence, e.Charge, mz, e.ApexRt, e.Score, cls),
+                            new CoAssignmentRow(
+                                new PrecursorKey(e.ModifiedSequence, e.Charge, e.IsDecoy),
+                                e.EntryId, mz, e.ApexRt, e.Score, cls),
                             runQ, expQ, runFdr);
                     }
                     builder.FlushFile();
@@ -1423,15 +1519,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private const int DELTA_RT_BINS = 50;
             private const int MAX_OFFENDERS = 50;
 
-            /// <summary>
-            /// Joins the two precursor keys of an offender pair. Must be a character that cannot
-            /// occur in a key: a key is <c>modseq|charge|decoy</c>, so '|' would make
-            /// <c>a|2</c> + <c>b|3</c> and <c>a</c> + <c>2|b|3</c> collide. Written as an escape
-            /// rather than the raw U+0001 byte it replaced - that byte was invisible in the
-            /// source, in diffs and in review, and any editor or formatter that normalized it
-            /// would have silently merged unrelated pairs.
-            /// </summary>
-            private const string PAIR_KEY_SEPARATOR = "\u0001";
 
             /// <summary>
             /// Fewest detected precursors a class needs before its enrichment ratio is reported.
@@ -1448,14 +1535,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // Current run's detected rows, reduced to one per precursor (max score). Cleared at
             // every FlushFile, so only a single run is ever resident.
             private readonly List<CoAssignmentRow> _fileRows = new List<CoAssignmentRow>();
-            private readonly Dictionary<string, int> _fileRowByKey =
-                new Dictionary<string, int>(StringComparer.Ordinal);
+            private readonly Dictionary<PrecursorKey, int> _fileRowByKey =
+                new Dictionary<PrecursorKey, int>();
             private int _fileIdx = -1;
 
             // Per-precursor result carried across runs: class, and the minimum |dRT| to a
             // same-m/z partner (any / better-scoring). NaN means "never matched".
-            private readonly Dictionary<string, PrecursorCoAssignment> _byPrecursor =
-                new Dictionary<string, PrecursorCoAssignment>(StringComparer.Ordinal);
+            private readonly Dictionary<PrecursorKey, PrecursorCoAssignment> _byPrecursor =
+                new Dictionary<PrecursorKey, PrecursorCoAssignment>();
 
             private readonly int[] _deltaRtTarget = new int[DELTA_RT_BINS];
             private readonly int[] _deltaRtEntrapment = new int[DELTA_RT_BINS];
@@ -1466,8 +1553,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // one row carrying a run count. Bounded by the number of DISTINCT co-assigned pairs
             // (thousands at Astral scale, not the tens of thousands of observations), so it needs
             // no mid-accumulation trimming - which also keeps the run counts exact.
-            private readonly Dictionary<string, CoAssignedPair> _offendersByPair =
-                new Dictionary<string, CoAssignedPair>(StringComparer.Ordinal);
+            private readonly Dictionary<(PrecursorKey, PrecursorKey), CoAssignedPair> _offendersByPair =
+                new Dictionary<(PrecursorKey, PrecursorKey), CoAssignedPair>();
 
             /// <param name="runNames">Input-file names in input order; indexes <see cref="AddDetectedRow"/>.</param>
             public CoAssignmentAccumulator(string[] runNames)
@@ -1686,7 +1773,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         // A precursor cannot be its own peak partner. Charge states of one peptide
                         // are excluded by m/z, not by sequence, so no sequence-level exclusion is
                         // needed or wanted here.
-                        if (string.Equals(partner.Key, row.Key, StringComparison.Ordinal))
+                        if (partner.Key.Equals(row.Key))
                             continue;
                         if (partner.Class != EntrapmentClass.Target)
                             continue;
@@ -1755,7 +1842,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     // One entry per PRECURSOR PAIR across all runs, not one per observation. The
                     // same pair co-assigning in 31 of 40 runs is one finding, and printing it 31
                     // times would crowd every other pair out of the listing.
-                    string pairKey = row.Key + PAIR_KEY_SEPARATOR + partner.Key;
+                    var pairKey = (row.Key, partner.Key);
                     if (_offendersByPair.TryGetValue(pairKey, out var seen))
                     {
                         seen.Runs++;
@@ -1901,7 +1988,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 if (c != 0)
                     return c;
                 // Total order so the scan is reproducible: distinct precursors can tie on m/z.
-                c = string.CompareOrdinal(a.Key, b.Key);
+                c = a.Key.CompareTo(b.Key);
                 if (c != 0)
                     return c;
                 return a.ApexRt.CompareTo(b.ApexRt);

@@ -3124,7 +3124,7 @@ namespace pwiz.Osprey.Test
 
                 int scanned = 0;
                 ParquetScoreCache.ReadFdrStubScalars(path,
-                    (entryId, charge, isDecoy, coelutionSum, modseq) => scanned++);
+                    (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) => scanned++);
 
                 var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(path);
                 Assert.IsTrue(probe.HasPinFeatures);
@@ -3637,16 +3637,17 @@ namespace pwiz.Osprey.Test
             // Non-sequential entry_ids, so a positional read cannot pass for a keyed one.
             var records = new List<FdrScoreRecord>
             {
-                new FdrScoreRecord(3, -2.0, 0.01, 0.02),
-                new FdrScoreRecord(77, -1.0, 0.03, 0.04),
+                new FdrScoreRecord(3, -2.0, 0.01, 0.02, 31.5),
+                new FdrScoreRecord(77, -1.0, 0.03, 0.04, 42.25),
             };
             FdrScoresSidecar.Write(first, records, FdrScoresSidecar.Pass.SecondPass);
             FdrScoresSidecar.Write(second, records, FdrScoresSidecar.Pass.SecondPass);
             CollectionAssert.AreEqual(File.ReadAllBytes(first), File.ReadAllBytes(second));
 
-            // The record is exactly entry_id + score + the two RUN q-values. A PEP column would
-            // widen it, and the whole point is that no experiment-scope value lives here.
-            Assert.AreEqual(sizeof(uint) + 3 * sizeof(double), FdrScoresSidecar.RecordLength);
+            // The record is exactly entry_id + score + the two RUN q-values + the apex RT.
+            // Every one of those is RUN-scope and per-observation; an experiment-scope column
+            // reappearing here would widen it, and that is what this pins.
+            Assert.AreEqual(sizeof(uint) + 4 * sizeof(double), FdrScoresSidecar.RecordLength);
             Assert.AreEqual(FdrScoresSidecar.HeaderLength + records.Count * FdrScoresSidecar.RecordLength,
                 new FileInfo(first).Length);
 
@@ -3656,6 +3657,11 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(2, read.Count);
             AssertBitEqual(-2.0, read[0].Score);
             AssertBitEqual(0.03, read[1].RunPrecursorQvalue);
+            // Round-tripped, and per record: the apex RT is the v7 column, and it is the only
+            // one whose writer and reader were added at the same time - so nothing else in this
+            // file would notice if the two disagreed on its offset.
+            AssertBitEqual(31.5, read[0].ApexRt);
+            AssertBitEqual(42.25, read[1].ApexRt);
 
             // WRITE-ONCE. Rewriting a sidecar inside one run is the defect class this whole
             // change exists to remove: the file no longer matches the validity sidecar that

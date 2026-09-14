@@ -221,6 +221,7 @@ namespace pwiz.Osprey.FDR
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = FIRST_PASS_LABEL,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
+            Func<string, double[]> loadFileApexRts = null,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null)
         {
@@ -281,7 +282,7 @@ namespace pwiz.Osprey.FDR
                 passLabel, n));
             bool streamingAbort = RunStreamingIntoProjection(
                 projections.PerFile, peptideById, percConfig, logInfo, passLabel,
-                loadFileFeatures, sink, captureContributions, captureModel);
+                loadFileFeatures, loadFileApexRts, sink, captureContributions, captureModel);
             if (streamingAbort)
                 return true;
 
@@ -300,7 +301,7 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// Projection-free 1st-pass Percolator (issue #4355 struct-shrink S3, Stage B): the
         /// FLAT-memory entry point that holds NO resident row buffer. The counterpart of the
-        /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
+        /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Func{string,double[]},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
         /// projection overload for the lean 1st-pass case, it builds the same parity-locked
         /// <see cref="PercolatorConfig"/> and delegates to
         /// <see cref="PercolatorScorer.RunStreamingFirstPass"/>, which streams every row's identity +
@@ -312,7 +313,7 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public static bool RunFirstPassStreaming(
             IReadOnlyList<string> fileNames,
-            Action<string, Action<uint, byte, bool, double, string>> streamFileRows,
+            Action<string, Action<uint, byte, bool, double, string, double>> streamFileRows,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
@@ -789,6 +790,7 @@ namespace pwiz.Osprey.FDR
             Action<string> logInfo,
             string passLabel,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            Func<string, double[]> loadFileApexRts,
             IFdrOutputSink sink,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null)
@@ -963,7 +965,7 @@ namespace pwiz.Osprey.FDR
             // primitives re-aggregated there silently.
             PercolatorScorer.ScoreProjectionAndComputeFdrInPlace(
                 perFile, labels, entryIds, peptides, trainResults, percConfig,
-                loadFileFeatures, sink, captureContributions,
+                loadFileFeatures, loadFileApexRts, sink, captureContributions,
                 applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
             return false;
         }

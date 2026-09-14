@@ -81,6 +81,13 @@ namespace pwiz.Osprey.Core
         public static readonly bool ExitAfterCalibration = IsSet(@"OSPREY_EXIT_AFTER_CALIBRATION");
 
         /// <summary>
+        /// Attribute the model-diagnostics co-assignment join's allocation by call site - the
+        /// per-file parquet column read against the sidecar stream - and report the totals when
+        /// the join finishes. Diagnostic only; it changes nothing the run produces.
+        /// </summary>
+        public static readonly bool LogCoAssignmentAllocation = IsSet(@"OSPREY_LOG_COASSIGN_ALLOC");
+
+        /// <summary>
         /// OSPREY_MZML_VIA_MZMLREADER=1: read mzML with the hand-written
         /// <c>MzmlReader</c> instead of ProteoWizard. Diagnostic only, and
         /// meaningful only in a build that HAS ProteoWizard (net472 with

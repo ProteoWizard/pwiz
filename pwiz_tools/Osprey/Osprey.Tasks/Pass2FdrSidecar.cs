@@ -1511,7 +1511,7 @@ namespace pwiz.Osprey.Tasks
                         string parquetPath = ParquetScoreCache.ReconciledPathFromScoresPath(
                             perFileParquetPaths[fileName]);
                         ParquetScoreCache.ReadFdrStubScalars(parquetPath,
-                            (entryId, charge, isDecoy, coelutionSum, modseq) =>
+                            (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) =>
                             {
                                 double q;
                                 if (!peptideQvalues.TryGetValue(modseq ?? string.Empty, out q))
