@@ -1,6 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2009 University of Washington - Seattle, WA
  * 
@@ -30,6 +31,7 @@ namespace pwiz.Skyline.Model
         private IStreamManager _streamManager = FileStreamManager.Default;
 
         private int _activeThreadCount;
+        private int _documentChangeCount;
         private readonly Dictionary<int, IDocumentContainer> _processing =
             new Dictionary<int, IDocumentContainer>();
 
@@ -55,8 +57,22 @@ namespace pwiz.Skyline.Model
             container.RemoveBackgroundLoader(this);  // Useful information for enforcing orderly test shutdown
         }
 
+        /// <summary>
+        /// Number of document changes this loader has been told about. A cancel-check that
+        /// caches its answer can compare this against the value it saw last time, and skip
+        /// re-checking only while nothing has changed - see <see cref="SingleFileLoadMonitor"/>.
+        /// </summary>
+        public int DocumentChangeCount
+        {
+            get { return Volatile.Read(ref _documentChangeCount); }
+        }
+
         protected void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
         {
+            // Counted before anything else, and after the container has already swapped in the
+            // new document: a reader that sees the new count is guaranteed to see the new
+            // document too, so a re-check it triggers cannot be answered from the old one.
+            Interlocked.Increment(ref _documentChangeCount);
             IDocumentContainer container = (IDocumentContainer)sender;
             SrmDocument document = container.Document;
             SrmDocument previous = e.DocumentPrevious;
