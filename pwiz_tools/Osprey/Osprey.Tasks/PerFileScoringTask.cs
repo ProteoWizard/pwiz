@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -2754,7 +2754,7 @@ namespace pwiz.Osprey.Tasks
             // Same path convention as Rust (`scores_path_for_input`).
             // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
             // as a Phase 4 follow-up. The metadata dictionary is precomputed
-            // in Run() against the original (un-mutated) outer config — see
+            // in Run() against the original (un-mutated) outer config - see
             // Run() for why. Skipped only in --task FirstPassFDR mode (no Stages 1-4
             // ran here, so there is nothing fresh to persist).
             // Segment 4/4 (write): the parquet build/write reporters in

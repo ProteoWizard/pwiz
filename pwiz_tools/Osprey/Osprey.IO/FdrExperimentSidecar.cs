@@ -87,30 +87,9 @@ namespace pwiz.Osprey.IO
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'E', (byte)'X', (byte)'P' };
 
-        /// <summary>
-        /// v3 (2026-09-14, issue #4522 validation) appended the two best-of-runs FLOORS. Before
-        /// it, this file persisted a q-value the pipeline then overrode: the post-Stage-6
-        /// re-clamp updates the entries that feed the .blib and never touched the accumulator
-        /// behind this sidecar, so the corrected value existed only inside the .blib. Measured at
-        /// 1,125,526 values, 0.19% of rows, on the 446-run CHS cohort.
-        ///
-        /// <para>A v2 file is still READ, with the floors coming back as NaN ("unknown"). That is
-        /// deliberate and it is not the usual version wall: this version is in NO task's validity
-        /// key, so a bump cannot invalidate anything - which means a reader that REFUSED v2 would
-        /// hand a task a file it still believes is current and fail on the read instead. Growing
-        /// the record and degrading to the old behaviour is the only shape that is safe here.</para>
-        /// </summary>
-        public const byte FormatVersion = 3;
-
-        // NO v2 read path. The version now rides the owning tasks' validity keys
-        // (";expsidecar="), so a v2 file invalidates its task's output and is regenerated, which
-        // is what every other format here does. Before that term existed, refusing v2 would have
-        // stranded a file the task still believed current - which is why an earlier cut of this
-        // change grew a v2 reader instead. The term is the right fix and the reader was the
-        // workaround; this is pre-release software and a stale bed costs a re-run, not a wrong
-        // answer (issue #4522 validation).
+        public const byte FormatVersion = 2;
         public const int HeaderLength = 32;
-        public const int RecordLength = 60;
+        public const int RecordLength = 44;
 
         /// <summary>
         /// Path for the experiment-wide sidecar of one pass: named after the output blib's stem,
@@ -175,9 +154,9 @@ namespace pwiz.Osprey.IO
                     if (!ReadFully(fs, header, HeaderLength))
                         return false;
                 }
-                if (!HeaderOk(header, expectedPass, out ulong headerCount, out byte version))
+                if (!HeaderOk(header, expectedPass, out ulong headerCount))
                     return false;
-                return TryComputeExpectedLen(headerCount, version, out int expectedLen) &&
+                return TryComputeExpectedLen(headerCount, out int expectedLen) &&
                        info.Length == expectedLen;
             }
             catch (IOException)
@@ -243,8 +222,6 @@ namespace pwiz.Osprey.IO
                         bw.Write(r.ExperimentProteinQvalue);        // [20..28]
                         bw.Write(r.ExperimentAggregateScore);       // [28..36]
                         bw.Write(r.Pep);                            // [36..44]
-                        bw.Write(r.MinRunQByEntry);                 // [44..52]
-                        bw.Write(r.MinRunQByPeptide);               // [52..60]
                     }
                 }
                 saver.Commit();
@@ -272,19 +249,18 @@ namespace pwiz.Osprey.IO
                     var header = new byte[HeaderLength];
                     if (!ReadFully(src, header, HeaderLength))
                         return false;
-                    if (!HeaderOk(header, expectedPass, out ulong headerCount, out byte version))
+                    if (!HeaderOk(header, expectedPass, out ulong headerCount))
                         return false;
-                    if (!TryComputeExpectedLen(headerCount, version, out int expectedLen) ||
+                    if (!TryComputeExpectedLen(headerCount, out int expectedLen) ||
                         src.Length != expectedLen)
                     {
                         return false;
                     }
 
-                    int recordLength = RecordLengthFor(version);
-                    var record = new byte[recordLength];
+                    var record = new byte[RecordLength];
                     for (ulong rec = 0; rec < headerCount; rec++)
                     {
-                        if (!ReadFully(src, record, recordLength))
+                        if (!ReadFully(src, record, RecordLength))
                             return false;
                         onRecord(new FdrExperimentRecord(
                             BitConverter.ToUInt32(record, 0),
@@ -292,9 +268,7 @@ namespace pwiz.Osprey.IO
                             BitConverter.ToDouble(record, 12),
                             BitConverter.ToDouble(record, 20),
                             BitConverter.ToDouble(record, 28),
-                            BitConverter.ToDouble(record, 36),
-                            BitConverter.ToDouble(record, 44),
-                            BitConverter.ToDouble(record, 52)));
+                            BitConverter.ToDouble(record, 36)));
                     }
                 }
             }
@@ -331,49 +305,30 @@ namespace pwiz.Osprey.IO
         /// Validate the 32-byte header: magic, current version, expected pass byte. Shared by
         /// every entry point so they cannot drift on what they accept.
         /// </summary>
-        /// <summary>
-        /// Validate the header and report BOTH the record count and the version that wrote it.
-        /// The version is an output because the length arithmetic and the record read below are
-        /// version-dependent by nature, even while exactly one version is readable.
-        /// </summary>
         private static bool HeaderOk(byte[] header, FdrScoresSidecar.Pass expectedPass,
-            out ulong headerCount, out byte version)
+            out ulong headerCount)
         {
             headerCount = 0;
-            version = 0;
             for (int i = 0; i < Magic.Length; i++)
             {
                 if (header[i] != Magic[i])
                     return false;
             }
-            if (header[8] != FormatVersion)
+            if (header[8] != FormatVersion || header[9] != (byte)expectedPass)
                 return false;
-            if (header[9] != (byte)expectedPass)
-                return false;
-            version = header[8];
             headerCount = BitConverter.ToUInt64(header, 16);
             return true;
-        }
-
-        /// <summary>
-        /// On-disk width of one record written by <paramref name="version"/>. One version is
-        /// readable today - see <see cref="FormatVersion"/> - and this exists so the length
-        /// arithmetic names its dependency rather than assuming it.
-        /// </summary>
-        private static int RecordLengthFor(byte version)
-        {
-            return RecordLength;
         }
 
         /// <summary>
         /// Compute <c>HeaderLength + headerCount * RecordLength</c> with overflow detection, so
         /// a corrupt count cannot wrap int and let the size check pass spuriously.
         /// </summary>
-        private static bool TryComputeExpectedLen(ulong headerCount, byte version, out int expectedLen)
+        private static bool TryComputeExpectedLen(ulong headerCount, out int expectedLen)
         {
             try
             {
-                expectedLen = checked(HeaderLength + (int)headerCount * RecordLengthFor(version));
+                expectedLen = checked(HeaderLength + (int)headerCount * RecordLength);
                 return true;
             }
             catch (OverflowException)

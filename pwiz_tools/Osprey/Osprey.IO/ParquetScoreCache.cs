@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -1143,12 +1143,16 @@ namespace pwiz.Osprey.IO
         /// row-group skip rule. A second reader with its own copy of that rule is how a join
         /// like this drifts.
         ///
-        /// <para>For the RESIDENT score path only (the flag-off <c>FdrEntry</c> oracle and the
-        /// 2nd pass): its sink assembles the per-file FDR sidecar from projection rows, and
-        /// those carry no retention time, while the sidecar has a column for one (format v7,
-        /// issue #4522). The STREAMING first pass needs none of this - it already has each
-        /// row's apex RT in hand from the same stream that produced its score, which is the
-        /// point of putting the column in the sidecar at all.</para>
+        /// <para>ONE production caller: the RESIDENT-projection arm of the FIRST pass, the
+        /// <c>else</c> of <c>projections.IsCountsOnly</c>. Its sink assembles the per-file FDR
+        /// sidecar from projection rows, and those carry no retention time, while the sidecar
+        /// has a column for one (format v7, issue #4522). Not the 2nd pass, which this used to
+        /// claim, and NOT a cost the ordinary pipeline pays: a default run takes the lean arm
+        /// (<c>PerFileScoringTask.CanUseLeanProjection</c>), so reaching this read means the run
+        /// asked for the resident pool - <c>OSPREY_FDR_PROJECTION=0</c> or a non-Percolator
+        /// <c>FdrMethod</c> - or carries reconciled input. The STREAMING first pass needs none
+        /// of it: it already has each row's apex RT in hand from the same stream that produced
+        /// its score, which is the point of putting the column in the sidecar at all.</para>
         /// </summary>
         public static double[] ReadApexRtsByParquetIndex(string path)
         {

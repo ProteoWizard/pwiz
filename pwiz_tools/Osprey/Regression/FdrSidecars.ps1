@@ -187,12 +187,8 @@ public static class OspreyFdrSidecarComparer
     // The analysis-wide experiment-scope sidecar (format v5, issue #4486): its own magic, its
     // own version, one record per DISTINCT entry_id.
     public const int ExperimentHeaderLen = 32;
-    // v3 (issue #4522 validation) appended the two best-of-runs floors at [44..60]. A v2 file
-    // is still readable by the product - the version is in no validity key, so refusing it would
-    // strand files a task still believes current - but this comparison only ever sees files the
-    // run under test just wrote, so it pins the CURRENT width and would flag a silent revert.
-    public const int ExperimentRecordLen = 60;
-    private const byte ExpectedExperimentVersion = 3;
+    public const int ExperimentRecordLen = 44;
+    private const byte ExpectedExperimentVersion = 2;
     private static readonly byte[] ExperimentMagic =
         { 0x4F, 0x53, 0x50, 0x52, 0x59, 0x45, 0x58, 0x50 }; // OSPRYEXP
 
@@ -223,8 +219,6 @@ public static class OspreyFdrSidecarComparer
         new FdrSidecarField { Name = "experiment_peptide_qvalue",   Offset = 12 },
         new FdrSidecarField { Name = "experiment_protein_qvalue",   Offset = 20 },
         new FdrSidecarField { Name = "experiment_aggregate_score",  Offset = 28 },
-        new FdrSidecarField { Name = "min_run_q_by_entry",           Offset = 44 },
-        new FdrSidecarField { Name = "min_run_q_by_peptide",         Offset = 52 },
         new FdrSidecarField { Name = "pep",                          Offset = 36 },
     };
 

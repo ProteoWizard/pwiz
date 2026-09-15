@@ -2253,7 +2253,9 @@ foreach ($name in $selected) {
                     $expStraight[0].Name, $expDiff.LengthExpected, $expDiff.LengthActual,
                     $expDiff.FirstDiffOffset, $expDiff.DiffCount))
             } else {
-                $m3sCompared += [int](([System.IO.FileInfo]$expStraight[0].FullName).Length - 32) / 36
+                $m3sCompared += [int](([System.IO.FileInfo]$expStraight[0].FullName).Length -
+                    [OspreyFdrSidecarComparer]::ExperimentHeaderLen) /
+                    [OspreyFdrSidecarComparer]::ExperimentRecordLen
             }
         }
 
@@ -3346,10 +3348,16 @@ foreach ($name in $selected) {
             # ORACLE 1b: and the join did NOT run. The positive marker alone is not enough -
             # one pass could fold while the other re-computes, and the artifact would still be
             # correct. These are lines only genuine analysis emits.
+            # The experiment-q floor traversal is here because it is a whole pass over every run
+            # that this arm must not perform. It used to run unconditionally before the .blib,
+            # re-deriving floors the second pass now applies before it writes (issue #4522), and
+            # nothing about the REPORT would change if it came back - only the wall clock and the
+            # working set, which is exactly what the byte comparisons cannot see.
             $m11Forbidden = @(
                 @{ What = 'a second-pass FDR compute'; Pattern = '[STAGE-WALL] second-pass-fdr' }
                 @{ What = 'protein-level FDR';         Pattern = 'Running protein-level FDR' }
-                @{ What = 'a per-file rescore';        Pattern = 'Re-scoring file ' })
+                @{ What = 'a per-file rescore';        Pattern = 'Re-scoring file ' }
+                @{ What = 'an experiment-q floor fold over the runs'; Pattern = 'Folding experiment-q floors' })
             foreach ($fb in $m11Forbidden) {
                 $hit = @(Select-String -Path $r11.Log -Pattern $fb.Pattern -SimpleMatch `
                     -ErrorAction SilentlyContinue)

@@ -52,7 +52,7 @@ Stage 6: cross-run reconciliation re-scores moved / gap-filled peaks (10-cross-r
 Stage 7 (second pass, authoritative):
   7. Re-run the identical Percolator core over the reconciled entries, write
      .2nd-pass.fdr_scores.bin sidecars, reload stubs with the fresh q-values.
-  8. Re-apply the best-of-runs clamp (Stage 6 reset the run q-values of moved peaks).
+  8. (No re-clamp: the second pass floors its experiment q before writing it - 3j.)
   9. Second-pass protein FDR (authoritative) + blib output.
 ```
 
@@ -299,6 +299,53 @@ runs in-pass over the score arrays (`PercolatorFdr.cs:1040`); the resident overl
 `PercolatorEngine.ClampExperimentQToBestRun` (`PercolatorEngine.cs:864`) is re-applied
 after Stage 6 reconciliation in `SecondPassFdrTask`, because reconciliation resets the run
 q-values of moved and gap-filled peaks (issue #4390).
+
+**The second pass applies the floor BEFORE it writes.** It did not, and that was the defect
+issue #4522 set out to validate. `Pass2FdrSidecar.FinishRecord` produces each experiment record
+from a q-value nothing had floored, and the correction happened afterwards, on the entries that
+feed the .blib - so `<blib-stem>.2nd-pass.fdr_experiment.bin` persisted a number the pipeline
+itself considered wrong, and the corrected one existed only inside the .blib. Measured on the
+446-run CHS cohort: 1,125,526 values, 0.19% of rows, uniformly across every run.
+
+**Both strata reached that state, by different routes**, which is why it looked like two bugs:
+
+| stratum | what `FinishRecord` gives it | why it can fall below its own best run |
+|---|---|---|
+| on-stratum | a fresh second-pass competition q | nothing clamps it |
+| off-stratum | its first-pass q, carried | that q WAS clamped - against FIRST-pass run q - while pass 2 refreshed run q underneath it, a run that did not compete taking 1.0 |
+
+The fix is one rule applied to every record regardless of which branch produced it, at the point
+where both the value and its floor are in hand:
+
+* the per-entry floor is folded out of the per-file `.2nd-pass.fdr_scores.bin` records the
+  experiment sweep is **already reading** - each carries `run_precursor_qvalue` and
+  `run_peptide_qvalue`, so the min-over-runs costs one comparison per record and no IO of its own
+* the peptide floor is derived from those entry floors, grouped through identities taken from the
+  survivor walk that sweep already performs. Exact rather than approximate, because `min` is
+  associative. **Not** from `LibraryById`: a `--task SecondPassFDR` node loads a library with no
+  GENERATED decoys, so a decoy entry_id resolves on the straight route and not on the distributed
+  one - 166,680 of 333,404 records differed that way on Stellar, every one a decoy
+* `FdrExperimentAccumulator.ApplyRunQFloors` raises both q-values before the records are written
+
+**Nothing re-clamps afterwards.** What stood between protein FDR and the .blib was a fold over
+every run to re-derive those floors plus a per-run apply - 8 minutes and a multi-GB working set at
+446 runs, paid by every analysis whether or not anything asked for diagnostics. Every pool
+downstream takes its experiment q from these records through the pass-2 overlay, so it arrives
+floored. The golden .blib comparison is what holds this: the golden was produced WITH the old
+re-clamp, so flooring at the source must reproduce it byte for byte.
+
+**The floor is not stored beside the raw value, deliberately.** This file holds DERIVED numbers -
+the model q-values cannot be reconstructed from it in any case - so keeping the un-floored
+competition result would preserve only WHICH ~0.1% of entries the floor moved, at the price of a
+wider record and a format version. Flooring at the source makes "experiment q is never more
+confident than its own best run" true by construction rather than checkable after the fact. The
+format is unchanged, so no task's validity key mentions it and no bed is invalidated.
+
+**The first pass needs none of this.** It floors in the same emit pass that computes the value
+(`PercolatorScorer`), over the same arrays, and nothing refreshes run q afterwards within the
+pass - so re-applying is `max(floored, floor)`, a no-op. That is the general rule: a floor can be
+omitted exactly when the value and the run q it floors against were produced together and neither
+moved afterwards.
 
 ---
 

@@ -254,12 +254,11 @@ namespace pwiz.Osprey.Tasks
             // without breaking any reader or moving a golden.
             return base.ValidityKey(ctx)
                 + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
-                // The experiment-scope sidecar's version belongs here for the same reason its
-                // per-file sibling's does, and its absence was a gap rather than a decision: this
-                // artifact is recent (issue #4486 split it out of the per-run files, which were
-                // ~50% redundant with it) and was created without the term. Without it a format
-                // bump leaves a file the task still believes current and cannot read.
-                + @";expsidecar=" + FdrExperimentSidecar.FormatVersion
+                // NO ";expsidecar=" term. The experiment sidecar's format does not change with
+                // this work: the best-of-runs floor is APPLIED to the q-values before they are
+                // written rather than stored beside them, so the record keeps its columns and its
+                // version. A term here would invalidate this task for a format that did not move,
+                // and invalidating FirstPassFDR costs a 5-hour Stage 5 re-run at 446 files.
                 + @";pass2proteinq=2"
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
@@ -468,7 +467,8 @@ namespace pwiz.Osprey.Tasks
             // entries it stamped are gone, so the same overlay is installed as a per-run hook
             // and re-applied to each run as the folds below rebuild it. No-op on the resident
             // arm, which is what keeps the two arms one code path rather than two.
-            Pass2FdrSidecar.InstallStreamedPass2Overlay(ctx, rescored, Name, ValidityKey(ctx));
+            Pass2FdrSidecar.InstallStreamedPass2Overlay(ctx, rescored, Name, ValidityKey(ctx),
+                Pass2FdrSidecar.LazyPass2ExperimentRecords(ctx));
             // The substep the 2026-07-31 characterization on #4486 located the churn in:
             // it reloads every file's reconciled features, so the pre-GC line carries the
             // transient reload peak and the post-GC line what survives it.
@@ -502,14 +502,21 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage7-protein-fdr",
                 memDetail);
 
-            // Re-clamp experiment q to each entry's best run q on the FINAL post-Stage-6
-            // pool. The pass-1 (and any pass-2) Percolator already clamped, but Stage 6
-            // reconciliation zeroes the run q of moved peaks AFTER that clamp, so a precursor
-            // whose only run-passing observation was relocated can otherwise keep a stale low
-            // experiment q with no surviving run support -- reported with no run-level ID (the
-            // blib ID-line artifact). Re-clamping here, against the run q's actually written to
-            // the blib, restores "reported => some run genuinely passed" for the final output.
-            ReclampExperimentQToBestRun(rescored, ctx.LogInfo);
+            // NOTHING re-clamps experiment q here any more, and that is the point of issue #4522.
+            //
+            // What stood here was a fold over every run to re-derive each entry's best-of-runs q
+            // floor, then a per-run apply - 8 minutes and a multi-GB working set at 446 runs,
+            // paid by every analysis whether or not anything asked for diagnostics. It existed
+            // because the second pass wrote its experiment q-values WITHOUT flooring them, so
+            // something downstream had to correct 1,125,526 of them (0.19%) before the .blib.
+            //
+            // The floor is now applied where both the value and the floor are in hand: the pass-2
+            // sweep that builds the experiment records folds the floors out of the per-file
+            // second-pass records it is already reading, and raises the q-values before they are
+            // written. Every pool downstream takes its experiment q from those records through
+            // the pass-2 overlay, so it arrives floored and there is nothing left to correct.
+            // The golden .blib comparison is what holds this: it was produced WITH the old
+            // re-clamp, so flooring at the source has to reproduce it byte for byte.
 
             // Write output blib - unless this is a diagnostics-only regeneration, whose whole
             // contract is that it touches no artifact but the report.
@@ -738,7 +745,6 @@ namespace pwiz.Osprey.Tasks
             // Stage-5 boundary probes, because three lines in a twenty-minute task is not a
             // cost and the alternative is re-running to get them.
             ProfilerHooks.LogMemoryStats(ctx.LogInfo, @"pass2-fold: before the second-pass join");
-            ProfilerHooks.CaptureRetentionSnapshot(@"pass2-join-start");
             var rescored = ctx.Get<RescoredEntries>();
             ProfilerHooks.LogMemoryStats(ctx.LogInfo, @"pass2-fold: after RescoredEntries (join done)");
             // This arm is ITSELF a resident-pool path when the source is absent - it pulls the
@@ -747,6 +753,16 @@ namespace pwiz.Osprey.Tasks
             WarnResidentStage7Join(rescored, ctx);
             var libraryById = ctx.Get<LibraryById>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+            // AFTER the lazy byproducts are resolved, not before, and that placement is the whole
+            // value of the probe. It used to fire above ctx.Get<RescoredEntries>(), where the
+            // process has loaded nothing: the 2026-09-14 workspace shows 573.5 KB and 4.8 K live
+            // objects there against 4.70 GB and 28.05 M at the end, with the comparison reporting
+            // 4.70 GB "New" and 477.6 KB survived. A delta measured from an empty process cannot
+            // separate "the overlays retained this" from "the stage loaded the library", and it
+            // was read as the former - as ~4 GB unaccounted for in a loop whose only product is
+            // ~90 MB of floor maps, when the library alone is 4.19 GB on this leg. Bracketing the
+            // overlays means starting where they start.
+            ProfilerHooks.CaptureRetentionSnapshot(@"pass2-join-start");
 
             // The stratum, from the same sidecar the join reloads it from. Under
             // protein-compact it SPLITS the pass-2 acceptance boundary in two (#4573), so a
@@ -771,9 +787,19 @@ namespace pwiz.Osprey.Tasks
             // skips that compute, so on the resident arm nothing would carry pass 2 onto the
             // pool and the report would describe the FIRST pass under a pass-2 heading -
             // complete, plausible, every card populated, and wrong.
-            Pass2FdrSidecar.InstallStreamedPass2Overlay(ctx, rescored, Name, ValidityKey(ctx));
-            Pass2FdrSidecar.OverlayPass2OntoResidentPool(ctx, rescored, Name, ValidityKey(ctx));
-            ReclampExperimentQToBestRun(rescored, ctx.LogInfo);
+            // ONE resolution of the analysis-wide 2nd-pass experiment records for both overlays.
+            // Each resolves it from the same place and each would otherwise deserialize its own
+            // copy - on this arm, which has no in-memory scope, that is the whole file per
+            // consumer (see LazyPass2ExperimentRecords).
+            var experimentRecords = Pass2FdrSidecar.LazyPass2ExperimentRecords(ctx);
+            Pass2FdrSidecar.InstallStreamedPass2Overlay(ctx, rescored, Name, ValidityKey(ctx),
+                experimentRecords);
+            Pass2FdrSidecar.OverlayPass2OntoResidentPool(ctx, rescored, Name, ValidityKey(ctx),
+                experimentRecords);
+            // No re-clamp here either, for the reason the join gives: the experiment q this arm
+            // overlays onto the pool comes from records that were floored before they were
+            // written, so the two arms describe the same pool by construction rather than by
+            // each repeating a correction.
             // The other end of the bracket: everything between this and the probe above is the
             // experiment-wide pass-2 state, which is where the library-vs-cohort sizing question
             // lives (625,620 retained base_ids against 6,175,389 library entries on this cohort).
@@ -935,76 +961,6 @@ namespace pwiz.Osprey.Tasks
             ModelDiagnosticsReport.WritePass2AndFinalizeFromAccumulator(
                 pass1Data, accumulator, coAssignment, config, ctx.LogInfo,
                 ValidityKey(ctx));
-        }
-
-        /// <summary>
-        /// Re-clamp experiment q to each precursor's best run q, as a FOLD then an APPLY.
-        ///
-        /// <para>The floors are whole-experiment and the application is per row, which is why
-        /// <see cref="PercolatorEngine"/> exposes the two halves separately. Folding them over a
-        /// stream visits every run and holds two O(distinct) maps - 45,724 precursors at 257 CHS
-        /// runs, not 137 M entries - so this genuinely whole-experiment step is one of the folds
-        /// the architecture admits in a join, not a reason to hold the pool.</para>
-        ///
-        /// <para>The apply half differs by arm and cannot not. On the resident pool the floors
-        /// are stamped onto the entries once and every later gate reads them. On the streamed
-        /// one there are no entries between passes, so the apply is installed as a per-run
-        /// overlay and re-applied to each run as the blib gates rebuild it - after the pass-2
-        /// sidecar overlay, because a floor raises the value that overlay has just written.
-        /// Composition order is the correctness argument, and it is why these go in as two
-        /// AddPostMaterialize calls in this order rather than one.</para>
-        /// </summary>
-        private static void ReclampExperimentQToBestRun(RescoredEntries rescored, Action<string> logInfo)
-        {
-            var minRunBothByEntryId = new Dictionary<uint, double>();
-            var minRunBothByPeptide = new Dictionary<(string ModifiedSequence, bool IsDecoy), double>();
-            foreach (var kvp in rescored.StreamFiles(@"Folding experiment-q floors"))
-            {
-                PercolatorEngine.AccumulateExperimentQFloors(
-                    kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
-            }
-            // How many values the re-apply actually RAISES, said out loud. The score pass floors
-            // these same values before it writes them (PercolatorScorer's clamp), so a pool
-            // rebuilt from the persisted q should already satisfy the invariant and this should
-            // raise NOTHING. If it reports zero, this whole fold - a full traversal of every run
-            // on the 446-run cohort, 8 minutes and 9.9 GB of working set - is re-deriving floors
-            // that change no value, and the question becomes whether to persist the floor or
-            // delete the step. If it reports a non-zero count, the persisted q is NOT floored
-            // and that is a much more serious finding, because those are the q-values the user
-            // is shown.
-            logInfo(string.Format(
-                @"[FDR] experiment-q floors: folded {0} entry_id and {1} peptide floor(s) over the " +
-                @"second pass.", minRunBothByEntryId.Count, minRunBothByPeptide.Count));
-            if (rescored.Streams)
-            {
-                // Per-run counts summed into one line at the end would need a barrier this arm
-                // does not have - the applies happen as later gates rebuild each run - so the
-                // count is reported per run and only when it is NON-ZERO. Silence is the
-                // expected, interesting answer.
-                rescored.AddPostMaterialize((fileName, entries) =>
-                {
-                    int raised = PercolatorEngine.ApplyExperimentQFloors(
-                        entries, minRunBothByEntryId, minRunBothByPeptide);
-                    if (raised > 0)
-                    {
-                        logInfo(string.Format(
-                            @"[FDR] experiment-q floors RAISED {0} of {1} value(s) rebuilding {2} - " +
-                            @"the persisted experiment q was below its own best run q.",
-                            raised, entries.Count, fileName));
-                    }
-                });
-                return;
-            }
-            int totalRaised = 0, totalRows = 0;
-            foreach (var kvp in rescored.Files())
-            {
-                totalRaised += PercolatorEngine.ApplyExperimentQFloors(
-                    kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
-                totalRows += kvp.Value.Count;
-            }
-            logInfo(string.Format(
-                @"[FDR] experiment-q floors raised {0} of {1} value(s) on the resident pool.",
-                totalRaised, totalRows));
         }
 
         /// <summary>

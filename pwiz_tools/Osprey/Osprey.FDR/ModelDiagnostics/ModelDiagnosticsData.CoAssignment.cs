@@ -987,7 +987,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 foreach (uint id in _fileAccepted)
                 {
                     double[] fileBest = IsDecoyId(id) ? _fileBestDecoy : _fileBestTarget;
-                    double v = fileBest[id & BASE_ID_MASK];
+                    uint baseId = id & BASE_ID_MASK;
+                    // Bounds-checked, because acceptance and SIZING are recorded under different
+                    // conditions by design: ObserveCutoff sizes the run scope inside its
+                    // !IsNaN(score) block - deliberately, so one stub row with a wild base id
+                    // cannot make every later file carry arrays it never uses - while it adds to
+                    // _fileAccepted outside that block, so a passing q is never silently dropped.
+                    // An entry that is accepted without ever having written a best therefore has
+                    // no slot, and indexing raw would throw here rather than in the code that
+                    // created the asymmetry. Skipping is also the RIGHT answer, not just a safe
+                    // one: an id with no slot wrote no best, so it contributes nothing to a
+                    // minimum over bests - exactly as a NaN slot already does below.
+                    if (baseId >= (uint)fileBest.Length)
+                        continue;
+                    double v = fileBest[baseId];
                     if (!double.IsNaN(v) && (double.IsNaN(min) || v < min))
                         min = v;
                 }
