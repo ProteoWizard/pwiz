@@ -53,6 +53,29 @@ namespace pwiz.SkylineTest
         }
 
         [TestMethod]
+        public void TestChromTransitionMissingObservedIonMobility()
+        {
+            // The missing_observed_ion_mobility flag must round-trip cleanly without
+            // disturbing Source or MissingMassErrors, since they share the flag word.
+            foreach (var chromSource in ListChromSourceValues())
+            {
+                var chromTransition = MakeChromTransition(chromSource);
+                Assert.IsFalse(chromTransition.MissingObservedIonMobility);
+                chromTransition.MissingObservedIonMobility = true;
+                Assert.IsTrue(chromTransition.MissingObservedIonMobility);
+                Assert.AreEqual(chromSource, chromTransition.Source);
+                Assert.IsFalse(chromTransition.MissingMassErrors);
+                chromTransition.MissingMassErrors = true;
+                Assert.IsTrue(chromTransition.MissingObservedIonMobility);
+                Assert.IsTrue(chromTransition.MissingMassErrors);
+                chromTransition.MissingObservedIonMobility = false;
+                Assert.IsFalse(chromTransition.MissingObservedIonMobility);
+                Assert.IsTrue(chromTransition.MissingMassErrors);
+                Assert.AreEqual(chromSource, chromTransition.Source);
+            }
+        }
+
+        [TestMethod]
         public void TestChromTransitionSource()
         {
             foreach (var chromSource1 in ListChromSourceValues())
