@@ -31,8 +31,9 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// Reader / writer for the per-file <c>.&lt;phase&gt;-pass.fdr_scores.bin</c>
-    /// sidecar: the v5 binary format that persists the RUN-scope FDR statistics
-    /// for one OBSERVATION (SVM discriminant + the two run q-values + PEP). Used
+    /// sidecar: the v7 binary format that persists the RUN-scope FDR statistics
+    /// for one OBSERVATION (SVM discriminant, the two run q-values, the detection
+    /// apex RT). Used
     /// at the Stage 5 → Stage 6 boundary so a Stage 6 worker can run without
     /// re-running first-pass Percolator AND apply the same protein-rescue
     /// compaction predicate the in-process pipeline uses - the protein-rescue
@@ -46,10 +47,11 @@ namespace pwiz.Osprey.IO
     /// byte parity was verified by a separate harness script via the
     /// <c>OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT</c> test hook.
     ///
-    /// Format (32-byte header + N × 36-byte records, all little-endian):
+    /// Format (<see cref="HeaderLength"/>-byte header + N × <see cref="RecordLength"/>-byte
+    /// records, all little-endian):
     /// <code>
     ///   magic         [0..8]   = b"OSPRYFDR"
-    ///   version       [8]      = u8 (= 5)
+    ///   version       [8]      = u8 (= 7)
     ///   pass          [9]      = u8 (1 = first-pass, 2 = second-pass)
     ///   reserved      [10..16] = 6 bytes (zero)
     ///   entry_count   [16..24] = u64
@@ -59,7 +61,7 @@ namespace pwiz.Osprey.IO
     ///                            [4..12]  f64 svm_score
     ///                            [12..20] f64 run_precursor_qvalue
     ///                            [20..28] f64 run_peptide_qvalue
-    ///                            [28..36] f64 pep
+    ///                            [28..36] f64 apex_rt
     /// </code>
     /// Records are written pre-compaction at the Stage 5 → Stage 6
     /// boundary: every input entry contributes one record so q-values are
@@ -124,9 +126,33 @@ namespace pwiz.Osprey.IO
     /// issue #4486, so a per-file sidecar is written exactly once on both
     /// passes and no later stage reopens it.</item>
     /// </list>
-    /// No conversion path is written: pre-first-public-release, a v4 sidecar
+    ///
+    /// v5 → v6 (2026-09-05, issue #4486): dropped <c>pep</c>. It is one value per
+    /// base_id, computed over the single winning observation, so the column wrote
+    /// a real number on the winner and the sentinel 1.0 on every other observation
+    /// of the same precursor - a materialized left-outer-join, not a probability.
+    /// It moved to <see cref="FdrExperimentRecord.Pep"/>, which is also what let
+    /// the 2nd pass stop reopening every per-run sidecar to patch it.
+    ///
+    /// v6 → v7 (2026-09-13, issue #4522): appended <c>apex_rt</c>, the
+    /// observation's detection apex retention time. It is a RUN-scope
+    /// per-observation fact and so belongs here, but it was left out because the
+    /// streaming score path did not otherwise read it. The one consumer that
+    /// wanted it - the model-diagnostics peak co-assignment panel - therefore read
+    /// a whole <c>apex_rt</c> column out of each file's <c>.scores.parquet</c> and
+    /// joined it to this sidecar POSITIONALLY, asserting the alignment on entry_id
+    /// because neither format recorded the contract it depended on. That join was
+    /// 29 MB per file of large-object allocation against 4 MB for everything else
+    /// the panel did. Carrying the column costs 8 bytes per record - a 29% larger
+    /// file, read sequentially - and deletes the column read, the inferred join
+    /// and the assertion that policed it.
+    ///
+    /// No conversion path is written: pre-first-public-release, an older sidecar
     /// simply fails <see cref="IsCurrentFormat"/> and is recomputed, which
-    /// costs a re-run rather than risking a misread record.
+    /// costs a re-run rather than risking a misread record. A version bump is
+    /// therefore not free at cohort scale: <c>FormatVersion</c> is part of
+    /// FirstPassFDR's validity key, so every bed's Stage 5 output has to be
+    /// regenerated (5h11m for the 446-run CHS cohort).
     /// </summary>
     public static class FdrScoresSidecar
     {
@@ -134,15 +160,17 @@ namespace pwiz.Osprey.IO
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'F', (byte)'D', (byte)'R' };
 
-        public const byte FormatVersion = 6;
+        public const byte FormatVersion = 7;
         public const int HeaderLength = 32;
-        public const int RecordLength = 28;
+        public const int RecordLength = 36;
 
         /// <summary>
-        /// Records per buffered body read in <see cref="TryWalkRecords"/>. 2,048 x 28 B =
-        /// 57,344 B, comfortably under the 85,000-byte large-object threshold, so a reader
-        /// walks a 106 MB sidecar through one Gen0 buffer instead of allocating the whole
-        /// file on the LOH.
+        /// Records per buffered body read in <see cref="TryWalkRecords"/>. 2,048 x 36 B =
+        /// 73,728 B, still under the 85,000-byte large-object threshold at format v7's wider
+        /// record, so a reader walks a 137 MB sidecar through one Gen0 buffer instead of
+        /// allocating the whole file on the LOH. Any further column added here has to be
+        /// checked against that threshold: 2,048 x 42 B would cross it and put every sidecar
+        /// read back on the large object heap.
         /// </summary>
         private const int RECORDS_PER_CHUNK = 2048;
 
@@ -386,7 +414,7 @@ namespace pwiz.Osprey.IO
                 foreach (var e in entries)
                 {
                     WriteRecord(bw, e.EntryId, e.Score,
-                        e.RunPrecursorQvalue, e.RunPeptideQvalue);
+                        e.RunPrecursorQvalue, e.RunPeptideQvalue, e.ApexRt);
                 }
             });
         }
@@ -415,7 +443,7 @@ namespace pwiz.Osprey.IO
                 foreach (var r in records)
                 {
                     WriteRecord(bw, r.EntryId, r.Score,
-                        r.RunPrecursorQvalue, r.RunPeptideQvalue);
+                        r.RunPrecursorQvalue, r.RunPeptideQvalue, r.ApexRt);
                 }
             });
         }
@@ -489,8 +517,8 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Write one 36-byte record (entry_id + 4 f64s, little-endian) in the exact
-        /// v5 field order. Single-sourced so the FdrEntry and FdrProjection write
+        /// Write one <see cref="RecordLength"/>-byte record (entry_id + 4 f64s, little-endian)
+        /// in the exact v7 field order. Single-sourced so the FdrEntry and FdrProjection write
         /// paths cannot drift on byte layout.
         /// </summary>
         /// <summary>
@@ -539,12 +567,13 @@ namespace pwiz.Osprey.IO
 
         private static void WriteRecord(
             BinaryWriter bw, uint entryId, double score,
-            double runPrecursorQvalue, double runPeptideQvalue)
+            double runPrecursorQvalue, double runPeptideQvalue, double apexRt)
         {
             bw.Write(entryId);                          // [0..4]
             bw.Write(score);                            // [4..12]
             bw.Write(runPrecursorQvalue);               // [12..20]
             bw.Write(runPeptideQvalue);                 // [20..28]
+            bw.Write(apexRt);                           // [28..36]
         }
 
         /// <summary>
@@ -640,6 +669,12 @@ namespace pwiz.Osprey.IO
                 e.Score                       = BitConverter.ToDouble(chunk, off + 4);
                 e.RunPrecursorQvalue          = BitConverter.ToDouble(chunk, off + 12);
                 e.RunPeptideQvalue            = BitConverter.ToDouble(chunk, off + 20);
+                // apex_rt (format v7) is deliberately NOT overlaid. Every caller of this
+                // overload builds its entries from a parquet that already carries the column,
+                // so the sidecar's copy is the same number arriving by a second route; writing
+                // it would only create a way for the two to disagree silently. The consumer
+                // that has no parquet row to start from reads records through
+                // <see cref="ReadRecords"/>, which does decode it.
                 // The EXPERIMENT-scope half, applied HERE so it reaches exactly the entries this
                 // sidecar has a record for and no others (format v5, issue #4486).
                 //
@@ -921,9 +956,10 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Decode one 28-byte record into a <see cref="FdrScoreRecord"/>, reading the exact v6
-        /// field order <see cref="WriteRecord"/> wrote (little-endian). Single-sourced with the
-        /// writer so the read/write byte layout cannot drift.
+        /// Decode one <see cref="RecordLength"/>-byte record into a
+        /// <see cref="FdrScoreRecord"/>, reading the exact v7 field order
+        /// <see cref="WriteRecord"/> wrote (little-endian). Single-sourced with the writer so
+        /// the read/write byte layout cannot drift.
         /// </summary>
         private static FdrScoreRecord DecodeRecord(byte[] rec)
         {
@@ -931,7 +967,8 @@ namespace pwiz.Osprey.IO
                 BitConverter.ToUInt32(rec, 0),    // [0..4]   entry_id
                 BitConverter.ToDouble(rec, 4),    // [4..12]  svm_score
                 BitConverter.ToDouble(rec, 12),   // [12..20] run_precursor_qvalue
-                BitConverter.ToDouble(rec, 20));  // [20..28] run_peptide_qvalue
+                BitConverter.ToDouble(rec, 20),   // [20..28] run_peptide_qvalue
+                BitConverter.ToDouble(rec, 28));  // [28..36] apex_rt
         }
     }
 }
