@@ -345,9 +345,14 @@ sweep_fixture()  # <fixture filename> <extension>
     rm -f "$difffile"
     started=$(now_ms)
 
-    # An Analysis.yep fixture is a Bruker format the sweep does not convert, and diaPASEF
-    # is only tested through a filtered configuration the reference does not describe.
-    if ! [ -e "$fixture/Analysis.yep" ] && [ "$fixture" != "diaPASEF.d" ]; then
+    # diaPASEF is only tested through a filtered configuration the reference does not describe.
+    #
+    # Bruker YEP (Analysis.yep, the Esquire/HCT ion-trap format read through the CompassXtract
+    # COM server) used to be excluded here too, and the exclusion had no matching branch below,
+    # so the one YEP fixture was reported as a failed conversion nobody had attempted. It
+    # converts in this container - CompassXtract activates fine under Wine, and the result is
+    # spectrum-for-spectrum identical to its reference - so it is swept like anything else.
+    if [ "$fixture" != "diaPASEF.d" ]; then
         if [ "$name" = "swath.api" ]; then
             msconvert_ -z "$fixture" --noindex -o "$outdir" \
                 --outfile "swath.api-sample-centroid.mzML" --filter "peakPicking true 1-"
@@ -380,13 +385,6 @@ sweep_fixture()  # <fixture filename> <extension>
         done
     elif [ "$fixture" = "diaPASEF.d" ]; then
         echo " Skipping diaPASEF test because it is not tested in non-filtered mode (diaPASEF.mzML)."
-    elif [ -e "$fixture/Analysis.yep" ]; then
-        # Deliberately not converted above - YEP is Bruker's Esquire/HCT ion-trap format, read
-        # through the CompassXtract COM server rather than the TDF/TSF/BAF stack the other
-        # fixtures use. Without this branch the skip fell through to the "expected output does
-        # not exist" failure below, so Sample_1-A,1_01_985.d had been reported as a failing
-        # conversion - in the cpp sweep too - when it was never converted in the first place.
-        echo " Skipping $fixture because YEP data is not converted by this sweep."
     else
         failed=1
         test_failed "$testname" "Expected output file '$outdir/$name.mzML' does not exist."
