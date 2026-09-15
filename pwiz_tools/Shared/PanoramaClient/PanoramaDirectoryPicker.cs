@@ -222,7 +222,7 @@ namespace pwiz.PanoramaClient
                     contextMenuStrip.Show(Cursor.Position);
                     break;
                 case MouseButtons.Left:
-                    Process.Start(urlLink.Text);
+                    ProcessEx.OpenInShell(urlLink.Text);
                     break;
             }
         }

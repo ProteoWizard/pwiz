@@ -37,11 +37,13 @@ namespace ZedGraph
 		/// instance that holds the serialized object data about the exception being thrown.</param>
 		/// <param name="context">The <see cref="System.Runtime.Serialization.StreamingContext"/>
 		/// instance that contains contextual information about the source or destination.</param>
+#pragma warning disable SYSLIB0051
 		protected ZedGraphException( System.Runtime.Serialization.SerializationInfo info, 
 										System.Runtime.Serialization.StreamingContext context )
 			: base ( info, context )
 		{
 		}
+#pragma warning restore SYSLIB0051
 		
 		/// <summary>
 		/// Initializes a new instance of the <see cref="Exception"/> class with a specified

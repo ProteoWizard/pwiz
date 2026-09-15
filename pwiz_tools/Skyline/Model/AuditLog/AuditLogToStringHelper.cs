@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util.Extensions;
 
@@ -27,12 +28,22 @@ namespace pwiz.Skyline.Model.AuditLog
                     return AuditLogParseHelper.GetParseString(ParseStringType.primitive, objStr);
                 else if (type == typeof(float) || type == typeof(double))
                 {
-                    string format = @"R";
+                    string decimalText;
                     if (decimalPlaces.HasValue)
-                        format = @"0." + new string('#', decimalPlaces.Value);
-
-                    string replacementText = string.Format(@"{{0:{0}}}", format);
-                    string decimalText = string.Format(CultureInfo.InvariantCulture, replacementText, obj);
+                    {
+                        string format = @"0." + new string('#', decimalPlaces.Value);
+                        string replacementText = string.Format(@"{{0:{0}}}", format);
+                        decimalText = string.Format(CultureInfo.InvariantCulture, replacementText, obj);
+                    }
+                    else
+                    {
+                        // Round-trip ("R"): on net8 emulate .NET Framework's "R" (see RoundTripFormat) so
+                        // audit logs match the historical, net472-generated expected logs. On net472
+                        // FormatOrNull returns null and this falls back to the identical string the code has
+                        // always produced.
+                        decimalText = RoundTripFormat.FormatOrNull(obj, @"R", CultureInfo.InvariantCulture)
+                                      ?? string.Format(CultureInfo.InvariantCulture, @"{0:R}", obj);
+                    }
 
                     return AuditLogParseHelper.GetParseString(ParseStringType.primitive, decimalText);
                 }

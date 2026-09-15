@@ -209,10 +209,16 @@ namespace pwiz.Common.Database.NHibernate
             get { return _session.Connection; }
         }
 
+        // Implements IStatelessSession's own obsolete member, so it cannot be dropped, and it has to
+        // keep that member's semantics: NHibernate's suggested GetCurrentTransaction() returns null
+        // where this returns a transaction object, and a caller reaching for the interface member
+        // expects the interface's behaviour. Delegate verbatim.
+#pragma warning disable 618
         public ITransaction Transaction
         {
             get { return _session.Transaction; }
         }
+#pragma warning restore 618
 
         public bool IsOpen
         {
