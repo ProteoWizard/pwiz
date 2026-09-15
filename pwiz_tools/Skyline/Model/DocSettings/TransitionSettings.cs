@@ -1266,17 +1266,18 @@ namespace pwiz.Skyline.Model.DocSettings
                 .Select(f => f.Label);
         }
 
+        public static IEnumerable<StartFragmentFinder> GetAllStartFragmentFinders()
+        {
+            return FragmentStartFinders;
+        }
+
         public static string GetStartFragmentNameFromLabel(string label)
         {
             for (int i = 0; i < FragmentStartFinders.SafeLength(); i++)
             {
-                var finder = FragmentStartFinders[i];
-                // Accept the invariant name as well as the localized label, so command-line
-                // arguments from external tools work in any UI language
-                if (string.Equals(finder.Label, label, StringComparison.CurrentCultureIgnoreCase) ||
-                    string.Equals(finder.Name, label, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(FragmentStartFinders[i].Label, label))
                 {
-                    return finder.Name;
+                    return FragmentStartFinders[i].Name;
                 }
             }
             throw new ArgumentException(string.Format(DocSettingsResources.TransitionFilter_GetStartFragmentNameFromLabel_The_label__0__is_not_a_valid_start_fragment_filter_, label));
@@ -1331,17 +1332,18 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public static IEnumerable<EndFragmentFinder> GetAllEndFragmentFinders()
+        {
+            return FragmentEndFinders;
+        }
+
         public static string GetEndFragmentNameFromLabel(string label)
         {
             for (int i = 0; i < FragmentEndFinders.SafeLength(); i++)
             {
-                var finder = FragmentEndFinders[i];
-                // Accept the invariant name as well as the localized label, so command-line
-                // arguments from external tools work in any UI language
-                if (string.Equals(finder.Label, label, StringComparison.CurrentCultureIgnoreCase) ||
-                    string.Equals(finder.Name, label, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(FragmentEndFinders[i].Label, label))
                 {
-                    return finder.Name;
+                    return FragmentEndFinders[i].Name;
                 }
             }
             throw new ArgumentException(string.Format(DocSettingsResources.TransitionFilter_GetEndFragmentNameFromLabel_The_label__0__is_not_a_valid_end_fragment_filter_, label));

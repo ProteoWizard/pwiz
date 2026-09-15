@@ -25,6 +25,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Common.CommandLine;
+using pwiz.Common.SystemUtil;
 using Argument = pwiz.Common.CommandLine.Argument<pwiz.Skyline.CommandArgs>;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -416,26 +417,76 @@ namespace pwiz.SkylineTestData
             output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue(ceNoneText));
             AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", AuditLogStrings.None);
             IsDocumentUnchanged(output);
-            // Invariant names, as sent by external tools, must work in any UI language
-            output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue(CollisionEnergyList.NONE.GetKey()));
-            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", AuditLogStrings.None);
-            IsDocumentUnchanged(output);
-            string dpNoneText = Settings.Default.DeclusterPotentialList.GetDisplayName(DeclusterPotentialList.NONE);
             output = Run(CommandArgs.ARG_TRAN_PREDICT_DP.GetArgumentTextWithValue("SCIEX"));
             AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullDeclusteringPotential, AuditLogStrings.None, "SCIEX");
             IsDocumentUnchanged(output);
-            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_DP, dpNoneText);
-            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_DP, DeclusterPotentialList.NONE.GetKey());
-            string covNoneText = Settings.Default.CompensationVoltageList.GetDisplayName(CompensationVoltageList.NONE);
             output = Run(CommandArgs.ARG_TRAN_PREDICT_COV.GetArgumentTextWithValue("SCIEX"));
             AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCompensationVoltage, AuditLogStrings.None, "SCIEX");
             IsDocumentUnchanged(output);
-            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_COV, covNoneText);
-            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_COV, CompensationVoltageList.NONE.GetKey());
             // Only None is possible for optimization libraries without setting one up
             string optLibNoneText = Settings.Default.OptimizationLibraryList.GetDisplayName(OptimizationLibrary.NONE);
             RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_OPTDB, optLibNoneText);
+
+            // Invariant keys and localized display names must both work in a UI language where they differ.
+            LocalizationHelper.CallWithCulture(new CultureInfo("ja"), () =>
+            {
+                ValidatePredictNoneValues();
+                return true;
+            });
+
+            // A default removed from the settings list is not a valid value.
+            var dpList = Settings.Default.DeclusterPotentialList;
+            Assert.IsTrue(dpList.TryGetValue("SCIEX", out var sciex));
+            dpList.Remove(sciex);
+            try
+            {
+                var arg = CommandArgs.ARG_TRAN_PREDICT_DP;
+                output = Run(arg.ArgumentText + "=SCIEX");
+                AssertEx.Contains(output, string.Format(
+                    CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                    "SCIEX", arg.ArgumentText, string.Join(@", ", arg.Values)));
+            }
+            finally
+            {
+                dpList.Add(sciex);
+            }
+        }
+
+        private void ValidatePredictNoneValues()
+        {
+            string ceNoneText = Settings.Default.CollisionEnergyList.GetDisplayName(CollisionEnergyList.NONE);
+            AssertEx.AreNotEqual(CollisionEnergyList.NONE.GetKey(), ceNoneText, "Test requires a translated display name");
+            foreach (var ceText in new[] { CollisionEnergyList.NONE.GetKey(), ceNoneText })
+            {
+                string output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue(ceText));
+                AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", AuditLogStrings.None);
+                IsDocumentUnchanged(output);
+            }
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_DP, DeclusterPotentialList.NONE.GetKey());
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_DP,
+                Settings.Default.DeclusterPotentialList.GetDisplayName(DeclusterPotentialList.NONE));
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_COV, CompensationVoltageList.NONE.GetKey());
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_COV,
+                Settings.Default.CompensationVoltageList.GetDisplayName(CompensationVoltageList.NONE));
             RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_OPTDB, OptimizationLibrary.NONE.GetKey());
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_OPTDB,
+                Settings.Default.OptimizationLibraryList.GetDisplayName(OptimizationLibrary.NONE));
+
+            // Verify the parsed keys, since the settings lookups also fall back to None for unknown names.
+            ValidateNoneKeys(CommandArgs.ARG_TRAN_PREDICT_CE, CollisionEnergyList.NONE.GetKey(),
+                ceNoneText, c => c.PredictCEName);
+            ValidateNoneKeys(CommandArgs.ARG_TRAN_PREDICT_DP, DeclusterPotentialList.NONE.GetKey(),
+                Settings.Default.DeclusterPotentialList.GetDisplayName(DeclusterPotentialList.NONE), c => c.PredictDPName);
+            ValidateNoneKeys(CommandArgs.ARG_TRAN_PREDICT_COV, CompensationVoltageList.NONE.GetKey(),
+                Settings.Default.CompensationVoltageList.GetDisplayName(CompensationVoltageList.NONE), c => c.PredictCoVName);
+            ValidateNoneKeys(CommandArgs.ARG_TRAN_PREDICT_OPTDB, OptimizationLibrary.NONE.GetKey(),
+                Settings.Default.OptimizationLibraryList.GetDisplayName(OptimizationLibrary.NONE), c => c.PredictOpimizationLibraryName);
+        }
+
+        private static void ValidateNoneKeys(Argument arg, string noneKey, string noneDisplayName, Func<CommandArgs, string> getKey)
+        {
+            foreach (var noneText in new[] { noneKey, noneDisplayName })
+                CommandLineTest.ValidateParsedKey(arg, noneText, getKey, noneKey);
         }
 
         private void RunPredictNoneUnchanged(Argument arg, string noneText)

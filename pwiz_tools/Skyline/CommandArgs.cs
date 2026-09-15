@@ -1564,11 +1564,13 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_TRAN_PRODUCT_START_ION = new DocArgument(@"tran-product-start-ion",
             () => TransitionFilter.GetStartFragmentFinderLabels().ToArray(),
             (c, p) => c.FilterStartProductIon = TransitionFilter.GetStartFragmentFinder(
-                ParseFragmentFinderName(p, TransitionFilter.GetStartFragmentNameFromLabel))) { WrapValue = true, HasValueChecking = true };
+                ParseLabeledValueName(p, TransitionFilter.GetAllStartFragmentFinders())))
+            { WrapValue = true, AcceptedValues = () => GetAcceptedValues(TransitionFilter.GetAllStartFragmentFinders()) };
         public static readonly Argument ARG_TRAN_PRODUCT_END_ION = new DocArgument(@"tran-product-end-ion",
             () => TransitionFilter.GetEndFragmentFinderLabels().ToArray(),
             (c, p) => c.FilterEndProductIon = TransitionFilter.GetEndFragmentFinder(
-                ParseFragmentFinderName(p, TransitionFilter.GetEndFragmentNameFromLabel))) { WrapValue = true, HasValueChecking = true };
+                ParseLabeledValueName(p, TransitionFilter.GetAllEndFragmentFinders())))
+            { WrapValue = true, AcceptedValues = () => GetAcceptedValues(TransitionFilter.GetAllEndFragmentFinders()) };
         public static readonly Argument ARG_TRAN_PRODUCT_SPECIAL_IONS_CLEAR = new DocArgument(@"tran-product-clear-special-ions",
                 (c, p) => c.FilterSpecialIons = Array.Empty<string>());
         public static readonly Argument ARG_TRAN_PRODUCT_SPECIAL_IONS_ADD = new DocArgument(@"tran-product-add-special-ion",
@@ -1588,14 +1590,18 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_TRAN_LIBRARY_PICK_PRODUCT_IONS = DocArgument.FromEnumType<TransitionLibraryPick>(@"library-pick-product-ions",
             (c, p) => c.LibraryPickIons = p);
 
-        public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", () => GetDisplayNamesAndKeys(Settings.Default.CollisionEnergyList),
-            (c, p) => c.PredictCEName = ParseSettingsListKey(p, Settings.Default.CollisionEnergyList)) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", () => GetDisplayNamesAndKeys(Settings.Default.DeclusterPotentialList),
-            (c, p) => c.PredictDPName = ParseSettingsListKey(p, Settings.Default.DeclusterPotentialList)) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_COV = new DocArgument(@"tran-predict-cov", () => GetDisplayNamesAndKeys(Settings.Default.CompensationVoltageList),
-            (c, p) => c.PredictCoVName = ParseSettingsListKey(p, Settings.Default.CompensationVoltageList)) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", () => GetDisplayNamesAndKeys(Settings.Default.OptimizationLibraryList),
-            (c, p) => c.PredictOpimizationLibraryName = ParseSettingsListKey(p, Settings.Default.OptimizationLibraryList)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", () => GetDisplayNames(Settings.Default.CollisionEnergyList),
+            (c, p) => c.PredictCEName = ParseSettingsListKey(p, Settings.Default.CollisionEnergyList))
+            { WrapValue = true, AcceptedValues = () => GetAcceptedValues(Settings.Default.CollisionEnergyList) };
+        public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", () => GetDisplayNames(Settings.Default.DeclusterPotentialList),
+            (c, p) => c.PredictDPName = ParseSettingsListKey(p, Settings.Default.DeclusterPotentialList))
+            { WrapValue = true, AcceptedValues = () => GetAcceptedValues(Settings.Default.DeclusterPotentialList) };
+        public static readonly Argument ARG_TRAN_PREDICT_COV = new DocArgument(@"tran-predict-cov", () => GetDisplayNames(Settings.Default.CompensationVoltageList),
+            (c, p) => c.PredictCoVName = ParseSettingsListKey(p, Settings.Default.CompensationVoltageList))
+            { WrapValue = true, AcceptedValues = () => GetAcceptedValues(Settings.Default.CompensationVoltageList) };
+        public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", () => GetDisplayNames(Settings.Default.OptimizationLibraryList),
+            (c, p) => c.PredictOpimizationLibraryName = ParseSettingsListKey(p, Settings.Default.OptimizationLibraryList))
+            { WrapValue = true, AcceptedValues = () => GetAcceptedValues(Settings.Default.OptimizationLibraryList) };
 
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ISOTOPES = DocArgument.FromEnumType<FullScanPrecursorIsotopes>(@"full-scan-precursor-isotopes",
             (c, p) => c.FullScanPrecursorIsotopes = p);
@@ -1604,9 +1610,9 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_THRESHOLD = new DocArgument(@"full-scan-precursor-threshold", NUM_VALUE,
             (c, p) => c.FullScanPrecursorThreshold = p.GetValueDouble(0, 100)) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ISOTOPE_ENRICHMENT = new DocArgument(@"full-scan-precursor-isotope-enrichment",
-                () => GetDisplayNamesAndKeys(Settings.Default.IsotopeEnrichmentsList),
+                () => GetDisplayNames(Settings.Default.IsotopeEnrichmentsList),
                 (c, p) => c.FullScanPrecursorIsotopeEnrichment = ParseSettingsListKey(p, Settings.Default.IsotopeEnrichmentsList))
-            { WrapValue = true };
+            { WrapValue = true, AcceptedValues = () => GetAcceptedValues(Settings.Default.IsotopeEnrichmentsList) };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_IGNORE_SIM = new DocArgument(@"full-scan-precursor-ignore-sim",
                 (c, p) => c.FullScanPrecursorIgnoreSimScans = p.IsNameOnly || bool.Parse(p.Value))
             { WrapValue = true, OptionalValue = true };
@@ -1769,16 +1775,19 @@ namespace pwiz.Skyline
             return list.Select(list.GetDisplayName).ToArray();
         }
 
-        /// <summary>
-        /// Display names followed by any invariant keys and default display names not already listed,
-        /// so that both the localized and the invariant forms are valid values.
-        /// </summary>
-        public static string[] GetDisplayNamesAndKeys<TItem>(SettingsListBase<TItem> list) where TItem : IKeyContainer<string>, IXmlSerializable
+        private static string[] GetAcceptedValues<TItem>(SettingsListBase<TItem> list) where TItem : IKeyContainer<string>, IXmlSerializable
         {
-            var items = list.Concat(list.GetDefaults(list.RevisionIndexCurrent));
-            return list.Select(list.GetDisplayName)
-                .Concat(items.SelectMany(item => new[] { item.GetKey(), list.GetDisplayName(item) }))
-                .Distinct().ToArray();
+            return GetAcceptedValues(GetKeysAndDisplayNames(list));
+        }
+
+        private static string[] GetAcceptedValues(IEnumerable<LabeledValues<string>> choices)
+        {
+            return GetAcceptedValues(GetNamesAndLabels(choices));
+        }
+
+        private static string[] GetAcceptedValues(IEnumerable<KeyValuePair<string, string>> keysAndDisplayNames)
+        {
+            return keysAndDisplayNames.SelectMany(kd => new[] { kd.Key, kd.Value }).Distinct().ToArray();
         }
 
         private static Adduct[] ParseIonCharges(NameValuePair p, int min, int max)
@@ -1796,32 +1805,58 @@ namespace pwiz.Skyline
             return charges;
         }
 
-        private static string ParseFragmentFinderName(NameValuePair p, Func<string, string> getNameFromText)
-        {
-            Assume.IsNotNull(p.Match); // Must be matched before accessing this
-            try
-            {
-                return getNameFromText(p.Value);
-            }
-            catch (ArgumentException)
-            {
-                throw new ValueInvalidException(p.Match, p.Value, p.Match.Values);
-            }
-        }
-
         private static string ParseSettingsListKey<TItem>(NameValuePair p, SettingsListBase<TItem> list) where TItem : IKeyContainer<string>, IXmlSerializable
         {
+            return ParseKey(p, GetKeysAndDisplayNames(list));
+        }
+
+        private static string ParseLabeledValueName(NameValuePair p, IEnumerable<LabeledValues<string>> choices)
+        {
+            return ParseKey(p, GetNamesAndLabels(choices));
+        }
+
+        /// <summary>
+        /// Keys and display names of the items in a settings list, plus the display names of the defaults
+        /// still in the list, which are localized only for the default instances themselves.
+        /// </summary>
+        private static IList<KeyValuePair<string, string>> GetKeysAndDisplayNames<TItem>(SettingsListBase<TItem> list) where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            var keysAndDisplayNames = list.Select(item => new KeyValuePair<string, string>(item.GetKey(), list.GetDisplayName(item))).ToList();
+            var keys = new HashSet<string>(keysAndDisplayNames.Select(kd => kd.Key));
+            keysAndDisplayNames.AddRange(list.GetDefaults()
+                .Where(item => keys.Contains(item.GetKey()))
+                .Select(item => new KeyValuePair<string, string>(item.GetKey(), list.GetDisplayName(item))));
+            return keysAndDisplayNames;
+        }
+
+        private static IList<KeyValuePair<string, string>> GetNamesAndLabels(IEnumerable<LabeledValues<string>> choices)
+        {
+            return choices.Select(choice => new KeyValuePair<string, string>(choice.Name, choice.Label)).ToList();
+        }
+
+        /// <summary>
+        /// Returns the key for a value that may be an invariant key, as sent by external tools, or a
+        /// localized display name. Exact matches take precedence over case-insensitive matches, and
+        /// keys take precedence over display names.
+        /// </summary>
+        private static string ParseKey(NameValuePair p, IList<KeyValuePair<string, string>> keysAndDisplayNames)
+        {
             Assume.IsNotNull(p.Match); // Must be matched before accessing this
-            // Accept the invariant key as well as the localized display name, so command-line
-            // arguments from external tools work in any UI language. Also check the display names
-            // of the defaults, which are only localized for the default instances themselves.
-            var items = list.Concat(list.GetDefaults(list.RevisionIndexCurrent));
-            foreach (var item in items)
+            // Display names are compared the same way as ArgumentBase.IsValidValue, so that a value
+            // accepted by validation always resolves here.
+            var matchers = new Func<KeyValuePair<string, string>, bool>[]
             {
-                if (string.Equals(item.GetKey(), p.Value, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(list.GetDisplayName(item), p.Value, StringComparison.CurrentCultureIgnoreCase))
+                kd => Equals(kd.Key, p.Value),
+                kd => Equals(kd.Value, p.Value),
+                kd => string.Equals(kd.Key, p.Value, StringComparison.OrdinalIgnoreCase),
+                kd => string.Equals(kd.Value, p.Value, StringComparison.CurrentCultureIgnoreCase)
+            };
+            foreach (var matches in matchers)
+            {
+                foreach (var keyAndDisplayName in keysAndDisplayNames)
                 {
-                    return item.GetKey();
+                    if (matches(keyAndDisplayName))
+                        return keyAndDisplayName.Key;
                 }
             }
             throw new ValueInvalidException(p.Match, p.Value, p.Match.Values);
