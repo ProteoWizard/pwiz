@@ -28,39 +28,55 @@ using SkylineTool;
 namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
-    /// Base for the native common file dialogs -- Open (<see cref="NativeOpenFileDialog"/>) and
-    /// Save (<see cref="NativeSaveFileDialog"/>). Both are "#32770" dialogs that take a file name and then accept or
-    /// cancel, but they expose their file-name field differently, so the path-entry gesture is abstract. Each says
-    /// which it is in its <see cref="NativeDialog.DialogTypeName"/>, so it is distinguishable from the message box a
-    /// file dialog raises -- which carries the file dialog's own caption.
+    /// Base for the native common file dialogs, Open and Save. Both take a file name and then accept or cancel,
+    /// but they expose their file-name field differently.
     /// </summary>
     public abstract class NativeFileDialog : NativeDialog
     {
-        // The address breadcrumb's window class and control id -- the "Address: <folder>" toolbar. Surfaced through
-        // EnumerateChildren as a read-only element so a caller can read the dialog's current folder from GetControls.
+        // The "Address: <folder>" breadcrumb toolbar.
         private const string ADDRESS_BAR_CLASS = @"ToolbarWindow32";
         private const int ADDRESS_BAR_ID = 1001;
 
-        // The commit button's control id, so it is found without matching a localized caption.
         protected const int IDOK = 1;
+
+        // lst1 in dlgs.h: the classic template's file list. The modern dialog is built on that template and keeps
+        // this ListBox, hidden, from milliseconds after its window is created until the window is destroyed --
+        // unlike the controls that tell Open from Save: the Save dialog carries the classic file-name combo (the
+        // Open dialog's mark) for its first ~50 ms, destroys it, and creates its own file-name field ~150 ms later.
+        private const int CLASSIC_FILE_LIST_ID = 1120;
 
         protected NativeFileDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(windowHandle, cancellationToken)
         {
         }
 
-        /// <summary>The dialog's controls: its Win32 children (the file-name field, the commit and cancel buttons)
-        /// PLUS the address breadcrumb as a read-only <see cref="NativeAddressBar"/> element -- so a caller can read
-        /// the folder the dialog is showing from GetControls and confirm a navigation before selecting files. The
-        /// file-name box is given the label "File name" so a caller can read/set it by that name (its adjacent
-        /// "File name:" static would otherwise shadow the caption-less field, and its own value is empty).</summary>
+        /// <summary>Whether the "#32770" is a common file dialog, Open or Save, by the classic file list that
+        /// neither a message box nor the Browse-For-Folder dialog has.</summary>
+        public static bool IsFileDialog(IntPtr hwnd)
+        {
+            return HasDescendant(hwnd, NativeControl.LISTBOX_CLASS, CLASSIC_FILE_LIST_ID);
+        }
+
+        /// <summary>The Open or Save wrapper for the common file dialog at <paramref name="handle"/>, or null while
+        /// it has neither dialog's file-name field: a file dialog the shell is still building or tearing down. Open
+        /// is checked first: the Save dialog starts out with the Open dialog's combo and has destroyed it by the
+        /// time it has a field of its own.</summary>
+        internal static NativeFileDialog Classify(IntPtr handle, CancellationToken cancellationToken)
+        {
+            if (NativeOpenFileDialog.IsOpenFileDialog(handle))
+                return new NativeOpenFileDialog(handle, cancellationToken);
+            if (NativeSaveFileDialog.IsSaveFileDialog(handle))
+                return new NativeSaveFileDialog(handle, cancellationToken);
+            return null;
+        }
+
+        /// <summary>The dialog's visible controls plus the address breadcrumb, with the file-name box labeled
+        /// "File name": its adjacent "File name:" static would otherwise shadow the caption-less field.</summary>
         public override IEnumerable<UiElement> EnumerateChildren()
         {
             var fileNameEdit = FindFileNameEdit();
             foreach (var child in base.EnumerateChildren())
             {
-                // Drop the field-label statics ("File name:", "Files of type:"): they carry no value, and a caption
-                // matching a field's would SHADOW it (the static comes first, so a get/set on "File name" would hit
-                // the empty static, not the box). The box is given that caption directly, below.
+                // Field-label statics carry no value and would shadow the fields they name.
                 if (child is NativeLabel)
                     continue;
                 yield return child is NativeTextBox textBox && textBox.Hwnd == fileNameEdit
@@ -73,42 +89,35 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Types the file name(s) into the dialog's file-name field WITHOUT accepting; call
-        /// <see cref="NativeDialog.DismissWithAcceptButton"/> to open/save. Confirms the text registered, and
-        /// throws if it did not, so a lost set is reported rather than leaving the dialog to open nothing.
+        /// Types the file name(s) into the dialog's file-name field without accepting, and throws if the text did
+        /// not register. Must be called off the dialog's own thread.
         ///
-        /// <para>To select several files in a multiselect Open dialog, FIRST navigate to their folder (EnterPath
-        /// the folder path, accept), THEN EnterPath their names -- BARE names in that folder, double-quoted and
-        /// space-separated (<c>"a.raw" "b.raw"</c>). A list of FULL paths does not work.</para>
-        ///
-        /// <para>Must be called OFF the dialog's own thread: the typing is posted to that thread and waited for.</para>
+        /// <para>To select several files in a multiselect Open dialog, first navigate to their folder (EnterPath
+        /// the folder path, accept), then EnterPath their bare names in that folder, double-quoted and
+        /// space-separated (<c>"a.raw" "b.raw"</c>). A list of full paths does not work.</para>
         /// </summary>
         public void EnterPath(string path)
         {
             string actual;
-            // The field is not always shown: the Save dialog's rides the DirectUI surface, which the shell hides
-            // while it lays its view out -- shortly after the dialog appears, and again on every navigation. Ask
-            // again until it is, because nothing the caller can observe says when it comes back. No deadline: the
-            // wait ends when the field is shown or when the client that asked for it disconnects.
+            // The shell hides the field while it lays its view out, shortly after the dialog appears and again on
+            // every navigation, and nothing observable says when it comes back. No deadline: the wait ends when the
+            // field is shown or the client disconnects.
             while (null == (actual = CallFunction(() => TypeFileName(path))))
             {
                 CancellationToken.WaitHandle.WaitOne(FIELD_POLL_MILLIS);
                 CancellationToken.ThrowIfCancellationRequested();
             }
-            // An EMPTY box means the shell consumed the path to navigate -- the caller confirms that through the
-            // "Address" control; the path itself means a file name is staged to open. Anything else means the set
-            // did not take.
+            // An empty box means the shell consumed the path to navigate; the path itself means a file name is
+            // staged. Anything else means the set did not take.
             if (actual.Length == 0 || Equals(actual, path))
                 return;
             throw new InvalidOperationException(LlmInstruction.Format(
                 @"Tried to set file path to '{0}' but it says '{1}'", path, actual));
         }
 
-        /// <summary>Types the path into the file-name field and returns what the field then HOLDS, or null when the
-        /// field is not shown and the caller should ask again. Runs on the dialog's OWN thread (see
-        /// <see cref="EnterPath"/>), which is what makes the three steps one step: the shell lays the field out on
-        /// that thread, so it cannot hide the field between finding it and setting it, nor rewrite the text between
-        /// setting it and reading it back.</summary>
+        /// <summary>Types the path into the file-name field and returns what the field then holds, or null when
+        /// the field is not shown. Runs on the dialog's own thread, which lays the field out, so the shell cannot
+        /// hide the field between finding and setting it, nor rewrite the text between setting and reading it.</summary>
         private string TypeFileName(string path)
         {
             var hwnd = FindShownFileNameEdit();
@@ -116,20 +125,16 @@ namespace pwiz.Skyline.ToolsUI
                 return null;
             var textBox = new NativeTextBox(hwnd, CancellationToken);
             textBox.SetText(path);
-            // What the box HOLDS, rather than what we predict the shell will make of the path.
             return textBox.GetValueNow() as string ?? string.Empty;
         }
 
-        /// <summary>Clicks the commit button, which is <see cref="StandaloneWindow.ClickButton"/> by control id
-        /// rather than by the button's localized caption -- the one thing a test cannot key on. Same marshal: ONE
-        /// trip onto the dialog's thread, and a modal the click raises comes back named rather than pinning this
-        /// thread. Must be called off the dialog's own thread.
+        /// <summary>Clicks the commit button, found by control id rather than localized caption, on the dialog's
+        /// thread; a modal the click raises comes back named. Must be called off the dialog's own thread.
         ///
-        /// <para>Does not wait for the dialog to close, because it may not: a FOLDER path navigates and leaves it
-        /// open (read the "AddressBar" control to tell), and on the multiselect Open dialog the click can be spent
-        /// closing the combo's autocomplete drop-down instead of committing -- so a caller checks whether the dialog
-        /// closed and clicks again if it did not. Use <see cref="NativeDialog.DismissWithAcceptButton"/> when it
-        /// must close.</para></summary>
+        /// <para>Does not wait for the dialog to close, because it may not: a folder path navigates and leaves it
+        /// open, and on the multiselect Open dialog the click can be spent closing the combo's autocomplete
+        /// drop-down, so a caller checks whether the dialog closed and clicks again if not. Use
+        /// <see cref="NativeDialog.DismissWithAcceptButton"/> when it must close.</para></summary>
         public ActionResult Accept()
         {
             return PerformAction(() => UiActions.Click.InvokeNow(AcceptButton, null));
@@ -140,31 +145,28 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>What the commit button is called, for the message when it cannot be found.</summary>
         protected abstract string CommitButtonDescription { get; }
 
-        /// <summary>The control id of this dialog's file-name Edit -- 1148 for the Open dialog's classic combo,
+        /// <summary>The control id of this dialog's file-name Edit: 1148 for the Open dialog's classic combo,
         /// 1001 for the Save dialog's DirectUI-hosted field.</summary>
         protected abstract int FileNameControlId { get; }
 
         /// <summary>The commit button rather than the file-name field, which the shell hides again each time it
-        /// lays the dialog's view out (see <see cref="EnterPath"/>).</summary>
+        /// lays the dialog's view out.</summary>
         protected override bool IsOpenComplete =>
             User32.IsWindowVisible(FindDescendant(NativeControl.BUTTON_CLASS, IDOK));
 
-        // How long to wait between asking for the field again.
         private const int FIELD_POLL_MILLIS = 30;
 
-        // The file-name Edit once the shell has shown it, else IntPtr.Zero.
         private IntPtr FindShownFileNameEdit()
         {
             var hwnd = FindFileNameEdit();
             return hwnd != IntPtr.Zero && User32.IsWindowVisible(hwnd) ? hwnd : IntPtr.Zero;
         }
 
-        /// <summary>The window handle of the file-name Edit, or IntPtr.Zero until it exists. By default the Edit
-        /// itself carries <see cref="FileNameControlId"/> (the Save dialog's Edit, the plain Open dialog's combo
-        /// Edit); the Open dialog overrides this because its multiselect flavour does not put the id on the Edit.</summary>
+        /// <summary>The file-name Edit, or IntPtr.Zero until it exists. Virtual because the multiselect Open
+        /// dialog does not put <see cref="FileNameControlId"/> on the Edit itself.</summary>
         protected virtual IntPtr FindFileNameEdit() => FindDescendant(NativeControl.EDIT_CLASS, FileNameControlId);
 
-        // set_value types the path: its controlId is ignored, because a file dialog has the one field to set.
+        // The controlId is ignored: a file dialog has the one field to set.
         protected override void SetValueCore(string value) => EnterPath(value);
     }
 }

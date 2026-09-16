@@ -29,19 +29,15 @@ using SkylineTool;
 namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
-    /// Drives the classic Windows "Browse For Folder" dialog -- the SHBrowseForFolder tree shown by WinForms
-    /// <see cref="System.Windows.Forms.FolderBrowserDialog"/> (e.g. the "Results Directory" picker used when
-    /// importing multi-injection replicates from directories). Unlike the common Open/Save dialog it has no
-    /// file-name box: a folder is chosen in a tree. So set_value selects the folder by sending the dialog a
-    /// BFFM_SETSELECTION message with the path, and the accept gesture clicks its OK button. See
-    /// <see cref="NativeDialog"/> for the threading contract and how an instance is obtained.
+    /// Drives the classic Windows "Browse For Folder" dialog, the SHBrowseForFolder tree shown by WinForms
+    /// <see cref="System.Windows.Forms.FolderBrowserDialog"/>. It has no file-name box: a folder is chosen in a
+    /// tree, so set_value selects the folder by sending the dialog BFFM_SETSELECTION with the path.
     /// </summary>
     public class NativeFolderBrowserDialog : NativeDialog
     {
-        // BFFM_SETSELECTION (Unicode): tells an open Browse-For-Folder dialog which folder to select. Sent to
-        // the dialog window with wParam TRUE (the lParam is a path string rather than a PIDL) and lParam the path.
+        // Sent with wParam TRUE (lParam is a path string rather than a PIDL) and lParam the path.
         private const int BFFM_SETSELECTIONW = 0x0400 + 103; // WM_USER + 103
-        private const int IDOK = 1; // the dialog's OK button carries this control id as its AutomationId
+        private const int IDOK = 1;
 
         public override string DialogTypeName => @"FolderBrowserDialog";
 
@@ -49,11 +45,8 @@ namespace pwiz.Skyline.ToolsUI
         {
         }
 
-        /// <summary>
-        /// Whether the "#32770" is the classic Browse-For-Folder dialog, identified by its folder tree. The
-        /// Open/Save file dialogs also have a tree (their navigation pane) but are matched first by their
-        /// file-name field (see <see cref="NativeDialog.Create"/>), so only the folder browser reaches this check.
-        /// </summary>
+        /// <summary>Whether the "#32770" is the classic Browse-For-Folder dialog, identified by its folder tree.
+        /// (The file dialogs' navigation pane also has a tree; they are classified first.)</summary>
         public static bool IsFolderBrowserDialog(IntPtr hwnd)
         {
             return new NativeFolderBrowserDialog(hwnd, CancellationToken.None)
@@ -65,9 +58,8 @@ namespace pwiz.Skyline.ToolsUI
         protected override bool IsOpenComplete =>
             FindDescendants(NativeControl.TREE_CLASS).Any(User32.IsWindowVisible);
 
-        // set_value selects the folder at the given path in the tree. BFFM_SETSELECTION must be SENT (not
-        // posted), so the dialog reads the path string while this blocks and the string stays valid until it
-        // returns; it merely navigates the tree (no nested modal), so the synchronous send does not wedge.
+        // BFFM_SETSELECTION must be sent, not posted: the dialog reads the path string while this blocks. It only
+        // navigates the tree (no nested modal), so the synchronous send does not wedge.
         protected override void SetValueCore(string value)
         {
             var pathPtr = Marshal.StringToHGlobalUni(value);
@@ -81,9 +73,8 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // Accepts by clicking OK (found by its control id, not a localized caption). OkDialog SENDS BM_CLICK on the
-        // dialog's UI thread and waits for the dialog to close. The click closes the dialog and unwinds its modal
-        // loop; run on the dialog's own thread it does not wedge the caller, as a cross-thread send would.
+        // OkDialog sends BM_CLICK on the dialog's own thread and waits for the dialog to close; a cross-thread send
+        // would wedge the caller.
         public override ActionResult DismissWithAcceptButton()
         {
             var okButton = RequireButton(IDOK, @"OK");
