@@ -444,13 +444,19 @@ namespace pwiz.Skyline.ToolsUI
                 @"BeginEdit", e => { e.BeginEditNow(); return null; })
             .Describe(new LlmInstruction(@"Start editing the tree's selected node in place (select the node first). The edit box appears on the form as a TextBox: send_text to the tree (or the box) to type into it and see the auto-completion suggestions; send_key_stroke Down/Up moves through them and Enter picks one, Enter with none showing commits the text, Esc cancels."));
 
+        // Shows a Targets-tree node's hover data tip without the mouse - the MethodEdit tutorial's "hover over
+        // the node to see its tip" steps - and returns the tip's text.
+        public static readonly UiAction ShowNodeTip = SimpleAction<INodeTipElement, string>(
+                @"ShowNodeTip", (e, nodePath) => e.ShowNodeTipNow(nodePath))
+            .Describe(new LlmInstruction(@"Show the data tip hovering over a tree node would show, and return its text. The tip appears after the usual hover delay, so capture the form a moment later to see it; an empty value hides the tip."), new LlmInstruction(@"the node's '>'-separated path, as for select_item, or empty to hide"));
+
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
         {
             GetActions, GetChildren, Click, GetValue, SetValue, SendText, SendKeyStroke, GetOptions, CheckItem, UncheckItem,
             SelectItem, UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress,
             GetGraphZoom, ZoomGraphTo, ClickGraph, Expand,
-            Collapse, SelectTab, Dismiss, Paste, SelectAll, RenameNode, BeginEdit
+            Collapse, SelectTab, Dismiss, Paste, SelectAll, RenameNode, BeginEdit, ShowNodeTip
         };
 
         // The action with the given wire name, matched case- and underscore-insensitively, or null.

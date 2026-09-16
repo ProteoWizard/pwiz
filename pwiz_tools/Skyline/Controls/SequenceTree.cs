@@ -224,6 +224,13 @@ namespace pwiz.Skyline.Controls
             get { return _nodeTip.Visible ? _nodeTip.Bounds : Rectangle.Empty; }
         }
 
+        /// <summary>The text of the data tip the tree is showing or about to show (a table tip rendered as text),
+        /// or null when there is none - for an automated caller that reads a tip rather than looking at it.</summary>
+        public string NodeTipText
+        {
+            get { return _nodeTip.TipTable?.ToString() ?? _nodeTip.TipText; }
+        }
+
         [Browsable(true)]
         public event EventHandler<PickedChildrenEventArgs> PickedChildrenEvent;
 

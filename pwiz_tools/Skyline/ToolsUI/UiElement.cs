@@ -102,6 +102,10 @@ namespace pwiz.Skyline.ToolsUI
     /// tree), so the auto-completion suggestions that appear as text is typed can be seen and picked.</summary>
     public interface IBeginEditElement { void BeginEditNow(); }
 
+    /// <summary>An element whose nodes show a data tip on hover (the Targets tree): the tip is shown for a node
+    /// without the mouse, and its text returned, so a caller can read it or capture it.</summary>
+    public interface INodeTipElement { string ShowNodeTipNow(string nodePath); }
+
     /// <summary>An element the keyboard can be driven on, without it having the focus. Every control is one.
     /// <see cref="SendTextNow"/> takes LITERAL text, so nothing in it needs escaping;
     /// <see cref="SendKeyStrokeNow"/> takes one key named with its modifiers ("Ctrl+V", "Down").</summary>
@@ -1841,8 +1845,35 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>The Targets tree (a <see cref="SequenceTree"/>): a TreeView with the document-owned node
     /// context menu and an in-place node rename a plain TreeView does not have.</summary>
-    internal sealed class SequenceTreeElement : TreeViewElement, IRenameNodeElement, IBeginEditElement, IClipboardElement
+    internal sealed class SequenceTreeElement : TreeViewElement, IRenameNodeElement, IBeginEditElement, INodeTipElement,
+        IClipboardElement
     {
+        // Shows the data tip hovering over the node would show - the mouse move is simulated the way the tutorial
+        // tests do it, with the tree told to ignore that it has no focus - and returns the tip's text. The tip
+        // itself appears after the tree's usual hover delay, so a capture that wants it in the picture follows a
+        // moment later. A null path hides the tip.
+        public string ShowNodeTipNow(string nodePath)
+        {
+            var tree = SequenceTree;
+            tree.MoveMouse(new System.Drawing.Point(-1, -1)); // off every node: hides the tip, resets the hover threshold
+            if (string.IsNullOrEmpty(nodePath))
+                return null;
+            var node = ListItems.FindTreeNode(tree, nodePath);
+            node.EnsureVisible();
+            var rect = node.Bounds;
+            tree.IgnoreFocus = true;
+            try
+            {
+                tree.MoveMouse(new System.Drawing.Point((rect.Left + rect.Right) / 2, (rect.Top + rect.Bottom) / 2));
+            }
+            finally
+            {
+                tree.IgnoreFocus = false;
+            }
+            return tree.NodeTipText ?? throw new ArgumentException(LlmInstruction.Format(
+                @"The node '{0}' has no data tip.", nodePath));
+        }
+
         public SequenceTreeElement(SequenceTree control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
 
         private SequenceTree SequenceTree => (SequenceTree) Control;
@@ -2078,7 +2109,7 @@ namespace pwiz.Skyline.ToolsUI
 
         // Walks a TreeView by a '>'-separated path of node texts, expanding each level so nodes built on
         // demand (e.g. the Customize Report field tree) are present before the next segment is matched.
-        private static TreeNode FindTreeNode(TreeView treeView, string path)
+        internal static TreeNode FindTreeNode(TreeView treeView, string path)
         {
             // A node's text legitimately contains '|' and '/' (e.g. a UniProt name "sp|P02769|ALBU_BOVIN"),
             // so split on '>' only.

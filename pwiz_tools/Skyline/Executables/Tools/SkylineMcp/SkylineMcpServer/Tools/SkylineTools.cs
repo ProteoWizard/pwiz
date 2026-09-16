@@ -455,6 +455,21 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_reorder_elements"),
+     Description("Reorder the Targets tree - the proteins and peptide lists, or the peptides within one - or " +
+        "the replicates, by listing element locators in the order wanted: what dragging a node above or " +
+        "below another does. Elements of the same parent that are not listed keep their order after the " +
+        "listed ones. Get locators from skyline_get_locations.")]
+    public static string ReorderElements(
+        [Description("Element locators in their new order")] string[] elementLocators)
+    {
+        return Invoke(connection =>
+        {
+            connection.ReorderElements(elementLocators);
+            return $"Reordered {elementLocators.Length} element(s).";
+        });
+    }
+
     [McpServerTool(Name = "skyline_set_selection"),
      Description("Navigate to a specific element in the Skyline document tree by its " +
         "ElementLocator string. Get locators from report columns like PeptideLocator, " +
@@ -585,7 +600,10 @@ public static class SkylineTools
         "of a paste-capable element's content, e.g. before paste to replace it); 'rename_node' (the Targets " +
         "tree, value the new name for the selected node); 'begin_edit' (the Targets tree: opens the selected " +
         "node's in-place edit box and leaves it open, so send_text to the tree shows the auto-completion " +
-        "suggestions, send_key_stroke Down/Up and Enter pick one, Enter commits, Esc cancels). " +
+        "suggestions, send_key_stroke Down/Up and Enter pick one, Enter commits, Esc cancels); 'show_node_tip' " +
+        "(the Targets tree: shows the hover data tip of the node at the '>'-separated path in value and returns " +
+        "its text; the tip appears after the hover delay, so capture the form a moment later; an empty value " +
+        "hides it). " +
         "For a control's right-click menu, pass path as the JSON {\"parent\": <the control's " +
         "UiElementPath>, \"type\": \"ContextMenu\"}, then get_children to list its items or " +
         "click to invoke one (for a grid, move to the cell first with skyline_set_current_cell_address). When " +
@@ -593,7 +611,7 @@ public static class SkylineTools
         "skyline_get_controls; the typed tools (skyline_click_form_button, ...) remain for common cases.")]
     public static string PerformAction(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string form,
-        [Description("Action: get_actions, get_children, click, get_value, set_value, send_text, send_key_stroke, get_options, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, get_graph_zoom, zoom_graph_to, click_graph, expand, collapse, select_tab, dismiss, paste, select_all, rename_node, begin_edit")] string action,
+        [Description("Action: get_actions, get_children, click, get_value, set_value, send_text, send_key_stroke, get_options, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, get_graph_zoom, zoom_graph_to, click_graph, expand, collapse, select_tab, dismiss, paste, select_all, rename_node, begin_edit, show_node_tip")] string action,
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
         [Description("Value for set_value/set_grid_text, the text for send_text/paste/rename_node, the key for send_key_stroke (e.g. 'Ctrl+V'), a [column, row] array for set_current_cell_address, a [left, top, right, bottom] array of graph data coordinates for zoom_graph_to/click_graph, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
