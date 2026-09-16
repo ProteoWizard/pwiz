@@ -103,6 +103,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public void SetReplicate(string replicateName) { CallClientVoid(c => c.SetReplicate(replicateName)); }
     public void SetUiMode(string mode) { CallClientVoid(c => c.SetUiMode(mode)); }
     public void SetUndoRedoPosition(int index) { CallClientVoid(c => c.SetUndoRedoPosition(index)); }
+    public WindowPlacement SetWindowPlacement(string formId = null, WindowPlacement placement = null) { return CallClient(c => c.SetWindowPlacement(formId, placement)); }
     public string GetDocumentSettings(string filePath) { return CallClient(c => c.GetDocumentSettings(filePath)); }
     public string GetDefaultSettings(string filePath) { return CallClient(c => c.GetDefaultSettings(filePath)); }
     public ActionResult ClickMainMenuItem(string menuPath) { return CallClient(c => c.ClickMainMenuItem(menuPath)); }

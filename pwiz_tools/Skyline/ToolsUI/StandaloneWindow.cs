@@ -1,5 +1,6 @@
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 using System;
 using System.Collections.Generic;
@@ -81,6 +82,69 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>Captures the form's image to a bitmap the caller disposes (no permission/format checks --
         /// the caller has done the screen-capture pre-flight).</summary>
         public abstract System.Drawing.Bitmap CaptureImage();
+
+        /// <summary>Applies a placement request to this window and reports where it ended up (the
+        /// SetWindowPlacement verb). Runs on the window's own thread. A request for something this kind of window
+        /// cannot do throws an LLM-facing error; an empty request only reads. The three kinds differ in what they
+        /// can do, which is why each implements it: a top-level form has bounds, a window state and a screen
+        /// placement; a dockable form a dock state too; a native dialog only bounds and a screen placement.</summary>
+        public abstract WindowPlacement SetPlacementNow(WindowPlacement placement);
+
+        // ---- Placement helpers shared by the window kinds ----
+
+        protected static Rectangle ToRectangle(System.Drawing.Rectangle rect)
+        {
+            return new Rectangle { Left = rect.Left, Top = rect.Top, Right = rect.Right, Bottom = rect.Bottom };
+        }
+
+        protected static System.Drawing.Rectangle ToDrawingRectangle(Rectangle rect)
+        {
+            return System.Drawing.Rectangle.FromLTRB((int) rect.Left, (int) rect.Top, (int) rect.Right, (int) rect.Bottom);
+        }
+
+        /// <summary>The bounds a request asks for: its own Bounds (else <paramref name="current"/>), then its
+        /// Placement - "maximize" is the whole <paramref name="screen"/>, "center" centers that size on it.</summary>
+        protected static System.Drawing.Rectangle RequestedBounds(WindowPlacement placement,
+            System.Drawing.Rectangle current, System.Drawing.Rectangle screen)
+        {
+            var bounds = placement.Bounds != null ? ToDrawingRectangle(placement.Bounds) : current;
+            switch (placement.Placement?.Trim().ToLowerInvariant())
+            {
+                case null:
+                case "":
+                    return bounds;
+                case WindowPlacement.PLACEMENT_MAXIMIZE:
+                    return screen;
+                case WindowPlacement.PLACEMENT_CENTER:
+                    return new System.Drawing.Rectangle(screen.Left + (screen.Width - bounds.Width) / 2,
+                        screen.Top + (screen.Height - bounds.Height) / 2, bounds.Width, bounds.Height);
+                default:
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unknown placement '{0}'. Use '{1}' or '{2}', or omit it.",
+                        placement.Placement, WindowPlacement.PLACEMENT_MAXIMIZE, WindowPlacement.PLACEMENT_CENTER));
+            }
+        }
+
+        /// <summary>Refuses a docking request on a window that is not dockable, naming the window.</summary>
+        protected void RequireNotDocking(WindowPlacement placement)
+        {
+            if (placement.HasDocking())
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"{0} is not a dockable window: it takes Bounds, WindowState and Placement only. DockState, RelativeTo, Alignment and Proportion apply to a graph, a grid or the Targets window.",
+                    FormId));
+            }
+        }
+
+        protected static FormWindowState ParseWindowState(string windowState)
+        {
+            if (!Enum.TryParse(windowState, true, out FormWindowState state))
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Unknown window state '{0}'. Use Normal, Maximized or Minimized.", windowState));
+            }
+            return state;
+        }
 
         // ---- Window-state queries the modal-watch asks each window about itself ----
 

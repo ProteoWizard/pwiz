@@ -1351,6 +1351,70 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_set_window_placement"),
+     Description("Move, resize, dock or float ONE window and report where it ended up, so a screenshot has a " +
+        "known, reproducible size or arrangement, or a window is out from under another one. Every argument is " +
+        "optional: an omitted one leaves that aspect alone, and a call with only formId (or nothing) reads the " +
+        "current placement without changing anything. Bounds are OUTER bounds in screen pixels (border and " +
+        "title bar included), so a tutorial capture of W x H needs a window slightly larger. A top-level window " +
+        "(the main window when formId is omitted, a dialog, a native dialog) takes left/top/width/height, " +
+        "windowState (Normal, Maximized, Minimized) and placement ('maximize' fills the screen as a normal " +
+        "window so it can still be resized; 'center' centers it); a change first restores a maximized window " +
+        "to normal. A dockable window (a graph, a grid, the Targets view) takes dockState (Floating, Document, " +
+        "DockLeft, DockRight, DockTop, DockBottom or a ...AutoHide side), relativeTo (another window's form id) " +
+        "with alignment (Left, Right, Top or Bottom to split beside it, or 'tab' to join its tab group) and " +
+        "proportion (its share of the split, 0-1), and bounds: the whole floating frame while it floats, only " +
+        "the width (left/right) or height (top/bottom) of its side while docked. For a whole layout use " +
+        "File > Import > Window Layout.")]
+    public static string SetWindowPlacement(
+        [Description("Form identifier from skyline_get_open_forms; omit for the main Skyline window.")] string formId = null,
+        [Description("New left edge in screen pixels.")] int? left = null,
+        [Description("New top edge in screen pixels.")] int? top = null,
+        [Description("New outer width in pixels.")] int? width = null,
+        [Description("New outer height in pixels.")] int? height = null,
+        [Description("Normal, Maximized or Minimized (a top-level window only).")] string windowState = null,
+        [Description("Floating, Document, DockLeft, DockRight, DockTop, DockBottom or a ...AutoHide side (a dockable window only).")] string dockState = null,
+        [Description("Form id of another dockable window to dock this one against.")] string relativeTo = null,
+        [Description("With relativeTo: Left, Right, Top or Bottom to split beside it, or 'tab' (the default) to join its tab group.")] string alignment = null,
+        [Description("With a side alignment: this window's share of the split, 0-1 (default 0.5).")] double? proportion = null,
+        [Description("'maximize' to fill the screen or 'center' to center the window on it.")] string placement = null)
+    {
+        return Invoke(connection =>
+        {
+            var request = new WindowPlacement
+            {
+                WindowState = windowState, DockState = dockState, RelativeTo = relativeTo,
+                Alignment = alignment, Proportion = proportion, Placement = placement
+            };
+            if (left.HasValue || top.HasValue || width.HasValue || height.HasValue)
+            {
+                // The service takes all four edges; fill the omitted ones in from where the window is now.
+                var current = connection.SetWindowPlacement(formId, new WindowPlacement()).Bounds;
+                int newLeft = left ?? (int) current.Left;
+                int newTop = top ?? (int) current.Top;
+                int newWidth = width ?? (int) (current.Right - current.Left);
+                int newHeight = height ?? (int) (current.Bottom - current.Top);
+                request.Bounds = new SkylineTool.Rectangle
+                    { Left = newLeft, Top = newTop, Right = newLeft + newWidth, Bottom = newTop + newHeight };
+            }
+            var result = connection.SetWindowPlacement(formId, request);
+            var sb = new StringBuilder();
+            if (result.DockState != null)
+                sb.AppendLine($"Dock: {result.DockState}");
+            if (result.WindowState != null)
+                sb.AppendLine($"State: {result.WindowState}");
+            sb.AppendLine($"Window: {Edges(result.Bounds)}");
+            sb.Append($"Screen: {Edges(result.Screen)}");
+            return sb.ToString();
+        });
+    }
+
+    // Screen-pixel edges of a window or screen rectangle, whole numbers, with the size a caller reasons in.
+    private static string Edges(SkylineTool.Rectangle r)
+    {
+        return $"left={(int) r.Left} top={(int) r.Top} width={(int) (r.Right - r.Left)} height={(int) (r.Bottom - r.Top)}";
+    }
+
     [McpServerTool(Name = "skyline_set_logging"),
      Description("Enable or disable diagnostic logging for Skyline MCP tool calls. " +
         "When enabled, subsequent tool responses include a diagnostic log " +

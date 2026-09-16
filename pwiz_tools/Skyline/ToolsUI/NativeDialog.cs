@@ -322,6 +322,33 @@ namespace pwiz.Skyline.ToolsUI
 
         public override System.Drawing.Bitmap CaptureImage() => JsonUiService.CaptureNativeWindow(Hwnd);
 
+        /// <summary>A native dialog is moved and sized by the window manager (SetWindowPos), which is safe from any
+        /// thread; it has no window state or dock state to set.</summary>
+        public override WindowPlacement SetPlacementNow(WindowPlacement placement)
+        {
+            RequireNotDocking(placement);
+            if (placement.WindowState != null)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"{0} is a native dialog and has no window state to set.", FormId));
+            }
+            var screen = System.Windows.Forms.Screen.FromHandle(Hwnd).Bounds;
+            if (placement.HasChanges())
+            {
+                var bounds = RequestedBounds(placement, GetBounds(), screen);
+                User32.SetWindowPos(Hwnd, IntPtr.Zero, bounds.Left, bounds.Top, bounds.Width, bounds.Height,
+                    User32.SetWindowPosFlags.NOZORDER | User32.SetWindowPosFlags.NOACTIVATE);
+            }
+            return new WindowPlacement { Bounds = ToRectangle(GetBounds()), Screen = ToRectangle(screen) };
+        }
+
+        private System.Drawing.Rectangle GetBounds()
+        {
+            var rect = new User32.RECT();
+            User32.GetWindowRect(Hwnd, ref rect);
+            return System.Drawing.Rectangle.FromLTRB(rect.left, rect.top, rect.right, rect.bottom);
+        }
+
         private void VerifyNotBlocked()
         {
             if (!IsEnabled)

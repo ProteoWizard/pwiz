@@ -618,6 +618,14 @@ namespace pwiz.Skyline.ToolsUI
             InvokeOnMainWindow(mainWindow => mainWindow.SetUndoRedoPosition(index));
         }
 
+        public WindowPlacement SetWindowPlacement(string formId = null, WindowPlacement placement = null)
+        {
+            placement = placement ?? new WindowPlacement();
+            if (string.IsNullOrEmpty(formId))
+                return CallOnMainWindow(mainWindow => mainWindow.SetPlacementNow(placement));
+            return CallOnForm<StandaloneWindow, WindowPlacement>(formId, form => form.SetPlacementNow(placement));
+        }
+
         public TutorialListItem[] GetAvailableTutorials()
         {
             return JsonTutorialCatalog.GetCatalog();

@@ -307,6 +307,27 @@ namespace SkylineTool
         /// <param name="index">Target position in the undo/redo stack.</param>
         void SetUndoRedoPosition(int index);
 
+        // --- Window placement ---
+
+        /// <summary>
+        /// Moves, resizes, docks or floats ONE window and returns where it ended up, so a caller can give a
+        /// screenshot a known, reproducible size or arrangement, or move a window out from under another one.
+        /// <paramref name="formId"/> names any open form (an id from <see cref="GetOpenForms"/>) or, when null, the
+        /// main Skyline window. Every property of <paramref name="placement"/> is optional and null leaves that
+        /// aspect alone, so a null or empty placement reads the current one without changing anything - not even a
+        /// maximized window's state.
+        ///
+        /// <para>Bounds are OUTER bounds in screen pixels, border and title bar included, so a tutorial capture of
+        /// W x H needs a window a border larger. A top-level window - the main window, a dialog, a native dialog -
+        /// takes Bounds, WindowState and Placement, and a change first restores a maximized or minimized window
+        /// to Normal, because a window in either state keeps the bounds it is given without showing them. A
+        /// dockable window - a graph, a grid, the Targets view - takes DockState, RelativeTo with Alignment and
+        /// Proportion to dock beside or into another window, and Bounds: its whole floating frame while it
+        /// floats, only the width or height of its side while it is docked. A request for something the window
+        /// cannot do throws and says why. A whole layout is applied with File &gt; Import &gt; Window Layout.</para>
+        /// </summary>
+        WindowPlacement SetWindowPlacement(string formId = null, WindowPlacement placement = null);
+
         // --- UI state ---
 
         /// <summary>

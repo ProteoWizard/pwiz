@@ -83,6 +83,63 @@ namespace SkylineTool
         public double Bottom { get; set; }
     }
 
+    // --- Window placement models ---
+
+    /// <summary>
+    /// Where a window is - and, in a request, where to put it - for <see cref="IJsonToolService.SetWindowPlacement"/>.
+    /// Every property is optional in a request and null leaves that aspect alone, so a request with nothing set
+    /// is a read; the reply has every aspect the window has filled in.
+    ///
+    /// <para><see cref="Bounds"/> and <see cref="Screen"/> reuse <see cref="Rectangle"/>, whose edges are named for a
+    /// GRAPH, where Top is the larger Y. Screen pixels grow downward, so here Top is the SMALLER Y - still the
+    /// upper edge on screen - and Bottom the larger; the width is Right - Left and the height Bottom - Top.</para>
+    /// </summary>
+    public class WindowPlacement
+    {
+        /// <summary><see cref="Placement"/>: fill the window's screen.</summary>
+        public const string PLACEMENT_MAXIMIZE = "maximize";
+        /// <summary><see cref="Placement"/>: center the window on its screen.</summary>
+        public const string PLACEMENT_CENTER = "center";
+        /// <summary><see cref="Alignment"/>: join <see cref="RelativeTo"/>'s tab group instead of splitting beside it.</summary>
+        public const string ALIGNMENT_TAB = "tab";
+
+        /// <summary>The OUTER bounds in screen pixels, border and title bar included: the main window's or a
+        /// dialog's own, a floating window's whole frame (every window tabbed in it moves with it), a docked
+        /// window's pane. A request gives all four edges; a docked window takes only the width (docked left or
+        /// right) or the height (top or bottom) from them.</summary>
+        public Rectangle Bounds { get; set; }
+        /// <summary>"Normal", "Maximized" or "Minimized" - a top-level window only.</summary>
+        public string WindowState { get; set; }
+        /// <summary>A dockable window's state: "Floating", "Document", "DockLeft", "DockRight", "DockTop",
+        /// "DockBottom" or the "...AutoHide" form of a side.</summary>
+        public string DockState { get; set; }
+        /// <summary>Request only: the form id of another dockable window to dock this one against.</summary>
+        public string RelativeTo { get; set; }
+        /// <summary>Request only, with <see cref="RelativeTo"/>: "Left", "Right", "Top" or "Bottom" to split
+        /// beside it on that side, or <see cref="ALIGNMENT_TAB"/> (the default) to join its tab group.</summary>
+        public string Alignment { get; set; }
+        /// <summary>Request only, with a side <see cref="Alignment"/>: this window's share of the split, 0-1
+        /// (default 0.5).</summary>
+        public double? Proportion { get; set; }
+        /// <summary>Request only: <see cref="PLACEMENT_MAXIMIZE"/> or <see cref="PLACEMENT_CENTER"/>, applied to
+        /// the bounds after <see cref="Bounds"/>; a floating or top-level window only.</summary>
+        public string Placement { get; set; }
+        /// <summary>Reply only: the bounds of the screen the window is on.</summary>
+        public Rectangle Screen { get; set; }
+
+        /// <summary>Whether the request asks for any change at all (else it is a read).</summary>
+        public bool HasChanges()
+        {
+            return Bounds != null || WindowState != null || Placement != null || HasDocking();
+        }
+
+        /// <summary>Whether the request asks for anything only a dockable window can do.</summary>
+        public bool HasDocking()
+        {
+            return DockState != null || RelativeTo != null || Alignment != null || Proportion.HasValue;
+        }
+    }
+
     // --- Report models ---
 
     /// <summary>
