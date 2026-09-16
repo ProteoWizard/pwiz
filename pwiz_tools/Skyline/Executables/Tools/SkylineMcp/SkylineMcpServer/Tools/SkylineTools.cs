@@ -583,7 +583,9 @@ public static class SkylineTools
         "its index, e.g. [\"Peptides\", 0]); 'paste' (value the text to paste into a text box, a grid, the " +
         "Targets tree, or the main Skyline window -- without using the clipboard); 'select_all' (selects all " +
         "of a paste-capable element's content, e.g. before paste to replace it); 'rename_node' (the Targets " +
-        "tree, value the new name for the selected node). " +
+        "tree, value the new name for the selected node); 'begin_edit' (the Targets tree: opens the selected " +
+        "node's in-place edit box and leaves it open, so send_text to the tree shows the auto-completion " +
+        "suggestions, send_key_stroke Down/Up and Enter pick one, Enter commits, Esc cancels). " +
         "For a control's right-click menu, pass path as the JSON {\"parent\": <the control's " +
         "UiElementPath>, \"type\": \"ContextMenu\"}, then get_children to list its items or " +
         "click to invoke one (for a grid, move to the cell first with skyline_set_current_cell_address). When " +
@@ -591,7 +593,7 @@ public static class SkylineTools
         "skyline_get_controls; the typed tools (skyline_click_form_button, ...) remain for common cases.")]
     public static string PerformAction(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string form,
-        [Description("Action: get_actions, get_children, click, get_value, set_value, send_text, send_key_stroke, get_options, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, get_graph_zoom, zoom_graph_to, click_graph, expand, collapse, select_tab, dismiss, paste, select_all, rename_node")] string action,
+        [Description("Action: get_actions, get_children, click, get_value, set_value, send_text, send_key_stroke, get_options, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, get_graph_zoom, zoom_graph_to, click_graph, expand, collapse, select_tab, dismiss, paste, select_all, rename_node, begin_edit")] string action,
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
         [Description("Value for set_value/set_grid_text, the text for send_text/paste/rename_node, the key for send_key_stroke (e.g. 'Ctrl+V'), a [column, row] array for set_current_cell_address, a [left, top, right, bottom] array of graph data coordinates for zoom_graph_to/click_graph, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
@@ -917,10 +919,10 @@ public static class SkylineTools
         "focus and you never have to arrange focus first; the control is verified enabled first. The text is " +
         "LITERAL - no key names, nothing to escape. To press a key (Enter, Down, Ctrl+V) use " +
         "skyline_send_key_stroke; to PASTE use skyline_perform_action with action='paste', which takes the " +
-        "text and so needs neither the clipboard nor Ctrl+V. DO NOT type into the Targets tree: it forwards " +
-        "each character through the FOCUSED window, so the characters land in whatever application is in " +
-        "front and arrive out of order - use skyline_perform_action with action='rename_node' to set a " +
-        "node's text. Discover control names with skyline_get_controls.")]
+        "text and so needs neither the clipboard nor Ctrl+V. Typing into the Targets tree types into the " +
+        "selected node's in-place edit box (opening it if needed - see skyline_perform_action 'begin_edit'), " +
+        "where the auto-completion suggestions appear; Enter commits and Esc cancels, or use 'rename_node' " +
+        "to set a node's text in one step. Discover control names with skyline_get_controls.")]
     public static string SendText(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Control to type into, as skyline_get_controls reports it: its visible Label, or its Type for a caption-less control (e.g. 'TreeView')")] string controlId,
@@ -935,10 +937,12 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_send_key_stroke"),
      Description("Press one key on a control, whether or not it has the focus - e.g. to accept or step " +
-        "through a popup, or to paste with 'Ctrl+V' where a form's own handler does the pasting. " +
-        "NOTE: this raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather " +
-        "than by a handler - Backspace editing a text box, an arrow moving a plain list's selection - will " +
-        "NOT take effect. Discover control names with skyline_get_controls.")]
+        "through a popup, or to paste with 'Ctrl+V' where a form's own handler does the pasting. A plain key " +
+        "goes the way a real press does: the menu bar's shortcuts (Delete on the Targets tree is Edit > " +
+        "Delete), a dialog's Enter/Esc, then the control's own handling (an arrow moves a tree's or list's " +
+        "selection, Backspace edits a text box). A key WITH modifiers is raised as the control's KeyDown, so " +
+        "it reaches a handler that reads it there (Ctrl+V on a grid) but not the control's default behavior. " +
+        "Discover control names with skyline_get_controls.")]
     public static string SendKeyStroke(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Control to press the key on, as skyline_get_controls reports it")] string controlId,

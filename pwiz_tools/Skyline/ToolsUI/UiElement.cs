@@ -98,6 +98,10 @@ namespace pwiz.Skyline.ToolsUI
     /// peptide group), as a user does by editing the node label and pressing Enter.</summary>
     public interface IRenameNodeElement { void RenameNodeNow(string value); }
 
+    /// <summary>An element whose selected node can be edited in place with the edit box left open (the Targets
+    /// tree), so the auto-completion suggestions that appear as text is typed can be seen and picked.</summary>
+    public interface IBeginEditElement { void BeginEditNow(); }
+
     /// <summary>An element the keyboard can be driven on, without it having the focus. Every control is one.
     /// <see cref="SendTextNow"/> takes LITERAL text, so nothing in it needs escaping;
     /// <see cref="SendKeyStrokeNow"/> takes one key named with its modifiers ("Ctrl+V", "Down").</summary>
@@ -704,23 +708,43 @@ namespace pwiz.Skyline.ToolsUI
                     @"The control '{0}' cannot be typed into: it is a {1}, which does nothing with a character. Use 'set_value' to give a control a value, or 'click' to press it.",
                     Label ?? NullIfEmpty(Name) ?? ElementType.Name, ElementType.Name));
             }
-            var handle = Control.Handle;
+            SendChars(Control, text);
+        }
+
+        /// <summary>Delivers the characters of <paramref name="text"/> to the control's own window, one WM_CHAR
+        /// each and in order - what typing them with the control focused would deliver.</summary>
+        protected static void SendChars(Control control, string text)
+        {
+            var handle = control.Handle;
             foreach (char c in text)
                 User32.SendMessage(handle, User32.WinMessageType.WM_CHAR, (IntPtr) c, IntPtr.Zero);
         }
 
         /// <summary>PRESSES ONE KEY on the control, named with its modifiers - "Ctrl+V", "Down", "Enter",
-        /// "Ctrl+Shift+Home". It raises KeyDown with the composed <see cref="Keys"/> value, which is where a
-        /// WinForms handler reads a keystroke from. Composing the value is what lets a modifier be expressed:
-        /// a delivered key message carries only the virtual key, and WinForms fills the modifiers in from the
-        /// GLOBAL keyboard state, which this does not touch.
-        ///
-        /// <para>KNOWN LIMIT: raising KeyDown does not run the control's default window procedure, so a key
-        /// whose effect comes from that rather than from a handler - Backspace editing a text box, an arrow
-        /// moving a plain list's selection - has no effect.</para></summary>
+        /// "Ctrl+Shift+Home". A key WITH modifiers is raised as KeyDown with the composed <see cref="Keys"/>
+        /// value, which is where a WinForms handler reads a keystroke from; composing it is what lets a modifier
+        /// be expressed, since a delivered key message carries only the virtual key and WinForms fills the
+        /// modifiers in from the GLOBAL keyboard state, which this does not touch. A PLAIN key goes the way a real
+        /// key press does: first the pre-processing a message loop gives a key before the control sees it - the
+        /// menu bar's shortcuts (Delete as Edit &gt; Delete), the dialog keys (Enter and Esc on a dialog, Tab) -
+        /// and, when nothing there consumed it, the control's own window procedure, where an arrow moves a tree's
+        /// or a list's selection, Backspace edits a text box, and the KeyDown handlers run from.</summary>
         public virtual void SendKeyStrokeNow(string keyStroke)
         {
-            RaiseProtectedHandler(Control, @"OnKeyDown", new KeyEventArgs(ParseKeyStroke(keyStroke)));
+            var keys = ParseKeyStroke(keyStroke);
+            if ((keys & Keys.Modifiers) != Keys.None)
+            {
+                RaiseProtectedHandler(Control, @"OnKeyDown", new KeyEventArgs(keys));
+                return;
+            }
+            var handle = Control.Handle;
+            var virtualKey = (IntPtr) (int) keys;
+            var keyDown = Message.Create(handle, (int) User32.WinMessageType.WM_KEYDOWN, virtualKey, IntPtr.Zero);
+            if (Control.PreProcessMessage(ref keyDown))
+                return;
+            User32.SendMessage(handle, User32.WinMessageType.WM_KEYDOWN, virtualKey, IntPtr.Zero);
+            // A release carries the previous-key-state and transition bits (the top two) in its lParam.
+            User32.SendMessage(handle, User32.WinMessageType.WM_KEYUP, virtualKey, (IntPtr) unchecked((int) 0xC0000000));
         }
 
         // Spellings for keys whose Keys name differs. Everything else is matched against the Keys enum, so
@@ -1817,11 +1841,50 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>The Targets tree (a <see cref="SequenceTree"/>): a TreeView with the document-owned node
     /// context menu and an in-place node rename a plain TreeView does not have.</summary>
-    internal sealed class SequenceTreeElement : TreeViewElement, IRenameNodeElement, IClipboardElement
+    internal sealed class SequenceTreeElement : TreeViewElement, IRenameNodeElement, IBeginEditElement, IClipboardElement
     {
         public SequenceTreeElement(SequenceTree control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
 
         private SequenceTree SequenceTree => (SequenceTree) Control;
+
+        // The in-place edit under way, or null. Its box is a TextBox the tree adds beside itself, so a caller can
+        // also address it directly as the Targets form's TextBox.
+        private StatementCompletionTextBox EditBox => SequenceTree.StatementCompletionEditBox;
+
+        // Starts editing the selected node in place, as a user typing into it would, and leaves the edit box open
+        // so the auto-completion suggestions show as text arrives. NOT committing on focus loss: an automated
+        // caller commits with Enter (or rename_node) and cancels with Esc, and the tree's focus comes and goes as
+        // other verbs run. A node that cannot be renamed - a peptide, a precursor - is refused up front, the way
+        // typing on it does nothing, rather than opening an edit whose commit would be ignored.
+        public void BeginEditNow()
+        {
+            if (EditBox != null)
+                return;
+            if (!SequenceTree.IsEditableNode(SequenceTree.SelectedNode))
+            {
+                throw new ArgumentException(new LlmInstruction(
+                    @"The selected node cannot be edited in place. Select a protein or peptide list, or the blank node at the end of the Targets list, first."));
+            }
+            SequenceTree.BeginEdit(false);
+        }
+
+        // Typing into the Targets tree types into the node being edited - beginning the edit if none is under way
+        // - not into the tree itself, whose own per-character handling would start an edit per character and
+        // scramble the text. Likewise a key with an edit under way is for the edit box: Down/Up move through the
+        // suggestions, Enter picks or commits, Esc cancels.
+        public override void SendTextNow(string text)
+        {
+            BeginEditNow();
+            SendChars(EditBox.TextBox, text);
+        }
+
+        public override void SendKeyStrokeNow(string keyStroke)
+        {
+            if (EditBox != null)
+                ((IKeyboardElement) FormElement.ElementFor(EditBox.TextBox)).SendKeyStrokeNow(keyStroke);
+            else
+                base.SendKeyStrokeNow(keyStroke);
+        }
 
         // Pasting into the Targets tree pastes into the document (a transition list, peptides, or FASTA) --
         // the same as Ctrl+V with the tree focused -- without the clipboard.

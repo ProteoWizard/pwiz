@@ -487,6 +487,7 @@
     <Compile Include="PrmMcpConnectorTest.cs" />
     <Compile Include="RunCommandMcpConnectorTest.cs" />
     <Compile Include="WindowPlacementMcpConnectorTest.cs" />
+    <Compile Include="TreeEditMcpConnectorTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
     <Compile Include="PythonInstallerLegacyDlgTest.cs" />

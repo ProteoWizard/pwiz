@@ -1236,6 +1236,10 @@ namespace pwiz.Skyline.Controls
 
         private void BeginEditNode(TreeNode node, bool commitOnLoseFocus)
         {
+            // One edit at a time: a second BeginEdit while one is under way (a key reaching the tree with the edit
+            // box unfocused, or synthetic input) cancels the first, so no orphan text box stays painted in the pane.
+            if (_editTextBox != null)
+                CommitEditBox(true);
             var textBox = new TextBox
             {
                 Text = node.Text,

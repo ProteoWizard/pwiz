@@ -436,13 +436,21 @@ namespace pwiz.Skyline.ToolsUI
                 @"RenameNode", (e, value) => { e.RenameNodeNow(value); return null; })
             .Describe(new LlmInstruction(@"Rename the tree's selected node in place (select the node first)."), new LlmInstruction(@"the new name"));
 
+        // Starts editing the tree's selected node in place -- the MethodEdit tutorial's "type into the blank node
+        // at the end of the Targets list" step, where the auto-completion suggestions appear as the text arrives.
+        // RenameNode does the whole edit in one go; this one leaves the edit box open so the suggestions can be
+        // seen and picked. Select the node first.
+        public static readonly UiAction BeginEdit = SimpleAction<IBeginEditElement>(
+                @"BeginEdit", e => { e.BeginEditNow(); return null; })
+            .Describe(new LlmInstruction(@"Start editing the tree's selected node in place (select the node first). The edit box appears on the form as a TextBox: send_text to the tree (or the box) to type into it and see the auto-completion suggestions; send_key_stroke Down/Up moves through them and Enter picks one, Enter with none showing commits the text, Esc cancels."));
+
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
         {
             GetActions, GetChildren, Click, GetValue, SetValue, SendText, SendKeyStroke, GetOptions, CheckItem, UncheckItem,
             SelectItem, UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress,
             GetGraphZoom, ZoomGraphTo, ClickGraph, Expand,
-            Collapse, SelectTab, Dismiss, Paste, SelectAll, RenameNode
+            Collapse, SelectTab, Dismiss, Paste, SelectAll, RenameNode, BeginEdit
         };
 
         // The action with the given wire name, matched case- and underscore-insensitively, or null.
