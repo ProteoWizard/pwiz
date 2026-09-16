@@ -1,0 +1,17 @@
+{
+  "name": "pwiz",
+  "version": "3.0.26008",
+  "homepage": "https://github.com/kpnovoselov/pwiz",
+  "description": "The ProteoWizard Library and Tools are a set of modular and extensible open-source, cross-platform tools and software libraries that facilitate proteomics data analysis.",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name" : "vcpkg-cmake",
+      "host" : true
+    },
+    {
+      "name" : "vcpkg-cmake-config",
+      "host" : true
+    }
+  ]
+}
