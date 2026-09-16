@@ -290,8 +290,13 @@ namespace pwiz.Skyline.ToolsUI
                 var labeled = BestMatch(candidates, text, true) ?? BestMatch(candidates, text, false);
                 if (labeled != null)
                     return labeled;
-                // Nothing carries that text, so read it as the KIND of control, which a user picks a
-                // caption-less control out by. A label always wins, so a type never shadows a real caption.
+                // Nothing carries that text; the internal Name GetControls prints resolves it too, since a control
+                // with no caption at all has nothing else. A label wins, so a name never shadows a real caption.
+                var named = candidates.Where(e => string.Equals(e.Name, text, StringComparison.OrdinalIgnoreCase)).ToList();
+                if (named.Count > 0)
+                    return SingleOrEnabled(named) ?? named[0];
+                // Otherwise read it as the KIND of control, which a user picks a caption-less control out by. A
+                // label always wins, so a type never shadows a real caption.
                 var ofType = candidates.Where(e => e.MatchesType(text)).ToList();
                 if (ofType.Count == 0)
                     throw new ArgumentException(LlmInstruction.Format(
@@ -862,17 +867,32 @@ namespace pwiz.Skyline.ToolsUI
         // A button-like control carries its own caption in Text -- including a custom IButtonControl tile
         // such as a StartPage ActionBoxControl, whose Text is its visible caption ("Blank Document"). A
         // plain field has no caption of its own; it is named by the Label immediately before it in tab order
-        // (e.g. "Name:" -> the name textbox, "Use only scans within" -> the RT box). Caption-bearing
-        // elements (button, checkbox, tab) override this to return their own text.
+        // (e.g. "Name:" -> the name textbox, "Use only scans within" -> the RT box) or, failing that, by a Label
+        // right after it on the same row - the unit or count word that trails its field ("3 [Peptides]"), which
+        // is the only name such a field has. Caption-bearing elements (button, checkbox, tab) override this to
+        // return their own text.
         public override string Label
         {
             get
             {
                 if (Control is IButtonControl && !string.IsNullOrEmpty(Control.Text))
                     return Control.Text;
-                var previous = Control.FindForm()?.GetNextControl(Control, false);
-                return (previous as Label)?.Text;
+                var form = Control.FindForm();
+                if (form?.GetNextControl(Control, false) is Label previous)
+                    return previous.Text;
+                if (form?.GetNextControl(Control, true) is Label trailing && IsBeside(trailing))
+                    return trailing.Text;
+                return null;
             }
+        }
+
+        // Whether the label sits to the right of this control on its row (their vertical extents overlap) rather
+        // than on the next row, where it would name the NEXT field.
+        private bool IsBeside(Control label)
+        {
+            var mine = Control.RectangleToScreen(Control.ClientRectangle);
+            var theirs = label.RectangleToScreen(label.ClientRectangle);
+            return theirs.Left >= mine.Left && theirs.Top < mine.Bottom && theirs.Bottom > mine.Top;
         }
 
         public override UiElement GetChild(UiElementPath path)
