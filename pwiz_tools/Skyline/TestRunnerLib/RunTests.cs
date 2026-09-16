@@ -1,6 +1,7 @@
 /*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2013 University of Washington - Seattle, WA
  * 
@@ -445,7 +446,10 @@ namespace TestRunnerLib
                 ? MemoryManagement.GetProcessHeapSizes(heapOutput ? dmpDir : null)
                 : new MemoryManagement.HeapAllocationSizes[1];
             var processBytes = heapCounts[0].Committed; // Process heap : useful for debugging - though included in committed bytes
-            var managedBytes = GC.GetTotalMemory(true); // Managed heap
+            // Collect right before sampling, so the numbers describe the floor the next test
+            // starts from rather than whatever the GC kept in reserve after the last one.
+            MemoryManagement.CollectForMeasurement();
+            var managedBytes = GC.GetTotalMemory(false); // Managed heap
             var committedBytes = heapCounts.Sum(h => h.Committed);
             ManagedMemoryBytes = managedBytes;
             CommittedMemoryBytes = committedBytes;
@@ -1141,14 +1145,42 @@ namespace TestRunnerLib
 
             public static void FlushMemory()
             {
-                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
+                CollectForMeasurement();
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 {
                     SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, -1, -1);
                 }
+            }
+
+            /// <summary>
+            /// A full, compacting collection whose purpose is a quiet measurement point: after
+            /// it, private bytes should be what the process truly holds, not what the GC has
+            /// decided to keep on hand for the next allocations.
+            /// </summary>
+            /// <remarks>
+            /// On .NET 7+ the regions-based GC retains a budget of free regions after an
+            /// ordinary full collection and decommits them only gradually, so a private-bytes
+            /// sample taken after <c>GC.Collect()</c> lags the live size by a variable amount.
+            /// In the .NET 10 nightly that showed as spikes of 400-900 MB on a ~350 MB floor
+            /// where the .NET Framework run of the same suite was smooth - noise that made the
+            /// private-bytes axis useless for leak detection. <c>GCCollectionMode.Aggressive</c>
+            /// is the mode the runtime provides for "the process is about to go idle": it
+            /// compacts every generation, the LOH included, and decommits as much as it can.
+            /// It is more expensive than a plain collection, which is why it is used here in
+            /// the test harness and not in Skyline.
+            /// </remarks>
+            public static void CollectForMeasurement()
+            {
+                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+#if NET7_0_OR_GREATER
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+                GC.WaitForPendingFinalizers();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+#else
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+#endif
             }
         }
 
