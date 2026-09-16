@@ -272,6 +272,11 @@ namespace pwiz.Osprey.Tasks
             // valid against v3 files.
             return base.ValidityKey(ctx)
                 + @";fdrsidecar=" + FdrScoresSidecar.FormatVersion
+                // NO ";expsidecar=" term. The experiment sidecar's format does not change with
+                // this work: the best-of-runs floor is APPLIED to the q-values before they are
+                // written rather than stored beside them, so the record keeps its columns and its
+                // version. A term here would invalidate this task for a format that did not move,
+                // and invalidating FirstPassFDR costs a 5-hour Stage 5 re-run at 446 files.
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
