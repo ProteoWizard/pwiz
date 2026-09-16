@@ -391,16 +391,29 @@ namespace pwiz.Skyline.ToolsUI
             if (candidate == null || key == null)
                 return false;
             if (strict)
+            {
                 // Match the raw text or its normalized form (the mnemonic '&' and trailing punctuation/space
                 // removed -- see NormalizeLabel), so the label GetControls/get_children report (which is the
                 // normalized one) is matchable even when it carries a symbol of its own, which disables the
-                // symbol-insensitive loose match below.
+                // symbol-insensitive loose match below. A trailing shortcut hint ("Find (Ctrl + F)") is one
+                // more thing a caller reasonably leaves off.
                 return string.Equals(candidate, key, StringComparison.Ordinal)
-                    || string.Equals(NormalizeLabel(candidate), key, StringComparison.Ordinal);
+                    || string.Equals(NormalizeLabel(candidate), key, StringComparison.Ordinal)
+                    || string.Equals(StripShortcutHint(NormalizeLabel(candidate)), key, StringComparison.Ordinal);
+            }
             if (HasSymbol(key))
                 return false;
-            return string.Equals(StripToAlphanumeric(candidate), StripToAlphanumeric(key),
-                StringComparison.CurrentCultureIgnoreCase);
+            string keyText = StripToAlphanumeric(key);
+            return string.Equals(StripToAlphanumeric(candidate), keyText, StringComparison.CurrentCultureIgnoreCase)
+                || string.Equals(StripToAlphanumeric(StripShortcutHint(candidate)), keyText, StringComparison.CurrentCultureIgnoreCase);
+        }
+
+        // A caption without its trailing parenthesized hint - a toolbar button's "(Ctrl + F)", a Japanese
+        // mnemonic's "(N)" - which is decoration on the name rather than part of it.
+        private static string StripShortcutHint(string text)
+        {
+            int open = text.LastIndexOf('(');
+            return open > 0 && text.EndsWith(@")") ? text.Substring(0, open).TrimEnd() : text;
         }
 
         /// <summary>Whether the candidate matches the key at all -- an exact (strict) or symbol-insensitive
@@ -563,8 +576,14 @@ namespace pwiz.Skyline.ToolsUI
             // child over a hidden duplicate -- e.g. the visible bound grid over the collapsed pivot grid.
             UiElement match;
             if (path.Text != null)
+            {
+                // By visible text, an exact match preferred over a loose one; failing both, by the internal
+                // Name get_controls prints, the same fallback FindElement gives the named verbs.
                 match = PreferInteractable(candidates.Where(child => child.MatchesText(path.Text, true)))
-                        ?? PreferInteractable(candidates.Where(child => child.MatchesText(path.Text, false)));
+                        ?? PreferInteractable(candidates.Where(child => child.MatchesText(path.Text, false)))
+                        ?? PreferInteractable(candidates.Where(child =>
+                            string.Equals(child.Name, path.Text, StringComparison.OrdinalIgnoreCase)));
+            }
             else
                 match = PreferInteractable(candidates);
             if (match == null)
@@ -1849,16 +1868,22 @@ namespace pwiz.Skyline.ToolsUI
         IClipboardElement
     {
         // Shows the data tip hovering over the node would show - the mouse move is simulated the way the tutorial
-        // tests do it, with the tree told to ignore that it has no focus - and returns the tip's text. The tip
-        // itself appears after the tree's usual hover delay, so a capture that wants it in the picture follows a
-        // moment later. A null path hides the tip.
+        // tests do it, with the tree told to ignore that it has no focus - and returns the tip's text when the tip
+        // has text (a document node's tip draws itself, so for it the tip is on screen but the text is empty). The
+        // tip itself appears after the tree's usual hover delay, so a capture that wants it in the picture follows
+        // a moment later. An empty path hides the tip.
         public string ShowNodeTipNow(string nodePath)
         {
             var tree = SequenceTree;
             tree.MoveMouse(new System.Drawing.Point(-1, -1)); // off every node: hides the tip, resets the hover threshold
             if (string.IsNullOrEmpty(nodePath))
-                return null;
+                return string.Empty;
             var node = ListItems.FindTreeNode(tree, nodePath);
+            if (!(node is ITipProvider tipProvider) || !tipProvider.HasTip)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"The node '{0}' has no data tip.", nodePath));
+            }
             node.EnsureVisible();
             var rect = node.Bounds;
             tree.IgnoreFocus = true;
@@ -1870,8 +1895,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 tree.IgnoreFocus = false;
             }
-            return tree.NodeTipText ?? throw new ArgumentException(LlmInstruction.Format(
-                @"The node '{0}' has no data tip.", nodePath));
+            return tree.NodeTipText ?? string.Empty;
         }
 
         public SequenceTreeElement(SequenceTree control, CancellationToken cancellationToken) : base(control, cancellationToken) { }

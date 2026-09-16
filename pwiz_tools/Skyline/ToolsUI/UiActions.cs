@@ -446,9 +446,10 @@ namespace pwiz.Skyline.ToolsUI
 
         // Shows a Targets-tree node's hover data tip without the mouse - the MethodEdit tutorial's "hover over
         // the node to see its tip" steps - and returns the tip's text.
-        public static readonly UiAction ShowNodeTip = SimpleAction<INodeTipElement, string>(
-                @"ShowNodeTip", (e, nodePath) => e.ShowNodeTipNow(nodePath))
-            .Describe(new LlmInstruction(@"Show the data tip hovering over a tree node would show, and return its text. The tip appears after the usual hover delay, so capture the form a moment later to see it; an empty value hides the tip."), new LlmInstruction(@"the node's '>'-separated path, as for select_item, or empty to hide"));
+        // The value is an object, not a string, so that NO value (hide the tip) is accepted as well as an empty one.
+        public static readonly UiAction ShowNodeTip = SimpleAction<INodeTipElement, object>(
+                @"ShowNodeTip", (e, nodePath) => e.ShowNodeTipNow(nodePath?.ToString()))
+            .Describe(new LlmInstruction(@"Show the data tip hovering over a tree node would show, and return its text when the tip has any (a document node's tip is drawn, so its text is empty). The tip appears after the usual hover delay, so capture the form a moment later to see it; no value, or an empty one, hides the tip."), new LlmInstruction(@"the node's '>'-separated path, as for select_item, or nothing to hide"));
 
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =

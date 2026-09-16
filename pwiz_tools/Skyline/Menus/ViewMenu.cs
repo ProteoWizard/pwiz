@@ -920,6 +920,11 @@ namespace pwiz.Skyline.Menus
         {
             viewTargetsMenuItem.Checked = SkylineWindow.SequenceTreeFormIsVisible;
             viewFilesMenuItem.Checked = SkylineWindow.FilesTreeFormIsVisible;
+            // The ion-type submenus follow the document's type. Without this they stay empty (and hidden) on
+            // a fresh document until an ion-type settings change happens to enable them, which is the only
+            // other place that does.
+            EnableProteomicIons(DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules);
+            EnableSmallMoleculeIons(DocumentUI.HasSmallMolecules);
             viewModificationsMenuItem.DropDownItems.Clear();
             var currentOption = DisplayModificationOption.Current;
             foreach (var opt in DisplayModificationOption.All)
