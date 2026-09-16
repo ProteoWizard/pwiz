@@ -43,6 +43,31 @@ recur and are worth knowing before the walkthrough:
    they were removed through `<Edit list...>` before starting. Those calls are
    preparation, not tutorial steps, and are omitted below.
 
+### What this branch added, and where the walkthrough uses it
+
+Most of the run below is existing connector surface. The rows here are the parts that
+**this branch** (`7993a4ef55..HEAD`) added or changed — the calls that would fail, or not
+exist, on master. Each is marked **[branch]** at the point it is used.
+
+| New or changed | Kind | Where |
+|----------------|------|-------|
+| `SetWindowPlacement` → `skyline_set_window_placement` | **New `IJsonToolService` method** — the only one this branch adds | [1. Getting Started](#1-getting-started) |
+| A grid resolves by the Label `get_controls` reports for it | Changed control matching (`GridElement.MatchesText`) | [2. Spectral library](#2-creating-a-msms-spectral-library) |
+| `grid[column,row]` accepts a column header, not only an index | Changed `SetFormValue` locator (`GridElement.ColumnIndex`) | [2. Spectral library](#2-creating-a-msms-spectral-library) |
+| `Ion Types` submenu is populated when it opens | Fixed `ViewMenu.ViewMenuDropDownOpening` | [4. Pasting FASTA sequences](#4-pasting-fasta-sequences) |
+| `SendKeyStroke` reaches the Targets tree (arrows, Home/End, Delete, Space) | Changed — falls back to the form's `ProcessCmdKey` | [4](#4-pasting-fasta-sequences), [9](#9-inserting-a-peptide-list), [11](#11-checking-peptide-uniqueness), [13](#13-pop-up-pick-lists) |
+| `SendText` types into the tree's in-place edit box, so completions appear | Changed, plus a new `begin_edit` action it routes through | [9](#9-inserting-a-peptide-list), [12](#12-direct-document-editing--auto-completion) |
+| A trailing label names a caption-less field ("product ions", "Peptides") | Changed label derivation | [5](#5-transition-settings), [7](#7-limiting-peptides-per-protein) |
+| `show_node_tip` | **New `perform_action` action** on `SequenceTree` | [14. Data tips](#14-data-tips) |
+| `skyline_reorder_elements` | **New MCP tool** over the existing `ReorderElements` service method | [15. Drag and drop](#15-drag-and-drop) |
+
+Two things that look new here but are not. **`Ctrl+V` into a grid** and the keyboard verbs
+themselves landed earlier, in PR #4452 — they are new only relative to the first
+`TEST-MethodEdit.md` run, which predates them. **`Space` opening a pick-list** is ordinary
+Skyline behavior (`SequenceTree.OnKeyDown`) that nothing on the tool surface advertises; no
+code was needed, only finding it. The branch's `get_tutorial_image` shared-image fix is not
+exercised below, since this document embeds its own captures rather than tutorial images.
+
 ---
 
 ## 1. Getting Started
@@ -62,8 +87,9 @@ skyline_set_ui_mode(mode="proteomic")
 skyline_set_window_placement(left=50, top=50, width=1021, height=560)
 ```
 
-The window placement is not a tutorial step — it sizes the window to the tutorial's
-own screenshot dimensions so the captures below line up with the reference images.
+**[branch]** `skyline_set_window_placement` is the one new `IJsonToolService` method this
+branch adds (`SetWindowPlacement`). It is not a tutorial step — it sizes the window to the
+tutorial's own screenshot dimensions so the captures below line up with the reference images.
 
 ## 2. Creating a MS/MS spectral library
 
@@ -103,9 +129,12 @@ skyline_set_form_value(formId="BuildLibraryDlg:Build Library",
                        controlId="Input Files[Score Threshold,0]", value="0.95")
 ```
 
-Both halves of that locator — addressing the grid by its "Input Files" label and the
-column by its header text — are fixes made on this branch; before them this step had
-no working call at all.
+**[branch]** Both halves of that locator are fixes made on this branch, and before them this
+step had no working call at all. Addressing the grid by its **"Input Files" label** — the one
+`get_controls` prints for it — needed `GridElement.MatchesText` to stop matching only the
+control Name; naming the column by its **header text** needed the `grid[column,row]` locator to
+stop requiring a digit. A column index still works, and a header that matches nothing now lists
+the headers that exist.
 
 ![Build Library input files](images/03-build-library-input-files.png)
 
@@ -191,7 +220,9 @@ skyline_click_form_button(formId="EmptyProteinsDlg:Skyline", button="Keep")
 ```
 
 Then *"press the down arrow key until the first pasted peptide is selected"* — real
-key presses on the Targets tree:
+key presses on the Targets tree. **[branch]** `SendKeyStroke` now falls back to the form's
+`ProcessCmdKey` when the control itself does not handle the key, which is what makes arrow
+navigation, `Home`/`End`, `Delete` (the Edit > Delete shortcut) and `Space` work here:
 
 ```
 skyline_send_key_stroke(formId="SequenceTreeForm:Targets",
@@ -206,7 +237,10 @@ skyline_get_document_status()    -> 35 proteins, 25 peptides, 75 transitions
 
 ![s-04 After the FASTA paste](images/s-04-after-fasta-paste.png)
 
-Now the b-ion overlay, which lives on a submenu built on demand when it opens:
+Now the b-ion overlay, which lives on a submenu built on demand when it opens.
+**[branch]** Before the `ViewMenu.ViewMenuDropDownOpening` fix this returned "Menu item not
+found" and `get_children` on Ion Types returned `[]` until something changed the transition
+filter's ion types; the flags are derived from the document now, so it resolves from the start:
 
 ```
 skyline_click_main_menu_item(menuPath="View > Libraries > Ion Types > B")
@@ -249,8 +283,10 @@ skyline_set_form_value(formId="TransitionSettingsUI:Transition Settings",
                        controlId="product ions", value="5")
 ```
 
-`product ions` is a text box with no caption of its own — it is named by the label
-*after* it on the same row, which the connector reports as its address.
+**[branch]** `product ions` is a text box with no caption of its own. It is named by the label
+*after* it on the same row — the trailing-label rule this branch added, which is what lets
+`set_form_value` address it (and "Peptides" in section 7) by something the user can actually
+see.
 
 **Tutorial screenshot s-07:**
 
@@ -352,8 +388,10 @@ skyline_send_text(formId="SequenceTreeForm:Targets",
 skyline_send_key_stroke(... keyStroke="Enter")
 ```
 
-Typing into the tree opens the selected node's in-place edit box and types into it —
-no separate "begin edit" step needed, exactly as the tutorial describes it.
+**[branch]** Typing into the tree opens the selected node's in-place edit box and types into
+it — no separate step needed, exactly as the tutorial describes it. `SendText` routes through
+the new `begin_edit` action to get there; on master it typed into whatever window had focus and
+left the tree stuck editing a label.
 
 **Tutorial screenshot s-11:**
 
@@ -437,6 +475,8 @@ Repeat for the new last protein, which the tutorial says maps to 4 proteins:
 ## 12. Direct document editing — auto-completion
 
 Type on the blank element at the end of the document and Skyline offers completions.
+**[branch]** This whole section rests on the same `SendText`/`begin_edit` routing: the edit box
+raises `TextChanged`, which is what makes the `StatementCompletionForm` appear at all.
 
 ```
 skyline_send_key_stroke(... keyStroke="End")
@@ -492,9 +532,12 @@ position:
 
 ## 13. Pop-up pick-lists
 
-The tutorial opens these by hovering a node until a drop-arrow appears and clicking
-it. There is no hover verb — but `SequenceTree.OnKeyDown` maps the **Space** key to
-`ShowPickList()`, so the keyboard reaches the same pop-up:
+The tutorial opens these by hovering a node until a drop-arrow appears and clicking it. There
+is no hover verb — but `SequenceTree.OnKeyDown` maps the **Space** key to `ShowPickList()`, so
+the keyboard reaches the same pop-up. That mapping is *not* new on this branch and needed no
+code; nothing on the tool surface advertises it, which is why the earlier run concluded this
+section was unreachable. Reaching the tree with `Space` at all is the **[branch]** key-stroke
+fallback above:
 
 ```
 skyline_set_selection(elementLocator="MoleculeGroup:/YBL087C")
@@ -548,8 +591,10 @@ skyline_get_locations(level="transition", rootLocator="Precursor:/YBL087C/...")
 
 ## 14. Data tips
 
-Hovering a node shows a data tip. `show_node_tip` renders the same tip for a node
-named by a `>`-separated path:
+Hovering a node shows a data tip. **[branch]** `show_node_tip` is a new `perform_action`
+action on `SequenceTree` — a simulated hover that renders the same tip for a node named by a
+`>`-separated path, and returns its text when the tip has any (a document node's tip is drawn,
+so its text is empty):
 
 ```
 skyline_perform_action(form="SequenceTreeForm:Targets", action="show_node_tip",
@@ -575,8 +620,9 @@ skyline_perform_action(... action="show_node_tip")     # no value hides the tip
 
 ## 15. Drag and drop
 
-Only proteins can be reordered in this document. `skyline_reorder_elements` does what
-dragging a node above another does — list the locators in the order wanted:
+Only proteins can be reordered in this document. **[branch]** `skyline_reorder_elements` is a
+new MCP tool over the existing `ReorderElements` service method, standing in for a drag verb: it
+does what dragging a node above another does — list the locators in the order wanted:
 
 ```
 skyline_reorder_elements(elementLocators=["MoleculeGroup:/YDR385W",
