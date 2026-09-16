@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -33,6 +33,7 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -471,9 +472,9 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// <see cref="FrozenModelScorer"/> must accept BOTH classifiers. This guards the
-        /// 2nd-pass transfer paths (OSPREY_PASS2_QVALUE=transfer / transfer-compete),
-        /// which decline when handed a model they cannot read and fall back to the
-        /// anti-conservative retrain. Before the scorer existed they read FoldWeights
+        /// 2nd-pass frozen paths (OSPREY_PASS2_QVALUE=transfer / protein-compact),
+        /// which decline when handed a model they cannot read - and since the retrain was
+        /// removed, declining is now a hard stop. Before the scorer existed they read FoldWeights
         /// directly, so a gbdt run would have silently taken that fallback -- honest
         /// FDR lost, with nothing failing.
         /// </summary>
@@ -494,8 +495,8 @@ namespace pwiz.Osprey.Test
             var treeModel = PercolatorTrainer.RunPercolator(entries, treeConfig);
             var treeScorer = FrozenModelScorer.TryCreate(treeModel);
             Assert.IsNotNull(treeScorer,
-                "frozen tree model must be scorable -- a null here silently drops " +
-                "transfer-compete back to the 2nd-pass retrain");
+                "frozen tree model must be scorable -- a null here fails the frozen " +
+                "competition, which has no retrain left to fall back to");
             Assert.IsTrue(treeScorer.IsGradientBoostedTrees);
             Assert.AreEqual(2, treeScorer.NumFeatures);
 
@@ -955,10 +956,17 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Minimal <see cref="IFdrOutputSink"/> for the projection parity tests: records
-        /// each row's Score + experiment aggregate score + <see cref="FdrQValues"/> by
-        /// (fileIdx, rowIdx) so the test can compare the streamed outputs against the
+        /// each row's Score + experiment aggregate score + apex RT + <see cref="FdrQValues"/>
+        /// by (fileIdx, rowIdx) so the test can compare the streamed outputs against the
         /// FdrEntry oracle now that the lean struct no longer stores them (issue #4355
         /// struct-shrink S0).
+        ///
+        /// <para>The apex RT is captured for the same reason the rest is: it reaches the
+        /// per-file FDR sidecar through this interface (format v7, issue #4522), and the
+        /// resident and streaming paths source it from different places - the projection row's
+        /// ParquetIndex against a column on one, the row stream itself on the other. A parity
+        /// test that compares everything BUT the value whose two sources differ is exactly the
+        /// test that would pass while they disagreed.</para>
         /// </summary>
         private sealed class CapturingSink : IFdrOutputSink
         {
@@ -967,15 +975,17 @@ namespace pwiz.Osprey.Test
             private readonly Dictionary<(int, int), FdrQValues> _q = new Dictionary<(int, int), FdrQValues>();
             private readonly Dictionary<(int, int), (uint EntryId, bool IsDecoy, byte Charge, string Peptide)> _ident =
                 new Dictionary<(int, int), (uint, bool, byte, string)>();
+            private readonly Dictionary<(int, int), double> _apexRts = new Dictionary<(int, int), double>();
 
             public void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
                 byte charge, string peptide, double score, double experimentAggregateScore,
-                in FdrQValues q)
+                double apexRt, in FdrQValues q)
             {
                 _scores[(fileIdx, rowIdx)] = score;
                 _expAgg[(fileIdx, rowIdx)] = experimentAggregateScore;
                 _q[(fileIdx, rowIdx)] = q;
                 _ident[(fileIdx, rowIdx)] = (entryId, isDecoy, charge, peptide);
+                _apexRts[(fileIdx, rowIdx)] = apexRt;
             }
 
             public void Finish(Action<string> logInfo)
@@ -985,6 +995,7 @@ namespace pwiz.Osprey.Test
             public double ScoreAt(int fileIdx, int rowIdx) => _scores[(fileIdx, rowIdx)];
             public double ExperimentAggregateScoreAt(int fileIdx, int rowIdx) => _expAgg[(fileIdx, rowIdx)];
             public FdrQValues QAt(int fileIdx, int rowIdx) => _q[(fileIdx, rowIdx)];
+            public double ApexRtAt(int fileIdx, int rowIdx) => _apexRts[(fileIdx, rowIdx)];
             public (uint EntryId, bool IsDecoy, byte Charge, string Peptide) IdentAt(int fileIdx, int rowIdx)
                 => _ident[(fileIdx, rowIdx)];
             public int Count => _scores.Count;
@@ -993,7 +1004,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// End-to-end projection RunPercolatorFdr equivalence (the survivor-reload
         /// equivalence at the unit level): the projection
-        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
+        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Func{string,double[]},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
         /// overload must produce byte-identical Score + q-values to the FdrEntry-buffer
         /// <see cref="PercolatorEngine"/> RunPercolatorFdr overload (the one that takes the
         /// per-file <see cref="FdrEntry"/> lists) -- the flag-off byte-identity ORACLE -- on the same input, at the
@@ -1044,7 +1055,7 @@ namespace pwiz.Osprey.Test
             var sink = new CapturingSink();
             PercolatorEngine.RunPercolatorFdr(
                 projSet, config, featureInfos, s => { }, sink, null, "First-pass",
-                f => featuresB[f]);
+                f => featuresB[f], f => ApexRtsByParquetIndex(fdrStubs2, f));
 
             // Both overloads sort their buffers, so compare keyed -- EntryId repeats
             // across a precursor's observations, so key by (fileIdx, ParquetIndex),
@@ -1054,7 +1065,7 @@ namespace pwiz.Osprey.Test
             for (int f = 0; f < fdrStubs.Count; f++)
             {
                 foreach (var e in fdrStubs[f].Value)
-                    refByKey[(f, e.ParquetIndex)] = e;
+                    refByKey[(f, e.ParquetIndex.Value)] = e;
             }
             int compared = 0;
             for (int f = 0; f < projSet.PerFile.Count; f++)
@@ -1197,7 +1208,7 @@ namespace pwiz.Osprey.Test
             var sink = new CapturingSink();
             bool abort = PercolatorEngine.RunStreamingIntoProjection(
                 projSet.PerFile, projSet.PeptideById, percConfig, s => { }, "First-pass",
-                f => featuresB[f], sink);
+                f => featuresB[f], f => ApexRtsByParquetIndex(fdrStubs2, f), sink);
             Assert.IsFalse(abort);
 
             Assert.AreEqual(fdrStubs.Count, projSet.PerFile.Count);
@@ -1216,6 +1227,11 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(stubList[i].ExperimentPrecursorQvalue, q.ExperimentPrecursorQvalue, 0.0);
                     Assert.AreEqual(stubList[i].ExperimentPeptideQvalue, q.ExperimentPeptideQvalue, 0.0);
                     Assert.AreEqual(stubList[i].Pep, q.Pep, 0.0);
+                    // The apex RT the sink carries to the v7 sidecar. The projection row has no
+                    // RT, so this came back through the per-file ParquetIndex lookup - compare it
+                    // against the stub it was read from, which is the only thing that proves the
+                    // lookup is keyed on the right ordinal.
+                    Assert.AreEqual(stubList[i].ApexRt, sink.ApexRtAt(f, i), 0.0);
                 }
             }
         }
@@ -1276,18 +1292,22 @@ namespace pwiz.Osprey.Test
             var sinkRes = new CapturingSink();
             bool abortRes = PercolatorEngine.RunStreamingIntoProjection(
                 projSet.PerFile, projSet.PeptideById, percConfig, s => { }, "First-pass",
-                f => featuresRes[f], sinkRes);
+                f => featuresRes[f], f => ApexRtsByParquetIndex(fixtureRes, f), sinkRes);
             Assert.IsFalse(abortRes);
 
             // Streaming-from-row-source path (the change under test): identity streamed straight
             // from the fixture (== parquet), features by fileName, no resident projection.
             var fileNames = fixtureStr.ConvertAll(kv => kv.Key);
-            Action<string, Action<uint, byte, bool, double, string>> streamFileRows =
-                (name, onRow) =>
+            // Supplies apex RT whatever the pass asks for. The scorer's Core/ApexRt choice is
+            // about what the PARQUET reader decodes, not about what a fixture can hand over, and
+            // this test's job is to prove the streamed path matches the resident one on every
+            // value - which it cannot do if the fixture withholds one of them.
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows =
+                (name, columns, onRow) =>
                 {
                     var list = fixtureStr.Find(kv => kv.Key == name).Value;
                     foreach (var e in list)
-                        onRow(e.EntryId, e.Charge, e.IsDecoy, e.CoelutionSum, e.ModifiedSequence);
+                        onRow(e.EntryId, e.Charge, e.IsDecoy, e.CoelutionSum, e.ModifiedSequence, e.ApexRt);
                 };
             var sinkStr = new CapturingSink();
             bool abortStr = PercolatorScorer.RunStreamingFirstPass(
@@ -1317,6 +1337,10 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(idRes.IsDecoy, idStr.IsDecoy);
                     Assert.AreEqual(idRes.Charge, idStr.Charge);
                     Assert.AreEqual(idRes.Peptide, idStr.Peptide);
+                    // Sourced differently by the two paths - the resident one by ParquetIndex
+                    // against a column, the streaming one off the row stream - so this is the
+                    // one output a shared bug could NOT produce identically by accident.
+                    Assert.AreEqual(sinkRes.ApexRtAt(f, r), sinkStr.ApexRtAt(f, r), 0.0);
                     compared++;
                 }
             }
@@ -1442,7 +1466,13 @@ namespace pwiz.Osprey.Test
                             Charge = 2,
                             ScanNumber = ++scan,
                             IsDecoy = false,
-                            CoelutionSum = targetFeatures[0]
+                            CoelutionSum = targetFeatures[0],
+                            // Distinct per ROW, and deliberately not monotone in the score: the
+                            // resident path looks this up by ParquetIndex while the streaming
+                            // path takes it off the row stream, so a value shared between rows -
+                            // or correlated with the sort key - would let a mis-keyed lookup
+                            // compare equal anyway.
+                            ApexRt = ApexRtForRow(file, featureRows.Count)
                         });
                         featureRows.Add(targetFeatures);
 
@@ -1454,7 +1484,8 @@ namespace pwiz.Osprey.Test
                             Charge = 2,
                             ScanNumber = ++scan,
                             IsDecoy = true,
-                            CoelutionSum = decoyFeatures[0]
+                            CoelutionSum = decoyFeatures[0],
+                            ApexRt = ApexRtForRow(file, featureRows.Count)
                         });
                         featureRows.Add(decoyFeatures);
                     }
@@ -1463,6 +1494,39 @@ namespace pwiz.Osprey.Test
                 featuresByFile[fileName] = featureRows;
             }
             return perFile;
+        }
+
+        /// <summary>
+        /// The fixture's apex RT for one (file, parquet row): unique across the whole fixture,
+        /// and scrambled against the row ordinal so neither an off-by-one nor a cross-file mix-up
+        /// can land on a value that happens to match.
+        /// </summary>
+        private static double ApexRtForRow(int fileIdx, int parquetIndex)
+        {
+            return 10.0 + fileIdx * 1000.0 + ((parquetIndex * 37) % 97) + parquetIndex * 0.001;
+        }
+
+        /// <summary>
+        /// One file's apex RTs indexed by <c>ParquetIndex</c>, off a resident
+        /// <see cref="FdrEntry"/> fixture - the unit-test stand-in for
+        /// <c>ParquetScoreCache.ReadApexRtsByParquetIndex</c>, which reads the same thing out of
+        /// the file's <c>.scores.parquet</c>. Supplied to the RESIDENT score path, whose
+        /// projection rows carry no retention time (issue #4355) while the per-file FDR sidecar
+        /// they feed has a column for one (format v7, issue #4522).
+        /// </summary>
+        private static double[] ApexRtsByParquetIndex(
+            List<KeyValuePair<string, List<FdrEntry>>> perFile, string fileName)
+        {
+            var entries = perFile.Find(kv => kv.Key == fileName).Value;
+            var apexRts = new double[entries.Count];
+            foreach (var e in entries)
+            {
+                // The fixture sets ParquetIndex on every row, which is what makes it a stand-in
+                // for a parquet read; a null here would be a broken fixture, not a live case.
+                Assert.IsTrue(e.ParquetIndex.HasValue);
+                apexRts[e.ParquetIndex.Value] = e.ApexRt;
+            }
+            return apexRts;
         }
 
         /// <summary>
@@ -3517,12 +3581,16 @@ namespace pwiz.Osprey.Test
             const string F = "f";
             var survivorIds = new HashSet<uint>();
             for (uint b = 1; b <= 20; b++) survivorIds.Add(b);   // target entryId == base_id
-            (uint[] eids, double[] scs, IReadOnlyDictionary<uint, double> ov) Read(string _)
-                => ((uint[])ids.Clone(), (double[])sc.Clone(), new Dictionary<uint, double>());
+            // The fourth element is this file's OWN survivor set, which is what the run-q
+            // filter uses (#4486). Single file here, so own == global.
+            (uint[] eids, double[] scs, IReadOnlyDictionary<uint, double> ov,
+                HashSet<uint> own) Read(string _)
+                => ((uint[])ids.Clone(), (double[])sc.Clone(), new Dictionary<uint, double>(),
+                    survivorIds);
             var runQ = new Dictionary<uint, double>();
-            void OnFileRunQ(string _, IReadOnlyDictionary<uint, double> fileRunQ)
+            void OnFileRunQ(string _, StreamingFdr.FileCompetition contribution)
             {
-                foreach (var kv in fileRunQ) runQ[kv.Key] = kv.Value;
+                foreach (var kv in contribution.RunQ) runQ[kv.Key] = kv.Value;
             }
             var competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
                 new[] { F }, Read, survivorIds, OnFileRunQ, stratum);
@@ -3592,16 +3660,21 @@ namespace pwiz.Osprey.Test
             var survivorIds = new HashSet<uint>();
             for (uint b = 1; b <= 12; b++) survivorIds.Add(b);
 
-            (uint[] e, double[] s, IReadOnlyDictionary<uint, double> ov) Read(string key)
+            // Both files hold rows for the same entry_ids and the same survivors, so each
+            // file's OWN survivor set is the global one - the equivalence the caller enforces
+            // (#4486). A file whose own set were smaller here would trip that guard.
+            (uint[] e, double[] s, IReadOnlyDictionary<uint, double> ov,
+                HashSet<uint> own) Read(string key)
                 => ((uint[])idArr.Clone(),
                     (key == FA ? scoresA : scoresB).ToArray(),
-                    new Dictionary<uint, double>());
+                    new Dictionary<uint, double>(),
+                    survivorIds);
 
             var runQByFile = new Dictionary<string, Dictionary<uint, double>>();
-            void OnFileRunQ(string key, IReadOnlyDictionary<uint, double> fileRunQ)
+            void OnFileRunQ(string key, StreamingFdr.FileCompetition contribution)
             {
-                runQByFile[key] = new Dictionary<uint, double>(fileRunQ.Count);
-                foreach (var kv in fileRunQ) runQByFile[key][kv.Key] = kv.Value;
+                runQByFile[key] = new Dictionary<uint, double>(contribution.RunQ.Count);
+                foreach (var kv in contribution.RunQ) runQByFile[key][kv.Key] = kv.Value;
             }
 
             var competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
@@ -3891,5 +3964,442 @@ namespace pwiz.Osprey.Test
                     string.Format(@"run {0} won only {1} of {2} precursors", run, winnersPerRun[run], nPrecursors));
             }
         }
+
+        // ============================================================
+        // Two-stage competition reduction (CompeteOneFile + FoldFileContribution)
+        // ============================================================
+
+        #region Two-stage competition reduction
+
+        /// <summary>
+        /// The per-file competition folded across files must give exactly what a single global
+        /// pass over the same observations gives - the same per-base_id maxima, the same FILE
+        /// each maximum is attributed to, and the same best-of-runs minimum.
+        ///
+        /// <para>This is the invariant the pass-2 move depends on (#4486). Once
+        /// <see cref="StreamingFdr.CompeteOneFile"/> runs inside <c>PerFileRescoring</c> and
+        /// <see cref="StreamingFdr.FoldFileContribution"/> runs in the join, the two halves are
+        /// separated by a process boundary and an on-disk artifact, and nothing else compares
+        /// them. The tie-break is the part that would break silently: both levels reduce with
+        /// STRICTLY-GREATER, so within a file the first observation at the maximum wins and
+        /// across files the earliest file at that maximum keeps the locator. Reduce with
+        /// greater-or-equal at either level and the winner's file index drifts, which moves the
+        /// experiment-q winner without changing any score.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestTwoStageCompetitionMatchesGlobalPass()
+        {
+            var files = BuildCompetitionFiles();
+
+            // Two-stage: per file, then folded.
+            var bestTarget = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+            var bestDecoy = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+            var minRunQ = new Dictionary<uint, double>();
+            var survivors = SurvivorIds(files);
+            for (int i = 0; i < files.Count; i++)
+            {
+                var contribution = StreamingFdr.CompeteOneFile(
+                    (uint[])files[i].EntryIds.Clone(), (double[])files[i].Scores.Clone(),
+                    files[i].SurvivorScores, survivors, null);
+                StreamingFdr.FoldFileContribution(contribution, i, bestTarget, bestDecoy, minRunQ);
+            }
+
+            // Reference: one pass over every observation, in file order, with the same rule.
+            var refTarget = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+            var refDecoy = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+            for (int i = 0; i < files.Count; i++)
+            {
+                var f = files[i];
+                for (int j = 0; j < f.EntryIds.Length; j++)
+                {
+                    uint eid = f.EntryIds[j];
+                    uint bid = eid & PercolatorEntry.BASE_ID_MASK;
+                    double s = f.SurvivorScores.TryGetValue(eid, out double ov) ? ov : f.Scores[j];
+                    var into = (eid & ~PercolatorEntry.BASE_ID_MASK) != 0u ? refDecoy : refTarget;
+                    if (!into.TryGetValue(bid, out var cur) || s > cur.score)
+                        into[bid] = (s, i, eid);
+                }
+            }
+
+            AssertBestsEqual(refTarget, bestTarget);
+            AssertBestsEqual(refDecoy, bestDecoy);
+
+            // Every folded minimum is a real per-file run q, and no lower one was missed.
+            foreach (var kv in minRunQ)
+            {
+                Assert.IsTrue(survivors.Contains(kv.Key),
+                    string.Format(@"minRunQ holds non-survivor entry {0}", kv.Key));
+                Assert.IsTrue(kv.Value >= 0.0 && kv.Value <= 1.0,
+                    string.Format(@"entry {0} run q {1} out of range", kv.Key, kv.Value));
+            }
+        }
+
+        /// <summary>
+        /// The locator tie-break, isolated: when two files hold the SAME maximum score for a
+        /// base_id, the EARLIER file keeps it. A greater-or-equal reduction would hand it to the
+        /// later file, which is invisible in the scores and visible only in the winner's origin.
+        /// </summary>
+        [TestMethod]
+        public void TestEqualMaximaKeepTheEarlierFile()
+        {
+            var bestTarget = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+            var bestDecoy = new Dictionary<uint, (double score, int fileIdx, uint entryId)>();
+            var minRunQ = new Dictionary<uint, double>();
+            var survivors = new HashSet<uint> { 7u };
+
+            for (int i = 0; i < 3; i++)
+            {
+                var c = StreamingFdr.CompeteOneFile(
+                    new[] { 7u }, new[] { 2.5 }, new Dictionary<uint, double>(), survivors, null);
+                StreamingFdr.FoldFileContribution(c, i, bestTarget, bestDecoy, minRunQ);
+            }
+
+            Assert.AreEqual(0, bestTarget[7u].fileIdx,
+                @"an equal maximum must stay with the earliest file that produced it");
+            Assert.AreEqual(2.5, bestTarget[7u].score, 1e-12, @"score unchanged by the fold");
+        }
+
+        /// <summary>
+        /// Within ONE file, the first observation at the maximum wins - the same
+        /// strictly-greater rule, one level down. Two rows of one base_id with an identical
+        /// score must resolve to the earlier row.
+        /// </summary>
+        [TestMethod]
+        public void TestFirstObservationAtTheMaximumWinsWithinAFile()
+        {
+            // Same base_id, same score, different entry rows: 5 is a target (no high bit), and
+            // the duplicate is the SAME entry id appearing twice in the pre-compaction population.
+            var c = StreamingFdr.CompeteOneFile(
+                new[] { 5u, 5u }, new[] { 1.25, 1.25 },
+                new Dictionary<uint, double>(), new HashSet<uint> { 5u }, null);
+
+            Assert.AreEqual(1.25, c.BestTarget[5u].score, 1e-12, @"maximum score kept");
+            Assert.AreEqual(1, c.BestTarget.Count, @"one entry per base_id");
+        }
+
+        /// <summary>
+        /// The STRATIFIED branch, which the other cases do not reach and which is the half that
+        /// carries the real logic: only stratum members compete and fold, EXCEPT that a peak
+        /// Stage 6 changed - a frozen-model score that differs bit-exactly from the stored
+        /// 1st-pass score - is admitted to the RUN competition by base_id so a target and its
+        /// decoy enter together, while still being kept OUT of the experiment reduction.
+        ///
+        /// <para>That asymmetry is what a process boundary could silently break. If a changed
+        /// off-stratum peak leaked into the experiment fold, its maximum would be taken over
+        /// only the files that changed it, which UNDERSTATES the precursor rather than merely
+        /// perturbing it.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestStratifiedCompetitionAdmitsChangedPeaksToRunOnly()
+        {
+            // base_id 1 is in the stratum; base_id 2 is NOT, and the override CHANGES its score
+            // (0.40 stored -> 0.75 frozen), so it earns a run q but must not reach the
+            // experiment bests.
+            var stratum = new HashSet<uint> { 1u };
+            var survivors = new HashSet<uint> { 1u, DecoyOf(1u), 2u, DecoyOf(2u) };
+            var overrides = new Dictionary<uint, double> { { 2u, 0.75 }, { DecoyOf(2u), 0.70 } };
+
+            var c = StreamingFdr.CompeteOneFile(
+                new[] { 1u, DecoyOf(1u), 2u, DecoyOf(2u) },
+                new[] { 0.90, 0.20, 0.40, 0.30 },
+                overrides, survivors, stratum);
+
+            Assert.IsTrue(c.BestTarget.ContainsKey(1u),
+                @"the stratum member must be reduced into the experiment bests");
+            Assert.IsFalse(c.BestTarget.ContainsKey(2u),
+                @"a changed OFF-stratum peak must not enter the experiment reduction");
+            Assert.IsFalse(c.BestDecoy.ContainsKey(2u),
+                @"nor may its paired decoy");
+            Assert.IsTrue(c.RunQ.ContainsKey(2u) || c.RunQ.ContainsKey(DecoyOf(2u)),
+                @"a changed off-stratum peak must earn a fresh run q");
+        }
+
+        /// <summary>
+        /// The other half of the admission rule: an UNCHANGED off-stratum peak - frozen score
+        /// bit-equal to the stored one - stays out of BOTH competitions. This is the case that
+        /// silently widens the stratum if the discriminator is ever loosened from bit-exact
+        /// inequality to mere presence in the override map, which is a mistake this code has
+        /// already made once.
+        /// </summary>
+        /// <summary>
+        /// The per-file competition survives a round trip through the two artifacts the worker
+        /// writes - the pool-image per-run 2nd-pass sidecar and the decoy side of the
+        /// competition - which is what lets SecondPassFDR fold from them instead of recomputing
+        /// from the 1st-pass sidecar and reconciled parquet (issue #4486).
+        ///
+        /// <para>Three properties, each of which is a way the round trip could be lossy while
+        /// still looking right on ordinary data:</para>
+        /// <list type="number">
+        /// <item><b>Ties resolve identically.</b> Two observations of one base_id at an EQUAL
+        /// score are reduced first-wins on both sides, so the records must be walked in the same
+        /// order the competition walked the population. Same value, different representative, is
+        /// the silent divergence - so the winning entry_id is asserted, not just the score.</item>
+        /// <item><b>The decoy side comes from its own artifact.</b> The competition's winning
+        /// decoy for a base_id is routinely a NON-SURVIVOR, which holds no row in the pool image,
+        /// so it reaches the join only because the worker serialized the map it computed. The
+        /// records here are the pool image and carry no such decoy, which is exactly the state
+        /// that used to take the base_id out of the null.</item>
+        /// <item><b>Run q is recovered asymmetrically.</b> The sidecar cannot distinguish "won
+        /// with q = 1.0" from "won nothing", so the rebuilt map holds keys the competition's does
+        /// not. That is immaterial to the only consumer - minRunQ's reader defaults an ABSENT
+        /// entry to 1.0 - and the assertion pins exactly that: every competed key matches, and
+        /// every extra key is 1.0.</item>
+        /// </list>
+        /// </summary>
+        [TestMethod]
+        public void TestFileCompetitionRoundTripsThroughSidecarRecords()
+        {
+            var stratum = new HashSet<uint> { 1u, 2u };
+            // base_id 1: two target observations at an EQUAL score - the tie case. base_id 2:
+            // a target and a decoy. The decoy is NOT a survivor, so it holds no pool row and
+            // reaches the join only through the competition-decoys artifact.
+            uint t1a = 1u, t1b = 0x00010001u, t2 = 2u, d2 = DecoyOf(2u);
+            var entryIds = new[] { t1a, t1b, t2, d2 };
+            var scores = new[] { 0.90, 0.90, 0.50, 0.20 };
+            var survivorIds = new HashSet<uint> { t1a, t1b, t2 };
+
+            var competed = StreamingFdr.CompeteOneFile(
+                entryIds, (double[])scores.Clone(),
+                new Dictionary<uint, double>(), survivorIds, stratum);
+
+            // What the worker writes as the per-run sidecar: the POOL, in canonical order. The
+            // non-survivor decoy is absent - that is the property this test exists for.
+            var records = new List<FdrScoreRecord>
+            {
+                new FdrScoreRecord(t1a, 0.90, competed.RunQ.TryGetValue(t1a, out var q1) ? q1 : 1.0, 1.0, 0.0),
+                new FdrScoreRecord(t1b, 0.90, competed.RunQ.TryGetValue(t1b, out var q2) ? q2 : 1.0, 1.0, 0.0),
+                new FdrScoreRecord(t2, 0.50, competed.RunQ.TryGetValue(t2, out var q3) ? q3 : 1.0, 1.0, 0.0),
+            };
+
+            // ... and the decoy side, through the real file rather than the in-memory map, so a
+            // format or ordering fault fails here rather than only in a multi-hour gate.
+            string decoysPath = Path.Combine(Path.GetTempPath(),
+                @"osprey_test_dcy_" + Guid.NewGuid().ToString(@"N") + @".bin");
+            try
+            {
+                Pass2CompetitionDecoys.Write(decoysPath, competed.BestDecoy);
+                var readBack = Pass2CompetitionDecoys.ReadMap(decoysPath);
+                Assert.IsNotNull(readBack, @"the decoys artifact must read back");
+                var rebuilt = Pass2FdrSidecar.FileCompetitionFromRecords(records, stratum, readBack);
+
+                // The tie: both sides must name the SAME winning observation, not merely the same
+                // score. t1a precedes t1b in population order and both score 0.90.
+                Assert.AreEqual(competed.BestTarget[1u].entryId, rebuilt.BestTarget[1u].entryId);
+                Assert.AreEqual(t1a, rebuilt.BestTarget[1u].entryId);
+                Assert.AreEqual(competed.BestTarget[1u].score, rebuilt.BestTarget[1u].score);
+
+                // The artifact is why base_id 2 still has a decoy best at all: d2 has no record.
+                Assert.AreEqual(d2, rebuilt.BestDecoy[2u].entryId);
+                Assert.AreEqual(competed.BestDecoy[2u].entryId, rebuilt.BestDecoy[2u].entryId);
+                Assert.AreEqual(competed.BestDecoy[2u].score, rebuilt.BestDecoy[2u].score);
+                Assert.AreEqual(competed.BestTarget.Count, rebuilt.BestTarget.Count);
+                Assert.AreEqual(competed.BestDecoy.Count, rebuilt.BestDecoy.Count);
+
+                // This is the assertion the streamed pass makes against the worker, in miniature.
+                StreamingFdr.AssertContributionsMatch(@"f", rebuilt, competed);
+
+                // And it has teeth: losing the artifact's decoy is precisely the decoy-depleted
+                // null this design exists to prevent, and the assert must see it.
+                var depleted = new Dictionary<uint, (double score, uint entryId)>(readBack);
+                depleted.Remove(2u);
+                Assert.ThrowsException<InvalidOperationException>(
+                    () => StreamingFdr.AssertContributionsMatch(@"f",
+                        Pass2FdrSidecar.FileCompetitionFromRecords(records, stratum, depleted),
+                        competed));
+
+                // A rebuilt map that awards a REAL q where nothing was competed is a genuine
+                // divergence rather than the representational one above.
+                var bogus = new List<FdrScoreRecord>(records)
+                {
+                    new FdrScoreRecord(DecoyOf(1u), 0.10, 0.5, 1.0, 0.0)
+                };
+                Assert.ThrowsException<InvalidOperationException>(
+                    () => StreamingFdr.AssertContributionsMatch(
+                        @"f", Pass2FdrSidecar.FileCompetitionFromRecords(bogus, stratum, readBack),
+                        competed));
+            }
+            finally
+            {
+                try { File.Delete(decoysPath); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// The per-run 2nd-pass sidecar's record SEQUENCE is asserted against the reconciled
+        /// parquet's row sequence, not merely its length (issue #4486).
+        ///
+        /// <para>The case that matters is a PERMUTATION at equal length and equal population,
+        /// because that is the one a count check cannot see and the one this writer actually
+        /// produced: the rescore task appends gap-fill entries to its pool list while the parquet
+        /// merges them into canonical position, so the sidecar came out as
+        /// <c>(pool minus gap-fills) + gap-fills</c>. Every count-based gate passed.</para>
+        ///
+        /// <para>The trailing-block shape is reproduced literally here rather than a generic
+        /// shuffle, so the test fails for the reason the field failure had.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestSidecarRecordSequenceMustMatchPoolOrder()
+        {
+            // Canonical pool order: ascending, with 7 and 9 the "gap-fills" interleaved.
+            var poolOrder = new uint[] { 3, 5, 7, 8, 9, 11 };
+            var inOrder = poolOrder
+                .Select(id => new FdrScoreRecord(id, 0.5, 1.0, 1.0, 0.0)).ToList();
+            Pass2FdrSidecar.AssertRecordsMatchPoolSequence(@"f", @"p.parquet", inOrder, poolOrder);
+
+            // The real defect: same rows, same count, gap-fills moved to a trailing block.
+            var gapFills = new uint[] { 7, 9 };
+            var trailing = poolOrder.Where(id => !gapFills.Contains(id))
+                .Concat(gapFills)
+                .Select(id => new FdrScoreRecord(id, 0.5, 1.0, 1.0, 0.0)).ToList();
+            Assert.AreEqual(inOrder.Count, trailing.Count, "the permutation must not change length");
+            var ex = Assert.ThrowsException<InvalidOperationException>(
+                () => Pass2FdrSidecar.AssertRecordsMatchPoolSequence(
+                    @"f", @"p.parquet", trailing, poolOrder));
+            StringAssert.Contains(ex.Message, "record 2");
+
+            // Short and long are both failures, and neither may read as agreement: a pool that
+            // yields nothing must not pass vacuously.
+            Assert.ThrowsException<InvalidOperationException>(
+                () => Pass2FdrSidecar.AssertRecordsMatchPoolSequence(
+                    @"f", @"p.parquet", inOrder, new uint[] { 3, 5, 7 }));
+            Assert.ThrowsException<InvalidOperationException>(
+                () => Pass2FdrSidecar.AssertRecordsMatchPoolSequence(
+                    @"f", @"p.parquet", inOrder, new uint[0]));
+            Assert.ThrowsException<InvalidOperationException>(
+                () => Pass2FdrSidecar.AssertRecordsMatchPoolSequence(
+                    @"f", @"p.parquet", inOrder.Take(3).ToList(), poolOrder));
+        }
+
+        /// <summary>
+        /// A DECOY row in the pool image must not become a base_id's best. The pool is not the
+        /// competition's population, so a pool decoy that outscores the competition's winner is
+        /// an observation the competition never ranked - the same error the gap-fill exclusion
+        /// prevents on the target side, and the reason the fold reads the decoy half from the
+        /// worker's artifact instead of reducing it out of the records.
+        /// </summary>
+        [TestMethod]
+        public void TestPoolDecoyRecordDoesNotOverrideCompetitionDecoyBest()
+        {
+            var stratum = new HashSet<uint> { 2u };
+            uint t2 = 2u, d2 = DecoyOf(2u);
+            // The competition's answer: the decoy won its base_id at 0.20.
+            var fromWorker = new Dictionary<uint, (double score, uint entryId)>
+            {
+                { 2u, (0.20, d2) }
+            };
+            // The pool image happens to hold a decoy row scoring HIGHER. It is still a pool row,
+            // not a competition observation, so it must not displace the worker's answer.
+            var records = new List<FdrScoreRecord>
+            {
+                new FdrScoreRecord(t2, 0.50, 1.0, 1.0, 0.0),
+                new FdrScoreRecord(d2, 0.95, 1.0, 1.0, 0.0),
+            };
+            var rebuilt = Pass2FdrSidecar.FileCompetitionFromRecords(records, stratum, fromWorker);
+            Assert.AreEqual(0.20, rebuilt.BestDecoy[2u].score);
+            Assert.AreEqual(d2, rebuilt.BestDecoy[2u].entryId);
+            // The pool decoy still contributes its run q - that map is per observation, and its
+            // only consumer is a cross-file minimum.
+            Assert.IsTrue(rebuilt.RunQ.ContainsKey(d2));
+        }
+
+        [TestMethod]
+        public void TestStratifiedCompetitionExcludesUnchangedOffStratumPeaks()
+        {
+            var stratum = new HashSet<uint> { 1u };
+            var survivors = new HashSet<uint> { 1u, 2u };
+            // 2u IS in the override map, but its value equals the stored score, so it is
+            // unchanged and must not be admitted.
+            var overrides = new Dictionary<uint, double> { { 2u, 0.40 } };
+
+            var c = StreamingFdr.CompeteOneFile(
+                new[] { 1u, DecoyOf(1u), 2u },
+                new[] { 0.90, 0.20, 0.40 },
+                overrides, survivors, stratum);
+
+            Assert.IsFalse(c.RunQ.ContainsKey(2u),
+                @"presence in the override map is not admission - only a CHANGED score is");
+            Assert.IsFalse(c.BestTarget.ContainsKey(2u),
+                @"and an unadmitted peak stays out of the experiment fold");
+        }
+
+        /// <summary>The decoy entry id paired with a base_id: the high bit set.</summary>
+        private static uint DecoyOf(uint baseId)
+        {
+            return baseId | ~PercolatorEntry.BASE_ID_MASK;
+        }
+
+
+        /// <summary>
+        /// Three files, each with a mix of target and decoy observations of overlapping
+        /// base_ids, plus a survivor-score override on some entries so the swap-in path is
+        /// exercised rather than only the stored scores.
+        /// </summary>
+        private static List<CompetitionFile> BuildCompetitionFiles()
+        {
+            var files = new List<CompetitionFile>();
+            // base_ids 1..6; decoys carry the high bit (see DecoyOf).
+
+
+            files.Add(new CompetitionFile(
+                new[] { 1u, DecoyOf(1u), 2u, DecoyOf(2u), 3u },
+                new[] { 0.90, 0.20, 0.50, 0.55, 0.10 },
+                new Dictionary<uint, double>()));
+            // File 2 ties file 1 on base_id 1 and beats it on 2; the tie must stay with file 1.
+            files.Add(new CompetitionFile(
+                new[] { 1u, DecoyOf(1u), 2u, 3u, DecoyOf(3u) },
+                new[] { 0.90, 0.30, 0.80, 0.40, 0.35 },
+                new Dictionary<uint, double> { { 2u, 0.85 } }));
+            files.Add(new CompetitionFile(
+                new[] { 4u, DecoyOf(4u), 5u, 6u, DecoyOf(6u) },
+                new[] { 0.70, 0.60, 0.05, 0.95, 0.15 },
+                new Dictionary<uint, double> { { 6u, 0.99 } }));
+            return files;
+        }
+
+        private static HashSet<uint> SurvivorIds(List<CompetitionFile> files)
+        {
+            var ids = new HashSet<uint>();
+            foreach (var f in files)
+            foreach (uint e in f.EntryIds)
+                ids.Add(e);
+            return ids;
+        }
+
+        private static void AssertBestsEqual(
+            Dictionary<uint, (double score, int fileIdx, uint entryId)> expected,
+            Dictionary<uint, (double score, int fileIdx, uint entryId)> actual)
+        {
+            Assert.AreEqual(expected.Count, actual.Count, @"same number of base_ids reduced");
+            foreach (var kv in expected)
+            {
+                Assert.IsTrue(actual.TryGetValue(kv.Key, out var got),
+                    string.Format(@"base_id {0} missing from the folded result", kv.Key));
+                Assert.AreEqual(kv.Value.score, got.score, 1e-12,
+                    string.Format(@"base_id {0} score", kv.Key));
+                Assert.AreEqual(kv.Value.fileIdx, got.fileIdx,
+                    string.Format(@"base_id {0} winning file", kv.Key));
+                Assert.AreEqual(kv.Value.entryId, got.entryId,
+                    string.Format(@"base_id {0} winning entry", kv.Key));
+            }
+        }
+
+        /// <summary>One file's pre-compaction population, as the competition reads it.</summary>
+        private sealed class CompetitionFile
+        {
+            public CompetitionFile(uint[] entryIds, double[] scores,
+                Dictionary<uint, double> survivorScores)
+            {
+                EntryIds = entryIds;
+                Scores = scores;
+                SurvivorScores = survivorScores;
+            }
+
+            public uint[] EntryIds { get; }
+            public double[] Scores { get; }
+            public Dictionary<uint, double> SurvivorScores { get; }
+        }
+
+        #endregion
+
     }
 }

@@ -307,21 +307,42 @@ namespace pwiz.Osprey.IO
         // accept/reject a cache by identical rules.
         internal static bool TryReadHeader(BinaryReader r, string sourcePath, out uint nMs2, out uint nMs1)
         {
+            return TryReadHeader(r, sourcePath, out nMs2, out nMs1, out _);
+        }
+
+        // Same, reporting WHICH rule rejected the cache. The reason-less overload above
+        // exists for LoadSpectraCache, whose caller recovers by re-parsing the mzML and so
+        // has nothing to do with the distinction; a caller that must FAIL needs to say why,
+        // and the six conditions below are not interchangeable - "absent" and "the source
+        // file changed underneath it" have opposite remedies.
+        internal static bool TryReadHeader(BinaryReader r, string sourcePath, out uint nMs2,
+            out uint nMs1, out SpectraCacheRejection reason)
+        {
             nMs2 = 0;
             nMs1 = 0;
+            reason = SpectraCacheRejection.None;
 
             byte[] magic = r.ReadBytes(8);
             if (magic.Length != 8)
+            {
+                reason = SpectraCacheRejection.TruncatedHeader;
                 return false;
+            }
             for (int i = 0; i < 8; i++)
             {
                 if (magic[i] != MAGIC[i])
+                {
+                    reason = SpectraCacheRejection.NotASpectraCache;
                     return false;
+                }
             }
 
             uint version = r.ReadUInt32();
             if (version != VERSION)
+            {
+                reason = SpectraCacheRejection.WrongFormatVersion;
                 return false;
+            }
 
             // Source fingerprint: reject a cache whose data file changed since it
             // was written. Skipped when the cache recorded no fingerprint
@@ -333,15 +354,24 @@ namespace pwiz.Osprey.IO
             // 0, which means "no source was given" and is legitimately trusted; folding
             // the two together would make one I/O error trust the cache forever.
             if (storedSize == FINGERPRINT_UNMEASURABLE)
+            {
+                reason = SpectraCacheRejection.FingerprintUnmeasurableAtWrite;
                 return false;
+            }
             if (storedSize != 0 && !string.IsNullOrEmpty(sourcePath))
             {
                 // Likewise on the read side: a source that exists but cannot be measured
                 // is stale, not "skip the check".
                 if (!TryComputeSourceFingerprint(sourcePath, out long actualSize, out long actualMtimeMs))
+                {
+                    reason = SpectraCacheRejection.SourceUnmeasurable;
                     return false;
+                }
                 if (actualSize != 0 && ((ulong)actualSize != storedSize || actualMtimeMs != storedMtimeMs))
+                {
+                    reason = SpectraCacheRejection.SourceChanged;
                     return false;
+                }
             }
 
             nMs2 = r.ReadUInt32();

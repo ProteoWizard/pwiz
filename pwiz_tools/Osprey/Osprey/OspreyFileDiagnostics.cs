@@ -1561,7 +1561,7 @@ namespace pwiz.Osprey
             }
             // OrderBy/ThenBy is STABLE — preserves insertion order for ties.
             // Required because gap-fill (Phase 2) appends new stubs with
-            // ParquetIndex = uint.MaxValue alongside an existing
+            // no ParquetIndex alongside an existing
             // post-compaction stub for the same (file_name, EntryId)
             // (e.g., decoy paired with a target that already passed
             // first-pass FDR). Stable sort keeps the hydrated stub first

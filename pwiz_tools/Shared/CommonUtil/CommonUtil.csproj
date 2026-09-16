@@ -90,6 +90,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="IdentityModel">
+      <HintPath>..\Lib\IdentityModel.dll</HintPath>
+    </Reference>
     <Reference Include="JetBrains.Annotations">
       <HintPath>..\Lib\JetBrains.Annotations.dll</HintPath>
     </Reference>
@@ -186,7 +189,6 @@
       <DependentUpon>Images.resx</DependentUpon>
     </Compile>
     <Compile Include="GUI\MessageIcons.cs" />
-    <Compile Include="Mock\HttpMessageHandlerFactory.cs" />
     <Compile Include="SystemUtil\Assume.cs" />
     <Compile Include="SystemUtil\Caching\ProductionFacility.cs" />
     <Compile Include="SystemUtil\Caching\Production.cs" />
@@ -197,6 +199,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="SystemUtil\CommonTextUtil.cs" />
+    <Compile Include="SystemUtil\IExplainDiff.cs" />
     <Compile Include="SystemUtil\FileLockingProcessFinder.cs" />
     <Compile Include="SystemUtil\FilteredUserMessageWriter.cs" />
     <Compile Include="SystemUtil\PInvoke\Advapi32.cs" />
@@ -245,6 +248,7 @@
     <Compile Include="SystemUtil\ConcurrencyVisualizer.cs" />
     <Compile Include="SystemUtil\FormUtil.cs" />
     <Compile Include="SystemUtil\HttpClientWithProgress.cs" />
+    <Compile Include="SystemUtil\OAuthPasswordGrantClient.cs" />
     <Compile Include="SystemUtil\Immutable.cs" />
     <Compile Include="SystemUtil\IProgressMonitor.cs" />
     <Compile Include="SystemUtil\LocalizationHelper.cs" />

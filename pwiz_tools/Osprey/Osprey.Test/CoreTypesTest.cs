@@ -635,5 +635,53 @@ namespace pwiz.Osprey.Test
         }
 
         #endregion
+
+        #region Environment flag gating (issue #4673)
+
+        /// <summary>
+        /// <c>OSPREY_LOG_MEMORY=0</c> must mean OFF. The dataset runners write exactly that
+        /// value for the off case, and the memory probes it gates each force a blocking
+        /// <c>GC.Collect()</c> pair - one per file in the diagnostics fold, 446 of them on the
+        /// CHS cohort. Gating them on a plain "is the variable set" test turns them ON for "0",
+        /// which is what issue #4673 was: every runner-launched run carried the forced
+        /// collections while its banner reported "memprobe : off ... no forced GCs".
+        ///
+        /// <para>This pins the HELPER's contract, which is what the fix changed. It cannot pin
+        /// the wiring - <c>OspreyEnvironment.LogMemory</c> and
+        /// <c>ProfilerHooks.MemoryLoggingEnabled</c> are <c>static readonly</c>, evaluated once
+        /// at type load, so no test can vary the environment underneath them. The wiring was
+        /// verified by running the identical 446-file fold on the identical staged bed before
+        /// and after: 451 <c>[MEM ...]</c> lines became 0.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestEnvFlagZeroCountsAsOff()
+        {
+            const string name = @"OSPREY_TEST_FLAG_4673";
+            string saved = Environment.GetEnvironmentVariable(name);
+            try
+            {
+                // The trap, asserted rather than described: "0" is a non-empty string, so the
+                // !IsNullOrEmpty test the probes used to be gated on reports it as SET.
+                Environment.SetEnvironmentVariable(name, @"0");
+                Assert.IsFalse(string.IsNullOrEmpty(Environment.GetEnvironmentVariable(name)),
+                    @"'0' is a non-empty value - this is why an IsNullOrEmpty gate turns on for it");
+                Assert.IsFalse(OspreyEnvironment.IsSetAndNotZero(name), @"'0' must count as OFF");
+
+                Environment.SetEnvironmentVariable(name, @"1");
+                Assert.IsTrue(OspreyEnvironment.IsSetAndNotZero(name), @"'1' must count as ON");
+
+                Environment.SetEnvironmentVariable(name, null);
+                Assert.IsFalse(OspreyEnvironment.IsSetAndNotZero(name), @"unset must count as OFF");
+
+                Environment.SetEnvironmentVariable(name, string.Empty);
+                Assert.IsFalse(OspreyEnvironment.IsSetAndNotZero(name), @"empty must count as OFF");
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(name, saved);
+            }
+        }
+
+        #endregion
     }
 }

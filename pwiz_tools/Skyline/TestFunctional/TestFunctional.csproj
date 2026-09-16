@@ -286,6 +286,7 @@
     <Compile Include="SpectrumFilterImportErrorTest.cs" />
     <Compile Include="SpectrumFilterTransitionListTest.cs" />
     <Compile Include="SpectrumRetentionTimeAlignmentTest.cs" />
+    <Compile Include="SpectrumSequenceRulerTest.cs" />
     <Compile Include="SurrogateCalibrationCurveTest.cs" />
     <Compile Include="TestPanoramaClient.cs" />
     <Compile Include="SkydFileModifiedTest.cs" />
@@ -294,7 +295,9 @@
     <Compile Include="EditSpectrumFilterTest.cs" />
     <Compile Include="DiannSearchTest.cs" />
     <Compile Include="EncyclopeDiaSearchTest.cs" />
+    <Compile Include="FileProgressStaleStatusTest.cs" />
     <Compile Include="UnalignedRetentionTimesTest.cs" />
+    <Compile Include="UnattendedDialogTimeoutTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />

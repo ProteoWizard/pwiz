@@ -1445,7 +1445,7 @@ namespace pwiz.Skyline.Controls.Graphs {
                 return ResourceManager.GetString("GraphFullScan_ToggleSonarHeatmap", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Intensity.
         /// </summary>
@@ -1472,7 +1472,7 @@ namespace pwiz.Skyline.Controls.Graphs {
                 return ResourceManager.GetString("GraphFullScan_ToolTip_Summed_Intensity", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Transition.
         /// </summary>
@@ -2023,6 +2023,60 @@ namespace pwiz.Skyline.Controls.Graphs {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to {0}-terminal z={1}.
+        /// </summary>
+        public static string RulerGroupKey_ToString__0__terminal_z__1_ {
+            get {
+                return ResourceManager.GetString("RulerGroupKey_ToString__0__terminal_z__1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Disable Rulers.
+        /// </summary>
+        public static string SequenceRulerMenu_DisableRulers {
+            get {
+                return ResourceManager.GetString("SequenceRulerMenu_DisableRulers", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Enable Rulers.
+        /// </summary>
+        public static string SequenceRulerMenu_EnableRulers {
+            get {
+                return ResourceManager.GetString("SequenceRulerMenu_EnableRulers", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Pin Ruler.
+        /// </summary>
+        public static string SequenceRulerMenu_PinRuler {
+            get {
+                return ResourceManager.GetString("SequenceRulerMenu_PinRuler", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unpin Ruler.
+        /// </summary>
+        public static string SequenceRulerMenu_UnpinRuler {
+            get {
+                return ResourceManager.GetString("SequenceRulerMenu_UnpinRuler", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unpin All Rulers.
+        /// </summary>
+        public static string SequenceRulerMenu_UnpinAllRulers {
+            get {
+                return ResourceManager.GetString("SequenceRulerMenu_UnpinAllRulers", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Detection.
         /// </summary>
