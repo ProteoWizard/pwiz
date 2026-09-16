@@ -177,25 +177,27 @@ public sealed class FixtureRunContext
 /// </remarks>
 public static class VendorReaderTestHarness
 {
-    /// <summary>Environment variable that turns every fixture run into a reference write.</summary>
-    public const string GenerateReferencesVariable = "PWIZ_GENERATE_REFERENCE_MZML";
-
     /// <summary>
     /// When true, each fixture WRITES its reference mzML instead of comparing against one, and
     /// the run reports success without having verified anything. Port of cpp's
-    /// <c>--generate-mzML</c>, which pwiz-sharp had no equivalent of — references could only be
+    /// <c>--generate-mzML</c>, which pwiz-sharp had no equivalent of - references could only be
     /// produced by the cpp harness, so pwiz-sharp could never be the source of truth for them.
     /// </summary>
     /// <remarks>
-    /// Off unless <see cref="GenerateReferencesVariable"/> is set to 1/true, and deliberately
-    /// not a plain test flag: a generating run rewrites committed test data and every assertion
-    /// it would otherwise make passes vacuously, so it must be something a person opts into for
-    /// one invocation, never a state a normal run can drift into. Regenerate, then run the suite
-    /// again WITHOUT it — a generated reference that does not then compare equal means the
-    /// generate path and the compare path disagree, which is the one failure this mode can hide.
+    /// <para>cpp parses <c>--generate-mzML</c> from argv because its harness IS the test
+    /// executable (<c>parseArgs</c> in VendorReaderTestHarness.cpp). pwiz-sharp's tests are
+    /// vstest-hosted class libraries with no argv of their own, so the switch is this flag,
+    /// set by the per-vendor <c>Regenerate_*_References</c> methods in the vendor test
+    /// projects - whose <c>[TestMethod]</c> attribute is commented out so they are not
+    /// discovered until someone deliberately enables one.</para>
+    ///
+    /// <para>Deliberately not something a normal run can reach: a generating run rewrites
+    /// committed test data and every assertion it would otherwise make passes vacuously.
+    /// Regenerate, then run the suite again WITHOUT it - a generated reference that does not
+    /// then compare equal means the generate path and the compare path disagree, which is the
+    /// one failure this mode can hide.</para>
     /// </remarks>
-    public static bool GenerateReferences =>
-        Environment.GetEnvironmentVariable(GenerateReferencesVariable) is "1" or "true" or "TRUE";
+    public static bool GenerateReferences { get; set; }
 
     /// <summary>
     /// Iterates immediate children of <paramref name="rootPath"/> and, for any matching
@@ -543,7 +545,8 @@ public static class VendorReaderTestHarness
         string referencePath = ReferencePath(config, msd, rootPath, out string referenceFilename);
         if (!File.Exists(referencePath))
             throw new FileNotFoundException(
-                $"reference mzML not found at {referencePath} (set {GenerateReferencesVariable}=1 to write it)");
+                $"reference mzML not found at {referencePath} (uncomment the [TestMethod] on this " +
+                "vendor's Regenerate_*_References test and run it to write one)");
 
         MSData referenceMsd;
         using (var fs = File.OpenRead(referencePath))
