@@ -1,6 +1,6 @@
 @echo off
 REM TeamCity entry point: build the redistributable Osprey artifacts
-REM (per-RID self-contained ZIPs + the win-x64 .msi) and publish them.
+REM (per-RID self-contained ZIPs + the win-x64 Setup.exe) and publish them.
 REM
 REM Intended for a dedicated packaging build config (trigger on master and/or
 REM release tags), SEPARATE from the per-commit ProteoWizard_OspreyWindowsNet
@@ -12,17 +12,14 @@ REM
 REM Pre-requisites on the build agent (in addition to tcbuild.bat's):
 REM   * .NET 8 runtime packs (restored automatically by `dotnet publish`;
 REM     needs outbound NuGet on first run)
-REM   * The wix v5 dotnet tool + the matching v5 UI extension for the .msi:
-REM       dotnet tool install --global wix --version 5.0.2
-REM       wix extension add -g WixToolset.UI.wixext/5.0.2
-REM     WiX v5 is the last release under the free MS-RL license; v6+ require the
-REM     paid Open Source Maintenance Fee EULA.
+REM   * Inno Setup 6 for the Setup.exe; package.ps1 fetches it through
+REM     pwiz-sharp/installer/Ensure-InnoSetup.ps1 when the agent lacks it.
 REM
 REM Artifacts (published via service messages from package.ps1):
 REM   * pwiz_tools/Osprey/dist/Osprey-<version>-win-x64.zip
 REM   * pwiz_tools/Osprey/dist/Osprey-<version>-linux-x64.zip
-REM   * pwiz_tools/Osprey/dist/Osprey-<version>-win-x64.msi
+REM   * pwiz_tools/Osprey/dist/Osprey-Setup-<version>.exe
 
 setlocal
-pwsh -NoProfile -File "%~dp0package.ps1" -TeamCity -Msi
+pwsh -NoProfile -File "%~dp0package.ps1" -TeamCity -Setup
 exit /b %ERRORLEVEL%

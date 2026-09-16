@@ -17,13 +17,17 @@
 ;   Both variants:
 ;     - Ask the user to pick "for me" (per-user, no admin) or "for everyone"
 ;       (per-machine, admin) at install time
+;     - Ask for a standard install (replaced in place by newer versions) or a
+;       version-specific one (kept beside other versions, never replaced);
+;       see common\InstallType.iss
 ;     - Install to %LOCALAPPDATA%\Programs\ProteoWizard-Sharp\ or
-;       %ProgramFiles%\ProteoWizard-Sharp\ accordingly
+;       %ProgramFiles%\ProteoWizard-Sharp\ accordingly (plus " <version>"
+;       for a version-specific install)
 ;     - Create Start Menu shortcuts for MSConvertGUI and SeeMS
 ;     - Register Windows Explorer right-click verbs
 ;     - Standard uninstall via Programs and Features
 ;
-; The lightweight variant is selected by passing `/DNoNetRuntime` to ISCC —
+; The lightweight variant is selected by passing `/DNoNetRuntime` to ISCC -
 ; build.ps1 does this automatically for the second compile pass. Without
 ; the define (= default behavior, including direct ISCC invocations), the
 ; bundled-runtime variant is produced.
@@ -43,6 +47,10 @@
 #endif
 #define MyAppPublisher "ProteoWizard"
 #define MyAppURL "https://proteowizard.sourceforge.io/"
+; The stable AppId. A standard install is keyed on exactly this; a version-specific
+; install on "<this>_<version>" (see common\InstallType.iss). Installer.Tests matches
+; on the same GUID, so a change here must be mirrored there.
+#define AppBaseId "{E4F1A2B3-5C6D-7E8F-9A0B-1C2D3E4F5A6B}"
 
 ; StagingDir + OutputDir come from build.ps1 via /Dxxx command-line defines so
 ; the script doesn't have to hardcode paths.
@@ -57,29 +65,33 @@
 #endif
 
 [Setup]
-; AppId and DefaultDirName both embed the version so distinct versions install
-; side-by-side without colliding (e.g. a stable release and a dev/preview build).
-; Inno keys every install on AppId — a versioned AppId means each version has
-; its own uninstall slot in Programs and Features, its own install dir, and its
-; own uninstaller log. Same-version reinstalls still upgrade in place.
-;
-; The base GUID stays stable so future migration code (or scripts iterating
-; "all ProteoWizard-Sharp installs") can match on the prefix.
+; AppId, directory, Start Menu group and uninstall entry name all depend on the
+; standard / version-specific choice, so they route through common\InstallType.iss.
+; Inno keys every install on AppId: the standard install has one uninstall slot per
+; install mode and is upgraded in place, a version-specific install gets its own.
 ;
 ; Shared resources policy (last-installed-wins, no automatic cleanup):
-;   - Explorer context-menu verbs are SHARED across versions: each install
+;   - Explorer context-menu verbs are SHARED across installs: each install
 ;     overwrites them to point at its own EXEs, and uninstall LEAVES them
-;     alone (no uninsdeletekey). Orphan risk if every version is removed.
-;   - Start Menu group and Desktop shortcuts are VERSIONED (the group name +
-;     shortcut filename include {#MyAppVersion}), so each install owns its
-;     own shortcuts and uninstall cleanly removes just that version's set.
-AppId={{E4F1A2B3-5C6D-7E8F-9A0B-1C2D3E4F5A6B}_{#MyAppVersion}
+;     alone (no uninsdeletekey). Orphan risk if every install is removed.
+;   - Start Menu group and Desktop shortcuts belong to the install that made
+;     them (versioned names for a version-specific install), so uninstall
+;     cleanly removes just that install's set.
+AppId={code:InstallTypeAppId}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
-DefaultDirName={autopf}\{#MyAppName}\{#MyAppVersion}
-DefaultGroupName={#MyAppName} {#MyAppVersion}
+DefaultDirName={autopf}\{#MyAppName}
+DefaultGroupName={#MyAppName}
+UninstallDisplayName={code:InstallTypeDisplayName}
+; Both required by Inno whenever AppId includes constants: the language and the
+; install mode are chosen before the AppId can be evaluated. Moot for the language
+; (there is one), and the install-mode dialog is meant to be asked every time.
+UsePreviousLanguage=no
+UsePreviousPrivileges=no
+; InstallType.iss decides when the directory page is skipped.
+DisableDirPage=no
 DisableProgramGroupPage=yes
 OutputDir={#OutputDir}
 OutputBaseFilename={#OutputBaseFilename}
@@ -97,7 +109,7 @@ MinVersion=10.0
 ; CloseApplications detects running instances of our app and prompts the user to
 ; close them so file replacement doesn't fall back to "schedule for restart".
 ; RestartApplications=no skips Inno's "want me to restart those apps for you?"
-; flow — pwiz-sharp users prefer to relaunch manually.
+; flow - pwiz-sharp users prefer to relaunch manually.
 CloseApplications=yes
 RestartApplications=no
 ; AlwaysRestart=no + RestartIfNeededByRun=no: don't show the "restart your PC"
@@ -130,33 +142,26 @@ Name: "desktopicon_seems";        Description: "Create a Desktop shortcut for Se
 ; SDKs, no debug symbols, no cross-platform native runtimes) into {app}.
 Source: "{#StagingDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
-#ifndef NoNetRuntime
-; .NET 10 desktop runtime installer EXE. Bundled into the setup; deleted after
-; install via [InstallDelete]. Skip download (DownloadTemporaryFile would work
-; but offline-install support is the main reason we bundle Burn-style).
-Source: "cache\windowsdesktop-runtime-10.0-win-x64.exe"; DestDir: "{tmp}"; \
-    Flags: deleteafterinstall; Check: not IsDotNetDesktopInstalled
-#endif
-
 [Icons]
+; {group} already carries the version for a version-specific install (the group
+; name is set by InstallType.iss), so the shortcut names inside it stay plain.
 Name: "{group}\MSConvertGUI"; Filename: "{app}\MSConvertGUI-sharp.exe"; \
     WorkingDir: "{app}"; Tasks: startmenu_msconvertgui; \
     Comment: "Convert vendor mass-spec data to mzML / mzXML / MGF"
 Name: "{group}\SeeMS";        Filename: "{app}\seems-sharp.exe"; \
     WorkingDir: "{app}"; Tasks: startmenu_seems; \
     Comment: "Spectrum viewer for vendor mass-spec data and mzML"
-; Desktop shortcuts are version-suffixed so multiple installed versions don't
-; clobber each other's icon — each version writes its own "MSConvertGUI 0.1.0".
-; The Start Menu group is similarly version-suffixed via DefaultGroupName.
-Name: "{userdesktop}\MSConvertGUI {#MyAppVersion}"; Filename: "{app}\MSConvertGUI-sharp.exe"; \
+; Desktop shortcuts share one folder, so a version-specific install suffixes
+; them with its version and leaves other installs' icons alone.
+Name: "{userdesktop}\MSConvertGUI{code:InstallTypeNameSuffix}"; Filename: "{app}\MSConvertGUI-sharp.exe"; \
     WorkingDir: "{app}"; Tasks: desktopicon_msconvertgui
-Name: "{userdesktop}\SeeMS {#MyAppVersion}";        Filename: "{app}\seems-sharp.exe"; \
+Name: "{userdesktop}\SeeMS{code:InstallTypeNameSuffix}";        Filename: "{app}\seems-sharp.exe"; \
     WorkingDir: "{app}"; Tasks: desktopicon_seems
 
 [Registry]
 ; Windows Explorer right-click verbs.
 ;
-; Vendor mass-spec acquisitions aren't always plain files — Bruker .d, Agilent
+; Vendor mass-spec acquisitions aren't always plain files - Bruker .d, Agilent
 ; .d, and Waters .raw are FOLDERS containing the real instrument data (e.g.
 ; analysis.tdf inside a Bruker .d, _FUNC001.DAT inside a Waters .raw). Windows
 ; doesn't reliably support "extension"-based context-menu rules on directories
@@ -168,7 +173,7 @@ Name: "{userdesktop}\SeeMS {#MyAppVersion}";        Filename: "{app}\seems-sharp
 ; for "all files" and "all real folders":
 ;   *         -> every file regardless of extension
 ;   Directory -> every real folder (excludes virtual folders like Control Panel,
-;               Recycle Bin, etc. — those use the abstract "Folder" class)
+;               Recycle Bin, etc. - those use the abstract "Folder" class)
 ;
 ; This is consistent with how the legacy pwiz installer registers msconvertgui
 ; on the parent of the .d / .raw directory. msconvert + SeeMS already do
@@ -179,10 +184,10 @@ Name: "{userdesktop}\SeeMS {#MyAppVersion}";        Filename: "{app}\seems-sharp
 ; Root: HKA = per-user install -> HKCU; per-machine install -> HKLM. Inno
 ; auto-resolves based on PrivilegesRequired at run time.
 
-; Note on multi-version policy: no Flags: uninsdeletekey on these verb writes.
+; Note on multi-install policy: no Flags: uninsdeletekey on these verb writes.
 ; Each install OVERWRITES the verb's command value to point at its own EXE
-; (last-installed-wins), and the verb survives any individual version's
-; uninstall. If you uninstall every installed version the verb is orphaned and
+; (last-installed-wins), and the verb survives any individual install's
+; uninstall. If you uninstall every install you have the verb is orphaned and
 ; will fail with "file not found" until you install something again.
 
 ; --- MSConvertGUI ---
@@ -221,22 +226,14 @@ Root: HKA; Subkey: "Software\Classes\Directory\shell\{#ViewVerb}"; \
 Root: HKA; Subkey: "Software\Classes\Directory\shell\{#ViewVerb}\command"; \
     ValueType: string; ValueData: """{app}\seems-sharp.exe"" ""%1"""; Tasks: context_seems
 
-[Run]
-#ifndef NoNetRuntime
-; .NET 10 desktop runtime install. Runs only if not already present. /install
-; /quiet /norestart matches Microsoft's documented silent-install flags. The
-; runtime always installs per-machine (it goes to %ProgramFiles%\dotnet\),
-; which means the .NET install step triggers UAC even if the pwiz-sharp
-; install itself is per-user — Inno surfaces this cleanly via the
-; "shellexec" flag + Verb=runas, which raises the UAC prompt at the right
-; moment rather than at process start.
-Filename: "{tmp}\windowsdesktop-runtime-10.0-win-x64.exe"; \
-    Parameters: "/install /quiet /norestart"; \
-    StatusMsg: "Installing .NET 10 desktop runtime..."; \
-    Flags: waituntilterminated shellexec; \
-    Check: not IsDotNetDesktopInstalled
-#endif
+; .NET 10 desktop runtime: bundled EXE + [Run] entry, or the NoNetRuntime abort.
+; Included here so its [Run] entry precedes the launch entries below.
+#define DotNetMajor "10"
+#define DotNetRuntimeExePath "cache\windowsdesktop-runtime-10.0-win-x64.exe"
+#define ProductDisplayName MyAppName
+#include "common\DotNetDesktopRuntime.iss"
 
+[Run]
 ; Optional "launch at end of install" buttons. Both unchecked by default so
 ; the wizard finishes silently; users can pick either.
 Filename: "{app}\MSConvertGUI-sharp.exe"; Description: "Launch &MSConvertGUI"; \
@@ -244,72 +241,6 @@ Filename: "{app}\MSConvertGUI-sharp.exe"; Description: "Launch &MSConvertGUI"; \
 Filename: "{app}\seems-sharp.exe"; Description: "Launch See&MS"; \
     Flags: nowait postinstall skipifsilent unchecked
 
-[Code]
-{ ----- .NET 10 desktop runtime detection -----
-  The .NET runtime is "installed" iff its files live under
-  C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\<version>\ — that
-  directory is what the dotnet host walks at startup, so its presence/absence
-  is the authoritative signal.
-
-  The registry-based check we tried originally
-  (HKLM\SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\...) wasn't
-  reliable: on at least some machines the .NET installer registers under
-  WOW6432Node (the 32-bit view) even for x64 runtimes, while Inno's HKLM
-  default depends on its install mode. The filesystem layout is the same on
-  every install. }
-
-function IsDotNetDesktopInstalled(): Boolean;
-var
-  baseDir: String;
-  rec: TFindRec;
-  found: Boolean;
-begin
-  Result := False;
-  baseDir := ExpandConstant('{commonpf64}\dotnet\shared\Microsoft.WindowsDesktop.App');
-  if not DirExists(baseDir) then
-    Exit;
-  found := FindFirst(baseDir + '\*', rec);
-  try
-    while found do
-    begin
-      if ((rec.Attributes and FILE_ATTRIBUTE_DIRECTORY) <> 0) and
-         (Copy(rec.Name, 1, 3) = '10.') then
-      begin
-        Result := True;
-        Exit;
-      end;
-      found := FindNext(rec);
-    end;
-  finally
-    FindClose(rec);
-  end;
-end;
-
-{ ----- Pre-flight check (NoNetRuntime variant only) -----
-  When this installer was built without the bundled .NET runtime
-  (build.ps1's second ISCC pass), we can't install .NET ourselves. Abort
-  with a clear message + download link if .NET 10 is missing. With the
-  bundled-runtime variant this function returns True unconditionally
-  (the [Run] section above installs the runtime if needed). }
-function InitializeSetup(): Boolean;
-#ifdef NoNetRuntime
-var
-  rc: Integer;
-#endif
-begin
-  Result := True;
-#ifdef NoNetRuntime
-  if not IsDotNetDesktopInstalled() then
-  begin
-    rc := MsgBox(
-      'ProteoWizard-Sharp requires the .NET 10 Desktop Runtime (x64), which is not installed on this machine.' + #13#10#13#10 +
-      'Click OK to open the Microsoft download page in your browser, then re-run this installer after installing the runtime.' + #13#10#13#10 +
-      'If you prefer an installer that bundles the runtime, use ProteoWizard-Sharp-Setup.exe instead.',
-      mbError, MB_OKCANCEL);
-    if rc = IDOK then
-      ShellExec('', 'https://dotnet.microsoft.com/download/dotnet/10.0/runtime',
-                '', '', SW_SHOW, ewNoWait, rc);
-    Result := False;
-  end;
-#endif
-end;
+; Standard / version-specific wizard page and the AppId, directory, group and
+; display-name code the [Setup] section routes through.
+#include "common\InstallType.iss"
