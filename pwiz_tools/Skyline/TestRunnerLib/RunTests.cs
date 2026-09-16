@@ -1167,7 +1167,10 @@ namespace TestRunnerLib
             /// is the mode the runtime provides for "the process is about to go idle": it
             /// compacts every generation, the LOH included, and decommits as much as it can.
             /// It is more expensive than a plain collection, which is why it is used here in
-            /// the test harness and not in Skyline.
+            /// the test harness and not in Skyline. Measured on the twelve spikiest nightly
+            /// tests (2026-09-16): private bytes above managed + heaps went from a median of
+            /// 355 MB (max 1.9 GB) to a near-constant 31-33 MB, at no measurable time cost;
+            /// on 179 TestData tests the run took 1% longer.
             /// </remarks>
             public static void CollectForMeasurement()
             {
