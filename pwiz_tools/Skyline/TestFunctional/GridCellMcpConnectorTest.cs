@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -58,10 +59,13 @@ namespace pwiz.SkylineTestFunctional
             StartToolService();
 
             SetFormValueIntoGridCell();
+            AddressGridByItsLabel();
             InvokeGridCellContextMenu();
         }
 
-        // SetFormValue with a "grid[column,row]" controlId sets that cell (plain Rule Set Editor grid).
+        // SetFormValue with a "grid[column,row]" controlId sets that cell (plain Rule Set Editor grid),
+        // naming the column either by its zero-based visible index or by its column HEADER -- the name the
+        // user reads off the grid, and the one a tutorial step names.
         private void SetFormValueIntoGridCell()
         {
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
@@ -71,20 +75,71 @@ namespace pwiz.SkylineTestFunctional
 
             var rulesGrid = (DataGridView)ruleSetEditor.Controls.Find(@"dataGridViewRules", true).First();
             int patternColumn = -1;
+            string patternHeader = null;
             RunUI(() =>
             {
                 var visibleColumns = rulesGrid.Columns.Cast<DataGridViewColumn>()
                     .Where(col => col.Visible).OrderBy(col => col.DisplayIndex).ToList();
                 patternColumn = visibleColumns.FindIndex(col => col.Name == @"colPattern");
+                // The header as the user sees it, so the by-name case below is not keyed on an English literal.
+                patternHeader = patternColumn < 0 ? null : visibleColumns[patternColumn].HeaderText;
             });
             Assert.IsTrue(patternColumn >= 0);
+            Assert.IsFalse(string.IsNullOrEmpty(patternHeader));
 
             McpConnector.SetFormValue(editorId, $@"dataGridViewRules[{patternColumn},0]", @"D");
             RunUI(() => Assert.AreEqual(@"D", rulesGrid.Rows[0].Cells[@"colPattern"].Value?.ToString(),
                 @"SetFormValue did not set the grid cell named by the locator."));
 
+            // The same cell by its column HEADER rather than its index -- what a caller reading the grid has.
+            McpConnector.SetFormValue(editorId, $@"dataGridViewRules[{patternHeader},0]", @"E");
+            RunUI(() => Assert.AreEqual(@"E", rulesGrid.Rows[0].Cells[@"colPattern"].Value?.ToString(),
+                @"SetFormValue did not set the grid cell whose column the locator named by its header."));
+
+            // A column that is neither an index nor a header says so, and names the columns there are.
+            AssertEx.ThrowsException<Exception>(
+                () => { McpConnector.SetFormValue(editorId, @"dataGridViewRules[No Such Column,0]", @"F"); },
+                (Exception x) => AssertEx.Contains(x.Message, patternHeader));
+
             OkDialog(ruleSetEditor, () => ruleSetEditor.DialogResult = DialogResult.Cancel);
             OkDialog(documentSettingsDlg, () => documentSettingsDlg.DialogResult = DialogResult.Cancel);
+        }
+
+        // A grid named by an adjacent label -- the Build Library form's "Input Files:" over its input-file
+        // grid -- resolves by the Label that GetControls reports for it, not only by its control Name.
+        // Whatever the enumeration prints as a control's address has to work as one.
+        private void AddressGridByItsLabel()
+        {
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Library);
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+            string buildId = GetOpenFormId<BuildLibraryDlg>();
+
+            // The grid lives on the wizard's second page, which needs a name and a writable output path to
+            // reach. Nothing is built: the point is only to have the grid on screen.
+            AssertComplete(McpConnector.SetFormValue(buildId, @"textName", @"Test Library"));
+            // A directory that certainly exists and is writable: the page will not advance otherwise, and
+            // nothing is ever written there because the wizard is cancelled below.
+            AssertComplete(McpConnector.SetFormValue(buildId, @"textPath",
+                Path.Combine(Path.GetTempPath(), @"McpConnectorTestLibrary.blib")));
+            RunUI(buildLibraryDlg.OkWizardPage);
+
+            // The Label GetControls reports for the grid -- the address it advertises.
+            var gridControl = McpConnector.GetControls(buildId)
+                .FirstOrDefault(control => control.Name == @"gridInputFiles");
+            Assert.IsNotNull(gridControl, @"The Build Library form did not report its input-file grid.");
+            string gridLabel = gridControl.Path?.Text;
+            Assert.IsFalse(string.IsNullOrEmpty(gridLabel),
+                @"The input-file grid reported no Label for GetControls to advertise as its address.");
+
+            // That Label resolves the grid: reading it back gives the grid's column headers.
+            var gridPath = new UiElementPath(new UiElementPath(null, buildId, null, @"Form"), gridLabel, null, null);
+            string headers = McpConnector.PerformAction(gridPath, @"get_grid_text", null)?.ToString();
+            Assert.IsFalse(string.IsNullOrEmpty(headers),
+                @"Addressing the input-file grid by its reported Label returned nothing.");
+
+            OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
+            OkDialog(peptideSettings, peptideSettings.CancelDialog);
         }
 
         // Moving to a Document Grid cell and invoking its right-click context menu (Type "ContextMenu" on

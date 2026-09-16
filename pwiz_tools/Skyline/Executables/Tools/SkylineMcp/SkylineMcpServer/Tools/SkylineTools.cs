@@ -738,10 +738,12 @@ public static class SkylineTools
         "several files by quoting each path and separating with spaces, e.g. \"C:\\a.raw\" \"C:\\b.raw\". " +
         "For a WinForms form it sets the text, the checked state ('true'/'false'), or the selected " +
         "item of the control named by controlId; a matched label sets the field it labels. controlId " +
-        "may also be a grid cell locator 'grid[column,row]' (grid name optional) to set that cell.")]
+        "may also be a grid cell locator 'grid[column,row]' (grid name optional) to set that cell, where " +
+        "the column is its header text ('Score Threshold') or its zero-based index, and the row is its " +
+        "zero-based index.")]
     public static string SetFormValue(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Control name, a grid cell locator 'grid[column,row]', or ignored for a native file dialog")] string controlId,
+        [Description("Control name, a grid cell locator 'grid[column,row]' (column by header text or index), or ignored for a native file dialog")] string controlId,
         [Description("Value to set: text, 'true'/'false' for a checkbox, item text for a combo box, " +
             "or space-separated quoted file paths for a native file dialog")] string value)
     {

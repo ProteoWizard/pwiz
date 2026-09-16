@@ -1262,7 +1262,8 @@ namespace pwiz.Skyline.ToolsUI
                 if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
                 {
                     var gridElement = FindGrid(gridName);
-                    UiActions.SetCurrentCellAddress.InvokeNow(gridElement, new[] { column, row });
+                    UiActions.SetCurrentCellAddress.InvokeNow(gridElement,
+                        new[] { gridElement.ColumnIndex(column), row });
                     UiActions.SetGridText.InvokeNow(gridElement, value);
                     return;
                 }
@@ -1295,19 +1296,22 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Parses a grid-cell locator "name[column,row]" (the name is optional -> the form's single grid).
-        // Returns false for a plain control id (no "[col,row]" suffix). column/row are zero-based indices
-        // into the grid's visible columns and its rows; row may be -1 for a header.
-        private static bool TryParseGridCell(string controlId, out string gridName, out int column, out int row)
+        // Returns false for a plain control id (no "[column,row]" suffix). The column is left as written, for
+        // GridElement.ColumnIndex to read as either a zero-based visible-column index or a column HEADER -- the
+        // name the user reads off the grid, and the one a tutorial step names ("the Score Threshold field").
+        // row is a zero-based row index.
+        private static bool TryParseGridCell(string controlId, out string gridName, out string column, out int row)
         {
             gridName = controlId ?? string.Empty;
-            column = row = 0;
+            column = null;
+            row = 0;
             if (string.IsNullOrEmpty(controlId))
                 return false;
-            var match = Regex.Match(controlId, @"^(?<name>.*?)\s*\[\s*(?<col>-?\d+)\s*,\s*(?<row>-?\d+)\s*\]$");
+            var match = Regex.Match(controlId, @"^(?<name>[^\[\]]*?)\s*\[\s*(?<col>[^,\[\]]+?)\s*,\s*(?<row>-?\d+)\s*\]$");
             if (!match.Success)
                 return false;
             gridName = match.Groups[@"name"].Value;
-            column = int.Parse(match.Groups[@"col"].Value);
+            column = match.Groups[@"col"].Value;
             row = int.Parse(match.Groups[@"row"].Value);
             return true;
         }
@@ -2413,11 +2417,14 @@ namespace pwiz.Skyline.ToolsUI
             cell.Value = value;
         }
 
-        // A grid carries no caption, so it is addressed by its control Name -- the one place the connector
-        // matches on a name rather than on visible text (an empty name picks the form's single grid, handled
-        // by FindElement). The name match is the same whether strict or loose.
+        // A grid usually carries no caption, so it is addressed by its control Name -- the one place the
+        // connector matches on a name rather than on visible text (an empty name picks the form's single grid,
+        // handled by FindElement). The name match is the same whether strict or loose. A grid that IS named by
+        // an adjacent label (the Build Library form's "Input Files:" over its input-file grid) also matches that
+        // label, because it is the label GetControls reports as the grid's address -- whatever the enumeration
+        // prints has to resolve.
         public override bool MatchesText(string text, bool strict) =>
-            string.Equals(Control.Name, text, StringComparison.OrdinalIgnoreCase);
+            string.Equals(Control.Name, text, StringComparison.OrdinalIgnoreCase) || base.MatchesText(text, strict);
 
         // A grid is a leaf in the walk (not a ContainerElement): its content is read/written through the
         // grid actions, not by walking into child controls. The plain path reads/writes cells directly.
@@ -2454,6 +2461,26 @@ namespace pwiz.Skyline.ToolsUI
         protected virtual void SetGridTextCore(string text)
         {
             DataGridViewPasteHandler.PasteText(_dataGridView, text);
+        }
+
+        // The visible-column index a grid-cell locator's column token names: a zero-based index as written, or
+        // a column HEADER -- the name the user reads off the grid and the one a tutorial step names ("the Score
+        // Threshold field"). The header is matched the way every other caption is (an exact match preferred over
+        // a symbol-insensitive one), so a header that carries a ':' or a unit still resolves. An all-digit token
+        // is always the index, which is what it has always meant. Must be called on the grid's UI thread.
+        public int ColumnIndex(string column)
+        {
+            if (int.TryParse(column, NumberStyles.Integer, CultureInfo.InvariantCulture, out int index))
+                return index;
+            var visibleColumns = VisibleColumns();
+            int found = Array.FindIndex(visibleColumns, col => TextMatches(col.HeaderText, column, true));
+            if (found < 0)
+                found = Array.FindIndex(visibleColumns, col => TextMatches(col.HeaderText, column, false));
+            if (found < 0)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"The grid has no column '{0}'. Its columns are: {1}. A column may also be given as its zero-based index.",
+                    column, string.Join(@", ", visibleColumns.Select(col => col.HeaderText))));
+            return found;
         }
 
         // Moves the current cell so the next SetGridText / context menu acts there. column is the

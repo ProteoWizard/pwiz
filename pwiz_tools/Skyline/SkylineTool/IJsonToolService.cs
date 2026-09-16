@@ -427,10 +427,11 @@ namespace SkylineTool
         /// <paramref name="controlId"/> is ignored. For a WinForms form it sets the text, checked
         /// state, or selected item of the control named <paramref name="controlId"/> (a matched label
         /// sets the field it labels). <paramref name="controlId"/> may also be a grid cell locator
-        /// "grid[column,row]" (grid name optional) to set that cell.
+        /// "grid[column,row]" (grid name optional) to set that cell, where the column is its header text
+        /// or its zero-based index, and the row is its zero-based index.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        /// <param name="controlId">Control name, a grid cell locator "grid[column,row]", or ignored for a native file dialog.</param>
+        /// <param name="controlId">Control name, a grid cell locator "grid[column,row]" (column by header text or index), or ignored for a native file dialog.</param>
         /// <param name="value">Text, "true"/"false", or item text, per control kind.</param>
         ActionResult SetFormValue(string formId, string controlId, string value);
 
