@@ -445,9 +445,9 @@ namespace TestRunnerLib
             var heapCounts = ReportSystemHeaps
                 ? MemoryManagement.GetProcessHeapSizes(heapOutput ? dmpDir : null)
                 : new MemoryManagement.HeapAllocationSizes[1];
-            var processBytes = heapCounts[0].Committed; // Process heap : useful for debugging - though included in committed bytes
             // Collect right before sampling, so the numbers describe the floor the next test
             // starts from rather than whatever the GC kept in reserve after the last one.
+            // FlushMemory above already collected once; this is the one pass that decommits.
             MemoryManagement.CollectForMeasurement();
             var managedBytes = GC.GetTotalMemory(false); // Managed heap
             var committedBytes = heapCounts.Sum(h => h.Committed);
@@ -1145,10 +1145,16 @@ namespace TestRunnerLib
 
             public static void FlushMemory()
             {
-                CollectForMeasurement();
+                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 {
-                    SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, -1, -1);
+                    // Dispose the Process, or its handle stays open until a finalizer runs and
+                    // shows up as a +1 in the handle count sampled after this.
+                    using var current = Process.GetCurrentProcess();
+                    SetProcessWorkingSetSize(current.Handle, -1, -1);
                 }
             }
 
@@ -1158,32 +1164,30 @@ namespace TestRunnerLib
             /// decided to keep on hand for the next allocations.
             /// </summary>
             /// <remarks>
-            /// On .NET 7+ the regions-based GC retains a budget of free regions after an
+            /// <para>The regions-based GC (.NET 7+) retains a budget of free regions after an
             /// ordinary full collection and decommits them only gradually, so a private-bytes
             /// sample taken after <c>GC.Collect()</c> lags the live size by a variable amount.
             /// In the .NET 10 nightly that showed as spikes of 400-900 MB on a ~350 MB floor
             /// where the .NET Framework run of the same suite was smooth - noise that made the
             /// private-bytes axis useless for leak detection. <c>GCCollectionMode.Aggressive</c>
             /// is the mode the runtime provides for "the process is about to go idle": it
-            /// compacts every generation, the LOH included, and decommits as much as it can.
-            /// It is more expensive than a plain collection, which is why it is used here in
-            /// the test harness and not in Skyline. Measured on the twelve spikiest nightly
-            /// tests (2026-09-16): private bytes above managed + heaps went from a median of
-            /// 355 MB (max 1.9 GB) to a near-constant 31-33 MB, at no measurable time cost;
-            /// on 179 TestData tests the run took 1% longer.
+            /// compacts every generation - on .NET 9+ the LOH included - and decommits as much
+            /// as it can. It is more expensive than a plain collection, which is why it is used
+            /// here in the test harness and not in Skyline.</para>
+            /// <para>A per-sample collection rather than a process-wide GC setting on purpose:
+            /// it leaves the GC every test runs under identical to production, and the one
+            /// setting measured against it (the segments GC, <c>DOTNET_GCName=clrgc.dll</c>)
+            /// was clearly worse. Measured on the twelve spikiest nightly tests (2026-09-16):
+            /// private bytes above managed + heaps went from a median of 355 MB (max 1.9 GB) to
+            /// a near-constant 31-33 MB; wall time unchanged within run-to-run noise on that
+            /// slice and on 179 TestData tests. The per-test seconds in the log stop before
+            /// this runs, so only whole-run time reflects its cost.</para>
             /// </remarks>
             public static void CollectForMeasurement()
             {
-                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-#if NET7_0_OR_GREATER
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
-                GC.WaitForPendingFinalizers();
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
-#else
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
-                GC.Collect();
-#endif
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
             }
         }
 
