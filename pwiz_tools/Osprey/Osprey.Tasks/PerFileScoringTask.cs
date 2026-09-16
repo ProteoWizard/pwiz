@@ -1160,8 +1160,9 @@ namespace pwiz.Osprey.Tasks
             // load garbage, so the settled managed heap is the clean resident number.
             // Collect/WaitForPendingFinalizers/Collect settles finalizable objects,
             // then GetTotalMemory(false) reads the result WITHOUT forcing a further
-            // collection. Zero-cost when OSPREY_LOG_MEMORY is unset.
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"OSPREY_LOG_MEMORY")))
+            // collection. Zero-cost when OSPREY_LOG_MEMORY is off - which includes the value "0",
+            // the form the dataset runners write; see OspreyEnvironment.LogMemory.
+            if (OspreyEnvironment.LogMemory)
             {
                 GC.Collect();
                 GC.WaitForPendingFinalizers();

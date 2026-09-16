@@ -104,6 +104,22 @@ namespace pwiz.Osprey.Core
         public static readonly bool CoAssignmentPanelOnly = IsSet(@"OSPREY_MDIAG_COASSIGN_ONLY");
 
         /// <summary>
+        /// OSPREY_LOG_MEMORY=1: emit the post-GC <c>[MEM ...]</c> probes. Each one forces a
+        /// blocking <c>GC.Collect()/WaitForPendingFinalizers()/GC.Collect()</c> so the number it
+        /// reports is a true live set rather than a heap with uncollected garbage in it.
+        ///
+        /// <para><see cref="IsSetAndNotZero"/>, NOT <see cref="IsSet"/>, and the difference was
+        /// not academic. The dataset runners write <c>OSPREY_LOG_MEMORY=0</c> to mean OFF
+        /// (<c>OspreyDatasetRun.psm1</c>), and the previous <c>!IsNullOrEmpty</c> test read
+        /// <c>"0"</c> as SET - so every run through a runner had the probes on while its banner
+        /// said "memprobe : off ... no forced GCs". On the 446-run CHS cohort that is one forced
+        /// gen2 collection per file in the diagnostics fold, which flattens the very allocation
+        /// curve the fold is measured by: the measurement was changing what it measured, in the
+        /// phase whose flatness is the claim. Timings taken through a runner include that cost.</para>
+        /// </summary>
+        public static readonly bool LogMemory = IsSetAndNotZero(@"OSPREY_LOG_MEMORY");
+
+        /// <summary>
         /// OSPREY_MZML_VIA_MZMLREADER=1: read mzML with the hand-written
         /// <c>MzmlReader</c> instead of ProteoWizard. Diagnostic only, and
         /// meaningful only in a build that HAS ProteoWizard (net472 with
@@ -1075,7 +1091,12 @@ namespace pwiz.Osprey.Core
             return Environment.GetEnvironmentVariable(name) != @"0";
         }
 
-        private static bool IsSetAndNotZero(string name)
+        /// <summary>
+        /// Set to anything but <c>0</c>. Internal rather than private so a test can pin the
+        /// distinction from <see cref="IsSet"/>: the runners write <c>=0</c> to mean off, and a
+        /// flag that reaches for <see cref="IsSet"/> turns ON for it (issue #4673).
+        /// </summary>
+        internal static bool IsSetAndNotZero(string name)
         {
             string v = Environment.GetEnvironmentVariable(name);
             return !string.IsNullOrEmpty(v) && v != @"0";
