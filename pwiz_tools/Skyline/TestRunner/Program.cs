@@ -28,6 +28,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -562,9 +563,9 @@ namespace TestRunner
 
             if (commandLineArgs.ArgAsBool("wait"))
             {
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
+                // The parked process is what a developer inspects in Task Manager or dotMemory,
+                // so make it the same quiet point the per-test samples use
+                RunTests.MemoryManagement.CollectForMeasurement();
                 Console.Out.WriteLine("Press <enter> to continue");
                 Console.ReadLine();
             }
@@ -2445,6 +2446,14 @@ namespace TestRunner
                             screen.DeviceName, screen.Bounds, screen.WorkingArea,
                             screen.Primary ? " PRIMARY" : "");
                     runTests.Log("# Offscreen point: {0}\r\n", CommonFormEx.GetOffscreenPoint());
+                    // The memory columns are only comparable between runs under the same GC
+                    // regime. A container's memory limit or a machine-wide DOTNET_gc* variable
+                    // changes it, and nothing else in the log would say so.
+                    var gcConfig = GC.GetConfigurationVariables();
+                    var gcKeys = new[] { "GCServer", "GCConcurrent", "GCName", "GCConserveMemory", "GCHeapHardLimit", "GCHeapHardLimitPercent", "GCRegionRange" };
+                    runTests.Log("# GC: server={0}, concurrent={1}, {2}\r\n", GCSettings.IsServerGC,
+                        AppContext.GetData("System.GC.Concurrent") ?? "default",
+                        string.Join(", ", gcKeys.Where(gcConfig.ContainsKey).Select(k => k + "=" + gcConfig[k])));
                 }
 
                 // Get list of languages
