@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -41,6 +42,9 @@ namespace pwiz.Skyline.ToolsUI
     {
         private const string GITHUB_RAW_BASE = @"https://raw.githubusercontent.com/ProteoWizard/pwiz";
         private const string TUTORIALS_PATH = @"pwiz_tools/Skyline/Documentation/Tutorials";
+        // The folder beside the tutorial folders holding the images every tutorial shares (a language subfolder
+        // for the localized ones, the root for the rest); a page references them as "../../shared/...".
+        private const string SHARED_FOLDER = @"shared";
         private const string NL = "\n";
 
         /// <summary>
@@ -139,25 +143,11 @@ namespace pwiz.Skyline.ToolsUI
             var tutorial = ResolveTutorial(name);
             ValidateTutorialImageFilename(imageFilename);
 
-            string url = BuildTutorialImageUrl(tutorial, language, imageFilename);
+            var bytes = DownloadFirst(GetTutorialImageUrls(tutorial, language, imageFilename));
 
-            // Download image
             filePath = filePath ?? GetTutorialImageFilePath(tutorial.FolderName, language, imageFilename);
             DirectoryEx.CreateForFilePath(filePath);
-
-            using (var client = new HttpClientWithProgress())
-            {
-                try
-                {
-                    client.DownloadFile(url, filePath);
-                }
-                catch (Exception ex)
-                {
-                    throw new IOException(LlmInstruction.Format(
-                        @"Failed to fetch tutorial image from {0}: {1}",
-                        url, ex.Message), ex);
-                }
-            }
+            File.WriteAllBytes(filePath, bytes);
 
             return new TutorialImageMetadata
             {
@@ -177,22 +167,7 @@ namespace pwiz.Skyline.ToolsUI
             var tutorial = ResolveTutorial(name);
             ValidateTutorialImageFilename(imageFilename);
 
-            string url = BuildTutorialImageUrl(tutorial, language, imageFilename);
-
-            byte[] bytes;
-            using (var client = new HttpClientWithProgress())
-            {
-                try
-                {
-                    bytes = client.DownloadData(url);
-                }
-                catch (Exception ex)
-                {
-                    throw new IOException(LlmInstruction.Format(
-                        @"Failed to fetch tutorial image from {0}: {1}",
-                        url, ex.Message), ex);
-                }
-            }
+            var bytes = DownloadFirst(GetTutorialImageUrls(tutorial, language, imageFilename));
 
             return new ImageBytesMetadata
             {
@@ -215,16 +190,71 @@ namespace pwiz.Skyline.ToolsUI
             return tutorial.Value;
         }
 
-        private static void ValidateTutorialImageFilename(string imageFilename)
+        // An image is named the way the tutorial text names it (see TutorialImageName): a bare file name, or a
+        // "shared/..." path. Anything else with a separator, and any "..", is refused before it reaches a URL.
+        internal static void ValidateTutorialImageFilename(string imageFilename)
         {
-            if (imageFilename.IndexOfAny(new[] { '\\', '/' }) >= 0 || imageFilename.Contains(@".."))
-                throw new ArgumentException(new LlmInstruction(@"Image filename must not contain path separators"));
+            if (string.IsNullOrEmpty(imageFilename) || imageFilename.Contains(@"\") || imageFilename.Contains(@"..") ||
+                (imageFilename.Contains(@"/") && !IsSharedImage(imageFilename)))
+            {
+                throw new ArgumentException(new LlmInstruction(
+                    @"Image filename must be a bare file name from the tutorial, or a 'shared/...' path exactly as the tutorial text gives it"));
+            }
         }
 
-        private static string BuildTutorialImageUrl(TutorialInfo tutorial, string language, string imageFilename)
+        private static bool IsSharedImage(string imageFilename)
         {
-            return string.Format(@"{0}/{1}/{2}/{3}/{4}/{5}",
-                GITHUB_RAW_BASE, GetGitHash(), TUTORIALS_PATH, tutorial.FolderName, language, imageFilename);
+            return imageFilename.StartsWith(SHARED_FOLDER + @"/", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>The name a tutorial image is fetched by, from the src its page references it with: the bare
+        /// file name for an image in the tutorial's own folder, or "shared/..." for one of the images the
+        /// tutorials share (referenced as "../../shared/..."), so the name says where to look.</summary>
+        internal static string TutorialImageName(string src)
+        {
+            string path = src.Replace('\\', '/');
+            int sharedIndex = path.IndexOf(SHARED_FOLDER + @"/", StringComparison.OrdinalIgnoreCase);
+            return sharedIndex >= 0 ? path.Substring(sharedIndex) : Path.GetFileName(path);
+        }
+
+        /// <summary>The URLs an image may be at, in the order to try them. A "shared/..." name is exactly that path
+        /// under the Tutorials folder. A bare name is in the tutorial's own language folder - else among the
+        /// shared images for that language, else the shared images common to every language: the three places a
+        /// tutorial page draws its images from, so a caller who has only the file name still gets the image.</summary>
+        internal static string[] GetTutorialImageUrls(TutorialInfo tutorial, string language, string imageFilename)
+        {
+            string tutorialsUrl = string.Format(@"{0}/{1}/{2}", GITHUB_RAW_BASE, GetGitHash(), TUTORIALS_PATH);
+            if (IsSharedImage(imageFilename))
+                return new[] { string.Format(@"{0}/{1}", tutorialsUrl, imageFilename) };
+            return new[]
+            {
+                string.Format(@"{0}/{1}/{2}/{3}", tutorialsUrl, tutorial.FolderName, language, imageFilename),
+                string.Format(@"{0}/{1}/{2}/{3}", tutorialsUrl, SHARED_FOLDER, language, imageFilename),
+                string.Format(@"{0}/{1}/{2}", tutorialsUrl, SHARED_FOLDER, imageFilename),
+            };
+        }
+
+        // Downloads from the first URL that has the image. A miss (a 404, or any failure) moves on to the next;
+        // only when every one has failed does the caller hear about it, with every URL that was tried.
+        private static byte[] DownloadFirst(string[] urls)
+        {
+            var failures = new List<string>();
+            using (var client = new HttpClientWithProgress())
+            {
+                foreach (string url in urls)
+                {
+                    try
+                    {
+                        return client.DownloadData(url);
+                    }
+                    catch (Exception ex)
+                    {
+                        failures.Add(url + @": " + ex.Message);
+                    }
+                }
+            }
+            throw new IOException(LlmInstruction.Format(
+                @"Failed to fetch tutorial image. Tried: {0}", string.Join(@"; ", failures)));
         }
 
         private static string GuessImageMimeType(string imageFilename)
@@ -267,14 +297,9 @@ namespace pwiz.Skyline.ToolsUI
                 m => NL + @"### " + StripTags(m.Groups[1].Value) + NL,
                 RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
-            // Convert images to descriptive placeholders
+            // Convert images to descriptive placeholders, named the way GetTutorialImage fetches them
             html = Regex.Replace(html, @"<img\b[^>]*\bsrc\s*=\s*""([^""]+)""[^>]*/?>",
-                m =>
-                {
-                    string src = m.Groups[1].Value;
-                    string filename = Path.GetFileName(src);
-                    return @"[Screenshot: " + filename + @"]";
-                },
+                m => @"[Screenshot: " + TutorialImageName(m.Groups[1].Value) + @"]",
                 RegexOptions.IgnoreCase);
 
             // Convert links
@@ -364,7 +389,9 @@ namespace pwiz.Skyline.ToolsUI
         {
             string dir = Path.Combine(JsonUiService.GetMcpTmpDir(), @"images", tutorialName, language);
             Directory.CreateDirectory(dir);
-            return Path.Combine(dir, imageFilename);
+            // A shared image keeps its "shared/..." path under the tutorial's folder, so it cannot collide with one
+            // of the tutorial's own; the caller creates the subfolders when it writes the file.
+            return Path.Combine(dir, imageFilename.Replace('/', Path.DirectorySeparatorChar));
         }
     }
 }

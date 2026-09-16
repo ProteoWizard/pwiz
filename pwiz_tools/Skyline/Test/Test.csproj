@@ -194,6 +194,7 @@
     <Compile Include="LocalizedHtmlTutorialsTest.cs" />
     <Compile Include="SpectrumClassFilterParserTest.cs" />
     <Compile Include="TutorialCatalogTest.cs" />
+    <Compile Include="JsonTutorialCatalogTest.cs" />
     <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
     <Compile Include="LongPathDirectoryTest.cs" />
     <Compile Include="MassListIonsTest.cs" />
