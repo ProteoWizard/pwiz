@@ -1228,6 +1228,122 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestLibraryCacheRetainMatchesRelease()
+        {
+            // RetainFragmentsFor's contract is EQUIVALENCE, not leanness: loading with a retain
+            // set must leave the library in exactly the state that loading everything and then
+            // calling LibraryFragmentRelease.ReleaseFragments with the same set would leave. A
+            // direct swap, differing only in what was allocated on the way.
+            //
+            // The state is what this pins, and it is not a detail. A skipped entry that kept
+            // Array.Empty would be a READABLE empty spectrum, which every scorer's
+            // `Fragments == null || Fragments.Count == 0` guard absorbs as "this entry has no
+            // spectrum" - scoring a degenerate zero where the released state throws. Skipping
+            // the allocation must not also skip the tripwire that says the skip was wrong, so
+            // the assertion below is on IsSpectrumReleased and on the throw, never on "is it
+            // empty". That is the exact difference this test exists for: before issue #4650's
+            // review, the skip produced the empty state and no caller assigned the option, so
+            // nothing would have caught it.
+            //
+            // Ids 10 and 11 are targets, each with its paired decoy sharing the base_id. The
+            // retain set names 10 only, so the pair rides along on the base_id and the 11 pair
+            // is dropped - a set that both retains and releases, since one that did neither
+            // would pass whatever the code did.
+            const uint DECOY_BIT = 0x80000000;
+            var entries = new List<LibraryEntry>
+            {
+                MakeTestEntry(10),
+                MakeTestEntry(10 | DECOY_BIT),
+                MakeTestEntry(11),
+                MakeTestEntry(11 | DECOY_BIT)
+            };
+            var retained = new HashSet<uint> { 10u };
+
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                "osprey_test_retain_" + Guid.NewGuid().ToString("N") + ".libcache");
+
+            try
+            {
+                LibraryCache.SaveCache(tempPath, entries, "retain-hash");
+
+                // Route A: load everything, then release. The shape this is a swap FOR.
+                var released = LibraryCache.LoadCache(tempPath, "retain-hash", false, null,
+                    out LibraryCache.LibraryCacheStatus releasedStatus);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, releasedStatus);
+                int nReleased = LibraryFragmentRelease.ReleaseFragments(released, retained);
+
+                // Route B: load only what the set names.
+                var skipped = LibraryCache.LoadCache(tempPath, "retain-hash", false, null,
+                    out LibraryCache.LibraryCacheStatus skippedStatus, retained);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, skippedStatus);
+
+                // The set has to do both jobs, or the comparison below proves nothing.
+                Assert.AreEqual(2, nReleased,
+                    @"the retain set must release the 11 pair and keep the 10 pair");
+
+                Assert.AreEqual(released.Count, skipped.Count);
+                for (int i = 0; i < released.Count; i++)
+                {
+                    var a = released[i];
+                    var b = skipped[i];
+                    string what = string.Format(CultureInfo.InvariantCulture, @"entry {0} (id {1})", i, a.Id);
+
+                    // Identity is untouched on BOTH sides, including on a released entry:
+                    // protein parsimony walks the whole library after the spectra are gone.
+                    Assert.AreEqual(a.Id, b.Id, what);
+                    Assert.AreEqual(a.Sequence, b.Sequence, what);
+                    Assert.AreEqual(a.ModifiedSequence, b.ModifiedSequence, what);
+                    Assert.AreEqual(a.Charge, b.Charge, what);
+                    Assert.AreEqual(a.PrecursorMz, b.PrecursorMz, 1e-10, what);
+                    Assert.AreEqual(a.RetentionTime, b.RetentionTime, 1e-10, what);
+                    Assert.AreEqual(a.RtCalibrated, b.RtCalibrated, what);
+                    Assert.AreEqual(a.IsDecoy, b.IsDecoy, what);
+                    Assert.AreEqual(a.Modifications.Count, b.Modifications.Count, what);
+                    CollectionAssert.AreEqual(a.ProteinIds.ToArray(), b.ProteinIds.ToArray(), what);
+                    CollectionAssert.AreEqual(a.GeneNames.ToArray(), b.GeneNames.ToArray(), what);
+
+                    // The state itself. Asked through IsSpectrumReleased because reading
+                    // Fragments to find out is what throws - which is the point of the state.
+                    Assert.AreEqual(a.IsSpectrumReleased, b.IsSpectrumReleased, what);
+                    bool expectReleased = !retained.Contains(a.Id & ScoringTaskShared.BASE_ID_MASK);
+                    Assert.AreEqual(expectReleased, b.IsSpectrumReleased, what);
+
+                    if (expectReleased)
+                    {
+                        // The tripwire, on the skipped side specifically. Equality above would
+                        // also hold if BOTH sides had quietly become readable-empty, so the
+                        // throw is asserted rather than inferred.
+                        Assert.ThrowsException<InvalidOperationException>(() =>
+                        {
+                            int unused = b.Fragments.Count;
+                        }, what + @": a skipped spectrum must throw on read, not read as empty");
+                        continue;
+                    }
+
+                    // A retained entry carries the identical peaks, read rather than skipped.
+                    Assert.AreEqual(a.Fragments.Count, b.Fragments.Count, what);
+                    for (int f = 0; f < a.Fragments.Count; f++)
+                    {
+                        var fa = a.Fragments[f];
+                        var fb = b.Fragments[f];
+                        Assert.AreEqual(fa.Mz, fb.Mz, 1e-10, what);
+                        Assert.AreEqual(fa.RelativeIntensity, fb.RelativeIntensity, what);
+                        Assert.AreEqual(fa.Annotation.IonType, fb.Annotation.IonType, what);
+                        Assert.AreEqual(fa.Annotation.Ordinal, fb.Annotation.Ordinal, what);
+                        Assert.AreEqual(fa.Annotation.Charge, fb.Annotation.Charge, what);
+                        Assert.AreEqual(fa.Annotation.NeutralLoss, fb.Annotation.NeutralLoss, what);
+                        Assert.AreEqual(fa.Annotation.CustomLossMass, fb.Annotation.CustomLossMass, 1e-10, what);
+                    }
+                }
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
+
+        [TestMethod]
         public void TestLibraryCacheOmitFragments()
         {
             // A FirstPassFDR / StopAfterStage5 worker loads the library lean: the
