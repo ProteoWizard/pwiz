@@ -137,27 +137,27 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestExportTypedFullName()
         {
-            var typedPath = TestContext.GetTestResultsPath(@"TypedName" + SkylineWindow.EXT_SKY_VIEW);
+            var typedPath = TestContext.GetTestResultsPath(@"TypedName.sky.view");
             FileEx.SafeDelete(typedPath);
-            FileEx.SafeDelete(typedPath + SkylineWindow.EXT_SKY_VIEW);
+            FileEx.SafeDelete(typedPath + @".sky.view");
             RunLongNativeDlg<NativeSaveFileDialog>(SkylineWindow.ShowExportLayoutDlg, dlg =>
             {
                 dlg.EnterPath(typedPath);
                 dlg.DismissWithAcceptButton();
             });
             Assert.IsTrue(File.Exists(typedPath));
-            Assert.IsFalse(File.Exists(typedPath + SkylineWindow.EXT_SKY_VIEW));
+            Assert.IsFalse(File.Exists(typedPath + @".sky.view"));
 
-            var shortPath = TestContext.GetTestResultsPath(@"ShortName" + SkylineWindow.EXT_VIEW);
+            var shortPath = TestContext.GetTestResultsPath(@"ShortName.view");
             FileEx.SafeDelete(shortPath);
-            FileEx.SafeDelete(shortPath + SkylineWindow.EXT_SKY_VIEW);
+            FileEx.SafeDelete(shortPath + @".sky.view");
             RunLongNativeDlg<NativeSaveFileDialog>(SkylineWindow.ShowExportLayoutDlg, dlg =>
             {
                 dlg.EnterPath(shortPath);
                 dlg.DismissWithAcceptButton();
             });
             Assert.IsTrue(File.Exists(shortPath));
-            Assert.IsFalse(File.Exists(shortPath + SkylineWindow.EXT_SKY_VIEW));
+            Assert.IsFalse(File.Exists(shortPath + @".sky.view"));
         }
 
         /// <summary>

@@ -1478,7 +1478,6 @@ namespace pwiz.Skyline
         // and default on the single extension, because a two-part one confuses the shell - it compares only
         // a typed name's last extension with the filter's, so "Name.view" became "Name.view.sky.view".
         public const string EXT_VIEW = ".view";
-        public const string EXT_SKY_VIEW = ".sky" + EXT_VIEW;
         public static string FILTER_VIEW
         {
             get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_VIEW); }
