@@ -39,10 +39,14 @@ namespace SkylineNightly
             this.textBoxFolder = new System.Windows.Forms.TextBox();
             this.buttonFolder = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
-            this.comboBoxOptions = new System.Windows.Forms.ComboBox();
+            this.comboBoxBranch1 = new System.Windows.Forms.ComboBox();
             this.labelOptions = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.comboBoxOptions2 = new System.Windows.Forms.ComboBox();
+            this.comboBoxBranch2 = new System.Windows.Forms.ComboBox();
+            this.labelType1 = new System.Windows.Forms.Label();
+            this.comboBoxType1 = new System.Windows.Forms.ComboBox();
+            this.labelType2 = new System.Windows.Forms.Label();
+            this.comboBoxType2 = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // enabled
@@ -167,26 +171,47 @@ namespace SkylineNightly
             this.button3.Text = "Now";
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.Now_Click);
-            // 
-            // comboBoxOptions
-            // 
-            this.comboBoxOptions.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxOptions.FormattingEnabled = true;
-            this.comboBoxOptions.Items.AddRange(new object[] {
-            "Trunk",
-            "Trunk with Perf Tests",
+            //
+            // comboBoxBranch1
+            //
+            this.comboBoxBranch1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxBranch1.FormattingEnabled = true;
+            this.comboBoxBranch1.Items.AddRange(new object[] {
+            "Master",
             "Release Branch",
-            "Trunk with Stress Tests",
-            "Integration",
-            "Release Branch with Perf Tests",
-            "Integration with Perf Tests"
-            });
-            this.comboBoxOptions.Location = new System.Drawing.Point(102, 174);
-            this.comboBoxOptions.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.comboBoxOptions.Name = "comboBoxOptions";
-            this.comboBoxOptions.Size = new System.Drawing.Size(373, 28);
-            this.comboBoxOptions.TabIndex = 12;
-            this.comboBoxOptions.SelectedIndexChanged += new System.EventHandler(this.comboBoxOptions_SelectedIndexChanged);
+            "Integration"});
+            this.comboBoxBranch1.Location = new System.Drawing.Point(102, 174);
+            this.comboBoxBranch1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.comboBoxBranch1.Name = "comboBoxBranch1";
+            this.comboBoxBranch1.Size = new System.Drawing.Size(170, 28);
+            this.comboBoxBranch1.TabIndex = 12;
+            this.comboBoxBranch1.SelectedIndexChanged += new System.EventHandler(this.comboBoxRun_SelectedIndexChanged);
+            //
+            // labelType1
+            //
+            this.labelType1.AutoSize = true;
+            this.labelType1.Location = new System.Drawing.Point(290, 178);
+            this.labelType1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelType1.Name = "labelType1";
+            this.labelType1.Size = new System.Drawing.Size(43, 20);
+            this.labelType1.TabIndex = 16;
+            this.labelType1.Text = "Type";
+            //
+            // comboBoxType1
+            //
+            this.comboBoxType1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxType1.FormattingEnabled = true;
+            this.comboBoxType1.Items.AddRange(new object[] {
+            "Standard",
+            "Leak Checking",
+            "Perf",
+            "Stress"});
+            this.comboBoxType1.Location = new System.Drawing.Point(345, 174);
+            this.comboBoxType1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.comboBoxType1.Name = "comboBoxType1";
+            this.comboBoxType1.Size = new System.Drawing.Size(200, 28);
+            this.comboBoxType1.TabIndex = 17;
+            this.comboBoxType1.SelectedIndexChanged += new System.EventHandler(this.comboBoxRun_SelectedIndexChanged);
             // 
             // labelOptions
             // 
@@ -207,26 +232,48 @@ namespace SkylineNightly
             this.label4.Size = new System.Drawing.Size(45, 20);
             this.label4.TabIndex = 15;
             this.label4.Text = "Then";
-            // 
-            // comboBoxOptions2
-            // 
-            this.comboBoxOptions2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxOptions2.FormattingEnabled = true;
-            this.comboBoxOptions2.Items.AddRange(new object[] {
-            "Trunk",
-            "Trunk with Perf Tests",
+            //
+            // comboBoxBranch2
+            //
+            this.comboBoxBranch2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxBranch2.FormattingEnabled = true;
+            this.comboBoxBranch2.Items.AddRange(new object[] {
+            "Master",
             "Release Branch",
-            "Trunk with Stress Tests",
-            "Integration",
-            "Release Branch with Perf Tests",
-            "Integration with Perf Tests",
+            "Integration"});
+            this.comboBoxBranch2.Location = new System.Drawing.Point(102, 212);
+            this.comboBoxBranch2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.comboBoxBranch2.Name = "comboBoxBranch2";
+            this.comboBoxBranch2.Size = new System.Drawing.Size(170, 28);
+            this.comboBoxBranch2.TabIndex = 14;
+            this.comboBoxBranch2.SelectedIndexChanged += new System.EventHandler(this.comboBoxRun_SelectedIndexChanged);
+            //
+            // labelType2
+            //
+            this.labelType2.AutoSize = true;
+            this.labelType2.Location = new System.Drawing.Point(290, 216);
+            this.labelType2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelType2.Name = "labelType2";
+            this.labelType2.Size = new System.Drawing.Size(43, 20);
+            this.labelType2.TabIndex = 18;
+            this.labelType2.Text = "Type";
+            //
+            // comboBoxType2
+            //
+            this.comboBoxType2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxType2.FormattingEnabled = true;
+            this.comboBoxType2.Items.AddRange(new object[] {
+            "Standard",
+            "Leak Checking",
+            "Perf",
+            "Stress",
             "None"});
-            this.comboBoxOptions2.Location = new System.Drawing.Point(102, 212);
-            this.comboBoxOptions2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.comboBoxOptions2.Name = "comboBoxOptions2";
-            this.comboBoxOptions2.Size = new System.Drawing.Size(373, 28);
-            this.comboBoxOptions2.TabIndex = 14;
-            this.comboBoxOptions2.SelectedIndexChanged += new System.EventHandler(this.comboBoxOptions2_SelectedIndexChanged);
+            this.comboBoxType2.Location = new System.Drawing.Point(345, 212);
+            this.comboBoxType2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.comboBoxType2.Name = "comboBoxType2";
+            this.comboBoxType2.Size = new System.Drawing.Size(200, 28);
+            this.comboBoxType2.TabIndex = 19;
+            this.comboBoxType2.SelectedIndexChanged += new System.EventHandler(this.comboBoxRun_SelectedIndexChanged);
             // 
             // SkylineNightly
             // 
@@ -234,10 +281,14 @@ namespace SkylineNightly
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(646, 369);
             this.ControlBox = false;
+            this.Controls.Add(this.comboBoxType2);
+            this.Controls.Add(this.labelType2);
+            this.Controls.Add(this.comboBoxType1);
+            this.Controls.Add(this.labelType1);
             this.Controls.Add(this.label4);
-            this.Controls.Add(this.comboBoxOptions2);
+            this.Controls.Add(this.comboBoxBranch2);
             this.Controls.Add(this.labelOptions);
-            this.Controls.Add(this.comboBoxOptions);
+            this.Controls.Add(this.comboBoxBranch1);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.buttonFolder);
             this.Controls.Add(this.textBoxFolder);
@@ -274,10 +325,14 @@ namespace SkylineNightly
         private System.Windows.Forms.TextBox textBoxFolder;
         private System.Windows.Forms.Button buttonFolder;
         private System.Windows.Forms.Button button3;
-        private System.Windows.Forms.ComboBox comboBoxOptions;
+        private System.Windows.Forms.ComboBox comboBoxBranch1;
         private System.Windows.Forms.Label labelOptions;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.ComboBox comboBoxOptions2;
+        private System.Windows.Forms.ComboBox comboBoxBranch2;
+        private System.Windows.Forms.Label labelType1;
+        private System.Windows.Forms.ComboBox comboBoxType1;
+        private System.Windows.Forms.Label labelType2;
+        private System.Windows.Forms.ComboBox comboBoxType2;
     }
 }
 

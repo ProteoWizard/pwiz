@@ -247,7 +247,8 @@ namespace SkylineTester
             this.nightlyRepeat = new System.Windows.Forms.ComboBox();
             this.label8 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
-            this.nightlyRunPerfTests = new System.Windows.Forms.CheckBox();
+            this.nightlyRunType = new System.Windows.Forms.ComboBox();
+            this.labelNightlyRunType = new System.Windows.Forms.Label();
             this.buttonNow = new System.Windows.Forms.Button();
             this.nightlyStartTime = new System.Windows.Forms.DateTimePicker();
             this.nightlyBuildType = new System.Windows.Forms.DomainUpDown();
@@ -2531,7 +2532,8 @@ namespace SkylineTester
             this.groupBox20.Controls.Add(this.nightlyRepeat);
             this.groupBox20.Controls.Add(this.label8);
             this.groupBox20.Controls.Add(this.label11);
-            this.groupBox20.Controls.Add(this.nightlyRunPerfTests);
+            this.groupBox20.Controls.Add(this.nightlyRunType);
+            this.groupBox20.Controls.Add(this.labelNightlyRunType);
             this.groupBox20.Controls.Add(this.buttonNow);
             this.groupBox20.Controls.Add(this.nightlyStartTime);
             this.groupBox20.Controls.Add(this.nightlyBuildType);
@@ -2605,17 +2607,34 @@ namespace SkylineTester
             this.label11.TabIndex = 35;
             this.label11.Text = "Run each test";
             // 
-            // nightlyRunPerfTests
+            // nightlyRunType
             // 
-            this.nightlyRunPerfTests.AutoSize = true;
-            this.nightlyRunPerfTests.Location = new System.Drawing.Point(9, 95);
-            this.nightlyRunPerfTests.Name = "nightlyRunPerfTests";
-            this.nightlyRunPerfTests.Size = new System.Drawing.Size(169, 17);
-            this.nightlyRunPerfTests.TabIndex = 33;
-            this.nightlyRunPerfTests.Text = "Include perf tests in nightly run";
-            this.toolTip1.SetToolTip(this.nightlyRunPerfTests, "Perf tests run only once per language, and only in pass 2 (no leak detection or i" +
-        "nitial novendor check)");
-            this.nightlyRunPerfTests.UseVisualStyleBackColor = true;
+            this.nightlyRunType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.nightlyRunType.FormattingEnabled = true;
+            this.nightlyRunType.Items.AddRange(new object[] {
+            "Standard",
+            "Leak checking",
+            "Perf",
+            "Stress",
+            "Standard with leak checking"});
+            this.nightlyRunType.Location = new System.Drawing.Point(85, 94);
+            this.nightlyRunType.Name = "nightlyRunType";
+            this.nightlyRunType.Size = new System.Drawing.Size(147, 21);
+            this.nightlyRunType.TabIndex = 33;
+            this.toolTip1.SetToolTip(this.nightlyRunType, "Standard: pass 0, then all tests in each language until stopped. Leak checking: pa" +
+        "ss 1 over every test until stopped. Perf: perf tests, then all tests in each lan" +
+        "guage, then perf tests in further languages. Stress: repeated tests in random or" +
+        "der. Standard with leak checking: pass 0, pass 1, then pass 2 (the pre-split nig" +
+        "htly).");
+            // 
+            // labelNightlyRunType
+            // 
+            this.labelNightlyRunType.AutoSize = true;
+            this.labelNightlyRunType.Location = new System.Drawing.Point(6, 97);
+            this.labelNightlyRunType.Name = "labelNightlyRunType";
+            this.labelNightlyRunType.Size = new System.Drawing.Size(48, 13);
+            this.labelNightlyRunType.TabIndex = 40;
+            this.labelNightlyRunType.Text = "Run type";
             // 
             // buttonNow
             // 
@@ -2664,9 +2683,9 @@ namespace SkylineTester
             this.label35.AutoSize = true;
             this.label35.Location = new System.Drawing.Point(6, 71);
             this.label35.Name = "label35";
-            this.label35.Size = new System.Drawing.Size(31, 13);
+            this.label35.Size = new System.Drawing.Size(54, 13);
             this.label35.TabIndex = 29;
-            this.label35.Text = "Type";
+            this.label35.Text = "Build type";
             // 
             // nightlyDuration
             // 
@@ -3512,7 +3531,8 @@ namespace SkylineTester
         private TabPage tabNightly;
         private TableLayoutPanel nightlyTableLayout;
         private Panel panel3;
-        private CheckBox nightlyRunPerfTests;
+        private ComboBox nightlyRunType;
+        private Label labelNightlyRunType;
         private GroupBox groupBox22;
         private RadioButton nightlyBranch;
         private RadioButton nightlyBuildTrunk;

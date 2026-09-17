@@ -136,8 +136,7 @@ namespace TestPerf
         // Full paths to the mzML the wizard searches.
         private string[] DiaSearchPaths => MZML_FILES.Select(f => Path.Combine(CacheDir, f)).ToArray();
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiannSearchTutorial()
         {
             // Name contains "Tutorial" so AbstractFunctionalTest's IsTutorial returns true,

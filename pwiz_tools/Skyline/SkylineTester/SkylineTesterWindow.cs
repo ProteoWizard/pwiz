@@ -1212,7 +1212,7 @@ namespace SkylineTester
                 nightlyDuration,
                 nightlyBuildType,
                 nightlyBuildTrunk,
-                nightlyRunPerfTests,
+                nightlyRunType,
                 nightlyRandomize,
                 nightlyRepeat,
                 nightlyBranch,
@@ -1378,6 +1378,29 @@ namespace SkylineTester
 
                 throw new ApplicationException("Attempted to load unknown control type.");
             }
+
+            LoadNightlyRunType(doc);
+        }
+
+        /// <summary>
+        /// Settings saved before the nightly run type existed describe the run with a perf tests
+        /// checkbox and a repeat count. Map those to the run type they meant, so that an older
+        /// SkylineNightly, or a developer's saved settings, still get the run they asked for.
+        /// </summary>
+        private void LoadNightlyRunType(XDocument doc)
+        {
+            if (doc.Descendants(nightlyRunType.Name).Any())
+                return;
+
+            var runPerfTests = doc.Descendants("nightlyRunPerfTests").Any(e => e.Value == "true");
+            var repeatCount = doc.Descendants(nightlyRepeat.Name).Select(e => e.Value).FirstOrDefault();
+            int.TryParse(repeatCount, out var repeatTimes);
+            if (repeatTimes > 1)
+                nightlyRunType.SelectedItem = TabNightly.RUN_TYPE_STRESS;
+            else if (runPerfTests)
+                nightlyRunType.SelectedItem = TabNightly.RUN_TYPE_PERF;
+            else
+                nightlyRunType.SelectedItem = TabNightly.RUN_TYPE_STANDARD_WITH_LEAK_CHECKING;
         }
 
         private XElement CreateElement(string name, params object[] childElements)
@@ -1696,7 +1719,7 @@ namespace SkylineTester
         public Label            NightlyRoot                 { get { return nightlyRoot; } }
         public ComboBox         NightlyRunDate              { get { return nightlyRunDate; } }
         public ComboBox         NightlyRepeat               { get { return nightlyRepeat; } }
-        public CheckBox         NightlyRunPerfTests         { get { return nightlyRunPerfTests; } }
+        public ComboBox         NightlyRunType              { get { return nightlyRunType; } }
         public DateTimePicker   NightlyStartTime            { get { return nightlyStartTime; } }
         public Label            NightlyTestName             { get { return nightlyTestName; } }
         public WindowThumbnail  NightlyThumbnail            { get { return nightlyThumbnail; } }
