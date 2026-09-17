@@ -525,13 +525,18 @@ user-supplied paths do reach it, both noted below. A completed run can therefore
 output directory and still be recognised as valid - the property external tooling relies
 on to adopt a prior run's Stage 1-4 artifacts instead of recomputing them for hours.
 
-**The exception is `--decoy-pairing-manifest`**, whose path goes into
-`SearchParameterHash` verbatim and unnormalised. It is the only path anywhere in artifact
-identity, so it is the only reason a move invalidates: relocate a cohort that was searched
-with a pairing manifest and every artifact invalidates, because the manifest is named from
-somewhere else now. Restoring the original path with a junction is the cheap fix. Anything
-that adds a second path to a hash removes relocatability for every run, not just
-entrapment ones.
+**There is no exception, and `--decoy-pairing-manifest` used to be one.** Its path went into
+`SearchParameterHash` verbatim and unnormalised - the only path anywhere in artifact identity,
+and so the only reason a move invalidated: relocate a cohort searched with a pairing manifest
+and every artifact invalidated, because the manifest was named from somewhere else now. Worse,
+the invalidation ran the wrong way round. EDITING a manifest in place changed neither its path
+nor the hash, so every scored parquet went on reading valid against a file that no longer said
+what it said - and the manifest decides decoy classification, target/decoy pairing and the
+protein accessions protein FDR runs on, which makes that a stale FDR answer rather than a stale
+cache. The manifest is now identified the way the library is, by file **name + size + mtime**
+(`SearchIdentity.DecoyPairingManifestTerm`), so moving one is free and editing one invalidates.
+Nothing left in artifact identity is a path. Anything that adds one back removes relocatability
+for every run, not just entrapment ones.
 
 **P16. A report is a DERIVED VIEW over the artifacts, never an output only its producing
 phase can make.** Everything the diagnostics report says about a pass is a reduction over

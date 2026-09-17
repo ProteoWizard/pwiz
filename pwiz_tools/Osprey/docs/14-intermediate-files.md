@@ -269,13 +269,15 @@ The Stage 6 reconciled rewrite (`ReconciledParquetWriter.BuildReconciliationMeta
 `ReconciledParquetWriter.cs:192`) sets `osprey.reconciled = "true"` and adds
 `osprey.reconciliation_hash` = `SearchIdentity.ReconciliationParameterHash[ForStems]()`.
 
-**Hash recipes** (`Osprey.Core/SearchIdentity.cs`, must stay byte-identical to Rust
-`osprey-core/src/config.rs`):
+**Hash recipes** (`Osprey.Core/SearchIdentity.cs`, following Rust
+`osprey-core/src/config.rs` except for the manifest term, noted below):
 
 - `SearchParameterHash()` (`SearchIdentity.cs:60`): resolution mode; fragment + precursor
   tolerance (value + unit); prefilter enabled; decoy method; decoys-in-library; sorted
-  lowercased decoy prefixes; decoy pairing manifest path (Rust `{:?}` `Some/None` escaping,
-  `SearchIdentity.cs:186`); decoy pair min fraction; all RT-calibration parameters (enabled,
+  lowercased decoy prefixes; decoy pairing manifest IDENTITY - `None`, or `Some(<hash>)` over
+  the manifest's file name + size + mtime, the same recipe as `LibraryIdentityHash` and for the
+  same reason, so moving a manifest is free and editing one in place invalidates
+  (`SearchIdentity.DecoyPairingManifestTerm`); decoy pair min fraction; all RT-calibration parameters (enabled,
   fallback tolerance, tolerance factor, min/max tolerance, LOESS bandwidth, min calibration
   points, sample size, retry factor); and `reconciliation.top_n_peaks`. Booleans lowercased,
   invariant culture (`SearchIdentity.cs:69`) for cross-impl parity.
