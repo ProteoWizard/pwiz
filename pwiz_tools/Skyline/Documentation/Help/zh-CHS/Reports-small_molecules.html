@@ -518,6 +518,10 @@ td {
 背景值总和</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">MS1 总体背景</td><td class="ColumnDescription">MS1总背景</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">片段总背景</td><td class="ColumnDescription">片段总背景</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Observed Ion Mobility</td><td class="ColumnDescription">Intensity-weighted ion mobility centroid across the peak, in the same units as the IM extraction filter.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Observed CCS</td><td class="ColumnDescription">Collision cross section in square Angstroms, computed from the observed ion mobility using the source instrument&#39;s vendor-supplied conversion. Available only for vendor formats that expose this conversion; open formats such as mzML and mz5 will leave this blank.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Ion Mobility Error Percent</td><td class="ColumnDescription">The difference between the expected and measured ion mobility values expressed as a percent of the expected value (intensity-weighted across the peak)</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">CCS Error Percent</td><td class="ColumnDescription">The difference between the expected and measured collisional cross section (CCS) values expressed as a percent of the expected value</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">总面积比</td><td class="ColumnDescription">该母离子与首个内标标签类型的总面积比，
 在版本 0.7 之前始终是轻标/重标，
 并显示在重标母离子上。</td><td class="ColumnType">Double</td></tr>

@@ -19,6 +19,7 @@
 
 
 using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.FileUI;
@@ -110,6 +111,15 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
             Assert.IsTrue(errmsg.Length == 0, errmsg);
             Assert.AreEqual(66631.82, maxHeight, 1);
+
+            // SONAR uses IMS hardware to filter precursor m/z; it is not ion mobility. So no
+            // transition should carry an observed ion mobility value - it would be a meaningless
+            // SONAR-bin centroid surfaced in the Document Grid. Regression guard for the
+            // waters_sonar observed-IM tracking gate (RawTimeIntensities.IsTrackedObservedIonMobilityUnit).
+            int withObservedIm = doc1.MoleculeTransitions
+                .SelectMany(t => t.Results.SelectMany(r => r))
+                .Count(chromInfo => chromInfo.ObservedIonMobility.HasValue);
+            Assert.AreEqual(0, withObservedIm, "SONAR data should not produce observed ion mobility values");
         }
     }
 }
