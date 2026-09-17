@@ -181,12 +181,20 @@ namespace pwiz.Osprey.Test
             // above now, asserted once rather than twice under two input kinds.
             AssertRunsOnLeg(false, @"--task FirstPassFDR", ForTask(HpcTask.FirstPassFdr));
 
-            // --fdrbench-pass 1 forces the RESIDENT first-pass pool, which never computes a
-            // surviving base_id set, so there is nothing to release against.
-            AssertRunsOnLeg(false, @"--fdrbench-pass 1", new OspreyConfig
+            // --fdrbench-pass 1 used to force the RESIDENT first-pass pool, which never computed
+            // a surviving base_id set, so there was nothing to release against. Since #4507 the
+            // pass-1 emitter streams off the sidecars on the projection path, before compaction
+            // and reading only library sequences and accessions, so the leg releases like any
+            // other - for either selection that includes pass 1.
+            AssertRunsOnLeg(true, @"--fdrbench-pass 1", new OspreyConfig
             {
                 OutputFdrBench = @"bench.tsv",
                 FdrBenchPass = OspreyConfig.FDRBENCH_PASS_1
+            });
+            AssertRunsOnLeg(true, @"--fdrbench-pass both", new OspreyConfig
+            {
+                OutputFdrBench = @"bench.tsv",
+                FdrBenchPass = OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2
             });
 
             bool savedProjection = OspreyEnvironment.UseFdrProjection;

@@ -407,8 +407,8 @@ namespace pwiz.Osprey
                     // warning said was not engaged.
                     LogWarning(string.Format(
                         "OSPREY_ALLOW_UNFIXED_RESIDENT contains unrecognized token(s) that grant " +
-                        "nothing: {0}. Recognized: {1}. ('hpc-merge' was retired - the " +
-                        "--task SecondPassFDR reconciled-input load streams and needs no allowance.) " +
+                        "nothing: {0}. Recognized: {1}. ('hpc-merge' and 'fdrbench-pass1' were retired - the " +
+                        "--task SecondPassFDR reconciled-input load and the pass-1 FDRBench emitter both stream and need no allowance.) " +
                         "Any recognized token in the same value is still honored.",
                         OspreyEnvironment.UnrecognizedResidentTokens,
                         string.Join(", ", ResidentPaths.KNOWN_UNFIXED)));
