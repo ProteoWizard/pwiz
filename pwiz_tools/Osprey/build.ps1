@@ -92,6 +92,20 @@ function Write-Problem-Tc([string]$msg) {
 }
 
 # --- Tool discovery -----------------------------------------------------
+# Windows drives the build through the Visual Studio toolchain (VS MSBuild +
+# vstest.console): that is what the agents have, and what dotCover wraps. Linux has
+# neither and needs neither - every Osprey project is plain net10.0, so the .NET SDK
+# builds and tests the same solution. `dotnet msbuild` takes the identical switch
+# syntax, which is why the build argument list below is shared rather than duplicated.
+$isWin = $IsWindows
+if ($Coverage -and -not $isWin) {
+    # dotCover is pinned to 2023.3.3 for the native launcher TeamCity needs (see
+    # Ensure-DotCover.ps1), and that runner is Windows-only. Coverage is reported from
+    # the Windows config; do not fail the Linux build over it, nor pretend it ran.
+    Write-Host "Coverage requested but dotCover is Windows-only; continuing without it." -ForegroundColor Yellow
+    $Coverage = $false
+}
+if ($isWin) {
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 if (-not (Test-Path $vswhere)) {
     Write-Problem-Tc "vswhere.exe not found (install Visual Studio Installer)"
@@ -119,6 +133,7 @@ if (-not $NoTests) {
         exit 2
     }
 }
+}  # end if ($isWin) - Linux resolves the toolchain through `dotnet` instead
 $dotcover = $null
 if ($Coverage) {
     # Restore dotCover from this directory's tool manifest rather than requiring a global
@@ -177,7 +192,7 @@ $buildArgs = @(
 if ($IAgreeToVendorLicenses) {
     $buildArgs += '/p:IAgreeToVendorLicenses=true'
 }
-& $msbuild @buildArgs
+if ($isWin) { & $msbuild @buildArgs } else { & dotnet msbuild @buildArgs }
 $buildExit = $LASTEXITCODE
 $buildSec = ((Get-Date) - $buildStart).TotalSeconds
 if ($buildExit -ne 0) {
@@ -201,7 +216,7 @@ New-Item -ItemType Directory -Force -Path $trxDir | Out-Null
 
 $overallTestExit = 0
 foreach ($fw in $testFrameworks) {
-    $testDll = Join-Path $scriptRoot "Osprey.Test\bin\$platform\$Configuration\$fw\Osprey.Test.dll"
+    $testDll = Join-Path $scriptRoot "Osprey.Test/bin/$platform/$Configuration/$fw/Osprey.Test.dll"
     if (-not (Test-Path $testDll)) {
         Write-Problem-Tc "Test DLL not found at $testDll"
         $overallTestExit = 2
@@ -269,9 +284,19 @@ foreach ($fw in $testFrameworks) {
         if ($TeamCity -and (Test-Path $dcvrPath)) {
             Write-Host ("##teamcity[importData type='dotNetCoverage' tool='dotcover' path='{0}']" -f (Format-TcMessage $dcvrPath))
         }
-    } else {
+    } elseif ($isWin) {
         Write-Progress-Tc "Running tests ($fw)"
         & $vstest @vstestArgs
+        $exit = $LASTEXITCODE
+    } else {
+        # vstest.console ships with Visual Studio, so Linux uses the SDK runner. It takes
+        # the project rather than the assembly, and --no-build keeps it from rebuilding what
+        # the step above just produced. The TRX lands in the same place, so the import and
+        # the no-TRX guard below are shared.
+        Write-Progress-Tc "Running tests ($fw, dotnet test)"
+        $testProj = Join-Path $scriptRoot 'Osprey.Test/Osprey.Test.csproj'
+        & dotnet test $testProj -c $Configuration "-p:Platform=$platform" --no-build --nologo `
+            --logger "trx;LogFileName=$trxName" --results-directory $trxDir
         $exit = $LASTEXITCODE
     }
     $testSec = ((Get-Date) - $testStart).TotalSeconds

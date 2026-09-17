@@ -57,4 +57,5 @@ project {
     // manifest: a config change then shows up as a diff to that config alone rather than
     // to a file every other config also touches.
     buildType(NativeShimsWindows)
+    buildType(OspreyLinuxNet)
 }
