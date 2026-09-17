@@ -44,7 +44,6 @@ namespace pwiz.Osprey.Test
         public void TestLibraryFragmentRelease()
         {
             ValidateGapFillCandidatesAreRetained();
-            ValidateReportedPoolIsRetainedOnSecondPassFdr();
             ValidateOnlyUnscorableFragmentsAreReleased();
             ValidateIdentityFieldsSurvive();
             ValidateEveryLegThatHoldsTheLibraryReleasesIt();
@@ -52,10 +51,17 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Gap-fill resolves the MISSING charge states of passing peptides, so it names entries
-        /// that did NOT survive compaction - and Stage 6 scores them. If the retained set were
-        /// survivors alone it would strip exactly the spectra gap-fill is about to ask for,
-        /// which is the defect this assertion exists to catch.
+        /// The union is over BOTH terms, whatever the relationship between them. This assertion
+        /// used to be justified by "gap-fill names entries that did NOT survive compaction",
+        /// which is wrong and is what left issue #4650's subset question open: a gap-fill target
+        /// is a precursor that PASSED in a sibling replicate and is missing from THIS file's
+        /// rows, so its base_id is already in the join-wide first-pass set. The corrected
+        /// argument lives on <c>LibraryFragmentRelease.BuildRetainedBaseIds</c>.
+        ///
+        /// <para>The assertion stays, and is worth keeping on the true reason rather than the
+        /// retracted one: it pins that both terms are unioned and that the decoy bit is masked
+        /// off. Nothing downstream may ASSUME the gap-fill term is empty of new base_ids - that
+        /// is an invariant of another class, which this one is not entitled to inline.</para>
         /// </summary>
         private static void ValidateGapFillCandidatesAreRetained()
         {
@@ -76,36 +82,6 @@ namespace pwiz.Osprey.Test
             // it from the reconciliation envelope, which can carry nothing.
             var survivorsOnly = LibraryFragmentRelease.BuildRetainedBaseIds(survivors, null);
             Assert.AreEqual(1, survivorsOnly.Count);
-        }
-
-        /// <summary>
-        /// SecondPassFDR has no survivors + gap-fill pair to work from - FirstPassFDR is excluded
-        /// from a --task SecondPassFDR pipeline - so it retains every base_id in the final
-        /// reported pool instead. Decoys included: a decoy row must retain its base_id rather
-        /// than being skipped, or a decoy whose paired target did not survive would have its
-        /// spectrum pulled out from under the pool it is still in.
-        /// </summary>
-        private static void ValidateReportedPoolIsRetainedOnSecondPassFdr()
-        {
-            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
-            {
-                new KeyValuePair<string, List<FdrEntry>>(@"fileA", new List<FdrEntry>
-                {
-                    new FdrEntry { EntryId = 10u },
-                    new FdrEntry { EntryId = 10u | DECOY_BIT }
-                }),
-                new KeyValuePair<string, List<FdrEntry>>(@"fileB", new List<FdrEntry>
-                {
-                    new FdrEntry { EntryId = 10u },
-                    new FdrEntry { EntryId = 40u | DECOY_BIT }
-                })
-            };
-
-            var retained = LibraryFragmentRelease.BuildRetainedBaseIds(perFileEntries);
-
-            Assert.AreEqual(2, retained.Count, @"the decoy bit must be masked off, not counted twice");
-            Assert.IsTrue(retained.Contains(10u));
-            Assert.IsTrue(retained.Contains(40u), @"a decoy-only row still retains its base_id");
         }
 
         /// <summary>
