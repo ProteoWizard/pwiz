@@ -72,7 +72,7 @@ namespace pwiz.Skyline
     {
         public static string GetViewFile(string fileName)
         {
-            return fileName + @".view";
+            return fileName + EXT_VIEW;
         }
 
         private void fileMenu_DropDownOpening(object sender, EventArgs e)
@@ -1474,10 +1474,14 @@ namespace pwiz.Skyline
             }
         }
 
-        public const string EXT_SKY_VIEW = ".sky.view";
-        public static string FILTER_SKY_VIEW
+        // A layout file is named "<document>.sky.view", but its EXTENSION is ".view": the file dialogs filter
+        // and default on the single extension, because a two-part one confuses the shell - it compares only
+        // a typed name's last extension with the filter's, so "Name.view" became "Name.view.sky.view".
+        public const string EXT_VIEW = ".view";
+        public const string EXT_SKY_VIEW = ".sky" + EXT_VIEW;
+        public static string FILTER_VIEW
         {
-            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_SKY_VIEW); }
+            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_VIEW); }
         }
 
         /// <summary>
@@ -1506,31 +1510,16 @@ namespace pwiz.Skyline
             {
                 dlg.Title = SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout;
                 dlg.SupportMultiDottedExtensions = true;
-                dlg.Filter = FILTER_SKY_VIEW;
+                dlg.Filter = FILTER_VIEW;
                 dlg.InitialDirectory = GetLayoutDirectory();
-                dlg.DefaultExt = EXT_SKY_VIEW;
+                dlg.DefaultExt = EXT_VIEW;
+                // Offer the document's own layout name, "<document>.sky.view"; the ".sky" is part of the
+                // name, so nothing the dialog appends can double it.
                 if (!string.IsNullOrEmpty(DocumentFilePath))
-                    dlg.FileName = Path.GetFileNameWithoutExtension(DocumentFilePath);
+                    dlg.FileName = Path.GetFileName(GetViewFile(DocumentFilePath));
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
-                var exportPath = dlg.FileName;
-                if (exportPath.EndsWith(EXT_SKY_VIEW + EXT_SKY_VIEW))
-                {
-                    // Offering ".view" as a second filter entry also stops the doubling, but is worse:
-                    // switching the file type back to ".sky.view" then swaps the last extension of
-                    // "Doc.sky.view" and offers "Doc.sky.sky.view".
-                    // If the path ends in ".sky.view.sky.view" strip off the last ".sky.view";
-                    var stripped = exportPath.Substring(0, exportPath.Length - EXT_SKY_VIEW.Length);
-                    // Only strip off the extension if neither form of the file existed.
-                    // If the stripped filename had exists, the dialog would not have added the extra extension, and
-                    // we also would need to prompt the user again to overwrite.
-                    // If the duplicated filename exists, the user was already prompted to overwrite so we should not change the name.
-                    if (!File.Exists(exportPath) && !File.Exists(stripped))
-                    {
-                        exportPath = stripped;
-                    }
-                }
-                ExportLayout(exportPath);
+                ExportLayout(dlg.FileName);
             }
         }
 
@@ -1558,7 +1547,7 @@ namespace pwiz.Skyline
             using (var dlg = new OpenFileDialog())
             {
                 dlg.Title = SkylineResources.SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout;
-                dlg.Filter = FILTER_SKY_VIEW;
+                dlg.Filter = FILTER_VIEW;
                 dlg.InitialDirectory = GetLayoutDirectory();
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
