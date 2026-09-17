@@ -87,10 +87,11 @@ namespace pwiz.Common.CommandLine
 
         /// <summary>
         /// True if the value is one of <see cref="Values"/> or <see cref="AcceptedValues"/>, ignoring case.
+        /// False for an argument that lists neither, and so has nothing to check the value against.
         /// </summary>
         public bool IsValidValue(string value)
         {
-            if (Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
+            if (Values != null && Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
                 return true;
             return AcceptedValues != null && AcceptedValues().Any(v => v.Equals(value, StringComparison.OrdinalIgnoreCase));
         }
