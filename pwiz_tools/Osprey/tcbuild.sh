@@ -15,7 +15,11 @@
 # pinned dotCover console runner is Windows-only. Coverage is reported by the Windows config.
 #
 # Pre-requisites on the build agent:
-#   * .NET 10 SDK
+#   * .NET SDK. The one global.json pins is self-provisioned if absent, through the
+#     same pwiz-sharp/scripts/ensure-dotnet.sh that ProteoWizard_CoreLinuxNet uses:
+#     the agent image ships an 8.x SDK, the tree pins 10.x, and rollForward never
+#     crosses majors, so without it `dotnet tool install` below dies with "A
+#     compatible .NET SDK was not found".
 #   * pwsh (PowerShell 7+). Self-provisioned below if absent, the same way tcbuild.bat
 #     self-provisions the wix tool - it installs as a dotnet global tool, so it needs no
 #     package manager, no root, and no new provisioning channel beyond the SDK.
@@ -28,6 +32,21 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+fail() {
+    echo "##teamcity[message text='$1' status='ERROR']"
+    exit "${2:-1}"
+}
+
+# dotnet resolution + SDK provisioning, shared with pwiz-sharp/tcbuild.sh: resolve_dotnet
+# finds an installed dotnet that is off PATH, ensure_dotnet_sdk installs the SDK
+# global.json pins when the agent image does not have it (into $HOME/.dotnet, outside
+# the tree). Probed from this directory, the one the pwsh scripts below run dotnet from;
+# global.json resolution walks up from there to the repo root.
+. "$REPO_ROOT/pwiz-sharp/scripts/ensure-dotnet.sh"
+resolve_dotnet || fail "dotnet not found on PATH or at /usr/bin, /usr/local/bin, /usr/share/dotnet, /usr/lib/dotnet, \$DOTNET_ROOT, ~/.dotnet"
+ensure_dotnet_sdk "$SCRIPT_DIR" || fail "no .NET SDK satisfying global.json, and installing one failed"
 
 # dotnet global tools (pwsh, and anything package.ps1 reaches for) live here.
 export PATH="$PATH:$HOME/.dotnet/tools"
@@ -41,6 +60,9 @@ if [ -z "${DOTNET_ROOT:-}" ] && command -v dotnet >/dev/null 2>&1; then
     DOTNET_ROOT="$(dirname "$(readlink -f "$(command -v dotnet)")")"
     export DOTNET_ROOT
 fi
+
+echo "##teamcity[progressMessage 'dotnet --version (resolves via global.json)']"
+( cd "$SCRIPT_DIR" && dotnet --version ) || fail "dotnet --version failed"
 
 if ! command -v pwsh >/dev/null 2>&1; then
     echo "##teamcity[progressMessage 'Installing PowerShell as a dotnet global tool']"
