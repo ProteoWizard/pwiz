@@ -53,9 +53,15 @@ project {
     description = "Build configs defined in-repo via Kotlin DSL, rather than in the TeamCity UI."
 
     // One file per build configuration under buildTypes/, which is the layout TeamCity
-    // itself generates (and the one its patch scripts already use). This file stays a
-    // manifest: a config change then shows up as a diff to that config alone rather than
-    // to a file every other config also touches.
+    // itself generates. This file stays a manifest: a config change then shows up as a
+    // diff to that config alone rather than to a file every other config also touches.
+    //
+    // Those files are .kt, NOT .kts, and that is load-bearing. A .kts script gets an
+    // implicit class named after the file, so buildTypes/OspreyLinuxNet.kts would declare
+    // a CLASS OspreyLinuxNet colliding with the object inside it; `import buildTypes.*`
+    // then binds the script class and this line fails to compile with "Classifier
+    // 'OspreyLinuxNet' does not have a companion object, and thus must be initialized
+    // here". settings.kts is the script; everything it references is a source file.
     buildType(NativeShimsWindows)
     buildType(OspreyLinuxNet)
 }
