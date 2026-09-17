@@ -3273,7 +3273,8 @@ namespace pwiz.Osprey.Test
 
                 int scanned = 0;
                 ParquetScoreCache.ReadFdrStubScalars(path,
-                    (entryId, charge, isDecoy, coelutionSum, modseq) => scanned++);
+                    (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) => scanned++,
+                    StubColumns.Core);
 
                 var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(path);
                 Assert.IsTrue(probe.HasPinFeatures);
@@ -3640,9 +3641,63 @@ namespace pwiz.Osprey.Test
             AssertBitEqual(0.25, updated.Pep);
         }
 
+        /// <summary>
+        /// The best-of-runs floors are APPLIED to the experiment q-values before the records are
+        /// written, and every other column survives the raise.
+        ///
+        /// <para>This is the whole of issue #4522's fix. The second pass used to write an
+        /// experiment q it had not floored - a value more confident than the precursor's own best
+        /// run, which downstream then corrected on 1,125,526 rows of the 446-run CHS cohort -
+        /// and the correction lived only in the .blib. Applying it here, where both the value and
+        /// the floor are in hand, makes the persisted number the final one.</para>
+        ///
+        /// <para>Asserted as MAX, not as assignment: a floor below the competed q must leave it
+        /// alone. The two q-values floor against differently-keyed minima, so they are moved
+        /// independently - a single entry can have its precursor q raised and its peptide q
+        /// untouched, which is the case a one-value test would miss.</para>
+        /// </summary>
+        private static void AssertRunQFloorsAreAppliedNotStored()
+        {
+            var accumulator = new FdrExperimentAccumulator();
+            accumulator.Add(1, 0.001, 0.002, 0.5, -1.0, 0.1);   // both floors bite
+            accumulator.Add(2, 0.030, 0.040, 0.6, -2.0, 0.2);   // neither floor bites
+            accumulator.Add(3, 0.004, 0.050, 0.7, -3.0, 0.3);   // only the precursor floor bites
+            accumulator.Add(4, 0.005, 0.006, 0.8, -4.0, 0.4);   // floors unknown
+
+            var floors = new Dictionary<uint, (double Entry, double Peptide)>
+            {
+                { 1, (0.010, 0.020) },
+                { 2, (0.010, 0.040) },
+                { 3, (0.010, 0.001) },
+                { 4, (double.NaN, double.NaN) },
+            };
+            int raised = accumulator.ApplyRunQFloors(id => floors[id]);
+
+            // 1 raises both, 3 raises one. Nothing else moves.
+            Assert.AreEqual(3, raised);
+            AssertBitEqual(0.010, accumulator.Records[1].ExperimentPrecursorQvalue);
+            AssertBitEqual(0.020, accumulator.Records[1].ExperimentPeptideQvalue);
+            // A floor EQUAL to the value is not a raise, and one below it is not a ceiling.
+            AssertBitEqual(0.030, accumulator.Records[2].ExperimentPrecursorQvalue);
+            AssertBitEqual(0.040, accumulator.Records[2].ExperimentPeptideQvalue);
+            AssertBitEqual(0.010, accumulator.Records[3].ExperimentPrecursorQvalue);
+            AssertBitEqual(0.050, accumulator.Records[3].ExperimentPeptideQvalue);
+            // NaN means "not known" and must raise nothing - every comparison against it is
+            // false, so this is a statement of intent rather than a guard the arithmetic needs.
+            AssertBitEqual(0.005, accumulator.Records[4].ExperimentPrecursorQvalue);
+            AssertBitEqual(0.006, accumulator.Records[4].ExperimentPeptideQvalue);
+
+            // The columns the raise does not own, on a record it DID rewrite.
+            AssertBitEqual(0.5, accumulator.Records[1].ExperimentProteinQvalue);
+            AssertBitEqual(-1.0, accumulator.Records[1].ExperimentAggregateScore);
+            AssertBitEqual(0.1, accumulator.Records[1].Pep);
+            Assert.AreEqual(4, accumulator.Count);
+        }
+
         private static void AssertExperimentSidecarRoundTrips(string dir)
         {
             AssertPartialUpdatePreservesEveryField();
+            AssertRunQFloorsAreAppliedNotStored();
             string path = Path.Combine(dir, "analysis.1st-pass.fdr_experiment.bin");
             var accumulator = new FdrExperimentAccumulator();
             accumulator.Add(7, 0.011, 0.012, 0.013, -1.5, 1.0);
@@ -3786,16 +3841,17 @@ namespace pwiz.Osprey.Test
             // Non-sequential entry_ids, so a positional read cannot pass for a keyed one.
             var records = new List<FdrScoreRecord>
             {
-                new FdrScoreRecord(3, -2.0, 0.01, 0.02),
-                new FdrScoreRecord(77, -1.0, 0.03, 0.04),
+                new FdrScoreRecord(3, -2.0, 0.01, 0.02, 31.5),
+                new FdrScoreRecord(77, -1.0, 0.03, 0.04, 42.25),
             };
             FdrScoresSidecar.Write(first, records, FdrScoresSidecar.Pass.SecondPass);
             FdrScoresSidecar.Write(second, records, FdrScoresSidecar.Pass.SecondPass);
             CollectionAssert.AreEqual(File.ReadAllBytes(first), File.ReadAllBytes(second));
 
-            // The record is exactly entry_id + score + the two RUN q-values. A PEP column would
-            // widen it, and the whole point is that no experiment-scope value lives here.
-            Assert.AreEqual(sizeof(uint) + 3 * sizeof(double), FdrScoresSidecar.RecordLength);
+            // The record is exactly entry_id + score + the two RUN q-values + the apex RT.
+            // Every one of those is RUN-scope and per-observation; an experiment-scope column
+            // reappearing here would widen it, and that is what this pins.
+            Assert.AreEqual(sizeof(uint) + 4 * sizeof(double), FdrScoresSidecar.RecordLength);
             Assert.AreEqual(FdrScoresSidecar.HeaderLength + records.Count * FdrScoresSidecar.RecordLength,
                 new FileInfo(first).Length);
 
@@ -3805,6 +3861,11 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(2, read.Count);
             AssertBitEqual(-2.0, read[0].Score);
             AssertBitEqual(0.03, read[1].RunPrecursorQvalue);
+            // Round-tripped, and per record: the apex RT is the v7 column, and it is the only
+            // one whose writer and reader were added at the same time - so nothing else in this
+            // file would notice if the two disagreed on its offset.
+            AssertBitEqual(31.5, read[0].ApexRt);
+            AssertBitEqual(42.25, read[1].ApexRt);
 
             // WRITE-ONCE. Rewriting a sidecar inside one run is the defect class this whole
             // change exists to remove: the file no longer matches the validity sidecar that

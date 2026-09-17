@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -79,6 +79,45 @@ namespace pwiz.Osprey.Core
         /// Used for calibration-only benchmarking and bisection.
         /// </summary>
         public static readonly bool ExitAfterCalibration = IsSet(@"OSPREY_EXIT_AFTER_CALIBRATION");
+
+        /// <summary>
+        /// Attribute the model-diagnostics co-assignment fold's allocation by call site and
+        /// report the totals when it finishes. Diagnostic only; it changes nothing the run
+        /// produces.
+        /// </summary>
+        public static readonly bool LogCoAssignmentAllocation = IsSet(@"OSPREY_LOG_COASSIGN_ALLOC");
+
+        /// <summary>
+        /// OSPREY_MDIAG_COASSIGN_ONLY=1: on <c>--task ModelDiagnostics</c>, skip the per-run fold
+        /// and build ONLY the peak co-assignment panel.
+        ///
+        /// <para>A measurement harness, not a product. On the 446-run CHS cohort the task takes
+        /// 63 minutes, of which the per-run fold is 54 and this panel is 8; skipping the fold
+        /// turns a one-hour iteration into about ten minutes, which is what makes questions
+        /// about the panel's memory answerable in a morning rather than a night.</para>
+        ///
+        /// <para>The report it leaves has every OTHER section empty, so it is written with no
+        /// validity key. An unstamped diagnostics product is refused by the render rather than
+        /// trusted, and the next real run regenerates it - which is what keeps a harness run
+        /// from being mistaken for, or overwriting, an answer.</para>
+        /// </summary>
+        public static readonly bool CoAssignmentPanelOnly = IsSet(@"OSPREY_MDIAG_COASSIGN_ONLY");
+
+        /// <summary>
+        /// OSPREY_LOG_MEMORY=1: emit the post-GC <c>[MEM ...]</c> probes. Each one forces a
+        /// blocking <c>GC.Collect()/WaitForPendingFinalizers()/GC.Collect()</c> so the number it
+        /// reports is a true live set rather than a heap with uncollected garbage in it.
+        ///
+        /// <para><see cref="IsSetAndNotZero"/>, NOT <see cref="IsSet"/>, and the difference was
+        /// not academic. The dataset runners write <c>OSPREY_LOG_MEMORY=0</c> to mean OFF
+        /// (<c>OspreyDatasetRun.psm1</c>), and the previous <c>!IsNullOrEmpty</c> test read
+        /// <c>"0"</c> as SET - so every run through a runner had the probes on while its banner
+        /// said "memprobe : off ... no forced GCs". On the 446-run CHS cohort that is one forced
+        /// gen2 collection per file in the diagnostics fold, which flattens the very allocation
+        /// curve the fold is measured by: the measurement was changing what it measured, in the
+        /// phase whose flatness is the claim. Timings taken through a runner include that cost.</para>
+        /// </summary>
+        public static readonly bool LogMemory = IsSetAndNotZero(@"OSPREY_LOG_MEMORY");
 
         /// <summary>
         /// OSPREY_CAL_MEDIANPOLISH=1: add median-polish cosine (the dominant full-search
@@ -1041,7 +1080,12 @@ namespace pwiz.Osprey.Core
             return Environment.GetEnvironmentVariable(name) != @"0";
         }
 
-        private static bool IsSetAndNotZero(string name)
+        /// <summary>
+        /// Set to anything but <c>0</c>. Internal rather than private so a test can pin the
+        /// distinction from <see cref="IsSet"/>: the runners write <c>=0</c> to mean off, and a
+        /// flag that reaches for <see cref="IsSet"/> turns ON for it (issue #4673).
+        /// </summary>
+        internal static bool IsSetAndNotZero(string name)
         {
             string v = Environment.GetEnvironmentVariable(name);
             return !string.IsNullOrEmpty(v) && v != @"0";

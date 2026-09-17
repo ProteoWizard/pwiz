@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -1103,7 +1103,8 @@ namespace pwiz.Osprey.IO
         ///
         /// <para>Deliberately a full column read rather than a footer probe: the whole point is
         /// the ORDER, which no metadata carries. One <c>uint</c> per row - 4.7 MB on the largest
-        /// Astral file - and nothing else is decoded.</para>
+        /// Astral file (1.18 M rows; the CHS cohort's largest is 4.18 M rows, i.e. ~17 MB of entry
+        /// ids and ~33 MB of apex RTs) - and nothing else is decoded.</para>
         /// </summary>
         public static IEnumerable<uint> StreamEntryIds(string path)
         {
@@ -1135,88 +1136,51 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Read just <c>entry_id</c> and <c>apex_rt</c> from a <c>.scores.parquet</c>, in the same
-        /// row order as <see cref="LoadFdrStubsFromParquet(string)"/> and under the identical "skip this
-        /// row group when entry_id is absent" rule, so the returned index is that method's
-        /// <c>ParquetIndex</c>.
+        /// One file's <c>apex_rt</c> column, indexed by <c>FdrProjection.ParquetIndex</c> - the
+        /// per-file parquet row ordinal. Read THROUGH <see cref="ReadFdrStubScalars"/> rather
+        /// than opening the column directly, so the ordinal this array is keyed by and the
+        /// ordinal the projection rows carry are produced by the same walk and the same
+        /// row-group skip rule. A second reader with its own copy of that rule is how a join
+        /// like this drifts.
         ///
-        /// <para>Serves the <c>--model-diagnostics</c> peak co-assignment panel (issue #4522),
-        /// which needs each first-pass row's detection apex RT. The lean first pass deliberately
-        /// carries no RT - <c>FdrProjection</c> is 32 bytes and every RT field is reload-obtained
-        /// after compaction (issue #4355) - so the panel recovers it by positionally joining this
-        /// against the file's <c>.1st-pass.fdr_scores.bin</c>, exactly as the prototype that
-        /// measured the effect did. The join is asserted on <c>entry_id</c>, never assumed.</para>
-        ///
-        /// <para>Two columns and no strings, so one file's arrays are exactly 12 bytes per row -
-        /// the modified sequence and charge behind the precursor identity are resolved from the
-        /// library by entry id instead. Both arrays are sized up front from the file's row count,
-        /// so this never pays the doubling-plus-copy an accumulating list would (which would
-        /// briefly triple the resident cost at the largest file).</para>
-        ///
-        /// <para>Returns false when the file carries no <c>apex_rt</c> column, leaving the outputs
-        /// null - the panel then degrades with a log line rather than reporting zeros.</para>
+        /// <para>ONE production caller: the RESIDENT-projection arm of the FIRST pass, the
+        /// <c>else</c> of <c>projections.IsCountsOnly</c>. Its sink assembles the per-file FDR
+        /// sidecar from projection rows, and those carry no retention time, while the sidecar
+        /// has a column for one (format v7, issue #4522). Not the 2nd pass, which this used to
+        /// claim, and NOT a cost the ordinary pipeline pays: a default run takes the lean arm
+        /// (<c>PerFileScoringTask.CanUseLeanProjection</c>), so reaching this read means the run
+        /// asked for the resident pool - <c>OSPREY_FDR_PROJECTION=0</c> or a non-Percolator
+        /// <c>FdrMethod</c> - or carries reconciled input. The STREAMING first pass needs none
+        /// of it: it already has each row's apex RT in hand from the same stream that produced
+        /// its score, which is the point of putting the column in the sidecar at all.</para>
         /// </summary>
-        public static bool TryReadEntryIdsAndApexRts(string path,
-            out uint[] entryIds, out double[] apexRts)
+        public static double[] ReadApexRtsByParquetIndex(string path)
         {
-            entryIds = null;
-            apexRts = null;
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
-            {
-                var fieldsByName = BuildFieldLookup(reader);
-                if (!fieldsByName.ContainsKey(FIELD_APEX_RT.Name))
-                    return false;
-                int total = checked((int)(reader.Metadata?.NumRows ?? 0L));
-                var ids = new uint[total];
-                var rts = new double[total];
-                int n = 0;
-                for (int g = 0; g < reader.RowGroupCount; g++)
-                {
-                    using (var groupReader = reader.OpenRowGroupReader(g))
-                    {
-                        var entryIdCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
-                        var apexCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name);
-                        if (entryIdCol == null)
-                            continue;
-                        // FAIL rather than substitute. The ContainsKey guard above only proves the
-                        // column is DECLARED; ReadColumnByName ends in an `as` cast, so a column
-                        // written as float or nullable double yields null here. Substituting 0.0
-                        // would give every row the same apex RT, so every same-m/z pair would
-                        // report |dRT| = 0 and the panel would claim ~100% co-assignment at the
-                        // tightest tolerance - a plausible page built from no data at all. Returning
-                        // false drops the panel with a log line, which is the documented contract.
-                        if (apexCol == null)
-                            return false;
-                        for (int row = 0; row < entryIdCol.Length && n < total; row++)
-                        {
-                            ids[n] = entryIdCol[row];
-                            rts[n] = apexCol[row];
-                            n++;
-                        }
-                    }
-                }
-                // A skipped row group (no entry_id) leaves the arrays long; trim so the caller's
-                // length check against the sidecar record count stays a real alignment assert.
-                if (n != total)
-                {
-                    Array.Resize(ref ids, n);
-                    Array.Resize(ref rts, n);
-                }
-                entryIds = ids;
-                apexRts = rts;
-            }
-            return true;
+            var apexRts = new List<double>();
+            ReadFdrStubScalars(path,
+                (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) => apexRts.Add(apexRt),
+                StubColumns.ApexRt);
+            return apexRts.ToArray();
         }
 
         /// <summary>
         /// Streams the scalar stub columns of a <c>.scores.parquet</c> without allocating a
-        /// single <see cref="FdrEntry"/>. Reads exactly the five columns the first-pass
-        /// FdrProjection needs -- entry_id, charge, is_decoy, coelution_sum,
-        /// modified_sequence -- and invokes <paramref name="onRow"/> once per row in the
+        /// single <see cref="FdrEntry"/>. Reads exactly the six columns the first-pass score
+        /// pass needs -- entry_id, charge, is_decoy, coelution_sum, modified_sequence and
+        /// apex_rt -- and invokes <paramref name="onRow"/> once per row in the
         /// same order as <see cref="LoadFdrStubsFromParquet(string)"/>, applying the identical
         /// "skip this row group when entry_id/is_decoy are absent" rule. The caller's
         /// running row count therefore equals that method's <c>ParquetIndex</c>.
+        ///
+        /// <para><c>apex_rt</c> is the sixth column and the only OPTIONAL one: it is read so the
+        /// per-file <c>.1st-pass.fdr_scores.bin</c> can carry it (format v7, issue #4522), and it
+        /// rides this read rather than getting one of its own - the model-diagnostics
+        /// co-assignment panel used to open every <c>.scores.parquet</c> a second time for
+        /// exactly this column. <paramref name="columns"/> has no default ON PURPOSE: every call
+        /// site states whether it consumes the value, so a caller that wants it and forgets to
+        /// ask fails to COMPILE rather than receiving NaN for every row. A file whose parquet
+        /// genuinely predates the column also yields <c>double.NaN</c> - the two cases are
+        /// indistinguishable here, which is precisely why asking is mandatory.</para>
         ///
         /// Exists because rematerializing the whole 191M-row stub buffer just to convert it
         /// into 32 B projection rows cost ~53 GB on an 82-file Astral run. Osprey.IO must
@@ -1224,10 +1188,11 @@ namespace pwiz.Osprey.IO
         /// these scalars rather than returned from here.
         /// </summary>
         public static void ReadFdrStubScalars(string path,
-            Action<uint, byte, bool, double, string> onRow)
+            Action<uint, byte, bool, double, string, double> onRow, StubColumns columns)
         {
             if (onRow == null)
                 throw new ArgumentNullException(nameof(onRow));
+            bool wantApexRt = (columns & StubColumns.ApexRt) != 0;
 
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
@@ -1242,6 +1207,14 @@ namespace pwiz.Osprey.IO
                         var chargeCol = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name);
                         var modseqCol = ReadColumnByName<string[]>(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
                         var coelutionCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name);
+                        // Decoded only when the caller says it consumes the value. The parquet is
+                        // Zstd-compressed, so a column is not 8 bytes per row of IO - it is a
+                        // decompress, a page decode and a fresh large-object array per row group.
+                        // Measured on the 446-run cohort: one column is ~7% of the whole pass, and
+                        // three of the four passes that walk these scalars never look at apex RT.
+                        var apexRtCol = wantApexRt
+                            ? ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name)
+                            : null;
 
                         if (entryIdCol == null || isDecoyCol == null)
                             continue;
@@ -1254,7 +1227,13 @@ namespace pwiz.Osprey.IO
                                 chargeCol != null ? chargeCol[row] : (byte)0,
                                 isDecoyCol[row],
                                 coelutionCol != null ? coelutionCol[row] : 0.0,
-                                modseqCol != null ? modseqCol[row] : string.Empty);
+                                modseqCol != null ? modseqCol[row] : string.Empty,
+                                // NaN, not 0.0, for a parquet with no apex_rt column: 0.0 is a
+                                // retention time a reader cannot tell from a measured one, and
+                                // this value's only consumer computes RT DIFFERENCES between
+                                // precursors. A pair of fabricated zeros would read as a perfect
+                                // co-elution rather than as missing data.
+                                apexRtCol != null ? apexRtCol[row] : double.NaN);
                         }
                     }
                 }

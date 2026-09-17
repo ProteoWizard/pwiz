@@ -186,7 +186,7 @@ namespace pwiz.Osprey.Test
             // two would show up here.
             var rec = new FdrScoreRecord(
                 entryId: 1, score: 10.0,
-                runPrecursorQvalue: 0.001, runPeptideQvalue: 0.002);
+                runPrecursorQvalue: 0.001, runPeptideQvalue: 0.002, apexRt: 21.75);
             // The EXPERIMENT-scope half is one analysis-wide record per entry_id (format v5,
             // issue #4486), so it arrives beside the run-scope record rather than inside it.
             var exp = new FdrExperimentRecord(
