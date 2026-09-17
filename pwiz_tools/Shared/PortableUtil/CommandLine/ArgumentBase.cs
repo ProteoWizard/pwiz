@@ -64,6 +64,11 @@ namespace pwiz.Common.CommandLine
         public bool OptionalValue { get; set; }
         public bool InternalUse { get; set; }
         public bool HasValueChecking { get; set; }  // Set to avoid default checking against values listed for documentation
+        /// <summary>
+        /// Values accepted in addition to <see cref="Values"/> without being listed in help or errors,
+        /// e.g. the invariant names for an argument whose values are shown localized.
+        /// </summary>
+        public Func<string[]> AcceptedValues { get; set; }
 
         public string ArgumentText
         {
@@ -74,10 +79,21 @@ namespace pwiz.Common.CommandLine
         {
             if (ValueExample == null)
                 throw new ValueUnexpectedException(this);
-            else if (Values != null && !Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
+            else if (Values != null && !IsValidValue(value))
                 throw new ValueInvalidException(this, value, Values);
 
             return ArgumentText + '=' + value;
+        }
+
+        /// <summary>
+        /// True if the value is one of <see cref="Values"/> or <see cref="AcceptedValues"/>, ignoring case.
+        /// False for an argument that lists neither, and so has nothing to check the value against.
+        /// </summary>
+        public bool IsValidValue(string value)
+        {
+            if (Values != null && Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
+                return true;
+            return AcceptedValues != null && AcceptedValues().Any(v => v.Equals(value, StringComparison.OrdinalIgnoreCase));
         }
 
         public static string operator +(ArgumentBase arg, string value)
