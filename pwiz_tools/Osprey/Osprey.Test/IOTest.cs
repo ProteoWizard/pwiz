@@ -3141,6 +3141,94 @@ namespace pwiz.Osprey.Test
         // Build an FdrEntry with a per-row-distinct feature vector (feature[f] = baseValue + f)
         // and distinct fragment / XIC blobs derived from baseValue, so a chunk-boundary row
         // mismap -- or an overlay row silently keeping the ORIGINAL blobs -- surfaces as a
+        /// <summary>
+        /// Write and read the same fixture many times over and assert every scalar survives.
+        /// The regression guard for the parallel-write data race: `ParquetPlainEncoder` returned
+        /// its widening buffer to the ArrayPool and then encoded from it, so once columns
+        /// compressed concurrently another column's dictionary-index buffer could land in the
+        /// byte-typed <c>charge</c> column. Measured at 27 corrupted round-trips in 20,000
+        /// before the fix and 0 in 100,000 after.
+        ///
+        /// <para>A single-shot round-trip cannot see a defect this rare - it surfaced as a ~2%
+        /// failure across four unrelated tests. Iterating in-process is what turns hours of
+        /// full-suite soaking into seconds. Cheap by default (25 iterations) so it costs the
+        /// gate nothing; set <c>OSPREY_PARQUET_STRESS_ITERS</c> to sweep harder, and pair it
+        /// with <c>OSPREY_PARQUET_WRITE_THREADS=1</c> to A/B the concurrent writer.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestParquetRoundTripScalarStress()
+        {
+            int iters = 25;
+            string raw = Environment.GetEnvironmentVariable(@"OSPREY_PARQUET_STRESS_ITERS");
+            if (!string.IsNullOrEmpty(raw) && int.TryParse(raw, out int parsed) && parsed > 0)
+                iters = parsed;
+
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_stress_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var entries = new List<FdrEntry>();
+                var expected = new Dictionary<uint, FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
+                {
+                    var e = MakeStreamEntry(id, id * 100.0);
+                    entries.Add(e);
+                    expected[id] = e;
+                }
+
+                int nBad = 0;
+                string firstBad = null;
+                for (int i = 0; i < iters; i++)
+                {
+                    string path = Path.Combine(dir, @"stress" + i + @".scores.parquet");
+                    ParquetScoreCache.WriteScoresParquet(path, entries, null, null, @"f.mzML");
+                    var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(path);
+                    string bad = null;
+                    if (stubs.Count != entries.Count)
+                    {
+                        bad = string.Format(@"row count {0}, expected {1}", stubs.Count, entries.Count);
+                    }
+                    else
+                    {
+                        foreach (var s in stubs)
+                        {
+                            if (!expected.TryGetValue(s.EntryId, out FdrEntry want))
+                            {
+                                bad = string.Format(@"unknown entry_id {0}", s.EntryId);
+                                break;
+                            }
+                            if (s.Charge != want.Charge)
+                                bad = string.Format(@"charge {0}, expected {1}", s.Charge, want.Charge);
+                            else if (s.ScanNumber != want.ScanNumber)
+                                bad = string.Format(@"scan_number {0}, expected {1}", s.ScanNumber, want.ScanNumber);
+                            else if (s.IsDecoy != want.IsDecoy)
+                                bad = string.Format(@"is_decoy {0}, expected {1}", s.IsDecoy, want.IsDecoy);
+                            if (bad != null)
+                            {
+                                bad = string.Format(@"entry_id {0}: {1}", s.EntryId, bad);
+                                break;
+                            }
+                        }
+                    }
+                    if (bad != null)
+                    {
+                        nBad++;
+                        if (firstBad == null)
+                            firstBad = string.Format(@"iteration {0} - {1}", i, bad);
+                    }
+                    File.Delete(path);
+                }
+
+                Assert.AreEqual(0, nBad, string.Format(
+                    @"{0} of {1} parquet round-trips lost a scalar. First: {2}",
+                    nBad, iters, firstBad ?? @"(none)"));
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
         // value mismatch. Key fields (entry_id, charge, scan_number) stay id-derived so an
         // overlay preserves the canonical sort key of the row it replaces.
         private static FdrEntry MakeStreamEntry(uint id, double baseValue)
