@@ -78,5 +78,7 @@ create(DslContext.projectId, BuildType({
     requirements {
         contains("teamcity.agent.name", "MacCoss", "RQ_59")
     }
+    
+    disableSettings("RQ_59")
 }))
 
