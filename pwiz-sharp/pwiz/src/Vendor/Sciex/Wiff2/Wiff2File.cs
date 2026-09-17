@@ -24,9 +24,10 @@ namespace Pwiz.Vendor.Sciex.Wiff2;
 /// <c>ObjectDisposedException</c> or a SQLite misuse error, and the catch blocks in
 /// <see cref="Wiff2File"/> would turn into empty spectra rather than a failure. Counting readers
 /// per path, and closing only when the last one goes, removes that: when the count reaches zero
-/// there is by definition no one left mid-request. Skyline reaches the dangerous shape whenever
-/// it imports a multi-sample file as one replicate per sample, because this reader is one per
-/// SAMPLE where cpp's is one per FILE.</para>
+/// there is by definition no one left mid-request, and the close runs under the path's lock, so
+/// a reader arriving while it is in progress is admitted only once it is done. Skyline reaches
+/// the dangerous shape whenever it imports a multi-sample file as one replicate per sample,
+/// because this reader is one per SAMPLE where cpp's is one per FILE.</para>
 /// <para>Readers on different paths are deliberately NOT serialized against each other - they
 /// share the api concurrently, as cpp's have for years.</para>
 /// </remarks>
@@ -43,10 +44,12 @@ internal static class Wiff2Sdk
         + "</license_key>";
 
     /// <summary>
-    /// Guards <see cref="s_paths"/> only, and is held for a dictionary operation and nothing
-    /// else. Separate from <see cref="s_apiGate"/> on purpose: a reader's finalizer releases its
-    /// claim under this lock, and the finalizer thread must not be able to stall behind the SDK
-    /// initialization that creating the api runs.
+    /// Guards <see cref="s_paths"/> only, and is held for a dictionary lookup and nothing else.
+    /// A path's count and sources are guarded by locking its <see cref="PathState"/>, which the
+    /// last reader out holds across its <c>CloseFile</c> calls - see <see cref="RemoveReader"/>.
+    /// Both are separate from <see cref="s_apiGate"/> on purpose: a reader's finalizer releases
+    /// its claim under these locks, and the finalizer thread must not be able to stall behind
+    /// the SDK initialization that creating the api runs.
     /// </summary>
     private static readonly object s_gate = new();
 
@@ -83,11 +86,15 @@ internal static class Wiff2Sdk
         }
     }
 
-    /// <summary>Counts a reader as open on <paramref name="sdkPath"/>.</summary>
+    /// <summary>
+    /// Counts a reader as open on <paramref name="sdkPath"/>. Waits for a last-reader close in
+    /// progress on the path, so the caller's first SDK request cannot land inside it.
+    /// </summary>
     internal static void AddReader(string sdkPath)
     {
-        lock (s_gate)
-            StateFor(sdkPath).OpenCount++;
+        var state = StateFor(sdkPath);
+        lock (state)
+            state.OpenCount++;
     }
 
     /// <summary>
@@ -103,9 +110,10 @@ internal static class Wiff2Sdk
     {
         if (sources is null || sources.Length == 0)
             return;
-        lock (s_gate)
+        var state = StateFor(sdkPath);
+        lock (state)
         {
-            var known = StateFor(sdkPath).Sources;
+            var known = state.Sources;
             foreach (var source in sources)
             {
                 if (source is not null && !known.Contains(source))
@@ -115,34 +123,56 @@ internal static class Wiff2Sdk
     }
 
     /// <summary>
-    /// Drops a reader from <paramref name="sdkPath"/>, returning the sources to close when it was
-    /// the last one there, and null when other readers remain or there is nothing left to close.
+    /// Drops a reader from <paramref name="sdkPath"/> and, when it was the last one there, closes
+    /// every source any reader on the path reported. Safe to call for a path never claimed, and
+    /// from the finalizer thread.
     /// </summary>
-    internal static List<ISourceFile>? RemoveReader(string sdkPath)
+    /// <remarks>
+    /// The close happens under the path's lock, the same one <see cref="AddReader"/> takes to
+    /// admit the next reader. Releasing the lock between the decrement and the close would let a
+    /// new reader claim the path and start its first request in the gap, and the close would
+    /// then purge the pool under it - the exact hazard the count exists to prevent. Under the
+    /// lock the two orders are both safe: the new reader claims first and the count never
+    /// reaches zero, or the close finishes first and the new reader's request re-creates the
+    /// storage location. The lock is per path, so readers of other files never wait here.
+    /// </remarks>
+    internal static void RemoveReader(string sdkPath)
     {
+        PathState? state;
         lock (s_gate)
+            s_paths.TryGetValue(sdkPath, out state);
+        // A path with no state, or a count already at zero, means nothing is open: a reader
+        // whose constructor never claimed, or a second Dispose racing the first. Closing on
+        // that basis would purge the pool under whoever opened the path next.
+        if (state is null)
+            return;
+        lock (state)
         {
-            // A path with no state, or a count already at zero, means nothing is open: a reader
-            // whose constructor never claimed, or a second Dispose racing the first. Closing on
-            // that basis would purge the pool under whoever opened the path next.
-            if (!s_paths.TryGetValue(sdkPath, out var state) || state.OpenCount == 0)
-                return null;
-            if (--state.OpenCount > 0)
-                return null;
+            if (state.OpenCount == 0 || --state.OpenCount > 0)
+                return;
             var sources = state.Sources;
             state.Sources = new List<ISourceFile>();
-            return sources.Count > 0 ? sources : null;
+            // Close every source, not just the first - multi-source wiff2 files (rare but the
+            // SDK reports them) leave handles dangling otherwise.
+            foreach (var source in sources)
+            {
+                try { Api.CloseFile(source); } catch { }
+            }
         }
     }
 
-    /// <summary>The path's state, created on first use. Caller holds <see cref="s_gate"/>.</summary>
+    /// <summary>The path's state, created on first use.</summary>
     private static PathState StateFor(string sdkPath)
     {
-        if (!s_paths.TryGetValue(sdkPath, out var state))
-            s_paths[sdkPath] = state = new PathState();
-        return state;
+        lock (s_gate)
+        {
+            if (!s_paths.TryGetValue(sdkPath, out var state))
+                s_paths[sdkPath] = state = new PathState();
+            return state;
+        }
     }
 
+    /// <summary>Locked on its own instance for every access to its fields.</summary>
     private sealed class PathState
     {
         internal int OpenCount;
@@ -431,15 +461,13 @@ internal sealed class Wiff2File : AbstractWiffFile
         // twice and purge the SDK's pooled storage location under a live sibling reader.
         if (Interlocked.Exchange(ref _disposed, 1) != 0)
             return;
-        var sources = Wiff2Sdk.RemoveReader(_sdkPath);
-        if (sources is null)
+        // Null when the constructor threw before it reached the path - the argument and
+        // existence checks come first - and the finalizer still runs for that object. Nothing
+        // was claimed, and an exception escaping a finalizer terminates the process rather
+        // than surfacing the original failure. The legacy WiffFile guards its fields the same way.
+        if (_sdkPath is null)
             return;
-        // Close every source, not just the first — multi-source wiff2 files (rare but the SDK
-        // reports them) leave handles dangling otherwise.
-        foreach (var src in sources)
-        {
-            try { Wiff2Sdk.Api.CloseFile(src); } catch { }
-        }
+        Wiff2Sdk.RemoveReader(_sdkPath);
     }
 }
 

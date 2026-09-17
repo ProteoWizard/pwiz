@@ -4,7 +4,8 @@ using Pwiz.TestHarness;
 namespace Pwiz.Vendor.Sciex.Tests;
 
 /// <summary>
-/// Several readers open on ONE <c>.wiff2</c> at the same time must not break each other.
+/// Several <c>.wiff2</c> readers open at the same time, on one file or on two, must not break
+/// each other; and a reader that failed to open must not break the process.
 /// </summary>
 /// <remarks>
 /// <para>This pins the invariant any change that shares a single <c>ISampleDataApi</c> across
@@ -16,15 +17,17 @@ namespace Pwiz.Vendor.Sciex.Tests;
 /// creates exactly that shape when it imports a multi-sample <c>.wiff2</c> as one replicate
 /// per sample through <c>MultiFileLoader</c>, several loads at once, and
 /// <c>Reader_Sciex.EnumerateSampleNames</c> races the same way.</para>
-/// <para>Measured 2026-09-15 on <c>swath.api.wiff2</c>: on current code, where each reader
-/// owns its api, both tests pass trivially. On a shared api with NO ownership arbitration the
-/// churn test fails 8 of 8 runs (<c>SQLiteException: bad parameter or other API misuse</c> or
-/// <c>ObjectDisposedException</c> from the readers), while the dispose test still passes - the
-/// SDK re-creates a purged storage location on the next request, so only a request in flight
-/// at the moment of the purge can see it. On a shared api with per-path reference counting
-/// (only the last reader on a path closes the file) both pass, 8 of 8. The churn test is
-/// therefore the acceptance test for any retry of that fix.</para>
-/// <para>Two details of the churn test keep its failure rate on the bare shared api near
+/// <para>Measured 2026-09-15 on <c>swath.api.wiff2</c>, against three shapes of the reader.
+/// On the api-per-reader code that preceded <c>Wiff2Sdk</c>, the dispose and same-path churn
+/// scenarios pass trivially. On a shared api with NO ownership arbitration the churn scenario
+/// fails 8 of 8 runs (<c>SQLiteException: bad parameter or other API misuse</c> or
+/// <c>ObjectDisposedException</c> from the readers), while the dispose scenario still passes -
+/// the SDK re-creates a purged storage location on the next request, so only a request in
+/// flight at the moment of the purge can see it. On the shared api with per-path reference
+/// counting that <c>Wiff2Sdk</c> now carries (only the last reader on a path closes the file)
+/// every scenario passes, 8 of 8. The churn scenario is therefore the acceptance test for that
+/// fix, and the cross-path scenario covers the one axis the fix leaves unserialized.</para>
+/// <para>Two details of the churn scenario keep its failure rate on the bare shared api near
 /// certain, and both were measured: spectra are read with <c>addZeros: false</c>, because the
 /// framing-zeros path retries the first SDK failure through a process-wide latch and hid two
 /// of three failing readers; and the churn thread touches only the cycle count before it
@@ -41,17 +44,71 @@ public class ReaderSciexWiff2ConcurrencyTests
     // A second, unrelated path - the cross-path test needs two files, not two samples
     private const string FIXTURE_EAD = "7600ZenoTOFMSMS_EAD_TestData.wiff2";
     // Hang guard only: the SDK requests take no cancellation token, so a block inside the
-    // SDK under contention would otherwise wedge the test process with no result.
-    private const int TEST_TIMEOUT_MS = 60_000;
-    // ~5 s on a shared api and ~8 s on current code, where every open creates its own api
+    // SDK under contention would otherwise wedge the test process with no result. Covers all
+    // three scenarios, which together take ~19 s.
+    private const int TEST_TIMEOUT_MS = 120_000;
+    // ~5 s per churn on the shared api; ~8 s on the api-per-open code it replaced
     private const int CHURN_OPENS = 150;
     private const int READER_COUNT = 3;
 
+    /// <summary>
+    /// One method rather than three: each scenario is a few seconds of SDK work on the same
+    /// two fixtures, none needs its own process or scheduling, and the fixture lookup and
+    /// SDK warm-up are paid once. Ordered from the simplest shape to the widest.
+    /// </summary>
     [TestMethod, Timeout(TEST_TIMEOUT_MS)]
-    public void Reader_Sciex_wiff2_SecondReaderSurvivesFirstReaderDispose()
+    public void Reader_Sciex_wiff2_ConcurrentReaders()
     {
         string wiff2 = RequireFixture(FIXTURE);
+        string otherWiff2 = RequireFixture(FIXTURE_EAD);
 
+        SecondReaderSurvivesFirstReaderDispose(wiff2);
+        ConcurrentReadersSurviveChurnOnSamePath(wiff2);
+        CloseOnOnePathDoesNotDisturbAnother(churnPath: wiff2, readPath: otherWiff2);
+    }
+
+    /// <summary>
+    /// A constructor that throws before it claims the path still leaves an object for the
+    /// finalizer, which the counted-reader design added so that a reader dropped without
+    /// <c>Dispose</c> cannot strand the count. That finalizer has to see a never-claimed reader
+    /// as nothing to release: an exception escaping it ends the process, and the original open
+    /// error with it.
+    /// </summary>
+    [TestMethod, Timeout(TEST_TIMEOUT_MS)]
+    public void Reader_Sciex_wiff2_FailedOpenFinalizesCleanly()
+    {
+        string missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".wiff2");
+        var failure = OpenExpectingFailure(missing);
+        Assert.IsInstanceOfType<FileNotFoundException>(failure.GetBaseException(),
+            "a missing file should fail to open: " + Describe(failure));
+        // Run the failed reader's finalizer now, inside this test, rather than at whatever
+        // later point the GC would reach it: a throw from it ends the test host either way,
+        // and here the crash is attributable
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+    }
+
+    /// <summary>
+    /// Opens in its own frame so that no reference to the half-constructed reader survives
+    /// into the caller's collection.
+    /// </summary>
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static Exception OpenExpectingFailure(string path)
+    {
+        try
+        {
+            using var reader = AbstractWiffFile.Open(path);
+        }
+        catch (Exception x)
+        {
+            return x;
+        }
+        Assert.Fail("opening " + path + " should have thrown");
+        return null!;    // Unreachable: Assert.Fail throws
+    }
+
+    private static void SecondReaderSurvivesFirstReaderDispose(string wiff2)
+    {
         using var first = AbstractWiffFile.Open(wiff2);
         // First is alone at this point, so it is the baseline
         var baseline = ReadBaseline(first);
@@ -69,11 +126,8 @@ public class ReaderSciexWiff2ConcurrencyTests
             "second reader broke when the first reader was disposed");
     }
 
-    [TestMethod, Timeout(TEST_TIMEOUT_MS)]
-    public void Reader_Sciex_wiff2_ConcurrentReadersSurviveChurnOnSamePath()
+    private static void ConcurrentReadersSurviveChurnOnSamePath(string wiff2)
     {
-        string wiff2 = RequireFixture(FIXTURE);
-
         Baseline baseline;
         using (var solo = AbstractWiffFile.Open(wiff2))
             baseline = ReadBaseline(solo);
@@ -155,18 +209,14 @@ public class ReaderSciexWiff2ConcurrencyTests
     /// <remarks>
     /// The reader counts and closes per path, and deliberately does not serialize readers of
     /// different files against each other - they share one <c>ISampleDataApi</c> concurrently,
-    /// as cpp's readers have for years. That leaves one hazard the same-path tests above do not
-    /// reach: a real <c>CloseFile</c> on path A landing inside a read on path B. The churn here
-    /// is the ONLY reader on its path, so unlike the same-path churn every one of its disposes
-    /// does reach CloseFile - which is what makes this a test of the cross-path axis rather
-    /// than of two readers that merely coexist.
+    /// as cpp's readers have for years. That leaves one hazard the same-path scenarios above do
+    /// not reach: a real <c>CloseFile</c> on path A landing inside a read on path B. The churn
+    /// here is the ONLY reader on its path, so unlike the same-path churn every one of its
+    /// disposes does reach CloseFile - which is what makes this a test of the cross-path axis
+    /// rather than of two readers that merely coexist.
     /// </remarks>
-    [TestMethod, Timeout(TEST_TIMEOUT_MS)]
-    public void Reader_Sciex_wiff2_CloseOnOnePathDoesNotDisturbAnother()
+    private static void CloseOnOnePathDoesNotDisturbAnother(string churnPath, string readPath)
     {
-        string churnPath = RequireFixture(FIXTURE);
-        string readPath = RequireFixture(FIXTURE_EAD);
-
         Baseline baseline;
         using (var solo = AbstractWiffFile.Open(readPath))
             baseline = ReadBaseline(solo);
