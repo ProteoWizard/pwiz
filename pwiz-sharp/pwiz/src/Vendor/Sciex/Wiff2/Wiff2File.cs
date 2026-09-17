@@ -7,16 +7,33 @@ using SCIEX.Apis.Data.v1.Contracts;
 namespace Pwiz.Vendor.Sciex.Wiff2;
 
 /// <summary>
-/// <see cref="AbstractWiffFile"/> implementation backed by the modern <see cref="ISampleDataApi"/> SDK
-/// for <c>.wiff2</c> files. C# equivalent of pwiz cpp <c>WiffFile2Impl</c>. Lives in the
-/// side-by-side <see cref="Wiff2LoadContext"/> so its compile-time references to bundled
-/// (PKT=null) <c>SCIEX.Apis.Data.v1.Contracts</c> resolve correctly without conflicting with
-/// the legacy <c>.wiff</c> path's signed Clearcore2 dlls in the default ALC.
+/// The one <see cref="ISampleDataApi"/> for the process, and the per-path reader counts that
+/// decide who closes a file.
 /// </summary>
-internal sealed class Wiff2File : AbstractWiffFile
+/// <remarks>
+/// <para><b>One api.</b> cpp's <c>WiffFile2.ipp</c> keeps a function-local
+/// <c>static gcroot&lt;ISampleDataApi^&gt;</c> and we do the same, because an api per reader
+/// leaks: every <c>CreateSampleDataApi</c> leaves a
+/// <c>Clearcore2.RFLight.SampleDataProvider.SampleDataProviderServer</c> rooted by its own
+/// periodic timer, and the SDK offers no shutdown - neither <see cref="ISampleDataApi"/> nor
+/// <c>DataApiFactory</c> is <see cref="IDisposable"/>, and <c>CloseFile</c> closes a file, not
+/// the server. Measured at ~34 KB per open, linear, with nothing able to release it.</para>
+/// <para><b>Counts per path.</b> Sharing the api makes arbitration necessary: the SDK keeps one
+/// pooled storage location (a SQLite connection) per path, and <c>CloseFile</c> purges it for
+/// every reader on that path at once - which a reader with a request in flight sees as an
+/// <c>ObjectDisposedException</c> or a SQLite misuse error, and the catch blocks in
+/// <see cref="Wiff2File"/> would turn into empty spectra rather than a failure. Counting readers
+/// per path, and closing only when the last one goes, removes that: when the count reaches zero
+/// there is by definition no one left mid-request. Skyline reaches the dangerous shape whenever
+/// it imports a multi-sample file as one replicate per sample, because this reader is one per
+/// SAMPLE where cpp's is one per FILE.</para>
+/// <para>Readers on different paths are deliberately NOT serialized against each other - they
+/// share the api concurrently, as cpp's have for years.</para>
+/// </remarks>
+internal static class Wiff2Sdk
 {
     // The cpp WiffFile2.ipp ships this license key in source; we re-use it.
-    private const string LicenseKey =
+    private const string LICENSE_KEY =
         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
         + "<license_key>"
         + "<company_name>Proteowizard</company_name>"
@@ -25,11 +42,135 @@ internal sealed class Wiff2File : AbstractWiffFile
         + "<key_data>t6QaoUk9a7EedqZ/V/WAE98aSv1Z0tgvmnYXSveHSvLNChvDdMXh3A==</key_data>"
         + "</license_key>";
 
-    private readonly ISampleDataApi _api;
+    /// <summary>
+    /// Guards <see cref="s_paths"/> only, and is held for a dictionary operation and nothing
+    /// else. Separate from <see cref="s_apiGate"/> on purpose: a reader's finalizer releases its
+    /// claim under this lock, and the finalizer thread must not be able to stall behind the SDK
+    /// initialization that creating the api runs.
+    /// </summary>
+    private static readonly object s_gate = new();
+
+    /// <summary>Guards creating <see cref="s_api"/>, which can be slow.</summary>
+    private static readonly object s_apiGate = new();
+
+    private static ISampleDataApi? s_api;
+
+    /// <summary>
+    /// Per-path reader count and the sources to close when it reaches zero. Entries are never
+    /// removed: the state for a path has to survive a count returning to zero, since the next
+    /// reader on it starts the cycle again. The residue is one small entry per distinct path
+    /// opened in the process.
+    /// </summary>
+    private static readonly Dictionary<string, PathState> s_paths = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The shared api, created on first use. Deliberately not a <see cref="Lazy{T}"/> with
+    /// <see cref="LazyThreadSafetyMode.ExecutionAndPublication"/>: that caches the factory's
+    /// exception forever, so one transient failure - and this SDK's initialization is known to
+    /// fail transiently on assembly resolution - would disable .wiff2 for the rest of the
+    /// process. The api-per-open code this replaced recovered on the next attempt, and so does
+    /// this: a throw leaves <see cref="s_api"/> null.
+    /// </summary>
+    internal static ISampleDataApi Api
+    {
+        get
+        {
+            lock (s_apiGate)
+            {
+                return s_api ??= new DataApiFactory { LicenseKey = LICENSE_KEY }.CreateSampleDataApi()
+                    ?? throw new InvalidOperationException("CreateSampleDataApi returned null");
+            }
+        }
+    }
+
+    /// <summary>Counts a reader as open on <paramref name="sdkPath"/>.</summary>
+    internal static void AddReader(string sdkPath)
+    {
+        lock (s_gate)
+            StateFor(sdkPath).OpenCount++;
+    }
+
+    /// <summary>
+    /// Records sources for the last reader on <paramref name="sdkPath"/> to close.
+    /// </summary>
+    /// <remarks>
+    /// The count is per PATH but <c>ISample.Sources</c> is per SAMPLE, and a multi-sample file is
+    /// read as one reader per sample - so a reader that is not the last one out would otherwise
+    /// close nothing and its sample's sources would never be released at all. Collecting them
+    /// here hands every one of them to whoever does close.
+    /// </remarks>
+    internal static void AddSources(string sdkPath, ISourceFile[]? sources)
+    {
+        if (sources is null || sources.Length == 0)
+            return;
+        lock (s_gate)
+        {
+            var known = StateFor(sdkPath).Sources;
+            foreach (var source in sources)
+            {
+                if (source is not null && !known.Contains(source))
+                    known.Add(source);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Drops a reader from <paramref name="sdkPath"/>, returning the sources to close when it was
+    /// the last one there, and null when other readers remain or there is nothing left to close.
+    /// </summary>
+    internal static List<ISourceFile>? RemoveReader(string sdkPath)
+    {
+        lock (s_gate)
+        {
+            // A path with no state, or a count already at zero, means nothing is open: a reader
+            // whose constructor never claimed, or a second Dispose racing the first. Closing on
+            // that basis would purge the pool under whoever opened the path next.
+            if (!s_paths.TryGetValue(sdkPath, out var state) || state.OpenCount == 0)
+                return null;
+            if (--state.OpenCount > 0)
+                return null;
+            var sources = state.Sources;
+            state.Sources = new List<ISourceFile>();
+            return sources.Count > 0 ? sources : null;
+        }
+    }
+
+    /// <summary>The path's state, created on first use. Caller holds <see cref="s_gate"/>.</summary>
+    private static PathState StateFor(string sdkPath)
+    {
+        if (!s_paths.TryGetValue(sdkPath, out var state))
+            s_paths[sdkPath] = state = new PathState();
+        return state;
+    }
+
+    private sealed class PathState
+    {
+        internal int OpenCount;
+        internal List<ISourceFile> Sources = new();
+    }
+}
+
+/// <summary>
+/// <see cref="AbstractWiffFile"/> implementation backed by the modern <see cref="ISampleDataApi"/> SDK
+/// for <c>.wiff2</c> files. C# equivalent of pwiz cpp <c>WiffFile2Impl</c>. Lives in the
+/// side-by-side <see cref="Wiff2LoadContext"/> so its compile-time references to bundled
+/// (PKT=null) <c>SCIEX.Apis.Data.v1.Contracts</c> resolve correctly without conflicting with
+/// the legacy <c>.wiff</c> path's signed Clearcore2 dlls in the default ALC.
+/// </summary>
+internal sealed class Wiff2File : AbstractWiffFile
+{
+    /// <summary>
+    /// The path handed to the SDK, which is what the SDK pools its storage location under and so
+    /// what <see cref="Wiff2Sdk"/> counts readers by. Not <see cref="WiffPath"/>, which keeps the
+    /// caller's spelling for metadata. Note this is a normalized full path, not a canonical file
+    /// identity: two spellings that <c>Path.GetFullPath</c> does not reconcile (a
+    /// long-path prefix, a subst drive, a junction) still count separately.
+    /// </summary>
+    private readonly string _sdkPath;
     private readonly List<ISample> _allSamples;
     private readonly ISample _msSample;
     private readonly Wiff2Experiment[] _experiments;
-    private bool _disposed;
+    private int _disposed;
 
     public override string WiffPath { get; }
     public override int SampleNumber { get; }
@@ -134,12 +275,6 @@ internal sealed class Wiff2File : AbstractWiffFile
         ArgumentException.ThrowIfNullOrWhiteSpace(wiff2Path);
         if (!File.Exists(wiff2Path)) throw new FileNotFoundException("WIFF2 not found", wiff2Path);
         WiffPath = wiff2Path;
-
-        var factory = new DataApiFactory { LicenseKey = LicenseKey };
-        _api = factory.CreateSampleDataApi()
-            ?? throw new InvalidOperationException("CreateSampleDataApi returned null");
-
-        var sampleRequest = _api.RequestFactory.CreateSamplesReadRequest();
         // The SCIEX.Apis SDK derives the sample/experiment/storage-location ids from this path
         // and resolves them through an ANSI native file layer (Clearcore2.SampleData
         // FileIdGenerator). A path with characters outside the current code page mangles that
@@ -147,26 +282,50 @@ internal sealed class Wiff2File : AbstractWiffFile
         // Windows 8.3 short name for any non-ASCII component (cpp's WiffFile2 sidesteps this by
         // handing the SDK a narrow ANSI-code-page std::string). WiffPath keeps the original for
         // metadata / SourceFile emission.
-        sampleRequest.AbsolutePathToWiffFile = Filesystem.GetNonUnicodePath(Path.GetFullPath(wiff2Path));
+        _sdkPath = Filesystem.GetNonUnicodePath(Path.GetFullPath(wiff2Path));
 
-        _allSamples = new List<ISample>();
-        var sampleReader = _api.GetSamples(sampleRequest);
-        while (sampleReader.MoveNext()) _allSamples.Add(sampleReader.GetCurrent());
-        if (_allSamples.Count == 0) throw new InvalidDataException($"WIFF2 reports zero samples: {wiff2Path}");
-        if (sampleIndex0 < 0 || sampleIndex0 >= _allSamples.Count)
-            throw new ArgumentOutOfRangeException(nameof(sampleIndex0),
-                $"sample index {sampleIndex0} out of [0, {_allSamples.Count})");
-        SampleNumber = sampleIndex0 + 1;
-        _msSample = _allSamples[sampleIndex0];
+        // Claim the path before the first SDK call rather than after the reads below have
+        // succeeded, so that another reader's Dispose cannot close the file while this
+        // constructor is between GetSamples and GetExperiments.
+        Wiff2Sdk.AddReader(_sdkPath);
+        try
+        {
+            var api = Wiff2Sdk.Api;
+            var sampleRequest = api.RequestFactory.CreateSamplesReadRequest();
+            sampleRequest.AbsolutePathToWiffFile = _sdkPath;
 
-        var experimentRequest = _api.RequestFactory.CreateExperimentsReadRequest(_msSample.Id, true);
-        var sdkExperiments = new List<IExperiment>();
-        var experimentReader = _api.GetExperiments(experimentRequest);
-        while (experimentReader.MoveNext()) sdkExperiments.Add(experimentReader.GetCurrent());
-        var ztBins = BuildZtScanBins(sdkExperiments);
-        _experiments = new Wiff2Experiment[sdkExperiments.Count];
-        for (int i = 0; i < _experiments.Length; i++)
-            _experiments[i] = new Wiff2Experiment(_api, _msSample, sdkExperiments[i], ztBins?[i]);
+            _allSamples = new List<ISample>();
+            var sampleReader = api.GetSamples(sampleRequest);
+            while (sampleReader.MoveNext()) _allSamples.Add(sampleReader.GetCurrent());
+            if (_allSamples.Count == 0) throw new InvalidDataException($"WIFF2 reports zero samples: {wiff2Path}");
+            // Register before the range check: GetSamples has already opened the file, so a throw
+            // from here on still has something to release. cpp closes allSamples[0]'s first
+            // source for the same reason - it is the file-level handle.
+            Wiff2Sdk.AddSources(_sdkPath, _allSamples[0].Sources);
+            if (sampleIndex0 < 0 || sampleIndex0 >= _allSamples.Count)
+                throw new ArgumentOutOfRangeException(nameof(sampleIndex0),
+                    $"sample index {sampleIndex0} out of [0, {_allSamples.Count})");
+            SampleNumber = sampleIndex0 + 1;
+            _msSample = _allSamples[sampleIndex0];
+            Wiff2Sdk.AddSources(_sdkPath, _msSample.Sources);
+
+            var experimentRequest = api.RequestFactory.CreateExperimentsReadRequest(_msSample.Id, true);
+            var sdkExperiments = new List<IExperiment>();
+            var experimentReader = api.GetExperiments(experimentRequest);
+            while (experimentReader.MoveNext()) sdkExperiments.Add(experimentReader.GetCurrent());
+            var ztBins = BuildZtScanBins(sdkExperiments);
+            _experiments = new Wiff2Experiment[sdkExperiments.Count];
+            for (int i = 0; i < _experiments.Length; i++)
+                _experiments[i] = new Wiff2Experiment(api, _msSample, sdkExperiments[i], ztBins?[i]);
+        }
+        catch
+        {
+            // Release the claim, and close the file if that leaves nobody on this path. The
+            // sources registered above are exactly what makes this possible: a constructor that
+            // throws never gets a Dispose, so this is the only chance to unlock the file.
+            CloseIfLastReader();
+            throw;
+        }
     }
 
     /// <summary>
@@ -182,7 +341,8 @@ internal sealed class Wiff2File : AbstractWiffFile
     {
         try
         {
-            var method = _api.GetMsMethodParameters(_api.RequestFactory.CreateMethodParametersReadRequest(_msSample.Id));
+            var api = Wiff2Sdk.Api;
+            var method = api.GetMsMethodParameters(api.RequestFactory.CreateMethodParametersReadRequest(_msSample.Id));
             if (method?.Experiments is null) return null;
 
             double rampStart = 0, rampEnd = 0;
@@ -246,22 +406,39 @@ internal sealed class Wiff2File : AbstractWiffFile
 
     public override void Dispose()
     {
-        if (_disposed) return;
-        _disposed = true;
-        // Close every source the sample touched, not just the first — multi-source
-        // wiff2 files (rare but the SDK reports them) leave handles dangling otherwise.
-        try
+        CloseIfLastReader();
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// A reader dropped without <see cref="Dispose"/> would pin this path's reader count above
+    /// zero forever, and no later reader on the path could ever close the file. The legacy
+    /// <c>WiffFile</c> carries the same guard for the same reason.
+    /// </summary>
+    ~Wiff2File()
+    {
+        CloseIfLastReader();
+    }
+
+    /// <summary>
+    /// Drops this reader's claim on the path and, if it was the last one, closes every source any
+    /// reader on that path reported. Safe to call twice and from the finalizer.
+    /// </summary>
+    private void CloseIfLastReader()
+    {
+        // Interlocked rather than a bool: Dispose can race itself (a cancelled import unwinding
+        // while the owning document is torn down), and a double release would drop the count
+        // twice and purge the SDK's pooled storage location under a live sibling reader.
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            return;
+        var sources = Wiff2Sdk.RemoveReader(_sdkPath);
+        if (sources is null)
+            return;
+        // Close every source, not just the first — multi-source wiff2 files (rare but the SDK
+        // reports them) leave handles dangling otherwise.
+        foreach (var src in sources)
         {
-            if (_msSample.Sources is { Length: > 0 } sources)
-                foreach (var src in sources)
-                    try { _api.CloseFile(src); } catch { }
-        }
-        catch { }
-        // ISampleDataApi may itself be IDisposable (some SDK builds expose it); release
-        // it so the underlying SQLite connection / file mapping unwinds.
-        if (_api is IDisposable apiDisposable)
-        {
-            try { apiDisposable.Dispose(); } catch { }
+            try { Wiff2Sdk.Api.CloseFile(src); } catch { }
         }
     }
 }

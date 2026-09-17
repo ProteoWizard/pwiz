@@ -38,6 +38,8 @@ namespace Pwiz.Vendor.Sciex.Tests;
 public class ReaderSciexWiff2ConcurrencyTests
 {
     private const string FIXTURE = "swath.api.wiff2";
+    // A second, unrelated path - the cross-path test needs two files, not two samples
+    private const string FIXTURE_EAD = "7600ZenoTOFMSMS_EAD_TestData.wiff2";
     // Hang guard only: the SDK requests take no cancellation token, so a block inside the
     // SDK under contention would otherwise wedge the test process with no result.
     private const int TEST_TIMEOUT_MS = 60_000;
@@ -145,6 +147,110 @@ public class ReaderSciexWiff2ConcurrencyTests
             "concurrent readers on one .wiff2 failed: " + string.Join(" | ", failures));
         Assert.AreEqual(CHURN_OPENS, churned, "the churn did not complete its opens");
         Assert.IsTrue(reads > 0, "no reader completed a read during the churn");
+    }
+
+    /// <summary>
+    /// Closing a file on one path must not disturb a reader on a DIFFERENT path.
+    /// </summary>
+    /// <remarks>
+    /// The reader counts and closes per path, and deliberately does not serialize readers of
+    /// different files against each other - they share one <c>ISampleDataApi</c> concurrently,
+    /// as cpp's readers have for years. That leaves one hazard the same-path tests above do not
+    /// reach: a real <c>CloseFile</c> on path A landing inside a read on path B. The churn here
+    /// is the ONLY reader on its path, so unlike the same-path churn every one of its disposes
+    /// does reach CloseFile - which is what makes this a test of the cross-path axis rather
+    /// than of two readers that merely coexist.
+    /// </remarks>
+    [TestMethod, Timeout(TEST_TIMEOUT_MS)]
+    public void Reader_Sciex_wiff2_CloseOnOnePathDoesNotDisturbAnother()
+    {
+        string churnPath = RequireFixture(FIXTURE);
+        string readPath = RequireFixture(FIXTURE_EAD);
+
+        Baseline baseline;
+        using (var solo = AbstractWiffFile.Open(readPath))
+            baseline = ReadBaseline(solo);
+
+        var failures = new ConcurrentQueue<string>();
+        using var readerReady = new ManualResetEventSlim();
+        using var churnDone = new ManualResetEventSlim();
+        int churned = 0, reads = 0;
+
+        // Hold a reader open on one path and keep reading through it until the churn is done
+        void Read()
+        {
+            try
+            {
+                using var r = AbstractWiffFile.Open(readPath);
+                var exp = r.GetExperiment(0);
+                // Fill this reader's caches before releasing the churn, so what the churn races
+                // is the spectrum, which re-enters the SDK on every call
+                if (DescribeReaderFailure(exp, baseline) != null)
+                {
+                    failures.Enqueue("reader disagreed with a lone reader before the churn started");
+                    return;
+                }
+                readerReady.Set();
+                while (!churnDone.IsSet)
+                {
+                    var failure = DescribeReaderFailure(exp, baseline);
+                    if (failure != null)
+                    {
+                        failures.Enqueue("reader: " + failure);
+                        return;
+                    }
+                    Interlocked.Increment(ref reads);
+                }
+            }
+            catch (Exception x)
+            {
+                failures.Enqueue("reader: " + Describe(x));
+            }
+            finally
+            {
+                // Never leave the churn waiting on a reader that failed during its open
+                readerReady.Set();
+            }
+        }
+
+        // Open and close readers on the OTHER path, so CloseFile lands at arbitrary points
+        // inside the long-lived reader's SDK calls
+        void Churn()
+        {
+            try
+            {
+                readerReady.Wait();
+                for (int i = 0; i < CHURN_OPENS; i++)
+                {
+                    using (var r = AbstractWiffFile.Open(churnPath))
+                    {
+                        if (r.GetExperiment(0).CycleCount <= 0)
+                        {
+                            failures.Enqueue("churn: read no cycles");
+                            return;
+                        }
+                    }
+                    Interlocked.Increment(ref churned);
+                }
+            }
+            catch (Exception x)
+            {
+                failures.Enqueue("churn: " + Describe(x));
+            }
+            finally
+            {
+                churnDone.Set();
+            }
+        }
+
+        Task.WaitAll(
+            Task.Factory.StartNew(Read, TaskCreationOptions.LongRunning),
+            Task.Factory.StartNew(Churn, TaskCreationOptions.LongRunning));
+
+        Assert.AreEqual(0, failures.Count,
+            "closing one .wiff2 disturbed a reader on another: " + string.Join(" | ", failures));
+        Assert.AreEqual(CHURN_OPENS, churned, "the churn did not complete its opens");
+        Assert.IsTrue(reads > 0, "the reader completed no reads while the other path churned");
     }
 
     /// <summary>
