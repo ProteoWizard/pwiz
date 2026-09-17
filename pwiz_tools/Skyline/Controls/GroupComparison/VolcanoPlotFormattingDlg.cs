@@ -717,22 +717,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return _bindingList;
         }
 
-        protected override void OnShown(EventArgs e)
-        {
-            base.OnShown(e);
-            if (DpiUtil.GetFactor(this) > 1)
-            {
-                // The form's autoscale skips the nested ColorGrid container's SIZE on
-                // .NET Framework 4.7.2 (its position does scale), leaving the grid at its
-                // 96-DPI resource size inside the scaled dialog. Setting the size in the
-                // constructor corrupts the anchor snapshot, so scale it here, after all
-                // scaling and layout. Scaling the still-unscaled size directly stays
-                // correct for localized resx geometry (ja sizes the grid 638x235 vs the
-                // English 606x235) (issue #4599).
-                regexColorRowGrid1.Size = DpiUtil.ScaleSize(this, regexColorRowGrid1.Size);
-            }
-        }
-
         private void UpdateAdvancedColumns()
         {
             _symbolCombo.Visible = _pointSizeCombo.Visible =

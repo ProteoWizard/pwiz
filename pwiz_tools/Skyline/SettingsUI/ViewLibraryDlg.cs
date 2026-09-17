@@ -149,6 +149,7 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryDlg(LibraryManager libMgr, String libName, IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
+            DpiUtil.ScaleFixedPanel(splitPeptideList);
 
             _graphHelper = GraphHelper.Attach(GraphControl);
             GraphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;

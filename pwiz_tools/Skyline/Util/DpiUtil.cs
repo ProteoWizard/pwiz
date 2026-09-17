@@ -159,6 +159,34 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Scales the fixed panel of a designer-laid-out SplitContainer. Auto-scaling scales
+        /// the container and its splitter width but not SplitterDistance, so a fixed panel
+        /// keeps its 96-DPI size while the controls inside it grow - squeezing an anchored
+        /// text box, or leaving the other panel too large. Call after InitializeComponent,
+        /// before any saved splitter position is restored. No-op at 100% scaling or when no
+        /// panel is fixed (issue #4599).
+        /// </summary>
+        public static void ScaleFixedPanel(SplitContainer splitContainer)
+        {
+            var factor = GetFactor(splitContainer);
+            if (Math.Abs(factor - 1) < 0.01f || splitContainer.FixedPanel == FixedPanel.None)
+                return;
+            int length = splitContainer.Orientation == Orientation.Vertical
+                ? splitContainer.Width
+                : splitContainer.Height;
+            int splitterWidth = splitContainer.SplitterWidth;
+            int distance = splitContainer.SplitterDistance;
+            if (splitContainer.FixedPanel == FixedPanel.Panel1)
+                distance = (int)Math.Round(distance * factor);
+            else
+                distance = length - (int)Math.Round((length - distance - splitterWidth) * factor) - splitterWidth;
+            int maxDistance = length - splitContainer.Panel2MinSize - splitterWidth;
+            if (maxDistance < splitContainer.Panel1MinSize)
+                return;
+            splitContainer.SplitterDistance = Math.Max(splitContainer.Panel1MinSize, Math.Min(maxDistance, distance));
+        }
+
+        /// <summary>
         /// Draws an image at its own pixel size, vertically centered in a row, into an
         /// explicit destination rectangle. DrawImageUnscaled honors the image's DPI
         /// metadata and would re-inflate bitmaps created in a high-DPI process, so
