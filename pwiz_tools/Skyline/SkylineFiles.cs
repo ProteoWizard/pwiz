@@ -1474,9 +1474,6 @@ namespace pwiz.Skyline
             }
         }
 
-        // A layout file is named "<document>.sky.view", but its EXTENSION is ".view": the file dialogs filter
-        // and default on the single extension, because a two-part one confuses the shell - it compares only
-        // a typed name's last extension with the filter's, so "Name.view" became "Name.view.sky.view".
         public const string EXT_VIEW = ".view";
         public static string FILTER_VIEW
         {
@@ -1512,8 +1509,6 @@ namespace pwiz.Skyline
                 dlg.Filter = FILTER_VIEW;
                 dlg.InitialDirectory = GetLayoutDirectory();
                 dlg.DefaultExt = EXT_VIEW;
-                // Offer the document's own layout name, "<document>.sky.view"; the ".sky" is part of the
-                // name, so nothing the dialog appends can double it.
                 if (!string.IsNullOrEmpty(DocumentFilePath))
                     dlg.FileName = Path.GetFileName(GetViewFile(DocumentFilePath));
                 if (dlg.ShowDialog(this) != DialogResult.OK)
