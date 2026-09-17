@@ -277,4 +277,51 @@ public class ReaderWatersTests
         return new FixtureRunContext(new Reader_Waters(), root, new IsNamedRawFile(fixtureFolderName),
             fixtureFolderName, WATERS_DIFF_PRECISION);
     }
+
+    /// <summary>
+    /// Rewrites every Waters reference mzML in this class from the current reader output.
+    ///
+    /// <para>The <c>[TestMethod]</c> attribute below is COMMENTED OUT deliberately. An
+    /// undiscovered test cannot run in "Run All Tests", and MSTest has no attribute that
+    /// excludes a test from a run-all while leaving it runnable on demand: <c>[Ignore]</c> is
+    /// skipped even when selected explicitly, and a runsettings <c>TestCaseFilter</c> removes it
+    /// from discovery altogether, so it never appears to click on. Commenting the attribute is
+    /// the only mechanism that gives both.</para>
+    ///
+    /// <para>To regenerate: uncomment the attribute, run this one test, then comment it back.
+    /// It ends in <c>Assert.Fail</c>, so a run that completes is never green and the message is
+    /// the reminder. That is NOT a CI guard: if this vendor's data is absent, <c>SetUp</c> throws
+    /// <c>Assert.Inconclusive</c>, which aborts before the <c>Assert.Fail</c> and reports Skipped -
+    /// and <c>dotnet test</c> exits 0 on skips. Afterwards run the suite again WITHOUT it - a
+    /// regenerated reference that
+    /// does not then compare equal means the generate and compare paths disagree, which is the
+    /// one failure this mode can hide.</para>
+    /// </summary>
+    //[TestMethod]
+    public void Regenerate_Waters_References()
+    {
+        VendorReaderTestHarness.GenerateReferences = true;
+        try
+        {
+            Reader_Waters_091204_NFDM_008();
+            Reader_Waters_160109_Mix1_calcurve_070();
+            Reader_Waters_ATEHLSTLSEK_profile();
+            Reader_Waters_ATEHLSTLSEK_LM_684_3469();
+            Reader_Waters_ATEHLSTLSEK_LM_785_8426();
+            Reader_Waters_DDA_IsolationWindow();
+            Reader_Waters_HDDDA_Short_noLM();
+            Reader_Waters_HDMSe_Short_noLM();
+            Reader_Waters_HDMRM_Short_noLM();
+            Reader_Waters_MSe_Short();
+            Reader_Waters_Minimal_DDA();
+            Reader_Waters_QC_LCMS2_2_23_268_1_1();
+            Reader_Waters_SONAR_Short();
+        }
+        finally
+        {
+            VendorReaderTestHarness.GenerateReferences = false;
+        }
+
+        Assert.Fail("Reference mzMLs regenerated. Comment out this [TestMethod] and run the normal tests.");
+    }
 }

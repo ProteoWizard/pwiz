@@ -35,6 +35,11 @@
     <ProjectReference Include="..\..\Common\Common.csproj" />
     <ProjectReference Include="..\..\MsData\MsData.csproj" />
     <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
+    <!-- One of two vendor readers that reference Vendor.Common directly (Bruker is the other).
+         Wiff2LoadContext loads the wiff2 SDK with LoadFromAssemblyPath, which consults no
+         resolver, so it has to locate the archive itself via EnsureExtracted when the DLL is
+         not app-local. Vendor.Common references only Util, so this adds no cycle. -->
+    <ProjectReference Include="..\Common\Vendor.Common.csproj" />
     <!-- OFX.Logging.dll: a runtime-only stub built from OfxLoggingStub/. The SCIEX
          SDK's OFX framework does Type.GetType("OFX.Logging.LogManager,OFX.Logging");
          providing a no-op LogManager prevents OFX from falling back to its noisy

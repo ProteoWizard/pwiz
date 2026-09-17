@@ -502,8 +502,19 @@ namespace pwiz.Osprey.Tasks
             // worker-mode join-only disk-load below applies only to the tasks that
             // start after Stage 4. That used to be asked as "were parquets supplied";
             // one seam now answers it, and it is the task.
-            if (!ScoringTaskShared.StartsAfterPerFileScoring(ctx.Config))
+            // The fold-only leg joins the in-pipeline one here. It owes no analysis, so it needs
+            // neither the pre-compaction pool nor the reconciliation bundle the disk-load path
+            // below adopts for SecondPassFDR - which does not run on it. All its report streams
+            // from is the per-file keys and parquet paths, and this lean load is what produces
+            // them; it is also the route the whole pipeline takes when it reaches this task with
+            // every output current, so the two entry points fold the same way. Without this,
+            // `--task FirstPassFDR --model-diagnostics` built the ALL-RUNS bundle, O(files x
+            // entries), to render a page that reads none of it.
+            if (!ScoringTaskShared.StartsAfterPerFileScoring(ctx.Config) ||
+                FirstPassFdrTask.WillOnlyFoldDiagnostics(ctx))
+            {
                 return RehydrateFromOwnOutputs(ctx);
+            }
 
             // Disk-load path for a node that starts after Stage 4: the
             // per-file Stage 2-4 scores already exist on disk, so load the
@@ -1149,8 +1160,9 @@ namespace pwiz.Osprey.Tasks
             // load garbage, so the settled managed heap is the clean resident number.
             // Collect/WaitForPendingFinalizers/Collect settles finalizable objects,
             // then GetTotalMemory(false) reads the result WITHOUT forcing a further
-            // collection. Zero-cost when OSPREY_LOG_MEMORY is unset.
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"OSPREY_LOG_MEMORY")))
+            // collection. Zero-cost when OSPREY_LOG_MEMORY is off - which includes the value "0",
+            // the form the dataset runners write; see OspreyEnvironment.LogMemory.
+            if (OspreyEnvironment.LogMemory)
             {
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
@@ -1715,7 +1727,14 @@ namespace pwiz.Osprey.Tasks
             // there, so nothing trains, and the proxy was forcing an O(files) resident pool
             // for a consumer that does not exist. Re-deriving membership here is what let
             // them drift, so this defers to the one definition.
-            if (FirstPassFdrTask.IsIncludedFor(config))
+            //
+            // Membership is necessary but not sufficient, and treating it as sufficient is what
+            // made `--task FirstPassFDR --model-diagnostics` over a COMPLETED first pass load the
+            // whole pre-compaction pool to train a model nothing would consume. That leg folds the
+            // report one run at a time and trains nothing, so it needs no pool; the arm proving it
+            // runs inside FirstPassFdrTask.Run, AFTER this decision, so it cannot be what corrects
+            // it. Ask the same question here instead.
+            if (FirstPassFdrTask.IsIncludedFor(config) && !FirstPassFdrTask.WillOnlyFoldDiagnostics(ctx))
                 return @"First-pass Percolator training in this process";
             // No bundle at all. The reconciliation envelope is what carries the compaction
             // predicate, so without it there is nothing to compact against at load time and
@@ -2736,7 +2755,7 @@ namespace pwiz.Osprey.Tasks
             // Same path convention as Rust (`scores_path_for_input`).
             // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
             // as a Phase 4 follow-up. The metadata dictionary is precomputed
-            // in Run() against the original (un-mutated) outer config — see
+            // in Run() against the original (un-mutated) outer config - see
             // Run() for why. Skipped only in --task FirstPassFDR mode (no Stages 1-4
             // ran here, so there is nothing fresh to persist).
             // Segment 4/4 (write): the parquet build/write reporters in

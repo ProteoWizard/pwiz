@@ -11,10 +11,10 @@ using Pwiz.TestHarness;
 namespace Pwiz.Installer.Tests;
 
 /// <summary>
-/// End-to-end tests for the Inno Setup-built <c>ProteoWizard-Sharp-Setup.exe</c>.
+/// End-to-end tests for the Inno Setup-built <c>ProteoWizard-Setup.exe</c>.
 /// Each test runs silent installs of both install types, verifies file deployment +
-/// registry state + a quick CLI smoke (<c>msconvert.exe</c> over vendor fixtures),
-/// then silently uninstalls and verifies cleanup.
+/// registry state, converts one real fixture per vendor through the installed
+/// <c>msconvert.exe</c>, then silently uninstalls and verifies cleanup.
 ///
 /// Test policy:
 /// <list type="bullet">
@@ -39,7 +39,7 @@ public class InstallerTests
     // version-specific one on `{guid}_{version}` (common\InstallType.iss). Inno appends
     // `_is1` to form the uninstall subkey name.
     private const string AppIdBase = "{E4F1A2B3-5C6D-7E8F-9A0B-1C2D3E4F5A6B}";
-    private const string AppName = "ProteoWizard-Sharp";
+    private const string AppName = "ProteoWizard";
     private const string UninstallRoot = @"Software\Microsoft\Windows\CurrentVersion\Uninstall";
 
     /// <summary>
@@ -154,7 +154,7 @@ public class InstallerTests
     /// <summary>
     /// Try to locate the built Setup.exe. Search order: <c>PWIZ_INSTALLER_PATH</c>
     /// env var (absolute path), then the newest
-    /// <c>pwiz-sharp/installer/build/ProteoWizard-Sharp-Setup-*.exe</c> (newest
+    /// <c>pwiz-sharp/installer/build/ProteoWizard-Setup-*.exe</c> (newest
     /// by file mtime, so the most recent build wins when older versioned
     /// installers are sitting alongside it). The NoNetRuntime variant is
     /// excluded — these tests target the bundled installer; the lightweight
@@ -180,11 +180,11 @@ public class InstallerTests
         string buildDir = PwizSharpPaths.InstallerBuildDir;
         if (Directory.Exists(buildDir))
         {
-            // Versioned bundled-variant filename: ProteoWizard-Sharp-Setup-<ver>.exe
+            // Versioned bundled-variant filename: ProteoWizard-Setup-<ver>.exe
             // Exclude the NoNetRuntime variant by name; pick the newest by mtime so
             // a fresh build wins over older artifacts in the same folder.
             var candidates = new DirectoryInfo(buildDir)
-                .GetFiles("ProteoWizard-Sharp-Setup-*.exe")
+                .GetFiles("ProteoWizard-Setup-*.exe")
                 .Where(f => !f.Name.Contains("NoNetRuntime", StringComparison.Ordinal))
                 .OrderByDescending(f => f.LastWriteTimeUtc)
                 .ToArray();
@@ -197,7 +197,7 @@ public class InstallerTests
         }
 
         setupPath = string.Empty;
-        reason = $"No ProteoWizard-Sharp-Setup-*.exe found in {buildDir}. " +
+        reason = $"No ProteoWizard-Setup-*.exe found in {buildDir}. " +
                  "Run `pwsh -File pwiz-sharp/installer/build.ps1` first, " +
                  "or set PWIZ_INSTALLER_PATH to its absolute path.";
         return false;
@@ -423,15 +423,26 @@ public class InstallerTests
     /// </remarks>
     private static void AssertMsconvertSmokes(string installDir)
     {
+        // One fixture per vendor the installer can read, smallest available in each case.
+        // Every vendor has to be here: an installed build resolves its SDKs out of the
+        // VendorSdkLoader cache, a path no dev or CI build takes (those keep the vendor
+        // DLLs app-local, which the resolver prefers). A vendor missing from this list is
+        // therefore a vendor whose installed-from-a-package behaviour nothing checks.
         var fixtures = new[]
         {
-            ("Thermo", "FT-HCD-MSX.raw"),                   // managed SDK
-            ("Waters", "Minimal_DDA.raw"),                  // native: MassLynxRaw
-            ("Bruker", "20percLaser_100fold_1_0_H6_MS.d"),  // native: timsdata (TSF)
-            ("Bruker", "CsI_Pos_0_G1_000003.d"),            // native: baf2sql_c (BAF)
+            ("Thermo",   "FT-HCD-MSX.raw"),                   // managed SDK
+            ("Waters",   "Minimal_DDA.raw"),                  // native: MassLynxRaw
+            ("Bruker",   "20percLaser_100fold_1_0_H6_MS.d"),  // native: timsdata (TSF)
+            ("Bruker",   "CsI_Pos_0_G1_000003.d"),            // native: baf2sql_c (BAF)
+            ("Agilent",  "Neg_MS_002_1scan.d"),               // managed MHDAC + mixed-mode BaseTof
+            ("ABI",      "swath.api.wiff2"),                  // managed Clearcore2 / SCIEX.Apis
+            ("Shimadzu", "10nmol_Negative_MS_ID_ON_055.lcd"), // native: IOModuleQTFL (MFC140)
+            ("Mobilion", "ExampleTuneMix_binned5.mbi"),       // native: MBI_SDK via MobilionShim
+            ("UIMF",     "BSA_10ugml_CID.UIMF"),              // managed UIMFLibrary + SQLite
         };
 
         var skipped = new List<string>();
+        var failures = new List<string>();
         int converted = 0;
         foreach ((string vendor, string name) in fixtures)
         {
@@ -440,14 +451,29 @@ public class InstallerTests
                 skipped.Add(reason);
                 continue;
             }
-            AssertMsconvertConverts(installDir, path);
-            converted++;
+            // Keep going after a failure and report every broken vendor at once. Throwing on
+            // the first one hides the rest behind whichever happens to be listed earliest,
+            // and these failures are per-vendor independent — one broken SDK resolution says
+            // nothing about the next.
+            try
+            {
+                AssertMsconvertConverts(installDir, path);
+                converted++;
+            }
+            catch (AssertFailedException ex)
+            {
+                failures.Add($"{vendor}/{name}: {ex.Message}");
+            }
         }
 
         // Inconclusive only when nothing at all could run. Skipping an individual vendor whose
         // data is not checked out must not silently pass off the others as unverified.
-        if (converted == 0)
+        if (converted == 0 && failures.Count == 0)
             Assert.Inconclusive("No vendor fixtures available:\n  " + string.Join("\n  ", skipped));
+
+        if (failures.Count > 0)
+            Assert.Fail($"{failures.Count} of {failures.Count + converted} vendor fixtures failed " +
+                        $"to convert from the installed build:\n\n" + string.Join("\n\n", failures));
     }
 
     private static void AssertMsconvertConverts(string installDir, string fixturePath)

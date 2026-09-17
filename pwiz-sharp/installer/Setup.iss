@@ -1,27 +1,34 @@
 ; -----------------------------------------------------------------------------
-; Inno Setup script for ProteoWizard-Sharp.
+; Inno Setup script for ProteoWizard.
 ;
-; build.ps1 invokes ISCC twice from this one script to produce two variants:
+; build.ps1 invokes ISCC from this one script to produce up to three variants:
 ;
-;   ProteoWizard-Sharp-Setup.exe (~62 MB)
+;   ProteoWizard-Setup.exe (~78 MB)
 ;     Bundles the .NET 10 Desktop Runtime installer. On install, checks for
 ;     .NET 10; if missing, silently invokes the bundled runtime installer
 ;     (which triggers UAC for its per-machine install).
 ;
-;   ProteoWizard-Sharp-NoNetRuntime-Setup.exe (~5 MB)
+;   ProteoWizard-NoNetRuntime-Setup.exe (~22 MB)
 ;     Same payload minus the bundled runtime. On install, aborts with a
 ;     dialog + download link if .NET 10 isn't already present. For users
 ;     who manage their own runtime install (corp deployments, dev boxes
 ;     that already have it, etc.).
 ;
-;   Both variants:
+;   ProteoWizard-WithVendorSdks-Setup.exe (~104 MB, opt-in: build.ps1 -WithVendorSdks)
+;     The bundled-runtime variant PLUS every Windows vendor SDK, pre-extracted
+;     into VendorSdkLoader's cache. Carries the .NET runtime too -- the name
+;     says only what it adds over the default variant, not what it inherits.
+;     Nothing it needs is fetched at run time, so it is the one to use where
+;     there is no network: an offline site install, or the wine container.
+;
+;   All variants:
 ;     - Ask the user to pick "for me" (per-user, no admin) or "for everyone"
 ;       (per-machine, admin) at install time
 ;     - Ask for a standard install (replaced in place by newer versions) or a
 ;       version-specific one (kept beside other versions, never replaced);
 ;       see common\InstallType.iss
-;     - Install to %LOCALAPPDATA%\Programs\ProteoWizard-Sharp\ or
-;       %ProgramFiles%\ProteoWizard-Sharp\ accordingly (plus " <version>"
+;     - Install to %LOCALAPPDATA%\Programs\ProteoWizard\ or
+;       %ProgramFiles%\ProteoWizard\ accordingly (plus " <version>"
 ;       for a version-specific install)
 ;     - Create Start Menu shortcuts for MSConvertGUI and SeeMS
 ;     - Register Windows Explorer right-click verbs
@@ -39,7 +46,7 @@
 ; `winget install JRSoftware.InnoSetup`).
 ; -----------------------------------------------------------------------------
 
-#define MyAppName "ProteoWizard-Sharp"
+#define MyAppName "ProteoWizard"
 ; Version comes in from build.ps1 via /DMyAppVersion=4.0.YYDOY-gitsha. The
 ; fallback below keeps direct ISCC invocations buildable for local debugging.
 #ifndef MyAppVersion
@@ -61,7 +68,13 @@
   #define OutputDir "build"
 #endif
 #ifndef OutputBaseFilename
-  #define OutputBaseFilename "ProteoWizard-Sharp-Setup"
+  #define OutputBaseFilename "ProteoWizard-Setup"
+#endif
+; WithVendorSdks: bundle the vendor SDKs and pre-populate VendorSdkLoader's cache, so the
+; installed app never reaches raw.githubusercontent.com. build.ps1 -WithVendorSdks sets this
+; and points VendorCacheDir at a tree it extracted into the runtime's own cache layout.
+#ifndef VendorCacheDir
+  #define VendorCacheDir "build\vendor-cache"
 #endif
 
 [Setup]
@@ -141,6 +154,24 @@ Name: "desktopicon_seems";        Description: "Create a Desktop shortcut for Se
 ; Bring the entire pwiz-sharp staging tree (filtered by build.ps1: no vendor
 ; SDKs, no debug symbols, no cross-platform native runtimes) into {app}.
 Source: "{#StagingDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+#ifdef WithVendorSdks
+; Vendor SDKs, pre-extracted by build.ps1 into exactly the layout
+; VendorSdkLoader.EnsureExtracted would have produced on first use — one
+; <Vendor>-<ShortSha> directory per pin, flattened, each holding a .ok marker.
+; The marker is the whole point: with it present the loader neither downloads
+; nor extracts, so the app works offline and needs no write access to the cache.
+;
+; Destination is {commonappdata}, not {localappdata}: one copy shared by every
+; user on the machine, which is what the cache-root override below is for.
+;
+; uninsneveruninstall because the cache is keyed by SDK version, not by app
+; version, so side-by-side pwiz-sharp installs share these directories — the
+; same last-installed-wins / leave-it-alone policy the Explorer verbs use.
+; Removing every version therefore leaves the cache behind on purpose.
+Source: "{#VendorCacheDir}\*"; DestDir: "{commonappdata}\ProteoWizard\vendor"; \
+    Flags: ignoreversion recursesubdirs createallsubdirs uninsneveruninstall
+#endif
 
 [Icons]
 ; {group} already carries the version for a version-specific install (the group
@@ -241,6 +272,38 @@ Filename: "{app}\MSConvertGUI-sharp.exe"; Description: "Launch &MSConvertGUI"; \
 Filename: "{app}\seems-sharp.exe"; Description: "Launch See&MS"; \
     Flags: nowait postinstall skipifsilent unchecked
 
-; Standard / version-specific wizard page and the AppId, directory, group and
-; display-name code the [Setup] section routes through.
+[Code]
+#ifdef WithVendorSdks
+{ ----- Point VendorSdkLoader at the bundled cache -----
+  The loader's default cache root is %LOCALAPPDATA%\ProteoWizard\vendor, but this
+  variant installs one shared copy under %PROGRAMDATA%. GetCacheRoot() reads a path
+  out of %PROGRAMDATA%\ProteoWizard\vendor-cache-root.txt when that file exists, so
+  writing it is what makes the bundled cache the one the app actually consults.
+  Without this the SDKs would sit on disk unused and the app would still try to
+  download them.
+
+  ProgramData is writable by standard users for new subdirectories, so this works
+  for a per-user install too; if it ever does not, failing loudly beats installing
+  a cache nothing reads. }
+procedure StampVendorCacheRoot();
+var
+  dir: String;
+begin
+  dir := ExpandConstant('{commonappdata}\ProteoWizard');
+  if not ForceDirectories(dir) then
+    RaiseException('Could not create ' + dir);
+  if not SaveStringToFile(dir + '\vendor-cache-root.txt',
+                          ExpandConstant('{commonappdata}\ProteoWizard\vendor'), False) then
+    RaiseException('Could not write vendor-cache-root.txt in ' + dir);
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+    StampVendorCacheRoot();
+end;
+#endif
+
+{ Standard / version-specific wizard page and the AppId, directory, group and
+  display-name code the [Setup] section routes through. }
 #include "common\InstallType.iss"
