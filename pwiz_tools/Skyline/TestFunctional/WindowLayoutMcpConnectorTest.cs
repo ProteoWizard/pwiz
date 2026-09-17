@@ -34,7 +34,8 @@ namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Exercises the connector's window layout verbs (<see cref="IJsonToolService.SetWindowState"/>,
-    /// <see cref="IJsonToolService.SetWindowBounds"/> and <see cref="IJsonToolService.GetLayout"/>) on the two kinds
+    /// <see cref="IJsonToolService.DockWindow"/>, <see cref="IJsonToolService.SetWindowBounds"/> and
+    /// <see cref="IJsonToolService.GetLayout"/>) on the two kinds
     /// of window they place. The main window: a state is set and read back, a read does not change it, bounds
     /// restore a maximized window to Normal, "maximize" fills the screen WITHOUT the Maximized state (which would
     /// refuse every later resize), and "center" centers. A dockable window (the Document Grid): bounds move its
@@ -106,15 +107,11 @@ namespace pwiz.SkylineTestFunctional
             });
             AssertEx.ThrowsException<ArgumentException>(() =>
             {
-                McpConnector.SetWindowState(null, null, @"SequenceTreeForm:Targets", WindowLayout.RELATION_TAB);
+                McpConnector.DockWindow(null, @"SequenceTreeForm:Targets");
             });
             AssertEx.ThrowsException<ArgumentException>(() =>
             {
-                McpConnector.SetWindowState(null, nameof(FormWindowState.Normal), @"SequenceTreeForm:Targets");
-            });
-            AssertEx.ThrowsException<ArgumentException>(() =>
-            {
-                McpConnector.SetWindowState();
+                McpConnector.SetWindowState(null, null);
             });
             AssertEx.AreEqual(centered, ToRectangle(McpConnector.SetWindowBounds().Bounds));
         }
@@ -150,7 +147,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // A place relative to another window splits beside it, and the reply and the layout both say so ...
-            window = McpConnector.SetWindowState(GridId(), null, targetsId, WindowLayout.RELATION_BOTTOM);
+            window = McpConnector.DockWindow(GridId(), targetsId, WindowLayout.RELATION_BOTTOM);
             AssertEx.AreEqual(targets.DockState.ToString(), window.State);
             AssertEx.AreEqual(targetsId, window.SplitFrom);
             AssertEx.AreEqual(nameof(DockPaneAlignment.Bottom), window.SplitSide);
@@ -173,7 +170,7 @@ namespace pwiz.SkylineTestFunctional
                 @"The first pane on the side should not report a split.");
 
             // ... or joins its tab group.
-            window = McpConnector.SetWindowState(GridId(), null, targetsId);
+            window = McpConnector.DockWindow(GridId(), targetsId);
             CollectionAssert.Contains(window.Tabs, targetsId);
             CollectionAssert.Contains(window.Tabs, GridId());
             RunUI(() => AssertEx.IsTrue(ReferenceEquals(targets.Pane, grid.Pane),
@@ -202,7 +199,7 @@ namespace pwiz.SkylineTestFunctional
             });
             AssertEx.ThrowsException<ArgumentException>(() =>
             {
-                McpConnector.SetWindowState(GridId(), null, targetsId, @"sideways");
+                McpConnector.DockWindow(GridId(), targetsId, @"sideways");
             });
             // The document area is sized by its splits: bounds and placements there are refused.
             McpConnector.SetWindowState(GridId(), nameof(DockState.Document));

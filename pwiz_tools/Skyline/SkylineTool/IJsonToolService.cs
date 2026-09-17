@@ -310,23 +310,27 @@ namespace SkylineTool
         // --- Window layout ---
 
         /// <summary>
-        /// Puts ONE window into a state, or into a place in the layout, and returns where it ended up. Sizes are
-        /// not part of this: a window put somewhere gets the default size there, and <see cref="SetWindowBounds"/>
-        /// sizes it afterwards. <paramref name="formId"/> names any open form (an id from <see cref="GetOpenForms"/>)
-        /// or, when null, the main Skyline window.
-        ///
-        /// <para>EITHER a <paramref name="state"/>: for a top-level window (the main window, a dialog) "Normal",
-        /// "Maximized" or "Minimized"; for a dockable window (a graph, a grid, the Targets view) "Document",
+        /// Puts ONE window into a state and returns where it ended up. Sizes are not part of this: a window put
+        /// somewhere gets the default size there, and <see cref="SetWindowBounds"/> sizes it afterwards.
+        /// <paramref name="formId"/> names any open form (an id from <see cref="GetOpenForms"/>) or, when null, the
+        /// main Skyline window. For a top-level window (the main window, a dialog) the state is "Normal",
+        /// "Maximized" or "Minimized"; for a dockable window (a graph, a grid, the Targets view) it is "Document",
         /// "DockLeft", "DockRight", "DockTop", "DockBottom", the "...AutoHide" form of a side, "Floating" (a new
         /// floating window at the default place) or "Hidden" (put away; a hidden window is no longer among the
-        /// open forms and comes back through its View menu item). OR a place relative to another dockable window:
-        /// <paramref name="relativeTo"/> is that window's form id and <paramref name="relation"/> is "tab" to join
-        /// its tab group (the default) or "left", "right", "top" or "bottom" to split its pane on that side, half
-        /// each; the window lands in whatever area the other one is in, a floating window included. Neither, or
-        /// both, is an error, and a request the window cannot honor throws and says why.</para>
+        /// open forms and comes back through its View menu item). To put a dockable window next to another one
+        /// use <see cref="DockWindow"/>. A state the window cannot take throws and says why.
         /// </summary>
-        WindowInfo SetWindowState(string formId = null, string state = null, string relativeTo = null,
-            string relation = null);
+        WindowInfo SetWindowState(string formId, string state);
+
+        /// <summary>
+        /// Puts ONE dockable window next to another and returns where it ended up: <paramref name="relativeTo"/>
+        /// is the other window's form id, and <paramref name="relation"/> is "tab" to join its tab group (the
+        /// default) or "left", "right", "top" or "bottom" to split its pane on that side, half each. The window
+        /// lands in whatever area the other one is in, a floating window included, at the default size there
+        /// (<see cref="SetWindowBounds"/> sizes it afterwards). A window that is not dockable, or one to dock
+        /// against that is not shown, throws and says why.
+        /// </summary>
+        WindowInfo DockWindow(string formId, string relativeTo, string relation = null);
 
         /// <summary>
         /// Sizes and/or moves ONE window and returns where it ended up. <paramref name="bounds"/> are OUTER bounds

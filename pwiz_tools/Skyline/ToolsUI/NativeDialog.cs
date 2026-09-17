@@ -323,10 +323,16 @@ namespace pwiz.Skyline.ToolsUI
         public override System.Drawing.Bitmap CaptureImage() => JsonUiService.CaptureNativeWindow(Hwnd);
 
         /// <summary>A native dialog has no window state or dock state to set; it is only moved and sized.</summary>
-        public override WindowInfo SetStateNow(string state, string relativeTo, string relation)
+        public override WindowInfo SetStateNow(string state)
         {
             throw new ArgumentException(LlmInstruction.Format(
                 @"{0} is a native dialog: it has no window state or dock state to set. Use the bounds verb to move it.", FormId));
+        }
+
+        public override WindowInfo DockNow(string relativeTo, string relation)
+        {
+            throw new ArgumentException(LlmInstruction.Format(
+                @"{0} is a native dialog: it cannot be placed next to another window. Use the bounds verb to move it.", FormId));
         }
 
         /// <summary>A native dialog is moved and sized by the window manager (SetWindowPos), which is safe from any

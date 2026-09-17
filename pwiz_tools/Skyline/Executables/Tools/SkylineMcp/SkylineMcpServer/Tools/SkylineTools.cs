@@ -1376,24 +1376,33 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_set_window_state"),
-     Description("Put ONE window into a state, or into a place in the layout, and report where it ended up. " +
-        "Sizes are not part of this: a window put somewhere gets the default size there; size it afterwards " +
-        "with skyline_set_window_bounds. Give EITHER a state OR a relativeTo window. States for a top-level " +
-        "window (the main window when formId is omitted, or a dialog): Normal, Maximized, Minimized. States " +
-        "for a dockable window (a graph, a grid, the Targets view): Document, DockLeft, DockRight, DockTop, " +
-        "DockBottom, a ...AutoHide side, Floating (a new floating window at the default place) or Hidden " +
-        "(put away; it is then no longer an open form and comes back through its View menu item). " +
-        "Or relativeTo = another dockable window's form id with relation 'tab' (join its tab group, the " +
-        "default) or 'left'/'right'/'top'/'bottom' (split its pane on that side, half each); the window " +
-        "lands in whatever area the other one is in, floating included. Read the layout first with " +
-        "skyline_get_layout.")]
+     Description("Put ONE window into a state and report where it ended up. Sizes are not part of this: a " +
+        "window put somewhere gets the default size there; size it afterwards with skyline_set_window_bounds. " +
+        "States for a top-level window (the main window when formId is omitted, or a dialog): Normal, " +
+        "Maximized, Minimized. States for a dockable window (a graph, a grid, the Targets view): Document, " +
+        "DockLeft, DockRight, DockTop, DockBottom, a ...AutoHide side, Floating (a new floating window at the " +
+        "default place) or Hidden (put away; it is then no longer an open form and comes back through its " +
+        "View menu item). To put a dockable window next to another one use skyline_dock_window.")]
     public static string SetWindowState(
-        [Description("Form identifier from skyline_get_open_forms; omit for the main Skyline window.")] string formId = null,
-        [Description("Normal, Maximized or Minimized for a top-level window; Document, DockLeft, DockRight, DockTop, DockBottom, a ...AutoHide side, Floating or Hidden for a dockable one.")] string state = null,
-        [Description("Form id of another dockable window to place this one against (instead of a state).")] string relativeTo = null,
-        [Description("With relativeTo: 'tab' (the default) to join its tab group, or 'left', 'right', 'top' or 'bottom' to split its pane on that side.")] string relation = null)
+        [Description("Normal, Maximized or Minimized for a top-level window; Document, DockLeft, DockRight, DockTop, DockBottom, a ...AutoHide side, Floating or Hidden for a dockable one.")] string state,
+        [Description("Form identifier from skyline_get_open_forms; omit for the main Skyline window.")] string formId = null)
     {
-        return Invoke(connection => Describe(connection.SetWindowState(formId, state, relativeTo, relation)));
+        return Invoke(connection => Describe(connection.SetWindowState(formId, state)));
+    }
+
+    [McpServerTool(Name = "skyline_dock_window"),
+     Description("Put ONE dockable window (a graph, a grid, the Targets view) next to another and report " +
+        "where it ended up: relativeTo is the other window's form id, and relation is 'tab' to join its tab " +
+        "group (the default) or 'left', 'right', 'top' or 'bottom' to split its pane on that side, half each. " +
+        "The window lands in whatever area the other one is in, floating included, at the default size " +
+        "there; size it afterwards with skyline_set_window_bounds. Read the layout first with " +
+        "skyline_get_layout to see the panes and tabs to place against.")]
+    public static string DockWindow(
+        [Description("Form identifier of the window to place, from skyline_get_open_forms.")] string formId,
+        [Description("Form identifier of the dockable window to place it against.")] string relativeTo,
+        [Description("'tab' (the default) to join its tab group, or 'left', 'right', 'top' or 'bottom' to split its pane on that side.")] string relation = null)
+    {
+        return Invoke(connection => Describe(connection.DockWindow(formId, relativeTo, relation)));
     }
 
     [McpServerTool(Name = "skyline_set_window_bounds"),

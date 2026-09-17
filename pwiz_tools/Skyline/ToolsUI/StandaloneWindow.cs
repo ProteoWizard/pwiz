@@ -83,12 +83,14 @@ namespace pwiz.Skyline.ToolsUI
         /// the caller has done the screen-capture pre-flight).</summary>
         public abstract System.Drawing.Bitmap CaptureImage();
 
-        /// <summary>Puts this window into a state or a place relative to another window (the SetWindowState verb)
-        /// and reports where it is. Exactly one of a state or a relativeTo is given (the server checks). Runs on
-        /// the window's own thread. What a window can do depends on its kind, which is why each implements it: a
-        /// top-level form has a window state; a dockable form a dock state and a place among the other dockable
-        /// windows; a native dialog neither.</summary>
-        public abstract WindowInfo SetStateNow(string state, string relativeTo, string relation);
+        /// <summary>Puts this window into a state (the SetWindowState verb) and reports where it is. Runs on the
+        /// window's own thread. What a window can do depends on its kind, which is why each implements it: a
+        /// top-level form has a window state, a dockable form a dock state, a native dialog neither.</summary>
+        public abstract WindowInfo SetStateNow(string state);
+
+        /// <summary>Puts this window next to another dockable window (the DockWindow verb) and reports where it is.
+        /// Runs on the window's own thread. Only a dockable form can; the other kinds refuse and say why.</summary>
+        public abstract WindowInfo DockNow(string relativeTo, string relation);
 
         /// <summary>Sizes and/or moves this window (the SetWindowBounds verb) and reports where it is; with a null
         /// bounds and placement it only reads. Runs on the window's own thread.</summary>

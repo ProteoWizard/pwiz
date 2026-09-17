@@ -51,7 +51,7 @@ exist, on master. Each is marked **[branch]** at the point it is used.
 
 | New or changed | Kind | Where |
 |----------------|------|-------|
-| `SetWindowBounds` → `skyline_set_window_bounds`, with `SetWindowState` → `skyline_set_window_state` and `GetLayout` → `skyline_get_layout` | **New `IJsonToolService` methods** — the window layout verbs this branch adds | [1. Getting Started](#1-getting-started) |
+| `SetWindowBounds` → `skyline_set_window_bounds`, with `SetWindowState` → `skyline_set_window_state`, `DockWindow` → `skyline_dock_window` and `GetLayout` → `skyline_get_layout` | **New `IJsonToolService` methods** — the window layout verbs this branch adds | [1. Getting Started](#1-getting-started) |
 | A grid resolves by the Label `get_controls` reports for it | Changed control matching (`GridElement.MatchesText`) | [2. Spectral library](#2-creating-a-msms-spectral-library) |
 | `grid[column,row]` accepts a column header, not only an index | Changed `SetFormValue` locator (`GridElement.ColumnIndex`) | [2. Spectral library](#2-creating-a-msms-spectral-library) |
 | `Ion Types` submenu is populated when it opens | Fixed `ViewMenu.ViewMenuDropDownOpening` | [4. Pasting FASTA sequences](#4-pasting-fasta-sequences) |
@@ -87,10 +87,10 @@ skyline_set_ui_mode(mode="proteomic")
 skyline_set_window_bounds(left=50, top=50, width=1021, height=560)
 ```
 
-**[branch]** `skyline_set_window_bounds` is one of the three window layout methods this
-branch adds to `IJsonToolService` (`SetWindowBounds`, `SetWindowState` for docking, floating,
-maximizing and placing a window relative to another, and `GetLayout` to read the arrangement
-back). It is not a tutorial step — it sizes the window to the tutorial's own screenshot
+**[branch]** `skyline_set_window_bounds` is one of the four window layout methods this
+branch adds to `IJsonToolService` (`SetWindowBounds`; `SetWindowState` for docking, floating,
+hiding, maximizing and minimizing; `DockWindow` for placing a window next to another; and
+`GetLayout` to read the arrangement back). It is not a tutorial step — it sizes the window to the tutorial's own screenshot
 dimensions so the captures below line up with the reference images.
 
 ## 2. Creating a MS/MS spectral library

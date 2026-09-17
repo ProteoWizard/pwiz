@@ -1133,17 +1133,18 @@ namespace pwiz.Skyline.ToolsUI
         public Form Form { get; }
 
         /// <summary>A top-level form has a window state (Normal, Maximized, Minimized) and no place among other
-        /// windows. A dockable form overrides this (see <see cref="DockableStandaloneForm"/>).</summary>
-        public override WindowInfo SetStateNow(string state, string relativeTo, string relation)
+        /// windows. A dockable form overrides both (see <see cref="DockableStandaloneForm"/>).</summary>
+        public override WindowInfo SetStateNow(string state)
         {
-            if (relativeTo != null)
-            {
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"{0} is not a dockable window, so it cannot be placed relative to another; it takes a state: Normal, Maximized or Minimized.",
-                    FormId));
-            }
             Form.WindowState = ParseWindowState(state);
             return DescribeWindowNow();
+        }
+
+        public override WindowInfo DockNow(string relativeTo, string relation)
+        {
+            throw new ArgumentException(LlmInstruction.Format(
+                @"{0} is not a dockable window, so it cannot be placed next to another; it takes a state: Normal, Maximized or Minimized.",
+                FormId));
         }
 
         /// <summary>A top-level form's own bounds. A change first restores a maximized or minimized form to Normal,
@@ -1578,26 +1579,23 @@ namespace pwiz.Skyline.ToolsUI
         // The floating frame this form is a tab of - the window a user drags by its title bar - or null when docked.
         private Form FloatingFrame => DockableForm.IsFloating ? DockableForm.ParentForm : null;
 
-        /// <summary>A dockable form goes into a dock state (a new pane in that area, at the default size there;
-        /// Hidden puts it away) or next to another dockable window: into its tab group, or beside it on a side,
-        /// half each. Sizes are the bounds verb's business, not this one's.</summary>
-        public override WindowInfo SetStateNow(string state, string relativeTo, string relation)
+        /// <summary>A dockable form goes into a dock state: a new pane in that area, at the default size there;
+        /// Hidden puts it away. Sizes are the bounds verb's business, not this one's.</summary>
+        public override WindowInfo SetStateNow(string state)
         {
-            var dockPanel = DockableForm.DockPanel ?? Program.MainWindow.DockPanel;
-            if (relativeTo != null)
-                DockRelativeTo(relativeTo, relation, dockPanel);
-            else if (string.Equals(state, DockState.Hidden.ToString(), StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(state, DockState.Hidden.ToString(), StringComparison.OrdinalIgnoreCase))
                 DockableForm.Hide();
             else
-                DockableForm.Show(dockPanel, ParseDockState(state));
+                DockableForm.Show(DockableForm.DockPanel ?? Program.MainWindow.DockPanel, ParseDockState(state));
             return DescribeWindowNow();
         }
 
-        // Docks this form against another dockable window: into its tab group, or beside it on the requested side,
-        // half each. The other window is found among the dock panel's contents by its form id (all of them live on
-        // this thread, so reading their handles here is safe).
-        private void DockRelativeTo(string relativeTo, string relation, DockPanel dockPanel)
+        /// <summary>Puts this form next to another dockable window: into its tab group, or beside it on the
+        /// requested side, half each. The other window is found among the dock panel's contents by its form id
+        /// (all of them live on this thread, so reading their handles here is safe).</summary>
+        public override WindowInfo DockNow(string relativeTo, string relation)
         {
+            var dockPanel = DockableForm.DockPanel ?? Program.MainWindow.DockPanel;
             var other = dockPanel.Contents.OfType<DockableForm>()
                 .FirstOrDefault(form => JsonUiService.GetFormId(form, form.Handle) == relativeTo);
             if (other == null)
@@ -1613,17 +1611,16 @@ namespace pwiz.Skyline.ToolsUI
             }
             string side = relation?.Trim().ToLowerInvariant();
             if (string.IsNullOrEmpty(side) || side == WindowLayout.RELATION_TAB)
-            {
                 DockableForm.Show(other.Pane, null); // join the tab group, at the end
-                return;
-            }
-            if (!Enum.TryParse(side, true, out DockPaneAlignment alignment))
+            else if (Enum.TryParse(side, true, out DockPaneAlignment alignment))
+                DockableForm.Show(other.Pane, alignment, 0.5);
+            else
             {
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Unknown relation '{0}'. Use left, right, top or bottom to split beside the window, or '{1}' to join its tab group.",
                     relation, WindowLayout.RELATION_TAB));
             }
-            DockableForm.Show(other.Pane, alignment, 0.5);
+            return DescribeWindowNow();
         }
 
         private DockState ParseDockState(string dockState)
