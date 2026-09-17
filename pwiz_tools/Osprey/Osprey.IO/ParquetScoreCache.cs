@@ -856,6 +856,41 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// One row's charge, REFUSING a zero. A precursor charge is always at least 1, so a zero
+        /// here is never a real value - it is either a <c>charge</c> column that could not be
+        /// read (<see cref="ReadColumnByName"/> answers null for a field it cannot find, which is
+        /// indistinguishable from an absent one) or a column that was written corrupt.
+        ///
+        /// <para>Both used to be swallowed: the call sites substituted <c>(byte)0</c> and carried
+        /// on. That is the worst available outcome, because charge is part of the
+        /// <c>(entry_id, charge, scan_number)</c> identity - a zeroed charge does not merely lose
+        /// a field, it makes the row fail identity matching downstream, so it is silently DROPPED
+        /// from the reported pool. No error, no warning, just fewer precursors.</para>
+        ///
+        /// <para>A concrete instance: until 2026-09-17 the parallel parquet writer returned its
+        /// widening buffer to the ArrayPool before encoding from it, so roughly one write in a
+        /// thousand emitted a zeroed <c>charge</c>. It was found only because it happened to trip
+        /// an equality assertion in a unit test, and it had been dismissed as an intermittent
+        /// failure before that. A guard here would have named it the first time a file was read.
+        /// Files written in that window can still be on disk; failing them loudly is the point.</para>
+        /// </summary>
+        private static byte RequireCharge(byte[] chargeCol, int row, uint entryId, string path)
+        {
+            byte charge = chargeCol == null ? (byte)0 : chargeCol[row];
+            if (charge != 0)
+                return charge;
+            throw new InvalidDataException(string.Format(
+                @"{0} is corrupt: row {1} (entry_id {2}) has a charge of 0, which is not a " +
+                @"possible precursor charge. The charge column is either unreadable or was " +
+                @"written corrupt, and because charge is part of the row's identity, using the " +
+                @"file would silently drop precursors rather than report a wrong number. Delete " +
+                @"this file and re-run the stage that produced it. Parquet written before " +
+                @"2026-09-17 may carry this from a write race in the parallel column writer, " +
+                @"fixed in that release.",
+                path, row, entryId));
+        }
+
+        /// <summary>
         /// Encode an array of f64 values as a little-endian byte blob with
         /// no length prefix - bytes / 8 recovers the count on read. Mirrors
         /// Rust pipeline.rs:1620-1623 (`v.to_le_bytes().flat_map(...)`)
@@ -1059,7 +1094,7 @@ namespace pwiz.Osprey.IO
                                 EntryId = entryIdCol[row],
                                 ParquetIndex = parquetIndex,
                                 IsDecoy = isDecoyCol[row],
-                                Charge = chargeCol != null ? chargeCol[row] : (byte)0,
+                                Charge = RequireCharge(chargeCol, row, entryIdCol[row], path),
                                 ScanNumber = scanCol != null ? scanCol[row] : 0u,
                                 ApexRt = apexCol != null ? apexCol[row] : 0.0,
                                 StartRt = startCol != null ? startCol[row] : 0.0,
@@ -1224,7 +1259,7 @@ namespace pwiz.Osprey.IO
                         {
                             onRow(
                                 entryIdCol[row],
-                                chargeCol != null ? chargeCol[row] : (byte)0,
+                                RequireCharge(chargeCol, row, entryIdCol[row], path),
                                 isDecoyCol[row],
                                 coelutionCol != null ? coelutionCol[row] : 0.0,
                                 modseqCol != null ? modseqCol[row] : string.Empty,
@@ -1438,7 +1473,7 @@ namespace pwiz.Osprey.IO
             {
                 var fieldsByName = BuildFieldLookup(reader);
                 for (int g = 0; g < reader.RowGroupCount; g++)
-                    entries.AddRange(ReadFdrEntryGroup(reader, g, fieldsByName, entries.Count, scalarsOnly));
+                    entries.AddRange(ReadFdrEntryGroup(reader, g, fieldsByName, entries.Count, path, scalarsOnly));
             }
 
             return entries;
@@ -1609,7 +1644,7 @@ namespace pwiz.Osprey.IO
 
                     for (int g = 0; g < reader.RowGroupCount; g++)
                     {
-                        var groupEntries = ReadFdrEntryGroup(reader, g, fieldsByName, origRead);
+                        var groupEntries = ReadFdrEntryGroup(reader, g, fieldsByName, origRead, originalPath);
                         for (int j = 0; j < groupEntries.Count; j++)
                         {
                             var row = groupEntries[j];
@@ -1710,7 +1745,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static List<FdrEntry> ReadFdrEntryGroup(ParquetReader reader, int g,
             IReadOnlyDictionary<string, DataField> fieldsByName, int startParquetIndex,
-            bool scalarsOnly = false)
+            string path, bool scalarsOnly = false)
         {
             var entries = new List<FdrEntry>();
             using (var groupReader = reader.OpenRowGroupReader(g))
@@ -1784,7 +1819,7 @@ namespace pwiz.Osprey.IO
                             ? scoreIndexCol[row]
                             : (uint)(startParquetIndex + entries.Count),
                         IsDecoy = isDecoyCol[row],
-                        Charge = chargeCol != null ? chargeCol[row] : (byte)0,
+                        Charge = RequireCharge(chargeCol, row, entryIdCol[row], path),
                         ScanNumber = scanCol != null ? scanCol[row] : 0u,
                         ApexRt = apexCol != null ? apexCol[row] : 0.0,
                         StartRt = startCol != null ? startCol[row] : 0.0,
