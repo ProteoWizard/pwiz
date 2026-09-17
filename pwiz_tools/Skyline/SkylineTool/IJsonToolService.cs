@@ -307,26 +307,48 @@ namespace SkylineTool
         /// <param name="index">Target position in the undo/redo stack.</param>
         void SetUndoRedoPosition(int index);
 
-        // --- Window placement ---
+        // --- Window layout ---
 
         /// <summary>
-        /// Moves, resizes, docks or floats ONE window and returns where it ended up, so a caller can give a
-        /// screenshot a known, reproducible size or arrangement, or move a window out from under another one.
-        /// <paramref name="formId"/> names any open form (an id from <see cref="GetOpenForms"/>) or, when null, the
-        /// main Skyline window. Every property of <paramref name="placement"/> is optional and null leaves that
-        /// aspect alone, so a null or empty placement reads the current one without changing anything - not even a
-        /// maximized window's state.
+        /// Puts ONE window into a state, or into a place in the layout, and returns where it ended up. Sizes are
+        /// not part of this: a window put somewhere gets the default size there, and <see cref="SetWindowBounds"/>
+        /// sizes it afterwards. <paramref name="formId"/> names any open form (an id from <see cref="GetOpenForms"/>)
+        /// or, when null, the main Skyline window.
         ///
-        /// <para>Bounds are OUTER bounds in screen pixels, border and title bar included, so a tutorial capture of
-        /// W x H needs a window a border larger. A top-level window - the main window, a dialog, a native dialog -
-        /// takes Bounds, WindowState and Placement, and a change first restores a maximized or minimized window
-        /// to Normal, because a window in either state keeps the bounds it is given without showing them. A
-        /// dockable window - a graph, a grid, the Targets view - takes DockState, RelativeTo with Alignment and
-        /// Proportion to dock beside or into another window, and Bounds: its whole floating frame while it
-        /// floats, only the width or height of its side while it is docked. A request for something the window
-        /// cannot do throws and says why. A whole layout is applied with File &gt; Import &gt; Window Layout.</para>
+        /// <para>EITHER a <paramref name="state"/>: for a top-level window (the main window, a dialog) "Normal",
+        /// "Maximized" or "Minimized"; for a dockable window (a graph, a grid, the Targets view) "Document",
+        /// "DockLeft", "DockRight", "DockTop", "DockBottom", the "...AutoHide" form of a side, "Floating" (a new
+        /// floating window at the default place) or "Hidden" (put away; a hidden window is no longer among the
+        /// open forms and comes back through its View menu item). OR a place relative to another dockable window:
+        /// <paramref name="relativeTo"/> is that window's form id and <paramref name="relation"/> is "tab" to join
+        /// its tab group (the default) or "left", "right", "top" or "bottom" to split its pane on that side, half
+        /// each; the window lands in whatever area the other one is in, a floating window included. Neither, or
+        /// both, is an error, and a request the window cannot honor throws and says why.</para>
         /// </summary>
-        WindowPlacement SetWindowPlacement(string formId = null, WindowPlacement placement = null);
+        WindowInfo SetWindowState(string formId = null, string state = null, string relativeTo = null,
+            string relation = null);
+
+        /// <summary>
+        /// Sizes and/or moves ONE window and returns where it ended up. <paramref name="bounds"/> are OUTER bounds
+        /// in screen pixels, border and title bar included (a tutorial capture of W x H needs a window a border
+        /// larger): a top-level window's own bounds - restoring a maximized or minimized window to Normal first,
+        /// since in either state it keeps bounds it is given without showing them - a floating window's whole
+        /// frame, or, for a window docked to a side, only the width (left/right) or height (top/bottom) of that
+        /// side. A window in the document area is sized by its splits and refuses bounds. <paramref name="placement"/>
+        /// then puts the result on the window's screen: "maximize" fills it (as a Normal window, so a later call
+        /// can still resize it), "center" centers it. With neither, this reads where the window is without
+        /// changing anything - not even a maximized window's state.
+        /// </summary>
+        WindowInfo SetWindowBounds(string formId = null, Rectangle bounds = null, string placement = null);
+
+        /// <summary>
+        /// Describes the whole layout: the main window, then every area that holds windows - the document area,
+        /// each docked side, each floating window - with its panes in nesting order: the tabs in each pane, and
+        /// which pane it split off from, on which side, taking what share (none for the first pane in an area).
+        /// This is what a caller reads before saying "put the chromatogram below the spectrum" with
+        /// <see cref="SetWindowState"/>.
+        /// </summary>
+        LayoutInfo GetLayout();
 
         // --- UI state ---
 

@@ -486,7 +486,7 @@
     <Compile Include="SetItemMcpConnectorTest.cs" />
     <Compile Include="PrmMcpConnectorTest.cs" />
     <Compile Include="RunCommandMcpConnectorTest.cs" />
-    <Compile Include="WindowPlacementMcpConnectorTest.cs" />
+    <Compile Include="WindowLayoutMcpConnectorTest.cs" />
     <Compile Include="TreeEditMcpConnectorTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />

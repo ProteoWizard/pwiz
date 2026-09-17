@@ -618,12 +618,35 @@ namespace pwiz.Skyline.ToolsUI
             InvokeOnMainWindow(mainWindow => mainWindow.SetUndoRedoPosition(index));
         }
 
-        public WindowPlacement SetWindowPlacement(string formId = null, WindowPlacement placement = null)
+        public WindowInfo SetWindowState(string formId = null, string state = null, string relativeTo = null,
+            string relation = null)
         {
-            placement = placement ?? new WindowPlacement();
+            // A state and a relative place are two ways of saying where the window goes, so exactly one is given.
+            if (string.IsNullOrEmpty(state) == string.IsNullOrEmpty(relativeTo))
+            {
+                throw new ArgumentException(new LlmInstruction(
+                    @"Give EITHER a state (Normal, Maximized or Minimized for a top-level window; Document, DockLeft, DockRight, DockTop, DockBottom, a ...AutoHide side, Floating or Hidden for a dockable one) OR a relativeTo window with a relation (tab, left, right, top, bottom) - one of the two, not both."));
+            }
+            if (!string.IsNullOrEmpty(relation) && string.IsNullOrEmpty(relativeTo))
+            {
+                throw new ArgumentException(new LlmInstruction(
+                    @"A relation needs a relativeTo window: the form id of the window to place this one against."));
+            }
             if (string.IsNullOrEmpty(formId))
-                return CallOnMainWindow(mainWindow => mainWindow.SetPlacementNow(placement));
-            return CallOnForm<StandaloneWindow, WindowPlacement>(formId, form => form.SetPlacementNow(placement));
+                return CallOnMainWindow(mainWindow => mainWindow.SetStateNow(state, relativeTo, relation));
+            return CallOnForm<StandaloneWindow, WindowInfo>(formId, form => form.SetStateNow(state, relativeTo, relation));
+        }
+
+        public WindowInfo SetWindowBounds(string formId = null, Rectangle bounds = null, string placement = null)
+        {
+            if (string.IsNullOrEmpty(formId))
+                return CallOnMainWindow(mainWindow => mainWindow.SetBoundsNow(bounds, placement));
+            return CallOnForm<StandaloneWindow, WindowInfo>(formId, form => form.SetBoundsNow(bounds, placement));
+        }
+
+        public LayoutInfo GetLayout()
+        {
+            return CallOnMainWindow(mainWindow => mainWindow.GetLayoutNow());
         }
 
         public TutorialListItem[] GetAvailableTutorials()

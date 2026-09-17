@@ -322,24 +322,34 @@ namespace pwiz.Skyline.ToolsUI
 
         public override System.Drawing.Bitmap CaptureImage() => JsonUiService.CaptureNativeWindow(Hwnd);
 
-        /// <summary>A native dialog is moved and sized by the window manager (SetWindowPos), which is safe from any
-        /// thread; it has no window state or dock state to set.</summary>
-        public override WindowPlacement SetPlacementNow(WindowPlacement placement)
+        /// <summary>A native dialog has no window state or dock state to set; it is only moved and sized.</summary>
+        public override WindowInfo SetStateNow(string state, string relativeTo, string relation)
         {
-            RequireNotDocking(placement);
-            if (placement.WindowState != null)
+            throw new ArgumentException(LlmInstruction.Format(
+                @"{0} is a native dialog: it has no window state or dock state to set. Use the bounds verb to move it.", FormId));
+        }
+
+        /// <summary>A native dialog is moved and sized by the window manager (SetWindowPos), which is safe from any
+        /// thread.</summary>
+        public override WindowInfo SetBoundsNow(Rectangle bounds, string placement)
+        {
+            if (bounds != null || placement != null)
             {
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"{0} is a native dialog and has no window state to set.", FormId));
-            }
-            var screen = System.Windows.Forms.Screen.FromHandle(Hwnd).Bounds;
-            if (placement.HasChanges())
-            {
-                var bounds = RequestedBounds(placement, GetBounds(), screen);
-                User32.SetWindowPos(Hwnd, IntPtr.Zero, bounds.Left, bounds.Top, bounds.Width, bounds.Height,
+                var rect = RequestedBounds(bounds, placement, GetBounds(), System.Windows.Forms.Screen.FromHandle(Hwnd).Bounds);
+                User32.SetWindowPos(Hwnd, IntPtr.Zero, rect.Left, rect.Top, rect.Width, rect.Height,
                     User32.SetWindowPosFlags.NOZORDER | User32.SetWindowPosFlags.NOACTIVATE);
             }
-            return new WindowPlacement { Bounds = ToRectangle(GetBounds()), Screen = ToRectangle(screen) };
+            return DescribeWindowNow();
+        }
+
+        public override WindowInfo DescribeWindowNow()
+        {
+            return new WindowInfo
+            {
+                Id = FormId,
+                Bounds = ToRectangle(GetBounds()),
+                Screen = ToRectangle(System.Windows.Forms.Screen.FromHandle(Hwnd).Bounds),
+            };
         }
 
         private System.Drawing.Rectangle GetBounds()

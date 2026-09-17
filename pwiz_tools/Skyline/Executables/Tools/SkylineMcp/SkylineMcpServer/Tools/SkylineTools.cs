@@ -1375,62 +1375,111 @@ public static class SkylineTools
         });
     }
 
-    [McpServerTool(Name = "skyline_set_window_placement"),
-     Description("Move, resize, dock or float ONE window and report where it ended up, so a screenshot has a " +
-        "known, reproducible size or arrangement, or a window is out from under another one. Every argument is " +
-        "optional: an omitted one leaves that aspect alone, and a call with only formId (or nothing) reads the " +
-        "current placement without changing anything. Bounds are OUTER bounds in screen pixels (border and " +
-        "title bar included), so a tutorial capture of W x H needs a window slightly larger. A top-level window " +
-        "(the main window when formId is omitted, a dialog, a native dialog) takes left/top/width/height, " +
-        "windowState (Normal, Maximized, Minimized) and placement ('maximize' fills the screen as a normal " +
-        "window so it can still be resized; 'center' centers it); a change first restores a maximized window " +
-        "to normal. A dockable window (a graph, a grid, the Targets view) takes dockState (Floating, Document, " +
-        "DockLeft, DockRight, DockTop, DockBottom or a ...AutoHide side), relativeTo (another window's form id) " +
-        "with alignment (Left, Right, Top or Bottom to split beside it, or 'tab' to join its tab group) and " +
-        "proportion (its share of the split, 0-1), and bounds: the whole floating frame while it floats, only " +
-        "the width (left/right) or height (top/bottom) of its side while docked. For a whole layout use " +
-        "File > Import > Window Layout.")]
-    public static string SetWindowPlacement(
+    [McpServerTool(Name = "skyline_set_window_state"),
+     Description("Put ONE window into a state, or into a place in the layout, and report where it ended up. " +
+        "Sizes are not part of this: a window put somewhere gets the default size there; size it afterwards " +
+        "with skyline_set_window_bounds. Give EITHER a state OR a relativeTo window. States for a top-level " +
+        "window (the main window when formId is omitted, or a dialog): Normal, Maximized, Minimized. States " +
+        "for a dockable window (a graph, a grid, the Targets view): Document, DockLeft, DockRight, DockTop, " +
+        "DockBottom, a ...AutoHide side, Floating (a new floating window at the default place) or Hidden " +
+        "(put away; it is then no longer an open form and comes back through its View menu item). " +
+        "Or relativeTo = another dockable window's form id with relation 'tab' (join its tab group, the " +
+        "default) or 'left'/'right'/'top'/'bottom' (split its pane on that side, half each); the window " +
+        "lands in whatever area the other one is in, floating included. Read the layout first with " +
+        "skyline_get_layout.")]
+    public static string SetWindowState(
+        [Description("Form identifier from skyline_get_open_forms; omit for the main Skyline window.")] string formId = null,
+        [Description("Normal, Maximized or Minimized for a top-level window; Document, DockLeft, DockRight, DockTop, DockBottom, a ...AutoHide side, Floating or Hidden for a dockable one.")] string state = null,
+        [Description("Form id of another dockable window to place this one against (instead of a state).")] string relativeTo = null,
+        [Description("With relativeTo: 'tab' (the default) to join its tab group, or 'left', 'right', 'top' or 'bottom' to split its pane on that side.")] string relation = null)
+    {
+        return Invoke(connection => Describe(connection.SetWindowState(formId, state, relativeTo, relation)));
+    }
+
+    [McpServerTool(Name = "skyline_set_window_bounds"),
+     Description("Size and/or move ONE window and report where it ended up, so a screenshot has a known, " +
+        "reproducible size or a window is out from under another one. Every argument is optional: an omitted " +
+        "edge keeps its current value, and a call with only formId (or nothing) reads where the window is " +
+        "without changing anything. Bounds are OUTER bounds in screen pixels (border and title bar included), " +
+        "so a tutorial capture of W x H needs a window slightly larger. A top-level window (the main window " +
+        "when formId is omitted, a dialog, a native dialog) takes its own bounds; a change first restores a " +
+        "maximized window to normal. A floating window takes its whole frame's bounds. A window docked to a " +
+        "side takes only the width (left/right) or height (top/bottom) of that side; one in the document area " +
+        "is sized by its splits and refuses bounds. placement 'maximize' fills the screen as a normal window " +
+        "(so it can still be resized), 'center' centers the window on it. To dock, float, maximize or hide a " +
+        "window use skyline_set_window_state.")]
+    public static string SetWindowBounds(
         [Description("Form identifier from skyline_get_open_forms; omit for the main Skyline window.")] string formId = null,
         [Description("New left edge in screen pixels.")] int? left = null,
         [Description("New top edge in screen pixels.")] int? top = null,
         [Description("New outer width in pixels.")] int? width = null,
         [Description("New outer height in pixels.")] int? height = null,
-        [Description("Normal, Maximized or Minimized (a top-level window only).")] string windowState = null,
-        [Description("Floating, Document, DockLeft, DockRight, DockTop, DockBottom or a ...AutoHide side (a dockable window only).")] string dockState = null,
-        [Description("Form id of another dockable window to dock this one against.")] string relativeTo = null,
-        [Description("With relativeTo: Left, Right, Top or Bottom to split beside it, or 'tab' (the default) to join its tab group.")] string alignment = null,
-        [Description("With a side alignment: this window's share of the split, 0-1 (default 0.5).")] double? proportion = null,
         [Description("'maximize' to fill the screen or 'center' to center the window on it.")] string placement = null)
     {
         return Invoke(connection =>
         {
-            var request = new WindowPlacement
-            {
-                WindowState = windowState, DockState = dockState, RelativeTo = relativeTo,
-                Alignment = alignment, Proportion = proportion, Placement = placement
-            };
+            SkylineTool.Rectangle bounds = null;
             if (left.HasValue || top.HasValue || width.HasValue || height.HasValue)
             {
                 // The service takes all four edges; fill the omitted ones in from where the window is now.
-                var current = connection.SetWindowPlacement(formId, new WindowPlacement()).Bounds;
+                var current = connection.SetWindowBounds(formId).Bounds;
                 int newLeft = left ?? (int) current.Left;
                 int newTop = top ?? (int) current.Top;
                 int newWidth = width ?? (int) (current.Right - current.Left);
                 int newHeight = height ?? (int) (current.Bottom - current.Top);
-                request.Bounds = new SkylineTool.Rectangle
+                bounds = new SkylineTool.Rectangle
                     { Left = newLeft, Top = newTop, Right = newLeft + newWidth, Bottom = newTop + newHeight };
             }
-            var result = connection.SetWindowPlacement(formId, request);
-            var sb = new StringBuilder();
-            if (result.DockState != null)
-                sb.AppendLine($"Dock: {result.DockState}");
-            if (result.WindowState != null)
-                sb.AppendLine($"State: {result.WindowState}");
-            sb.AppendLine($"Window: {Edges(result.Bounds)}");
-            sb.Append($"Screen: {Edges(result.Screen)}");
-            return sb.ToString();
+            return Describe(connection.SetWindowBounds(formId, bounds, placement));
         });
+    }
+
+    [McpServerTool(Name = "skyline_get_layout"),
+     Description("Describe the whole window layout: the main window, then every area holding windows - the " +
+        "document area, each docked side, each floating window - with its panes (tab groups) in nesting order. " +
+        "Every dockable window is a tab in exactly one pane and every pane is in exactly one area; each pane " +
+        "after the first in an area split off an earlier pane on a side, taking a share of it. Read this " +
+        "before placing a window with skyline_set_window_state (relativeTo names a tab in one of these panes) " +
+        "and to see what skyline_set_window_bounds would size.")]
+    public static string GetLayout()
+    {
+        return Invoke(connection =>
+        {
+            var layout = connection.GetLayout();
+            var sb = new StringBuilder();
+            sb.AppendLine("Main window: " + Describe(layout.MainWindow).Replace("\n", "; "));
+            foreach (var area in layout.Areas)
+            {
+                sb.AppendLine($"Area {area.State}: {Edges(area.Bounds)}");
+                for (int i = 0; i < area.Panes.Length; i++)
+                {
+                    var pane = area.Panes[i];
+                    var tabs = pane.Tabs.Select(tab => tab == pane.ActiveTab ? tab + " (active)" : tab);
+                    string split = pane.SplitFrom == null
+                        ? "fills the area"
+                        : $"split from {pane.SplitFrom} on the {pane.SplitSide}, share {pane.SplitShare:0.##}";
+                    sb.AppendLine($"  Pane {i + 1} [{string.Join(", ", tabs)}]: {split}; {Edges(pane.Bounds)}");
+                }
+            }
+            return sb.ToString().TrimEnd();
+        });
+    }
+
+    // One window as the layout verbs report it: its state, bounds and screen, and for a dockable window its tab
+    // group and the split that placed its pane.
+    private static string Describe(WindowInfo window)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"Window: {window.Id}");
+        if (window.State != null)
+            sb.AppendLine($"State: {window.State}");
+        sb.AppendLine($"Bounds: {Edges(window.Bounds)}");
+        sb.AppendLine($"Screen: {Edges(window.Screen)}");
+        if (window.Tabs != null)
+            sb.AppendLine($"Tabs: {string.Join(", ", window.Tabs)}");
+        if (window.SplitFrom != null)
+            sb.AppendLine($"Split from {window.SplitFrom} on the {window.SplitSide}, share {window.SplitShare:0.##}");
+        return sb.ToString().TrimEnd();
     }
 
     // Screen-pixel edges of a window or screen rectangle, whole numbers, with the size a caller reasons in.

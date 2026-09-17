@@ -83,61 +83,83 @@ namespace SkylineTool
         public double Bottom { get; set; }
     }
 
-    // --- Window placement models ---
+    // --- Window layout models ---
 
     /// <summary>
-    /// Where a window is - and, in a request, where to put it - for <see cref="IJsonToolService.SetWindowPlacement"/>.
-    /// Every property is optional in a request and null leaves that aspect alone, so a request with nothing set
-    /// is a read; the reply has every aspect the window has filled in.
+    /// Where one window is, returned by <see cref="IJsonToolService.SetWindowState"/> and
+    /// <see cref="IJsonToolService.SetWindowBounds"/>. <see cref="State"/> is a top-level window's "Normal",
+    /// "Maximized" or "Minimized", or a dockable window's dock state ("Document", "DockLeft", "DockRight",
+    /// "DockTop", "DockBottom", the "...AutoHide" form of a side, "Floating", "Hidden"). <see cref="Bounds"/> are
+    /// OUTER bounds in screen pixels: a top-level window's own, a floating window's whole frame, a docked window's
+    /// pane. <see cref="Tabs"/> lists the windows sharing a dockable window's tab group, and
+    /// <see cref="SplitFrom"/>, <see cref="SplitSide"/> and <see cref="SplitShare"/> say which window's pane its
+    /// pane split off from, on which side, taking what share - null for the first pane in its area.
     ///
-    /// <para><see cref="Bounds"/> and <see cref="Screen"/> reuse <see cref="Rectangle"/>, whose edges are named for a
-    /// GRAPH, where Top is the larger Y. Screen pixels grow downward, so here Top is the SMALLER Y - still the
+    /// <para><see cref="Bounds"/> and <see cref="Screen"/> reuse <see cref="Rectangle"/>, whose edges are named for
+    /// a GRAPH, where Top is the larger Y. Screen pixels grow downward, so here Top is the SMALLER Y - still the
     /// upper edge on screen - and Bottom the larger; the width is Right - Left and the height Bottom - Top.</para>
     /// </summary>
-    public class WindowPlacement
+    public class WindowInfo
     {
-        /// <summary><see cref="Placement"/>: fill the window's screen.</summary>
-        public const string PLACEMENT_MAXIMIZE = "maximize";
-        /// <summary><see cref="Placement"/>: center the window on its screen.</summary>
-        public const string PLACEMENT_CENTER = "center";
-        /// <summary><see cref="Alignment"/>: join <see cref="RelativeTo"/>'s tab group instead of splitting beside it.</summary>
-        public const string ALIGNMENT_TAB = "tab";
-
-        /// <summary>The OUTER bounds in screen pixels, border and title bar included: the main window's or a
-        /// dialog's own, a floating window's whole frame (every window tabbed in it moves with it), a docked
-        /// window's pane. A request gives all four edges; a docked window takes only the width (docked left or
-        /// right) or the height (top or bottom) from them.</summary>
+        public string Id { get; set; }
+        public string State { get; set; }
         public Rectangle Bounds { get; set; }
-        /// <summary>"Normal", "Maximized" or "Minimized" - a top-level window only.</summary>
-        public string WindowState { get; set; }
-        /// <summary>A dockable window's state: "Floating", "Document", "DockLeft", "DockRight", "DockTop",
-        /// "DockBottom" or the "...AutoHide" form of a side.</summary>
-        public string DockState { get; set; }
-        /// <summary>Request only: the form id of another dockable window to dock this one against.</summary>
-        public string RelativeTo { get; set; }
-        /// <summary>Request only, with <see cref="RelativeTo"/>: "Left", "Right", "Top" or "Bottom" to split
-        /// beside it on that side, or <see cref="ALIGNMENT_TAB"/> (the default) to join its tab group.</summary>
-        public string Alignment { get; set; }
-        /// <summary>Request only, with a side <see cref="Alignment"/>: this window's share of the split, 0-1
-        /// (default 0.5).</summary>
-        public double? Proportion { get; set; }
-        /// <summary>Request only: <see cref="PLACEMENT_MAXIMIZE"/> or <see cref="PLACEMENT_CENTER"/>, applied to
-        /// the bounds after <see cref="Bounds"/>; a floating or top-level window only.</summary>
-        public string Placement { get; set; }
-        /// <summary>Reply only: the bounds of the screen the window is on.</summary>
         public Rectangle Screen { get; set; }
+        public string[] Tabs { get; set; }
+        public string SplitFrom { get; set; }
+        public string SplitSide { get; set; }
+        public double? SplitShare { get; set; }
+    }
 
-        /// <summary>Whether the request asks for any change at all (else it is a read).</summary>
-        public bool HasChanges()
-        {
-            return Bounds != null || WindowState != null || Placement != null || HasDocking();
-        }
+    /// <summary>The words <see cref="IJsonToolService.SetWindowState"/> and
+    /// <see cref="IJsonToolService.SetWindowBounds"/> take besides the state names.</summary>
+    public static class WindowLayout
+    {
+        /// <summary>Relation to another window: join its tab group.</summary>
+        public const string RELATION_TAB = "tab";
+        /// <summary>Relations to another window: split its pane on that side, half each.</summary>
+        public const string RELATION_LEFT = "left";
+        public const string RELATION_RIGHT = "right";
+        public const string RELATION_TOP = "top";
+        public const string RELATION_BOTTOM = "bottom";
+        /// <summary>Placement on the screen: fill it (as a Normal window).</summary>
+        public const string PLACEMENT_MAXIMIZE = "maximize";
+        /// <summary>Placement on the screen: center the window on it.</summary>
+        public const string PLACEMENT_CENTER = "center";
+    }
 
-        /// <summary>Whether the request asks for anything only a dockable window can do.</summary>
-        public bool HasDocking()
-        {
-            return DockState != null || RelativeTo != null || Alignment != null || Proportion.HasValue;
-        }
+    /// <summary>
+    /// The whole layout, returned by <see cref="IJsonToolService.GetLayout"/>: the main window, then every area that
+    /// holds windows - the document area, each docked side, each floating window - with its panes in nesting
+    /// order. Every dockable window is a tab in exactly one pane, every pane is in exactly one area, and the panes
+    /// of an area form a split tree: each pane after the first split off an earlier one on a side, taking a share.
+    /// </summary>
+    public class LayoutInfo
+    {
+        public WindowInfo MainWindow { get; set; }
+        public LayoutArea[] Areas { get; set; }
+    }
+
+    /// <summary>One area of the layout: its <see cref="State"/> is "Document", a docked side or "Floating", its
+    /// <see cref="Bounds"/> are in screen pixels (a floating window's whole frame).</summary>
+    public class LayoutArea
+    {
+        public string State { get; set; }
+        public Rectangle Bounds { get; set; }
+        public LayoutPane[] Panes { get; set; }
+    }
+
+    /// <summary>One tab group in an area: its <see cref="Tabs"/> (form ids) with the <see cref="ActiveTab"/> in
+    /// front, its pane's screen <see cref="Bounds"/>, and the split that made it: the window (the active tab)
+    /// of the pane it split off from, the side, and the share - all null for the first pane in the area.</summary>
+    public class LayoutPane
+    {
+        public string[] Tabs { get; set; }
+        public string ActiveTab { get; set; }
+        public Rectangle Bounds { get; set; }
+        public string SplitFrom { get; set; }
+        public string SplitSide { get; set; }
+        public double? SplitShare { get; set; }
     }
 
     // --- Report models ---

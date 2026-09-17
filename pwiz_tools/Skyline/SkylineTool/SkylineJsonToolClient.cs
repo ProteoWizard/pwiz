@@ -218,10 +218,15 @@ namespace SkylineTool
         public void SetReplicate(string replicateName) { Call(nameof(SetReplicate), replicateName); }
         public void SetUiMode(string mode) { Call(nameof(SetUiMode), mode); }
         public void SetUndoRedoPosition(int index) { Call(nameof(SetUndoRedoPosition), index); }
-        public WindowPlacement SetWindowPlacement(string formId = null, WindowPlacement placement = null)
+        public WindowInfo SetWindowState(string formId = null, string state = null, string relativeTo = null, string relation = null)
         {
-            return CallTyped<WindowPlacement>(nameof(SetWindowPlacement), formId, placement);
+            return CallTyped<WindowInfo>(nameof(SetWindowState), formId, state, relativeTo, relation);
         }
+        public WindowInfo SetWindowBounds(string formId = null, Rectangle bounds = null, string placement = null)
+        {
+            return CallTyped<WindowInfo>(nameof(SetWindowBounds), formId, bounds, placement);
+        }
+        public LayoutInfo GetLayout() { return CallTyped<LayoutInfo>(nameof(GetLayout)); }
         public string GetDocumentSettings(string filePath) { return Call(nameof(GetDocumentSettings), filePath); }
         public string GetDefaultSettings(string filePath) { return Call(nameof(GetDefaultSettings), filePath); }
         public void ReorderElements(string[] elementLocators) { Call(nameof(ReorderElements), (object) elementLocators); }

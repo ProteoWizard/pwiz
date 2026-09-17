@@ -83,14 +83,21 @@ namespace pwiz.Skyline.ToolsUI
         /// the caller has done the screen-capture pre-flight).</summary>
         public abstract System.Drawing.Bitmap CaptureImage();
 
-        /// <summary>Applies a placement request to this window and reports where it ended up (the
-        /// SetWindowPlacement verb). Runs on the window's own thread. A request for something this kind of window
-        /// cannot do throws an LLM-facing error; an empty request only reads. The three kinds differ in what they
-        /// can do, which is why each implements it: a top-level form has bounds, a window state and a screen
-        /// placement; a dockable form a dock state too; a native dialog only bounds and a screen placement.</summary>
-        public abstract WindowPlacement SetPlacementNow(WindowPlacement placement);
+        /// <summary>Puts this window into a state or a place relative to another window (the SetWindowState verb)
+        /// and reports where it is. Exactly one of a state or a relativeTo is given (the server checks). Runs on
+        /// the window's own thread. What a window can do depends on its kind, which is why each implements it: a
+        /// top-level form has a window state; a dockable form a dock state and a place among the other dockable
+        /// windows; a native dialog neither.</summary>
+        public abstract WindowInfo SetStateNow(string state, string relativeTo, string relation);
 
-        // ---- Placement helpers shared by the window kinds ----
+        /// <summary>Sizes and/or moves this window (the SetWindowBounds verb) and reports where it is; with a null
+        /// bounds and placement it only reads. Runs on the window's own thread.</summary>
+        public abstract WindowInfo SetBoundsNow(Rectangle bounds, string placement);
+
+        /// <summary>Where this window is, as the layout verbs report it. Runs on the window's own thread.</summary>
+        public abstract WindowInfo DescribeWindowNow();
+
+        // ---- Layout helpers shared by the window kinds ----
 
         protected static Rectangle ToRectangle(System.Drawing.Rectangle rect)
         {
@@ -102,37 +109,27 @@ namespace pwiz.Skyline.ToolsUI
             return System.Drawing.Rectangle.FromLTRB((int) rect.Left, (int) rect.Top, (int) rect.Right, (int) rect.Bottom);
         }
 
-        /// <summary>The bounds a request asks for: its own Bounds (else <paramref name="current"/>), then its
-        /// Placement - "maximize" is the whole <paramref name="screen"/>, "center" centers that size on it.</summary>
-        protected static System.Drawing.Rectangle RequestedBounds(WindowPlacement placement,
+        /// <summary>The bounds a request asks for: <paramref name="bounds"/> (else <paramref name="current"/>), then
+        /// the <paramref name="placement"/> - "maximize" is the whole <paramref name="screen"/>, "center" centers
+        /// that size on it.</summary>
+        protected static System.Drawing.Rectangle RequestedBounds(Rectangle bounds, string placement,
             System.Drawing.Rectangle current, System.Drawing.Rectangle screen)
         {
-            var bounds = placement.Bounds != null ? ToDrawingRectangle(placement.Bounds) : current;
-            switch (placement.Placement?.Trim().ToLowerInvariant())
+            var requested = bounds != null ? ToDrawingRectangle(bounds) : current;
+            switch (placement?.Trim().ToLowerInvariant())
             {
                 case null:
                 case "":
-                    return bounds;
-                case WindowPlacement.PLACEMENT_MAXIMIZE:
+                    return requested;
+                case WindowLayout.PLACEMENT_MAXIMIZE:
                     return screen;
-                case WindowPlacement.PLACEMENT_CENTER:
-                    return new System.Drawing.Rectangle(screen.Left + (screen.Width - bounds.Width) / 2,
-                        screen.Top + (screen.Height - bounds.Height) / 2, bounds.Width, bounds.Height);
+                case WindowLayout.PLACEMENT_CENTER:
+                    return new System.Drawing.Rectangle(screen.Left + (screen.Width - requested.Width) / 2,
+                        screen.Top + (screen.Height - requested.Height) / 2, requested.Width, requested.Height);
                 default:
                     throw new ArgumentException(LlmInstruction.Format(
                         @"Unknown placement '{0}'. Use '{1}' or '{2}', or omit it.",
-                        placement.Placement, WindowPlacement.PLACEMENT_MAXIMIZE, WindowPlacement.PLACEMENT_CENTER));
-            }
-        }
-
-        /// <summary>Refuses a docking request on a window that is not dockable, naming the window.</summary>
-        protected void RequireNotDocking(WindowPlacement placement)
-        {
-            if (placement.HasDocking())
-            {
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"{0} is not a dockable window: it takes Bounds, WindowState and Placement only. DockState, RelativeTo, Alignment and Proportion apply to a graph, a grid or the Targets window.",
-                    FormId));
+                        placement, WindowLayout.PLACEMENT_MAXIMIZE, WindowLayout.PLACEMENT_CENTER));
             }
         }
 
@@ -141,7 +138,7 @@ namespace pwiz.Skyline.ToolsUI
             if (!Enum.TryParse(windowState, true, out FormWindowState state))
             {
                 throw new ArgumentException(LlmInstruction.Format(
-                    @"Unknown window state '{0}'. Use Normal, Maximized or Minimized.", windowState));
+                    @"Unknown window state '{0}'. A top-level window takes Normal, Maximized or Minimized.", windowState));
             }
             return state;
         }

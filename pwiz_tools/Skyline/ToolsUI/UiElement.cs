@@ -1132,27 +1132,44 @@ namespace pwiz.Skyline.ToolsUI
 
         public Form Form { get; }
 
-        /// <summary>A top-level form: its own bounds, window state and screen placement. A change first restores a
-        /// maximized or minimized form to Normal, since a form in either state keeps the bounds it is given without
-        /// showing them - which is also why an empty request must not touch the state: asking where the window is
-        /// would un-maximize it. "maximize" fills the screen AS a Normal window, so a later call can still resize
-        /// it (a genuinely maximized window refuses every resize); WindowState is there for the real state.</summary>
-        public override WindowPlacement SetPlacementNow(WindowPlacement placement)
+        /// <summary>A top-level form has a window state (Normal, Maximized, Minimized) and no place among other
+        /// windows. A dockable form overrides this (see <see cref="DockableStandaloneForm"/>).</summary>
+        public override WindowInfo SetStateNow(string state, string relativeTo, string relation)
         {
-            RequireNotDocking(placement);
-            if (placement.HasChanges())
+            if (relativeTo != null)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"{0} is not a dockable window, so it cannot be placed relative to another; it takes a state: Normal, Maximized or Minimized.",
+                    FormId));
+            }
+            Form.WindowState = ParseWindowState(state);
+            return DescribeWindowNow();
+        }
+
+        /// <summary>A top-level form's own bounds. A change first restores a maximized or minimized form to Normal,
+        /// since a form in either state keeps the bounds it is given without showing them - which is also why a
+        /// read must not touch the state: asking where the window is would un-maximize it. "maximize" fills the
+        /// screen AS a Normal window, so a later call can still resize it (a genuinely maximized window refuses
+        /// every resize); the Maximized state itself is set with <see cref="SetStateNow"/>.</summary>
+        public override WindowInfo SetBoundsNow(Rectangle bounds, string placement)
+        {
+            if (bounds != null || placement != null)
             {
                 if (Form.WindowState != FormWindowState.Normal)
                     Form.WindowState = FormWindowState.Normal;
-                Form.Bounds = RequestedBounds(placement, Form.Bounds, Screen.FromControl(Form).Bounds);
-                if (placement.WindowState != null)
-                    Form.WindowState = ParseWindowState(placement.WindowState);
+                Form.Bounds = RequestedBounds(bounds, placement, Form.Bounds, Screen.FromControl(Form).Bounds);
             }
-            return new WindowPlacement
+            return DescribeWindowNow();
+        }
+
+        public override WindowInfo DescribeWindowNow()
+        {
+            return new WindowInfo
             {
+                Id = FormId,
+                State = Form.WindowState.ToString(),
                 Bounds = ToRectangle(Form.Bounds),
                 Screen = ToRectangle(Screen.FromControl(Form).Bounds),
-                WindowState = Form.WindowState.ToString(),
             };
         }
 
@@ -1502,6 +1519,43 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
+        /// <summary>The whole layout in the docking library's own terms (see <see cref="LayoutInfo"/>): every area
+        /// that has panes, each pane's tabs, and the split each pane made off an earlier one. The areas are the
+        /// dock panel's nested-pane containers - the document area, the four sides and each floating window - found
+        /// through the panes, since only a container with a pane in it is worth reporting.</summary>
+        public LayoutInfo GetLayoutNow()
+        {
+            var areas = new List<LayoutArea>();
+            var containers = SkylineWindow.DockPanel.Panes.Cast<DockPane>()
+                .Select(pane => pane.NestedPanesContainer).Where(container => container != null).Distinct()
+                .OrderBy(container => container.IsFloating ? 1 : 0).ThenBy(container => container.DockState);
+            foreach (var container in containers)
+            {
+                var panes = container.VisibleNestedPanes.Cast<DockPane>().ToList();
+                if (panes.Count == 0)
+                    continue;
+                var layoutPanes = panes.Select(pane =>
+                {
+                    var layoutPane = DockableStandaloneForm.PaneSplit(pane) ?? new LayoutPane();
+                    layoutPane.Tabs = DockableStandaloneForm.PaneTabs(pane);
+                    layoutPane.ActiveTab = DockableStandaloneForm.PaneActiveTab(pane);
+                    layoutPane.Bounds = ToRectangle(DockableStandaloneForm.ScreenBounds(pane));
+                    return layoutPane;
+                }).ToArray();
+                // A floating window's frame is the area; a docked side's area is what its panes cover.
+                var areaBounds = container is Form floatWindow
+                    ? floatWindow.Bounds
+                    : panes.Select(DockableStandaloneForm.ScreenBounds).Aggregate(System.Drawing.Rectangle.Union);
+                areas.Add(new LayoutArea
+                {
+                    State = container.DockState.ToString(),
+                    Bounds = ToRectangle(areaBounds),
+                    Panes = layoutPanes,
+                });
+            }
+            return new LayoutInfo { MainWindow = DescribeWindowNow(), Areas = areas.ToArray() };
+        }
+
         protected override string GetDockState()
         {
             return @"Main";
@@ -1524,78 +1578,60 @@ namespace pwiz.Skyline.ToolsUI
         // The floating frame this form is a tab of - the window a user drags by its title bar - or null when docked.
         private Form FloatingFrame => DockableForm.IsFloating ? DockableForm.ParentForm : null;
 
-        public override WindowPlacement SetPlacementNow(WindowPlacement placement)
+        /// <summary>A dockable form goes into a dock state (a new pane in that area, at the default size there;
+        /// Hidden puts it away) or next to another dockable window: into its tab group, or beside it on a side,
+        /// half each. Sizes are the bounds verb's business, not this one's.</summary>
+        public override WindowInfo SetStateNow(string state, string relativeTo, string relation)
         {
-            if (placement.WindowState != null)
-            {
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"{0} is a dockable window and has no window state of its own. Give it a DockState, or a Placement of '{1}' to fill the screen while it floats.",
-                    FormId, WindowPlacement.PLACEMENT_MAXIMIZE));
-            }
             var dockPanel = DockableForm.DockPanel ?? Program.MainWindow.DockPanel;
-            if (placement.RelativeTo != null)
-                DockRelativeTo(placement, dockPanel);
-            else if (placement.Alignment != null || placement.Proportion.HasValue)
-            {
-                throw new ArgumentException(new LlmInstruction(
-                    @"Alignment and Proportion need RelativeTo: the form id of the window to dock against."));
-            }
-            else if (placement.DockState != null)
-                DockableForm.Show(dockPanel, ParseDockState(placement.DockState));
-            if (placement.Bounds != null || placement.Placement != null)
-                ApplyBounds(placement, dockPanel);
-
-            var frame = FloatingFrame;
-            var pane = (Control) DockableForm.Pane ?? DockableForm;
-            return new WindowPlacement
-            {
-                Bounds = ToRectangle(frame?.Bounds ?? pane.RectangleToScreen(pane.ClientRectangle)),
-                Screen = ToRectangle(Screen.FromControl(DockableForm).Bounds),
-                DockState = DockableForm.DockState.ToString(),
-                WindowState = frame?.WindowState.ToString(),
-            };
+            if (relativeTo != null)
+                DockRelativeTo(relativeTo, relation, dockPanel);
+            else if (string.Equals(state, DockState.Hidden.ToString(), StringComparison.OrdinalIgnoreCase))
+                DockableForm.Hide();
+            else
+                DockableForm.Show(dockPanel, ParseDockState(state));
+            return DescribeWindowNow();
         }
 
-        // Docks this form against another dockable window: into its tab group, or beside it on the requested side
-        // with the requested share of the split. The other window is found among the dock panel's contents by its
-        // form id (all of them live on this thread, so reading their handles here is safe).
-        private void DockRelativeTo(WindowPlacement placement, DockPanel dockPanel)
+        // Docks this form against another dockable window: into its tab group, or beside it on the requested side,
+        // half each. The other window is found among the dock panel's contents by its form id (all of them live on
+        // this thread, so reading their handles here is safe).
+        private void DockRelativeTo(string relativeTo, string relation, DockPanel dockPanel)
         {
             var other = dockPanel.Contents.OfType<DockableForm>()
-                .FirstOrDefault(form => JsonUiService.GetFormId(form, form.Handle) == placement.RelativeTo);
+                .FirstOrDefault(form => JsonUiService.GetFormId(form, form.Handle) == relativeTo);
             if (other == null)
             {
                 throw new ArgumentException(LlmInstruction.Format(
-                    @"'{0}' is not a dockable window that is shown, so nothing can be docked relative to it. Use a graph, grid or Targets form id from skyline_get_open_forms.",
-                    placement.RelativeTo));
+                    @"'{0}' is not a dockable window that is shown, so nothing can be placed relative to it. Use a graph, grid or Targets form id from skyline_get_open_forms.",
+                    relativeTo));
             }
             if (other.Pane == null || other.DockState == DockState.Hidden)
             {
                 throw new ArgumentException(LlmInstruction.Format(
-                    @"'{0}' is not shown, so nothing can be docked relative to it.", placement.RelativeTo));
+                    @"'{0}' is not shown, so nothing can be placed relative to it.", relativeTo));
             }
-            string alignment = placement.Alignment?.Trim().ToLowerInvariant();
-            if (string.IsNullOrEmpty(alignment) || alignment == WindowPlacement.ALIGNMENT_TAB)
+            string side = relation?.Trim().ToLowerInvariant();
+            if (string.IsNullOrEmpty(side) || side == WindowLayout.RELATION_TAB)
             {
                 DockableForm.Show(other.Pane, null); // join the tab group, at the end
                 return;
             }
-            if (!Enum.TryParse(alignment, true, out DockPaneAlignment paneAlignment))
+            if (!Enum.TryParse(side, true, out DockPaneAlignment alignment))
             {
                 throw new ArgumentException(LlmInstruction.Format(
-                    @"Unknown alignment '{0}'. Use Left, Right, Top or Bottom to split beside the window, or '{1}' to join its tab group.",
-                    placement.Alignment, WindowPlacement.ALIGNMENT_TAB));
+                    @"Unknown relation '{0}'. Use left, right, top or bottom to split beside the window, or '{1}' to join its tab group.",
+                    relation, WindowLayout.RELATION_TAB));
             }
-            DockableForm.Show(other.Pane, paneAlignment, placement.Proportion ?? 0.5);
+            DockableForm.Show(other.Pane, alignment, 0.5);
         }
 
         private DockState ParseDockState(string dockState)
         {
-            if (!Enum.TryParse(dockState, true, out DockState state) ||
-                state == DockState.Hidden || state == DockState.Unknown)
+            if (!Enum.TryParse(dockState, true, out DockState state) || state == DockState.Unknown)
             {
                 throw new ArgumentException(LlmInstruction.Format(
-                    @"'{0}' is not a dock state a window can be placed in. Use Floating, Document, DockLeft, DockRight, DockTop, DockBottom or the AutoHide form of a side; a window is closed through its View menu item or close button.",
+                    @"'{0}' is not a state a dockable window takes. Use Document, DockLeft, DockRight, DockTop, DockBottom, a ...AutoHide side, Floating or Hidden; Normal, Maximized and Minimized are for top-level windows.",
                     dockState));
             }
             if (!DockableForm.IsDockStateValid(state))
@@ -1606,25 +1642,88 @@ namespace pwiz.Skyline.ToolsUI
             return state;
         }
 
-        // Bounds mean different things by dock state: the whole frame while floating, the width or height of the
-        // side while docked there. The document area is sized by its splits, so bounds there are refused.
-        private void ApplyBounds(WindowPlacement placement, DockPanel dockPanel)
+        /// <summary>Bounds mean different things by dock state: the whole frame while floating, the width or height
+        /// of the side while docked there. The document area is sized by its splits, so bounds there are refused.
+        /// A placement (maximize, center) is for a floating frame.</summary>
+        public override WindowInfo SetBoundsNow(Rectangle bounds, string placement)
+        {
+            if (bounds != null || placement != null)
+                ApplyBounds(bounds, placement, DockableForm.DockPanel ?? Program.MainWindow.DockPanel);
+            return DescribeWindowNow();
+        }
+
+        public override WindowInfo DescribeWindowNow()
+        {
+            var form = DockableForm;
+            var frame = FloatingFrame;
+            var pane = form.Pane;
+            var info = new WindowInfo
+            {
+                Id = FormId,
+                State = form.DockState.ToString(),
+                Bounds = ToRectangle(frame?.Bounds ?? ScreenBounds((Control) pane ?? form)),
+                Screen = ToRectangle(Screen.FromControl(form).Bounds),
+            };
+            if (pane != null)
+            {
+                info.Tabs = PaneTabs(pane);
+                var split = PaneSplit(pane);
+                if (split != null)
+                {
+                    info.SplitFrom = split.SplitFrom;
+                    info.SplitSide = split.SplitSide;
+                    info.SplitShare = split.SplitShare;
+                }
+            }
+            return info;
+        }
+
+        // ---- The pane vocabulary the layout verbs report, shared with GetLayout ----
+
+        internal static System.Drawing.Rectangle ScreenBounds(Control control) =>
+            control.RectangleToScreen(control.ClientRectangle);
+
+        /// <summary>The form ids of the tabs a pane shows, in tab order: its contents less any that is hidden
+        /// (a hidden content keeps its pane so that showing it again restores it).</summary>
+        internal static string[] PaneTabs(DockPane pane) =>
+            pane.Contents.OfType<DockableForm>().Where(form => !form.IsHidden)
+                .Select(form => JsonUiService.GetFormId(form, form.Handle)).ToArray();
+
+        /// <summary>The form id of the tab in front of a pane, or null when it shows none.</summary>
+        internal static string PaneActiveTab(DockPane pane) =>
+            pane.ActiveContent is Form active ? JsonUiService.GetFormId(active, active.Handle) : null;
+
+        /// <summary>How a pane split off from an earlier pane in its area - named by that pane's active tab, with the
+        /// side and the share - or null for the first pane in the area, which fills it.</summary>
+        internal static LayoutPane PaneSplit(DockPane pane)
+        {
+            var status = pane.NestedDockingStatus;
+            if (status?.PreviousPane == null)
+                return null;
+            return new LayoutPane
+            {
+                SplitFrom = PaneActiveTab(status.PreviousPane),
+                SplitSide = status.Alignment.ToString(),
+                SplitShare = status.Proportion,
+            };
+        }
+
+        private void ApplyBounds(Rectangle bounds, string placement, DockPanel dockPanel)
         {
             var form = DockableForm;
             var frame = FloatingFrame;
             if (frame != null)
             {
-                var bounds = RequestedBounds(placement, frame.Bounds, Screen.FromControl(frame).Bounds);
-                form.FloatingPane.FloatAt(bounds);
+                form.FloatingPane.FloatAt(RequestedBounds(bounds, placement, frame.Bounds, Screen.FromControl(frame).Bounds));
                 return;
             }
-            if (placement.Placement != null)
+            if (placement != null)
             {
                 throw new ArgumentException(LlmInstruction.Format(
-                    @"Placement applies to a floating window; {0} is docked ({1}). Float it first, or give it Bounds to size its side.",
+                    @"A placement applies to a floating window; {0} is docked ({1}). Float it first, or give it bounds to size its side.",
                     FormId, form.DockState));
             }
-            var requested = ToDrawingRectangle(placement.Bounds);
+            var requested = ToDrawingRectangle(bounds);
             switch (form.DockState)
             {
                 case DockState.DockLeft:
@@ -1649,7 +1748,7 @@ namespace pwiz.Skyline.ToolsUI
                     break;
                 case DockState.Document:
                     throw new ArgumentException(LlmInstruction.Format(
-                        @"{0} is in the document area, which is sized by its splits: dock it beside another window with RelativeTo, Alignment and Proportion instead of giving it Bounds.",
+                        @"{0} is in the document area, which is sized by its splits: place it relative to another window instead of giving it bounds.",
                         FormId));
                 default:
                     throw new ArgumentException(LlmInstruction.Format(@"{0} is not shown ({1}).", FormId, form.DockState));
