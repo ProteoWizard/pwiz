@@ -133,6 +133,18 @@ matchPaths = [
     (".*/smartBuildTrigger.py", {}),
     (".*/vcs_trigger_and_paths_config.py", {}),
     (".*/ai/.*", {}),
+    # TeamCity versioned settings: every UI edit to a config in the Versioned Configs
+    # subproject is committed back to this branch by TeamCity itself, and those commits carry
+    # nothing a build could test. Without this they fall through to no pattern at all, which
+    # happens to be a no-op today but only by accident - anything added below with a broad
+    # enough pattern would start rebuilding the world on every settings tweak. Say it out loud
+    # instead, next to the other build-plumbing no-ops.
+    #
+    # Not hypothetical: the run of moves into that subproject produced six commits in eight
+    # minutes, superseding builds mid-flight and leaving Core Linux .NET and Skyline Windows
+    # .NET reporting cancellations and an "Error while applying patch" against a commit whose
+    # only delta was a generated .kts patch file.
+    (".*\\.teamcity/.*", {}),
     # Native shims: these three dirs hold C++ that only a Windows agent with the VC++ toolchain
     # can build, so they get their own config. Each entry ALSO triggers the config that actually
     # tests the result, so a shim change still runs BiblioSpec's Mascot tests / Mobilion.Tests /
