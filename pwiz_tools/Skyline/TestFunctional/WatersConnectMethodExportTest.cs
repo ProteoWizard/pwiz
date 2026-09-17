@@ -40,6 +40,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
+using WatersConnectModel = pwiz.Skyline.Model.WatersConnect;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -74,6 +75,8 @@ namespace pwiz.SkylineTestFunctional
             TestMethodExport(exportMethodDlg);
 
             VerifyBehaviorReplacement();
+
+            TestCeOptimizationExport();
 
             _authenticationError = true;
             exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
@@ -386,6 +389,51 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => methodFileDlg.RefreshForTest());
             WaitForConditionUI(5000, () => methodFileDlg.ListViewItems.Any(i => i.Text == serverFolderName),
                 () => "The server-side folder did not appear after refresh.");
+        }
+
+        /// <summary>
+        /// Verifies a CE optimization export. waters_connect records the CE of every channel, so each CE step
+        /// keeps the real product m/z instead of the per-step product m/z shift other instruments need. The CE
+        /// rises by the step size across the steps, and only one step of the adduct is the quant ion.
+        /// </summary>
+        private void TestCeOptimizationExport()
+        {
+            var document = SkylineWindow.Document;
+            var ceRegression = document.Settings.TransitionSettings.Prediction.CollisionEnergy;
+            var optimizedCompounds = ExportCompounds(document, ExportOptimize.CE, ceRegression.StepSize, ceRegression.StepCount);
+            var plainCompounds = ExportCompounds(document, null, 0, 0);
+            var optimizedAdducts = optimizedCompounds.SelectMany(compound => compound.Adducts).ToList();
+            var plainAdducts = plainCompounds.SelectMany(compound => compound.Adducts).ToList();
+            Assert.AreEqual(plainAdducts.Count, optimizedAdducts.Count);
+            for (int i = 0; i < optimizedAdducts.Count; i++)
+            {
+                var transitions = optimizedAdducts[i].Transitions;
+                // The product m/z values are exactly those of the export without optimization
+                AssertEx.AreEqualDeep(plainAdducts[i].Transitions.Select(t => t.ProductMz).ToList(),
+                    transitions.Select(t => t.ProductMz).Distinct().ToList());
+                foreach (var steps in transitions.GroupBy(t => t.ProductMz))
+                {
+                    var collisionEnergies = steps.Select(t => t.CollisionEnergy).ToList();
+                    Assert.IsTrue(collisionEnergies.Count > 1, "Expected several CE steps at product m/z {0}", steps.Key);
+                    for (int step = 1; step < collisionEnergies.Count; step++)
+                        AssertEx.AreEqual(ceRegression.StepSize, collisionEnergies[step] - collisionEnergies[step - 1], 1e-6);
+                }
+                Assert.AreEqual(1, transitions.Count(t => t.IsQuanIon));
+            }
+        }
+
+        private static IList<WatersConnectModel.Compound> ExportCompounds(SrmDocument document, string optimizeType,
+            double optimizeStepSize, int optimizeStepCount)
+        {
+            var exporter = new WatersConnectMethodExporter(document, null)
+            {
+                OptimizeType = optimizeType,
+                OptimizeStepSize = optimizeStepSize,
+                OptimizeStepCount = optimizeStepCount
+            };
+            exporter.Export(null);
+            return exporter.MemoryOutput.Values
+                .SelectMany(output => exporter.ParseMethod(output.ToString()).Compounds).ToList();
         }
 
         private void TestAuthenticationError(ExportMethodDlg exportMethodDlg)

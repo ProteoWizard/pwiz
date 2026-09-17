@@ -116,6 +116,8 @@ namespace pwiz.ProteowizardWrapper
 
         private CVID? _cvidIonMobility;
 
+        private Dictionary<int, double> _watersConnectProductMzShifts; // Lazily built, see GetWatersConnectProductMzShift
+
         private static double[] ToArray(BinaryDataArray binaryDataArray)
         {
             return binaryDataArray.data.Storage();
@@ -699,6 +701,14 @@ namespace pwiz.ProteowizardWrapper
             get { return _msDataFile.softwareList.Any(software => software.hasCVParamChild(CVID.MS_Shimadzu_Corporation_software)); }
         }
 
+        /// <summary>
+        /// True for data acquired with waters_connect, whether read from the server or from a file converted from it.
+        /// </summary>
+        public bool IsWatersConnectFile
+        {
+            get { return _msDataFile.softwareList.Any(software => software.hasCVParam(CVID.MS_waters_connect)); }
+        }
+
         private string InstrumentVendorName
         {
             get
@@ -897,18 +907,61 @@ namespace pwiz.ProteowizardWrapper
             return chrom.precursor?.activation?.cvParam(CVID.MS_collision_energy)?.value;
         }
         
+        /// <summary>
+        /// Gets the identifying metadata of a chromatogram. For waters_connect CE optimization data the product
+        /// m/z includes the per-step shift from <see cref="WatersConnectCeSteps"/>.
+        /// </summary>
         public void GetChromatogramMetadata(int chromIndex, out string id, out bool? isNegativePolarity, out double precursorMz, out double productMz)
         {
             using Chromatogram chrom = ChromatogramList.chromatogram(chromIndex, DetailLevel.FullMetadata);
             id = chrom.id;
-            isNegativePolarity = chrom.cvParamChild(CVID.MS_scan_polarity).cvid switch
+            isNegativePolarity = GetNegativePolarity(chrom);
+            precursorMz = chrom.precursor.isolationWindow.cvParam(CVID.MS_isolation_window_target_m_z).value;
+            productMz = chrom.product.isolationWindow.cvParam(CVID.MS_isolation_window_target_m_z).value;
+            productMz += GetWatersConnectProductMzShift(chromIndex);
+        }
+
+        private static bool? GetNegativePolarity(Chromatogram chrom)
+        {
+            return chrom.cvParamChild(CVID.MS_scan_polarity).cvid switch
             {
                 CVID.MS_positive_scan => false,
                 CVID.MS_negative_scan => true,
                 _ => null
             };
-            precursorMz = chrom.precursor.isolationWindow.cvParam(CVID.MS_isolation_window_target_m_z).value;
-            productMz = chrom.product.isolationWindow.cvParam(CVID.MS_isolation_window_target_m_z).value;
+        }
+
+        /// <summary>
+        /// Returns the product m/z shift for a waters_connect CE optimization step, or 0 for any other
+        /// chromatogram or file. The shifts are computed once, over all SRM chromatograms of the file.
+        /// </summary>
+        private double GetWatersConnectProductMzShift(int chromIndex)
+        {
+            if (_watersConnectProductMzShifts == null)
+            {
+                _watersConnectProductMzShifts = IsWatersConnectFile
+                    ? WatersConnectCeSteps.GetProductMzShifts(GetSrmChannels())
+                    : new Dictionary<int, double>();
+            }
+            return _watersConnectProductMzShifts.TryGetValue(chromIndex, out var shift) ? shift : 0;
+        }
+
+        private IEnumerable<WatersConnectCeSteps.Channel> GetSrmChannels()
+        {
+            for (int i = 0; i < ChromatogramCount; i++)
+            {
+                using var chrom = ChromatogramList.chromatogram(i, DetailLevel.FullMetadata);
+                if (!IsSingleIonCurrentId(chrom.id))
+                    continue;
+                var activation = chrom.precursor.activation;
+                double collisionEnergy = activation.hasCVParam(CVID.MS_collision_energy)
+                    ? (double) activation.cvParam(CVID.MS_collision_energy).value
+                    : 0;
+                yield return new WatersConnectCeSteps.Channel(i, GetNegativePolarity(chrom),
+                    chrom.precursor.isolationWindow.cvParam(CVID.MS_isolation_window_target_m_z).value,
+                    chrom.product.isolationWindow.cvParam(CVID.MS_isolation_window_target_m_z).value,
+                    collisionEnergy);
+            }
         }
 
         public void GetChromatogram(int chromIndex, out string id,

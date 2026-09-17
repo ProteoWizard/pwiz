@@ -4694,7 +4694,10 @@ namespace pwiz.Skyline.Model
 
             writer.Write(FieldSeparator);
 
-            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
+            // waters_connect records the CE of every channel, so the optimization steps keep the real product m/z
+            // and are told apart on import by their CE (see WatersConnectCeSteps).
+            int productMzStep = this is WatersConnectMethodExporter ? 0 : step;
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), productMzStep).ToString(CultureInfo));
             writer.Write(FieldSeparator);
 
             // Waters only excepts integers for CE and CV
@@ -4722,7 +4725,9 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.WriteDsvField(RTWindow.ToString(CultureInfo), FieldSeparator);
             writer.Write(FieldSeparator);
-            if (nodeTran.ResultsRank.HasValue)
+            if (step != 0 && this is WatersConnectMethodExporter)
+                writer.Write(false);    // Only the center optimization step can be the quant ion
+            else if (nodeTran.ResultsRank.HasValue)
                 writer.Write((nodeTran.ResultsRank == 1).ToString());
             else if (nodeTran.HasLibInfo)
                 writer.Write((nodeTran.LibInfo.Rank == 1).ToString());
