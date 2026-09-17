@@ -210,4 +210,45 @@ public class ReaderThermoTests
         }
         return new FixtureRunContext(new Reader_Thermo(), root, new IsNamedRawFile(fixtureFileName), fixtureFileName);
     }
+
+    /// <summary>
+    /// Rewrites every Thermo reference mzML in this class from the current reader output.
+    ///
+    /// <para>The <c>[TestMethod]</c> attribute below is COMMENTED OUT deliberately. An
+    /// undiscovered test cannot run in "Run All Tests", and MSTest has no attribute that
+    /// excludes a test from a run-all while leaving it runnable on demand: <c>[Ignore]</c> is
+    /// skipped even when selected explicitly, and a runsettings <c>TestCaseFilter</c> removes it
+    /// from discovery altogether, so it never appears to click on. Commenting the attribute is
+    /// the only mechanism that gives both.</para>
+    ///
+    /// <para>To regenerate: uncomment the attribute, run this one test, then comment it back.
+    /// It ends in <c>Assert.Fail</c>, so a run that completes is never green and the message is
+    /// the reminder. That is NOT a CI guard: if this vendor's data is absent, <c>SetUp</c> throws
+    /// <c>Assert.Inconclusive</c>, which aborts before the <c>Assert.Fail</c> and reports Skipped -
+    /// and <c>dotnet test</c> exits 0 on skips. Afterwards run the suite again WITHOUT it - a
+    /// regenerated reference that
+    /// does not then compare equal means the generate and compare paths disagree, which is the
+    /// one failure this mode can hide.</para>
+    /// </summary>
+    //[TestMethod]
+    public void Regenerate_Thermo_References()
+    {
+        VendorReaderTestHarness.GenerateReferences = true;
+        try
+        {
+            Reader_Thermo_090701_LTQVelos_unittest_01();
+            Reader_Thermo_BSA_FT_ETD();
+            Reader_Thermo_BSA_FT_HCD();
+            Reader_Thermo_FT_HCD_MSX();
+            Reader_Thermo_IT_HCD_SPS();
+            Reader_Thermo_IsolationMzOffset_ReportedMassOffset();
+            Reader_Thermo_source_cid_test_3scans();
+        }
+        finally
+        {
+            VendorReaderTestHarness.GenerateReferences = false;
+        }
+
+        Assert.Fail("Reference mzMLs regenerated. Comment out this [TestMethod] and run the normal tests.");
+    }
 }

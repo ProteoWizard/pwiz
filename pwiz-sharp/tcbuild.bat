@@ -22,7 +22,8 @@ REM # Usage:
 REM #   tcbuild.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
 REM #               [--require-vendor-support] [--automated]
 REM #
-REM # Args are forwarded verbatim to build.bat; see that script for flag
+REM # Args are forwarded verbatim to build.bat, plus --with-vendor-sdks; see that
+REM # script for flag
 REM # semantics. TC should pass --i-agree-to-the-vendor-licenses
 REM # --require-vendor-support --automated for the standard CI run.
 REM #
@@ -84,8 +85,14 @@ call "%SCRIPT_DIR%\clean.bat"
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set "ERROR_TEXT=clean.bat failed" & goto error)
 
-echo ##teamcity[progressMessage 'pwiz-sharp build.bat %*']
-call "%SCRIPT_DIR%\build.bat" %*
+REM # --with-vendor-sdks is added here rather than left to the caller: the
+REM # vendor-bundled installer is a CI deliverable (the wine container installs
+REM # it, and it is the only variant that needs no network at run time), while a
+REM # developer running build.bat by hand should not pay ~30 s and ~26 MB for it.
+REM # Appending after %* is safe — build.bat parses flags in any order, and the
+REM # flag is inert unless --i-agree-to-the-vendor-licenses was also passed.
+echo ##teamcity[progressMessage 'pwiz-sharp build.bat %* --with-vendor-sdks']
+call "%SCRIPT_DIR%\build.bat" %* --with-vendor-sdks
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set "ERROR_TEXT=build.bat failed" & goto error)
 

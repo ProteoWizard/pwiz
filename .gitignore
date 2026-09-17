@@ -409,6 +409,9 @@ Version.cpp
 /pwiz/data/vendor_readers/Bruker/Reader_Bruker_Test.data
 /pwiz/data/vendor_readers/UIMF/Reader_UIMF_Test.data
 
+# Conversions written next to the fixtures by scripts/container/tctest.sh
+/pwiz/data/vendor_readers/*/Reader*Test.data/output/
+
 # Files that get extracted from vendor reader distros
 /pwiz_aux/msrc/utility/vendor_api/**/*.dll
 /pwiz_aux/msrc/utility/vendor_api/*/EULA.*
