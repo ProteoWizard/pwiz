@@ -2977,9 +2977,13 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>The retained set is the post-compaction survivors (<c>_firstPassBaseIds</c>,
         /// already pair-symmetric so a target's decoy rides along) PLUS the gap-fill candidates.
-        /// Gap-fill has to be in it: <c>GapFillTargetIdentifier</c> looks up the MISSING charge
-        /// states of passing peptides through the library, so by construction it reaches
-        /// entries that did NOT survive compaction and still needs their spectra.</para>
+        /// The gap-fill term is a belt rather than a necessity, and the reason this doc used to
+        /// give for it was wrong - see
+        /// <see cref="LibraryFragmentRelease.BuildRetainedBaseIds(HashSet{uint}, IReadOnlyDictionary{string, List{GapFillTarget}})"/>,
+        /// which carries the corrected argument (issue #4650). In short: a gap-fill target is a
+        /// precursor that PASSED in a sibling replicate and is absent from THIS file's rows, so
+        /// its base_id is already in the join-wide first-pass set. "Did not survive compaction"
+        /// is true of the file's ROW, never of the base_id.</para>
         ///
         /// <para>Called from BOTH <see cref="Run"/> (projection path) and
         /// <see cref="Rehydrate"/> (resume / bundle-adopt), which set

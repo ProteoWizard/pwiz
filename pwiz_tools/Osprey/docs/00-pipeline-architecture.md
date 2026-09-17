@@ -1010,7 +1010,11 @@ Experiment-wide, to **every** node:
   Stage 6 planning ends. It is what makes this list one a single-run node can actually run
   on: without it a node would rebuild the union from every run's `reconciliation.json`,
   which is the O(runs) pre-pass P6 forbids. Its absence is FATAL rather than silently
-  rebuilt, deliberately - see `ScoringTaskShared.ReadRetainedBaseIds`
+  rebuilt, deliberately - see `ScoringTaskShared.ReadRetainedBaseIds`. Stage 7's
+  library-fragment release reads the same file (#4650); it used to fold every run's final
+  pool to rebuild the set instead, which is the identical O(runs) pre-pass in different
+  clothes - 11 minutes and a 41.5 GB peak on the 446-run CHS cohort of issue #4650, for the
+  625,620 base_ids already sitting on disk in that run's 2,502,512-byte summary
 - `<stem>.1st-pass.model.json` (any one copy) - **mandatory on an ordinary run**, because
   the default pass-2 mode is a frozen one (`protein-compact`); an unset
   `OSPREY_PASS2_QVALUE` is not an opt-out
