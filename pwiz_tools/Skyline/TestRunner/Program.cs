@@ -2362,6 +2362,7 @@ namespace TestRunner
                     if (!pass2 && loopCount <= 0)
                         pass1LoopCount = int.MaxValue;
 
+                    var failedTests = new List<TestInfo>();
                     for (int pass1Count = 0; pass1Count <= pass1LoopCount; ++pass1Count)
                     {
                         if (pass1Count > 0)
@@ -2375,6 +2376,14 @@ namespace TestRunner
                             if (test.IsPerfTest)
                             {
                                 // These are generally too lengthy to run multiple times, so not a good fit for pass 1
+                                continue;
+                            }
+
+                            if (RunOnceTestNames.Contains(test.TestMethod.Name))
+                            {
+                                // Not leak checks, but the antivirus check still wants to be the first thing a run does
+                                if (pass1Count == 0 && !runTests.Run(test, 1, testNumber, dmpDir, false))
+                                    failedTests.Add(test);
                                 continue;
                             }
 
@@ -2395,7 +2404,7 @@ namespace TestRunner
                                 if (!runTests.Run(test, 1, testNumber, dmpDir, hangIteration >= 0 && (i - hangIteration) % 100 == 0))
                                 {
                                     failed = true;
-                                    removeList.Add(test);
+                                    failedTests.Add(test);
                                     break;
                                 }
 
@@ -2462,6 +2471,16 @@ namespace TestRunner
                             maxDeltas = maxDeltas.Max(minDeltas.Value);
                             maxIterationCount = Math.Max(maxIterationCount, iterationCount);
                         }
+
+                        // A failure can leak badly, so give up on a failed test for the following sweeps (a leak is
+                        // kept for its independent measurement). Leaked and failed tests are both dropped from pass 2.
+                        // NB the phrase "# Pass 1 sweep 1 complete" is how SkylineNightly tells a leak checking run
+                        // that got through every test from one that did not - so don't mess with this.
+                        foreach (var failedTest in failedTests)
+                            testList.Remove(failedTest);
+                        removeList.AddRange(failedTests);
+                        failedTests.Clear();
+                        runTests.Log("# Pass 1 sweep {0} complete.\r\n", pass1Count + 1);
                     }
 
                     runTests.Log(maxDeltas.GetLogMessage("MaximumLeaks", maxIterationCount));
@@ -2500,10 +2519,13 @@ namespace TestRunner
                 // gains perf languages and a slow one loses them, never the suite. Once every language has had its
                 // perf pass, the remaining passes cycle the suite.
                 var perfTests = new List<TestInfo>();
+                var runOnceTests = new List<TestInfo>(); // The antivirus check, which wants to be the first thing a run does
+                int perfLanguageStart = GetPerfTestLanguageIndex(); // Once: a pass may start after midnight
                 if (perfFirst)
                 {
                     perfTests = testList.Where(t => t.IsPerfTest).ToList();
-                    testList = OrderForPerfNight(testList.Where(t => !t.IsPerfTest));
+                    runOnceTests = testList.Where(t => RunOnceTestNames.Contains(t.TestMethod.Name)).ToList();
+                    testList = OrderForPerfNight(testList.Where(t => !t.IsPerfTest && !runOnceTests.Contains(t)));
                     // NB the phrase "# Perf tests" in a log is a key for SkylineNightly to post to a different URL - so don't mess with this.
                     runTests.Log("# Perf tests first, once in one language, then all tests once in each selected language, then perf tests in each further language until stopped.\r\n");
                 }
@@ -2517,7 +2539,7 @@ namespace TestRunner
                     foreach (var test in testPass)
                     {
                         // Perf Tests are generally too lengthy to run multiple times (but non-english format check is useful, so rotate through on a per-day basis - including "tr")
-                        var languagesThisTest = (test.IsPerfTest && perfTestsOneLanguageOnly) ? new[] { GetPerfTestLanguage(0) } : testLanguages;
+                        var languagesThisTest = (test.IsPerfTest && perfTestsOneLanguageOnly) ? new[] { allLanguages[perfLanguageStart] } : testLanguages;
                         if (perfTestsOneLanguageOnly && needsPerfTestPass2Warning)
                         {
                             // NB the phrase "# Perf tests" in a log is a key for SkylineNightly to post to a different URL - so don't mess with this.
@@ -2586,8 +2608,10 @@ namespace TestRunner
                         // One perf language per pass, starting with the rotating language
                         int perfLanguageOffset = pass - perfPass;
                         bool perfLanguagesDone = perfLanguageOffset >= allLanguages.Length;
-                        if (!perfLanguagesDone)
-                            continueRun = RunTestsInLanguages(perfTests, new[] { GetPerfTestLanguage(perfLanguageOffset) });
+                        if (pass == perfPass)
+                            continueRun = RunTestsInLanguages(runOnceTests, new[] { languages[0] });
+                        if (continueRun && !perfLanguagesDone)
+                            continueRun = RunTestsInLanguages(perfTests, new[] { allLanguages[(perfLanguageStart + perfLanguageOffset) % allLanguages.Length] });
                         // The suite runs once, after the first perf language, and cycles only once the perf languages are exhausted
                         if (continueRun && (pass == perfPass || perfLanguagesDone))
                             continueRun = RunTestsInLanguages(testList, languages);
@@ -2614,14 +2638,14 @@ namespace TestRunner
         }
 
         /// <summary>
-        /// The language for the perf tests in a nightly run, rotating by day so that every language gets
-        /// covered over a week, and by machine so that machines running perf tests on the same night cover
-        /// different languages instead of all choosing the same one. Successive passOffset values walk the
-        /// languages in order from there.
+        /// The index into allLanguages of the first perf test language of a nightly run, rotating by day so
+        /// that every language gets covered over a week, and by machine so that machines running perf tests
+        /// on the same night cover different languages instead of all choosing the same one. Later perf
+        /// passes walk the languages in order from there.
         /// </summary>
-        private static string GetPerfTestLanguage(int passOffset)
+        private static int GetPerfTestLanguageIndex()
         {
-            return allLanguages[(DateTime.Now.DayOfYear + GetMachineLanguageOffset() + passOffset) % allLanguages.Length];
+            return (DateTime.Now.DayOfYear + GetMachineLanguageOffset()) % allLanguages.Length;
         }
 
         private static int GetMachineLanguageOffset()

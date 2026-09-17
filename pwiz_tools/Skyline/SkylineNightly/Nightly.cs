@@ -73,7 +73,6 @@ namespace SkylineNightly
         private static string LABKEY_URL = GetPostUrl("home/development/Nightly%20x64");
         private static string LABKEY_PERF_URL = GetPostUrl("home/development/Performance%20Tests");
         private static string LABKEY_LEAK_URL = GetPostUrl("home/development/Nightly%20x64%20Leak%20Detection");
-        private static string LABKEY_STRESS_URL = GetPostUrl("home/development/NightlyStress");
         private static string LABKEY_RELEASE_URL = GetPostUrl("home/development/Release%20Branch");
         private static string LABKEY_RELEASE_PERF_URL = GetPostUrl("home/development/Release%20Branch%20Performance%20Tests");
         private static string LABKEY_RELEASE_LEAK_URL = GetPostUrl("home/development/Release%20Branch%20Leak%20Detection");
@@ -204,8 +203,10 @@ namespace SkylineNightly
                 runResult = QuitWithError(e.Message);
             }
 
-            Parse();
-            var postResult = Post(_runSpec);
+            // Post to the folder for the run the log shows, not the run that was asked for: an older
+            // SkylineTester on a branch cannot run a leak run yet, and its results belong with the
+            // standard runs.
+            var postResult = Post(Parse());
             if (!string.IsNullOrEmpty(postResult))
             {
                 if (!string.IsNullOrEmpty(runResult))
@@ -304,22 +305,11 @@ namespace SkylineNightly
 
         private void KillProcesses()
         {
-            // Kill any other instance of SkylineNightly, unless this is
-            // the StressTest mode, in which case assume that a previous invocation
-            // is still running and just exit to stay out of its way.
+            // Kill any other instance of SkylineNightly
             foreach (var process in Process.GetProcessesByName("skylinenightly"))
             {
                 if (process.Id != Process.GetCurrentProcess().Id)
-                {
-                    if (_runSpec.IsStress)
-                    {
-                        Application.Exit(); // Just let the already (long!) running process do its thing
-                    }
-                    else
-                    {
-                        process.Kill();
-                    }
-                }
+                    process.Kill();
             }
 
             // Kill processes started within the proposed working directory - most likely SkylineTester and/or TestRunner.
@@ -410,8 +400,6 @@ namespace SkylineNightly
                     // A SkylineTester from before the run type existed reads these instead
                     skylineTester.GetChild("nightlyRunPerfTests").Set(_runSpec.IsPerf ? "true" : "false");
                     skylineTester.GetChild("nightlyDuration").Set(((int)TargetDuration.TotalHours).ToString());
-                    skylineTester.GetChild("nightlyRepeat").Set(_runSpec.IsStress ? "100" : "1");
-                    skylineTester.GetChild("nightlyRandomize").Set(_runSpec.IsStress ? "true" : "false");
                     if (!string.IsNullOrEmpty(branchUrl) && branchUrl.Contains("tree"))
                     {
                         skylineTester.GetChild("nightlyBuildTrunk").Set("false");
@@ -440,8 +428,6 @@ namespace SkylineNightly
                     return "Leak checking";
                 case RunType.perf:
                     return "Perf";
-                case RunType.stress:
-                    return "Stress";
                 case RunType.standard_leak:
                     return "Standard with leak checking";
                 default:
@@ -790,6 +776,8 @@ namespace SkylineNightly
             var runType = log.Contains("# Perf tests") ? RunType.perf
                 : log.Contains("# Leak checking only") ? RunType.leak
                 : RunType.standard;
+            if (runType == RunType.leak)
+                CheckLeakSweepComplete(log);
             var matchBranch = new Regex(@"git\.exe.*clone.*-b.*SkylineTesterForNightly_([a-z]+)").Match(log);
             var branch = !matchBranch.Success ? Branch.master
                 : Equals("integration", matchBranch.Groups[1].Value) ? Branch.integration
@@ -985,6 +973,27 @@ namespace SkylineNightly
             return testCount;
         }
 
+        /// <summary>
+        /// A leak checking run must get through every test at least once, or the tail of the
+        /// alphabet is never leak-checked on that machine. That is easy to miss on the results
+        /// page, so a run that never logged its first sweep complete is reported as a failure.
+        /// </summary>
+        private void CheckLeakSweepComplete(string log)
+        {
+            if (log.Contains("# Pass 1 sweep 1 complete."))
+                return;
+            var failure = _failures.Append("failure");
+            failure["name"] = "LeakCheckingIncomplete";
+            failure["timestamp"] = _startTime.ToString("HH:mm", CultureInfo.InvariantCulture);
+            failure["pass"] = "1";
+            failure["test"] = "0";
+            failure["language"] = "en";
+            failure.Set(Environment.NewLine +
+                        "Leak checking did not get through every test once before the run was stopped. " +
+                        "This machine is too slow for a leak checking run of this length: schedule it as a standard run instead." +
+                        Environment.NewLine);
+        }
+
         private void ParseFailures(string log)
         {
             var startFailure = new Regex(@"\r\n!!! (\S+) FAILED\r\n", RegexOptions.Compiled);
@@ -1111,13 +1120,10 @@ namespace SkylineNightly
 
         /// <summary>
         /// The skyline.ms folder that receives a run's results: one per branch and run type, except
-        /// that stress results share a folder whatever the branch, and the pre-split combined run
-        /// posts with the standard runs of its branch.
+        /// that the pre-split combined run posts with the standard runs of its branch.
         /// </summary>
         private static string GetResultsUrl(RunSpec runSpec)
         {
-            if (runSpec.IsStress)
-                return LABKEY_STRESS_URL;
             switch (runSpec.Branch)
             {
                 case Branch.integration:

@@ -1213,8 +1213,6 @@ namespace SkylineTester
                 nightlyBuildType,
                 nightlyBuildTrunk,
                 nightlyRunType,
-                nightlyRandomize,
-                nightlyRepeat,
                 nightlyBranch,
                 nightlyBranchUrl,
                 nightlyRoot,
@@ -1384,23 +1382,20 @@ namespace SkylineTester
 
         /// <summary>
         /// Settings saved before the nightly run type existed describe the run with a perf tests
-        /// checkbox and a repeat count. Map those to the run type they meant, so that an older
-        /// SkylineNightly, or a developer's saved settings, still get the run they asked for.
+        /// checkbox. Map that to the run type it meant, so that an older SkylineNightly, or a
+        /// developer's saved settings, still get the run they asked for.
         /// </summary>
         private void LoadNightlyRunType(XDocument doc)
         {
             if (doc.Descendants(nightlyRunType.Name).Any())
                 return;
+            var perfTestsElement = doc.Descendants("nightlyRunPerfTests").FirstOrDefault();
+            if (perfTestsElement == null)
+                return; // Not a nightly document, so nothing to say about the run type
 
-            var runPerfTests = doc.Descendants("nightlyRunPerfTests").Any(e => e.Value == "true");
-            var repeatCount = doc.Descendants(nightlyRepeat.Name).Select(e => e.Value).FirstOrDefault();
-            int.TryParse(repeatCount, out var repeatTimes);
-            if (repeatTimes > 1)
-                nightlyRunType.SelectedItem = TabNightly.RUN_TYPE_STRESS;
-            else if (runPerfTests)
-                nightlyRunType.SelectedItem = TabNightly.RUN_TYPE_PERF;
-            else
-                nightlyRunType.SelectedItem = TabNightly.RUN_TYPE_STANDARD_WITH_LEAK_CHECKING;
+            nightlyRunType.SelectedItem = perfTestsElement.Value == "true"
+                ? TabNightly.RUN_TYPE_PERF
+                : TabNightly.RUN_TYPE_STANDARD_WITH_LEAK_CHECKING;
         }
 
         private XElement CreateElement(string name, params object[] childElements)
@@ -1714,11 +1709,9 @@ namespace SkylineTester
         public Label            NightlyLabelLeaks           { get { return nightlyLabelLeaks; } }
         public Label            NightlyLabelTestsRun        { get { return nightlyLabelTestsRun; } }
         public ZedGraphControl  NightlyGraphMemory          { get { return nightlyGraphMemory; } }
-        public CheckBox         NightlyRandomize            { get { return nightlyRandomize; } }
         public CheckBox         NightlyRunIndefinitely      { get { return nightlyRunIndefinitely; } }
         public Label            NightlyRoot                 { get { return nightlyRoot; } }
         public ComboBox         NightlyRunDate              { get { return nightlyRunDate; } }
-        public ComboBox         NightlyRepeat               { get { return nightlyRepeat; } }
         public ComboBox         NightlyRunType              { get { return nightlyRunType; } }
         public DateTimePicker   NightlyStartTime            { get { return nightlyStartTime; } }
         public Label            NightlyTestName             { get { return nightlyTestName; } }

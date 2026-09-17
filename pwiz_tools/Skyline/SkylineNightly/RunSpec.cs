@@ -36,10 +36,10 @@ namespace SkylineNightly
     /// everything in one night: standard cycles the suite, leak repeats the leak checking pass over
     /// every test, and perf concentrates on the perf tests. standard_leak is the run every machine
     /// did before the split - pass 0, pass 1 and pass 2 in one night - and is not offered in the
-    /// form: a machine scheduled with a pre-split argument keeps running exactly what it ran until
-    /// it is reconfigured.
+    /// form: a machine scheduled with a pre-split argument keeps running the run it ran (pass 1
+    /// now covering the tests the NoLeakTesting attribute used to skip) until it is reconfigured.
     /// </summary>
-    public enum RunType { standard, leak, perf, stress, standard_leak }
+    public enum RunType { standard, leak, perf, standard_leak }
 
     /// <summary>
     /// A branch and a run type: everything the scheduled task needs to say about one nightly run.
@@ -49,7 +49,6 @@ namespace SkylineNightly
     {
         public const int STANDARD_DURATION_HOURS = 9;
         public const int LONG_DURATION_HOURS = 12;
-        public const int STRESS_DURATION_HOURS = 168; // Let it go as long as a week
 
         /// <summary>
         /// The pre-split task arguments, which the shim keeps passing until a machine is reconfigured.
@@ -65,7 +64,6 @@ namespace SkylineNightly
             { "release_perf", new RunSpec(Branch.release, RunType.perf) },
             { "integration", new RunSpec(Branch.integration, RunType.standard_leak) },
             { "integration_perf", new RunSpec(Branch.integration, RunType.perf) },
-            { "stress", new RunSpec(Branch.master, RunType.stress) },
         };
 
         public static RunSpec Parse(string argument)
@@ -90,7 +88,6 @@ namespace SkylineNightly
         public RunType RunType { get; }
 
         public bool IsPerf => RunType == RunType.perf;
-        public bool IsStress => RunType == RunType.stress;
 
         /// <summary>
         /// Whether this run takes the longer of the two nightly slots. A machine may schedule one
@@ -99,45 +96,26 @@ namespace SkylineNightly
         /// </summary>
         public bool IsLong => RunType == RunType.leak || RunType == RunType.perf;
 
-        public TimeSpan TargetDuration
-        {
-            get
-            {
-                switch (RunType)
-                {
-                    case RunType.stress:
-                        return TimeSpan.FromHours(STRESS_DURATION_HOURS);
-                    case RunType.leak:
-                    case RunType.perf:
-                        return TimeSpan.FromHours(LONG_DURATION_HOURS);
-                    default:
-                        return TimeSpan.FromHours(STANDARD_DURATION_HOURS);
-                }
-            }
-        }
+        public TimeSpan TargetDuration => TimeSpan.FromHours(IsLong ? LONG_DURATION_HOURS : STANDARD_DURATION_HOURS);
 
         /// <summary>
-        /// The name the pre-split SkylineNightly gave this run, which still names the working
-        /// directory and the log file so that nothing on disk moves when a machine is reconfigured -
-        /// the log parser finds the branch in the clone command by the directory name, and the
-        /// scheduled cleanup of the previous run's directory finds it by the same name.
+        /// A name for this run, distinct for every distinct run, which names the working directory
+        /// and the log file. A run the pre-split SkylineNightly could schedule keeps the name it had
+        /// then (trunk, perf, release, ...), so nothing on disk moves until a machine is reconfigured;
+        /// the log parser finds the branch in the clone command by the directory name either way.
         /// </summary>
         public string ShortName
         {
             get
             {
-                var branchName = Branch == Branch.master ? "trunk" : Branch.ToString();
-                switch (RunType)
+                foreach (var legacy in LEGACY_ARGUMENTS)
                 {
-                    case RunType.perf:
-                        return Branch == Branch.master ? "perf" : branchName + "_perf";
-                    case RunType.leak:
-                        return Branch == Branch.master ? "leak" : branchName + "_leak";
-                    case RunType.stress:
-                        return Branch == Branch.master ? "stress" : branchName + "_stress";
-                    default:
-                        return branchName;
+                    if (Equals(legacy.Value, this))
+                        return legacy.Key;
                 }
+                if (RunType == RunType.standard && Branch == Branch.master)
+                    return Branch.ToString();
+                return Branch + "_" + RunType;
             }
         }
 

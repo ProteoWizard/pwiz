@@ -42,7 +42,6 @@ namespace SkylineTester
         public const string RUN_TYPE_STANDARD = "Standard";
         public const string RUN_TYPE_LEAK_CHECKING = "Leak checking";
         public const string RUN_TYPE_PERF = "Perf";
-        public const string RUN_TYPE_STRESS = "Stress";
         public const string RUN_TYPE_STANDARD_WITH_LEAK_CHECKING = "Standard with leak checking"; // Pass 0, 1 and 2 in one run, as every nightly was before the split
 
         private const int MINUTES_PER_INCREMENT = 60; // 1 hour
@@ -384,17 +383,11 @@ namespace SkylineTester
             else
             {
                 // Then add the testing command
-                int stressTestLoopCount;
-                if (!int.TryParse(MainWindow.NightlyRepeat.Text, out stressTestLoopCount))
-                    stressTestLoopCount = 0;
-
                 MainWindow.AddTestRunner("offscreen=on quality=on loop=-1 " +
                                          GetRunTypeArgs(MainWindow.NightlyRunType.SelectedItem as string) +
                                          " runsmallmoleculeversions=on" + // Run any provided tests that convert the document to small molecules
                                          " retrydatadownloads=on" + // In case of test failure, re-download test data in case staleness was the issue
-                                         (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
-                                         (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty)
-                                         + " dmpdir=" + MainWindow.GetMinidumpDir());
+                                         " dmpdir=" + MainWindow.GetMinidumpDir());
                 MainWindow.CommandShell.Add("# Nightly finished.");
             }
             MainWindow.CommandShell.IsUnattended = MainWindow.NightlyExit.Checked;
@@ -410,9 +403,9 @@ namespace SkylineTester
         }
 
         /// <summary>
-        /// The TestRunner pass arguments for a nightly run type. Each type is one job: a standard
-        /// run cycles the suite, a leak checking run repeats pass 1, and a perf run puts the perf
-        /// tests first. Only the pre-split combined run does all three in one night.
+        /// The TestRunner arguments for a nightly run type. Each type is one job: a standard run
+        /// cycles the suite, a leak checking run repeats pass 1, and a perf run puts the perf tests
+        /// first. Only the pre-split combined run does pass 0, 1 and 2 in one night.
         /// </summary>
         public static string GetRunTypeArgs(string runType)
         {
@@ -422,8 +415,6 @@ namespace SkylineTester
                     return "pass0=off pass1=on pass2=off";
                 case RUN_TYPE_PERF:
                     return "pass0=off pass1=off pass2=on perftests=on perffirst=on";
-                case RUN_TYPE_STRESS:
-                    return "pass0=off pass1=off pass2=on";
                 case RUN_TYPE_STANDARD_WITH_LEAK_CHECKING:
                     return "pass0=on pass1=on pass2=on";
                 default:
