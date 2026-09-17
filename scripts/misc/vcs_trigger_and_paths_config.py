@@ -112,6 +112,12 @@ targets['Container'] = \
 }
 
 targets['OspreyWindowsNet'] = {'master': {"ProteoWizard_OspreyWindowsNet": "Osprey Windows .NET"}}
+targets['OspreyLinuxNet'] = {'master': {"ProteoWizard_VersionedConfigs_OspreyLinuxNet": "Osprey Linux .NET"}}
+# Both platforms build the same net10.0 sources from the same tree, so a change that warrants
+# the Windows Osprey build warrants the Linux one too - otherwise a portability regression (a
+# backslash path literal, a Windows-only API) only surfaces on the next unrelated Linux
+# trigger. Same reasoning as targets['CoreNet'] above.
+targets['Osprey'] = merge(targets['OspreyWindowsNet'], targets['OspreyLinuxNet'])
 
 # MascotShim.dll / MobilionShim.dll / Hardklor.exe are native Windows binaries COMPILED during
 # the build rather than vendored, and the first two link vendor DLLs that export C++ classes
@@ -203,7 +209,7 @@ matchPaths = [
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Shared/CommonMsData/RemoteApi/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'], targets['Container'])),
-    ("pwiz_tools/Osprey/.*", targets['OspreyWindowsNet']),
+    ("pwiz_tools/Osprey/.*", targets['Osprey']),
     ("pwiz_tools/.*", targets['All']),
     ("Jamroot.jam", targets['All']),
     (".*\\.bat", targets['Windows']),

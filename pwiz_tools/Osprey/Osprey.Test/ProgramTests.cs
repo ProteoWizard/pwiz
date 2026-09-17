@@ -86,18 +86,24 @@ namespace pwiz.Osprey.Test
         {
             var config = TaskConfig(HpcTask.PerFileScoring);
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
-            config.InputFiles = new List<string> { @"plateA\run1.mzML", @"plateB\run1.mzML" };
+            // Forward slashes deliberately. DuplicateInputStemError derives the stem with
+            // Path.GetFileNameWithoutExtension, and on Linux \ is an ordinary filename
+            // character - so "plateA\run1.mzML" is one flat name whose stem is
+            // "plateA\run1", the two paths do not collide, and the check correctly finds
+            // nothing. / is an alternate separator on Windows too, so one spelling yields the
+            // stem "run1" on both platforms.
+            config.InputFiles = new List<string> { @"plateA/run1.mzML", @"plateB/run1.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err, "two inputs sharing a stem must be refused");
             // The stem and BOTH colliding paths, so the operator can act without re-deriving
             // which of several hundred inputs collided.
             StringAssert.Contains(err, "run1");
-            StringAssert.Contains(err, @"plateA\run1.mzML");
-            StringAssert.Contains(err, @"plateB\run1.mzML");
+            StringAssert.Contains(err, @"plateA/run1.mzML");
+            StringAssert.Contains(err, @"plateB/run1.mzML");
 
             // Distinct stems in one directory remain fine - the check is on the stem, not the
             // directory, and a cohort in one folder is the ordinary case.
-            config.InputFiles = new List<string> { @"plateA\run1.mzML", @"plateA\run2.mzML" };
+            config.InputFiles = new List<string> { @"plateA/run1.mzML", @"plateA/run2.mzML" };
             Assert.IsNull(Program.ValidateArgs(config));
         }
 
