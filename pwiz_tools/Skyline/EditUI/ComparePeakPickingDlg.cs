@@ -851,8 +851,10 @@ namespace pwiz.Skyline.EditUI
 
         private void zedGraphFiles_Resize(object sender, EventArgs e)
         {
-            _axisLabelScaler.ScaleAxisLabels();
-    }
+            // Auto-scaling on a high-DPI display resizes the graph inside InitializeComponent,
+            // before the constructor has created the scaler.
+            _axisLabelScaler?.ScaleAxisLabels();
+        }
 
         private void checkObserved_CheckedChanged(object sender, EventArgs e)
         {
