@@ -320,6 +320,8 @@ SpectrumPtr SpectrumList_BTDXImpl::spectrum(size_t index, bool getBinaryData) co
     // resolve any references into the MSData object
     References::resolve(*result, msd_);
 
+    ensureMzAscending(result);
+
     return result;
 }
 

@@ -26,6 +26,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;

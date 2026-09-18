@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using Ionic.Crc;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Tools;
@@ -85,6 +86,15 @@ namespace pwiz.Skyline.Util
         /// The name of the file after downloading. For ZIP files (Unzip is true), the file will be deleted after unzipping.
         /// </summary>
         public string Filename;
+
+        /// <summary>
+        /// Optional distinctive name to use on the S3 test mirror and in the local download cache. Defaults
+        /// to the DownloadUrl's last path segment. Set this for tools whose URL ends in a generic filename
+        /// (e.g. GitHub "raw/.../latest.zip") so the mirrored copy and the cache entry don't collide with
+        /// other tools. Include the extension (e.g. "MSAmanda-3.0.22.864.zip"). The original DownloadUrl is
+        /// still used for direct/originalurls downloads; only the mirror URL and cache filename change.
+        /// </summary>
+        public string MirrorFilename;
 
         /// <summary>
         /// The path to download the file to, and to unzip if Unzip is true.
@@ -259,15 +269,21 @@ namespace pwiz.Skyline.Util
                 {
                     var requiredFile = requiredFileGroup.First();
                     
-                    // For testing, replace the hostname with the Skyline tool testing mirror path on AWS
+                    // The name used on the S3 test mirror and in the local download cache. Defaults to the
+                    // download URL's last path segment, but a tool whose URL ends in a generic name (e.g.
+                    // GitHub "raw/.../latest.zip") sets MirrorFilename to something distinctive so it doesn't
+                    // collide with other tools on the mirror or in the shared cache.
+                    var mirrorFilename = requiredFile.MirrorFilename ?? requiredFile.DownloadUrl.Segments.Last();
+
+                    // For testing, replace the whole URL with the Skyline tool testing mirror path on AWS.
                     var downloadUrl = requiredFile.DownloadUrl;
                     if (Program.UnitTest && !Program.UseOriginalURLs)
-                        downloadUrl = new Uri(Regex.Replace(downloadUrl.OriginalString, ".*/(.*)", $"{SKYLINE_TOOL_TESTING_MIRROR_URL}/$1"));
+                        downloadUrl = new Uri($@"{SKYLINE_TOOL_TESTING_MIRROR_URL}/{mirrorFilename}");
 
                     var useCachedDownloads = Program.UnitTest; // Cache downloads in case of tests running in parallel
                     var destinationFilename = Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
                     string downloadFilename = useCachedDownloads
-                        ? Path.Combine(GetCachedDownloadsDirectory(), requiredFile.DownloadUrl.Segments.Last()) :
+                        ? Path.Combine(GetCachedDownloadsDirectory(), mirrorFilename) :
                         requiredFile.Unzip ? Path.GetTempFileName() : destinationFilename;
 
                     if (useCachedDownloads && File.Exists(downloadFilename))
@@ -315,9 +331,21 @@ namespace pwiz.Skyline.Util
                     }
 
                     Directory.CreateDirectory(requiredFile.InstallPath);
-                    using (var zipFile = new ZipFile(downloadFilename))
+                    try
                     {
-                        zipFile.ExtractAll(requiredFile.InstallPath, requiredFile.OverwriteExisting ? ExtractExistingFileAction.OverwriteSilently : ExtractExistingFileAction.DoNotOverwrite);
+                        var installPath = requiredFile.InstallPath;
+                        var overwrite = requiredFile.OverwriteExisting;
+                        TryHelper.Try<Exception>(() => ExtractChangedFiles(downloadFilename, installPath, overwrite),
+                            4, 1000);
+                    }
+                    catch (Exception x) when (x is UnauthorizedAccessException || x is IOException)
+                    {
+                        // Still locked after retrying. "Access to the path is denied" on its own cannot
+                        // be acted on, so name whatever is holding the file.
+                        var described = FileLockingProcessFinder.ToFileLockingException(x, requiredFile.InstallPath);
+                        if (ReferenceEquals(described, x))
+                            throw;  // Nothing to add, so keep the original stack trace
+                        throw described;
                     }
 
                     if (unzipTimer != null)
@@ -350,6 +378,69 @@ namespace pwiz.Skyline.Util
         public static string GetCachedDownloadsDirectory()
         {
             return Path.Combine(ToolDescriptionHelpers.GetSkylineInstallationPath(), @"CachedDownloadsForTests");
+        }
+
+        /// <summary>
+        /// Extracts an archive, leaving alone any file that already matches the archive's size and
+        /// CRC.
+        /// <para>These archives hold version-pinned tool executables and the MSVC runtime DLLs beside
+        /// them, so re-extracting rewrites files that are already byte for byte correct. That is not
+        /// merely wasteful: overwriting renames the existing file aside and deletes it, and Windows
+        /// lets a DLL that some process has LOADED be renamed but never deleted. A tool process
+        /// launched out of this directory - crux or comet, which load their neighbours - therefore
+        /// made every re-extraction fail with nothing but "access to the path is denied", on a file
+        /// that did not need replacing at all. Skipping what already matches removes the collision
+        /// rather than racing it.</para>
+        /// </summary>
+        private static void ExtractChangedFiles(string zipPath, string installPath, bool overwriteExisting)
+        {
+            var existingAction = overwriteExisting
+                ? ExtractExistingFileAction.OverwriteSilently
+                : ExtractExistingFileAction.DoNotOverwrite;
+            using (var zipFile = new ZipFile(zipPath))
+            {
+                foreach (var entry in zipFile.Entries)
+                {
+                    if (!entry.IsDirectory && IsAlreadyExtracted(entry, installPath))
+                        continue;
+                    entry.Extract(installPath, existingAction);
+                }
+            }
+        }
+
+        private static bool IsAlreadyExtracted(ZipEntry entry, string installPath)
+        {
+            var destination = Path.Combine(installPath, entry.FileName.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(destination) || new FileInfo(destination).Length != entry.UncompressedSize)
+                return false;
+            // Length alone is not enough to call a file already extracted. A rebuilt binary
+            // republished at the same version, or a partially written file from an interrupted
+            // extraction that happened to reach full length, would both be skipped forever, since
+            // nothing here ever repairs the install directory. The archive carries a CRC for
+            // exactly this comparison, and reading the file takes no write lock on it.
+            // A file that cannot be read is not a file that can be called already extracted. Reading
+            // takes no write lock, but it still fails when something else holds the file exclusively -
+            // which is the very situation this extraction path exists to survive. Answering "not
+            // extracted" sends it down the normal extraction route, which reports a locked file
+            // properly, instead of aborting the whole install from a check that was only an optimization.
+            try
+            {
+                return GetFileCrc(destination) == entry.Crc;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private static int GetFileCrc(string path)
+        {
+            using (var stream = File.OpenRead(path))
+            using (var crcStream = new CrcCalculatorStream(stream))
+            {
+                crcStream.CopyTo(Stream.Null);
+                return crcStream.Crc;
+            }
         }
     }
 

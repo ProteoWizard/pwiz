@@ -7,7 +7,7 @@
     Produces the canonical Osprey redistributable artifacts described in
     ai/todos/active/TODO-20260627_osprey_redistribution.md:
 
-      * For each RID, a `dotnet publish -c Release -f net8.0 -r <rid>
+      * For each RID, a `dotnet publish -c Release -f net10.0 -r <rid>
         --self-contained` is laid out under a single versioned top-level
         folder (Osprey.exe + runtime/dependency DLLs + Documentation/ +
         README + LICENSE) and zipped to `Osprey-<version>-<rid>.zip`. The
@@ -20,8 +20,7 @@
         (Osprey-<version>-win-x64.msi) with an Add/Remove-Programs entry.
 
     Self-contained means ZERO system-.NET dependency: copy the folder to an
-    HPC node and run it. net8.0 is the canonical distribution runtime; net472
-    is intentionally not packaged.
+    HPC node and run it. net10.0 is the canonical distribution runtime.
 
     This script is standalone (build.ps1 / Osprey.sln are the dev+CI build;
     this is the redistribution step on top of them). It is NOT wired into
@@ -72,6 +71,7 @@
     # CI
     .\package.ps1 -TeamCity -Msi
 #>
+#Requires -Version 7.0
 param(
     [string[]]$Rid = @('win-x64','linux-x64'),
     [ValidateSet('Debug','Release')] [string]$Configuration = 'Release',
@@ -166,11 +166,11 @@ function New-OspreyStage {
     if (Test-Path $stageDir) { Remove-Item $stageDir -Recurse -Force }
     New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
 
-    Write-Progress-Tc "Publishing $folderName ($Configuration, self-contained net8.0)"
+    Write-Progress-Tc "Publishing $folderName ($Configuration, self-contained net10.0)"
     $publishArgs = @(
         'publish', $ospreyCsproj,
         '-c', $Configuration,
-        '-f', 'net8.0',
+        '-f', 'net10.0',
         '-r', $Rid,
         '--self-contained', 'true',
         '-p:PublishSingleFile=false',
@@ -222,7 +222,31 @@ function Add-OspreyDocs {
     $html = [regex]::Replace($html, 'https?://raw\.githack\.com/ProteoWizard/pwiz/[^"'' ]*Osprey-workflow\.html', 'Osprey-workflow.html')
     Set-Content -Path $staged -Value $html -NoNewline -Encoding utf8
 
-    Copy-Item (Join-Path $scriptRoot 'README.md') (Join-Path $StageDir 'README.md') -Force
+    # README.md ships, but docs/*.md does not, and the workflow page lands in
+    # Documentation/ rather than beside the README. Retarget both link shapes on
+    # the COPY so the bundled README has no dead links: docs/ links go to GitHub
+    # (there is nothing local to point at), and the workflow link gets its
+    # subdirectory. Same approach as the CommandLine.html retarget above.
+    #
+    # The docs URL deliberately points at master rather than this build's commit.
+    # A commit URL would describe exactly the code in the ZIP, but it 404s for any
+    # bundle built from an unpushed branch (every developer build), and a dead link
+    # is worse than a slightly newer one. Revisit if bundles are ever produced only
+    # from pushed release tags.
+    #
+    # Read and write with explicit encoding rather than Get-Content/Set-Content
+    # defaults: the README is BOM-less UTF-8 containing em dashes, and the default
+    # round-trip mangles them and prepends a BOM on Windows PowerShell 5.1. The
+    # #Requires above should prevent that, but the file is data, so make the
+    # handling of it explicit anyway.
+    $readmeStaged = Join-Path $StageDir 'README.md'
+    Copy-Item (Join-Path $scriptRoot 'README.md') $readmeStaged -Force
+    $readme = [System.IO.File]::ReadAllText($readmeStaged, [System.Text.Encoding]::UTF8)
+    $docsUrl = 'https://github.com/ProteoWizard/pwiz/blob/master/pwiz_tools/Osprey/docs/'
+    $readme = [regex]::Replace($readme, '\]\(docs/([^)]+)\)', ('](' + $docsUrl + '$1)'))
+    $readme = [regex]::Replace($readme, '\]\(Osprey-workflow\.html\)', '](Documentation/Osprey-workflow.html)')
+    [System.IO.File]::WriteAllText($readmeStaged, $readme, (New-Object System.Text.UTF8Encoding $false))
+
     Copy-Item (Join-Path $repoRoot 'LICENSE') (Join-Path $StageDir 'LICENSE') -Force
 }
 

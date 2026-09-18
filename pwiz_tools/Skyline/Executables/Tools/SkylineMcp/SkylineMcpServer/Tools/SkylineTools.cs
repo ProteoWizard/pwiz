@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -590,10 +591,10 @@ public static class SkylineTools
         "skyline_get_controls; the typed tools (skyline_click_form_button, ...) remain for common cases.")]
     public static string PerformAction(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string form,
-        [Description("Action: get_actions, get_children, click, set_value, get_value, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, select_tab, expand, collapse, paste, select_all, rename_node")] string action,
+        [Description("Action: get_actions, get_children, click, get_value, set_value, send_text, send_key_stroke, get_options, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, get_graph_zoom, zoom_graph_to, click_graph, expand, collapse, select_tab, dismiss, paste, select_all, rename_node")] string action,
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
-        [Description("Value for set_value/set_grid_text, the text for paste/rename_node, a [column, row] array for set_current_cell_address, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
+        [Description("Value for set_value/set_grid_text, the text for send_text/paste/rename_node, the key for send_key_stroke (e.g. 'Ctrl+V'), a [column, row] array for set_current_cell_address, a [left, top, right, bottom] array of graph data coordinates for zoom_graph_to/click_graph, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
         [Description("A full UiElementPath as JSON (e.g. one straight from get_children, or wrapped as a ContextMenu); overrides label/type when given (optional)")] string path = null)
     {
         return Invoke(connection =>
@@ -797,13 +798,13 @@ public static class SkylineTools
         "Skyline's Copy Data clipboard format, including pane titles, axis labels, and all " +
         "curve data points. Use skyline_get_open_forms to discover graph IDs.")]
     public static string GetGraphData(
-        [Description("Graph identifier from skyline_get_open_forms (e.g., 'GraphSummary:Peak Areas - Replicate Comparison')")] string graphId,
+        [Description("Form identifier from skyline_get_open_forms (e.g., 'GraphSummary:Peak Areas - Replicate Comparison')")] string formId,
         [Description("Output file path. If not specified, saves to a temp directory. " +
             "Extension determines format (.tsv default).")] string filePath = null)
     {
         return Invoke(connection =>
         {
-            string result = connection.GetGraphData(graphId, filePath);
+            string result = connection.GetGraphData(formId, filePath);
             return string.IsNullOrEmpty(result)
                 ? "No data in graph."
                 : $"Graph data saved to: {result}\n\nUse the Read tool to examine the data.";
@@ -817,13 +818,137 @@ public static class SkylineTools
         "'inline' to require the inline form (errors if the image exceeds the inline cap or the " +
         "connected Skyline does not support inline images). Use skyline_get_open_forms to discover graph IDs.")]
     public static CallToolResult GetGraphImage(
-        [Description("Graph identifier from skyline_get_open_forms (e.g., 'GraphSummary:Peak Areas - Replicate Comparison')")] string graphId,
+        [Description("Form identifier from skyline_get_open_forms (e.g., 'GraphSummary:Peak Areas - Replicate Comparison')")] string formId,
         [Description("Return shape: 'auto' (default, inline with file fallback), 'inline' (always inline, error if too big or Skyline too old), or 'file' (write to disk and return the path).")] string returnFormat = RETURN_AUTO,
         [Description("Output file path. Honored only on the file path (returnFormat='file' or auto-fell-back-to-file). Ignored otherwise.")] string filePath = null)
     {
         return InvokeContent(connection => InvokeImage(connection, returnFormat, filePath,
-            bytesCall: c => c.GetGraphImageBytes(graphId),
-            fileCall: (c, fp) => SavedToPath("Graph image", c.GetGraphImage(graphId, fp))));
+            bytesCall: c => c.GetGraphImageBytes(formId),
+            fileCall: (c, fp) => SavedToPath("Graph image", c.GetGraphImage(formId, fp))));
+    }
+
+    // A graph coordinate as text a caller can hand straight back to skyline_zoom_graph_to or
+    // skyline_click_graph, which read one as invariant text whatever the machine's culture is.
+    private static string Coordinate(double value)
+    {
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+
+    [McpServerTool(Name = "skyline_get_graph_zoom"),
+     Description("Get the region of DATA coordinates a graph is currently zoomed to - the X and Y axis " +
+        "ranges of its first pane. Returns Left/Right (the X-axis range) and Top/Bottom (the Y-axis range, " +
+        "Top the upper edge). These are the same coordinates skyline_click_graph and skyline_zoom_graph_to " +
+        "take, so they show what is valid to pass those tools: in particular the Bottom edge is the X-axis " +
+        "line, so a click below it drags a chromatogram peak boundary. Pair with skyline_get_graph_data for " +
+        "the data points themselves. Use skyline_get_open_forms to discover graph IDs.")]
+    public static string GetGraphZoom(
+        [Description("Form identifier from skyline_get_open_forms (e.g., 'GraphSummary:Peak Areas - Replicate Comparison')")] string formId)
+    {
+        return Invoke(connection =>
+        {
+            var r = connection.GetGraphZoom(formId);
+            if (r == null)
+                return $"No zoom reported for {formId}.";
+            // Invariant, because these go back out to skyline_zoom_graph_to and skyline_click_graph, which
+            // read a coordinate as invariant text. Formatted in the machine's own culture, a decimal comma
+            // would come back as a different number or as none at all.
+            return "Edge\tData value\n" +
+                   $"Left (X min)\t{Coordinate(r.Left)}\n" +
+                   $"Right (X max)\t{Coordinate(r.Right)}\n" +
+                   $"Top (Y max)\t{Coordinate(r.Top)}\n" +
+                   $"Bottom (Y min)\t{Coordinate(r.Bottom)}";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_zoom_graph_to"),
+     Description("Zoom a graph's first pane to a DATA-coordinate rectangle: left/right set the X-axis range " +
+        "and top/bottom the Y-axis range. Returns the zoom actually applied, which may be clamped to the " +
+        "available data range. Give an EQUAL pair to leave that axis alone: equal left and right zoom only " +
+        "vertically, equal top and bottom only horizontally, and equal corners change nothing at all. A graph " +
+        "that lets the user neither zoom nor pan a direction ignores that direction here too; the returned " +
+        "zoom shows what actually changed. Read the " +
+        "current zoom first with skyline_get_graph_zoom.")]
+    public static string ZoomGraphTo(
+        [Description("Form identifier from skyline_get_open_forms")] string formId,
+        [Description("Left edge: minimum X-axis (data) value")] double left,
+        [Description("Top edge: maximum Y-axis (data) value")] double top,
+        [Description("Right edge: maximum X-axis (data) value")] double right,
+        [Description("Bottom edge: minimum Y-axis (data) value")] double bottom)
+    {
+        return Invoke(connection =>
+        {
+            var r = connection.ZoomGraphTo(formId,
+                new SkylineTool.Rectangle { Left = left, Top = top, Right = right, Bottom = bottom });
+            if (r == null)
+                return $"No zoom reported for {formId}.";
+            return $"Zoomed to Left={Coordinate(r.Left)}, Top={Coordinate(r.Top)}, " +
+                   $"Right={Coordinate(r.Right)}, Bottom={Coordinate(r.Bottom)}.";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_click_graph"),
+     Description("Click or drag on a graph in DATA coordinates, reproducing a real mouse gesture: the mouse " +
+        "goes down at (left, top) and releases at (right, bottom). Set the two corners EQUAL to click a " +
+        "single point - e.g. to select a data point such as an outlier on a regression graph (Skyline treats " +
+        "it exactly as a user click, so the point becomes selected). Make them differ to DRAG: a rectangle " +
+        "whose Y values fall below the X-axis (below the Bottom that skyline_get_graph_zoom reports) drags a " +
+        "chromatogram peak boundary, just as the same gesture would by hand, while any OTHER drag does what a " +
+        "user's drag does on that pane - on most graphs, zooming to the rectangle. Get coordinates from " +
+        "skyline_get_graph_data (point values) and skyline_get_graph_zoom (visible range). Operates on the " +
+        "first pane. Use skyline_get_open_forms to discover graph IDs.")]
+    public static string ClickGraph(
+        [Description("Form identifier from skyline_get_open_forms")] string formId,
+        [Description("Mouse-down X (data) coordinate")] double left,
+        [Description("Mouse-down Y (data) coordinate")] double top,
+        [Description("Mouse-up X (data) coordinate; set equal to left for a single click")] double right,
+        [Description("Mouse-up Y (data) coordinate; set equal to top for a single click")] double bottom)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.ClickGraph(formId,
+                new SkylineTool.Rectangle { Left = left, Top = top, Right = right, Bottom = bottom });
+            return DescribeAction(result, $"Clicked graph '{formId}'.");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_send_text"),
+     Description("Type text into one control on a form. Named for what it does: it delivers the CHARACTERS " +
+        "to that control's own window, it does not simulate key presses - so the control does NOT need the " +
+        "focus and you never have to arrange focus first; the control is verified enabled first. The text is " +
+        "LITERAL - no key names, nothing to escape. To press a key (Enter, Down, Ctrl+V) use " +
+        "skyline_send_key_stroke; to PASTE use skyline_perform_action with action='paste', which takes the " +
+        "text and so needs neither the clipboard nor Ctrl+V. DO NOT type into the Targets tree: it forwards " +
+        "each character through the FOCUSED window, so the characters land in whatever application is in " +
+        "front and arrive out of order - use skyline_perform_action with action='rename_node' to set a " +
+        "node's text. Discover control names with skyline_get_controls.")]
+    public static string SendText(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Control to type into, as skyline_get_controls reports it: its visible Label, or its Type for a caption-less control (e.g. 'TreeView')")] string controlId,
+        [Description("The text to type, taken literally")] string text)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.SendText(formId, controlId, text);
+            return DescribeAction(result, $"Typed into '{controlId}' on {formId}.");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_send_key_stroke"),
+     Description("Press one key on a control, whether or not it has the focus - e.g. to accept or step " +
+        "through a popup, or to paste with 'Ctrl+V' where a form's own handler does the pasting. " +
+        "NOTE: this raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather " +
+        "than by a handler - Backspace editing a text box, an arrow moving a plain list's selection - will " +
+        "NOT take effect. Discover control names with skyline_get_controls.")]
+    public static string SendKeyStroke(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Control to press the key on, as skyline_get_controls reports it")] string controlId,
+        [Description("The key with any modifiers, '+'-separated and in any order: e.g. 'Down', 'Enter', 'Ctrl+V', 'Ctrl+Shift+Home', 'Alt+F4'. Key names are A-Z, 0-9, Enter, Down, Up, Left, Right, Tab, Esc, Backspace, Delete, Home, End, PgUp, PgDn, F1-F12, Space.")] string keyStroke)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.SendKeyStroke(formId, controlId, keyStroke);
+            return DescribeAction(result, $"Pressed '{keyStroke}' on '{controlId}' in {formId}.");
+        });
     }
 
     // Note: the handshake wording below describes the SHAPE of the response,

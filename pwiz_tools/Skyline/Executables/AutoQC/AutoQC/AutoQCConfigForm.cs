@@ -20,6 +20,7 @@ using System;
 using System.Windows.Forms;
 using AutoQC.Properties;
 using SharedBatch;
+using pwiz.Common.SystemUtil;
 
 namespace AutoQC
 {
@@ -152,11 +153,13 @@ namespace AutoQC
             var skylineFilePath = textSkylinePath.Text;
             var folderToWatch = textFolderToWatchPath.Text;
             var includeSubfolders = includeSubfoldersCb.Checked;
-            var qcFileFilter = FileFilter.GetFileFilter(comboBoxFileFilter.SelectedItem.ToString(),
+            // Both combo boxes are DropDownList over strings, so Text is the selected item's text
+            // and, unlike SelectedItem, is never null.
+            var qcFileFilter = FileFilter.GetFileFilter(comboBoxFileFilter.Text,
                 textQCFilePattern.Text);
             var removeResults = checkBoxRemoveResults.Checked;
             var resultsWindow = textResultsTimeWindow.Text;
-            var instrumentType = comboBoxInstrumentType.SelectedItem.ToString();
+            var instrumentType = comboBoxInstrumentType.Text;
             var acquisitionTime = textAquisitionTime.Text;
             var annotationsFilePath = textAnnotationsFilePath.Text;
             var mainSettings = new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime, annotationsFilePath);
@@ -179,7 +182,8 @@ namespace AutoQC
         
         private void btnFolderToWatch_Click(object sender, EventArgs e)
         {
-            var dialog = new FolderBrowserDialog();
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            var dialog = FormUtil.CreateFolderBrowserDialog();
             dialog.SelectedPath = FileUtil.GetInitialDirectory(textFolderToWatchPath.Text, _lastEnteredPath);
             if (dialog.ShowDialog(this) == DialogResult.OK)
             {
@@ -205,7 +209,8 @@ namespace AutoQC
         private void comboBoxFileFilter_SelectedIndexChanged(object sender, EventArgs e)
         {
             var selectedItem = comboBoxFileFilter.SelectedItem;
-            if (selectedItem.Equals(AllFileFilter.FilterName))
+            // Non-null operand on the left: SelectedItem is null when nothing is selected.
+            if (AllFileFilter.FilterName.Equals(selectedItem))
             {
                 textQCFilePattern.Hide();
                 labelQcFilePattern.Hide();
@@ -314,7 +319,8 @@ namespace AutoQC
 
         private void btnSaveConfig_Click(object sender, EventArgs e)
         {
-            if (tabControl.SelectedTab.Equals(tabSkylineSettings))
+            // Non-null operand on the left: SelectedTab is null when no tab is selected.
+            if (tabSkylineSettings.Equals(tabControl.SelectedTab))
                 CheckIfSkylineChanged();
             Save();
         }

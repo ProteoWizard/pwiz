@@ -1,6 +1,7 @@
 /*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2013 University of Washington - Seattle, WA
  * 
@@ -172,9 +173,20 @@ namespace TestRunnerLib
         private int _dotMemoryIterationCount;
         private string _dotMemoryTestName;
 
+        // Escape hatch to skip the system-heap accounting (GetProcessHeapSizes) entirely. Normally left
+        // off: the accounting is segment-heap safe. HeapWalk/HeapLock fault with a fatal, non-catchable
+        // AccessViolation in a Windows Segment Heap process (the default on Windows Server + Windows
+        // containers, hence on the net8 Docker workers and the TeamCity build agents) -- and even on some
+        // classic HEAP_NO_SERIALIZE heaps -- so on net8 GetProcessHeapSizes reads committed/reserved via
+        // HeapSummary (which never walks) instead of walking; net472 keeps the historically-safe walk.
+        // Leak tracking therefore keeps working on net8. This flag is just a manual escape hatch now: the
+        // SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS env var or the skipsystemheaps=on arg forces it all off.
+        public static bool SkipSystemHeaps { get; set; } =
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS"));
+
         public bool ReportSystemHeaps
         {
-            get { return !RunPerfTests; }   // 12-hour perf runs get much slower with system heap reporting
+            get { return !RunPerfTests && !SkipSystemHeaps; }   // 12-hour perf runs get much slower with system heap reporting
         }
 
         public static bool WriteMiniDumps
@@ -281,7 +293,12 @@ namespace TestRunnerLib
                 resultsDir = Path.Combine(GetProjectPath("TestResults"), "TestRunner results");
             else if (IsParallelClient && resultsDir.Contains("TestResults_"))
                 ParallelClientId = resultsDir.Split('_').Last();
+            // Seed both keys. The deprecated TestDir property and TestRunDirectory read different
+            // entries, so moving callers onto the latter needs it present: under VSTest the adapter
+            // fills these in, but under TestRunner we are the adapter, and the property MSTest is
+            // steering everyone toward would otherwise come back null.
             testContext.Properties["TestDir"] = resultsDir;
+            testContext.Properties["TestRunDirectory"] = resultsDir;
             if (Directory.Exists(resultsDir))
                 Try<Exception>(() => Directory.Delete(resultsDir, true), 4, false);
             if (Directory.Exists(resultsDir))
@@ -356,7 +373,7 @@ namespace TestRunnerLib
             var saveTmp = Environment.GetEnvironmentVariable(@"TMP");
 
             if (string.IsNullOrEmpty(dmpDir))
-                dmpDir = Path.Combine(TestContext.TestDir, test.TestMethod.Name, "Minidumps");
+                dmpDir = Path.Combine(TestContext.TestRunDirectory, test.TestMethod.Name, "Minidumps");
 
             var preDumpPath = WritePreMiniDumpIfRequested(test, pass, testNumber, dmpDir);
 
@@ -428,8 +445,11 @@ namespace TestRunnerLib
             var heapCounts = ReportSystemHeaps
                 ? MemoryManagement.GetProcessHeapSizes(heapOutput ? dmpDir : null)
                 : new MemoryManagement.HeapAllocationSizes[1];
-            var processBytes = heapCounts[0].Committed; // Process heap : useful for debugging - though included in committed bytes
-            var managedBytes = GC.GetTotalMemory(true); // Managed heap
+            // Collect right before sampling, so the numbers describe the floor the next test
+            // starts from rather than whatever the GC kept in reserve after the last one.
+            // FlushMemory above already collected once; this is the one pass that decommits.
+            MemoryManagement.CollectForMeasurement();
+            var managedBytes = GC.GetTotalMemory(false); // Managed heap
             var committedBytes = heapCounts.Sum(h => h.Committed);
             ManagedMemoryBytes = managedBytes;
             CommittedMemoryBytes = committedBytes;
@@ -462,24 +482,10 @@ namespace TestRunnerLib
                     Log("# Heaps " + string.Join("\t", heapCounts.Select(s => s.ToString())) + Environment.NewLine);
                 }
                 
-                // Report handle counts if requested (useful for debugging handle leaks)
-                if (ReportHandles)
-                {
-                    var handleInfos = HandleEnumeratorWrapper.GetHandleInfos();
-                    // Build list of (Type, Count) including User and GDI handles
-                    // (User/GDI are not returned by HandleEnumeratorWrapper)
-                    var allHandleCounts = handleInfos
-                        .GroupBy(h => h.Type)
-                        .Select(g => (Type: g.Key, Count: g.Count()))
-                        .Where(hc => hc.Count > 10)
-                        .Concat(new[] { (Type: "User", Count: LastUserHandleCount), (Type: "GDI", Count: LastGdiHandleCount) });
-                    // Sort by count descending (leaking types rise to top) or alphabetically
-                    var sortedHandleCounts = SortHandlesByCount
-                        ? allHandleCounts.OrderByDescending(c => c.Count)
-                        : allHandleCounts.OrderBy(c => c.Type);
-
-                    Log("# Handles " + string.Join("\t", sortedHandleCounts.Select(c => c.Type + ": " + c.Count)) + Environment.NewLine);
-                }
+                // Report handle counts if requested (useful for debugging handle leaks).
+                // The per-type handle enumeration comes from the C++/CLI TestDiagnostics.dll
+                // (HandleEnumeratorWrapper), which is net472-only. On net8 a pure-C# P/Invoke
+                // reimplementation would be needed; skip per-type handle reporting for now.
                 // CRT leak checking removed - was disabled (required special debug pwiz_cli_data.dll build)
 
                 if (heapOutput && ReportSystemHeaps)
@@ -491,18 +497,37 @@ namespace TestRunnerLib
                     for (int i = 0; i < heapCounts.Length; i++)
                     {
                         var heapCount = heapCounts[i];
-                        allSizes.AddRange(heapCount.CommittedSizes.Take(sizeOutputs).Select(p =>
-                            new Tuple<int, long, int>(i, p.Key, p.Value)));
-                        allStrings.AddRange(heapCount.StringCounts.Take(stringOutputs).Select(p =>
-                            new Tuple<int, string, int>(i, p.Key, p.Value)));
+                        // CommittedSizes and StringCounts are filled in by a HeapWalk, which
+                        // GetProcessHeapSizes() does not perform on net8 - HeapLock/HeapWalk fault
+                        // with a non-catchable AccessViolation on a Windows Segment Heap - so both
+                        // stay null there and only the Committed/Reserved totals are available.
+                        if (heapCount.CommittedSizes != null)
+                        {
+                            allSizes.AddRange(heapCount.CommittedSizes.Take(sizeOutputs).Select(p =>
+                                new Tuple<int, long, int>(i, p.Key, p.Value)));
+                        }
+                        if (heapCount.StringCounts != null)
+                        {
+                            allStrings.AddRange(heapCount.StringCounts.Take(stringOutputs).Select(p =>
+                                new Tuple<int, string, int>(i, p.Key, p.Value)));
+                        }
                     }
 
-                    var sizeText = allSizes.OrderByDescending(s => s.Item3).Take(sizeOutputs)
-                        .Select(s => string.Format("{0}:{1}:{2}", s.Item1, s.Item2, s.Item3));
-                    Log("# HEAP SIZES (top {0}) - {1}\r\n", sizeOutputs, string.Join(", ", sizeText));
-                    var stringText = allStrings.OrderByDescending(s => s.Item3).Take(stringOutputs)
-                        .Select(s => string.Format("{0}:\"{1}\":{2}", s.Item1, s.Item2, s.Item3));
-                    Log("# HEAP STRINGS (top {0}) - {1}\r\n", stringOutputs, string.Join(", ", stringText));
+                    if (allSizes.Count == 0 && allStrings.Count == 0)
+                    {
+                        // Say so rather than logging two empty lists. Silence here previously
+                        // arrived as an ArgumentNullException that killed the whole run.
+                        Log("# HEAP DETAIL unavailable - per-block heap walking is net472-only\r\n");
+                    }
+                    else
+                    {
+                        var sizeText = allSizes.OrderByDescending(s => s.Item3).Take(sizeOutputs)
+                            .Select(s => string.Format("{0}:{1}:{2}", s.Item1, s.Item2, s.Item3));
+                        Log("# HEAP SIZES (top {0}) - {1}\r\n", sizeOutputs, string.Join(", ", sizeText));
+                        var stringText = allStrings.OrderByDescending(s => s.Item3).Take(stringOutputs)
+                            .Select(s => string.Format("{0}:\"{1}\":{2}", s.Item1, s.Item2, s.Item3));
+                        Log("# HEAP STRINGS (top {0}) - {1}\r\n", stringOutputs, string.Join(", ", stringText));
+                    }
                 }
 
                 TeamCityFinishTest(test, pass);
@@ -779,7 +804,7 @@ namespace TestRunnerLib
             // If everything is supposed to be cleaned up, then check for any left over files
             if (_cleanupLevelAll)
             {
-                CleanupAbandonedFiles(TestContext.TestDir, !final, abandonedFilesList);
+                CleanupAbandonedFiles(TestContext.TestRunDirectory, !final, abandonedFilesList);
             }
             CleanupAbandonedFiles(tmpTestDir, !final, abandonedFilesList); // It's always an error to leave any tempfiles behind
 
@@ -916,6 +941,22 @@ namespace TestRunnerLib
             [DllImport("kernel32.dll", SetLastError = true)]
             static extern bool HeapUnlock(IntPtr hHeap);
 
+            // HeapSummary yields committed/reserved/allocated totals without walking the heap, so it can
+            // read a segment heap where HeapWalk cannot. Available on Windows 8+ (kernelbase.dll). Wrapped
+            // in try/catch at the call site in case the export is unavailable on the host OS.
+            [StructLayoutAttribute(LayoutKind.Sequential)]
+            public struct HEAP_SUMMARY
+            {
+                public uint cb;                 // sizeof(HEAP_SUMMARY); must be set before the call
+                public UIntPtr cbAllocated;
+                public UIntPtr cbCommitted;
+                public UIntPtr cbReserved;
+                public UIntPtr cbMaxReserve;
+            }
+
+            [DllImport("kernelbase.dll", SetLastError = true)]
+            static extern bool HeapSummary(IntPtr hHeap, uint dwFlags, ref HEAP_SUMMARY lpSummary);
+
             public static bool HeapDiagnostics { get; set; }
 
             public struct HeapAllocationSizes
@@ -1034,55 +1075,31 @@ namespace TestRunnerLib
                 var buffer = new IntPtr[count];
                 GetProcessHeaps(count, buffer);
                 var sizes = new HeapAllocationSizes[count];
+
+                // net8: never walk. HeapLock/HeapWalk fault with a fatal, non-catchable AccessViolation on
+                // a Windows Segment Heap (the default on Windows Server + Windows containers) AND on some
+                // classic-signature heaps -- e.g. HEAP_NO_SERIALIZE ones with a null lock -- and no cheap
+                // heap-type check reliably tells the safe ones from the unsafe ones across Windows builds
+                // (a segment-signature check still crashed on HeapLock on the TeamCity Windows Server
+                // agent). HeapSummary never walks and works on every heap, so use it for the
+                // committed/reserved totals. cbAllocated matches the walk's "busy bytes" Committed
+                // semantics (and is the more sensitive leak signal); leak tracking keeps working. The
+                // per-block HeapDiagnostics detail is net472-only.
                 for (int i = 0; i < count; i++)
                 {
-                    var committedSizes = HeapDiagnostics ? new Dictionary<long, int>() : null;
-                    var stringCounts = HeapDiagnostics ? new Dictionary<string, int>() : null;
-
-                    var h = buffer[i];
-                    HeapLock(h);
-                    var e = new PROCESS_HEAP_ENTRY();
-                    while (HeapWalk(h, ref e))
+                    try
                     {
-                        if ((e.wFlags & PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_ENTRY_BUSY) != 0)
+                        var summary = new HEAP_SUMMARY { cb = (uint)Marshal.SizeOf(typeof(HEAP_SUMMARY)) };
+                        if (HeapSummary(buffer[i], 0, ref summary))
                         {
-                            sizes[i].Committed += e.cbData + e.cbOverhead;
-
-                            if (committedSizes != null)
-                            {
-                                // Update count
-                                if (!committedSizes.ContainsKey(e.cbData))
-                                    committedSizes[e.cbData] = 0;
-                                committedSizes[e.cbData]++;
-                            }
-
-                            if (stringCounts != null)
-                            {
-                                // Find string(s)
-                                var byteData = new byte[e.cbData];
-                                IntPtr pData = e.lpData;
-                                Marshal.Copy(pData, byteData, 0, byteData.Length);
-                                TRACK_SIZES.ForEach(t => t.DumpUnseenSize(pData, byteData));
-                                foreach (var byteString in FindStrings(byteData))
-                                {
-                                    if (!stringCounts.ContainsKey(byteString))
-                                        stringCounts[byteString] = 0;
-                                    stringCounts[byteString]++;
-                                }
-                            }
+                            sizes[i].Committed += (long)summary.cbAllocated.ToUInt64();
+                            sizes[i].Reserved += (long)summary.cbReserved.ToUInt64();
                         }
-                        else if ((e.wFlags & PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_UNCOMMITTED_RANGE) != 0)
-                            sizes[i].Reserved += e.cbData + e.cbOverhead;
-                        else
-                            sizes[i].Unknown += e.cbData + e.cbOverhead;
-
                     }
-                    HeapUnlock(h);
-
-                    if (committedSizes != null)
-                        sizes[i].CommittedSizes = committedSizes.OrderByDescending(p => p.Value).ToList();
-                    if (stringCounts != null)
-                        sizes[i].StringCounts = stringCounts.OrderByDescending(p => p.Value).ToList();
+                    catch (Exception)
+                    {
+                        // HeapSummary unavailable on this OS; leave this heap's totals at zero.
+                    }
                 }
                 if (HeapDiagnostics)
                     TRACK_SIZES.ForEach(t => t.CloseDumpFile());
@@ -1134,8 +1151,43 @@ namespace TestRunnerLib
                 GC.Collect();
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 {
-                    SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, -1, -1);
+                    // Dispose the Process, or its handle stays open until a finalizer runs and
+                    // shows up as a +1 in the handle count sampled after this.
+                    using var current = Process.GetCurrentProcess();
+                    SetProcessWorkingSetSize(current.Handle, -1, -1);
                 }
+            }
+
+            /// <summary>
+            /// A full, compacting collection whose purpose is a quiet measurement point: after
+            /// it, private bytes should be what the process truly holds, not what the GC has
+            /// decided to keep on hand for the next allocations.
+            /// </summary>
+            /// <remarks>
+            /// <para>The regions-based GC (.NET 7+) retains a budget of free regions after an
+            /// ordinary full collection and decommits them only gradually, so a private-bytes
+            /// sample taken after <c>GC.Collect()</c> lags the live size by a variable amount.
+            /// In the .NET 10 nightly that showed as spikes of 400-900 MB on a ~350 MB floor
+            /// where the .NET Framework run of the same suite was smooth - noise that made the
+            /// private-bytes axis useless for leak detection. <c>GCCollectionMode.Aggressive</c>
+            /// is the mode the runtime provides for "the process is about to go idle": it
+            /// compacts every generation - on .NET 9+ the LOH included - and decommits as much
+            /// as it can. It is more expensive than a plain collection, which is why it is used
+            /// here in the test harness and not in Skyline.</para>
+            /// <para>A per-sample collection rather than a process-wide GC setting on purpose:
+            /// it leaves the GC every test runs under identical to production, and the one
+            /// setting measured against it (the segments GC, <c>DOTNET_GCName=clrgc.dll</c>)
+            /// was clearly worse. Measured on the twelve spikiest nightly tests (2026-09-16):
+            /// private bytes above managed + heaps went from a median of 355 MB (max 1.9 GB) to
+            /// a near-constant 31-33 MB; wall time unchanged within run-to-run noise on that
+            /// slice and on 179 TestData tests. The per-test seconds in the log stop before
+            /// this runs, so only whole-run time reflects its cost.</para>
+            /// </remarks>
+            public static void CollectForMeasurement()
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
             }
         }
 
@@ -1347,9 +1399,20 @@ namespace TestRunnerLib
             }
         }
 
-        public static IEnumerable<TestInfo> GetTestInfos(string testDll)
+        /// <param name="testDll">The test assembly, by name next to TestRunner or by full path</param>
+        /// <param name="loader">How to load it. Defaults to <see cref="LoadFromAssembly.Try"/>,
+        /// which is what TestRunner needs: it goes on to RUN these tests, so the assemblies have to
+        /// load the way they will at execution time. A caller that only reads names - a test tree -
+        /// passes <see cref="LoadFromAssembly.TryWithoutLocking"/> instead, so that browsing a build
+        /// directory does not take a write lock on everything in it.</param>
+        public static IEnumerable<TestInfo> GetTestInfos(string testDll, Func<string, Assembly> loader = null)
         {
-            var assembly = LoadFromAssembly.Try(GetAssemblyPath(testDll));
+            var dllPath = GetAssemblyPath(testDll);
+            // Not every test project is necessarily deployed next to TestRunner (each net8 SDK
+            // project builds to its own bin). A test DLL that isn't present simply has no tests.
+            if (!File.Exists(dllPath))
+                yield break;
+            var assembly = (loader ?? LoadFromAssembly.Try)(dllPath);
             var types = assembly.GetTypes();
 
             foreach (var type in types)
@@ -1446,37 +1509,263 @@ namespace TestRunnerLib
         public static string ALWAYS_UP_RUNNER_REPO => Path.Combine(PathEx.GetDownloadsPath(), @"AlwaysUpRunner-master");
         public static string ALWAYS_UP_SERVICE_EXE => Path.Combine(ALWAYS_UP_RUNNER_REPO, @"AlwaysUpService.exe");
 
+        /// <summary>
+        /// How long to wait for "docker ps" when listing workers. Bounded because every caller is
+        /// somewhere a hang is unacceptable: the end of a run, a ProcessExit handler the runtime
+        /// gives about two seconds, and SkylineTester's UI thread at the start of every run. A
+        /// daemon that is starting or wedged makes the CLI block rather than fail, and none of
+        /// those callers can afford to wait for it.
+        /// </summary>
+        private const int DOCKER_LIST_TIMEOUT_MILLIS = 10 * 1000;
+
         public static IEnumerable<string> GetDockerWorkerNames()
         {
-            string dockerPsOutput = RunCommand("docker", "ps --format \"{{.Names}}\" -f \"ancestor=chambm/always_up_runner\"", IS_DOCKER_RUNNING_MESSAGE);
-            foreach(var dockerWorkerName in dockerPsOutput.Split(new [] { Environment.NewLine }, StringSplitOptions.None))
+            string dockerPsOutput = RunCommandBounded("docker", "ps --format \"{{.Names}}\" -f \"ancestor=chambm/always_up_runner\"",
+                IS_DOCKER_RUNNING_MESSAGE, DOCKER_LIST_TIMEOUT_MILLIS);
+            // Split on either ending. The docker CLI writes LF, not CRLF, so splitting on
+            // Environment.NewLine returns ONE string holding every name - which matches no
+            // container, so teardown silently kills nothing.
+            foreach (var dockerWorkerName in dockerPsOutput.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
                 yield return dockerWorkerName;
         }
 
-        public static void KillParallelWorkers(int hostWorkerPid, string workerNames = null)
+        /// <summary>
+        /// How long to wait for "docker kill" on the way out of a run. Generous for a command that
+        /// normally returns in well under a second, but finite: a wedged daemon must not keep a
+        /// finished run alive.
+        /// </summary>
+        private const int DOCKER_KILL_TIMEOUT_MILLIS = 30 * 1000;
+
+        public static void KillParallelWorkers(Process hostWorker, string workerNames = null, string runTag = null)
         {
             // Kill the host worker before asking docker for anything. Listing the containers shells out
             // to docker, which throws if it is absent or wedged, and that must not be what stops the
             // host worker from being killed.
             try
             {
-                if (hostWorkerPid > 0)
-                    Process.GetProcessById(hostWorkerPid).Kill();
+                // The caller holds the Process rather than its id, so this cannot reach a stranger
+                // that inherited a recycled pid, and it needs no guess about the process name -
+                // under coverage the host worker runs as dotCover rather than as TestRunner.
+                if (hostWorker != null && !hostWorker.HasExited)
+                    hostWorker.Kill();
+            }
+            catch (InvalidOperationException)
+            {
+                // Process.Kill() on a process that has already exited, which is the ordinary end of a
+                // run that finished on its own. (Process.GetProcessById threw ArgumentException for
+                // this; holding the Process instead means the exit race arrives as this type.)
             }
             catch (Exception ex)
             {
                 Console.WriteLine(@"Failed to kill host worker process: " + ex.Message);
             }
 
-            workerNames ??= string.Join(" ", GetDockerWorkerNames());
-            if (string.IsNullOrEmpty(workerNames))
+            string namesToKill;
+            try
+            {
+                namesToKill = GetWorkersStillRunning(workerNames, runTag);
+            }
+            catch (Exception ex)
+            {
+                // Docker may be absent or wedged. Fall back to killing whatever was launched: a kill
+                // for a container that is already gone is noisy, and leaking one is worse than noisy.
+                Console.WriteLine(@"Could not list running workers: " + ex.Message);
+                namesToKill = workerNames ?? string.Empty;
+            }
+
+            if (string.IsNullOrEmpty(namesToKill))
                 return; // No containers to kill
 
-            Console.WriteLine(@$"Sending docker kill command to: {workerNames}");
-            var psi = new ProcessStartInfo("docker", $@"kill {workerNames}");
-            psi.CreateNoWindow = true;
-            psi.UseShellExecute = false;
-            Process.Start(psi)?.WaitForExit();
+            KillWorkers(namesToKill.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
+        }
+
+        /// <summary>
+        /// Runs a command and gives up after <paramref name="timeoutMillis"/> rather than waiting
+        /// forever. For callers on a path where blocking is worse than not knowing the answer.
+        /// </summary>
+        private static string RunCommandBounded(string command, string args, string message, int timeoutMillis)
+        {
+            var psi = new ProcessStartInfo(command, args)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            var p = Process.Start(psi);
+            if (p == null)
+                throw new InvalidOperationException(message);
+
+            var output = p.StandardOutput.ReadToEndAsync();
+            if (!p.WaitForExit(timeoutMillis))
+            {
+                // Leave it running rather than adding another wait to a path that is already over
+                // budget. The caller gets an exception, which every one of them treats as "docker
+                // could not answer" and carries on.
+                throw new InvalidOperationException(
+                    string.Format(@"{0} ('{1} {2}' did not finish within {3} ms)", message, command, args, timeoutMillis));
+            }
+
+            if (p.ExitCode != 0)
+                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'\"{command}\" {args}' returned an error;");
+
+            return output.Result;
+        }
+
+        /// <summary>
+        /// Stops the named worker containers. Shared by teardown at the end of a run and by
+        /// SkylineTester offering to clear leftovers before one starts.
+        /// </summary>
+        public static void KillWorkers(ICollection<string> workerNames)
+        {
+            if (workerNames == null || workerNames.Count == 0)
+                return;
+
+            var names = string.Join(@" ", workerNames);
+            Console.WriteLine(@$"Sending docker kill command to: {names}");
+            var psi = new ProcessStartInfo(@"docker", $@"kill {names}")
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false
+            };
+            var killProcess = Process.Start(psi);
+
+            // Bounded, because this runs on the way out. A wedged docker daemon makes the CLI hang
+            // rather than fail, and an unbounded wait here holds the whole run open at the moment it
+            // is trying to end - turning a leaked container into a run that never exits.
+            if (killProcess != null && !killProcess.WaitForExit(DOCKER_KILL_TIMEOUT_MILLIS))
+                Console.WriteLine(@$"docker kill did not finish within {DOCKER_KILL_TIMEOUT_MILLIS} ms; containers may still be running: {names}");
+        }
+
+        /// <summary>
+        /// Every worker container currently running, trimmed and without blanks.
+        /// </summary>
+        public static IEnumerable<string> GetRunningWorkerNames()
+        {
+            return GetDockerWorkerNames().Select(name => name.Trim()).Where(name => !string.IsNullOrEmpty(name));
+        }
+
+        /// <summary>
+        /// The worker containers still running that belong to the run tagged <paramref name="runTag"/>,
+        /// whether or not this process still knows the names it launched.
+        /// <para>Scoping by the run tag is what lets teardown be thorough AND safe. Killing exactly the
+        /// remembered names misses a container whose name was never recorded, and killing every worker
+        /// on the machine reaches a concurrent run's containers - neither is acceptable, and the run
+        /// timestamp already embedded in every name answers it precisely.</para>
+        /// </summary>
+        private static string GetWorkersStillRunning(string workerNames, string runTag)
+        {
+            var running = new HashSet<string>(GetRunningWorkerNames(), StringComparer.OrdinalIgnoreCase);
+
+            // Names this run is known to have launched, plus anything else carrying its tag.
+            var mine = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (!string.IsNullOrEmpty(workerNames))
+            {
+                foreach (var launched in workerNames.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                             .Where(running.Contains))
+                {
+                    mine.Add(launched);
+                }
+            }
+            if (!string.IsNullOrEmpty(runTag))
+            {
+                foreach (var tagged in running.Where(name => name.IndexOf(runTag, StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    mine.Add(tagged);
+                }
+            }
+            return string.Join(@" ", mine);
+        }
+
+        /// <summary>
+        /// Kills the parallel workers when disposed, so they are torn down on every exit from a
+        /// parallel run.
+        /// <para>A worker is a container, and a container outlives the run that started it unless
+        /// something stops it. Teardown used to hang solely off the console control handler, which
+        /// only fires when the process is terminated from outside, so a run that simply FINISHED left
+        /// its workers alive. They then held the mounted checkout open indefinitely - long enough to
+        /// wedge a later run's staging step with no error, just silence.</para>
+        /// </summary>
+        public class ParallelWorkerTeardown : IDisposable
+        {
+            private readonly Func<Process> _getHostWorker;
+            private readonly Func<string> _getWorkerNames;
+            private readonly string _runTag;
+            private int _torndown;
+
+            /// <summary>
+            /// The scope currently in force, for <see cref="TearDownNow"/>.
+            /// </summary>
+            private static ParallelWorkerTeardown _current;
+
+            /// <summary>
+            /// Tears down the workers of the run in progress, for code about to call
+            /// <see cref="Environment.Exit"/> - which runs no finally block, and whose ProcessExit
+            /// handlers .NET Framework cuts off after about two seconds. Docker cannot be relied on
+            /// to answer in that budget, so an exit that means to clean up has to say so here first
+            /// rather than leave it to the runtime.
+            /// </summary>
+            public static void TearDownNow()
+            {
+                _current?.TearDown();
+            }
+
+            /// <param name="getHostWorker">Reads the host worker process at teardown time, or null if
+            /// there is none. Deferred for the same reason as the names: the host worker has not been
+            /// launched yet when this scope is created, so reading it now yields null</param>
+            /// <param name="getWorkerNames">Reads the launched worker names at teardown time, since
+            /// workers are still being launched when this scope is created</param>
+            /// <param name="runTag">The timestamp this run embeds in the names of the containers it
+            /// launches. It is what makes "this run's workers" answerable without a name list, so
+            /// teardown can be thorough without reaching a concurrent run's containers</param>
+            public ParallelWorkerTeardown(Func<Process> getHostWorker, Func<string> getWorkerNames, string runTag)
+            {
+                _getHostWorker = getHostWorker;
+                _getWorkerNames = getWorkerNames;
+                _runTag = runTag;
+                _current = this;
+
+                // Environment.Exit does NOT run finally blocks, and this scope surrounds code that
+                // leaves through several of them - so disposing at the end of the block cannot be the
+                // only way teardown happens, or an early exit leaks every container it launched.
+                // ProcessExit does run on Environment.Exit, which closes that hole. It still does not
+                // run when the process is killed outright (SkylineTester stopping a run), and nothing
+                // inside the process can - that path is covered by reporting orphans on the next run.
+                AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
+            }
+
+            private void OnProcessExit(object sender, EventArgs e)
+            {
+                TearDown();
+            }
+
+            public void Dispose()
+            {
+                AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
+                TearDown();
+                _current = null;
+            }
+
+            /// <summary>
+            /// Runs once however many times it is called: Dispose and ProcessExit both reach here on a
+            /// normal run, and killing the same host worker twice would report a spurious failure.
+            /// </summary>
+            private void TearDown()
+            {
+                if (Interlocked.Exchange(ref _torndown, 1) != 0)
+                    return;
+
+                try
+                {
+                    KillParallelWorkers(_getHostWorker(), _getWorkerNames(), _runTag);
+                }
+                catch (Exception ex)
+                {
+                    // Never let teardown replace the result of the run it is cleaning up after
+                    Console.WriteLine(@"Failed to tear down parallel workers: " + ex.Message);
+                }
+            }
         }
     }
 }

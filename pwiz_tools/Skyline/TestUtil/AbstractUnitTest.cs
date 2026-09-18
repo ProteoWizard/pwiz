@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline;
 using pwiz.Skyline.Properties;
@@ -163,7 +164,73 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public bool IsRunningInTestRunner
         {
+            // Same check on both frameworks. This was once #if'd to a hardcoded false on net8,
+            // on the belief that TestRunnerContext was TestRunner.exe-only - it is not:
+            // TestRunnerLib targets net472 AND net8.0-windows, defines a net8 TestRunnerContext
+            // for MSTest 3.x, and TestUtil references it. The stub silently made every
+            // IsRunningInTestRunner caller take its "not TestRunner" path on net8, which meant
+            // SkipWiff2TestInTestExplorer skipped FileTypeTest and Wiff2ResultsTest everywhere,
+            // including under TestRunner - so the wiff2 path had no coverage at all.
             get { return TestContext is TestRunnerContext; }
+        }
+
+        /// <summary>
+        /// The pass in which TestRunner repeats each test looking for leaks. Matches
+        /// <c>TestRunner.Program.LEAK_PASS</c>, which is private to TestRunner and so cannot be
+        /// shared; if that changes, this must change with it.
+        /// </summary>
+        private const int LEAK_CHECK_PASS = 1;
+
+        /// <summary>
+        /// Whether a test may read Sciex <c>.wiff2</c> data on this run.
+        /// </summary>
+        /// <remarks>
+        /// This is <see cref="ExtensionTestContext.CanImportAbWiff2"/> except during leak
+        /// detection, where reading a <c>.wiff2</c> is currently unsafe: every
+        /// <c>MsDataFileImpl</c> open of one leaves a
+        /// <c>Clearcore2.RFLight.SampleDataProvider.SampleDataProviderServer</c> rooted by its own
+        /// periodic Timer - roughly 24 KB per open that nothing can release, because the SDK
+        /// exposes no shutdown (<c>ISampleDataApi</c> and <c>DataApiFactory</c> are both
+        /// non-disposable, and <c>CloseFile</c> closes a file, not the server). Sharing the api
+        /// process-wide is what the C++ reader does and it removes the leak, but that reader keeps
+        /// one api per FILE where this one keeps one per SAMPLE, so sharing needs ownership
+        /// arbitration the C++ side never needed. An attempt was reverted after a test proved it
+        /// caused <c>ObjectDisposedException: SQLiteConnection</c> under concurrent readers, which
+        /// is silent data loss in a parallel import - worse than the leak.
+        /// <para>
+        /// The leak pass runs each test around two dozen times, so those tens of KB become the
+        /// bulk of every managed leak the nightly reports and drown out real regressions. Falling
+        /// back to the equivalent mzML keeps the tests running and asserting there, and the
+        /// <c>.wiff2</c> path is still covered normally in pass 2.
+        /// </para>
+        /// <para>
+        /// Remove this once the SDK leak is fixed, and go back to
+        /// <see cref="ExtensionTestContext.CanImportAbWiff2"/> directly.
+        /// </para>
+        /// </remarks>
+        protected bool IsAbWiff2Safe
+        {
+            get
+            {
+                if (!ExtensionTestContext.CanImportAbWiff2)
+                    return false;
+                if (TestPass != LEAK_CHECK_PASS)
+                    return true;
+                Console.Out.WriteLine("Reading .wiff2 is skipped during leak detection (pass {0}) because the Sciex SDK leaks ~24 KB per file open.", LEAK_CHECK_PASS);
+                Console.Out.WriteLine("Equivalent mzML is used instead, so wiff2-specific coverage comes from pass 2 only.");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// The Sciex file extension to use for this run - the <c>.wiff2</c> extension, or the mzML
+        /// extension when <see cref="IsAbWiff2Safe"/> is false. Must move together with
+        /// <see cref="IsAbWiff2Safe"/>: taking the mzML sample suffix while keeping the
+        /// <c>.wiff2</c> extension names a file that does not exist.
+        /// </summary>
+        protected string ExtAbWiff2Safe
+        {
+            get { return IsAbWiff2Safe ? DataSourceUtil.EXT_WIFF2 : ExtensionTestContext.ExtMzml; }
         }
 
         /// <summary>
@@ -445,6 +512,11 @@ namespace pwiz.SkylineTestUtil
             Program.TestName = TestContext.TestName;
             Program.DoNotTestUnicodeHandling = TestContext.Properties["UnicodeDecoration"]==null;
 
+            // The loader trace ring is static and this process runs test after test, so anything
+            // left in it belongs to a previous test and would be presented as evidence for this
+            // one's failure.
+            Skyline.Model.BackgroundLoader.ClearLoaderTrace();
+
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
 
@@ -511,6 +583,10 @@ namespace pwiz.SkylineTestUtil
         {
             // Report any pooled streams left open, then stop tracking and clean up
             string poolReport = FileStreamManager.Default.ReportPooledStreams();
+            // A FileSaver holds its temporary file open with a plain FileStream that never
+            // enters the pool, so a leaked one is invisible above and surfaces only as the
+            // directory failing to delete, naming a "~SK*.tmp" locked by this process.
+            string fileSaverReport = FileSaver.ReportUndisposed();
             FileStreamManager.Default.EndTrackingHistory();
             FileStreamManager.Default.CloseAllStreams();
 
@@ -524,6 +600,8 @@ namespace pwiz.SkylineTestUtil
                 cleanupException = ex;
             }
 
+            // The FileSaver report explains a failure; it never causes one on its own. A saver
+            // for a load still in flight is undisposed for a moment without anything being wrong.
             if (poolReport != null || cleanupException != null)
             {
                 var errors = new List<string>();
@@ -531,6 +609,8 @@ namespace pwiz.SkylineTestUtil
                     errors.AddRange(new[] {"Streams left open:", string.Empty, poolReport});
                 if (cleanupException != null)
                     errors.AddRange(new[] {"CleanupFiles failed:", string.Empty, cleanupException.Message});
+                if (fileSaverReport != null)
+                    errors.AddRange(new[] {"Temporary files left open:", string.Empty, fileSaverReport});
                 Assert.Fail(TextUtil.LineSeparate(errors));
             }
         }

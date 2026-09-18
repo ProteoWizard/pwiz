@@ -1,5 +1,6 @@
 /*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
+ * AI assistance: Claude Code (Claude Fable 5) <noreply .at. anthropic.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
  *
@@ -19,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -28,12 +28,12 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 {
     public class WatersConnectSession : RemoteSession
     {
-        protected HttpClient _httpClient;
+        protected HttpClientWithProgress _httpClient;
 
         public WatersConnectSession(WatersConnectAccount account) : base(account)
         {
             Assume.IsNotNull(account, @"WatersConnectSession requires a WatersConnectAccount");
-            _httpClient = account.GetAuthenticatedHttpClient();
+            _httpClient = account.CreateAuthenticatedClient();
         }
 
         public WatersConnectAccount WatersConnectAccount { get { return (WatersConnectAccount) Account; } }
@@ -115,52 +115,62 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         {
             var requestUri = new Uri(WatersConnectAccount.GetFoldersUrl() + RemoteUrl.PATH_SEPARATOR + parentFolderId);
             var body = new JObject { [@"Name"] = name, [@"Description"] = description ?? string.Empty }.ToString();
-            var request = new HttpRequestMessage(HttpMethod.Put, requestUri) { Content = new StringContent(body) };
-            request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(@"application/json") { CharSet = @"utf-8" };
-            HttpResponseMessage response;
             try
             {
-                response = _httpClient.SendAsync(request).Result;
+                responseBody = _httpClient.UploadString(requestUri, @"PUT", body, @"application/json");
+            }
+            catch (NetworkRequestException e)
+            {
+                // HTTP errors carry the server's status and body.
+                responseBody = e.ResponseBody ?? e.Message;
+                return e.StatusCode ?? HttpStatusCode.ServiceUnavailable;
             }
             catch (Exception e)
             {
-                // Network/TLS/DNS failures must not escape as an unhandled exception from the wait
-                // dialog: return a failure status and surface the detail through responseBody.
-                responseBody = ((e as AggregateException)?.Flatten().InnerException ?? e).Message;
+                // Anything else (unmapped transport failures, a malformed server URL) must not
+                // escape as an unhandled exception from the wait dialog: return a failure status
+                // and surface the detail through responseBody.
+                responseBody = e.Message;
                 return HttpStatusCode.ServiceUnavailable;
             }
-            responseBody = response.Content?.ReadAsStringAsync().Result;
-            if (response.StatusCode < HttpStatusCode.BadRequest)
-            {
-                // Invalidate the cached folder list and refetch so the new folder becomes visible.
-                // RetryFetch alone is a no-op while a successful response is already cached (which it
-                // is once the dialog has listed the parent), so the cache must be cleared first.
-                ClearResultsFor<ImmutableList<WatersConnectFolderObject>>(GetRootContentsUrl());
-                RetryFetch(GetRootContentsUrl(), GetFolders);
-            }
-            return response.StatusCode;
+            // Invalidate the cached folder list and refetch so the new folder becomes visible.
+            // RetryFetch alone is a no-op while a successful response is already cached (which it
+            // is once the dialog has listed the parent), so the cache must be cleared first.
+            ClearResultsFor<ImmutableList<WatersConnectFolderObject>>(GetRootContentsUrl());
+            RetryFetch(GetRootContentsUrl(), GetFolders);
+            return HttpStatusCode.OK;
         }
 
-        protected void EnsureSuccess(HttpResponseMessage response)
+        /// <summary>
+        /// Downloads the response body for <paramref name="requestUri"/>, mapping an HTTP error to
+        /// the waters_connect <see cref="RemoteServerException"/> (message with the status code,
+        /// detail from the response body) that callers and tests expect.
+        /// </summary>
+        protected string DownloadStringChecked(Uri requestUri)
         {
-            if (response.StatusCode >= HttpStatusCode.BadRequest)
+            try
             {
-                var message = string.Format(WatersConnectResources.WatersConnectUrl_OpenMsDataFile_waters_connect_server_returns_an_error_code__0__, response.StatusCode);
-                if (response.Content != null)
-                {
-                    throw new RemoteServerException(message,
-                        response.Content.ReadAsStringAsync().Result);
-                }
-
-                throw new RemoteServerException(message);
+                return _httpClient.DownloadString(requestUri);
             }
+            catch (NetworkRequestException e)
+            {
+                throw MapToRemoteServerException(e);
+            }
+        }
+
+        protected static RemoteServerException MapToRemoteServerException(NetworkRequestException e)
+        {
+            if (e.StatusCode == null)
+                return new RemoteServerException(e.Message, e);
+            var message = string.Format(WatersConnectResources.WatersConnectUrl_OpenMsDataFile_waters_connect_server_returns_an_error_code__0__, e.StatusCode);
+            if (e.ResponseBody != null)
+                return new RemoteServerException(message, e.ResponseBody);
+            return new RemoteServerException(message, e);
         }
 
         protected ImmutableList<WatersConnectFolderObject> GetFolders(Uri requestUri)
         {
-            var response = _httpClient.GetAsync(requestUri).Result;
-            EnsureSuccess(response);
-            string responseBody = response.Content.ReadAsStringAsync().Result;
+            string responseBody = DownloadStringChecked(requestUri);
             var jsonObject = JObject.Parse(responseBody);
 
             var foldersValue = jsonObject[@"children"] as JArray;
@@ -173,9 +183,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         protected ImmutableList<WatersConnectFolderObject> GetInjections(Uri requestUri)
         {
-            var response = _httpClient.GetAsync(requestUri).Result;
-            EnsureSuccess(response);
-            string responseBody = response.Content.ReadAsStringAsync().Result;
+            string responseBody = DownloadStringChecked(requestUri);
             if (string.IsNullOrEmpty(responseBody))
                 return ImmutableList<WatersConnectFolderObject>.EMPTY;
             var itemsValue = JArray.Parse(responseBody);
@@ -186,9 +194,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         private ImmutableList<WatersConnectFileObject> GetFiles(Uri requestUri)
         {
-            var response = _httpClient.GetAsync(requestUri).Result;
-            EnsureSuccess(response);
-            string responseBody = response.Content.ReadAsStringAsync().Result;
+            string responseBody = DownloadStringChecked(requestUri);
             var itemsValue = JArray.Parse(responseBody);
             if (itemsValue.Count == 0)
             {

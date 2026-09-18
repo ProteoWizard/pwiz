@@ -120,8 +120,26 @@ deterministic across runs and thread counts with **no** PRNG involvement.
 
 ## Step 5 — Seeded PRNG (`XorShift64`, seed 42)
 
-The only randomness in the pipeline is training-subset shuffling, and it uses a
-fixed-seed deterministic PRNG. `XorShift64` (`Osprey.ML/LinearSvmClassifier.cs:266`)
+Randomness in the pipeline is confined to training-set selection, and every source of it
+is seeded and deterministic. There are **two**, structurally different:
+
+1. **Training-subset shuffling** — `XorShift64`, described below.
+2. **The per-precursor run draw** — `PercolatorScorer.ReservoirTakesSlot`, a SplitMix64
+   finalizer over `(base_id | decoy bit, k, seed)`. Deliberately *not* drawn from a shared
+   RNG: a hash of the row's own identity cannot be moved by thread interleaving or by how
+   the ingest is scheduled, where a shared stream's draw order could. See
+   `07-fdr-control.md` for what it selects.
+
+   One caveat this does **not** remove: the reservoir picks the k-th arriving run, so
+   which run survives follows FILE ORDER. A cross-run maximum was commutative and did not.
+   Re-running the same file list in the same order reproduces the same model; re-running it
+   in a different order does not, and file order is not part of the task validity key.
+   Order is the CALLER's: `--input-scores` used to sort a globbed directory on the caller's
+   behalf, and with it retired an orchestrator states the order explicitly (`--input-list`
+   takes a sorted file). A stray parquet in a directory can no longer change the cohort
+   either, which is the other half of the same trade.
+
+`XorShift64` (`Osprey.ML/LinearSvmClassifier.cs:266`)
 matches the Rust generator exactly (`x ^= x << 13; x ^= x >> 7; x ^= x << 17`).
 `PercolatorConfig.Seed` defaults to `42` (`Osprey.FDR/PercolatorFdr.cs:64,:121`),
 and is threaded through both the direct and streaming Percolator paths
@@ -142,7 +160,8 @@ individual entries, preserving the cross-validation grouping invariant. The
 prior `SelectBestPerPrecursor` dedup (`:2569`) itself sorts its output
 (`:2604`), so the subsample input order is stable. `BuildTrainingSubset`
 (`:2522`) is the single owner both the direct and streaming Percolator paths call
-so they select **identical** subsets for identical input.
+so they select **identical** subsets for identical input — where "identical input" now
+includes the file ORDER, since the run draw is positional (see Step 5).
 
 ## Step 7 — Float stability within the 1e-9 gate
 
@@ -201,11 +220,12 @@ on it. The scoring task orders entries and writes them to the per-file
 `PerFileRescoreTask.SortFileEntriesCanonical` (`Osprey.Tasks/PerFileRescoreTask.cs:1301`)
 re-imposes the exact `(EntryId, Charge, ScanNumber, ParquetIndex)` order a cold
 run establishes, with `ParquetIndex` as a unique terminal key so the sort never
-ties (`:1306-1315`). The comment at `:1287-1299` explains why this is applied to
-**every** file (even no-work files with no reconciled Parquet): otherwise
+ties (`:1306-1315`). Its comment explains why this is applied to **every** file the
+resume overlays, including a file with no reconciliation work: otherwise
 `SecondPassFDR`'s `BuildSharedBoundaries` could iterate a different order and, on a
 q-value tie between charge states, pick a different shared `(modseq, file)`
-boundary. Parquet preserves exact IEEE-754 values, so a rehydrated entry is
+boundary. A file the resume loads from its reconciled Parquet instead arrives in
+that order already, from `FirstPassSurvivorLoader`'s own canonical sort. Parquet preserves exact IEEE-754 values, so a rehydrated entry is
 bit-identical to the in-memory original (see 14-intermediate-files.md).
 
 The PEP estimator is fed a `base_id`-ascending-sorted union so its

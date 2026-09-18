@@ -278,6 +278,7 @@ namespace pwiz.Osprey.FDR
             bool[] labels, uint[] entryIds, string[] peptides,
             PercolatorResults trainResults, PercolatorConfig config,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            Func<string, double[]> loadFileApexRts,
             IFdrOutputSink sink,
             Action<FeatureContributions> captureContributions = null,
             bool applyExperimentAgg = true)
@@ -286,6 +287,15 @@ namespace pwiz.Osprey.FDR
                 throw new InvalidOperationException(
                     @"ScoreProjectionAndComputeFdrInPlace requires a per-file feature loader: " +
                     @"the projection carries no resident feature vectors.");
+            // Required for the same reason the feature loader is: the lean FdrProjection carries
+            // no retention time, and the sidecar this sink writes has a column for one (format
+            // v7). Defaulting it would put a fabricated RT in a persisted artifact that no
+            // reader could tell from a measured one, so the absence is a bug here, not a case.
+            if (loadFileApexRts == null)
+                throw new InvalidOperationException(
+                    @"ScoreProjectionAndComputeFdrInPlace requires a per-file apex-RT loader: " +
+                    @"the projection carries no retention time and the per-file FDR sidecar " +
+                    @"persists one.");
 
             int n = labels.Length;
             var gbtModels = ResolveGbtModels(trainResults);
@@ -399,7 +409,7 @@ namespace pwiz.Osprey.FDR
             // used (PercolatorQValues.ComputePepWinnerMap / PercolatorQValues.ComputeExperimentPrecursorQMap /
             // PercolatorQValues.ComputeExperimentPeptideQMap / PercolatorQValues.ComputePerFileRunQvalues all mirror
             // StreamingFdr.ComputeStreamingCompetitionQvalues), so the streamed outputs are identical.
-            var pepByWinnerIdx = PercolatorQValues.ComputePepWinnerMap(finalScores, labels, entryIds);
+            var pepByEntryId = PercolatorQValues.ComputePepWinnerMap(finalScores, labels, entryIds);
 
             // The per-file q-value passes below slice each file as one contiguous block
             // [off, off+count). The full-length ComputePerRun* path instead grouped by file
@@ -486,6 +496,11 @@ namespace pwiz.Osprey.FDR
             {
                 var projRows = kvp.Value;
                 int count = projRows.Count;
+                // Indexed by FdrProjection.ParquetIndex, which IS this file's parquet row
+                // ordinal - not by r, because the projection rows were sorted by
+                // (EntryId, Charge, ParquetIndex) before scoring. Read through the same
+                // ReadFdrStubScalars the ordinal is defined by, so the two cannot drift.
+                double[] fileApexRts = count > 0 ? loadFileApexRts(kvp.Key) : null;
                 PercolatorQValues.ComputePerFileRunQvalues(
                     finalScores, labels, entryIds, peptides, wgi, count,
                     out double[] runPrecFile, out double[] runPeptFile);
@@ -517,14 +532,18 @@ namespace pwiz.Osprey.FDR
                         floorPept > epe)
                         epe = floorPept;
 
-                    double pep = pepByWinnerIdx.TryGetValue(g, out double pv) ? pv : 1.0;
+                    double pep = pepByEntryId.TryGetValue(entryIds[g], out double pv) ? pv : 1.0;
 
                     double ea = expAggByEntryId.TryGetValue(entryIds[g], out double eav)
                         ? eav : finalScores[g];
 
                     projRows[r] = projRows[r].WithScore(finalScores[g]);
+                    uint parquetIndex = projRows[r].ParquetIndex;
+                    double apexRt = fileApexRts != null && parquetIndex < fileApexRts.Length
+                        ? fileApexRts[parquetIndex]
+                        : double.NaN;
                     sink.Accept(fileIdx, r, projRows[r].EntryId, projRows[r].IsDecoy,
-                        projRows[r].Charge, pept, finalScores[g], ea,
+                        projRows[r].Charge, pept, finalScores[g], ea, apexRt,
                         new FdrQValues(rp, rpe, ep, epe, pep));
                 }
                 wgi += count;
@@ -550,7 +569,6 @@ namespace pwiz.Osprey.FDR
             public readonly uint ParquetIndex;
             public readonly double CoelutionSum;
             public readonly string Peptide;
-
             public FirstPassDedupRow(int g, string fileName, uint entryId, byte charge, bool isDecoy,
                 uint parquetIndex, double coelutionSum, string peptide)
             {
@@ -563,6 +581,50 @@ namespace pwiz.Osprey.FDR
                 CoelutionSum = coelutionSum;
                 Peptide = peptide;
             }
+        }
+
+        /// <summary>
+        /// A file's already-computed scores, in parquet row order, or null when the caller has
+        /// nothing on disk for it.
+        ///
+        /// <para>Only the SCORE is taken from disk. The run q-values are recomputed from it,
+        /// which is a sort and costs nothing next to loading a file's feature vectors and
+        /// re-running the dot product - and recomputing keeps a resumed file byte-identical to a
+        /// freshly scored one by construction rather than by trusting two writers to agree.</para>
+        /// </summary>
+        private static double[] TryLoadCompletedScores(
+            Func<string, Action<uint, double>, bool> tryStream, string fileName, int expectedCount,
+            IReadOnlyList<uint> expectedEntryIds)
+        {
+            if (tryStream == null)
+                return null;
+            var scores = new List<double>(expectedCount);
+            var entryIds = new List<uint>(expectedCount);
+            if (!tryStream(fileName, (entryId, score) =>
+                {
+                    entryIds.Add(entryId);
+                    scores.Add(score);
+                }))
+            {
+                return null;
+            }
+            // A count mismatch means the sidecar and the parquet disagree about how many rows
+            // this file has, which no validity key can catch - so refuse the shortcut and score
+            // it rather than emit a silently misaligned file.
+            if (scores.Count != expectedCount)
+                return null;
+            // And the ROWS must line up, not just the count. This binds the sidecar's records
+            // to parquet rows by POSITION, while every other reader of the file matches by
+            // entry_id - so a sidecar that is complete but ordered differently (the resident
+            // write path sorts by FdrEntry, not by parquet row) would hand every row its
+            // neighbour's score, and the run would finish clean with wrong identifications.
+            // The identity is already in hand at both call sites, so checking is free.
+            for (int r = 0; r < expectedCount; r++)
+            {
+                if (entryIds[r] != expectedEntryIds[r])
+                    return null;
+            }
+            return scores.ToArray();
         }
 
         /// <summary>
@@ -600,14 +662,17 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         internal static bool RunStreamingFirstPass(
             IReadOnlyList<string> fileNames,
-            Action<string, Action<uint, byte, bool, double, string>> streamFileRows,
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             PercolatorConfig percConfig,
             Action<string> logInfo,
             string passLabel,
             IFdrOutputSink sink,
             Action<FeatureContributions> captureContributions = null,
-            Action<PercolatorResults> captureModel = null)
+            Action<PercolatorResults> captureModel = null,
+            Func<string, Action<uint, double>, bool> tryStreamCompletedScores = null,
+            PercolatorResults pretrainedModel = null,
+            FileRunScopeSink flushFileRunScope = null)
         {
             if (streamFileRows == null)
                 throw new ArgumentNullException(nameof(streamFileRows));
@@ -632,6 +697,18 @@ namespace pwiz.Osprey.FDR
             // (byte-identical to Features[0] on the 1st pass), so no feature load is needed here.
             var bestTarget = new Dictionary<uint, FirstPassDedupRow>();
             var bestDecoy = new Dictionary<uint, FirstPassDedupRow>();
+            // Run bookkeeping for the reservoir, allocated only when it is on so the default-off
+            // arm keeps exactly the dictionaries, and the memory, it has always had.
+            var runPick = OspreyEnvironment.TrainPickRun ? new Dictionary<uint, PercolatorSampling.RunPickState>() : null;
+            // Which observation represents a precursor. Logged when it is NOT the default,
+            // because nothing else in the output would say which population trained the model.
+            bool pickRun = OspreyEnvironment.TrainPickRun;
+            if (!pickRun)
+            {
+                logInfo(
+                    @"[TRAIN] OSPREY_TRAIN_PICK_RUN=0: each precursor's training row is its BEST " +
+                    @"observation across runs, not a uniform sample of them (pre-26.1 behaviour)");
+            }
             int g = 0;
             int nInputTargets = 0, nInputDecoys = 0;
             // This pass streams every file's parquet rows before the [PATH] line below, so it is a
@@ -644,7 +721,9 @@ namespace pwiz.Osprey.FDR
             {
                 string file = fileNames[f];
                 buffer.Clear();
-                streamFileRows(file, buffer.Add);
+                // Core only: this pass reduces to a best-per-precursor training subset and never
+                // looks at RowBuffer.ApexRts, so decoding apex_rt here is pure waste.
+                streamFileRows(file, StubColumns.Core, buffer.Add);
                 int count = buffer.Count;
                 for (int r = 0; r < count; r++)
                 {
@@ -655,14 +734,59 @@ namespace pwiz.Osprey.FDR
                     var map = isDecoy ? bestDecoy : bestTarget;
                     if (map.TryGetValue(baseId, out FirstPassDedupRow existing))
                     {
-                        if (coelutionSum > existing.CoelutionSum)
+                        bool replace;
+                        if (pickRun)
+                        {
+                            // Reservoir of size one over RUNS - not over rows. Pass 1 is
+                            // PRE-COMPACTION, so a precursor carries several candidate-peak rows
+                            // within one file; drawing per row would both weight a run by how many
+                            // candidates it produced AND leave a RANDOM candidate as the training
+                            // row instead of that run's best peak.
+                            uint seenKey = baseId | (isDecoy ? 0x80000000u : 0u);
+                            PercolatorSampling.RunPickState state = runPick[seenKey];
+                            if (f == state.LastRun)
+                            {
+                                // Another candidate peak from the run already drawn for: resolve it
+                                // by score, so the surviving row is this run's BEST peak.
+                                replace = state.HolderIsCurrentRun && coelutionSum > existing.CoelutionSum;
+                            }
+                            else
+                            {
+                                uint runs = state.RunsSeen + 1u;
+                                // The DRAW takes the decoy bit too. BASE_ID_MASK clears the high
+                                // bit, so drawing on the masked base_id would make a target and its
+                                // paired decoy decide identically at every k and land on the same
+                                // run for essentially every precursor.
+                                replace = ReservoirTakesSlot(seenKey, runs, percConfig.Seed);
+                                state.RunsSeen = runs;
+                                state.LastRun = f;
+                                state.HolderIsCurrentRun = replace;
+                                runPick[seenKey] = state;
+                            }
+                        }
+                        else
+                        {
+                            replace = coelutionSum > existing.CoelutionSum;
+                        }
+                        if (replace)
+                        {
                             map[baseId] = new FirstPassDedupRow(
-                                g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum, buffer.Peptides[r]);
+                                g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum,
+                                buffer.Peptides[r]);
+                        }
                     }
                     else
                     {
                         map[baseId] = new FirstPassDedupRow(
                             g, file, entryId, buffer.Charges[r], isDecoy, (uint)r, coelutionSum, buffer.Peptides[r]);
+                        if (pickRun)
+                        {
+                            uint seenKey = baseId | (isDecoy ? 0x80000000u : 0u);
+                            runPick[seenKey] = new PercolatorSampling.RunPickState
+                            {
+                                RunsSeen = 1u, LastRun = f, HolderIsCurrentRun = true
+                            };
+                        }
                     }
                     if (isDecoy) nInputDecoys++; else nInputTargets++;
                     g++;
@@ -738,22 +862,59 @@ namespace pwiz.Osprey.FDR
                 "[COUNT] {0} Percolator streaming subsample: {1} entries ({2} targets, {3} decoys)",
                 passLabel, subsetEntries.Count, subTargets, subsetEntries.Count - subTargets));
 
+            // A persisted model is only usable if it was trained on THIS run's feature set, and
+            // nothing upstream can establish that: the validity key the caller checks carries no
+            // feature-set or build term, so a model from a build with a different feature list
+            // matches it exactly. Adopting one would either index past the end of its weight
+            // vector mid-score-pass or, when it is wider, silently truncate it and apply the
+            // standardizer at the wrong width - scores that look plausible and are wrong.
+            //
+            // Checked HERE, above the subset load, because rejecting it after that branch would
+            // leave the subset unloaded and then train on entries with no features.
+            if (pretrainedModel != null)
+            {
+                int modelFeatures = pretrainedModel.FoldWeights != null && pretrainedModel.FoldWeights.Count > 0
+                    ? pretrainedModel.FoldWeights[0].Length
+                    : -1;
+                if (modelFeatures != nFeatures ||
+                    pretrainedModel.Standardizer == null ||
+                    pretrainedModel.Standardizer.NumFeatures != nFeatures)
+                {
+                    logInfo(string.Format(
+                        @"[TRAIN] Ignoring the persisted 1st-pass model: it carries {0} features " +
+                        @"and this run scores {1}. Training a fresh model.", modelFeatures, nFeatures));
+                    pretrainedModel = null;
+                }
+            }
+
             // Load ONLY the subset's feature vectors, one file at a time (bounded by MaxTrainSize),
             // cloning each row so the subset entry owns it -- mirrors RunStreamingIntoProjection.
             var subsetByFile = GroupIndicesByFileName(subsetEntries);
-            int subsetFilesLoaded = 0;
-            using (var loadProgress = new ProgressReporter(string.Format(
-                       @"Loading training-subset feature vectors from {0} file(s)", subsetByFile.Count), subsetByFile.Count))
-            foreach (var kvp in subsetByFile)
+            // Both skipped when the caller supplied the model this pass would have trained.
+            // Training exists to score entries; when every entry's score is already on disk
+            // there is nothing for a model to do, and loading the training subset's feature
+            // vectors is the single most expensive thing left - 21 minutes at 446 files, spent
+            // to reproduce a model that was already persisted per file as .1st-pass.model.json.
+            if (pretrainedModel == null)
             {
-                IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
-                foreach (int k in kvp.Value)
+                int subsetFilesLoaded = 0;
+                using (var loadProgress = new ProgressReporter(string.Format(
+                           @"Loading training-subset feature vectors from {0} file(s)", subsetByFile.Count), subsetByFile.Count))
+                foreach (var kvp in subsetByFile)
                 {
-                    var entry = subsetEntries[k];
-                    entry.Features = (double[])ResolveFeatureRow(
-                        rows, entry.ParquetIndex, entry.CoelutionSum, nFeatures).Clone();
+                    IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
+                    foreach (int k in kvp.Value)
+                    {
+                        var entry = subsetEntries[k];
+                        entry.Features = (double[])ResolveFeatureRow(
+                            rows, entry.ParquetIndex, entry.CoelutionSum, nFeatures).Clone();
+                    }
+                    loadProgress.Report(++subsetFilesLoaded);
                 }
-                loadProgress.Report(++subsetFilesLoaded);
+            }
+            else
+            {
+                logInfo(@"Reusing the persisted first-pass model; no training subset is loaded and no SVM is trained.");
             }
 
             var trainConfig = new PercolatorConfig
@@ -769,7 +930,8 @@ namespace pwiz.Osprey.FDR
                 TrainOnly = true,
                 Diagnostics = percConfig.Diagnostics
             };
-            PercolatorResults trainResults = PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
+            PercolatorResults trainResults =
+                pretrainedModel ?? PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
             if (trainResults.DiagnosticAbort)
                 return true;
 
@@ -832,28 +994,47 @@ namespace pwiz.Osprey.FDR
             using (var scoreProgress = new ProgressReporter(string.Format(@"Scoring {0} entries", n), n))
             for (int f = 0; f < nFiles; f++)
             {
-                IReadOnlyList<double[]> rows = loadFileFeatures(fileNames[f]);
+                // Identity first (entry_id / charge / decoy / modseq): scalar parquet columns,
+                // cheap, and needed either way. The FEATURE vectors are what cost, so they are
+                // loaded only when this file actually has to be scored.
                 buffer.Clear();
-                streamFileRows(fileNames[f], buffer.Add);
+                // The ONE walk that needs it: this pass hands the file's finished run-scope
+                // output to flushFileRunScope, which writes the v7 sidecar.
+                streamFileRows(fileNames[f], StubColumns.ApexRt, buffer.Add);
                 int count = buffer.Count;
                 if (count > 0)
                     nonEmptyFiles++;
+                double[] doneScores = TryLoadCompletedScores(tryStreamCompletedScores, fileNames[f], count, buffer.EntryIds);
+                IReadOnlyList<double[]> rows = doneScores == null ? loadFileFeatures(fileNames[f]) : null;
                 var fScores = new double[count];
                 var fLabels = new bool[count];
                 var fEntryIds = new uint[count];
                 var fPeptides = new string[count];
+                // The sidecar's apex-RT column (format v7). Copied out of the buffer rather than
+                // read from it at the flush because the buffer is cleared per file and the sink
+                // contract says the arrays are consumed synchronously - the same rule the other
+                // four already follow.
+                var fApexRts = new double[count];
                 for (int r = 0; r < count; r++)
                 {
                     // ComputeStreamedScore leaves featureBuf standardized, which contribAcc bins.
-                    double score = ComputeStreamedScore(
-                        avgWeights, avgBias, standardizer, featureBuf, rows, r, buffer.CoelutionSums[r], nFeatures);
+                    double score = doneScores != null
+                        ? doneScores[r]
+                        : ComputeStreamedScore(
+                            avgWeights, avgBias, standardizer, featureBuf, rows, r, buffer.CoelutionSums[r], nFeatures);
                     bool isDecoy = buffer.IsDecoys[r];
                     fScores[r] = score;
                     fLabels[r] = isDecoy;
                     fEntryIds[r] = buffer.EntryIds[r];
                     fPeptides[r] = buffer.Peptides[r];
+                    fApexRts[r] = buffer.ApexRts[r];
                     streamingQ.Add(g1, score, buffer.EntryIds[r], isDecoy, buffer.Peptides[r]);
-                    contribAcc.Add(featureBuf, isDecoy);
+                    // featureBuf is filled by ComputeStreamedScore, so it holds nothing meaningful
+                    // for a resumed file. Feeding it would poison the feature-contribution report
+                    // with a stale or zeroed vector; omitting it makes the report cover the files
+                    // actually scored, which is the honest reading.
+                    if (doneScores == null)
+                        contribAcc.Add(featureBuf, isDecoy);
                     g1++;
                     scoreProgress.Report(g1);
                 }
@@ -866,6 +1047,16 @@ namespace pwiz.Osprey.FDR
                     PercolatorQValues.UpdateExperimentQClampFloor(
                         minRunBothByEntryId, minRunBothByPeptide, fEntryIds[r], fPeptides[r], fLabels[r], runBoth);
                 }
+
+                // This file's run-scope output is COMPLETE here - score, run precursor q and run
+                // peptide q are all final, and none of them depends on another file. Hand it to
+                // the caller so it lands on disk now rather than one phase later, which is what
+                // makes an interrupted run lose one file instead of every file (see
+                // FileRunScopeSink). Skipped when the scores came off an existing sidecar: that
+                // file is already written, and rewriting an artifact a validity marker attests
+                // would replace it with a copy the marker no longer describes.
+                if (doneScores == null)
+                    flushFileRunScope?.Invoke(fileNames[f], f, count, fEntryIds, fScores, runPrecFile, runPeptFile, fApexRts);
             }
 
             var contributions = contribAcc.Build(trainResults.FoldWeights, percConfig.FeatureInfos);
@@ -875,7 +1066,7 @@ namespace pwiz.Osprey.FDR
             // Finalize the bounded lookups. PEP is global (built always); the experiment maps use
             // the single-file shortcut (exp == per-run) so they are built only when multi-file --
             // matching ScoreProjectionAndComputeFdrInPlace exactly.
-            var pepByWinnerIdx = streamingQ.BuildPepWinnerMap();
+            var pepByEntryId = streamingQ.BuildPepWinnerMap();
             bool isSingleFile = nonEmptyFiles <= 1;
             Dictionary<uint, double> expPrecByWinnerId = isSingleFile
                 ? null : streamingQ.BuildExperimentPrecursorQMap();
@@ -894,10 +1085,20 @@ namespace pwiz.Osprey.FDR
             using (var emitProgress = new ProgressReporter(string.Format(@"Assigning q-values to {0} entries", n), n))
             for (int f = 0; f < nFiles; f++)
             {
-                IReadOnlyList<double[]> rows = loadFileFeatures(fileNames[f]);
                 buffer.Clear();
-                streamFileRows(fileNames[f], buffer.Add);
+                // Still asks, though on this path nothing consumes it: the value goes to
+                // sink.Accept, and FdrStoringSink writes a record from it whenever it owns the
+                // write. It never does here - pass 1 marks every file it writes and the resume
+                // gate marks the rest - but that is an invariant maintained in another file, and
+                // the cost of being wrong is a fabricated retention time in a persisted artifact
+                // that no reader could distinguish from a measured one. Recovering this third
+                // walk needs the sink to be able to REFUSE a write it has no apex RT for, which
+                // is an interface change; until then the ~7% is the price of not relying on a
+                // distant invariant.
+                streamFileRows(fileNames[f], StubColumns.ApexRt, buffer.Add);
                 int count = buffer.Count;
+                double[] doneScores2 = TryLoadCompletedScores(tryStreamCompletedScores, fileNames[f], count, buffer.EntryIds);
+                IReadOnlyList<double[]> rows = doneScores2 == null ? loadFileFeatures(fileNames[f]) : null;
                 var fScores = new double[count];
                 var fLabels = new bool[count];
                 var fEntryIds = new uint[count];
@@ -905,8 +1106,10 @@ namespace pwiz.Osprey.FDR
                 var fCharges = new byte[count];
                 for (int r = 0; r < count; r++)
                 {
-                    fScores[r] = ComputeStreamedScore(
-                        avgWeights, avgBias, standardizer, featureBuf, rows, r, buffer.CoelutionSums[r], nFeatures);
+                    fScores[r] = doneScores2 != null
+                        ? doneScores2[r]
+                        : ComputeStreamedScore(
+                            avgWeights, avgBias, standardizer, featureBuf, rows, r, buffer.CoelutionSums[r], nFeatures);
                     fLabels[r] = buffer.IsDecoys[r];
                     fEntryIds[r] = buffer.EntryIds[r];
                     fPeptides[r] = buffer.Peptides[r];
@@ -934,12 +1137,13 @@ namespace pwiz.Osprey.FDR
                         minRunBothByPeptide.TryGetValue((pept, fLabels[r]), out double floorPept) && floorPept > epe)
                         epe = floorPept;
 
-                    double pep = pepByWinnerIdx.TryGetValue(gEmit + r, out double pv) ? pv : 1.0;
+                    double pep = pepByEntryId.TryGetValue(fEntryIds[r], out double pv) ? pv : 1.0;
 
                     double ea = expAggByEntryId.TryGetValue(fEntryIds[r], out double eav)
                         ? eav : fScores[r];
 
                     sink.Accept(f, r, fEntryIds[r], fLabels[r], fCharges[r], pept, fScores[r], ea,
+                        buffer.ApexRts[r],
                         new FdrQValues(rp, rpe, ep, epe, pep));
                     emitProgress.Report(gEmit + r + 1);
                 }
@@ -947,6 +1151,39 @@ namespace pwiz.Osprey.FDR
             }
             sink.Finish(logInfo);
             return false;
+        }
+
+        /// <summary>
+        /// Reservoir decision for the default training selection: does the
+        /// <paramref name="seen"/>-th run this precursor appears in take its training slot? True
+        /// with probability 1/seen, which leaves every run the precursor actually appears in
+        /// equally likely to be the survivor, however few runs contain it.
+        ///
+        /// Deterministic in <paramref name="baseId"/>, <paramref name="seen"/> and the training
+        /// seed rather than drawn from a shared RNG. That makes the decision independent of how
+        /// the ingest is SCHEDULED - thread interleaving cannot move it, as a shared RNG's draw
+        /// order would - and reproducible across re-runs. It does not make the winner independent
+        /// of file ORDER: the surviving ordinal is fixed, so which run holds that ordinal follows
+        /// the arrival sequence. Reproducibility therefore rests on the input file list being
+        /// ordered, which it is.
+        ///
+        /// Mixing is the SplitMix64 finalizer: the low bits of a raw base_id are far from uniform
+        /// and comparing them directly would skew the draw.
+        /// </summary>
+        internal static bool ReservoirTakesSlot(uint baseId, uint seen, ulong seed)
+        {
+            if (seen <= 1)
+                return true;
+            // Wrapping is the point here - this is a hash mixer, not a quantity - so the
+            // multiplications are marked unchecked rather than left to look like an oversight.
+            unchecked
+            {
+                ulong x = baseId + seed * 0x9E3779B97F4A7C15UL + seen * 0xD1B54A32D192ED03UL;
+                x = (x ^ (x >> 30)) * 0xBF58476D1CE4E5B9UL;
+                x = (x ^ (x >> 27)) * 0x94D049BB133111EBUL;
+                x ^= x >> 31;
+                return x % seen == 0;
+            }
         }
 
         /// <summary>
@@ -976,8 +1213,11 @@ namespace pwiz.Osprey.FDR
         /// (<see cref="RunStreamingFirstPass"/>) so the stream callback only appends to
         /// reference-type lists (never a captured-and-mutated counter) and the row/global ordinals
         /// advance in plain indexed loops. Bounded to one file at a time -- the same one-file
-        /// resident set the per-file run-q competition already requires. The five parallel lists
-        /// mirror the <see cref="FdrProjection"/> scalar slice the resident path holds.
+        /// resident set the per-file run-q competition already requires. Five of the six
+        /// parallel lists mirror the <see cref="FdrProjection"/> scalar slice the resident path
+        /// holds; <see cref="ApexRts"/> is the sixth, and it is scoring INPUT to nothing - it is
+        /// carried so this file's <c>.1st-pass.fdr_scores.bin</c> can persist it (format v7,
+        /// issue #4522).
         /// </summary>
         private sealed class RowBuffer
         {
@@ -986,6 +1226,7 @@ namespace pwiz.Osprey.FDR
             public readonly List<bool> IsDecoys = new List<bool>();
             public readonly List<double> CoelutionSums = new List<double>();
             public readonly List<string> Peptides = new List<string>();
+            public readonly List<double> ApexRts = new List<double>();
 
             public int Count => EntryIds.Count;
 
@@ -996,14 +1237,17 @@ namespace pwiz.Osprey.FDR
                 IsDecoys.Clear();
                 CoelutionSums.Clear();
                 Peptides.Clear();
+                ApexRts.Clear();
             }
 
-            public void Add(uint entryId, byte charge, bool isDecoy, double coelutionSum, string peptide)
+            public void Add(uint entryId, byte charge, bool isDecoy, double coelutionSum,
+                string peptide, double apexRt)
             {
                 EntryIds.Add(entryId);
                 Charges.Add(charge);
                 IsDecoys.Add(isDecoy);
                 CoelutionSums.Add(coelutionSum);
+                ApexRts.Add(apexRt);
                 // Normalize a null modseq to string.Empty exactly as the resident FdrProjectionSet
                 // .Builder.AddRow does (a present-but-null modified_sequence element survives
                 // ReadFdrStubScalars' column-level guard): a null peptide would otherwise throw as a

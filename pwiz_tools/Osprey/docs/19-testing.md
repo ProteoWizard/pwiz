@@ -26,12 +26,12 @@ crate carried its own `#[cfg(test)]` tests compiled into that crate.
   `Osprey.Test.csproj:12-13`) on `Microsoft.NET.Test.Sdk` 17.12.0
   (`Osprey.Test.csproj:11`). Tests are annotated with `[TestClass]` /
   `[TestMethod]`, the Skyline-standard MSTest attributes.
-- **Multi-target**: the test project builds for both `net472` and `net8.0`. The
-  `net472` leg needs extra native/managed wiring the SDK gives `net8.0` for
-  free: an explicit `IronCompress` native `nironcompress.dll` copy for Parquet
-  Zstd (`Osprey.Test.csproj:17-36`) and an explicit `System.Memory` reference
-  (`Osprey.Test.csproj:38-41`). The production regression build runs the
-  `net8.0` binary (`regression.ps1:123`).
+- **Single target**: the test project builds for `net8.0` only, the same
+  binary the production regression build runs (`regression.ps1:123`). The
+  `net472` leg was dropped with the ProteoWizard .NET 8 port (issue #4497),
+  and with it the extra native/managed wiring that leg needed (an explicit
+  `nironcompress.dll` copy for Parquet Zstd, an explicit `System.Memory`
+  reference).
 - **Scale**: 41 `[TestClass]` types and **492 `[TestMethod]` tests** across the
   `Osprey.Test/*.cs` files (measured). Rust 11-testing.md tabulates "~302
   tests." The larger C# count reflects extra tests written specifically to lock
@@ -72,8 +72,8 @@ inputs (spectra, library entries, feature vectors) with no external data
 dependency.
 
 Additional C# test files with no direct Rust analog cover port-specific
-infrastructure: `ProgramTests.cs` (CLI `--task` argument validation and
-`--input-scores` directory expansion — see 15-hpc-scoring-split.md),
+infrastructure: `ProgramTests.cs` (CLI `--task` argument validation — see
+15-hpc-scoring-split.md),
 `ByproductContextTest.cs`, `DiagnosticsTest.cs`, `ModelDiagnosticsDataTest.cs`
 (the `--model-diagnostics` HTML report), `FileSaverTest.cs` (the safe
 copy-and-verify NAS-write pattern), `DecoyPairingManifestTest.cs` and

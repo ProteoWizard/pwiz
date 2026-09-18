@@ -175,7 +175,7 @@ namespace pwiz.SkylineTestFunctional
                         list.Add(new DbIrtPeptide(
                             new Target(reader["PeptideModSeq"].ToString()),
                             double.Parse(reader["Irt"].ToString()),
-                            bool.Parse(reader["Standard"].ToString()),
+                            Convert.ToBoolean(reader["Standard"]), // net8 SQLite returns this INTEGER column as a boxed Int64 (0/1); bool.Parse("1") throws
                             int.Parse(reader["TimeSource"].ToString())));
                     }
                 }

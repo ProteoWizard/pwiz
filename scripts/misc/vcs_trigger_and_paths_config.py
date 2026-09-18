@@ -4,9 +4,11 @@ targets['CoreWindowsRelease'] = \
 {
     'master':
     {
-        "bt83": "Core Windows x86_64"
+        # NET8-PORT TEMP (restore before merge): don't trigger the cpp Core x86_64
+        # builds during net8 iteration; they fan out from any pwiz_tools/ edit via All.
+        #"bt83": "Core Windows x86_64"
         #,"bt36": "Core Windows x86"
-        ,"bt143": "Core Windows x86_64 (no vendor DLLs)"
+        #,"bt143": "Core Windows x86_64 (no vendor DLLs)"
     },
     'release':
     {
@@ -20,7 +22,21 @@ targets['CoreWindowsRelease'] = \
 #}
 #targets['CoreWindows'] = merge(targets['CoreWindowsRelease'], targets['CoreWindowsDebug'])
 targets['CoreWindows'] = targets['CoreWindowsRelease']
-targets['CoreLinux'] = {'master': {"bt17": "Core Linux x86_64"}}
+# NET8-PORT TEMP (restore before merge): don't trigger cpp Core Linux x86_64 during net8 iteration
+#targets['CoreLinux'] = {'master': {"bt17": "Core Linux x86_64"}}
+targets['CoreLinux'] = {'master': {}}
+
+# pwiz-sharp is the .NET 8 C# port; the corresponding TeamCity builds run
+# `pwiz-sharp/build.bat` on Windows and `pwiz-sharp/build.sh` on Linux (dotnet restore +
+# build + test). Independent from the cpp build configs above — only files under
+# pwiz-sharp/ should trigger them.
+targets['CoreWindowsNet'] = {'master': {"ProteoWizard_CoreWindowsNet": "Core Windows .NET"}}
+targets['CoreLinuxNet'] = {'master': {"ProteoWizard_CoreLinuxNet": "Core Linux .NET"}}
+# Both platforms build the same C# sources from the same tree, so any change that warrants a
+# Windows .NET build warrants the Linux one too — otherwise a cross-platform regression (a
+# hardcoded 7za.exe, a backslash path, a Windows-only vendor reference) only surfaces on the
+# next unrelated Linux trigger.
+targets['CoreNet'] = merge(targets['CoreWindowsNet'], targets['CoreLinuxNet'])
 
 targets['SkylineRelease'] = \
 {
@@ -44,15 +60,28 @@ targets['SkylineRelease'] = \
 #    ,"bt87": "Skyline master and PRs (Windows x86 debug)"
 #}
 #targets['Skyline'] = merge(targets['SkylineRelease'], targets['SkylineDebug'])
-targets['Skyline'] = targets['SkylineRelease']
+
+# On the .NET 8 port branch, Skyline builds and tests run via pwiz_tools/Skyline/build.bat
+# (dotnet restore + build + test; CodeInspection now runs inside Test.csproj), not the old
+# cpp/MSVC "bt209" config. Point plain Skyline triggers at the net8 build config instead.
+targets['SkylineWindowsNet'] = {'master': {"ProteoWizard_SkylineWindowsNet": "Skyline Windows .NET"}}
+targets['Skyline'] = targets['SkylineWindowsNet']
 
 targets['SkylineWithTestConnected'] = \
 {
     'master':
     {
-        "ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests" # depends on "bt209",
-        ,"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
-        ,"bt209": "Skyline master and PRs (Windows x86_64)"
+        # NET8-PORT TEMP (restore before merge): don't trigger TestConnected or Skyline
+        # code inspection from the net8 port PR (the net8 build runs inspection in-build).
+        #"ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests" # depends on "bt209",
+        #,"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
+        # bt209 was the last cpp/MSVC config still reachable on master. Commented out with the
+        # rest of them: this branch builds Skyline through pwiz_tools/Skyline/build.bat, so a
+        # cpp Skyline build here only reports a status for work the branch does not do.
+        # The native shims are unaffected - MobilionShim and MascotShim live under pwiz-sharp/
+        # and are built by their own csproj/CMake inside Core Windows .NET, not by any cpp
+        # config, and the pwiz-sharp/.* rule already covers their sources.
+        #"bt209": "Skyline master and PRs (Windows x86_64)"
     },
     'release':
     {
@@ -66,7 +95,15 @@ targets['Container'] = \
 {
     'master':
     {
-        "ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"
+        # The net10 container. It takes the payload from this chain: snapshot + artifact
+        # dependencies on Core Windows .NET (ProteoWizard-WithVendorSdks-Setup*.exe) and
+        # Skyline Windows .NET (SkylineTester.zip), so it validates the artifacts this branch
+        # actually produces. Note the id here carries the ProteoWizard_ prefix while the cpp
+        # one below does not - both are as TeamCity has them, and smartBuildTrigger.py POSTs
+        # the key verbatim as <buildType id="...">.
+        "ProteoWizard_ProteoWizardAndSkylineDockerContainerNetWineX8664": "ProteoWizard and Skyline Docker container .NET (Wine x86_64)"
+        # NET8-PORT TEMP (restore before merge): don't trigger the Wine x86_64 container during net8 iteration
+        #,"ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"
     },
     'release':
     {
@@ -75,16 +112,33 @@ targets['Container'] = \
 }
 
 targets['OspreyWindowsNet'] = {'master': {"ProteoWizard_OspreyWindowsNet": "Osprey Windows .NET"}}
+targets['OspreyLinuxNet'] = {'master': {"ProteoWizard_VersionedConfigs_OspreyLinuxNet": "Osprey Linux .NET"}}
+# Both platforms build the same net10.0 sources from the same tree, so a change that warrants
+# the Windows Osprey build warrants the Linux one too - otherwise a portability regression (a
+# backslash path literal, a Windows-only API) only surfaces on the next unrelated Linux
+# trigger. Same reasoning as targets['CoreNet'] above.
+targets['Osprey'] = merge(targets['OspreyWindowsNet'], targets['OspreyLinuxNet'])
+
+# MascotShim.dll / MobilionShim.dll / Hardklor.exe are native Windows binaries COMPILED during
+# the build rather than vendored, and the first two link vendor DLLs that export C++ classes
+# returning MSVC STL types by value - so they cannot be cross-compiled, and a Linux/Wine
+# container cannot produce them. This config builds them once and publishes them as artifacts;
+# see scripts/misc/tcbuild-native-shims.bat. Config id must match .teamcity/settings.kts, which
+# is what smartBuildTrigger POSTs to the build queue.
+targets['NativeShims'] = {'master': {"ProteoWizard_VersionedConfigs_NativeShimsWindows": "Native shims (Windows x86_64)"}}
 
 targets['BumbershootRelease'] = \
 {
     'master':
     {
-        "Bumbershoot_Windows_X86_64": "Bumbershoot Windows x86_64"
+        # NET8-PORT TEMP (restore before merge): don't trigger Bumbershoot from the net8 port PR
+        #"Bumbershoot_Windows_X86_64": "Bumbershoot Windows x86_64"
         #,"ProteoWizard_Bumbershoot_Windows_X86": "Bumbershoot Windows x86"
     }
 }
-targets['BumbershootLinux'] = {'master': {"ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}}
+# NET8-PORT TEMP (restore before merge): don't trigger Bumbershoot from the net8 port PR
+#targets['BumbershootLinux'] = {'master': {"ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}}
+targets['BumbershootLinux'] = {'master': {}}
 targets['Bumbershoot'] = merge(targets['BumbershootRelease'], targets['BumbershootLinux'])
 
 targets['Core'] = merge(targets['CoreWindows'], targets['CoreLinux'])
@@ -96,23 +150,66 @@ targets['Linux'] = merge(targets['CoreLinux'], targets['BumbershootLinux'])
 # "pwiz_tools/Bumbershoot/Jamfile.jam" matches both "pwiz_tools/Bumbershoot/.*" and "pwiz_tools/.*", but will only trigger "Bumbershoot" targets
 matchPaths = [
     (".*/smartBuildTrigger.py", {}),
+    (".*/vcs_trigger_and_paths_config.py", {}),
     (".*/ai/.*", {}),
+    # TeamCity versioned settings: every UI edit to a config in the Versioned Configs
+    # subproject is committed back to this branch by TeamCity itself, and those commits carry
+    # nothing a build could test. Without this they fall through to no pattern at all, which
+    # happens to be a no-op today but only by accident - anything added below with a broad
+    # enough pattern would start rebuilding the world on every settings tweak. Say it out loud
+    # instead, next to the other build-plumbing no-ops.
+    #
+    # Not hypothetical: the run of moves into that subproject produced six commits in eight
+    # minutes, superseding builds mid-flight and leaving Core Linux .NET and Skyline Windows
+    # .NET reporting cancellations and an "Error while applying patch" against a commit whose
+    # only delta was a generated .kts patch file.
+    (".*\\.teamcity/.*", {}),
+    # Native shims: these three dirs hold C++ that only a Windows agent with the VC++ toolchain
+    # can build, so they get their own config. Each entry ALSO triggers the config that actually
+    # tests the result, so a shim change still runs BiblioSpec's Mascot tests / Mobilion.Tests /
+    # Skyline's Hardklor-Bullseye tests rather than only producing a binary nobody exercised.
+    # These must stay ABOVE the broader pwiz-sharp/ and pwiz_tools/Skyline/ patterns below:
+    # first match wins, so a later-but-broader pattern would swallow them.
+    ("pwiz-sharp/Tools/BiblioSpec/native/MascotShim/.*", merge(targets['NativeShims'], targets['CoreNet'])),
+    ("pwiz-sharp/pwiz/src/Vendor/Mobilion/MobilionShim/.*", merge(targets['NativeShims'], targets['CoreNet'])),
+    # pwiz-sharp: standalone .NET 8 port. Builds run via `pwiz-sharp/build.bat`. Match this
+    # before the generic libraries/scripts/.bat patterns below so changes under pwiz-sharp/
+    # don't trigger the cpp Core/Skyline/Bumbershoot chain.
+    #
+    # Container IS included: the net10 container's payload is pwiz-sharp's own installer, so a
+    # pwiz-sharp change is exactly what needs validating there. Only the net10 container is in
+    # targets['Container']['master'], so this does not pull in the cpp one.
+    ("pwiz-sharp/.*", merge(targets['CoreNet'], targets['Container'])),
     ("libraries/.*", targets['All']),
     ("pwiz/.*", targets['All']),
+    # Vendor SDK archives are pwiz-sharp inputs as well as cpp ones: build/vendor-sdk-pins.json
+    # points VendorSdkLoader at the Agilent and ABI archives in here, so an archive swap changes
+    # what every .NET install resolves at run time. targets['All'] alone carries no .NET config,
+    # which would leave that untested; merged rather than replaced so the cpp chain still fires
+    # if it is ever uncommented.
+    ("pwiz_aux/msrc/utility/vendor_api_.*\\.7z", merge(targets['All'], targets['CoreNet'])),
     ("pwiz_aux/.*", targets['All']),
     ("scripts/wix/.*", targets['CoreWindows']),
+    ("scripts/misc/tcbuild-native-shims.bat", targets['NativeShims']),
+    # The container's msconvert sweep, which nothing else runs or builds. Must stay above the
+    # generic scripts/ pattern: that one is targets['All'], so without this a shell-script edit
+    # rebuilds the whole cpp + Skyline + Bumbershoot chain to exercise one container step.
+    ("scripts/container/.*", targets['Container']),
     ("scripts/.*", targets['All']),
     ("pwiz_tools/BiblioSpec/.*", merge(targets['Core'], targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),
-    ("pwiz_tools/Skyline/Model/Results/RemoteApi/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
+    ("pwiz_tools/Skyline/TestConnected/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*Ardia.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*Koina.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*Panorama.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*Unifi.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
+    ("pwiz_tools/Skyline/.*WatersConnect.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*DataSource.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
+    ("pwiz_tools/Skyline/Executables/Hardklor/.*", merge(targets['NativeShims'], targets['Skyline'])),
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
+    ("pwiz_tools/Shared/CommonMsData/RemoteApi/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'], targets['Container'])),
-    ("pwiz_tools/Osprey/.*", targets['OspreyWindowsNet']),
+    ("pwiz_tools/Osprey/.*", targets['Osprey']),
     ("pwiz_tools/.*", targets['All']),
     ("Jamroot.jam", targets['All']),
     (".*\\.bat", targets['Windows']),

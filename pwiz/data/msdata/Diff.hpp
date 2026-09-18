@@ -223,6 +223,16 @@ struct PWIZ_API_DECL DiffConfig : public pwiz::data::BaseDiffConfig
     /// ignore arrays like mobility, charge state, noise, SNR, etc.
     bool ignoreExtraBinaryDataArrays;
 
+    /// compare the two primary arrays as a set of peaks rather than as an ordered list, by putting
+    /// both sides in ascending m/z order first
+    ///
+    /// For a format that keeps m/z and intensity but drops the array that gave their order its
+    /// meaning - mz5 does exactly that to a combined ion mobility spectrum - the surviving peak
+    /// order carries no information, and a round trip cannot be expected to preserve it. Only
+    /// meaningful together with ignoreExtraBinaryDataArrays, which is what narrows the comparison
+    /// to those two arrays.
+    bool ignorePeakOrder;
+
     bool ignoreSpectra;
     bool ignoreChromatograms;
 
@@ -233,6 +243,7 @@ struct PWIZ_API_DECL DiffConfig : public pwiz::data::BaseDiffConfig
         ignoreIdentity(false),
         ignoreMetadata(false),
         ignoreExtraBinaryDataArrays(false),
+        ignorePeakOrder(false),
         ignoreSpectra(false),
         ignoreChromatograms(false),
         ignoreDataProcessing(false)

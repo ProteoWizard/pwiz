@@ -704,8 +704,8 @@ namespace pwiz.SkylineTestFunctional
         }
 
         // Adds the input files. A SINGLE file is added by driving the real native "Add Input Files" (Open) dialog --
-        // type its full path and accept (a simple fire-and-forget gesture, so RunNativeDlg) -- so the build still
-        // exercises the connector's native-dialog automation. MULTIPLE files are added directly through
+        // type its full path and accept -- so the build still exercises the connector's native-dialog automation
+        // (from the test thread, which is where those gestures run). MULTIPLE files are added directly through
         // BuildLibraryDlg.AddInputFiles, which shows no dialog; driving a multiselect Open dialog by name is
         // exercised on its own by NativeFileDialogTest.
         private void AddInputFilesThroughDialog(BuildLibraryDlg buildLibraryDlg, IList<string> inputPaths)
@@ -715,7 +715,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => buildLibraryDlg.AddInputFiles(inputPaths));
                 return;
             }
-            RunNativeDlg<NativeOpenFileDialog>(buildLibraryDlg.ClickAddFile, dlg =>
+            RunLongNativeDlg<NativeOpenFileDialog>(buildLibraryDlg.ClickAddFile, dlg =>
             {
                 dlg.EnterPath(inputPaths[0]);
                 dlg.Accept();
@@ -731,6 +731,14 @@ namespace pwiz.SkylineTestFunctional
                 dlg.SetValue(@"Folder", inputDir);
                 dlg.DismissWithAcceptButton();
             });
+            // A folder browser that ignores the selection gesture returns the folder it opened on instead, and
+            // the build then quietly uses whatever inputs happen to live there. Fail on the directory, rather
+            // than several minutes later on a spectrum count that is merely surprising.
+            RunUI(() => AssertEx.IsTrue(
+                buildLibraryDlg.Grid.FilePaths.Any() && buildLibraryDlg.Grid.FilePaths.All(
+                    path => path.StartsWith(inputDir, System.StringComparison.OrdinalIgnoreCase)),
+                string.Format("Expected input files under {0}, got {1}", inputDir,
+                    string.Join(", ", buildLibraryDlg.Grid.FilePaths))));
         }
 
         private void BuildLibrary(string inputDir, IEnumerable<string> inputFiles, string libraryPath,

@@ -193,24 +193,55 @@ JOIN RefSpectra r ON p.RefSpectraID = r.id
 # ----------------------------------------------------------------------
 function Initialize-Sqlite {
     <#
-    Load System.Data.SQLite from the Osprey net8.0 build output and make
+    Load System.Data.SQLite from the Osprey net10.0 build output and make
     sure its native SQLite.Interop.dll sits beside the managed assembly (the
     P/Invoke probes the assembly dir directly when loaded via Add-Type). Call
-    once before any Open-Blib. -OspreyBinDir points at the build's net8.0 dir.
+    once before any Open-Blib. -OspreyBinDir points at the build's net10.0 dir.
     #>
     param([Parameter(Mandatory = $true)][string]$OspreyBinDir)
 
     $dll = Join-Path $OspreyBinDir 'System.Data.SQLite.dll'
     if (-not (Test-Path $dll)) {
-        throw "System.Data.SQLite.dll not found at $dll -- build Osprey (net8.0) first."
+        throw "System.Data.SQLite.dll not found at $dll -- build Osprey (net10.0) first."
     }
     $rid = if ($IsLinux) { 'linux-x64' } else { 'win-x64' }
     $nativeSrc = Join-Path $OspreyBinDir "runtimes/$rid/native/SQLite.Interop.dll"
     $nativeDst = Join-Path $OspreyBinDir 'SQLite.Interop.dll'
-    # Always overwrite: a previous run on another OS may have left the
-    # wrong-architecture binary, which P/Invoke rejects with "incorrect format".
+    # Copy only when the destination actually differs.
+    #
+    # This used to overwrite unconditionally, to defend against a previous run on
+    # another OS leaving a wrong-architecture binary that P/Invoke rejects with
+    # "incorrect format". The defence is kept - the bytes are compared, so a
+    # wrong-architecture file still gets replaced - but the common case is now a
+    # no-op, and that is what lets two datasets run at once.
+    #
+    # Add-Type below P/Invokes this file, so Windows holds it open for the whole life
+    # of any gate process that has started. An unconditional overwrite therefore fails
+    # for the SECOND concurrent lane with "The process cannot access the file ...
+    # because it is being used by another process", killing it at startup before a
+    # single leg runs. Measured 2026-09-05: two lanes launched together, one completed
+    # 21/21 and the other died in 2 seconds. A mutex does not help - the winner holds
+    # the handle until it exits, so the loser can never write - which is why this is a
+    # compare-and-skip rather than serialisation.
     if (Test-Path $nativeSrc) {
-        Copy-Item $nativeSrc $nativeDst -Force
+        $needsCopy = -not (Test-Path $nativeDst)
+        if (-not $needsCopy) {
+            $needsCopy = (Get-FileHash $nativeSrc).Hash -ne (Get-FileHash $nativeDst).Hash
+        }
+        if ($needsCopy) {
+            # A lane that started microseconds earlier may already hold the destination
+            # open. What it loaded came from this same source, so losing that race is
+            # only fatal if the destination is still wrong once the dust settles.
+            try {
+                Copy-Item $nativeSrc $nativeDst -Force -ErrorAction Stop
+            }
+            catch {
+                if (-not (Test-Path $nativeDst) -or
+                    (Get-FileHash $nativeSrc).Hash -ne (Get-FileHash $nativeDst).Hash) {
+                    throw
+                }
+            }
+        }
     }
     Add-Type -Path $dll
 }
@@ -238,6 +269,17 @@ function Invoke-BlibQuery {
         $n = $reader.FieldCount
         $cols = [string[]]::new($n)
         for ($i = 0; $i -lt $n; $i++) { $cols[$i] = $reader.GetName($i) }
+        # SpectrumSourceFiles.fileName carries the ABSOLUTE acquisition path
+        # (BiblioSpec's BlibBuild convention), which is machine- and
+        # run-dir-specific. Normalize every *ileName projection column to its
+        # basename so the committed goldens stay machine-independent and the
+        # resume/HPC legs - which stage inputs under their run dirs - compare
+        # equal to the straight-through run. The Osprey per-run FileName
+        # columns hold bare stems, so the split is a no-op there.
+        $nameCols = [System.Collections.Generic.List[int]]::new()
+        for ($i = 0; $i -lt $n; $i++) {
+            if ($cols[$i] -match 'ileName$') { $nameCols.Add($i) }
+        }
         $rows = [System.Collections.Generic.List[object[]]]::new()
         while ($reader.Read()) {
             $vals = [object[]]::new($n)
@@ -245,6 +287,9 @@ function Invoke-BlibQuery {
                 $v = $reader.GetValue($i)
                 if ($v -is [System.DBNull]) { $v = $null }
                 $vals[$i] = $v
+            }
+            foreach ($ci in $nameCols) {
+                if ($vals[$ci] -is [string]) { $vals[$ci] = ($vals[$ci] -split '[\\/]')[-1] }
             }
             $rows.Add($vals)
         }

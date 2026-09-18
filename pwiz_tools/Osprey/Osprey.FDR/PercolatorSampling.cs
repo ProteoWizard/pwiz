@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR
 {
@@ -160,9 +161,9 @@ namespace pwiz.Osprey.FDR
         internal static int[] BuildTrainingSubset(
             bool[] labels, uint[] entryIds, string[] peptides,
             IList<PercolatorEntry> entries, int maxTrainSize, ulong seed,
-            out int[] bestPerPrecursor, double[] bestScores = null)
+            out int[] bestPerPrecursor, double[] bestScores = null, int[] fileStart = null)
         {
-            bestPerPrecursor = SelectBestPerPrecursor(labels, entryIds, entries, bestScores);
+            bestPerPrecursor = SelectBestPerPrecursor(labels, entryIds, entries, bestScores, seed, fileStart);
             if (maxTrainSize <= 0 || bestPerPrecursor.Length <= maxTrainSize)
                 return bestPerPrecursor;
 
@@ -189,12 +190,18 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Pick the best-scoring observation per (base_id, isDecoy) tuple across all
-        /// entries. Used to deduplicate multi-file observations of the same precursor
-        /// before SVM training, so the SVM doesn't see the same peptide N times.
+        /// Pick ONE observation per (base_id, isDecoy) tuple across all entries. Used to
+        /// deduplicate multi-file observations of the same precursor before SVM training, so the
+        /// SVM doesn't see the same peptide N times.
         ///
-        /// Score for ranking is taken from PercolatorEntry.Features[0], which is
-        /// coelution_sum (matches Rust's selection criterion in pipeline.rs).
+        /// WHICH observation is <see cref="OspreyEnvironment.TrainPickRun"/>'s decision. By
+        /// default it is a uniform draw over the observations that arrived, which for first-pass
+        /// per-file rows - one row per precursor per run - is a uniform draw over that
+        /// precursor's runs. With <c>OSPREY_TRAIN_PICK_RUN=0</c> it is instead the highest
+        /// scoring observation, the historical behaviour and Rust's criterion in pipeline.rs.
+        ///
+        /// Score for ranking, on that path, is taken from PercolatorEntry.Features[0], which is
+        /// coelution_sum.
         ///
         /// When <paramref name="bestScores"/> is supplied (issue #4355 Phase 4
         /// streaming path, where the stubs carry no resident feature vector) the
@@ -206,30 +213,119 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public static int[] SelectBestPerPrecursor(
             bool[] labels, uint[] entryIds, IList<PercolatorEntry> entries,
-            double[] bestScores = null)
+            double[] bestScores = null, ulong seed = 0, int[] fileStart = null)
         {
             int n = labels.Length;
-            // Map base_id to best target index, separately for targets and decoys
+            // Map base_id to the selected target index, separately for targets and decoys
             var bestTarget = new Dictionary<uint, int>();
             var bestDecoy = new Dictionary<uint, int>();
+
+            // Run-level bookkeeping for the reservoir, in its own map so the selection
+            // dictionaries keep the value type, and the memory, they have always had.
+            bool pickRun = OspreyEnvironment.TrainPickRun;
+            var runPick = pickRun ? new Dictionary<uint, RunPickState>() : null;
+
+            // Which RUN row i belongs to. Rows arrive grouped by run, so a cursor over the
+            // per-file offsets gives it in O(1) amortized; when the caller has no offsets the
+            // entries carry the file name and a change of name is a change of run. One of the two
+            // is always available - that is what lets every path sample at run granularity.
+            int[] fileStartLocal = fileStart;
+            int fileCursor = 0;
+            int currentRun = 0;
+            string prevFile = null;
+            // Neither source available is a WIRING error, not a configuration one, and it must not
+            // be survivable: every row would report run 0, the whole population would collapse to
+            // one within-run comparison, and the selection would silently be the cross-run MAXIMUM
+            // again while the log and the validity key both claim the reservoir. Unreachable from
+            // the three real callers - the projection path passes fileStart, the direct and
+            // RunPercolatorStreaming paths pass entries carrying FileName - which is why it throws
+            // rather than degrading.
+            if (pickRun && n > 0 && fileStartLocal == null && entries.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    @"SelectBestPerPrecursor cannot determine which run each row came from: " +
+                    @"supply fileStart, or entries carrying FileName. This is an Osprey defect, " +
+                    @"not a configuration error.");
+            }
 
             for (int i = 0; i < n; i++)
             {
                 uint baseId = entryIds[i] & PercolatorEntry.BASE_ID_MASK;
-                double score = bestScores != null ? bestScores[i] : entries[i].Features[0];
+                if (pickRun)
+                {
+                    if (fileStartLocal != null)
+                    {
+                        while (fileCursor + 1 < fileStartLocal.Length && i >= fileStartLocal[fileCursor + 1])
+                            fileCursor++;
+                        currentRun = fileCursor;
+                    }
+                    else if (entries.Count > i)
+                    {
+                        string fileName = entries[i].FileName;
+                        if (!string.Equals(fileName, prevFile, StringComparison.Ordinal))
+                        {
+                            if (prevFile != null)
+                                currentRun++;
+                            prevFile = fileName;
+                        }
+                    }
+                }
 
                 Dictionary<uint, int> map = labels[i] ? bestDecoy : bestTarget;
                 int existing;
                 if (map.TryGetValue(baseId, out existing))
                 {
+                    double score = bestScores != null ? bestScores[i] : entries[i].Features[0];
                     double existingScore = bestScores != null
                         ? bestScores[existing] : entries[existing].Features[0];
-                    if (score > existingScore)
+                    bool replace;
+                    if (pickRun)
+                    {
+                        // Targets and decoys of one base_id are separate precursors but share a
+                        // base_id, so BOTH the counter key and the DRAW take the decoy bit -
+                        // BASE_ID_MASK clears the high bit, so a masked base_id passed to the draw
+                        // would make a target and its paired decoy decide identically at every k
+                        // and land on the same run for essentially every precursor.
+                        uint seenKey = baseId | (labels[i] ? 0x80000000u : 0u);
+                        RunPickState state = runPick[seenKey];
+                        if (currentRun == state.LastRun)
+                        {
+                            // Same run as the last row of this precursor: the run-level draw for it
+                            // has already happened. Pass 1 is PRE-COMPACTION, so this is the common
+                            // case - a precursor carries several candidate-peak rows per run - and
+                            // resolving it by score is what keeps the training row that run's BEST
+                            // peak instead of a random one.
+                            replace = state.HolderIsCurrentRun && score > existingScore;
+                        }
+                        else
+                        {
+                            // First row of a NEW run: reservoir of size one over RUNS.
+                            uint runs = state.RunsSeen + 1u;
+                            replace = PercolatorScorer.ReservoirTakesSlot(seenKey, runs, seed);
+                            state.RunsSeen = runs;
+                            state.LastRun = currentRun;
+                            state.HolderIsCurrentRun = replace;
+                            runPick[seenKey] = state;
+                        }
+                    }
+                    else
+                    {
+                        replace = score > existingScore;
+                    }
+                    if (replace)
                         map[baseId] = i;
                 }
                 else
                 {
                     map[baseId] = i;
+                    if (pickRun)
+                    {
+                        uint seenKey = baseId | (labels[i] ? 0x80000000u : 0u);
+                        runPick[seenKey] = new RunPickState
+                        {
+                            RunsSeen = 1u, LastRun = currentRun, HolderIsCurrentRun = true
+                        };
+                    }
                 }
             }
 
@@ -241,6 +337,24 @@ namespace pwiz.Osprey.FDR
                 result[idx++] = i;
             Array.Sort(result); // Array.Sort OK: result holds unique entry indices (one per base_id from bestTarget/bestDecoy), so no ties
             return result;
+        }
+
+        /// <summary>
+        /// Per-precursor run bookkeeping for <see cref="SelectBestPerPrecursor"/>'s reservoir.
+        /// Lives beside the selection maps rather than inside their values so the hot dictionaries
+        /// keep the width they have always had.
+        /// </summary>
+        internal struct RunPickState
+        {
+            /// <summary>Distinct runs of this precursor seen so far - the reservoir's k.</summary>
+            public uint RunsSeen;
+            /// <summary>Run the most recent row belonged to, so the several pre-compaction rows a
+            /// precursor carries within one run are not counted as several runs.</summary>
+            public int LastRun;
+            /// <summary>Whether the current holder came from <see cref="LastRun"/>. When the run
+            /// was REJECTED by the draw its remaining rows must be ignored, not score-compared
+            /// against a holder from a different run.</summary>
+            public bool HolderIsCurrentRun;
         }
 
         /// <summary>

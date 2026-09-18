@@ -99,8 +99,15 @@ artifact**, so the multi-GB spectra caches there are harmless):
    construction: with `OSPREY_RELEASE_LIBRARY_FRAGMENTS=0` the other legs stay green
    and only mode 6 goes red.
 
-   Asserts presence and non-zero counts, **never exact counts** - those move with any
-   scoring change. One run-wide check asserts the log pattern matched *somewhere*, so
+   Asserts presence and non-zero counts, **never absolute counts** - those move with any
+   scoring change. It does assert counts against *each other* (issue #4650): on every leg
+   that runs Stage 7's release, its retained count must equal the count the summary's
+   producer logged, Stage 5's retained count must equal it too, and where Stage 5 released
+   in the same process Stage 7 must release 0. All three move together with any scoring
+   change, so none of them cries wolf, and together they say Stage 7 READ the analysis-wide
+   summary rather than folding every run's final pool to rebuild it.
+
+   One run-wide check asserts the log pattern matched *somewhere*, so
    a reworded C# line fails the gate instead of quietly satisfying the
    "must not release" leg. Always on; there is no skip switch.
 
@@ -120,8 +127,9 @@ so a required token would be visible on every green run - today that table is em
 summary prints `none`.
 
 Zero tokens is not zero O(files) paths, and the summary says only the former. The survivor
-buffer is rebuilt at the end of Stage 6 for `SecondPassFDR` to read, so it is resident from
-there to the end of Stage 7 on every path; no guard covers that because it is Stage 7's
+buffer is rebuilt by `SecondPassFDR`'s own pull for it to read (#4597 moved the build off the
+end of Stage 6, which does not shrink it), so it is resident for the whole of Stage 7 on every
+path; no guard covers that because it is Stage 7's
 input rather than a mode or a resume. That is #4486.
 
 An ambient allowance on a standing gate can only mask the regression the gate exists to

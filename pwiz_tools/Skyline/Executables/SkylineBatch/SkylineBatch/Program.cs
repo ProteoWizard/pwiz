@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Deployment.Application;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -162,10 +161,15 @@ namespace SkylineBatch
             if (restart) Application.Restart();
         }
 
+        // ClickOnce (System.Deployment) is net472-only; on net8 the app is never network-deployed.
+        private static bool IsNetworkDeployed =>
+            false;
+
         private static void InitializeVersion()
         {
-            if (ApplicationDeployment.IsNetworkDeployed)
-                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+            if (IsNetworkDeployed)
+            {
+            }
             else
             {
                 // copied from Skyline Install.cs GetVersion()
@@ -205,12 +209,9 @@ namespace SkylineBatch
         private static string GetFirstArg(string[] args)
         {
             string arg;
-            if (ApplicationDeployment.IsNetworkDeployed)
+            if (IsNetworkDeployed)
             {
-                var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
-                arg = activationData != null && activationData.Length > 0
-                    ? activationData[0]
-                    : string.Empty;
+                arg = string.Empty;
             }
             else
             {
@@ -224,7 +225,15 @@ namespace SkylineBatch
         {
             if (SkylineInstallations.FindSkyline())
                 return true;
-            
+
+            // FindSkylineForm is modal and there is no one to answer it under a functional test,
+            // so on a machine with no Skyline installation the whole test run hangs here instead
+            // of failing. Carry on without the settings: tests that need a Skyline path build
+            // their own SkylineSettings, and a missing installation then surfaces as a test
+            // failure with a message rather than as a run that never finishes.
+            if (FunctionalTest)
+                return true;
+
             var form = new FindSkylineForm(AppName(), Icon());
             Application.Run(form);
             if (form.DialogResult == DialogResult.OK)
@@ -244,7 +253,7 @@ namespace SkylineBatch
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var configFileIconPath = Path.Combine(baseDirectory, "SkylineBatch_configs.ico");
 
-            if (ApplicationDeployment.IsNetworkDeployed)
+            if (IsNetworkDeployed)
             {
                 FileUtil.AddFileTypeClickOnce(TextUtil.EXT_BCFG, "SkylineBatch.Configuration.0",
                     Resources.Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File,

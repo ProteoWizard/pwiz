@@ -162,6 +162,36 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Read back the recorded validity key for an (output, task) pair, for the caller that
+        /// needs to compare TWO artifacts of the same task rather than one artifact against a
+        /// key it can compute.
+        ///
+        /// <para>That caller is <c>--task ModelDiagnostics</c>, which runs outside the pipeline
+        /// and so has no pipeline context with which to ask FirstPassFDR for its key. It
+        /// establishes that the diagnostics product describes the first pass currently on disk by
+        /// checking that both carry the SAME key - which is the question, and needs no ability to
+        /// recompute one.</para>
+        /// </summary>
+        public static bool TryReadValidityKey(string outputPath, string taskName, out string validityKey)
+        {
+            validityKey = null;
+            if (string.IsNullOrEmpty(outputPath) || string.IsNullOrEmpty(taskName))
+                return false;
+            string sidecarPath = PathFor(outputPath, taskName);
+            if (!File.Exists(sidecarPath))
+                return false;
+            try
+            {
+                validityKey = ExtractStringField(File.ReadAllText(sidecarPath), @"validity_key");
+            }
+            catch
+            {
+                return false;
+            }
+            return validityKey != null;
+        }
+
+        /// <summary>
         /// Delete the sidecar for an (output, task) pair if it exists.
         /// Called when a task starts running (we don't want a stale
         /// sidecar surviving if the new Run crashes mid-write).
