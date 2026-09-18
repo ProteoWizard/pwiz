@@ -33,10 +33,22 @@ namespace SkylineNightly
     {
         public const string TokenEnvVar = "TEAMCITY_NIGHTLY_TEST_AUTH_TOKEN";
 
-        // The bt209 branch a machine downloads SkylineNightly and its master SkylineTester from, as a
-        // TeamCity branch locator such as "pull/4700". Unset means master. This is how a change to the
-        // nightly tooling gets tried on a machine or two before it merges: set the variable there, and
-        // the machine runs the pull request's build as if it were master, until the variable is unset.
+        /// <summary>
+        /// The bt209 branch a machine downloads SkylineNightly and its master SkylineTester from, as a
+        /// TeamCity branch locator such as "pull/4700". Unset means master. This is how a change to the
+        /// nightly tooling gets tried on a machine or two before it merges: set the variable there, and
+        /// the machine runs the pull request's build as if it were master, until the variable is unset.
+        ///
+        /// Set it as a persistent User-level variable (PowerShell - no admin needed), which the scheduled
+        /// task picks up on its next run, as it does the TeamCity token:
+        ///   [Environment]::SetEnvironmentVariable("SKYLINE_NIGHTLY_BRANCH", "pull/4700", "User")
+        ///
+        /// To put the machine back on master:
+        ///   [Environment]::SetEnvironmentVariable("SKYLINE_NIGHTLY_BRANCH", $null, "User")
+        ///
+        /// Use "User" level, NOT "Machine" level: the task runs as the user who scheduled it, and a
+        /// User-level variable needs no elevation to set or clear.
+        /// </summary>
         public const string BranchEnvVar = "SKYLINE_NIGHTLY_BRANCH";
         private const string MASTER_BRANCH = "master";
 
