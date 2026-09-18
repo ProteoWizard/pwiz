@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using SkylineNightly.Properties;
 
 namespace SkylineNightly
 {
@@ -65,6 +66,27 @@ namespace SkylineNightly
             { "integration", new RunSpec(Branch.integration, RunType.standard_leak) },
             { "integration_perf", new RunSpec(Branch.integration, RunType.perf) },
         };
+
+        /// <summary>
+        /// The runs the form last saved: Run1 and, if there is one, Run2. Settings from before the
+        /// split (mode1 and mode2, pre-split names) are read when Run1 has never been saved, and are
+        /// never written, so that a machine put back on the pre-split SkylineNightly still opens its
+        /// form and runs what it ran.
+        /// </summary>
+        public static RunSpec[] GetSavedRuns()
+        {
+            var settings = Settings.Default;
+            bool saved = !string.IsNullOrEmpty(settings.Run1);
+            var run1 = Parse(saved ? settings.Run1 : settings.mode1);
+            var run2Argument = saved ? settings.Run2 : settings.mode2;
+            return string.IsNullOrEmpty(run2Argument) ? new[] { run1 } : new[] { run1, Parse(run2Argument) };
+        }
+
+        public static void SaveRuns(RunSpec run1, RunSpec run2)
+        {
+            Settings.Default.Run1 = run1.ToString();
+            Settings.Default.Run2 = run2?.ToString() ?? string.Empty;
+        }
 
         public static RunSpec Parse(string argument)
         {

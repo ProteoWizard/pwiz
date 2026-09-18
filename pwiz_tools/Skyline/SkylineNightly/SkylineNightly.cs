@@ -46,11 +46,11 @@ namespace SkylineNightly
         {
             InitializeComponent();
 
-            // The saved modes may be pre-split names, which parse to the run they meant
-            SelectRun(comboBoxBranch1, comboBoxType1, RunSpec.Parse(Settings.Default.mode1));
-            radioButtonTwoRuns.Checked = Settings.Default.mode2 != string.Empty;
+            var savedRuns = RunSpec.GetSavedRuns();
+            SelectRun(comboBoxBranch1, comboBoxType1, savedRuns[0]);
+            radioButtonTwoRuns.Checked = savedRuns.Length > 1;
             if (radioButtonTwoRuns.Checked)
-                SelectRun(comboBoxBranch2, comboBoxType2, RunSpec.Parse(Settings.Default.mode2));
+                SelectRun(comboBoxBranch2, comboBoxType2, savedRuns[1]);
             else
                 ShowSecondRun(false);
 
@@ -99,8 +99,7 @@ namespace SkylineNightly
                 return;
 
             Settings.Default.NightlyFolder = nightlyFolder;
-            Settings.Default.mode1 = GetRun1().ToString();
-            Settings.Default.mode2 = GetRun2()?.ToString() ?? string.Empty;
+            RunSpec.SaveRuns(GetRun1(), GetRun2());
 
             Settings.Default.Save();
 
@@ -125,7 +124,6 @@ namespace SkylineNightly
                     if (scheduledTime < now + TimeSpan.FromMinutes(1) && scheduledTime + TimeSpan.FromMinutes(3) > now)
                         scheduledTime = now + TimeSpan.FromMinutes(2);
                     dt.StartBoundary = scheduledTime;
-                    var runArguments = GetRunArguments(out _);
                     dt.ExecutionTimeLimit = new TimeSpan(23, 30, 0);
                     dt.Enabled = true;
                     td.Settings.WakeToRun = true;
@@ -143,9 +141,10 @@ namespace SkylineNightly
                     //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
                     td.Settings.Priority = ProcessPriorityClass.High; 
 
-                    // Add an action that will launch SkylineNightlyShim whenever the trigger fires
+                    // Add an action that will launch SkylineNightlyShim whenever the trigger fires. What
+                    // to run is in the settings saved above; the shim just updates and says "run".
                     var assembly = Assembly.GetExecutingAssembly();
-                    td.Actions.Add(new ExecAction(assembly.Location.Replace(@".exe", @"Shim.exe"), runArguments));
+                    td.Actions.Add(new ExecAction(assembly.Location.Replace(@".exe", @"Shim.exe"), @"run"));
 
                     // Register the task in the root folder
                     ts.RootFolder.RegisterTaskDefinition(Nightly.NightlyTaskNameWithUser, td);
@@ -166,21 +165,11 @@ namespace SkylineNightly
         }
 
         /// <summary>
-        /// The scheduled task argument for the runs selected in the form, and their total hours.
+        /// The total hours of the runs selected in the form.
         /// </summary>
-        public string GetRunArguments(out int durationHours)
+        private int GetDurationHours()
         {
-            var runSpec1 = GetRun1();
-            var runSpec2 = GetRun2();
-            string result = @"run " + runSpec1;
-            durationHours = (int)runSpec1.TargetDuration.TotalHours;
-            if (runSpec2 != null)
-            {
-                result += @" " + runSpec2;
-                durationHours += (int)runSpec2.TargetDuration.TotalHours;
-            }
-
-            return result;
+            return (int)(GetRun1().TargetDuration.TotalHours + (GetRun2()?.TargetDuration.TotalHours ?? 0));
         }
 
         private RunSpec GetRun1()
@@ -210,9 +199,7 @@ namespace SkylineNightly
         {
             if (comboBoxBranch1.SelectedIndex == -1 || comboBoxType1.SelectedIndex == -1)
                 return; // Still initializing
-            int durationHours;
-            GetRunArguments(out durationHours);
-            endTime.Text = (startTime.Value + TimeSpan.FromHours(durationHours)).ToShortTimeString();
+            endTime.Text = (startTime.Value + TimeSpan.FromHours(GetDurationHours())).ToShortTimeString();
         }
 
         private void Now_Click(object sender, EventArgs e)

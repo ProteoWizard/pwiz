@@ -89,20 +89,23 @@ namespace SkylineNightly
                 {
                     case @"run":
                     {
-                        switch (args.Length)
+                        // With no runs given, which is what the shim passes, the saved settings say what to run
+                        var runSpecs = args.Length == 1
+                            ? RunSpec.GetSavedRuns()
+                            : args.Skip(1).Select(RunSpec.Parse).ToArray();
+                        switch (runSpecs.Length)
                         {
+                            case 1:
+                            {
+                                PerformTests(runSpecs[0], runSpecs[0].ToString());
+                                break;
+                            }
                             case 2:
                             {
-                                PerformTests(RunSpec.Parse(args[1]), args[1]);
+                                PerformTests(runSpecs[0], runSpecs[1], runSpecs[0] + @" then " + runSpecs[1]);
                                 break;
                             }
-                            case 3:
-                            {
-                                PerformTests(RunSpec.Parse(args[1]), RunSpec.Parse(args[2]),
-                                    args[1] + @" then " + args[2]);
-                                break;
-                            }
-                            default: throw new Exception(@"Wrong number of run modes specified, has to be 1 or 2");
+                            default: throw new Exception(@"Wrong number of runs specified, has to be 1 or 2");
                         }
 
                         break;
