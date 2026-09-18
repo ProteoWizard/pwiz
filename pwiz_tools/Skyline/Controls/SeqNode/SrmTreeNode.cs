@@ -845,6 +845,33 @@ namespace pwiz.Skyline.Controls.SeqNode
     }
 
     /// <summary>
+    /// Optional capability a child picker may implement to expose a "site-determining
+    /// ions" filter in the <see cref="PopupPickList"/>, for peptides that carry an
+    /// ambiguous (localizable) modification.
+    /// </summary>
+    public interface ISiteDeterminingIonPicker
+    {
+        /// <summary>
+        /// True when the picker's peptide is localizable, so the site-determining
+        /// ions toggle should be offered.
+        /// </summary>
+        bool CanShowSiteDeterminingIons { get; }
+
+        /// <summary>
+        /// True when the given choice is a product ion that uniquely localizes the modification
+        /// (no other positional placement produces it). May match nothing when the placement is
+        /// unresolvable, in which case the filtered list is legitimately empty.
+        /// </summary>
+        bool IsSiteDeterminingChoice(DocNode choice);
+
+        /// <summary>
+        /// The resolved modification's name for the given choice, or null when the
+        /// choice is not site-determining.
+        /// </summary>
+        string GetSiteDeterminingTip(DocNode choice);
+    }
+
+    /// <summary>
     /// Implement to support the <see cref="PopupPickList"/> user interface for
     /// picking children of a <see cref="SrmTreeNode"/>.
     /// </summary>

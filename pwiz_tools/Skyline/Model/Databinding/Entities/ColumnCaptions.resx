@@ -738,6 +738,9 @@
   <data name="LinearFit">
     <value>Linear Fit</value>
   </data>
+  <data name="LocalizationIsomerCount">
+    <value>Localization Isomer Count</value>
+  </data>
   <data name="Log2FoldChange">
     <value>Log 2 Fold Change</value>
   </data>
@@ -854,6 +857,9 @@
   </data>
   <data name="ModelScore">
     <value>Model Score</value>
+  </data>
+  <data name="ModificationLocalizationGroup">
+    <value>Modification Localization Group</value>
   </data>
   <data name="ModifiedAreaProportion">
     <value>Modified Area Proportion</value>

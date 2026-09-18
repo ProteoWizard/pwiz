@@ -1924,6 +1924,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Localization Isomer Count.
+        /// </summary>
+        public static string LocalizationIsomerCount {
+            get {
+                return ResourceManager.GetString("LocalizationIsomerCount", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Log 2 Fold Change.
         /// </summary>
         public static string Log2FoldChange {
@@ -2274,6 +2283,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Modification Localization Group.
+        /// </summary>
+        public static string ModificationLocalizationGroup {
+            get {
+                return ResourceManager.GetString("ModificationLocalizationGroup", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Modified Area Proportion.
         /// </summary>
