@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -113,8 +113,14 @@ namespace pwiz.Osprey
             }
             catch (Exception ex)
             {
-                LogError(string.Format("Pipeline failed: {0}", ex.Message));
-                LogError(ex.StackTrace);
+                // The whole exception, not ex.Message plus ex.StackTrace. Message can be
+                // empty and a wrapper carries its real cause only in InnerException, so the
+                // pair could name the throwing frame while saying nothing about why: a
+                // 17-hour 163-file run ended in "Pipeline failed: " and a bare BlibWriter
+                // constructor frame, which leaves a file lock, a full disk and a missing
+                // native library indistinguishable. ToString() prints the type, the message,
+                // every inner exception and the stack.
+                LogError(string.Format("Pipeline failed: {0}", ex));
                 return 1;
             }
         }

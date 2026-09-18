@@ -255,14 +255,14 @@ namespace pwiz.Osprey
                     // 0 is the value a user most naturally types to mean "off" --
                     // map it to sequential rather than silently falling through to
                     // auto. Positive N is an explicit concurrent-file count.
-                    int n = int.Parse(p.Value);
+                    int n = ParseInt(p.Value, @"--parallel-files");
                     c._config.FileParallelism = n <= 0
                         ? FileParallelism.Sequential
                         : FileParallelism.Explicit(n);
                 }
             });
         public static readonly OspreyArgument ARG_THREADS = new OspreyArgument(@"threads",
-            () => @"<count>", (c, p) => c._config.NThreads = int.Parse(p.Value));
+            () => @"<count>", (c, p) => c._config.NThreads = ParseInt(p.Value, @"--threads"));
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_PERFORMANCE =
             new ArgumentGroup<OspreyCommandArgs>(() => @"Performance", true,
@@ -655,6 +655,25 @@ namespace pwiz.Osprey
                     return false;
             }
             return int.TryParse(token, out int n) && n >= 0;
+        }
+
+        /// <summary>
+        /// An integer option's value, or an <see cref="ArgumentException"/> naming the flag.
+        /// The int.Parse this replaced threw FormatException (or OverflowException), which is
+        /// neither caught as a usage error nor legible: `--threads bad` reported "Input string
+        /// was not in a correct format." with a stack through the parser, for a typo. Mirrors
+        /// <see cref="ParseDouble"/>, which has always done this.
+        /// </summary>
+        private static int ParseInt(string value, string flagName)
+        {
+            int result;
+            if (!int.TryParse(value, System.Globalization.NumberStyles.Integer,
+                System.Globalization.CultureInfo.InvariantCulture, out result))
+            {
+                throw new ArgumentException(string.Format(
+                    @"Invalid value '{0}' for {1}", value, flagName));
+            }
+            return result;
         }
 
         private static double ParseDouble(string value, string flagName)
