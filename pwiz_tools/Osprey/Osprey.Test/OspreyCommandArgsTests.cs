@@ -208,25 +208,28 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestBadOptionValuesAreUsageErrors()
         {
+            var argThreads = OspreyCommandArgs.ARG_THREADS;
             foreach (var badValue in new[] { @"bad", @"1.5", @"99999999999999999999", string.Empty })
             {
                 var threads = Assert.ThrowsException<ArgumentException>(
-                    () => Parse(@"--threads", badValue),
-                    string.Format(@"--threads {0}", badValue));
-                StringAssert.Contains(threads.Message, @"--threads");
+                    () => Parse(argThreads, badValue),
+                    string.Format(@"{0} {1}", argThreads.ArgumentText, badValue));
+                StringAssert.Contains(threads.Message, argThreads.ArgumentText);
             }
 
             // --parallel-files cannot reach that path with a bad value and must not: its value is
             // OPTIONAL, so the lookahead consumes only a digits-only token that fits an int and
             // otherwise leaves the token alone (auto mode). Its ParseInt is the belt to that
             // lookahead's braces, which is why only --threads is swept above.
-            Assert.AreEqual(FileParallelismMode.Auto, Parse(@"--parallel-files", @"bad", @"-i", @"a.mzML").FileParallelism.Mode);
+            var argParallelFiles = OspreyCommandArgs.ARG_PARALLEL_FILES;
+            Assert.AreEqual(FileParallelismMode.Auto,
+                Parse(argParallelFiles, @"bad", OspreyCommandArgs.ARG_INPUT, @"a.mzML").FileParallelism.Mode);
 
             // The good values still parse, including the two --parallel-files spellings.
-            Assert.AreEqual(8, Parse(@"--threads", @"8").NThreads);
-            Assert.AreEqual(FileParallelismMode.Sequential, Parse(@"--parallel-files", @"0").FileParallelism.Mode);
-            Assert.AreEqual(FileParallelismMode.Auto, Parse(@"--parallel-files").FileParallelism.Mode);
-            Assert.AreEqual(4, Parse(@"--parallel-files", @"4").FileParallelism.Count);
+            Assert.AreEqual(8, Parse(argThreads, @"8").NThreads);
+            Assert.AreEqual(FileParallelismMode.Sequential, Parse(argParallelFiles, @"0").FileParallelism.Mode);
+            Assert.AreEqual(FileParallelismMode.Auto, Parse(argParallelFiles).FileParallelism.Mode);
+            Assert.AreEqual(4, Parse(argParallelFiles, @"4").FileParallelism.Count);
         }
 
         [TestMethod]
