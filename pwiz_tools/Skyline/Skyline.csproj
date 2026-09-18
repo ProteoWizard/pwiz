@@ -287,7 +287,12 @@
                       Private="false" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0')">
-    <Content Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\**\*">
+    <!-- Exclude any RID-named publish folder: a self-contained `dotnet publish -r win-x64` run
+         from that project lands 200 MB of runtime under bin\...\net10.0\win-x64, which is not
+         part of msconvert's framework-dependent output and would otherwise ride into Skyline's
+         bin and from there into the installer. -->
+    <Content Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\**\*"
+             Exclude="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\win-*\**;..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\linux-*\**;..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\osx-*\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
