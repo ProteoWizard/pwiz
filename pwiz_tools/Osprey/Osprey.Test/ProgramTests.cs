@@ -142,7 +142,7 @@ namespace pwiz.Osprey.Test
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             Assert.IsNull(Program.ValidateArgs(config), "a library should be tolerated");
 
-            AssertSpectraCacheError(c => { }, "--input <file");
+            AssertSpectraCacheError(c => { }, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
         private static void AssertSpectraCacheError(Action<OspreyConfig> mutate, string expected)
@@ -151,7 +151,7 @@ namespace pwiz.Osprey.Test
             mutate(config);
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task SpectraCache");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"SpectraCache");
             StringAssert.Contains(err, expected);
         }
 
@@ -173,8 +173,8 @@ namespace pwiz.Osprey.Test
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task PerFileScoring");
-            StringAssert.Contains(err, "--input <mzML");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"PerFileScoring");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
         [TestMethod]
@@ -184,8 +184,8 @@ namespace pwiz.Osprey.Test
             config.InputFiles = new List<string> { "a.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task PerFileScoring");
-            StringAssert.Contains(err, "--library");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"PerFileScoring");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText);
         }
 
         // - PerFileRescore (one run in, its reconciled parquet out) --
@@ -208,8 +208,8 @@ namespace pwiz.Osprey.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task PerFileRescoring");
-            StringAssert.Contains(err, "--input");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"PerFileRescoring");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
         [TestMethod]
@@ -219,8 +219,8 @@ namespace pwiz.Osprey.Test
             config.InputFiles = new List<string> { "a.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task PerFileRescoring");
-            StringAssert.Contains(err, "--library and --output");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"PerFileRescoring");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
         }
 
         // - FirstPassFDR (2+ runs in, reconciliation on) --
@@ -243,8 +243,8 @@ namespace pwiz.Osprey.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task FirstPassFDR");
-            StringAssert.Contains(err, "--input");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"FirstPassFDR");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
         [TestMethod]
@@ -254,8 +254,8 @@ namespace pwiz.Osprey.Test
             config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task FirstPassFDR");
-            StringAssert.Contains(err, "--library and --output");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"FirstPassFDR");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
         }
 
         [TestMethod]
@@ -269,7 +269,7 @@ namespace pwiz.Osprey.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task FirstPassFDR");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"FirstPassFDR");
             StringAssert.Contains(err, "2+ files");
         }
 
@@ -309,8 +309,8 @@ namespace pwiz.Osprey.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task SecondPassFDR");
-            StringAssert.Contains(err, "--input");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"SecondPassFDR");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
         [TestMethod]
@@ -320,8 +320,8 @@ namespace pwiz.Osprey.Test
             config.InputFiles = new List<string> { "a.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task SecondPassFDR");
-            StringAssert.Contains(err, "--library and --output");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"SecondPassFDR");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
         }
 
         // - ModelDiagnostics (the completed run's own command line, replayed) --
@@ -537,7 +537,7 @@ namespace pwiz.Osprey.Test
             // must throw rather than silently dropping them (which would run
             // the full pipeline in the wrong mode). Replaced by --task <Name>.
             var ex = Assert.ThrowsException<ArgumentException>(
-                () => Program.ParseArgs(new[] { "--no-join", "-i", "a.mzML" }));
+                () => Parse("--no-join", OspreyCommandArgs.ARG_INPUT + @"a.mzML"));
             StringAssert.Contains(ex.Message, "--no-join");
         }
 
@@ -575,8 +575,9 @@ namespace pwiz.Osprey.Test
         public void TestParseArgsAcceptsTaskAndValidArgs()
         {
             // --task and ordinary flags must NOT throw.
-            Program.ParseArgs(new[] { "--task", "FirstPassFDR", "-l", "ref.blib", "-o", "out.blib" });
-            Program.ParseArgs(new[] { "--task=SecondPassFDR", "-l", "ref.blib", "-o", "out.blib" });
+            Parse(OspreyCommandArgs.ARG_TASK + @"FirstPassFDR", OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
+            // --task=Name is the one joined form Program.Main pre-scans, so it is spelled here.
+            Parse(OspreyCommandArgs.ARG_TASK.ArgumentText + @"=SecondPassFDR", OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
         }
 
         [TestMethod]
@@ -586,10 +587,10 @@ namespace pwiz.Osprey.Test
             // like the other required-value flags, so it can't be silently
             // ignored when ParseArgs runs outside Main's pre-scan.
             var ex = Assert.ThrowsException<ArgumentException>(
-                () => Program.ParseArgs(new[] { "--task" }));
-            StringAssert.Contains(ex.Message, "--task");
+                () => Parse(OspreyCommandArgs.ARG_TASK));
+            StringAssert.Contains(ex.Message, OspreyCommandArgs.ARG_TASK.ArgumentText);
             Assert.ThrowsException<ArgumentException>(
-                () => Program.ParseArgs(new[] { "--task", "-l", "ref.blib" }));
+                () => Parse(OspreyCommandArgs.ARG_TASK, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib"));
         }
 
         [TestMethod]
@@ -602,16 +603,16 @@ namespace pwiz.Osprey.Test
             // numeric, and enum flags.
             var missingOrFlagFollowed = new[]
             {
-                new[] { "-l" },
-                new[] { "-o", "-l", "x.blib" },
-                new[] { "--output" },
-                new[] { "--resolution", "--protein-fdr", "0.01" },
-                new[] { "--protein-fdr" },
-                new[] { "--threads", "-i", "f.mzML" },
-                new[] { "--decoy-pairing-manifest" },
-                new[] { "--fdr-method", "-o", "out.blib" },
-                new[] { "--fdr-level" },
-                new[] { "--shared-peptides", "--threads", "4" },
+                ArgTokens.Split(OspreyCommandArgs.ARG_LIBRARY.ShortArgumentText),
+                ArgTokens.Split(OspreyCommandArgs.ARG_OUTPUT.ShortArgumentText, OspreyCommandArgs.ARG_LIBRARY + @"x.blib"),
+                ArgTokens.Split(OspreyCommandArgs.ARG_OUTPUT),
+                ArgTokens.Split(OspreyCommandArgs.ARG_RESOLUTION, OspreyCommandArgs.ARG_PROTEIN_FDR + 0.01),
+                ArgTokens.Split(OspreyCommandArgs.ARG_PROTEIN_FDR),
+                ArgTokens.Split(OspreyCommandArgs.ARG_THREADS, OspreyCommandArgs.ARG_INPUT + @"f.mzML"),
+                ArgTokens.Split(OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST),
+                ArgTokens.Split(OspreyCommandArgs.ARG_FDR_METHOD, OspreyCommandArgs.ARG_OUTPUT + @"out.blib"),
+                ArgTokens.Split(OspreyCommandArgs.ARG_FDR_LEVEL),
+                ArgTokens.Split(OspreyCommandArgs.ARG_SHARED_PEPTIDES, OspreyCommandArgs.ARG_THREADS + 4),
             };
             foreach (var args in missingOrFlagFollowed)
             {
@@ -785,14 +786,7 @@ namespace pwiz.Osprey.Test
             // --decoys-in-library is a flat boolean; flips DecoysInLibrary
             // to true without consuming a value. Mirrors Rust osprey's
             // --decoys-in-library semantics.
-            var args = new[]
-            {
-                @"-i", @"x.mzML",
-                @"-l", @"lib.tsv",
-                @"-o", @"out.blib",
-                @"--decoys-in-library",
-            };
-            var config = Program.ParseArgs(args);
+            var config = Parse(RequiredIoThen(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY));
             Assert.IsTrue(config.DecoysInLibrary);
             Assert.IsTrue(string.IsNullOrEmpty(config.DecoyPairingManifestPath));
         }
@@ -805,14 +799,8 @@ namespace pwiz.Osprey.Test
             // isolation (no companion --decoys-in-library) so a regression
             // where the flag accidentally enables library-decoy mode on
             // its own would actually fail the test.
-            var args = new[]
-            {
-                @"-i", @"x.mzML",
-                @"-l", @"lib.tsv",
-                @"-o", @"out.blib",
-                @"--decoy-pairing-manifest", @"T:\test\manifest.tsv",
-            };
-            var config = Program.ParseArgs(args);
+            var config = Parse(RequiredIoThen(
+                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST + @"T:\test\manifest.tsv"));
             Assert.IsFalse(config.DecoysInLibrary);
             Assert.AreEqual(@"T:\test\manifest.tsv", config.DecoyPairingManifestPath);
         }
@@ -823,16 +811,10 @@ namespace pwiz.Osprey.Test
             // A bare --decoy-pairing-manifest with no value, or a value
             // that's itself an option (--decoys-in-library), must throw
             // rather than silently consume the next token as the path.
-            var argsNoValue = new[]
-            {
-                @"-i", @"x.mzML",
-                @"-l", @"lib.tsv",
-                @"-o", @"out.blib",
-                @"--decoy-pairing-manifest",
-            };
+            var argsNoValue = RequiredIoThen(OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST);
             try
             {
-                Program.ParseArgs(argsNoValue);
+                Parse(argsNoValue);
                 Assert.Fail(@"Expected ArgumentException for bare --decoy-pairing-manifest.");
             }
             catch (ArgumentException)
@@ -840,16 +822,11 @@ namespace pwiz.Osprey.Test
                 // expected
             }
 
-            var argsFlagAsValue = new[]
-            {
-                @"-i", @"x.mzML",
-                @"-l", @"lib.tsv",
-                @"-o", @"out.blib",
-                @"--decoy-pairing-manifest", @"--decoys-in-library",
-            };
+            var argsFlagAsValue = RequiredIoThen(
+                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST, OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY);
             try
             {
-                Program.ParseArgs(argsFlagAsValue);
+                Parse(argsFlagAsValue);
                 Assert.Fail(@"Expected ArgumentException for next-flag-as-value.");
             }
             catch (ArgumentException)
@@ -865,16 +842,35 @@ namespace pwiz.Osprey.Test
             // (false) and DecoyPairingManifestPath stays null. Pipeline runs
             // the existing reverse-decoy path. Pins the "library-decoy mode
             // is fully opt-in" contract.
-            var args = new[]
-            {
-                @"-i", @"x.mzML",
-                @"-l", @"lib.tsv",
-                @"-o", @"out.blib",
-            };
-            var config = Program.ParseArgs(args);
+            var config = Parse(RequiredIoThen());
             Assert.IsFalse(config.DecoysInLibrary);
             Assert.IsTrue(string.IsNullOrEmpty(config.DecoyPairingManifestPath));
         }
 
+        /// <summary>
+        /// <see cref="Program.ParseArgs"/> over tokens built from the Argument instances, split
+        /// into argv the way a shell would by <see cref="ArgTokens.Split"/>.
+        /// </summary>
+        private static OspreyConfig Parse(params string[] tokens)
+        {
+            return Program.ParseArgs(ArgTokens.Split(tokens));
+        }
+
+        /// <summary>
+        /// The input, library and output every parse needs, followed by the tokens under
+        /// test. Each token is one ARG instance, alone for a flag or joined to its value
+        /// with <c>+</c>, exactly as the command line the usage text documents.
+        /// </summary>
+        private static string[] RequiredIoThen(params string[] tokens)
+        {
+            var args = new List<string>
+            {
+                OspreyCommandArgs.ARG_INPUT + @"x.mzML",
+                OspreyCommandArgs.ARG_LIBRARY + @"lib.tsv",
+                OspreyCommandArgs.ARG_OUTPUT + @"out.blib"
+            };
+            args.AddRange(tokens);
+            return args.ToArray();
+        }
     }
 }

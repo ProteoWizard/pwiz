@@ -41,9 +41,13 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class OspreyCommandArgsTests
     {
+        /// <summary>
+        /// Parses tokens built from the Argument instances (<c>ARG_THREADS + 8</c>), split
+        /// into argv the way a shell would by <see cref="ArgTokens.Split"/>.
+        /// </summary>
         private static OspreyConfig Parse(params string[] args)
         {
-            return OspreyCommandArgs.ParseArgs(args);
+            return OspreyCommandArgs.ParseArgs(ArgTokens.Split(args));
         }
 
         /// <summary>
@@ -74,21 +78,21 @@ namespace pwiz.Osprey.Test
 
                 // Listed paths land in InputFiles exactly as -i would have placed them.
                 CollectionAssert.AreEqual(new[] { @"a.mzML", @"b.mzML" },
-                    Parse(@"--input-list", listPath).InputFiles.ToArray());
+                    Parse(OspreyCommandArgs.ARG_INPUT_LIST + listPath).InputFiles.ToArray());
 
                 // Composable with -i, and ORDER is preserved: -i first, then the list. Input
                 // order is not decorative - FirstJoin is order-sensitive and file indices
                 // follow this list.
                 CollectionAssert.AreEqual(new[] { @"z.mzML", @"a.mzML", @"b.mzML" },
-                    Parse(@"-i", @"z.mzML", @"--input-list", listPath).InputFiles.ToArray());
+                    Parse(OspreyCommandArgs.ARG_INPUT + @"z.mzML", OspreyCommandArgs.ARG_INPUT_LIST + listPath).InputFiles.ToArray());
 
                 // Composable with itself, the same way repeated -i is.
                 CollectionAssert.AreEqual(new[] { @"a.mzML", @"b.mzML", @"a.mzML", @"b.mzML" },
-                    Parse(@"--input-list", listPath, @"--input-list", listPath).InputFiles.ToArray());
+                    Parse(OspreyCommandArgs.ARG_INPUT_LIST + listPath, OspreyCommandArgs.ARG_INPUT_LIST + listPath).InputFiles.ToArray());
 
                 // A list that names nothing is fatal, not an empty cohort.
                 File.WriteAllLines(listPath, new[] { @"# nothing but a comment", string.Empty });
-                Assert.ThrowsException<InvalidDataException>(() => Parse(@"--input-list", listPath));
+                Assert.ThrowsException<InvalidDataException>(() => Parse(OspreyCommandArgs.ARG_INPUT_LIST + listPath));
             }
             finally
             {
@@ -97,102 +101,107 @@ namespace pwiz.Osprey.Test
 
             // A missing list is fatal too - the path is the operator's whole input set.
             Assert.ThrowsException<FileNotFoundException>(
-                () => Parse(@"--input-list", Path.Combine(Path.GetTempPath(), @"osprey-no-such-list.txt")));
+                () => Parse(OspreyCommandArgs.ARG_INPUT_LIST + Path.Combine(Path.GetTempPath(), @"osprey-no-such-list.txt")));
         }
 
         [TestMethod]
         public void TestArgToConfigMapping()
         {
             // General I/O. -i is variadic (no on-disk check at parse); -l/-o just record paths.
-            var io = Parse(@"-i", @"a.mzML", @"b.mzML", @"-l", @"ref.blib", @"-o", @"out.blib");
+            var io = Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML", @"b.mzML", OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
             CollectionAssert.AreEqual(new[] { @"a.mzML", @"b.mzML" }, io.InputFiles.ToArray());
             Assert.AreEqual(@"ref.blib", io.LibrarySource.Path);
             Assert.AreEqual(@"out.blib", io.OutputBlib);
 
-            Assert.AreEqual(@"r.tsv", Parse(@"--report", @"r.tsv").OutputReport);
+            Assert.AreEqual(@"r.tsv", Parse(OspreyCommandArgs.ARG_REPORT + @"r.tsv").OutputReport);
 
             // --work-dir fans out to both; an explicit --output-dir / --cache-dir overrides one.
-            var work = Parse(@"--work-dir", @"w");
+            var work = Parse(OspreyCommandArgs.ARG_WORK_DIR + @"w");
             Assert.AreEqual(@"w", work.OutputDir);
             Assert.AreEqual(@"w", work.CacheDir);
-            var workOverrideOut = Parse(@"--work-dir", @"w", @"--output-dir", @"o");
+            var workOverrideOut = Parse(OspreyCommandArgs.ARG_WORK_DIR + @"w", OspreyCommandArgs.ARG_OUTPUT_DIR + @"o");
             Assert.AreEqual(@"o", workOverrideOut.OutputDir);
             Assert.AreEqual(@"w", workOverrideOut.CacheDir);
-            var workOverrideCache = Parse(@"--work-dir", @"w", @"--cache-dir", @"c");
+            var workOverrideCache = Parse(OspreyCommandArgs.ARG_WORK_DIR + @"w", OspreyCommandArgs.ARG_CACHE_DIR + @"c");
             Assert.AreEqual(@"w", workOverrideCache.OutputDir);
             Assert.AreEqual(@"c", workOverrideCache.CacheDir);
 
             // Resolution + tolerance, including the unit-resolution injected defaults.
-            Assert.AreEqual(ResolutionMode.HRAM, Parse(@"--resolution", @"hram").ResolutionMode);
-            var unit = Parse(@"--resolution", @"unit");
+            Assert.AreEqual(ResolutionMode.HRAM, Parse(OspreyCommandArgs.ARG_RESOLUTION + @"hram").ResolutionMode);
+            var unit = Parse(OspreyCommandArgs.ARG_RESOLUTION + @"unit");
             Assert.AreEqual(ResolutionMode.UnitResolution, unit.ResolutionMode);
             Assert.AreEqual(ToleranceUnit.Mz, unit.FragmentTolerance.Unit);
             Assert.AreEqual(0.5, unit.FragmentTolerance.Tolerance);
             Assert.AreEqual(ToleranceUnit.Mz, unit.PrecursorTolerance.Unit);
             Assert.AreEqual(1.0, unit.PrecursorTolerance.Tolerance);
-            Assert.AreEqual(20.0, Parse(@"--fragment-tolerance", @"20").FragmentTolerance.Tolerance);
-            Assert.AreEqual(ToleranceUnit.Ppm, Parse(@"--fragment-unit", @"ppm").FragmentTolerance.Unit);
-            Assert.AreEqual(ToleranceUnit.Mz, Parse(@"--fragment-unit", @"mz").FragmentTolerance.Unit);
-            Assert.AreEqual(ToleranceUnit.Mz, Parse(@"--fragment-unit", @"th").FragmentTolerance.Unit);
-            Assert.AreEqual(ToleranceUnit.Mz, Parse(@"--fragment-unit", @"da").FragmentTolerance.Unit);
-            Assert.IsFalse(Parse(@"--no-prefilter").PrefilterEnabled);
+            Assert.AreEqual(20.0, Parse(OspreyCommandArgs.ARG_FRAGMENT_TOLERANCE + 20.0).FragmentTolerance.Tolerance);
+            Assert.AreEqual(ToleranceUnit.Ppm, Parse(OspreyCommandArgs.ARG_FRAGMENT_UNIT + @"ppm").FragmentTolerance.Unit);
+            Assert.AreEqual(ToleranceUnit.Mz, Parse(OspreyCommandArgs.ARG_FRAGMENT_UNIT + @"mz").FragmentTolerance.Unit);
+            // th and da are accepted aliases the declared value list does not name; the argument
+            // declares HasValueChecking, so the token builder leaves the check to the parser.
+            Assert.AreEqual(ToleranceUnit.Mz, Parse(OspreyCommandArgs.ARG_FRAGMENT_UNIT + @"th").FragmentTolerance.Unit);
+            Assert.AreEqual(ToleranceUnit.Mz, Parse(OspreyCommandArgs.ARG_FRAGMENT_UNIT + @"da").FragmentTolerance.Unit);
+            Assert.IsFalse(Parse(OspreyCommandArgs.ARG_NO_PREFILTER).PrefilterEnabled);
 
             // FDR + protein inference, including warn-and-default enums.
-            Assert.AreEqual(0.05, Parse(@"--run-fdr", @"0.05").RunFdr);
-            Assert.AreEqual(0.02, Parse(@"--experiment-fdr", @"0.02").ExperimentFdr);
-            Assert.AreEqual(0.01, Parse(@"--protein-fdr", @"0.01").ProteinFdr);
-            Assert.AreEqual(8, Parse(@"--threads", @"8").NThreads);
-            Assert.AreEqual(FdrMethod.Simple, Parse(@"--fdr-method", @"simple").FdrMethod);
-            Assert.AreEqual(FdrMethod.Percolator, Parse(@"--fdr-method", @"bogus").FdrMethod); // warn -> default
-            Assert.AreEqual(FdrLevel.Peptide, Parse(@"--fdr-level", @"peptide").FdrLevel);
-            Assert.AreEqual(FdrLevel.Precursor, Parse(@"--fdr-level", @"bogus").FdrLevel);     // warn -> default unchanged
-            Assert.AreEqual(SharedPeptideMode.Razor, Parse(@"--shared-peptides", @"razor").SharedPeptides);
-            Assert.AreEqual(SharedPeptideMode.All, Parse(@"--shared-peptides", @"bogus").SharedPeptides); // warn -> default
+            // A number renders the way Osprey parses it - invariant culture, see the static
+            // constructor - so 0.05 is "0.05" under any locale.
+            Assert.AreEqual(0.05, Parse(OspreyCommandArgs.ARG_RUN_FDR + 0.05).RunFdr);
+            Assert.AreEqual(0.02, Parse(OspreyCommandArgs.ARG_EXPERIMENT_FDR + 0.02).ExperimentFdr);
+            Assert.AreEqual(0.01, Parse(OspreyCommandArgs.ARG_PROTEIN_FDR + 0.01).ProteinFdr);
+            Assert.AreEqual(8, Parse(OspreyCommandArgs.ARG_THREADS + 8).NThreads);
+            Assert.AreEqual(FdrMethod.Simple, Parse(OspreyCommandArgs.ARG_FDR_METHOD + @"simple").FdrMethod);
+            Assert.AreEqual(FdrMethod.Percolator, Parse(OspreyCommandArgs.ARG_FDR_METHOD + @"bogus").FdrMethod); // warn -> default
+            Assert.AreEqual(FdrLevel.Peptide, Parse(OspreyCommandArgs.ARG_FDR_LEVEL + @"peptide").FdrLevel);
+            Assert.AreEqual(FdrLevel.Precursor, Parse(OspreyCommandArgs.ARG_FDR_LEVEL + @"bogus").FdrLevel);     // warn -> default unchanged
+            Assert.AreEqual(SharedPeptideMode.Razor, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"razor").SharedPeptides);
+            Assert.AreEqual(SharedPeptideMode.All, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"bogus").SharedPeptides); // warn -> default
 
             // FDRBench: --fdrbench records the path, --fdrbench-per-run is a flat flag,
             // --fdrbench-pass selects the pass(es) as a bitmask (default 2; 1, 2, or both;
             // an unlisted value throws).
-            Assert.AreEqual(@"fb.tsv", Parse(@"--fdrbench", @"fb.tsv").OutputFdrBench);
-            Assert.IsTrue(Parse(@"--fdrbench-per-run").FdrBenchPerRun);
-            Assert.AreEqual(OspreyConfig.FDRBENCH_PASS_2, Parse(@"-i", @"a.mzML").FdrBenchPass); // default
-            Assert.AreEqual(OspreyConfig.FDRBENCH_PASS_1, Parse(@"--fdrbench-pass", @"1").FdrBenchPass);
-            Assert.AreEqual(OspreyConfig.FDRBENCH_PASS_2, Parse(@"--fdrbench-pass", @"2").FdrBenchPass);
+            Assert.AreEqual(@"fb.tsv", Parse(OspreyCommandArgs.ARG_FDRBENCH + @"fb.tsv").OutputFdrBench);
+            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_FDRBENCH_PER_RUN).FdrBenchPerRun);
+            Assert.AreEqual(OspreyConfig.FDRBENCH_PASS_2, Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").FdrBenchPass); // default
+            Assert.AreEqual(OspreyConfig.FDRBENCH_PASS_1, Parse(OspreyCommandArgs.ARG_FDRBENCH_PASS + 1).FdrBenchPass);
+            Assert.AreEqual(OspreyConfig.FDRBENCH_PASS_2, Parse(OspreyCommandArgs.ARG_FDRBENCH_PASS + 2).FdrBenchPass);
             Assert.AreEqual(OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2,
-                Parse(@"--fdrbench-pass", @"both").FdrBenchPass);
-            Assert.ThrowsException<ArgumentException>(() => Parse(@"--fdrbench-pass", @"3"));
+                Parse(OspreyCommandArgs.ARG_FDRBENCH_PASS + @"both").FdrBenchPass);
+            Assert.ThrowsException<ArgumentException>(() => Parse(OspreyCommandArgs.ARG_FDRBENCH_PASS + 3));
 
             // Decoys.
-            Assert.IsTrue(Parse(@"--decoys-in-library").DecoysInLibrary);
-            Assert.AreEqual(@"m.tsv", Parse(@"--decoys-in-library", @"--decoy-pairing-manifest", @"m.tsv").DecoyPairingManifestPath);
-            Assert.IsTrue(Parse(@"--write-pin").WritePin);
+            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY).DecoysInLibrary);
+            Assert.AreEqual(@"m.tsv", Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST + @"m.tsv").DecoyPairingManifestPath);
+            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_WRITE_PIN).WritePin);
 
             // Performance: --parallel-files has an OPTIONAL value. Absent =
             // sequential default; no value = auto; <N> = explicit. The optional
             // value must not swallow the following flag.
-            Assert.AreEqual(FileParallelismMode.Sequential, Parse(@"-i", @"a.mzML").FileParallelism.Mode);
-            Assert.AreEqual(FileParallelismMode.Auto, Parse(@"--parallel-files").FileParallelism.Mode);
-            var explicitN = Parse(@"--parallel-files", @"4").FileParallelism;
+            Assert.AreEqual(FileParallelismMode.Sequential, Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").FileParallelism.Mode);
+            Assert.AreEqual(FileParallelismMode.Auto, Parse(OspreyCommandArgs.ARG_PARALLEL_FILES).FileParallelism.Mode);
+            var explicitN = Parse(OspreyCommandArgs.ARG_PARALLEL_FILES + 4).FileParallelism;
             Assert.AreEqual(FileParallelismMode.Explicit, explicitN.Mode);
             Assert.AreEqual(4, explicitN.Count);
             // 0 is the natural "off" -> sequential (consumed as a value, no stray warning).
-            Assert.AreEqual(FileParallelismMode.Sequential, Parse(@"--parallel-files", @"0").FileParallelism.Mode);
-            var autoThenInput = Parse(@"--parallel-files", @"-i", @"a.mzML");
+            Assert.AreEqual(FileParallelismMode.Sequential, Parse(OspreyCommandArgs.ARG_PARALLEL_FILES + 0).FileParallelism.Mode);
+            var autoThenInput = Parse(OspreyCommandArgs.ARG_PARALLEL_FILES, OspreyCommandArgs.ARG_INPUT + @"a.mzML");
             Assert.AreEqual(FileParallelismMode.Auto, autoThenInput.FileParallelism.Mode);
             CollectionAssert.AreEqual(new[] { @"a.mzML" }, autoThenInput.InputFiles.ToArray());
 
             // Diagnostics. --task is resolved in Main, so ParseArgs alone leaves SelectedTask null
             // but must accept both --task forms without throwing.
-            Assert.IsTrue(Parse(@"-d").Diagnostics);
-            Assert.IsNull(Parse(@"--task=SecondPassFDR", @"-l", @"ref.blib", @"-o", @"out.blib").SelectedTask);
+            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DIAGNOSTICS).Diagnostics);
+            // --task=Name is the one joined form Program.Main pre-scans, so it is spelled here.
+            Assert.IsNull(Parse(OspreyCommandArgs.ARG_TASK.ArgumentText + @"=SecondPassFDR", OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib").SelectedTask);
 
             // Logging: --timestamp / --memstamp are value-less flags (default off);
             // --log-file takes a path.
-            Assert.IsFalse(Parse(@"-i", @"a.mzML").IsTimeStamped);
-            Assert.IsFalse(Parse(@"-i", @"a.mzML").IsMemStamped);
-            Assert.IsNull(Parse(@"-i", @"a.mzML").LogFilePath);
-            Assert.IsTrue(Parse(@"--timestamp").IsTimeStamped);
-            Assert.IsTrue(Parse(@"--memstamp").IsMemStamped);
-            Assert.AreEqual(@"run.log", Parse(@"--log-file", @"run.log").LogFilePath);
+            Assert.IsFalse(Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").IsTimeStamped);
+            Assert.IsFalse(Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").IsMemStamped);
+            Assert.IsNull(Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").LogFilePath);
+            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_TIMESTAMP).IsTimeStamped);
+            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_MEMSTAMP).IsMemStamped);
+            Assert.AreEqual(@"run.log", Parse(OspreyCommandArgs.ARG_LOG_FILE + @"run.log").LogFilePath);
         }
 
         /// <summary>
@@ -212,8 +221,7 @@ namespace pwiz.Osprey.Test
             foreach (var badValue in new[] { @"bad", @"1.5", @"99999999999999999999", string.Empty })
             {
                 var threads = Assert.ThrowsException<ArgumentException>(
-                    () => Parse(argThreads, badValue),
-                    string.Format(@"{0} {1}", argThreads.ArgumentText, badValue));
+                    () => Parse(argThreads + badValue), argThreads + badValue);
                 StringAssert.Contains(threads.Message, argThreads.ArgumentText);
             }
 
@@ -223,20 +231,87 @@ namespace pwiz.Osprey.Test
             // lookahead's braces, which is why only --threads is swept above.
             var argParallelFiles = OspreyCommandArgs.ARG_PARALLEL_FILES;
             Assert.AreEqual(FileParallelismMode.Auto,
-                Parse(argParallelFiles, @"bad", OspreyCommandArgs.ARG_INPUT, @"a.mzML").FileParallelism.Mode);
+                Parse(argParallelFiles + @"bad", OspreyCommandArgs.ARG_INPUT + @"a.mzML").FileParallelism.Mode);
 
             // The good values still parse, including the two --parallel-files spellings.
-            Assert.AreEqual(8, Parse(argThreads, @"8").NThreads);
-            Assert.AreEqual(FileParallelismMode.Sequential, Parse(argParallelFiles, @"0").FileParallelism.Mode);
+            Assert.AreEqual(8, Parse(argThreads + 8).NThreads);
+            Assert.AreEqual(FileParallelismMode.Sequential, Parse(argParallelFiles + 0).FileParallelism.Mode);
             Assert.AreEqual(FileParallelismMode.Auto, Parse(argParallelFiles).FileParallelism.Mode);
-            Assert.AreEqual(4, Parse(argParallelFiles, @"4").FileParallelism.Count);
+            Assert.AreEqual(4, Parse(argParallelFiles + 4).FileParallelism.Count);
+        }
+
+        /// <summary>
+        /// The tokens these tests hand the parser are built from the Argument instances, so
+        /// the contract behind that is pinned here rather than assumed: the + operator joins
+        /// with the host's separator (a space, the same one the usage text renders) and the
+        /// test-side split keeps a value containing spaces whole; a number renders the way
+        /// the HOST parses (Osprey: invariant; a host that leaves the provider unset gets the
+        /// current culture); the same operator renders Skyline's --name=value when the host
+        /// separator says so; and an argument can never be a flag's value, a value outside a
+        /// fixed list that the argument does not check itself, another argument's value, or
+        /// null. Mutates two process-wide settings, so it must not share a process slice with
+        /// another test building tokens.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestArgumentTokensFromInstances()
+        {
+            var argThreads = OspreyCommandArgs.ARG_THREADS;
+            string flagOnly = argThreads;
+            Assert.AreEqual(argThreads.ArgumentText, flagOnly);
+            Assert.AreEqual(argThreads.ArgumentText + @" 8", argThreads + 8);
+            Assert.AreEqual(argThreads + @"8", argThreads + 8);
+            Assert.AreEqual(@"-" + OspreyCommandArgs.ARG_INPUT.ShortName, OspreyCommandArgs.ARG_INPUT.ShortArgumentText);
+            Assert.IsNull(argThreads.ShortArgumentText, @"an argument without a short name has no short spelling");
+
+            const string spacedPath = @"C:\my dir\run.log";
+            Assert.AreEqual(spacedPath, Parse(OspreyCommandArgs.ARG_LOG_FILE + spacedPath).LogFilePath);
+
+            // A comma-decimal culture built rather than looked up by name, so the assertions
+            // do not depend on ICU data being present on the agent. CurrentCulture is
+            // per-thread; the separator and the format provider are process-wide.
+            var commaDecimal = (System.Globalization.CultureInfo)System.Globalization.CultureInfo.InvariantCulture.Clone();
+            commaDecimal.NumberFormat.NumberDecimalSeparator = @",";
+            var argTolerance = OspreyCommandArgs.ARG_FRAGMENT_TOLERANCE;
+            string ospreySeparator = ArgUsage.ArgumentValueSeparator;
+            var ospreyProvider = ArgUsage.ValueFormatProvider;
+            var culture = System.Threading.Thread.CurrentThread.CurrentCulture;
+            try
+            {
+                System.Threading.Thread.CurrentThread.CurrentCulture = commaDecimal;
+                // Osprey parses invariantly, so it renders invariantly whatever the thread's culture.
+                Assert.AreEqual(argTolerance.ArgumentText + @" 0.5", argTolerance + 0.5);
+                Assert.AreEqual(0.5, Parse(argTolerance + 0.5).FragmentTolerance.Tolerance);
+
+                // A host that parses in the current culture leaves the provider unset and gets
+                // the value the way its user would type it.
+                ArgUsage.ValueFormatProvider = null;
+                Assert.AreEqual(argTolerance.ArgumentText + @" 0,5", argTolerance + 0.5);
+                ArgUsage.ValueFormatProvider = ospreyProvider;
+
+                ArgUsage.ArgumentValueSeparator = @"=";
+                Assert.AreEqual(argThreads.ArgumentText + @"=8", argThreads + 8);
+            }
+            finally
+            {
+                ArgUsage.ArgumentValueSeparator = ospreySeparator;
+                ArgUsage.ValueFormatProvider = ospreyProvider;
+                System.Threading.Thread.CurrentThread.CurrentCulture = culture;
+            }
+
+            Assert.ThrowsException<ValueUnexpectedException>(() => OspreyCommandArgs.ARG_TIMESTAMP + 1);
+            // --resolution enforces its declared list; --fdr-method checks its own (aliases,
+            // warn-and-default), so the builder lets its value through to the parser.
+            Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_RESOLUTION + @"bogus");
+            Assert.AreEqual(OspreyCommandArgs.ARG_FDR_METHOD.ArgumentText + @" bogus", OspreyCommandArgs.ARG_FDR_METHOD + @"bogus");
+            Assert.ThrowsException<ArgumentException>(() => argThreads + OspreyCommandArgs.ARG_INPUT);
+            Assert.ThrowsException<ArgumentNullException>(() => OspreyCommandArgs.ARG_LIBRARY + null);
         }
 
         [TestMethod]
         public void TestVariadicInputAccumulates()
         {
             // -i consumes the run of non-flag tokens and stops at the next flag.
-            var config = Parse(@"-i", @"a.mzML", @"b.mzML", @"--threads", @"2");
+            var config = Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML", @"b.mzML", OspreyCommandArgs.ARG_THREADS + 2);
             CollectionAssert.AreEqual(new[] { @"a.mzML", @"b.mzML" }, config.InputFiles.ToArray());
             Assert.AreEqual(2, config.NThreads);
         }
@@ -245,17 +320,17 @@ namespace pwiz.Osprey.Test
         public void TestShortAliasEqualsLongForm()
         {
             CollectionAssert.AreEqual(
-                Parse(@"-i", @"a.mzML").InputFiles.ToArray(),
-                Parse(@"--input", @"a.mzML").InputFiles.ToArray());
+                Parse(OspreyCommandArgs.ARG_INPUT.ShortArgumentText, @"a.mzML").InputFiles.ToArray(),
+                Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").InputFiles.ToArray());
             Assert.AreEqual(
-                Parse(@"-l", @"ref.blib").LibrarySource.Path,
-                Parse(@"--library", @"ref.blib").LibrarySource.Path);
+                Parse(OspreyCommandArgs.ARG_LIBRARY.ShortArgumentText, @"ref.blib").LibrarySource.Path,
+                Parse(OspreyCommandArgs.ARG_LIBRARY + @"ref.blib").LibrarySource.Path);
             Assert.AreEqual(
-                Parse(@"-o", @"out.blib").OutputBlib,
-                Parse(@"--output", @"out.blib").OutputBlib);
+                Parse(OspreyCommandArgs.ARG_OUTPUT.ShortArgumentText, @"out.blib").OutputBlib,
+                Parse(OspreyCommandArgs.ARG_OUTPUT + @"out.blib").OutputBlib);
             Assert.AreEqual(
-                Parse(@"-d").Diagnostics,
-                Parse(@"--diagnostics").Diagnostics);
+                Parse(OspreyCommandArgs.ARG_DIAGNOSTICS.ShortArgumentText).Diagnostics,
+                Parse(OspreyCommandArgs.ARG_DIAGNOSTICS).Diagnostics);
         }
 
         [TestMethod]
@@ -291,10 +366,10 @@ namespace pwiz.Osprey.Test
             foreach (var title in new[] { @"General I/O", @"Scoring & Tolerance", @"FDR & Protein Inference",
                 @"Decoys", @"Performance", @"Distributed / HPC", @"Logging", @"Diagnostics & Info" })
                 StringAssert.Contains(defaultHelp, title);
-            StringAssert.Contains(defaultHelp, @"--input");
-            StringAssert.Contains(defaultHelp, @"--parallel-files");
-            StringAssert.Contains(defaultHelp, @"--timestamp");
-            StringAssert.Contains(defaultHelp, @"--help");
+            StringAssert.Contains(defaultHelp, OspreyCommandArgs.ARG_INPUT.ArgumentText);
+            StringAssert.Contains(defaultHelp, OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText);
+            StringAssert.Contains(defaultHelp, OspreyCommandArgs.ARG_TIMESTAMP.ArgumentText);
+            StringAssert.Contains(defaultHelp, OspreyCommandArgs.ARG_HELP.ArgumentText);
             StringAssert.Contains(defaultHelp, ArgUsage.Provider.ArgumentHeader);
             Assert.IsTrue(defaultHelp.Contains('│') || defaultHelp.Contains('─'),
                 @"default help should use unicode box-drawing borders");
@@ -304,7 +379,7 @@ namespace pwiz.Osprey.Test
 
             // ascii on request: lower-128 borders only (no box-drawing).
             string ascii = OspreyCommandArgs.BuildUsage(@"ascii");
-            StringAssert.Contains(ascii, @"--input");
+            StringAssert.Contains(ascii, OspreyCommandArgs.ARG_INPUT.ArgumentText);
             Assert.IsTrue(ascii.Contains('+'), @"ascii help should use '+' corner borders");
             Assert.IsFalse(ascii.Contains('│') || ascii.Contains('─'),
                 @"ascii help must not contain unicode box-drawing characters");
@@ -313,12 +388,12 @@ namespace pwiz.Osprey.Test
             string sections = OspreyCommandArgs.BuildUsage(@"sections");
             foreach (var title in new[] { @"General I/O", @"Diagnostics & Info" })
                 StringAssert.Contains(sections, title);
-            Assert.IsFalse(sections.Contains(@"--input"), @"sections should list titles only");
+            Assert.IsFalse(sections.Contains(OspreyCommandArgs.ARG_INPUT.ArgumentText), @"sections should list titles only");
 
             // section filter: only the matching group.
             string filtered = OspreyCommandArgs.BuildUsage(@"Decoys");
-            StringAssert.Contains(filtered, @"--write-pin");
-            Assert.IsFalse(filtered.Contains(@"--run-fdr"), @"section filter should show only the matched group");
+            StringAssert.Contains(filtered, OspreyCommandArgs.ARG_WRITE_PIN.ArgumentText);
+            Assert.IsFalse(filtered.Contains(OspreyCommandArgs.ARG_RUN_FDR.ArgumentText), @"section filter should show only the matched group");
 
             // unknown section: a helpful message, no crash.
             StringAssert.Contains(OspreyCommandArgs.BuildUsage(@"NoSuchSection"), @"sections");

@@ -1,6 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -18,6 +19,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -70,19 +72,55 @@ namespace pwiz.Common.CommandLine
             get { return ARG_PREFIX + Name; }
         }
 
+        /// <summary>The short spelling (<c>-i</c> for <c>--input</c>), or null when the
+        /// argument has no <see cref="ShortName"/>. The one place that spelling is built, so
+        /// the usage text, a host's tokenizer and a test all agree on it.</summary>
+        public string ShortArgumentText
+        {
+            get { return ShortName != null ? @"-" + ShortName : null; }
+        }
+
+        /// <summary>
+        /// The argument and a value as one command-line token, joined by the host's
+        /// <see cref="ArgUsage.ArgumentValueSeparator"/> - the same process-wide setting the
+        /// usage text renders with, so a token built here always has the shape the host's
+        /// own documentation shows (Skyline: <c>--in=path</c>; Osprey: <c>--threads 8</c>).
+        /// A fixed value list is enforced here exactly as <see cref="NameValuePair.IsMatch"/>
+        /// enforces it at parse time: not at all when <see cref="HasValueChecking"/> says the
+        /// argument checks its own values (aliases, case folding, warn-and-default).
+        /// </summary>
         public string GetArgumentTextWithValue(string value)
         {
             if (ValueExample == null)
                 throw new ValueUnexpectedException(this);
-            else if (Values != null && !Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
+            else if (Values != null && !HasValueChecking && !Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
                 throw new ValueInvalidException(this, value, Values);
 
-            return ArgumentText + '=' + value;
+            return ArgumentText + ArgUsage.ArgumentValueSeparator + value;
         }
 
-        public static string operator +(ArgumentBase arg, string value)
+        /// <summary>
+        /// <c>ARG_THREADS + 8</c> reads as the command line does. A non-string value is
+        /// formatted with <see cref="ArgUsage.ValueFormatProvider"/>, i.e. the way the host
+        /// parses, so a test that passes a number follows the host's culture rules instead
+        /// of hard-coding a decimal separator. Taking <see cref="object"/> rather than
+        /// <see cref="string"/> also closes a trap: with a string-only operator,
+        /// <c>ARG_THREADS + 8</c> still compiled, through the implicit string conversion and
+        /// the predefined <c>string + object</c>, and silently produced <c>--threads8</c>.
+        /// </summary>
+        public static string operator +(ArgumentBase arg, object value)
         {
-            return arg.GetArgumentTextWithValue(value);
+            // A null value would render as a trailing separator and parse as an EMPTY value,
+            // which a path option records without complaint. Nothing means that; fail here.
+            if (value == null)
+                throw new ArgumentNullException(nameof(value), @"An argument value cannot be null");
+            // An argument's ToString() is its usage line, so ARG_A + ARG_B would render
+            // "--a=--b <value>". Fail here instead of at parse time.
+            if (value is ArgumentBase)
+                throw new ArgumentException(@"An argument cannot be the value of another argument");
+
+            var provider = ArgUsage.ValueFormatProvider ?? CultureInfo.CurrentCulture;
+            return arg.GetArgumentTextWithValue(Convert.ToString(value, provider));
         }
 
         public static implicit operator string(ArgumentBase arg)
@@ -97,7 +135,7 @@ namespace pwiz.Common.CommandLine
                 // Hosts that set a ShortName (e.g. Osprey's -i) get it shown alongside the
                 // long form: "-i, --input ...". Skyline leaves ShortName null, so this prefix is
                 // empty and the rendered text is unchanged.
-                var retValue = (ShortName != null ? @"-" + ShortName + @", " : string.Empty) + ArgumentText;
+                var retValue = (ShortName != null ? ShortArgumentText + @", " : string.Empty) + ArgumentText;
                 if (ValueExample != null)
                 {
                     var valueText = ArgUsage.ArgumentValueSeparator + (WrapValue ? Environment.NewLine : string.Empty) + ValueExample();
@@ -138,13 +176,16 @@ namespace pwiz.Common.CommandLine
             if (!arg.StartsWith(ARG_PREFIX))
                 return NameValuePair.EMPTY;
 
+            // Split on the same separator GetArgumentTextWithValue joins with, so the framework
+            // round-trips its own tokens whatever the host's grammar. Skyline's is "=".
             string name, value = null;
             arg = arg.Substring(2);
-            int indexEqualsSign = arg.IndexOf('=');
-            if (indexEqualsSign >= 0)
+            string separator = ArgUsage.ArgumentValueSeparator;
+            int indexSeparator = arg.IndexOf(separator, StringComparison.Ordinal);
+            if (indexSeparator >= 0)
             {
-                name = arg.Substring(0, indexEqualsSign);
-                value = arg.Substring(indexEqualsSign + 1);
+                name = arg.Substring(0, indexSeparator);
+                value = arg.Substring(indexSeparator + separator.Length);
             }
             else
             {
