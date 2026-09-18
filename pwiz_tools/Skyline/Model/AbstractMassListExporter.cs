@@ -791,7 +791,10 @@ namespace pwiz.Skyline.Model
 
         protected double GetProductMz(double productMz, int step)
         {
-            return productMz + ChromatogramInfo.OPTIMIZE_SHIFT_SIZE * step;
+            // Persistence-round the shifted m/z so exported lists are byte-identical across frameworks.
+            // The optimization-step offset re-introduces full precision, which net8's shortest-round-trip
+            // double.ToString then emits (e.g. 524.2163370000001) where net472 printed 524.216337.
+            return SequenceMassCalc.PersistentMZ(productMz + ChromatogramInfo.OPTIMIZE_SHIFT_SIZE * step);
         }
 
         protected double GetCollisionEnergy(PeptideDocNode nodePep,

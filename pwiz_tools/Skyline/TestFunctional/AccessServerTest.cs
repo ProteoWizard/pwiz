@@ -348,11 +348,11 @@ namespace pwiz.SkylineTestFunctional
 
             serverUri = PanoramaUtil.ServerNameToUri(PWEB_LK);
             pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
-            Assert.AreEqual(pServer.URI, PWEB_LK_FULL);
+            Assert.AreEqual((object)pServer.URI, PWEB_LK_FULL);
             // Redirect from https://panoramaweb.org/labkey/ -> "https://panoramaweb.org/
             tempServer = pServer.Redirect(PWEB_FULL + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH);
             Assert.IsFalse(ReferenceEquals(pServer, tempServer));
-            Assert.AreEqual(tempServer.URI, PWEB_FULL);
+            Assert.AreEqual((object)tempServer.URI, PWEB_FULL);
 
             // No redirection in the following cases
             Assert.IsTrue(ReferenceEquals(pServer, pServer.Redirect("/labkey/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH))); // Need full URL

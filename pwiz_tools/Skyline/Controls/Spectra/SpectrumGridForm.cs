@@ -25,6 +25,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
@@ -581,7 +582,7 @@ namespace pwiz.Skyline.Controls.Spectra
                     {
                         if (_files.Count == 0)
                         {
-                            CommonActionUtil.SafeBeginInvoke(_form, () => _form.statusPanel.Visible = false);
+                            ControlUtil.SafeBeginInvoke(_form, () => _form.statusPanel.Visible = false);
                             _isRunning = false;
                             return;
                         }
@@ -602,7 +603,7 @@ namespace pwiz.Skyline.Controls.Spectra
             private bool ReadSpectraFromFile(MsDataFileUri file)
             {
                 string message = string.Format(SpectraResources.SpectrumReader_ReadSpectraFromFile_Reading_spectra_from__0_, file.GetFileName());
-                CommonActionUtil.SafeBeginInvoke(_form, () => _form.UpdateProgress(message, 0, file));
+                ControlUtil.SafeBeginInvoke(_form, () => _form.UpdateProgress(message, 0, file));
 
                 string docDir = Path.GetDirectoryName(_form.SkylineWindow.DocumentFilePath) ?? Directory.GetCurrentDirectory();
                 var openMsDataFileParams = new OpenMsDataFileParams()
@@ -628,7 +629,7 @@ namespace pwiz.Skyline.Controls.Spectra
                         if (progress != lastProgress)
                         {
                             lastProgress = progress;
-                            CommonActionUtil.SafeBeginInvoke(_form, () => _form.UpdateProgress(message, progress, file));
+                            ControlUtil.SafeBeginInvoke(_form, () => _form.UpdateProgress(message, progress, file));
                         }
 
                         var spectrumMetadata = msDataFile.GetSpectrumMetadata(i);
@@ -638,7 +639,7 @@ namespace pwiz.Skyline.Controls.Spectra
                         }
                     }
 
-                    CommonActionUtil.SafeBeginInvoke(_form, () => _form.SetSpectra(file, spectra));
+                    ControlUtil.SafeBeginInvoke(_form, () => _form.SetSpectra(file, spectra));
                     return true;
                 }
             }

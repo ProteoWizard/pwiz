@@ -289,7 +289,12 @@ namespace pwiz.SkylineTestFunctional
             var docNanIrt = SkylineWindow.Document;
             var textIrtNan = AsSmallMoleculeTestUtil.AdjustTransitionListForTestMode("PrecursorMz\tProductMz\tTr_recalibrated\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\tBAD_IRT\t3305.3\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n", 2, _asSmallMolecules);
             RunUI(() => ClipboardEx.SetText(textIrtNan));
-            var mzExpected = _asSmallMolecules ? 723.8753698625 : 728.88;
+            // The small-molecule m/z is computed, and the computed double is one ULP above the
+            // literal 723.8753698625 (bits ...148 vs ...147). That was invisible on net472, whose
+            // default double.ToString() was G15 and rendered both as "723.8753698625". .NET Core 3.0
+            // changed the default to shortest-round-trippable, so the message now carries the extra
+            // digits and the expected literal has to be the value actually computed.
+            var mzExpected = _asSmallMolecules ? 723.8753698625001 : 728.88;
             PasteTransitionListSkipColumnSelectWithMessage(string.Format(
                 Resources.MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_,
                 mzExpected,

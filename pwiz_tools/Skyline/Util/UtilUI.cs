@@ -275,7 +275,7 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                Process.Start(link);
+                ProcessEx.OpenInShell(link);
             }
             catch (Exception)
             {
@@ -383,7 +383,7 @@ window.onload = submitForm;
             {
                 // CONSIDER: User could have a configuration that opens html documents
                 //           with a text editor. This would defeat the redirection and post.
-                Process.Start(filePath);
+                ProcessEx.OpenInShell(filePath);
             }
             catch(Exception)
             {

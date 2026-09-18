@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            Directory.CreateDirectory(TestContext.TestDir);
+            Directory.CreateDirectory(TestContext.TestRunDirectory);
 
             {
                 var fullScanDlg = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);

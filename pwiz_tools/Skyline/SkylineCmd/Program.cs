@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
 using System.Text;
 
 namespace pwiz.SkylineCmd
@@ -83,8 +84,11 @@ namespace pwiz.SkylineCmd
         {
             // SkylineCmd and Skyline must be in the same directory
             string dirPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
-            const string SKYLINE = @"Skyline.exe";
-            const string SKYLINE_DAILY = @"Skyline-daily.exe"; // Keep -daily;
+            // On .NET Framework the managed entry point is Skyline(.exe). On .NET (net8+)
+            // the .exe is a native apphost that Assembly.LoadFrom can't load, so load the
+            // managed assembly (Skyline-daily.dll) instead.
+            const string SKYLINE = @"Skyline.dll";
+            const string SKYLINE_DAILY = @"Skyline-daily.dll"; // Keep -daily;
             foreach (var exeName in new []{SKYLINE, SKYLINE_DAILY})
             {
                 string exePath = Path.Combine(dirPath, exeName);
@@ -92,11 +96,25 @@ namespace pwiz.SkylineCmd
                 {
                     continue;
                 }
-                // Assembly.Load, not LoadFrom: probing finds the .exe next to this one and puts
-                // Skyline in the default load context. LoadFrom is also refused for files marked
-                // as downloaded from the internet, which Windows applies to everything a user
-                // extracts from a .zip.
-                var assembly = Assembly.Load(new AssemblyName(Path.GetFileNameWithoutExtension(exeName)));
+                // .NET resolves assemblies through the RUNNING app's deps.json rather than by
+                // probing its directory, and Skyline is deliberately NOT a dependency of
+                // SkylineCmd - it is discovered at run time. Two things follow, and only fixing
+                // both makes SkylineCmd work on net8 at all:
+                //   1. Assembly.Load(AssemblyName) cannot find Skyline-daily.dll even though it
+                //      sits in this very directory, because the name is not in our deps.json.
+                //      LoadFromAssemblyPath takes the file directly, into the DEFAULT context so
+                //      that everything resolved afterwards shares one context (what net472 got
+                //      from probing, without the mark-of-the-web refusal that ruled out LoadFrom).
+                //   2. Skyline's OWN dependencies then fail the same way - pwiz.PortableUtil is
+                //      the first. AssemblyDependencyResolver reads Skyline-daily.deps.json, which
+                //      is the only thing that knows that graph, so hand resolution to it.
+                var resolver = new AssemblyDependencyResolver(exePath);
+                AssemblyLoadContext.Default.Resolving += (context, name) =>
+                {
+                    string dependencyPath = resolver.ResolveAssemblyToPath(name);
+                    return dependencyPath == null ? null : context.LoadFromAssemblyPath(dependencyPath);
+                };
+                var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(exePath);
                 var programClass = assembly.GetType(@"pwiz.Skyline.Program");
                 var mainFunction = programClass.GetMethod(@"Main");
                 return mainFunction;

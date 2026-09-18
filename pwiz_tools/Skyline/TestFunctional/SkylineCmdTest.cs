@@ -114,7 +114,17 @@ namespace pwiz.SkylineTestFunctional
             TestContext.EnsureTestResultsDir();
             var tempPath = TestContext.GetTestResultsPath();
             var destFileName = Path.Combine(tempPath, "SkylineCmd.exe");
-            File.Copy(FindSkylineCmdExe(), destFileName);
+            var skylineCmdExe = FindSkylineCmdExe();
+            File.Copy(skylineCmdExe, destFileName);
+            // On net8 SkylineCmd.exe is a native apphost that needs its managed companions beside it
+            // to bootstrap; copy them (but NOT Skyline*.dll, which the test expects to be missing) so
+            // the managed entry point runs and reports the missing Skyline.dll from tempPath.
+            foreach (var companion in new[] { "SkylineCmd.dll", "SkylineCmd.runtimeconfig.json", "SkylineCmd.deps.json" })
+            {
+                var companionSrc = Path.Combine(Path.GetDirectoryName(skylineCmdExe) ?? string.Empty, companion);
+                if (File.Exists(companionSrc))
+                    File.Copy(companionSrc, Path.Combine(tempPath, companion), true);
+            }
             var processStartInfo = GetProcessStartInfo(string.Empty);
             processStartInfo.FileName = destFileName;
             var processRunner = new ProcessRunner { OutputEncoding = Encoding.UTF8 };
@@ -129,10 +139,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 output = ioException.Message;
             }
-            // Make sure the error message says it tries loading "Skyline.exe" and "Skyline-daily.exe" from the
-            // same directory as SkylineCmd.exe
-            StringAssert.Contains(output, "Skyline.exe");
-            StringAssert.Contains(output, "Skyline-daily.exe"); // Keep -daily
+            // Make sure the error message says it tries loading the Skyline managed assembly from
+            // the same directory as SkylineCmd.exe. On net8 that is the .dll (the .exe is a native
+            // apphost that Assembly.LoadFrom can't load); on net472 it is the .exe.
+            StringAssert.Contains(output, "Skyline.dll");
+            StringAssert.Contains(output, "Skyline-daily.dll"); // Keep -daily
             StringAssert.Contains(output, tempPath);
         }
 

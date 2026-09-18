@@ -270,25 +270,31 @@ namespace pwiz.Skyline.Model
         /// </summary>
         private IEnumerable<PartialMassMatch> SearchPartialModMatches(AAModInfo info)
         {
-            Dictionary<IEnumerable<StaticMod>, bool> listsToSearch = new Dictionary<IEnumerable<StaticMod>, bool>();
+            // A List (not Dictionary) of (mod-list, structural) pairs: order matters (see
+            // the method summary), and duplicate keys are legal - on .NET Core an empty
+            // ToArray()/Array.Empty is a shared singleton, so two empty mod-lists are
+            // reference-equal and would collide in a reference-keyed Dictionary.
+            var listsToSearch = new List<KeyValuePair<IEnumerable<StaticMod>, bool>>();
+            void AddList(IEnumerable<StaticMod> mods, bool structural) =>
+                listsToSearch.Add(new KeyValuePair<IEnumerable<StaticMod>, bool>(mods, structural));
             if(!info.AppearsToBeSpecificMod)
-                listsToSearch.Add(_foundHeavyLabels, false);
-            listsToSearch.Add(new StaticMod[] { null }, true);
-            listsToSearch.Add(new StaticMod[] { null }, false);
+                AddList(_foundHeavyLabels, false);
+            AddList(new StaticMod[] { null }, true);
+            AddList(new StaticMod[] { null }, false);
             foreach (var labelType in Settings.PeptideSettings.Modifications.GetModificationTypes())
             {
-                listsToSearch.Add(Settings.PeptideSettings.Modifications.GetModifications(labelType).ToArray(), 
+                AddList(Settings.PeptideSettings.Modifications.GetModifications(labelType).ToArray(),
                     labelType.IsLight);
             }
-            listsToSearch.Add(DefSetStatic, true);
-            listsToSearch.Add(DefSetHeavy, false);
-            listsToSearch.Add(UniMod.DictIsotopeModNames.Values, false);
-            listsToSearch.Add(UniMod.DictHiddenIsotopeModNames.Values, false);
+            AddList(DefSetStatic, true);
+            AddList(DefSetHeavy, false);
+            AddList(UniMod.DictIsotopeModNames.Values, false);
+            AddList(UniMod.DictHiddenIsotopeModNames.Values, false);
             return EnumeratePartialModMatches(listsToSearch, info);
         }
 
-        private static IEnumerable<PartialMassMatch> 
-            EnumeratePartialModMatches(Dictionary<IEnumerable<StaticMod>, bool> dictModLists, 
+        private static IEnumerable<PartialMassMatch>
+            EnumeratePartialModMatches(List<KeyValuePair<IEnumerable<StaticMod>, bool>> dictModLists,
             AAModInfo info)
         {
             foreach (var dict in dictModLists)

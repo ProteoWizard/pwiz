@@ -278,7 +278,7 @@ namespace pwiz.SkylineTestFunctional
                                                                         peakScoringModelMProphetList, 
                                                                         peakScoringModelMProphetBase });
                 // Check document model has changed
-                Assert.AreNotEqual(peakScoringModelBaseNew, peakScoringModelMProphet);
+                Assert.AreNotEqual((object)peakScoringModelBaseNew, peakScoringModelMProphet);
                 // ReSharper disable PossibleNullReferenceException
                 Assert.IsTrue(peakScoringModelMProphet.UsesDecoys);
                 // ReSharper restore PossibleNullReferenceException

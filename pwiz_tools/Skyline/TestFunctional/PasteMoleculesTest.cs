@@ -109,6 +109,15 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(transitionDlg);
         }
 
+        // Mirrors how SmallMoleculeTransitionListReader formats the m/z values in its
+        // "m/z does not agree with calculated value" messages: pin to 7 significant figures
+        // so the expected text matches on both net472 and net8 (net8's float.ToString emits
+        // the shortest round-trip form, up to 9 digits, where net472 capped at ~7).
+        private static string Mz7(double mz)
+        {
+            return ((float)mz).ToString(@"G7", CultureInfo.CurrentCulture);
+        }
+
         private static string ToLocalText(string text)
         {
             if (Equals(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator, TextUtil.SEPARATOR_CSV.ToString()) &&
@@ -431,12 +440,12 @@ namespace pwiz.SkylineTestFunctional
                 Resources.Transition_Validate_Precursor_and_product_ion_polarity_do_not_agree_, fullColumnOrder);
             TestError(line1.Replace(caffeineFormula, "C77H12O4"), // mz and formula disagree
                 String.Format(Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_,
-                    (float)precursorMzAtZNeg2, 499.0295, 402.9966,
-                    docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance), fullColumnOrder);
+                    Mz7(precursorMzAtZNeg2), Mz7(499.0295), Mz7(402.9966),
+                    Mz7(docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance)), fullColumnOrder);
             TestError(line1.Replace(caffeineFragment, "C76H3"), // mz and formula disagree
                 String.Format(Resources.SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_,
-                    (float)productMzAtZNeg2, 456.5045, 396.9916,
-                    docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance), fullColumnOrder);
+                    Mz7(productMzAtZNeg2), Mz7(456.5045), Mz7(396.9916),
+                    Mz7(docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance)), fullColumnOrder);
             var badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
             TestError(line1 + line2start + "\t\t1\t" + badcharge, // Excessively large charge for product
                 String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__,
@@ -2134,11 +2143,11 @@ namespace pwiz.SkylineTestFunctional
                 3, 2, "Acetic Acid C2H4O2 1 [M-H] 59"), errDlg.ErrorList[0]);
             AssertEx.AreEqual(new TransitionImportErrorInfo(string.Format(
                     Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_,
-                    536.88, 537.879, 0.9990012, (float)SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance), 
+                    Mz7(536.88), Mz7(537.879), Mz7(0.9990012), Mz7(SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance)),
                 4, 3, "Acetic Acid C2H4O2 1 [6M-H6+Fe3+O] 536.88"), errDlg.ErrorList[1]);
             AssertEx.AreEqual(new TransitionImportErrorInfo(string.Format(
                     Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_,
-                    596.9, 597.9001, 1.000131, (float)SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance),
+                    Mz7(596.9), Mz7(597.9001), Mz7(1.000131), Mz7(SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance)),
                 4, 5, "Acetic Acid C2H4O2 1 [7M-H6+Fe3+O] 596.9"), errDlg.ErrorList[2]);
             OkDialog(errDlg, errDlg.OkDialog);
             OkDialog(transitionDlg, transitionDlg.CancelDialog);

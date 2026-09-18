@@ -668,7 +668,7 @@ namespace pwiz.PanoramaClient
                     contextMenuStrip.Show();
                     break;
                 case MouseButtons.Left:
-                    Process.Start(urlLink.Text);
+                    ProcessEx.OpenInShell(urlLink.Text);
                     break;
             }
         }

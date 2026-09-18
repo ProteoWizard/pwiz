@@ -163,6 +163,13 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public bool IsRunningInTestRunner
         {
+            // Same check on both frameworks. This was once #if'd to a hardcoded false on net8,
+            // on the belief that TestRunnerContext was TestRunner.exe-only - it is not:
+            // TestRunnerLib targets net472 AND net8.0-windows, defines a net8 TestRunnerContext
+            // for MSTest 3.x, and TestUtil references it. The stub silently made every
+            // IsRunningInTestRunner caller take its "not TestRunner" path on net8, which meant
+            // SkipWiff2TestInTestExplorer skipped FileTypeTest and Wiff2ResultsTest everywhere,
+            // including under TestRunner - so the wiff2 path had no coverage at all.
             get { return TestContext is TestRunnerContext; }
         }
 
@@ -444,6 +451,11 @@ namespace pwiz.SkylineTestUtil
             Program.UnitTest = true;
             Program.TestName = TestContext.TestName;
             Program.DoNotTestUnicodeHandling = TestContext.Properties["UnicodeDecoration"]==null;
+
+            // The loader trace ring is static and this process runs test after test, so anything
+            // left in it belongs to a previous test and would be presented as evidence for this
+            // one's failure.
+            Skyline.Model.BackgroundLoader.ClearLoaderTrace();
 
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
