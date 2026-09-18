@@ -78,8 +78,11 @@ function Format-TcValue([string] $text) {
 # Never throws and never retries: a status that fails to post is worth a warning in the log,
 # not a failed build. The token is a TeamCity credentialsJSON value, so it is never echoed.
 function Send-GitHubStatus([string] $state, [string] $description) {
-    if ([string]::IsNullOrEmpty($env:GITHUB_STATUS_TOKEN) -or [string]::IsNullOrEmpty($CommitSha)) {
-        Write-Host "  (no GitHub token or commit sha; not posting '$state' to '$StatusContext')"
+    $missing = @()
+    if ([string]::IsNullOrEmpty($env:GITHUB_STATUS_TOKEN)) { $missing += 'GITHUB_STATUS_TOKEN' }
+    if ([string]::IsNullOrEmpty($CommitSha)) { $missing += 'BUILD_VCS_NUMBER' }
+    if ($missing.Count -gt 0) {
+        Write-Host "  (not posting '$state' to '$StatusContext': $($missing -join ' and ') $(if ($missing.Count -gt 1) { 'are' } else { 'is' }) empty)"
         return
     }
     $body = @{ state = $state; context = $StatusContext; description = $description }

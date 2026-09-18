@@ -46,7 +46,7 @@ create(DslContext.projectId, BuildType({
             // publishes, character for character, replacing that check on a PR rather than
             // adding a second one. Note there is no "teamcity - " prefix on that one, unlike
             // every other config here - verified against the GitHub status API, not inferred.
-            param("env.GITHUB_STATUS_TOKEN", "credentialsJSON:ff89fd87-e72b-4868-b752-4f2beaabe7b2")
+            param("env.GITHUB_STATUS_TOKEN", "%GitHubAuthToken%")
             param("env.BUILD_VCS_NUMBER", "%build.vcs.number%")
             // guest=1 so the link from GitHub opens without a TeamCity login, matching what
             // the standalone inspection config has always linked to.
