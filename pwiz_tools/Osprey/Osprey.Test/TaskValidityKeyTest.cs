@@ -85,7 +85,7 @@ namespace pwiz.Osprey.Test
                 OspreyTask second = null;
                 foreach (var t in tasks)
                 {
-                    if (t.Name == HpcTaskName.SECOND_PASS_FDR)
+                    if (t.Name == SecondPassFdrTask.TASK_NAME)
                         second = t;
                 }
                 Assert.IsNotNull(second, @"SecondPassFDR must be in the canonical pipeline");
@@ -219,13 +219,13 @@ namespace pwiz.Osprey.Test
                 string key = task.ValidityKey(ctx);
                 StringAssert.Contains(key, pick, string.Format(
                     @"{0} must key on the peak-pick arm", task.Name));
-                bool expectPass2 = task.Name != HpcTaskName.PER_FILE_SCORING;
+                bool expectPass2 = task.Name != PerFileScoringTask.TASK_NAME;
                 Assert.AreEqual(expectPass2, key.Contains(pass2), string.Format(
                     @"{0} must {1} key on the 2nd-pass q-value mode",
                     task.Name, expectPass2 ? @"" : @"NOT "));
-                bool expectTrain = task.Name == HpcTaskName.FIRST_PASS_FDR ||
-                                   task.Name == HpcTaskName.PER_FILE_RESCORING ||
-                                   task.Name == HpcTaskName.SECOND_PASS_FDR;
+                bool expectTrain = task.Name == FirstPassFdrTask.TASK_NAME ||
+                                   task.Name == PerFileRescoreTask.TASK_NAME ||
+                                   task.Name == SecondPassFdrTask.TASK_NAME;
                 Assert.AreEqual(expectTrain, key.Contains(train), string.Format(
                     @"{0} must {1} key on the first-pass training selection",
                     task.Name, expectTrain ? @"" : @"NOT "));
@@ -275,7 +275,7 @@ namespace pwiz.Osprey.Test
                 // keying it here would re-run hours of scoring to reproduce a byte-identical file.
                 foreach (var task in tasks)
                 {
-                    bool expectLibfrag = task.Name != HpcTaskName.PER_FILE_SCORING;
+                    bool expectLibfrag = task.Name != PerFileScoringTask.TASK_NAME;
                     Assert.AreEqual(expectLibfrag, task.ValidityKey(ctx).Contains(libfrag),
                         string.Format(@"{0} must {1}key on the library-fragment release arm",
                             task.Name, expectLibfrag ? string.Empty : @"NOT "));

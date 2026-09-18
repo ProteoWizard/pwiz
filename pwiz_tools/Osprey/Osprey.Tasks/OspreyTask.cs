@@ -59,8 +59,8 @@ namespace pwiz.Osprey.Tasks
     {
         /// <summary>
         /// Short identifier used in pipeline log lines, the <c>--task</c> selector and the
-        /// validity sidecar. Always one of the <see cref="HpcTaskName"/> constants - the one
-        /// spelling shared with the CLI and the tests - never a literal of its own.
+        /// validity sidecar. Each task returns its own <c>TASK_NAME</c> constant, the one
+        /// spelling the CLI value list and the tests reference too.
         /// </summary>
         public abstract string Name { get; }
 

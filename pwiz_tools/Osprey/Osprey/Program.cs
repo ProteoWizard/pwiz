@@ -534,10 +534,17 @@ namespace pwiz.Osprey
             // flag rather than requiring both (the caller derives that from the result).
             // Without --model-diagnostics the task would run the pass-2 compute and write
             // nothing at all, which reads as a silent no-op.
-            if (HpcTaskName.TryParse(taskName, out task))
-                return null;
+            foreach (HpcTask candidate in Enum.GetValues(typeof(HpcTask)))
+            {
+                if (string.Equals(taskName, TaskCliName(candidate), StringComparison.OrdinalIgnoreCase))
+                {
+                    task = candidate;
+                    return null;
+                }
+            }
+            task = default;
             return string.Format("{0}: unknown task '{1}'. Valid tasks: {2}.",
-                OspreyCommandArgs.ARG_TASK.ArgumentText, taskName, string.Join(", ", HpcTaskName.ALL));
+                OspreyCommandArgs.ARG_TASK.ArgumentText, taskName, string.Join(", ", OspreyCommandArgs.ARG_TASK.Values));
         }
 
         /// <summary>
@@ -546,11 +553,23 @@ namespace pwiz.Osprey
         /// startup settings block. Not necessarily the spelling the operator typed:
         /// <see cref="ResolveTask"/> matches case-insensitively, and only the resolved
         /// enum value reaches this method, so <c>--task firstpassfdr</c> echoes as
-        /// <c>FirstPassFDR</c>.
+        /// <c>FirstPassFDR</c>. Each name is the owning class's <c>TASK_NAME</c>; not
+        /// <c>task.ToString()</c>, because the members keep C# casing (<c>FirstPassFdr</c>)
+        /// where the name keeps the acronym, and <c>PerFileRescore</c> is named
+        /// <c>PerFileRescoring</c>. Internal so Osprey.Test can round-trip it.
         /// </summary>
-        private static string TaskCliName(HpcTask task)
+        internal static string TaskCliName(HpcTask task)
         {
-            return HpcTaskName.Of(task);
+            switch (task)
+            {
+                case HpcTask.SpectraCache: return SpectraCacheTask.TASK_NAME;
+                case HpcTask.PerFileScoring: return PerFileScoringTask.TASK_NAME;
+                case HpcTask.FirstPassFdr: return FirstPassFdrTask.TASK_NAME;
+                case HpcTask.PerFileRescore: return PerFileRescoreTask.TASK_NAME;
+                case HpcTask.SecondPassFdr: return SecondPassFdrTask.TASK_NAME;
+                case HpcTask.ModelDiagnostics: return ModelDiagnosticsReport.TASK_NAME;
+                default: throw new ArgumentOutOfRangeException(nameof(task), task, null);
+            }
         }
 
         /// <summary>

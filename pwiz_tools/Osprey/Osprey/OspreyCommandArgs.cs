@@ -28,6 +28,8 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.Tasks;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey
 {
@@ -233,8 +235,13 @@ namespace pwiz.Osprey
         // --- Distributed / HPC ------------------------------------------------------------
         // --task is resolved + validated in Program.Main's pre-scan; the tokenizer here only
         // consumes its value (and rejects a missing one). Declared so it appears in help.
+        // The value list is the --help order, each name from the class that owns the task.
         public static readonly OspreyArgument ARG_TASK = new OspreyArgument(@"task",
-            HpcTaskName.ALL, (c, p) => true);
+            new[]
+            {
+                SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
+                PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, ModelDiagnosticsReport.TASK_NAME
+            }, (c, p) => true);
         // --input-scores is GONE. It named an input KIND - "you handed me parquets" - which is
         // how the Rust pipeline said "Stage 1-4 is already done"; the C# port says that with
         // --task plus the per-run validity sidecars, and two seams answering one question is

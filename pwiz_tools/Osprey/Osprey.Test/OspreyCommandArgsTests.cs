@@ -28,6 +28,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
@@ -192,7 +193,7 @@ namespace pwiz.Osprey.Test
             // but must accept both --task forms without throwing.
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DIAGNOSTICS).Diagnostics);
             // --task=Name is the one joined form Program.Main pre-scans, so it is spelled here.
-            Assert.IsNull(Parse(OspreyCommandArgs.ARG_TASK.ArgumentText + @"=" + HpcTaskName.SECOND_PASS_FDR, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib").SelectedTask);
+            Assert.IsNull(Parse(OspreyCommandArgs.ARG_TASK.ArgumentText + @"=" + SecondPassFdrTask.TASK_NAME, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib").SelectedTask);
 
             // Logging: --timestamp / --memstamp are value-less flags (default off);
             // --log-file takes a path.

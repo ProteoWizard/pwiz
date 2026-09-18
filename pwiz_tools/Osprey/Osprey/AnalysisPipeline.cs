@@ -209,9 +209,9 @@ namespace pwiz.Osprey
             // (one task -> two pipeline stages).
             string stageName = task.Name switch
             {
-                HpcTaskName.PER_FILE_SCORING => "stage1to4",
-                HpcTaskName.FIRST_PASS_FDR => "stage5",
-                HpcTaskName.PER_FILE_RESCORING => "stage6",
+                PerFileScoringTask.TASK_NAME => "stage1to4",
+                FirstPassFdrTask.TASK_NAME => "stage5",
+                PerFileRescoreTask.TASK_NAME => "stage6",
                 _                => null,
             };
             if (stageName != null)

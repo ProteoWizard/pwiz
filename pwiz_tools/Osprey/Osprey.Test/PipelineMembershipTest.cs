@@ -25,6 +25,7 @@ using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey.Test
 {
@@ -78,13 +79,13 @@ namespace pwiz.Osprey.Test
             {
                 (@"straight-through",  new OspreyConfig(),
                     new[] { true,  true,  true,  true  }),
-                (HpcTaskName.PER_FILE_SCORING, ForTask(HpcTask.PerFileScoring),
+                (PerFileScoringTask.TASK_NAME, ForTask(HpcTask.PerFileScoring),
                     new[] { true,  false, false, false }),
-                (HpcTaskName.FIRST_PASS_FDR, ForTask(HpcTask.FirstPassFdr),
+                (FirstPassFdrTask.TASK_NAME, ForTask(HpcTask.FirstPassFdr),
                     new[] { false, true,  false, false }),
-                (HpcTaskName.PER_FILE_RESCORING, ForTask(HpcTask.PerFileRescore),
+                (PerFileRescoreTask.TASK_NAME, ForTask(HpcTask.PerFileRescore),
                     new[] { false, false, true,  false }),
-                (HpcTaskName.SECOND_PASS_FDR, ForTask(HpcTask.SecondPassFdr),
+                (SecondPassFdrTask.TASK_NAME, ForTask(HpcTask.SecondPassFdr),
                     new[] { false, false, false, true  }),
                 // --task ModelDiagnostics is a RENDER over retained products, and it reaches
                 // AnalysisPipeline with all three membership flags FALSE - it sets none of
@@ -93,7 +94,7 @@ namespace pwiz.Osprey.Test
                 // artifact writes rather than membership. The row here used to read
                 // {true,true,false,false}, which was the shape of a config the CLI cannot
                 // build; ProgramTests.cs pins the real flags and now agrees with this.
-                (HpcTaskName.MODEL_DIAGNOSTICS, ForTask(HpcTask.ModelDiagnostics),
+                (ModelDiagnosticsReport.TASK_NAME, ForTask(HpcTask.ModelDiagnostics),
                     new[] { true,  true,  true,  true  }),
             };
 

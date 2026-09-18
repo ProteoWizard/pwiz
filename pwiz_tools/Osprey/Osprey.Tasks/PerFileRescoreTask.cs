@@ -143,10 +143,10 @@ namespace pwiz.Osprey.Tasks
         private readonly object _survivorLoadLock = new object();
 
         /// <summary>
-        /// This task's name, as a constant so another task can name the stamp it looks for
-        /// without constructing one of these or duplicating the literal (#4486).
+        /// This task's name, as a constant so the CLI selector, the validity stamp another
+        /// task looks for, and the tests all spell it from here rather than duplicating it (#4486).
         /// </summary>
-        public const string TASK_NAME = HpcTaskName.PER_FILE_RESCORING;
+        public const string TASK_NAME = @"PerFileRescoring";
 
         public override string Name => TASK_NAME;
 
