@@ -176,7 +176,7 @@ namespace pwiz.Skyline.Controls.Startup
 
                     try
                     {
-                        Process.Start(PdfFileLocation); // Opens Tutorial PDF in users default browser.
+                        ProcessEx.OpenInShell(PdfFileLocation); // Opens Tutorial PDF in users default browser.
                     }
                     catch (Exception e)
                     {

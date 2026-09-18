@@ -150,7 +150,7 @@ namespace SkylineNightlyShim
                     {
                         AttemptUpdate("SkylineNightly.exe", zipFile);
                         AttemptUpdate("SkylineNightly.pdb", zipFile);
-                        AttemptUpdate("DotNetZip.dll", zipFile);
+                        AttemptUpdate("ProDotNetZip.dll", zipFile);
                         AttemptUpdate("SkylineNightlyShim.exe", zipFile);
                         AttemptUpdate("Microsoft.Win32.TaskScheduler.dll", zipFile);
                     }

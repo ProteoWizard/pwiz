@@ -57,11 +57,10 @@ namespace pwiz.Osprey.Tasks
         internal const uint BASE_ID_MASK = 0x7FFFFFFFu;
 
         // Serializes input parsing across concurrent ProcessFile() calls (mzML or
-        // vendor raw; the name predates vendor reading). The
-        // producer inside MzmlReader.LoadAllSpectra is a sequential XmlReader over
-        // a FileStream, so 3 files parsing in parallel means 3 sequential disk
-        // scans fighting for the same head/cache. Gating the parse step funnels
-        // the disk-bound work into one stream at a time while leaving the
+        // vendor raw; the name predates vendor reading). Reading a spectrum file is
+        // disk-bound and sequential, so 3 files parsing in parallel means 3
+        // sequential scans fighting for the same head/cache. Gating the parse step
+        // funnels the disk-bound work into one stream at a time while leaving the
         // subsequent main-search phase free to run in parallel across files.
         internal static readonly SemaphoreSlim s_mzmlReadGate = new SemaphoreSlim(1, 1);
 
@@ -170,8 +169,8 @@ namespace pwiz.Osprey.Tasks
             // Miss/stale/absent: parse the input once (materialized only transiently here),
             // optionally serialized across files, write the cache, then index it and drop the
             // parsed list. The "Processing file N/M: <path>" banner already named the file.
-            // SpectrumFileReader picks the mzML or vendor-raw reader by extension; both
-            // return the same MzmlResult, so nothing below here knows the source format.
+            // SpectrumFileReader reads every format through ProteoWizard and returns the
+            // same SpectrumFileResult, so nothing below here knows the source format.
             // Deleting the sources once the caches exist is supported, so reaching a re-parse
             // with no source is a real state, not a bad argument. Say which of the two is
             // wrong - the cache, and why - rather than failing inside the reader on a path
@@ -186,7 +185,7 @@ namespace pwiz.Osprey.Tasks
                     @"Spectra cache '{0}' is not usable and cannot be rebuilt because the source '{1}' is missing. Restore the source and re-run.",
                     cachePath, inputFile));
             }
-            MzmlResult mzmlResult;
+            SpectrumFileResult mzmlResult;
             if (serializeMzmlRead)
                 s_mzmlReadGate.Wait();
             try
@@ -637,9 +636,11 @@ namespace pwiz.Osprey.Tasks
         /// computes anything: at 446 CHS runs it reached 68.0 GB managed / 70.5 GB private and
         /// was killed at run 381 of 446 with 0.34 GB free, still inside the
         /// <c>--input-scores</c> load. It is the <c>O(runs x entries)</c> shape the architecture
-        /// forbids a join to hold, and every consumer of it in Stage 7 - the fragment release,
-        /// the pass-2 competition, protein FDR, the experiment-q re-clamp and all three blib
-        /// gates - is a fold to <c>O(distinct)</c> that never needed the whole pool.</para>
+        /// forbids a join to hold, and every consumer of it in Stage 7 - the pass-2 competition,
+        /// protein FDR, the experiment-q re-clamp and all three blib gates - is a fold to
+        /// <c>O(distinct)</c> that never needed the whole pool. The fragment release was on that
+        /// list until #4650; it now reads its set from the analysis-wide summary and is not a
+        /// consumer of the pool at all.</para>
         /// </summary>
         internal static bool CanStreamStage7Join(OspreyConfig config)
         {
@@ -703,9 +704,17 @@ namespace pwiz.Osprey.Tasks
             // folds the written answers; every other mode still computes the per-file half HERE,
             // over the whole pool - RestorePass1Scalars, the resident second pass and the
             // projection sink's per-file protein-q map all index it. Streaming underneath them
-            // does not make them per-run, it just takes their input away: the fragment release
-            // streams first and drops the pool, and ComputeAndPersist then throws
-            // "Value was read after StreamFiles dropped the survivor pool" hours into Stage 7.
+            // does not make them per-run, it just takes their input away: something streams
+            // first and drops the pool, and ComputeAndPersist then throws "Value was read after
+            // StreamFiles dropped the survivor pool" hours into Stage 7.
+            //
+            // The fragment release used to be the concrete first-streamer quoted here. It is
+            // not any more (#4650): it reads its retained set from the analysis-wide summary and
+            // touches no pool. The term stands on its other grounds, which are the real ones -
+            // RestorePass1Scalars, the resident second pass, the projection sink's per-file map.
+            // Named because the illustration going away is exactly how a term gets relaxed on
+            // the strength of a fixed ordering, and then fails hours into Stage 7 for the
+            // reasons that never moved.
             //
             // Not a guess about which modes are safe - the same predicate ComputeAndPersist
             // itself branches on for `frozenCompetition`. When transfer's per-run half moves to
@@ -826,16 +835,42 @@ namespace pwiz.Osprey.Tasks
         /// Creating empty blib." and exiting 0. An empty <c>.blib</c> from a successful-looking
         /// run is the worst outcome this pipeline can produce, and the sidecar's own reader
         /// documents its absence as FATAL.</para>
+        ///
+        /// <para>The Stage 7 library-fragment release reads it through here too (issue #4650),
+        /// for the same reason and with the same refusal to degrade: the fallback it replaced
+        /// was a fold over every run's final pool, the O(files) pre-pass this artifact exists to
+        /// delete. That caller checks <c>LibraryFragmentRelease.SummaryCanExist</c> first, so by
+        /// the time it asks, a config that never writes a summary has already been excluded.</para>
+        ///
+        /// <para>An EMPTY summary is NOT a failure, and was briefly made one here in error.
+        /// <see cref="RetainedBaseIdSidecar.Read"/> returns an empty set rather than null for a
+        /// zero-count file, and zero is what a genuine analysis with no surviving precursors
+        /// writes - <c>GlobalBaseIds</c> over nothing. Osprey handles that state deliberately
+        /// and gracefully, hundreds of lines further on, with "No entries pass FDR threshold.
+        /// Creating empty blib." Rejecting it here converted that into an abort, and offered a
+        /// remedy that would regenerate the identical file. The catastrophic reading of an empty
+        /// set - release every spectrum in the library - is real, but it belongs to the one
+        /// CALLER for whom empty means "release everything" rather than "retain nothing", and a
+        /// guard in a shared reader cannot tell those apart.</para>
+        ///
+        /// <para>The remedy - carried on <see cref="ReadRetainedBaseIds"/>'s error, so every
+        /// caller that logs it says the same thing - names a STAMP deletion rather than "re-run
+        /// FirstPassFDR", because that task declares this file in neither <c>Outputs</c> nor its
+        /// <c>ValidityKey</c>. That is deliberate, with its own rationale at
+        /// <c>RetainedBaseIdSidecar.FormatVersion</c>, and its consequence is stated in
+        /// <c>FirstPassFdrTask</c>: re-running the task over a complete analysis "reports its
+        /// outputs valid and writes nothing". An operator told to re-run it would loop
+        /// forever.</para>
         /// </summary>
         internal static HashSet<uint> ReadRetainedBaseIdsOrFail(OspreyConfig config)
         {
             var retained = ReadRetainedBaseIds(config, out string error);
             if (retained != null)
                 return retained;
+            // ONE remedy, and it comes from the inner error.
             throw new InvalidDataException(string.Format(
-                @"The second-pass join is streaming, which requires the analysis-wide retained " +
-                @"base_id summary, and it could not be read: {0} Continuing would fold every run " +
-                @"as empty and write an empty library.",
+                @"The analysis-wide retained base_id summary is required here and could not be " +
+                @"read: {0} Continuing would fold every run as empty and write an empty library.",
                 error ?? @"(no reason reported)"));
         }
 
@@ -870,8 +905,11 @@ namespace pwiz.Osprey.Tasks
                     @"The analysis-wide retained base_id summary is missing or unreadable at {0}. " +
                     @"It is written by FirstPassFDR when Stage 6 planning ends, and every run's " +
                     @"compaction reads it; without it a run cannot be compacted without " +
-                    @"re-reading every other run's reconciliation.json. Re-run the FirstPassFDR " +
-                    @"phase for this analysis to produce it.", path);
+                    @"re-reading every other run's reconciliation.json. To produce it, delete " +
+                    @"this analysis's '<output>.FirstPassFDR.osprey.task' stamp and run the " +
+                    @"first pass again - FirstPassFDR declares this file in neither Outputs nor " +
+                    @"its ValidityKey, so re-running the task over a complete analysis reports " +
+                    @"its outputs valid and writes nothing.", path);
                 return null;
             }
             return retained;

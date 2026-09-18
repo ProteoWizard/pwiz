@@ -22,6 +22,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.Results;
+using ReplicateValue = pwiz.Skyline.Model.Results.ReplicateValue;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Menus

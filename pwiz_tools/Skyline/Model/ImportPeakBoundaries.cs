@@ -234,17 +234,17 @@ namespace pwiz.Skyline.Model
                                 // Replicate object column caption ("Replicate", whose exported value is also the name).
                                 new[] {MProphetResultsHandler.REPLICATE_NAME_COLUMN, ColumnCaptions.ReplicateName, ColumnCaptions.Replicate},
                             };
-                            for (var field = 0; field < currentFieldNames.Length; field++)
+                            for (var fieldIdx = 0; fieldIdx < currentFieldNames.Length; fieldIdx++)
                             {
-                                if (field == allFieldNames.Count)
+                                if (fieldIdx == allFieldNames.Count)
                                 {
-                                    allFieldNames.Add(currentFieldNames[field]);
+                                    allFieldNames.Add(currentFieldNames[fieldIdx]);
                                 }
                                 else
                                 {
-                                    var seen = allFieldNames[field];
-                                    var newNames = currentFieldNames[field].Where(header => !seen.Contains(header));
-                                    allFieldNames[field] = allFieldNames[field].Concat(newNames).ToArray();
+                                    var seen = allFieldNames[fieldIdx];
+                                    var newNames = currentFieldNames[fieldIdx].Where(header => !seen.Contains(header));
+                                    allFieldNames[fieldIdx] = allFieldNames[fieldIdx].Concat(newNames).ToArray();
                                 }
                             }
                         }

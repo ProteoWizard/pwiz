@@ -473,9 +473,11 @@ namespace pwiz.Skyline.Model.Results
         /// <see cref="Equals(TransitionGroupChromInfo)"/> so the two stay in step; the list below
         /// is exactly what that method compares.
         ///
-        /// <para>FileIndex is deliberately NOT reported: <see cref="ChromInfo.Equals(ChromInfo)"/>
-        /// treats all FileIds as equal, so a differing index is not what made these unequal, and
-        /// naming it sends the reader after the wrong thing.</para>
+        /// <para>FileIndex is deliberately NOT reported. Equals here is content equality, as it is
+        /// throughout Skyline - a document saved and read back must come out Equals, which no
+        /// reference comparison could satisfy - so <see cref="ChromInfo.Equals(ChromInfo)"/>
+        /// compares all FileIds as equal. A differing index therefore is not what made these
+        /// unequal, and naming it sends the reader after the wrong thing.</para>
         /// </summary>
         public string ExplainDiff(object other)
         {
@@ -511,7 +513,7 @@ namespace pwiz.Skyline.Model.Results
             var differences = members
                 .Where(m => !Equals(m.Mine, m.Theirs))
                 .Select(m => string.Format(@"{0} {1} vs {2}",
-                    m.Name, m.Mine ?? @"(null)", m.Theirs ?? @"(null)"))
+                    m.Name, m.Mine ?? (object)@"(null)", m.Theirs ?? (object)@"(null)"))
                 .ToList();
             return differences.Count == 0 ? null : TextUtil.LineSeparate(differences);
         }
@@ -1610,11 +1612,12 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            // TODO: This is not very strong equality, since all FileIds are equal
-            //       It would be better to check reference equality, but this would
-            //       break document equality tests across serialization/deserialization
-            //       At the momement, we rely on it being very unlikely that two
-            //       peaks from different files are exactly equal.
+            // All ChromFileInfoIds compare equal, so this contributes nothing on its own and the
+            // derived class's members do the real work. That is deliberate, not a shortcoming:
+            // Equals is content equality throughout Skyline, because a document saved to disk and
+            // read back must come out Equals to the original, and no reference comparison could
+            // satisfy that. We rely on it being very unlikely that two peaks from different files
+            // are exactly equal in every other member.
             return Equals(other.FileId, FileId);
         }
 

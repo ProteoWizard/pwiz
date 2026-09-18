@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Model.AuditLog
         private static byte[] CalculateRootHash(IEnumerable<Hash> hashes)
         {
             // Calculate root hash
-            using (var sha1 = new SHA1CryptoServiceProvider())
+            using (var sha1 = SHA1.Create())
             {
                 var blockHash = new BlockHash(sha1);
                 hashes.ForEach(h => blockHash.ProcessBytes(Encoding.UTF8.GetBytes(h.HashString)));
@@ -1532,7 +1532,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (User == null || UndoRedo == null || Summary == null || _allInfoNoUndoRedo == null)
                 return null;
 
-            using (var sha1 = new SHA1CryptoServiceProvider())
+            using (var sha1 = SHA1.Create())
             {
                 var enc = Encoding.UTF8;
                 var encodedBytes = new List<byte[]>(7+_allInfoNoUndoRedo.Count());
@@ -1567,7 +1567,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             var bytes = BitConverter.GetBytes(TimeStampUTC.ToFileTime() / TimeSpan.TicksPerSecond); // We only serialize to hour:min:sec precision, lose the ticks so we can roundtrip
             if (!BitConverter.IsLittleEndian)
-                return bytes.Reverse().ToArray(); // For crossplatform stability
+                return Enumerable.Reverse(bytes).ToArray(); // For crossplatform stability
             return bytes;
         }
     }

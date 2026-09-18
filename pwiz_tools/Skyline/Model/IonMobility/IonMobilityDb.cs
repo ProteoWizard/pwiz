@@ -66,7 +66,6 @@ namespace pwiz.Skyline.Model.IonMobility
         public const string EXT = ".imsdb";
 
         private readonly string _path;
-        private readonly ISessionFactory _sessionFactory;
         private readonly ReaderWriterLock _databaseLock;
 
         private DateTime _modifiedTime;
@@ -75,10 +74,9 @@ namespace pwiz.Skyline.Model.IonMobility
         // LibKeyMap is a specialized dictionary class that can match modifications written at varying precisions
         private LibKeyMap<List<IonMobilityAndCCS>> _dictLibrary;
 
-        private IonMobilityDb(string path, ISessionFactory sessionFactory)
+        private IonMobilityDb(string path)
         {
             _path = path;
-            _sessionFactory = sessionFactory;
             _databaseLock = new ReaderWriterLock();
             LastChange = IonMobilityLibraryChange.NONE;
         }
@@ -104,7 +102,28 @@ namespace pwiz.Skyline.Model.IonMobility
 
         private ISession OpenWriteSession()
         {
-            return new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, true);
+            // Each session owns the factory it was opened from, so nothing retains one. NHibernate
+            // roots every SessionFactory in the static SessionFactoryObjectFactory.Instances
+            // dictionary until Dispose() removes it, so a retained factory never becomes
+            // collectible - which is what leaked once the NHibernate upgrade stopped these two
+            // disposing after Load. (IrtDb closes the same hole differently, passing a
+            // caller-scoped factory into OpenWriteSession; that shape cannot leak here at all.)
+            //
+            // Ownership does not transfer until the constructor RETURNS, so the window between
+            // has to be guarded: OpenSession() throws if SQLite cannot open the file, and
+            // AbstractSessionWithLock's constructor throws by design when this thread already
+            // holds a read lock. Without the catch the factory is registered, owned by nobody,
+            // and the leak comes back on exactly the error paths no test looks at.
+            var sessionFactory = GetSessionFactory(_path);
+            try
+            {
+                return new SessionWithLock(sessionFactory.OpenSession(), _databaseLock, true, sessionFactory);
+            }
+            catch
+            {
+                sessionFactory.Dispose();
+                throw;
+            }
         }
 
         public IList<IonMobilityAndCCS> GetIonMobilityInfo(LibKey key)
@@ -118,7 +137,8 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public IEnumerable<DbPrecursorAndIonMobility> GetIonMobilities()
         {
-            using (var session = new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, false))
+            using (var sessionFactory = GetSessionFactory(_path))
+            using (var session = new SessionWithLock(sessionFactory.OpenSession(), _databaseLock, false))
             {
                 return session.CreateCriteria(typeof (DbPrecursorAndIonMobility)).List<DbPrecursorAndIonMobility>();
             }
@@ -374,7 +394,8 @@ namespace pwiz.Skyline.Model.IonMobility
 
             var dictLibrary = new Dictionary<LibKey, List<IonMobilityAndCCS>>();
 
-            using (var session = new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, false))
+            using (var sessionFactory = GetSessionFactory(_path))
+            using (var session = new SessionWithLock(sessionFactory.OpenSession(), _databaseLock, false))
             {
                 var ionMobilities = session.CreateCriteria(typeof(DbPrecursorAndIonMobility)).List<DbPrecursorAndIonMobility>();
 
@@ -512,13 +533,13 @@ namespace pwiz.Skyline.Model.IonMobility
                 {
                     //Check for a valid SQLite file and that it has our schema
                     //Allow only one thread at a time to read from the same path
-                    using (var sessionFactory = GetSessionFactory(path))
-                    {
-                        lock (sessionFactory)
-                        {
-                            return new IonMobilityDb(path, sessionFactory).Load(loadMonitor, status);
-                        }
-                    }
+                    // NOTE: do NOT wrap sessionFactory in `using` here - ownership
+                    // transfers to the IonMobilityDb instance (its own Dispose releases
+                    // it). The `using` was benign on net472 NHibernate but net8's
+                    // NHibernate 5.5 correctly throws ObjectDisposedException when a
+                    // caller later calls OpenSession on the disposed factory (see
+                    // UpdateIonMobilities → OpenWriteSession chain).
+                    return new IonMobilityDb(path).Load(loadMonitor, status);
                 }
                 catch (UnauthorizedAccessException x)
                 {
@@ -554,7 +575,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public void Dispose()
         {
-            _sessionFactory?.Dispose();
+            // Nothing retained to release - each session disposes the factory it owns.
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -42,7 +42,7 @@ using pwiz.Osprey.Tasks;
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Tests for Osprey.IO types: BlibWriter, SpectraCache, MzmlReader, and ParquetScoreCache.
+    /// Tests for Osprey.IO types: BlibWriter, SpectraCache, SpectrumFileReader, and ParquetScoreCache.
     /// Ported from osprey-io Rust tests.
     /// </summary>
     [TestClass]
@@ -1228,6 +1228,122 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestLibraryCacheRetainMatchesRelease()
+        {
+            // RetainFragmentsFor's contract is EQUIVALENCE, not leanness: loading with a retain
+            // set must leave the library in exactly the state that loading everything and then
+            // calling LibraryFragmentRelease.ReleaseFragments with the same set would leave. A
+            // direct swap, differing only in what was allocated on the way.
+            //
+            // The state is what this pins, and it is not a detail. A skipped entry that kept
+            // Array.Empty would be a READABLE empty spectrum, which every scorer's
+            // `Fragments == null || Fragments.Count == 0` guard absorbs as "this entry has no
+            // spectrum" - scoring a degenerate zero where the released state throws. Skipping
+            // the allocation must not also skip the tripwire that says the skip was wrong, so
+            // the assertion below is on IsSpectrumReleased and on the throw, never on "is it
+            // empty". That is the exact difference this test exists for: before issue #4650's
+            // review, the skip produced the empty state and no caller assigned the option, so
+            // nothing would have caught it.
+            //
+            // Ids 10 and 11 are targets, each with its paired decoy sharing the base_id. The
+            // retain set names 10 only, so the pair rides along on the base_id and the 11 pair
+            // is dropped - a set that both retains and releases, since one that did neither
+            // would pass whatever the code did.
+            const uint DECOY_BIT = 0x80000000;
+            var entries = new List<LibraryEntry>
+            {
+                MakeTestEntry(10),
+                MakeTestEntry(10 | DECOY_BIT),
+                MakeTestEntry(11),
+                MakeTestEntry(11 | DECOY_BIT)
+            };
+            var retained = new HashSet<uint> { 10u };
+
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                "osprey_test_retain_" + Guid.NewGuid().ToString("N") + ".libcache");
+
+            try
+            {
+                LibraryCache.SaveCache(tempPath, entries, "retain-hash");
+
+                // Route A: load everything, then release. The shape this is a swap FOR.
+                var released = LibraryCache.LoadCache(tempPath, "retain-hash", false, null,
+                    out LibraryCache.LibraryCacheStatus releasedStatus);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, releasedStatus);
+                int nReleased = LibraryFragmentRelease.ReleaseFragments(released, retained);
+
+                // Route B: load only what the set names.
+                var skipped = LibraryCache.LoadCache(tempPath, "retain-hash", false, null,
+                    out LibraryCache.LibraryCacheStatus skippedStatus, retained);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, skippedStatus);
+
+                // The set has to do both jobs, or the comparison below proves nothing.
+                Assert.AreEqual(2, nReleased,
+                    @"the retain set must release the 11 pair and keep the 10 pair");
+
+                Assert.AreEqual(released.Count, skipped.Count);
+                for (int i = 0; i < released.Count; i++)
+                {
+                    var a = released[i];
+                    var b = skipped[i];
+                    string what = string.Format(CultureInfo.InvariantCulture, @"entry {0} (id {1})", i, a.Id);
+
+                    // Identity is untouched on BOTH sides, including on a released entry:
+                    // protein parsimony walks the whole library after the spectra are gone.
+                    Assert.AreEqual(a.Id, b.Id, what);
+                    Assert.AreEqual(a.Sequence, b.Sequence, what);
+                    Assert.AreEqual(a.ModifiedSequence, b.ModifiedSequence, what);
+                    Assert.AreEqual(a.Charge, b.Charge, what);
+                    Assert.AreEqual(a.PrecursorMz, b.PrecursorMz, 1e-10, what);
+                    Assert.AreEqual(a.RetentionTime, b.RetentionTime, 1e-10, what);
+                    Assert.AreEqual(a.RtCalibrated, b.RtCalibrated, what);
+                    Assert.AreEqual(a.IsDecoy, b.IsDecoy, what);
+                    Assert.AreEqual(a.Modifications.Count, b.Modifications.Count, what);
+                    CollectionAssert.AreEqual(a.ProteinIds.ToArray(), b.ProteinIds.ToArray(), what);
+                    CollectionAssert.AreEqual(a.GeneNames.ToArray(), b.GeneNames.ToArray(), what);
+
+                    // The state itself. Asked through IsSpectrumReleased because reading
+                    // Fragments to find out is what throws - which is the point of the state.
+                    Assert.AreEqual(a.IsSpectrumReleased, b.IsSpectrumReleased, what);
+                    bool expectReleased = !retained.Contains(a.Id & ScoringTaskShared.BASE_ID_MASK);
+                    Assert.AreEqual(expectReleased, b.IsSpectrumReleased, what);
+
+                    if (expectReleased)
+                    {
+                        // The tripwire, on the skipped side specifically. Equality above would
+                        // also hold if BOTH sides had quietly become readable-empty, so the
+                        // throw is asserted rather than inferred.
+                        Assert.ThrowsException<InvalidOperationException>(() =>
+                        {
+                            int unused = b.Fragments.Count;
+                        }, what + @": a skipped spectrum must throw on read, not read as empty");
+                        continue;
+                    }
+
+                    // A retained entry carries the identical peaks, read rather than skipped.
+                    Assert.AreEqual(a.Fragments.Count, b.Fragments.Count, what);
+                    for (int f = 0; f < a.Fragments.Count; f++)
+                    {
+                        var fa = a.Fragments[f];
+                        var fb = b.Fragments[f];
+                        Assert.AreEqual(fa.Mz, fb.Mz, 1e-10, what);
+                        Assert.AreEqual(fa.RelativeIntensity, fb.RelativeIntensity, what);
+                        Assert.AreEqual(fa.Annotation.IonType, fb.Annotation.IonType, what);
+                        Assert.AreEqual(fa.Annotation.Ordinal, fb.Annotation.Ordinal, what);
+                        Assert.AreEqual(fa.Annotation.Charge, fb.Annotation.Charge, what);
+                        Assert.AreEqual(fa.Annotation.NeutralLoss, fb.Annotation.NeutralLoss, what);
+                        Assert.AreEqual(fa.Annotation.CustomLossMass, fb.Annotation.CustomLossMass, 1e-10, what);
+                    }
+                }
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
+
+        [TestMethod]
         public void TestLibraryCacheOmitFragments()
         {
             // A FirstPassFDR / StopAfterStage5 worker loads the library lean: the
@@ -1732,18 +1848,15 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// A scan start time must survive the mzML round trip bit-exactly.
         /// 0.86653405 is a real Thermo value (spectrum index 5679 of a TDP-43
-        /// PlasmaEV acquisition) that came out of <see cref="MzmlReader"/> as
-        /// 0.8665340500000001 on the net472 build while the net8.0 build of the
-        /// same code returned it exactly - a 1-ULP difference that made a
-        /// raw-sourced .spectra.bin disagree with an mzML-sourced one
-        /// (issue #4496).
-        ///
-        /// Root cause: .NET Framework's string-to-double conversion is not
-        /// correctly rounded for some decimals, and XmlConvert.ToDouble inherits
-        /// it. "0.86653405" parses to 0x3FEBBAA59DB3DA8E on .NET Framework and
-        /// 0x3FEBBAA59DB3DA8D (correctly rounded, and what C++ strtod gives) on
-        /// .NET Core 3.0+. The net472 reader now parses through the CRT's strtod
-        /// so both builds agree with each other and with ProteoWizard.
+        /// PlasmaEV acquisition) that came out of Osprey's hand-written mzML
+        /// reader as 0.8665340500000001 on the net472 build while the net8.0
+        /// build of the same code returned it exactly - a 1-ULP difference that
+        /// made a raw-sourced .spectra.bin disagree with an mzML-sourced one
+        /// (issue #4496). That reader is gone (issue #4497); the case survives
+        /// because ProteoWizard now has to clear the same bar, and because
+        /// <c>SpectrumFileReader.GetStartTime</c> deliberately does NOT route a
+        /// minute-valued scan start time through TimeInSeconds()/60, which is a
+        /// multiply-then-divide that perturbs most values by an ULP (PR #4501).
         ///
         /// The reference values below are COMPILED LITERALS on purpose: Roslyn
         /// rounds them correctly at compile time, so they are a parser-independent
@@ -1753,7 +1866,7 @@ namespace pwiz.Osprey.Test
         /// assertion proves nothing.
         /// </summary>
         [TestMethod]
-        public void TestMzmlReaderRetentionTimePrecision()
+        public void TestSpectrumFileReaderRetentionTimePrecision()
         {
             // Text as it appears in the mzML, paired with the correctly rounded
             // double. The text must be exactly what a literal formats to, so the
@@ -1788,7 +1901,7 @@ namespace pwiz.Osprey.Test
                 try
                 {
                     File.WriteAllText(path, mzml);
-                    var result = MzmlReader.LoadAllSpectra(path);
+                    var result = SpectrumFileReader.LoadAllSpectra(path);
                     Assert.AreEqual(1, result.Ms2Spectra.Count);
                     Assert.AreEqual(expected, result.Ms2Spectra[0].RetentionTime, 0.0,
                         @"retention time not preserved bit-exactly for " + text);
@@ -1805,13 +1918,12 @@ namespace pwiz.Osprey.Test
         #region SpectrumFileReader Tests
 
         /// <summary>
-        /// The by-extension routing that decides whether an input is parsed by the
-        /// hand-written mzML reader or handed to ProteoWizard. Consolidated: one
-        /// wrong answer here sends a whole run to the wrong parser, and the
-        /// gzip and case variants are exactly where that would happen quietly.
-        /// The vendor branch itself needs a real instrument file and the pwiz
-        /// native dependencies, so it is covered by the raw-vs-mzML
-        /// .spectra.bin comparison rather than here (issue #4496).
+        /// The by-extension format predicates. ProteoWizard reads every format
+        /// now, so these no longer pick a parser - but <see cref="SpectrumFileReader.IsVendorFormat"/>
+        /// still decides whether vendor centroiding is REQUESTED, and asking for
+        /// it on a non-vendor input lands in a VendorOnlyPeakDetector that throws.
+        /// Consolidated: the gzip and case variants are exactly where a wrong
+        /// answer would happen quietly.
         /// </summary>
         [TestMethod]
         public void TestSpectrumFileReaderFormatRouting()
@@ -1841,13 +1953,17 @@ namespace pwiz.Osprey.Test
 
         #endregion
 
-        #region MzmlReader Tests
+        #region mzML reading
 
         /// <summary>
-        /// Verifies that isolation window CVs are parsed correctly from a minimal mzML snippet.
+        /// Verifies that isolation window CVs are parsed correctly from a minimal mzML
+        /// snippet. Reads through <see cref="SpectrumFileReader"/>, i.e. ProteoWizard:
+        /// the assertions are unchanged from when Osprey parsed this file itself, so
+        /// they pin that the reader swap of issue #4497 preserved the offsets-not-widths
+        /// reading of MS:1000828 / MS:1000829 and the precursor-m/z choice.
         /// </summary>
         [TestMethod]
-        public void TestMzmlIsolationWindowParsing()
+        public void TestSpectrumFileReaderIsolationWindowParsing()
         {
             string mzml = BuildMinimalMzml(
                 msLevel: 2,
@@ -1863,7 +1979,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 File.WriteAllText(path, mzml);
-                var result = MzmlReader.LoadAllSpectra(path);
+                var result = SpectrumFileReader.LoadAllSpectra(path);
 
                 Assert.AreEqual(1, result.Ms2Spectra.Count);
                 Assert.AreEqual(0, result.Ms1Spectra.Count);
@@ -1890,7 +2006,7 @@ namespace pwiz.Osprey.Test
         /// Verifies that MS1 and MS2 spectra are separated correctly.
         /// </summary>
         [TestMethod]
-        public void TestMzmlMs1Ms2Separation()
+        public void TestSpectrumFileReaderMs1Ms2Separation()
         {
             // Build mzML with one MS1 and one MS2
             string ms1Block = BuildSpectrumElement(
@@ -1923,7 +2039,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 File.WriteAllText(path, mzml);
-                var result = MzmlReader.LoadAllSpectra(path);
+                var result = SpectrumFileReader.LoadAllSpectra(path);
 
                 Assert.AreEqual(1, result.Ms1Spectra.Count);
                 Assert.AreEqual(1, result.Ms2Spectra.Count);
@@ -1940,18 +2056,25 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Verifies that retention time in seconds (MS:1000894) is converted to minutes.
+        /// Verifies that a scan start time recorded in seconds is converted to minutes.
+        ///
+        /// The term is MS:1000016 (scan start time) with UO:0000010 seconds, which is what
+        /// a seconds-valued acquisition actually writes. The fixture used to say MS:1000894
+        /// (retention time) instead - a different term that Osprey's hand-written parser
+        /// also accepted. ProteoWizard does not read it for a scan start time and neither
+        /// does Skyline's MsDataFileImpl, so keeping it would have pinned a leniency of the
+        /// parser deleted in issue #4497 rather than the conversion under test.
         /// </summary>
         [TestMethod]
-        public void TestMzmlRetentionTimeSeconds()
+        public void TestSpectrumFileReaderRetentionTimeSeconds()
         {
-            // Build mzML with RT in seconds using MS:1000894
+            // Build mzML with the scan start time in seconds (330 s = 5.5 min).
             string spectrumBlock = @"
       <spectrum index=""0"" defaultArrayLength=""1"" id=""scan=1"">
         <cvParam cvRef=""MS"" accession=""MS:1000511"" value=""2"" />
         <scanList count=""1"">
           <scan>
-            <cvParam cvRef=""MS"" accession=""MS:1000894"" value=""330.0"" unitName=""second"" />
+            <cvParam cvRef=""MS"" accession=""MS:1000016"" value=""330.0"" unitCvRef=""UO"" unitAccession=""UO:0000010"" unitName=""second"" />
           </scan>
         </scanList>
         <precursorList count=""1"">
@@ -1989,7 +2112,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 File.WriteAllText(path, mzml);
-                var result = MzmlReader.LoadAllSpectra(path);
+                var result = SpectrumFileReader.LoadAllSpectra(path);
 
                 Assert.AreEqual(1, result.Ms2Spectra.Count);
                 // 330 seconds = 5.5 minutes
@@ -1999,6 +2122,138 @@ namespace pwiz.Osprey.Test
             {
                 TryDeleteFile(path);
             }
+        }
+
+        #endregion
+
+        #region Raw vs mzML parity
+
+        /// <summary>
+        /// The same acquisition read from a vendor .raw and from the mzML msconvert wrote
+        /// from it must produce the same Osprey spectra. This is the axis the reader swap
+        /// of issue #4497 is most exposed on, and the only one a committed test can cover:
+        /// the reader-vs-reader and raw-vs-raw comparisons both need multi-GB off-repo
+        /// acquisitions, but the ProteoWizard Thermo test fixture is already tracked here.
+        ///
+        /// Designed during issue #4496 (see ai/todos/completed/TODO-20260729_osprey_vendor_raw_reader.md,
+        /// "Tier 2") and never landed - the large-file parity was run by hand instead, so
+        /// nothing has guarded the field mapping since. It is cheap: three spectra, no
+        /// msconvert run, no staged data.
+        ///
+        /// Known limit, inherited from the fixture: its binary arrays are 32-bit for BOTH
+        /// m/z and intensity, so this pins the field mapping, the isolation-window
+        /// offset semantics and the MS-level split, but cannot catch an f64 m/z precision
+        /// defect. That is what the large-file comparisons cover.
+        ///
+        /// Without the vendor SDK the .raw cannot be read at all, so the test asserts the
+        /// OTHER half of the contract there: that the failure is a clear, actionable error
+        /// rather than an empty result. Both branches are real assertions - this never
+        /// silently passes for lack of a vendor build.
+        /// </summary>
+        [TestMethod]
+        public void TestRawVsMzmlSpectraParity()
+        {
+            string dataDir = Path.Combine(FindPwizRoot(),
+                @"pwiz/data/vendor_readers/Thermo/Reader_Thermo_Test.data");
+            string rawPath = Path.Combine(dataDir, @"source_cid_test_3scans.raw");
+            // The CENTROID conversion: Osprey asks ProteoWizard for vendor centroiding on a
+            // .raw, so the mzML that must match is the one msconvert wrote with the same
+            // request, not the profile conversion beside it.
+            string mzmlPath = Path.Combine(dataDir, @"source_cid_test_3scans-centroid.mzML");
+            Assert.IsTrue(File.Exists(rawPath), rawPath);
+            Assert.IsTrue(File.Exists(mzmlPath), mzmlPath);
+
+            var fromMzml = SpectrumFileReader.LoadAllSpectra(mzmlPath);
+            Assert.IsTrue(fromMzml.Ms1Spectra.Count + fromMzml.Ms2Spectra.Count > 0,
+                @"the mzML fixture produced no spectra");
+
+            SpectrumFileResult fromRaw;
+            try
+            {
+                fromRaw = SpectrumFileReader.LoadAllSpectra(rawPath);
+            }
+            catch (NotSupportedException ex)
+            {
+                // No vendor SDK in this build. Pin that the message at least NAMES the
+                // file, so a user is not left with a bare format complaint. Asserting on the
+                // file name rather than on wording keeps this translation-proof.
+                //
+                // NotSupportedException specifically, NOT Exception: SpectrumFileReader
+                // interpolates the path into its message, so a blanket catch would let an
+                // IOException from a file lock - or a genuine mapping defect that happened to
+                // quote the path - satisfy this assertion and skip every parity check below.
+                // The two branches have to be disjoint for the pass to mean anything.
+                StringAssert.Contains(ex.Message, Path.GetFileName(rawPath));
+                return;
+            }
+
+            Assert.AreEqual(fromMzml.Ms2Spectra.Count, fromRaw.Ms2Spectra.Count);
+            Assert.AreEqual(fromMzml.Ms1Spectra.Count, fromRaw.Ms1Spectra.Count);
+            for (int i = 0; i < fromMzml.Ms1Spectra.Count; i++)
+            {
+                AssertMs1SpectrumEqual(fromMzml.Ms1Spectra[i], fromRaw.Ms1Spectra[i]);
+            }
+            for (int i = 0; i < fromMzml.Ms2Spectra.Count; i++)
+            {
+                AssertMs2SpectrumEqual(fromMzml.Ms2Spectra[i], fromRaw.Ms2Spectra[i]);
+            }
+        }
+
+        private static void AssertMs1SpectrumEqual(MS1Spectrum expected, MS1Spectrum actual)
+        {
+            Assert.AreEqual(expected.ScanNumber, actual.ScanNumber);
+            Assert.AreEqual(expected.RetentionTime, actual.RetentionTime, 0.0);
+            AssertPeaksEqual(expected.Mzs, expected.Intensities, actual.Mzs, actual.Intensities);
+        }
+
+        private static void AssertMs2SpectrumEqual(Spectrum expected, Spectrum actual)
+        {
+            Assert.AreEqual(expected.ScanNumber, actual.ScanNumber);
+            Assert.AreEqual(expected.RetentionTime, actual.RetentionTime, 0.0);
+            Assert.AreEqual(expected.PrecursorMz, actual.PrecursorMz, 0.0);
+            // The isolation window is the field most likely to be silently wrong in a
+            // binding: lower/upper are OFFSETS from the centre, not a width or bounds.
+            Assert.AreEqual(expected.IsolationWindow.Center, actual.IsolationWindow.Center, 0.0);
+            Assert.AreEqual(expected.IsolationWindow.LowerOffset, actual.IsolationWindow.LowerOffset, 0.0);
+            Assert.AreEqual(expected.IsolationWindow.UpperOffset, actual.IsolationWindow.UpperOffset, 0.0);
+            AssertPeaksEqual(expected.Mzs, expected.Intensities, actual.Mzs, actual.Intensities);
+        }
+
+        /// <summary>
+        /// Exact comparison, no tolerance: both sides come from ProteoWizard reading the
+        /// same acquisition, so any difference is a defect rather than accumulated error.
+        /// </summary>
+        private static void AssertPeaksEqual(double[] expectedMzs, float[] expectedIntensities,
+            double[] actualMzs, float[] actualIntensities)
+        {
+            Assert.AreEqual(expectedMzs.Length, actualMzs.Length);
+            Assert.AreEqual(expectedIntensities.Length, actualIntensities.Length);
+            for (int i = 0; i < expectedMzs.Length; i++)
+            {
+                Assert.AreEqual(expectedMzs[i], actualMzs[i], 0.0);
+                Assert.AreEqual(expectedIntensities[i], actualIntensities[i], 0.0f);
+            }
+        }
+
+        /// <summary>
+        /// Walk up from the test assembly to the pwiz checkout root (the directory holding
+        /// both pwiz/ and pwiz_tools/), so the tracked vendor-reader fixtures can be found
+        /// without hardcoding a machine path.
+        /// </summary>
+        private static string FindPwizRoot()
+        {
+            string dir = Path.GetDirectoryName(typeof(IOTest).Assembly.Location);
+            while (!string.IsNullOrEmpty(dir))
+            {
+                if (Directory.Exists(Path.Combine(dir, @"pwiz")) &&
+                    Directory.Exists(Path.Combine(dir, @"pwiz_tools")))
+                {
+                    return dir;
+                }
+                dir = Path.GetDirectoryName(dir);
+            }
+            throw new InvalidOperationException(
+                @"Could not locate the pwiz root from the test assembly location.");
         }
 
         #endregion
@@ -2322,6 +2577,16 @@ namespace pwiz.Osprey.Test
             return WrapInMzml(specBlock);
         }
 
+        /// <summary>
+        /// Build one <c>spectrum</c> element. Units are spelled out in full -
+        /// <c>unitCvRef</c> + <c>unitAccession</c> + <c>unitName</c> - because that is
+        /// what a real mzML carries (ProteoWizard's own writer emits all three) and what
+        /// a reader keys off. Osprey's hand-written parser read <c>unitName</c>, so a
+        /// fixture carrying only that name survived until issue #4497; ProteoWizard reads
+        /// <c>unitAccession</c>, and a scan start time with no unit accession has UNKNOWN
+        /// units, which converts to 0 rather than failing. A fixture that is not valid
+        /// mzML tests the reader against input the reader will never see.
+        /// </summary>
         private static string BuildSpectrumElement(int index, int msLevel,
             double retentionTimeMinutes, double precursorMz,
             double isoTarget, double isoLower, double isoUpper,
@@ -2360,7 +2625,7 @@ namespace pwiz.Osprey.Test
         <cvParam cvRef=""MS"" accession=""MS:1000511"" value=""{2}"" />
         <scanList count=""1"">
           <scan>
-            <cvParam cvRef=""MS"" accession=""MS:1000016"" value=""{3}"" unitName=""minute"" />
+            <cvParam cvRef=""MS"" accession=""MS:1000016"" value=""{3}"" unitCvRef=""UO"" unitAccession=""UO:0000031"" unitName=""minute"" />
           </scan>
         </scanList>{4}
         <binaryDataArrayList count=""2"">
@@ -3141,6 +3406,94 @@ namespace pwiz.Osprey.Test
         // Build an FdrEntry with a per-row-distinct feature vector (feature[f] = baseValue + f)
         // and distinct fragment / XIC blobs derived from baseValue, so a chunk-boundary row
         // mismap -- or an overlay row silently keeping the ORIGINAL blobs -- surfaces as a
+        /// <summary>
+        /// Write and read the same fixture many times over and assert every scalar survives.
+        /// The regression guard for the parallel-write data race: `ParquetPlainEncoder` returned
+        /// its widening buffer to the ArrayPool and then encoded from it, so once columns
+        /// compressed concurrently another column's dictionary-index buffer could land in the
+        /// byte-typed <c>charge</c> column. Measured at 27 corrupted round-trips in 20,000
+        /// before the fix and 0 in 100,000 after.
+        ///
+        /// <para>A single-shot round-trip cannot see a defect this rare - it surfaced as a ~2%
+        /// failure across four unrelated tests. Iterating in-process is what turns hours of
+        /// full-suite soaking into seconds. Cheap by default (25 iterations) so it costs the
+        /// gate nothing; set <c>OSPREY_PARQUET_STRESS_ITERS</c> to sweep harder, and pair it
+        /// with <c>OSPREY_PARQUET_WRITE_THREADS=1</c> to A/B the concurrent writer.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestParquetRoundTripScalarStress()
+        {
+            int iters = 25;
+            string raw = Environment.GetEnvironmentVariable(@"OSPREY_PARQUET_STRESS_ITERS");
+            if (!string.IsNullOrEmpty(raw) && int.TryParse(raw, out int parsed) && parsed > 0)
+                iters = parsed;
+
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_stress_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var entries = new List<FdrEntry>();
+                var expected = new Dictionary<uint, FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
+                {
+                    var e = MakeStreamEntry(id, id * 100.0);
+                    entries.Add(e);
+                    expected[id] = e;
+                }
+
+                int nBad = 0;
+                string firstBad = null;
+                for (int i = 0; i < iters; i++)
+                {
+                    string path = Path.Combine(dir, @"stress" + i + @".scores.parquet");
+                    ParquetScoreCache.WriteScoresParquet(path, entries, null, null, @"f.mzML");
+                    var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(path);
+                    string bad = null;
+                    if (stubs.Count != entries.Count)
+                    {
+                        bad = string.Format(@"row count {0}, expected {1}", stubs.Count, entries.Count);
+                    }
+                    else
+                    {
+                        foreach (var s in stubs)
+                        {
+                            if (!expected.TryGetValue(s.EntryId, out FdrEntry want))
+                            {
+                                bad = string.Format(@"unknown entry_id {0}", s.EntryId);
+                                break;
+                            }
+                            if (s.Charge != want.Charge)
+                                bad = string.Format(@"charge {0}, expected {1}", s.Charge, want.Charge);
+                            else if (s.ScanNumber != want.ScanNumber)
+                                bad = string.Format(@"scan_number {0}, expected {1}", s.ScanNumber, want.ScanNumber);
+                            else if (s.IsDecoy != want.IsDecoy)
+                                bad = string.Format(@"is_decoy {0}, expected {1}", s.IsDecoy, want.IsDecoy);
+                            if (bad != null)
+                            {
+                                bad = string.Format(@"entry_id {0}: {1}", s.EntryId, bad);
+                                break;
+                            }
+                        }
+                    }
+                    if (bad != null)
+                    {
+                        nBad++;
+                        if (firstBad == null)
+                            firstBad = string.Format(@"iteration {0} - {1}", i, bad);
+                    }
+                    File.Delete(path);
+                }
+
+                Assert.AreEqual(0, nBad, string.Format(
+                    @"{0} of {1} parquet round-trips lost a scalar. First: {2}",
+                    nBad, iters, firstBad ?? @"(none)"));
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
         // value mismatch. Key fields (entry_id, charge, scan_number) stay id-derived so an
         // overlay preserves the canonical sort key of the row it replaces.
         private static FdrEntry MakeStreamEntry(uint id, double baseValue)

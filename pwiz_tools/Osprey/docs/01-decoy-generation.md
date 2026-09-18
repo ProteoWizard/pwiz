@@ -22,6 +22,7 @@ The relevant C# types:
 - `Osprey.IO/LibraryDecoyMarker.cs` — `ApplyLibraryDecoyMarking` (prefix / column marking).
 - `Osprey.Core/LibraryDecoyPairing.cs` — `PairLibraryDecoysByComposition` (composition fallback).
 - `Osprey.IO/DecoyPairingManifest.cs` — FDRBench manifest pairing + protein-ID substitution.
+- `Osprey.IO/LibraryLoader.cs` — marking + pairing, INSIDE the load (issue #4650).
 - `Osprey.Tasks/PerFileScoringTask.cs` — the dispatch that ties it all together.
 
 ## Dispatch: generate vs. mark-and-pair
@@ -41,9 +42,11 @@ librarySuppliesDecoys = config.DecoysInLibrary || config.DecoyMethod == FromLibr
    `DecoyGenerator.GenerateAllWithCollisionDetection(...)` is called and the target
    list is replaced with the collision-filtered `validTargets`
    (`PerFileScoringTask.cs`).
-3. **Library-supplied decoys** — `MarkSuppliedDecoys` runs first (before the target
-   count is taken, `PerFileScoringTask.cs`), then `TryPairSuppliedDecoys`
-   (`PerFileScoringTask.cs`). A failure here returns `false` with `ExitCode = 1`.
+3. **Library-supplied decoys** — nothing to dispatch: marking and pairing already ran
+   INSIDE `LibraryLoader.Load`, ahead of the `.libcache` write (issue #4650), so the
+   library arrives finished and the target count below already reflects marking. A pairing
+   failure surfaces as the loader's `out error`, which the caller reports with
+   `ExitCode = 1` exactly as it did when it owned the work.
 
 `DecoyMethod.FromLibrary` is treated as a synonym for `DecoysInLibrary = true`
 (`PerFileScoringTask.cs`); the comment there notes it historically fell
@@ -239,7 +242,7 @@ When `DecoysInLibrary` is set, Osprey runs three post-load steps: marking, pairi
 
 `LibraryDecoyMarker.ApplyLibraryDecoyMarking`
 (`Osprey.IO/LibraryDecoyMarker.cs`, called from
-`PerFileScoringTask.MarkSuppliedDecoys` at `PerFileScoringTask.cs`) marks
+`LibraryLoader.TryFinishSuppliedDecoys` at `Osprey.IO/LibraryLoader.cs`) marks
 decoys from two OR'd signals:
 
 - **DIA-NN `Decoy` column**: the TSV loader sets `IsDecoy` at load time
@@ -261,15 +264,17 @@ Marking is idempotent (`LibraryDecoyMarker.cs`). The log breaks the count down:
 
 ### Step 2: target-decoy pairing (hybrid manifest + composition fallback)
 
-`TryPairSuppliedDecoys` (`PerFileScoringTask.cs`) pairs each decoy with a target
+`LibraryLoader.TryFinishSuppliedDecoys` (`Osprey.IO/LibraryLoader.cs`) pairs each decoy
+with a target
 so their `base_id`s match — required for SVM competition, LDA calibration, and CV
 fold grouping (see 07-fdr-control.md, 16-determinism.md).
 
 First, a **hard guard**: if there are no library decoys at all,
-`TryPairSuppliedDecoys` errors and exits with code 1 (`PerFileScoringTask.cs`).
+the load returns that fault as `error` and the caller exits with code 1
+(`LibraryLoader.cs`, reported at `PerFileScoringTask.cs`).
 This "no decoys" check runs **before** manifest application, matching Rust
 v26.6.0 (`bcd7249`); the comment notes a manifest can therefore not rescue a load
-where the prefix scan misses every decoy (`PerFileScoringTask.cs`).
+where the prefix scan misses every decoy (`LibraryLoader.cs`).
 
 - **Stage 2a — manifest-based** (when `--decoy-pairing-manifest` is set):
   `DecoyPairingManifest.FromTsv` (`Osprey.IO/DecoyPairingManifest.cs`) parses an
@@ -286,10 +291,10 @@ where the prefix scan misses every decoy (`PerFileScoringTask.cs`).
   prefix-stripping failure mode; `DecoyPairingManifest.cs`, counted in
   `NNewlyMarkedDecoy`). Paired decoys get `Id = targetId | DECOY_ID_BIT`
   (`DecoyPairingManifest.cs`). Manifest read failure errors out with
-  exit code 1 (`PerFileScoringTask.cs`).
+  exit code 1 (`LibraryLoader.cs`).
 - **Stage 2b — composition fallback** (always runs):
   `LibraryDecoyPairing.PairLibraryDecoysByComposition`
-  (`Osprey.Core/LibraryDecoyPairing.cs`, called at `PerFileScoringTask.cs`)
+  (`Osprey.Core/LibraryDecoyPairing.cs`, called at `LibraryLoader.cs`)
   indexes unclaimed targets by `(stripped_accession, charge, sorted_AA_composition)`
   (`LibraryDecoyPairing.cs`), strips a configured decoy prefix from each
   decoy accession (`StripDecoyPrefix`, `LibraryDecoyPairing.cs`), and matches
@@ -302,15 +307,17 @@ where the prefix scan misses every decoy (`PerFileScoringTask.cs`).
 
 The chained pass shares a `PairingState` (`Osprey.Core/LibraryDecoyPairing.cs`)
 of `ClaimedTargets` / `PairedDecoys` so the composition pass never re-claims a
-manifest-paired target (`PerFileScoringTask.cs`).
+manifest-paired target (`LibraryLoader.cs`).
 
 ### Pairing gate (min fraction)
 
 The breakdown is logged as
 `Library-decoy pairing: paired A/B decoys (P%); manifest=M, composition=C; U unpaired decoys, V unpaired targets`
-(`PerFileScoringTask.cs`). If `PairingStats.PairedFraction <
+(`LibraryLoader.cs`). A load served from the `.libcache` did no pairing work - the cache
+holds the finished library - so it reports the same TOTAL from a separate line that omits
+the manifest/composition split, which a finished library does not record. If `PairingStats.PairedFraction <
 config.DecoyPairMinFraction` (default **0.80**), Osprey logs an error and exits with
-code 1 rather than run with broken competition (`PerFileScoringTask.cs`).
+code 1 rather than run with broken competition (`LibraryLoader.cs`).
 `PairedFraction` returns 1.0 when there are no decoys
 (`Osprey.Core/LibraryDecoyPairing.cs`).
 
@@ -321,7 +328,7 @@ stored `ProteinIds`, `ApplyToLibrary` replaces `entry.ProteinIds` with the
 manifest's clean source-protein list (`DecoyPairingManifest.cs`,
 applied), counted in `NProteinsReplaced` and logged as
 `manifest replaced protein_ids on N library entries`
-(`PerFileScoringTask.cs`). This restores correct protein parsimony /
+(`LibraryLoader.cs`). This restores correct protein parsimony /
 picked-protein FDR (see 08-protein-parsimony.md) for Carafe libraries that stamp a
 per-peptide `_pepNNNNN` suffix into `ProteinID`. Empty / `-` proteins column is a
 no-op — the library wins (`DecoyPairingManifest.cs`).

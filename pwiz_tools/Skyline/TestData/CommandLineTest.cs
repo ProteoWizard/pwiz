@@ -98,7 +98,6 @@ namespace pwiz.SkylineTestData
             DoConsoleReplicateOutTest(true);
         }
 
-        [TestMethod]
         private void DoConsoleReplicateOutTest(bool auditLogging)
         {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
@@ -262,7 +261,10 @@ namespace pwiz.SkylineTestData
                 CollectionAssert.AreEqual(originalValues[replicateName].PeakAreas, reorderedValues[replicateName].PeakAreas);
             }
 
-            var reverseNames = originalNames.Reverse().ToArray();
+            // AsEnumerable() so Reverse() binds to Enumerable and returns a reversed copy.
+            // Without it C# 14 prefers MemoryExtensions.Reverse, which reverses the array in
+            // place and returns void, so the array-typed receiver alone does not say enough.
+            var reverseNames = originalNames.AsEnumerable().Reverse().ToArray();
             File.WriteAllLines(orderPath, reverseNames);
             RunCommand(CommandArgs.ARG_IN + docPath, CommandArgs.ARG_REORDER_REPLICATES + orderPath,
                 CommandArgs.ARG_OUT + outPath);
@@ -999,6 +1001,11 @@ namespace pwiz.SkylineTestData
             var commandLine = new CommandLine();
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
+                // Stand in for CommandLine faithfully: it waits on a plain
+                // ResultsMemoryDocumentContainer, where a superseded cancel ends the wait early.
+                // Leaving the test container's default on here would make that production gap
+                // permanently invisible to the test that covers this path.
+                docContainer.WaitForCancelRestart = false;
                 commandLine.ImportResults(docContainer, replicate, MsDataFileUri.Parse(rawPath), null);
                 docContainer.WaitForComplete();
                 docContainer.AssertComplete();  // No errors
@@ -1042,6 +1049,8 @@ namespace pwiz.SkylineTestData
             var commandLine = new CommandLine();
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
+                // Same reason as above: keep this standing in for CommandLine's real wait.
+                docContainer.WaitForCancelRestart = false;
                 commandLine.ImportResults(docContainer, replicate, MsDataFileUri.Parse(rawPath), null);
                 docContainer.WaitForComplete();
                 docContainer.AssertComplete();  // No errors
@@ -1235,7 +1244,6 @@ namespace pwiz.SkylineTestData
             DoConsoleAnnotationsExportToImportTest(true);
         }
 
-        [TestMethod]
         private void DoConsoleAnnotationsExportToImportTest(bool auditLogging)
         {
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleAnnotationsExportToImportTest.zip");
@@ -4141,7 +4149,7 @@ namespace pwiz.SkylineTestData
         {
             TestSkylineRunnerErrorDetection(null);
             TestSkylineRunnerErrorDetection(new CultureInfo("ja"));
-            TestSkylineRunnerErrorDetection(new CultureInfo("zh-CHS"));
+            TestSkylineRunnerErrorDetection(new CultureInfo("zh-Hans"));
         }
 
         private void TestSkylineRunnerErrorDetection(CultureInfo ci)
