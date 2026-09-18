@@ -86,6 +86,7 @@ namespace SkylineNightly
         private static string LABKEY_CSRF = @"X-LABKEY-CSRF";
 
         private const string GIT_MASTER_URL = "https://github.com/ProteoWizard/pwiz";
+        private const string GITHUB_PULLS_API_URL = "https://api.github.com/repos/ProteoWizard/pwiz/pulls/";
         private const string GIT_BRANCHES_URL = GIT_MASTER_URL + "/tree/";
         private const string BRANCH_MARKER = ".branch.";
         private const string SKYLINETESTER_FILES_DIR = "SkylineTester Files";
@@ -449,6 +450,35 @@ namespace SkylineNightly
         }
 
         /// <summary>
+        /// The branch to clone when SKYLINE_NIGHTLY_BRANCH names a pull request (pull/NNNN) and this
+        /// is a master run: the pull request's head branch, from the GitHub API. The build's own stamp
+        /// is no use here - TeamCity builds a pull request from a detached checkout, so it reads
+        /// "(HEAD detached at ...)" - and without this the machine would download the pull request's
+        /// SkylineTester and then build master's TestRunner and tests under it.
+        /// </summary>
+        /// <returns>Branch URL, or null when the run is not a master run trying a pull request</returns>
+        private string ResolvePullRequestBranchUrl()
+        {
+            if (_runSpec.Branch != Branch.master)
+                return null;
+            var match = Regex.Match(TeamCityNightlyAuth.GetMasterBranch(), @"^pull/(\d+)$");
+            if (!match.Success)
+                return null;
+
+            var pullRequest = match.Groups[1].Value;
+            using var client = new WebClient();
+            client.Headers[HttpRequestHeader.UserAgent] = "SkylineNightly"; // The GitHub API refuses requests without one
+            var json = client.DownloadString(GITHUB_PULLS_API_URL + pullRequest);
+            // "head": { "label": "...", "ref": "<branch>", ... } - ref follows label, before the nested objects
+            var refMatch = Regex.Match(json, @"""head""\s*:\s*\{\s*""label""\s*:\s*""[^""]*""\s*,\s*""ref""\s*:\s*""([^""]+)""");
+            if (!refMatch.Success)
+                throw new IOException("Could not find the head branch of pull request " + pullRequest + " in the GitHub API response");
+            var branch = refMatch.Groups[1].Value;
+            Log("Branch " + branch + " identified from pull request " + pullRequest + " (" + TeamCityNightlyAuth.BranchEnvVar + ")");
+            return GIT_BRANCHES_URL + branch;
+        }
+
+        /// <summary>
         /// Figures out which branch the downloaded SkylineTester was built from.
         /// </summary>
         /// <remarks>
@@ -591,8 +621,9 @@ namespace SkylineNightly
                     Log("Delete zip file " + skylineTesterZipPath);
                     File.Delete(skylineTesterZipPath);
 
-                    // Figure out which branch we're working in - the downloaded SkylineTester zip tells us.
-                    return ResolveBranchUrl();   // success
+                    // Figure out which branch we're working in - the downloaded SkylineTester zip tells us,
+                    // unless this machine is trying a pull request's build as master
+                    return ResolvePullRequestBranchUrl() ?? ResolveBranchUrl();   // success
                 }
                 catch (Exception ex)
                 {
@@ -778,10 +809,14 @@ namespace SkylineNightly
                 : RunType.standard;
             if (runType == RunType.leak)
                 CheckLeakSweepComplete(log);
+            // The working directory in the clone command names the branch (see RunSpec.ShortName). A master
+            // run clones without -b, except when it is trying a pull request's branch, so the directory
+            // name decides rather than the presence of -b.
             var matchBranch = new Regex(@"git\.exe.*clone.*-b.*SkylineTesterForNightly_([a-z]+)").Match(log);
             var branch = !matchBranch.Success ? Branch.master
                 : Equals("integration", matchBranch.Groups[1].Value) ? Branch.integration
-                : Branch.release;
+                : Equals("release", matchBranch.Groups[1].Value) ? Branch.release
+                : Branch.master;
 
             var machineName = Environment.MachineName;
             // Get machine name from logfile name, in case it's not from this machine
