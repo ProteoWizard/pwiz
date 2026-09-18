@@ -123,12 +123,8 @@ namespace pwiz.Osprey
             new[] { @"unit", @"hram", @"auto" }, (c, p) => c._resolution = p.Value.ToLowerInvariant());
         public static readonly OspreyArgument ARG_FRAGMENT_TOLERANCE = new OspreyArgument(@"fragment-tolerance",
             () => @"<value>", (c, p) => c._fragmentTolerance = ParseDouble(p));
-        // HasValueChecking: the listed values document the choice; ToConfig also accepts the
-        // th / da aliases for mz, so the framework must not enforce the list (it would refuse
-        // a token a test builds with ARG_FRAGMENT_UNIT + "th"). Same reason on the other
-        // fixed-list arguments below that fold case, accept an alias or warn-and-default.
         public static readonly OspreyArgument ARG_FRAGMENT_UNIT = new OspreyArgument(@"fragment-unit",
-            new[] { @"ppm", @"mz" }, (c, p) => c._fragmentUnit = p.Value.ToLowerInvariant()) { HasValueChecking = true };
+            new[] { @"ppm", @"mz" }, (c, p) => c._fragmentUnit = p.Value.ToLowerInvariant());
         public static readonly OspreyArgument ARG_NO_PREFILTER = new OspreyArgument(@"no-prefilter",
             (c, p) => c._config.PrefilterEnabled = false);
 
@@ -166,7 +162,7 @@ namespace pwiz.Osprey
                         c._config.FdrMethod = FdrMethod.Percolator;
                         break;
                 }
-            }) { HasValueChecking = true };
+            });
         public static readonly OspreyArgument ARG_FDR_LEVEL = new OspreyArgument(@"fdr-level",
             new[] { @"precursor", @"peptide", @"both" }, (c, p) =>
             {
@@ -186,7 +182,7 @@ namespace pwiz.Osprey
                             @"Unknown FDR level '{0}', defaulting to both", p.Value));
                         break;
                 }
-            }) { HasValueChecking = true };
+            });
         public static readonly OspreyArgument ARG_SHARED_PEPTIDES = new OspreyArgument(@"shared-peptides",
             new[] { @"all", @"razor", @"unique" }, (c, p) =>
             {
@@ -206,14 +202,14 @@ namespace pwiz.Osprey
                             @"Unknown shared peptides mode '{0}', defaulting to all", p.Value));
                         break;
                 }
-            }) { HasValueChecking = true };
+            });
 
         public static readonly OspreyArgument ARG_FDRBENCH = new OspreyArgument(@"fdrbench",
             () => @"<input.tsv>", (c, p) => c._config.OutputFdrBench = p.Value);
         public static readonly OspreyArgument ARG_FDRBENCH_PER_RUN = new OspreyArgument(@"fdrbench-per-run",
             (c, p) => c._config.FdrBenchPerRun = true);
         public static readonly OspreyArgument ARG_FDRBENCH_PASS = new OspreyArgument(@"fdrbench-pass",
-            new[] { @"1", @"2", @"both" }, (c, p) => c._config.FdrBenchPass = ParseFdrBenchPass(p)) { HasValueChecking = true };
+            new[] { @"1", @"2", @"both" }, (c, p) => c._config.FdrBenchPass = ParseFdrBenchPass(p));
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => @"FDR & Protein Inference", true,

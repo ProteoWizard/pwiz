@@ -138,10 +138,12 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(20.0, Parse(OspreyCommandArgs.ARG_FRAGMENT_TOLERANCE + 20.0).FragmentTolerance.Tolerance);
             Assert.AreEqual(ToleranceUnit.Ppm, Parse(OspreyCommandArgs.ARG_FRAGMENT_UNIT + @"ppm").FragmentTolerance.Unit);
             Assert.AreEqual(ToleranceUnit.Mz, Parse(OspreyCommandArgs.ARG_FRAGMENT_UNIT + @"mz").FragmentTolerance.Unit);
-            // th and da are accepted aliases the declared value list does not name; the argument
-            // declares HasValueChecking, so the token builder leaves the check to the parser.
-            Assert.AreEqual(ToleranceUnit.Mz, Parse(OspreyCommandArgs.ARG_FRAGMENT_UNIT + @"th").FragmentTolerance.Unit);
-            Assert.AreEqual(ToleranceUnit.Mz, Parse(OspreyCommandArgs.ARG_FRAGMENT_UNIT + @"da").FragmentTolerance.Unit);
+            // th and da are accepted aliases the declared value list does not name. The token
+            // builder enforces the list (Skyline's tests pin that), so an unlisted value the
+            // PARSER accepts is passed as its own token, here and for the warn-and-default
+            // cases below.
+            Assert.AreEqual(ToleranceUnit.Mz, Parse(OspreyCommandArgs.ARG_FRAGMENT_UNIT, @"th").FragmentTolerance.Unit);
+            Assert.AreEqual(ToleranceUnit.Mz, Parse(OspreyCommandArgs.ARG_FRAGMENT_UNIT, @"da").FragmentTolerance.Unit);
             Assert.IsFalse(Parse(OspreyCommandArgs.ARG_NO_PREFILTER).PrefilterEnabled);
 
             // FDR + protein inference, including warn-and-default enums.
@@ -152,11 +154,11 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.01, Parse(OspreyCommandArgs.ARG_PROTEIN_FDR + 0.01).ProteinFdr);
             Assert.AreEqual(8, Parse(OspreyCommandArgs.ARG_THREADS + 8).NThreads);
             Assert.AreEqual(FdrMethod.Simple, Parse(OspreyCommandArgs.ARG_FDR_METHOD + @"simple").FdrMethod);
-            Assert.AreEqual(FdrMethod.Percolator, Parse(OspreyCommandArgs.ARG_FDR_METHOD + @"bogus").FdrMethod); // warn -> default
+            Assert.AreEqual(FdrMethod.Percolator, Parse(OspreyCommandArgs.ARG_FDR_METHOD, @"bogus").FdrMethod); // warn -> default
             Assert.AreEqual(FdrLevel.Peptide, Parse(OspreyCommandArgs.ARG_FDR_LEVEL + @"peptide").FdrLevel);
-            Assert.AreEqual(FdrLevel.Precursor, Parse(OspreyCommandArgs.ARG_FDR_LEVEL + @"bogus").FdrLevel);     // warn -> default unchanged
+            Assert.AreEqual(FdrLevel.Precursor, Parse(OspreyCommandArgs.ARG_FDR_LEVEL, @"bogus").FdrLevel);     // warn -> default unchanged
             Assert.AreEqual(SharedPeptideMode.Razor, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"razor").SharedPeptides);
-            Assert.AreEqual(SharedPeptideMode.All, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"bogus").SharedPeptides); // warn -> default
+            Assert.AreEqual(SharedPeptideMode.All, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES, @"bogus").SharedPeptides); // warn -> default
 
             // FDRBench: --fdrbench records the path, --fdrbench-per-run is a flat flag,
             // --fdrbench-pass selects the pass(es) as a bitmask (default 2; 1, 2, or both;
@@ -168,7 +170,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(OspreyConfig.FDRBENCH_PASS_2, Parse(OspreyCommandArgs.ARG_FDRBENCH_PASS + 2).FdrBenchPass);
             Assert.AreEqual(OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2,
                 Parse(OspreyCommandArgs.ARG_FDRBENCH_PASS + @"both").FdrBenchPass);
-            Assert.ThrowsException<ArgumentException>(() => Parse(OspreyCommandArgs.ARG_FDRBENCH_PASS + 3));
+            Assert.ThrowsException<ArgumentException>(() => Parse(OspreyCommandArgs.ARG_FDRBENCH_PASS, @"3"));
 
             // Decoys.
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY).DecoysInLibrary);
@@ -249,7 +251,7 @@ namespace pwiz.Osprey.Test
         /// the HOST parses (Osprey: invariant; a host that leaves the provider unset gets the
         /// current culture); the same operator renders Skyline's --name=value when the host
         /// separator says so; and an argument can never be a flag's value, a value outside a
-        /// fixed list that the argument does not check itself, another argument's value, or
+        /// fixed list, another argument's value, or
         /// null. Mutates two process-wide settings, so it must not share a process slice with
         /// another test building tokens.
         /// </summary>
@@ -300,10 +302,7 @@ namespace pwiz.Osprey.Test
             }
 
             Assert.ThrowsException<ValueUnexpectedException>(() => OspreyCommandArgs.ARG_TIMESTAMP + 1);
-            // --resolution enforces its declared list; --fdr-method checks its own (aliases,
-            // warn-and-default), so the builder lets its value through to the parser.
-            Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_RESOLUTION + @"bogus");
-            Assert.AreEqual(OspreyCommandArgs.ARG_FDR_METHOD.ArgumentText + @" bogus", OspreyCommandArgs.ARG_FDR_METHOD + @"bogus");
+            Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_FDR_METHOD + @"bogus");
             Assert.ThrowsException<ArgumentException>(() => argThreads + OspreyCommandArgs.ARG_INPUT);
             Assert.ThrowsException<ArgumentNullException>(() => OspreyCommandArgs.ARG_LIBRARY + null);
         }

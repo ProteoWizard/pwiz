@@ -85,15 +85,16 @@ namespace pwiz.Common.CommandLine
         /// <see cref="ArgUsage.ArgumentValueSeparator"/> - the same process-wide setting the
         /// usage text renders with, so a token built here always has the shape the host's
         /// own documentation shows (Skyline: <c>--in=path</c>; Osprey: <c>--threads 8</c>).
-        /// A fixed value list is enforced here exactly as <see cref="NameValuePair.IsMatch"/>
-        /// enforces it at parse time: not at all when <see cref="HasValueChecking"/> says the
-        /// argument checks its own values (aliases, case folding, warn-and-default).
+        /// A fixed value list is always enforced here, <see cref="HasValueChecking"/> or not:
+        /// Skyline's ConsoleArgumentInvalidValuesTest pins that every listed argument refuses
+        /// an unlisted value at build time. A host whose parser accepts an unlisted alias
+        /// passes that value as its own token instead of through this builder.
         /// </summary>
         public string GetArgumentTextWithValue(string value)
         {
             if (ValueExample == null)
                 throw new ValueUnexpectedException(this);
-            else if (Values != null && !HasValueChecking && !Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
+            else if (Values != null && !Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
                 throw new ValueInvalidException(this, value, Values);
 
             return ArgumentText + ArgUsage.ArgumentValueSeparator + value;
